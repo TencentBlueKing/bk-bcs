@@ -28,13 +28,14 @@
         ref="KvCodeEditorRef"
         :languages="localVal.kv_type"
         :content="localVal.value"
+        :height="editorHeight"
         @change="handleStringContentChange" />
     </bk-form-item>
   </bk-form>
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted, computed } from 'vue';
+  import { ref, onMounted, computed, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
   import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
@@ -64,6 +65,7 @@
   const localVal = ref({
     ...props.config,
   });
+  const editorHeight = ref(0);
 
   const typeDescription = computed(() => {
     if (appData.value.spec.data_type !== 'any' && !props.editMode) {
@@ -122,6 +124,11 @@
     if (!props.editMode) {
       localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
     }
+    nextTick(() => {
+      const editorMinHeight = 300; // 编辑器最小高度
+      const remainingHeight = formRef.value.$el.offsetHeight - 355; // 容器高度减去其他元素已占用高度
+      editorHeight.value = remainingHeight > editorMinHeight ? remainingHeight : editorMinHeight;
+    });
   });
 
   const validate = async () => {
@@ -148,5 +155,8 @@
 
   defineExpose({ validate });
 </script>
-
-<style scoped lang="scss"></style>
+<style lang="scss" scoped>
+  :deep(.bk-form-item:last-child) {
+    margin-bottom: 0;
+  }
+</style>

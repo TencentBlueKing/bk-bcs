@@ -65,7 +65,7 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   else
     kubeadm init --config="${ROOT_DIR}/kubeadm-config" -v 11 \
       || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
-	systemctl enable --now kubelet
+	  systemctl enable --now kubelet
   fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
@@ -100,13 +100,15 @@ else
   else
     kubeadm join --config="${ROOT_DIR}/kubeadm-config" -v 11 \
       || utils::log "FATAL" "${LAN_IP} failed to join master: ${K8S_CTRL_IP}"
+    systemctl enable --now kubelet
   fi
   install -dv "$HOME/.kube"
   install -v -m 600 -o "$(id -u)" -g "$(id -g)" \
     /etc/kubernetes/admin.conf "$HOME/.kube/config"
   "${ROOT_DIR}"/system/config_bcs_dns -u "${LAN_IP}" k8s-api.bcs.local
   "${ROOT_DIR}"/system/config_envfile.sh -c clean
-  K8S_CTRL_IP=$LAN_IP "${ROOT_DIR}"/system/config_envfile.sh -c init
+  K8S_CTRL_IP=$LAN_IP
+  "${ROOT_DIR}"/system/config_envfile.sh -c init
   k8s::restart_kubelet
   sleep 30
   k8s::check_master

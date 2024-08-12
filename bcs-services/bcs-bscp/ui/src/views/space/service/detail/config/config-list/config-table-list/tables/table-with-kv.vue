@@ -7,18 +7,24 @@
       :remote-pagination="true"
       :pagination="pagination"
       :key="versionData.id"
-      :checked="checkedConfigs"
       selection-key="id"
       row-key="id"
       :row-class="getRowCls"
-      :is-row-select-enable="isRowSelectEnable"
       @page-limit-change="handlePageLimitChange"
-      @page-value-change="refresh"
+      @page-value-change="refresh($event, true)"
       @column-sort="handleSort"
-      @column-filter="handleFilter"
-      @selection-change="handleSelectionChange"
-      @select-all="handleSelectAll">
-      <bk-table-column v-if="versionData.id === 0" type="selection" :width="40" :min-width="40"></bk-table-column>
+      @column-filter="handleFilter">
+      <template #prepend v-if="versionData.id === 0">
+        <render-table-tip />
+      </template>
+      <bk-table-column v-if="versionData.id === 0" :width="74" :min-width="74" :label="renderSelection">
+        <template #default="{ row }">
+          <across-check-box
+            :checked="isChecked(row)"
+            :disabled="row.kv_state === 'DELETE'"
+            :handle-change="() => handleSelectionChange(row)" />
+        </template>
+      </bk-table-column>
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
           <bk-button
@@ -176,12 +182,15 @@
   import VersionDiff from '../../../components/version-diff/index.vue';
   import TableEmpty from '../../../../../../../../components/table/table-empty.vue';
   import DeleteConfirmDialog from '../../../../../../../../components/delete-confirm-dialog.vue';
+  import useTableAcrossCheck from '../../../../../../../../utils/hooks/use-table-acrosscheck';
+  import acrossCheckBox from '../../../../../../../../components/across-checkbox.vue';
+  import CheckType from '../../../../../../../../../types/across-checked';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
   const { versionData } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
-  const { permCheckLoading, hasEditServicePerm } = storeToRefs(serviceStore);
+  const { permCheckLoading, hasEditServicePerm, topIds } = storeToRefs(serviceStore);
   const { t } = useI18n();
   const { pagination, updatePagination } = useTablePagination('tableWithKv');
 
@@ -191,7 +200,7 @@
     searchStr: string;
   }>();
 
-  const emits = defineEmits(['clearStr', 'updateSelectedIds']);
+  const emits = defineEmits(['clearStr', 'updateSelectedIds', 'sendTableDataCount']);
 
   const loading = ref(false);
   const configList = ref<IConfigKvType[]>([]);
@@ -210,6 +219,8 @@
   const updateSortType = ref('null');
   const recoverConfig = ref<IConfigKvType>();
   const isRecoverConfigDialogShow = ref(false);
+  const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
   const typeFilterList = computed(() =>
     CONFIG_KV_TYPE.map((item) => ({
@@ -247,16 +258,26 @@
     return '';
   });
 
-  const checkedConfigs = computed(() => {
-    return configList.value.filter((config) => selectedConfigIds.value.includes(config.id));
-  });
+  // 跨页全选
+  const selecTableData = computed(() => configList.value.filter((item) => item.kv_state !== 'DELETE'));
+  const crossPageSelect = computed(
+    () => pagination.value.limit < pagination.value.count && selecTableDataCount.value !== 0,
+  );
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: selecTableDataCount, // 总数，不含禁用row
+      curPageData: selecTableData, // 当前页数据，不含禁用row
+      rowKey: ['id'],
+      crossPageSelect, // 是否提供跨页全选功能
+    });
 
   watch(
     () => versionData.value.id,
     () => {
       refresh();
       selectedConfigIds.value = [];
-      emits('updateSelectedIds', []);
+      // emits('updateSelectedIds', []);
+      emits('updateSelectedIds', { selectedConfigIds, isAcrossChecked: false });
     },
   );
 
@@ -274,6 +295,21 @@
       configStore.$patch((state) => {
         state.allConfigCount = configsCount.value;
       });
+    },
+  );
+
+  watch(
+    selections,
+    () => {
+      isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+      selectedConfigIds.value = selections.value.map((item) => item.id);
+      emits('updateSelectedIds', {
+        selectedConfigIds: selectedConfigIds.value,
+        isAcrossChecked: isAcrossChecked.value,
+      });
+    },
+    {
+      deep: true,
     },
   );
 
@@ -303,6 +339,7 @@
         params.sort = 'updated_at';
         params.order = updateSortType.value.toUpperCase();
       }
+      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
       let res;
       if (isUnNamedVersion.value) {
         if (statusFilterChecked.value!.length > 0) {
@@ -322,6 +359,11 @@
         return 0;
       });
       configsCount.value = res.count;
+      configStore.$patch((state) => {
+        state.allConfigCount = res.count;
+      });
+      selecTableDataCount.value = Number(res.exclusion_count);
+      emits('sendTableDataCount', selecTableDataCount.value);
       pagination.value.count = res.count;
     } catch (e) {
       console.error(e);
@@ -330,32 +372,22 @@
     }
   };
 
-  // 表格行是否可以选中
-  const isRowSelectEnable = ({ row, isCheckAll }: { row: IConfigKvType; isCheckAll: boolean }) => {
-    return isCheckAll || row.kv_state !== 'DELETE';
+  // 选中状态
+  const isChecked = (row: IConfigKvType) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.id === row.id);
+    }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.id === row.id);
   };
 
   // 表格行选择事件
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IConfigKvType }) => {
-    const index = selectedConfigIds.value.findIndex((id) => id === row.id);
-    if (checked) {
-      if (index === -1) {
-        selectedConfigIds.value.push(row.id);
-      }
-    } else {
-      selectedConfigIds.value.splice(index, 1);
-    }
-    emits('updateSelectedIds', selectedConfigIds.value);
-  };
-
-  // 全选
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      selectedConfigIds.value = configList.value.filter((item) => item.kv_state !== 'DELETE').map((item) => item.id);
-    } else {
-      selectedConfigIds.value = [];
-    }
-    emits('updateSelectedIds', selectedConfigIds.value);
+  const handleSelectionChange = (row: IConfigKvType) => {
+    const isSelected = selections.value.some((item) => item.id === row.id);
+    // 根据选择类型决定传递的状态
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
+    handleRowCheckChange(shouldBeChecked, row);
   };
 
   const handleEditOrView = (config: IConfigKvType) => {
@@ -461,13 +493,14 @@
   };
 
   // 批量删除配置项后刷新配置项列表
-  const refreshAfterBatchDelete = () => {
+  const refreshAfterBatchSet = () => {
     if (selectedConfigIds.value.length === configList.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
 
     selectedConfigIds.value = [];
-    emits('updateSelectedIds', []);
+    // emits('updateSelectedIds', []);
+    emits('updateSelectedIds', { selectedConfigIds, isAcrossChecked: false });
     refresh(pagination.value.current);
   };
 
@@ -477,7 +510,11 @@
     refresh();
   };
 
-  const refresh = (current = 1) => {
+  const refresh = (current = 1, pageChange = false) => {
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     pagination.value.current = current;
     getListData();
   };
@@ -501,11 +538,14 @@
   // 判断当前行是否是删除行
   const getRowCls = (config: IConfigKvType) => {
     if (config.kv_state === 'DELETE') return 'delete-row';
+    if (topIds.value.includes(config.id)) {
+      return 'new-row-marked';
+    }
   };
 
   defineExpose({
     refresh,
-    refreshAfterBatchDelete,
+    refreshAfterBatchSet,
   });
 </script>
 <style lang="scss" scoped>
@@ -516,11 +556,16 @@
   }
   .config-table {
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
       tr.delete-row td {
         background: #fafbfd !important;
         .cell {
           color: #c4c6cc !important;
         }
+      }
+      tr.new-row-marked td {
+        background: #f2fff4 !important;
       }
     }
   }

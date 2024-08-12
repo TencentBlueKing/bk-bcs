@@ -31,6 +31,7 @@
           :model-value="props.content"
           :editable="editable"
           :language="languages"
+          :always-consume-mouse-wheel="false"
           @update:model-value="emits('change', $event)" />
       </div>
     </div>
@@ -48,7 +49,7 @@
     defineProps<{
       content: string;
       languages: string;
-      editable: boolean;
+      editable?: boolean;
       height?: number;
     }>(),
     {
@@ -97,7 +98,7 @@
   defineExpose({
     validate: () => {
       if (codeEditorRef.value) {
-        return codeEditorRef.value.validate(props.content);
+        return codeEditorRef.value.validateAndMarkErrorLine(props.content);
       }
     },
   });

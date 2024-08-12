@@ -54,7 +54,7 @@ type Client interface {
 		order *pbds.ListClientsReq_Order, opt *types.BasePage) ([]*table.Client, int64, error)
 	// ListClientGroupByCurrentReleaseID 按当前版本 ID 列出客户端组
 	ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
-		search *pbclient.ClientQueryCondition) ([]types.ClientConfigVersionChart, error)
+		search *pbclient.ClientQueryCondition) ([]types.CurrentConfigVersionChart, error)
 	// ListClientGroupByChangeStatus 按更改状态列出客户端组
 	ListClientGroupByChangeStatus(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
 		search *pbclient.ClientQueryCondition) ([]types.ChangeStatusChart, error)
@@ -73,6 +73,14 @@ type Client interface {
 	// UpdateRetriedClientsStatusWithTx batch update client release change failed status to
 	// processing status instances with transaction.
 	UpdateRetriedClientsStatusWithTx(kit *kit.Kit, tx *gen.QueryTx, ids []uint32, all bool) error
+	// FetchIDsExcluding 获取排除指定ID后的ID
+	FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error)
+	// ListClientGroupByTargetReleaseID 按目标版本 ID 列出客户端组
+	ListClientGroupByTargetReleaseID(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+		search *pbclient.ClientQueryCondition) ([]types.TargetConfigVersionChart, error)
+	// CountNumberOlineClients 统计客户端在线数量
+	CountNumberOlineClients(kit *kit.Kit, bizID, appID uint32, heartbeatTime int64,
+		search *pbclient.ClientQueryCondition) (int64, error)
 }
 
 var _ Client = new(clientDao)
@@ -81,6 +89,77 @@ type clientDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// CountNumberOlineClients 统计客户端在线数量
+func (dao *clientDao) CountNumberOlineClients(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition) (int64, error) {
+
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID),
+		m.AppID.Eq(appID), m.OnlineStatus.Eq("online"))
+
+	var err error
+	var conds []rawgen.Condition
+	if search.String() != "" {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
+	}
+
+	return q.Where(conds...).Count()
+}
+
+// ListClientGroupByTargetReleaseID 按目标版本 ID 列出客户端组
+func (dao *clientDao) ListClientGroupByTargetReleaseID(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
+	search *pbclient.ClientQueryCondition) ([]types.TargetConfigVersionChart, error) {
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.TargetReleaseID.Neq(0))
+	var err error
+	var conds []rawgen.Condition
+
+	if heartbeatTime > 0 {
+		lastHeartbeatTime := time.Now().UTC().Add(time.Duration(-heartbeatTime) * time.Minute)
+		conds = append(conds, q.Where(m.LastHeartbeatTime.Gte(lastHeartbeatTime)))
+	}
+
+	if search.String() != "" {
+		conds, err = dao.handleSearch(kit, bizID, appID, search)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var items []types.TargetConfigVersionChart
+	err = q.Select(m.TargetReleaseID, m.ID.Count().As("count")).Where(conds...).
+		Group(m.TargetReleaseID).
+		Scan(&items)
+	if err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+// FetchIDsExcluding 获取指定ID后排除的ID
+func (dao *clientDao) FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error) {
+
+	m := dao.genQ.Client
+	q := dao.genQ.Client.WithContext(kit.Ctx)
+
+	var result []uint32
+	if err := q.Select(m.ID).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ID.NotIn(ids...)).
+		Pluck(m.ID, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // UpdateRetriedClientsStatusWithTx batch update client release change failed status to
@@ -227,7 +306,7 @@ func (dao *clientDao) ListClientGroupByChangeStatus(kit *kit.Kit, bizID uint32, 
 
 // ListClientGroupByCurrentReleaseID 通过当前版本ID统计数量
 func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint32, appID uint32, heartbeatTime int64,
-	search *pbclient.ClientQueryCondition) ([]types.ClientConfigVersionChart, error) {
+	search *pbclient.ClientQueryCondition) ([]types.CurrentConfigVersionChart, error) {
 	m := dao.genQ.Client
 	q := dao.genQ.Client.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.CurrentReleaseID.Neq(0))
 	var err error
@@ -245,7 +324,7 @@ func (dao *clientDao) ListClientGroupByCurrentReleaseID(kit *kit.Kit, bizID uint
 		}
 	}
 
-	var items []types.ClientConfigVersionChart
+	var items []types.CurrentConfigVersionChart
 	err = q.Select(m.CurrentReleaseID, m.ID.Count().As("count")).Where(conds...).
 		Group(m.CurrentReleaseID).
 		Scan(&items)

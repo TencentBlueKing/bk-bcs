@@ -44,6 +44,8 @@ var (
 	AddExternalNodesToCluster TaskType = "AddExternalNodesToCluster"
 	// RemoveExternalNodesFromCluster task
 	RemoveExternalNodesFromCluster TaskType = "RemoveExternalNodesFromCluster"
+	// SwitchClusterUnderlayNetwork task
+	SwitchClusterUnderlayNetwork TaskType = "SwitchClusterUnderlayNetwork"
 
 	// CreateNodeGroup task
 	CreateNodeGroup TaskType = "CreateNodeGroup"
@@ -120,6 +122,8 @@ var (
 	AddExternalNodesToClusterTask TaskName = "集群上架第三方节点"
 	// RemoveExternalNodesFromClusterTask xx
 	RemoveExternalNodesFromClusterTask TaskName = "集群下架第三方节点"
+	// SwitchClusterUnderlayNetworkTask xx
+	SwitchClusterUnderlayNetworkTask TaskName = "切换集群underlay网络模式"
 
 	// CreateNodeGroupTask task
 	// nodeGroup manager task
@@ -349,4 +353,11 @@ var (
 	VclusterEtcdClientKeyKey ParamKey = "vclusterEtcdClientCert"
 	// VclusterServiceCIDRKey xxx
 	VclusterServiceCIDRKey ParamKey = "vclusterServiceCIDR"
+
+	// SubnetInfoKey xxx
+	SubnetInfoKey ParamKey = "subnetInfo"
+	// IsStaticIpModeKey xxx
+	IsStaticIpModeKey ParamKey = "isStaticIpMode"
+	// ClaimExpiredSecondsKey xxx
+	ClaimExpiredSecondsKey ParamKey = "claimExpiredSeconds"
 )

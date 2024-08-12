@@ -180,8 +180,11 @@ func ValidateReleaseName(name string) error {
 }
 
 // qualifiedFileNameRegexp file name regexp.
-// support character: chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
+// support character: chinese, english, number,
+// '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '{'. '}'.
 var qualifiedFileNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
+
+var dotsRegexp = regexp.MustCompile(`^\.+$`)
 
 // ValidateFileName validate config item's name.
 func ValidateFileName(name string) error {
@@ -197,13 +200,13 @@ func ValidateFileName(name string) error {
 		return err
 	}
 
-	if strings.HasPrefix(name, ".") {
-		return fmt.Errorf("invalid name %s, should not start with '.'", name)
+	if dotsRegexp.MatchString(name) {
+		return fmt.Errorf("invalid name %s, name cannot all be '{'. '}'", name)
 	}
 
 	if !qualifiedFileNameRegexp.MatchString(name) {
 		return fmt.Errorf("invalid name %s, should only contains chinese, english, "+
-			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'", name)
+			"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '{'. '}", name)
 	}
 
 	return nil

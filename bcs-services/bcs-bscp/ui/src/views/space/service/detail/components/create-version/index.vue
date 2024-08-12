@@ -66,7 +66,7 @@
     isDiffSliderShow.value = false;
     isVersionSliderShow.value = false;
     emits('confirm', versionData, isPublish);
-    Message({ theme: 'success', message: '新版本已生成' });
+    Message({ theme: 'success', message: t('新版本已生成') });
   };
 </script>
 <style lang="scss" scoped>

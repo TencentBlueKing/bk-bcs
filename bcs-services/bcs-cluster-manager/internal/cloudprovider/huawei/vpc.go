@@ -188,13 +188,14 @@ func (vm *VPCManager) AddClusterOverlayCidr(clusterId string, cidrs []string, op
 	return nil
 }
 
-// GetVpcIpSurplus get vpc ipSurplus
-func (vm *VPCManager) GetVpcIpSurplus(
-	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, error) {
-	return 0, nil
+// GetVpcIpUsage get vpc ipTotal/ipSurplus
+func (vm *VPCManager) GetVpcIpUsage(
+	vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *cloudprovider.CommonOption) (uint32, uint32, error) {
+	return 0, 0, nil
 }
 
-// GetOverlayClusterIPSurplus get cluster overlay ipSurplus
-func (vm *VPCManager) GetOverlayClusterIPSurplus(clusterId string, opt *cloudprovider.CommonOption) (uint32, error) {
-	return 0, nil
+// GetClusterIpUsage get cluster ip usage
+func (vm *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *cloudprovider.CommonOption) (
+	uint32, uint32, error) {
+	return 0, 0, nil
 }

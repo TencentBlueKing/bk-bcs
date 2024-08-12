@@ -14,6 +14,7 @@ package validator
 
 import (
 	"errors"
+	"unicode/utf8"
 )
 
 // ValidateMemo validate bscp resource memo's length and format.
@@ -33,8 +34,9 @@ func ValidateMemo(memo string, required bool) error {
 		}
 	}
 
-	if len(memo) > 256 {
-		return errors.New("invalid memo, length should <= 256")
+	charLength := utf8.RuneCountInString(memo)
+	if charLength > 200 {
+		return errors.New("invalid memo, length should <= 200")
 	}
 
 	return nil

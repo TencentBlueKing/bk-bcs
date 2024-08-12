@@ -416,7 +416,7 @@ export const sort = (arr, key, order = 'ascending', extraDataFn?): any[] => {
 };
 
 // 格式化时间
-export const formatTime = (timestamp, fmt) => {
+export const formatTime = (timestamp, fmt = 'yyyy-MM-dd hh:mm:ss') => {
   const time = new Date(timestamp);
   const opt = {
     'M+': time.getMonth() + 1, // 月份
@@ -629,10 +629,13 @@ export function throttle(fn, delay) {
  * @param key Cookie的键
  * @param value Cookie的值
  * @param domain Cookie所适用的域名
+ * @param expires Cookie的过期时间  Sat, 02 Aug 2025 07:02:43 GMT
  */
-export function setCookie(key: string, value: string, domain?: string): void {
+export function setCookie(key: string, value: string, domain?: string, expires?: string): void {
+  const expiresStr = expires ? `; expires=${expires}` : '';
+
   // 构建Cookie字符串
-  let cookieString = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; path=/`;
+  let cookieString = `${encodeURIComponent(key)}=${encodeURIComponent(value)}${expiresStr}; path=/`;
 
   // 如果提供了domain，则将其添加到Cookie字符串中
   if (domain) {

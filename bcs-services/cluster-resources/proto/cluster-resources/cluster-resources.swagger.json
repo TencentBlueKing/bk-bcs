@@ -9905,6 +9905,18 @@
         "content": {
           "type": "string",
           "title": "模板文件版本Content"
+        },
+        "isDraft": {
+          "type": "boolean",
+          "title": "是否草稿"
+        },
+        "draftVersion": {
+          "type": "string",
+          "title": "基于模板文件版本"
+        },
+        "draftContent": {
+          "type": "string",
+          "title": "模板文件草稿内容"
         }
       },
       "description": "创建模板文件元数据",
@@ -9996,6 +10008,10 @@
         "version": {
           "type": "string",
           "title": "模板文件版本"
+        },
+        "editFormat": {
+          "type": "string",
+          "title": "编辑模式"
         },
         "content": {
           "type": "string",
@@ -10850,6 +10866,18 @@
         "versionMode": {
           "$ref": "#/definitions/clusterresourcesVersionMode",
           "title": "模板文件版本模式"
+        },
+        "isDraft": {
+          "type": "boolean",
+          "title": "是否草稿"
+        },
+        "draftVersion": {
+          "type": "string",
+          "title": "基于模板文件版本"
+        },
+        "draftContent": {
+          "type": "string",
+          "title": "模板文件草稿内容"
         }
       },
       "description": "更新模板文件元数据",

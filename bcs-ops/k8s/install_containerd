@@ -40,11 +40,13 @@ _yum_containerd() {
       | sed "s#https://download.docker.com#${MIRROR_URL}/docker-ce#g" \
       | tee "${repo_file}"
     if [[ -f /etc/tlinux-release ]];then
-      if grep "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+      if grep -i "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/8/g" "$ROOT_DIR/docker-ce.repo"
-      elif grep "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
+      elif grep -i "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
-      elif grep "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+      elif grep -i "Tencent tlinux release 2.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep -i "Tencent linux release 2.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
       fi
     fi

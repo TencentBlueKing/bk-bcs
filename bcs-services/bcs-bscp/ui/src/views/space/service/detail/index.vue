@@ -5,7 +5,7 @@
         <VersionListAside :version-detail-view="versionDetailView" :bk-biz-id="bkBizId" :app-id="appId" />
         <div :class="['view-change-trigger', { extend: versionDetailView }]" @click="handleToggleView">
           <AngleDoubleRight class="arrow-icon" />
-          <span :class="['text', { 'en-text': locale === 'en-US' }]">{{ t('版本详情') }} </span>
+          <span :class="['text', { 'en-text': locale === 'en' }]">{{ t('版本详情') }} </span>
         </div>
       </div>
       <div class="config-setting-area">

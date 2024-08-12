@@ -205,7 +205,7 @@ func AddNodesToClusterTask(taskID, stepName string) error { // nolint
 		cloudprovider.NodeIDsKey.String(), ",")
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	// cluster basic depend info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -320,7 +320,7 @@ func CheckClusterNodeStatusTask(taskID, stepName string) error { // nolint
 	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 	// cluster basic depend info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,

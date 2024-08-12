@@ -1,6 +1,4 @@
 bcs:
-  title: BCS | Tencent BlueKing
-  name: BCS
   TKEx:
     title: TKEx-IEG
     welcome: Welcome to TKEX-IEG platform
@@ -11,13 +9,12 @@ bcs:
       container management services based on the characteristics of each type of
       IEG game.
   intro:
-    title: BCS
     welcome: Welcome to BCS
     article1: >-
       BCS is designed to bridge the gap between cloud-native technologies and
       real-world business application scenarios
     article2: >-
-      Focusing on the development, integration, and productization of 
+      Focusing on the development, integration, and productization of
       containerized deployment technology solutions for complex application
       scenarios.
     article3: >-
@@ -355,6 +352,7 @@ generic:
     copyAll: Copy All
     retry: Retry
     skip: Skip
+    detail: Detail
   label:
     basicConfig: Basic config
     key: Key
@@ -405,6 +403,8 @@ generic:
     start: Start
     stop: Stop
     abnormal: Abnormal
+    resourceName: Resource name
+    resourceID: Resource ID
   status:
     part_failure: Part failure
     support: Support
@@ -442,6 +442,10 @@ generic:
     restarting: Restarting
     pending: Pending
     skip: Skipped
+    enable: Enabling
+    enableFailed: Enable failed
+    disable: Disabling
+    disableFailed: Disable failed
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -576,6 +580,7 @@ cluster:
     setClusterVar: Set Variables
     skipTask: Confirm skip current task
     retryTask: Confirm retry task
+    opRecord: Operate record
   button:
     useSharedCluster: Use shared cluster
     addCluster: Add
@@ -661,7 +666,7 @@ cluster:
         title: Kubernetes Cluster (with kubeadm)
         subTitle: Provide a solution for cluster management in private environments.
         desc: >-
-          If the business environment cannot use any cloud provider products, 
+          If the business environment cannot use any cloud provider products,
           this feature can be used to create Kubernetes clusters in a private
           environment.
       kubeconfig:
@@ -721,7 +726,6 @@ cluster:
         text: VPC
         deficiencyIpNumTips: The number of available container network IP is insufficient
         availableIpNum: 'Number of ip available: {0}'
-        availableIpNum2: 'Available container network IP {num}'
         businessSpecificVPC: Business-specific VPC
         publicVPC: Public VPC
       networkSetting1:
@@ -762,21 +766,11 @@ cluster:
           expanded, the cluster can be added at most {count}.
       networkMode:
         text: Network Mode
+        cni:
+          route: TKE-ROUTE-ENI
+          direct: TKE-DIRECT-ENI
         overlay:
           text: GlobalRoute
-          desc: >-
-            The global routing network mode is the global routing capability of
-            TKE based on the underlying private network (VPC), which realizes
-            the routing strategy of container network and VPC interoperability.
-        vpc-cni:
-          text: Global router with VPC-CNI hybrid mode
-          desc: >-
-            The cluster supports the global routing mode and VPC-CNI mode. The
-            VPC-CNI network mode is a container network capability implemented
-            by TKE based on CNI and VPC elastic network cards. The VPC-CNI
-            network mode is similar to cloud-native UNDERLAY network mode. If
-            you need to use, please contact BlueWhale container assistant
-            assistance
       applyResource: Apply for node resources
       useExitHost: Use existing server
       index: No.
@@ -878,6 +872,12 @@ cluster:
       quota: Quota
       nodeList: Nodes
       controlConfig: Control plane
+      disableVpcCNI:
+        text: Confirm disable VPC-CNI
+        p1: 'if it is disabled, you cannot create StatefulSet with fixed Pod IP.'
+        p2: >-
+          Please make sure you have deleted all Pods of VPC-CNI mode in the
+          cluster.
     label:
       tkeID: TKE Cluster ID
   ca:
@@ -902,8 +902,8 @@ cluster:
       noModule2: 'To add a node from a node pool, configure a transfer module'
       notEmptyNodes: Please delete the nodes before removing the node pool.
       noEnableNodePool: >-
-        Cluster Autoscaler requires at least one node pool to be enabled. 
-        Please disable Cluster Autoscaler before proceeding.
+        Cluster Autoscaler requires at least one node pool to be enabled. Please
+        disable Cluster Autoscaler before proceeding.
       needMoreThanOneNodePoolOn: >-
         Cluster Autoscaler requires at least one node pool.  Please disable
         Cluster Autoscaler before proceeding.
@@ -1445,10 +1445,6 @@ cluster:
       When the container network resources are overused, the container network
       will be automatically expanded. After the expansion, a maximum of
       {maxRemainNodesCount} nodes can be added.
-    article4: >-
-      The number of container network segments has reached the maximum limit. If
-      you need to continue expanding the container network, please contact the
-      container platform administrator.
     button:
       selectPage: Selected on this page
       selectAcrossPage: Cross page
@@ -2230,8 +2226,8 @@ deploy:
     variableList: Variable list
     imageSearch: Images query
     addK8sResourceYaml: >-
-      You can create a new K8S resource yaml file by clicking the "+" button, 
-      or by using the option above
+      You can create a new K8S resource yaml file by clicking the "+" button, or
+      by using the option above
     importButton: Import button
     importZip: import zip archive
     chooseImage: Choose image
@@ -2241,7 +2237,7 @@ deploy:
     fileName: Filename
     selectZipToImport: >-
       Please select a archive file (*.zip) to import, with file names ending in
-      .yaml.  The yaml files (excluding those in the common Manifest directory) 
+      .yaml.  The yaml files (excluding those in the common Manifest directory)
       will be imported into the custom Manifest category.  Note: Files with the
       same name will be overwritten.
     enterResourceFileName: Please enter the resource filename
@@ -2378,7 +2374,7 @@ deploy:
       Create your JSON file according to the above template and select "file
       import" operation
     scopeTips: >-
-      The meaning of the scope value:  "global" represents a global variable, 
+      The meaning of the scope value:  "global" represents a global variable,
       "cluster" represents a cluster variable,  and "namespace" represents a
       namespace variable.
     clusterTips: >-

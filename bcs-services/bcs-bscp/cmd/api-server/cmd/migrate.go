@@ -45,7 +45,7 @@ var migrateInitApigatewayCmd = &cobra.Command{
 
 		logs.InitLogger(cc.ApiServer().Log.Logs())
 
-		if err := apigw.ReleaseSwagger(cc.ApiServer(), "zh",
+		if err := apigw.ReleaseSwagger(cc.ApiServer().Esb, cc.ApiServer().ApiGateway, "zh",
 			fmt.Sprintf("%s+%s", version.GITTAG, time.Now().Format("20060102150405"))); err != nil {
 			fmt.Println(err)
 			return

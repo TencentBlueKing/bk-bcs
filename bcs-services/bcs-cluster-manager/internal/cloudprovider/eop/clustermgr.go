@@ -197,3 +197,15 @@ func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *cmpro
 	nodes []*cmproto.ClusterNode) bool {
 	return true
 }
+
+// SwitchClusterNetwork switch cluster network mode
+func (c *Cluster) SwitchClusterNetwork(cls *cmproto.Cluster, subnet *cmproto.SubnetSource,
+	opt *cloudprovider.SwitchClusterNetworkOption) (*cmproto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// CheckClusterNetworkStatus get cluster network
+func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
+	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
+}

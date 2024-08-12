@@ -450,6 +450,21 @@ func (ua *UpdateAction) checkStatus() error {
 	return nil
 }
 
+func (ua *UpdateAction) checkAdjustGroupQuota() error {
+	if ua.req.GetAutoScaling().GetMaxSize() <= ua.group.GetAutoScaling().GetMaxSize() {
+		return nil
+	}
+
+	scaleUpNum := ua.req.GetAutoScaling().GetMaxSize() - ua.group.GetAutoScaling().GetMaxSize()
+	// check resource pool quota
+	err := checkNodeGroupResourceValidate(ua.cloud.GetCloudProvider(), ua.group, scaleUpNum)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Handle handle update cluster nodeGroup
 func (ua *UpdateAction) Handle(
 	ctx context.Context, req *cmproto.UpdateNodeGroupRequest, resp *cmproto.UpdateNodeGroupResponse) {
@@ -474,6 +489,12 @@ func (ua *UpdateAction) Handle(
 
 	if err := ua.checkStatus(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	// check nodeGroup resize max quota
+	if err := ua.checkAdjustGroupQuota(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerCheckCloudResourceQuotaErr, err.Error())
 		return
 	}
 
@@ -1212,5 +1233,103 @@ func (ua *UpdateGroupMinMaxAction) Handle(
 	}
 
 	blog.Infof("update nodegroup min/maxSize %s successfully", destGroup.NodeGroupID)
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+// UpdateGroupAsTimeRangeAction update nodegroup autoscaling time range strategy
+type UpdateGroupAsTimeRangeAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.UpdateGroupAsTimeRangeRequest
+	resp  *cmproto.UpdateGroupAsTimeRangeResponse
+
+	group *cmproto.NodeGroup
+}
+
+// NewUpdateGroupAsTimeRangeAction create update autoscaling time strategy action for group
+func NewUpdateGroupAsTimeRangeAction(model store.ClusterManagerModel) *UpdateGroupAsTimeRangeAction {
+	return &UpdateGroupAsTimeRangeAction{
+		model: model,
+	}
+}
+
+func (ua *UpdateGroupAsTimeRangeAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+// validate check
+func (ua *UpdateGroupAsTimeRangeAction) validate() error {
+	if err := ua.req.Validate(); err != nil {
+		return err
+	}
+
+	maxSize := ua.group.GetAutoScaling().GetMaxSize()
+	minSize := ua.group.GetAutoScaling().GetMinSize()
+
+	if len(ua.req.GetTimeRanges()) == 0 {
+		return fmt.Errorf("UpdateGroupAsTimeRangeAction[%s] timeRanges empty", ua.req.NodeGroupID)
+	}
+
+	for i := range ua.req.GetTimeRanges() {
+		if ua.req.GetTimeRanges()[i].GetName() == "" {
+			return fmt.Errorf("UpdateGroupAsTimeRangeAction[%s] timeRanges name empty", ua.req.NodeGroupID)
+		}
+
+		if ua.req.GetTimeRanges()[i].GetDesiredNum() < minSize || ua.req.GetTimeRanges()[i].GetDesiredNum() > maxSize {
+			return fmt.Errorf("UpdateGroupAsTimeRangeAction[%s] timeRanges[%s] desiredNum in [%v-%v]",
+				ua.req.NodeGroupID, ua.req.GetTimeRanges()[i].GetName(), minSize, maxSize)
+		}
+		// default Asia/Shanghai
+		if ua.req.GetTimeRanges()[i].GetZone() == "" {
+			ua.req.GetTimeRanges()[i].Zone = iutils.DefaultTimeZone
+		}
+
+		if iutils.ValidateCronExpr(ua.req.GetTimeRanges()[i].GetSchedule()) != nil {
+			return fmt.Errorf("UpdateGroupAsTimeRangeAction[%s] timeRanges[%s] schedule invalid",
+				ua.req.NodeGroupID, ua.req.GetTimeRanges()[i].GetName())
+		}
+	}
+
+	return nil
+}
+
+// Handle handle update cluster credential
+func (ua *UpdateGroupAsTimeRangeAction) Handle(
+	ctx context.Context, req *cmproto.UpdateGroupAsTimeRangeRequest, resp *cmproto.UpdateGroupAsTimeRangeResponse) {
+
+	if req == nil || resp == nil {
+		blog.Errorf("update nodegroup min/max failed, req or resp is empty")
+		return
+	}
+	ua.ctx = ctx
+	ua.req = req
+	ua.resp = resp
+
+	// get old project information, update fields if required
+	destGroup, err := ua.model.GetNodeGroup(ua.ctx, req.NodeGroupID)
+	if err != nil {
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		blog.Errorf("find nodegroup %s failed when pre-update checking, err %s", req.NodeGroupID, err.Error())
+		return
+	}
+	ua.group = destGroup
+
+	if err = ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	destGroup.AutoScaling.TimeRanges = ua.req.GetTimeRanges()
+
+	if err = ua.model.UpdateNodeGroup(ctx, destGroup); err != nil {
+		blog.Errorf("nodegroup %s update autoscaling timeRanges failed in local storage, %s",
+			destGroup.NodeGroupID, err.Error())
+		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	blog.Infof("update nodegroup autoscaling time ranges %s successfully", destGroup.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

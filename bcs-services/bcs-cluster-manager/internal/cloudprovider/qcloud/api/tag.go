@@ -70,7 +70,7 @@ func (tc *TagClient) ListProjects() ([]*tag.Project, error) {
 		resp, err := tc.tag.DescribeProjects(req)
 		if err != nil {
 			blog.Errorf("tag client DescribeProjects failed, %s", err.Error())
-			continue
+			return nil, err
 		}
 
 		// check response

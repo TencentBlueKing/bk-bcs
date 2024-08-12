@@ -658,7 +658,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	}
 
 	// get cluster nodes
-	k8sNodes := filterNodesRole(la.getK8sNodes(cmNodes), false)
+	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(cmNodes), false)
 	la.nodes = mergeClusterNodes(la.cluster, cmNodes, k8sNodes)
 
 	return nil
@@ -826,7 +826,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 			return err
 		}
 
-		masters = filterNodesRole(masters, true)
+		masters = autils.FilterNodesRole(masters, true)
 		la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
 	}
 

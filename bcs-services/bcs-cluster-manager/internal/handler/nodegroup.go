@@ -34,7 +34,7 @@ func (cm *ClusterManager) CreateNodeGroup(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	ca := nodegroup.NewCreateAction(cm.model)
+	ca := nodegroup.NewCreateAction(cm.model, cm.locker)
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("CreateNodeGroup", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: CreateNodeGroup, req %v, resp %v", reqID, req, resp)
@@ -273,6 +273,21 @@ func (cm *ClusterManager) UpdateGroupMinMaxSize(ctx context.Context,
 	ca.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("UpdateGroupMinMaxSize", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: UpdateGroupMinMaxSize, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// UpdateGroupAsTimeRange implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateGroupAsTimeRange(ctx context.Context,
+	req *cmproto.UpdateGroupAsTimeRangeRequest, resp *cmproto.UpdateGroupAsTimeRangeResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := nodegroup.NewUpdateGroupAsTimeRangeAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateGroupAsTimeRange", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateGroupAsTimeRange, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

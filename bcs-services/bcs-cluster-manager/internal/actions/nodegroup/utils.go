@@ -18,6 +18,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -70,4 +71,13 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 
 func virtualNodeID() string {
 	return "bcs-" + utils.RandomHexString(8)
+}
+
+func checkNodeGroupResourceValidate(provider string, nodeGroup *cmproto.NodeGroup, scaleUpResource uint32) error {
+	ngr, err := cloudprovider.GetNodeGroupMgr(provider)
+	if err != nil {
+		return err
+	}
+
+	return ngr.CheckResourcePoolQuota(nodeGroup, scaleUpResource)
 }

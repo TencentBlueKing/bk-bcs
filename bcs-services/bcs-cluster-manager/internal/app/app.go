@@ -64,6 +64,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	clusterops "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/commonhandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
@@ -77,7 +78,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/addons"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
+	installTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/nodeman"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/passcc"
@@ -383,7 +386,19 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 	}
 
 	// init helm client
-	err = helm.SetHelmManagerClient(&helm.Options{
+	err = helm.SetHelmManagerClient(&installTypes.Options{
+		Enable:          cm.opt.Helm.Enable,
+		GateWay:         cm.opt.Helm.GateWay,
+		Token:           cm.opt.Helm.Token,
+		Module:          cm.opt.Helm.Module,
+		EtcdRegistry:    cm.microRegistry,
+		ClientTLSConfig: cm.clientTLSConfig,
+	})
+	if err != nil {
+		return err
+	}
+	// init addons client
+	err = addons.SetAddonsClient(&installTypes.Options{
 		Enable:          cm.opt.Helm.Enable,
 		GateWay:         cm.opt.Helm.GateWay,
 		Token:           cm.opt.Helm.Token,
@@ -449,23 +464,6 @@ func (cm *ClusterManager) initBKOpsClient() error {
 	}
 
 	return nil
-}
-
-// init helm client
-func (cm *ClusterManager) initHelmClient() error { // nolint
-	err := helm.SetHelmManagerClient(&helm.Options{
-		Enable:          cm.opt.Helm.Enable,
-		GateWay:         cm.opt.Helm.GateWay,
-		Token:           cm.opt.Helm.Token,
-		Module:          cm.opt.Helm.Module,
-		EtcdRegistry:    cm.microRegistry,
-		ClientTLSConfig: cm.clientTLSConfig,
-	})
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 // init iam client for perm
@@ -652,7 +650,7 @@ func (cm *ClusterManager) initK8SOperator() {
 
 // init daemon
 func (cm *ClusterManager) initDaemon() {
-	cm.daemon = daemon.NewDaemon(0, cm.model, daemon.DaemonOptions{EnableDaemon: cm.opt.Daemon.Enable})
+	cm.daemon = daemon.NewDaemon(0, cm.model, cm.locker, daemon.DaemonOptions{EnableDaemon: cm.opt.Daemon.Enable})
 }
 
 // initRegistry etcd registry
@@ -823,11 +821,31 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	return nil
 }
 
+// initCommonHandler common handler
+func (cm *ClusterManager) initCommonHandler(router *mux.Router) error {
+	commonHandler := commonhandler.NewCommonHandler(cm.model, cm.locker)
+	commonContainer := restful.NewContainer()
+	commonHandlerURL := "/clustermanager/v1/common/{uri:.*}"
+	commonWebService := new(restful.WebService).
+		Consumes(restful.MIME_XML, restful.MIME_JSON).
+		Produces(restful.MIME_JSON, restful.MIME_XML)
+	commonWebService.Route(commonWebService.GET("/clustermanager/v1/common/downloadtaskrecords").
+		To(commonHandler.DownloadTaskRecords))
+	commonContainer.Add(commonWebService)
+	router.Handle(commonHandlerURL, commonContainer)
+	blog.Infof("register common handler to path %s", commonHandlerURL)
+	return nil
+}
+
 // initHTTPService init http service
 func (cm *ClusterManager) initHTTPService() error {
 	router := mux.NewRouter()
 	// init tke cidr handler
 	if err := cm.initTkeHandler(router); err != nil {
+		return err
+	}
+	// init common http handler
+	if err := cm.initCommonHandler(router); err != nil {
 		return err
 	}
 	// init tunnel server
@@ -1051,6 +1069,7 @@ func (cm *ClusterManager) close() {
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
 	helm.GetHelmManagerClient().Stop()
+	addons.GetAddonsClient().Stop()
 	cm.extraServer.Shutdown(closeCtx) // nolint
 	cm.httpServer.Shutdown(closeCtx)  // nolint
 	cm.daemon.Stop()

@@ -59,10 +59,12 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/rest"
 	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
+	"k8s.io/utils/strings/slices"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -138,6 +140,11 @@ func (cd *argo) Stop() {
 // GetOptions return the options of gitops
 func (cd *argo) GetOptions() *Options {
 	return cd.option
+}
+
+// ReturnArgoK8SClient return the argo k8s client
+func (cd *argo) ReturnArgoK8SClient() *argopkg.ArgoprojV1alpha1Client {
+	return cd.argoK8SClient
 }
 
 func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
@@ -372,7 +379,7 @@ func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) 
 }
 
 // ListClustersByProject will list clusters by project id
-func (cd *argo) ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error) {
+func (cd *argo) ListClustersByProject(ctx context.Context, projID string) (*v1alpha1.ClusterList, error) {
 	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
@@ -388,7 +395,7 @@ func (cd *argo) ListClustersByProject(ctx context.Context, project string) (*v1a
 			blog.Errorf("cluster '%s' not have project id annotation", item.Name)
 			continue
 		}
-		if projectID == project {
+		if projectID == projID {
 			clusters = append(clusters, item)
 		}
 	}
@@ -461,13 +468,12 @@ func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alph
 // AllApplications return all applications cached
 func (cd *argo) AllApplications() []*v1alpha1.Application {
 	result := make([]*v1alpha1.Application, 0)
-	cd.cacheApplication.Range(func(key, value any) bool {
-		projectApps := value.(map[string]*v1alpha1.Application)
-		for _, app := range projectApps {
-			result = append(result, app.DeepCopy())
+	allApps := cd.getAllApplications()
+	for _, v := range allApps {
+		for _, app := range v {
+			result = append(result, app)
 		}
-		return true
-	})
+	}
 	return result
 }
 
@@ -477,7 +483,6 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 		app, err := cd.appClient.Get(ctx, &appclient.ApplicationQuery{Name: &name})
 		if err != nil {
 			if utils.IsArgoResourceNotFound(err) {
-				blog.Warnf("argocd get application %s not found: %s", name, err.Error())
 				return nil, nil
 			}
 			if !utils.IsContextCanceled(err) {
@@ -487,18 +492,22 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 		}
 		return app, nil
 	}
+	argoAppList, err := cd.ListProjects(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "argocd list projects failed")
+	}
 	var result *v1alpha1.Application
-	cd.cacheApplication.Range(func(key, value any) bool {
-		apps := cd.getProjectApplications(key.(string))
+	for i := range argoAppList.Items {
+		argoProj := &argoAppList.Items[i]
+		if !strings.HasPrefix(name, argoProj.Name) {
+			continue
+		}
+		apps := cd.getProjectApplications(argoProj.Name)
 		app, ok := apps[name]
 		if ok {
 			result = app.DeepCopy()
-			return false
+			break
 		}
-		return true
-	})
-	if result == nil {
-		blog.Warnf("argocd get application %s not found", name)
 	}
 	return result, nil
 }
@@ -506,7 +515,7 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 // GetApplicationRevisionsMetadata get revisions metadata for repos, adapt to multiple sources
 func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
 	revisions []string) ([]*v1alpha1.RevisionMetadata, error) {
-	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 60,
+	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 300,
 		apiclient.TLSConfiguration{
 			DisableTLS:       false,
 			StrictValidation: false,
@@ -570,12 +579,32 @@ func (cd *argo) GetApplicationManifests(
 	return resp, nil
 }
 
+// PatchApplicationResource patch application resources
+func (cd *argo) PatchApplicationResource(ctx context.Context, appName string, resource *v1alpha1.ResourceStatus,
+	patch, patchType string) error {
+	_, err := cd.appClient.PatchResource(ctx, &appclient.ApplicationResourcePatchRequest{
+		Name:         &appName,
+		Namespace:    &resource.Namespace,
+		ResourceName: &resource.Name,
+		Version:      &resource.Version,
+		Group:        &resource.Group,
+		Kind:         &resource.Kind,
+		PatchType:    &patchType,
+		Patch:        &patch,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "patch '%s/%s/%s-%s' failed", resource.Group, resource.Version,
+			resource.Kind, resource.Name)
+	}
+	return nil
+}
+
 // GetApplicationManifestsFromRepoServerWithMultiSources returns the manifests result of application which not
 // created. This function will direct call reposerver of argocd
 // nolint
 func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx context.Context,
 	application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error) {
-	repoUrl := application.Spec.Source.RepoURL
+	repoUrl := application.Spec.GetSource().RepoURL
 	repo, err := cd.argoDB.GetRepository(ctx, repoUrl)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
@@ -583,7 +612,7 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 	if repo == nil {
 		return nil, errors.Wrapf(err, "get repo '%s' not found", repoUrl)
 	}
-	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 60,
+	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 300,
 		apiclient.TLSConfiguration{
 			DisableTLS:       false,
 			StrictValidation: false,
@@ -600,11 +629,7 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 		return nil, errors.Wrapf(err, "failed to get ref sources")
 	}
 	sources := make([]v1alpha1.ApplicationSource, 0)
-	if application.Spec.HasMultipleSources() {
-		sources = append(sources, application.Spec.Sources...)
-	} else {
-		sources = append(sources, *application.Spec.Source)
-	}
+	sources = append(sources, application.Spec.GetSource())
 
 	result := make([]*apiclient.ManifestResponse, 0)
 	for i := range sources {
@@ -616,7 +641,10 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 			AppName:            application.Name,
 			RefSources:         refSources,
 			HasMultipleSources: application.Spec.HasMultipleSources(),
-			ApplicationSource:  &sources[i],
+			KustomizeOptions: &v1alpha1.KustomizeOptions{
+				BuildOptions: "--enable-alpha-plugins",
+			},
+			ApplicationSource: &sources[i],
 		})
 		if err != nil {
 			return nil, errors.Wrapf(err, "generate manifests failed")
@@ -624,6 +652,38 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 		result = append(result, resp)
 	}
 	return result, nil
+}
+
+func (cd *argo) checkAppMatchQuery(app *v1alpha1.Application, query *appclient.ApplicationQuery,
+	selector labels.Selector) bool {
+	if query.Name != nil && (*query.Name != "" && *query.Name != app.Name) {
+		return false
+	}
+	if query.Repo != nil {
+		queryRepo := *query.Repo
+		if app.Spec.HasMultipleSources() {
+			consistent := false
+			for _, source := range app.Spec.Sources {
+				if queryRepo == source.RepoURL {
+					consistent = true
+					break
+				}
+			}
+			if !consistent {
+				return false
+			}
+		} else if queryRepo != app.Spec.Source.RepoURL {
+			return false
+		}
+	}
+	if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
+		app.Spec.Destination.Namespace) {
+		return false
+	}
+	if query.Selector != nil && (*query.Selector != "" && !selector.Matches(labels.Set(app.Labels))) {
+		return false
+	}
+	return true
 }
 
 // ListApplications interface
@@ -649,41 +709,30 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 			return nil, errors.Wrapf(err, "argocd list application for project '%v' failed", query.Projects)
 		}
 	}
+
+	blog.Infof("RequestID[%s] query applications with params: %s", ctxutils.RequestID(ctx),
+		utils.MarshalObject(query))
 	result := &v1alpha1.ApplicationList{
 		Items: make([]v1alpha1.Application, 0),
+	}
+	if len(query.Projects) == 0 {
+		allApps := cd.getAllApplications()
+		for _, apps := range allApps {
+			for _, app := range apps {
+				if cd.checkAppMatchQuery(app, query, selector) {
+					result.Items = append(result.Items, *app)
+				}
+			}
+		}
+		return result, nil
 	}
 	for i := range query.Projects {
 		projName := query.Projects[i]
 		projApps := cd.getProjectApplications(projName)
-		for _, v := range projApps {
-			if query.Name != nil && (*query.Name != "" && *query.Name != v.Name) {
-				continue
+		for _, app := range projApps {
+			if cd.checkAppMatchQuery(app, query, selector) {
+				result.Items = append(result.Items, *app)
 			}
-			if query.Repo != nil {
-				queryRepo := *query.Repo
-				if v.Spec.HasMultipleSources() {
-					consistent := false
-					for _, source := range v.Spec.Sources {
-						if queryRepo == source.RepoURL {
-							consistent = true
-							break
-						}
-					}
-					if !consistent {
-						continue
-					}
-				} else if queryRepo != v.Spec.Source.RepoURL {
-					continue
-				}
-			}
-			if query.AppNamespace != nil && (*query.AppNamespace != "" && *query.AppNamespace !=
-				v.Spec.Destination.Namespace) {
-				continue
-			}
-			if query.Selector != nil && (*query.Selector != "" && !selector.Matches(labels.Set(v.Labels))) {
-				continue
-			}
-			result.Items = append(result.Items, *v.DeepCopy())
 		}
 	}
 	return result, nil
@@ -829,6 +878,29 @@ func (cd *argo) GetApplicationSet(ctx context.Context, name string) (*v1alpha1.A
 // ListApplicationSets list applicationsets by projects
 func (cd *argo) ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 	*v1alpha1.ApplicationSetList, error) {
+	if cd.cacheSynced.Load() {
+		appSets := cd.AllApplicationSets()
+		result := make([]v1alpha1.ApplicationSet, 0)
+		for _, appset := range appSets {
+			if len(query.Projects) != 0 {
+				if !slices.Contains(query.Projects, appset.Spec.Template.Spec.Project) {
+					continue
+				}
+			}
+			if query.Selector != "" {
+				selector, err := labels.Parse(query.Selector)
+				if err != nil {
+					return nil, errors.Wrapf(err, "parse selector '%s' failed", query.Selector)
+				}
+				if !selector.Matches(labels.Set(appset.Labels)) {
+					continue
+				}
+			}
+			result = append(result, *appset)
+		}
+		return &v1alpha1.ApplicationSetList{Items: result}, nil
+	}
+
 	appsets, err := cd.appsetClient.List(ctx, query)
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
@@ -1165,6 +1237,22 @@ func (cd *argo) handleAppSetWatch() error {
 		}
 	}()
 	return nil
+}
+
+func (cd *argo) getAllApplications() map[string]map[string]*v1alpha1.Application {
+	cd.RLock()
+	defer cd.RUnlock()
+	result := make(map[string]map[string]*v1alpha1.Application)
+	cd.cacheApplication.Range(func(proj, projApps interface{}) bool {
+		p := proj.(string)
+		result[p] = make(map[string]*v1alpha1.Application)
+		apps := projApps.(map[string]*v1alpha1.Application)
+		for appName, app := range apps {
+			result[p][appName] = app.DeepCopy()
+		}
+		return true
+	})
+	return result
 }
 
 func (cd *argo) getProjectApplications(projName string) map[string]*v1alpha1.Application {

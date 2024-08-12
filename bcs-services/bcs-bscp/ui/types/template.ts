@@ -98,6 +98,8 @@ export interface IPackagesCitedByApps {
   template_set_name: string;
   app_id: number;
   app_name: string;
+  app_exceeds_limit?: boolean;
+  template_set_exceeds_limit?: boolean;
 }
 
 // 模板被服务绑定或套餐引用计数详情
@@ -213,6 +215,10 @@ export interface ImportTemplateConfigItem {
   template_space_id: number;
   template_set_name: string;
   template_set_id: number;
+  template_space_exist: boolean;
+  template_set_exist: boolean;
+  is_exist: boolean;
+  template_set_is_empty: boolean;
   template_revisions: {
     template_id: number;
     template_revision_id: number;

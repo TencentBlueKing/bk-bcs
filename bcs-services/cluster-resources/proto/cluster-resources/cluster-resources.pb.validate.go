@@ -9994,18 +9994,15 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for VersionDescription
 
-	if l := utf8.RuneCountInString(m.GetVersion()); l < 1 || l > 64 {
-		err := CreateTemplateMetadataReqValidationError{
-			field:  "Version",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Version
 
 	// no validation rules for Content
+
+	// no validation rules for IsDraft
+
+	// no validation rules for DraftVersion
+
+	// no validation rules for DraftContent
 
 	if len(errors) > 0 {
 		return CreateTemplateMetadataReqMultiError(errors)
@@ -10148,6 +10145,12 @@ func (m *UpdateTemplateMetadataReq) validate(all bool) error {
 	// no validation rules for Version
 
 	// no validation rules for VersionMode
+
+	// no validation rules for IsDraft
+
+	// no validation rules for DraftVersion
+
+	// no validation rules for DraftContent
 
 	if len(errors) > 0 {
 		return UpdateTemplateMetadataReqMultiError(errors)
@@ -10794,6 +10797,8 @@ func (m *CreateTemplateVersionReq) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for EditFormat
 
 	// no validation rules for Content
 

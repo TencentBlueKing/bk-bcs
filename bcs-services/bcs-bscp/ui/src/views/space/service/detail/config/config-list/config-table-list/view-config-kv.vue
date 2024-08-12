@@ -31,18 +31,20 @@
           </bk-form>
         </bk-tab-panel>
         <bk-tab-panel name="meta" :label="t('元数据')">
-          <ConfigContentEditor
-            language="json"
-            :content="JSON.stringify(metaData, null, 2)"
-            :editable="false"
-            :show-tips="false" />
+          <div class="meta-config-wrapper">
+            <ConfigContentEditor
+              language="json"
+              :content="JSON.stringify(metaData, null, 2)"
+              :editable="false"
+              :show-tips="false" />
+          </div>
         </bk-tab-panel>
       </bk-tab>
     </div>
     <section class="action-btns">
-      <bk-button v-if="config.kv_state !== 'DELETE'" theme="primary" @click="emits('openEdit')">{{
-        t('编辑')
-      }}</bk-button>
+      <bk-button v-if="config.kv_state !== 'DELETE'" theme="primary" @click="emits('openEdit')">
+        {{ t('编辑') }}
+      </bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
     </section>
   </bk-sideslider>
@@ -53,6 +55,7 @@
   import { IConfigKvType } from '../../../../../../../../types/config';
   import kvConfigContentEditor from '../../components/kv-config-content-editor.vue';
   import ConfigContentEditor from '../../components/config-content-editor.vue';
+  import { sortObjectKeysByAscii, datetimeFormat } from '../../../../../../../utils';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -70,10 +73,21 @@
 
   const metaData = computed(() => {
     const { content_spec, revision, spec } = props.config;
-    const { byte_size, signature } = content_spec;
-    const { create_at, creator, reviser, update_at } = revision;
-    const { key, kv_type } = spec;
-    return { key, kv_type, byte_size, signature, create_at, creator, reviser, update_at };
+    const { create_at, creator, update_at, reviser } = revision;
+    const { byte_size, signature, md5 } = content_spec;
+    const { key, kv_type, memo } = spec;
+    return sortObjectKeysByAscii({
+      key,
+      kv_type,
+      byte_size,
+      signature,
+      create_at: datetimeFormat(create_at),
+      creator,
+      reviser,
+      update_at: datetimeFormat(update_at),
+      md5,
+      memo,
+    });
   });
 
   watch(
@@ -89,7 +103,9 @@
   const setEditorHeight = () => {
     nextTick(() => {
       const el = sideSliderRef.value.$el.querySelector('.view-wrap');
-      editorHeight.value = el.offsetHeight > 410 ? el.offsetHeight - 400 : 300;
+      const editorMinHeight = 300; // 编辑器最小高度
+      const remainingHeight = el.offsetHeight - 354; // 容器其他元素已占用高度
+      editorHeight.value = remainingHeight > editorMinHeight ? remainingHeight : editorMinHeight;
     });
   };
 
@@ -110,14 +126,21 @@
         background: #eaebf0;
       }
       :deep(.bk-tab-content) {
-        padding: 24px 40px;
+        padding: 24px 0;
         height: calc(100% - 48px);
         box-shadow: none;
-        overflow: auto;
       }
+    }
+    .bk-form {
+      padding: 0 40px;
+      height: 100%;
+      overflow: auto;
     }
     :deep(.bk-form-item) {
       margin-bottom: 24px;
+      &:last-child {
+        margin-bottom: 0;
+      }
       .bk-form-label,
       .bk-form-content {
         font-size: 12px;
@@ -136,6 +159,11 @@
     line-height: 20px;
     white-space: pre-wrap;
     word-break: break-word;
+  }
+  .meta-config-wrapper {
+    padding: 0 40px;
+    height: 100%;
+    overflow: auto;
   }
   .action-btns {
     border-top: 1px solid #dcdee5;

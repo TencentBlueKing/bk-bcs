@@ -34,13 +34,18 @@
             </div>
             <TextFill class="file-icon" />
             <div class="file-content">
-              <div class="name">{{ fileItem.file.name }}</div>
-              <div v-if="fileItem.status !== 'success'" class="progress">
+              <bk-overflow-title type="tips" class="name">
+                <div>{{ fileItem.file.name }}</div>
+              </bk-overflow-title>
+              <div v-if="fileItem.status !== 'success' && fileItem.status !== 'fail'" class="progress">
                 <bk-progress
                   :percent="fileItem.progress"
                   :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
                   size="small" />
               </div>
+              <bk-overflow-title v-else-if="fileItem.status === 'fail'" type="tips" class="error-message">
+                <div>{{ fileItem.errorMessage }}</div>
+              </bk-overflow-title>
             </div>
             <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
           </div>
@@ -57,14 +62,19 @@
   import { useI18n } from 'vue-i18n';
   import { IConfigImportItem } from '../../../../../../../../../../types/config';
   import { importTemplateFile } from '../../../../../../../../../api/template';
+  import { Message } from 'bkui-vue';
+  import useGlobalStore from '../../../../../../../../../store/global';
+  import { storeToRefs } from 'pinia';
 
   interface IUploadFileList {
     file: File;
     status: string;
     progress: number;
+    errorMessage?: string;
   }
 
   const { t } = useI18n();
+  const { spaceFeatureFlags } = storeToRefs(useGlobalStore());
 
   const props = defineProps<{
     isTemplate: boolean; // 是否是配置模板导入
@@ -74,7 +84,7 @@
     currentTemplateSpace?: number;
   }>();
 
-  const emits = defineEmits(['change', 'delete', 'uploading', 'decompressing']);
+  const emits = defineEmits(['change', 'delete', 'uploading', 'decompressing', 'fileProcessing']);
 
   const loading = ref(false);
   const isDecompression = ref(true);
@@ -99,15 +109,53 @@
         emits('uploading', false);
       }
       if (fileList.value.some((fileItem) => fileItem.status === 'decompressing')) {
-        emits('decompressing', true);
+        const decompressingFile = fileList.value.find((file) => file.status === 'decompressing');
+        const isCompressionFile = handleCheckIsCompressedFile(decompressingFile!.file.name);
+        if (isDecompression.value && isCompressionFile) {
+          emits('decompressing', true);
+        } else {
+          emits('fileProcessing', true);
+        }
       } else {
         emits('decompressing', false);
+        emits('fileProcessing', false);
       }
     },
     { deep: true },
   );
 
   const handleFileUpload = async (option: { file: File }) => {
+    const {
+      RESOURCE_LIMIT: { MaxUploadContentLength, maxFileSize },
+    } = spaceFeatureFlags.value;
+    const fileSize = option.file.size / 1024 / 1024;
+    const isCompressionFile = handleCheckIsCompressedFile(option.file.name);
+
+    if (isDecompression.value) {
+      if (isCompressionFile && fileSize > MaxUploadContentLength) {
+        Message({
+          theme: 'error',
+          message: t('压缩包大小不能超过{n}GB', { n: MaxUploadContentLength / 1024 }),
+        });
+        return;
+      }
+      if (!isCompressionFile && fileSize > maxFileSize) {
+        Message({
+          theme: 'error',
+          message: t('单文件大小不能超过{n}M', { n: maxFileSize }),
+        });
+        return;
+      }
+    }
+
+    if (!isDecompression.value && fileSize > maxFileSize) {
+      Message({
+        theme: 'error',
+        message: t('单文件大小不能超过{n}M', { n: maxFileSize }),
+      });
+      return;
+    }
+
     loading.value = true;
     try {
       if (fileList.value.find((fileItem) => fileItem.file.name === option.file.name)) {
@@ -155,9 +203,11 @@
         item.file_name = option.file.name;
       });
       emits('change', res.exist, res.non_exist);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      fileList.value.find((fileItem) => fileItem.file === option.file)!.status = 'fail';
+      const file = fileList.value.find((fileItem) => fileItem.file === option.file);
+      file!.status = 'fail';
+      file!.errorMessage = e.response.data.error.message;
     } finally {
       loading.value = false;
     }
@@ -167,15 +217,21 @@
     fileList.value = fileList.value.filter((fileItem) => fileItem.file.name !== fileName);
     emits('delete', fileName);
   };
+
+  // 判断是否是压缩包
+  const handleCheckIsCompressedFile = (filename: string) => {
+    const ext = filename.split('.').pop()!.toLowerCase();
+    return ['zip', 'rar', 'tar', 'gz', 'tgz'].includes(ext);
+  };
 </script>
 
 <style scoped lang="scss">
   .tips {
     color: #979ba5;
-    height: 20px;
     font-size: 12px;
     line-height: 20px;
     margin-bottom: 8px;
+    width: 780px;
   }
   :deep(.config-uploader) {
     .bk-upload-list {
@@ -183,7 +239,7 @@
     }
   }
   .upload-file-list {
-    margin-left: 94px;
+    margin-left: 100px;
     padding: 12px;
     width: 520px;
     background: #f5f7fa;
@@ -255,12 +311,19 @@
         width: 100%;
         height: 20px;
         .name {
-          max-width: 360px;
+          max-width: 200px;
           margin-right: 4px;
           color: #63656e;
           white-space: nowrap;
           text-overflow: ellipsis;
           overflow: hidden;
+        }
+        .error-message {
+          position: absolute;
+          color: #ff5656;
+          right: 10px;
+          top: 0;
+          max-width: 200px;
         }
         :deep(.bk-progress) {
           position: absolute;

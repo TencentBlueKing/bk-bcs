@@ -18,7 +18,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"reflect"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -42,9 +45,15 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/dbprivilege/common"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/dbprivilege/pkg"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/plugin/dbprivilege/pkg/util"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/pluginutil"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/internal/types"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/options"
 )
+
+const failRetryLimit = 10
 
 // Hooker webhook for db privilege
 type Hooker struct {
@@ -72,7 +81,7 @@ func (h *Hooker) AnnotationKey() string {
 
 // Init implements plugin interface
 func (h *Hooker) Init(configFilePath string) error {
-	fileBytes, err := ioutil.ReadFile(configFilePath)
+	fileBytes, err := ioutil.ReadFile(configFilePath) // nolint
 	if err != nil {
 		blog.Errorf("read db privilege config file %s failed, err %s", configFilePath, err.Error())
 		return fmt.Errorf("read db privilege config file %s failed, err %s", configFilePath, err.Error())
@@ -90,6 +99,9 @@ func (h *Hooker) Init(configFilePath string) error {
 	if err = h.initKubeClient(); err != nil {
 		return err
 	}
+
+	go h.initListenerServer()
+
 	return nil
 }
 
@@ -210,10 +222,12 @@ func (h *Hooker) initKubeClient() error {
 	if err != nil {
 		return fmt.Errorf("building kubernetes clientset failed, err %s", err.Error())
 	}
+
 	clientset, err := internalclientset.NewForConfig(cfg)
 	if err != nil {
 		return fmt.Errorf("build internal clientset failed, err %s", err.Error())
 	}
+
 	factory := informers.NewSharedInformerFactory(clientset, 0)
 	bcsDbPrivConfigInformer := factory.Bkbcs().V1().BcsDbPrivConfigs()
 	h.bcsDbPrivConfigLister = bcsDbPrivConfigInformer.Lister()
@@ -227,6 +241,11 @@ func (h *Hooker) initKubeClient() error {
 
 	// start factory and wait factory synced
 	go factory.Start(h.stopCh)
+
+	// start goroutine
+	if h.opt.DbmOptimizeEnabled {
+		go h.taskAuthDBM(clientset, kubeClient)
+	}
 	blog.Infof("Waiting for BcsLogConfig inormer caches to sync")
 	blog.Infof("sleep 1 seconds to wait for BcsLogConfig crd to be ready")
 	time.Sleep(1 * time.Second)
@@ -329,7 +348,6 @@ func (h *Hooker) createPatch(pod *corev1.Pod) ([]types.PatchOperation, error) {
 // generateInitContainer generate an init-container with BcsDbPrivConfig
 func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1.Container, error) {
 	var envs = make([]DBPrivEnv, 0)
-	var fieldPath string
 
 	for _, config := range configs {
 		var env = DBPrivEnv{
@@ -347,19 +365,22 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 		}
 		envs = append(envs, env)
 	}
-
 	envstr, err := json.Marshal(envs)
 	if err != nil {
 		blog.Errorf("convert DBPrivEnv array to json string failed: %s", err.Error())
 		return corev1.Container{}, err
 	}
-
+	var fieldPath string
 	if h.opt.NetworkType == NetworkTypeOverlay {
 		fieldPath = "status.hostIP"
 	} else if h.opt.NetworkType == NetworkTypeUnderlay {
 		fieldPath = "status.podIP"
 	}
+	return h.getContainer(fieldPath, envstr), nil
+}
 
+// getContainer
+func (h *Hooker) getContainer(fieldPath string, envstr []byte) corev1.Container {
 	initContainer := corev1.Container{
 		Name:  "db-privilege",
 		Image: h.opt.InitContainerImage,
@@ -390,7 +411,7 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 			},
 			{
 				Name:  "io_tencent_bcs_app_code",
-				Value: string(h.dbPrivSecret.Data["sdk-appCode"][:]), // nolint
+				Value: string(h.dbPrivSecret.Data["sdk-appCode"]),
 			},
 			{
 				Name:  "io_tencent_bcs_app_secret",
@@ -406,11 +427,444 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 			},
 		},
 	}
-	return initContainer, nil
+	if h.opt.DbmOptimizeEnabled {
+		env := []corev1.EnvVar{
+			{
+				Name: BcsPodName,
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.name",
+					},
+				},
+			},
+			{
+				Name: BcsPodNamespace,
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "metadata.namespace",
+					},
+				},
+			},
+			{
+				Name:  BcsPrivilegeServiceURL,
+				Value: fmt.Sprintf(BcsPrivilegeHost, h.opt.ServiceName, h.opt.ServiceNamespace, h.opt.ServiceServerPort),
+			},
+			{
+				Name:  BcsPrivilegeDbmOptimizeEnabled,
+				Value: "true",
+			},
+			{
+				Name:  BcsPrivilegeServiceTicketTimer,
+				Value: strconv.Itoa(h.opt.TicketTimer),
+			},
+		}
+		initContainer.Env = append(initContainer.Env, env...)
+	}
+	return initContainer
 }
 
 // Close implements plugin interface
 func (h *Hooker) Close() error {
 	h.stopCh <- struct{}{}
 	return nil
+}
+
+// taskAuthDBM 周期性汇聚未授权pod 进行dbm授权，修改状态 并写入到crd 中
+func (h *Hooker) taskAuthDBM(clientset *internalclientset.Clientset, kubeClient *kubernetes.Clientset) {
+	if h.opt.TicketTimer == 0 {
+		h.opt.TicketTimer = 60
+	}
+	ticker := time.NewTicker(time.Duration(h.opt.TicketTimer) * time.Second)
+	defer ticker.Stop()
+	apc, aps, opt, err := util.DesDecrypt(
+		h.dbPrivSecret.Data["sdk-appCode"][:], // nolint
+		h.dbPrivSecret.Data["sdk-appSecret"], h.dbPrivSecret.Data["sdk-operator"])
+	if err != nil {
+		blog.Errorf("taskAuthDBM DesDecrypt error %s", err.Error())
+		return
+	}
+
+	for { //nolint
+		select {
+		case <-ticker.C:
+			namespaces, err := kubeClient.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+			if err != nil {
+				blog.Errorf("taskAuthDBM get Namespaces error %s", err.Error())
+				continue
+			}
+			for _, ns := range namespaces.Items {
+				bcsDbPrivConfs, err := clientset.BkbcsV1().BcsDbPrivConfigs(ns.Name).List(context.TODO(), metav1.ListOptions{})
+				if err != nil {
+					blog.Errorf("taskAuthDBM list BcsDbPrivConfigs error %s", err.Error())
+					continue
+				}
+				// 根据labelSelector 匹配 pods
+				for _, dbPrivConfig := range bcsDbPrivConfs.Items {
+					pods, err := searchPodsByLabels(ns.Name, &dbPrivConfig, kubeClient)
+					if err != nil {
+						continue
+					}
+					if len(pods.Items) == 0 {
+						blog.Errorf("taskAuthDBM Pods empty ns %s ;labels %+v ", ns.Name, dbPrivConfig.Spec.PodSelector)
+						updateDbprivconfig(&dbPrivConfig, clientset)
+						continue
+					}
+					pdsMap := make(map[string]*corev1.Pod, len(pods.Items))
+					for _, pod := range pods.Items {
+						pdsMap[pod.Name] = &pod
+					}
+					status := &dbPrivConfig.Status
+					if reflect.ValueOf(status).IsZero() {
+						status = &bcsv1.BcsDbPrivConfigStatus{
+							DbPrivConfigStatusMap: make(map[string]*bcsv1.DbPrivConfigStatus),
+						}
+					}
+					configStatusMap := status.DbPrivConfigStatusMap
+					if reflect.ValueOf(configStatusMap).IsZero() {
+						configStatusMap = make(map[string]*bcsv1.DbPrivConfigStatus)
+					}
+					hasDeleted := false
+					hasDeleted = compareDbPrivConfigCRInfo(hasDeleted, pdsMap, &dbPrivConfig, configStatusMap)
+					// 判断 pods是否在 dbPrivConfigStatusMap里，若不在则新增
+					for podName, pod := range pdsMap {
+						nodeIp := ""
+						if h.opt.NetworkType == NetworkTypeOverlay {
+							nodeIp = pod.Status.HostIP
+						} else if h.opt.NetworkType == NetworkTypeUnderlay {
+							nodeIp = pod.Status.PodIP
+						}
+						podIP := pod.Status.PodIP
+						if podIP != "" && podIP != nodeIp {
+							nodeIp = fmt.Sprintf("%s,%s", nodeIp, podIP)
+						}
+						toDbmAuth(podName, nodeIp, podIP, &dbPrivConfig, configStatusMap)
+					}
+					h.authDbm(hasDeleted, apc, aps, opt, &dbPrivConfig, clientset)
+				}
+			}
+		}
+	}
+}
+
+// updateDbprivconfig
+func updateDbprivconfig(dbPrivConfig *bcsv1.BcsDbPrivConfig, clientset *internalclientset.Clientset) {
+	if reflect.ValueOf(dbPrivConfig.Status).IsZero() {
+		return
+	}
+
+	dbPrivConfig.Status = bcsv1.BcsDbPrivConfigStatus{
+		DbPrivConfigStatusMap: nil,
+	}
+	_, err := clientset.BkbcsV1().BcsDbPrivConfigs(dbPrivConfig.Namespace).
+		Update(context.TODO(), dbPrivConfig, metav1.UpdateOptions{})
+	if err != nil {
+		blog.Errorf("taskAuthDBM authDbm update dbprivconfig failed config0: %+v, err: %s",
+			dbPrivConfig, err.Error())
+		return
+	}
+}
+
+// authDbm 进行dbm授权
+func (h *Hooker) authDbm(hasDeleted bool, apc, aps, opt string, dbPrivConfig *bcsv1.BcsDbPrivConfig,
+	clientset *internalclientset.Clientset) {
+	configStatusMap := dbPrivConfig.Status.DbPrivConfigStatusMap
+	if len(configStatusMap) == 0 {
+		return
+	}
+	var wg sync.WaitGroup
+	hasUpdated := false
+	for _, dbConfig := range configStatusMap {
+		// 去授权
+		if dbConfig.Status == BcsPrivilegeDBMAuthStatusPending || dbConfig.Status == BcsPrivilegeDBMAuthStatusChanged {
+			dbConfig.Status = BcsPrivilegeDBMAuthStatusPending
+			configStatusMap[dbConfig.PodName] = dbConfig
+			hasUpdated = true
+			callType := ""
+			if dbPrivConfig.Spec.DbType == "mysql" {
+				callType = "mysql_ignoreCC"
+			} else if dbPrivConfig.Spec.DbType == "spider" {
+				callType = "spider_ignoreCC"
+			}
+			osEnv := &options.Env{
+				PodIp:             dbConfig.PodIp,
+				NodeIp:            dbConfig.NodeIp,
+				ExternalSysType:   h.opt.ExternalSysType,
+				ExternalSysConfig: h.opt.ExternalSysConfig,
+				AppCode:           apc,
+				AppSecret:         aps,
+				AppOperator:       opt,
+				CallType:          callType,
+			}
+
+			wg.Add(1)
+			go func(env *options.Env, dbPrivConfigStatus *bcsv1.DbPrivConfigStatus) {
+				defer wg.Done()
+				var doPriRetry, checkRetry = 0, 0
+				client, err := pkg.InitClient(env)
+				if err != nil {
+					blog.Errorf("taskAuthDBM failed to init client for external system, %s", err.Error())
+					return
+				}
+				for doPriRetry < failRetryLimit {
+					time.Sleep(1 * time.Second)
+					err = client.DoPri(env, dbPrivConfigStatus)
+					if err == nil {
+						break
+					}
+					blog.Errorf("taskAuthDBM error calling the privilege api err: %s, status: %+v, retry %d",
+						err.Error(), dbPrivConfigStatus, doPriRetry)
+					doPriRetry++
+				}
+				if doPriRetry >= failRetryLimit {
+					blog.Errorf("taskAuthDBM error calling the privilege api with db: %s, dbname: %s, max retry times reached",
+						dbPrivConfigStatus.TargetDb, dbPrivConfigStatus.DbName)
+					return
+				}
+				for checkRetry < failRetryLimit {
+					common.WaitForSeveralSeconds()
+					err = client.CheckFinalStatus()
+					if err == nil {
+						break
+					}
+					blog.Errorf("taskAuthDBM check operation status failed: %s, db: %s, dbname: %s, retry %d",
+						err.Error(), dbPrivConfigStatus.TargetDb, dbPrivConfigStatus.DbName, checkRetry)
+					checkRetry++
+				}
+				if checkRetry >= failRetryLimit {
+					blog.Errorf("taskAuthDBM check operation status failed with db: %s, dbname: %s, max retry times reached",
+						dbPrivConfigStatus.TargetDb, dbPrivConfigStatus.DbName)
+					return
+				}
+				dbPrivConfigStatus.Status = BcsPrivilegeDBMAuthStatusDone
+				configStatusMap[dbPrivConfigStatus.PodName] = dbPrivConfigStatus
+
+			}(osEnv, dbConfig)
+		}
+	}
+	wg.Wait()
+	updatePrivConfigCR(hasDeleted, hasUpdated, dbPrivConfig, clientset)
+}
+
+func updatePrivConfigCR(hasDeleted bool, hasUpdated bool, dbPrivConfig *bcsv1.BcsDbPrivConfig,
+	clientset *internalclientset.Clientset) {
+	if hasUpdated || hasDeleted {
+		blog.Infof("authDbm start Update crName:%s", dbPrivConfig.Name)
+		_, err := clientset.BkbcsV1().BcsDbPrivConfigs(dbPrivConfig.Namespace).Update(context.TODO(), dbPrivConfig,
+			metav1.UpdateOptions{})
+		if err != nil {
+			blog.Errorf("taskAuthDBM update failed dbPrivConfig: %+v, err: %s", dbPrivConfig, err.Error())
+			return
+		}
+	}
+}
+
+// initListenerServer 开启一个服务监听新的端口，查询pod是否已经授权，用于被 initContainer 调用接口
+func (h *Hooker) initListenerServer() {
+
+	var cfg *restclient.Config
+	var err error
+	if len(h.opt.KubeMaster) == 0 && len(h.opt.Kubeconfig) == 0 {
+		cfg, err = restclient.InClusterConfig()
+		if err != nil {
+			blog.Errorf("initListenerServer build config from in cluster failed, err %s", err.Error())
+			return
+		}
+	} else {
+		cfg, err = clientcmd.BuildConfigFromFlags(h.opt.KubeMaster, h.opt.Kubeconfig)
+		if err != nil {
+			blog.Errorf("initListenerServer building kubeconfig failed, err %s", err.Error())
+			return
+		}
+	}
+
+	clientset, err := internalclientset.NewForConfig(cfg)
+	if err != nil {
+		blog.Errorf("initListenerServer internalclientset NewForConfig error %s", err.Error())
+		return
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/check_status", func(writer http.ResponseWriter, request *http.Request) {
+		query := request.URL.Query()
+		podName := query.Get("podName")
+		podNamespace := query.Get("podNameSpace")
+		blog.Infof("initListenerServer podName:%s,podNamespace:%s", podName, podNamespace)
+		ok, _ := h.checkDbPrivConfigIsOk(podName, podNamespace, clientset)
+		if ok {
+			_, err := fmt.Fprint(writer, "ok") //nolint
+			if err != nil {
+				blog.Errorf("initListenerServer check_status podName:%s, podNamespace:%s, err:%s", podName,
+					podNamespace, err.Error())
+				return
+			}
+			return
+		}
+
+		_, err := fmt.Fprint(writer, "not ok") // nolint
+		if err != nil {
+			blog.Errorf("initListenerServer podName:%s, podNamespace:%s, err:%s", podName, podNamespace, err.Error())
+			return
+		}
+	})
+
+	// HTTP服务器监听xxxx端口
+	err = http.ListenAndServe(fmt.Sprintf(":%d", h.opt.ServiceServerPort), mux)
+	if err != nil {
+		blog.Errorf("initListenerServer ListenAndServe error %s", err.Error())
+		return
+	}
+}
+
+// checkDbPrivConfigIsOk 查询pod是否已经授权
+func (h *Hooker) checkDbPrivConfigIsOk(podName string, namespace string,
+	clientset *internalclientset.Clientset) (bool, error) {
+
+	// 查出符合条件的dbprivconfigs
+	bcsDbPrivConfs, err := clientset.BkbcsV1().BcsDbPrivConfigs(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		blog.Errorf("initListenerServer checkDbPrivConfigIsOk list BcsDbPrivConfigs error %s", err.Error())
+		return false, err
+	}
+
+	for _, dbPrivConfig := range bcsDbPrivConfs.Items {
+		if !reflect.ValueOf(dbPrivConfig.Status).IsZero() && len(dbPrivConfig.Status.DbPrivConfigStatusMap) > 0 {
+			if dbPrivConfigStatus, ok := dbPrivConfig.Status.DbPrivConfigStatusMap[podName]; ok {
+				if dbPrivConfigStatus.Status == BcsPrivilegeDBMAuthStatusDone {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
+}
+
+// searchPodsByLabels 根据namespace 和 labels 查询pods
+func searchPodsByLabels(namespace string, dbPrivConfig *bcsv1.BcsDbPrivConfig,
+	kubeClient *kubernetes.Clientset) (*corev1.PodList, error) {
+
+	if dbPrivConfig.Spec.PodSelector == nil {
+		blog.Errorf("taskAuthDBM PodSelector is empty; namespace:%s ; cr name:%s", namespace, dbPrivConfig.Name)
+		return nil, fmt.Errorf("PodSelector is empty")
+	}
+
+	labelSelector := &metav1.LabelSelector{
+		MatchLabels: dbPrivConfig.Spec.PodSelector,
+	}
+
+	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+	if err != nil {
+		blog.Errorf("taskAuthDBM LabelSelectorAsSelector error %s", err.Error())
+		return nil, err
+	}
+
+	// 查找相匹配的Pods
+	pods, err := kubeClient.CoreV1().Pods(namespace).List(context.TODO(),
+		metav1.ListOptions{LabelSelector: selector.String()})
+	if err != nil {
+		blog.Errorf("taskAuthDBM list Pods failed; ns:%s; crname:%s;error %s", namespace,
+			dbPrivConfig.Name, err.Error())
+		return nil, err
+	}
+
+	return pods, nil
+}
+
+// compareDbPrivConfigCRInfo 对比 dbPrivConfig 信息
+func compareDbPrivConfigCRInfo(hasDeleted bool, pdsMap map[string]*corev1.Pod,
+	dbPrivConfig *bcsv1.BcsDbPrivConfig, configStatusMap map[string]*bcsv1.DbPrivConfigStatus) bool {
+
+	if len(configStatusMap) == 0 {
+		return hasDeleted
+	}
+
+	var dltKeys []string
+	// 查看对比 db信息是否有改变，如有改变，则更新db信息以及状态
+	// 对比该pod信息是否还在 pods里
+	for podName, dbPrivConfigStatus := range configStatusMap {
+		// 判断pod 是否还在,若不在，则无须往下走
+		if _, ok := pdsMap[podName]; !ok {
+			dltKeys = append(dltKeys, podName)
+			continue
+		}
+
+		flag := false
+		// 对比db信息
+		if dbPrivConfig.Spec.DbName != dbPrivConfigStatus.DbName {
+			dbPrivConfigStatus.DbName = dbPrivConfig.Spec.DbName
+			flag = true
+		}
+		if dbPrivConfig.Spec.TargetDb != dbPrivConfigStatus.TargetDb {
+			dbPrivConfigStatus.TargetDb = dbPrivConfig.Spec.TargetDb
+			flag = true
+		}
+		if dbPrivConfig.Spec.AppName != dbPrivConfigStatus.AppName {
+			dbPrivConfigStatus.AppName = dbPrivConfig.Spec.AppName
+			flag = true
+		}
+		if dbPrivConfig.Spec.DbType != dbPrivConfigStatus.DbType {
+			dbPrivConfigStatus.DbType = dbPrivConfig.Spec.DbType
+			flag = true
+		}
+		if dbPrivConfig.Spec.Operator != dbPrivConfigStatus.Operator {
+			dbPrivConfigStatus.Operator = dbPrivConfig.Spec.Operator
+			flag = true
+		}
+		if dbPrivConfig.Spec.UseCDP != dbPrivConfigStatus.UseCDP {
+			dbPrivConfigStatus.UseCDP = dbPrivConfig.Spec.UseCDP
+			flag = true
+		}
+		if dbPrivConfig.Spec.CallUser != dbPrivConfigStatus.CallUser {
+			dbPrivConfigStatus.CallUser = dbPrivConfig.Spec.CallUser
+			flag = true
+		}
+
+		if flag {
+			dbPrivConfigStatus.Status = BcsPrivilegeDBMAuthStatusChanged
+		}
+	}
+
+	if len(dltKeys) > 0 {
+		hasDeleted = true
+		for _, key := range dltKeys {
+			delete(configStatusMap, key)
+		}
+	}
+
+	return hasDeleted
+}
+
+// toDbmAuth 构造dbprivconfig 信息，并且去dbm授权
+func toDbmAuth(podName, nodeIp, podIP string, dbPrivConfig *bcsv1.BcsDbPrivConfig,
+	configStatusMap map[string]*bcsv1.DbPrivConfigStatus) {
+	// 若不在则新增
+	if _, ok := configStatusMap[podName]; !ok {
+		dbPrivConfigStatus := &bcsv1.DbPrivConfigStatus{
+			AppName:  dbPrivConfig.Spec.AppName,
+			TargetDb: dbPrivConfig.Spec.TargetDb,
+			DbType:   dbPrivConfig.Spec.DbType,
+			CallUser: dbPrivConfig.Spec.CallUser,
+			DbName:   dbPrivConfig.Spec.DbName,
+			Operator: dbPrivConfig.Spec.Operator,
+			UseCDP:   dbPrivConfig.Spec.UseCDP,
+			Status:   "pending",
+			PodIp:    podIP,
+			NodeIp:   nodeIp,
+			PodName:  podName,
+		}
+
+		configStatusMap[podName] = dbPrivConfigStatus
+	} else {
+		if podIP != "" && configStatusMap[podName].PodIp != podIP {
+			configStatusMap[podName].PodIp = podIP
+			configStatusMap[podName].Status = BcsPrivilegeDBMAuthStatusChanged
+		}
+		if nodeIp != "" && configStatusMap[podName].NodeIp != nodeIp {
+			configStatusMap[podName].NodeIp = nodeIp
+			configStatusMap[podName].Status = BcsPrivilegeDBMAuthStatusChanged
+		}
+	}
+
+	dbPrivConfig.Status.DbPrivConfigStatusMap = configStatusMap
+
 }

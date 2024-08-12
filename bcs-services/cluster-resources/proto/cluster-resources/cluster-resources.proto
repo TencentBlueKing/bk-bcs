@@ -3070,9 +3070,18 @@ message CreateTemplateMetadataReq {
 	}];
 	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本"
-	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	}];
 	string content = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本Content"
+	}];
+	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否草稿"
+	}];
+	string draftVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "基于模板文件版本"
+	}];
+	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿内容"
 	}];
 }
 
@@ -3100,6 +3109,15 @@ message UpdateTemplateMetadataReq {
 	}];
 	VersionMode versionMode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本模式"
+	}];
+	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否草稿"
+	}];
+	string draftVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "基于模板文件版本"
+	}];
+	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿内容"
 	}];
 }
 
@@ -3177,13 +3195,16 @@ message CreateTemplateVersionReq {
 	string version = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
-	string content = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string editFormat = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "编辑模式"
+	}];
+	string content = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本Content"
 	}];
-	string templateID = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string templateID = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件元数据ID"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
-	bool force = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	bool force = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "能否被覆盖"
 	}];
 }

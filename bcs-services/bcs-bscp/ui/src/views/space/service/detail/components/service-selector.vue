@@ -26,7 +26,9 @@
           :class="['service-option-item', { 'no-perm': !item.permissions.view }]"
           @click="handleOptionClick(item, $event)">
           <div class="name-text">{{ item.spec.name }}</div>
-          <div class="type-tag">{{ item.spec.config_type === 'file' ? t('文件型') : t('键值型') }}</div>
+          <div :class="['type-tag', { 'type-tag--en': locale === 'en' }]">
+            {{ item.spec.config_type === 'file' ? t('文件型') : t('键值型') }}
+          </div>
         </div>
       </bk-option>
       <template #extension>
@@ -54,7 +56,7 @@
 
   const route = useRoute();
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const configStore = useConfigStoe();
 
@@ -210,14 +212,17 @@
       position: absolute;
       top: 5px;
       right: 16px;
-      width: 52px;
       height: 22px;
+      width: 52px;
       line-height: 22px;
       color: #63656e;
       font-size: 12px;
       text-align: center;
       background: #f0f1f5;
       border-radius: 2px;
+      &--en {
+        width: 96px;
+      }
     }
   }
   .selector-extensition {

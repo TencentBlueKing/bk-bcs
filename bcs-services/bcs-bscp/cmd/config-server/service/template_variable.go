@@ -110,7 +110,21 @@ func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.Bat
 		return nil, err
 	}
 
-	idsLen := len(req.Ids)
+	var ids []uint32
+	ids = req.GetIds()
+	if req.ExclusionOperation {
+		result, err := s.client.DS.TemplateVariableFetchIDsExcluding(grpcKit.RpcCtx(),
+			&pbds.TemplateVariableFetchIDsExcludingReq{
+				BizId: req.GetBizId(),
+				Ids:   req.GetIds(),
+			})
+		if err != nil {
+			return nil, err
+		}
+		ids = result.GetIds()
+	}
+
+	idsLen := len(ids)
 	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
 		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit,
 			"the length of template variable ids is %d, it must be within the range of [1,%d]",
@@ -124,7 +138,7 @@ func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.Bat
 	var mux sync.Mutex
 
 	// 使用 data-service 原子接口
-	for _, v := range req.Ids {
+	for _, v := range ids {
 		v := v
 		eg.Go(func() error {
 			r := &pbds.DeleteTemplateVariableReq{
@@ -157,7 +171,7 @@ func (s *Service) BatchDeleteTemplateVariable(ctx context.Context, req *pbcs.Bat
 	}
 
 	// 全部失败, 当前API视为失败
-	if len(failedIDs) == len(req.Ids) {
+	if len(failedIDs) == len(ids) {
 		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 

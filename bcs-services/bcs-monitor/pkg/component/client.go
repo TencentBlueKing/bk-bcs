@@ -38,7 +38,7 @@ import (
 )
 
 const (
-	timeout = time.Second * 30
+	timeout = time.Second * 160
 	// BKAPIRequestIDHeader 蓝鲸网关的请求ID
 	BKAPIRequestIDHeader = "X-Bkapi-Request-Id"
 	userAgent            = "bcs-monitor/v1.0"

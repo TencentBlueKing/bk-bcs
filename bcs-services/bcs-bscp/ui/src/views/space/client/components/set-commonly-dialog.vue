@@ -4,7 +4,7 @@
     :title="isCreate ? $t('设为常用') : $t('重命名')"
     ext-cls="set-commonly-dialog"
     theme="primary"
-    confirm-text="保存"
+    :confirm-text="$t('保存')"
     @closed="handleClose"
     @confirm="handleConfirm">
     <bk-form ref="formRef" :rules="rules" :model="formData">

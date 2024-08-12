@@ -31,8 +31,10 @@ import BkTrace from '@blueking/bk-trace';
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
 import '@/views/app/performance';
+import '@blueking/bkui-library';
 import App from '@/App.vue';
 import { bus } from '@/common/bus';
+import { BCS_UI_PREFIX } from '@/common/constant';
 import { chainable } from '@/common/util';
 import bkCombox from '@/components/bk-input/combox.vue';
 import bkbcsInput from '@/components/bk-input/index.vue';
@@ -49,7 +51,7 @@ import BcsErrorPlugin from '@/views/app/bcs-error';
 import k8sIngress from '@/views/deploy-manage/templateset/ingress/k8s-ingress.vue';
 
 window.BkTrace = new BkTrace({
-  url: '/bcsapi/v4/ui/report',
+  url: `${BCS_UI_PREFIX}/report`,
   struct: {
     module: '',
     operation: '',

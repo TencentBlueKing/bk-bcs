@@ -84,6 +84,7 @@ export interface IConfigEditParams {
   privilege?: string;
   fileAP?: string;
   revision_name?: string;
+  template_revision_id?: number;
 }
 
 // kv配置文件编辑表单参数
@@ -215,6 +216,7 @@ export interface IConfigImportItem {
     type: string;
   }[];
   file_name?: string;
+  is_exist: boolean;
 }
 
 // kv类型
@@ -223,6 +225,7 @@ export interface IConfigKvItem {
   kv_type: string;
   value: string;
   memo: string;
+  is_exist?: boolean;
 }
 
 // 单个kv配置详情
@@ -232,6 +235,7 @@ export interface IConfigKvType {
   content_spec: {
     signature: string;
     byte_size: string;
+    md5?: string;
   };
   kv_state: string;
   attachment: {

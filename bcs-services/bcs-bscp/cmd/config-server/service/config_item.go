@@ -15,13 +15,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"path"
-	"strings"
 	"sync"
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -31,8 +28,6 @@ import (
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbcontent "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/content"
-	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
-	pbtv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-variable"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 )
 
@@ -111,22 +106,6 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 
 	items := make([]*pbds.BatchUpsertConfigItemsReq_ConfigItem, 0, len(req.Items))
 	for _, item := range req.Items {
-		// validate if file content uploaded.
-		metadata, err := s.client.provider.Metadata(grpcKit, item.Sign)
-		if err != nil {
-			logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		vars := make([]*pbtv.TemplateVariableSpec, 0, len(item.Variables))
-		for _, v := range item.GetVariables() {
-			vars = append(vars, &pbtv.TemplateVariableSpec{
-				Name:       v.Name,
-				Type:       v.Type,
-				DefaultVal: v.DefaultVal,
-				Memo:       v.Memo,
-			})
-		}
-
 		items = append(items, &pbds.BatchUpsertConfigItemsReq_ConfigItem{
 			ConfigItemAttachment: &pbci.ConfigItemAttachment{
 				BizId: req.BizId,
@@ -147,9 +126,16 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: item.Sign,
 				ByteSize:  item.ByteSize,
-				Md5:       metadata.Md5,
+				Md5:       item.Md5,
 			},
-			Variables: vars,
+		})
+	}
+
+	bindings := make([]*pbds.BatchUpsertConfigItemsReq_TemplateBinding, 0)
+	for _, v := range req.GetBindings() {
+		bindings = append(bindings, &pbds.BatchUpsertConfigItemsReq_TemplateBinding{
+			TemplateSpaceId: v.TemplateSpaceId,
+			TemplateBinding: v.GetTemplateBinding(),
 		})
 	}
 
@@ -158,6 +144,8 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 		AppId:      req.AppId,
 		Items:      items,
 		ReplaceAll: req.ReplaceAll,
+		Variables:  req.GetVariables(),
+		Bindings:   bindings,
 	}
 	batchUpsertConfigResp, e := s.client.DS.BatchUpsertConfigItems(grpcKit.RpcCtx(), buReq)
 	if e != nil {
@@ -497,40 +485,10 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbcs.ListConfigItems
 		return nil, err
 	}
 
-	// 对比模板配置, 检测是否存在冲突
-	trc, err := s.client.DS.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListAppBoundTmplRevisionsReq{
-		BizId: grpcKit.BizID,
-		AppId: req.AppId,
-		All:   true,
-	})
-	if err != nil {
-		logs.Errorf("list app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	existingPaths := []string{}
-	for _, v := range rp.GetDetails() {
-		if v.FileState != constant.FileStateDelete {
-			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
-		}
-	}
-	for _, v := range trc.GetDetails() {
-		if v.FileState != constant.FileStateDelete {
-			existingPaths = append(existingPaths, path.Join(v.Path, v.Name))
-		}
-	}
-
-	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
-	for _, v := range rp.GetDetails() {
-		if v.FileState != constant.FileStateDelete {
-			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
-		}
-	}
-
 	resp := &pbcs.ListConfigItemsResp{
 		Count:          rp.Count,
 		Details:        rp.Details,
-		ConflictNumber: conflictNums,
+		ConflictNumber: rp.ConflictNumber,
 	}
 	return resp, nil
 }
@@ -692,147 +650,124 @@ func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemRe
 	return &pbcs.UndoConfigItemResp{}, nil
 }
 
-// checkExistingPathConflict Check existing path collections for conflicts.
-func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
-	conflictPaths := make(map[string]bool, len(existing))
-	var conflictNums uint32
-	conflictMap := make(map[string]bool, 0)
-	// 遍历每一个路径
-	for i := 0; i < len(existing); i++ {
-		// 检查当前路径与后续路径之间是否存在冲突
-		for j := i + 1; j < len(existing); j++ {
-			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
-				// 相等也算冲突
-				if len(existing[j]) == len(existing[i]) {
-					conflictNums++
-				} else if len(existing[j]) < len(existing[i]) {
-					conflictMap[existing[j]] = true
-				} else {
-					conflictMap[existing[i]] = true
-				}
-
-				conflictPaths[existing[i]] = true
-				conflictPaths[existing[j]] = true
-			}
-		}
-	}
-
-	return uint32(len(conflictMap)) + conflictNums, conflictPaths
-}
-
 // CompareConfigItemConflicts compare config item version conflicts
-func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) ( // nolint
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.CompareConfigItemConflictsReq) (
 	*pbcs.CompareConfigItemConflictsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
-		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
 	}
 
 	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
 		return nil, err
 	}
 
-	// 获取该服务未发布的版本
-	ci, err := s.client.DS.ListConfigItems(grpcKit.RpcCtx(), &pbds.ListConfigItemsReq{
-		BizId:      grpcKit.BizID,
-		AppId:      req.AppId,
-		All:        true,
-		WithStatus: true,
-		Status:     []string{constant.FileStateAdd, constant.FileStateRevise, constant.FileStateUnchange},
-	})
-	if err != nil {
-		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	// 从服务获取发布的版本
-	rci, err := s.client.DS.ListReleasedConfigItems(grpcKit.RpcCtx(), &pbds.ListReleasedConfigItemsReq{
-		BizId:     req.BizId,
-		AppId:     req.OtherAppId,
-		ReleaseId: req.ReleaseId,
-		All:       true,
-	})
-	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	conflicts := make(map[string]bool)
-	for _, v := range ci.GetDetails() {
-		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
-	}
-
-	// 获取已生成版本的引用变量
-	resf, err := s.client.DS.GetReleasedAppTmplVariableRefs(grpcKit.RpcCtx(), &pbds.GetReleasedAppTmplVariableRefsReq{
-		BizId:     req.BizId,
-		AppId:     req.OtherAppId,
-		ReleaseId: req.ReleaseId,
-	})
-	if err != nil {
-		return nil, err
-	}
-	resfMap := make(map[string][]string, 0)
-	for _, v := range resf.GetDetails() {
-		for _, ref := range v.GetReferences() {
-			filePath := path.Join(ref.Path, ref.Name)
-			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
-		}
-	}
-
-	// 获取已生成版本的变量值、描述等
-	vars, err := s.client.DS.ListReleasedAppTmplVariables(grpcKit.RpcCtx(), &pbds.ListReleasedAppTmplVariablesReq{
-		BizId:     req.BizId,
-		AppId:     req.OtherAppId,
-		ReleaseId: req.ReleaseId,
+	result, err := s.client.DS.CompareConfigItemConflicts(grpcKit.RpcCtx(), &pbds.CompareConfigItemConflictsReq{
+		BizId:      req.GetBizId(),
+		AppId:      req.GetAppId(),
+		ReleaseId:  req.GetReleaseId(),
+		OtherAppId: req.GetOtherAppId(),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	varsMap := make(map[string][]*pbcs.CompareConfigItemConflictsResp_Variable, 0)
-	for _, v := range vars.GetDetails() {
-		for key, name := range resfMap {
-			for _, n := range name {
-				if v.Name == n {
-					varsMap[key] = append(varsMap[key], &pbcs.CompareConfigItemConflictsResp_Variable{
-						Name:       n,
-						Type:       v.Type,
-						DefaultVal: v.DefaultVal,
-						Memo:       v.Memo,
-					})
-				}
-			}
-		}
+	nonTemplateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
+	for _, v := range result.NonTemplateConfigs {
+		nonTemplateConfigs = append(nonTemplateConfigs, &pbcs.CompareConfigItemConflictsResp_NonTemplateConfig{
+			Id:             v.GetId(),
+			ConfigItemSpec: v.GetConfigItemSpec(),
+			Variables:      v.GetVariables(),
+			IsExist:        v.GetIsExist(),
+			Signature:      v.GetSignature(),
+			ByteSize:       v.GetByteSize(),
+			Md5:            v.GetMd5(),
+		})
 	}
 
-	newConfigItem := func(v *pbrci.ReleasedConfigItem) *pbcs.CompareConfigItemConflictsResp_ConfigItem {
-		return &pbcs.CompareConfigItemConflictsResp_ConfigItem{
-			Id:        v.Id,
-			Name:      v.Spec.Name,
-			Path:      v.Spec.Path,
-			FileType:  v.Spec.FileType,
-			FileMode:  v.Spec.FileMode,
-			Memo:      v.Spec.Memo,
-			User:      v.Spec.Permission.User,
-			UserGroup: v.Spec.Permission.UserGroup,
-			Privilege: v.Spec.Permission.Privilege,
-			Sign:      v.CommitSpec.Content.OriginSignature,
-			ByteSize:  v.CommitSpec.Content.OriginByteSize,
-			Variables: varsMap[path.Join(v.Spec.Path, v.Spec.Name)],
+	templateConfigs := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig, 0)
+	for _, v := range result.TemplateConfigs {
+		revisions := make([]*pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail, 0,
+			len(v.TemplateRevisions))
+		for _, revision := range v.TemplateRevisions {
+			revisions = append(revisions, &pbcs.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
+				TemplateId:         revision.TemplateId,
+				TemplateRevisionId: revision.TemplateRevisionId,
+				IsLatest:           revision.IsLatest,
+				Variables:          revision.GetVariables(),
+			})
 		}
+		templateConfigs = append(templateConfigs, &pbcs.CompareConfigItemConflictsResp_TemplateConfig{
+			TemplateSpaceId:    v.GetTemplateSpaceId(),
+			TemplateSpaceName:  v.GetTemplateSpaceName(),
+			TemplateSetId:      v.GetTemplateSetId(),
+			TemplateSetName:    v.GetTemplateSetName(),
+			IsExist:            v.IsExist,
+			TemplateRevisions:  revisions,
+			TemplateSpaceExist: v.TemplateSpaceExist,
+			TemplateSetExist:   v.TemplateSetExist,
+			TemplateSetIsEmpty: v.GetTemplateSetIsEmpty(),
+		})
 	}
 
-	exist := make([]*pbcs.CompareConfigItemConflictsResp_ConfigItem, 0)
-	nonExist := make([]*pbcs.CompareConfigItemConflictsResp_ConfigItem, 0)
-	for _, v := range rci.GetDetails() {
-		if conflicts[path.Join(v.Spec.Path, v.Spec.Name)] {
-			exist = append(exist, newConfigItem(v))
-		} else {
-			nonExist = append(nonExist, newConfigItem(v))
-		}
+	return &pbcs.CompareConfigItemConflictsResp{
+		NonTemplateConfigs: nonTemplateConfigs,
+		TemplateConfigs:    templateConfigs,
+	}, nil
+}
+
+// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
+func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbcs.GetTemplateAndNonTemplateCICountReq) (
+	*pbcs.GetTemplateAndNonTemplateCICountResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
 
-	return &pbcs.CompareConfigItemConflictsResp{Exist: exist, NonExist: nonExist}, nil
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	result, err := s.client.DS.GetTemplateAndNonTemplateCICount(grpcKit.RpcCtx(),
+		&pbds.GetTemplateAndNonTemplateCICountReq{
+			BizId: req.GetBizId(),
+			AppId: req.GetAppId(),
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.GetTemplateAndNonTemplateCICountResp{
+		ConfigItemCount:         result.GetConfigItemCount(),
+		TemplateConfigItemCount: result.GetTemplateConfigItemCount(),
+	}, nil
+}
+
+// RemoveAppBoundTmplSet 移除服务绑定的套餐
+func (s *Service) RemoveAppBoundTmplSet(ctx context.Context, req *pbcs.RemoveAppBoundTmplSetReq) (
+	*pbcs.RemoveAppBoundTmplSetResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kit, res...); err != nil {
+		return nil, err
+	}
+
+	_, err := s.client.DS.RemoveAppBoundTmplSet(kit.RpcCtx(), &pbds.RemoveAppBoundTmplSetReq{
+		BizId:         req.BizId,
+		AppId:         req.AppId,
+		TemplateSetId: req.TemplateSetId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.RemoveAppBoundTmplSetResp{}, nil
 }

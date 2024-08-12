@@ -19,6 +19,7 @@ type FileInfo struct {
 	FileType string
 	Sign     string
 	ByteSize uint64
+	Md5      string
 }
 
 // TemplateItem Template info
@@ -34,6 +35,7 @@ type TemplateItem struct {
 	UserGroup string `json:"user_group"`
 	Sign      string `json:"sign"`
 	ByteSize  uint64 `json:"byte_size"`
+	Md5       string `json:"md5"`
 }
 
 // TemplatesImportResp Import template return

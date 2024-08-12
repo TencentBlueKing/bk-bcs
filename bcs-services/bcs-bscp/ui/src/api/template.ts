@@ -163,6 +163,33 @@ export const getUnNamedVersionAppsBoundByPackages = (
     .then((res) => res.data);
 
 /**
+ * 检测某个套餐是否超出限制
+ * @param biz_id 业务ID
+ * @param template_space_id 模板空间ID
+ * @param template_set_id 模板套餐Id列表
+ * @param items 导入的配置项列表
+ * @returns
+ */
+export const getCheckTemplateSetReferencesApps = (
+  biz_id: string,
+  template_space_id: number,
+  template_set_ids: number[],
+  items: {
+    name: string;
+    id: number;
+  }[],
+) =>
+  http
+    .post(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/check_template_set_references_apps`,
+      {
+        template_set_ids,
+        items,
+      },
+    )
+    .then((res) => res.data);
+
+/**
  * 获取当前模板套餐被已生成版本引用的服务引用列表
  * @param biz_id 业务ID
  * @param template_space_id 模板空间ID
@@ -224,6 +251,7 @@ export const updateTemplateContent = (
   templateSpaceId: number,
   data: string | File,
   signature: string,
+  progress?: Function,
 ) =>
   http
     .put(`/biz/${biz_id}/content/upload`, data, {
@@ -232,6 +260,12 @@ export const updateTemplateContent = (
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);
@@ -259,15 +293,39 @@ export const downloadTemplateContent = (biz_id: string, templateSpaceId: number,
     .then((res) => res);
 
 /**
+ * 判断上传的配置文件是否已存在
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param data 配置内容
+ * @param signature 文件内容的SHA256值
+ * @returns
+ */
+export const getTemplateUploadFileIsExist = (bizId: string, templateSpaceId: number, signature: string) =>
+  http
+    .get(`/biz/${bizId}/content/metadata`, {
+      headers: {
+        'X-Bscp-Template-Space-Id': templateSpaceId,
+        'X-Bkapi-File-Content-Id': signature,
+      },
+    })
+    .then((res) => res.data);
+
+/**
  * 批量删除模板
  * @param biz_id 业务ID
  * @param template_space_id 空间ID
  * @param template_ids 模板ID列表
+ * @param exclusion_operation 是否跨页全选
  * @returns
  */
-export const deleteTemplate = (biz_id: string, template_space_id: number, template_ids: number[]) =>
+export const deleteTemplate = (
+  biz_id: string,
+  template_space_id: number,
+  template_ids: number[],
+  exclusion_operation: boolean,
+) =>
   http.delete(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, {
-    params: { template_ids: template_ids.join(',') },
+    params: { template_ids: template_ids.join(','), exclusion_operation },
   });
 
 /**
@@ -285,6 +343,9 @@ export const getTemplatesDetailByIds = (biz_id: string, ids: number[]) =>
  * @param template_space_id 空间ID
  * @param template_id 模板ID
  * @param template_set_ids 模板套餐列表
+ * @param exclusion_operation 是否跨页全选
+ * @param template_set_id 正在操作的套餐id，全部套餐和未指定套餐传0
+ * @param no_set_specified 是否未指定套餐
  * @returns
  */
 export const addTemplateToPackage = (
@@ -292,11 +353,19 @@ export const addTemplateToPackage = (
   template_space_id: number,
   template_ids: number[],
   template_set_ids: number[],
+  exclusion_operation: boolean,
+  template_set_id: number | string,
+  no_set_specified: boolean,
 ) =>
-  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/add_to_template_sets`, {
-    template_ids,
-    template_set_ids,
-  });
+  http.post(
+    `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/add_to_template_sets`,
+    {
+      template_set_ids,
+      template_ids,
+      exclusion_operation,
+      no_set_specified,
+    },
+  );
 
 /**
  * 将模版移出套餐(多个模板移出多个套餐)
@@ -304,6 +373,9 @@ export const addTemplateToPackage = (
  * @param template_space_id 空间ID
  * @param template_id 模板ID
  * @param template_set_ids 模板套餐列表
+ * @param exclusion_operation 是否跨页全选
+ * @param template_set_id 正在操作的套餐id，全部套餐和未指定套餐传0
+ * @param no_set_specified 是否未指定套餐
  * @returns
  */
 export const moveOutTemplateFromPackage = (
@@ -311,11 +383,17 @@ export const moveOutTemplateFromPackage = (
   template_space_id: number,
   template_ids: number[],
   template_set_ids: number[],
+  exclusion_operation: boolean,
+  template_set_id: number | string,
 ) =>
-  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/delete_from_template_sets`, {
-    template_ids,
-    template_set_ids,
-  });
+  http.post(
+    `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/delete_from_template_sets`,
+    {
+      template_ids,
+      template_set_ids,
+      exclusion_operation,
+    },
+  );
 
 /**
  * 查询单个模板被套餐引用详情
@@ -625,10 +703,16 @@ export const importTemplateFile = (
  * @param configData 配置列表
  * @returns
  */
-export const importTemplateBatchAdd = (biz_id: string, template_space_id: number, configData: any) =>
+export const importTemplateBatchAdd = (
+  biz_id: string,
+  template_space_id: number,
+  configData: any,
+  template_set_ids: number[],
+) =>
   http
     .post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/batch_upsert_templates`, {
       items: configData,
+      template_set_ids,
     })
     .then((res) => res.data);
 
@@ -637,7 +721,44 @@ export const importTemplateBatchAdd = (biz_id: string, template_space_id: number
  * @param biz_id 业务ID
  * @param template_space_id 空间id
  * @param configData 配置列表
+ * @param exclusion_operation // 是否跨页
+ * @param template_set_id // 正在操作的套餐id，全部套餐和未指定传0
+ * @param no_set_specified // 是否未指定套餐
  * @returns
  */
 export const batchEditTemplatePermission = (biz_id: string, query: any) =>
-  http.post(`/config/biz/${biz_id}/templates/batch_update_templates_permissions`, query);
+  http.post(
+    `/config/biz/${biz_id}/template_spaces/${query.template_space_id}/template_set/${query.template_set_id}/templates/batch_update_templates_permissions`,
+    query,
+  );
+
+/**
+ * 获取配置模板配置项元信息
+ * @param biz_id 业务ID
+ * @param template_id 模板id
+ * @param revision_name 版本名称
+ * @returns
+ */
+export const getTemplateConfigMeta = (biz_id: string, template_id: number, revision_name?: string) =>
+  http.get(`/config/biz/${biz_id}/templates/${template_id}/template_revisions`, { params: { revision_name } });
+
+/**
+ * 编辑模板配置文件
+ * @param biz_id 业务ID
+ * @param template_space_id 空间ID
+ * @param template_id 模板ID
+ * @param params 模板配置参数
+ * @returns
+ */
+export const updateTemplateConfig = (
+  biz_id: string,
+  template_space_id: number,
+  template_id: number,
+  params: ITemplateVersionEditingData,
+) =>
+  http
+    .put(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/${template_id}/template_revisions`,
+      params,
+    )
+    .then((res) => res.data);

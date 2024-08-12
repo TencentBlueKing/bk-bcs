@@ -3,26 +3,30 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      :placeholder="t('配置文件名/创建人/修改人')"
+      :placeholder="t('配置文件绝对路径/创建人/修改人')"
       @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="group in tableGroupsData" :key="group.id" class="config-group">
-        <div class="group-title" @click="group.expand = !group.expand">
-          <DownShape :class="['fold-icon', { fold: !group.expand }]" />
-          {{ group.name }}
-        </div>
-        <div v-if="group.expand" class="config-list-wrapper">
-          <div
-            v-for="config in group.configs"
-            :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
-            :key="config.id"
-            @click="handleConfigClick(config, group.id)">
-            <div class="config-name">{{ config.name }}</div>
-            <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
+        <template v-if="group.configs.length > 0">
+          <div class="group-title" @click="group.expand = !group.expand">
+            <DownShape :class="['fold-icon', { fold: !group.expand }]" />
+            {{ group.name }}
           </div>
-          <TableEmpty v-if="group.configs.length === 0" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
-        </div>
+          <div v-if="group.expand" class="config-list-wrapper">
+            <div
+              v-for="config in group.configs"
+              :class="['config-item', { disabled: config.file_state === 'DELETE' }]"
+              :key="config.id"
+              @click="handleConfigClick(config, group)">
+              <bk-overflow-title class="config-name" type="tips">
+                {{ fileAP(config) }}
+              </bk-overflow-title>
+              <div class="config-type">{{ getConfigTypeName(config.file_type) }}</div>
+            </div>
+          </div>
+        </template>
       </div>
+      <TableEmpty v-if="isTableEmpty" :is-search-empty="isSearchEmpty" @clear="clearSearch" />
     </bk-loading>
     <EditConfig
       v-model:show="editConfigSliderData.open"
@@ -34,7 +38,8 @@
       v-bind="viewConfigSliderData.data"
       :bk-biz-id="props.bkBizId"
       :app-id="props.appId"
-      :version-id="versionData.id" />
+      :version-id="versionData.id"
+      @open-edit="handleOpenEdit" />
   </section>
 </template>
 <script setup lang="ts">
@@ -56,12 +61,17 @@
   import EditConfig from '../config-table-list/edit-config.vue';
   import ViewConfig from '../config-table-list/view-config.vue';
   import TableEmpty from '../../../../../../../components/table/table-empty.vue';
+  import { debounce } from 'lodash';
 
   interface IConfigsGroupData {
     id: number;
     name: string;
     expand: boolean;
     configs: IConfigTableItem[];
+    template_space_id?: number;
+    template_space_name?: string;
+    template_set_id?: number;
+    template_set_name?: string;
   }
 
   interface IConfigTableItem {
@@ -75,6 +85,14 @@
     reviser: string;
     update_at: string;
     file_state: string;
+    is_latest?: boolean;
+  }
+
+  interface ITemplateConfigMeta {
+    template_space_id: number;
+    template_space_name: string;
+    template_set_id: number;
+    template_set_name: string;
   }
 
   const store = useConfigStore();
@@ -98,9 +116,21 @@
     open: false,
     id: 0,
   });
-  const viewConfigSliderData = ref({
+  const viewConfigSliderData = ref<{
+    open: boolean;
+    data: {
+      id: number;
+      type: string;
+      templateMeta?: ITemplateConfigMeta;
+      versionName?: string;
+      isLatest?: boolean;
+    };
+  }>({
     open: false,
-    data: { id: 0, type: '' },
+    data: {
+      id: 0,
+      type: '',
+    },
   });
 
   watch(
@@ -120,20 +150,34 @@
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
 
+  const isTableEmpty = computed(() => tableGroupsData.value.every((group) => group.configs.length === 0));
+
   onMounted(() => {
     getListData();
   });
 
-  const getListData = async () => {
+  // 配置文件绝对路径
+  const fileAP = (config: IConfigTableItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
+
+  const getListData = debounce(async () => {
+    const currentSearchStr = searchStr.value;
     // 拉取到版本列表之前不加在列表数据
     if (typeof versionData.value.id !== 'number') {
       return;
     }
     loading.value = true;
     await Promise.all([getCommonConfigList(), getBoundTemplateList()]);
-    tableGroupsData.value = transListToTableData();
     loading.value = false;
-  };
+    // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
+    if (currentSearchStr !== searchStr.value) return;
+    tableGroupsData.value = transListToTableData();
+  }, 500);
 
   // 获取非模板配置文件列表
   const getCommonConfigList = async () => {
@@ -144,10 +188,9 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,memo,path,creator,reviser';
+        params.search_fields = 'name,path,memo,creator';
         params.search_value = searchStr.value;
       }
-
       let res;
       if (isUnNamedVersion.value) {
         res = await getConfigList(props.bkBizId, props.appId, params);
@@ -172,7 +215,7 @@
         all: true,
       };
       if (searchStr.value) {
-        params.search_fields = 'name,memo,path,creator,reviser';
+        params.search_fields = 'revision_name,revision_memo,name,path,creator';
         params.search_value = searchStr.value;
       }
 
@@ -210,9 +253,14 @@
   // 将模板按套餐分组，并将模板数据格式转为表格数据
   const groupTplsByPkg = (list: IBoundTemplateGroup[]) => {
     const groups: IConfigsGroupData[] = list.map((groupItem) => {
-      const { template_space_name, template_set_id, template_set_name, template_revisions } = groupItem;
+      const { template_space_name, template_set_id, template_set_name, template_revisions, template_space_id } =
+        groupItem;
       const group: IConfigsGroupData = {
         id: template_set_id,
+        template_set_id,
+        template_set_name,
+        template_space_name,
+        template_space_id,
         name: `${template_space_name} - ${template_set_name}`,
         expand: false,
         configs: [],
@@ -246,20 +294,35 @@
     return groups;
   };
 
-  const handleConfigClick = (config: IConfigTableItem, groupId: number) => {
-    if (isUnNamedVersion.value && groupId === 0) {
-      editConfigSliderData.value = {
-        open: true,
-        id: config.id,
-      };
-    } else {
-      const id = groupId === 0 ? config.id : config.versionId;
-      const type = groupId === 0 ? 'config' : 'template';
+  const handleConfigClick = (config: IConfigTableItem, group: IConfigsGroupData) => {
+    const id = group.id === 0 ? config.id : config.versionId;
+    if (group.id === 0) {
       viewConfigSliderData.value = {
         open: true,
-        data: { id, type },
+        data: { id, type: 'config' },
+      };
+    } else {
+      const { versionName, is_latest, id, versionId } = config;
+      const { template_set_id, template_space_id, template_set_name, template_space_name } = group;
+      const templateMeta = { template_space_id, template_space_name, template_set_id, template_set_name };
+      const viewTemplateId = isUnNamedVersion.value ? id : versionId;
+      viewConfigSliderData.value = {
+        open: true,
+        data: {
+          id: viewTemplateId,
+          versionName,
+          templateMeta: templateMeta as ITemplateConfigMeta,
+          type: 'template',
+          isLatest: is_latest,
+        },
       };
     }
+    editConfigSliderData.value.id = id;
+  };
+
+  const handleOpenEdit = () => {
+    viewConfigSliderData.value.open = false;
+    editConfigSliderData.value.open = true;
   };
 
   const clearSearch = () => {

@@ -16,18 +16,19 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // ClusterPlugin for internal cluster authorization
 type ClusterPlugin struct {
 	*mux.Router
-	middleware mw.MiddlewareInterface
+	middleware    mw.MiddlewareInterface
+	permitChecker permitcheck.PermissionInterface
 }
 
 // Init implementation for plugin
@@ -64,15 +65,14 @@ func (plugin *ClusterPlugin) forbidden(w http.ResponseWriter, r *http.Request) {
 
 // GET /api/v1/clusters
 func (plugin *ClusterPlugin) listClustersHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	params := mux.Vars(r)
-	projectName, ok := params["projects"]
-	if !ok || projectName == "" {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects param"))
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects query param"))
 	}
-	clusterList, statusCode, err := plugin.middleware.ListClusters(r.Context(), []string{projectName})
+	clusterList, statusCode, err := plugin.middleware.ListClusters(r.Context(), projects)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "list clusters by project '%s' failed", projectName))
+			errors.Wrapf(err, "list clusters by project '%v' failed", projects))
 	}
 	return r, mw.ReturnJSONResponse(clusterList)
 }
@@ -80,9 +80,10 @@ func (plugin *ClusterPlugin) listClustersHandler(r *http.Request) (*http.Request
 // GET /api/v1/clusters/{name}
 func (plugin *ClusterPlugin) clusterViewHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	clusterName := mux.Vars(r)["name"]
-	statusCode, err := plugin.middleware.CheckClusterPermission(r.Context(), &clusterclient.ClusterQuery{
+	_, statusCode, err := plugin.permitChecker.CheckClusterPermission(r.Context(), &cluster.ClusterQuery{
 		Name: clusterName,
-	}, iam.ClusterView)
+	},
+		permitcheck.ClusterViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check cluster '%s' view permision failed", clusterName))

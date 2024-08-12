@@ -21,21 +21,24 @@ import NoticeComponent from '@blueking/notice-component-vue2';
 
 import '@blueking/notice-component-vue2/dist/style.css';
 import { bus } from '@/common/bus';
+import { BCS_UI_PREFIX } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
+import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
 import PermDialog from '@/views/app/apply-perm.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import Navigation from '@/views/app/navigation.vue';
 
 const { getUserInfo } = useAppData();
+const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
 const isLoading = ref(false);
 const applyPermRef = ref<any>(null);
 const loginRef = ref<any>(null);
 
 // 通知
-const apiUrl = ref('/bcsapi/v4/ui/announcements');
+const apiUrl = ref(`${BCS_UI_PREFIX}/announcements`);
 // 设置内容高度
 const noticeRef = ref();
 const { init } = useCalcHeight([
@@ -121,6 +124,7 @@ onMounted(async () => {
   validateResourceVersion();
   validateAllowDomains();
 
+  await getPlatformInfo();
   window.$loginModal = loginRef.value;
   setTimeout(() => {
     observerNoticeEl();
@@ -128,7 +132,8 @@ onMounted(async () => {
   isLoading.value = true;
   await getUserInfo();
   isLoading.value = false;
-  document.title = $i18n.t('bcs.title');
+  setDocumentTitle(config.i18n);
+  setShortcutIcon(config.favicon);
 });
 
 onBeforeUnmount(() => {

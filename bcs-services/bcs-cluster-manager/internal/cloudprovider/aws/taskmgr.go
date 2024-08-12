@@ -137,6 +137,8 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	importCluster.BuildImportClusterNodesStep(task)
 	// step3: install cluster watch component
 	common.BuildWatchComponentTaskStep(task, cls, "")
+	// step4: install image pull secret addon if config
+	common.BuildInstallImageSecretAddonTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -593,5 +595,11 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 // BuildDeleteExternalNodeFromCluster delete external node task
 func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildSwitchClusterNetworkTask switch cluster network mode
+func (t *Task) BuildSwitchClusterNetworkTask(cls *proto.Cluster,
+	subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

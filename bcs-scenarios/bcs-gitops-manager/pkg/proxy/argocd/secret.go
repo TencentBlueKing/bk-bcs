@@ -16,18 +16,20 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // SecretPlugin for internal project authorization
 type SecretPlugin struct {
 	*mux.Router
-	middleware mw.MiddlewareInterface
+	middleware    mw.MiddlewareInterface
+	permitChecker permitcheck.PermissionInterface
 }
 
 // all argocd secret URL:
@@ -80,41 +82,47 @@ func (plugin *SecretPlugin) Init() error {
 // validate project detail from request
 func (plugin *SecretPlugin) createPutSecretHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	project := mux.Vars(r)["project"]
-
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), project, iam.ProjectEdit)
+	secretName := mux.Vars(r)["path"]
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), project,
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' edit permission failed", project))
 	}
+	var action ctxutils.AuditAction
 	switch r.Method {
 	case http.MethodPost:
-		r = middleware.SetAuditMessage(r, project, middleware.SecretCreate)
+		action = ctxutils.SecretCreate
 	case http.MethodPut:
-		r = middleware.SetAuditMessage(r, project, middleware.SecretUpdate)
+		action = ctxutils.SecretUpdate
 	}
+	r = plugin.setSecretAudit(r, project, secretName, action, ctxutils.EmptyData)
 	return r, mw.ReturnSecretReverse()
 }
 
 // Delete with preifx /api/v1/secrets/{project}/{path}
 func (plugin *SecretPlugin) deleteSecretHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
-
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectEdit)
+	secretName := mux.Vars(r)["path"]
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
-	r = middleware.SetAuditMessage(r, projectName, middleware.SecretDelete)
+	r = plugin.setSecretAudit(r, projectName, secretName, ctxutils.SecretDelete, ctxutils.EmptyData)
 	return r, mw.ReturnSecretReverse()
 }
 
 // Get with preifx /api/v1/secrets/{project}/{path}?version={version}
 func (plugin *SecretPlugin) getSecretHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
-
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectEdit)
+	secretName := mux.Vars(r)["path"]
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
+	r = plugin.setSecretAudit(r, projectName, secretName, ctxutils.SecretView, ctxutils.EmptyData)
 	return r, mw.ReturnSecretReverse()
 }
 
@@ -122,7 +130,8 @@ func (plugin *SecretPlugin) getSecretHandler(r *http.Request) (*http.Request, *m
 func (plugin *SecretPlugin) listSecretHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
 
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectView)
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
@@ -134,7 +143,8 @@ func (plugin *SecretPlugin) listSecretHandler(r *http.Request) (*http.Request, *
 func (plugin *SecretPlugin) getMetadataHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
 
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectEdit)
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
@@ -145,7 +155,8 @@ func (plugin *SecretPlugin) getMetadataHandler(r *http.Request) (*http.Request, 
 func (plugin *SecretPlugin) getVersionHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
 
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectEdit)
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
@@ -156,11 +167,24 @@ func (plugin *SecretPlugin) getVersionHandler(r *http.Request) (*http.Request, *
 // POST /api/v1/secrets/{project}/{path}/rollback
 func (plugin *SecretPlugin) rollbackHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
-
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectEdit)
+	secretName := mux.Vars(r)["path"]
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectEditRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check project permission failed"))
 	}
-	r = middleware.SetAuditMessage(r, projectName, middleware.SecretRollback)
+	r = plugin.setSecretAudit(r, projectName, secretName, ctxutils.SecretRollback, ctxutils.EmptyData)
 	return r, mw.ReturnSecretReverse()
+}
+
+func (plugin *SecretPlugin) setSecretAudit(r *http.Request, project, secretName string,
+	action ctxutils.AuditAction, data string) *http.Request {
+	return ctxutils.SetAuditMessage(r, &dao.UserAudit{
+		Project:      project,
+		Action:       string(action),
+		ResourceType: string(ctxutils.SecretResource),
+		ResourceName: secretName,
+		ResourceData: data,
+		RequestType:  string(ctxutils.HTTPRequest),
+	})
 }

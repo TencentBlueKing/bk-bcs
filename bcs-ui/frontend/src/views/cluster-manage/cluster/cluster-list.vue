@@ -3,6 +3,7 @@
     :data="sortClusterList"
     size="medium"
     :row-class-name="rowClassName"
+    height="h-[calc(100%-48px)]"
     @row-click="handleRowClick">
     <bk-table-column :label="$t('cluster.labels.nameAndId')" :min-width="160" :show-overflow-tooltip="false">
       <template #default="{ row }">
@@ -72,15 +73,17 @@
     <bk-table-column :label="$t('cluster.labels.nodeCounts')">
       <template #default="{ row }">
         <template
-          v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage
-            && !row.is_shared && row.clusterType !== 'virtual'">
-          <LoadingIcon v-if="!clusterNodesMap[row.clusterID]">{{ $t('generic.status.loading') }}...</LoadingIcon>
+          v-if="perms[row.clusterID] && perms[row.clusterID].cluster_manage && row.clusterType !== 'virtual'">
+          <LoadingIcon
+            v-if="clusterNodesMap[row.clusterID] === undefined">
+            {{ $t('generic.status.loading') }}...
+          </LoadingIcon>
           <div
             :class=" row.status === 'RUNNING' ? 'cursor-pointer' : 'cursor-not-allowed'"
             v-else
             @click.stop="handleGotoClusterNode(row)">
             <bk-button text :disabled="row.status !== 'RUNNING'">
-              {{ clusterNodesMap[row.clusterID].length }}
+              {{ clusterNodesMap[row.clusterID] }}
             </bk-button>
           </div>
         </template>
@@ -280,7 +283,7 @@
                   <li
                     :class="[
                       'bcs-dropdown-item',
-                      { disabled: clusterNodesMap[row.clusterID] && clusterNodesMap[row.clusterID].length > 0 }
+                      { disabled: clusterNodesMap[row.clusterID] && clusterNodesMap[row.clusterID] > 0 }
                     ]"
                     v-authority="{
                       clickable: perms[row.clusterID]
@@ -296,7 +299,7 @@
                     key="deleteCluster"
                     v-bk-tooltips="{
                       content: $t('cluster.validate.exitNodes'),
-                      disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID].length === 0,
+                      disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID] === 0,
                       placement: 'right'
                     }"
                     v-else
@@ -359,7 +362,7 @@ export default defineComponent({
       default: '',
     },
     clusterNodesMap: {
-      type: Object,
+      type: Object as PropType<Record<string, number>>,
       default: () => ({}),
     },
     activeClusterId: {

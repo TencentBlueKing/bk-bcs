@@ -25,7 +25,7 @@ func Test_GetPerfDetail(t *testing.T) {
 	req := &GetPerfDetailReq{
 		Dsl: &GetPerfDetailDsl{MatchExpr: []GetPerfDetailMatchExpr{{
 			Key:      "IP",
-			Values:   []string{"11.187.113.19"},
+			Values:   []string{""},
 			Operator: "In",
 		}, {
 			Key:      "sync_date",

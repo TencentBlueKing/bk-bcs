@@ -171,6 +171,7 @@ import SetAgentArea from './set-agent-area.vue';
 import SetConnectInfo from './set-connect-info.vue';
 import { useClusterList, useClusterOperate, useClusterOverview, useTask, useVCluster } from './use-cluster';
 
+import { clusterMeta } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
@@ -182,7 +183,6 @@ import $router from '@/router';
 import $store from '@/store';
 import ClusterGuide from '@/views/app/cluster-guide.vue';
 import TaskList from '@/views/cluster-manage/components/task-list.vue';
-import useNode from '@/views/cluster-manage/node-list/use-node';
 import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 
 export default defineComponent({
@@ -224,6 +224,7 @@ export default defineComponent({
     const hideSharedCluster = computed(() => $store.state.hideSharedCluster);
     const changeSharedClusterVisible = (v) => {
       $store.commit('updateHideClusterStatus', v);
+      handleGetClusterNodes();
     };
     // 集群状态
     const statusTextMap = {
@@ -336,7 +337,7 @@ export default defineComponent({
       if (
         cluster.clusterType !== 'virtual'
         && cluster.clusterCategory !== 'importer'
-        && clusterNodesMap.value[cluster.clusterID]?.length > 0
+        && clusterNodesMap.value[cluster.clusterID] > 0
         && cluster.status === 'RUNNING'
       ) return;
 
@@ -473,17 +474,18 @@ export default defineComponent({
     };
 
     // 集群节点数
-    const { getNodeList } = useNode();
-    const clusterNodesMap = ref({});
+    const clusterNodesMap = ref<Record<string, number>>({});
     const handleGetClusterNodes = async () => {
+      const clusterIDs = curClusterList.value.map(item => item.clusterID);
+      if (!clusterIDs.length) return;
+
       clusterNodesMap.value = {};
-      curClusterList.value
-        .filter(cluster => webAnnotations.value.perms[cluster.clusterID]?.cluster_manage && !cluster.is_shared && cluster.clusterType !== 'virtual')
-        .forEach((item) => {
-          getNodeList(item.clusterID).then((data) => {
-            set(clusterNodesMap.value, item.clusterID, data);
-          });
-        });
+      const data = await clusterMeta({
+        clusters: clusterIDs,
+      }).catch(() => []);
+      data.map((item) => {
+        set(clusterNodesMap.value, item.clusterId, item.clusterNodeNum);
+      });
     };
     const throttleClusterNodesFunc = throttle(handleGetClusterNodes, 300);
 

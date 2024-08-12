@@ -345,6 +345,12 @@ type ClusterManager interface {
 	AppendCloudNodeInfo(ctx context.Context, nodes []*proto.ClusterNode, opt *CommonOption) error
 	// CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
 	CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster, nodes []*proto.ClusterNode) bool
+
+	// SwitchClusterNetwork switch cluster network mode
+	SwitchClusterNetwork(
+		cls *proto.Cluster, subnet *proto.SubnetSource, opt *SwitchClusterNetworkOption) (*proto.Task, error)
+	// CheckClusterNetworkStatus check cluster network status
+	CheckClusterNetworkStatus(cloudID string, opt *CheckClusterNetworkStatusOption) (bool, error)
 }
 
 // NodeGroupManager cloud interface for nodegroup management
@@ -363,7 +369,7 @@ type NodeGroupManager interface {
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 	// CheckResourcePoolQuota need to check resource pool quota when revise group quota
-	CheckResourcePoolQuota(region, instanceType string, groupId string) error
+	CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error
@@ -423,10 +429,10 @@ type VPCManager interface {
 		reservedBlocks []*net.IPNet, opt *CommonOption) ([]string, error)
 	// AddClusterOverlayCidr add overlay cidr to cluster
 	AddClusterOverlayCidr(clusterId string, cidrs []string, opt *CommonOption) error
-	// GetVpcIpSurplus get VPC ip surplus
-	GetVpcIpSurplus(vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *CommonOption) (uint32, error)
-	// GetOverlayClusterIPSurplus get cluster ip surplus
-	GetOverlayClusterIPSurplus(clusterId string, opt *CommonOption) (uint32, error)
+	// GetVpcIpUsage get VPC ip total / surplus
+	GetVpcIpUsage(vpcId string, ipType string, reservedBlocks []*net.IPNet, opt *CommonOption) (uint32, uint32, error)
+	// GetClusterIpUsage get cluster ip usage
+	GetClusterIpUsage(clusterId string, ipType string, opt *CommonOption) (uint32, uint32, error)
 }
 
 // InstanceConfig get machine cpu/mem/disk config
@@ -493,6 +499,9 @@ type TaskManager interface {
 	// BuildRemoveNodesFromClusterTask remove instances from cluster
 	BuildRemoveNodesFromClusterTask(
 		cls *proto.Cluster, nodes []*proto.Node, opt *DeleteNodesOption) (*proto.Task, error)
+	// BuildSwitchClusterNetworkTask switch cluster network mode
+	BuildSwitchClusterNetworkTask(
+		cls *proto.Cluster, subnet *proto.SubnetSource, opt *SwitchClusterNetworkOption) (*proto.Task, error)
 
 	// BuildAddExternalNodeToCluster add external to cluster
 	BuildAddExternalNodeToCluster(

@@ -63,6 +63,7 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: loader.Namespace,
 			Labels: map[string]string{
+				// specific label
 				ImageLoaderNameKey: loader.Name,
 			},
 			Annotations: loader.Annotations,
@@ -81,8 +82,8 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 			ActiveDeadlineSeconds: &loader.Spec.JobTimeout,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      map[string]string{},
-					Annotations: loader.Annotations,
+					Labels:      make(map[string]string),
+					Annotations: make(map[string]string),
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
@@ -93,13 +94,21 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 					},
 					ImagePullSecrets: loader.Spec.ImagePullSecrets,
 					RestartPolicy:    "Never",
+					Tolerations:      loader.Spec.Tolerations,
 				},
 			},
 			// the job will be delete by reconciler, no need to set ttl
 		},
 	}
-	for k, v := range loader.Labels {
-		job.Labels[k] = v
+	if loader.Labels != nil && len(loader.Labels) != 0 {
+		for k, v := range loader.Labels {
+			job.Labels[k] = v
+		}
+		job.Spec.Template.Labels = loader.Labels
+	}
+	if loader.Annotations != nil && len(loader.Annotations) != 0 {
+		job.Annotations = loader.Annotations
+		job.Spec.Template.Annotations = loader.Annotations
 	}
 	return job
 }
@@ -114,19 +123,6 @@ func (r *ImageLoaderReconciler) handlePodSelector(ctx context.Context, loader *t
 					Namespaces:    []string{loader.Namespace},
 					LabelSelector: loader.Spec.PodSelector,
 					TopologyKey:   corev1.LabelHostname,
-				},
-			},
-		},
-		PodAntiAffinity: &corev1.PodAntiAffinity{
-			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-				{
-					Namespaces: []string{loader.Namespace},
-					LabelSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							LoaderJobNameKey: job.Name,
-						},
-					},
-					TopologyKey: corev1.LabelHostname,
 				},
 			},
 		},
@@ -162,22 +158,6 @@ func (r *ImageLoaderReconciler) handlePodSelector(ctx context.Context, loader *t
 
 func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
 	job *batchv1.Job) error {
-	// ensure the job runs one pod on each node
-	job.Spec.Template.Spec.Affinity = &corev1.Affinity{
-		PodAntiAffinity: &corev1.PodAntiAffinity{
-			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-				{
-					Namespaces: []string{loader.Namespace},
-					LabelSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							LoaderJobNameKey: job.Name,
-						},
-					},
-					TopologyKey: corev1.LabelHostname,
-				},
-			},
-		},
-	}
 
 	nodes := make([]corev1.Node, 0)
 	if len(loader.Spec.NodeSelector.MatchLabels) != 0 {
@@ -231,23 +211,7 @@ func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *
 	return nil
 }
 
-func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	job *batchv1.Job) error {
-	job.Spec.Template.Spec.Affinity = &corev1.Affinity{
-		PodAntiAffinity: &corev1.PodAntiAffinity{
-			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-				{
-					Namespaces: []string{loader.Namespace},
-					LabelSelector: &metav1.LabelSelector{
-						MatchLabels: map[string]string{
-							LoaderJobNameKey: job.Name,
-						},
-					},
-					TopologyKey: corev1.LabelHostname,
-				},
-			},
-		},
-	}
+func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, job *batchv1.Job) error {
 	nodeList := &corev1.NodeList{}
 	err := r.Client.List(ctx, nodeList)
 	if err != nil {
@@ -264,11 +228,34 @@ func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, loader *tkexv
 
 func modifyJob(job *batchv1.Job, loader *tkexv1alpha1.ImageLoader, index int) {
 	job.Name = getJobName(loader, index)
+	if job.Annotations == nil {
+		job.Annotations = make(map[string]string)
+	}
 	job.Annotations[LoaderJobNameKey] = job.Name
+	if job.Spec.Template.Labels == nil {
+		job.Spec.Template.Labels = make(map[string]string)
+	}
 	job.Spec.Template.Labels[LoaderJobNameKey] = job.Name
 	job.Spec.Template.Spec.Containers[0].Image = loader.Spec.Images[index]
 	job.Spec.Template.Spec.Containers[0].Command = []string{
 		"echo", "pull " + loader.Spec.Images[index],
+	}
+	// ensure the job runs one pod on each node
+	if job.Spec.Template.Spec.Affinity == nil {
+		job.Spec.Template.Spec.Affinity = &corev1.Affinity{}
+	}
+	job.Spec.Template.Spec.Affinity.PodAntiAffinity = &corev1.PodAntiAffinity{
+		RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
+			{
+				Namespaces: []string{loader.Namespace},
+				LabelSelector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						LoaderJobNameKey: job.Name,
+					},
+				},
+				TopologyKey: corev1.LabelHostname,
+			},
+		},
 	}
 }
 

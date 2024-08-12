@@ -1,17 +1,21 @@
 <template>
   <div class="app-footer">
-    <div class="links">
-      <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('技术支持') }}</a> |
-      <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('社区论坛') }}</a> |
-      <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('产品官网') }}</a>
-    </div>
-    <p>Copyright © 2012 Tencent BlueKing. All Rights Reserved. {{ bscpVersion }}</p>
+    <div class="links" v-html="appGlobalConfig.i18n.footerInfoHTML"></div>
+    <p>{{ copyRight }}</p>
   </div>
 </template>
 <script lang="ts" setup>
+  import { computed } from 'vue';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../store/global';
-  const { bscpVersion } = storeToRefs(useGlobalStore());
+  const { bscpVersion, appGlobalConfig } = storeToRefs(useGlobalStore());
+
+  const copyRight = computed(() => {
+    return (
+      appGlobalConfig.value.footerCopyrightContent ||
+      `Copyright © 2012 Tencent BlueKing. All Rights Reserved. ${bscpVersion.value}`
+    );
+  });
 </script>
 <style lang="scss" scoped>
   .app-footer {
@@ -21,8 +25,11 @@
     text-align: center;
     line-height: 20px;
     padding-top: 25px;
-    .links a {
+    .links :deep(.link-item) {
       color: #3a84ff;
+      &:hover {
+        color: #3a84ff;
+      }
     }
   }
 </style>

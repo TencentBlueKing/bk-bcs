@@ -20,7 +20,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	workflowv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow/pkg/apis/gitopsworkflow/v1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -28,6 +27,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/manager/options"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/workflowstore"
 )
 
@@ -37,6 +38,7 @@ type WorkflowPlugin struct {
 	op            *options.Options
 	middleware    mw.MiddlewareInterface
 	workflowStore workflowstore.WorkflowInterface
+	permitChecker permitcheck.PermissionInterface
 }
 
 // Init the workflow router
@@ -71,7 +73,7 @@ func (plugin *WorkflowPlugin) Init() error {
 // listHandler lis the workflows by query projects
 func (plugin *WorkflowPlugin) listHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectList, statusCode, err := plugin.middleware.ListProjects(r.Context())
-	if statusCode != http.StatusOK {
+	if err != nil {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list projects failed"))
 	}
 	allProjects := make(map[string]struct{})
@@ -132,12 +134,13 @@ func (plugin *WorkflowPlugin) createHandler(r *http.Request) (*http.Request, *mw
 	if err = plugin.checkWorkflow(wf); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "check workflow failed"))
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(r.Context(), wf.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), wf.Spec.Project,
+		permitcheck.ProjectViewRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(status, err)
 	}
 
-	user := mw.User(r.Context())
+	user := ctxutils.User(r.Context())
 	wf.TypeMeta = metav1.TypeMeta{
 		APIVersion: "gitopsworkflow.bkbcs.tencent.com/v1",
 		Kind:       "Workflow",
@@ -181,7 +184,7 @@ func (plugin *WorkflowPlugin) updateHandler(r *http.Request) (*http.Request, *mw
 	if httpResp != nil {
 		return r, httpResp
 	}
-	user := mw.User(r.Context())
+	user := ctxutils.User(r.Context())
 	k8sWorkflow.Annotations[workflowv1.WorkflowAnnotationUpdateUser] = user.GetUser()
 	if k8sWorkflow.Spec.Engine != wf.Spec.Engine {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
@@ -228,7 +231,7 @@ func (plugin *WorkflowPlugin) executeHandler(r *http.Request) (*http.Request, *m
 	if httpResp != nil {
 		return r, httpResp
 	}
-	user := mw.User(r.Context())
+	user := ctxutils.User(r.Context())
 	controller := true
 	block := true
 	history := &workflowv1.WorkflowHistory{
@@ -316,7 +319,7 @@ func (plugin *WorkflowPlugin) checkWorkflowPermission(ctx context.Context, name 
 	if wf == nil {
 		return nil, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("workflow '%s' not found", name))
 	}
-	_, status, err := plugin.middleware.CheckProjectPermission(ctx, wf.Spec.Project, iam.ProjectView)
+	_, status, err := plugin.permitChecker.CheckProjectPermission(ctx, wf.Spec.Project, permitcheck.ProjectViewRSAction)
 	if err != nil {
 		return nil, mw.ReturnErrorResponse(status, errors.Wrapf(err, "check project permission failed"))
 	}

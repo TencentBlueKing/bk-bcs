@@ -136,6 +136,7 @@
         }
       }
       .totle {
+        padding:0 16px;
         height: 24px;
         background: #eaebf0;
         border-radius: 12px;

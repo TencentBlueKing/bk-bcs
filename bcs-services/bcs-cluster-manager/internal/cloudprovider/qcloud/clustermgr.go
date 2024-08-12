@@ -331,7 +331,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 
 func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
 	var (
-		ipNum          uint32 = 0
+		ipNum          uint32
 		clusterCidrNum uint32
 	)
 	cidrs, err := business.GetCidrsFromCluster(tkeCls)
@@ -410,6 +410,23 @@ func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*pr
 	opt.Cluster.ExtraInfo[icommon.ClusterCurNodeNum] = fmt.Sprintf("%v", currentNodeNum)
 	opt.Cluster.ExtraInfo[icommon.ClusterSupNodeNum] = fmt.Sprintf("%v", supNodeNum)
 	opt.Cluster.ExtraInfo[icommon.ClusterMaxNodeNum] = fmt.Sprintf("%v", maxNodeNum)
+
+	if opt.Cluster.NetworkSettings == nil {
+		opt.Cluster.NetworkSettings = &proto.NetworkSetting{}
+	}
+	if opt.Cluster.NetworkSettings.SubnetSource == nil {
+		opt.Cluster.NetworkSettings.SubnetSource = &proto.SubnetSource{}
+	}
+
+	// 集群VPC-CNI模式子网信息
+	if !utils.StringInSlice(opt.Cluster.GetNetworkSettings().GetStatus(),
+		[]string{icommon.StatusInitialization, icommon.TaskStatusFailure}) {
+		opt.Cluster.NetworkSettings.EnableVPCCni = business.GetClusterVpcCniStatus(cls)
+	}
+	if opt.Cluster.NetworkSettings.GetNetworkMode() == "" {
+		opt.Cluster.NetworkSettings.NetworkMode = api.TKERouteEni
+	}
+	opt.Cluster.NetworkSettings.EniSubnetIDs = business.GetClusterVpcCniSubnets(cls)
 
 	return opt.Cluster, nil
 }
@@ -558,7 +575,7 @@ func (c *Cluster) CheckClusterCidrAvailable(cls *proto.Cluster,
 		return true, nil
 	}
 
-	ipNum, err := getClusterCidrAvailableIPNum(cls.ClusterID, cls.SystemID, &opt.CommonOption)
+	_, ipNum, err := getClusterCidrAvailableIPNum(cls.ClusterID, cls.SystemID, &opt.CommonOption)
 	if err != nil {
 		return false, err
 	}
@@ -739,10 +756,65 @@ func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	return nil
 }
 
+func mergeSubnetSource(originSubs, newSubs []*proto.NewSubnet) []*proto.NewSubnet {
+	if originSubs == nil {
+		originSubs = make([]*proto.NewSubnet, 0)
+	}
+
+	originSubsMap := make(map[string]*proto.NewSubnet, 0)
+	for i := range originSubs {
+		originSubsMap[originSubs[i].GetZone()] = originSubs[i]
+	}
+
+	for i := range newSubs {
+		zone := newSubs[i].GetZone()
+
+		sub, ok := originSubsMap[zone]
+		if ok {
+			sub.IpCnt += newSubs[i].GetIpCnt()
+		} else {
+			originSubs = append(originSubs, &proto.NewSubnet{
+				Zone:  zone,
+				IpCnt: newSubs[i].GetIpCnt(),
+			})
+		}
+	}
+
+	return originSubs
+}
+
 // AddSubnetsToCluster add subnets to cluster
 func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetSource,
 	opt *cloudprovider.AddSubnetsToClusterOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if opt == nil || opt.Cluster == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 {
+		return fmt.Errorf("AddSubnetsToCluster lost cloud accoount")
+	}
+	if subnet == nil || len(subnet.GetNew()) == 0 {
+		return fmt.Errorf("AddSubnetsToCluster subnet data empty")
+	}
+
+	// 检测当前集群子网资源使用率, 如果使用率达标则继续扩容, 不达标则拒绝扩容
+	zoneSubnetRatio, _, _, err := business.GetClusterCurrentVpcCniSubnets(*opt.Cluster, false)
+	if err != nil {
+		return fmt.Errorf("AddSubnetsToCluster failed: %v", err)
+	}
+
+	goalRatio := opt.Cloud.GetNetworkInfo().GetUnderlayRatio()
+	for i := range subnet.GetNew() {
+		zoneRatio, ok := zoneSubnetRatio[subnet.GetNew()[i].GetZone()]
+		if ok && zoneRatio.Ratio < float64(goalRatio) {
+			return fmt.Errorf("zone[%s] usage lt goalRatio %+v", subnet.GetNew()[i].GetZone(), goalRatio)
+		}
+	}
+
+	newClusterSubnets := mergeSubnetSource(opt.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), subnet.GetNew())
+	if opt.Cluster.NetworkSettings.SubnetSource == nil {
+		opt.Cluster.NetworkSettings.SubnetSource = &proto.SubnetSource{}
+	}
+
+	opt.Cluster.NetworkSettings.SubnetSource.New = newClusterSubnets
+	return cloudprovider.UpdateCluster(opt.Cluster)
 }
 
 // GetMasterSuggestedMachines get master suggested machines
@@ -804,7 +876,117 @@ func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto
 	return true
 }
 
-func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, error) {
+// SwitchClusterNetwork switch cluster network mode
+func (c *Cluster) SwitchClusterNetwork(
+	cls *proto.Cluster, subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	if opt == nil || opt.Account == nil || len(opt.Account.SecretID) == 0 ||
+		len(opt.Account.SecretKey) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("qcloud SwitchClusterNetwork lost authoration")
+	}
+
+	// GetTaskManager for cluster manager initialization
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when SwitchClusterNetwork %d failed, %s",
+			opt.Cloud.CloudID, cls.ClusterName, err.Error(),
+		)
+		return nil, err
+	}
+
+	// build create cluster task
+	task, err := mgr.BuildSwitchClusterNetworkTask(cls, subnet, opt)
+	if err != nil {
+		blog.Errorf("build SwitchClusterNetwork task for cluster %s with cloudProvider %s failed, %s",
+			cls.ClusterName, cls.Provider, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
+}
+
+// CheckClusterNetworkStatus check cluster network status
+func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
+	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
+	if clusterId == "" {
+		return false, fmt.Errorf("cluster[%s] cloud systemId empty", opt.Cluster.ClusterID)
+	}
+
+	// get cloud cluster
+	cls, err := getCloudCluster(clusterId, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("Get Cluster %s failed, %s", clusterId, err.Error())
+		return false, err
+	}
+
+	if opt.Cluster.GetNetworkSettings().GetSubnetSource() == nil {
+		opt.Cluster.GetNetworkSettings().SubnetSource = &proto.SubnetSource{}
+	}
+
+	switch opt.Disable {
+	case true:
+		// 底层集群已经关闭
+		if !business.GetClusterVpcCniStatus(cls) {
+			opt.Cluster.NetworkSettings.EnableVPCCni = false
+			opt.Cluster.NetworkSettings.EniSubnetIDs = nil
+			opt.Cluster.NetworkSettings.SubnetSource.New = nil
+			opt.Cluster.NetworkSettings.Status = icommon.StatusRunning
+
+			return false, nil
+		}
+
+		if !opt.Cluster.GetNetworkSettings().GetEnableVPCCni() &&
+			opt.Cluster.GetNetworkSettings().GetStatus() != icommon.TaskStatusFailure {
+			return false,
+				fmt.Errorf("cluster %s/%s already close vpc-cni", opt.Cluster.ClusterID, opt.Cluster.ClusterName)
+		}
+
+		// check subnets usage when close vpc-cni
+		opt.Cluster.NetworkSettings.EniSubnetIDs = nil
+		opt.Cluster.NetworkSettings.SubnetSource.New = nil
+	default:
+		if business.GetClusterVpcCniStatus(cls) {
+			opt.Cluster.NetworkSettings.EnableVPCCni = true
+			opt.Cluster.NetworkSettings.EniSubnetIDs = business.GetClusterVpcCniSubnets(cls)
+			opt.Cluster.NetworkSettings.Status = icommon.StatusRunning
+
+			zoneSubs, _, errLocal := business.GetClusterSubnetsZoneUsage(&opt.CommonOption,
+				business.GetClusterVpcCniSubnets(cls), true)
+			if errLocal != nil {
+				return false, errLocal
+			}
+
+			opt.Cluster.NetworkSettings.SubnetSource.New = func() []*proto.NewSubnet {
+				newSubnets := make([]*proto.NewSubnet, 0)
+				for zone, sub := range zoneSubs {
+					newSubnets = append(newSubnets, &proto.NewSubnet{
+						Zone:  zone,
+						IpCnt: uint32(sub.TotalIps),
+					})
+				}
+
+				return newSubnets
+			}()
+
+			return false, nil
+		}
+
+		if opt.Cluster.GetNetworkSettings().GetEnableVPCCni() &&
+			opt.Cluster.GetNetworkSettings().GetStatus() != icommon.TaskStatusFailure {
+			return false,
+				fmt.Errorf("cluster %s/%s already open vpc-cni", opt.Cluster.ClusterID, opt.Cluster.ClusterName)
+		}
+		opt.Cluster.NetworkSettings.IsStaticIpMode = opt.IsStaticIpMode
+		opt.Cluster.NetworkSettings.ClaimExpiredSeconds = opt.ClaimExpiredSeconds
+		opt.Cluster.NetworkSettings.SubnetSource = opt.SubnetSource
+		if opt.Cluster.NetworkSettings.GetClaimExpiredSeconds() <= 0 {
+			opt.Cluster.NetworkSettings.ClaimExpiredSeconds = 300
+		}
+	}
+
+	return true, nil
+}
+
+func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, uint32, error) {
 	return business.GetClusterGrIPSurplus(option, clusterId, tkeId)
 }
 

@@ -11,14 +11,20 @@
         <Funnel :fill="isShowSelect ? '#313238' : '#c4c6cc'" />
       </bk-button>
       <template #content>
-        <div class="popover-content">
-          <bk-checkbox-group v-model="selectedValues">
-            <bk-checkbox v-for="item in filterList" :key="item.value" :label="item.value">{{ item.text }}</bk-checkbox>
-          </bk-checkbox-group>
-        </div>
-        <div class="popover-footer">
-          <bk-button theme="primary" size="small" style="margin-right: 6px" @click="handleConfirm">确定</bk-button>
-          <bk-button size="small" @click="handleReset">重置</bk-button>
+        <div v-click-outside="handleReset">
+          <div class="popover-content">
+            <bk-checkbox-group v-model="selectedValues">
+              <bk-checkbox v-for="item in filterList" :key="item.value" :label="item.value">{{
+                item.text
+              }}</bk-checkbox>
+            </bk-checkbox-group>
+          </div>
+          <div class="popover-footer">
+            <bk-button theme="primary" size="small" style="margin-right: 6px" @click="handleConfirm">
+              {{ $t('确定') }}
+            </bk-button>
+            <bk-button size="small" @click="handleReset">{{ $t('重置') }}</bk-button>
+          </div>
         </div>
       </template>
     </bk-popover>

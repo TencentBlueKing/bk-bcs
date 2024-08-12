@@ -92,14 +92,6 @@
         "debug": ${bcsIAMDebug},
         "applyPermAddress": "${bcsIAMApplyPermAddress}"
     },
-    "bcsapp": {
-        "server": "${bcsAppServer}",
-        "appCode": "${bcsAppAppCode}",
-        "appSecret": "${bcsAppAppSecret}",
-        "bkUserName": "${bcsAppBkUsername}",
-        "enable": ${bcsAppEnable},
-        "debug": ${bcsAppDebug}
-    },
     "helm": {
         "module": "${bcsHelmManagerModule}",
         "enable": ${bcsHelmManagerEnable}
@@ -126,11 +118,13 @@
             "releaseName": "${bcsVclusterReleaseName}",
             "isPublicRepo": ${bcsVclusterIsPublicRepo}
         },
+        "imagePullSecret": {
+            "addonName": "${bcsImagePullSecretAddonName}"
+        },
         "registry": "${bcsImageRegistry}",
         "bcsApiGateway": "${bcsCAApiGateway}",
         "token": "${bcsCAToken}",
-        "deployService": "${deployService}",
-         "bcsClusterUrl": "${bcsClusterUrl}"
+        "bcsClusterUrl": "${bcsClusterUrl}"
     },
     "user": {
         "enable": ${bcsUserEnable},

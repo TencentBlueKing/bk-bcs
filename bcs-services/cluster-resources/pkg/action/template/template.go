@@ -125,7 +125,39 @@ func (t *TemplateAction) Get(ctx context.Context, id string) (map[string]interfa
 		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
-	return template.ToMap(), nil
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode: p.Code,
+	})
+	// 获取 templatespace id
+	templateSpace, err := t.model.ListTemplateSpace(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+	// get version id
+	versions, err := t.model.ListTemplateVersion(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: template.TemplateSpace,
+		entity.FieldKeyTemplateName:  template.Name,
+		entity.FieldKeyVersion:       template.Version,
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	// template to map
+	result := template.ToMap()
+	for _, v := range templateSpace {
+		if v.Name == template.TemplateSpace {
+			result["templateSpaceID"] = v.ID.Hex()
+		}
+	}
+	for _, v := range versions {
+		if v.Version == template.Version {
+			result["versionID"] = v.ID.Hex()
+		}
+	}
+
+	return result, nil
 }
 
 // List xxx
@@ -154,28 +186,48 @@ func (t *TemplateAction) List(ctx context.Context, templateSpaceID string) ([]ma
 	if err != nil {
 		return nil, err
 	}
+	// get version id
+	versions, err := t.model.ListTemplateVersion(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+	}))
+	if err != nil {
+		return nil, err
+	}
 
 	m := make([]map[string]interface{}, 0)
 	for _, value := range template {
-		m = append(m, value.ToMap())
+		mm := value.ToMap()
+		for _, v := range versions {
+			if v.Version == value.Version {
+				mm["versionID"] = v.ID.Hex()
+			}
+		}
+		m = append(m, mm)
 	}
 	return m, nil
 }
 
 // Create xxx
-func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTemplateMetadataReq) (string, error) {
+func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTemplateMetadataReq) (
+	string, string, error) {
 	if err := t.checkAccess(ctx); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	p, err := project.FromContext(ctx)
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+
+	// 非草稿模板文件需要版本号
+	if !req.GetIsDraft() && req.GetVersion() == "" {
+		return "", "", errorx.New(errcode.ValidateErr, i18n.GetMsg(ctx, ("版本字段不能为空")))
 	}
 
 	templateSpace, err := t.model.GetTemplateSpace(ctx, req.GetTemplateSpaceID())
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	// 检测模板元数据是否重复
@@ -186,39 +238,31 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	})
 	templates, err := t.model.ListTemplate(ctx, cond)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if len(templates) > 0 {
-		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "元数据名称重复"))
+		return "", "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "元数据名称重复"))
 	}
 
 	userName := ctxkey.GetUsernameFromCtx(ctx)
 
-	// 创建顺序：templateVersion -> template
-	templateVersion := &entity.TemplateVersion{
-		ProjectCode:   p.Code,
-		Description:   req.GetVersionDescription(),
-		TemplateName:  req.Name,
-		TemplateSpace: templateSpace.Name,
-		Version:       req.Version,
-		Content:       req.Content,
-		Creator:       userName,
-	}
-
-	_, err = t.model.CreateTemplateVersion(ctx, templateVersion)
-	if err != nil {
-		return "", err
-	}
-
-	// get resource type
-	resourceType := ""
-	manifests := parser.SplitManifests(req.GetContent())
-	for _, v := range manifests {
-		metadata := parser.GetManifestMetadata(v)
-		if metadata.Kind != "" {
-			resourceType = metadata.Kind
-			break
+	// 非草稿状态下：创建模板文件版本
+	versionID := ""
+	if !req.GetIsDraft() {
+		// 创建顺序：templateVersion -> template
+		templateVersion := &entity.TemplateVersion{
+			ProjectCode:   p.Code,
+			Description:   req.GetVersionDescription(),
+			TemplateName:  req.GetName(),
+			TemplateSpace: templateSpace.Name,
+			Version:       req.GetVersion(),
+			Content:       req.GetContent(),
+			Creator:       userName,
+		}
+		versionID, err = t.model.CreateTemplateVersion(ctx, templateVersion)
+		if err != nil {
+			return "", "", err
 		}
 	}
 
@@ -227,19 +271,26 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		ProjectCode:   p.Code,
 		Description:   req.GetDescription(),
 		TemplateSpace: templateSpace.Name,
-		ResourceType:  resourceType,
+		ResourceType:  parser.GetResourceTypesFromManifest(req.GetContent()),
 		Creator:       userName,
 		Updator:       userName,
 		Tags:          req.GetTags(),
 		VersionMode:   0,
 		Version:       req.GetVersion(),
+		IsDraft:       req.GetIsDraft(),
 	}
-	templateID, err := t.model.CreateTemplate(ctx, template)
-	if err != nil {
-		return "", err
+	// 草稿状态，新增相关字段
+	if req.GetIsDraft() {
+		template.DraftVersion = req.GetDraftVersion()
+		template.DraftContent = req.GetDraftContent()
 	}
 
-	return templateID, nil
+	// 没有记录的情况下直接创建
+	templateID, err := t.model.CreateTemplate(ctx, template)
+	if err != nil {
+		return "", "", err
+	}
+	return templateID, versionID, nil
 }
 
 // Update xxx
@@ -293,15 +344,19 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	}
 
 	updateTemplate := entity.M{
-		"name":        req.GetName(),
-		"description": req.GetDescription(),
-		"updator":     userName,
-		"tags":        req.GetTags(),
-		"versionMode": req.GetVersionMode(),
+		"name":         req.GetName(),
+		"description":  req.GetDescription(),
+		"updator":      userName,
+		"tags":         req.GetTags(),
+		"versionMode":  req.GetVersionMode(),
+		"isDraft":      req.GetIsDraft(),
+		"draftVersion": req.GetDraftVersion(),
+		"draftContent": req.GetDraftContent(),
 	}
 	if req.GetVersionMode() == clusterRes.VersionMode_SpecifyVersion && req.GetVersion() != "" {
 		updateTemplate["version"] = req.GetVersion()
 	}
+
 	if err = t.model.UpdateTemplate(ctx, req.GetId(), updateTemplate); err != nil {
 		return err
 	}
@@ -369,8 +424,8 @@ func (t *TemplateAction) CreateTemplateSet(ctx context.Context, req *clusterRes.
 }
 
 func getTemplateContents(ctx context.Context, model store.ClusterResourcesModel, versions []string,
-	projectCode string) ([]string, error) {
-	templates := make([]string, 0)
+	projectCode string) ([]entity.TemplateDeploy, error) {
+	templates := make([]entity.TemplateDeploy, 0)
 	for _, v := range versions {
 		vv, err := model.GetTemplateVersion(ctx, v)
 		if err != nil {
@@ -379,7 +434,12 @@ func getTemplateContents(ctx context.Context, model store.ClusterResourcesModel,
 		if vv.ProjectCode != projectCode {
 			return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 		}
-		templates = append(templates, vv.Content)
+		templates = append(templates, entity.TemplateDeploy{
+			TemplateSpace:   vv.TemplateSpace,
+			TemplateName:    vv.TemplateName,
+			TemplateVersion: vv.Version,
+			Content:         vv.Content,
+		})
 	}
 	return templates, nil
 }
@@ -459,7 +519,7 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 	// render templates
 	manifests, err := t.renderTemplates(ctx, templates, req.GetVariables(), req.GetNamespace())
 	if err != nil {
-		return nil, err
+		return map[string]interface{}{"items": []string{}, "error": err.Error()}, nil
 	}
 
 	// 鉴权
@@ -467,11 +527,33 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 		return nil, errr
 	}
 
-	items, err := convertManifestToString(manifests)
+	// dry-run deploy templates
+	dryRunMsg := ""
+	clusterConf := res.NewClusterConf(req.GetClusterID())
+	for _, v := range manifests {
+		kind := mapx.GetStr(v, "kind")
+		groupVersion := mapx.GetStr(v, "apiVersion")
+		if kind == "" {
+			continue
+		}
+		k8sRes, errr := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
+		if errr != nil {
+			dryRunMsg = errr.Error()
+			break
+		}
+		_, errr = cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v,
+			metav1.CreateOptions{DryRun: []string{metav1.DryRunAll}})
+		if errr != nil {
+			dryRunMsg = errr.Error()
+			break
+		}
+	}
+
+	items, err := convertManifestToString(ctx, manifests, req.GetClusterID())
 	if err != nil {
 		return nil, err
 	}
-	return map[string]interface{}{"items": items}, nil
+	return map[string]interface{}{"items": items, "error": dryRunMsg}, nil
 }
 
 // DeployTemplateFile deploy template file
@@ -528,19 +610,21 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 }
 
 // renderTemplates render templates
-func (t *TemplateAction) renderTemplates(ctx context.Context, templates []string, vars map[string]string, ns string) (
-	[]map[string]interface{}, error) {
+func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity.TemplateDeploy,
+	vars map[string]string, ns string) ([]map[string]interface{}, error) {
 	manifests := make([]map[string]interface{}, 0)
 	for i := range templates {
-		templates[i] = replaceTemplateFileVar(templates[i], vars)
-		mm := parser.SplitManifests(templates[i])
+		templates[i].Content = replaceTemplateFileVar(templates[i].Content, vars)
+		mm := parser.SplitManifests(templates[i].Content)
 		for _, v := range mm {
 			manifest := map[string]interface{}{}
 			if errr := yaml.Unmarshal([]byte(v), &manifest); errr != nil {
 				return nil, errr
 			}
 			manifest = mapx.CleanUpMap(manifest)
-			manifest = patchTemplateAnnotations(manifest, ctxkey.GetUsernameFromCtx(ctx))
+			manifest = patchTemplateAnnotations(
+				manifest, ctxkey.GetUsernameFromCtx(ctx),
+				templates[i].TemplateSpace, templates[i].TemplateName, templates[i].TemplateVersion)
 			// patch ns
 			kind := mapx.GetStr(manifest, "kind")
 			if mapx.GetStr(manifest, "metadata.namespace") != "" || isNSRequired(kind) {

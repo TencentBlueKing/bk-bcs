@@ -39,6 +39,8 @@ type TemplateVariable interface {
 	BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, tmplVars []*table.TemplateVariable) error
 	// GetByUniqueKey get template variable by unique key.
 	GetByUniqueKey(kit *kit.Kit, bizID uint32, name string) (*table.TemplateVariable, error)
+	// FetchIDsExcluding 获取指定ID后排除的ID
+	FetchIDsExcluding(kit *kit.Kit, bizID uint32, ids []uint32) ([]uint32, error)
 }
 
 var _ TemplateVariable = new(templateVariableDao)
@@ -47,6 +49,22 @@ type templateVariableDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListIdsExcluded 获取指定ID后排除的ID
+func (dao *templateVariableDao) FetchIDsExcluding(kit *kit.Kit, bizID uint32, ids []uint32) ([]uint32, error) {
+
+	m := dao.genQ.TemplateVariable
+	q := dao.genQ.TemplateVariable.WithContext(kit.Ctx)
+
+	var result []uint32
+	if err := q.Select(m.ID).
+		Where(m.BizID.Eq(bizID), m.ID.NotIn(ids...)).
+		Pluck(m.ID, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // Create one template variable instance.

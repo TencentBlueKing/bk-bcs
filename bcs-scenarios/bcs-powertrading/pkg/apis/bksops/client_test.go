@@ -30,7 +30,7 @@ func Test_CreateTask(t *testing.T) {
 		AppSecret:   "",
 	}, requester.NewRequester())
 	constants := make(map[string]string)
-	constants["${node_ip_list}"] = "11.187.113.19"
+	constants["${node_ip_list}"] = ""
 	constants["${biz_cc_id}"] = "100148"
 	rsp, err := testCli.CreateTask("10179", "100148", "TKExIEG混部集群第三方节点上架前检测", constants)
 	fmt.Println(err)
@@ -48,7 +48,7 @@ func TestClient_GetTaskStatus(t *testing.T) {
 		AppSecret:   "",
 	}, requester.NewRequester())
 	constants := make(map[string]string)
-	constants["${node_ip_list}"] = "11.187.113.19"
+	constants["${node_ip_list}"] = ""
 	constants["${biz_cc_id}"] = "100148"
 	rsp, err := testCli.GetTaskStatus("38749998", "100148")
 	fmt.Println(err)

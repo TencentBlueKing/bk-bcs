@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -34,7 +33,8 @@ var (
 )
 
 // ArchiveType 文件类型
-type ArchiveType string // nolint
+// nolint:revive
+type ArchiveType string
 
 const (
 	// GZIP gzip
@@ -47,31 +47,36 @@ const (
 	Unknown ArchiveType = "Unknown"
 )
 
-// Unpack 解压zip、gzip、tar
-func Unpack(reader io.Reader, archiveType ArchiveType) (string, error) {
+// ArchiveErrCode 错误码
+// nolint:revive
+type ArchiveErrCode int32
 
-	tempDir, err := os.MkdirTemp("", "configItem-")
-	if err != nil {
-		return "", err
-	}
+const (
+	// FileTooLarge 文件过大
+	FileTooLarge ArchiveErrCode = 400413
+)
+
+// Unpack 解压zip、gzip、tar
+func Unpack(reader io.Reader, archiveType ArchiveType, dirPath string, limitFileSize int64) error {
+
 	switch archiveType {
 	case ZIP:
-		if err := NewZipArchive(tempDir).UnZipPack(reader); err != nil {
-			return "", err
+		if err := NewZipArchive(dirPath, limitFileSize).UnZipPack(reader); err != nil {
+			return err
 		}
 	case GZIP:
-		if err := NewTgzArchive(tempDir).UnTgzPack(reader); err != nil {
-			return "", err
+		if err := NewTgzArchive(dirPath, limitFileSize).UnTgzPack(reader); err != nil {
+			return err
 		}
 	case TAR:
-		if err := NewTgzArchive(tempDir).UnTar(reader); err != nil {
-			return "", err
+		if err := NewTgzArchive(dirPath, limitFileSize).UnTar(reader); err != nil {
+			return err
 		}
 	default:
-		return "", errors.New("file type detection failed")
+		return errors.New("file type detection failed")
 	}
 
-	return tempDir, nil
+	return nil
 }
 
 // IdentifyFileType 检测文件类型：zip、zip、tar

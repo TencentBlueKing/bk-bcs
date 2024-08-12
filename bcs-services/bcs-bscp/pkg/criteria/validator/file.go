@@ -24,8 +24,8 @@ import (
 )
 
 // validUnixFileSubPathRegexp sub path support character:
-// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'.
-var validUnixFileSubPathRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,@^+=\\[\\]{}]+$")
+// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '{'. '}'.
+var validUnixFileSubPathRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]{}]+$")
 
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(path string) error {
@@ -51,19 +51,19 @@ func ValidateUnixFilePath(path string) error {
 
 	// Iterate over each part to validate
 	for _, part := range parts {
-		// 2. '/' in the end is optional (already handled by strings.Split)
-		// 3. each sub path should not start with '.'
-		if strings.HasPrefix(part, ".") {
-			return fmt.Errorf("invalid path, each sub path should not start with '.'")
+
+		// 2. the verification path cannot all be '{'. '}'
+		if dotsRegexp.MatchString(part) {
+			return fmt.Errorf("invalid path %s, path cannot all be '{'. '}'", part)
 		}
 
-		// 4. each sub path support character:
+		// 3. each sub path support character:
 		// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
 		if !validUnixFileSubPathRegexp.MatchString(part) {
 			return fmt.Errorf("invalid path, each sub path should only contain chinese, english, " +
-				"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}'")
+				"number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '{'. '}")
 		}
-		// 5. each sub path should be separated by '/'
+		// 4. each sub path should be separated by '/'
 		// (handled by strings.Split above)
 	}
 

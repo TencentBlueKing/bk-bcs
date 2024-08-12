@@ -254,3 +254,59 @@ func MergeAndDeduplicate(a, b []uint32) []uint32 {
 
 	return result
 }
+
+// Difference 返回在数组 a 中但不在数组 b 中的元素
+// 返回值是一个包含在数组 a 中但不在数组 b 中的去重后的元素的数组
+// 示例 a []uint32{1,3,5,6}  b []uint32{2,3,7,4} return []uint32{1,5,6}
+func Difference(a, b []uint32) []uint32 {
+	// 使用map来记录数组b中的元素
+	bMap := make(map[uint32]bool)
+	for _, num := range b {
+		bMap[num] = true
+	}
+
+	var result []uint32
+	// 遍历数组a，如果元素不在b中，则添加到结果中
+	for _, num := range a {
+		if !bMap[num] {
+			result = append(result, num)
+		}
+	}
+
+	return result
+}
+
+// MatchPattern reports whether name matches the shell pattern.
+func MatchPattern(name string, match []string) bool {
+	if len(match) == 0 {
+		return true
+	}
+
+	for _, m := range match {
+		ok, _ := path.Match(m, name)
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
+// BytesToHumanReadable converts bytes to a human-readable format (KB, MB, GB)
+func BytesToHumanReadable(bytes uint64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+
+	switch {
+	case bytes >= GB:
+		return fmt.Sprintf("%.2f GB", float64(bytes)/GB)
+	case bytes >= MB:
+		return fmt.Sprintf("%.2f MB", float64(bytes)/MB)
+	case bytes >= KB:
+		return fmt.Sprintf("%.2f KB", float64(bytes)/KB)
+	default:
+		return fmt.Sprintf("%d bytes", bytes)
+	}
+}

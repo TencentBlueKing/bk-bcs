@@ -20,7 +20,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0
 	github.com/GehirnInc/crypt v0.0.0-20230320061759-8cc1b52080c5
 	github.com/RichardKnop/machinery/v2 v2.0.11
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240531072443-fdaf7d7c6abc
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240725124512-1f33a499f31d
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230908045126-c9d09981a9c5
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/apparentlymart/go-cidr v1.1.0
@@ -44,6 +44,7 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.0
+	github.com/robfig/cron/v3 v3.0.1
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.768
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
@@ -187,7 +188,6 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.48.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
-	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect

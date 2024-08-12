@@ -18,6 +18,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
@@ -29,6 +30,10 @@ func CustomHeaderMatcher(key string) (string, bool) {
 	case "Traceparent":
 		// http -> grpc Traceparent
 		return "Traceparent", true
+	case ctxkey.CustomUsernameHeaderKey:
+		return ctxkey.CustomUsernameHeaderKey, true
+	case ctxkey.InnerClientHeaderKey:
+		return ctxkey.CustomUsernameHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

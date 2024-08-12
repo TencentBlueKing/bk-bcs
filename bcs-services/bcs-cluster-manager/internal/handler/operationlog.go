@@ -38,3 +38,33 @@ func (cm *ClusterManager) ListOperationLogs(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListOperationLogs, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// ListTaskStepLogs implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListTaskStepLogs(ctx context.Context,
+	req *cmproto.ListTaskStepLogsRequest, resp *cmproto.ListTaskStepLogsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := operationlog.NewListTaskStepLogsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListTaskStepLogs", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListTaskStepLogs, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListTaskRecords implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListTaskRecords(ctx context.Context,
+	req *cmproto.ListTaskRecordsRequest, resp *cmproto.ListTaskRecordsResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := operationlog.NewTaskRecordsAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListTaskRecords", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListTaskRecords, req %v, resp %v", reqID, req, resp)
+	return nil
+}

@@ -386,7 +386,7 @@ func (ins InstanceInfo) GetNodeFailedReason() string {
 // nolint
 func CheckCvmInstanceState(ctx context.Context, ids []string,
 	opt *cloudprovider.ListNodesOption) (*InstanceList, error) {
-	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+	taskId, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	client, err := api.GetCVMClient(opt.Common)
 	if err != nil {
@@ -507,13 +507,16 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	blog.Infof("CheckCvmInstanceState[%s] success[%v] failure[%v]",
 		taskId, instances.SuccessNodes, instances.FailedNodes)
 
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", instances.SuccessNodes, instances.FailedNodes))
+
 	return instances, nil
 }
 
 // ModifyInstancesVpcAttribute modify instance vpc attribute
 func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string,
 	opt *cloudprovider.CommonOption) error {
-	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+	taskId, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	if vpcId == "" || len(ids) == 0 {
 		return fmt.Errorf("ModifyInstancesVpcAttribute[%s] vpcId/instanceIds empty", taskId)
@@ -554,23 +557,29 @@ func ModifyInstancesVpcAttribute(ctx context.Context, vpcId string, ids []string
 			blog.Errorf("ModifyInstancesVpcAttribute[%s] zone[%s] not exist subnet", taskId, zone)
 			continue
 		}
+		// tke modify instances vpc attribute support max 20 nodes
 
 		// get zone nodes instanceIds
 		instanceIds := make([]string, 0)
 		for i := range zoneNodes[zone] {
 			instanceIds = append(instanceIds, zoneNodes[zone][i].NodeID)
 		}
-
-		// modify instances vpc
-		err = nodeClient.ModifyInstancesVpcAttribute(vpcId, subnetId, instanceIds)
-		if err != nil {
-			blog.Errorf("ModifyInstancesVpcAttribute[%s][%s:%s] instances[%v] failed: %v",
-				taskId, vpcId, zone, instanceIds, err)
-			return err
+		instanceIdsSlice := utils.SplitStringsChunks(instanceIds, 20)
+		for i := range instanceIdsSlice {
+			// modify instances vpc
+			err = nodeClient.ModifyInstancesVpcAttribute(vpcId, subnetId, instanceIdsSlice[i])
+			if err != nil {
+				blog.Errorf("ModifyInstancesVpcAttribute[%s][%s:%s] instances[%v] failed: %v",
+					taskId, vpcId, zone, instanceIdsSlice[i], err)
+				return err
+			}
 		}
 
 		blog.Infof("ModifyInstancesVpcAttribute[%s][%s:%s] instances successful",
 			taskId, vpcId, zone, instanceIds)
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
+			fmt.Sprintf("[%s] instances successful", instanceIds))
 	}
 
 	return nil

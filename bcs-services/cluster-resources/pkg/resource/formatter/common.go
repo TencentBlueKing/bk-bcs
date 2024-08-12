@@ -30,10 +30,13 @@ func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 		"editMode": mapx.Get(
 			manifest, []string{"metadata", "annotations", resCsts.EditModeAnnoKey}, resCsts.EditModeYaml,
 		),
-		"creator":      mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}),
-		"updater":      mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}),
-		"immutable":    immutable,
-		"createSource": createSource,
+		"creator":         mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}),
+		"updater":         mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}),
+		"immutable":       immutable,
+		"createSource":    createSource,
+		"templateName":    mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}),
+		"templateVersion": mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey}),
+		"chart":           mapx.GetStr(manifest, []string{"metadata", "labels", resCsts.HelmChartAnnoKey}),
 	}
 	return ret
 }
@@ -61,7 +64,7 @@ func GetPruneFunc(kind string) func(manifest map[string]interface{}) map[string]
 	return pruneFunc
 }
 
-// 解析创建来源，主要有：Template/Helm/Client
+// 解析创建来源，主要有：Template/Helm/Client/Web
 func parseCreateSource(manifest map[string]interface{}) (string, bool) {
 	labels := mapx.GetMap(manifest, "metadata.labels")
 	// Helm创建来源：app.kubernetes.io/managed-by: Helm
@@ -74,6 +77,12 @@ func parseCreateSource(manifest map[string]interface{}) (string, bool) {
 	if mapx.GetStr(annotations, []string{resCsts.TemplateSourceType}) == resCsts.TemplateSourceTypeValue ||
 		mapx.GetStr(labels, []string{resCsts.TemplateSourceType}) == resCsts.TemplateSourceTypeValue {
 		return resCsts.TemplateCreateSource, false
+	}
+
+	// web 创建来源
+	if mapx.GetStr(annotations, []string{resCsts.CreatorAnnoKey}) != "" ||
+		mapx.GetStr(labels, []string{resCsts.UpdaterAnnoKey}) != "" {
+		return resCsts.WebCreateSource, false
 	}
 
 	return resCsts.ClientCreateSource, false

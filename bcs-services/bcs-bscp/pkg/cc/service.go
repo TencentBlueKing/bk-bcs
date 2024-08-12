@@ -79,6 +79,7 @@ type ApiServerSetting struct {
 	Repo         Repository   `yaml:"repository"`
 	BKNotice     BKNotice     `yaml:"bkNotice"`
 	Esb          Esb          `yaml:"esb"`
+	ApiGateway   ApiGateway   `yaml:"apiGateway"`
 	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
@@ -98,6 +99,7 @@ func (s *ApiServerSetting) trySetDefault() {
 	s.Service.trySetDefault()
 	s.Log.trySetDefault()
 	s.Repo.trySetDefault()
+	s.FeatureFlags.trySetDefault()
 }
 
 // Validate ApiServerSetting option.
@@ -115,17 +117,22 @@ func (s ApiServerSetting) Validate() error {
 		return err
 	}
 
+	if err := s.FeatureFlags.validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // AuthServerSetting defines auth server used setting options.
 type AuthServerSetting struct {
-	Network   Network           `yaml:"network"`
-	Service   Service           `yaml:"service"`
-	Log       LogOption         `yaml:"log"`
-	LoginAuth LoginAuthSettings `yaml:"loginAuth"`
-	IAM       IAM               `yaml:"iam"`
-	Esb       Esb               `yaml:"esb"`
+	Network    Network           `yaml:"network"`
+	Service    Service           `yaml:"service"`
+	Log        LogOption         `yaml:"log"`
+	LoginAuth  LoginAuthSettings `yaml:"loginAuth"`
+	IAM        IAM               `yaml:"iam"`
+	Esb        Esb               `yaml:"esb"`
+	ApiGateway ApiGateway        `yaml:"apiGateway"`
 }
 
 // LoginAuthSettings login conf
@@ -134,7 +141,15 @@ type LoginAuthSettings struct {
 	InnerHost string `yaml:"innerHost"`
 	Provider  string `yaml:"provider"`
 	UseESB    bool   `yaml:"useEsb"`
-	GWPubKey  string `yaml:"gwPubkey"`
+}
+
+// ApiGateway gateway conf
+type ApiGateway struct {
+	// AutoRegister 是否自动注册
+	AutoRegister bool `yaml:"autoRegister"`
+	// Host apigateway host
+	Host     string `yaml:"host"`
+	GWPubKey string `yaml:"gwPubkey"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -279,11 +294,12 @@ type DataServiceSetting struct {
 	Service Service   `yaml:"service"`
 	Log     LogOption `yaml:"log"`
 
-	Credential Credential `yaml:"credential"`
-	Sharding   Sharding   `yaml:"sharding"`
-	Esb        Esb        `yaml:"esb"`
-	Repo       Repository `yaml:"repository"`
-	Vault      Vault      `yaml:"vault"`
+	Credential   Credential   `yaml:"credential"`
+	Sharding     Sharding     `yaml:"sharding"`
+	Esb          Esb          `yaml:"esb"`
+	Repo         Repository   `yaml:"repository"`
+	Vault        Vault        `yaml:"vault"`
+	FeatureFlags FeatureFlags `yaml:"featureFlags"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -304,6 +320,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Sharding.trySetDefault()
 	s.Repo.trySetDefault()
 	s.Vault.getConfigFromEnv()
+	s.FeatureFlags.trySetDefault()
 }
 
 // Validate DataServiceSetting option.
@@ -333,6 +350,10 @@ func (s DataServiceSetting) Validate() error {
 		return err
 	}
 
+	if err := s.FeatureFlags.validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -346,9 +367,11 @@ type FeedServerSetting struct {
 	Esb          Esb                 `yaml:"esb"`
 	BCS          BCS                 `yaml:"bcs"`
 	GSE          GSE                 `yaml:"gse"`
+	RedisCluster RedisCluster        `yaml:"redisCluster"`
 	FSLocalCache FSLocalCache        `yaml:"fsLocalCache"`
 	Downstream   Downstream          `yaml:"downstream"`
 	MRLimiter    MatchReleaseLimiter `yaml:"matchReleaseLimiter"`
+	RateLimiter  RateLimiter         `yaml:"rateLimiter"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -369,7 +392,10 @@ func (s *FeedServerSetting) trySetDefault() {
 	s.FSLocalCache.trySetDefault()
 	s.Downstream.trySetDefault()
 	s.GSE.getFromEnv()
+	s.GSE.trySetDefault()
+	s.RedisCluster.trySetDefault()
 	s.MRLimiter.trySetDefault()
+	s.RateLimiter.trySetDefault()
 }
 
 // Validate FeedServerSetting option.
@@ -399,11 +425,19 @@ func (s FeedServerSetting) Validate() error {
 		return err
 	}
 
+	if err := s.RateLimiter.validate(); err != nil {
+		return err
+	}
+
 	if err := s.Esb.validate(); err != nil {
 		return err
 	}
 
 	if err := s.GSE.validate(); err != nil {
+		return err
+	}
+
+	if err := s.RedisCluster.validate(); err != nil {
 		return err
 	}
 

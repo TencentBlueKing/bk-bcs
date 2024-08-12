@@ -9,14 +9,13 @@
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
         <i18n path="cluster.nodeList.article2">
-          <span place="nodes" class="num">{{nodesCount}}</span>
-          <span place="realRemainNodesCount" class="num">{{realRemainNodesCount || 0}}</span>
+          <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
+          <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
         </i18n>
-        <template v-if="curSelectedCluster.provider === 'tencentCloud'">
-          <i18n path="cluster.nodeList.article3" v-if="maxRemainNodesCount > 0 && cidrLen <= 3">
-            <span place="maxRemainNodesCount" class="num">{{maxRemainNodesCount}}</span>
+        <template v-if="clusterData.provider === 'tencentCloud'">
+          <i18n path="cluster.nodeList.article3">
+            <span place="maxRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterMaxNodeNum || '--' }}</span>
           </i18n>
-          <span v-else-if="cidrLen >= 4">{{ $t('cluster.nodeList.article4') }}</span>
         </template>
       </div>
     </bcs-alert>
@@ -692,7 +691,7 @@ import useNode from './use-node';
 import { setClusterModule } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
-import { copyText, formatBytes, getCidrIpNum, padIPv6 } from '@/common/util';
+import { copyText, formatBytes, padIPv6 } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsCascade from '@/components/cascade.vue';
@@ -1114,6 +1113,7 @@ export default defineComponent({
       setNodeLabels,
       batchDeleteNodes,
       taskDetail,
+      getAllNodeOverview,
     } = useNode();
 
     const tableLoading = ref(false);
@@ -1873,18 +1873,14 @@ export default defineComponent({
     const handleGetNodeOverview = async () => {
       const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]
         && ['RUNNING', 'REMOVABLE'].includes(item.status));
-      const promiseList: Promise<any>[] = [];
-      for (const row of data) {
-        (function (item) {
-          promiseList.push(getNodeOverview({
-            nodeIP: item.nodeName,
-            clusterId: localClusterId.value,
-          }).then((data) => {
-            set(nodeMetric.value, item.nodeName, formatMetricData(data));
-          }));
-        }(row));
+      let nodes = data.map(item => item.nodeName) as string[];
+      const result = await getAllNodeOverview({
+        clusterId: localClusterId.value,
+        nodes
+      }).catch(() => {})
+      for (const key in result) {
+        set(nodeMetric.value, key, formatMetricData(result[key]));
       }
-      await Promise.all(promiseList);
     };
     watch(curPageData, async () => {
       await handleGetNodeOverview();
@@ -1926,53 +1922,6 @@ export default defineComponent({
       }
     }, 5000);
 
-    // eslint-disable-next-line max-len
-    const nodesCount = computed(() => tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length);
-
-    // 容器网络网段数量
-    const cidrLen = computed(() => {
-      const { multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {};
-      // +1 是clusterIPv4CIDR占有一个网段
-      return multiClusterCIDR.length + 1;
-    });
-    // 当前CIDR可添加节点数
-    const realRemainNodesCount = computed(() => {
-      const {
-        maxNodePodNum = 0,
-        maxServiceNum = 0,
-        clusterIPv4CIDR = 0,
-        multiClusterCIDR = [],
-      } = curSelectedCluster.value?.networkSettings || {};
-      const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce<number>((pre, cidr) => {
-        pre += getCidrIpNum(cidr);
-        return pre;
-      }, 0);
-      return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
-    });
-    // 扩容后最大节点数量
-    const maxRemainNodesCount = computed(() => {
-      const {
-        cidrStep = 0,
-        maxNodePodNum = 0,
-        maxServiceNum = 0,
-        clusterIPv4CIDR = 0,
-        multiClusterCIDR = [],
-      } = curSelectedCluster.value?.networkSettings || {};
-      let totalCidrStep = 0;
-      if (multiClusterCIDR.length < 3) {
-        totalCidrStep = (5 - multiClusterCIDR.length) * cidrStep + multiClusterCIDR.reduce((pre, cidr) => {
-          pre += getCidrIpNum(cidr);
-          return pre;
-        }, 0);
-      } else {
-        totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce<number>((pre, cidr) => {
-          pre += getCidrIpNum(cidr);
-          return pre;
-        }, 0);
-      }
-      return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
-    });
-
     onMounted(async () => {
       getClusterDetail(curSelectedCluster.value.clusterID || '', true);
       await handleGetNodeData();
@@ -1985,12 +1934,8 @@ export default defineComponent({
       stop();
     });
     return {
-      cidrLen,
       copyList,
       metricColumnConfig,
-      nodesCount,
-      realRemainNodesCount,
-      maxRemainNodesCount,
       curSelectedCluster,
       clusterData, // 全量数据
       logSideDialogConf,

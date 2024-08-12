@@ -2,6 +2,189 @@
     "language": "zh",
     "messages": [
         {
+            "id": "id is required",
+            "message": "id is required",
+            "translation": "id不能为空"
+        },
+        {
+            "id": "read file failed {ErrR}",
+            "message": "read file failed {ErrR}",
+            "translation": "读取文件失败: {ErrR}",
+            "placeholders": [
+                {
+                    "id": "ErrR",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "errR"
+                }
+            ]
+        },
+        {
+            "id": "create directory failed {Err}",
+            "message": "create directory failed {Err}",
+            "translation": "创建文件目录失败: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "create temporary directory failed {Err}",
+            "message": "create temporary directory failed {Err}",
+            "translation": "创建临时目录失败: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
+            "message": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
+            "translation": "解压文件失败，文件 {Message} 的大小超过了最大限制阈值 {MB}",
+            "placeholders": [
+                {
+                    "id": "Message",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "compare.Message"
+                },
+                {
+                    "id": "MB",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "tools.BytesToHumanReadable(uint64(singleContentLength * constant.MB))"
+                }
+            ]
+        },
+        {
+            "id": "decompression failed {Err}",
+            "message": "decompression failed {Err}",
+            "translation": "解压文件失败：{Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "upload file failed {Err}",
+            "message": "upload file failed {Err}",
+            "translation": "上传文件失败：{Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "detecting file conflicts failed {Err}",
+            "message": "detecting file conflicts failed {Err}",
+            "translation": "检测文件冲突失败: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "upload completed",
+            "message": "upload completed",
+            "translation": "上传完成"
+        },
+        {
+            "id": "upload completed, {UploadErrCount} failed",
+            "message": "upload completed, {UploadErrCount} failed",
+            "translation": "上传完成, {UploadErrCount} 失败",
+            "placeholders": [
+                {
+                    "id": "UploadErrCount",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "uploadErrCount"
+                }
+            ]
+        },
+        {
+            "id": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
+            "message": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
+            "translation": "解压文件失败，超过了文件数量最大限制阈值 {Limit}",
+            "placeholders": [
+                {
+                    "id": "Limit",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "limit"
+                }
+            ]
+        },
+        {
+            "id": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
+            "message": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
+            "translation": "上传失败，请确保文件大小不超过 {BytesToHumanReadableuint64maxSize}",
+            "placeholders": [
+                {
+                    "id": "BytesToHumanReadableuint64maxSize",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "tools.BytesToHumanReadable(uint64(maxSize))"
+                }
+            ]
+        },
+        {
+            "id": "client ids is empty",
+            "message": "client ids is empty",
+            "translation": "客户端 id 为空"
+        },
+        {
+            "id": "batch delete config items failed",
+            "message": "batch delete config items failed",
+            "translation": "批量删除配置项失败"
+        },
+        {
+            "id": "batch delete groups failed",
+            "message": "batch delete groups failed",
+            "translation": "批量删除群组失败"
+        },
+        {
             "id": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
             "message": "the length of hook ids is {IdsLen}, it must be within the range of [1,{ArrayInputLenLimit}]",
             "translation": "脚本id列表的长度为{IdsLen}, 长度范围必须为[1,{ArrayInputLenLimit}]",
@@ -28,11 +211,6 @@
             "id": "batch delete failed",
             "message": "batch delete failed",
             "translation": "批量删除失败"
-        },
-        {
-            "id": "id is required",
-            "message": "id is required",
-            "translation": "id不能为空"
         },
         {
             "id": "template variable name must start with {TemplateVariablePrefix}",
@@ -84,6 +262,294 @@
                     "underlyingType": "uint32",
                     "argNum": 1,
                     "expr": "req.AppId"
+                }
+            ]
+        },
+        {
+            "id": "obtain the number of configuration items",
+            "message": "obtain the number of configuration items",
+            "translation": "获取配置项数量"
+        },
+        {
+            "id": "get template binding relationships through business and service IDs failed, err: {Err}",
+            "message": "get template binding relationships through business and service IDs failed, err: {Err}",
+            "translation": "通过业务和服务ID获取模板绑定关系失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get reference template set under this app failed, err: {Err}",
+            "message": "get reference template set under this app failed, err: {Err}",
+            "translation": "获取此应用程序下的引用模板集失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list template sets by template set ids failed, err: {Err}",
+            "message": "list template sets by template set ids failed, err: {Err}",
+            "translation": "按模板集ID列出模板集失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "remove the template set bound to the app failed, err: {Err}",
+            "message": "remove the template set bound to the app failed, err: {Err}",
+            "translation": "移除套餐失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "hook name {Name} already exists",
+            "message": "hook name {Name} already exists",
+            "translation": "脚本名称 {Name} 已存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "get excluded hook failed, err: {Err}",
+            "message": "get excluded hook failed, err: {Err}",
+            "translation": "获取排除后的脚本失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "retrieve the referenced script failed, err: {Err}",
+            "message": "retrieve the referenced script failed, err: {Err}",
+            "translation": "检索引用的脚本失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get excluded kv failed, err: {Err}",
+            "message": "get excluded kv failed, err: {Err}",
+            "translation": "获取排除后的kv失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get app template bindings by template set ids, err: {Err}",
+            "message": "get app template bindings by template set ids, err: {Err}",
+            "translation": "按模板集ID获取应用程序模板绑定，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch update app template binding's failed, err: {Err}",
+            "message": "batch update app template binding's failed, err: {Err}",
+            "translation": "批量更新应用模板绑定失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch add templates to template sets failed, err: {Err}",
+            "message": "batch add templates to template sets failed, err: {Err}",
+            "translation": "模板集批量添加模板失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set data failed, err: {Err}",
+            "message": "get template set data failed, err: {Err}",
+            "translation": "获取模板集数据失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "there is no template file under this template set",
+            "message": "there is no template file under this template set",
+            "translation": "此模板集下没有模板文件"
+        },
+        {
+            "id": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "message": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "translation": "从模板集中删除模板失败，err: {Err}, rid: {Rid}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                },
+                {
+                    "id": "Rid",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "kt.Rid"
+                }
+            ]
+        },
+        {
+            "id": "list templates by tuple failed, err: {Err}",
+            "message": "list templates by tuple failed, err: {Err}",
+            "translation": "列出模板失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list app template bindings by app ids failed, err: {Err}",
+            "message": "list app template bindings by app ids failed, err: {Err}",
+            "translation": "按服务ID列出应用模板绑定失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get template set failed, err: {Err}",
+            "message": "get template set failed, err: {Err}",
+            "translation": "获取模板集失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list apps by app ids failed, err: {Err}",
+            "message": "list apps by app ids failed, err: {Err}",
+            "translation": "按服务ID列出应用程序失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "count the number of app configs failed, err: {Err}",
+            "message": "count the number of app configs failed, err: {Err}",
+            "translation": "统计服务配置数量失败，err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ]
         },
@@ -156,6 +622,16 @@
                     "expr": "name"
                 }
             ]
+        },
+        {
+            "id": "hook is nil",
+            "message": "hook is nil",
+            "translation": "脚本不存在"
+        },
+        {
+            "id": "Unnamed Version",
+            "message": "Unnamed Version",
+            "translation": "未命名版本"
         },
         {
             "id": "default_val {DefaultVal} is not a number type",

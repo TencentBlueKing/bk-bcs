@@ -48,6 +48,8 @@ const (
 var (
 	defaultOverlayCidrs        = []string{"9.165.0.0/16", "9.166.0.0/16", "11.166.0.0/16", "11.157.0.0/16"}
 	defaultSubnetStep   uint32 = 256
+	// DefaultSubnetSteps for if cloud config is empty, use default
+	DefaultSubnetSteps = []uint32{64, 128, 256, 512, 1024}
 )
 
 // GetAvailableSubnets get match pattern subnet
@@ -144,7 +146,7 @@ func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
 
 		exist := false
 		for i := range subnets {
-			if subnets[i].AvaliableIP >= uint64(num) {
+			if subnets[i].AvailableIps >= uint64(num) {
 				exist = true
 				selectedZoneSubnet[zone] = subnets[i].ID
 				break
@@ -167,8 +169,8 @@ func selectZoneAvailableSubnet(vpcId string, zoneIpCnt map[string]int,
 
 		blog.Infof("selectZoneAvailableSubnet vpc[%s] zone[%s] begin to allocate subnet", vpcId, zone)
 		subnetName, errLocal := getVpcNextSubnetName(vpcId, zone, "", opt)
-		if err != nil {
-			return nil, err
+		if errLocal != nil {
+			return nil, errLocal
 		}
 
 		// default allocate 256 ips
@@ -322,7 +324,8 @@ func subnetFromVpcSubnet(info *vpc.Subnet) (n *cidrtree.Subnet) {
 	s.VpcID = *info.VpcId
 	s.Zone = *info.Zone
 	s.CreatedTime = *info.CreatedTime
-	s.AvaliableIP = *info.AvailableIpAddressCount
+	s.AvailableIps = *info.AvailableIpAddressCount
+	s.TotalIps = *info.TotalIpAddressCount
 	return s
 }
 
@@ -349,7 +352,12 @@ func AllocateClusterVpcCniSubnets(ctx context.Context, clusterId, vpcId string,
 			mask = utils.DefaultMask
 		}
 
-		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, "")
+		subnetName, errLocal := getVpcNextSubnetName(vpcId, subnets[i].Zone, clusterId, opt)
+		if errLocal != nil {
+			blog.Errorf("AllocateClusterVpcCniSubnets[%s] getVpcNextSubnetName failed: %v", errLocal)
+		}
+
+		sub, err := AllocateSubnet(opt, vpcId, subnets[i].Zone, mask, clusterId, subnetName)
 		if err != nil {
 			blog.Errorf("AllocateClusterVpcCniSubnets[%s] failed: %v", taskID, err)
 			continue
@@ -424,17 +432,21 @@ func DeleteDrSubnet(opt *cloudprovider.CommonOption, subnetId string) error {
 }
 
 // GetDrSubnetInfo get subnet info
-func GetDrSubnetInfo(opt *cloudprovider.CommonOption, subnetId string) (*cidrtree.Subnet, error) {
+func GetDrSubnetInfo(opt *cloudprovider.CommonOption, subnetIds []string) ([]*cidrtree.Subnet, error) {
 	vpcCli, err := api.NewVPCClient(opt)
 	if err != nil {
 		return nil, err
 	}
 
-	subnets, err := vpcCli.DescribeSubnets([]string{subnetId}, nil)
+	subnets, err := vpcCli.DescribeSubnets(subnetIds, nil)
 	if err != nil {
 		return nil, err
 	}
-	subnetInfo := subnetFromVpcSubnet(subnets[0])
+
+	subnetInfos := make([]*cidrtree.Subnet, 0)
+	for i := range subnets {
+		subnetInfos = append(subnetInfos, subnetFromVpcSubnet(subnets[i]))
+	}
 
 	cvmCli, err := api.GetCVMClient(opt)
 	if err != nil {
@@ -444,12 +456,19 @@ func GetDrSubnetInfo(opt *cloudprovider.CommonOption, subnetId string) (*cidrtre
 	if err != nil {
 		return nil, err
 	}
+
+	zoneNameMap := make(map[string]string)
 	for _, zoneInfo := range zoneInfos {
-		if *zoneInfo.Zone == *subnets[0].Zone {
-			subnetInfo.ZoneName = *zoneInfo.ZoneName
+		zoneNameMap[*zoneInfo.Zone] = *zoneInfo.ZoneName
+	}
+
+	for i := range subnetInfos {
+		name, ok := zoneNameMap[subnetInfos[i].Zone]
+		if ok {
+			subnetInfos[i].ZoneName = name
 		}
 	}
-	return subnetInfo, nil
+	return subnetInfos, nil
 }
 
 // ListSubnets list vpc subnets
@@ -682,6 +701,26 @@ func GetGrVPCIPSurplus(opt *cloudprovider.CommonOption, cloudId, vpcId string,
 	return cidrtree.GetIPNetsNum(frees)
 }
 
+// GetVpcOverlayIpNum get vpc total overlay ip number
+func GetVpcOverlayIpNum(cloudId, vpcId string) (uint32, error) {
+	allBlocks, err := getOverlayCidrBlocks(cloudId, vpcId)
+	if err != nil {
+		return 0, err
+	}
+
+	return cidrtree.GetIPNetsNum(allBlocks)
+}
+
+// GetVpcUnderlayIpNum get vpc total underlay ip number
+func GetVpcUnderlayIpNum(opt *cloudprovider.CommonOption, vpcId string) (uint32, error) {
+	allSubnets, err := GetVpcCIDRBlocks(opt, vpcId, 0)
+	if err != nil {
+		return 0, err
+	}
+
+	return cidrtree.GetIPNetsNum(allSubnets)
+}
+
 // GetClusterGrCidrs return all cidr info of the cluster by clusterId
 func GetClusterGrCidrs(opt *cloudprovider.CommonOption, clusterId string) ([]*cidrtree.Cidr, error) {
 	cluster, err := GetTkeCluster(opt, clusterId)
@@ -738,11 +777,10 @@ func GetCidrsFromCluster(cluster *tke.Cluster) ([]*cidrtree.Cidr, error) {
 }
 
 // GetClusterGrIPSurplus return current available ip number for pod
-func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId, tkeId string) (uint32, error) {
-	ipSurplus := uint32(0)
+func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId, tkeId string) (uint32, uint32, error) {
 	cluster, err := GetTkeCluster(opt, tkeId)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
 	clusterNodeNum := *cluster.ClusterNodeNum
@@ -762,29 +800,32 @@ func GetClusterGrIPSurplus(opt *cloudprovider.CommonOption, clusterId, tkeId str
 	maxNodePodNum := (uint32)(*cluster.ClusterNetworkSettings.MaxNodePodNum)
 	maxClusterServiceNum := (uint32)(*cluster.ClusterNetworkSettings.MaxClusterServiceNum)
 
+	var (
+		clusterTotalIpNum, clusterSurplusIpNum uint32
+	)
+
 	cidrs, err := GetCidrsFromCluster(cluster)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
-
 	for _, cidr := range cidrs {
 		// 如果cidr的type值是ClsuterCIDR或者MultiClusterCIDR其中之一
 		if utils.StringInSlice(cidr.Type, []string{utils.ClusterCIDR, utils.MultiClusterCIDR}) {
 			ipnum, err := cidr.GetIPNum()
 			if err != nil {
-				return 0, err
+				return 0, 0, err
 			}
-			ipSurplus += ipnum
+			clusterTotalIpNum += ipnum
 		}
 	}
 
-	if ipSurplus < (maxNodePodNum*nodeNum + maxClusterServiceNum) {
-		ipSurplus = 0
+	if clusterTotalIpNum < (maxNodePodNum*nodeNum + maxClusterServiceNum) {
+		clusterSurplusIpNum = 0
 	} else {
-		ipSurplus = ipSurplus - maxNodePodNum*nodeNum - maxClusterServiceNum
+		clusterSurplusIpNum = clusterTotalIpNum - maxNodePodNum*nodeNum - maxClusterServiceNum
 	}
 
-	return ipSurplus, nil
+	return clusterTotalIpNum, clusterSurplusIpNum, nil
 }
 
 // GetVpcGrFreeIPNets get vpc cidr free cidrs

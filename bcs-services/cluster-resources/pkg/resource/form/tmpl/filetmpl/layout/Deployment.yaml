@@ -8,6 +8,7 @@
             - [ "maxSurge", "msUnit", "maxUnavailable", "muaUnit" ]
             - [ "minReadySecs", "progressDeadlineSecs" ]
           prop: replicas
+      {{- include "workload.labels" . | nindent 6 }}
       {{- include "workload.affinity" . | nindent 6 }}
       {{- include "workload.toleration" . | nindent 6 }}
       {{- include "workload.networking" . | indent 6 }}

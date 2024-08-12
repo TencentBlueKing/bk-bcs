@@ -87,6 +87,7 @@ type Watcher struct {
 	namespaceFilters map[string]struct{}
 	nameFilters      map[string]struct{}
 	dataMaskers      []Masker
+	storageSynced    bool
 }
 
 // WatcherOptions provide options for create Watcher
@@ -154,6 +155,7 @@ func NewWatcher(wo *WatcherOptions) (*Watcher, error) {
 		namespaceFilters: map[string]struct{}{},
 		nameFilters:      map[string]struct{}{},
 		dataMaskers:      make([]Masker, 0),
+		storageSynced:    false,
 	}
 	for _, ns := range wo.NamespaceFilters {
 		watcher.namespaceFilters[ns] = struct{}{}

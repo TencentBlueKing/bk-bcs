@@ -21,27 +21,29 @@ import (
 )
 
 const (
-	name        = "bk-bscp-test"
+	// Name 网关名
+	Name        = "bk-bscp"
 	env         = "prod"
-	description = "bk-bscp-test 网关描述"
-	host        = "http://bscp-api.sit.bktencent.com"
+	description = "服务配置中心（bk_bscp）API 网关，包含了服务、配置项/模板、版本、分组、发布等相关资源的查询和操作接口"
 )
 
 // ReleaseSwagger 导入swagge 文档
-func ReleaseSwagger(opt cc.ApiServerSetting, language, version string) error { // nolint
+// nolint:funlen
+func ReleaseSwagger(esbOpt cc.Esb, apiGwOpt cc.ApiGateway, language, version string) error {
+
 	// 获取需要导入的文档
 	swaggerData, err := docs.Assets.ReadFile("swagger/bkapigw.swagger.json")
 	if err != nil {
 		return fmt.Errorf("reads and returns the content of the named file failed, err: %s", err.Error())
 	}
 	// 初始化网关
-	gw, err := NewApiGw(opt)
+	gw, err := NewApiGw(esbOpt, apiGwOpt)
 	if err != nil {
 		return fmt.Errorf("init api gateway failed, err: %s", err.Error())
 	}
 
 	// 创建或者更新网关
-	syncApiResp, err := gw.SyncApi(name, &SyncApiReq{
+	syncApiResp, err := gw.SyncApi(Name, &SyncApiReq{
 		Description: description,
 		Maintainers: []string{"admin"},
 		IsPublic:    true,
@@ -62,7 +64,7 @@ func ReleaseSwagger(opt cc.ApiServerSetting, language, version string) error { /
 			Upstreams: Upstreams{
 				Loadbalance: "roundrobin",
 				Hosts: []Host{{
-					Host:   host,
+					Host:   esbOpt.BscpHost,
 					Weight: 100,
 				}},
 			},

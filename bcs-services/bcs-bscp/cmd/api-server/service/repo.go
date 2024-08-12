@@ -13,6 +13,7 @@
 package service
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -21,6 +22,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -37,6 +39,13 @@ type repoService struct {
 // UploadFile upload to repo provider
 func (s *repoService) UploadFile(w http.ResponseWriter, r *http.Request) {
 	kt := kit.MustGetKit(r.Context())
+
+	// 检测上传文件的大小
+	_, singleContentLength := getUploadConfig(kt.BizID)
+	if err := checkUploadSize(kt, r, singleContentLength); err != nil {
+		_ = render.Render(w, r, rest.BadRequest(err))
+		return
+	}
 
 	sign, err := repository.GetFileSign(r)
 	if err != nil {
@@ -162,13 +171,23 @@ func (s *repoService) FileMetadata(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var exists bool
 	metadata, err := s.provider.Metadata(kt, sign)
-	if err != nil {
+	if err != nil && !errors.Is(err, errf.ErrFileContentNotFound) {
 		render.Render(w, r, rest.BadRequest(err))
 		return
 	}
 
-	render.Render(w, r, rest.OKRender(metadata))
+	if err == nil {
+		exists = true
+	}
+
+	render.Render(w, r, rest.OKRender(
+		&repository.MetadataResponse{
+			Exists:   exists,
+			Metadata: metadata,
+		},
+	))
 }
 
 func newRepoService(settings cc.Repository, authorizer auth.Authorizer) (*repoService, error) {

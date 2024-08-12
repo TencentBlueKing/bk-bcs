@@ -1,19 +1,20 @@
 <template>
   <Teleport :disabled="!isOpenFullScreen" to="body">
-    <div :class="['script-editor', { fullscreen: isOpenFullScreen }]">
+    <div :class="['script-editor', { fullscreen: isOpenFullScreen, 'is-show-var': isShowVariable }]">
       <div class="editor-header">
         <div class="head-title">
           <slot name="header"></slot>
         </div>
         <div class="actions">
           <span
+            v-if="!props.isPreview"
             v-bk-tooltips="{
               content: t('内置变量'),
               placement: 'top',
               distance: 20,
             }"
             :class="['bk-bscp-icon', 'icon-variable', { 'show-var': isShowVariable }]"
-            @click="emits('update:isShowVariable',!isShowVariable)"></span>
+            @click="emits('update:isShowVariable', !isShowVariable)"></span>
           <ReadFileContent
             v-if="props.uploadIcon"
             v-bk-tooltips="{
@@ -73,10 +74,12 @@
       language?: string;
       editable?: boolean;
       uploadIcon?: boolean;
+      isPreview?: boolean; // 是否是脚本预览
     }>(),
     {
       editable: true,
       uploadIcon: true,
+      isPreview: false,
     },
   );
 
@@ -119,7 +122,26 @@
       height: 100vh;
       z-index: 5000;
       .content-wrapper {
-        height: calc(100vh - 43px);
+        height: calc(100vh - 40px);
+      }
+      &.is-show-var {
+        :deep(.code-editor-wrapper) {
+          width: calc(100vw - 272px);
+        }
+        :deep(.var-wrap) {
+          position: absolute;
+          right: 0;
+          top: 40px;
+          .content {
+            height: calc(100% - 40px);
+            .example {
+              height: 100%;
+            }
+            .bk-textarea {
+              height: 100%;
+            }
+          }
+        }
       }
     }
   }

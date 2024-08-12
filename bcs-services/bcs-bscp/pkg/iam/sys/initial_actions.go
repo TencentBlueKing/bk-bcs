@@ -47,7 +47,7 @@ func genApplicationActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   AppCreate,
 		Name:                 ActionIDNameMap[AppCreate],
-		NameEn:               "Create App",
+		NameEn:               "Create APP",
 		Type:                 Create,
 		RelatedResourceTypes: businessResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource},
@@ -69,7 +69,7 @@ func genApplicationActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   AppView,
 		Name:                 ActionIDNameMap[AppView],
-		NameEn:               "View App",
+		NameEn:               "View APP",
 		Type:                 View,
 		RelatedResourceTypes: relatedResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource},
@@ -79,7 +79,7 @@ func genApplicationActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   AppEdit,
 		Name:                 ActionIDNameMap[AppEdit],
-		NameEn:               "Edit App",
+		NameEn:               "Edit APP",
 		Type:                 Edit,
 		RelatedResourceTypes: relatedResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource, AppView},
@@ -89,7 +89,7 @@ func genApplicationActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   AppDelete,
 		Name:                 ActionIDNameMap[AppDelete],
-		NameEn:               "Delete App",
+		NameEn:               "Delete APP",
 		Type:                 Delete,
 		RelatedResourceTypes: relatedResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource, AppView},
@@ -178,7 +178,7 @@ func genCredentialActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   CredentialView,
 		Name:                 ActionIDNameMap[CredentialView],
-		NameEn:               "View App Credential",
+		NameEn:               "View APP Credential",
 		Type:                 View,
 		RelatedResourceTypes: businessResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource},
@@ -188,7 +188,7 @@ func genCredentialActions() []client.ResourceAction {
 	actions = append(actions, client.ResourceAction{
 		ID:                   CredentialManage,
 		Name:                 ActionIDNameMap[CredentialManage],
-		NameEn:               "Manage App Credential",
+		NameEn:               "Manage APP Credential",
 		Type:                 Manage,
 		RelatedResourceTypes: businessResource,
 		RelatedActions:       []client.ActionID{BusinessViewResource, CredentialView},

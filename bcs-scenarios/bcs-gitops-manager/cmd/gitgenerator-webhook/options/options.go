@@ -14,7 +14,11 @@
 package options
 
 import (
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
+
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 )
 
 // Config defines the config
@@ -31,4 +35,20 @@ type Config struct {
 	ArgoService string `json:"argo_service" value:"" usage:"the service address of argo"`
 	ArgoUser    string `json:"argo_user" value:"" usage:"the user of argo"`
 	ArgoPass    string `json:"argo_pass" value:"" usage:"the password of argo"`
+
+	DBConfig common.DBConfig `json:"dbConfig,omitempty"`
+
+	RecoverProjects string `json:"recoverProjects" value:"" usage:""`
+	AdminNamespace  string `json:"adminNamespace" value:"" usage:""`
+
+	PublicProjectsStr string   `json:"publicProjects,omitempty"`
+	PublicProjects    []string `json:"-"`
+}
+
+// Parse parse the options
+func Parse() *Config {
+	cfg := new(Config)
+	conf.Parse(cfg)
+	cfg.PublicProjects = strings.Split(cfg.PublicProjectsStr, ",")
+	return cfg
 }

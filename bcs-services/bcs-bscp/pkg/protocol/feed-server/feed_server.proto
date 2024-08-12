@@ -8,6 +8,7 @@ import "pkg/protocol/core/config-item/config_item.proto";
 import "pkg/protocol/core/hook/hook.proto";
 import "pkg/protocol/core/kv/kvs.proto";
 import "pkg/protocol/core/content/content.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server;pbfs";
 
@@ -18,11 +19,35 @@ service Upstream {
   rpc Watch(SideWatchMeta) returns (stream FeedWatchMessage) {}
   rpc PullAppFileMeta(PullAppFileMetaReq) returns (PullAppFileMetaResp) {}
   rpc GetDownloadURL(GetDownloadURLReq) returns (GetDownloadURLResp) {}
-  rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {}
-  rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {}
+  rpc PullKvMeta(PullKvMetaReq) returns (PullKvMetaResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/metadata"
+      body: "*"
+    };
+  }
+  rpc GetKvValue(GetKvValueReq) returns (GetKvValueResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/data/{key}"
+      body: "*"
+    };
+  }
   rpc ListApps(ListAppsReq) returns (ListAppsResp) {}
   rpc AsyncDownload(AsyncDownloadReq) returns (AsyncDownloadResp) {}
   rpc AsyncDownloadStatus(AsyncDownloadStatusReq) returns (AsyncDownloadStatusResp) {}
+
+  // 获取单个kv实例
+  rpc GetSingleKvValue(GetSingleKvValueReq) returns (GetSingleKvValueResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/value/{key}"
+      body: "*"
+    };
+  }
+  rpc GetSingleKvMeta(GetSingleKvValueReq) returns (GetSingleKvMetaResp) {
+    option (google.api.http) = {
+      post: "/api/v1/feed/biz/{biz_id}/kvs/metadata/{key}"
+      body: "*"
+    };
+  }
 }
 
 // SidecarSpec defines a sidecar's specifics.
@@ -137,6 +162,7 @@ message GetDownloadURLReq {
 
 message GetDownloadURLResp {
   string url = 1;
+  int64 wait_time_mil = 2;  // the time(milliseconds) that the client should wait before downloading file
 }
 
 // App 对外简单版本
@@ -214,4 +240,18 @@ enum AsyncDownloadStatus {
   SUCCESS = 0;
   DOWNLOADING = 1;
   FAILED = 2;
+}
+
+message GetSingleKvValueReq {
+  uint32 biz_id = 1;
+  AppMeta app_meta = 2;
+  string key = 3;
+}
+
+message GetSingleKvValueResp {
+  string data = 1;
+}
+
+message GetSingleKvMetaResp {
+  KvMeta data = 1;
 }

@@ -16,9 +16,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
+	"github.com/TencentBlueKing/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-external-privilege/constants"
 )
 
 const (
@@ -28,29 +30,47 @@ const (
 
 // Option xxx
 type Option struct {
-	RequestESB        *RequestEsb
-	PrivilegeIP       string
-	ExternalSysType   string
-	ExternalSysConfig string
-	DBPrivEnvList     []DBPrivEnv
+	RequestESB         *RequestEsb
+	PrivilegeIP        string
+	PodName            string
+	PodNameSpace       string
+	ExternalSysType    string
+	ExternalSysConfig  string
+	DBPrivEnvList      []DBPrivEnv
+	ServiceUrl         string
+	DbmOptimizeEnabled bool
+	TicketTimer        int
 }
 
 func LoadOption() *Option {
 	var ret = &Option{RequestESB: &RequestEsb{}}
-	ret.RequestESB.AppCode = os.Getenv("io_tencent_bcs_app_code")
-	ret.RequestESB.AppSecret = os.Getenv("io_tencent_bcs_app_secret")
-	ret.RequestESB.Operator = os.Getenv("io_tencent_bcs_app_operator")
+	ret.RequestESB.AppCode = os.Getenv(constants.BcsPrivilegeAppCode)
+	ret.RequestESB.AppSecret = os.Getenv(constants.BcsPrivilegeAppSecret)
+	ret.RequestESB.Operator = os.Getenv(constants.BcsPrivilegeAppOperator)
 
-	ret.PrivilegeIP = os.Getenv("io_tencent_bcs_privilege_ip")
-	podIP := os.Getenv("io_tencent_bcs_pod_ip")
+	if os.Getenv(constants.BcsPrivilegeDbmOptimizeEnabled) == "true" {
+		ret.DbmOptimizeEnabled = true
+		ret.PodName = os.Getenv(constants.BcsPodName)
+		ret.PodNameSpace = os.Getenv(constants.BcsPodNamespace)
+		ret.ServiceUrl = os.Getenv(constants.BcsPrivilegeServiceURL)
+		ticketTimer := os.Getenv(constants.BcsPrivilegeServiceTicketTimer)
+		if ticketTimer != "" {
+			ret.TicketTimer, _ = strconv.Atoi(ticketTimer)
+		} else {
+			ret.TicketTimer = 60
+		}
+	}
+
+	ret.PrivilegeIP = os.Getenv(constants.BcsPrivilegePrivilegeIP)
+	podIP := os.Getenv(constants.BcsPrivilegePodIP)
 	if podIP != "" && podIP != ret.PrivilegeIP {
 		ret.PrivilegeIP = fmt.Sprintf("%s,%s", ret.PrivilegeIP, podIP)
 	}
 
-	ret.ExternalSysType = os.Getenv("external_sys_type")
-	ret.ExternalSysConfig = os.Getenv("external_sys_config")
+	ret.ExternalSysType = os.Getenv(constants.BcsPrivilegeExternalSysType)
+	ret.ExternalSysConfig = os.Getenv(constants.BcsPrivilegeExternalSysConfig)
 
-	envstr := []byte(os.Getenv("io_tencent_bcs_db_privilege_env"))
+	envstr := []byte(os.Getenv(constants.BcsPrivilegeDbPrivilegeEnv))
 	err := json.Unmarshal(envstr, &(ret.DBPrivEnvList))
 	if err != nil {
 		blog.Errorf("Unmarshall json str(%s) to []DBPrivEnv failed: %s\n", string(envstr), err.Error())

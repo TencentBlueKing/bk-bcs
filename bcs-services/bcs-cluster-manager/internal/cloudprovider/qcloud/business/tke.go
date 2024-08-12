@@ -16,6 +16,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -50,6 +51,133 @@ func GetTkeCluster(opt *cloudprovider.CommonOption, clusterId string) (*tke.Clus
 	return cluster, nil
 }
 
+// GetClusterVpcCniStatus cluster vpc-cni status
+func GetClusterVpcCniStatus(cls *tke.Cluster) bool {
+	if cls != nil && cls.Property != nil {
+		if strings.Contains(*cls.Property, api.TKERouteEni) || strings.Contains(*cls.Property, api.TKEDirectEni) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GetClusterVpcCniSubnets cluster vpc-cni subnets
+func GetClusterVpcCniSubnets(cls *tke.Cluster) []string {
+	subnetIDs := make([]string, 0)
+
+	if cls != nil && cls.ClusterNetworkSettings != nil && len(cls.ClusterNetworkSettings.Subnets) > 0 {
+		for _, subnet := range cls.ClusterNetworkSettings.Subnets {
+			subnetIDs = append(subnetIDs, *subnet)
+		}
+	}
+
+	blog.Infof("getClusterVpcCniSubnets %v", subnetIDs)
+	return subnetIDs
+}
+
+// GetClusterSubnetsZoneUsage get cluster subnets zone usage
+func GetClusterSubnetsZoneUsage(cmOption *cloudprovider.CommonOption, subnetIds []string, extraIp bool) (
+	map[string]*ZoneSubnetRatio, float64, error) {
+	subnets, err := GetDrSubnetInfo(cmOption, subnetIds)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	zoneSubnetNum := make(map[string]*ZoneSubnetRatio, 0)
+	for i := range subnets {
+		if zoneSubnetNum[subnets[i].Zone] == nil {
+			zoneSubnetNum[subnets[i].Zone] = &ZoneSubnetRatio{}
+		}
+
+		if extraIp {
+			zoneSubnetNum[subnets[i].Zone].TotalIps += subnets[i].TotalIps + 3
+		} else {
+			zoneSubnetNum[subnets[i].Zone].TotalIps += subnets[i].TotalIps
+		}
+		zoneSubnetNum[subnets[i].Zone].AvailableIps += subnets[i].AvailableIps
+	}
+
+	var (
+		totalIps     uint64
+		availableIps uint64
+	)
+
+	for zone := range zoneSubnetNum {
+		zoneSubnetNum[zone].Ratio = 100 * (float64(zoneSubnetNum[zone].TotalIps-zoneSubnetNum[zone].AvailableIps) /
+			float64(zoneSubnetNum[zone].TotalIps))
+
+		totalIps += zoneSubnetNum[zone].TotalIps
+		availableIps += zoneSubnetNum[zone].AvailableIps
+	}
+
+	totalRatio := 100 * (float64(totalIps-availableIps) / float64(totalIps))
+
+	return zoneSubnetNum, totalRatio, nil
+}
+
+// ZoneSubnetRatio zone subnet ratio
+type ZoneSubnetRatio struct {
+	TotalIps     uint64
+	AvailableIps uint64
+	Ratio        float64
+}
+
+// GetClusterCurrentVpcCniSubnets get tke cluster subnets
+func GetClusterCurrentVpcCniSubnets(cls proto.Cluster, extraIp bool) (map[string]*ZoneSubnetRatio,
+	float64, []string, error) {
+	cmOption, err := cloudprovider.GetCloudCmOptionByCluster(cls)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	tkeCls, err := GetTkeCluster(cmOption, cls.GetSystemID())
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	if !GetClusterVpcCniStatus(tkeCls) {
+		return nil, 0, nil, fmt.Errorf("cluster not enable vpc-cni mode")
+	}
+
+	// 获取集群子网
+	subnetIds := GetClusterVpcCniSubnets(tkeCls)
+	if len(subnetIds) == 0 {
+		return nil, 0, nil, fmt.Errorf("clsuter[%s] subnets empty", cls.GetClusterID())
+	}
+
+	zoneSubnetNum, totalRatio, err := GetClusterSubnetsZoneUsage(cmOption, subnetIds, extraIp)
+	if err != nil {
+		return nil, 0, nil, err
+	}
+
+	return zoneSubnetNum, totalRatio, subnetIds, nil
+}
+
+// AddSubnetsToCluster add subnet to tke cluster
+func AddSubnetsToCluster(cls *proto.Cluster, subnets []string, opt *cloudprovider.CommonOption) error {
+	client, err := api.NewTkeClient(opt)
+	if err != nil {
+		return err
+	}
+
+	err = client.AddVpcCniSubnets(&api.AddVpcCniSubnetsInput{
+		ClusterID: cls.GetSystemID(),
+		VpcID:     cls.GetVpcID(),
+		SubnetIDs: subnets,
+	})
+	if err != nil {
+		blog.Errorf("AddSubnetsToCluster[%s] failed:%v", cls.GetClusterID(), err)
+		return err
+	}
+	if cls.GetNetworkSettings().GetEniSubnetIDs() == nil {
+		cls.GetNetworkSettings().EniSubnetIDs = make([]string, 0)
+	}
+
+	cls.GetNetworkSettings().EniSubnetIDs = append(cls.GetNetworkSettings().EniSubnetIDs, subnets...)
+	return cloudprovider.GetStorageModel().UpdateCluster(context.Background(), cls)
+}
+
 // 集群下架节点
 
 // 第三方节点下架操作
@@ -57,7 +185,7 @@ func GetTkeCluster(opt *cloudprovider.CommonOption, clusterId string) (*tke.Clus
 // RemoveExternalNodesFromCluster remove external nodes from cluster, 移除第三方节点
 func RemoveExternalNodesFromCluster(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIPs []string) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// filter exist external nodes
 	clusterNodes, err := FilterClusterExternalNodesByIPs(ctx, info, nodeIPs)
@@ -79,6 +207,9 @@ func RemoveExternalNodesFromCluster(
 		return err
 	}
 	blog.Infof("RemoveExternalNodesFromCluster[%s] success[%v]", taskID, nodeIPs)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v]", nodeIPs))
 
 	return nil
 }
@@ -182,7 +313,7 @@ func DeleteClusterExternalNodes(
 // RemoveNodesFromCluster remove nodes from cluster
 func RemoveNodesFromCluster(
 	ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeIDs []string, force bool) ([]string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// filter exist instanceIDs
 	existInClusterNodes, _, err := FilterClusterInstanceFromNodesIDs(ctx, info, nodeIDs)
@@ -209,6 +340,9 @@ func RemoveNodesFromCluster(
 		return nil, err
 	}
 	blog.Infof("removeNodesFromCluster[%s] success, origin[%v] success[%v]", taskID, nodeIDs, success)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("origin [%v] success [%v]", nodeIDs, success))
 
 	return success, nil
 }
@@ -689,7 +823,7 @@ type AddExistedInstanceResult struct {
 func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, options *NodeAdvancedOptions,
 	nodeIDs []string, passwd string, isNodeGroup bool, idToIP map[string]string,
 	operator string) (*AddExistedInstanceResult, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
 	if err != nil {
@@ -741,6 +875,9 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 
 	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
 		"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failed [%v]", result.SuccessNodes, result.FailedNodes))
 
 	return result, nil
 }
@@ -804,7 +941,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		addFailureNodes = make([]string, 0)
 	)
 
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 
 	// get qcloud client
 	cli, err := api.NewTkeClient(info.CmOption)
@@ -882,6 +1019,9 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		addFailureNodes = failure
 	}
 	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", addSuccessNodes, addFailureNodes))
 
 	// set cluster node status
 	for _, n := range addFailureNodes {

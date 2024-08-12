@@ -126,7 +126,7 @@ func (c *NSClient) Watch(
 // CheckIsProjNSinSharedCluster 判断某命名空间，是否属于指定项目（仅共享集群有效）
 func CheckIsProjNSinSharedCluster(ctx context.Context, clusterID, namespace string) error {
 	if namespace == "" {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "检查共享集群命名空间权限失败"))
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间为空"))
 	}
 	manifest, err := NewNSCliByClusterID(ctx, clusterID).Get(ctx, namespace, metav1.GetOptions{})
 	if err != nil {

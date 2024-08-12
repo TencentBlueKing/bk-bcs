@@ -7,6 +7,7 @@ import {
 } from '../../types/config';
 import { IVariableEditParams } from '../../types/variable';
 import { ICommonQuery } from '../../types/index';
+import { localT } from '../i18n';
 
 // 配置文件版本下脚本配置接口可能会返回null，做数据兼容处理
 export const getDefaultConfigScriptData = () => ({
@@ -127,7 +128,13 @@ export const getReleasedConfigItemDetail = (
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const updateConfigContent = (bizId: string, appId: number, data: string | File, signature: string) =>
+export const updateConfigContent = (
+  bizId: string,
+  appId: number,
+  data: string | File,
+  signature: string,
+  progress?: Function,
+) =>
   http
     .put(`/biz/${bizId}/content/upload`, data, {
       headers: {
@@ -135,6 +142,12 @@ export const updateConfigContent = (bizId: string, appId: number, data: string |
         'X-Bkapi-File-Content-Id': signature,
         'X-Bkapi-File-Content-Overwrite': 'false',
         'Content-Type': 'text/plain',
+      },
+      onUploadProgress: (progressEvent: any) => {
+        if (progress) {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          progress(percentCompleted);
+        }
       },
     })
     .then((res) => res.data);
@@ -160,6 +173,28 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
       ...(isBlob && { responseType: 'blob' }), // 文件为二进制流，需要设置响应类型为blob才能正确解析
     })
     .then((res) => res);
+
+/**
+ * 判断上传的配置文件是否已存在
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param data 配置内容
+ * @param signature 文件内容的SHA256值
+ * @returns
+ */
+export const getConfigUploadFileIsExist = (
+  bizId: string,
+  appId: number,
+  signature: string,
+) =>
+  http
+    .get(`/biz/${bizId}/content/metadata`, {
+      headers: {
+        'X-Bscp-App-Id': appId,
+        'X-Bkapi-File-Content-Id': signature,
+      },
+    })
+    .then((res) => res.data);
 
 /**
  * 创建配置版本
@@ -218,7 +253,7 @@ export const getConfigVersionList = (bizId: string, appId: number, params: IConf
     res.data.details.forEach((item: IConfigVersion) => {
       const defaultGroup = item.status.released_groups.find((group) => group.id === 0);
       if (defaultGroup) {
-        defaultGroup.name = '全部实例';
+        defaultGroup.name = localT('全部实例');
       }
     });
     return res;
@@ -380,9 +415,19 @@ export const updateBoundTemplateVersion = (
  * @returns
  */
 export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, template_set_ids: number[]) =>
-  http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_sets`, {
+  http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_set`, {
     params: { template_set_ids: template_set_ids.join(',') },
   });
+
+/**
+ * 删除服务下绑定的模板套餐
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置ID
+ * @returns
+ */
+export const deleteCurrBoundPkg = (bizId: string, appId: number, id: number) =>
+  http.delete(`/config/biz/${bizId}/apps/${appId}/template_set/${id}`);
 
 /**
  * 导入非模板配置文件压缩包
@@ -608,3 +653,13 @@ export const importKvFormJson = (bizId: string, appId: number, content: string) 
  */
 export const importKvFormYaml = (bizId: string, appId: number, content: string) =>
   http.post(`/config/biz/${bizId}/apps/${appId}/kvs/yaml/import`, { data: content });
+
+/**
+ * 判断生成版本名称是否重名
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param kvs 上传kv列表
+ * @returns
+ */
+export const createVersionNameCheck = (bizId: string, appId: number, name: string) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/release/${name}/check`);

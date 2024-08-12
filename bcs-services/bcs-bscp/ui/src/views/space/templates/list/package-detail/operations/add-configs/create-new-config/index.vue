@@ -16,6 +16,7 @@
         :is-tpl="true"
         :bk-biz-id="spaceId"
         :id="currentTemplateSpace"
+        :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
         @change="handleFormChange" />
     </div>
     <div class="action-btns">
@@ -43,8 +44,10 @@
   import ConfigForm from '../../../../../../service/detail/config/config-list/config-table-list/config-form.vue';
   import SelectPackage from './select-package.vue';
 
-  const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+  const templateStore = useTemplateStore();
+
+  const { spaceId, spaceFeatureFlags } = storeToRefs(useGlobalStore());
+  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -99,12 +102,28 @@
       if (configForm.value.path?.endsWith('/') && configForm.value.path !== '/') {
         configForm.value.path = configForm.value.path.slice(0, -1);
       }
-      const params = { ...configForm.value, ...{ sign, byte_size: size } };
+      const params = {
+        ...configForm.value,
+        ...{ sign, byte_size: size },
+        template_set_ids: pkgIds[0] === 0 ? [] : pkgIds,
+      };
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params);
       // 选择未指定套餐时,不需要调用添加接口
+      // 新建配置不存在全选反选，未指定套餐不存在新建
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds);
+        await addTemplateToPackage(
+          spaceId.value,
+          currentTemplateSpace.value,
+          [res.data.id],
+          pkgIds,
+          false,
+          typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
+          false,
+        );
       }
+      templateStore.$patch((state) => {
+        state.topIds = [res.data.id];
+      });
       isSelectPkgDialogShow.value = false;
       emits('added');
       close();
@@ -120,7 +139,7 @@
   };
 
   const handleBeforeClose = async () => {
-    if (isFormChanged.value) {
+    if (isFormChanged.value || fileUploading.value) {
       const result = await useModalCloseConfirmation();
       return result;
     }

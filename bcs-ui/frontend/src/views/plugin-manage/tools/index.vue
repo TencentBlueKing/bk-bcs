@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <!-- eslint-disable max-len -->
 <template>
-  <BcsContent hide-back :title="crdKind === 'BcsLog' ? $t('nav.log') : $t('plugin.tools.title')">
+  <BcsContent hide-back :title="$t('plugin.tools.title')">
     <div>
       <Row class="mb-[16px]">
         <div class="right" slot="right">
@@ -48,7 +48,7 @@
             </g>
           </symbol>
         </svg>
-        <table class="bk-table biz-templateset-table mb20" v-if="crdKind !== 'BcsLog'">
+        <table class="bk-table biz-templateset-table mb20">
           <thead>
             <tr>
               <th style="width: 120px; padding-left: 0;" class="center">{{$t('plugin.tools.icon')}}</th>
@@ -94,17 +94,10 @@
                           </bcs-popover>
                         </span>
                         <template v-else-if="pendingStatus.includes(crdcontroller.status)">
-                          <div class="bk-spin-loading bk-spin-loading-mini bk-spin-loading-primary vm" style="margin-right: 3px;">
-                            <div class="rotate rotate1"></div>
-                            <div class="rotate rotate2"></div>
-                            <div class="rotate rotate3"></div>
-                            <div class="rotate rotate4"></div>
-                            <div class="rotate rotate5"></div>
-                            <div class="rotate rotate6"></div>
-                            <div class="rotate rotate7"></div>
-                            <div class="rotate rotate8"></div>
+                          <div class="flex items-center">
+                            <LoadingIcon />
+                            <span class="vm">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</span>
                           </div>
-                          <span class="vm">{{statusTextMap[crdcontroller.status] || $t('plugin.tools.doing')}}</span>
                         </template>
                         <span class="biz-mark" v-else>
                           <bcs-popover :width="500" :content="crdcontroller.message" placement="top">
@@ -120,27 +113,24 @@
                       </td>
                       <td class="action">
                         <template v-if="crdcontroller.status === 'deployed'">
-                          <bk-dropdown-menu
-                            class="dropdown-menu"
-                            :align="'left'"
-                            ref="dropdown">
-                            <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
+                          <PopoverSelector offset="0,6">
+                            <bk-button theme="default" style="position: relative; width: 88px;">
                               <span>{{$t('generic.label.action')}}</span>
                               <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                             </bk-button>
 
-                            <ul class="bk-dropdown-list" slot="dropdown-content">
-                              <li v-if="crdcontroller.supported_actions.includes('config')">
-                                <a href="javascript:void(0)" @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</a>
+                            <ul slot="content">
+                              <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('config')">
+                                <span @click="goControllerInstances(crdcontroller)">{{$t('plugin.tools.config')}}</span>
                               </li>
-                              <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
+                              <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('upgrade')">
+                                <span @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</span>
                               </li>
-                              <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
+                              <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                <span @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</span>
                               </li>
                             </ul>
-                          </bk-dropdown-menu>
+                          </PopoverSelector>
                         </template>
                         <template v-else-if="!crdcontroller.status">
                           <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('logCollector.action.enable')}}</bk-button>
@@ -152,23 +142,20 @@
                             <bk-button type="primary" @click="haneldEnableCrdController(crdcontroller)">{{$t('plugin.tools.restart')}}</bk-button>
                           </template>
                           <template v-else>
-                            <bk-dropdown-menu
-                              class="dropdown-menu"
-                              :align="'left'"
-                              ref="dropdown">
-                              <bk-button :class="['bk-button bk-default btn']" slot="dropdown-trigger" style="position: relative; width: 88px;">
+                            <PopoverSelector>
+                              <bk-button theme="default" style="position: relative; width: 88px;">
                                 <span>{{$t('generic.label.action')}}</span>
                                 <i class="bcs-icon bcs-icon-angle-down dropdown-menu-angle-down ml5" style="font-size: 10px;"></i>
                               </bk-button>
-                              <ul class="bk-dropdown-list" slot="dropdown-content">
-                                <li v-if="crdcontroller.supported_actions.includes('upgrade')">
-                                  <a href="javascript:void(0)" @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</a>
+                              <ul slot="content">
+                                <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('upgrade')">
+                                  <span @click="showInstanceDetail(crdcontroller)">{{$t('plugin.tools.upgrade')}}</span>
                                 </li>
-                                <li v-if="crdcontroller.supported_actions.includes('uninstall')">
-                                  <a href="javascript:void(0)" @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</a>
+                                <li class="bcs-dropdown-item" v-if="crdcontroller.supported_actions.includes('uninstall')">
+                                  <span @click="handleUninstall(crdcontroller)">{{$t('plugin.tools.uninstall')}}</span>
                                 </li>
                               </ul>
-                            </bk-dropdown-menu>
+                            </PopoverSelector>
                           </template>
                         </template>
                         <template v-else-if="crdcontroller.status === 'unknown'">
@@ -240,7 +227,9 @@ import { catchErrorHandler } from '@/common/util';
 import ClusterSelectComb from '@/components/cluster-selector/cluster-select-comb.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import Row from '@/components/layout/Row.vue';
+import LoadingIcon from '@/components/loading-icon.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import PopoverSelector from '@/components/popover-selector.vue';
 
 export default {
   components: {
@@ -248,6 +237,8 @@ export default {
     BcsContent,
     ClusterSelectComb,
     Row,
+    PopoverSelector,
+    LoadingIcon,
   },
   data() {
     return {
@@ -316,9 +307,6 @@ export default {
     },
     curProject() {
       return this.$store.state.curProject;
-    },
-    crdKind() {
-      return this.$route.meta.crdKind;
     },
     clusterList() {
       return this.$store.state.cluster.clusterList;
@@ -448,12 +436,7 @@ export default {
         version: item.version,
       }));
         // 搜索
-      let results = data.filter((item) => {
-        if (this.crdKind === 'BcsLog') {
-          return item.chart_name === 'bk-log-collector';
-        }
-        return item.chart_name !== 'bk-log-collector';
-      });
+      let results = data;
       if (this.searchKeyword.trim()) {
         results = [];
         const keyword = this.searchKeyword.trim();
@@ -534,40 +517,20 @@ export default {
     },
 
     async goControllerInstances(crdcontroller) {
-      if (this.crdKind === 'BcsLog') {
-        try {
-          if (this.$INTERNAL) {
-            const { projectId } = this;
-            await this.$store.dispatch('enableLogPlans', projectId);
-          }
-
-          this.$router.push({
-            name: 'crdcontrollerLogInstances',
-            params: {
-              clusterId: this.searchScope,
-            },
-          });
-        } catch (e) {
-          if (e.code !== 404) {
-            catchErrorHandler(e, this);
-          }
-        }
-      } else {
-        if (crdcontroller.chart_name === 'db-privilege') {
-          this.$router.push({
-            name: 'crdcontrollerDBInstances',
-            params: {
-              clusterId: this.searchScope,
-            },
-          });
-        } else if (crdcontroller.chart_name === 'bcs-polaris-operator') {
-          this.$router.push({
-            name: 'crdcontrollerPolarisInstances',
-            params: {
-              clusterId: this.searchScope,
-            },
-          });
-        }
+      if (crdcontroller.chart_name === 'db-privilege') {
+        this.$router.push({
+          name: 'crdcontrollerDBInstances',
+          params: {
+            clusterId: this.searchScope,
+          },
+        });
+      } else if (crdcontroller.chart_name === 'bcs-polaris-operator') {
+        this.$router.push({
+          name: 'crdcontrollerPolarisInstances',
+          params: {
+            clusterId: this.searchScope,
+          },
+        });
       }
     },
 

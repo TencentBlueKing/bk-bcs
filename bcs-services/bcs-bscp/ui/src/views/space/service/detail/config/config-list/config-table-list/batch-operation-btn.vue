@@ -25,13 +25,17 @@
   <bk-button
     v-else
     class="batch-delete-btn"
-    :disabled="props.selectedIds.length === 0"
+    :disabled="props.selectedIds.length === 0 && !isAcrossChecked"
     @click="isBatchDeleteDialogShow = true">
     {{ t('批量删除') }}
   </bk-button>
   <DeleteConfirmDialog
     v-model:isShow="isBatchDeleteDialogShow"
-    :title="t('确认删除所选的 {n} 项配置项？', { n: props.selectedIds.length })"
+    :title="
+      t('确认删除所选的 {n} 项配置项？', {
+        n: isAcrossChecked ? dataCount - props.selectedIds.length : props.selectedIds.length,
+      })
+    "
     :pending="batchDeletePending"
     @confirm="handleBatchDeleteConfirm">
     <div>
@@ -55,6 +59,7 @@
   import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
   import EditPermissionDialog from '../../../../../templates/list/package-detail/operations/edit-permission/edit-permission-dialog.vue';
   import { IConfigItem } from '../../../../../../../../types/config';
+
   const { t } = useI18n();
 
   interface IPermissionType {
@@ -69,6 +74,8 @@
     selectedIds: number[];
     isFileType: boolean; // 是否为文件型配置
     selectedItems: IConfigItem[];
+    isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
   const emits = defineEmits(['deleted']);
@@ -91,9 +98,11 @@
       theme: 'success',
       message: props.isFileType ? t('批量删除配置文件成功') : t('批量删除配置项成功'),
     });
-    batchDeletePending.value = false;
     isBatchDeleteDialogShow.value = false;
-    emits('deleted');
+    setTimeout(() => {
+      emits('deleted');
+      batchDeletePending.value = false;
+    }, 300);
   };
 
   const handleOpenBantchEditPerm = () => {
@@ -243,6 +252,7 @@
     padding: 4px 0;
     border: 1px solid #dcdee5;
     box-shadow: 0 2px 6px 0 #0000001a;
+    width: auto !important;
     .operation-item {
       padding: 0 12px;
       min-width: 58px;

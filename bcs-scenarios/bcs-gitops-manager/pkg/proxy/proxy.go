@@ -90,9 +90,9 @@ func GetJWTInfoWithAuthorization(authorization string, client *jwt.JWTClient) (*
 	return u, nil
 }
 
-// IsAdmin check if request comes from admin,
+// IsGitOpsClient check if request comes from bcs-gitops client,
 // only use for gitops command line
-func IsAdmin(req *http.Request) bool {
+func IsGitOpsClient(req *http.Request) bool {
 	token := req.Header.Get(common.HeaderBCSClient)
 	return token == common.ServiceNameShort
 }

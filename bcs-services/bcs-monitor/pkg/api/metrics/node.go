@@ -13,9 +13,11 @@
 package metrics
 
 import (
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -49,6 +51,16 @@ type UsageQuery struct {
 	StartAt string `json:"start_at" form:"start_at"` // 必填参数`
 	EndAt   string `json:"end_at" form:"end_at"`
 }
+
+// Nodes 列表
+type Nodes struct {
+	Node []string `json:"node"`
+}
+
+const (
+	// 限制并发为 20，防止对数据源造成压力
+	defaultQueryConcurrent = 20
+)
 
 // parseTime 兼容前端多个格式
 func parseTime(rawTime string) (time.Time, error) {
@@ -202,6 +214,89 @@ func GetNodeOverview(c *rest.Context) (interface{}, error) {
 	}
 
 	return overview, nil
+}
+
+// ListNodeOverviews 查询节点列表概览
+// @Summary 查询节点列表概览
+// @Tags    Metrics
+// @Success 200 {string} string
+// @Router  /nodes/overviews [post]
+func ListNodeOverviews(c *rest.Context) (interface{}, error) {
+
+	nodes := Nodes{}
+	if err := c.ShouldBindJSON(&nodes); err != nil {
+		return nil, err
+	}
+
+	nodeOveriewMetrics := make(map[string]*NodeOveriewMetric, len(nodes.Node))
+
+	var mtx sync.Mutex
+	var wg errgroup.Group
+	wg.SetLimit(defaultQueryConcurrent)
+
+	promqlMap := map[string]string{
+		"container_count":      `bcs:node:container_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"pod_total":            `bcs:node:pod_total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"pod_count":            `bcs:node:pod_count{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_used":             `bcs:node:cpu:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_request":          `bcs:node:cpu:request{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_total":            `bcs:node:cpu:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_usage":            `bcs:node:cpu:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"cpu_request_usage":    `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_used":          `bcs:node:memory:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_request":       `bcs:node:memory:request{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_total":         `bcs:node:memory:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_usage":         `bcs:node:memory:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"memory_request_usage": `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"disk_usage":           `bcs:node:disk:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"disk_used":            `bcs:node:disk:used{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"disk_total":           `bcs:node:disk:total{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+		"diskio_usage":         `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`,
+	}
+	for _, node := range nodes.Node {
+		node := node
+		wg.Go(func() error {
+			params := map[string]interface{}{
+				"clusterId": c.ClusterId,
+				"node":      node,
+				"provider":  PROVIDER,
+			}
+
+			// 设计如此，忽略报错原因如下两点：
+			// 1、忽略报错信息，底层函数始终也是返回err nil的情况；
+			// 2、如果报错的情况下，result始终也是有默认值的，而且结果需要返回空的结构体
+			result, _ := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
+				utils.GetNowQueryTime())
+
+			overview := &NodeOveriewMetric{
+				ContainerCount:     result["container_count"],
+				PodTotal:           result["pod_total"],
+				PodCount:           result["pod_count"],
+				CPUUsed:            result["cpu_used"],
+				CPURequest:         result["cpu_request"],
+				CPUTotal:           result["cpu_total"],
+				CPUUsage:           result["cpu_usage"],
+				CPURequestUsage:    result["cpu_request_usage"],
+				DiskUsed:           result["disk_used"],
+				DiskTotal:          result["disk_total"],
+				DiskUsage:          result["disk_usage"],
+				DiskioUsage:        result["diskio_usage"],
+				MemoryUsed:         result["memory_used"],
+				MemoryRequest:      result["memory_request"],
+				MemoryTotal:        result["memory_total"],
+				MemoryUsage:        result["memory_usage"],
+				MemoryRequestUsage: result["memory_request_usage"],
+			}
+			mtx.Lock()
+			nodeOveriewMetrics[node] = overview
+			mtx.Unlock()
+			return nil
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		return nil, err
+	}
+	return nodeOveriewMetrics, nil
 }
 
 // GetNodeCPUUsage 查询 CPU 使用率

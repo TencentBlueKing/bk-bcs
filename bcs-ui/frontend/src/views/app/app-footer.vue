@@ -2,30 +2,32 @@
   <div class="bcs-footer">
     <div v-if="$INTERNAL">
       <div class="mb5 link">
-        <a href="wxwork://message?uin=8444252571319680">{{ $t('blueking.onCall') }}</a> |
+        <a :href="config.helperLink">{{ config.i18n.helperText }}</a> |
         <a :href="PAAS_HOST" target="_blank">{{ $t('blueking.desktop') }}</a>
       </div>
       <p>
-        Copyright © 2012 Tencent BlueKing. All Rights Reserved. {{ version }}
+        {{ config.footerCopyrightContent }}
       </p>
     </div>
     <div v-else>
       <div class="mb5 link">
-        <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('blueking.support') }}</a> |
-        <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('blueking.community') }}</a> |
-        <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('blueking.website') }}</a>
+        <span v-html="config.i18n.footerInfoHTML"></span>
       </div>
-      <p>Copyright © 2012 Tencent BlueKing. All Rights Reserved. {{ version }}</p>
+      <p>{{ config.footerCopyrightContent }}</p>
     </div>
   </div>
 </template>
 <script lang="ts">
 import { defineComponent } from 'vue';
 
+import usePlatform from '@/composables/use-platform';
+
 export default defineComponent({
   name: 'BcsFooter',
   setup() {
+    const { config } = usePlatform();
     return {
+      config,
       PAAS_HOST: window.PAAS_HOST,
       version: localStorage.getItem('__bcs_latest_version__'),
     };
@@ -43,5 +45,8 @@ export default defineComponent({
   .link a {
     color: #3a84ff;
   }
+}
+>>> .link-item {
+  color: #3a84ff;
 }
 </style>

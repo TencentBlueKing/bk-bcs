@@ -13,7 +13,7 @@
         v-model:fileUploading="fileUploading"
         :config="configForm"
         :content="content"
-        :editable="true"
+        :is-edit="true"
         :bk-biz-id="props.bkBizId"
         :id="props.appId"
         :file-size-limit="spaceFeatureFlags.RESOURCE_LIMIT.maxFileSize"
@@ -115,7 +115,7 @@
   };
 
   const handleBeforeClose = async () => {
-    if (isFormChange.value) {
+    if (isFormChange.value || fileUploading.value) {
       const result = await useModalCloseConfirmation();
       return result;
     }
@@ -149,7 +149,7 @@
       close();
       Message({
         theme: 'success',
-        message: '编辑配置文件成功',
+        message: t('编辑配置文件成功'),
       });
     } catch (e) {
       console.log(e);

@@ -28,14 +28,19 @@
             <Plus class="button-icon" />
             {{ t('新建脚本') }}
           </bk-button>
-          <BatchDeleteBtn :bk-biz-id="spaceId" :selected-ids="selectedIds" @deleted="refreshAfterBatchDelete" />
+          <BatchDeleteBtn
+            :bk-biz-id="spaceId"
+            :selected-ids="selectedIds"
+            :is-across-checked="isAcrossChecked"
+            :data-count="selecTableDataCount"
+            @deleted="refreshAfterBatchDelete" />
         </div>
         <bk-input
           v-model="searchStr"
           class="search-script-input"
           :placeholder="t('脚本名称')"
           :clearable="true"
-          @clear="refreshList"
+          @clear="refreshList()"
           @input="handleNameInputChange">
           <template #suffix>
             <Search class="search-input-icon" />
@@ -46,17 +51,24 @@
         <bk-table
           :border="['outer']"
           :data="scriptsData"
-          :checked="checkedScripts"
           :remote-pagination="true"
           :pagination="pagination"
           :class="memoEditHookId > 0 || tagEditHookId > 0 ? 'table-with-memo-edit' : ''"
           show-overflow-tooltip
           :cell-class="getCellCls"
-          @selection-change="handleSelectionChange"
-          @select-all="handleSelectAll"
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="handlePageCurrentChange">
-          <bk-table-column type="selection" width="60"></bk-table-column>
+          @page-value-change="refreshList($event, true)">
+          <template #prepend>
+            <render-table-tip />
+          </template>
+          <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
+            <template #default="{ row }">
+              <across-check-box
+                :checked="isChecked(row)"
+                :disabled="row.bound_num !== 0"
+                :handle-change="() => handleSelectionChange(row)" />
+            </template>
+          </bk-table-column>
           <bk-table-column :label="t('脚本名称')" :min-width="200">
             <template #default="{ row }">
               <div v-if="row.hook" class="hook-name" @click="handleViewVersionClick(row.hook.id)">
@@ -64,7 +76,7 @@
               </div>
             </template>
           </bk-table-column>
-          <bk-table-column prop="hook.spec.type" :label="t('脚本语言')" :width="locale === 'zh-CN' ? '120' : '150'">
+          <bk-table-column prop="hook.spec.type" :label="t('脚本语言')" :width="locale === 'zh-cn' ? '120' : '150'">
           </bk-table-column>
           <bk-table-column :label="t('分类标签')" property="tag">
             <template #default="{ row }">
@@ -107,7 +119,7 @@
                   <bk-overflow-title class="memo-text" type="tips">
                     {{ row.hook.spec.memo || '--' }}
                   </bk-overflow-title>
-                  <span class="edit-icon" @click="handleOpenMemoEdit(row.hook.id)">
+                  <span class="edit-icon" @click="handleOpenMemoEdit(row)">
                     <EditLine />
                   </span>
                 </div>
@@ -116,9 +128,10 @@
                   ref="memoInputRef"
                   class="memo-input"
                   type="textarea"
-                  :model-value="row.hook.spec.memo"
+                  v-model="editMemoStr"
                   :autosize="{ maxRows: 4 }"
                   :resize="false"
+                  :maxlength="200"
                   @blur="handleMemoEditBlur(row, $event)" />
               </div>
             </template>
@@ -137,7 +150,7 @@
               <span v-if="row.hook">{{ datetimeFormat(row.hook.revision.update_at) }}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作')" width="180">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '180' : '250'">
             <template #default="{ row }">
               <div class="action-btns">
                 <bk-button text theme="primary" @click="handleEditClick(row)">{{ t('编辑') }}</bk-button>
@@ -147,7 +160,14 @@
                   @click="router.push({ name: 'script-version-manage', params: { spaceId, scriptId: row.hook.id } })">
                   {{ t('版本管理') }}
                 </bk-button>
-                <bk-button text theme="primary" @click="handleDeleteScript(row)">{{ t('删除') }}</bk-button>
+                <bk-button
+                  :disabled="row.bound_num !== 0"
+                  text
+                  theme="primary"
+                  v-bk-tooltips="{ content: $t('脚本已被引用，不能删除'), disabled: row.bound_num === 0 }"
+                  @click="handleDeleteScript(row)">
+                  {{ t('删除') }}
+                </bk-button>
               </div>
             </template>
           </bk-table-column>
@@ -212,10 +232,14 @@
   import DeleteConfirmDialog from '../../../../components/delete-confirm-dialog.vue';
   import LinkToApp from '../../templates/list/components/link-to-app.vue';
   import ContentWidthOverflowTips from '../../../../components/content-width-overflow-tips/index.vue';
+  import useTableAcrossCheck from '../../../../utils/hooks/use-table-acrosscheck';
+  import acrossCheckBox from '../../../../components/across-checkbox.vue';
+  import CheckType from '../../../../../types/across-checked';
   import { debounce } from 'lodash';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(useScriptStore());
+  const scriptStore = useScriptStore();
+  const { versionListPageShouldOpenEdit, versionListPageShouldOpenView } = storeToRefs(scriptStore);
   const router = useRouter();
   const { t, locale } = useI18n();
 
@@ -244,15 +268,35 @@
   const memoInputRef = ref();
   const tagEditHookId = ref(0); // 当前正在编辑标签的脚本id
   const tagInputRef = ref();
+  const editMemoStr = ref(''); // 编辑描述内容
+  const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
   const maxTableHeight = computed(() => {
     const windowHeight = window.innerHeight;
     return windowHeight * 0.6 - 200;
   });
 
-  const checkedScripts = computed(() => {
-    return scriptsData.value.filter((item) => selectedIds.value.includes(item.hook.id));
+  // 当前页数据，不含禁用
+  const selecTableData = computed(() => {
+    return scriptsData.value
+      .filter((item) => item.bound_num === 0)
+      .map((item) => ({
+        ...item,
+        id: item.hook?.id,
+      }));
   });
+
+  const crossPageSelect = computed(
+    () => pagination.value.limit < pagination.value.count && selecTableDataCount.value !== 0,
+  );
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: selecTableDataCount,
+      curPageData: selecTableData, // 当前页数据，不含禁用
+      rowKey: ['id'],
+      crossPageSelect,
+    });
 
   const isSearchEmpty = ref(false);
   watch(
@@ -260,6 +304,17 @@
     () => {
       refreshList();
       getTags();
+    },
+  );
+
+  watch(
+    selections,
+    () => {
+      isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+      selectedIds.value = selections.value.map((item) => item.id);
+    },
+    {
+      deep: true,
     },
   );
 
@@ -289,6 +344,7 @@
       item.hook.spec.type = item.hook.spec.type.charAt(0).toUpperCase() + item.hook.spec.type.slice(1);
     });
     pagination.value.count = res.count;
+    selecTableDataCount.value = Number(res.exclusion_count);
     scriptsLoading.value = false;
   };
 
@@ -307,6 +363,7 @@
       theme: 'success',
       message: t('脚本更新成功'),
     });
+    getTags();
   };
 
   // 添加自定义单元格class
@@ -315,24 +372,11 @@
   };
 
   // 表格行选择事件
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: IScriptItem }) => {
-    const index = selectedIds.value.findIndex((id) => id === row.hook.id);
-    if (checked) {
-      if (index === -1) {
-        selectedIds.value.push(row.hook.id);
-      }
-    } else {
-      selectedIds.value.splice(index, 1);
-    }
-  };
-
-  // 全选
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      selectedIds.value = scriptsData.value.map((item) => item.hook.id);
-    } else {
-      selectedIds.value = [];
-    }
+  const handleSelectionChange = (row: IScriptItem) => {
+    const isSelected = selections.value.some((item) => item.hook.id === row.hook.id);
+    // 根据选择类型决定传递的状态
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
+    handleRowCheckChange(shouldBeChecked, { ...row, id: row.hook.id });
   };
 
   const handleSelectTag = (tag: string, all = false) => {
@@ -362,8 +406,13 @@
   };
 
   // 触发编辑脚本描述
-  const handleOpenMemoEdit = (id: number) => {
+  const handleOpenMemoEdit = (script: IScriptItem) => {
+    const {
+      id,
+      spec: { memo },
+    } = script.hook;
     memoEditHookId.value = id;
+    editMemoStr.value = memo;
     nextTick(() => {
       memoInputRef.value?.focus();
     });
@@ -457,7 +506,11 @@
     refreshList(pagination.value.current);
   };
 
-  const refreshList = (current = 1) => {
+  const refreshList = (current = 1, pageChange = false) => {
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
     getScripts();
@@ -468,14 +521,18 @@
     refreshList();
   };
 
-  const handlePageCurrentChange = (val: number) => {
-    pagination.value.current = val;
-    getScripts();
-  };
-
   const clearSearchStr = () => {
     searchStr.value = '';
     refreshList();
+  };
+
+  const isChecked = (row: IScriptItem) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.hook?.id === row.hook?.id);
+    }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.hook?.id === row.hook?.id);
   };
 </script>
 <style lang="scss" scoped>
@@ -558,6 +615,10 @@
     height: 100%;
     background: #ffffff;
     overflow: auto;
+    :deep(.bk-table-body) {
+      max-height: calc(100vh - 280px);
+      overflow: auto;
+    }
   }
   .operate-area {
     display: flex;
@@ -582,15 +643,6 @@
     padding-right: 10px;
     color: #979ba5;
     background: #ffffff;
-  }
-  // 脚本标签、描述编辑需要溢出table
-  :deep(.bk-table) {
-    &.table-with-memo-edit .bk-table-body {
-      overflow: visible;
-    }
-    .bk-table-body table td.memo-cell .cell {
-      overflow: visible;
-    }
   }
   .hook-name {
     color: #348aff;
@@ -644,7 +696,6 @@
     }
   }
   .script-memo {
-    position: relative;
     .memo-display {
       display: flex;
       align-items: center;
@@ -668,13 +719,6 @@
       &:hover {
         color: #3a84ff;
       }
-    }
-    .memo-input {
-      position: absolute;
-      top: 4px;
-      left: 0;
-      right: 0;
-      z-index: 2;
     }
   }
   .action-btns {

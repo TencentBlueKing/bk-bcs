@@ -119,6 +119,13 @@ const (
 	// UpdaterAnnoKey 更新者，为保持与 bcs-ui 中的一致，还是使用 updator（typo）
 	UpdaterAnnoKey = "io.tencent.paas.updator"
 
+	// TemplateNameAnnoKey 模板名称annotation key
+	TemplateNameAnnoKey = "io.tencent.paas.template_name"
+	// TemplateVersionAnnoKey 模板版本annotation key
+	TemplateVersionAnnoKey = "io.tencent.paas.template_version"
+	// HelmChartAnnoKey Helm Chart anno key
+	HelmChartAnnoKey = "helm.sh/chart"
+
 	// TemplateSourceType 模板来源
 	TemplateSourceType = "io.tencent.paas.source_type"
 
@@ -129,12 +136,15 @@ const (
 const (
 	// TemplateSourceTypeValue 模板创建来源类型值
 	TemplateSourceTypeValue = "template"
+
 	// TemplateCreateSource 创建来源: Template
 	TemplateCreateSource = "Template"
 	// HelmCreateSource 创建来源: Helm
 	HelmCreateSource = "Helm"
 	// ClientCreateSource 创建来源: Client
 	ClientCreateSource = "Client"
+	// WebCreateSource 创建来源: Web
+	WebCreateSource = "Web"
 )
 
 const (

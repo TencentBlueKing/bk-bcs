@@ -771,18 +771,28 @@ func (rm *ResManClient) listDevicePools(ctx context.Context, provider, region, i
 	}
 	blog.Infof("listDevicePools[%s] successful", traceID)
 
-	if instanceType == "" {
-		return pools, nil
+	filterPools := make([]*DevicePool, 0)
+	// filter snapshot pools
+	for i := range pools {
+		if strings.Contains(pools[i].GetName(), "snapshot") {
+			continue
+		}
+
+		filterPools = append(filterPools, pools[i])
 	}
 
-	filterPools := make([]*DevicePool, 0)
-	for _, pool := range pools {
+	if instanceType == "" {
+		return filterPools, nil
+	}
+
+	insTypesPools := make([]*DevicePool, 0)
+	for _, pool := range filterPools {
 		if pool.GetBaseConfig().GetInstanceType() == instanceType {
-			filterPools = append(filterPools, pool)
+			insTypesPools = append(insTypesPools, pool)
 		}
 	}
 
-	return filterPools, nil
+	return insTypesPools, nil
 }
 
 // GetRegionInstanceTypesFromPools get region instanceTypes机型 & zones可用区

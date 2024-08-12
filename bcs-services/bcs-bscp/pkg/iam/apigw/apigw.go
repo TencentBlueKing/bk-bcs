@@ -24,16 +24,15 @@ import (
 )
 
 var (
-	endpoint                    = "http://bkapi.sit.bktencent.com/api/bk-apigateway/prod/api/v1/apis/"
-	syncApi                     = "%s/%s/sync/"
-	syncStage                   = "%s/%s/stages/sync/"
-	syncResources               = "%s/%s/resources/sync/"
-	importResourceDocsBySwagger = "%s/%s/resource-docs/import/by-swagger/"
-	createResourceVersion       = "%s/%s/resource_versions/"
-	getLatestResourceVersion    = "%s/%s/resource_versions/latest/"
-	release                     = "%s/%s/resource_versions/release/"
-	applyPermissions            = "%s/%s/permissions/apply/"
-	getApigwPublicKey           = "%s/%s/public_key/"
+	syncApi                     = "%s/api/v1/apis/%s/sync/"
+	syncStage                   = "%s/api/v1/apis/%s/stages/sync/"
+	syncResources               = "%s/api/v1/apis/%s/resources/sync/"
+	importResourceDocsBySwagger = "%s/api/v1/apis/%s/resource-docs/import/by-swagger/"
+	createResourceVersion       = "%s/api/v1/apis/%s/resource_versions/"
+	getLatestResourceVersion    = "%s/api/v1/apis/%s/resource_versions/latest/"
+	release                     = "%s/api/v1/apis/%s/resource_versions/release/"
+	applyPermissions            = "%s/api/v1/apis/%s/permissions/apply/"
+	getApigwPublicKey           = "%s/api/v1/apis/%s/public_key/"
 )
 
 // ApiGw document sync gateway interface
@@ -60,26 +59,29 @@ type ApiGw interface {
 }
 
 // NewApiGw 初始化网关
-func NewApiGw(opt cc.ApiServerSetting) (ApiGw, error) {
+func NewApiGw(esbOpt cc.Esb, apiGwOpt cc.ApiGateway) (ApiGw, error) {
 
 	c, err := client.NewClient(nil)
 	if err != nil {
 		return nil, err
 	}
 	return &apiGw{
-		client: c,
-		opt:    opt,
+		client:   c,
+		esbOpt:   esbOpt,
+		apiGwOpt: apiGwOpt,
 	}, nil
+
 }
 
 type apiGw struct {
-	client *http.Client
-	opt    cc.ApiServerSetting
+	client   *http.Client
+	esbOpt   cc.Esb
+	apiGwOpt cc.ApiGateway
 }
 
 // SyncApi 同步网关，如果网关不存在，创建网关，如果网关已存在，更新网关
 func (a *apiGw) SyncApi(gwName string, req *SyncApiReq) (*SyncApiResp, error) {
-	url := fmt.Sprintf(syncApi, endpoint, gwName)
+	url := fmt.Sprintf(syncApi, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -108,7 +110,7 @@ func (a *apiGw) SyncApi(gwName string, req *SyncApiReq) (*SyncApiResp, error) {
 
 // SyncStage 同步网关环境，如果环境不存在，创建环境，如果已存在，则更新
 func (a *apiGw) SyncStage(gwName string, req *SyncStageReq) (*SyncStageResp, error) {
-	url := fmt.Sprintf(syncStage, endpoint, gwName)
+	url := fmt.Sprintf(syncStage, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -139,7 +141,7 @@ func (a *apiGw) SyncStage(gwName string, req *SyncStageReq) (*SyncStageResp, err
 // SyncResources 同步资源
 func (a *apiGw) SyncResources(gwName string, req *SyncResourcesReq) (*SyncResourcesResp, error) {
 
-	url := fmt.Sprintf(syncResources, endpoint, gwName)
+	url := fmt.Sprintf(syncResources, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -170,7 +172,7 @@ func (a *apiGw) SyncResources(gwName string, req *SyncResourcesReq) (*SyncResour
 // ImportResourceDocsBySwagger 根据 swagger 描述文件，导入资源文档
 func (a *apiGw) ImportResourceDocsBySwagger(gwName string, req *ImportResourceDocsBySwaggerReq) (
 	*ImportResourceDocsBySwaggerResp, error) {
-	url := fmt.Sprintf(importResourceDocsBySwagger, endpoint, gwName)
+	url := fmt.Sprintf(importResourceDocsBySwagger, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -202,7 +204,7 @@ func (a *apiGw) ImportResourceDocsBySwagger(gwName string, req *ImportResourceDo
 func (a *apiGw) CreateResourceVersion(gwName string, req *CreateResourceVersionReq) (
 	*CreateResourceVersionResp, error) {
 
-	url := fmt.Sprintf(createResourceVersion, endpoint, gwName)
+	url := fmt.Sprintf(createResourceVersion, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -233,7 +235,7 @@ func (a *apiGw) CreateResourceVersion(gwName string, req *CreateResourceVersionR
 // GetLatestResourceVersion implements ApiGw.
 func (a *apiGw) GetLatestResourceVersion(gwName string) (*GetLatestResourceVersionResp, error) {
 
-	url := fmt.Sprintf(getLatestResourceVersion, endpoint, gwName)
+	url := fmt.Sprintf(getLatestResourceVersion, a.apiGwOpt.Host, gwName)
 
 	request, err := a.newRequest("GET", url, nil)
 	if err != nil {
@@ -259,7 +261,7 @@ func (a *apiGw) GetLatestResourceVersion(gwName string) (*GetLatestResourceVersi
 // Release 发布版本
 func (a *apiGw) Release(gwName string, req *ReleaseReq) (*ReleaseResp, error) {
 
-	url := fmt.Sprintf(release, endpoint, gwName)
+	url := fmt.Sprintf(release, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -289,7 +291,7 @@ func (a *apiGw) Release(gwName string, req *ReleaseReq) (*ReleaseResp, error) {
 
 // ApplyPermissions implements ApiGw.
 func (a *apiGw) ApplyPermissions(gwName string, req *ApplyPermissionsReq) (*ApplyPermissionsResp, error) {
-	url := fmt.Sprintf(applyPermissions, endpoint, gwName)
+	url := fmt.Sprintf(applyPermissions, a.apiGwOpt.Host, gwName)
 
 	jsonData, err := json.Marshal(req)
 	if err != nil {
@@ -319,7 +321,7 @@ func (a *apiGw) ApplyPermissions(gwName string, req *ApplyPermissionsReq) (*Appl
 
 // GetApigwPublicKey implements ApiGw.
 func (a *apiGw) GetApigwPublicKey(gwName string) (*GetApigwPublicKeyResp, error) {
-	url := fmt.Sprintf(getApigwPublicKey, endpoint, gwName)
+	url := fmt.Sprintf(getApigwPublicKey, a.apiGwOpt.Host, gwName)
 
 	request, err := a.newRequest("GET", url, nil)
 	if err != nil {
@@ -359,7 +361,7 @@ func (a *apiGw) newRequest(method, url string, body []byte) (*http.Request, erro
 
 	// 设置请求头
 	req.Header.Set("X-Bkapi-Authorization", fmt.Sprintf(`{"bk_app_code": "%s", "bk_app_secret": "%s"}`,
-		a.opt.Esb.AppCode, a.opt.Esb.AppSecret))
+		a.esbOpt.AppCode, a.esbOpt.AppSecret))
 	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil

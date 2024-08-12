@@ -148,8 +148,9 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 	}
 
 	resp := &pbcs.ListKvsResp{
-		Count:   rp.Count,
-		Details: rp.Details,
+		Count:          rp.Count,
+		Details:        rp.Details,
+		ExclusionCount: rp.GetExclusionCount(),
 	}
 	return resp, nil
 
@@ -196,7 +197,21 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteAppRes
 		return nil, err
 	}
 
-	if len(req.GetIds()) == 0 {
+	var ids []uint32
+	ids = req.GetIds()
+	if req.ExclusionOperation {
+		result, err := s.client.DS.KvFetchIDsExcluding(grpcKit.RpcCtx(), &pbds.KvFetchIDsExcludingReq{
+			BizId: req.BizId,
+			AppId: req.AppId,
+			Ids:   req.GetIds(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		ids = result.GetIds()
+	}
+
+	if len(ids) == 0 {
 		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(grpcKit, "id is required"))
 	}
 
@@ -207,7 +222,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteAppRes
 	var mux sync.Mutex
 
 	// 使用 data-service 原子接口
-	for _, v := range req.GetIds() {
+	for _, v := range ids {
 		v := v
 		eg.Go(func() error {
 			r := &pbds.DeleteKvReq{
@@ -241,7 +256,7 @@ func (s *Service) BatchDeleteKv(ctx context.Context, req *pbcs.BatchDeleteAppRes
 	}
 
 	// 全部失败, 当前API视为失败
-	if len(failedIDs) == len(req.Ids) {
+	if len(failedIDs) == len(ids) {
 		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "batch delete failed"))
 	}
 

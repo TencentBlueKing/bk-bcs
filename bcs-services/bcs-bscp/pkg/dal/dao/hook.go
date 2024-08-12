@@ -18,9 +18,11 @@ import (
 	"gorm.io/datatypes"
 	rawgen "gorm.io/gen"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	dtypes "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -40,10 +42,18 @@ type Hook interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error
 	// Update one hook instance.
 	Update(kit *kit.Kit, hook *table.Hook) error
+	// UpdateWithTx update one hook instance with transaction.
+	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, hook *table.Hook) error
 	// GetByID get hook only with id.
 	GetByID(kit *kit.Kit, bizID, hookID uint32) (*table.Hook, error)
 	// GetByName get hook by name
 	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Hook, error)
+	// FetchIDsExcluding 获取指定ID后排除的ID
+	FetchIDsExcluding(kit *kit.Kit, bizID uint32, ids []uint32) ([]uint32, error)
+	// CountNumberUnReferences 统计未引用的数量
+	CountNumberUnReferences(kit *kit.Kit, bizID uint32, opt *types.ListHooksWithReferOption) (int64, error)
+	// GetReferencedIDs 获取被引用的IDs
+	GetReferencedIDs(kit *kit.Kit, bizID uint32) ([]uint32, error)
 }
 
 var _ Hook = new(hookDao)
@@ -54,10 +64,92 @@ type hookDao struct {
 	auditDao AuditDao
 }
 
+// UpdateWithTx update one hook instance with transaction.
+func (dao *hookDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error {
+	if err := g.ValidateUpdate(); err != nil {
+		return err
+	}
+
+	// 更新操作, 获取当前记录做审计
+	m := tx.Hook
+	q := tx.Hook.WithContext(kit.Ctx)
+	oldOne, err := q.Where(m.ID.Eq(g.ID), m.BizID.Eq(g.Attachment.BizID)).Take()
+	if err != nil {
+		return err
+	}
+
+	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareUpdate(g, oldOne)
+
+	if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).Updates(g); err != nil {
+		return err
+	}
+
+	if err := ad.Do(tx.Query); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetReferencedIDs 获取被引用的IDs
+func (dao *hookDao) GetReferencedIDs(kit *kit.Kit, bizID uint32) ([]uint32, error) {
+
+	h := dao.genQ.Hook
+	rh := dao.genQ.ReleasedHook
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(bizID))
+
+	var result []uint32
+	err := q.Distinct(h.ID).
+		LeftJoin(rh, h.ID.EqCol(rh.HookID)).
+		Where(rh.HookID.IsNotNull()).
+		Pluck(h.ID, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// CountNumberUnReferences 统计未引用的数量
+func (dao *hookDao) CountNumberUnReferences(kit *kit.Kit, bizID uint32,
+	opt *types.ListHooksWithReferOption) (int64, error) {
+
+	h := dao.genQ.Hook
+	rh := dao.genQ.ReleasedHook
+	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(bizID))
+	if opt.Name != "" {
+		q = q.Where(h.Name.Like("%" + opt.Name + "%"))
+	}
+	if opt.Tag != "" {
+		q = q.Where(rawgen.Cond(datatypes.JSONArrayQuery("tags").Contains(opt.Tag))...)
+	} else if opt.NotTag {
+		// when the length of tags is 2, it must be '[]'
+		// It could also be null
+		q = q.Where(h.Tags.Length().Eq(2)).Or(h.Tags.Length().Eq(4))
+	}
+
+	return q.LeftJoin(rh, h.ID.EqCol(rh.HookID)).Where(rh.HookID.IsNull()).Count()
+}
+
+// FetchIDsExcluding 获取指定ID后排除的ID
+func (dao *hookDao) FetchIDsExcluding(kit *kit.Kit, bizID uint32, ids []uint32) ([]uint32, error) {
+	m := dao.genQ.Hook
+	q := dao.genQ.Hook.WithContext(kit.Ctx)
+
+	var result []uint32
+	if err := q.Select(m.ID).
+		Where(m.BizID.Eq(bizID), m.ID.NotIn(ids...)).
+		Pluck(m.ID, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // CreateWithTx create one hook instance with transaction.
 func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (uint32, error) {
 	if g == nil {
-		return 0, errors.New("hook is nil")
+		return 0, errf.Errorf(errf.InvalidArgument, i18n.T(kit, "hook is nil"))
 	}
 
 	if err := g.ValidateCreate(); err != nil {
@@ -97,13 +189,14 @@ func (dao *hookDao) ListWithRefer(kit *kit.Kit, opt *types.ListHooksWithReferOpt
 	q := dao.genQ.Hook.WithContext(kit.Ctx).Where(h.BizID.Eq(opt.BizID)).Order(h.Name)
 
 	if opt.Name != "" {
-		q = q.Where(h.Name.Regexp("(?i)" + opt.Name))
+		q = q.Where(h.Name.Like("%" + opt.Name + "%"))
 	}
 	if opt.Tag != "" {
 		q = q.Where(rawgen.Cond(datatypes.JSONArrayQuery("tags").Contains(opt.Tag))...)
 	} else if opt.NotTag {
 		// when the length of tags is 2, it must be '[]'
-		q = q.Where(h.Tags.Length().Eq(2))
+		// It could also be null
+		q = q.Where(h.Tags.Length().Eq(2)).Or(h.Tags.Length().Eq(4))
 	}
 
 	if opt.SearchKey != "" {
@@ -167,7 +260,7 @@ func (dao *hookDao) ListHookReferences(kit *kit.Kit, opt *types.ListHookReferenc
 
 	for i := range details {
 		if details[i].ReleaseID == 0 {
-			details[i].ReleaseName = "未命名版本"
+			details[i].ReleaseName = i18n.T(kit, "Unnamed Version")
 		}
 	}
 
@@ -255,7 +348,7 @@ func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Hook.WithContext(kit.Ctx)
 		if _, err := q.Where(m.BizID.Eq(g.Attachment.BizID), m.ID.Eq(g.ID)).
-			Select(m.Tags, m.Memo, m.Reviser).Updates(g); err != nil {
+			Select(m.Tags, m.Memo).Omit(m.Reviser, m.UpdatedAt).Updates(g); err != nil {
 			return err
 		}
 

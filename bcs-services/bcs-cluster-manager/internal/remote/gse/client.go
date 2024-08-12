@@ -215,32 +215,17 @@ func (c *Client) GetHostsGseAgentStatus(supplyAccount string, hosts []Host) ([]H
 		con.Add(1)
 		go func(hosts []Host) {
 			defer con.Done()
-
-			agentIDs := make([]string, 0)
 			for i := range hosts {
-				agentIDs = append(agentIDs, hosts[i].AgentID) // nolint
-			}
-
-			resp, err := c.GetAgentStatusV1(&GetAgentStatusReq{
-				BKSupplierAccount: supplyAccount,
-				Hosts:             hosts,
-			})
-			if err != nil {
-				blog.Errorf("GetHostsGseAgentStatus %v failed, %s", supplyAccount, err.Error())
-				return
-			}
-			for _, agent := range resp.Data {
 				agentLock.Lock()
 				hostAgentStatus = append(hostAgentStatus, HostAgentStatus{
 					Host: Host{
-						IP:        agent.IP,
-						BKCloudID: agent.BKCloudID,
+						IP:        hosts[i].IP,
+						BKCloudID: hosts[i].BKCloudID,
 					},
-					Alive: agent.BKAgentAlive,
+					Alive: 0,
 				})
 				agentLock.Unlock()
 			}
-
 		}(cloudHostList[i])
 	}
 	con.Wait()
