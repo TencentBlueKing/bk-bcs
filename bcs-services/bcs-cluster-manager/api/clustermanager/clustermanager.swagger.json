@@ -3568,7 +3568,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -3643,7 +3643,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -4924,7 +4924,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -6077,7 +6077,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -6110,7 +6110,7 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/runtimeError"
             }
@@ -7782,7 +7782,6 @@
         },
         "disableCheckGroupResource": {
           "type": "boolean",
-          "format": "boolean",
           "description": "cloud是否关闭节点池资源quota校验开关",
           "title": "disableCheckGroupResource"
         }
@@ -12178,7 +12177,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -14933,7 +14931,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15000,7 +14997,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -15274,8 +15270,7 @@
           "type": "string"
         },
         "default": {
-          "type": "boolean",
-          "format": "boolean"
+          "type": "boolean"
         },
         "name": {
           "type": "string"
@@ -17231,7 +17226,6 @@
         },
         "disable": {
           "type": "boolean",
-          "format": "boolean",
           "description": "开关集群网络模式, 默认打开",
           "title": "disable"
         },
@@ -17242,7 +17236,6 @@
         },
         "isStaticIpMode": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否开启静态IP模式",
           "title": "isStaticIpMode"
         },
@@ -17281,7 +17274,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
@@ -19078,7 +19070,6 @@
         },
         "result": {
           "type": "boolean",
-          "format": "boolean",
           "description": "返回结果",
           "title": "result"
         },
