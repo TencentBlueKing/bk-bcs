@@ -8,222 +8,219 @@
         </div>
       </div>
     </div>
-    <div class="table-container">
-      <table class="table" v-show="expand">
-        <thead>
-          <tr>
-            <th class="th-cell name">{{ t('配置文件绝对路径') }}</th>
-            <th class="th-cell type">{{ t('配置文件格式') }}</th>
-            <th class="th-cell memo">
-              <div class="th-cell-edit">
-                <span>{{ t('配置文件描述') }}</span>
-                <bk-popover
-                  ext-cls="popover-wrap"
-                  theme="light"
-                  trigger="manual"
-                  placement="bottom"
-                  :is-show="batchSet.isShowMemoPop">
-                  <edit-line class="edit-line" @click="batchSet.isShowMemoPop = true" />
-                  <template #content>
-                    <div class="pop-wrap" v-click-outside="() => (batchSet.isShowMemoPop = false)">
-                      <div class="pop-content">
-                        <div class="pop-title">{{ t('批量设置配置文件描述') }}</div>
-                        <bk-input v-model="batchSet.memo" :placeholder="t('请输入')"></bk-input>
-                      </div>
-                      <div class="pop-footer">
-                        <div class="button">
-                          <bk-button
-                            theme="primary"
-                            style="margin-right: 8px; width: 80px"
-                            size="small"
-                            @click="handleConfirmPop('memo')">
-                            {{ t('确定') }}
-                          </bk-button>
-                          <bk-button size="small" @click="batchSet.isShowMemoPop = false">{{ t('取消') }}</bk-button>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </bk-popover>
-              </div>
-            </th>
-            <th class="th-cell privilege">
-              <div class="th-cell-edit">
-                <span class="required">{{ t('文件权限') }}</span>
-                <bk-popover
-                  ext-cls="popover-wrap"
-                  theme="light"
-                  trigger="manual"
-                  placement="bottom"
-                  :is-show="batchSet.isShowPrivilege">
-                  <edit-line class="edit-line" @click="batchSet.isShowPrivilege = true" />
-                  <template #content>
-                    <div class="pop-wrap privilege-wrap" v-click-outside="() => (batchSet.isShowPrivilege = false)">
-                      <div class="pop-content">
-                        <div class="pop-title">{{ t('批量设置文件权限') }}</div>
-                        <bk-input
-                          v-model="batchSet.privilege"
-                          :placeholder="t('请输入')"
-                          style="width: 184px; margin-bottom: 16px"
-                          @blur="testPrivilegeInput(batchSet.privilege)"></bk-input>
-                        <span class="error-tip" style="margin-left: 10px" v-if="batchSet.isShowPrivilegeError">
-                          {{ t('只能输入三位 0~7 数字且文件own必须有读取权限') }}
-                        </span>
-                        <div class="privilege-select-panel">
-                          <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
-                            <div class="header">{{ item }}</div>
-                            <div class="checkbox-area">
-                              <bk-checkbox-group
-                                class="group-checkboxs"
-                                :model-value="privilegeGroupsValue(batchSet.privilege)[index]"
-                                @change="handleSelectPrivilege(index, $event)">
-                                <bk-checkbox size="small" :label="4" :disabled="index === 0">{{ t('读') }}</bk-checkbox>
-                                <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
-                                <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
-                              </bk-checkbox-group>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="pop-footer">
-                        <div class="button">
-                          <bk-button
-                            theme="primary"
-                            style="margin-right: 8px; width: 80px"
-                            size="small"
-                            @click="handleConfirmPop('privilege')">
-                            {{ t('确定') }}
-                          </bk-button>
-                          <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </bk-popover>
-              </div>
-            </th>
-            <th class="th-cell user">
-              <div class="th-cell-edit">
-                <span class="required">{{ t('用户') }}</span>
-                <bk-popover
-                  ext-cls="popover-wrap"
-                  theme="light"
-                  trigger="manual"
-                  placement="bottom"
-                  :is-show="batchSet.isShowUserPop">
-                  <edit-line class="edit-line" @click="batchSet.isShowUserPop = true" />
-                  <template #content>
-                    <div class="pop-wrap" v-click-outside="() => (batchSet.isShowUserPop = false)">
-                      <div class="pop-content">
-                        <div class="pop-title">{{ t('批量设置用户') }}</div>
-                        <bk-input v-model="batchSet.user" :placeholder="t('请输入')"></bk-input>
-                      </div>
-                      <div class="pop-footer">
-                        <div class="button">
-                          <bk-button
-                            theme="primary"
-                            style="margin-right: 8px; width: 80px"
-                            size="small"
-                            @click="handleConfirmPop('user')">
-                            {{ t('确定') }}
-                          </bk-button>
-                          <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </bk-popover>
-              </div>
-            </th>
-            <th class="th-cell user-group">
-              <div class="th-cell-edit">
-                <span class="required">{{ t('用户组') }}</span>
-                <bk-popover
-                  ext-cls="popover-wrap"
-                  theme="light"
-                  trigger="manual"
-                  placement="bottom"
-                  :is-show="batchSet.isShowUserGroupPop">
-                  <edit-line class="edit-line" @click="batchSet.isShowUserGroupPop = true" />
-                  <template #content>
-                    <div class="pop-wrap" v-click-outside="() => (batchSet.isShowUserGroupPop = false)">
-                      <div class="pop-content">
-                        <div class="pop-title">{{ t('批量设置用户组') }}</div>
-                        <bk-input v-model="batchSet.user_group" :placeholder="t('请输入')"></bk-input>
-                      </div>
-                      <div class="pop-footer">
-                        <div class="button">
-                          <bk-button
-                            theme="primary"
-                            style="margin-right: 8px; width: 80px"
-                            size="small"
-                            @click="handleConfirmPop('user_group')">
-                            {{ t('确定') }}
-                          </bk-button>
-                          <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-                </bk-popover>
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(item, index) in data" :key="item.name + item.path">
-            <td class="not-editable td-cell">
-              <bk-overflow-title type="tips">
-                {{ item.path + item.name }}
-              </bk-overflow-title>
-            </td>
-            <td class="not-editable td-cell">
-              <bk-overflow-title type="tips">
-                {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
-              </bk-overflow-title>
-            </td>
-            <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'memo') }">
-              <bk-input v-model="item.memo" :placeholder="t('请输入')"></bk-input>
-            </td>
-            <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'privilege') }">
-              <div class="perm-input">
-                <bk-input v-model="item.privilege" :placeholder="t('请输入')" @blur="handlePrivilegeInputBlur(item)" />
-                <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
-                  <div class="perm-panel-trigger">
-                    <i class="bk-bscp-icon icon-configuration-line"></i>
+    <div class="table-container" v-show="expand">
+      <div class="table-head">
+        <div class="th-cell name">{{ t('配置文件绝对路径') }}</div>
+        <div class="th-cell type">{{ t('配置文件格式') }}</div>
+        <div class="th-cell memo">
+          <div class="th-cell-edit">
+            <span>{{ t('配置文件描述') }}</span>
+            <bk-popover
+              ext-cls="popover-wrap"
+              theme="light"
+              trigger="manual"
+              placement="bottom"
+              :is-show="batchSet.isShowMemoPop">
+              <edit-line class="edit-line" @click="batchSet.isShowMemoPop = true" />
+              <template #content>
+                <div class="pop-wrap" v-click-outside="() => (batchSet.isShowMemoPop = false)">
+                  <div class="pop-content">
+                    <div class="pop-title">{{ t('批量设置配置文件描述') }}</div>
+                    <bk-input v-model="batchSet.memo" :placeholder="t('请输入')"></bk-input>
                   </div>
-                  <template #content>
+                  <div class="pop-footer">
+                    <div class="button">
+                      <bk-button
+                        theme="primary"
+                        style="margin-right: 8px; width: 80px"
+                        size="small"
+                        @click="handleConfirmPop('memo')">
+                        {{ t('确定') }}
+                      </bk-button>
+                      <bk-button size="small" @click="batchSet.isShowMemoPop = false">{{ t('取消') }}</bk-button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </bk-popover>
+          </div>
+        </div>
+        <div class="th-cell privilege">
+          <div class="th-cell-edit">
+            <span class="required">{{ t('文件权限') }}</span>
+            <bk-popover
+              ext-cls="popover-wrap"
+              theme="light"
+              trigger="manual"
+              placement="bottom"
+              :is-show="batchSet.isShowPrivilege">
+              <edit-line class="edit-line" @click="batchSet.isShowPrivilege = true" />
+              <template #content>
+                <div class="pop-wrap privilege-wrap" v-click-outside="() => (batchSet.isShowPrivilege = false)">
+                  <div class="pop-content">
+                    <div class="pop-title">{{ t('批量设置文件权限') }}</div>
+                    <bk-input
+                      v-model="batchSet.privilege"
+                      :placeholder="t('请输入')"
+                      style="width: 184px; margin-bottom: 16px"
+                      @blur="testPrivilegeInput(batchSet.privilege)"></bk-input>
+                    <span class="error-tip" style="margin-left: 10px" v-if="batchSet.isShowPrivilegeError">
+                      {{ t('只能输入三位 0~7 数字且文件own必须有读取权限') }}
+                    </span>
                     <div class="privilege-select-panel">
-                      <div v-for="(group, i) in PRIVILEGE_GROUPS" class="group-item" :key="i" :label="item">
-                        <div class="header">{{ group }}</div>
+                      <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
+                        <div class="header">{{ item }}</div>
                         <div class="checkbox-area">
                           <bk-checkbox-group
                             class="group-checkboxs"
-                            :model-value="privilegeGroupsValue(item.privilege)[i]"
-                            @change="handleSelectPrivilege(i, $event, item)">
-                            <bk-checkbox size="small" :label="4" :disabled="i === 0">{{ t('读') }}</bk-checkbox>
+                            :model-value="privilegeGroupsValue(batchSet.privilege)[index]"
+                            @change="handleSelectPrivilege(index, $event)">
+                            <bk-checkbox size="small" :label="4" :disabled="index === 0">{{ t('读') }}</bk-checkbox>
                             <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
                             <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
                           </bk-checkbox-group>
                         </div>
                       </div>
                     </div>
-                  </template>
-                </bk-popover>
-              </div>
-            </td>
-            <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'user') }">
-              <bk-input v-model="item.user" :placeholder="t('请输入')"></bk-input>
-            </td>
-            <td class="td-cell-editable" :class="{ change: isContentChange(item.id, 'user_group') }">
-              <bk-input v-model="item.user_group" :placeholder="t('请输入')"></bk-input>
-            </td>
-            <td class="td-cell-delete">
-              <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(index)"></i>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                  </div>
+                  <div class="pop-footer">
+                    <div class="button">
+                      <bk-button
+                        theme="primary"
+                        style="margin-right: 8px; width: 80px"
+                        size="small"
+                        @click="handleConfirmPop('privilege')">
+                        {{ t('确定') }}
+                      </bk-button>
+                      <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </bk-popover>
+          </div>
+        </div>
+        <div class="th-cell user">
+          <div class="th-cell-edit">
+            <span class="required">{{ t('用户') }}</span>
+            <bk-popover
+              ext-cls="popover-wrap"
+              theme="light"
+              trigger="manual"
+              placement="bottom"
+              :is-show="batchSet.isShowUserPop">
+              <edit-line class="edit-line" @click="batchSet.isShowUserPop = true" />
+              <template #content>
+                <div class="pop-wrap" v-click-outside="() => (batchSet.isShowUserPop = false)">
+                  <div class="pop-content">
+                    <div class="pop-title">{{ t('批量设置用户') }}</div>
+                    <bk-input v-model="batchSet.user" :placeholder="t('请输入')"></bk-input>
+                  </div>
+                  <div class="pop-footer">
+                    <div class="button">
+                      <bk-button
+                        theme="primary"
+                        style="margin-right: 8px; width: 80px"
+                        size="small"
+                        @click="handleConfirmPop('user')">
+                        {{ t('确定') }}
+                      </bk-button>
+                      <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </bk-popover>
+          </div>
+        </div>
+        <div class="th-cell user-group">
+          <div class="th-cell-edit">
+            <span class="required">{{ t('用户组') }}</span>
+            <bk-popover
+              ext-cls="popover-wrap"
+              theme="light"
+              trigger="manual"
+              placement="bottom"
+              :is-show="batchSet.isShowUserGroupPop">
+              <edit-line class="edit-line" @click="batchSet.isShowUserGroupPop = true" />
+              <template #content>
+                <div class="pop-wrap" v-click-outside="() => (batchSet.isShowUserGroupPop = false)">
+                  <div class="pop-content">
+                    <div class="pop-title">{{ t('批量设置用户组') }}</div>
+                    <bk-input v-model="batchSet.user_group" :placeholder="t('请输入')"></bk-input>
+                  </div>
+                  <div class="pop-footer">
+                    <div class="button">
+                      <bk-button
+                        theme="primary"
+                        style="margin-right: 8px; width: 80px"
+                        size="small"
+                        @click="handleConfirmPop('user_group')">
+                        {{ t('确定') }}
+                      </bk-button>
+                      <bk-button size="small" @click="handleCancelPop">{{ t('取消') }}</bk-button>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </bk-popover>
+          </div>
+        </div>
+        <div class="th-cell delete"></div>
+      </div>
+      <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="name" v-slot="{ item, index }">
+        <div class="table-row">
+          <div class="not-editable td-cell name">
+            <bk-overflow-title type="tips">
+              {{ item.path + item.name }}
+            </bk-overflow-title>
+          </div>
+          <div class="not-editable td-cell type">
+            <bk-overflow-title type="tips">
+              {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
+            </bk-overflow-title>
+          </div>
+          <div class="td-cell-editable td-cell memo" :class="{ change: isContentChange(item.id, 'memo') }">
+            <bk-input v-model="item.memo" :placeholder="t('请输入')"></bk-input>
+          </div>
+          <div class="td-cell-editable td-cell privilege" :class="{ change: isContentChange(item.id, 'privilege') }">
+            <div class="perm-input">
+              <bk-input v-model="item.privilege" :placeholder="t('请输入')" @blur="handlePrivilegeInputBlur(item)" />
+              <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
+                <div class="perm-panel-trigger">
+                  <i class="bk-bscp-icon icon-configuration-line"></i>
+                </div>
+                <template #content>
+                  <div class="privilege-select-panel">
+                    <div v-for="(group, i) in PRIVILEGE_GROUPS" class="group-item" :key="i" :label="item">
+                      <div class="header">{{ group }}</div>
+                      <div class="checkbox-area">
+                        <bk-checkbox-group
+                          class="group-checkboxs"
+                          :model-value="privilegeGroupsValue(item.privilege)[i]"
+                          @change="handleSelectPrivilege(i, $event, item)">
+                          <bk-checkbox size="small" :label="4" :disabled="i === 0">{{ t('读') }}</bk-checkbox>
+                          <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
+                          <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
+                        </bk-checkbox-group>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </bk-popover>
+            </div>
+          </div>
+          <div class="td-cell-editable td-cell user" :class="{ change: isContentChange(item.id, 'user') }">
+            <bk-input v-model="item.user" :placeholder="t('请输入')"></bk-input>
+          </div>
+          <div class="td-cell-editable td-cell user-group" :class="{ change: isContentChange(item.id, 'user_group') }">
+            <bk-input v-model="item.user_group" :placeholder="t('请输入')"></bk-input>
+          </div>
+          <div class="td-cell-delete delete td-cell">
+            <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(index)"></i>
+          </div>
+        </div>
+      </RecycleScroller>
     </div>
   </div>
 </template>
@@ -414,7 +411,6 @@
     height: 28px;
     background: #eaebf0;
     border-radius: 2px 2px 0 0;
-
     .title-content {
       display: flex;
       align-items: center;
@@ -441,21 +437,28 @@
       }
     }
   }
-  .table {
+  .table-container {
     width: 100%;
-    border-collapse: collapse;
-    border: 1px solid #dcdee5;
     font-size: 12px;
     line-height: 20px;
-    table-layout: fixed;
-    overflow: auto;
+    border: 1px solid #dcdee5;
+    .table-head {
+      display: flex;
+    }
+    .table-row {
+      display: flex;
+    }
+    .table-body {
+      max-height: 400px;
+    }
     .th-cell {
       padding-left: 16px;
       height: 42px;
       color: #313238;
       background: #fafbfd;
-      border: 1px solid #dcdee5;
+      border-bottom: none;
       text-align: left;
+      line-height: 42px;
       .th-cell-edit {
         display: flex;
         justify-content: space-between;
@@ -478,6 +481,9 @@
           }
         }
       }
+      &:not(:last-child) {
+        border-right: 1px solid #dcdee5;
+      }
     }
     .name {
       width: 300px;
@@ -497,16 +503,24 @@
     .user-group {
       width: 91px;
     }
+    .delete {
+      flex: 1;
+      margin: 0;
+    }
     .not-editable {
       background-color: #f5f7fa;
     }
     .td-cell {
-      border: 1px solid #dcdee5;
       padding-left: 16px;
+      line-height: 42px;
+      border-bottom: none;
+      border-top: 1px solid #dcdee5;
+      &:not(:last-child) {
+        border-right: 1px solid #dcdee5;
+      }
     }
     .td-cell-editable {
       padding: 0;
-      border: 1px solid #dcdee5;
       :deep(.bk-input) {
         height: 42px;
         .bk-input--text {
@@ -523,9 +537,10 @@
       }
     }
     .td-cell-delete {
-      border: 1px solid #dcdee5;
-      width: 50px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
       .delete-icon {
         cursor: pointer;
         font-size: 14px;
