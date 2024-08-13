@@ -45,7 +45,7 @@
   import LinkToApp from '../../../components/link-to-app.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { packageList, currentTemplateSpace, isAcrossChecked } = storeToRefs(useTemplateStore());
+  const { packageList, currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -53,6 +53,7 @@
     currentPkg: number;
     value: ITemplateConfigItem[];
     valueLength: number;
+    isAcrossChecked: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'movedOut']);
@@ -113,7 +114,7 @@
         currentTemplateSpace.value,
         ids,
         [props.currentPkg as number],
-        isAcrossChecked.value,
+        props.isAcrossChecked,
         pkg.id, // 全部配置文件/未指定套餐没有移出套餐选项
       );
       emits('movedOut');

@@ -182,11 +182,7 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const getConfigUploadFileIsExist = (
-  bizId: string,
-  appId: number,
-  signature: string,
-) =>
+export const getConfigUploadFileIsExist = (bizId: string, appId: number, signature: string) =>
   http
     .get(`/biz/${bizId}/content/metadata`, {
       headers: {
@@ -511,9 +507,10 @@ export const deleteKv = (bizId: string, appId: number, configId: number) =>
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param ids 配置项ID列表
+ * @param exclusion_operation 是否跨页
  */
-export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
-  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[], exclusion_operation: boolean) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids, exclusion_operation });
 
 /**
  * 获取已发布kv
