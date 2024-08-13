@@ -5,28 +5,30 @@
       <span v-overflow-title class="name">{{ title }}</span>
       <Close v-if="!props.disabled" class="close-icon" @click.stop="handleDeletePkg" />
     </div>
-    <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
-      <thead>
-        <tr>
-          <th>{{ t('配置文件绝对路径') }}</th>
-          <th>{{ t('版本号') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-if="configTemplateList.length > 0">
-          <tr v-for="tpl in configTemplateList" :key="tpl.id">
-            <td>
-              <bk-overflow-title class="cell" type="tips">{{ fileAP(tpl) }}</bk-overflow-title>
-            </td>
-
-            <td class="select-version">
+    <div v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
+      <div class="table-head">
+        <div class="th-cell">{{ t('配置文件绝对路径') }}</div>
+        <div class="th-cell">{{ t('版本号') }}</div>
+      </div>
+      <RecycleScroller
+        v-if="configTemplateList.length > 0"
+        class="table-body"
+        :items="configTemplateList"
+        :item-size="42"
+        key-field="id">
+        <template #default="{ item }">
+          <div class="table-row">
+            <div class="td-cell">
+              <bk-overflow-title class="cell" type="tips">{{ fileAP(item) }}</bk-overflow-title>
+            </div>
+            <div class="td-cell select-version">
               <bk-select
                 :clearable="false"
                 :popover-options="{ theme: 'light bk-select-popover add-config-selector-popover' }"
-                :model-value="getVersionSelectVal(tpl.id)"
-                @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
+                :model-value="getVersionSelectVal(item.id)"
+                @change="handleSelectVersion(item.id, item.versions, $event)">
                 <bk-option
-                  v-for="version in tpl.versions"
+                  v-for="version in item.versions"
                   :key="version.isLatest ? 0 : version.id"
                   :id="version.isLatest ? 0 : version.id"
                   :label="version.name">
@@ -40,16 +42,12 @@
                   </div>
                 </bk-option>
               </bk-select>
-            </td>
-          </tr>
+            </div>
+          </div>
         </template>
-        <tr v-else>
-          <td colspan="3">
-            <bk-exception class="empty-tips" scene="part" type="empty">{{ t('该套餐下暂无模板') }}</bk-exception>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      </RecycleScroller>
+      <bk-exception v-else class="empty-tips" scene="part" type="empty">{{ t('该套餐下暂无模板') }}</bk-exception>
+    </div>
   </div>
 </template>
 <script lang="ts" setup>
@@ -205,12 +203,11 @@
   const handleDeletePkg = () => {
     emits('delete', props.pkgId);
   };
+
 </script>
 <style lang="scss" scoped>
   .package-template-table {
-    &:not(:last-child) {
-      margin-bottom: 18px;
-    }
+    margin-bottom: 18px;
     &.expand {
       .arrow-icon {
         transform: rotate(90deg);
@@ -240,12 +237,6 @@
       text-overflow: ellipsis;
       overflow: hidden;
     }
-    .conflict-icon {
-      margin-left: 10px;
-      font-size: 14px;
-      color: #ff9c01;
-      cursor: pointer;
-    }
     .close-icon {
       position: absolute;
       top: 5px;
@@ -260,9 +251,19 @@
   }
   .template-table {
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    tr.has-conflict {
+    border: 1px solid #dcdee5;
+    .table-head {
+      display: flex;
+      width: 100%;
+    }
+    .table-body {
+      max-height: calc(42px * 7);
+    }
+    .table-row {
+      display: flex;
+      width: 100%;
+    }
+    .td-cell.has-conflict {
       .cell {
         background: #fff3e1;
       }
@@ -272,20 +273,24 @@
         }
       }
     }
-    th,
-    td {
+    .th-cell,
+    .td-cell {
+      width: 454px;
       line-height: 20px;
       font-size: 12px;
       font-weight: 400;
-      border: 1px solid #dcdee5;
       text-align: left;
+      &:not(:last-child) {
+        border-right: 1px solid #dcdee5;
+      }
     }
-    th {
+    .th-cell {
       padding: 11px 16px;
       color: #313238;
       background: #fafbfd;
+      border-bottom: none;
     }
-    td {
+    .td-cell {
       padding: 0;
       color: #63656e;
       background: #f5f7fa;
@@ -296,6 +301,8 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        border-top: 1px solid #dcdee5;
+        width: 452px;
       }
     }
     .select-version {
@@ -303,6 +310,7 @@
       :deep(.bk-input) {
         height: 42px;
         border-color: transparent;
+        border-top: 1px solid #dcdee5;
       }
     }
     .empty-tips {

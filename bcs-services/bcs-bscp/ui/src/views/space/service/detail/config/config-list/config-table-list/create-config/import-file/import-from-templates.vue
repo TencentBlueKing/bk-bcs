@@ -69,7 +69,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, onMounted, computed } from 'vue';
+  import { ref, onMounted, computed, watch } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share } from 'bkui-vue/lib/icon';
   import { ITemplateBoundByAppData } from '../../../../../../../../../../types/config';
@@ -87,6 +87,8 @@
     appId: number;
   }>();
 
+  const emits = defineEmits(['toggleDisabled']);
+
   const pkgListLoading = ref(false);
   const pkgList = ref<IAllPkgsGroupBySpaceInBiz[]>([]);
   const bindingId = ref(0); // 模板和服务的绑定关系id，不为0表示绑定关系已经存在，编辑时需要调用编辑接口
@@ -96,8 +98,8 @@
   const searchPkgStr = ref('');
   const allImportPkgs = computed(() => [...importedPkgs.value, ...selectedPkgs.value]);
 
-  const isImportBtnDisabled = computed(() => {
-    return pkgListLoading.value || importedPkgs.value.length + selectedPkgs.value.length === 0;
+  watch([() => pkgListLoading.value, () => importedPkgs.value.length, () => selectedPkgs.value.length], () => {
+    emits('toggleDisabled', pkgListLoading.value || importedPkgs.value.length + selectedPkgs.value.length === 0);
   });
 
   onMounted(async () => {
@@ -228,7 +230,6 @@
   };
 
   defineExpose({
-    isImportBtnDisabled: isImportBtnDisabled.value,
     handleImportConfirm,
   });
 </script>
@@ -237,7 +238,6 @@
     margin-top: 24px;
     border-top: 1px solid #dcdee5;
     overflow: auto;
-    max-height: 490px;
     .tips {
       margin: 16px 0;
       font-size: 12px;
