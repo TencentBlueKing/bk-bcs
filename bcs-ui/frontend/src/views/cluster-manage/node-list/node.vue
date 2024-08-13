@@ -141,7 +141,30 @@
               v-bk-tooltips="{ content: $t('generic.button.drain.tips'), disabled: !podDisabled, placement: 'right' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('generic.button.drain.text')}}</li>
             </div>
-            <li @click="handleBatchSetLabels">{{$t('cluster.nodeList.button.setLabel')}}</li>
+            <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('labels')">
+                {{$t('cluster.nodeList.button.setLabel')}}
+              </li>
+            </div>
+            <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('taints')">
+                {{$t('cluster.nodeList.button.setTaint')}}
+              </li>
+            </div>
             <div
               class="h-[32px]"
               v-bk-tooltips="{
@@ -1725,11 +1748,20 @@ export default defineComponent({
         },
       });
     };
-    // 批量设置标签
-    const handleBatchSetLabels = () => {
+    // 批量设置标签和污点
+    const handleBatchSetNode = (type: 'labels'|'taints') => {
       if (!selections.value.length) return;
 
-      handleSetLabel(selections.value);
+      $router.push({
+        name: 'batchSettingNode',
+        params: {
+          clusterId: props.clusterId,
+          type,
+        },
+        query: {
+          nodeNameList: selections.value.map(item => item.nodeName).join(','),
+        },
+      });
     };
     // 批量删除节点
     const handleBatchDeleteNodes = () => {
@@ -1987,7 +2019,7 @@ export default defineComponent({
       handleBatchEnableNodes,
       handleBatchStopNodes,
       handleBatchReAddNodes,
-      handleBatchSetLabels,
+      handleBatchSetNode,
       handleBatchDeleteNodes,
       handleAddNode,
       handleClusterChange,

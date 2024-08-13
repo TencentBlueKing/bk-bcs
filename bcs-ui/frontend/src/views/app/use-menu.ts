@@ -512,6 +512,8 @@ export default function useMenu() {
     }
     return data;
   };
+  // 所有叶子菜单项
+  const leafMenus = computed(() => flatLeafMenus(menus.value));
   const allLeafMenus = computed(() => flatLeafMenus(menusData.value));
   // 所有路由父节点只是用于分组（指向子路由），真正的菜单项是子节点
   const getCurrentMenuByRouteName = (name: string) => allLeafMenus.value
@@ -566,6 +568,7 @@ export default function useMenu() {
   };
 
   return {
+    leafMenus,
     menusData,
     menus,
     disabledMenuIDs,

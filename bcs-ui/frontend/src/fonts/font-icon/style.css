@@ -911,3 +911,18 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-crd-3:before {
 	content: "\e23a";
 }
+.bcs-icon-batch-edit:before {
+	content: "\e23b";
+}
+.bcs-icon-undo:before {
+	content: "\e23c";
+}
+.bcs-icon-md:before {
+	content: "\e23d";
+}
+.bcs-icon-undo_line:before {
+	content: "\e23f";
+}
+.bcs-icon-templete:before {
+	content: "\e23e";
+}

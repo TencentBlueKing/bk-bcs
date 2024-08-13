@@ -226,6 +226,7 @@ generic:
     warning:
       '403': 无权限操作
       '404': 页面不存在
+      invalid: 请输入合法的值
     success:
       ok: 操作成功
       copy: 复制成功
@@ -250,6 +251,7 @@ generic:
       searchEmpty:
         text: 搜索结果为空
         subTitle: '可以尝试 调整关键词 或{action}'
+      noMatchLabel: 暂无匹配标签
     info:
       tips: 提示
       refreshAuth: 当前操作有权限，请刷新界面
@@ -380,8 +382,10 @@ generic:
     stop: 停止
     basicConfig: 基本配置
     abnormal: 异常
+    batchSetting: '批量设置 {0}'
     resourceName: 资源名称
     resourceID: 资源ID
+    batchSetting: '批量设置 {0}'
   status:
     part_failure: 部分失败
     support: 支持
@@ -429,6 +433,7 @@ generic:
     required: 必填项
     labelValueEmpty: 标签值不能为空
     labelKey: 仅支持字母，数字和字符(-_./)
+    SpeciaLabelKey: 输入无效，请确保您的输入符合Kubernetes标签格式
     annotations: 仅支持字母，数字，空格和字符(-_./)
     label: 标签必须由字母数字字符、连字符、下划线或点组成
     required1: taints不能有空字段
@@ -1178,6 +1183,8 @@ cluster:
       retry: 失败重试
       setLabel: 设置标签
       setTaint: 设置污点
+      addLabel: 添加标签
+      addTaint: 添加污点
       copy:
         text: 复制
         checkedIP: 复制勾选IP
@@ -1185,6 +1192,8 @@ cluster:
       cancelSelectAll: 取消选择所有数据
       delete:
         subTitle: '确认是否删除 {ip} 等 {num} 个节点'
+      saveSetting: 变动预览
+      gotIt: 我知道了
     msg:
       labelDesc: 标签有助于整理你的资源
       selectedData: '已选择 {num} 条数据'
@@ -1198,8 +1207,20 @@ cluster:
       disableImportClusterAction: 导入集群，节点管理功能不可用
       disableImportClusterAddNode: 导入集群不支持从已有服务器添加节点
       hasNotNodePoolNode: 选择的节点中有非节点池添加的节点
+      disableBatchSettingNodes: 选中的节点中有非正常状态的节点
+      undo: 恢复
+      batchUndo: 批量恢复
+      remove: 移除
+      batchRemove: 批量移除
+      batchEdit: 批量设置
+      copyNodeIP: 一键复制节点IP
+      note: '注意：NoExecute污点可能驱逐节点上的所有Pod，请谨慎操作。'
     placeholder:
       searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点池
+      inputKey: 请输入key
+      inputValue: 请输入value
+      locationTag: 定位标签
+      locationTaint: 定位污点
     title:
       confirmAddNode: 确定添加节点
       confirmReAddNode: 确认重新添加节点
@@ -1208,6 +1229,12 @@ cluster:
       batchSetLabel:
         text: 批量设置标签
         desc: 批量设置只展示相同Key的标签
+      batchSetTaint:
+        text: 批量设置污点
+      tableSetting: 表格设置
+      fieldDisplaySettings: 表格显示设置
+      nodeSaveError: 部分节点保存失败
+      tabelTitle: 以下节点异常，在此次批量设置操作中失败：
     label:
       podCounts: Pod数量
       index: 序号
@@ -1217,6 +1244,9 @@ cluster:
         text: 节点来源
         add: 手动添加
       nodePool: 所属节点池
+      thisAddition: 本次添加
+      thisRemoval: 本次移除
+      nodeNum: '本次选择 {nodeNum} 个节点，本次批量编辑标签内容如下：'
     metric:
       cpuUsageAndRequestUsage: CPU使用率/装箱率
       memUsageAndRequestUsage: 内存使用率/装箱率

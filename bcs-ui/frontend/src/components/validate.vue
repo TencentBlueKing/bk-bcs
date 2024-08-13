@@ -3,7 +3,7 @@
     :class="[{ 'bcs-validate': isError }, type]"
     @focusin="handleFocus"
     @focusout="handleBlur">
-    <slot></slot>
+    <slot :is-error="isError"></slot>
     <span
       class="error-tip"
       v-if="isError"
@@ -18,7 +18,7 @@ import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 
 export interface IValidate {
-  validator: Function | RegExp;
+  validator: Function | RegExp | string;
   message: string;
 }
 export default defineComponent({

@@ -24,6 +24,7 @@ const ClusterNodeOverview = () => import(/* webpackChunkName: 'cluster' */'@/vie
 const NodeTemplate = () => import(/* webpackChunkName: 'cluster'  */'@/views/cluster-manage/node-template/node-template.vue');
 const EditNodeTemplate = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-template/edit-node-template.vue');
 const AddClusterNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/add-nodes.vue');
+const batchSettingNode = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/node-list/batch-settings.vue');
 const NodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/tencent/node-pool.vue');
 const NodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/tencent/node-pool-detail.vue');
 const EditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/tencent/edit-node-pool.vue');
@@ -464,6 +465,17 @@ export default [
     name: 'huaweiNodePoolDetail',
     props: true,
     component: HuaweiNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // 批量设置（标签或污点）
+  {
+    path: 'clusters/:clusterId/nodes/setting/:type',
+    name: 'batchSettingNode',
+    props: route => ({ ...route.query, ...route.params }),
+    component: batchSettingNode,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

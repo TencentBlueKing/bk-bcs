@@ -246,6 +246,7 @@ generic:
     warning:
       '403': No permission operation
       '404': Page does not exist
+      invalid: Please enter a valid value
     success:
       ok: Done
       copy: Copied
@@ -270,6 +271,7 @@ generic:
       searchEmpty:
         text: The search result is empty
         subTitle: 'You can try adjusting keywords or {action}'
+      noMatchLabel: No matching Label
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
@@ -403,8 +405,10 @@ generic:
     start: Start
     stop: Stop
     abnormal: Abnormal
+    batchSetting: 'Batch setting {0}'
     resourceName: Resource name
     resourceID: Resource ID
+    batchSetting: 'Batch setting {0}'
   status:
     part_failure: Part failure
     support: Support
@@ -451,6 +455,7 @@ generic:
     required: Requiring item
     labelValueEmpty: The label value cannot be empty
     labelKey: 'only support letters, numbers and characters (-_./)'
+    SpeciaLabelKey: 'Invalid input, Please ensure your input follows Kubernetes label format'
     required1: TAINTS cannot have vacant fields
     annotationValueEmpty: The annotation value cannot be empty
     annotations: 'only support letters, numbers, space and characters (-_./)'
@@ -755,7 +760,7 @@ cluster:
         article3: >-
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
-          POD quantity upper limit.
+          POD quantity upper limit.       
         article1: >-
           The container network resources are limited, please allocate it
           reasonably. Under the current container network configuration, the
@@ -1453,6 +1458,8 @@ cluster:
       retry: Failure to retry
       setLabel: Set label
       setTaint: Set taint
+      addLabel: Add tag
+      addTaint: Add taint
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1460,6 +1467,8 @@ cluster:
       cancelSelectAll: Cancel all data
       delete:
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
+      saveSetting: Change Preview
+      gotIt: Got it
     msg:
       labelDesc: Tag helps to sort out your resources
       selectedData: 'Selected {num}'
@@ -1473,8 +1482,20 @@ cluster:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
       hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
+      disableBatchSettingNodes: There are abnormal nodes among the selected nodes.
+      undo: undo
+      batchUndo: Batch undo
+      remove: remove
+      batchRemove: Batch remove
+      batchEdit: Batch edit
+      copyNodeIP: Click to Copy Node IP
+      note: 'Note: NoExecute taint may evict all Pods on the node; proceed with care.'
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
+      inputKey: Please enter the key
+      inputValue: Please enter the value
+      locationTag: Location tag
+      locationTaint: Location taint
     title:
       confirmAddNode: Determine the additional node
       confirmReAddNode: Confirm the re-added node
@@ -1483,6 +1504,14 @@ cluster:
       batchSetLabel:
         text: Set label batch
         desc: Batch settings only show the same key label
+      batchSetTaint:
+        text: Set taint batch
+      tableSetting: Table setting
+      fieldDisplaySettings: Field display settings
+      nodeSaveError: Some nodes failed to save
+      tabelTitle: >-
+        The following nodes encountered errors and failed during this batch
+        operation:
     label:
       podCounts: Pods
       index: No.
@@ -1492,6 +1521,11 @@ cluster:
         text: Node source
         add: Manually added
       nodePool: Node pool
+      thisAddition: This addition
+      thisRemoval: This removal
+      nodeNum: >-
+        This selection includes {nodeNum} nodes, and the batch edit label
+        content for this batch is as follows:
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate

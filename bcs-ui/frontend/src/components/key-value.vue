@@ -80,7 +80,11 @@
           :value="item.value"
           :meta="index"
           ref="validateRefs">
-          <bcs-input :placeholder="item.placeholder || $t('generic.label.value')" class="value" v-model="item.value"></bcs-input>
+          <bcs-input
+            :placeholder="item.placeholder || $t('generic.label.value')"
+            class="value"
+            v-model="item.value">
+          </bcs-input>
         </Validate>
         <template v-if="showOperate">
           <i class="bk-icon icon-plus-circle ml10 mr5" @click="handleAddKeyValue(index)"></i>
