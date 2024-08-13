@@ -408,7 +408,6 @@ generic:
     batchSetting: 'Batch setting {0}'
     resourceName: Resource name
     resourceID: Resource ID
-    batchSetting: 'Batch setting {0}'
   status:
     part_failure: Part failure
     support: Support

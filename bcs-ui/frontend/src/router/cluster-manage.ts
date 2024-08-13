@@ -66,6 +66,7 @@ export default [
     component: Cluster,
     meta: {
       hideMenu: true,
+      keepAlive: true,
     },
   },
   {

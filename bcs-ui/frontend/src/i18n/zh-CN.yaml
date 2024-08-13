@@ -385,7 +385,6 @@ generic:
     batchSetting: '批量设置 {0}'
     resourceName: 资源名称
     resourceID: 资源ID
-    batchSetting: '批量设置 {0}'
   status:
     part_failure: 部分失败
     support: 支持

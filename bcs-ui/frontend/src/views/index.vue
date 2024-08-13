@@ -9,8 +9,11 @@
           :hide-back="routeMeta.hideBack"
           :cluster-id="routeMeta.showClusterName ? $route.params.clusterId : ''"
           v-if="routeMeta.title" />
+        <KeepAlive>
+          <RouterView class="flex-1" v-if="$route.meta?.keepAlive" />
+        </KeepAlive>
         <!-- key为了解决旧版模板集刷新问题, 资源视图视图管理切换集群后不能刷新界面(不能用path作为Key) -->
-        <RouterView class="flex-1" :key="isDashboard ? 'dashboard' : $route.path" />
+        <RouterView class="flex-1" :key="isDashboard ? 'dashboard' : $route.path" v-if="!$route.meta?.keepAlive" />
         <!-- 终端 -->
         <Terminal />
       </template>
