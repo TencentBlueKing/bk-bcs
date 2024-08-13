@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    width="640"
+    width="960"
     :title="t('编辑配置项')"
     :is-show="props.show"
     :before-close="handleBeforeClose"

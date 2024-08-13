@@ -58,7 +58,8 @@ export default {
          string: One-line string
          number: Numeric values, including integers, floating-point numbers, and checksum data types
          text: Multi-line string text, unverified data structure, size 2Mb
-         json、xml、yaml: For structured data in different formats, the data structure is checked`,
+         json、xml、yaml: For structured data in different formats, the data structure is checked
+         Sensitive information: Store confidential data, such as passwords, certificates, etc., on the product interface, this information is displayed with an asterisk (*) to ensure security`,
     createConfig: `You can reference global variables and define new BSCP variables in the configuration file. The variable rules are as follows
          1.To go template syntax, for example {'{{'} .bk_bscp_appid {'}}'}
          2.The variable name must start with “bk_bscp_” or “BK_BSCP_”`,
@@ -74,6 +75,11 @@ export default {
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
   删除服务成功: 'Service deleted successfully',
+  敏感信息: 'Sensitive info',
+  请选择数据类型: 'Please select data type',
+  服务属性编辑成功: 'Service attributes edited successfully',
+  '调整服务数据类型{n}失败': 'Failed to adjust service data type {n}',
+  '该服务下存在非{n}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为{n}': 'There are configuration items of non-{n} type under this service. If you need to modify it, please adjust the data type of all configuration items under this service to {n} first',
 
   // 导航栏
   服务配置中心: 'BSCP',
@@ -475,6 +481,7 @@ export default {
   '上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the service will reach {n}, exceeding the maximum limit',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
   '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
+  '已限制该服务下所有配置项数据类型为{n}，如需其他数据类型，请调整服务属性下的数据类型': 'All configuration item data types under the service are limited to {n}, if you need other data types, please adjust the data type under the service attributes',
 
   // 分组管理
   新增分组: 'New group',

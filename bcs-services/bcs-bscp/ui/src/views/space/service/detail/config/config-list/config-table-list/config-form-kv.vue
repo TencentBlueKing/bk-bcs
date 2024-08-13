@@ -1,27 +1,28 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item :label="t('配置项名称')" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="props.editMode" @input="change" :placeholder="t('请输入')" />
-    </bk-form-item>
+    <div class="form-row">
+      <bk-form-item :label="t('配置项名称')" property="key" :required="true">
+        <bk-input
+          class="name-input"
+          v-model="localVal.key"
+          :disabled="props.editMode"
+          @input="change"
+          :placeholder="t('请输入')" />
+      </bk-form-item>
+      <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
+        <bk-select v-model="localVal.kv_type" class="type-select" :disabled="selectDisabled">
+          <bk-option v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :id="kvType.id" :name="kvType.name" />
+        </bk-select>
+      </bk-form-item>
+    </div>
     <bk-form-item :label="t('配置项描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :placeholder="t('请输入')" @input="change" />
-    </bk-form-item>
-    <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
-      <bk-radio-group v-model="localVal.kv_type">
-        <bk-radio
-          v-for="kvType in CONFIG_KV_TYPE"
-          :key="kvType.id"
-          :label="kvType.id"
-          :disabled="radioDisabled(kvType.id)">
-          {{ kvType.name }}
-        </bk-radio>
-      </bk-radio-group>
     </bk-form-item>
     <bk-form-item :label="t('配置项值')" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
-        :placeholder="stringTypePlaceholder"
+        class="value-input"
         @input="change" />
       <KvConfigContentEditor
         v-else
@@ -53,7 +54,6 @@
       editMode?: boolean;
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
-      isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
       editMode: false,
@@ -69,24 +69,14 @@
 
   const typeDescription = computed(() => {
     if (appData.value.spec.data_type !== 'any' && !props.editMode) {
-      return `已限制该服务下所有配置项数据类型为${appData.value.spec.data_type}，如需其他数据类型，请调整服务属性下的数据类型`;
+      return t('已限制该服务下所有配置项数据类型为{n}，如需其他数据类型，请调整服务属性下的数据类型', {
+        n: appData.value.spec.data_type,
+      });
     }
     return '';
   });
 
-  const radioDisabled = computed(() => (kvTypeId: string) => {
-    if (appData.value.spec.data_type !== 'any' || props.editMode) {
-      return kvTypeId !== localVal.value.kv_type;
-    }
-    return false;
-  });
-
-  const stringTypePlaceholder = computed(() => {
-    if (localVal.value.kv_type === 'string') {
-      return t('请输入(仅支持大小不超过2M)');
-    }
-    return t('请输入');
-  });
+  const selectDisabled = computed(() => appData.value.spec.data_type !== 'any' || props.editMode);
 
   const rules = {
     key: [
@@ -119,7 +109,6 @@
     ],
   };
 
-  // 新建文件任意类型默认选中string
   onMounted(() => {
     if (!props.editMode) {
       localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
@@ -158,5 +147,16 @@
 <style lang="scss" scoped>
   :deep(.bk-form-item:last-child) {
     margin-bottom: 0;
+  }
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    .name-input,
+    .type-select {
+      width: 428px;
+    }
+  }
+  .value-input {
+    width: 428px;
   }
 </style>
