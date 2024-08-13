@@ -14,7 +14,7 @@
         <div class="title">{{ title }}</div>
       </div>
     </template>
-    <div v-if="props.selections.length > 0" class="dialog-content">
+    <div v-if="props.selections.length > 0 && !isAcrossChecked" class="dialog-content">
       <bk-table
         v-if="props.isBatch"
         empty-cell-text="--"
@@ -60,6 +60,7 @@
     isShow: boolean;
     isBatch: boolean;
     selections: { id: number; uid: string; current_release_name: string; target_release_name: string }[];
+    isAcrossChecked: boolean;
   }>();
 
   const emits = defineEmits(['close', 'retried']);
@@ -74,7 +75,7 @@
     pending.value = true;
     try {
       const ids = props.selections.map((item) => item.id);
-      await retryClients(props.bkBizId, props.appId, ids);
+      await retryClients(props.bkBizId, props.appId, ids, props.isAcrossChecked);
       close();
       BkMessage({
         theme: 'success',

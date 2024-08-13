@@ -415,9 +415,19 @@ export const updateBoundTemplateVersion = (
  * @returns
  */
 export const deleteBoundPkg = (bizId: string, appId: number, bindingId: number, template_set_ids: number[]) =>
-  http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_sets`, {
+  http.delete(`/config/biz/${bizId}/apps/${appId}/template_bindings/${bindingId}/template_set`, {
     params: { template_set_ids: template_set_ids.join(',') },
   });
+
+/**
+ * 删除服务下绑定的模板套餐
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param id 配置ID
+ * @returns
+ */
+export const deleteCurrBoundPkg = (bizId: string, appId: number, id: number) =>
+  http.delete(`/config/biz/${bizId}/apps/${appId}/template_set/${id}`);
 
 /**
  * 导入非模板配置文件压缩包

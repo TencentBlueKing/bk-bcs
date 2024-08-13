@@ -471,8 +471,8 @@ export default {
   上一步: 'Previous',
   上传至模板套餐: 'Upload to template package',
   '上传后，部分套餐/服务的配置文件数量将超过最大限制 ({n} 个文件)': 'After uploading, the number of configuration files in some packages/services will exceed the maximum limit ({n} files)',
-  '上传后，该套餐配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the package will exceed the maximum limit',
-  '上传后，该服务配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the service will exceed the maximum limit',
+  '上传后，该套餐的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the package will reach {n}, exceeding the maximum limit',
+  '上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the service will reach {n}, exceeding the maximum limit',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
   '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
 
@@ -1011,4 +1011,10 @@ export default {
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
   总和: 'Total',
+
+  // 跨页全选
+  跨页全选: 'AcrossChecked',
+  已选择: '{count} item selected',
+  选择所有: 'select all {count} items',
+  取消选择所有数据: 'Unselect all items',
 };

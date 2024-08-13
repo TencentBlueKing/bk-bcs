@@ -1,13 +1,17 @@
 <template>
   <bk-button
     class="batch-delete-btn"
-    :disabled="props.selectedIds.length === 0"
+    :disabled="props.selectedIds.length === 0 && !isAcrossChecked"
     @click="isBatchDeleteDialogShow = true">
     {{ t('批量删除') }}
   </bk-button>
   <DeleteConfirmDialog
     v-model:isShow="isBatchDeleteDialogShow"
-    :title="t('确认删除所选的 {n} 项脚本？', { n: props.selectedIds.length })"
+    :title="
+      t('确认删除所选的 {n} 项脚本？', {
+        n: isAcrossChecked ? dataCount - props.selectedIds.length : props.selectedIds.length,
+      })
+    "
     :pending="batchDeletePending"
     @confirm="handleBatchDeleteConfirm">
     <div>
@@ -27,6 +31,8 @@
   const props = defineProps<{
     bkBizId: string;
     selectedIds: number[];
+    isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
   const emits = defineEmits(['deleted']);
@@ -36,7 +42,7 @@
 
   const handleBatchDeleteConfirm = async () => {
     batchDeletePending.value = true;
-    await batchDeleteScript(props.bkBizId, props.selectedIds);
+    await batchDeleteScript(props.bkBizId, props.selectedIds, props.isAcrossChecked);
     Message({
       theme: 'success',
       message: t('批量删除脚本成功'),

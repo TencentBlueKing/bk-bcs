@@ -24,6 +24,23 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
 
+// GetServiceRoles implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetServiceRoles(ctx context.Context,
+	req *cmproto.GetServiceRolesRequest, resp *cmproto.GetServiceRolesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ga := cloudresource.NewGetServiceRolesAction(cm.model)
+	ga.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetServiceRoles", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetServiceRoles, req %v, resp.Code %d, resp.Message %s, resp.Data %v",
+		reqID, req, resp.Code, resp.Message, resp.Data)
+	blog.V(5).Infof("reqID: %s, action: GetServiceRoles, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // GetResourceGroups implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) GetResourceGroups(ctx context.Context,
 	req *cmproto.GetResourceGroupsRequest, resp *cmproto.GetResourceGroupsResponse) error {

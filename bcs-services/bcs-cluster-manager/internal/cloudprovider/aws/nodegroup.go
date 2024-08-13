@@ -13,11 +13,9 @@
 package aws
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -26,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
-	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
 func init() {
@@ -191,27 +188,7 @@ func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGro
 // UpdateDesiredNodes update nodegroup desired node
 func (ng *NodeGroup) UpdateDesiredNodes(desiredNode uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*cloudprovider.ScalingResponse, error) {
-	if group == nil || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
-		return nil, fmt.Errorf("invalid request")
-	}
-
-	taskType := cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode)
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		"clusterid":   opt.Cluster.ClusterID,
-		"tasktype":    taskType,
-		"nodegroupid": group.NodeGroupID,
-		"status":      cloudprovider.TaskStatusRunning,
-	})
-	taskList, err := cloudprovider.GetStorageModel().ListTask(context.Background(), cond, &storeopt.ListOption{})
-	if err != nil {
-		blog.Errorf("UpdateDesiredNodes failed: %v", err)
-		return nil, err
-	}
-	if len(taskList) != 0 {
-		return nil, fmt.Errorf("%d %s task(s) is still running", len(taskList), taskType)
-	}
-
+	// awsCloud支持连续扩容, 因此直接返回想扩容的节点数
 	return &cloudprovider.ScalingResponse{
 		ScalingUp: desiredNode,
 	}, nil

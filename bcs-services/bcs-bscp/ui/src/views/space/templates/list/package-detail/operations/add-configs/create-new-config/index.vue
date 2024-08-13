@@ -47,7 +47,7 @@
   const templateStore = useTemplateStore();
 
   const { spaceId, spaceFeatureFlags } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -109,8 +109,17 @@
       };
       const res = await createTemplate(spaceId.value, currentTemplateSpace.value, params);
       // 选择未指定套餐时,不需要调用添加接口
+      // 新建配置不存在全选反选，未指定套餐不存在新建
       if (pkgIds.length > 1 || pkgIds[0] !== 0) {
-        await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, [res.data.id], pkgIds);
+        await addTemplateToPackage(
+          spaceId.value,
+          currentTemplateSpace.value,
+          [res.data.id],
+          pkgIds,
+          false,
+          typeof currentPkg.value === 'string' ? 0 : currentPkg.value,
+          false,
+        );
       }
       templateStore.$patch((state) => {
         state.topIds = [res.data.id];

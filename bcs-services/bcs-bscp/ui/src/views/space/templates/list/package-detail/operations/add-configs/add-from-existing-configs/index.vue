@@ -159,7 +159,15 @@
     try {
       pending.value = true;
       const configIds = selectedConfigs.value.map((item) => item.id);
-      await addTemplateToPackage(spaceId.value, currentTemplateSpace.value, configIds, [currentPkg.value as number]);
+      await addTemplateToPackage(
+        spaceId.value,
+        currentTemplateSpace.value,
+        configIds,
+        [currentPkg.value as number],
+        false,
+        currentPkg.value,
+        false,
+      );
       emits('added');
       close();
       Message({

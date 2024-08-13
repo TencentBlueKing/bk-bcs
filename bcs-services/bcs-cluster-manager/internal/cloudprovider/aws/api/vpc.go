@@ -38,7 +38,8 @@ func init() {
 type VPCManager struct{}
 
 // CheckConflictInVpcCidr check cidr conflict
-func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string, opt *cloudprovider.CommonOption) ([]string, error) {
+func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string, opt *cloudprovider.CommonOption) (
+	[]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -46,52 +47,82 @@ func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string, opt *clo
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
 	client, err := GetEc2Client(&opt.CommonOption)
 	if err != nil {
-		return nil, fmt.Errorf("create aws client failed, err %s", err.Error())
+		return nil, fmt.Errorf("ListVpcs GetEc2Client failed, err %s", err.Error())
 	}
 
-	input := &ec2.DescribeVpcsInput{}
+	filters := []*ec2.Filter{{Name: aws.String("state"), Values: aws.StringSlice([]string{"available"})}}
 	if vpcID != "" {
-		input.VpcIds = []*string{&vpcID}
+		filters = append(filters, &ec2.Filter{Name: aws.String("vpc-id"), Values: aws.StringSlice([]string{vpcID})})
 	}
 
-	cloudVpcs, err := client.DescribeVpcs(input)
+	vpcs := make([]*ec2.Vpc, 0)
+	err = client.DescribeVpcsPages(&ec2.DescribeVpcsInput{Filters: filters},
+		func(page *ec2.DescribeVpcsOutput, lastPage bool) bool {
+			vpcs = append(vpcs, page.Vpcs...)
+			return !lastPage
+		})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListVpcs DescribeVpcsPages failed, err %s", err.Error())
 	}
 
-	vpcs := make([]*proto.CloudVpc, 0)
-	for _, v := range cloudVpcs.Vpcs {
-		vpcs = append(vpcs, &proto.CloudVpc{
-			VpcId:    *v.VpcId,
-			Name:     *v.VpcId,
-			Ipv4Cidr: *v.CidrBlock,
+	results := make([]*proto.CloudVpc, 0)
+	for _, v := range vpcs {
+		results = append(results, &proto.CloudVpc{
+			VpcId: *v.VpcId,
+			Ipv4Cidr: func(v *ec2.Vpc) string {
+				if v.CidrBlockAssociationSet != nil {
+					return *v.CidrBlockAssociationSet[0].CidrBlock
+				}
+				return ""
+			}(v),
+			Ipv6Cidr: func() string {
+				if v.Ipv6CidrBlockAssociationSet != nil {
+					return *v.Ipv6CidrBlockAssociationSet[0].Ipv6CidrBlock
+				}
+				return ""
+			}(),
 		})
 	}
 
-	return vpcs, nil
+	return results, nil
 }
 
 // ListSubnets list vpc subnets
-func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.ListNetworksOption) ([]*proto.Subnet, error) {
+func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.ListNetworksOption) (
+	[]*proto.Subnet, error) {
 	client, err := GetEc2Client(&opt.CommonOption)
 	if err != nil {
-		return nil, fmt.Errorf("create aws client failed, err %s", err.Error())
+		return nil, fmt.Errorf("ListSubnets GetEc2Client failed, err %s", err.Error())
 	}
 
-	output, err := client.DescribeSubnets(&ec2.DescribeSubnetsInput{})
+	cloudSubnets := make([]*ec2.Subnet, 0)
+	err = client.DescribeSubnetsPages(&ec2.DescribeSubnetsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("vpc-id"),
+				Values: aws.StringSlice([]string{vpcID}),
+			},
+			{
+				Name:   aws.String("state"),
+				Values: aws.StringSlice([]string{"available"}),
+			},
+		},
+	}, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
+		cloudSubnets = append(cloudSubnets, page.Subnets...)
+		return !lastPage
+	})
 	if err != nil {
-		return nil, fmt.Errorf("list regions failed, err %s", err.Error())
+		return nil, fmt.Errorf("ListSubnets DescribeSubnetsPages failed, err %s", err.Error())
 	}
 
 	result := make([]*proto.Subnet, 0)
-	for _, v := range output.Subnets {
+	for _, v := range cloudSubnets {
 		subnet := &proto.Subnet{
-			VpcID:                   aws.StringValue(v.VpcId),
-			SubnetID:                aws.StringValue(v.SubnetId),
-			SubnetName:              aws.StringValue(v.SubnetId),
-			CidrRange:               aws.StringValue(v.CidrBlock),
-			Zone:                    aws.StringValue(v.AvailabilityZone),
-			AvailableIPAddressCount: uint64(aws.Int64Value(v.AvailableIpAddressCount)),
+			VpcID:      aws.StringValue(v.VpcId),
+			SubnetID:   aws.StringValue(v.SubnetId),
+			SubnetName: aws.StringValue(v.SubnetId),
+			CidrRange:  aws.StringValue(v.CidrBlock),
+			Zone:       aws.StringValue(v.AvailabilityZone),
 		}
 
 		ipv6CidrBlocks := make([]string, 0)
@@ -105,12 +136,36 @@ func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.
 
 		result = append(result, subnet)
 	}
+
 	return result, nil
 }
 
 // ListSecurityGroups list security groups
 func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	client, err := GetEc2Client(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("ListSecurityGroups GetEc2Client failed, err %s", err.Error())
+	}
+
+	cloudSgs := make([]*ec2.SecurityGroup, 0)
+	err = client.DescribeSecurityGroupsPages(&ec2.DescribeSecurityGroupsInput{},
+		func(page *ec2.DescribeSecurityGroupsOutput, lastPage bool) bool {
+			cloudSgs = append(cloudSgs, page.SecurityGroups...)
+			return !lastPage
+		})
+	if err != nil {
+		return nil, fmt.Errorf("ListSecurityGroups DescribeSecurityGroupsPages failed, err %s", err.Error())
+	}
+
+	result := make([]*proto.SecurityGroup, 0)
+	for _, s := range cloudSgs {
+		result = append(result, &proto.SecurityGroup{
+			SecurityGroupName: *s.GroupName,
+			SecurityGroupID:   *s.GroupId,
+		})
+	}
+
+	return result, nil
 }
 
 // GetCloudNetworkAccountType 查询用户网络类型

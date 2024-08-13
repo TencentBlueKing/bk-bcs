@@ -64,3 +64,14 @@ const (
 	// InstanceStateStopped instance state stopped
 	InstanceStateStopped = "stopped"
 )
+
+const (
+	// EKSRolePolicyWorkerNode EKS role policy AmazonEKSWorkerNodePolicy
+	EKSRolePolicyWorkerNode = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+	// EKSRolePolicyContainerRegistryReadOnly EKS role policy AmazonEC2ContainerRegistryReadOnly
+	EKSRolePolicyContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+	// EKSRolePolicyCNI EKS role policy AmazonEKS_CNI_Policy
+	EKSRolePolicyCNI = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+	// EksClusterRole EKS role policy AmazonEKSClusterPolicy
+	EksClusterRole = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+)

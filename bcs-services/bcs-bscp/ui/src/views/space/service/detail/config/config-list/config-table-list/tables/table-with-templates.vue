@@ -39,7 +39,7 @@
                     v-if="isUnNamedVersion && group.id !== 0"
                     v-cursor="{ active: !hasEditServicePerm }"
                     :class="['delete-btn', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-                    @click="handleDeletePkg(group.id, group.name)">
+                    @click="handleDeletePkg(group.id, group.name, group.template_set_id)">
                     <Close class="close-icon" />
                     {{ t('移除套餐') }}
                   </div>
@@ -294,7 +294,7 @@
     getBoundTemplates,
     getBoundTemplatesByAppVersion,
     deleteServiceConfigItem,
-    deleteBoundPkg,
+    deleteCurrBoundPkg,
     unModifyConfigItem,
     unDeleteConfigItem,
   } from '../../../../../../../../api/config';
@@ -386,6 +386,7 @@
   const isDeletePkgDialogShow = ref(false);
   const deleteTemplatePkgName = ref('');
   const deleteTemplatePkgId = ref(0);
+  const templateSetId = ref(0);
   const statusFilterChecked = ref<string[]>([]);
   const viewConfigSliderData = ref<{
     open: boolean;
@@ -774,17 +775,19 @@
   };
 
   // 删除模板套餐
-  const handleDeletePkg = async (pkgId: number, name: string) => {
+  const handleDeletePkg = async (pkgId: number, name: string, templateId: number) => {
     if (permCheckLoading.value || !checkPermBeforeOperate('update')) {
       return;
     }
     isDeletePkgDialogShow.value = true;
     deleteTemplatePkgName.value = name;
     deleteTemplatePkgId.value = pkgId;
+    templateSetId.value = templateId;
   };
 
   const handleDeletePkgConfirm = async () => {
-    await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
+    // await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
+    await deleteCurrBoundPkg(props.bkBizId, props.appId, templateSetId.value);
     await getBoundTemplateList();
     tableGroupsData.value = transListToTableData();
     emits('deleteConfig');

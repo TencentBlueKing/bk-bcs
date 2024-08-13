@@ -119,6 +119,12 @@ func (nm *NodeManager) GetResourceGroups(opt *cloudprovider.CommonOption) ([]*pr
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
+// GetServiceRoles service roles list
+func (nm *NodeManager) GetServiceRoles(opt *cloudprovider.CommonOption, roleType string) (
+	[]*proto.ServiceRoleInfo, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // GetZoneList get zoneList
 func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*proto.ZoneInfo, error) {
 	client, err := api.NewEcsClient(&opt.CommonOption)

@@ -24,6 +24,10 @@ export default defineStore('template', () => {
   const versionListPageShouldOpenView = ref(false);
   // 置顶id
   const topIds = ref<number[]>([]);
+  // 表格是否跨页选择
+  const isAcrossChecked = ref(false);
+  // 表格数据总数
+  const dataCount = ref(0);
 
   return {
     templateSpaceList,
@@ -36,5 +40,7 @@ export default defineStore('template', () => {
     versionListPageShouldOpenEdit,
     versionListPageShouldOpenView,
     topIds,
+    isAcrossChecked,
+    dataCount,
   };
 });
