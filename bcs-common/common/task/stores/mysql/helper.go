@@ -48,6 +48,8 @@ func getTaskRecord(t *types.Task) *TaskRecords {
 	record := &TaskRecords{
 		TaskID:              t.TaskID,
 		TaskType:            t.TaskType,
+		TaskIndex:           t.TaskIndex,
+		TaskIndexType:       t.TaskIndexType,
 		TaskName:            t.TaskName,
 		CurrentStep:         t.CurrentStep,
 		StepSequence:        stepSequence,
