@@ -74,7 +74,7 @@
   }
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace, isAcrossChecked } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
@@ -192,7 +192,7 @@
         currentTemplateSpace.value,
         [props.id],
         selectedPkgs.value,
-        isAcrossChecked.value,
+        false,
         typeof props.currentPkg === 'string' ? 0 : props.currentPkg,
       );
       emits('movedOut');

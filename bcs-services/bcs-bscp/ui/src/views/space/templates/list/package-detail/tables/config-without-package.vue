@@ -6,15 +6,25 @@
     current-pkg="no_specified"
     :space-id="spaceId"
     :get-config-list="getConfigList"
-    :show-delete-action="true">
+    :show-delete-action="true"
+    :is-across-checked="acrossCheckedType.isAcrossChecked"
+    :data-count="acrossCheckedType.dataCount"
+    @send-across-checked-type="
+      (checked, dataCount) => {
+        acrossCheckedType.isAcrossChecked = checked;
+        acrossCheckedType.dataCount = dataCount;
+      }
+    ">
     <template #tableOperations>
       <BatchOperationButton
         :space-id="spaceId"
         :configs="selectedConfigs"
         :current-template-space="currentTemplateSpace"
         pkg-type="without"
+        :is-across-checked="acrossCheckedType.isAcrossChecked"
+        :data-count="acrossCheckedType.dataCount"
         @refresh="refreshConfigList"
-        @deleted="handleConfigsDeleted"/>
+        @deleted="handleConfigsDeleted" />
     </template>
   </CommonConfigTable>
 </template>
@@ -35,6 +45,10 @@
 
   const configTable = ref();
   const selectedConfigs = ref<ITemplateConfigItem[]>([]);
+  const acrossCheckedType = ref<{ isAcrossChecked: boolean; dataCount: number }>({
+    isAcrossChecked: false,
+    dataCount: 0,
+  });
 
   const getConfigList = (params: ICommonQuery) => {
     const res = getTemplatesWithNoSpecifiedPackage(spaceId.value, currentTemplateSpace.value, params);

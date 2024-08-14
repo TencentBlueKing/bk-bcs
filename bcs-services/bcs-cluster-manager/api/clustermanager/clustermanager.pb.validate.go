@@ -430,6 +430,8 @@ func (m *Cluster) validate(all bool) error {
 
 	// no validation rules for IsMixed
 
+	// no validation rules for ClusterIamRole
+
 	if len(errors) > 0 {
 		return ClusterMultiError(errors)
 	}
@@ -9911,38 +9913,7 @@ func (m *NodeGroup) validate(all bool) error {
 
 	// no validation rules for Name
 
-	if l := utf8.RuneCountInString(m.GetClusterID()); l < 2 || l > 100 {
-		err := NodeGroupValidationError{
-			field:  "ClusterID",
-			reason: "value length must be between 2 and 100 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
-		err := NodeGroupValidationError{
-			field:  "ClusterID",
-			reason: "value does not have prefix \"BCS-\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
-	if !_NodeGroup_ClusterID_Pattern.MatchString(m.GetClusterID()) {
-		err := NodeGroupValidationError{
-			field:  "ClusterID",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for ClusterID
 
 	// no validation rules for Region
 
@@ -10190,8 +10161,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = NodeGroupValidationError{}
-
-var _NodeGroup_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 var _NodeGroup_Status_InLookup = map[string]struct{}{
 	"CREATING":       {},
@@ -16201,6 +16170,8 @@ func (m *CreateClusterReq) validate(all bool) error {
 	}
 
 	// no validation rules for IsMixed
+
+	// no validation rules for ClusterIamRole
 
 	if len(errors) > 0 {
 		return CreateClusterReqMultiError(errors)

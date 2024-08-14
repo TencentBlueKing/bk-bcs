@@ -1671,6 +1671,10 @@ message Cluster {
     title: "isMixed",
     description: "标记该集群是否是混部集群"
   }];
+  string clusterIamRole = 43[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterIamRole",
+    description: "aws的iam role, 用于创建eks集群"
+  }];
 }
 
 message Node {
@@ -3460,9 +3464,7 @@ message NodeGroup {
   string clusterID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "clusterID", 
     description: "节点组所关联的集群，该ID为BCS集群ID"
-  },
-  (validate.rules).string = {min_len : 2, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
-  ];
+  }];
   string region = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "region", 
     description: "节点组所关联区域信息"
@@ -5233,6 +5235,10 @@ message CreateClusterReq {
   bool isMixed = 42[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isMixed",
     description: "标记该集群是否是混部集群, 默认是false"
+  }];
+  string clusterIamRole = 43[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterIamRole",
+    description: "aws的iam role, 用于创建eks集群"
   }];
 }
 

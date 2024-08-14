@@ -14,7 +14,6 @@ package tasks
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -28,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -72,24 +70,6 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
-	}
-
-	return nil
-}
-
-func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error { // nolint
-	configByte, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
-	if err != nil {
-		return fmt.Errorf("failed to decode kubeconfig, %v", err)
-	}
-	typesConfig := &types.Config{}
-	err = json.Unmarshal([]byte(configByte), typesConfig)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal kubeconfig, %v", err)
-	}
-	err = cloudprovider.UpdateClusterCredentialByConfig(data.Cluster.ClusterID, typesConfig)
-	if err != nil {
 		return err
 	}
 
