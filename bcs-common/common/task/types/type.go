@@ -46,7 +46,7 @@ const (
 )
 
 var (
-	//DefaultPayloadContent default json extras content
+	// DefaultPayloadContent default json extras content
 	DefaultPayloadContent = []byte("{}")
 	// ErrNotImplemented not implemented error
 	ErrNotImplemented = errors.New("not implemented")

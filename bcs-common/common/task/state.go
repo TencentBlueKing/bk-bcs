@@ -264,12 +264,12 @@ func (s *State) AddCommonParams(key, value string) *State {
 	return s
 }
 
-// GetExtraParams get extra params by obj
+// GetCommonPayload get extra params by obj
 func (s *State) GetCommonPayload(obj interface{}) error {
 	return s.task.GetCommonPayload(obj)
 }
 
-// SetExtraAll set extra params by obj
+// SetCommonPayload set extra params by obj
 func (s *State) SetCommonPayload(obj interface{}) error {
 	return s.task.SetCommonPayload(obj)
 }

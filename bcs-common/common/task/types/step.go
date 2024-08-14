@@ -133,7 +133,7 @@ func (s *Step) SetNewParams(params map[string]string) *Step {
 	return s
 }
 
-// GetExtras return unmarshal step extras
+// GetPayload return unmarshal step extras
 func (s *Step) GetPayload(obj interface{}) error {
 	if len(s.Payload) == 0 {
 		s.Payload = DefaultPayloadContent

@@ -55,9 +55,6 @@ var (
 // nolint
 func main() {
 	pwd := os.Getenv("MONGO_PASSWORD")
-	if pwd == "" {
-		pwd = "12345"
-	}
 
 	mongoOpts := &bcsmongo.Options{
 		Hosts:                 mongoHosts,
