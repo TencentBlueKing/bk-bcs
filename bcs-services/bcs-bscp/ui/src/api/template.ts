@@ -762,3 +762,12 @@ export const updateTemplateConfig = (
       params,
     )
     .then((res) => res.data);
+
+/**
+ * 根据模板套餐获取模板版本列表
+ * @param biz_id 业务ID
+ * @param template_id 模板ID
+ * @returns
+ */
+export const getTemplateConfigFromPkgId = (biz_id: string, pkgId: number) =>
+  http.get(`/config/biz/${biz_id}/template_sets/${pkgId}/template_revisions`).then((res) => res.data);

@@ -75,7 +75,10 @@
   import { ITemplateBoundByAppData } from '../../../../../../../../../../types/config';
   import { IAllPkgsGroupBySpaceInBiz } from '../../../../../../../../../../types/template';
   import { importTemplateConfigPkgs, updateTemplateConfigPkgs } from '../../../../../../../../../api/config';
-  import { getAllPackagesGroupBySpace, getAppPkgBindingRelations } from '../../../../../../../../../api/template';
+  import {
+    getAllPackagesGroupBySpace,
+    getAppPkgBindingRelations,
+  } from '../../../../../../../../../api/template';
   import PkgTree from './pkg-tree.vue';
   import PkgTemplatesTable from './pkg-templates-table.vue';
 

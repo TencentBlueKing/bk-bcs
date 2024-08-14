@@ -54,15 +54,18 @@
   import { ref, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { RightShape, Close } from 'bkui-vue/lib/icon';
-  import {
-    IAllPkgsGroupBySpaceInBiz,
-    ITemplateConfigItem,
-    ITemplateVersionsName,
-  } from '../../../../../../../../../../types/template';
-  import { getTemplatesByPackageId, getTemplateVersionsNameByIds } from '../../../../../../../../../api/template';
+  import { IAllPkgsGroupBySpaceInBiz, ITemplateConfigItem } from '../../../../../../../../../../types/template';
+  import { getTemplateConfigFromPkgId } from '../../../../../../../../../api/template';
+
+  interface ITemplateVersions {
+    id: number;
+    name: string;
+    memo: string;
+    isLatest: boolean;
+  }
 
   interface ITemplateConfigWithVersions extends ITemplateConfigItem {
-    versions: { id: number; name: string; memo: string; isLatest: boolean }[];
+    versions: ITemplateVersions[];
   }
   const { t } = useI18n();
 
@@ -109,44 +112,37 @@
   // 获取模板及对应版本列表
   const getTemplateList = async () => {
     listLoading.value = true;
-    // 先取套餐下模板列表
-    const templateListRes = await getTemplatesByPackageId(props.bkBizId, templateSpaceId.value, props.pkgId, {
-      start: 0,
-      all: true,
-    });
-    configTemplateList.value = templateListRes.details.map((item: ITemplateConfigItem) => ({ ...item, versions: [] }));
-    const ids = configTemplateList.value.map((item) => item.id);
-    if (ids.length > 0) {
-      // 再根据模板列表取对应模板的版本列表
-      const versionListRes = await getTemplateVersionsNameByIds(props.bkBizId, ids);
-      versionListRes.details.forEach((item: ITemplateVersionsName) => {
-        const { template_id, latest_template_revision_id, template_revisions } = item;
-        const configTemplate = configTemplateList.value.find((tpl) => tpl.id === template_id);
-        if (configTemplate) {
-          configTemplate.versions = template_revisions.map((version) => {
-            const { template_revision_id, template_revision_name, template_revision_memo } = version;
-            return {
-              id: template_revision_id,
-              name: template_revision_name,
-              memo: template_revision_memo,
-              isLatest: false,
-            };
+    try {
+      const res = await getTemplateConfigFromPkgId(props.bkBizId, props.pkgId);
+      configTemplateList.value = res.details.map((item: any) => {
+        const { template, template_revision } = item;
+        const versions = template_revision.map((version: any) => {
+          const {
+            id,
+            spec: { revision_name, revision_memo },
+          } = version;
+          return {
+            id,
+            name: revision_name,
+            memo: revision_memo,
+            isLatest: false,
+          };
+        });
+        const latestVerison = versions[0];
+        if (latestVerison) {
+          versions.unshift({
+            id: latestVerison.id,
+            name: t('latest（当前最新为{n}）', { n: latestVerison?.name }),
+            memo: latestVerison.memo,
+            isLatest: true,
           });
-          const version = template_revisions.find((version) => {
-            const res = version.template_revision_id === latest_template_revision_id;
-            return res;
-          });
-          if (version) {
-            configTemplate.versions.unshift({
-              id: version.template_revision_id,
-              name: `latest（当前最新为${version.template_revision_name}）`,
-              memo: version.template_revision_memo,
-              isLatest: true,
-            });
-          }
         }
+        return {
+          ...template,
+          versions,
+        };
       });
-    }
+    } catch (error) {}
     listLoading.value = false;
   };
 
@@ -203,7 +199,6 @@
   const handleDeletePkg = () => {
     emits('delete', props.pkgId);
   };
-
 </script>
 <style lang="scss" scoped>
   .package-template-table {
