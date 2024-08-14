@@ -229,7 +229,7 @@ func (t *Task) GetExecutionTime() time.Duration {
 
 // SetExecutionTime set execution time
 func (t *Task) SetExecutionTime(start time.Time, end time.Time) *Task {
-	t.ExecutionTime = uint32(end.Sub(start).Seconds())
+	t.ExecutionTime = uint32(end.Sub(start).Milliseconds())
 	return t
 }
 
