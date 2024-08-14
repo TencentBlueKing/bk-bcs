@@ -55,6 +55,8 @@ func (m *TaskManager) getTaskStateAndCurrentStep(taskId, stepName string) (*Stat
 		name := istep.CallbackName(state.task.GetCallback())
 		if cbExecutor, ok := m.callbackExecutors[name]; ok {
 			state.cbExecutor = cbExecutor
+		} else {
+			log.WARNING.Println("task %s callback %s not registered, just ignore", taskId, name)
 		}
 	}
 
