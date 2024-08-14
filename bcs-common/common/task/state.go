@@ -263,13 +263,13 @@ func (s *State) AddCommonParams(key, value string) *State {
 }
 
 // GetExtraParams get extra params by obj
-func (s *State) GetExtraParams(obj interface{}) error {
-	return s.task.GetExtra(obj)
+func (s *State) GetCommonPayload(obj interface{}) error {
+	return s.task.GetCommonPayload(obj)
 }
 
 // SetExtraAll set extra params by obj
-func (s *State) SetExtraAll(obj interface{}) error {
-	return s.task.SetExtraAll(obj)
+func (s *State) SetCommonPayload(obj interface{}) error {
+	return s.task.SetCommonPayload(obj)
 }
 
 // GetStepParam get step params by key

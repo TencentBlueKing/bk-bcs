@@ -14,7 +14,6 @@ package iface
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
@@ -56,6 +55,11 @@ func (t *Context) AddCommonParams(k, v string) error {
 	return nil
 }
 
+// GetCommonPayload add task common params
+func (t *Context) GetCommonPayload(obj interface{}) error {
+	return t.task.GetCommonPayload(obj)
+}
+
 // GetName get current step name
 func (t *Context) GetName() string {
 	return t.currentStep.GetName()
@@ -76,17 +80,7 @@ func (t *Context) GetStatus() string {
 	return t.currentStep.GetStatus()
 }
 
-// GetExtras ...
-func (t *Context) GetExtras() string {
-	return t.currentStep.Extras
-}
-
 // GetPayload ...
-func GetPayload[T any](c *Context) (*T, error) {
-	var payload T
-	err := json.Unmarshal([]byte(c.currentStep.Extras), &payload)
-	if err != nil {
-		return nil, err
-	}
-	return &payload, nil
+func (t *Context) GetPayload(obj interface{}) error {
+	return t.currentStep.GetPayload(obj)
 }

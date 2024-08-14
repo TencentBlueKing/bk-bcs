@@ -65,6 +65,8 @@ func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 		TaskID:              uuid.NewString(),
 		TaskType:            o.TaskType,
 		TaskName:            o.TaskName,
+		TaskIndex:           o.TaskIndex,
+		TaskIndexType:       o.TaskIndexType,
 		Status:              TaskStatusInit,
 		ForceTerminate:      false,
 		Start:               now,
@@ -73,7 +75,7 @@ func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 		Updater:             o.Creator,
 		LastUpdate:          now,
 		CommonParams:        make(map[string]string, 0),
-		ExtraJson:           DefaultJsonExtrasContent,
+		CommonPayload:       DefaultPayloadContent,
 		CallbackName:        defaultOptions.CallbackName,
 		Message:             DefaultTaskMessage,
 		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
@@ -147,21 +149,21 @@ func (t *Task) SetCallback(callBackName string) *Task {
 	return t
 }
 
-// GetExtra get extra json
-func (t *Task) GetExtra(obj interface{}) error {
-	if t.ExtraJson == "" {
-		t.ExtraJson = DefaultJsonExtrasContent
+// GetCommonPayload get extra json
+func (t *Task) GetCommonPayload(obj interface{}) error {
+	if len(t.CommonPayload) == 0 {
+		t.CommonPayload = DefaultPayloadContent
 	}
-	return json.Unmarshal([]byte(t.ExtraJson), obj)
+	return json.Unmarshal(t.CommonPayload, obj)
 }
 
-// SetExtraAll set extra json
-func (t *Task) SetExtraAll(obj interface{}) error {
+// SetCommonPayload set extra json
+func (t *Task) SetCommonPayload(obj interface{}) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
-	t.ExtraJson = string(result)
+	t.CommonPayload = result
 	return nil
 }
 

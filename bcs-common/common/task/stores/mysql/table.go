@@ -39,7 +39,7 @@ type TaskRecords struct {
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
 	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
-	ExtraJson           string            `json:"extraJson" gorm:"type:text"`
+	CommonPayload       []byte            `json:"commonPayload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
 	ForceTerminate      bool              `json:"forceTerminate"`
@@ -63,7 +63,7 @@ type StepRecords struct {
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
-	Extras              string            `json:"extras" gorm:"type:text"`
+	Payload             []byte            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
@@ -85,7 +85,7 @@ func (t *StepRecords) ToStep() *types.Step {
 		Name:                t.Name,
 		Alias:               t.Alias,
 		Params:              t.Params,
-		Extras:              t.Extras,
+		Payload:             t.Payload,
 		Status:              t.Status,
 		Message:             t.Message,
 		SkipOnFailed:        t.SkipOnFailed,
