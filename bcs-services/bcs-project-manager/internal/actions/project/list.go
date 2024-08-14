@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
@@ -129,18 +130,41 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 			return nil, nil
 		}
 		if req.All {
-			// all 为 true 时，返回所有项目并排序和分页，支持模糊查询
-			projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey, req.Kind,
-				&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+			if config.GlobalConf.RestrictAuthorizedProjects {
+				// all 为 true 且限权显示用户授权的项目列表时，仅查看用户有权限的项目，并支持模糊查询和分页
+				condKind := make(operator.M)
+				condID := make(operator.M)
+				if req.Kind != "" {
+					condKind["kind"] = req.Kind
+				}
+				condID["projectID"] = ids
+				cond := operator.NewBranchCondition(operator.And,
+					operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
+				projects, total, err = lap.model.ListProjects(ctx, cond,
+					&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+			} else {
+				// all 为 true 且不限权时，返回所有项目并排序和分页，支持模糊查询
+				projects, total, err = lap.model.SearchProjects(ctx, ids, req.SearchKey, req.Kind,
+					&page.Pagination{Offset: req.Offset, Limit: req.Limit})
+			}
 		} else if any {
-			// all 为 false 时，直接返回所有有权限的项目，分页和模糊查询无效
+			// all 为 false 且用户有全部项目查看权限时，直接返回所有有权限的项目，分页和模糊查询无效
 			cond := operator.EmptyCondition
 			if req.Kind != "" {
 				cond = operator.NewLeafCondition(operator.Eq, operator.M{"kind": req.Kind})
 			}
 			projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 		} else {
-			projects, total, err = lap.model.ListProjectByIDs(ctx, req.Kind, ids, &page.Pagination{All: true})
+			// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，分页和模糊查询都无效
+			condKind := make(operator.M)
+			condID := make(operator.M)
+			if req.Kind != "" {
+				condKind["kind"] = req.Kind
+			}
+			condID["projectID"] = ids
+			cond := operator.NewBranchCondition(operator.And,
+				operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
+			projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 		}
 		if err != nil {
 			return nil, err
