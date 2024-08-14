@@ -49,6 +49,11 @@ func (t *Context) GetTaskType() string {
 	return t.task.GetTaskType()
 }
 
+// GetCommonParams get current task param
+func (t *Context) GetCommonParams(key string) (string, bool) {
+	return t.task.GetCommonParams(key)
+}
+
 // AddCommonParams add task common params
 func (t *Context) AddCommonParams(k, v string) error {
 	_ = t.task.AddCommonParams(k, v)
