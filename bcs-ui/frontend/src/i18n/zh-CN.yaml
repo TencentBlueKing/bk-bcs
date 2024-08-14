@@ -1213,7 +1213,7 @@ cluster:
       batchRemove: 批量移除
       batchEdit: 批量设置
       copyNodeIP: 一键复制节点IP
-      note: '注意：NoExecute污点可能驱逐节点上的所有Pod，请谨慎操作。'
+      note: 注意：NoExecute污点可能驱逐节点上的所有Pod，请谨慎操作。
     placeholder:
       searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点池
       inputKey: 请输入key
