@@ -154,10 +154,10 @@ func (m *TaskManager) initWorker(workerNum int) error {
 	m.worker = m.server.NewWorker("", workerNum)
 
 	preTaskHandler := func(signature *tasks.Signature) {
-		log.INFO.Printf("start task handler for: %s", signature.Name)
+		log.INFO.Printf("start task[%s] handler for: %s", signature.UUID, signature.Name)
 	}
 	postTaskHandler := func(signature *tasks.Signature) {
-		log.INFO.Printf("end task handler for: %s", signature.Name)
+		log.INFO.Printf("end task[%s] handler for: %s", signature.UUID, signature.Name)
 	}
 	errorHandler := func(err error) {
 		log.INFO.Printf("task error handler: %s", err)
