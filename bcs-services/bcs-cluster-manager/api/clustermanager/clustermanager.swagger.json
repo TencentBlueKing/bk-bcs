@@ -8504,6 +8504,11 @@
           "type": "boolean",
           "description": "标记该集群是否是混部集群",
           "title": "isMixed"
+        },
+        "clusterIamRole": {
+          "type": "string",
+          "description": "aws的iam role, 用于创建eks集群",
+          "title": "clusterIamRole"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -10139,6 +10144,11 @@
           "type": "boolean",
           "description": "标记该集群是否是混部集群, 默认是false",
           "title": "isMixed"
+        },
+        "clusterIamRole": {
+          "type": "string",
+          "description": "aws的iam role, 用于创建eks集群",
+          "title": "clusterIamRole"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",

@@ -103,6 +103,7 @@ func (ca *CreateAction) constructCluster(cloud *cmproto.Cloud) (*cmproto.Cluster
 		IsShared:                ca.req.IsShared,
 		Creator:                 ca.req.Creator,
 		CloudAccountID:          ca.req.CloudAccountID,
+		ClusterIamRole:          ca.req.ClusterIamRole,
 		CreateTime:              createTime,
 		UpdateTime:              createTime,
 		Status:                  common.StatusInitialization,
