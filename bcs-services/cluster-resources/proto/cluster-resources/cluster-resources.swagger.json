@@ -9917,6 +9917,10 @@
         "draftContent": {
           "type": "string",
           "title": "模板文件草稿内容"
+        },
+        "draftEditFormat": {
+          "type": "string",
+          "title": "模板文件草稿编辑模式"
         }
       },
       "description": "创建模板文件元数据",
@@ -10878,6 +10882,10 @@
         "draftContent": {
           "type": "string",
           "title": "模板文件草稿内容"
+        },
+        "draftEditFormat": {
+          "type": "string",
+          "title": "模板文件草稿编辑模式"
         }
       },
       "description": "更新模板文件元数据",

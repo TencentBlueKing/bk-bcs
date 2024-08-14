@@ -3083,6 +3083,9 @@ message CreateTemplateMetadataReq {
 	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿内容"
 	}];
+	string draftEditFormat = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿编辑模式"
+	}];
 }
 
 message UpdateTemplateMetadataReq {
@@ -3118,6 +3121,9 @@ message UpdateTemplateMetadataReq {
 	}];
 	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿内容"
+	}];
+	string draftEditFormat = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿编辑模式"
 	}];
 }
 

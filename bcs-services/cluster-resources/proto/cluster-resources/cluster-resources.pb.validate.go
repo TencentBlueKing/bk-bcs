@@ -10004,6 +10004,8 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for DraftContent
 
+	// no validation rules for DraftEditFormat
+
 	if len(errors) > 0 {
 		return CreateTemplateMetadataReqMultiError(errors)
 	}
@@ -10151,6 +10153,8 @@ func (m *UpdateTemplateMetadataReq) validate(all bool) error {
 	// no validation rules for DraftVersion
 
 	// no validation rules for DraftContent
+
+	// no validation rules for DraftEditFormat
 
 	if len(errors) > 0 {
 		return UpdateTemplateMetadataReqMultiError(errors)

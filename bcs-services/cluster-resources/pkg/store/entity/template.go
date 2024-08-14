@@ -18,22 +18,23 @@ import (
 
 // Template 定义了模板文件元数据的模型
 type Template struct {
-	ID            primitive.ObjectID `json:"id" bson:"_id"`
-	Name          string             `json:"name" bson:"name"`
-	ProjectCode   string             `json:"projectCode" bson:"projectCode"`
-	Description   string             `json:"description" bson:"description"`
-	TemplateSpace string             `json:"templateSpace" bson:"templateSpace"`
-	ResourceType  []string           `json:"resourceType" bson:"resourceType"`
-	Creator       string             `json:"creator" bson:"creator"`
-	Updator       string             `json:"updator" bson:"updator"`
-	CreateAt      int64              `json:"createAt" bson:"createAt"`
-	UpdateAt      int64              `json:"updateAt" bson:"updateAt"`
-	Tags          []string           `json:"tags" bson:"tags"`
-	VersionMode   int                `json:"versionMode" bson:"versionMode"`
-	Version       string             `json:"version" bson:"version"`
-	IsDraft       bool               `json:"isDraft" bson:"isDraft"`
-	DraftVersion  string             `json:"draftVersion" bson:"draftVersion"`
-	DraftContent  string             `json:"draftContent" bson:"draftContent"`
+	ID              primitive.ObjectID `json:"id" bson:"_id"`
+	Name            string             `json:"name" bson:"name"`
+	ProjectCode     string             `json:"projectCode" bson:"projectCode"`
+	Description     string             `json:"description" bson:"description"`
+	TemplateSpace   string             `json:"templateSpace" bson:"templateSpace"`
+	ResourceType    []string           `json:"resourceType" bson:"resourceType"`
+	Creator         string             `json:"creator" bson:"creator"`
+	Updator         string             `json:"updator" bson:"updator"`
+	CreateAt        int64              `json:"createAt" bson:"createAt"`
+	UpdateAt        int64              `json:"updateAt" bson:"updateAt"`
+	Tags            []string           `json:"tags" bson:"tags"`
+	VersionMode     int                `json:"versionMode" bson:"versionMode"`
+	Version         string             `json:"version" bson:"version"`
+	IsDraft         bool               `json:"isDraft" bson:"isDraft"`
+	DraftVersion    string             `json:"draftVersion" bson:"draftVersion"`
+	DraftContent    string             `json:"draftContent" bson:"draftContent"`
+	DraftEditFormat string             `json:"draftEditFormat" bson:"draftEditFormat"`
 }
 
 // ToMap trans Template to map
@@ -60,5 +61,6 @@ func (t *Template) ToMap() map[string]interface{} {
 	m["isDraft"] = t.IsDraft
 	m["draftVersion"] = t.DraftVersion
 	m["draftContent"] = t.DraftContent
+	m["draftEditFormat"] = t.DraftEditFormat
 	return m
 }
