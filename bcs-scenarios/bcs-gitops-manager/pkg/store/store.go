@@ -68,6 +68,7 @@ type Store interface {
 	GetClusterFromDB(ctx context.Context, serverUrL string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
 	ListClustersByProject(ctx context.Context, projectID string) (*v1alpha1.ClusterList, error)
+	ListClustersByProjectName(ctx context.Context, projectName string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	DeleteCluster(ctx context.Context, name string) error
 

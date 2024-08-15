@@ -22,6 +22,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/applicationset/generators"
 	"github.com/argoproj/argo-cd/v2/applicationset/services"
 	"github.com/argoproj/argo-cd/v2/applicationset/utils"
+	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
@@ -34,23 +35,184 @@ var (
 	render = utils.Render{}
 )
 
-// CheckAppSetPermission check appset permission
-func (c *checker) CheckAppSetPermission(ctx context.Context, appSet string, action RSAction) (
-	*v1alpha1.ApplicationSet, int, error) {
-	argoAppSet, err := c.store.GetApplicationSet(ctx, appSet)
+// UpdatePermissions 更新用户权限，目前只有 appset
+func (c *checker) UpdatePermissions(ctx context.Context, project string, resourceType RSType,
+	req *UpdatePermissionRequest) (int, error) {
+	switch resourceType {
+	case AppSetRSType:
+		return c.updateAppSetPermissions(ctx, project, req)
+	default:
+		return http.StatusBadRequest, fmt.Errorf("not handler for resourceType=%s", resourceType)
+	}
+}
+
+// updateAppSetPermissions update the appset permissions
+func (c *checker) updateAppSetPermissions(ctx context.Context, project string,
+	req *UpdatePermissionRequest) (int, error) {
+	for i := range req.ResourceActions {
+		action := req.ResourceActions[i]
+		if action != string(AppSetUpdateRSAction) {
+			return http.StatusBadRequest, fmt.Errorf("not allowed action '%s'", action)
+		}
+	}
+	argoProject, statusCode, err := c.CheckProjectPermission(ctx, project, ProjectViewRSAction)
 	if err != nil {
-		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get appset from storage failed")
+		return statusCode, errors.Wrapf(err, "check permission for project '%s' failed", project)
 	}
-	if argoAppSet == nil {
-		return nil, http.StatusBadRequest, errors.Errorf("appset '%s' not found", appSet)
+	clusterCreate, err := c.getBCSClusterCreatePermission(ctx, common.GetBCSProjectID(argoProject.Annotations))
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "check cluster_create permission failed")
 	}
-	var statusCode int
-	_, statusCode, err = c.checkSingleResourcePermission(ctx, argoAppSet.Spec.Template.Spec.Project,
-		AppSetRSType, appSet, action)
+	if !clusterCreate {
+		return http.StatusForbidden, errors.Errorf("user '%s' not have cluster_create permission",
+			ctxutils.User(ctx).GetUser())
+	}
+
+	appSets := c.store.AllApplicationSets()
+	appSetMap := make(map[string]*v1alpha1.ApplicationSet)
+	for _, appSet := range appSets {
+		appSetMap[appSet.Name] = appSet
+	}
+	notFoundAppSet := make([]string, 0)
+	resultAppSets := make([]*v1alpha1.ApplicationSet, 0)
+	// 校验请求的 resource_name
+	for i := range req.ResourceNames {
+		rsName := req.ResourceNames[i]
+		tmp, ok := appSetMap[rsName]
+		if !ok {
+			notFoundAppSet = append(notFoundAppSet, rsName)
+			continue
+		}
+		resultAppSets = append(resultAppSets, tmp)
+		if tmpProj := tmp.Spec.Template.Spec.Project; tmpProj != project {
+			return http.StatusBadRequest, fmt.Errorf("appset '%s' project '%s' not same as '%s'",
+				rsName, tmpProj, project)
+		}
+	}
+	if len(notFoundAppSet) != 0 {
+		return http.StatusBadRequest, fmt.Errorf("appset '%v' not found", notFoundAppSet)
+	}
+
+	// 添加权限
+	errs := make([]string, 0)
+	for _, appSet := range resultAppSets {
+		for _, action := range req.ResourceActions {
+			err = c.db.UpdateResourcePermissions(project, string(AppSetRSType), appSet.Name, action, req.Users)
+			if err == nil {
+				blog.Infof("RequestID[%s] update resource '%s/%s' permissions success", ctxutils.RequestID(ctx),
+					string(AppSetRSType), appSet.Name)
+				continue
+			}
+
+			errMsg := fmt.Sprintf("update resource '%s/%s' permissions failed", string(AppSetRSType), appSet.Name)
+			errs = append(errs, errMsg)
+			blog.Errorf("RequestID[%s] update permission failed: %s", ctxutils.RequestID(ctx), errMsg)
+		}
+	}
+	if len(errs) != 0 {
+		return http.StatusInternalServerError, fmt.Errorf("create permission with multiple error: %v", errs)
+	}
+	return http.StatusOK, nil
+}
+
+// CheckAppSetPermission check appset permission
+func (c *checker) CheckAppSetPermission(ctx context.Context, appSet string, action RSAction) (*v1alpha1.ApplicationSet,
+	int, error) {
+	objs, permits, statusCode, err := c.getMultiAppSetMultiActionPermission(ctx, "", []string{appSet})
 	if err != nil {
 		return nil, statusCode, err
 	}
-	return argoAppSet, http.StatusOK, nil
+	pm, ok := permits.ResourcePerms[appSet]
+	if !ok {
+		return nil, http.StatusBadRequest, errors.Errorf("appset '%s' not exist", appSet)
+	}
+	if !pm[action] {
+		return nil, http.StatusForbidden, errors.Errorf("user '%s' not have aappsetpp permission '%s/%s'",
+			ctxutils.User(ctx).GetUser(), action, appSet)
+	}
+	if len(objs) != 1 {
+		return nil, http.StatusBadRequest, errors.Errorf("query appset '%s' got '%d' appsets", appSet, len(objs))
+	}
+	return objs[0].(*v1alpha1.ApplicationSet), http.StatusOK, nil
+}
+
+func (c *checker) getMultiAppSetMultiActionPermission(ctx context.Context, project string,
+	appSets []string) ([]interface{}, *UserResourcePermission, int, error) {
+	resultAppSets := make([]interface{}, 0, len(appSets))
+	projAppSets := make(map[string][]*v1alpha1.ApplicationSet)
+	if project != "" && len(appSets) == 0 {
+		appSetList, err := c.store.ListApplicationSets(ctx, &appsetpkg.ApplicationSetListQuery{
+			Projects: []string{project},
+		})
+		if err != nil {
+			return nil, nil, http.StatusInternalServerError, err
+		}
+		for i := range appSetList.Items {
+			argoAppSet := appSetList.Items[i]
+			resultAppSets = append(resultAppSets, &argoAppSet)
+			projAppSets[project] = append(projAppSets[project], &argoAppSet)
+		}
+	} else {
+		for i := range appSets {
+			appSet := appSets[i]
+			argoAppSet, err := c.store.GetApplicationSet(ctx, appSet)
+			if err != nil {
+				return nil, nil, http.StatusInternalServerError, errors.Wrapf(err, "get application failed")
+			}
+			if argoAppSet == nil {
+				return nil, nil, http.StatusBadRequest, errors.Errorf("appset '%s' not found", appSet)
+			}
+			proj := argoAppSet.Spec.Template.Spec.Project
+			_, ok := projAppSets[proj]
+			if ok {
+				projAppSets[proj] = append(projAppSets[proj], argoAppSet)
+			} else {
+				projAppSets[proj] = []*v1alpha1.ApplicationSet{argoAppSet}
+			}
+			resultAppSets = append(resultAppSets, argoAppSet)
+		}
+	}
+
+	result := &UserResourcePermission{
+		ResourceType:  AppSetRSType,
+		ResourcePerms: make(map[string]map[RSAction]bool),
+	}
+	canDeleteOrUpdate := false
+	var statusCode int
+	var err error
+	for proj, argoAppSets := range projAppSets {
+		ctx, statusCode, err = c.createPermitContext(ctx, proj)
+		if err != nil {
+			return nil, nil, statusCode, err
+		}
+		projPermits := contextGetProjPermits(ctx)
+		for _, argoAppSet := range argoAppSets {
+			result.ResourcePerms[argoAppSet.Name] = map[RSAction]bool{
+				AppSetViewRSAction:   projPermits[ProjectViewRSAction],
+				AppSetDeleteRSAction: projPermits[ProjectEditRSAction],
+				AppSetUpdateRSAction: projPermits[ProjectEditRSAction],
+			}
+		}
+		if projPermits[ProjectEditRSAction] {
+			canDeleteOrUpdate = true
+			continue
+		}
+		// 如果数据库中具备权限，则将 Update 权限设置为 true
+		user := ctxutils.User(ctx)
+		permissions, err := c.db.ListUserPermissions(user.GetUser(), contextGetProjName(ctx), string(AppSetRSType))
+		if err != nil {
+			return nil, nil, http.StatusInternalServerError, errors.Wrapf(err, "list user's resources failed")
+		}
+		for _, permit := range permissions {
+			if _, ok := result.ResourcePerms[permit.ResourceName]; ok {
+				canDeleteOrUpdate = true
+				result.ResourcePerms[permit.ResourceName][AppSetUpdateRSAction] = true
+			}
+		}
+	}
+	result.ActionPerms = map[RSAction]bool{AppSetViewRSAction: true, AppSetCreateRSAction: true,
+		AppSetUpdateRSAction: canDeleteOrUpdate, AppSetDeleteRSAction: canDeleteOrUpdate}
+	return resultAppSets, result, http.StatusOK, nil
 }
 
 // CheckAppSetCreate check appset create permission
