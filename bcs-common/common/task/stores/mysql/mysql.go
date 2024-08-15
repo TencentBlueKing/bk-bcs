@@ -149,6 +149,6 @@ func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, e
 	return toTask(&taskRecord, stepRecords), nil
 }
 
-func (s *mysqlStore) PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error {
-	return nil
+func (s *mysqlStore) PatchTask(ctx context.Context, opt *iface.PatchOption) error {
+	return types.ErrNotImplemented
 }

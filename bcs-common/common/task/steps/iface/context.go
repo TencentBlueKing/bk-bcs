@@ -103,8 +103,9 @@ func (t *Context) GetParam(key string) (string, bool) {
 }
 
 // AddParam set step param by key,value
-func (t *Context) AddParam(key string, value string) {
+func (t *Context) AddParam(key string, value string) error {
 	_ = t.currentStep.AddParam(key, value)
+	return t.store.UpdateTask(t.ctx, t.task)
 }
 
 // GetParamsAll return all step params

@@ -186,12 +186,6 @@ func (m *TaskManager) UpdateTask(ctx context.Context, task *types.Task) error {
 	return GetGlobalStorage().UpdateTask(ctx, task)
 }
 
-// PatchTaskInfo update task info
-// ! warning: modify task status will cause task status not consistent
-func (m *TaskManager) PatchTaskInfo(ctx context.Context, taskID string, patchs map[string]interface{}) error {
-	return GetGlobalStorage().PatchTask(ctx, taskID, patchs)
-}
-
 // RetryAll reset status to running and dispatch all tasks
 func (m *TaskManager) RetryAll(task *types.Task) error {
 	task.SetStatus(types.TaskStatusRunning)

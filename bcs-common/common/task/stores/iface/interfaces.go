@@ -64,17 +64,19 @@ type UpdateStepOption struct {
 	LastUpdate    time.Time         `json:"lastUpdate"`
 }
 
+// PatchOption 主要实时更新params, payload信息
+type PatchOption struct {
+	Task        *types.Task
+	CurrentStep *types.Step
+}
+
 // Store model for TaskManager
 type Store interface {
 	EnsureTable(ctx context.Context, dst ...any) error
 	CreateTask(ctx context.Context, task *types.Task) error
 	ListTask(ctx context.Context, opt *ListOption) ([]types.Task, error)
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
-	// UpdateTask(ctx context.Context, taskID string, opt *UpdateOption) error
 	DeleteTask(ctx context.Context, taskID string) error
-	// GetStep(ctx context.Context, taskID string, stepName string) (*types.Step, error)
-	// UpdateStep(ctx context.Context, taskID string, stepName string, opt *UpdateStepOption) error
 	UpdateTask(ctx context.Context, task *types.Task) error
-	PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error
-	// WriteStepOutput(ctx context.Context, taskId string, name string, output map[string]string) error
+	// PatchTask(ctx context.Context, opt *PatchOption) error // Patcask 更新params/payload信息
 }
