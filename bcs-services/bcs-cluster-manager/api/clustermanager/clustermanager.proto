@@ -7124,6 +7124,11 @@ message ListClusterReq {
       title : "clusterID",
       description : "集群ID"
     }];
+  bool all = 21 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "all",
+      description : "true时获取所有的集群信息,包括被软删除的集群; false时获取非DELETED状态的集群信息"
+    }];
 }
 
 message ListClusterResp {

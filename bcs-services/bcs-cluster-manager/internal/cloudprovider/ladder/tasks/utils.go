@@ -14,83 +14,21 @@ package tasks
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
+	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
-
-// buildApplyInstanceRequest build resource request
-func buildApplyInstanceRequest(group *proto.NodeGroup, operator string) *resource.ApplyInstanceReq {
-	return &resource.ApplyInstanceReq{
-		NodeType: resource.CVM,
-
-		Region:             group.GetRegion(),
-		VpcID:              group.GetAutoScaling().GetVpcID(),
-		ZoneList:           group.GetAutoScaling().GetZones(),
-		SubnetList:         group.GetAutoScaling().GetSubnetIDs(),
-		InstanceType:       group.GetLaunchTemplate().GetInstanceType(),
-		CPU:                group.GetLaunchTemplate().GetCPU(),
-		Memory:             group.GetLaunchTemplate().GetMem(),
-		Gpu:                group.GetLaunchTemplate().GetGPU(),
-		InstanceChargeType: group.GetLaunchTemplate().GetInstanceChargeType(),
-		SystemDisk: resource.DataDisk{
-			DiskType: group.GetLaunchTemplate().GetSystemDisk().GetDiskType(),
-			DiskSize: group.GetLaunchTemplate().GetSystemDisk().GetDiskSize(),
-		},
-		DataDisks: func() []resource.DataDisk {
-			if len(group.GetLaunchTemplate().GetDataDisks()) > 0 {
-				disks := make([]resource.DataDisk, 0)
-				for _, disk := range group.GetLaunchTemplate().GetDataDisks() {
-					if disk == nil {
-						continue
-					}
-					disks = append(disks, resource.DataDisk{
-						DiskType: disk.GetDiskType(),
-						DiskSize: disk.GetDiskSize(),
-					})
-				}
-				return disks
-			}
-
-			return nil
-		}(),
-		Image: func() *resource.ImageInfo {
-			var (
-				imageId   = ""
-				imageName = ""
-			)
-			if group.GetLaunchTemplate() != nil && group.GetLaunchTemplate().GetImageInfo() != nil {
-				imageId = group.GetLaunchTemplate().GetImageInfo().ImageID
-				imageName = group.GetLaunchTemplate().GetImageInfo().ImageName
-			}
-			return &resource.ImageInfo{
-				ImageID:   imageId,
-				ImageName: imageName,
-			}
-		}(),
-		LoginInfo:        &resource.LoginSettings{Password: group.GetLaunchTemplate().GetInitLoginPassword()},
-		SecurityGroupIds: group.GetLaunchTemplate().GetSecurityGroupIDs(),
-		EnhancedService: &resource.EnhancedService{
-			SecurityService: group.GetLaunchTemplate().GetIsSecurityService(),
-			MonitorService:  group.GetLaunchTemplate().GetIsMonitorService(),
-		},
-		PoolID:   group.GetConsumerID(),
-		Operator: operator,
-	}
-}
 
 // 申请机器
 func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	state *cloudprovider.TaskState, oldOrderId string, desired int, operator string) (*RecordInstanceList, string, error) {
+	state *cloudprovider.TaskState, oldOrderId string, desired int, operator string) (
+	*providerutils.RecordInstanceList, string, error) {
 	var (
 		orderID string
 		err     error
@@ -106,7 +44,8 @@ func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.Clou
 
 	// check if already submit old task
 	if len(oldOrderId) == 0 {
-		orderID, err = consumeDevicesFromResourcePool(ctx, info.NodeGroup, desired, operator)
+		orderID, err = providerutils.ConsumeDevicesFromResourcePool(ctx, info.NodeGroup, resource.CVM.String(),
+			desired, operator)
 		if err != nil {
 			return nil, orderID, err
 		}
@@ -117,62 +56,13 @@ func applyInstanceFromResourcePool(ctx context.Context, info *cloudprovider.Clou
 		_ = cloudprovider.GetStorageModel().UpdateTask(context.Background(), state.Task)
 	}
 
-	record, err := checkOrderStateFromResourcePool(ctx, getOrderId())
+	record, err := providerutils.CheckOrderStateFromResourcePool(ctx, getOrderId())
 	if err != nil {
 		return nil, getOrderId(), err
 	}
 	record.OrderID = getOrderId()
 
 	return record, getOrderId(), nil
-}
-
-// consumeDevicesFromResourcePool apply cvm instances to generate orderID form resource pool
-func consumeDevicesFromResourcePool(
-	ctx context.Context, group *proto.NodeGroup, nodeNum int, operator string) (string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	ctx = utils.WithTraceIDForContext(ctx, taskID)
-	resp, err := tresource.GetResourceManagerClient().ApplyInstances(ctx, nodeNum,
-		buildApplyInstanceRequest(group, operator))
-	if err != nil {
-		blog.Errorf("consumeDevicesFromResourcePool[%s] ApplyInstances failed: %v", taskID, err)
-		return "", err
-	}
-
-	blog.Infof("consumeDevicesFromResourcePool[%s] success", taskID)
-	return resp.OrderID, nil
-}
-
-// RecordInstanceList xxx
-type RecordInstanceList struct {
-	OrderID        string
-	InstanceIPList []string
-	InstanceIDList []string
-	DeviceIDList   []string
-}
-
-func checkOrderStateFromResourcePool(ctx context.Context, orderID string) (*RecordInstanceList, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	ctx = utils.WithTraceIDForContext(ctx, taskID)
-	result, err := tresource.GetResourceManagerClient().CheckOrderStatus(ctx, orderID)
-	if err != nil {
-		blog.Errorf("checkOrderStateFromResourcePool[%s] CheckOrderStatus[%s] failed: %v", taskID, orderID, err)
-		return nil, err
-	}
-
-	// get device instanceIDs & instanceIPs
-	if len(result.InstanceIDs) == 0 || len(result.InstanceIPs) == 0 {
-		retErr := fmt.Errorf("checkOrderStateFromResourcePool[%s] return instance empty", taskID)
-		blog.Errorf(retErr.Error())
-		return nil, retErr
-	}
-
-	return &RecordInstanceList{
-		InstanceIPList: result.InstanceIPs,
-		InstanceIDList: result.InstanceIDs,
-		DeviceIDList:   result.ExtraIDs,
-	}, nil
 }
 
 // RecordInstanceToDBOption xxx
@@ -241,30 +131,6 @@ func recordClusterCVMInfoToDB(
 	return nil
 }
 
-// 销毁归还机器
-func destroyDeviceList(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, deviceList []string,
-	operator string) (string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-	if info == nil || info.NodeGroup == nil || info.Cluster == nil || len(deviceList) == 0 {
-		return "", fmt.Errorf("destroyDeviceList[%s] lost validate info", taskID)
-	}
-
-	ctx = utils.WithTraceIDForContext(ctx, taskID)
-	resp, err := tresource.GetResourceManagerClient().DestroyInstances(ctx, &resource.DestroyInstanceReq{
-		PoolID:      info.NodeGroup.GetConsumerID(),
-		SystemID:    info.Cluster.GetSystemID(),
-		InstanceIDs: deviceList,
-		Operator:    operator,
-	})
-	if err != nil {
-		blog.Errorf("destroyDeviceList[%s] DestroyInstances failed: %v", taskID, err)
-		return "", err
-	}
-
-	blog.Infof("destroyDeviceList[%s] call DestroyInstances successfully, orders %v.", resp.OrderID)
-	return resp.OrderID, nil
-}
-
 // returnDevicesToRMAndCleanNodes need to handle some operations when failure
 // 1. clean cluster-manager data / update desired value
 // 2. delete cluster nodes
@@ -307,7 +173,7 @@ func returnDevicesToRMAndCleanNodes(ctx context.Context, info *cloudprovider.Clo
 	}
 
 	// destroy device to resource manager
-	orderID, err := destroyDeviceList(ctx, info, deviceIDs, operator)
+	orderID, err := providerutils.DestroyDeviceList(ctx, info, deviceIDs, operator)
 	if err != nil {
 		blog.Errorf("returnDevicesToRMAndCleanNodes[%s] destroyDeviceList failed: %v", taskID, err)
 	} else {

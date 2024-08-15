@@ -92,7 +92,7 @@ var NoAuthMethod = []string{
 
 	"ClusterManager.ListOperationLogs",
 	"ClusterManager.ListTaskStepLogs",
-	"ClusterManager.TaskRecords",
+	"ClusterManager.ListTaskRecords",
 	"ClusterManager.ListResourceSchema",
 	"ClusterManager.GetResourceSchema",
 

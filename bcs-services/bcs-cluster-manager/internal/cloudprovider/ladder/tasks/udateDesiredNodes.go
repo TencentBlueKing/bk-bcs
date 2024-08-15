@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	tcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
+	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -144,7 +145,7 @@ func ApplyCVMFromResourcePoolTask(taskID, stepName string) error { // nolint
 		if manual == common.True {
 			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
 		} else {
-			destroyDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator) // nolint
+			providerutils.DestroyDeviceList(ctx, dependInfo, recordInstanceList.DeviceIDList, operator) // nolint
 			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, scalingNum, true)
 		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)

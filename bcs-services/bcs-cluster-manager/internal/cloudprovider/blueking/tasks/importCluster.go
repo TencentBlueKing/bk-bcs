@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tasks xxx
 package tasks
 
 import (
@@ -27,7 +28,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
@@ -250,10 +251,7 @@ func transInstanceIPToNodes(ipList []types.NodeAddress, opt *cloudprovider.ListN
 		ipAddressMap[ip.IPv4Address] = ip
 	}
 
-	nodeMgr := api.NodeManager{}
-	nodes, err := nodeMgr.ListNodesByIP(ipAddressList, &cloudprovider.ListNodesOption{
-		Common: opt.Common,
-	})
+	nodes, err := business.ListNodesByIP(opt.Common.Region, ipAddressList)
 	if err != nil {
 		return nil, err
 	}
