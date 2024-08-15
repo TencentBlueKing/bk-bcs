@@ -249,3 +249,21 @@ export interface IConfigKvType {
     update_at: string;
   };
 }
+
+// 从配置模板导入
+export interface ITemplateRevision {
+  template_id: number;
+  template_revision_id: number;
+  is_latest: boolean;
+  template_name: string;
+  template_revision_name: string;
+}
+
+export interface ITemplatePkgs {
+  template_set_id: number;
+  template_revisions: ITemplateRevision[];
+  template_set_name: string;
+  template_space_name: string;
+  template_space_id: number;
+  template_show_title: string;
+}

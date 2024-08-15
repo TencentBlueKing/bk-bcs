@@ -55,13 +55,16 @@
   import { useI18n } from 'vue-i18n';
   import { RightShape, Close } from 'bkui-vue/lib/icon';
   import { IAllPkgsGroupBySpaceInBiz, ITemplateConfigItem } from '../../../../../../../../../../types/template';
-  import { getTemplateConfigFromPkgId } from '../../../../../../../../../api/template';
+  import { ITemplateRevision } from '../../../../../../../../../../types/config';
+  import { getTemplateRevisionsFromPkgId } from '../../../../../../../../../api/template';
 
   interface ITemplateVersions {
     id: number;
     name: string;
     memo: string;
     isLatest: boolean;
+    template_id: number;
+    template_name: string;
   }
 
   interface ITemplateConfigWithVersions extends ITemplateConfigItem {
@@ -73,7 +76,7 @@
     bkBizId: string;
     pkgList: IAllPkgsGroupBySpaceInBiz[];
     pkgId: number;
-    selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean }[];
+    selectedVersions: ITemplateRevision[];
     disabled?: boolean;
     conflictTpls?: number[];
   }>();
@@ -113,19 +116,22 @@
   const getTemplateList = async () => {
     listLoading.value = true;
     try {
-      const res = await getTemplateConfigFromPkgId(props.bkBizId, props.pkgId);
+      const res = await getTemplateRevisionsFromPkgId(props.bkBizId, props.pkgId);
       configTemplateList.value = res.details.map((item: any) => {
         const { template, template_revision } = item;
         const versions = template_revision.map((version: any) => {
           const {
             id,
-            spec: { revision_name, revision_memo },
+            spec: { revision_name, revision_memo, path, name },
           } = version;
+          const template_name = path.endsWith('/') ? `${path}${name}` : `${path}/${name}`;
           return {
             id,
             name: revision_name,
             memo: revision_memo,
             isLatest: false,
+            template_name,
+            template_id: template.id,
           };
         });
         const latestVerison = versions[0];
@@ -135,6 +141,8 @@
             name: t('latest（当前最新为{n}）', { n: latestVerison?.name }),
             memo: latestVerison.memo,
             isLatest: true,
+            template_name: latestVerison.template_name,
+            template_id: template.id,
           });
         }
         return {
@@ -142,28 +150,47 @@
           versions,
         };
       });
-    } catch (error) {}
-    listLoading.value = false;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      listLoading.value = false;
+    }
   };
 
   // 如果有模板没有选择版本则自动选择latest版本
   const setTemplatesDefaultVersion = () => {
     const selectedTplVersionsData = props.selectedVersions.slice();
     configTemplateList.value.forEach((tpl) => {
-      if (!props.selectedVersions.find((item) => item.template_id === tpl.id)) {
-        const lasteVersion = tpl.versions.find((v) => v.isLatest);
-        if (lasteVersion) {
+      const selectedVersionIndex = props.selectedVersions.findIndex((item) => item.template_id === tpl.id);
+      if (selectedVersionIndex === -1) {
+        const latestVerison = tpl.versions.find((v) => v.isLatest);
+        if (latestVerison) {
           selectedTplVersionsData.push({
             template_id: tpl.id,
-            template_revision_id: lasteVersion.id,
+            template_revision_id: latestVerison.id,
             is_latest: true,
+            template_revision_name: latestVerison.name,
+            template_name: latestVerison.template_name,
+          });
+        }
+      } else {
+        // 已有版本 对版本数据加工处理
+        const selectedVersion = props.selectedVersions[selectedVersionIndex];
+        const version = tpl.versions.find(
+          (v) => v.id === selectedVersion.template_revision_id && v.isLatest === selectedVersion.is_latest,
+        );
+        if (version) {
+          selectedTplVersionsData.splice(selectedVersionIndex, 1, {
+            template_id: tpl.id,
+            template_revision_id: version.id,
+            is_latest: selectedVersion.is_latest,
+            template_revision_name: version.name,
+            template_name: version.template_name,
           });
         }
       }
     });
-    if (selectedTplVersionsData.length !== props.selectedVersions.length) {
-      emits('updateVersions', selectedTplVersionsData);
-    }
+    emits('updateVersions', selectedTplVersionsData);
   };
 
   const getVersionSelectVal = (id: number) => {
@@ -181,17 +208,17 @@
     }
   };
 
-  const handleSelectVersion = (
-    tplId: number,
-    versions: { id: number; name: string; isLatest: boolean }[],
-    val: number,
-  ) => {
+  const handleSelectVersion = (tplId: number, versions: ITemplateVersions[], val: number) => {
     const isLatest = val === 0;
-    const versionId = isLatest ? versions.find((item) => item.isLatest)?.id : val;
+    const version = isLatest
+      ? versions.find((item) => item.isLatest)
+      : versions.find((item) => item.id === val && item.isLatest === isLatest);
     const versionData = {
-      template_id: tplId,
-      template_revision_id: versionId,
+      template_id: version?.template_id,
+      template_revision_id: version?.id,
       is_latest: isLatest,
+      template_revision_name: version?.name,
+      template_name: version?.template_name,
     };
     emits('selectVersion', versionData);
   };

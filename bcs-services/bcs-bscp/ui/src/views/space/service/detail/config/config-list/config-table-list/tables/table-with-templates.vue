@@ -39,7 +39,7 @@
                     v-if="isUnNamedVersion && group.id !== 0"
                     v-cursor="{ active: !hasEditServicePerm }"
                     :class="['delete-btn', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-                    @click="handleDeletePkg(group.id, group.name, group.template_set_id)">
+                    @click="handleDeletePkg(group.id, group.name, group.template_set_id!)">
                     <Close class="close-icon" />
                     {{ t('移除套餐') }}
                   </div>
@@ -495,13 +495,15 @@
   );
 
   watch(
-    [() => configsCount.value, () => templatesCount.value],
+    [() => configList.value, () => templatesCount.value],
     () => {
+      const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
       configStore.$patch((state) => {
         state.allConfigCount = configsCount.value + templatesCount.value;
+        state.allExistConfigCount = existConfigCount + templatesCount.value;
       });
     },
-    { immediate: true },
+    { immediate: true, deep: true },
   );
 
   onMounted(async () => {
@@ -538,7 +540,7 @@
         all: true,
       };
       if (!createConfig) topIds.value = [];
-      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
+      if (topIds.value.length > 0) params.ids = topIds.value;
       let res;
       if (isUnNamedVersion.value) {
         if (props.searchStr) {

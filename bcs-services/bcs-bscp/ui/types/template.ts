@@ -183,6 +183,7 @@ export interface IPkgTreeItem {
   disabled?: boolean;
   indeterminate?: boolean;
   parentName?: string;
+  template_space_id?: number;
 }
 
 // 模板下多个版本名称
