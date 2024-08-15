@@ -15,20 +15,23 @@ package iface
 import (
 	"context"
 
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 // Context 当前执行的任务
 type Context struct {
 	ctx         context.Context
+	store       istore.Store
 	task        *types.Task
 	currentStep *types.Step
 }
 
 // NewContext ...
-func NewContext(ctx context.Context, task *types.Task, currentStep *types.Step) *Context {
+func NewContext(ctx context.Context, store istore.Store, task *types.Task, currentStep *types.Step) *Context {
 	return &Context{
 		ctx:         ctx,
+		store:       store,
 		task:        task,
 		currentStep: currentStep,
 	}
@@ -77,7 +80,11 @@ func (t *Context) GetCommonPayload(obj interface{}) error {
 
 // SetCommonPayload set task extra json
 func (t *Context) SetCommonPayload(obj interface{}) error {
-	return t.task.SetCommonPayload(obj)
+	if err := t.task.SetCommonPayload(obj); err != nil {
+		return err
+	}
+
+	return t.store.UpdateTask(t.ctx, t.task)
 }
 
 // GetName get current step name
@@ -106,8 +113,9 @@ func (t *Context) GetParamsAll() map[string]string {
 }
 
 // SetParamMulti return all step params
-func (t *Context) SetParamMulti(params map[string]string) {
+func (t *Context) SetParamMulti(params map[string]string) error {
 	t.currentStep.SetParamMulti(params)
+	return t.store.UpdateTask(t.ctx, t.task)
 }
 
 // GetPayload return unmarshal step extras
@@ -117,5 +125,9 @@ func (t *Context) GetPayload(obj interface{}) error {
 
 // SetPayload set step extras by json string
 func (t *Context) SetPayload(obj interface{}) error {
-	return t.currentStep.SetPayload(obj)
+	if err := t.currentStep.SetPayload(obj); err != nil {
+		return err
+	}
+
+	return t.store.UpdateTask(t.ctx, t.task)
 }

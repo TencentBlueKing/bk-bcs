@@ -344,7 +344,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 	tmpCh := make(chan error, 1)
 	go func() {
 		// call step worker
-		execCtx := istep.NewContext(stepCtx, state.GetTask(), step)
+		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 		tmpCh <- stepWorker.Execute(execCtx)
 	}()
 

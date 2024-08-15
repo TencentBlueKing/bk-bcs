@@ -163,7 +163,7 @@ func (s *State) updateStepSuccess(start time.Time, stepName string) error {
 
 			// callback
 		if s.cbExecutor != nil {
-			c := istep.NewContext(context.Background(), s.task, step)
+			c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, step)
 			s.cbExecutor.Callback(c, nil)
 		}
 	}
@@ -213,7 +213,7 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 
 			// callback
 			if s.cbExecutor != nil {
-				c := istep.NewContext(context.Background(), s.task, step)
+				c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, step)
 				s.cbExecutor.Callback(c, stepErr)
 			}
 		}
@@ -231,7 +231,7 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 
 		// callback
 		if s.cbExecutor != nil {
-			c := istep.NewContext(context.Background(), s.task, step)
+			c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, step)
 			s.cbExecutor.Callback(c, stepErr)
 		}
 	}
