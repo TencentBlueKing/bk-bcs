@@ -34,6 +34,11 @@ func NewContext(ctx context.Context, task *types.Task, currentStep *types.Step) 
 	}
 }
 
+// Context returns the step's context
+func (t *Context) Context() context.Context {
+	return t.ctx
+}
+
 // GetTaskID get task id
 func (t *Context) GetTaskID() string {
 	return t.task.GetTaskID()
@@ -49,6 +54,11 @@ func (t *Context) GetTaskType() string {
 	return t.task.GetTaskType()
 }
 
+// GetTaskStatus get task status
+func (t *Context) GetTaskStatus() string {
+	return t.task.GetStatus()
+}
+
 // GetCommonParams get current task param
 func (t *Context) GetCommonParams(key string) (string, bool) {
 	return t.task.GetCommonParams(key)
@@ -60,9 +70,14 @@ func (t *Context) AddCommonParams(k, v string) error {
 	return nil
 }
 
-// GetCommonPayload add task common params
+// GetCommonPayload get task extra json
 func (t *Context) GetCommonPayload(obj interface{}) error {
 	return t.task.GetCommonPayload(obj)
+}
+
+// SetCommonPayload set task extra json
+func (t *Context) SetCommonPayload(obj interface{}) error {
+	return t.task.SetCommonPayload(obj)
 }
 
 // GetName get current step name
@@ -70,9 +85,19 @@ func (t *Context) GetName() string {
 	return t.currentStep.GetName()
 }
 
+// GetStatus get current step status
+func (t *Context) GetStatus() string {
+	return t.currentStep.GetStatus()
+}
+
 // GetParam get current step param
 func (t *Context) GetParam(key string) (string, bool) {
 	return t.currentStep.GetParam(key)
+}
+
+// AddParam set step param by key,value
+func (t *Context) AddParam(key string, value string) {
+	_ = t.currentStep.AddParam(key, value)
 }
 
 // GetParamsAll return all step params
@@ -80,12 +105,17 @@ func (t *Context) GetParamsAll() map[string]string {
 	return t.currentStep.GetParamsAll()
 }
 
-// GetStatus get current step status
-func (t *Context) GetStatus() string {
-	return t.currentStep.GetStatus()
+// SetParamMulti return all step params
+func (t *Context) SetParamMulti(params map[string]string) {
+	t.currentStep.SetParamMulti(params)
 }
 
-// GetPayload ...
+// GetPayload return unmarshal step extras
 func (t *Context) GetPayload(obj interface{}) error {
 	return t.currentStep.GetPayload(obj)
+}
+
+// SetPayload set step extras by json string
+func (t *Context) SetPayload(obj interface{}) error {
+	return t.currentStep.SetPayload(obj)
 }
