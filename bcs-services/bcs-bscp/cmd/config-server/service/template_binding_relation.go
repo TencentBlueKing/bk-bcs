@@ -267,11 +267,6 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context, req *pbcs.List
 	if err != nil {
 		return nil, fmt.Errorf("invalid template ids, %s", err)
 	}
-	idsLen := len(templateIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -421,11 +416,6 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbc
 	templateSetIDs, err := tools.GetUint32List(req.TemplateSetIds)
 	if err != nil {
 		return nil, fmt.Errorf("invalid template set ids, %s", err)
-	}
-	idsLen := len(templateSetIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
 	}
 
 	res := []*meta.ResourceAttribute{
