@@ -129,8 +129,14 @@ func (cd *argo) InitArgoDB(ctx context.Context) error {
 	return nil
 }
 
+// GetArgoDB return argodb object
 func (cd *argo) GetArgoDB() db.ArgoDB {
 	return cd.argoDB
+}
+
+// GetAppClient return argo app client
+func (cd *argo) GetAppClient() applicationpkg.ApplicationServiceClient {
+	return cd.appClient
 }
 
 // Stop control interface

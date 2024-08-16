@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -51,6 +52,7 @@ type Store interface {
 	Init() error
 	InitArgoDB(ctx context.Context) error
 	GetArgoDB() db.ArgoDB
+	GetAppClient() applicationpkg.ApplicationServiceClient
 	Stop()
 	GetOptions() *Options
 	ReturnArgoK8SClient() *argopkg.ArgoprojV1alpha1Client

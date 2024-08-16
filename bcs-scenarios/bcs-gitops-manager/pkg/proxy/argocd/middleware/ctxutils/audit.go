@@ -71,6 +71,8 @@ const (
 	ApplicationCreate AuditAction = "ApplicationCreate"
 	// ApplicationUpdate defines the app update action
 	ApplicationUpdate AuditAction = "ApplicationUpdate"
+	// ApplicationRefresh refresh the application
+	ApplicationRefresh AuditAction = "ApplicationRefresh"
 	// ApplicationSync defines the app sync action
 	ApplicationSync AuditAction = "ApplicationSync"
 	// ApplicationRollback defines the app rollback action
