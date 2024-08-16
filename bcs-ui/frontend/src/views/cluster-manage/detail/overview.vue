@@ -1,7 +1,7 @@
 <!-- eslint-disable max-len -->
 <template>
   <div>
-    <div class="flex overflow-hidden py-[20px] h-[360px]">
+    <div class="flex overflow-hidden pt-[30px] pb-[20px] h-[360px]">
       <!--CPU使用率-->
       <div class="flex-1 w-0 mr-[24px]">
         <div class="flex justify-between">

@@ -1,9 +1,9 @@
 <template>
   <div class="status-loading">
     <div class="loading mr5" :style="verticalAlign">
-      <section class="loading-origin">
-        <div class="loading-ball" v-for="index in 8" :key="index" :style="bgColor"></div>
-      </section>
+      <svg class="round">
+        <use xlink:href="#bcs-icon-color-jiazai"></use>
+      </svg>
     </div>
     <slot></slot>
   </div>
@@ -104,5 +104,11 @@ export default defineComponent({
       opacity: .3;
     }
   }
+}
+
+.round {
+  width: 16px;
+  height: 16px;
+  animation: loading 1s linear infinite;
 }
 </style>
