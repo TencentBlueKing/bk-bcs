@@ -1,6 +1,9 @@
 bcs:
-  newVersion: '有版本更新, 是否刷新界面'
   preVersion: 返回旧版
+  newVersion:
+    title: 资源更新提醒
+    p1: 服务器端资源文件已经更新，请刷新页面获取最新资源，以免前端页面执行失败，造成困扰
+    p2: 点击确定将刷新页面，请注意保存数据
   TKEx:
     title: 容器管理平台
     welcome: 欢迎使用 TKEx-IEG 容器平台
@@ -57,6 +60,11 @@ blueking:
   help: 帮助
   contact: 联系我们
   bk: 蓝鲸容器助手
+  aiScriptsAssistant:
+    desc: 询问AI小鲸
+    errTips: 询问AI小鲸解读报错信息
+    loading: 正在思考中
+    breakLoading: 聊天内容已中断
 k8s:
   namespace: 命名空间
   label: 标签
@@ -92,7 +100,6 @@ k8s:
       True 值
 nav:
   dashboard: 资源视图
-  namespace: 命名空间
   workload: 工作负载
   configuration: 配置
   storage: 存储
@@ -117,6 +124,7 @@ nav:
   monitor: 容器监控
   network: 网络
   cloudToken: 云凭证
+  templateFile: 模板文件
 iam:
   title:
     perms: 该操作需要以下权限
@@ -276,6 +284,7 @@ generic:
     command: 多个命令用空格分隔，例如/bin/bash &quot;-c&quot
     searchIp: '输入IP搜索, 多个IP用逗号或空格隔开'
   button:
+    clone: 克隆
     resetSearch: 调整筛选条件
     validate: 校验
     confirm: 确定
@@ -327,10 +336,12 @@ generic:
     query: 查询
     create: 创建
     submit: 提交
-    reload: 立即刷新
     copyAll: 复制全部
     retry: 重试
     skip: 跳过
+    export: 导出
+    know: 我知道了
+    confirmSave: 确定保存
     detail: 详情
   label:
     key: 键
@@ -358,6 +369,7 @@ generic:
     createdBy: 创建人
     createdBy1: 创建者
     updator: 更新人
+    updatedAt: 更新时间
     updator1: 更新者
     cluster: 集群
     cluster1: 所属集群
@@ -382,6 +394,7 @@ generic:
     stop: 停止
     basicConfig: 基本配置
     abnormal: 异常
+    source: 来源
     batchSetting: '批量设置 {0}'
     resourceName: 资源名称
     resourceID: 资源ID
@@ -444,9 +457,11 @@ generic:
     cidr: CIDR格式错误，请重新输入，如：10.0.0.0/8
     cidrConflict: 'CIDR与 {cidr} 冲突，请重新输入'
     fieldRequired: '{0} 必填'
+    fieldRepeat: '{0} 重复'
   title:
     createPublicCluster: 新建公有云集群
-    curVersion: 当前版本
+    diffVersion: 线上版本
+    curVersion: 待上线
     basicInfo: 基础信息
     basicInfo1: 基本信息
     preview: 预览
@@ -2861,3 +2876,100 @@ container:
     finishedAt: 退出时间
     exitCode: 退出码
     reason: 原因
+templateFile:
+  title:
+    file: 模板文件
+    createVersion: 创建版本
+    createSpace: 新建文件夹
+    rename: 重命名
+    versionManage: 版本管理
+    modifyMetadata: 修改基本信息
+    editNewVersion: 编辑新版本
+    deployFile: 部署模板文件
+    deploySetting: 部署设置
+    deployReview: 部署预览
+    disableYamlToForm: 无法切换模式
+  button:
+    formMode: 表单模式
+    yamlMode: YAML模式
+    createSpace: 新建文件夹
+    rename: 重命名
+    createFile: 新建模板文件
+    delete: 删除
+    deploy: 部署
+    previewAndDeploy: 预览并部署
+    versionManage: 版本管理
+    confirmDeploy: 确认部署
+  placeholder:
+    searchFile: 模板文件名称/类型/版本/更新人
+    searchVersion: 版本号/版本日志/更新人
+  label:
+    name: 名称
+    templateName: 模板名称
+    resourceType: 类型
+    latestVersion: 最新版本
+    spaceName: 文件夹名称
+    kindType: 资源类型
+    workload: 工作负载
+    versionDesc: 版本日志
+    desc: 模板描述
+    semver:
+      major: 重大版本
+      minor: 次版本
+      patch: 修正版本
+      preRelease: 预发布版本
+    semverNo: 版本号
+    semverDesc: 版本日志
+    rebaseVersion: 选择载入版本
+    version: 版本号
+    versionType: 版本类型
+    fileVersion: 模板文件版本
+    params: 入参
+    otherParams: 其他变量
+    byCluster: 按集群
+    versionDiff: 版本对比
+    untitled: 未命名
+  tips:
+    disableYamlToFormReason: '源码文件中，{0}，请继续使用源码模式编辑模板或修改再尝试'
+    preKind: 上一个类型
+    nextKind: 下一个类型
+  tag:
+    draft: 草稿
+    baseOn: 基于
+    latestUpdate: 最新更新
+templateSet:
+  title:
+    set: 模板集
+    versionManage: 版本管理
+    addTemplateFile: 添加模板文件
+    modifyMetadata: 修改基本信息
+  label:
+    name: 模板名称
+    appVersion: 应用版本
+    desc: 模板集描述
+    templateFile: 模板文件
+    setVersion: 模板版本
+    key: 关键字
+    label: 分类标签
+    versionNo: 版本号
+    set: 模板集
+  button:
+    addFile: 添加模板文件
+    existFile: 选择已有模板文件
+    createFile: 新建模板文件
+    addNow: 立即添加
+    versionManage: 版本管理
+    deploy: 去部署
+  placeholder:
+    searchFile: 模板名称/资源类型
+    searchSet: 模板集名称/版本/仓库/分类标签/关键字/更新人/更新时间
+    searchVersion: 版本号/版本日志/更新人
+  tips:
+    emptyTemplateFile: 暂无模板文件
+    listView: 列表视图
+    cardView: 卡片视图
+    cantDeploy: 草稿版本不支持部署
+diff:
+  delete: 删除
+  change: 变化
+  add: 新增

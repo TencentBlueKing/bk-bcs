@@ -46,6 +46,7 @@ export default function useEditor(config?: Partial<IConfig>) {
   const diffStat = ref({
     insert: 0,
     delete: 0,
+    changesCount: 0,
   }); // diff统计
 
   // 初始化编辑器
@@ -171,8 +172,10 @@ export default function useEditor(config?: Partial<IConfig>) {
     const diffStat = {
       insert: 0,
       delete: 0,
+      changesCount: 0,
     };
     const changes = (editor.value as monaco.editor.IStandaloneDiffEditor)?.getLineChanges() || [];
+    diffStat.changesCount = changes.length;
     changes.forEach((item) => {
       if ((item.originalEndLineNumber >= item.originalStartLineNumber) && item.originalEndLineNumber > 0) {
         diffStat.delete += item.originalEndLineNumber - item.originalStartLineNumber + 1;
@@ -183,6 +186,15 @@ export default function useEditor(config?: Partial<IConfig>) {
       }
     });
     return diffStat;
+  };
+
+  // 设置位置
+  const setPosition = (offset: number) => {
+    const { modified } = getModel() || {};
+    const pos = modified?.getPositionAt(offset);
+    if (!pos) return;
+
+    editor.value?.revealPositionNearTop(pos);
   };
 
   // 容器大小变化时重新调整编辑器布局
@@ -207,5 +219,6 @@ export default function useEditor(config?: Partial<IConfig>) {
     setModelLanguage,
     layout,
     setDiffStat,
+    setPosition,
   };
 }

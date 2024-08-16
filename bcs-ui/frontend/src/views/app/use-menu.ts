@@ -23,12 +23,6 @@ export default function useMenu() {
       title: $i18n.t('nav.dashboard'),
       id: 'CLUSTERRESOURCE',
       children: [
-        // {
-        //   title: $i18n.t('nav.namespace'),
-        //   icon: 'bcs-icon-namespace',
-        //   id: 'NAMESPACE',
-        //   route: 'dashboardNamespace',
-        // },
         {
           title: $i18n.t('nav.workload'),
           icon: 'bcs-icon-yy-apply',
@@ -231,11 +225,6 @@ export default function useMenu() {
                 kind: 'HookTemplate',
               },
             },
-            // {
-            //   title: 'CustomObjects',
-            //   route: 'dashboardCustomObjects',
-            //   id: 'CUSTOMOBJECT',
-            // },
           ],
           id: 'CUSTOM_RESOURCE',
         },
@@ -353,6 +342,12 @@ export default function useMenu() {
               id: 'TEMPLATESET_CUSTOMOBJECT',
             },
           ],
+        },
+        {
+          title: $i18n.t('nav.templateFile'),
+          id: 'TEMPLATE_FILE',
+          icon: 'bcs-icon-templete',
+          route: 'templatefile',
         },
         {
           title: $i18n.t('nav.variable'),

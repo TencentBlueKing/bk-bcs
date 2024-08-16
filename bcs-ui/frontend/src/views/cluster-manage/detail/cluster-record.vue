@@ -77,7 +77,7 @@
           type="multi-task"
           :data="taskConfig.data"
           :loading="taskConfig.loading"
-          :height="'calc(100vh - 100px)'"
+          :height="'calc(100vh - 92px)'"
           :enable-statistics="true"
           :rolling-loading="false"
           :enable-rolling-loading="false"

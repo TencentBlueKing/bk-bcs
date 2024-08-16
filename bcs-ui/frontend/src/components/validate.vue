@@ -4,12 +4,19 @@
     @focusin="handleFocus"
     @focusout="handleBlur">
     <slot :is-error="isError"></slot>
-    <span
-      class="error-tip"
-      v-if="isError"
-      v-bk-tooltips="errorMsg">
-      <i class="bk-icon icon-exclamation-circle-shape"></i>
-    </span>
+    <template v-if="isError">
+      <span
+        class="error-tip"
+        v-if="errorDisplayType === 'tooltips'"
+        v-bk-tooltips="errorMsg">
+        <i class="bk-icon icon-exclamation-circle-shape"></i>
+      </span>
+      <div
+        class="text-[#ea3636] text-[12px] leading-[18px]"
+        v-else-if="errorDisplayType === 'normal'">
+        {{ errorMsg }}
+      </div>
+    </template>
   </div>
 </template>
 <script lang="ts">
@@ -55,6 +62,10 @@ export default defineComponent({
     required: {
       type: Boolean,
       default: false,
+    },
+    errorDisplayType: {
+      type: String as PropType<'tooltips'|'normal'>,
+      default: 'tooltips',
     },
   },
   emits: ['validate'],

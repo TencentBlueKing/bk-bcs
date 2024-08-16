@@ -327,9 +327,6 @@
 
 .bk-dialog-body {
     color: $fontColor;
-    p {
-        text-align: center;
-    }
 }
 
 .bk-data-list {

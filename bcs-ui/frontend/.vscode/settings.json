@@ -10,4 +10,6 @@
     "typescript",
     "vue"
   ],
+  "bk-code-ai.enable": false,
+  "vue.codeActions.enabled": false,
 }
