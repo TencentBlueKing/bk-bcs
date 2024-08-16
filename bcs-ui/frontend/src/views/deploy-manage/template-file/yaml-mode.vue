@@ -150,7 +150,7 @@ const validate = async () => !editorErr.value.message;
 const { contentRef, isFullscreen, switchFullScreen } = useFullScreen();
 // 调用AI
 const explainK8sIssue = throttle(() => {
-  assistantRef.value?.handleSend(editorErr.value.message);
+  assistantRef.value?.handleSendMsg(editorErr.value.message);
   assistantRef.value?.showAITips();
 }, 300);
 

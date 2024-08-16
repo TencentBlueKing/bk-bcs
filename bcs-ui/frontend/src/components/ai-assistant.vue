@@ -37,6 +37,7 @@
   </span>
 </template>
 <script setup lang="ts">
+import { debounce } from 'lodash';
 import { ref } from 'vue';
 
 import Assistant, { ChatHelper, IMessage, IStartPosition, MessageStatus, RoleType } from '@blueking/ai-blueking/vue2';
@@ -108,12 +109,13 @@ const handleEnd = () => {
   // loading 情况下终止
   if (currentMessage.status === 'loading') {
     currentMessage.content = $i18n.t('blueking.aiScriptsAssistant.breakLoading');
+    currentMessage.status = MessageStatus.Error;
   }
 };
 
 // 终止聊天
-const handleStop = () => {
-  chatHelper.stop(streamID.value);
+const handleStop = async () => {
+  await chatHelper.stop(streamID.value);
 };
 
 // 错误处理
@@ -128,6 +130,8 @@ const handleError = (msg: string) => {
 const chatHelper = new ChatHelper(`${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError);
 // 发送消息
 const handleSend = async (msg: string) => {
+  // 终止上一个聊天信息
+  await handleStop();
   // 添加一条消息
   messages.value.push({
     role: RoleType.User,
@@ -140,6 +144,11 @@ const handleSend = async (msg: string) => {
     stream: true,
   }, streamID.value);
 };
+// 发送消息防抖(外部调用)
+const handleSendMsg = debounce((msg: string) => {
+  handleSend(msg);
+}, 1000);
+
 // 关闭对话框
 const handleClose = () => {
   isShowAssistant.value = false;
@@ -158,7 +167,7 @@ const showAITips = () => {
 };
 
 defineExpose({
-  handleSend,
+  handleSendMsg,
   showAITips,
 });
 </script>

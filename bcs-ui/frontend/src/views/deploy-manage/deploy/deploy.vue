@@ -362,7 +362,7 @@ async function handlePreviewData() {
   curPreviewName.value = previewData.value.at(0)?.name || '';
   if (error) {
     editorErrMsg.value = error;
-    assistantRef.value?.handleSend(editorErrMsg.value);
+    assistantRef.value?.handleSendMsg(editorErrMsg.value);
     assistantRef.value?.showAITips();// 弹出提示
   } else {
     editorErrMsg.value = '';
