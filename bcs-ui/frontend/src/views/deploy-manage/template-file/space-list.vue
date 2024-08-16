@@ -26,7 +26,9 @@
             @mouseenter="hoverItemID = space.id"
             @mouseleave="hoverItemID = ''"
             @click="handleChangeSpace(space.id)">
-            <span class="bcs-ellipsis" v-bk-overflow-tips>{{ space.name }}</span>
+            <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">
+              {{ space.name }}
+            </span>
             <!-- 空间操作 -->
             <span v-if="hoverItemID === space.id || curPopover === space.id" @click.stop>
               <PopoverSelector offset="0, 6" :on-hide="hidePopover" :on-show="() => showPopover(space.id)">
@@ -65,7 +67,7 @@
           @mouseenter="hoverItemID = file.id"
           @mouseleave="hoverItemID = ''"
           @click="handleChangeFile(space.id, file)">
-          <span class="bcs-ellipsis" v-bk-overflow-tips>{{ file.name }}</span>
+          <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">{{ file.name }}</span>
           <!-- 文件操作 -->
           <span @click.stop>
             <PopoverSelector

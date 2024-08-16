@@ -50,7 +50,7 @@
                 type="number"
                 class="w-[48px]"
                 :show-controls="false"
-                :min="0"
+                :min="1"
                 :precision="0"
                 v-model="semverData[item.id]" />
             </template>
@@ -132,7 +132,7 @@ const semverData = ref({
   minor: 0,
   patch: 0,
   preReleaseTag: 'alpha',
-  preRelease: 0,
+  preRelease: 1,
 });
 const isPreRelease = ref(false);
 const semverList = computed(() => {
@@ -170,7 +170,7 @@ function parseSemverVersion(version: string) {
     minor: 0,
     patch: 0,
     preReleaseTag: 'alpha',
-    preRelease: 0,
+    preRelease: 1,
   };
 
   return {
@@ -178,7 +178,7 @@ function parseSemverVersion(version: string) {
     minor: parseInt(match[2], 10),
     patch: parseInt(match[3], 10),
     preReleaseTag: match[4] || 'alpha',
-    preRelease: parseInt(match[5], 10) || 0,
+    preRelease: parseInt(match[5], 10) || 1,
   };
 }
 

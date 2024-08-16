@@ -2968,7 +2968,7 @@ templateSet:
     emptyTemplateFile: 暂无模板文件
     listView: 列表视图
     cardView: 卡片视图
-    cantDeploy: 草稿版本不支持部署
+    cantDeploy: 无法部署：无任何已保存版本
 diff:
   delete: 删除
   change: 变化
