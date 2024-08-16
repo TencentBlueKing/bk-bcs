@@ -561,12 +561,14 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbcs.
 	result := make([]*pbcs.CheckTemplateSetReferencesAppsResp_Item, 0, len(resp.GetItems()))
 	for _, v := range resp.GetItems() {
 		result = append(result, &pbcs.CheckTemplateSetReferencesAppsResp_Item{
-			TemplateSetId:           v.GetTemplateSetId(),
-			TemplateSetName:         v.GetTemplateSetName(),
-			AppId:                   v.GetAppId(),
-			AppName:                 v.GetAppName(),
-			AppExceedsLimit:         v.GetAppExceedsLimit(),
-			TemplateSetExceedsLimit: v.GetTemplateSetExceedsLimit(),
+			TemplateSetId:              v.GetTemplateSetId(),
+			TemplateSetName:            v.GetTemplateSetName(),
+			AppId:                      v.GetAppId(),
+			AppName:                    v.GetAppName(),
+			AppExceedsLimit:            v.GetAppExceedsLimit(),
+			TemplateSetExceedsLimit:    v.GetTemplateSetExceedsLimit(),
+			AppExceedsQuantity:         v.GetAppExceedsQuantity(),
+			TemplateSetExceedsQuantity: v.GetTemplateSetExceedsQuantity(),
 		})
 	}
 
