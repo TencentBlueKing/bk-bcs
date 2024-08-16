@@ -28,20 +28,18 @@
       :prompts="prompts"
       :start-position="startPosition"
       :size-limit="sizeLimit"
-      :key="assistantKey"
       v-if="isShowAssistant"
       @choose-prompt="handleChoosePrompt"
       @clear="handleClear"
       @close="handleClose"
-      @send="handleSend" />
+      @send="handleSend"
+      @stop="handleStop" />
   </span>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import { ChatHelper } from '@blueking/ai-blueking/dist/chat-helper';
-import type { IMessage, IStartPosition } from '@blueking/ai-blueking/dist/types/index';
-import Assistant, { RoleType } from '@blueking/ai-blueking/vue2';
+import Assistant, { ChatHelper, IMessage, IStartPosition, MessageStatus, RoleType } from '@blueking/ai-blueking/vue2';
 
 import '@blueking/ai-blueking/dist/vue2/style.css';
 import { BCS_UI_PREFIX } from '@/common/constant';
@@ -50,6 +48,7 @@ import AssistantIcon from '@/images/assistant.png';
 import AssistantSmallIcon from '@/images/assistant-small.svg';
 
 // AI小鲸
+const streamID = ref(1);
 const popoverRef = ref();
 const isShowAssistant = ref(false);
 const loading = ref(false);
@@ -82,12 +81,11 @@ const handleStart = () => {
   messages.value.push({
     role: RoleType.Assistant,
     content: $i18n.t('blueking.aiScriptsAssistant.loading'),
-    status: 'loading',
+    status: MessageStatus.Loading,
   });
 };
 
 // 接收消息
-const assistantKey = ref();
 const handleReceiveMessage = (msg: string) => {
   const currentMessage = messages.value.at(-1);
   if (!currentMessage) return;
@@ -95,13 +93,11 @@ const handleReceiveMessage = (msg: string) => {
   if (currentMessage.status === 'loading') {
     // 如果是loading状态，直接覆盖
     currentMessage.content = msg;
-    currentMessage.status = 'success';
+    currentMessage.status = MessageStatus.Success;
   } else if (currentMessage.status === 'success') {
     // 如果是后续消息，就追加消息
     currentMessage.content += msg;
   }
-  // hack 临时修复流失效问题
-  assistantKey.value = `${Math.random() * 1000}`;
 };
 
 // 聊天结束
@@ -115,12 +111,17 @@ const handleEnd = () => {
   }
 };
 
+// 终止聊天
+const handleStop = () => {
+  chatHelper.stop(streamID.value);
+};
+
 // 错误处理
 const handleError = (msg: string) => {
   const currentMessage = messages.value.at(-1);
   if (!currentMessage) return;
 
-  currentMessage.status = 'error';
+  currentMessage.status = MessageStatus.Error;
   currentMessage.content = msg;
   loading.value = false;
 };
@@ -137,7 +138,7 @@ const handleSend = async (msg: string) => {
     role: 'KubernetesProfessor',
     input: msg,
     stream: true,
-  }, 1);
+  }, streamID.value);
 };
 // 关闭对话框
 const handleClose = () => {
