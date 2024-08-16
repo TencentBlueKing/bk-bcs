@@ -35,7 +35,8 @@
           ref="importFromTemplateRef"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
-          @toggle-disabled="templateImportBtnDisabled = $event" />
+          @toggle-disabled="templateImportBtnDisabled = $event"
+          @close="handleClose" />
       </div>
       <div v-else-if="importType === 'historyVersion'">
         <div class="wrap">

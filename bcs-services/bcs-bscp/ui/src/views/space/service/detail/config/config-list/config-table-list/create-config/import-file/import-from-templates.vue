@@ -87,7 +87,7 @@
     appId: number;
   }>();
 
-  const emits = defineEmits(['toggleDisabled']);
+  const emits = defineEmits(['toggleDisabled', 'close']);
 
   const pkgListLoading = ref(false);
   const pkgList = ref<IAllPkgsGroupBySpaceInBiz[]>([]);
@@ -218,6 +218,7 @@
   };
 
   const handleLinkToTemplates = () => {
+    emits('close');
     setTimeout(() => {
       router.push({ name: 'templates-list' });
     }, 300);
