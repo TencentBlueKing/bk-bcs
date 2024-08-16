@@ -2,10 +2,31 @@
 
 set -euo pipefail
 
-CACHE_DIR=${CACHE_DIR:-"./bcs-ops-offline"}
+CACHE_DIR=${CACHE_DIR:-"/tmp/bcs-ops-offline"}
 VERSION=
 CACHE_DIR_BIN="${CACHE_DIR}/bin-tools"
 CACHE_DIR_IMG="${CACHE_DIR}/images"
+CACHE_DIR_CHART="${CACHE_DIR}/charts"
+CACHE_DIR_RPM="${CACHE_DIR}/rpm"
+
+USER=$(base64 -d <<<"$USER")
+TOKEN=$(base64 -d <<<"$TOKEN")
+
+upload_mirrors() {
+  local path filename url
+  path=$1
+  filename=$2
+  url="https://mirrors.tencent.com/repository/generic\
+/bcs-ops/bcs-ops-offline/${path}/"
+  local curl_cmd=(curl --request PUT -u "${USER}:${TOKEN}"
+    --url "${url}" --upload-file "${filename}")
+  echo "${curl_cmd[@]}"
+  if ! "${curl_cmd[@]}"; then
+    echo "[FATAL]: fail upload ${filename} to ${url}, Please check permission"
+    return 1
+  fi
+  return 0
+}
 
 safe_curl() {
   local url save_file
@@ -37,7 +58,7 @@ download_k8s() {
     return 0
   fi
 
-  url="https://dl.k8s.io/v${version}/bin/linux/amd64"
+  url="https://dl.k8s.io/v${version}/bin/linux/${arch}"
 
   cache_dir="${CACHE_DIR_BIN}/${name}-${version}"
   mkdir -pv "${cache_dir}/bin" "${cache_dir}/systemd"
@@ -73,7 +94,7 @@ download_cni-plugins() {
   fi
 
   url="https://github.com/containernetworking/plugins/releases/download\
-/v${version}/cni-plugins-linux-amd64-v${version}.tgz"
+/v${version}/cni-plugins-linux-${arch}-v${version}.tgz"
 
   cache_dir="${CACHE_DIR_BIN}/${name}-${version}"
   mkdir -pv "${cache_dir}/bin"
@@ -104,7 +125,7 @@ download_crictl() {
   fi
 
   url="https://github.com/kubernetes-sigs/cri-tools/releases/download\
-/v${version}/crictl-v${version}-linux-amd64.tar.gz"
+/v${version}/crictl-v${version}-linux-${arch}.tar.gz"
 
   cache_dir="${CACHE_DIR_BIN}/${name}-${version}"
   mkdir -pv "${cache_dir}/bin"
@@ -133,8 +154,14 @@ download_docker() {
     return 0
   fi
 
-  url="https://download.docker.com/linux/static/stable/\
-x86_64/docker-${version}.tgz"
+  if [[ ${arch} == "amd64" ]];then
+    url="https://download.docker.com/linux/static/stable/x86_64/docker-${version}.tgz"
+  elif [[ ${arch} == "arm64" ]];then
+    url="https://download.docker.com/linux/static/stable/aarch64/docker-${version}.tgz"
+  else
+    echo "[FATAL]: unknown arch ${arch}"
+    exit 1
+  fi
 
   cache_dir="${CACHE_DIR_BIN}/${name}-${version}"
   mkdir -pv "${cache_dir}/bin"
@@ -174,7 +201,7 @@ download_containerd() {
   fi
 
   url="https://github.com/containerd/containerd/releases/download/\
-v${version}/containerd-${version}-linux-amd64.tar.gz"
+v${version}/containerd-${version}-linux-${arch}.tar.gz"
 
   cache_dir="${CACHE_DIR_BIN}/${name}-${version}"
 
@@ -187,7 +214,7 @@ v${version}/containerd-${version}-linux-amd64.tar.gz"
   fi
 
   mkdir -pv "${cache_dir}/systemd"
-  url="https://raw.githubusercontent.com/containerd/containerd/v${version}/containerd.service"
+  url="https://raw.githubusercontent.com/containerd/containerd/v1.6.20/containerd.service"
   url="https://raw.githubusercontent.com/containerd/containerd\
 /v${version}/containerd.service"
   safe_curl "${url}" "${cache_dir}/systemd/containerd.service"
@@ -212,7 +239,7 @@ download_runc() {
   fi
 
   url="https://github.com/opencontainers/runc/releases/\
-download/v${version}/runc.amd64"
+download/v${version}/runc.${arch}"
 
   cache_dir="${CACHE_DIR_BIN}/${name}-${version}"
   mkdir -pv "${cache_dir}/bin"
@@ -231,8 +258,9 @@ download_yq() {
   [[ -n ${version} ]] || echo "$name missing version"
   tar_name="${CACHE_DIR_BIN}/${name}-${version}.xz"
 
-  url="https://bkopen-1252002024.file.myqcloud.com/ce7/tools/yq-${version}.xz"
-  safe_curl "$url" "${tar_name}"
+  url="https://github.com/mikefarah/yq/releases/download/v${version}/yq_linux_${arch}.tar.gz"
+  safe_curl "$url" "yq_linux_${arch}tar.gz"
+  tar -xf yq_linux_${arch}tar.gz -O | xz > ${tar_name}
   cp -v "$tar_name" "${CACHE_DIR}/version-${VERSION}/bin-tools/"
 }
 
@@ -243,29 +271,80 @@ download_jq() {
   [[ -n ${version} ]] || echo "$name missing version"
   tar_name="${CACHE_DIR_BIN}/${name}-${version}.xz"
 
-  url="https://bkopen-1252002024.file.myqcloud.com/ce7/tools/jq-${version}.xz"
-  safe_curl "$url" "${tar_name}"
+  url="https://github.com/jqlang/jq/releases/download/jq-${version}/jq-linux-${arch}"
+  safe_curl "$url" "jq-linux-${arch}"
+  tar -cJf "${tar_name}" "jq-linux-${arch}"
   cp -v "$tar_name" "${CACHE_DIR}/version-${VERSION}/bin-tools/"
+}
+
+download_rpm() {
+  local rpm_name url rpm_file rpm
+  IFS=' ' read -ra rpm <<<"$@"
+  mkdir -pv "${CACHE_DIR_RPM}"
+  for rpm_name in "${rpm[@]}"; do
+    rpm_file="${CACHE_DIR_RPM}/${rpm_name}"
+    if [[ -f $rpm_file ]]; then
+      echo "[INFO]:${rpm_file} exist, skip download"
+      cp -v "$rpm_file" "${CACHE_DIR}/version-${VERSION}/rpm/"
+      break
+    fi
+
+    url="https://mirrors.tencent.com/repository/generic/\
+bcs-ops/bcs-ops-offline/rpm/${rpm_name}"
+    safe_curl "$url" "$rpm_file" || exit 1
+  done <<<"$1"
+}
+
+download_charts() {
+  local charts chart_name url chart_file
+  IFS=' ' read -ra charts <<<"$@"
+  mkdir -pv "${CACHE_DIR_CHART}"
+  for chart_name in "${charts[@]}"; do
+    chart_file="${CACHE_DIR_CHART}/${chart_name}"
+    if [[ -f $chart_file ]]; then
+      echo "[INFO]:${chart_file} exist, skip download"
+      cp -v "$chart_file" "${CACHE_DIR}/version-${VERSION}/charts/"
+      continue
+    fi
+
+    url="https://mirrors.tencent.com/repository/generic\
+/bcs-ops/bcs-ops-offline/charts/${chart_name}"
+    safe_curl "$url" "$chart_file" || exit 1
+  done
 }
 
 download_img() {
   local imgs img img_name img_tag img_tar
+
+  repo=$1
+  shift
   IFS=' ' read -ra imgs <<<"$@"
   mkdir -pv "${CACHE_DIR_IMG}"
   for img in "${imgs[@]}"; do
+    if [[ "${repo}" != "null" ]];then
+      rel_img=${img//hub.bktencent.com/$repo}
+    else
+      rel_img=${img}
+    fi
     img_name=${img##*/}
     img_tag=${img_name##*:}
     img_name=${img_name%%:*}
     img_tar="${CACHE_DIR_IMG}/${img_name}-${img_tag}.tar"
-    if [[ -f "${img_tar}" ]]; then
-      echo "[INFO]:${img} exist, skip pull"
-      cp -v "$img_tar" "${CACHE_DIR}/version-${VERSION}/images/"
-      continue
-    fi
-    echo "[INFO]: trying to pull ${img}"
-    if skopeo inspect --raw "docker://${img}" >/dev/null; then
-      if skopeo copy "docker://${img}" "docker-archive:${img_tar}:${img}" >/dev/null; then
-        cp -v "$img_tar" "${CACHE_DIR}/version-${VERSION}/images/"
+#    if [[ -f "${img_tar}" ]]; then
+#      echo "[INFO]:${img} exist, skip pull"
+#      cp -v "$img_tar" "${CACHE_DIR}/version-${VERSION}/images/"
+#      continue
+#    fi
+    echo "[INFO]: trying to docker pull --platform ${arch} ${rel_img}"
+    if docker manifest inspect "${rel_img}" >/dev/null; then
+#    if skopeo inspect --raw "docker://${img}" >/dev/null; then
+      if docker pull --platform linux/${arch} ${rel_img} >/dev/null;then
+        echo docker tag ${rel_img} ${img}
+        docker tag ${rel_img} ${img} >/dev/null
+        echo docker save ${img} -o ${img_tar}
+        docker save ${img} -o ${img_tar} >/dev/null
+#      if skopeo copy --arch ${arch} "docker://${rel_img}" "docker-archive:${img_tar}:${img}" >/dev/null; then
+        mv -v "$img_tar" "${CACHE_DIR}/version-${VERSION}/images/"
       else
         echo "[FATAL]: fail to pull ${img}"
         rm -rf "$img_tar"
@@ -279,42 +358,58 @@ download_img() {
 }
 
 unMarshall_mainfest() {
-  local manifest_file ver ver_num version projects images
+  local manifest_file ver_num version projects images charts rpms
   manifest_file=$1
-  ver=$2
+  repo=$2
 
   ver_num=$(yq e '.bcs-ops | length' "$manifest_file")
   local i=0
   while ((i < ver_num)); do
     IFS=',' read -ra projects <<<"$(yq -o csv e '.bcs-ops[0] | keys' "$manifest_file")"
     VERSION=$(yq e ".bcs-ops[$i].version" "$manifest_file")
-    if [[ "$VERSION" == "$ver" ]] || [[ -z $ver ]]; then
-      for project in "${projects[@]}"; do
-        case $project in
-          "version")
-            echo "version: $VERSION"
-            ;;
-          "bin-tools")
-            mkdir -pv "${CACHE_DIR}/version-${VERSION}/bin-tools"
-            yq e ".bcs-ops[$i].bin-tools" "$manifest_file" \
-              | while IFS=': ' read -r p v; do "download_$p" "${v//\"/}"; done
-            ;;
-          "images")
-            mkdir -pv "${CACHE_DIR}/version-${VERSION}/images"
-            IFS=',' read -ra images <<<"$(yq -o csv e ".bcs-ops[$i].images" "$manifest_file")"
-            download_img "${images[@]}"
-            ;;
-          *)
-            echo "unknow key $project"
-            ;;
-        esac
-      done
-      tar cvzf "${CACHE_DIR}/bcs-ops-offline-${VERSION}.tgz" -C "${CACHE_DIR}" "version-${VERSION}/"
-    else
-      echo "skip pacakge $VERSION"
-    fi
+    for project in "${projects[@]}"; do
+      case $project in
+        "version")
+          echo "version: $VERSION"
+          ;;
+        "bin-tools")
+          mkdir -pv "${CACHE_DIR}/version-${VERSION}/bin-tools"
+          yq e ".bcs-ops[$i].bin-tools" "$manifest_file" | while IFS=': ' read -r p v; do "download_$p" "${v//\"/}"; done
+          ;;
+        "images")
+          mkdir -pv "${CACHE_DIR}/version-${VERSION}/images"
+          IFS=',' read -ra images <<<"$(yq -o csv e ".bcs-ops[$i].images" "$manifest_file")"
+
+          download_img "${repo}" "${images[@]}"
+          ;;
+        "charts")
+          mkdir -pv "${CACHE_DIR}/version-${VERSION}/charts"
+          IFS=',' read -ra charts <<<"$(yq -o csv e ".bcs-ops[$i].charts" "$manifest_file")"
+          download_charts "${charts[@]}"
+          ;;
+        "rpm")
+          mkdir -pv "${CACHE_DIR}/version-${VERSION}/rpm"
+          IFS=',' read -ra rpms <<<"$(yq -o csv e ".bcs-ops[$i].rpm" "$manifest_file")"
+          download_rpm "${rpms[@]}"
+          ;;
+        *)
+          echo "unknow key $project"
+          ;;
+      esac
+    done
+    tar cvzf "${CACHE_DIR}/bcs-ops-offline-${VERSION}-${arch}.tgz" -C "${CACHE_DIR}" "version-${VERSION}/"
+    upload_mirrors "version" "${CACHE_DIR}/bcs-ops-offline-${VERSION}-${arch}.tgz"
     ((i += 1))
   done
 }
 
-unMarshall_mainfest "$1" "${2:-}"
+if [[ $# -eq 1 ]] || [[ -z "$2" ]]; then
+  repo="null"
+else
+  repo=$2
+fi
+
+export arch=arm64
+unMarshall_mainfest "$1" "$repo"
+export arch=amd64
+unMarshall_mainfest "$1" "$repo"
