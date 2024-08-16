@@ -8,7 +8,7 @@ Usage:
     [ -h --help -?     show usage ]
     [ -v -V --version  show script version]
     [ -i --install     support: master node helm op]
-    [ -r --render      suppport: bcsenv kubeadm joincmd]
+    [ -r --render      support: bcsenv kubeadm joincmd]
     [ -c --clean       support: master node bcsenv op]
 	[ -e --check       support: all]
     [ -e --check ]
@@ -71,7 +71,7 @@ ip -6 route add fd00::/8 via <next hop> dev <interface> src <lan_ipv6>
 ```bash
 set -x
 LAN_IP=<YOUR LAN IP>
-LAN_IPv6<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
+LAN_IPv6=<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
 set +x
 ```
 
@@ -200,24 +200,24 @@ set +x
 
 #### apiserver ha 环境变量
 
-| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                        |
-| ------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENABLE_APISERVER_HA`     | `false`                     | apiserver ha 模式，默认关闭。                                                                                                                                                                                               |
-| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1), [kube-vip](https://kube-vip.io/) |
-| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                    |
-| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                |
-| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                |
-| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                            |
-| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                              |
-| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                            |
-| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                                |
-| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                     |
-| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                                |
-| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                           |
-| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                         |
-| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                           |
-| `EXTERNAL_VIP`            | `""`                        | 外部 LB ip                                                                                                                                                                                                                  |
-| `EXTERNAL_HOST`           | `""`                        | 外部域名解析域名                                                                                                                                                                                                            |
+| 环境变量                  | 默认值                      | 说明                                                                                                                                                                                                                                      |
+| ------------------------- | --------------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ENABLE_APISERVER_HA`     | `false`                     | apiserver ha 模式，默认关闭。                                                                                                                                                                                                                   |
+| `APISERVER_HA_MODE`       | `bcs-apiserver-proxy`       | 模式选择，支持 [bcs-apiserver-proxy](https://github.com/TencentBlueKing/bk-bcs/blob/625be3183d99ee3500123016a6dea99d78165565/docs/features/bcs-apiserver-proxy/bcs-apiserver-proxy.md#L1), [kube-vip](https://kube-vip.io/), third-party(直接使用) |
+| `VIP`                     |                             | VIP 地址，可配置与集群内不冲突的 ip 地址                                                                                                                                                                                                                |
+| `VS_PORT`                 | `6443`                      | bap 代理端口                                                                                                                                                                                                                                |
+| `APISERVER_PROXY_VERSION` | `v1.29.0-alpha.130-tencent` | bap 镜像版本                                                                                                                                                                                                                                |
+| `PROXY_TOOL_PATH`         | `/usr/bin`                  | bap 工具安装目录                                                                                                                                                                                                                              |
+| `PERSIST_DIR`             | `/root/.bcs`                | bap 持久化目录                                                                                                                                                                                                                               |
+| `LVS_SCHEDULER`           | `rr`                        | bap 负载均衡策略                                                                                                                                                                                                                              |
+| `MANAGER_INTERVAL`        | `10`                        | bap 监听时间                                                                                                                                                                                                                                |
+| `DEBUG_MODE`              | `true`                      | bap DEBUG 模式 默认开启                                                                                                                                                                                                                       |
+| `LOG_LEVEL`               | `3`                         | bap 日志等级                                                                                                                                                                                                                                |
+| `KUBE_VIP_VERSION`        | `v0.5.12`                   | kube-vip 镜像版本                                                                                                                                                                                                                           |
+| `BIND_INTERFACE`          | `""`                        | kube-vip 绑定网卡名                                                                                                                                                                                                                          |
+| `VIP_CIDR`                | `32`                        | VIP CIDR 掩码长度                                                                                                                                                                                                                           |
+| `EXTERNAL_VIP`            | `""`                        | 外部 LB ip                                                                                                                                                                                                                                |
+| `EXTERNAL_HOST`           | `""`                        | 外部域名解析域名                                                                                                                                                                                                                                |
 
 ### 示例
 

@@ -37,7 +37,7 @@ _curl_yq() {
   name="yq"
   ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}-${ARCH}.xz"
-  url=${REPO_URL:-}/${file}
+  url=${REPO_URL:-}/yq/${file}
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
   else
@@ -49,7 +49,7 @@ _curl_yq() {
 _offline_yq() {
   local bin_path tar_name
   bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
-  tar_name=$(find "$bin_path" -iname "yq-*.xz" -type f | head -1)
+  tar_name=$(find "$bin_path" -iname "yq-*-${ARCH}.xz" -type f | head -1)
 
   unxz -dc "${tar_name}" >/tmp/yq
   chmod +x /tmp/yq

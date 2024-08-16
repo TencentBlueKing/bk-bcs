@@ -50,6 +50,7 @@ add_kernel_para() {
   source /etc/os-release
   if [[ $VERSION_ID != "2.2" ]]; then
     echo br_netfilter ip_vs ip_vs_rr ip_vs_wrr ip_vs_sh nf_conntrack | xargs -n1 modprobe
+    echo "br_netfilter" >> /etc/modules-load.d/k8s.conf
   fi
 
   [[ ${BCS_SYSCTL} == "1" ]] || return 0
@@ -131,6 +132,7 @@ kernel.pid_max=$((4 * 1024 * 1024))
 kernel.threads-max=$((total_mem / (8 * thread_size)))
 # 整个系统fd（包括socket）的总数量限制。根据内存大小动态计算得出，TOTAL_MEM为系统的内存总量，单位是字节，调大该参数避免"Too many open files"错误。
 fs.file-max=$((total_mem / 10240))
+fs.may_detach_mounts=1
 # bcs config end
 EOF
   sysctl --system
