@@ -160,7 +160,7 @@ func (s *Step) IsCompleted() bool {
 	// 失败需要看重试次数
 	if s.Status == TaskStatusFailure {
 		// 还有重试次数
-		if s.MaxRetries > 0 && s.RetryCount < s.MaxRetries {
+		if s.MaxRetries > 0 && s.RetryCount <= s.MaxRetries {
 			return false
 		}
 		return true
