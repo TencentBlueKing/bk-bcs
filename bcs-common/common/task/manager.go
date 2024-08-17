@@ -220,15 +220,17 @@ func (m *TaskManager) Dispatch(task *types.Task) error {
 func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) []*tasks.Signature {
 	var signatures []*tasks.Signature
 
-	for _, step := range task.Steps {
+	for idx, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
 		if step.Name != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
 
+		// 需要添加序号, 否则一个任务2个标准运维任务会冲突
+		uid := fmt.Sprintf("%s-step%d-%s", task.TaskID, idx, step.Name)
 		// build signature from step
 		signature := &tasks.Signature{
-			UUID: fmt.Sprintf("%s-%s", task.TaskID, step.Name),
+			UUID: uid,
 			Name: step.Name,
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{

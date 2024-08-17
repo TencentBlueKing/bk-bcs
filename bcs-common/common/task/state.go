@@ -258,7 +258,7 @@ func (s *State) GetCommonParam(key string) (string, bool) {
 	return s.task.GetCommonParam(key)
 }
 
-// AddCommonParams add common params
+// AddCommonParam add common params
 func (s *State) AddCommonParam(key, value string) *State {
 	s.task.AddCommonParam(key, value)
 	return s
