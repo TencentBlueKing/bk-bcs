@@ -364,7 +364,7 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 			return nil
 		}
 
-		if step.GetRetryCount() <= step.MaxRetries {
+		if step.GetRetryCount() < step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
 				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
@@ -381,7 +381,7 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 			return nil
 		}
 
-		if step.GetRetryCount() <= step.MaxRetries {
+		if step.GetRetryCount() < step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
 				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)

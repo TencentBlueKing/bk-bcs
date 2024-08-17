@@ -161,7 +161,7 @@ func (s *State) updateStepSuccess(start time.Time) {
 		SetLastUpdate(endTime)
 
 	// last step
-	if s.isLastStep(s.step) {
+	if s.isLastStep() {
 		s.task.SetEndTime(endTime).
 			SetStatus(types.TaskStatusSuccess).
 			SetMessage("task finished successfully")
@@ -212,7 +212,7 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskTimeOut bo
 	}
 
 	// last step failed and skipOnFailed is true, update task status to success
-	if s.isLastStep(s.step) {
+	if s.isLastStep() {
 		if s.step.GetSkipOnFailed() {
 			s.task.SetStatus(types.TaskStatusSuccess).SetMessage("task finished successfully")
 		} else {
@@ -248,7 +248,7 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskTimeOut bo
 	}
 }
 
-func (s *State) isLastStep(step *types.Step) bool {
+func (s *State) isLastStep() bool {
 	count := len(s.task.Steps)
 	// 没有step默认返回false
 	if count == 0 {
