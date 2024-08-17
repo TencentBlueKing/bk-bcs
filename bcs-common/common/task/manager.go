@@ -318,18 +318,20 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 	log.INFO.Printf("start to execute task[%s] stepName[%s]", taskID, stepName)
 
 	start := time.Now()
-	state, step, err := m.getTaskStateAndCurrentStep(taskID, stepName)
+	state, err := m.getTaskState(taskID, stepName)
 	if err != nil {
 		log.ERROR.Printf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
 			taskID, stepName, err)
 		return err
 	}
 	// step executed success
-	if step == nil {
+	if state.step == nil {
 		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
 			taskID, stepName, err)
 		return nil
 	}
+
+	step := state.step
 
 	// step timeout
 	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
@@ -353,24 +355,16 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 
 		// update task & step status
 		if retErr == nil {
-			if updateErr := state.updateStepSuccess(start, step.GetName()); updateErr != nil {
-				log.ERROR.Printf("task %s update step %s to success failed: %s",
-					taskID, step.GetName(), updateErr.Error())
-			}
+			state.updateStepSuccess(start)
 			return nil
 		}
-
-		if updateErr := state.updateStepFailure(start, step.GetName(), retErr, false); updateErr != nil {
-			log.ERROR.Printf("task %s update step %s to failure failed: %s",
-				taskID, step.GetName(), updateErr.Error())
-		}
+		state.updateStepFailure(start, retErr, false)
 
 		if step.GetSkipOnFailed() {
 			return nil
 		}
 
-		fmt.Println("leijiaoin11", step.GetRetryCount(), step.MaxRetries, step.GetRetryCount() < step.MaxRetries)
-		if step.GetRetryCount() < step.MaxRetries {
+		if step.GetRetryCount() <= step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 			log.INFO.Printf("retry task %s step %s, retryCount=%d, maxRetries=%d, retryIn=%s",
 				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
@@ -381,9 +375,8 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 
 	case <-stepCtx.Done():
 		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-		if updateErr := state.updateStepFailure(start, step.GetName(), retErr, false); updateErr != nil {
-			log.ERROR.Printf("update task %s step %s to failure failed: %s", taskID, step.GetName(), updateErr.Error())
-		}
+		state.updateStepFailure(start, retErr, false)
+
 		if step.GetSkipOnFailed() {
 			return nil
 		}
@@ -400,11 +393,7 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 	case <-taskCtx.Done():
 		// task timeOut
 		retErr := fmt.Errorf("task %s exec timeout", taskID)
-		errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
-		if errLocal != nil {
-			log.ERROR.Printf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
-		}
-
+		state.updateStepFailure(start, retErr, true)
 		// 整个任务结束
 		return retErr
 	}

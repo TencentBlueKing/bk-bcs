@@ -150,6 +150,25 @@ func (s *Step) GetStatus() string {
 	return s.Status
 }
 
+// IsCompleted return step completed or not
+func (s *Step) IsCompleted() bool {
+	// 已经完成
+	if s.Status == TaskStatusSuccess {
+		return true
+	}
+
+	// 失败需要看重试次数
+	if s.Status == TaskStatusFailure {
+		// 还有重试次数
+		if s.MaxRetries > 0 && s.RetryCount < s.MaxRetries {
+			return false
+		}
+		return true
+	}
+
+	return false
+}
+
 // SetStatus set status
 func (s *Step) SetStatus(stat string) *Step {
 	s.Status = stat
