@@ -230,12 +230,11 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 			continue
 		}
 
-		// 需要添加序号, 否则一个任务2个标准运维任务会冲突
 		uid := fmt.Sprintf("%s-step%d-%s", task.TaskID, idx, step.Name)
 		// build signature from step
 		signature := &tasks.Signature{
 			UUID: uid,
-			Name: step.Name,
+			Name: step.Executor,
 			ETA:  step.ETA,
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
@@ -333,7 +332,7 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 	defer stepCancel()
 
 	// task timeout
-	t, _ := state.task.GetStartTime()
+	t := state.task.GetStartTime()
 	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
 	defer taskCancel()
 

@@ -90,8 +90,12 @@ func (s *State) isTaskTerminated() bool {
 
 // isReadyToStep check if step is ready to step
 func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
+	nowTime := time.Now()
+
 	switch s.task.GetStatus() {
-	case types.TaskStatusRunning, types.TaskStatusInit:
+	case types.TaskStatusInit:
+		s.task.SetStartTime(nowTime)
+	case types.TaskStatusRunning:
 	case types.TaskStatusForceTerminate:
 		return nil, fmt.Errorf("task %s state for terminate", s.task.GetTaskID())
 	default:
@@ -115,13 +119,12 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 		curStep.AddRetryCount(1)
 	}
 
-	nowTime := time.Now()
 	curStep = curStep.SetStartTime(nowTime).
 		SetStatus(types.TaskStatusRunning).
 		SetMessage("step ready to run").
 		SetLastUpdate(nowTime)
 
-	s.task.SetCurrentStep(stepName).SetStatus(types.TaskStatusRunning)
+	s.task.SetCurrentStep(stepName).SetStatus(types.TaskStatusRunning).SetMessage("task running")
 
 	// update Task in storage
 	if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
@@ -146,18 +149,15 @@ func (s *State) updateStepSuccess(start time.Time, stepName string) error {
 		SetMessage(fmt.Sprintf("step %s running successfully", step.Name)).
 		SetLastUpdate(endTime)
 
+	taskStartTime := s.task.GetStartTime()
 	s.task.SetStatus(types.TaskStatusRunning).
+		SetExecutionTime(taskStartTime, endTime).
 		SetMessage(fmt.Sprintf("step %s running successfully", step.Name)).
 		SetLastUpdate(endTime)
 
 	// last step
 	if s.isLastStep(stepName) {
-		taskStartTime, err := s.task.GetStartTime()
-		if err != nil {
-			return fmt.Errorf(fmt.Sprintf("get task %s start time error", s.task.GetTaskID()))
-		}
 		s.task.SetEndTime(endTime).
-			SetExecutionTime(taskStartTime, endTime).
 			SetStatus(types.TaskStatusSuccess).
 			SetMessage("task finished successfully")
 
@@ -191,6 +191,10 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 		SetMessage(fmt.Sprintf("running failed, %s", stepErr.Error())).
 		SetLastUpdate(endTime)
 
+	taskStartTime := s.task.GetStartTime()
+	s.task.SetExecutionTime(taskStartTime, endTime).
+		SetLastUpdate(endTime)
+
 	// if step SkipOnFailed, update task status to running
 	if !taskTimeOut && step.GetSkipOnFailed() {
 		// skip, set task running or success
@@ -201,10 +205,7 @@ func (s *State) updateStepFailure(start time.Time, name string, stepErr error, t
 		// last step failed and skipOnFailed is true, update task status to success
 		if s.isLastStep(name) {
 			// last step
-			taskStartTime, err := s.task.GetStartTime()
-			if err != nil {
-				return fmt.Errorf(fmt.Sprintf("get task %s start time error", s.task.GetTaskID()))
-			}
+			taskStartTime := s.task.GetStartTime()
 			s.task.SetStatus(types.TaskStatusSuccess).
 				SetMessage("task finished successfully").
 				SetLastUpdate(endTime).

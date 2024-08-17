@@ -69,7 +69,6 @@ func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 		TaskIndexType:       o.TaskIndexType,
 		Status:              TaskStatusInit,
 		ForceTerminate:      false,
-		Start:               now,
 		Steps:               make([]*Step, 0),
 		Creator:             o.Creator,
 		Updater:             o.Creator,
@@ -201,8 +200,8 @@ func (t *Task) SetForceTerminate(f bool) *Task {
 }
 
 // GetStartTime get start time
-func (t *Task) GetStartTime() (time.Time, error) {
-	return t.Start, nil
+func (t *Task) GetStartTime() time.Time {
+	return t.Start
 }
 
 // SetStartTime set start time
@@ -212,8 +211,8 @@ func (t *Task) SetStartTime(time time.Time) *Task {
 }
 
 // GetEndTime get end time
-func (t *Task) GetEndTime() (time.Time, error) {
-	return t.End, nil
+func (t *Task) GetEndTime() time.Time {
+	return t.End
 }
 
 // SetEndTime set end time
