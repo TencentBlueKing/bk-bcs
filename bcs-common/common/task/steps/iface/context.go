@@ -97,6 +97,11 @@ func (t *Context) GetStatus() string {
 	return t.currentStep.GetStatus()
 }
 
+// GetRetryCount get current step retrycount
+func (t *Context) GetRetryCount() uint32 {
+	return t.currentStep.GetRetryCount()
+}
+
 // GetParam get current step param
 func (t *Context) GetParam(key string) (string, bool) {
 	return t.currentStep.GetParam(key)

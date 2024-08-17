@@ -232,14 +232,14 @@ func (t *Task) SetExecutionTime(start time.Time, end time.Time) *Task {
 	return t
 }
 
-// GetMaxExecutionSeconds get max execution seconds
-func (t *Task) GetMaxExecutionSeconds() time.Duration {
+// GetMaxExecution get max execution seconds
+func (t *Task) GetMaxExecution() time.Duration {
 	return time.Duration(t.MaxExecutionSeconds) * time.Second
 }
 
-// SetMaxExecutionSeconds set max execution seconds
-func (t *Task) SetMaxExecutionSeconds(maxExecutionSeconds time.Duration) *Task {
-	t.MaxExecutionSeconds = uint32(maxExecutionSeconds.Seconds())
+// SetMaxExecution set max execution seconds
+func (t *Task) SetMaxExecution(duration time.Duration) *Task {
+	t.MaxExecutionSeconds = uint32(duration.Seconds())
 	return t
 }
 

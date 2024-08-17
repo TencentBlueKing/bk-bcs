@@ -239,18 +239,22 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
 				{
+					Name:  "task_id",
 					Type:  "string",
 					Value: task.GetTaskID(), // 任务ID
 				},
 				{
+					Name:  "step_idx",
 					Type:  "int",
 					Value: idx, // step步骤
 				},
 				{
+					Name:  "step_name",
 					Type:  "string",
 					Value: step.Name, // step名称
 				},
 				{
+					Name:  "executor",
 					Type:  "string",
 					Value: step.Executor, // executor
 				},
