@@ -195,6 +195,28 @@ func (s *Step) AddRetryCount(count uint32) *Step {
 	return s
 }
 
+// SetCountdown step eta with countdown(seconds)
+func (s *Step) SetCountdown(c int) *Step {
+	// 默认就是立即执行, 0值忽略
+	if c <= 0 {
+		return s
+	}
+
+	t := time.Now().Add(time.Duration(c) * time.Second)
+	s.ETA = &t
+	return s
+}
+
+// SetETA step estimated time of arrival
+func (s *Step) SetETA(t time.Time) *Step {
+	if t.Before(time.Now()) {
+		return s
+	}
+
+	s.ETA = &t
+	return s
+}
+
 // GetStartTime get start time
 func (s *Step) GetStartTime() time.Time {
 	return s.Start

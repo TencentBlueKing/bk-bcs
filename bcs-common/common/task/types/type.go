@@ -85,7 +85,7 @@ type Step struct {
 	Payload             []byte            `json:"payload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
-	ETA                 *time.Time        `json:"eta"` // 延迟执行时间
+	ETA                 *time.Time        `json:"eta"` // 延迟执行时间(Estimated Time of Arrival)
 	SkipOnFailed        bool              `json:"skipOnFailed"`
 	RetryCount          uint32            `json:"retryCount"`
 	MaxRetries          uint32            `json:"maxRetries"`
