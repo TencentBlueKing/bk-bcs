@@ -253,14 +253,14 @@ func (s *State) isLastStep(stepName string) bool {
 	return stepName == s.task.Steps[count-1].Name
 }
 
-// GetCommonParams get common params by key
-func (s *State) GetCommonParams(key string) (string, bool) {
-	return s.task.GetCommonParams(key)
+// GetCommonParam get common params by key
+func (s *State) GetCommonParam(key string) (string, bool) {
+	return s.task.GetCommonParam(key)
 }
 
 // AddCommonParams add common params
-func (s *State) AddCommonParams(key, value string) *State {
-	s.task.AddCommonParams(key, value)
+func (s *State) AddCommonParam(key, value string) *State {
+	s.task.AddCommonParam(key, value)
 	return s
 }
 

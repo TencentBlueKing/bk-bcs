@@ -53,7 +53,7 @@ func Sum(c *istep.Context) error {
 	}
 
 	c1 := a1 + b1
-	_ = c.AddCommonParams(SumC.String(), fmt.Sprintf("%v", c1))
+	_ = c.AddCommonParam(SumC.String(), fmt.Sprintf("%v", c1))
 
 	fmt.Printf("%s %s %s sumC: %v\n", c.GetTaskID(), c.GetTaskType(), c.GetName(), c)
 	return nil

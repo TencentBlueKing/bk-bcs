@@ -109,16 +109,16 @@ func (s *Step) AddParam(key, value string) *Step {
 	return s
 }
 
-// GetParamsAll return all step params
-func (s *Step) GetParamsAll() map[string]string {
+// GetParams return all step params
+func (s *Step) GetParams() map[string]string {
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}
 	return s.Params
 }
 
-// SetParamMulti set step params by map
-func (s *Step) SetParamMulti(params map[string]string) {
+// SetParams set step params by map
+func (s *Step) SetParams(params map[string]string) {
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}

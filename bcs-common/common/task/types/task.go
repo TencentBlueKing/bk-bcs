@@ -117,8 +117,8 @@ func (t *Task) AddStep(step *Step) *Task {
 	return t
 }
 
-// GetCommonParams get common params
-func (t *Task) GetCommonParams(key string) (string, bool) {
+// GetCommonParam get common params
+func (t *Task) GetCommonParam(key string) (string, bool) {
 	if t.CommonParams == nil {
 		t.CommonParams = make(map[string]string, 0)
 		return "", false
@@ -129,8 +129,8 @@ func (t *Task) GetCommonParams(key string) (string, bool) {
 	return "", false
 }
 
-// AddCommonParams add common params
-func (t *Task) AddCommonParams(k, v string) *Task {
+// AddCommonParam add common params
+func (t *Task) AddCommonParam(k, v string) *Task {
 	if t.CommonParams == nil {
 		t.CommonParams = make(map[string]string, 0)
 	}
