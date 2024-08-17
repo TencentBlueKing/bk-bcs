@@ -210,6 +210,10 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 
 // Dispatch dispatch task
 func (m *TaskManager) Dispatch(task *types.Task) error {
+	if err := task.Validate(); err != nil {
+		return err
+	}
+
 	if err := GetGlobalStorage().CreateTask(context.Background(), task); err != nil {
 		return err
 	}
@@ -222,7 +226,7 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 
 	for idx, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
-		if step.Name != "" && stepNameBegin != "" && step.Name != stepNameBegin {
+		if step.Name != "" && step.Executor != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
 
@@ -232,17 +236,27 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 		signature := &tasks.Signature{
 			UUID: uid,
 			Name: step.Name,
+			ETA:  step.ETA,
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
 				{
 					Type:  "string",
-					Value: task.GetTaskID(),
+					Value: task.GetTaskID(), // 任务ID
+				},
+				{
+					Type:  "int",
+					Value: idx, // step步骤
 				},
 				{
 					Type:  "string",
-					Value: step.Name,
+					Value: step.Name, // step名称
+				},
+				{
+					Type:  "string",
+					Value: step.Executor, // executor
 				},
 			},
+
 			IgnoreWhenTaskNotRegistered: true,
 		}
 
@@ -267,24 +281,10 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 	}
 
 	// send chain to machinery & ctx for tracing
-	asyncResult, err := m.server.SendChainWithContext(context.Background(), chain)
+	_, err = m.server.SendChainWithContext(context.Background(), chain)
 	if err != nil {
 		return fmt.Errorf("send chain to machinery failed: %s", err.Error())
 	}
-
-	// get results
-	go func(t *types.Task, _ *tasks.Chain) {
-		// check async results
-		for retry := 3; retry > 0; retry-- {
-			results, err := asyncResult.Get(time.Second * 5)
-			if err != nil {
-				fmt.Printf("tracing task %s result failed, %s. retry %d\n", t.GetTaskID(), err.Error(), retry)
-				continue
-			}
-			// check results
-			log.INFO.Printf("tracing task %s result %s", t.GetTaskID(), tasks.HumanReadableResults(results))
-		}
-	}(task, chain)
 
 	return nil
 }
@@ -304,10 +304,10 @@ func (m *TaskManager) registerStepWorkers() error {
 }
 
 // doWork machinery 通用处理函数
-func (m *TaskManager) doWork(taskID string, stepName string) error {
-	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
+func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, executor string) error {
+	defer RecoverPrintStack(fmt.Sprintf("%s-step%d-%s", taskID, stepIdx, stepName))
 
-	stepWorker, ok := m.stepExecutors[istep.StepName(stepName)]
+	stepWorker, ok := m.stepExecutors[istep.StepName(executor)]
 	if !ok {
 		return fmt.Errorf("step worker %s not found", stepName)
 	}

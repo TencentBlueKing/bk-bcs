@@ -68,7 +68,7 @@ func (s SumStep) Execute(c *istep.Context) error {
 
 // BuildStep build step
 func (s SumStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
-	step := types.NewStep(s.GetName(), s.Alias(), opts...)
+	step := types.NewStep(s.GetName(), sumMethod, opts...)
 
 	// build step paras
 	for _, v := range kvs {

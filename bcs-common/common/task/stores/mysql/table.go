@@ -43,10 +43,10 @@ type TaskRecords struct {
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
 	ForceTerminate      bool              `json:"forceTerminate"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	Creator             string            `json:"creator" gorm:"type:varchar(255)"`
 	Updater             string            `json:"updater" gorm:"type:varchar(255)"`
 }
@@ -62,16 +62,19 @@ type StepRecords struct {
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
+	Executor            string            `json:"executor" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
 	Payload             []byte            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
+	ETA                 *time.Time        `json:"eta"`
 	RetryCount          uint32            `json:"retryCount"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
+	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 }
 
 // TableName ..

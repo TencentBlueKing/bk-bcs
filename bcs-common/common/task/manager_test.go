@@ -49,8 +49,8 @@ func TestDoWork(t *testing.T) {
 	}
 
 	steps := []*types.Step{
-		types.NewStep("hello", "test"),
-		types.NewStep("sum", "test1").AddParam(hellostep.SumA.String(), "1").AddParam(hellostep.SumB.String(), "2"),
+		types.NewStep("test", "hello"),
+		types.NewStep("test1", "sum").AddParam(hellostep.SumA.String(), "1").AddParam(hellostep.SumB.String(), "2"),
 	}
 
 	task := types.NewTask(info)
@@ -59,7 +59,7 @@ func TestDoWork(t *testing.T) {
 	require.NoError(t, GetGlobalStorage().CreateTask(context.Background(), task))
 
 	for _, s := range steps {
-		err := mgr.doWork(task.TaskID, s.Name)
+		err := mgr.doWork(task.TaskID, 0, s.Name, s.Name)
 		assert.ErrorIs(t, err, types.ErrNotImplemented)
 	}
 }
@@ -95,8 +95,8 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	}
 
 	steps := []*types.Step{
-		types.NewStep("hello", "test"),
-		types.NewStep("sum", "test1").AddParam(hellostep.SumA.String(), "1").AddParam(hellostep.SumB.String(), "2"),
+		types.NewStep("test", "hello"),
+		types.NewStep("test1", "sum").AddParam(hellostep.SumA.String(), "1").AddParam(hellostep.SumB.String(), "2"),
 	}
 
 	task := types.NewTask(info)
@@ -105,7 +105,7 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	require.NoError(t, GetGlobalStorage().CreateTask(context.Background(), task))
 
 	for _, s := range steps {
-		err := mgr.doWork(task.TaskID, s.Name)
+		err := mgr.doWork(task.TaskID, 0, s.Name, s.Name)
 		assert.NoError(t, err)
 	}
 }

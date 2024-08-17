@@ -51,7 +51,7 @@ func (s HelloStep) Execute(c *istep.Context) error {
 
 // BuildStep build step
 func (s HelloStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
-	step := types.NewStep(s.GetName(), s.Alias(), opts...)
+	step := types.NewStep(s.GetName(), method, opts...)
 
 	// build step paras
 	for _, v := range kvs {

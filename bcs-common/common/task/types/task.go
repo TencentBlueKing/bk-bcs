@@ -319,3 +319,28 @@ func (t *Task) AddStepParamsBatch(stepName string, params map[string]string) err
 	}
 	return nil
 }
+
+// Validate 校验 task
+func (t *Task) Validate() error {
+	if t.TaskName == "" {
+		return fmt.Errorf("task name is required")
+	}
+
+	if len(t.Steps) == 0 {
+		return fmt.Errorf("task steps empty")
+	}
+
+	uniq := map[string]struct{}{}
+	for _, s := range t.Steps {
+		if s.Name == "" {
+			return fmt.Errorf("step name is required")
+		}
+
+		if _, ok := uniq[s.Name]; ok {
+			return fmt.Errorf("step name %s is not unique", s.Name)
+		}
+		uniq[s.Name] = struct{}{}
+	}
+
+	return nil
+}

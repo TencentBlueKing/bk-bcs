@@ -20,7 +20,7 @@ import (
 
 // StepOptions xxx
 type StepOptions struct {
-	Retry               uint32
+	MaxRetries          uint32
 	SkipFailed          bool
 	MaxExecutionSeconds uint32
 }
@@ -28,10 +28,10 @@ type StepOptions struct {
 // StepOption xxx
 type StepOption func(opt *StepOptions)
 
-// WithStepRetry xxx
-func WithStepRetry(retry uint32) StepOption {
+// WithMaxRetries xxx
+func WithMaxRetries(count uint32) StepOption {
 	return func(opt *StepOptions) {
-		opt.Retry = retry
+		opt.MaxRetries = count
 	}
 }
 
@@ -50,22 +50,22 @@ func WithMaxExecutionSeconds(execSecs uint32) StepOption {
 }
 
 // NewStep return a new step by default params
-func NewStep(name string, alias string, opts ...StepOption) *Step {
-	defaultOptions := &StepOptions{Retry: 0}
+func NewStep(name string, executor string, opts ...StepOption) *Step {
+	defaultOptions := &StepOptions{MaxRetries: 0}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
 
 	return &Step{
 		Name:                name,
-		Alias:               alias,
+		Executor:            executor,
 		Params:              map[string]string{},
 		Payload:             DefaultPayloadContent,
 		Status:              TaskStatusNotStarted,
 		Message:             "",
+		RetryCount:          0,
 		SkipOnFailed:        defaultOptions.SkipFailed,
-		RetryCount:          defaultOptions.Retry,
-		Start:               time.Now(),
+		MaxRetries:          defaultOptions.MaxRetries,
 		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
 }
@@ -210,8 +210,8 @@ func (s *Step) SetStartTime(t time.Time) *Step {
 }
 
 // GetEndTime get end time
-func (s *Step) GetEndTime() (time.Time, error) {
-	return s.End, nil
+func (s *Step) GetEndTime() time.Time {
+	return s.End
 }
 
 // SetEndTime set end time
@@ -223,7 +223,7 @@ func (s *Step) SetEndTime(t time.Time) *Step {
 
 // GetExecutionTime set execution time
 func (s *Step) GetExecutionTime() time.Duration {
-	return time.Duration(s.ExecutionTime)
+	return time.Duration(s.ExecutionTime) * time.Millisecond
 }
 
 // SetExecutionTime set execution time
@@ -244,8 +244,8 @@ func (s *Step) SetMaxExecutionSeconds(maxExecutionSeconds time.Duration) *Step {
 }
 
 // GetLastUpdate get last update time
-func (s *Step) GetLastUpdate() (time.Time, error) {
-	return s.LastUpdate, nil
+func (s *Step) GetLastUpdate() time.Time {
+	return s.LastUpdate
 }
 
 // SetLastUpdate set last update time
