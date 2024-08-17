@@ -87,16 +87,18 @@ func (t *StepRecords) ToStep() *types.Step {
 	return &types.Step{
 		Name:                t.Name,
 		Alias:               t.Alias,
+		Executor:            t.Executor,
 		Params:              t.Params,
 		Payload:             t.Payload,
 		Status:              t.Status,
 		Message:             t.Message,
 		SkipOnFailed:        t.SkipOnFailed,
 		RetryCount:          t.RetryCount,
-		Start:               t.Start,
-		End:                 t.End,
+		MaxRetries:          t.MaxRetries,
 		ExecutionTime:       t.ExecutionTime,
 		MaxExecutionSeconds: t.MaxExecutionSeconds,
+		Start:               t.Start,
+		End:                 t.End,
 		LastUpdate:          t.UpdatedAt,
 	}
 }
