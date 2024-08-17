@@ -67,8 +67,8 @@ type StepRecords struct {
 	Payload             []byte            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
-	SkipOnFailed        bool              `json:"skipOnFailed"`
 	ETA                 *time.Time        `json:"eta"`
+	SkipOnFailed        bool              `json:"skipOnFailed"`
 	RetryCount          uint32            `json:"retryCount"`
 	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
