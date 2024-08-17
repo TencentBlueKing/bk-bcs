@@ -122,15 +122,16 @@ func (m *ModelTask) UpdateTask(ctx context.Context, task *types.Task) error {
 }
 
 // PatchTask update task partially
-func (m *ModelTask) PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error {
-	if err := m.EnsureTable(ctx); err != nil {
-		return err
-	}
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		TableUniqueKey: taskID,
-	})
-	//! we patch fields that need to be updated
-	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": patchs})
+func (m *ModelTask) PatchTask(ctx context.Context, opt *iface.PatchOption) error {
+	return types.ErrNotImplemented
+	// if err := m.EnsureTable(ctx); err != nil {
+	// 	return err
+	// }
+	// cond := operator.NewLeafCondition(operator.Eq, operator.M{
+	// 	TableUniqueKey: taskID,
+	// })
+	// //! we patch fields that need to be updated
+	// return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": patchs})
 }
 
 // DeleteTask delete task

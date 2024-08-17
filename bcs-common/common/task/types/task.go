@@ -23,17 +23,17 @@ import (
 
 // TaskOptions xxx
 type TaskOptions struct {
-	CallBackFuncName    string
+	CallbackName        string
 	MaxExecutionSeconds uint32
 }
 
 // TaskOption xxx
 type TaskOption func(opt *TaskOptions)
 
-// WithTaskCallBackFunc xxx
-func WithTaskCallBackFunc(callBackName string) TaskOption {
+// WithTaskCallback xxx
+func WithTaskCallback(callbackName string) TaskOption {
 	return func(opt *TaskOptions) {
-		opt.CallBackFuncName = callBackName
+		opt.CallbackName = callbackName
 	}
 }
 
@@ -46,16 +46,16 @@ func WithTaskMaxExecutionSeconds(timeout uint32) TaskOption {
 
 // TaskInfo task basic info definition
 type TaskInfo struct {
-	// TaskIndex for resource index
-	TaskIndex string
-	TaskType  string
-	TaskName  string
-	Creator   string
+	TaskType      string
+	TaskName      string
+	TaskIndex     string // TaskIndex for resource index
+	TaskIndexType string
+	Creator       string
 }
 
 // NewTask create new task by default
-func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
-	defaultOptions := &TaskOptions{CallBackFuncName: "", MaxExecutionSeconds: 0}
+func NewTask(o TaskInfo, opts ...TaskOption) *Task {
+	defaultOptions := &TaskOptions{CallbackName: "", MaxExecutionSeconds: 0}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
@@ -65,6 +65,8 @@ func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
 		TaskID:              uuid.NewString(),
 		TaskType:            o.TaskType,
 		TaskName:            o.TaskName,
+		TaskIndex:           o.TaskIndex,
+		TaskIndexType:       o.TaskIndexType,
 		Status:              TaskStatusInit,
 		ForceTerminate:      false,
 		Start:               now,
@@ -73,8 +75,8 @@ func NewTask(o *TaskInfo, opts ...TaskOption) *Task {
 		Updater:             o.Creator,
 		LastUpdate:          now,
 		CommonParams:        make(map[string]string, 0),
-		ExtraJson:           DefaultJsonExtrasContent,
-		CallBackFuncName:    defaultOptions.CallBackFuncName,
+		CommonPayload:       DefaultPayloadContent,
+		CallbackName:        defaultOptions.CallbackName,
 		Message:             DefaultTaskMessage,
 		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
@@ -138,30 +140,30 @@ func (t *Task) AddCommonParams(k, v string) *Task {
 
 // GetCallback set callback function name
 func (t *Task) GetCallback() string {
-	return t.CallBackFuncName
+	return t.CallbackName
 }
 
 // SetCallback set callback function name
-func (t *Task) SetCallback(callBackFuncName string) *Task {
-	t.CallBackFuncName = callBackFuncName
+func (t *Task) SetCallback(callBackName string) *Task {
+	t.CallbackName = callBackName
 	return t
 }
 
-// GetExtra get extra json
-func (t *Task) GetExtra(obj interface{}) error {
-	if t.ExtraJson == "" {
-		t.ExtraJson = DefaultJsonExtrasContent
+// GetCommonPayload get extra json
+func (t *Task) GetCommonPayload(obj interface{}) error {
+	if len(t.CommonPayload) == 0 {
+		t.CommonPayload = DefaultPayloadContent
 	}
-	return json.Unmarshal([]byte(t.ExtraJson), obj)
+	return json.Unmarshal(t.CommonPayload, obj)
 }
 
-// SetExtraAll set extra json
-func (t *Task) SetExtraAll(obj interface{}) error {
+// SetCommonPayload set extra json
+func (t *Task) SetCommonPayload(obj interface{}) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
-	t.ExtraJson = string(result)
+	t.CommonPayload = result
 	return nil
 }
 
@@ -227,7 +229,7 @@ func (t *Task) GetExecutionTime() time.Duration {
 
 // SetExecutionTime set execution time
 func (t *Task) SetExecutionTime(start time.Time, end time.Time) *Task {
-	t.ExecutionTime = uint32(end.Sub(start).Seconds())
+	t.ExecutionTime = uint32(end.Sub(start).Milliseconds())
 	return t
 }
 

@@ -36,13 +36,13 @@ func TestDoWork(t *testing.T) {
 	// istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
 
 	mgr := TaskManager{
-		ctx:         context.Background(),
-		store:       mem.New(),
-		stepWorkers: istep.GetRegisters(),
+		ctx:           context.Background(),
+		store:         mem.New(),
+		stepExecutors: istep.GetRegisters(),
 	}
 	mgr.initGlobalStorage()
 
-	info := &types.TaskInfo{
+	info := types.TaskInfo{
 		TaskType: "example-test",
 		TaskName: "example",
 		Creator:  "bcs",
@@ -73,7 +73,7 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	istep.Register("hello", hellostep.NewHello())
 
 	// 使用函数注册
-	istep.Register("sum", istep.StepWorkerFunc(hellostep.Sum))
+	istep.Register("sum", istep.StepExecutorFunc(hellostep.Sum))
 
 	store, err := mysqlstore.New(os.Getenv("MYSQL_DSN"))
 	require.NoError(t, err)
@@ -82,13 +82,13 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	require.NoError(t, store.EnsureTable(ctx))
 
 	mgr := TaskManager{
-		ctx:         context.Background(),
-		store:       store,
-		stepWorkers: istep.GetRegisters(),
+		ctx:           context.Background(),
+		store:         store,
+		stepExecutors: istep.GetRegisters(),
 	}
 	mgr.initGlobalStorage()
 
-	info := &types.TaskInfo{
+	info := types.TaskInfo{
 		TaskType: "example-test",
 		TaskName: "example",
 		Creator:  "bcs",
