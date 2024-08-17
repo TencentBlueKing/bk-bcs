@@ -109,7 +109,7 @@ func (t *Task) GetStep(stepName string) (*Step, bool) {
 // AddStep add step to task
 func (t *Task) AddStep(step *Step) *Task {
 	if step == nil {
-		return t
+		t.Steps = make([]*Step, 0)
 	}
 
 	t.Steps = append(t.Steps, step)

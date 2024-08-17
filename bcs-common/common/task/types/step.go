@@ -75,12 +75,6 @@ func (s *Step) GetName() string {
 	return s.Name
 }
 
-// SetName set task method
-func (s *Step) SetName(name string) *Step {
-	s.Name = name
-	return s
-}
-
 // GetAlias return task alias
 func (s *Step) GetAlias() string {
 	return s.Alias
@@ -164,9 +158,6 @@ func (s *Step) SetStatus(stat string) *Step {
 
 // GetMessage get step message
 func (s *Step) GetMessage() string {
-	if s.Message == "" {
-		return ""
-	}
 	return s.Message
 }
 
@@ -187,6 +178,12 @@ func (s *Step) SetSkipOnFailed(skipOnFailed bool) *Step {
 	return s
 }
 
+// SetMaxTries set step max retry count
+func (s *Step) SetMaxTries(count uint32) *Step {
+	s.MaxRetries = count
+	return s
+}
+
 // GetRetryCount get step retry count
 func (s *Step) GetRetryCount() uint32 {
 	return s.RetryCount
@@ -199,8 +196,8 @@ func (s *Step) AddRetryCount(count uint32) *Step {
 }
 
 // GetStartTime get start time
-func (s *Step) GetStartTime() (time.Time, error) {
-	return s.Start, nil
+func (s *Step) GetStartTime() time.Time {
+	return s.Start
 }
 
 // SetStartTime update start time
@@ -232,14 +229,14 @@ func (s *Step) SetExecutionTime(start time.Time, end time.Time) *Step {
 	return s
 }
 
-// GetMaxExecutionSeconds get max execution seconds
-func (s *Step) GetMaxExecutionSeconds() time.Duration {
+// GetMaxExecution get max execution seconds
+func (s *Step) GetMaxExecution() time.Duration {
 	return time.Duration(s.MaxExecutionSeconds) * time.Second
 }
 
-// SetMaxExecutionSeconds set max execution seconds
-func (s *Step) SetMaxExecutionSeconds(maxExecutionSeconds time.Duration) *Step {
-	s.MaxExecutionSeconds = uint32(maxExecutionSeconds.Seconds())
+// SetMaxExecution set max execution seconds
+func (s *Step) SetMaxExecution(duration time.Duration) *Step {
+	s.MaxExecutionSeconds = uint32(duration.Seconds())
 	return s
 }
 

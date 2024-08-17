@@ -233,9 +233,10 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 		uid := fmt.Sprintf("%s-step%d-%s", task.TaskID, idx, step.Name)
 		// build signature from step
 		signature := &tasks.Signature{
-			UUID: uid,
-			Name: step.Executor,
-			ETA:  step.ETA,
+			UUID:       uid,
+			Name:       step.Executor,
+			ETA:        step.ETA,
+			RetryCount: int(step.MaxRetries),
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
 				{
@@ -389,7 +390,8 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 			log.ERROR.Printf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
 		}
 
-		return retErr
+		// 整个任务结束
+		return nil
 	}
 }
 
