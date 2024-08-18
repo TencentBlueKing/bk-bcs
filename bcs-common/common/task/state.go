@@ -255,13 +255,15 @@ func (s *State) isLastStep() bool {
 		return false
 	}
 
-	// 最后一步
+	// 非最后一步
 	if s.step.GetName() != s.task.Steps[count-1].Name {
 		return false
 	}
 
-	// 最后一步, 但是还有重试次数
-	if s.step.MaxRetries > 0 && s.step.GetRetryCount() < s.step.MaxRetries {
+	// 最后一步但是失败, 且还有重试次数
+	if s.step.Status == types.TaskStatusFailure &&
+		s.step.MaxRetries > 0 &&
+		s.step.GetRetryCount() < s.step.MaxRetries {
 		return false
 	}
 

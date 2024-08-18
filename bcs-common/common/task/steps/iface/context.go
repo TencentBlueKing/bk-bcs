@@ -57,6 +57,11 @@ func (t *Context) GetTaskType() string {
 	return t.task.GetTaskType()
 }
 
+// GetTaskIndex get task index
+func (t *Context) GetTaskIndex() string {
+	return t.task.GetTaskIndex()
+}
+
 // GetTaskStatus get task status
 func (t *Context) GetTaskStatus() string {
 	return t.task.GetStatus()

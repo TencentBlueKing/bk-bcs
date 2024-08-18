@@ -21,6 +21,13 @@ import (
 	"github.com/google/uuid"
 )
 
+// TaskBuilder ...
+type TaskBuilder interface { // nolint
+	TaskInfo() TaskInfo
+	Steps() ([]*Step, error) // Steps init step and define StepSequence
+	BuildTask(t Task) (Task, error)
+}
+
 // TaskOptions xxx
 type TaskOptions struct {
 	CallbackName        string
@@ -94,6 +101,11 @@ func (t *Task) GetTaskType() string {
 // GetTaskName get task name
 func (t *Task) GetTaskName() string {
 	return t.TaskName
+}
+
+// GetTaskIndex get task index
+func (t *Task) GetTaskIndex() string {
+	return t.TaskIndex
 }
 
 // GetStep get step by name
