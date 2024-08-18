@@ -260,14 +260,8 @@ func (s *State) isLastStep() bool {
 		return false
 	}
 
-	// 最后一步但是失败, 且还有重试次数
-	if s.step.Status == types.TaskStatusFailure &&
-		s.step.MaxRetries > 0 &&
-		s.step.GetRetryCount() < s.step.MaxRetries {
-		return false
-	}
-
-	return true
+	// 最后一步还需要看重试次数
+	return s.step.IsCompleted()
 }
 
 // GetCommonParam get common params by key
