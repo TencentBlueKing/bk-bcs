@@ -54,7 +54,7 @@
         {
             "id": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
             "message": "decompress the file. The size of file {Message} exceeds the maximum limit of {MB}",
-            "translation": "解压文件失败，文件 {Message} 的大小超过了最大限制阈值 {MB}",
+            "translation": "解压文件失败, 文件 {Message} 的大小超过了最大限制阈值 {MB}",
             "placeholders": [
                 {
                     "id": "Message",
@@ -142,7 +142,7 @@
         {
             "id": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
             "message": "decompress file failed, exceeding the maximum file limit threshold of {Limit}",
-            "translation": "解压文件失败，超过了文件数量最大限制阈值 {Limit}",
+            "translation": "解压文件失败, 超过了文件数量最大限制阈值 {Limit}",
             "placeholders": [
                 {
                     "id": "Limit",
@@ -157,7 +157,7 @@
         {
             "id": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
             "message": "upload failed, please make sure the file size does not exceed {BytesToHumanReadableuint64maxSize}",
-            "translation": "上传失败，请确保文件大小不超过 {BytesToHumanReadableuint64maxSize}",
+            "translation": "上传失败, 请确保文件大小不超过 {BytesToHumanReadableuint64maxSize}",
             "placeholders": [
                 {
                     "id": "BytesToHumanReadableuint64maxSize",
@@ -266,6 +266,255 @@
             ]
         },
         {
+            "id": "list template sets by template set ids failed, err: {Err}",
+            "message": "list template sets by template set ids failed, err: {Err}",
+            "translation": "按模板集ID列出模板集失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "update app template binding failed, err: {Err}",
+            "message": "update app template binding failed, err: {Err}",
+            "translation": "更新服务模板绑定失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "list template spaces failed, err: {Err}",
+            "message": "list template spaces failed, err: {Err}",
+            "translation": "列出模板空间失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template space {V} not found",
+            "message": "template space {V} not found",
+            "translation": "模板空间 {V} 不存在",
+            "placeholders": [
+                {
+                    "id": "V",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v"
+                }
+            ]
+        },
+        {
+            "id": "template set {V} not found",
+            "message": "template set {V} not found",
+            "translation": "模板套餐 {V} 不存在",
+            "placeholders": [
+                {
+                    "id": "V",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v"
+                }
+            ]
+        },
+        {
+            "id": "list templates of template set failed, err: {Err}",
+            "message": "list templates of template set failed, err: {Err}",
+            "translation": "获取模板套餐下的模板失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the template file {ValidatedTemplateSetNamessId} in the template set \n\t\t\t\t{TemplateNamesv} has been removed. Please import the set again",
+            "message": "the template file {ValidatedTemplateSetNamessId} in the template set \n\t\t\t\t{TemplateNamesv} has been removed. Please import the set again",
+            "translation": "模板套餐 {TemplateNamesv} 中的模板文件 {ValidatedTemplateSetNamessId} 被移除, 请重新导入套餐",
+            "placeholders": [
+                {
+                    "id": "ValidatedTemplateSetNamessId",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "validatedTemplateSetNames[sId]"
+                },
+                {
+                    "id": "TemplateNamesv",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "templateNames[v]"
+                }
+            ]
+        },
+        {
+            "id": "list template revisions failed, err: {Err}",
+            "message": "list template revisions failed, err: {Err}",
+            "translation": "获取模板版本失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template version {RevisionNamesv} in template file {TemplateNamestId} \n\t\t\t\thas been removed. Please import the set again",
+            "message": "template version {RevisionNamesv} in template file {TemplateNamestId} \n\t\t\t\thas been removed. Please import the set again",
+            "translation": "模板文件 {TemplateNamestId} 中的模板版本 {RevisionNamesv} 被移除, 请重新导入套餐",
+            "placeholders": [
+                {
+                    "id": "RevisionNamesv",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "revisionNames[v]"
+                },
+                {
+                    "id": "TemplateNamestId",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "templateNames[tId]"
+                }
+            ]
+        },
+        {
+            "id": "the version number {TemplateID} in the template file {ID} is not the \n\t\tlatest version. Please import the set again",
+            "message": "the version number {TemplateID} in the template file {ID} is not the \n\t\tlatest version. Please import the set again",
+            "translation": "模板文件 {ID} 中的版本号 {TemplateID} 不是最新版本, 请重新导入套餐",
+            "placeholders": [
+                {
+                    "id": "TemplateID",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "templateNames[v.Attachment.TemplateID]"
+                },
+                {
+                    "id": "ID",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "revisionNames[v.ID]"
+                }
+            ]
+        },
+        {
+            "id": "count the number of service configurations failed, err: {Err}",
+            "message": "count the number of service configurations failed, err: {Err}",
+            "translation": "统计服务配置数量失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "app {Name} is not file type",
+            "message": "app {Name} is not file type",
+            "translation": "应用程序 {Name} 不是文件类型",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "app.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "delete one app template binding instance by app id failed, err: {Err}",
+            "message": "delete one app template binding instance by app id failed, err: {Err}",
+            "translation": "移除服务模板套餐失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch create contents failed, err: {Error}",
+            "message": "batch create contents failed, err: {Error}",
+            "translation": "批量创建内容失败, err: {Error}",
+            "placeholders": [
+                {
+                    "id": "Error",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "e"
+                }
+            ]
+        },
+        {
+            "id": "delete one app template variable failed, err: {Error}",
+            "message": "delete one app template variable failed, err: {Error}",
+            "translation": "删除模板变量失败, err: {Error}",
+            "placeholders": [
+                {
+                    "id": "Error",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "e"
+                }
+            ]
+        },
+        {
             "id": "obtain the number of configuration items",
             "message": "obtain the number of configuration items",
             "translation": "获取配置项数量"
@@ -273,7 +522,7 @@
         {
             "id": "get template binding relationships through business and service IDs failed, err: {Err}",
             "message": "get template binding relationships through business and service IDs failed, err: {Err}",
-            "translation": "通过业务和服务ID获取模板绑定关系失败，err: {Err}",
+            "translation": "通过业务和服务ID获取模板绑定关系失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -288,22 +537,7 @@
         {
             "id": "get reference template set under this app failed, err: {Err}",
             "message": "get reference template set under this app failed, err: {Err}",
-            "translation": "获取此应用程序下的引用模板集失败，err: {Err}",
-            "placeholders": [
-                {
-                    "id": "Err",
-                    "string": "%[1]s",
-                    "type": "error",
-                    "underlyingType": "interface{Error() string}",
-                    "argNum": 1,
-                    "expr": "err"
-                }
-            ]
-        },
-        {
-            "id": "list template sets by template set ids failed, err: {Err}",
-            "message": "list template sets by template set ids failed, err: {Err}",
-            "translation": "按模板集ID列出模板集失败，err: {Err}",
+            "translation": "获取此应用程序下的引用模板集失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -318,7 +552,7 @@
         {
             "id": "remove the template set bound to the app failed, err: {Err}",
             "message": "remove the template set bound to the app failed, err: {Err}",
-            "translation": "移除套餐失败，err: {Err}",
+            "translation": "移除套餐失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -348,7 +582,7 @@
         {
             "id": "get excluded hook failed, err: {Err}",
             "message": "get excluded hook failed, err: {Err}",
-            "translation": "获取排除后的脚本失败，err: {Err}",
+            "translation": "获取排除后的脚本失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -363,7 +597,7 @@
         {
             "id": "retrieve the referenced script failed, err: {Err}",
             "message": "retrieve the referenced script failed, err: {Err}",
-            "translation": "检索引用的脚本失败，err: {Err}",
+            "translation": "检索引用的脚本失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -378,7 +612,7 @@
         {
             "id": "get excluded kv failed, err: {Err}",
             "message": "get excluded kv failed, err: {Err}",
-            "translation": "获取排除后的kv失败，err: {Err}",
+            "translation": "获取排除后的kv失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -391,9 +625,32 @@
             ]
         },
         {
+            "id": "config item's same name {Name} and path {Path} already exists",
+            "message": "config item's same name {Name} and path {Path} already exists",
+            "translation": "配置项名称 {Name} 和路径 {Path} 已存在",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                },
+                {
+                    "id": "Path",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "req.Spec.Path"
+                }
+            ]
+        },
+        {
             "id": "get app template bindings by template set ids, err: {Err}",
             "message": "get app template bindings by template set ids, err: {Err}",
-            "translation": "按模板集ID获取应用程序模板绑定，err: {Err}",
+            "translation": "按模板集ID获取应用程序模板绑定, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -408,7 +665,7 @@
         {
             "id": "batch update app template binding's failed, err: {Err}",
             "message": "batch update app template binding's failed, err: {Err}",
-            "translation": "批量更新应用模板绑定失败，err: {Err}",
+            "translation": "批量更新应用模板绑定失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -423,7 +680,7 @@
         {
             "id": "batch add templates to template sets failed, err: {Err}",
             "message": "batch add templates to template sets failed, err: {Err}",
-            "translation": "模板集批量添加模板失败，err: {Err}",
+            "translation": "模板集批量添加模板失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -438,7 +695,7 @@
         {
             "id": "get template set data failed, err: {Err}",
             "message": "get template set data failed, err: {Err}",
-            "translation": "获取模板集数据失败，err: {Err}",
+            "translation": "获取模板集数据失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -458,7 +715,7 @@
         {
             "id": "delete template from template sets failed, err: {Err}, rid: {Rid}",
             "message": "delete template from template sets failed, err: {Err}, rid: {Rid}",
-            "translation": "从模板集中删除模板失败，err: {Err}, rid: {Rid}",
+            "translation": "从模板集中删除模板失败, err: {Err}, rid: {Rid}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -481,7 +738,7 @@
         {
             "id": "list templates by tuple failed, err: {Err}",
             "message": "list templates by tuple failed, err: {Err}",
-            "translation": "列出模板失败，err: {Err}",
+            "translation": "列出模板失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -496,7 +753,7 @@
         {
             "id": "list app template bindings by app ids failed, err: {Err}",
             "message": "list app template bindings by app ids failed, err: {Err}",
-            "translation": "按服务ID列出应用模板绑定失败，err: {Err}",
+            "translation": "按服务ID列出应用模板绑定失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -511,7 +768,7 @@
         {
             "id": "get template set failed, err: {Err}",
             "message": "get template set failed, err: {Err}",
-            "translation": "获取模板集失败，err: {Err}",
+            "translation": "获取模板集失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -526,7 +783,7 @@
         {
             "id": "list apps by app ids failed, err: {Err}",
             "message": "list apps by app ids failed, err: {Err}",
-            "translation": "按服务ID列出应用程序失败，err: {Err}",
+            "translation": "按服务ID列出应用程序失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -541,7 +798,47 @@
         {
             "id": "count the number of app configs failed, err: {Err}",
             "message": "count the number of app configs failed, err: {Err}",
-            "translation": "统计服务配置数量失败，err: {Err}",
+            "translation": "统计服务配置数量失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template set data is empty",
+            "message": "template set data is empty",
+            "translation": "模板套餐数据为空"
+        },
+        {
+            "id": "list templates data failed, err: {Err}",
+            "message": "list templates data failed, err: {Err}",
+            "translation": "列出模板数据失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "template data is empty",
+            "message": "template data is empty",
+            "translation": "模板数据为空"
+        },
+        {
+            "id": "list templates revisions data failed, err: {Err}",
+            "message": "list templates revisions data failed, err: {Err}",
+            "translation": "列出模板版本数据失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -601,17 +898,17 @@
         {
             "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
             "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
-            "translation": "无效名称，长度应该\u003e=9且必须以bk_bscp_前缀开头（忽略大小写）"
+            "translation": "无效名称, 长度应该\u003e=9且必须以bk_bscp_前缀开头（忽略大小写）"
         },
         {
             "id": "invalid name, length should \u003c= 128",
             "message": "invalid name, length should \u003c= 128",
-            "translation": "无效名称，长度应该\u003c=128"
+            "translation": "无效名称, 长度应该\u003c=128"
         },
         {
             "id": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
             "message": "invalid name: {Name}, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)",
-            "translation": "无效名称：{Name}，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）",
+            "translation": "无效名称：{Name}, 只允许英文、数字、下划线（_）, 且必须以bk_bscp_前缀开头（忽略大小写）",
             "placeholders": [
                 {
                     "id": "Name",

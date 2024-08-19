@@ -355,7 +355,7 @@ func (s *Service) verifyAppLimitHasBeenExceeded(kit *kit.Kit, tx *gen.QueryTx, b
 
 	app, err := s.dao.App().GetByID(kit, appID)
 	if err != nil {
-		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "list apps by app ids failed, err: %s", err))
+		return errf.Errorf(errf.AppNotExists, i18n.T(kit, "app %d not found", appID))
 	}
 
 	// 只有文件类型的才能绑定套餐
@@ -1096,10 +1096,9 @@ func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItems
 	}
 
 	// 如果有topID则按照topID排最前面
-	topId, _ := tools.StrToUint32Slice(req.Ids)
 	sort.SliceStable(configItems, func(i, j int) bool {
-		iInTopID := tools.Contains(topId, configItems[i].Id)
-		jInTopID := tools.Contains(topId, configItems[j].Id)
+		iInTopID := tools.Contains(req.Ids, configItems[i].Id)
+		jInTopID := tools.Contains(req.Ids, configItems[j].Id)
 		if iInTopID && jInTopID {
 			return i < j
 		}

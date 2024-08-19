@@ -771,3 +771,52 @@ func (s *Service) CheckAppTemplateBinding(ctx context.Context, req *pbcs.CheckAp
 	}
 	return resp, nil
 }
+
+// ImportFromTemplateSetToApp 从配置模板导入到服务
+func (s *Service) ImportFromTemplateSetToApp(ctx context.Context, req *pbcs.ImportFromTemplateSetToAppReq) (
+	*pbcs.ImportFromTemplateSetToAppResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kit, res...); err != nil {
+		return nil, err
+	}
+
+	bindings := make([]*pbds.ImportFromTemplateSetToAppReq_Binding, 0, len(req.GetBindings()))
+	for _, binding := range req.GetBindings() {
+		revisions := make([]*pbds.ImportFromTemplateSetToAppReq_Binding_TemplateRevisionBinding,
+			0, len(binding.GetTemplateRevisions()))
+		for _, revision := range binding.GetTemplateRevisions() {
+			revisions = append(revisions, &pbds.ImportFromTemplateSetToAppReq_Binding_TemplateRevisionBinding{
+				TemplateId:           revision.GetTemplateId(),
+				TemplateRevisionId:   revision.GetTemplateRevisionId(),
+				IsLatest:             revision.GetIsLatest(),
+				TemplateName:         revision.GetTemplateName(),
+				TemplateRevisionName: revision.GetTemplateRevisionName(),
+			})
+		}
+		bindings = append(bindings, &pbds.ImportFromTemplateSetToAppReq_Binding{
+			TemplateSetId:     binding.GetTemplateSetId(),
+			TemplateSpaceId:   binding.GetTemplateSpaceId(),
+			TemplateSpaceName: binding.GetTemplateSpaceName(),
+			TemplateSetName:   binding.GetTemplateSetName(),
+			TemplateRevisions: revisions,
+		})
+	}
+
+	_, err := s.client.DS.ImportFromTemplateSetToApp(kit.RpcCtx(), &pbds.ImportFromTemplateSetToAppReq{
+		BizId:    req.BizId,
+		AppId:    req.AppId,
+		Bindings: bindings,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.ImportFromTemplateSetToAppResp{}, nil
+}

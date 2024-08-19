@@ -101,6 +101,7 @@ const (
 	Data_ListTemplatesByIDs_FullMethodName                = "/pbds.Data/ListTemplatesByIDs"
 	Data_ListTemplatesNotBound_FullMethodName             = "/pbds.Data/ListTemplatesNotBound"
 	Data_ListTmplsOfTmplSet_FullMethodName                = "/pbds.Data/ListTmplsOfTmplSet"
+	Data_ListTemplateSetsAndRevisions_FullMethodName      = "/pbds.Data/ListTemplateSetsAndRevisions"
 	Data_ListTemplateByTuple_FullMethodName               = "/pbds.Data/ListTemplateByTuple"
 	Data_BatchUpsertTemplates_FullMethodName              = "/pbds.Data/BatchUpsertTemplates"
 	Data_BatchUpdateTemplatePermissions_FullMethodName    = "/pbds.Data/BatchUpdateTemplatePermissions"
@@ -127,6 +128,7 @@ const (
 	Data_ListReleasedAppBoundTmplRevisions_FullMethodName = "/pbds.Data/ListReleasedAppBoundTmplRevisions"
 	Data_GetReleasedAppBoundTmplRevision_FullMethodName   = "/pbds.Data/GetReleasedAppBoundTmplRevision"
 	Data_CheckAppTemplateBinding_FullMethodName           = "/pbds.Data/CheckAppTemplateBinding"
+	Data_ImportFromTemplateSetToApp_FullMethodName        = "/pbds.Data/ImportFromTemplateSetToApp"
 	Data_ExtractAppTmplVariables_FullMethodName           = "/pbds.Data/ExtractAppTmplVariables"
 	Data_GetAppTmplVariableRefs_FullMethodName            = "/pbds.Data/GetAppTmplVariableRefs"
 	Data_GetReleasedAppTmplVariableRefs_FullMethodName    = "/pbds.Data/GetReleasedAppTmplVariableRefs"
@@ -290,6 +292,7 @@ type DataClient interface {
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
 	ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error)
+	ListTemplateSetsAndRevisions(ctx context.Context, in *ListTemplateSetsAndRevisionsReq, opts ...grpc.CallOption) (*ListTemplateSetsAndRevisionsResp, error)
 	ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleReqResp, error)
 	BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesReqResp, error)
 	BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error)
@@ -319,6 +322,7 @@ type DataClient interface {
 	ListReleasedAppBoundTmplRevisions(ctx context.Context, in *ListReleasedAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*ListReleasedAppBoundTmplRevisionsResp, error)
 	GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error)
 	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
+	ImportFromTemplateSetToApp(ctx context.Context, in *ImportFromTemplateSetToAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// app template variables related interface.
 	ExtractAppTmplVariables(ctx context.Context, in *ExtractAppTmplVariablesReq, opts ...grpc.CallOption) (*ExtractAppTmplVariablesResp, error)
 	GetAppTmplVariableRefs(ctx context.Context, in *GetAppTmplVariableRefsReq, opts ...grpc.CallOption) (*GetAppTmplVariableRefsResp, error)
@@ -1052,6 +1056,15 @@ func (c *dataClient) ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmpl
 	return out, nil
 }
 
+func (c *dataClient) ListTemplateSetsAndRevisions(ctx context.Context, in *ListTemplateSetsAndRevisionsReq, opts ...grpc.CallOption) (*ListTemplateSetsAndRevisionsResp, error) {
+	out := new(ListTemplateSetsAndRevisionsResp)
+	err := c.cc.Invoke(ctx, Data_ListTemplateSetsAndRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleReqResp, error) {
 	out := new(ListTemplateByTupleReqResp)
 	err := c.cc.Invoke(ctx, Data_ListTemplateByTuple_FullMethodName, in, out, opts...)
@@ -1280,6 +1293,15 @@ func (c *dataClient) GetReleasedAppBoundTmplRevision(ctx context.Context, in *Ge
 func (c *dataClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
 	out := new(CheckAppTemplateBindingResp)
 	err := c.cc.Invoke(ctx, Data_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ImportFromTemplateSetToApp(ctx context.Context, in *ImportFromTemplateSetToAppReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_ImportFromTemplateSetToApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2047,6 +2069,7 @@ type DataServer interface {
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
 	ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error)
+	ListTemplateSetsAndRevisions(context.Context, *ListTemplateSetsAndRevisionsReq) (*ListTemplateSetsAndRevisionsResp, error)
 	ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleReqResp, error)
 	BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesReqResp, error)
 	BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error)
@@ -2076,6 +2099,7 @@ type DataServer interface {
 	ListReleasedAppBoundTmplRevisions(context.Context, *ListReleasedAppBoundTmplRevisionsReq) (*ListReleasedAppBoundTmplRevisionsResp, error)
 	GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error)
 	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
+	ImportFromTemplateSetToApp(context.Context, *ImportFromTemplateSetToAppReq) (*base.EmptyResp, error)
 	// app template variables related interface.
 	ExtractAppTmplVariables(context.Context, *ExtractAppTmplVariablesReq) (*ExtractAppTmplVariablesResp, error)
 	GetAppTmplVariableRefs(context.Context, *GetAppTmplVariableRefsReq) (*GetAppTmplVariableRefsResp, error)
@@ -2385,6 +2409,9 @@ func (UnimplementedDataServer) ListTemplatesNotBound(context.Context, *ListTempl
 func (UnimplementedDataServer) ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplsOfTmplSet not implemented")
 }
+func (UnimplementedDataServer) ListTemplateSetsAndRevisions(context.Context, *ListTemplateSetsAndRevisionsReq) (*ListTemplateSetsAndRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsAndRevisions not implemented")
+}
 func (UnimplementedDataServer) ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleReqResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateByTuple not implemented")
 }
@@ -2462,6 +2489,9 @@ func (UnimplementedDataServer) GetReleasedAppBoundTmplRevision(context.Context, 
 }
 func (UnimplementedDataServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
+}
+func (UnimplementedDataServer) ImportFromTemplateSetToApp(context.Context, *ImportFromTemplateSetToAppReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImportFromTemplateSetToApp not implemented")
 }
 func (UnimplementedDataServer) ExtractAppTmplVariables(context.Context, *ExtractAppTmplVariablesReq) (*ExtractAppTmplVariablesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExtractAppTmplVariables not implemented")
@@ -3960,6 +3990,24 @@ func _Data_ListTmplsOfTmplSet_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListTemplateSetsAndRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetsAndRevisionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListTemplateSetsAndRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListTemplateSetsAndRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListTemplateSetsAndRevisions(ctx, req.(*ListTemplateSetsAndRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListTemplateByTuple_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateByTupleReq)
 	if err := dec(in); err != nil {
@@ -4424,6 +4472,24 @@ func _Data_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).CheckAppTemplateBinding(ctx, req.(*CheckAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ImportFromTemplateSetToApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportFromTemplateSetToAppReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ImportFromTemplateSetToApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ImportFromTemplateSetToApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ImportFromTemplateSetToApp(ctx, req.(*ImportFromTemplateSetToAppReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -6066,6 +6132,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_ListTmplsOfTmplSet_Handler,
 		},
 		{
+			MethodName: "ListTemplateSetsAndRevisions",
+			Handler:    _Data_ListTemplateSetsAndRevisions_Handler,
+		},
+		{
 			MethodName: "ListTemplateByTuple",
 			Handler:    _Data_ListTemplateByTuple_Handler,
 		},
@@ -6168,6 +6238,10 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckAppTemplateBinding",
 			Handler:    _Data_CheckAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "ImportFromTemplateSetToApp",
+			Handler:    _Data_ImportFromTemplateSetToApp_Handler,
 		},
 		{
 			MethodName: "ExtractAppTmplVariables",
