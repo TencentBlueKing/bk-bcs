@@ -1667,6 +1667,18 @@ service TemplateSet {
 		};
 	}
 
+	// 复制模板文件文件夹
+	rpc CopyTemplateSpace(CopyTemplateSpaceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "复制模板文件文件夹"
+			summary: "Copy template space"
+		};
+	}
+
 	// 获取模板文件元数据详情
 	rpc GetTemplateMetadata(GetTemplateMetadataReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -2975,6 +2987,9 @@ message ListTemplateSpaceReq {
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹名称"
+	}];
 }
 
 message CreateTemplateSpaceReq {
@@ -3013,6 +3028,18 @@ message UpdateTemplateSpaceReq {
 message DeleteTemplateSpaceReq {
 	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
 		json_schema: {title: "DeleteTemplateSpaceReq", description: "删除单个模板文件文件夹"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CopyTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CopyTemplateSpaceReq", description: "复制模板文件文件夹"}
 	};
 	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹 ID"

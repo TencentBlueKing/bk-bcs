@@ -9217,6 +9217,8 @@ func (m *ListTemplateSpaceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Name
+
 	if len(errors) > 0 {
 		return ListTemplateSpaceReqMultiError(errors)
 	}
@@ -9685,6 +9687,131 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = DeleteTemplateSpaceReqValidationError{}
+
+// Validate checks the field values on CopyTemplateSpaceReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CopyTemplateSpaceReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CopyTemplateSpaceReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CopyTemplateSpaceReqMultiError, or nil if none found.
+func (m *CopyTemplateSpaceReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CopyTemplateSpaceReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetId()) != 24 {
+		err := CopyTemplateSpaceReqValidationError{
+			field:  "Id",
+			reason: "value length must be 24 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := CopyTemplateSpaceReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CopyTemplateSpaceReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CopyTemplateSpaceReqMultiError is an error wrapping multiple validation
+// errors returned by CopyTemplateSpaceReq.ValidateAll() if the designated
+// constraints aren't met.
+type CopyTemplateSpaceReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CopyTemplateSpaceReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CopyTemplateSpaceReqMultiError) AllErrors() []error { return m }
+
+// CopyTemplateSpaceReqValidationError is the validation error returned by
+// CopyTemplateSpaceReq.Validate if the designated constraints aren't met.
+type CopyTemplateSpaceReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CopyTemplateSpaceReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CopyTemplateSpaceReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CopyTemplateSpaceReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CopyTemplateSpaceReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CopyTemplateSpaceReqValidationError) ErrorName() string {
+	return "CopyTemplateSpaceReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CopyTemplateSpaceReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCopyTemplateSpaceReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CopyTemplateSpaceReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CopyTemplateSpaceReqValidationError{}
 
 // Validate checks the field values on GetTemplateMetadataReq with the rules
 // defined in the proto definition for this message. If any rules are
