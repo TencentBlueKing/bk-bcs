@@ -156,12 +156,6 @@ func (s *Service) BatchDeleteTemplate(ctx context.Context, req *pbcs.BatchDelete
 		templateIDs = tools.Difference(idsAll, templateIDs)
 	}
 
-	idsLen := len(templateIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
-
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
 	}
