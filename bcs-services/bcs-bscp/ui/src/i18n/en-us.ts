@@ -628,6 +628,7 @@ export default {
   批量移出套餐: 'Move out of package in batches',
   从其他空间导入: 'Import from another space',
   '确认删除所选的 {n} 个配置文件?': 'Confirm the deletion of the selected {n} configuration fils?',
+  'latest（当前最新为{n}）': 'latest (current latest is {n})',
 
   // 脚本管理
   全部脚本: 'All scripts',

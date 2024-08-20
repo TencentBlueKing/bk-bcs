@@ -296,7 +296,7 @@
       });
     }
     if (topIds.value.length > 0) {
-      params.ids = topIds.value.join(',');
+      params.ids = topIds.value;
     }
     if (searchStr.value) {
       params.search_fields = 'name,path,memo,creator,reviser';

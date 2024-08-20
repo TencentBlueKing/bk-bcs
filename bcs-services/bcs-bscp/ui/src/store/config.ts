@@ -8,6 +8,9 @@ export default defineStore('config', () => {
   // 非套餐配置和模板配置文件总数量 kv服务非套餐配置总数
   const allConfigCount = ref(0);
 
+  // 非套餐配置和模板配置文件总数量 kv服务非套餐配置总数 （除去删除状态总数）
+  const allExistConfigCount = ref(0);
+
   // 当前选中版本, 用id为0表示未命名版本
   const versionData = ref<IConfigVersion>(GET_UNNAMED_VERSION_DATA());
 
@@ -30,5 +33,6 @@ export default defineStore('config', () => {
     refreshVersionListFlag,
     publishedVersionId,
     conflictFileCount,
+    allExistConfigCount,
   };
 });
