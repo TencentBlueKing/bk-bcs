@@ -15,11 +15,11 @@ package utils
 import (
 	"context"
 	"fmt"
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
@@ -191,7 +191,7 @@ func ConsumeDevicesFromResourcePool(
 
 	ctx = utils.WithTraceIDForContext(ctx, taskID)
 
-	req := &resource.ApplyInstanceReq{}
+	req := &resource.ApplyInstanceReq{} // nolint ineffassign(ineffectual assignment to req)
 	switch resourceType {
 	case resource.CVM.String():
 		req = buildApplyCvmInstanceRequest(group, operator)
