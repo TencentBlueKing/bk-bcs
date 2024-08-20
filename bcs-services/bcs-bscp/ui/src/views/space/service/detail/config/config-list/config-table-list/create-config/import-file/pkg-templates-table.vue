@@ -187,6 +187,18 @@
             template_revision_name: version.name,
             template_name: version.template_name,
           });
+        } else {
+          // 版本为最新版本 但接口返回版本号不是最新的
+          const latestVerison = tpl.versions.find((v) => v.isLatest);
+          if (latestVerison) {
+            selectedTplVersionsData.splice(selectedVersionIndex, 1, {
+              template_id: tpl.id,
+              template_revision_id: latestVerison.id,
+              is_latest: true,
+              template_revision_name: latestVerison.name,
+              template_name: latestVerison.template_name,
+            });
+          }
         }
       }
     });
