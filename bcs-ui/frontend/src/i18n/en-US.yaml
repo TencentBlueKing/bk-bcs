@@ -3685,8 +3685,7 @@ templateSet:
     emptyTemplateFile: No Template File
     listView: List View
     cardView: Card View
-    cantDeploy: >-
-      Cannot deploy: No saved versions
+    cantDeploy: 'Cannot deploy: No saved versions'
 diff:
   delete: Delete
   change: Change

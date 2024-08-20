@@ -1,5 +1,5 @@
 <template>
-  <span>
+  <span v-if="flagsMap.BKAI">
     <!-- AI小鲸按钮 -->
     <bcs-popover theme="ai-assistant light" placement="bottom" trigger="manual" offset="0, 10" ref="popoverRef">
       <span
@@ -44,9 +44,12 @@ import Assistant, { ChatHelper, IMessage, IStartPosition, MessageStatus, RoleTyp
 
 import '@blueking/ai-blueking/dist/vue2/style.css';
 import { BCS_UI_PREFIX } from '@/common/constant';
+import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import AssistantIcon from '@/images/assistant.png';
 import AssistantSmallIcon from '@/images/assistant-small.svg';
+
+const { flagsMap } = useAppData();
 
 // AI小鲸
 const streamID = ref(1);
@@ -130,6 +133,7 @@ const handleError = (msg: string) => {
 const chatHelper = new ChatHelper(`${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError);
 // 发送消息
 const handleSend = async (msg: string) => {
+  if (!flagsMap.value.BKAI) return;
   // 终止上一个聊天信息
   await handleStop();
   // 添加一条消息
@@ -163,6 +167,7 @@ const handleShowAssistant = () => {
 };
 // 消息提示
 const showAITips = () => {
+  if (!flagsMap.value.BKAI) return;
   popoverRef.value?.showHandler();
 };
 
