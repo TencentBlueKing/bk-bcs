@@ -503,6 +503,46 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources": {
+      "post": {
+        "summary": "Get multi cluster resources",
+        "description": "获取多集群原生资源列表",
+        "operationId": "MultiCluster_FetchMultiClusterApiResources",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterApiResourcesReq"
+            }
+          }
+        ],
+        "tags": [
+          "MultiCluster"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects": {
       "post": {
         "summary": "Get multi cluster custom resources",
@@ -10185,6 +10225,39 @@
       },
       "description": "Echo API 响应",
       "title": "EchoResp"
+    },
+    "clusterresourcesFetchMultiClusterApiResourcesReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "onlyCrd": {
+          "type": "boolean",
+          "title": "是否只列出crd资源"
+        },
+        "viewID": {
+          "type": "string",
+          "title": "viewID"
+        },
+        "labelSelector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
+          },
+          "title": "标签选择器"
+        }
+      },
+      "description": "获取多集群api资源请求体",
+      "title": "FetchMultiClusterApiResourcesReq"
     },
     "clusterresourcesFetchMultiClusterCustomResourceReq": {
       "type": "object",

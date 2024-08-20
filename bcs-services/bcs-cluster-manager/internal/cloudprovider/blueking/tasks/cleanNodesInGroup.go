@@ -56,6 +56,7 @@ func ReturnNodesToResourcePoolTask(taskID, stepName string) error {
 		NodeGroupID: nodeGroupID,
 	})
 	if err != nil {
+		// nolint goconst
 		blog.Errorf("ReturnNodesToResourcePoolTask[%s] GetClusterDependBasicInfo for NodeGroup %s to "+
 			"clean Node in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())

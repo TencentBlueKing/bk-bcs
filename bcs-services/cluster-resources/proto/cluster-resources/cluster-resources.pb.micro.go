@@ -5759,6 +5759,12 @@ func NewMultiClusterEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "MultiCluster.FetchMultiClusterApiResources",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "MultiCluster.FetchMultiClusterCustomResource",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects"},
 			Method:  []string{"POST"},
@@ -5777,6 +5783,7 @@ func NewMultiClusterEndpoints() []*api.Endpoint {
 
 type MultiClusterService interface {
 	FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...client.CallOption) (*CommonResp, error)
+	FetchMultiClusterApiResources(ctx context.Context, in *FetchMultiClusterApiResourcesReq, opts ...client.CallOption) (*CommonResp, error)
 	FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, opts ...client.CallOption) (*CommonResp, error)
 	MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...client.CallOption) (*CommonResp, error)
 }
@@ -5795,6 +5802,16 @@ func NewMultiClusterService(name string, c client.Client) MultiClusterService {
 
 func (c *multiClusterService) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "MultiCluster.FetchMultiClusterResource", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) FetchMultiClusterApiResources(ctx context.Context, in *FetchMultiClusterApiResourcesReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.FetchMultiClusterApiResources", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -5827,6 +5844,7 @@ func (c *multiClusterService) MultiClusterResourceCount(ctx context.Context, in 
 
 type MultiClusterHandler interface {
 	FetchMultiClusterResource(context.Context, *FetchMultiClusterResourceReq, *CommonResp) error
+	FetchMultiClusterApiResources(context.Context, *FetchMultiClusterApiResourcesReq, *CommonResp) error
 	FetchMultiClusterCustomResource(context.Context, *FetchMultiClusterCustomResourceReq, *CommonResp) error
 	MultiClusterResourceCount(context.Context, *MultiClusterResourceCountReq, *CommonResp) error
 }
@@ -5834,6 +5852,7 @@ type MultiClusterHandler interface {
 func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts ...server.HandlerOption) error {
 	type multiCluster interface {
 		FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, out *CommonResp) error
+		FetchMultiClusterApiResources(ctx context.Context, in *FetchMultiClusterApiResourcesReq, out *CommonResp) error
 		FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, out *CommonResp) error
 		MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error
 	}
@@ -5844,6 +5863,12 @@ func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "MultiCluster.FetchMultiClusterResource",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.FetchMultiClusterApiResources",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -5868,6 +5893,10 @@ type multiClusterHandler struct {
 
 func (h *multiClusterHandler) FetchMultiClusterResource(ctx context.Context, in *FetchMultiClusterResourceReq, out *CommonResp) error {
 	return h.MultiClusterHandler.FetchMultiClusterResource(ctx, in, out)
+}
+
+func (h *multiClusterHandler) FetchMultiClusterApiResources(ctx context.Context, in *FetchMultiClusterApiResourcesReq, out *CommonResp) error {
+	return h.MultiClusterHandler.FetchMultiClusterApiResources(ctx, in, out)
 }
 
 func (h *multiClusterHandler) FetchMultiClusterCustomResource(ctx context.Context, in *FetchMultiClusterCustomResourceReq, out *CommonResp) error {
