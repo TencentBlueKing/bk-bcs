@@ -79,7 +79,7 @@ export default {
       on: this.$listeners, // 透传事件
       props: Object.assign({}, {
         ...this.$props,
-        value: this.$props.isShow,
+        value: this.$props.value || this.$props.isShow,
         showFooter: this.$props.hasFooter,
         okText: this.$props.confirm,
         cancelText: this.$props.cancel,
