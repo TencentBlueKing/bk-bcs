@@ -268,7 +268,7 @@
         {
             "id": "list template sets by template set ids failed, err: {Err}",
             "message": "list template sets by template set ids failed, err: {Err}",
-            "translation": "按模板集ID列出模板集失败, err: {Err}",
+            "translation": "按模板套餐ID列出模板套餐失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -457,7 +457,7 @@
         {
             "id": "app {Name} is not file type",
             "message": "app {Name} is not file type",
-            "translation": "应用程序 {Name} 不是文件类型",
+            "translation": "该服务 {Name} 不是文件类型",
             "placeholders": [
                 {
                     "id": "Name",
@@ -466,6 +466,29 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "app.Spec.Name"
+                }
+            ]
+        },
+        {
+            "id": "the total number of app {Name} config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "message": "the total number of app {Name} config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "translation": "服务 {Name} 的配置项总数（包括模板和非模板）超过单服务最大配置文件数量限制 {AppConfigCnt}",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "app.Spec.Name"
+                },
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "appConfigCnt"
                 }
             ]
         },
@@ -537,7 +560,7 @@
         {
             "id": "get reference template set under this app failed, err: {Err}",
             "message": "get reference template set under this app failed, err: {Err}",
-            "translation": "获取此应用程序下的引用模板集失败, err: {Err}",
+            "translation": "获取该服务下的引用模板集失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -781,9 +804,32 @@
             ]
         },
         {
+            "id": "the total number of template set {Name} templates exceeded the limit {TmplSetTmplCnt}",
+            "message": "the total number of template set {Name} templates exceeded the limit {TmplSetTmplCnt}",
+            "translation": "模板套餐 {Name} 超过单套餐最大配置文件数量限制 {TmplSetTmplCnt}",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v.Spec.Name"
+                },
+                {
+                    "id": "TmplSetTmplCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "tmplSetTmplCnt"
+                }
+            ]
+        },
+        {
             "id": "list apps by app ids failed, err: {Err}",
             "message": "list apps by app ids failed, err: {Err}",
-            "translation": "按服务ID列出应用程序失败, err: {Err}",
+            "translation": "按服务ID列出服务失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",

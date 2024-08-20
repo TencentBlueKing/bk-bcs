@@ -1258,7 +1258,7 @@ func (s *Service) verifyTemplateSetAndReturnData(kt *kit.Kit, tx *gen.QueryTx, b
 		mergedIDs := tools.MergeAndDeduplicate(v.Spec.TemplateIDs, templateIDs)
 		if len(mergedIDs)+additionalQuantity > tmplSetTmplCnt {
 			return nil, errf.New(errf.InvalidParameter,
-				fmt.Sprintf("the total number of template set %s's templates exceeded the limit %d",
+				i18n.T(kt, "the total number of template set %s templates exceeded the limit %d",
 					v.Spec.Name, tmplSetTmplCnt))
 		}
 		v.Spec.TemplateIDs = mergedIDs
@@ -1316,7 +1316,7 @@ func (s *Service) verifyAppReferenceTmplSetExceedsLimit(kt *kit.Kit, bizID uint3
 			mergedIDs := tools.MergeAndDeduplicate(excludedTemplateSetIDs[spec.TemplateSetID], templateIDs)
 			if len(mergedIDs)+configCountWithTemplates[templateBinding.Attachment.AppID] > appConfigCnt {
 				return errf.New(errf.InvalidParameter,
-					fmt.Sprintf("the total number of app %s's config items(including template and non-template)"+
+					i18n.T(kt, "the total number of app %s config items(including template and non-template)"+
 						"exceeded the limit %d", configItemName[templateBinding.Attachment.AppID], appConfigCnt))
 			}
 		}
