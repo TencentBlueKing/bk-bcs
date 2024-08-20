@@ -87,12 +87,19 @@ func (c *checker) getMultiRepoMultiActionPermission(ctx context.Context, project
 		}
 	}
 
-	canDelete := false
-	canViewOrCreateOrUpdate := false
 	result := &UserResourcePermission{
 		ResourceType:  RepoRSType,
 		ResourcePerms: make(map[string]map[RSAction]bool),
+		ActionPerms: map[RSAction]bool{
+			RepoViewRSAction: true, RepoCreateRSAction: true, RepoUpdateRSAction: true, RepoDeleteRSAction: true,
+		},
 	}
+	if len(resultRepos) == 0 {
+		return resultRepos, result, http.StatusOK, nil
+	}
+
+	canDelete := false
+	canViewOrCreateOrUpdate := false
 	for proj, argoRepos := range projRepos {
 		_, projPermits, statusCode, err := c.getProjectMultiActionsPermission(ctx, proj)
 		if err != nil {

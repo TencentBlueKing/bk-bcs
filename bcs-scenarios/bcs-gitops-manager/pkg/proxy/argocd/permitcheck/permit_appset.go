@@ -176,7 +176,13 @@ func (c *checker) getMultiAppSetMultiActionPermission(ctx context.Context, proje
 	result := &UserResourcePermission{
 		ResourceType:  AppSetRSType,
 		ResourcePerms: make(map[string]map[RSAction]bool),
+		ActionPerms: map[RSAction]bool{AppSetViewRSAction: true, AppSetDeleteRSAction: true,
+			AppSetCreateRSAction: true, AppSetUpdateRSAction: true},
 	}
+	if len(resultAppSets) == 0 {
+		return resultAppSets, result, http.StatusOK, nil
+	}
+
 	canDeleteOrUpdate := false
 	var statusCode int
 	var err error
