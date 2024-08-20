@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/envmanage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/template"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templatespace"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templatespacecollect"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templateversion"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -108,6 +109,45 @@ func (h *Handler) CopyTemplateSpace(
 		return err
 	}
 	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ListTemplateSpaceCollect 获取模板文件文件夹收藏列表
+func (h *Handler) ListTemplateSpaceCollect(
+	ctx context.Context, in *clusterRes.ListTemplateSpaceCollectReq, out *clusterRes.CommonListResp) error {
+	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
+	data, err := action.List(ctx)
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.MapSlice2ListValue(data); err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateTemplateSpaceCollect 创建模板文件文件夹收藏
+func (h *Handler) CreateTemplateSpaceCollect(
+	ctx context.Context, in *clusterRes.CreateTemplateSpaceCollectReq, out *clusterRes.CommonResp) error {
+	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
+	id, err := action.Create(ctx, in)
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteTemplateSpaceCollect 删除模板文件文件夹收藏
+func (h *Handler) DeleteTemplateSpaceCollect(
+	ctx context.Context, in *clusterRes.DeleteTemplateSpaceCollectReq, out *clusterRes.CommonResp) error {
+	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
+	err := action.Delete(ctx, in.GetId())
+	if err != nil {
 		return err
 	}
 	return nil

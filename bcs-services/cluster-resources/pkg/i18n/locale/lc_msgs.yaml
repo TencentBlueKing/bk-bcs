@@ -48,6 +48,10 @@
   en: "unsupported transformer form: %s"
 - msgID: 文件夹名称重复
   en: "Folder name duplicated"
+- msgID: 该文件夹已被收藏
+  en: "Folder name has been collected"
+- msgID: 该文件夹收藏不存在
+  en: "Folder name collect does not exist"
 - msgID: 元数据名称重复
   en: "Name duplicated"
 - msgID: 清理集群资源缓存时间间隔过短，请稍后再试
