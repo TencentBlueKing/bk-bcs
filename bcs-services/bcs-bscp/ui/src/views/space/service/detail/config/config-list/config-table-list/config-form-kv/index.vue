@@ -18,7 +18,8 @@
     <bk-form-item :label="t('配置项描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
-    <bk-form-item :label="t('配置项值')" property="value" :required="true">
+    <SecretForm v-if="localVal.kv_type === 'secret'" />
+    <bk-form-item v-else :label="t('配置项值')" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
@@ -38,11 +39,12 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
-  import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
-  import { IConfigKvEditParams } from '../../../../../../../../types/config';
-  import useServiceStore from '../../../../../../../store/service';
+  import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
+  import KvConfigContentEditor from '../../../components/kv-config-content-editor.vue';
+  import { IConfigKvEditParams } from '../../../../../../../../../types/config';
+  import useServiceStore from '../../../../../../../../store/service';
   import { storeToRefs } from 'pinia';
+  import SecretForm from './secret.vue';
 
   const serviceStore = useServiceStore();
   const { appData } = storeToRefs(serviceStore);

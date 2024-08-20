@@ -26,7 +26,7 @@
   import { IConfigKvEditParams } from '../../../../../../../../../types/config';
   import { createKv } from '../../../../../../../../api/config';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
-  import ConfigForm from '../config-form-kv.vue';
+  import ConfigForm from '../config-form-kv/index.vue';
   import useServiceStore from '../../../../../../../../store/service';
 
   const serviceStore = useServiceStore();

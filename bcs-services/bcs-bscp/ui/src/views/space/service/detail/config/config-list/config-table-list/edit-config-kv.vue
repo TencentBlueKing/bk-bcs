@@ -26,7 +26,7 @@
   import { ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import Message from 'bkui-vue/lib/message';
-  import ConfigForm from './config-form-kv.vue';
+  import ConfigForm from './config-form-kv/index.vue';
   import { updateKv } from '../../../../../../../api/config';
   import { IConfigKvItem } from '../../../../../../../../types/config';
   import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
