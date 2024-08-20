@@ -37,6 +37,12 @@ func NewArgoCmd() *cobra.Command {
 			item.AddCommand(applicationDryRun())
 			item.AddCommand(applicationDiff())
 			item.AddCommand(applicationHistory())
+			for _, c := range item.Commands() {
+				if c.Name() != "sync" {
+					continue
+				}
+				changeApplicationSync(c)
+			}
 		}
 		if item.Use == "appset" {
 			item.AddCommand(appsetGenerate())

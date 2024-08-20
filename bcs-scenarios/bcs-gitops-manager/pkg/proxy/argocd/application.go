@@ -42,6 +42,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
 )
@@ -54,6 +55,7 @@ type AppPlugin struct {
 	middleware    mw.MiddlewareInterface
 	permitChecker permitcheck.PermissionInterface
 	bcsStorage    bcsapi.Storage
+	secretStore   secretstore.SecretInterface
 }
 
 // all argocd application URL:

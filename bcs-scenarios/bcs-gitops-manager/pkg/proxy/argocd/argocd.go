@@ -32,6 +32,7 @@ import (
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/terraformstore"
 )
 
@@ -123,6 +124,7 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware:    middleware,
 		permitChecker: permitChecker,
 		bcsStorage:    bcsStorage,
+		secretStore:   secretstore.NewSecretStore(options.GlobalOptions().SecretServer),
 	}
 	appsetPlugin := &ApplicationSetPlugin{
 		storage:       store.GlobalStore(),

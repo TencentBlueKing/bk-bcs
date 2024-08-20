@@ -100,7 +100,7 @@ func (plugin *SecretPlugin) createPutSecretHandler(r *http.Request) (*http.Reque
 	return r, mw.ReturnSecretReverse()
 }
 
-// Delete with preifx /api/v1/secrets/{project}/{path}
+// Delete with prefix /api/v1/secrets/{project}/{path}
 func (plugin *SecretPlugin) deleteSecretHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
 	secretName := mux.Vars(r)["path"]
@@ -113,7 +113,7 @@ func (plugin *SecretPlugin) deleteSecretHandler(r *http.Request) (*http.Request,
 	return r, mw.ReturnSecretReverse()
 }
 
-// Get with preifx /api/v1/secrets/{project}/{path}?version={version}
+// Get with prefix /api/v1/secrets/{project}/{path}?version={version}
 func (plugin *SecretPlugin) getSecretHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["project"]
 	secretName := mux.Vars(r)["path"]
