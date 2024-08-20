@@ -55,9 +55,6 @@ var (
 // nolint
 func main() {
 	pwd := os.Getenv("MONGO_PASSWORD")
-	if pwd == "" {
-		pwd = "12345"
-	}
 
 	mongoOpts := &bcsmongo.Options{
 		Hosts:                 mongoHosts,
@@ -124,8 +121,6 @@ func main() {
 		Lock:       lock,
 		Store:      store,
 	}
-	// register step worker && callback
-	config.CallBacks = registerCallbacks()
 
 	// init task manager
 	err = btm.Init(config)
@@ -144,14 +139,14 @@ func main() {
 	// build tak && run
 	sum := NewExampleTask("3", "5")
 
-	info := &types.TaskInfo{
+	info := types.TaskInfo{
 		TaskIndex: "example",
 		TaskType:  "example-test",
 		TaskName:  "example",
 		Creator:   "bcs",
 	}
 	sumTask, err := sum.BuildTask(info, types.WithTaskMaxExecutionSeconds(0),
-		types.WithTaskCallBackFunc(callBackName))
+		types.WithTaskCallback(callBackName))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -173,8 +168,8 @@ func main() {
 }
 
 // nolint
-func registerSteps() []istep.StepWorkerInterface {
-	steps := make([]istep.StepWorkerInterface, 0)
+func registerSteps() []istep.StepExecutor {
+	steps := make([]istep.StepExecutor, 0)
 
 	sum := NewSumStep()
 	steps = append(steps, sum)
@@ -183,11 +178,4 @@ func registerSteps() []istep.StepWorkerInterface {
 	steps = append(steps, hello)
 
 	return steps
-}
-
-func registerCallbacks() []istep.CallbackInterface {
-	callbacks := make([]istep.CallbackInterface, 0)
-	callbacks = append(callbacks, &callBack{})
-
-	return callbacks
 }

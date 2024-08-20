@@ -332,3 +332,32 @@ type ESBListBizHostsTopoResult struct {
 	ESBBaseResp `json:",inline"`
 	Data        *ListBizHostsTopoData `json:"data"`
 }
+
+// ESBSearchModuleRequest request for search module
+type ESBSearchModuleRequest struct {
+	Page              *BasePage              `json:"page"`
+	BkSupplierAccount string                 `json:"bk_supplier_account"`
+	BkBizID           int64                  `json:"bk_biz_id"`
+	BkSetID           int64                  `json:"bk_set_id"`
+	Fields            []string               `json:"fields,omitempty"`
+	Condition         map[string]interface{} `json:"condition"`
+}
+
+// ESBSearchModuleResponse response for search module
+type ESBSearchModuleResult struct {
+	ESBBaseResp `json:",inline"`
+	Data        *ESBSearchModuleData `json:"data"`
+}
+
+// ESBSearchModuleData for search module data
+type ESBSearchModuleData struct {
+	Count int64                 `json:"count"`
+	Info  []ESBSearchModuleInfo `json:"info,omitempty"`
+}
+
+// ESBSearchModuleInfo for search module info
+type ESBSearchModuleInfo struct {
+	BkModuleName string `json:"bk_module_name"`
+	BkSetID      int64  `json:"bk_set_id"`
+	Default      int64  `json:"default"`
+}

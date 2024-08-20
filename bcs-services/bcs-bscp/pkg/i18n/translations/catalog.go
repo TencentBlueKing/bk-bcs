@@ -39,82 +39,108 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"Unnamed Version":    51,
-	"app %d not found":   19,
-	"attachment not set": 45,
-	"batch add templates to template sets failed, err: %s":                                31,
+	"Unnamed Version":         71,
+	"app %d not found":        19,
+	"app %s is not file type": 31,
+	"attachment not set":      65,
+	"batch add templates to template sets failed, err: %s":                                47,
+	"batch create contents failed, err: %s":                                               33,
 	"batch delete config items failed":                                                    13,
 	"batch delete failed":                                                                 16,
 	"batch delete groups failed":                                                          14,
-	"batch update app template binding's failed, err: %s":                                 30,
+	"batch update app template binding's failed, err: %s":                                 46,
 	"client ids is empty":                                                                 12,
-	"count the number of app configs failed, err: %s":                                     39,
+	"config item's same name %s and path %s already exists":                               44,
+	"count the number of app configs failed, err: %s":                                     55,
+	"count the number of service configurations failed, err: %s":                          30,
 	"create directory failed %s":                                                          2,
 	"create temporary directory failed %s":                                                3,
-	"db operation failed":                                                                 41,
+	"db operation failed":                                                                 61,
 	"decompress file failed, exceeding the maximum file limit threshold of %d":            10,
 	"decompress the file. The size of file %s exceeds the maximum limit of %s":            4,
 	"decompression failed %s":                                                             5,
-	"default_val %s is not a number type":                                                 52,
-	"delete template from template sets failed, err: %v, rid: %s":                         34,
+	"default_val %s is not a number type":                                                 72,
+	"delete one app template binding instance by app id failed, err: %s":                  32,
+	"delete one app template variable failed, err: %s":                                    34,
+	"delete template from template sets failed, err: %v, rid: %s":                         50,
 	"detecting file conflicts failed %s":                                                  7,
-	"get app template bindings by template set ids, err: %s":                              29,
-	"get excluded hook failed, err: %s":                                                   26,
-	"get excluded kv failed, err: %s":                                                     28,
-	"get reference template set under this app failed, err: %s":                           22,
-	"get template binding relationships through business and service IDs failed, err: %s": 21,
-	"get template set data failed, err: %s":                                               32,
-	"get template set failed, err: %s":                                                    37,
-	"hook is nil":                                                                         50,
-	"hook name %s already exists":                                                         25,
+	"get app template bindings by template set ids, err: %s":                              45,
+	"get excluded hook failed, err: %s":                                                   41,
+	"get excluded kv failed, err: %s":                                                     43,
+	"get reference template set under this app failed, err: %s":                           37,
+	"get template binding relationships through business and service IDs failed, err: %s": 36,
+	"get template set data failed, err: %s":                                               48,
+	"get template set failed, err: %s":                                                    53,
+	"hook is nil":                                                                         70,
+	"hook name %s already exists":                                                         40,
 	"id is required":                                                                      0,
-	"id should not be set":                                                                43,
-	"invalid argument":                                                                    42,
-	"invalid name, length should <= 128":                                                  48,
-	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":  47,
-	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 49,
-	"list app template bindings by app ids failed, err: %s":                                                                      36,
-	"list apps by app ids failed, err: %s":                                                                                       38,
-	"list template sets by template set ids failed, err: %s":                                                                     23,
-	"list templates by tuple failed, err: %v":                                                                                    35,
-	"obtain the number of configuration items":                                                                                   20,
-	"read file failed %s": 1,
-	"remove the template set bound to the app failed, err: %s": 24,
-	"retrieve the referenced script failed, err: %s":           27,
-	"revision not set": 46,
-	"same template variable name %s already exists": 40,
-	"spec not set": 44,
-	"template variable name must start with %s":                                        17,
-	"the length of hook ids is %d, it must be within the range of [1,%d]":              15,
-	"the length of template variable ids is %d, it must be within the range of [1,%d]": 18,
-	"there is no template file under this template set":                                33,
-	"unsupported variable type: %s":                                                    53,
-	"upload completed":                                                                 8,
-	"upload completed, %d failed":                                                      9,
-	"upload failed, please make sure the file size does not exceed %s":                 11,
-	"upload file failed %s":                                                            6,
+	"id should not be set":                                                                63,
+	"invalid argument":                                                                    62,
+	"invalid name, length should <= 128":                                                  68,
+	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":  67,
+	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)": 69,
+	"list app template bindings by app ids failed, err: %s":                                                                      52,
+	"list apps by app ids failed, err: %s":                                                                                       54,
+	"list template revisions failed, err: %v":                                                                                    27,
+	"list template sets by template set ids failed, err: %s":                                                                     38,
+	"list template sets by template set ids failed, err: %v":                                                                     20,
+	"list template spaces failed, err: %v":                                                                                       22,
+	"list templates by tuple failed, err: %v":                                                                                    51,
+	"list templates data failed, err: %s":                                                                                        57,
+	"list templates of template set failed, err: %v":                                                                             25,
+	"list templates revisions data failed, err: %s":                                                                              59,
+	"obtain the number of configuration items":                                                                                   35,
+	"read file failed %s":                                                                                                        1,
+	"remove the template set bound to the app failed, err: %s":                                                                   39,
+	"retrieve the referenced script failed, err: %s":                                                                             42,
+	"revision not set": 66,
+	"same template variable name %s already exists": 60,
+	"spec not set":                              64,
+	"template data is empty":                    58,
+	"template set %s not found":                 24,
+	"template set data is empty":                56,
+	"template space %s not found":               23,
+	"template variable name must start with %s": 17,
+	"template version %s in template file %s \n\t\t\t\thas been removed. Please import the set again":            28,
+	"the length of hook ids is %d, it must be within the range of [1,%d]":                                        15,
+	"the length of template variable ids is %d, it must be within the range of [1,%d]":                           18,
+	"the template file %s in the template set \n\t\t\t\t%s has been removed. Please import the set again":        26,
+	"the version number %s in the template file %s is not the \n\t\tlatest version. Please import the set again": 29,
+	"there is no template file under this template set":                                                          49,
+	"unsupported variable type: %s":                                    73,
+	"update app template binding failed, err: %v":                      21,
+	"upload completed":                                                 8,
+	"upload completed, %d failed":                                      9,
+	"upload failed, please make sure the file size does not exceed %s": 11,
+	"upload file failed %s":                                            6,
 }
 
-var enIndex = []uint32{ // 55 elements
+var enIndex = []uint32{ // 75 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000026, 0x00000044,
 	0x0000006c, 0x000000bb, 0x000000d6, 0x000000ef,
 	0x00000115, 0x00000126, 0x00000145, 0x00000191,
 	0x000001d5, 0x000001e9, 0x0000020a, 0x00000225,
 	0x0000026f, 0x00000283, 0x000002b0, 0x00000307,
-	0x0000031b, 0x00000344, 0x0000039b, 0x000003d8,
-	0x00000412, 0x0000044e, 0x0000046d, 0x00000492,
-	0x000004c4, 0x000004e7, 0x00000521, 0x00000558,
+	0x0000031b, 0x00000355, 0x00000384, 0x000003ac,
+	0x000003cb, 0x000003e8, 0x0000041a, 0x0000047f,
+	0x000004aa, 0x0000050b, 0x00000579, 0x000005b7,
 	// Entry 20 - 3F
-	0x00000590, 0x000005b9, 0x000005eb, 0x0000062d,
-	0x00000658, 0x00000691, 0x000006b5, 0x000006dd,
-	0x00000710, 0x00000741, 0x00000755, 0x00000766,
-	0x0000077b, 0x00000788, 0x0000079b, 0x000007ac,
-	0x000007ff, 0x00000822, 0x000008a4, 0x000008b0,
-	0x000008c0, 0x000008e7, 0x00000908,
-} // Size: 244 bytes
+	0x000005d2, 0x00000618, 0x00000641, 0x00000675,
+	0x0000069e, 0x000006f5, 0x00000732, 0x0000076c,
+	0x000007a8, 0x000007c7, 0x000007ec, 0x0000081e,
+	0x00000841, 0x0000087d, 0x000008b7, 0x000008ee,
+	0x00000926, 0x0000094f, 0x00000981, 0x000009c3,
+	0x000009ee, 0x00000a27, 0x00000a4b, 0x00000a73,
+	0x00000aa6, 0x00000ac1, 0x00000ae8, 0x00000aff,
+	0x00000b30, 0x00000b61, 0x00000b75, 0x00000b86,
+	// Entry 40 - 5F
+	0x00000b9b, 0x00000ba8, 0x00000bbb, 0x00000bcc,
+	0x00000c1f, 0x00000c42, 0x00000cc4, 0x00000cd0,
+	0x00000ce0, 0x00000d07, 0x00000d28,
+} // Size: 324 bytes
 
-const enData string = "" + // Size: 2312 bytes
+const enData string = "" + // Size: 3368 bytes
 	"\x02id is required\x02read file failed %[1]s\x02create directory failed " +
 	"%[1]s\x02create temporary directory failed %[1]s\x02decompress the file." +
 	" The size of file %[1]s exceeds the maximum limit of %[2]s\x02decompress" +
@@ -126,14 +152,28 @@ const enData string = "" + // Size: 2312 bytes
 	"lete groups failed\x02the length of hook ids is %[1]d, it must be within" +
 	" the range of [1,%[2]d]\x02batch delete failed\x02template variable name" +
 	" must start with %[1]s\x02the length of template variable ids is %[1]d, " +
-	"it must be within the range of [1,%[2]d]\x02app %[1]d not found\x02obtai" +
-	"n the number of configuration items\x02get template binding relationship" +
-	"s through business and service IDs failed, err: %[1]s\x02get reference t" +
-	"emplate set under this app failed, err: %[1]s\x02list template sets by t" +
-	"emplate set ids failed, err: %[1]s\x02remove the template set bound to t" +
-	"he app failed, err: %[1]s\x02hook name %[1]s already exists\x02get exclu" +
-	"ded hook failed, err: %[1]s\x02retrieve the referenced script failed, er" +
-	"r: %[1]s\x02get excluded kv failed, err: %[1]s\x02get app template bindi" +
+	"it must be within the range of [1,%[2]d]\x02app %[1]d not found\x02list " +
+	"template sets by template set ids failed, err: %[1]v\x02update app templ" +
+	"ate binding failed, err: %[1]v\x02list template spaces failed, err: %[1]" +
+	"v\x02template space %[1]s not found\x02template set %[1]s not found\x02l" +
+	"ist templates of template set failed, err: %[1]v\x02the template file %[" +
+	"1]s in the template set \x0a\x09\x09\x09\x09%[2]s has been removed. Plea" +
+	"se import the set again\x02list template revisions failed, err: %[1]v" +
+	"\x02template version %[1]s in template file %[2]s \x0a\x09\x09\x09\x09ha" +
+	"s been removed. Please import the set again\x02the version number %[1]s " +
+	"in the template file %[2]s is not the \x0a\x09\x09latest version. Please" +
+	" import the set again\x02count the number of service configurations fail" +
+	"ed, err: %[1]s\x02app %[1]s is not file type\x02delete one app template " +
+	"binding instance by app id failed, err: %[1]s\x02batch create contents f" +
+	"ailed, err: %[1]s\x02delete one app template variable failed, err: %[1]s" +
+	"\x02obtain the number of configuration items\x02get template binding rel" +
+	"ationships through business and service IDs failed, err: %[1]s\x02get re" +
+	"ference template set under this app failed, err: %[1]s\x02list template " +
+	"sets by template set ids failed, err: %[1]s\x02remove the template set b" +
+	"ound to the app failed, err: %[1]s\x02hook name %[1]s already exists\x02" +
+	"get excluded hook failed, err: %[1]s\x02retrieve the referenced script f" +
+	"ailed, err: %[1]s\x02get excluded kv failed, err: %[1]s\x02config item's" +
+	" same name %[1]s and path %[2]s already exists\x02get app template bindi" +
 	"ngs by template set ids, err: %[1]s\x02batch update app template binding" +
 	"'s failed, err: %[1]s\x02batch add templates to template sets failed, er" +
 	"r: %[1]s\x02get template set data failed, err: %[1]s\x02there is no temp" +
@@ -141,52 +181,68 @@ const enData string = "" + // Size: 2312 bytes
 	"failed, err: %[1]v, rid: %[2]s\x02list templates by tuple failed, err: %" +
 	"[1]v\x02list app template bindings by app ids failed, err: %[1]s\x02get " +
 	"template set failed, err: %[1]s\x02list apps by app ids failed, err: %[1" +
-	"]s\x02count the number of app configs failed, err: %[1]s\x02same templat" +
-	"e variable name %[1]s already exists\x02db operation failed\x02invalid a" +
-	"rgument\x02id should not be set\x02spec not set\x02attachment not set" +
-	"\x02revision not set\x02invalid name, length should >= 9 and must start " +
-	"with prefix bk_bscp_ (ignore case)\x02invalid name, length should <= 128" +
-	"\x02invalid name: %[1]s, only allows to include english、numbers、undersco" +
-	"re (_), and must start with prefix bk_bscp_ (ignore case)\x02hook is nil" +
-	"\x02Unnamed Version\x02default_val %[1]s is not a number type\x02unsuppo" +
-	"rted variable type: %[1]s"
+	"]s\x02count the number of app configs failed, err: %[1]s\x02template set" +
+	" data is empty\x02list templates data failed, err: %[1]s\x02template dat" +
+	"a is empty\x02list templates revisions data failed, err: %[1]s\x02same t" +
+	"emplate variable name %[1]s already exists\x02db operation failed\x02inv" +
+	"alid argument\x02id should not be set\x02spec not set\x02attachment not " +
+	"set\x02revision not set\x02invalid name, length should >= 9 and must sta" +
+	"rt with prefix bk_bscp_ (ignore case)\x02invalid name, length should <= " +
+	"128\x02invalid name: %[1]s, only allows to include english、numbers、under" +
+	"score (_), and must start with prefix bk_bscp_ (ignore case)\x02hook is " +
+	"nil\x02Unnamed Version\x02default_val %[1]s is not a number type\x02unsu" +
+	"pported variable type: %[1]s"
 
-var zhIndex = []uint32{ // 55 elements
+var zhIndex = []uint32{ // 75 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x00000029, 0x00000049,
-	0x00000069, 0x000000b6, 0x000000d1, 0x000000ec,
-	0x0000010c, 0x00000119, 0x00000134, 0x00000177,
-	0x000001ab, 0x000001bf, 0x000001db, 0x000001f4,
-	0x00000234, 0x00000247, 0x00000271, 0x000002b7,
-	0x000002d4, 0x000002ea, 0x0000032d, 0x0000036b,
-	0x0000039c, 0x000003bc, 0x000003d9, 0x00000405,
-	0x0000042e, 0x00000456, 0x00000490, 0x000004c2,
+	0x00000069, 0x000000b5, 0x000000d0, 0x000000eb,
+	0x0000010b, 0x00000118, 0x00000133, 0x00000175,
+	0x000001a8, 0x000001bc, 0x000001d8, 0x000001f1,
+	0x00000231, 0x00000244, 0x0000026e, 0x000002b4,
+	0x000002d1, 0x00000301, 0x0000032c, 0x00000351,
+	0x0000036e, 0x0000038b, 0x000003bc, 0x00000409,
+	0x0000042e, 0x0000047b, 0x000004ce, 0x000004f9,
 	// Entry 20 - 3F
-	0x000004f1, 0x0000051a, 0x0000053c, 0x00000577,
-	0x00000597, 0x000005ce, 0x000005f1, 0x00000622,
-	0x0000064e, 0x00000678, 0x00000687, 0x00000694,
-	0x000006a9, 0x000006bd, 0x000006d7, 0x000006ef,
-	0x00000743, 0x00000764, 0x000007df, 0x000007ef,
-	0x000007ef, 0x00000814, 0x00000835,
-} // Size: 244 bytes
+	0x0000051f, 0x0000054a, 0x0000056f, 0x00000594,
+	0x000005aa, 0x000005ec, 0x00000629, 0x00000659,
+	0x00000678, 0x00000695, 0x000006c0, 0x000006e8,
+	0x0000070f, 0x0000073f, 0x00000778, 0x000007a9,
+	0x000007d7, 0x000007ff, 0x00000821, 0x0000085b,
+	0x0000087a, 0x000008b0, 0x000008d2, 0x00000902,
+	0x0000092d, 0x00000946, 0x0000096b, 0x0000097e,
+	0x000009a9, 0x000009d3, 0x000009e2, 0x000009ef,
+	// Entry 40 - 5F
+	0x00000a04, 0x00000a18, 0x00000a32, 0x00000a4a,
+	0x00000a9d, 0x00000abd, 0x00000b36, 0x00000b46,
+	0x00000b56, 0x00000b7b, 0x00000b9c,
+} // Size: 324 bytes
 
-const zhData string = "" + // Size: 2101 bytes
+const zhData string = "" + // Size: 2972 bytes
 	"\x02id不能为空\x02读取文件失败: %[1]s\x02创建文件目录失败: %[1]s\x02创建临时目录失败: %[1]s\x02解压文" +
-	"件失败，文件 %[1]s 的大小超过了最大限制阈值 %[2]s\x02解压文件失败：%[1]s\x02上传文件失败：%[1]s\x02检测文" +
-	"件冲突失败: %[1]s\x02上传完成\x02上传完成, %[1]d 失败\x02解压文件失败，超过了文件数量最大限制阈值 %[1]d" +
-	"\x02上传失败，请确保文件大小不超过 %[1]s\x02客户端 id 为空\x02批量删除配置项失败\x02批量删除群组失败\x02脚本id列" +
-	"表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02全局变量id列" +
-	"表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02获取配置项数量\x02通过业务和服务ID" +
-	"获取模板绑定关系失败，err: %[1]s\x02获取此应用程序下的引用模板集失败，err: %[1]s\x02按模板集ID列出模板集失败，" +
-	"err: %[1]s\x02移除套餐失败，err: %[1]s\x02脚本名称 %[1]s 已存在\x02获取排除后的脚本失败，err: %[1" +
-	"]s\x02检索引用的脚本失败，err: %[1]s\x02获取排除后的kv失败，err: %[1]s\x02按模板集ID获取应用程序模板绑定，" +
-	"err: %[1]s\x02批量更新应用模板绑定失败，err: %[1]s\x02模板集批量添加模板失败，err: %[1]s\x02获取模板集" +
-	"数据失败，err: %[1]s\x02此模板集下没有模板文件\x02从模板集中删除模板失败，err: %[1]v, rid: %[2]s" +
-	"\x02列出模板失败，err: %[1]v\x02按服务ID列出应用模板绑定失败，err: %[1]s\x02获取模板集失败，err: %[1]" +
-	"s\x02按服务ID列出应用程序失败，err: %[1]s\x02统计服务配置数量失败，err: %[1]s\x02同名的模版变量名称%[1]s" +
-	"已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置\x02r" +
-	"evision没有被设置\x02无效名称，长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称，长度应该<=128" +
-	"\x02无效名称：%[1]s，只允许英文、数字、下划线（_），且必须以bk_bscp_前缀开头（忽略大小写）\x02脚本不存在\x02defau" +
-	"lt_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]s"
+	"件失败, 文件 %[1]s 的大小超过了最大限制阈值 %[2]s\x02解压文件失败：%[1]s\x02上传文件失败：%[1]s\x02检测" +
+	"文件冲突失败: %[1]s\x02上传完成\x02上传完成, %[1]d 失败\x02解压文件失败, 超过了文件数量最大限制阈值 %[1]d" +
+	"\x02上传失败, 请确保文件大小不超过 %[1]s\x02客户端 id 为空\x02批量删除配置项失败\x02批量删除群组失败\x02脚本id" +
+	"列表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02全局变量id" +
+	"列表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02ID为%[1]d的服务不存在\x02按模板集ID列出模板集失败, err:" +
+	" %[1]v\x02更新服务模板绑定失败, err: %[1]v\x02列出模板空间失败, err: %[1]v\x02模板空间 %[1]s 不" +
+	"存在\x02模板套餐 %[1]s 不存在\x02获取模板套餐下的模板失败, err: %[1]v\x02模板套餐 %[2]s 中的模板文件 " +
+	"%[1]s 被移除, 请重新导入套餐\x02获取模板版本失败, err: %[1]v\x02模板文件 %[2]s 中的模板版本 %[1]s 被移" +
+	"除, 请重新导入套餐\x02模板文件 %[2]s 中的版本号 %[1]s 不是最新版本, 请重新导入套餐\x02统计服务配置数量失败, er" +
+	"r: %[1]s\x02应用程序 %[1]s 不是文件类型\x02移除服务模板套餐失败, err: %[1]s\x02批量创建内容失败, err" +
+	": %[1]s\x02删除模板变量失败, err: %[1]s\x02获取配置项数量\x02通过业务和服务ID获取模板绑定关系失败, err: " +
+	"%[1]s\x02获取此应用程序下的引用模板集失败, err: %[1]s\x02按模板集ID列出模板集失败, err: %[1]s\x02移除" +
+	"套餐失败, err: %[1]s\x02脚本名称 %[1]s 已存在\x02获取排除后的脚本失败, err: %[1]s\x02检索引用的脚" +
+	"本失败, err: %[1]s\x02获取排除后的kv失败, err: %[1]s\x02配置项名称 %[1]s 和路径 %[2]s 已存在" +
+	"\x02按模板集ID获取应用程序模板绑定, err: %[1]s\x02批量更新应用模板绑定失败, err: %[1]s\x02模板集批量添加模" +
+	"板失败, err: %[1]s\x02获取模板集数据失败, err: %[1]s\x02此模板集下没有模板文件\x02从模板集中删除模板失败" +
+	", err: %[1]v, rid: %[2]s\x02列出模板失败, err: %[1]v\x02按服务ID列出应用模板绑定失败, err: " +
+	"%[1]s\x02获取模板集失败, err: %[1]s\x02按服务ID列出应用程序失败, err: %[1]s\x02统计服务配置数量失败," +
+	" err: %[1]s\x02模板套餐数据为空\x02列出模板数据失败, err: %[1]s\x02模板数据为空\x02列出模板版本数据失败," +
+	" err: %[1]s\x02同名的模版变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有" +
+	"被设置\x02attachment没有被设置\x02revision没有被设置\x02无效名称, 长度应该>=9且必须以bk_bscp_前缀" +
+	"开头（忽略大小写）\x02无效名称, 长度应该<=128\x02无效名称：%[1]s, 只允许英文、数字、下划线（_）, 且必须以bk_bs" +
+	"cp_前缀开头（忽略大小写）\x02脚本不存在\x02未命名版本\x02default_val %[1]s 不是数字类型\x02不支持的变量类型" +
+	"：%[1]s"
 
-	// Total table size 4901 bytes (4KiB); checksum: A7F6C093
+	// Total table size 6988 bytes (6KiB); checksum: 39BBBFDB

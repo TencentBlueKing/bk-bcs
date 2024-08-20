@@ -359,28 +359,3 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 	}
 	return projectList, count, nil
 }
-
-// ListProjectByIDs query project by project ids
-func (m *ModelProject) ListProjectByIDs(ctx context.Context, kind string, ids []string, pagination *page.Pagination) (
-	[]Project, int64, error) {
-	projectList := make([]Project, 0)
-	condKind := make(operator.M)
-	condID := make(operator.M)
-	if kind != "" {
-		condKind["kind"] = kind
-	}
-	condID["projectID"] = ids
-	cond := operator.NewBranchCondition(operator.And,
-		operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
-	finder := m.db.Table(m.tableName).Find(cond)
-	// 获取总量
-	total, err := finder.Count(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-	// 拉取满足项目 ID 的全量数据
-	if err := finder.All(ctx, &projectList); err != nil {
-		return nil, 0, err
-	}
-	return projectList, total, nil
-}

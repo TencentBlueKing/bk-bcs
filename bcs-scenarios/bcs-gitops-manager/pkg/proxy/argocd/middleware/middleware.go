@@ -69,7 +69,8 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer func() {
 		cost := time.Since(start)
-		blog.Infof("RequestID[%s] handle request '%s' cost time: %v", requestID, r.URL.Path, cost)
+		blog.Infof("RequestID[%s] handle request '%s' for user '%s' cost time: %v", requestID, r.URL.Path,
+			ctxutils.User(ctx).GetUser(), cost)
 		// ignore metric proxy
 		if strings.Contains(r.URL.Path, "/api/metric") ||
 			strings.Contains(r.URL.Path, "/api/v1/analysis") {

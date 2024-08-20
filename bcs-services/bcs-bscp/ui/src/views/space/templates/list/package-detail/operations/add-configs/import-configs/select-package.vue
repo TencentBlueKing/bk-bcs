@@ -39,7 +39,7 @@
                 class="warn-icon"
                 v-bk-tooltips="{
                   content: $t('上传后，该套餐的配置文件数量将达到 {n} 个，超过了最大限制', {
-                    n: spaceFeatureFlags.RESOURCE_LIMIT.TmplSetTmplCnt,
+                    n: row.template_set_exceeds_quantity,
                   }),
                 }" />
             </div>
@@ -55,7 +55,7 @@
                   class="warn-icon"
                   v-bk-tooltips="{
                     content: $t('上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制', {
-                      n: spaceFeatureFlags.RESOURCE_LIMIT.AppConfigCnt,
+                      n: row.app_exceeds_quantity,
                     }),
                   }" />
                 <LinkToApp class="link-icon" :id="row.app_id" />

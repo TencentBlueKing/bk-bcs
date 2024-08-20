@@ -83,6 +83,7 @@ CheckClusterCleanNodsTask: "check nodes clean finished"
 CheckCleanDBDataTask: "clean db data"
 ModifyInstancesVpcTask: "modify node vpc"
 CheckInstanceStateTask: "check cvm status"
+ReturnNodesToResourcePoolTask: "return nodes to resource pool"
 #
 installGseAgent: "Install GSE Agent"
 #

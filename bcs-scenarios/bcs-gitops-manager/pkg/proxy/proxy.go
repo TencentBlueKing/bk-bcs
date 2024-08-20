@@ -40,9 +40,14 @@ type GitOpsProxy interface {
 	Init() error
 }
 
+var (
+	tencentUserRegexp = regexp.MustCompile("^(v_|p_|[a-z])[a-z]+$")
+)
+
 // UserInfo for token validate
 type UserInfo struct {
 	*jwt.UserClaimsInfo
+	IsTencent bool
 }
 
 // GetUser string
@@ -67,6 +72,7 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 		userName := req.Header.Get(common.HeaderBKUserName)
 		user.UserName = userName
 	}
+	user.IsTencent = tencentUserRegexp.MatchString(user.GetUser())
 	return user, nil
 }
 
@@ -83,7 +89,7 @@ func GetJWTInfoWithAuthorization(authorization string, client *jwt.JWTClient) (*
 	if err != nil {
 		return nil, err
 	}
-	u := &UserInfo{claim}
+	u := &UserInfo{UserClaimsInfo: claim}
 	if u.GetUser() == "" {
 		return nil, fmt.Errorf("lost user information")
 	}

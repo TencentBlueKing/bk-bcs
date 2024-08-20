@@ -19,13 +19,13 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/RichardKnop/machinery/v2/log"
 )
 
 // RecoverPrintStack capture panic and print stack
 func RecoverPrintStack(proc string) {
 	if r := recover(); r != nil {
-		blog.Errorf("[%s][recover] panic: %v, stack %v\n", proc, r, string(debug.Stack()))
+		log.ERROR.Printf("[%s][recover] panic: %v, stack %v\n", proc, r, string(debug.Stack()))
 		return
 	}
 }
@@ -89,7 +89,7 @@ func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error {
 		case <-tick.C:
 		case <-ctx.Done():
 			if errors.Is(ctx.Err(), context.Canceled) {
-				blog.Errorf("LoopDoFunc is canceled")
+				log.ERROR.Printf("LoopDoFunc is canceled")
 			}
 			return ctx.Err()
 		}

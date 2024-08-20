@@ -46,7 +46,7 @@
         </bcs-table-column>
         <bcs-table-column :label="$t('updateRecord.label.createTime')" prop="createTime" width="180">
           <template #default="{ row }">
-            {{ formatTime(row.createTime) }}
+            {{row.createTime ? formatDate(row.createTime) : '--'}}
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('updateRecord.label.operator')" width="120">
@@ -113,7 +113,7 @@ import { onBeforeMount, ref } from 'vue';
 import Rollback from './rollback.vue';
 import useRecords, { IRevisionData } from './use-records';
 
-import { formatTime } from '@/common/util';
+import { formatDate } from '@/common/util';
 import ContentHeader from '@/components/layout/Header.vue';
 import Row from '@/components/layout/Row.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';

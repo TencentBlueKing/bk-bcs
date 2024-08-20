@@ -92,3 +92,4 @@ build.yml
 .prod.env
 .sg.env
 .bkce.env
+.debug.env

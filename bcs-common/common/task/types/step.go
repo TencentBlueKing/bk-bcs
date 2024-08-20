@@ -60,7 +60,7 @@ func NewStep(name string, alias string, opts ...StepOption) *Step {
 		Name:                name,
 		Alias:               alias,
 		Params:              map[string]string{},
-		Extras:              DefaultJsonExtrasContent,
+		Payload:             DefaultPayloadContent,
 		Status:              TaskStatusNotStarted,
 		Message:             "",
 		SkipOnFailed:        defaultOptions.SkipFailed,
@@ -133,21 +133,21 @@ func (s *Step) SetNewParams(params map[string]string) *Step {
 	return s
 }
 
-// GetExtras return unmarshal step extras
-func (s *Step) GetExtras(obj interface{}) error {
-	if s.Extras == "" {
-		s.Extras = DefaultJsonExtrasContent
+// GetPayload return unmarshal step extras
+func (s *Step) GetPayload(obj interface{}) error {
+	if len(s.Payload) == 0 {
+		s.Payload = DefaultPayloadContent
 	}
-	return json.Unmarshal([]byte(s.Extras), obj)
+	return json.Unmarshal(s.Payload, obj)
 }
 
-// SetExtrasAll set step extras by json string
-func (s *Step) SetExtrasAll(obj interface{}) error {
+// SetPayload set step extras by json string
+func (s *Step) SetPayload(obj interface{}) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
-	s.Extras = string(result)
+	s.Payload = result
 	return nil
 }
 

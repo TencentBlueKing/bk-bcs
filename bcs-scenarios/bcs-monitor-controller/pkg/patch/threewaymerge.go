@@ -61,13 +61,13 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 		// 3. 其余情况， 统一以模板为准
 		var mergeRule *v1.MonitorRuleDetail
 		if cmp.Equal(originalRule, currentRule, cmp.Comparer(compareMonitorRule)) {
-			blog.Infof("mergeRule..")
+			blog.Infof("[%s]mergeRule..", originalRule.Name)
 			// 相同说明用户没有在面板上进行修改
 			mergeRule = modifiedRule
 			// 告警组配置以用户设置为准
 			mergeRule.Notice = mergeNoticeGroup(currentRule.Notice, modifiedRule.Notice)
 		} else {
-			blog.Infof("changed Rule..")
+			blog.Infof("[%s]changed Rule..", originalRule.Name)
 			// 用户进行了修改， 不做变更
 			mergeRule = currentRule
 		}

@@ -5,28 +5,30 @@
       <span v-overflow-title class="name">{{ title }}</span>
       <Close v-if="!props.disabled" class="close-icon" @click.stop="handleDeletePkg" />
     </div>
-    <table v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
-      <thead>
-        <tr>
-          <th>{{ t('配置文件绝对路径') }}</th>
-          <th>{{ t('版本号') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <template v-if="configTemplateList.length > 0">
-          <tr v-for="tpl in configTemplateList" :key="tpl.id">
-            <td>
-              <bk-overflow-title class="cell" type="tips">{{ fileAP(tpl) }}</bk-overflow-title>
-            </td>
-
-            <td class="select-version">
+    <div v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
+      <div class="table-head">
+        <div class="th-cell">{{ t('配置文件绝对路径') }}</div>
+        <div class="th-cell">{{ t('版本号') }}</div>
+      </div>
+      <RecycleScroller
+        v-if="configTemplateList.length > 0"
+        class="table-body"
+        :items="configTemplateList"
+        :item-size="42"
+        key-field="id">
+        <template #default="{ item }">
+          <div class="table-row">
+            <div class="td-cell">
+              <bk-overflow-title class="cell" type="tips">{{ fileAP(item) }}</bk-overflow-title>
+            </div>
+            <div class="td-cell select-version">
               <bk-select
                 :clearable="false"
                 :popover-options="{ theme: 'light bk-select-popover add-config-selector-popover' }"
-                :model-value="getVersionSelectVal(tpl.id)"
-                @change="handleSelectVersion(tpl.id, tpl.versions, $event)">
+                :model-value="getVersionSelectVal(item.id)"
+                @change="handleSelectVersion(item.id, item.versions, $event)">
                 <bk-option
-                  v-for="version in tpl.versions"
+                  v-for="version in item.versions"
                   :key="version.isLatest ? 0 : version.id"
                   :id="version.isLatest ? 0 : version.id"
                   :label="version.name">
@@ -40,31 +42,33 @@
                   </div>
                 </bk-option>
               </bk-select>
-            </td>
-          </tr>
+            </div>
+          </div>
         </template>
-        <tr v-else>
-          <td colspan="3">
-            <bk-exception class="empty-tips" scene="part" type="empty">{{ t('该套餐下暂无模板') }}</bk-exception>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+      </RecycleScroller>
+      <bk-exception v-else class="empty-tips" scene="part" type="empty">{{ t('该套餐下暂无模板') }}</bk-exception>
+    </div>
   </div>
 </template>
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { RightShape, Close } from 'bkui-vue/lib/icon';
-  import {
-    IAllPkgsGroupBySpaceInBiz,
-    ITemplateConfigItem,
-    ITemplateVersionsName,
-  } from '../../../../../../../../../../types/template';
-  import { getTemplatesByPackageId, getTemplateVersionsNameByIds } from '../../../../../../../../../api/template';
+  import { IAllPkgsGroupBySpaceInBiz, ITemplateConfigItem } from '../../../../../../../../../../types/template';
+  import { ITemplateRevision } from '../../../../../../../../../../types/config';
+  import { getTemplateRevisionsFromPkgId } from '../../../../../../../../../api/template';
+
+  interface ITemplateVersions {
+    id: number;
+    name: string;
+    memo: string;
+    isLatest: boolean;
+    template_id: number;
+    template_name: string;
+  }
 
   interface ITemplateConfigWithVersions extends ITemplateConfigItem {
-    versions: { id: number; name: string; memo: string; isLatest: boolean }[];
+    versions: ITemplateVersions[];
   }
   const { t } = useI18n();
 
@@ -72,7 +76,7 @@
     bkBizId: string;
     pkgList: IAllPkgsGroupBySpaceInBiz[];
     pkgId: number;
-    selectedVersions: { template_id: number; template_revision_id: number; is_latest: boolean }[];
+    selectedVersions: ITemplateRevision[];
     disabled?: boolean;
     conflictTpls?: number[];
   }>();
@@ -111,65 +115,82 @@
   // 获取模板及对应版本列表
   const getTemplateList = async () => {
     listLoading.value = true;
-    // 先取套餐下模板列表
-    const templateListRes = await getTemplatesByPackageId(props.bkBizId, templateSpaceId.value, props.pkgId, {
-      start: 0,
-      all: true,
-    });
-    configTemplateList.value = templateListRes.details.map((item: ITemplateConfigItem) => ({ ...item, versions: [] }));
-    const ids = configTemplateList.value.map((item) => item.id);
-    if (ids.length > 0) {
-      // 再根据模板列表取对应模板的版本列表
-      const versionListRes = await getTemplateVersionsNameByIds(props.bkBizId, ids);
-      versionListRes.details.forEach((item: ITemplateVersionsName) => {
-        const { template_id, latest_template_revision_id, template_revisions } = item;
-        const configTemplate = configTemplateList.value.find((tpl) => tpl.id === template_id);
-        if (configTemplate) {
-          configTemplate.versions = template_revisions.map((version) => {
-            const { template_revision_id, template_revision_name, template_revision_memo } = version;
-            return {
-              id: template_revision_id,
-              name: template_revision_name,
-              memo: template_revision_memo,
-              isLatest: false,
-            };
+    try {
+      const res = await getTemplateRevisionsFromPkgId(props.bkBizId, props.pkgId);
+      configTemplateList.value = res.details.map((item: any) => {
+        const { template, template_revision } = item;
+        const versions = template_revision.map((version: any) => {
+          const {
+            id,
+            spec: { revision_name, revision_memo, path, name },
+          } = version;
+          const template_name = path.endsWith('/') ? `${path}${name}` : `${path}/${name}`;
+          return {
+            id,
+            name: revision_name,
+            memo: revision_memo,
+            isLatest: false,
+            template_name,
+            template_id: template.id,
+          };
+        });
+        const latestVerison = versions[0];
+        if (latestVerison) {
+          versions.unshift({
+            id: latestVerison.id,
+            name: t('latest（当前最新为{n}）', { n: latestVerison?.name }),
+            memo: latestVerison.memo,
+            isLatest: true,
+            template_name: latestVerison.template_name,
+            template_id: template.id,
           });
-          const version = template_revisions.find((version) => {
-            const res = version.template_revision_id === latest_template_revision_id;
-            return res;
-          });
-          if (version) {
-            configTemplate.versions.unshift({
-              id: version.template_revision_id,
-              name: `latest（当前最新为${version.template_revision_name}）`,
-              memo: version.template_revision_memo,
-              isLatest: true,
-            });
-          }
         }
+        return {
+          ...template,
+          versions,
+        };
       });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      listLoading.value = false;
     }
-    listLoading.value = false;
   };
 
   // 如果有模板没有选择版本则自动选择latest版本
   const setTemplatesDefaultVersion = () => {
     const selectedTplVersionsData = props.selectedVersions.slice();
     configTemplateList.value.forEach((tpl) => {
-      if (!props.selectedVersions.find((item) => item.template_id === tpl.id)) {
-        const lasteVersion = tpl.versions.find((v) => v.isLatest);
-        if (lasteVersion) {
+      const selectedVersionIndex = props.selectedVersions.findIndex((item) => item.template_id === tpl.id);
+      if (selectedVersionIndex === -1) {
+        const latestVerison = tpl.versions.find((v) => v.isLatest);
+        if (latestVerison) {
           selectedTplVersionsData.push({
             template_id: tpl.id,
-            template_revision_id: lasteVersion.id,
+            template_revision_id: latestVerison.id,
             is_latest: true,
+            template_revision_name: latestVerison.name,
+            template_name: latestVerison.template_name,
+          });
+        }
+      } else {
+        // 已有版本 对版本数据加工处理
+        const selectedVersion = props.selectedVersions[selectedVersionIndex];
+        const version = tpl.versions.find(
+          (v) => v.id === selectedVersion.template_revision_id && v.isLatest === selectedVersion.is_latest,
+        );
+        if (version) {
+          selectedTplVersionsData.splice(selectedVersionIndex, 1, {
+            template_id: tpl.id,
+            template_revision_id: version.id,
+            is_latest: selectedVersion.is_latest,
+            template_revision_name: version.name,
+            template_name: version.template_name,
           });
         }
       }
     });
-    if (selectedTplVersionsData.length !== props.selectedVersions.length) {
-      emits('updateVersions', selectedTplVersionsData);
-    }
+    emits('updateVersions', selectedTplVersionsData);
   };
 
   const getVersionSelectVal = (id: number) => {
@@ -187,17 +208,17 @@
     }
   };
 
-  const handleSelectVersion = (
-    tplId: number,
-    versions: { id: number; name: string; isLatest: boolean }[],
-    val: number,
-  ) => {
+  const handleSelectVersion = (tplId: number, versions: ITemplateVersions[], val: number) => {
     const isLatest = val === 0;
-    const versionId = isLatest ? versions.find((item) => item.isLatest)?.id : val;
+    const version = isLatest
+      ? versions.find((item) => item.isLatest)
+      : versions.find((item) => item.id === val && item.isLatest === isLatest);
     const versionData = {
-      template_id: tplId,
-      template_revision_id: versionId,
+      template_id: version?.template_id,
+      template_revision_id: version?.id,
       is_latest: isLatest,
+      template_revision_name: version?.name,
+      template_name: version?.template_name,
     };
     emits('selectVersion', versionData);
   };
@@ -208,9 +229,7 @@
 </script>
 <style lang="scss" scoped>
   .package-template-table {
-    &:not(:last-child) {
-      margin-bottom: 18px;
-    }
+    margin-bottom: 18px;
     &.expand {
       .arrow-icon {
         transform: rotate(90deg);
@@ -240,12 +259,6 @@
       text-overflow: ellipsis;
       overflow: hidden;
     }
-    .conflict-icon {
-      margin-left: 10px;
-      font-size: 14px;
-      color: #ff9c01;
-      cursor: pointer;
-    }
     .close-icon {
       position: absolute;
       top: 5px;
@@ -260,9 +273,19 @@
   }
   .template-table {
     width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    tr.has-conflict {
+    border: 1px solid #dcdee5;
+    .table-head {
+      display: flex;
+      width: 100%;
+    }
+    .table-body {
+      max-height: calc(42px * 7);
+    }
+    .table-row {
+      display: flex;
+      width: 100%;
+    }
+    .td-cell.has-conflict {
       .cell {
         background: #fff3e1;
       }
@@ -272,20 +295,24 @@
         }
       }
     }
-    th,
-    td {
+    .th-cell,
+    .td-cell {
+      width: 454px;
       line-height: 20px;
       font-size: 12px;
       font-weight: 400;
-      border: 1px solid #dcdee5;
       text-align: left;
+      &:not(:last-child) {
+        border-right: 1px solid #dcdee5;
+      }
     }
-    th {
+    .th-cell {
       padding: 11px 16px;
       color: #313238;
       background: #fafbfd;
+      border-bottom: none;
     }
-    td {
+    .td-cell {
       padding: 0;
       color: #63656e;
       background: #f5f7fa;
@@ -296,6 +323,8 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        border-top: 1px solid #dcdee5;
+        width: 452px;
       }
     }
     .select-version {
@@ -303,6 +332,7 @@
       :deep(.bk-input) {
         height: 42px;
         border-color: transparent;
+        border-top: 1px solid #dcdee5;
       }
     }
     .empty-tips {

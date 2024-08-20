@@ -1,11 +1,21 @@
 <template>
   <div>
     <div class="key-value" v-for="(item, index) in taints" :key="index">
+      <span v-if="required" class="text-[#ea3636] mr-[12px]">*</span>
+      <!-- 修改为新的校验规则 -->
       <Validate
         :rules="[
           {
-            message: $i18n.t('generic.validate.labelKey'),
-            validator: '^[A-Za-z0-9._/-]+$',
+            message: $i18n.t('generic.validate.SpeciaLabelKey'),
+            validator: LABEL_KEY_MAXL,
+          },
+          {
+            message: $i18n.t('generic.validate.SpeciaLabelKey'),
+            validator: LABEL_KEY_DOMAIN,
+          },
+          {
+            message: $i18n.t('generic.validate.SpeciaLabelKey'),
+            validator: LABEL_KEY_PATH,
           },
           {
             message: $i18n.t('generic.validate.repeatKey'),
@@ -13,11 +23,12 @@
           },
         ]"
         :value="item.key"
+        :required="required"
         :meta="index"
         class="flex-1">
         <bcs-input
           v-model="item.key"
-          :placeholder="$t('generic.label.key')"
+          :placeholder="keyPlaceholder"
           @change="handleLabelKeyChange">
         </bcs-input>
       </Validate>
@@ -26,15 +37,15 @@
         :rules="[
           {
             message: $i18n.t('generic.validate.labelKey'),
-            validator: '^[A-Za-z0-9._/-]+$',
+            validator: TAINT_VALUE,
           },
         ]"
         :value="item.value"
         :meta="index"
         class="flex-1">
         <bcs-input
-          v-model="item.value"
-          :placeholder="$t('generic.label.value')"
+          v-model.trim="item.value"
+          :placeholder="valuePlaceholder"
           @change="handleLabelValueChange">
         </bcs-input>
       </Validate>
@@ -61,13 +72,14 @@
 <script lang="ts">
 import { computed, defineComponent, ref, watch } from 'vue';
 
-import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
+import { KEY_REGEXP, LABEL_KEY_DOMAIN, LABEL_KEY_MAXL, LABEL_KEY_PATH, TAINT_VALUE, VALUE_REGEXP } from '@/common/constant';
 import Validate from '@/components/validate.vue';
+import $i18n from '@/i18n/i18n-setup';
 
-interface ITaint {
+export interface ITaint {
   key: string;
   value: string;
-  effect: string;
+  effect: 'PreferNoSchedule'| 'NoExecute'| 'NoSchedule';
 }
 export default defineComponent({
   name: 'NewTaints',
@@ -89,6 +101,18 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
+    required: {
+      type: Boolean,
+      default: false,
+    },
+    keyPlaceholder: {
+      type: String,
+      default:  $i18n.t('generic.label.key'),
+    },
+    valuePlaceholder: {
+      type: String,
+      default:  $i18n.t('generic.label.value'),
+    }
   },
   setup(props, ctx) {
     const taints = ref<ITaint[]>([]);
@@ -132,8 +156,10 @@ export default defineComponent({
         return false;
       }
 
-      return keys.every(key => new RegExp(KEY_REGEXP).test(key))
-        && values.every(value => new RegExp(VALUE_REGEXP).test(value)) ;
+      return keys.every(key => new RegExp(LABEL_KEY_DOMAIN).test(key))
+        && keys.every(key => new RegExp(LABEL_KEY_MAXL).test(key))
+        && keys.every(key => new RegExp(LABEL_KEY_PATH).test(key))
+        && values.every(value => new RegExp(TAINT_VALUE).test(value)) ;
     };
     return {
       taints,
@@ -145,6 +171,10 @@ export default defineComponent({
       validate,
       KEY_REGEXP,
       VALUE_REGEXP,
+      LABEL_KEY_DOMAIN,
+      LABEL_KEY_MAXL,
+      LABEL_KEY_PATH,
+      TAINT_VALUE,
     };
   },
 });

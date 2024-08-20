@@ -137,6 +137,10 @@ func (nm *NodeManager) GetExternalNodeByIP(ip string, opt *cloudprovider.GetNode
 
 // ListExternalNodesByIP xxx
 func (nm *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	if len(ips) == 0 {
+		return nil, nil
+	}
+
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -173,6 +177,10 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 
 // ListNodesByIP list node by IP set
 func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	if len(ips) == 0 {
+		return nil, nil
+	}
+
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

@@ -21,8 +21,7 @@ import (
 const (
 	// TaskTimeFormat task time format, e.g. 2006-01-02T15:04:05Z07:00
 	TaskTimeFormat = time.RFC3339
-	// DefaultJsonExtrasContent default json extras content
-	DefaultJsonExtrasContent = "{}"
+
 	// DefaultMaxExecuteTimeSeconds default max execute time for 1 hour
 	DefaultMaxExecuteTimeSeconds = 3600
 	// DefaultTaskMessage default message
@@ -47,6 +46,8 @@ const (
 )
 
 var (
+	// DefaultPayloadContent default json extras content
+	DefaultPayloadContent = []byte("{}")
 	// ErrNotImplemented not implemented error
 	ErrNotImplemented = errors.New("not implemented")
 )
@@ -60,9 +61,9 @@ type Task struct {
 	TaskName            string            `json:"taskName"`
 	CurrentStep         string            `json:"currentStep"`
 	Steps               []*Step           `json:"steps"`
-	CallBackFuncName    string            `json:"callBackFuncName"`
+	CallbackName        string            `json:"callbackName"`
 	CommonParams        map[string]string `json:"commonParams"`
-	ExtraJson           string            `json:"extraJson"`
+	CommonPayload       []byte            `json:"commonPayload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
 	ForceTerminate      bool              `json:"forceTerminate"`
@@ -80,7 +81,7 @@ type Step struct {
 	Name                string            `json:"name"`
 	Alias               string            `json:"alias"`
 	Params              map[string]string `json:"params"`
-	Extras              string            `json:"extras"`
+	Payload             []byte            `json:"payload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
@@ -90,4 +91,20 @@ type Step struct {
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
+}
+
+// TaskType taskType
+type TaskType string // nolint
+
+// String toString
+func (tt TaskType) String() string {
+	return string(tt)
+}
+
+// TaskName xxx
+type TaskName string // nolint
+
+// String xxx
+func (tn TaskName) String() string {
+	return string(tn)
 }

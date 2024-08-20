@@ -329,7 +329,7 @@ func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		}
 		item.ID = ids[i]
 	}
-	return tx.Query.TemplateRevision.WithContext(kit.Ctx).Save(revisions...)
+	return tx.Query.TemplateRevision.WithContext(kit.Ctx).CreateInBatches(revisions, 200)
 }
 
 // ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids

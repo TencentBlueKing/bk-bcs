@@ -39,23 +39,20 @@ func GrantProjectCreatorActions(username string, projectID string, projectName s
 	iamConf := config.GlobalConf.IAM
 	// 使用网关访问
 	reqURL := fmt.Sprintf("%s%s", iamConf.GatewayHost, grantActionPath)
-	headers := map[string]string{"Content-Type": "application/json"}
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
 		Data: map[string]interface{}{
-			"bk_app_code":   config.GlobalConf.App.Code,
-			"bk_app_secret": config.GlobalConf.App.Secret,
-			"creator":       username,
-			"system":        bcsIAM.SystemIDBKBCS,
-			"type":          "project",
-			"id":            projectID,
-			"name":          projectName,
+			"creator": username,
+			"system":  bcsIAM.SystemIDBKBCS,
+			"type":    "project",
+			"id":      projectID,
+			"name":    projectName,
 		},
 	}
 	// 请求API
 	proxy := ""
-	_, err := component.Request(req, timeout, proxy, headers)
+	_, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
 	if err != nil {
 		logging.Error("grant creator actions for project failed, %s", err.Error())
 		return errorx.NewRequestIAMErr(err.Error())
@@ -68,24 +65,21 @@ func GrantNamespaceCreatorActions(username, clusterID, namespace string) error {
 	iamConf := config.GlobalConf.IAM
 	// 使用网关访问
 	reqURL := fmt.Sprintf("%s%s", iamConf.GatewayHost, grantActionPath)
-	headers := map[string]string{"Content-Type": "application/json"}
 	id := authutils.CalcIAMNsID(clusterID, namespace)
 	req := gorequest.SuperAgent{
 		Url:    reqURL,
 		Method: "POST",
 		Data: map[string]interface{}{
-			"bk_app_code":   config.GlobalConf.App.Code,
-			"bk_app_secret": config.GlobalConf.App.Secret,
-			"creator":       username,
-			"system":        bcsIAM.SystemIDBKBCS,
-			"type":          "namespace",
-			"id":            id,
-			"name":          namespace,
+			"creator": username,
+			"system":  bcsIAM.SystemIDBKBCS,
+			"type":    "namespace",
+			"id":      id,
+			"name":    namespace,
 		},
 	}
 	// 请求API
 	proxy := ""
-	_, err := component.Request(req, timeout, proxy, headers)
+	_, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
 	if err != nil {
 		logging.Error("grant creator actions for namespace failed, %s", err.Error())
 		return errorx.NewRequestIAMErr(err.Error())

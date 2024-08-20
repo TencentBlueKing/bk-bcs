@@ -174,23 +174,24 @@ type ListForIAMConfig struct {
 
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
-	Etcd                   EtcdConfig                   `yaml:"etcd"`
-	Mongo                  MongoConfig                  `yaml:"mongo"`
-	Log                    LogConfig                    `yaml:"log"`
-	Swagger                SwaggerConfig                `yaml:"swagger"`
-	Server                 ServerConfig                 `yaml:"server"`
-	Client                 ClientConfig                 `yaml:"client"`
-	JWT                    JWTConfig                    `yaml:"jwt"`
-	IAM                    IAMConfig                    `yaml:"iam"`
-	ITSM                   ITSMConfig                   `yaml:"itsm"`
-	Bkmonitor              BkMonitorConfig              `yaml:"bkmonitor"`
-	ClientActionExemptPerm ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
-	CMDB                   CMDBConfig                   `yaml:"cmdb"`
-	BCSCC                  BCSCCConfig                  `yaml:"bcscc"`
-	App                    AppConfig                    `yaml:"app"`
-	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
-	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
-	TracingConfig          conf.TracingConfig           `yaml:"tracingConfig"`
+	Etcd                       EtcdConfig                   `yaml:"etcd"`
+	Mongo                      MongoConfig                  `yaml:"mongo"`
+	Log                        LogConfig                    `yaml:"log"`
+	Swagger                    SwaggerConfig                `yaml:"swagger"`
+	Server                     ServerConfig                 `yaml:"server"`
+	Client                     ClientConfig                 `yaml:"client"`
+	JWT                        JWTConfig                    `yaml:"jwt"`
+	IAM                        IAMConfig                    `yaml:"iam"`
+	ITSM                       ITSMConfig                   `yaml:"itsm"`
+	Bkmonitor                  BkMonitorConfig              `yaml:"bkmonitor"`
+	ClientActionExemptPerm     ClientActionExemptPermConfig `yaml:"clientActionExemptPerm"`
+	CMDB                       CMDBConfig                   `yaml:"cmdb"`
+	BCSCC                      BCSCCConfig                  `yaml:"bcscc"`
+	App                        AppConfig                    `yaml:"app"`
+	BcsGateway                 BCSGatewayConfig             `yaml:"bcsGateway"`
+	ListForIAM                 ListForIAMConfig             `yaml:"listForIAM"`
+	TracingConfig              conf.TracingConfig           `yaml:"tracingConfig"`
+	RestrictAuthorizedProjects bool                         `yaml:"restrictAuthorizedProjects"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {

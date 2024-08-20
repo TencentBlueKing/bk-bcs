@@ -839,7 +839,7 @@ export default defineComponent({
                       options={{
                         roundedSelection: false,
                         scrollBeyondLastLine: false,
-                        renderLineHighlight: false,
+                        renderLineHighlight: 'none',
                       }}
                       width="100%" height="100%" lang="yaml"
                       readonly={true} value={this.yaml} />)

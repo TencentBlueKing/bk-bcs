@@ -199,7 +199,7 @@ func (t *TemplateAction) List(ctx context.Context, templateSpaceID string) ([]ma
 	for _, value := range template {
 		mm := value.ToMap()
 		for _, v := range versions {
-			if v.Version == value.Version {
+			if v.Version == value.Version && v.TemplateName == value.Name {
 				mm["versionID"] = v.ID.Hex()
 			}
 		}
@@ -283,6 +283,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	if req.GetIsDraft() {
 		template.DraftVersion = req.GetDraftVersion()
 		template.DraftContent = req.GetDraftContent()
+		template.DraftEditFormat = req.GetDraftEditFormat()
 	}
 
 	// 没有记录的情况下直接创建
@@ -344,14 +345,15 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 	}
 
 	updateTemplate := entity.M{
-		"name":         req.GetName(),
-		"description":  req.GetDescription(),
-		"updator":      userName,
-		"tags":         req.GetTags(),
-		"versionMode":  req.GetVersionMode(),
-		"isDraft":      req.GetIsDraft(),
-		"draftVersion": req.GetDraftVersion(),
-		"draftContent": req.GetDraftContent(),
+		"name":            req.GetName(),
+		"description":     req.GetDescription(),
+		"updator":         userName,
+		"tags":            req.GetTags(),
+		"versionMode":     req.GetVersionMode(),
+		"isDraft":         req.GetIsDraft(),
+		"draftVersion":    req.GetDraftVersion(),
+		"draftContent":    req.GetDraftContent(),
+		"draftEditFormat": req.GetDraftEditFormat(),
 	}
 	if req.GetVersionMode() == clusterRes.VersionMode_SpecifyVersion && req.GetVersion() != "" {
 		updateTemplate["version"] = req.GetVersion()
@@ -481,18 +483,16 @@ func (t *TemplateAction) ListTemplateFileVariables(ctx context.Context,
 	})
 	vars := make([]map[string]interface{}, 0)
 	for _, v := range parseMultiTemplateFileVar(templates) {
-		readonly := false
 		value := ""
 		for _, vv := range clusterVars {
 			if vv.Key == v {
-				readonly = true
 				value = vv.Value
 			}
 		}
 		vars = append(vars, map[string]interface{}{
 			"key":      v,
 			"value":    value,
-			"readonly": readonly,
+			"readonly": false, // 默认可覆盖
 		})
 	}
 	return map[string]interface{}{"vars": vars}, nil

@@ -155,6 +155,13 @@ func BCSJWTDecode(jwtToken string) (*auth.UserClaimsInfo, error) {
 // Authentication middleware for authentication
 func Authentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.G.IsLocalDevMode() {
+			// skip auth in local dev mode
+			ctx := context.WithValue(r.Context(), AuthUserKey, &auth.UserClaimsInfo{UserName: "anonymous"})
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+			return
+		}
 		claims, err := decodeBCSJwtFromContext(r.Context(), r)
 		if err != nil {
 			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())

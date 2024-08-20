@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -83,6 +84,47 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 	if err != nil {
 		return err
 	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
+	return err
+}
+
+// FetchMultiClusterApiResources Fetch multi cluster api resources
+func (h *Handler) FetchMultiClusterApiResources(ctx context.Context, req *clusterRes.FetchMultiClusterApiResourcesReq,
+	resp *clusterRes.CommonResp) (err error) {
+	// 获取视图信息
+	view := &entity.View{}
+	if req.GetViewID() != "" {
+		view, err = h.model.GetView(ctx, req.GetViewID())
+		if err != nil {
+			return err
+		}
+	}
+	filter := QueryFilter{
+		LabelSelector: req.GetLabelSelector(),
+	}
+	// 是否仅获取crd资源
+	kind := ""
+	if req.GetOnlyCrd() {
+		kind = constants.CRD
+	}
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(getScopedByKind(kind)))
+
+	// from api server
+	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
+
+	var data map[string]interface{}
+	data, err = query.FetchApiResources(ctx, kind)
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(data)
+	if err != nil {
+		return err
+	}
+
 	resp.WebAnnotations, err = web.NewAnnos(
 		web.NewFeatureFlag(featureflag.FormCreate, true),
 	).ToPbStruct()

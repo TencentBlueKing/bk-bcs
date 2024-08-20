@@ -62,3 +62,15 @@ interface IFieldItem {
   status: 'added' | ''// added: 已经添加的条件, 空: 为添加的条件
   placeholder?: string
 }
+
+// 获得函数参数类型的辅助类型
+type ParamTypes<T> = T extends (...args: infer P) => any ? P : never;
+
+type MakeOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
+interface IFetchConfig {
+  needRes?: boolean// 是否需要返回原始资源
+  cancelPrevious?: boolean// 是否需要上一次重复的请求
+  cancelWhenRouteChange?: boolean// 当前路由切换时当前请求可以被取消
+  globalError?: boolean // 捕获全局异常
+}

@@ -256,6 +256,19 @@ export default function useNode() {
       .catch(() => false);
     return result;
   };
+  // 批量设置节点标签，返回data,以处理个别节点标签设置失败的情况
+  const batchSetNodeLabels = async (params: ILabelsAndTaintsParams<ILabelsItem>) => {
+    const result = await handleSetNodeLabels(params).then(data => data)
+      .catch(() => false);
+
+    return result;
+  };
+  // 设置节点污点，返回data,以处理个别节点污点设置失败的情况
+  const batchSetNodeTaints = async (params: ILabelsAndTaintsParams<ITaintsItem>) => {
+    const result = await handleSetNodeTaints(params).then(data => data)
+      .catch(() => false);
+    return result;
+  };
   // 批量删除节点（节点组、空节点）
   const batchDeleteNodes = async (params: {
     $clusterId: string
@@ -284,6 +297,8 @@ export default function useNode() {
     retryTask,
     setNodeLabels,
     setNodeTaints,
+    batchSetNodeLabels,
+    batchSetNodeTaints,
     batchDeleteNodes,
     taskDetail,
     getAllNodeOverview,
