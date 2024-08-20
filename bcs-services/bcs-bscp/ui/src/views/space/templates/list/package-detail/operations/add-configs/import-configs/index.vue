@@ -9,7 +9,7 @@
     :before-close="handleBeforeClose"
     :quick-close="false"
     @closed="handleClose">
-    <div v-if="currentStep === 'upload'">
+    <div v-show="currentStep === 'upload'">
       <div :class="['select-wrap', { 'en-select-wrap': locale === 'en' }]">
         <div class="import-type-select">
           <div class="label">{{ t('导入方式') }}</div>
@@ -72,7 +72,7 @@
       </bk-loading>
     </div>
     <SelectPackage
-      v-else
+      v-if="currentStep === 'import'"
       ref="selectedPkgsRef"
       :config-id-list="importConfigIdList"
       @toggle-btn-disabled="importBtnDisabled = $event" />

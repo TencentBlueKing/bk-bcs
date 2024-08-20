@@ -503,6 +503,46 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources": {
+      "post": {
+        "summary": "Get multi cluster resources",
+        "description": "获取多集群原生资源列表",
+        "operationId": "MultiCluster_FetchMultiClusterApiResources",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterApiResourcesReq"
+            }
+          }
+        ],
+        "tags": [
+          "MultiCluster"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects": {
       "post": {
         "summary": "Get multi cluster custom resources",
@@ -938,6 +978,13 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "文件夹名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1050,6 +1097,50 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Copy template space",
+        "description": "复制模板文件文件夹",
+        "operationId": "TemplateSet_CopyTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCopyTemplateSpaceReq"
+            }
           }
         ],
         "tags": [
@@ -9846,6 +9937,21 @@
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
       "title": "CommonResp"
     },
+    "clusterresourcesCopyTemplateSpaceReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "文件夹 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        }
+      },
+      "description": "复制模板文件文件夹",
+      "title": "CopyTemplateSpaceReq"
+    },
     "clusterresourcesCreateEnvManageReq": {
       "type": "object",
       "properties": {
@@ -10119,6 +10225,39 @@
       },
       "description": "Echo API 响应",
       "title": "EchoResp"
+    },
+    "clusterresourcesFetchMultiClusterApiResourcesReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "onlyCrd": {
+          "type": "boolean",
+          "title": "是否只列出crd资源"
+        },
+        "viewID": {
+          "type": "string",
+          "title": "viewID"
+        },
+        "labelSelector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
+          },
+          "title": "标签选择器"
+        }
+      },
+      "description": "获取多集群api资源请求体",
+      "title": "FetchMultiClusterApiResourcesReq"
     },
     "clusterresourcesFetchMultiClusterCustomResourceReq": {
       "type": "object",

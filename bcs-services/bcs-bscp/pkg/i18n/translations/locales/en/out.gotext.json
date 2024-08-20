@@ -306,6 +306,285 @@
             "fuzzy": true
         },
         {
+            "id": "list template sets by template set ids failed, err: {Err}",
+            "message": "list template sets by template set ids failed, err: {Err}",
+            "translation": "list template sets by template set ids failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "update app template binding failed, err: {Err}",
+            "message": "update app template binding failed, err: {Err}",
+            "translation": "update app template binding failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list template spaces failed, err: {Err}",
+            "message": "list template spaces failed, err: {Err}",
+            "translation": "list template spaces failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template space {V} not found",
+            "message": "template space {V} not found",
+            "translation": "template space {V} not found",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "V",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template set {V} not found",
+            "message": "template set {V} not found",
+            "translation": "template set {V} not found",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "V",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list templates of template set failed, err: {Err}",
+            "message": "list templates of template set failed, err: {Err}",
+            "translation": "list templates of template set failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the template file {ValidatedTemplateSetNamessId} in the template set \n\t\t\t\t{TemplateNamesv} has been removed. Please import the set again",
+            "message": "the template file {ValidatedTemplateSetNamessId} in the template set \n\t\t\t\t{TemplateNamesv} has been removed. Please import the set again",
+            "translation": "the template file {ValidatedTemplateSetNamessId} in the template set \n\t\t\t\t{TemplateNamesv} has been removed. Please import the set again",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "ValidatedTemplateSetNamessId",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "validatedTemplateSetNames[sId]"
+                },
+                {
+                    "id": "TemplateNamesv",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "templateNames[v]"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list template revisions failed, err: {Err}",
+            "message": "list template revisions failed, err: {Err}",
+            "translation": "list template revisions failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template version {RevisionNamesv} in template file {TemplateNamestId} \n\t\t\t\thas been removed. Please import the set again",
+            "message": "template version {RevisionNamesv} in template file {TemplateNamestId} \n\t\t\t\thas been removed. Please import the set again",
+            "translation": "template version {RevisionNamesv} in template file {TemplateNamestId} \n\t\t\t\thas been removed. Please import the set again",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "RevisionNamesv",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "revisionNames[v]"
+                },
+                {
+                    "id": "TemplateNamestId",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "templateNames[tId]"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the version number {TemplateID} in the template file {ID} is not the \n\t\tlatest version. Please import the set again",
+            "message": "the version number {TemplateID} in the template file {ID} is not the \n\t\tlatest version. Please import the set again",
+            "translation": "the version number {TemplateID} in the template file {ID} is not the \n\t\tlatest version. Please import the set again",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "TemplateID",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "templateNames[v.Attachment.TemplateID]"
+                },
+                {
+                    "id": "ID",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "revisionNames[v.ID]"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "count the number of service configurations failed, err: {Err}",
+            "message": "count the number of service configurations failed, err: {Err}",
+            "translation": "count the number of service configurations failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "app {Name} is not file type",
+            "message": "app {Name} is not file type",
+            "translation": "app {Name} is not file type",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "app.Spec.Name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "delete one app template binding instance by app id failed, err: {Err}",
+            "message": "delete one app template binding instance by app id failed, err: {Err}",
+            "translation": "delete one app template binding instance by app id failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "batch create contents failed, err: {Error}",
+            "message": "batch create contents failed, err: {Error}",
+            "translation": "batch create contents failed, err: {Error}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Error",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "e"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "delete one app template variable failed, err: {Error}",
+            "message": "delete one app template variable failed, err: {Error}",
+            "translation": "delete one app template variable failed, err: {Error}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Error",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "e"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "obtain the number of configuration items",
             "message": "obtain the number of configuration items",
             "translation": "obtain the number of configuration items",
@@ -333,23 +612,6 @@
             "id": "get reference template set under this app failed, err: {Err}",
             "message": "get reference template set under this app failed, err: {Err}",
             "translation": "get reference template set under this app failed, err: {Err}",
-            "translatorComment": "Copied from source.",
-            "placeholders": [
-                {
-                    "id": "Err",
-                    "string": "%[1]s",
-                    "type": "error",
-                    "underlyingType": "interface{Error() string}",
-                    "argNum": 1,
-                    "expr": "err"
-                }
-            ],
-            "fuzzy": true
-        },
-        {
-            "id": "list template sets by template set ids failed, err: {Err}",
-            "message": "list template sets by template set ids failed, err: {Err}",
-            "translation": "list template sets by template set ids failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
@@ -444,6 +706,31 @@
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
                     "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item's same name {Name} and path {Path} already exists",
+            "message": "config item's same name {Name} and path {Path} already exists",
+            "translation": "config item's same name {Name} and path {Path} already exists",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                },
+                {
+                    "id": "Path",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "req.Spec.Path"
                 }
             ],
             "fuzzy": true
@@ -620,6 +907,54 @@
             "id": "count the number of app configs failed, err: {Err}",
             "message": "count the number of app configs failed, err: {Err}",
             "translation": "count the number of app configs failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template set data is empty",
+            "message": "template set data is empty",
+            "translation": "template set data is empty",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "list templates data failed, err: {Err}",
+            "message": "list templates data failed, err: {Err}",
+            "translation": "list templates data failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template data is empty",
+            "message": "template data is empty",
+            "translation": "template data is empty",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "list templates revisions data failed, err: {Err}",
+            "message": "list templates revisions data failed, err: {Err}",
+            "translation": "list templates revisions data failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {

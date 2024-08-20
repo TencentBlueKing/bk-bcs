@@ -49,6 +49,7 @@ type ClusterResourcesModel interface {
 	GetTemplate(ctx context.Context, id string) (*entity.Template, error)
 	ListTemplate(ctx context.Context, cond *operator.Condition) ([]*entity.Template, error)
 	CreateTemplate(ctx context.Context, template *entity.Template) (string, error)
+	CreateTemplateBatch(ctx context.Context, templates []*entity.Template) error
 	UpdateTemplate(ctx context.Context, id string, template entity.M) error
 	UpdateTemplateBySpecial(
 		ctx context.Context, projectCode, templateSpace string, template entity.M) error
@@ -59,6 +60,7 @@ type ClusterResourcesModel interface {
 	GetTemplateVersion(ctx context.Context, id string) (*entity.TemplateVersion, error)
 	ListTemplateVersion(ctx context.Context, cond *operator.Condition) ([]*entity.TemplateVersion, error)
 	CreateTemplateVersion(ctx context.Context, templateVersion *entity.TemplateVersion) (string, error)
+	CreateTemplateVersionBatch(ctx context.Context, templateVersions []*entity.TemplateVersion) error
 	UpdateTemplateVersion(ctx context.Context, id string, templateVersion entity.M) error
 	UpdateTemplateVersionBySpecial(
 		ctx context.Context, projectCode, templateName, templateSpace string, templateVersion entity.M) error

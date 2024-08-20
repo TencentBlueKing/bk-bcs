@@ -147,7 +147,7 @@
         user_group,
         template_ids: props.configs.map((item) => item.id),
         app_ids: appIds,
-        template_space_id: bkBizId.value,
+        template_space_id: props.currentTemplateSpace,
         exclusion_operation: props.isAcrossChecked,
         template_set_id: props.currentPkg !== undefined ? props.currentPkg : 0,
         no_set_specified: props.pkgType === 'without',

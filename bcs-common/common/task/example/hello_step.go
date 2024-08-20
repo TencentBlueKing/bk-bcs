@@ -14,7 +14,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
@@ -44,9 +43,9 @@ func (s HelloStep) GetName() string {
 	return method
 }
 
-// DoWork for worker exec task
-func (s HelloStep) DoWork(ctx context.Context, step *istep.Work) error {
-	fmt.Printf("%s %s %s\n", step.GetTaskID(), step.GetTaskType(), step.GetTaskName())
+// Execute for worker exec task
+func (s HelloStep) Execute(c *istep.Context) error {
+	fmt.Printf("%s %s %s\n", c.GetTaskID(), c.GetTaskType(), c.GetTaskName())
 	return nil
 }
 

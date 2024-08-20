@@ -16,15 +16,32 @@ import (
 	"sync"
 )
 
+// StepName 步骤名称, 通过这个查找Executor, 必须全局唯一
+type StepName string
+
+// String ...
+func (s StepName) String() string {
+	return string(s)
+}
+
+// CallbackName 步骤名称, 通过这个查找callback Executor, 必须全局唯一
+type CallbackName string
+
+// String ...
+func (cb CallbackName) String() string {
+	return string(cb)
+}
+
 var (
-	stepMu sync.RWMutex
-	steps  = make(map[string]StepWorkerInterface)
+	stepMu    sync.RWMutex
+	steps     = make(map[StepName]StepExecutor)
+	callBacks = make(map[CallbackName]CallbackExecutor)
 )
 
-// Register makes a StepWorkerInterface available by the provided name.
-// If Register is called twice with the same name or if StepWorkerInterface is nil,
+// Register makes a StepExecutor available by the provided name.
+// If Register is called twice with the same name or if StepExecutor is nil,
 // it panics.
-func Register(name string, step StepWorkerInterface) {
+func Register(name StepName, step StepExecutor) {
 	stepMu.Lock()
 	defer stepMu.Unlock()
 
@@ -33,16 +50,40 @@ func Register(name string, step StepWorkerInterface) {
 	}
 
 	if _, dup := steps[name]; dup {
-		panic("task: Register step twice for work " + name)
+		panic("task: Register step twice for executor " + name)
 	}
 
 	steps[name] = step
 }
 
 // GetRegisters get all steps instance
-func GetRegisters() map[string]StepWorkerInterface {
+func GetRegisters() map[StepName]StepExecutor {
 	stepMu.Lock()
 	defer stepMu.Unlock()
 
 	return steps
+}
+
+// RegisterCallback ...
+func RegisterCallback(name CallbackName, cb CallbackExecutor) {
+	stepMu.Lock()
+	defer stepMu.Unlock()
+
+	if cb == nil {
+		panic("task: Register callback is nil")
+	}
+
+	if _, dup := callBacks[name]; dup {
+		panic("task: Register callback twice for executor " + name)
+	}
+
+	callBacks[name] = cb
+}
+
+// GetCallbackRegisters get all steps instance
+func GetCallbackRegisters() map[CallbackName]CallbackExecutor {
+	stepMu.Lock()
+	defer stepMu.Unlock()
+
+	return callBacks
 }

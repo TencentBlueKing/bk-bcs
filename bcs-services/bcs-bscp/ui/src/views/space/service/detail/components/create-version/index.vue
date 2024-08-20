@@ -4,7 +4,7 @@
     v-cursor="{ active: !props.hasPerm }"
     theme="primary"
     :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
-    :disabled="(props.hasPerm && allConfigCount === 0) || props.permCheckLoading || conflictFileCount > 0"
+    :disabled="!props.hasPerm || allExistConfigCount === 0 || props.permCheckLoading || conflictFileCount > 0"
     @click="handleBtnClick">
     {{ t('生成版本') }}
   </bk-button>
@@ -37,7 +37,7 @@
   const { t } = useI18n();
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
-  const { allConfigCount, versionData, conflictFileCount } = storeToRefs(useConfigStore());
+  const { allExistConfigCount, versionData, conflictFileCount } = storeToRefs(useConfigStore());
   const isVersionSliderShow = ref(false);
   const isDiffSliderShow = ref(false);
   const createSliderRef = ref();

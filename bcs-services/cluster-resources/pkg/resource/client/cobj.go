@@ -48,6 +48,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -348,7 +349,7 @@ func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string
 				return err
 			}
 			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
-			manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
+			manifest, err := getApiReSourcesManifest(ctx, crdName, clusterID)
 			if err != nil {
 				return err
 			}
@@ -362,7 +363,7 @@ func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string
 		return nil, err
 	}
 
-	return formatter.FormatCRD(result), nil
+	return result, nil
 }
 
 // GetCObjManifest 获取自定义资源信息
@@ -615,4 +616,45 @@ func printTemplate(template *corev1.PodTemplateSpec) (string, error) {
 	w := describe.NewPrefixWriter(buf)
 	describe.DescribePodTemplate(template, w)
 	return buf.String(), nil
+}
+
+// 简单的返回特殊的字段
+func getApiReSourcesManifest(ctx context.Context, crdName, clusterID string) (map[string]interface{}, error) {
+	manifest := make(map[string]interface{}, 0)
+	// 分离资源名称
+	s := strings.SplitN(crdName, ".", 2)
+	if len(s) > 0 {
+		crdName = s[0]
+	}
+
+	// group可能为空
+	group := ""
+	if len(s) > 1 {
+		group = s[1]
+	}
+	apiResources, err := res.GetApiResources(ctx, res.NewClusterConf(clusterID), "")
+	if err != nil {
+		return manifest, err
+	}
+	// 避免不了存在resources,group一样，版本不一样的GroupVersionResource
+	for _, v := range apiResources {
+		for _, vv := range v {
+			if vv["resource"] == crdName && vv["group"] == group {
+				manifest = map[string]interface{}{
+					"name":       vv["resource"],
+					"kind":       vv["kind"],
+					"apiVersion": fmt.Sprintf("%s/%s", vv["group"], vv["version"]),
+					"scope":      constants.ClusterScope,
+				}
+
+				if vv["group"] == "" {
+					manifest["apiVersion"] = fmt.Sprintf("%s", vv["version"])
+				}
+				if vv["namespaced"] == true {
+					manifest["scope"] = constants.NamespacedScope
+				}
+			}
+		}
+	}
+	return manifest, nil
 }
