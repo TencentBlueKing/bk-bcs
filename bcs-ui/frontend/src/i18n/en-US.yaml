@@ -11,8 +11,9 @@ bcs:
   intro:
     welcome: Welcome to BCS
     article1: >-
-      BlueKing Container Service (BCS, same below) is designed to bridge the gap between cloud-native technologies and
-      real-world business application scenarios
+      BlueKing Container Service (BCS, same below) is designed to bridge the gap
+      between cloud-native technologies and real-world business application
+      scenarios
     article2: >-
       Focusing on the development, integration, and productization of 
       containerized deployment technology solutions for complex application
