@@ -9813,6 +9813,371 @@ var _ interface {
 	ErrorName() string
 } = CopyTemplateSpaceReqValidationError{}
 
+// Validate checks the field values on ListTemplateSpaceCollectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListTemplateSpaceCollectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListTemplateSpaceCollectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListTemplateSpaceCollectReqMultiError, or nil if none found.
+func (m *ListTemplateSpaceCollectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListTemplateSpaceCollectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := ListTemplateSpaceCollectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListTemplateSpaceCollectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListTemplateSpaceCollectReqMultiError is an error wrapping multiple
+// validation errors returned by ListTemplateSpaceCollectReq.ValidateAll() if
+// the designated constraints aren't met.
+type ListTemplateSpaceCollectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListTemplateSpaceCollectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListTemplateSpaceCollectReqMultiError) AllErrors() []error { return m }
+
+// ListTemplateSpaceCollectReqValidationError is the validation error returned
+// by ListTemplateSpaceCollectReq.Validate if the designated constraints
+// aren't met.
+type ListTemplateSpaceCollectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListTemplateSpaceCollectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListTemplateSpaceCollectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListTemplateSpaceCollectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListTemplateSpaceCollectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListTemplateSpaceCollectReqValidationError) ErrorName() string {
+	return "ListTemplateSpaceCollectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListTemplateSpaceCollectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListTemplateSpaceCollectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListTemplateSpaceCollectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListTemplateSpaceCollectReqValidationError{}
+
+// Validate checks the field values on CreateTemplateSpaceCollectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateTemplateSpaceCollectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateTemplateSpaceCollectReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// CreateTemplateSpaceCollectReqMultiError, or nil if none found.
+func (m *CreateTemplateSpaceCollectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateTemplateSpaceCollectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := CreateTemplateSpaceCollectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetTemplateSpaceID()); l < 1 || l > 64 {
+		err := CreateTemplateSpaceCollectReqValidationError{
+			field:  "TemplateSpaceID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return CreateTemplateSpaceCollectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateTemplateSpaceCollectReqMultiError is an error wrapping multiple
+// validation errors returned by CreateTemplateSpaceCollectReq.ValidateAll()
+// if the designated constraints aren't met.
+type CreateTemplateSpaceCollectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateTemplateSpaceCollectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateTemplateSpaceCollectReqMultiError) AllErrors() []error { return m }
+
+// CreateTemplateSpaceCollectReqValidationError is the validation error
+// returned by CreateTemplateSpaceCollectReq.Validate if the designated
+// constraints aren't met.
+type CreateTemplateSpaceCollectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateTemplateSpaceCollectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateTemplateSpaceCollectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateTemplateSpaceCollectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateTemplateSpaceCollectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateTemplateSpaceCollectReqValidationError) ErrorName() string {
+	return "CreateTemplateSpaceCollectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateTemplateSpaceCollectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateTemplateSpaceCollectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateTemplateSpaceCollectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateTemplateSpaceCollectReqValidationError{}
+
+// Validate checks the field values on DeleteTemplateSpaceCollectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteTemplateSpaceCollectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteTemplateSpaceCollectReq with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// DeleteTemplateSpaceCollectReqMultiError, or nil if none found.
+func (m *DeleteTemplateSpaceCollectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteTemplateSpaceCollectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetId()) != 24 {
+		err := DeleteTemplateSpaceCollectReqValidationError{
+			field:  "Id",
+			reason: "value length must be 24 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := DeleteTemplateSpaceCollectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteTemplateSpaceCollectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteTemplateSpaceCollectReqMultiError is an error wrapping multiple
+// validation errors returned by DeleteTemplateSpaceCollectReq.ValidateAll()
+// if the designated constraints aren't met.
+type DeleteTemplateSpaceCollectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteTemplateSpaceCollectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteTemplateSpaceCollectReqMultiError) AllErrors() []error { return m }
+
+// DeleteTemplateSpaceCollectReqValidationError is the validation error
+// returned by DeleteTemplateSpaceCollectReq.Validate if the designated
+// constraints aren't met.
+type DeleteTemplateSpaceCollectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteTemplateSpaceCollectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteTemplateSpaceCollectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteTemplateSpaceCollectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteTemplateSpaceCollectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteTemplateSpaceCollectReqValidationError) ErrorName() string {
+	return "DeleteTemplateSpaceCollectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteTemplateSpaceCollectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteTemplateSpaceCollectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteTemplateSpaceCollectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteTemplateSpaceCollectReqValidationError{}
+
 // Validate checks the field values on GetTemplateMetadataReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

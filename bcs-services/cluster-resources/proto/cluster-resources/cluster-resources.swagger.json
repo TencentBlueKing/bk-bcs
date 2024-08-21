@@ -953,6 +953,122 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/template/space/collects": {
+      "get": {
+        "summary": "Get template space collect list",
+        "description": "获取模板文件文件夹收藏列表",
+        "operationId": "TemplateSet_ListTemplateSpaceCollect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/space/collects/{id}": {
+      "delete": {
+        "summary": "Delete template space collect",
+        "description": "删除模板文件文件夹收藏",
+        "operationId": "TemplateSet_DeleteTemplateSpaceCollect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects": {
+      "post": {
+        "summary": "Create template space collect",
+        "description": "创建模板文件文件夹收藏",
+        "operationId": "TemplateSet_CreateTemplateSpaceCollect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateSpaceID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateTemplateSpaceCollectReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/template/spaces": {
       "get": {
         "summary": "Get template space list",
@@ -10084,6 +10200,21 @@
       },
       "description": "创建模板集",
       "title": "CreateTemplateSetReq"
+    },
+    "clusterresourcesCreateTemplateSpaceCollectReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "templateSpaceID": {
+          "type": "string",
+          "title": "模板文件文件夹ID"
+        }
+      },
+      "description": "创建模板文件文件夹收藏",
+      "title": "CreateTemplateSpaceCollectReq"
     },
     "clusterresourcesCreateTemplateSpaceReq": {
       "type": "object",

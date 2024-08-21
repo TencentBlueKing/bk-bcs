@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/envmanage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/template"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templatespace"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templatespacecollect"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/templateversion"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/view"
@@ -44,6 +45,14 @@ type ClusterResourcesModel interface {
 	CreateTemplateSpace(ctx context.Context, templateSpace *entity.TemplateSpace) (string, error)
 	UpdateTemplateSpace(ctx context.Context, id string, templateSpace entity.M) error
 	DeleteTemplateSpace(ctx context.Context, id string) error
+
+	// 模板文件文件夹收藏
+	GetTemplateSpaceCollect(ctx context.Context, id string) (*entity.TemplateSpaceCollect, error)
+	ListTemplateSpaceCollect(
+		ctx context.Context, templateSpaceID, projectCode, username string) ([]*entity.TemplateSpaceAndCollect, error)
+	CreateTemplateSpaceCollect(
+		ctx context.Context, templateSpaceCollect *entity.TemplateSpaceCollect) (string, error)
+	DeleteTemplateSpaceCollect(ctx context.Context, id string) error
 
 	// 模板文件元数据
 	GetTemplate(ctx context.Context, id string) (*entity.Template, error)
@@ -83,15 +92,17 @@ type modelSet struct {
 	*template.ModelTemplate
 	*templateversion.ModelTemplateVersion
 	*envmanage.ModelEnvManage
+	*templatespacecollect.ModelTemplateSpaceCollect
 }
 
 // New return a new ClusterResourcesModel instance
 func New(db drivers.DB) ClusterResourcesModel {
 	return &modelSet{
-		ModelView:            view.New(db),
-		ModelTemplateSpace:   templatespace.New(db),
-		ModelTemplate:        template.New(db),
-		ModelTemplateVersion: templateversion.New(db),
-		ModelEnvManage:       envmanage.New(db),
+		ModelView:                 view.New(db),
+		ModelTemplateSpace:        templatespace.New(db),
+		ModelTemplate:             template.New(db),
+		ModelTemplateVersion:      templateversion.New(db),
+		ModelEnvManage:            envmanage.New(db),
+		ModelTemplateSpaceCollect: templatespacecollect.New(db),
 	}
 }
