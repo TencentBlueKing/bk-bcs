@@ -101,7 +101,8 @@
             "chartName": "${bcsCAChartName}",
             "releaseName": "${bcsCAReleaseName}",
             "releaseNamespace": "${bcsCAReleaseNamespace}",
-            "isPublicRepo": ${bcsCAIsPublicRepo}
+            "isPublicRepo": ${bcsCAIsPublicRepo},
+            "caImageRegistry": "${bcsCAImageRegistry}"
         },
         "watch": {
             "chartName": "${bcsWatchChartName}",

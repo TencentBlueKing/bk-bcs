@@ -13226,6 +13226,14 @@
           "type": "string",
           "description": "集群所在的资源组(azure云)",
           "title": "resourceGroup"
+        },
+        "nodeIps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "集群Master或者节点IP列表, 需要提前纳管至蓝鲸平台。通过反向代理实现集群纳管",
+          "title": "nodeIps"
         }
       },
       "description": "云provider导入集群模式",

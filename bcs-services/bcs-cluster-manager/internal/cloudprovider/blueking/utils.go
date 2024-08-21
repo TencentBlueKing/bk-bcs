@@ -36,6 +36,8 @@ const (
 	deleteClusterTaskTemplate = "blueking-delete cluster: %s"
 	// createClusterTaskTemplate bk-sops delete cluster task template
 	createClusterTaskTemplate = "blueking-create cluster: %s"
+	// importClusterTaskTemplate bk-sops import cluster task template
+	importClusterTaskTemplate = "blueking-import cluster: %s"
 
 	// createNodeGroupTaskTemplate bk-sops add task template
 	createNodeGroupTaskTemplate = "blueking-create node group: %s/%s"
