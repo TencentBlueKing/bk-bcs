@@ -111,7 +111,7 @@ func (t *TemplateSpaceCollectAction) Create(
 	}
 
 	if len(templateSpaceCollects) > 0 {
-		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "该文件夹已被收藏"))
+		return templateSpaceCollects[0].ID.Hex(), nil
 	}
 
 	templateSpaceID, err := primitive.ObjectIDFromHex(req.TemplateSpaceID)
@@ -121,7 +121,7 @@ func (t *TemplateSpaceCollectAction) Create(
 	templateSpaceCollect := &entity.TemplateSpaceCollect{
 		TemplateSpaceID: templateSpaceID,
 		ProjectCode:     p.Code,
-		Creator:         username,
+		Username:        username,
 	}
 	id, err := t.model.CreateTemplateSpaceCollect(ctx, templateSpaceCollect)
 	if err != nil {
@@ -147,7 +147,7 @@ func (t *TemplateSpaceCollectAction) Delete(ctx context.Context, id string) erro
 	}
 
 	// 检验更新 TemplateSpace 的权限
-	if templateSpaceCollect.ProjectCode != p.Code {
+	if templateSpaceCollect.ProjectCode != p.Code || templateSpaceCollect.Username != ctxkey.GetUsernameFromCtx(ctx) {
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 

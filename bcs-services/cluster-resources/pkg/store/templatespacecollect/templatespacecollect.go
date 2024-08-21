@@ -109,11 +109,11 @@ func (m *ModelTemplateSpaceCollect) GetTemplateSpaceCollect(ctx context.Context,
 
 // ListTemplateSpaceCollect get a list of entity.TemplateSpaceCollect by condition from database
 func (m *ModelTemplateSpaceCollect) ListTemplateSpaceCollect(
-	ctx context.Context, templateSpaceID, projectCode, creator string) ([]*entity.TemplateSpaceAndCollect, error) {
+	ctx context.Context, templateSpaceID, projectCode, username string) ([]*entity.TemplateSpaceAndCollect, error) {
 
 	t := make([]*entity.TemplateSpaceAndCollect, 0)
 	// 构建聚合管道, 文件夹名称有可能会更新，不想在这张表维护
-	match := operator.M{"projectCode": projectCode, "creator": creator}
+	match := operator.M{"projectCode": projectCode, "username": username}
 	if templateSpaceID != "" {
 		spaceID, err := primitive.ObjectIDFromHex(templateSpaceID)
 		if err != nil {
@@ -134,7 +134,8 @@ func (m *ModelTemplateSpaceCollect) ListTemplateSpaceCollect(
 			"_id":             1,
 			"templateSpaceID": 1,
 			"projectCode":     1,
-			"creator":         1,
+			"username":        1,
+			"createAt":        1,
 			"name":            "$templatespace.name",
 		}},
 	}
@@ -163,6 +164,10 @@ func (m *ModelTemplateSpaceCollect) CreateTemplateSpaceCollect(
 	now := time.Now()
 	if templateSpaceCollect.ID.IsZero() {
 		templateSpaceCollect.ID = primitive.NewObjectIDFromTimestamp(now)
+	}
+
+	if templateSpaceCollect.CreateAt == 0 {
+		templateSpaceCollect.CreateAt = now.UTC().Unix()
 	}
 
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{templateSpaceCollect}); err != nil {
