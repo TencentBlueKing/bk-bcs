@@ -534,6 +534,31 @@
             "fuzzy": true
         },
         {
+            "id": "the total number of app {Name} config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "message": "the total number of app {Name} config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "translation": "the total number of app {Name} config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "app.Spec.Name"
+                },
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "appConfigCnt"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "delete one app template binding instance by app id failed, err: {Err}",
             "message": "delete one app template binding instance by app id failed, err: {Err}",
             "translation": "delete one app template binding instance by app id failed, err: {Err}",
@@ -882,6 +907,31 @@
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
                     "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the total number of template set {Name} templates exceeded the limit {TmplSetTmplCnt}",
+            "message": "the total number of template set {Name} templates exceeded the limit {TmplSetTmplCnt}",
+            "translation": "the total number of template set {Name} templates exceeded the limit {TmplSetTmplCnt}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v.Spec.Name"
+                },
+                {
+                    "id": "TmplSetTmplCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "tmplSetTmplCnt"
                 }
             ],
             "fuzzy": true

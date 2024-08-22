@@ -18,15 +18,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
-// TaskBuilder ...
-type TaskBuilder interface { // nolint
-	TaskInfo() types.TaskInfo
-	Steps() ([]*types.Step, error) // Steps init step and define StepSequence
-	BuildTask(t types.Task) (types.Task, error)
-}
-
 // NewByTaskBuilder init task from builder
-func NewByTaskBuilder(builder TaskBuilder, opts ...types.TaskOption) (*types.Task, error) {
+func NewByTaskBuilder(builder types.TaskBuilder, opts ...types.TaskOption) (*types.Task, error) {
 	// 声明step
 	steps, err := builder.Steps()
 	if err != nil {

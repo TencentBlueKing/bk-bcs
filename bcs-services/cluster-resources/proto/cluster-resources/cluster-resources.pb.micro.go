@@ -4940,6 +4940,24 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "TemplateSet.ListTemplateSpaceCollect",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/collects"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.CreateTemplateSpaceCollect",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "TemplateSet.DeleteTemplateSpaceCollect",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/collects/{id}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "TemplateSet.GetTemplateMetadata",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}"},
 			Method:  []string{"GET"},
@@ -5077,6 +5095,12 @@ type TemplateSetService interface {
 	DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error)
 	// 复制模板文件文件夹
 	CopyTemplateSpace(ctx context.Context, in *CopyTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取模板文件文件夹收藏列表
+	ListTemplateSpaceCollect(ctx context.Context, in *ListTemplateSpaceCollectReq, opts ...client.CallOption) (*CommonListResp, error)
+	// 创建模板文件文件夹收藏
+	CreateTemplateSpaceCollect(ctx context.Context, in *CreateTemplateSpaceCollectReq, opts ...client.CallOption) (*CommonResp, error)
+	// 删除模板文件文件夹收藏
+	DeleteTemplateSpaceCollect(ctx context.Context, in *DeleteTemplateSpaceCollectReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件元数据详情
 	GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件元数据列表
@@ -5183,6 +5207,36 @@ func (c *templateSetService) DeleteTemplateSpace(ctx context.Context, in *Delete
 
 func (c *templateSetService) CopyTemplateSpace(ctx context.Context, in *CopyTemplateSpaceReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.CopyTemplateSpace", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) ListTemplateSpaceCollect(ctx context.Context, in *ListTemplateSpaceCollectReq, opts ...client.CallOption) (*CommonListResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.ListTemplateSpaceCollect", in)
+	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) CreateTemplateSpaceCollect(ctx context.Context, in *CreateTemplateSpaceCollectReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.CreateTemplateSpaceCollect", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *templateSetService) DeleteTemplateSpaceCollect(ctx context.Context, in *DeleteTemplateSpaceCollectReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.DeleteTemplateSpaceCollect", in)
 	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
@@ -5406,6 +5460,12 @@ type TemplateSetHandler interface {
 	DeleteTemplateSpace(context.Context, *DeleteTemplateSpaceReq, *CommonResp) error
 	// 复制模板文件文件夹
 	CopyTemplateSpace(context.Context, *CopyTemplateSpaceReq, *CommonResp) error
+	// 获取模板文件文件夹收藏列表
+	ListTemplateSpaceCollect(context.Context, *ListTemplateSpaceCollectReq, *CommonListResp) error
+	// 创建模板文件文件夹收藏
+	CreateTemplateSpaceCollect(context.Context, *CreateTemplateSpaceCollectReq, *CommonResp) error
+	// 删除模板文件文件夹收藏
+	DeleteTemplateSpaceCollect(context.Context, *DeleteTemplateSpaceCollectReq, *CommonResp) error
 	// 获取模板文件元数据详情
 	GetTemplateMetadata(context.Context, *GetTemplateMetadataReq, *CommonResp) error
 	// 获取模板文件元数据列表
@@ -5456,6 +5516,9 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		UpdateTemplateSpace(ctx context.Context, in *UpdateTemplateSpaceReq, out *CommonResp) error
 		DeleteTemplateSpace(ctx context.Context, in *DeleteTemplateSpaceReq, out *CommonResp) error
 		CopyTemplateSpace(ctx context.Context, in *CopyTemplateSpaceReq, out *CommonResp) error
+		ListTemplateSpaceCollect(ctx context.Context, in *ListTemplateSpaceCollectReq, out *CommonListResp) error
+		CreateTemplateSpaceCollect(ctx context.Context, in *CreateTemplateSpaceCollectReq, out *CommonResp) error
+		DeleteTemplateSpaceCollect(ctx context.Context, in *DeleteTemplateSpaceCollectReq, out *CommonResp) error
 		GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, out *CommonResp) error
 		ListTemplateMetadata(ctx context.Context, in *ListTemplateMetadataReq, out *CommonListResp) error
 		CreateTemplateMetadata(ctx context.Context, in *CreateTemplateMetadataReq, out *CommonResp) error
@@ -5515,6 +5578,24 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		Name:    "TemplateSet.CopyTemplateSpace",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/spaces/{id}"},
 		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.ListTemplateSpaceCollect",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/collects"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.CreateTemplateSpaceCollect",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.DeleteTemplateSpaceCollect",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/space/collects/{id}"},
+		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -5666,6 +5747,18 @@ func (h *templateSetHandler) DeleteTemplateSpace(ctx context.Context, in *Delete
 
 func (h *templateSetHandler) CopyTemplateSpace(ctx context.Context, in *CopyTemplateSpaceReq, out *CommonResp) error {
 	return h.TemplateSetHandler.CopyTemplateSpace(ctx, in, out)
+}
+
+func (h *templateSetHandler) ListTemplateSpaceCollect(ctx context.Context, in *ListTemplateSpaceCollectReq, out *CommonListResp) error {
+	return h.TemplateSetHandler.ListTemplateSpaceCollect(ctx, in, out)
+}
+
+func (h *templateSetHandler) CreateTemplateSpaceCollect(ctx context.Context, in *CreateTemplateSpaceCollectReq, out *CommonResp) error {
+	return h.TemplateSetHandler.CreateTemplateSpaceCollect(ctx, in, out)
+}
+
+func (h *templateSetHandler) DeleteTemplateSpaceCollect(ctx context.Context, in *DeleteTemplateSpaceCollectReq, out *CommonResp) error {
+	return h.TemplateSetHandler.DeleteTemplateSpaceCollect(ctx, in, out)
 }
 
 func (h *templateSetHandler) GetTemplateMetadata(ctx context.Context, in *GetTemplateMetadataReq, out *CommonResp) error {

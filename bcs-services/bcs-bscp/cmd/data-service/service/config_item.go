@@ -366,7 +366,7 @@ func (s *Service) verifyAppLimitHasBeenExceeded(kit *kit.Kit, tx *gen.QueryTx, b
 	// 非模板配置数+当前套餐配置数+历史套餐配置数+待创建的配置项数
 	if int(configItemCount)+currentTemplateSetNum+historyTemplateSetNum+createConfigItemNum > appConfigCnt {
 		return errf.New(errf.InvalidParameter,
-			fmt.Sprintf("the total number of app %s's config items(including template and non-template)"+
+			i18n.T(kit, "the total number of app %s config items(including template and non-template)"+
 				"exceeded the limit %d", app.Spec.Name, appConfigCnt))
 	}
 

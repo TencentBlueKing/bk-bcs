@@ -21,6 +21,13 @@ import (
 	"github.com/google/uuid"
 )
 
+// TaskBuilder ...
+type TaskBuilder interface { // nolint
+	TaskInfo() TaskInfo
+	Steps() ([]*Step, error) // Steps init step and define StepSequence
+	BuildTask(t Task) (Task, error)
+}
+
 // TaskOptions xxx
 type TaskOptions struct {
 	CallbackName        string
@@ -69,7 +76,6 @@ func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 		TaskIndexType:       o.TaskIndexType,
 		Status:              TaskStatusInit,
 		ForceTerminate:      false,
-		Start:               now,
 		Steps:               make([]*Step, 0),
 		Creator:             o.Creator,
 		Updater:             o.Creator,
@@ -97,6 +103,11 @@ func (t *Task) GetTaskName() string {
 	return t.TaskName
 }
 
+// GetTaskIndex get task index
+func (t *Task) GetTaskIndex() string {
+	return t.TaskIndex
+}
+
 // GetStep get step by name
 func (t *Task) GetStep(stepName string) (*Step, bool) {
 	for _, step := range t.Steps {
@@ -110,15 +121,15 @@ func (t *Task) GetStep(stepName string) (*Step, bool) {
 // AddStep add step to task
 func (t *Task) AddStep(step *Step) *Task {
 	if step == nil {
-		return t
+		t.Steps = make([]*Step, 0)
 	}
 
 	t.Steps = append(t.Steps, step)
 	return t
 }
 
-// GetCommonParams get common params
-func (t *Task) GetCommonParams(key string) (string, bool) {
+// GetCommonParam get common params
+func (t *Task) GetCommonParam(key string) (string, bool) {
 	if t.CommonParams == nil {
 		t.CommonParams = make(map[string]string, 0)
 		return "", false
@@ -129,8 +140,8 @@ func (t *Task) GetCommonParams(key string) (string, bool) {
 	return "", false
 }
 
-// AddCommonParams add common params
-func (t *Task) AddCommonParams(k, v string) *Task {
+// AddCommonParam add common params
+func (t *Task) AddCommonParam(k, v string) *Task {
 	if t.CommonParams == nil {
 		t.CommonParams = make(map[string]string, 0)
 	}
@@ -201,8 +212,8 @@ func (t *Task) SetForceTerminate(f bool) *Task {
 }
 
 // GetStartTime get start time
-func (t *Task) GetStartTime() (time.Time, error) {
-	return t.Start, nil
+func (t *Task) GetStartTime() time.Time {
+	return t.Start
 }
 
 // SetStartTime set start time
@@ -212,8 +223,8 @@ func (t *Task) SetStartTime(time time.Time) *Task {
 }
 
 // GetEndTime get end time
-func (t *Task) GetEndTime() (time.Time, error) {
-	return t.End, nil
+func (t *Task) GetEndTime() time.Time {
+	return t.End
 }
 
 // SetEndTime set end time
@@ -233,14 +244,14 @@ func (t *Task) SetExecutionTime(start time.Time, end time.Time) *Task {
 	return t
 }
 
-// GetMaxExecutionSeconds get max execution seconds
-func (t *Task) GetMaxExecutionSeconds() time.Duration {
+// GetMaxExecution get max execution seconds
+func (t *Task) GetMaxExecution() time.Duration {
 	return time.Duration(t.MaxExecutionSeconds) * time.Second
 }
 
-// SetMaxExecutionSeconds set max execution seconds
-func (t *Task) SetMaxExecutionSeconds(maxExecutionSeconds time.Duration) *Task {
-	t.MaxExecutionSeconds = uint32(maxExecutionSeconds.Seconds())
+// SetMaxExecution set max execution seconds
+func (t *Task) SetMaxExecution(duration time.Duration) *Task {
+	t.MaxExecutionSeconds = uint32(duration.Seconds())
 	return t
 }
 
@@ -317,5 +328,34 @@ func (t *Task) AddStepParamsBatch(stepName string, params map[string]string) err
 	for k, v := range params {
 		step.AddParam(k, v)
 	}
+	return nil
+}
+
+// Validate 校验 task
+func (t *Task) Validate() error {
+	if t.TaskName == "" {
+		return fmt.Errorf("task name is required")
+	}
+
+	if len(t.Steps) == 0 {
+		return fmt.Errorf("task steps empty")
+	}
+
+	uniq := map[string]struct{}{}
+	for _, s := range t.Steps {
+		if s.Name == "" {
+			return fmt.Errorf("step name is required")
+		}
+
+		if s.Executor == "" {
+			return fmt.Errorf("step executor is required")
+		}
+
+		if _, ok := uniq[s.Name]; ok {
+			return fmt.Errorf("step name %s is not unique", s.Name)
+		}
+		uniq[s.Name] = struct{}{}
+	}
+
 	return nil
 }

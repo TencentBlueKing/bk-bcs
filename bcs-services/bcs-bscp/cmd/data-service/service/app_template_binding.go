@@ -1270,7 +1270,7 @@ func (s *Service) verifyTemplateSetBoundTemplatesNumber(kt *kit.Kit, templateSet
 
 	if int(configItemCount)+templateCount > appConfigCnt {
 		return errf.New(errf.InvalidParameter,
-			fmt.Sprintf("the total number of app %s's config items(including template and non-template)"+
+			i18n.T(kt, "the total number of app %s config items(including template and non-template)"+
 				"exceeded the limit %d", app.Spec.Name, appConfigCnt))
 	}
 

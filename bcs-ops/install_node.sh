@@ -101,9 +101,9 @@ init_bap_rule() {
   k8s::restart_kubelet
 }
 
-"${ROOT_DIR}"/system/check_host.sh -c all
 safe_source "${ROOT_DIR}/functions/utils.sh"
 safe_source "${ROOT_DIR}/functions/k8s.sh"
+"${ROOT_DIR}"/system/check_host.sh -c all
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
 "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
