@@ -60,7 +60,7 @@ func TestDoWork(t *testing.T) {
 
 	for _, s := range steps {
 		err := mgr.doWork(task.TaskID, s.Name)
-		assert.ErrorIs(t, err, types.ErrNotImplemented)
+		assert.NoError(t, err)
 	}
 }
 
