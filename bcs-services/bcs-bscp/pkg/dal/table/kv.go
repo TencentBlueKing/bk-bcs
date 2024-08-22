@@ -22,6 +22,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -71,7 +72,7 @@ func (k *Kv) ResType() string {
 }
 
 // ValidateCreate validate kv is valid or not when create it.
-func (k Kv) ValidateCreate() error {
+func (k Kv) ValidateCreate(kit *kit.Kit) error {
 
 	if k.ID > 0 {
 		return errors.New("id should not be set")
@@ -86,7 +87,7 @@ func (k Kv) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := k.Spec.ValidateCreate(); err != nil {
+	if err := k.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -110,8 +111,8 @@ func (k Kv) ValidateCreate() error {
 }
 
 // ValidateCreate validate kv spec when it is created.
-func (k KvSpec) ValidateCreate() error {
-	if err := validator.ValidateName(k.Key); err != nil {
+func (k KvSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateName(kit, k.Key); err != nil {
 		return err
 	}
 

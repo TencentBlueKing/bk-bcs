@@ -30,6 +30,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bkpaas"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -196,7 +197,7 @@ func (a authorizer) AuthorizeDecision(kt *kit.Kit, resources ...*meta.ResourceAt
 func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute) error {
 	_, authorized, err := a.AuthorizeDecision(kt, resources...)
 	if err != nil {
-		return errf.New(errf.DoAuthorizeFailed, "authorize failed")
+		return errf.New(errf.DoAuthorizeFailed, i18n.T(kt, "authorize failed"))
 	}
 
 	if authorized {
@@ -210,7 +211,7 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 	permResp, err := a.authClient.GetPermissionToApply(kt.RpcCtx(), req)
 	if err != nil {
 		logs.Errorf("get permission to apply failed, req: %#v, err: %v, rid: %s", req, err, kt.Rid)
-		return errf.New(errf.DoAuthorizeFailed, "get permission to apply failed")
+		return errf.New(errf.DoAuthorizeFailed, i18n.T(kt, "get permission to apply failed, err: %v", err))
 	}
 
 	st := status.New(codes.PermissionDenied, "permission denied")
@@ -240,7 +241,7 @@ func (a authorizer) Authorize(kt *kit.Kit, resources ...*meta.ResourceAttribute)
 	st, err = st.WithDetails(&details)
 	if err != nil {
 		logs.Errorf("with details failed, err: %v", err)
-		return errf.New(errf.PermissionDenied, "grpc status with details failed")
+		return errf.New(errf.PermissionDenied, i18n.T(kt, "grpc status with details failed, err: %v", err))
 	}
 	return st.Err()
 }

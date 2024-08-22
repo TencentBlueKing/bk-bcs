@@ -49,11 +49,11 @@ func (s *Service) CreateApp(ctx context.Context, req *pbds.CreateAppReq) (*pbds.
 	}
 
 	if _, err := s.dao.App().GetByName(kt, req.BizId, req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("app name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(errf.InvalidRequest, i18n.T(kt, "app name %s already exists", req.Spec.Name))
 	}
 
 	if _, err := s.dao.App().GetByAlias(kt, req.BizId, req.Spec.Alias); err == nil {
-		return nil, fmt.Errorf("app alias %s already exists", req.Spec.Alias)
+		return nil, errf.Errorf(errf.InvalidRequest, i18n.T(kt, "app alias %s already exists", req.Spec.Alias))
 	}
 
 	app := &table.App{
@@ -82,16 +82,16 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbds.UpdateAppReq) (*pbapp
 	old, err := s.dao.App().GetByAlias(grpcKit, req.BizId, req.Spec.Alias)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get app failed, err: %v", err))
 	}
 	if !errors.Is(gorm.ErrRecordNotFound, err) && old.ID != req.Id {
-		return nil, fmt.Errorf("app alias %s already exists", req.Spec.Alias)
+		return nil, errf.Errorf(errf.InvalidRequest, "app alias %s already exists", req.Spec.Alias)
 	}
 
 	app, err := s.dao.App().Get(grpcKit, req.BizId, req.Id)
 	if err != nil {
 		logs.Errorf("get app failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get app failed, err: %v", err))
 	}
 	if app.Spec.ConfigType == table.KV {
 		if e := s.checkUpdateAppDataType(grpcKit, req, app); e != nil {
@@ -154,7 +154,7 @@ func (s *Service) checkUpdateAppDataType(kt *kit.Kit, req *pbds.UpdateAppReq, ap
 		}
 
 		if string(kvType) != req.Spec.DataType {
-			return fmt.Errorf("the specified type does not match the actual configuration")
+			return errf.Errorf(errf.InvalidArgument, i18n.T(kt, "the specified type does not match the actual configuration"))
 		}
 	}
 
@@ -178,7 +178,8 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "delete app related resources failed, err: %v", err))
 	}
 
 	// 2. delete app
@@ -187,12 +188,14 @@ func (s *Service) DeleteApp(ctx context.Context, req *pbds.DeleteAppReq) (*pbbas
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "delete app failed, err: %v", err))
 	}
 
 	if err := tx.Commit(); err != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "delete app failed, err: %v", err))
 	}
 
 	return new(pbbase.EmptyResp), nil
@@ -412,11 +415,11 @@ func (s *Service) validateBizExist(kt *kit.Kit, bizID uint32) error {
 
 	bizResp, err := s.esb.Cmdb().SearchBusiness(kt.Ctx, searchBizParams)
 	if err != nil {
-		return err
+		return errf.Errorf(errf.InvalidRequest, i18n.T(kt, "business query failed, err: %v", err))
 	}
 
 	if bizResp.Count == 0 {
-		return errf.New(errf.RelatedResNotExist, fmt.Sprintf("app related biz %d is not exist", bizID))
+		return errf.Errorf(errf.RelatedResNotExist, i18n.T(kt, "app related biz %d is not exist", bizID))
 	}
 
 	return nil
