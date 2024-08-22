@@ -57,19 +57,24 @@ func (t *Context) GetTaskType() string {
 	return t.task.GetTaskType()
 }
 
+// GetTaskIndex get task index
+func (t *Context) GetTaskIndex() string {
+	return t.task.GetTaskIndex()
+}
+
 // GetTaskStatus get task status
 func (t *Context) GetTaskStatus() string {
 	return t.task.GetStatus()
 }
 
-// GetCommonParams get current task param
-func (t *Context) GetCommonParams(key string) (string, bool) {
-	return t.task.GetCommonParams(key)
+// GetCommonParam get current task param
+func (t *Context) GetCommonParam(key string) (string, bool) {
+	return t.task.GetCommonParam(key)
 }
 
-// AddCommonParams add task common params
-func (t *Context) AddCommonParams(k, v string) error {
-	_ = t.task.AddCommonParams(k, v)
+// AddCommonParam add task common params
+func (t *Context) AddCommonParam(k, v string) error {
+	_ = t.task.AddCommonParam(k, v)
 	return nil
 }
 
@@ -97,6 +102,11 @@ func (t *Context) GetStatus() string {
 	return t.currentStep.GetStatus()
 }
 
+// GetRetryCount get current step retrycount
+func (t *Context) GetRetryCount() uint32 {
+	return t.currentStep.GetRetryCount()
+}
+
 // GetParam get current step param
 func (t *Context) GetParam(key string) (string, bool) {
 	return t.currentStep.GetParam(key)
@@ -108,14 +118,14 @@ func (t *Context) AddParam(key string, value string) error {
 	return t.store.UpdateTask(t.ctx, t.task)
 }
 
-// GetParamsAll return all step params
-func (t *Context) GetParamsAll() map[string]string {
-	return t.currentStep.GetParamsAll()
+// GetParams return all step params
+func (t *Context) GetParams() map[string]string {
+	return t.currentStep.GetParams()
 }
 
-// SetParamMulti return all step params
-func (t *Context) SetParamMulti(params map[string]string) error {
-	t.currentStep.SetParamMulti(params)
+// SetParams return all step params
+func (t *Context) SetParams(params map[string]string) error {
+	t.currentStep.SetParams(params)
 	return t.store.UpdateTask(t.ctx, t.task)
 }
 
