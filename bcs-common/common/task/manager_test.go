@@ -59,7 +59,7 @@ func TestDoWork(t *testing.T) {
 	require.NoError(t, GetGlobalStorage().CreateTask(context.Background(), task))
 
 	for _, s := range steps {
-		err := mgr.doWork(task.TaskID, 0, s.Name, s.Name)
+		err := mgr.doWork(task.TaskID, s.Name)
 		assert.ErrorIs(t, err, types.ErrNotImplemented)
 	}
 }
@@ -105,7 +105,7 @@ func TestDoWorkWithMySQL(t *testing.T) {
 	require.NoError(t, GetGlobalStorage().CreateTask(context.Background(), task))
 
 	for _, s := range steps {
-		err := mgr.doWork(task.TaskID, 0, s.Name, s.Name)
+		err := mgr.doWork(task.TaskID, s.Name)
 		assert.NoError(t, err)
 	}
 }

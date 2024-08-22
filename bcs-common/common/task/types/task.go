@@ -347,6 +347,10 @@ func (t *Task) Validate() error {
 			return fmt.Errorf("step name is required")
 		}
 
+		if s.Executor == "" {
+			return fmt.Errorf("step executor is required")
+		}
+
 		if _, ok := uniq[s.Name]; ok {
 			return fmt.Errorf("step name %s is not unique", s.Name)
 		}

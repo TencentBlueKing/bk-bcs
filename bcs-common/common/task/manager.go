@@ -226,14 +226,13 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 
 	for _, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
-		if step.Name != "" && step.Executor != "" && stepNameBegin != "" && step.Name != stepNameBegin {
+		if step.Name != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
 
-		uid := fmt.Sprintf("%s-%s", task.TaskID, step.Name)
 		// build signature from step
 		signature := &tasks.Signature{
-			UUID: uid,
+			UUID: fmt.Sprintf("%s-%s", task.TaskID, step.Name),
 			Name: step.Executor,
 			ETA:  step.ETA,
 			// two parameters: taskID, stepName
@@ -241,12 +240,12 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 				{
 					Name:  "task_id",
 					Type:  "string",
-					Value: task.GetTaskID(), // 任务ID
+					Value: task.GetTaskID(),
 				},
 				{
 					Name:  "step_name",
 					Type:  "string",
-					Value: step.Name, // step名称
+					Value: step.Name,
 				},
 			},
 
@@ -317,7 +316,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	}
 
 	step := state.step
-	stepWorker, ok := m.stepExecutors[istep.StepName(step.Executor)]
+	stepExecutor, ok := m.stepExecutors[istep.StepName(step.Executor)]
 	if !ok {
 		log.ERROR.Printf("task[%s] stepName[%s] executor[%s] not found", taskID, stepName, state.step.Executor)
 		return fmt.Errorf("step executor[%s] not found", step.Executor)
@@ -337,7 +336,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	go func() {
 		// call step worker
 		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
-		tmpCh <- stepWorker.Execute(execCtx)
+		tmpCh <- stepExecutor.Execute(execCtx)
 	}()
 
 	select {
