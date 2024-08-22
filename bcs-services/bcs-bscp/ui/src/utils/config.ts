@@ -43,6 +43,8 @@ export function getDefaultKvItem() {
       key: '',
       memo: '',
       value: '',
+      secret_type: '',
+      secret_visible: true,
     },
     content_spec: {
       byte_size: '',

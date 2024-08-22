@@ -3,15 +3,22 @@
     <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]" :style="editorStyle">
       <div class="editor-title">
         <div class="tips">
-          <div v-if="isCredential">
+          <div v-if="isCredential && props.isEdit">
             <InfoLine class="info-icon" />
             {{ t('目前只支持 X.509 类型证书') }}
           </div>
-          <span v-else></span>
         </div>
         <div class="btns">
-          <Eye v-if="isVisible" class="view-icon" @click="isVisible = false" />
-          <Unvisible v-else class="view-icon" @click="isVisible = true" />
+          <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
+          <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
+          <ReadFileContent
+            v-if="props.isEdit"
+            v-bk-tooltips="{
+              content: t('上传'),
+              placement: 'top',
+              distance: 20,
+            }"
+            @completed="handleFileReadComplete" />
           <FilliscreenLine
             v-if="!isOpenFullScreen"
             v-bk-tooltips="{
@@ -33,9 +40,10 @@
       <div class="editor-content">
         <SecretEditor
           ref="codeEditorRef"
-          :model-value="props.content"
-          :is-visible="isVisible"
-          @update:model-value="emits('change', $event)" />
+          :model-value="secretValue"
+          :is-cipher="isCipherShowSecret"
+          :editable="isEdit"
+          @update:model-value="handleSecretChange" />
       </div>
     </div>
   </Teleport>
@@ -46,17 +54,20 @@
   import BkMessage from 'bkui-vue/lib/message';
   import { InfoLine, FilliscreenLine, UnfullScreen, Unvisible, Eye } from 'bkui-vue/lib/icon';
   import SecretEditor from './secret-editor.vue';
+  import ReadFileContent from '../../../../../config/components/read-file-content.vue';
 
   const { t } = useI18n();
   const props = withDefaults(
     defineProps<{
       content: string;
+      isEdit: boolean;
       isCredential?: boolean;
       height?: number;
     }>(),
     {
       height: 640,
       isCredential: true,
+      isEdit: true,
     },
   );
 
@@ -64,7 +75,8 @@
 
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
-  const isVisible = ref(false);
+  const isCipherShowSecret = ref(true); // 密文展示敏感信息
+  const secretValue = ref(props.content);
 
   const editorStyle = computed(() => {
     return {
@@ -96,6 +108,15 @@
     if (event.code === 'Escape') {
       isOpenFullScreen.value = false;
     }
+  };
+
+  const handleFileReadComplete = (content: string) => {
+    secretValue.value = content;
+    emits('change', content);
+  };
+
+  const handleSecretChange = (secret: string) => {
+    emits('change', secret);
   };
 </script>
 <style lang="scss" scoped>

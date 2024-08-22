@@ -58,6 +58,8 @@
       currentLanguage?: string;
       currentVariables?: IVariableEditParams[];
       currentPermission?: string;
+      isSecret: boolean;
+      secretVisible: boolean;
     }>(),
     {
       baseLanguage: '',

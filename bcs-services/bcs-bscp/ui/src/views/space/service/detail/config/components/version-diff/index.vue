@@ -78,6 +78,8 @@
     // 差异详情数据
     id: 0,
     contentType: 'text',
+    is_secret: false,
+    secret_visible: true,
     current: {
       language: '',
       content: '',

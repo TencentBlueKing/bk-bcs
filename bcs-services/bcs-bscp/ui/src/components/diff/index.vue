@@ -45,7 +45,9 @@
             :current-permission="currentPermission"
             :base="props.diff.base.content as string"
             :base-variables="props.diff.base.variables"
-            :base-permission="basePermission" />
+            :base-permission="basePermission"
+            :is-secret="props.diff.is_secret"
+            :secret-visible="props.diff.secret_visible" />
           <template v-else-if="props.diff.contentType === 'singleLineKV'">
             <SingleLineKV
               v-if="props.diff.singleLineKVDiff"

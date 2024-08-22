@@ -13,18 +13,23 @@ export interface ISingleLineKVDIffItem {
   id: number;
   name: string;
   diffType: string;
+  is_secret: boolean;
+  secret_visible: boolean;
   base: {
     content: string;
   };
   current: {
     content: string;
   };
+  isCipherShowValue?: boolean;
 }
 
 // 版本下的脚本配置
 export interface IDiffDetail {
   contentType: 'file' | 'text' | 'singleLineKV';
   id: number | string;
+  is_secret: boolean;
+  secret_visible: boolean;
   base: {
     content: string | IFileConfigContentSummary;
     language?: string;

@@ -18,7 +18,12 @@
     <bk-form-item :label="t('配置项描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
-    <SecretForm v-if="localVal.kv_type === 'secret'" />
+    <SecretForm
+      v-if="localVal.kv_type === 'secret'"
+      ref="secretRef"
+      :config="props.config"
+      :is-edit="editMode"
+      @change="handleSecretChange" />
     <bk-form-item v-else :label="t('配置项值')" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
@@ -44,7 +49,7 @@
   import { IConfigKvEditParams } from '../../../../../../../../../types/config';
   import useServiceStore from '../../../../../../../../store/service';
   import { storeToRefs } from 'pinia';
-  import SecretForm from './secret.vue';
+  import SecretForm from './secret-form/index.vue';
 
   const serviceStore = useServiceStore();
   const { appData } = storeToRefs(serviceStore);
@@ -63,6 +68,7 @@
   );
 
   const KvCodeEditorRef = ref();
+  const secretRef = ref();
   const formRef = ref();
   const localVal = ref({
     ...props.config,
@@ -108,6 +114,15 @@
         },
         message: t('配置项值不为数字'),
       },
+      {
+        validator: (value: string) => {
+          if (localVal.value.kv_type === 'secret' && localVal.value.secret_type === 'token') {
+            return /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value);
+          }
+          return true;
+        },
+        message: t('访问令牌格式不正确（只支持 OAuth2.0 与 JWT 类型的访问令牌）'),
+      },
     ],
   };
 
@@ -130,6 +145,9 @@
       case 'yaml':
         return KvCodeEditorRef.value.validate();
     }
+    if (localVal.value.secret_type === 'certificate') {
+      return secretRef.value.validate();
+    }
     return true;
   };
 
@@ -137,6 +155,21 @@
 
   const handleStringContentChange = (val: string) => {
     localVal.value!.value = val;
+    change();
+  };
+
+  const handleSecretChange = ({
+    value,
+    secret_type,
+    visible,
+  }: {
+    value: string;
+    secret_type: string;
+    visible: boolean;
+  }) => {
+    localVal.value.value = value;
+    localVal.value.secret_type = secret_type;
+    localVal.value.secret_visible = visible;
     change();
   };
 

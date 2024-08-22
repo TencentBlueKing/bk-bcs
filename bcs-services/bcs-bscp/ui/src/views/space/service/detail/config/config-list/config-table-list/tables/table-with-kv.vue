@@ -39,7 +39,13 @@
       </bk-table-column>
       <bk-table-column :label="t('配置项值预览')" prop="spec.value">
         <template #default="{ row }">
-          <kvValuePreview v-if="row.spec" :key="row.id" :value="row.spec.value" @view-all="handleView(row)" />
+          <kvValuePreview
+            v-if="row.spec"
+            :is-visible="row.spec.secret_visible"
+            :key="row.id"
+            :value="row.spec.value"
+            :type="row.spec.kv_type"
+            @view-all="handleView(row)" />
         </template>
       </bk-table-column>
       <bk-table-column :label="t('配置项描述')">
@@ -341,7 +347,7 @@
         params.sort = 'updated_at';
         params.order = updateSortType.value.toUpperCase();
       }
-      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
+      if (topIds.value.length > 0) params.ids = topIds.value;
       let res;
       if (isUnNamedVersion.value) {
         if (statusFilterChecked.value!.length > 0) {

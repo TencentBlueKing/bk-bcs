@@ -1,6 +1,6 @@
 <template>
   <bk-form-item :label="t('配置项值')" property="value" required>
-    <div class="secret-list">
+    <div :class="['secret-list', { disabled: isEdit }]">
       <div
         :class="['secret-item', { active: selectType === item.value }]"
         v-for="item in secretType"
@@ -14,7 +14,13 @@
         :content="secretValue"
         :is-credential="selectType === 'certificate'"
         :height="400"
+        :is-edit="props.isEdit"
         @change="handlSecretChange" />
+      <div
+        v-if="selectTypeContent!.infoList.length > 0"
+        :class="['certificate-info', selectTypeContent?.infoList[0].status]">
+        {{ selectTypeContent?.infoList[0].text }}
+      </div>
     </div>
     <div v-else class="value-content">
       <bk-popover
@@ -23,23 +29,25 @@
         trigger="manual"
         placement="right"
         theme="light">
-        <div class="secret-content">
-          <bk-input
-            :model-value="valueVisible ? secretValue : encryptValue"
-            class="value-input"
-            :placeholder="selectTypeContent?.placeholder"
-            @input="handleValueChange"
-            @focus="handleInputFocus"
-            @blur="isShowValidateInfo = false">
-            <template #suffix>
-              <info-line
-                v-if="selectTypeContent!.infoList.some((item) => item.status === 'warn') && secretValue"
-                class="warn-icon" />
-              <Eye v-if="valueVisible" class="view-icon" @click="valueVisible = false" />
-              <Unvisible v-else class="view-icon" @click="valueVisible = true" />
-            </template>
-          </bk-input>
-        </div>
+        <bk-input
+          :model-value="isCipherShowSecret ? encryptValue : secretValue"
+          class="value-input"
+          :placeholder="inputPlaceholder"
+          v-bk-tooltips="{
+            content: inputPlaceholder,
+            disabled: selectType !== 'token' || locale !== 'en',
+          }"
+          @input="handleValueChange"
+          @focus="handleInputFocus"
+          @blur="isShowValidateInfo = false">
+          <template #suffix>
+            <info-line
+              v-if="selectTypeContent!.infoList.some((item) => item.status === 'warn') && secretValue"
+              class="warn-icon" />
+            <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
+            <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
+          </template>
+        </bk-input>
         <template #content>
           <div class="info-list">
             <div v-for="item in selectTypeContent?.infoList" :key="item.text" class="info-item">
@@ -50,7 +58,11 @@
       </bk-popover>
     </div>
   </bk-form-item>
-  <bk-checkbox class="visible-checkbox" :model-value="secretUnVisible" :before-change="handleChangeSecretUnVisible">
+  <bk-checkbox
+    class="visible-checkbox"
+    :disabled="props.isEdit"
+    :model-value="secretUnVisible"
+    :before-change="handleChangeSecretUnVisible">
     {{ t('敏感信息不可见') }}
   </bk-checkbox>
   <bk-dialog
@@ -60,10 +72,9 @@
     :width="480"
     @close="isShowVisibleDialog = false">
     <div class="dialog-content">
-      <div>{{ t('启用后，可降低数据泄露风险。尽管客户端拉去配置不受影响，但仍存在以下注意事项：') }}</div>
-      <div>{{ t('⒈ 用户无法直接查看敏感数据，将导致查看和对比操作不便') }}</div>
-      <div>{{ t('⒉ 编辑敏感信息时，需重新输入完整数据 ') }}</div>
-      <div>{{ t('⒊ 若忘记或丢失敏感信息，可能需要通过其他途径找回或重置') }}</div>
+      <div v-for="(item, index) in enableTips" :key="index">
+        {{ item }}
+      </div>
     </div>
     <div class="dialog-footer">
       <bk-button theme="primary" @click="confirmEnable">{{ t('确定启用') }}</bk-button>
@@ -73,20 +84,46 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, computed } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { Eye, Unvisible, InfoLine } from 'bkui-vue/lib/icon';
+  import { IConfigKvEditParams } from '../../../../../../../../../../types/config';
   import SecretContentEditor from './secret-content-editor.vue';
+  import forge from 'node-forge';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+
+  const props = withDefaults(
+    defineProps<{
+      config: IConfigKvEditParams;
+      isEdit: boolean;
+    }>(),
+    { isEdit: false },
+  );
+
+  const emits = defineEmits(['change']);
 
   const selectType = ref('password');
 
-  const valueVisible = ref(false); // 密文展示敏感信息
+  const isCipherShowSecret = ref(true); // 密文展示敏感信息
   const secretUnVisible = ref(false); // 敏感信息不可见
   const isShowVisibleDialog = ref(false);
   const secretValue = ref('');
   const isShowValidateInfo = ref(false);
+  const enableTips = [
+    t('启用后，可降低数据泄露风险。尽管客户端拉去配置不受影响，但仍存在以下注意事项：'),
+    t('⒈ 用户无法直接查看敏感数据，将导致查看和对比操作不便'),
+    t('⒉ 编辑敏感信息时，需重新输入完整数据 '),
+    t('⒊ 若忘记或丢失敏感信息，可能需要通过其他途径找回或重置'),
+  ];
+
+  onMounted(() => {
+    if (!props.isEdit) return;
+    const { secret_type, secret_visible, value } = props.config;
+    secretValue.value = secret_visible ? value : '';
+    selectType.value = secret_type || 'password';
+    secretUnVisible.value = !secret_visible;
+  });
 
   const selectTypeContent = computed(() => {
     return secretType.find((item) => item.value === selectType.value);
@@ -94,6 +131,12 @@
 
   const encryptValue = computed(() => {
     return '*'.repeat(secretValue.value.length);
+  });
+
+  const inputPlaceholder = computed(() => {
+    return props.isEdit
+      ? t('敏感数据不可见，无法查看实际内容；如需修改，请重新输入')
+      : selectTypeContent.value?.placeholder;
   });
 
   const secretType = [
@@ -109,10 +152,7 @@
     {
       label: t('证书'),
       value: 'certificate',
-      infoList: [
-        { status: 'warn', text: t('建议长度 {n} 字符', { n: '8~64' }) },
-        { status: 'warn', text: t('至少包含大写字母、小写字母、数字和特殊字符中的 3 种类型') },
-      ],
+      infoList: [],
     },
     {
       label: t('API密钥'),
@@ -135,40 +175,55 @@
     {
       label: t('自定义'),
       value: 'customize',
-      infoList: [
-        { status: 'warn', text: t('建议长度 {n} 字符', { n: '8~64' }) },
-        { status: 'warn', text: t('至少包含大写字母、小写字母、数字和特殊字符中的 3 种类型') },
-      ],
+      infoList: [],
     },
   ];
 
   const handleChangeCurrentType = (type: string) => {
+    if (props.isEdit) return;
     selectType.value = type;
     secretValue.value = '';
+    if (selectType.value === 'certificate') {
+      selectTypeContent.value!.infoList = [];
+    }
   };
 
   const handleValueChange = (value: string, event: any) => {
-    if (value.length > secretValue.value.length) {
-      // 添加的内容长度
-      const addLength = value.length - secretValue.value.length;
-      // 添加索引
-      const addIndex = event.target.selectionStart - addLength;
-      // 添加内容
-      const addContent = value.slice(addIndex, event.target.selectionStart);
-      secretValue.value = secretValue.value.slice(0, addIndex) + addContent + secretValue.value.slice(addIndex);
-    } else if (value.length < secretValue.value.length) {
-      // 删除的内容长度
-      const deleteLength = secretValue.value.length - value.length;
-      // 删除索引
-      const deleteIndex = event.target.selectionStart;
-      secretValue.value = secretValue.value.slice(0, deleteIndex) + secretValue.value.slice(deleteIndex + deleteLength);
+    if (!isCipherShowSecret.value) {
+      // 明文展示 内容直接替换
+      secretValue.value = value;
+    } else {
+      // 密文展示 内容处理
+      // 输入的内容
+      const editContent = value.replace(/\*/g, '');
+      if (editContent) {
+        // 添加或者修改内容 中间添加修改需要特殊处理
+        // 正则表达式匹配前面的星号和对应的内容
+        const startMatch = value.match(/^(\*)*/);
+        const startAsterisks = startMatch ? startMatch[0].length : 0;
+        const startContent = secretValue.value.slice(0, startAsterisks);
+        // 正则表达式匹配后面的星号和对应的内容
+        const endMatch = value.match(/(\*)*$/);
+        const endAsterisks = endMatch ? endMatch[0].length : 0;
+        const endContent = endAsterisks ? secretValue.value.slice(-endAsterisks) : '';
+        secretValue.value = startContent + editContent + endContent;
+      } else {
+        // 删除的内容长度
+        const deleteLength = secretValue.value.length - value.length;
+        // 删除索引
+        const deleteIndex = event.target.selectionStart;
+        secretValue.value =
+          secretValue.value.slice(0, deleteIndex) + secretValue.value.slice(deleteIndex + deleteLength);
+      }
     }
     validateSecretValue();
+    change();
   };
 
   const handleChangeSecretUnVisible = (val: boolean) => {
     if (val) {
       isShowVisibleDialog.value = true;
+      change();
       return false;
     }
     secretUnVisible.value = false;
@@ -178,6 +233,7 @@
   const confirmEnable = () => {
     secretUnVisible.value = true;
     isShowVisibleDialog.value = false;
+    change();
   };
 
   const handleInputFocus = () => {
@@ -230,7 +286,7 @@
     let hasLowercase = false; // 是否包含小写字母
     let hasDigit = false; // 是否包含数字
     let hasSpecialChar = false; // 是否包含特殊字符
-    // 将字符串转成字符数组
+    // 将字符串转成字符数组判断格式组成
     Array.from(secretValue.value).forEach((char) => {
       if (/[A-Z]/.test(char)) {
         hasUppercase = true;
@@ -243,15 +299,65 @@
       }
     });
     if (isPassword) {
-      // 计算满足的类型数量
+      // 计算满足的类型数量是否达到3个
       return [hasUppercase, hasLowercase, hasDigit, hasSpecialChar].filter(Boolean).length >= 3;
     }
     return hasUppercase && hasLowercase && hasDigit;
   };
 
   const handlSecretChange = (val: string) => {
-    secretValue.value = val;
+    if (selectType.value === 'certificate') {
+      validateCertificate(val);
+      secretValue.value = val;
+    } else {
+      secretValue.value = val;
+    }
+    change();
   };
+
+  const change = () => {
+    emits('change', { value: secretValue.value, secret_type: selectType.value, visible: !secretUnVisible.value });
+  };
+
+  const validateCertificate = (pem: string) => {
+    try {
+      // Remove the PEM headers and footers
+      const pemCleaned = pem
+        .replace(/-----BEGIN CERTIFICATE-----/, '')
+        .replace(/-----END CERTIFICATE-----/, '')
+        .replace(/\s+/g, '');
+
+      // Decode the PEM to DER
+      const der = forge.util.decode64(pemCleaned);
+
+      // Convert DER to a Forge certificate object
+      const cert = forge.pki.certificateFromAsn1(forge.asn1.fromDer(der));
+
+      // 获取证书有效期
+      const notAfter: Date = cert.validity.notAfter;
+
+      // 计算剩余天数
+      const now = new Date();
+      const remainingDays = Math.floor((notAfter.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (remainingDays > 0) {
+        selectTypeContent.value!.infoList = [
+          { status: 'warn', text: t('证书将在 {n} 天后到期，请考虑更换新证书', { n: remainingDays }) },
+        ];
+      } else {
+        selectTypeContent.value!.infoList = [{ status: 'warn', text: t('证书已过期，请更换证书后再进行提交') }];
+      }
+    } catch (e) {
+      console.error(e);
+      selectTypeContent.value!.infoList = [{ status: 'error', text: t('证书格式不正确（只支持 X.509 类型证书）') }];
+    }
+  };
+
+  defineExpose({
+    validate: () => {
+      return !selectTypeContent.value?.infoList.some((info) => info.status === 'error');
+    },
+  });
 </script>
 
 <style scoped lang="scss">
@@ -259,9 +365,17 @@
     display: flex;
     align-items: center;
     margin-bottom: 12px;
+    &.disabled {
+      .secret-item {
+        cursor: not-allowed;
+        background: #f0f1f5;
+        color: #979ba5;
+      }
+    }
     .secret-item {
+      padding: 0 10px;
       height: 26px;
-      width: 80px;
+      min-width: 80px;
       line-height: 26px;
       background: #f8f8f8;
       text-align: center;
@@ -269,6 +383,9 @@
       border: 1px solid #c4c6cc;
       color: #63656e;
       cursor: pointer;
+      &:not(:last-child) {
+        border-right: none;
+      }
       &.active {
         background: #e1ecff;
         border: 1px solid #3a84ff;
@@ -276,22 +393,20 @@
       }
     }
   }
-  .secret-content {
-    .value-input {
-      width: 560px;
-      .view-icon {
-        cursor: pointer;
-        margin: 0 8px;
-        font-size: 14px;
-        color: #979ba5;
-        &:hover {
-          color: #3a84ff;
-        }
+  .value-input {
+    width: 560px;
+    .view-icon {
+      cursor: pointer;
+      margin: 0 8px;
+      font-size: 14px;
+      color: #979ba5;
+      &:hover {
+        color: #3a84ff;
       }
-      .warn-icon {
-        font-size: 14px;
-        color: #ff9c01;
-      }
+    }
+    .warn-icon {
+      font-size: 14px;
+      color: #ff9c01;
     }
   }
 
@@ -303,6 +418,7 @@
       .bk-modal-header {
         .bk-dialog-title {
           text-align: center !important;
+          white-space: initial;
         }
       }
       .dialog-content {
@@ -329,6 +445,8 @@
   .secret-validate-info-popover {
     .info-list {
       .info-item {
+        position: relative;
+        padding-left: 12px;
         font-size: 12px;
         color: #63656e;
         line-height: 16px;
@@ -336,10 +454,13 @@
           margin-bottom: 8px;
         }
         .dot {
+          position: absolute;
           display: inline-block;
           width: 6px;
           height: 6px;
           border-radius: 50%;
+          left: 0;
+          top: 5px;
           &.warn {
             background: #ff9c01;
           }
@@ -350,10 +471,24 @@
       }
     }
   }
+
+  .certificate-info {
+    position: absolute;
+    font-size: 12px;
+    line-height: 20px;
+    padding: 4px 0;
+    &.warn {
+      color: #ff9c01;
+    }
+    &.error {
+      color: #ea3636;
+    }
+  }
 </style>
 
 <style>
   .secret-validate-info-popover.bk-popover.bk-pop2-content {
+    max-width: 240px;
     padding: 8px;
   }
 </style>

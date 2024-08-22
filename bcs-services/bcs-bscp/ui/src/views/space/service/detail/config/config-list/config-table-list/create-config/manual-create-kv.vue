@@ -43,11 +43,13 @@
   const content = ref('');
   const formRef = ref();
   const isFormChange = ref(false);
-  const configForm = ref({
+  const configForm = ref<IConfigKvEditParams>({
     key: '',
     kv_type: '',
     value: '',
     memo: '',
+    secret_type: '',
+    secret_visible: true,
   });
   watch(
     () => props.show,
@@ -58,6 +60,8 @@
           kv_type: '',
           value: '',
           memo: '',
+          secret_type: '',
+          secret_visible: true,
         };
         content.value = '';
         isFormChange.value = false;
@@ -94,7 +98,7 @@
       close();
       Message({
         theme: 'success',
-        message: '新建配置项成功',
+        message: t('新建配置项成功'),
       });
     } catch (e) {
       console.log(e);
