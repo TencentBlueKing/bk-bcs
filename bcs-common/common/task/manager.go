@@ -224,13 +224,13 @@ func (m *TaskManager) Dispatch(task *types.Task) error {
 func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) []*tasks.Signature {
 	var signatures []*tasks.Signature
 
-	for idx, step := range task.Steps {
+	for _, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
 		if step.Name != "" && step.Executor != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
 
-		uid := fmt.Sprintf("%s-step%d-%s", task.TaskID, idx, step.Name)
+		uid := fmt.Sprintf("%s-%s", task.TaskID, step.Name)
 		// build signature from step
 		signature := &tasks.Signature{
 			UUID: uid,
@@ -244,19 +244,9 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 					Value: task.GetTaskID(), // 任务ID
 				},
 				{
-					Name:  "step_idx",
-					Type:  "int",
-					Value: idx, // step步骤
-				},
-				{
 					Name:  "step_name",
 					Type:  "string",
 					Value: step.Name, // step名称
-				},
-				{
-					Name:  "executor",
-					Type:  "string",
-					Value: step.Executor, // executor
 				},
 			},
 
@@ -307,23 +297,18 @@ func (m *TaskManager) registerStepWorkers() error {
 }
 
 // doWork machinery 通用处理函数
-func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, executor string) error { // nolint
-	defer RecoverPrintStack(fmt.Sprintf("%s-step%d-%s", taskID, stepIdx, stepName))
-
-	stepWorker, ok := m.stepExecutors[istep.StepName(executor)]
-	if !ok {
-		return fmt.Errorf("step worker %s not found", stepName)
-	}
+func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
+	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
 
 	log.INFO.Printf("start to execute task[%s] stepName[%s]", taskID, stepName)
 
-	start := time.Now()
 	state, err := m.getTaskState(taskID, stepName)
 	if err != nil {
-		log.ERROR.Printf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
+		log.ERROR.Printf("task[%s] stepName[%s] getTaskState failed: %v",
 			taskID, stepName, err)
 		return err
 	}
+
 	// step executed success
 	if state.step == nil {
 		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
@@ -332,7 +317,13 @@ func (m *TaskManager) doWork(taskID string, stepIdx int, stepName string, execut
 	}
 
 	step := state.step
+	stepWorker, ok := m.stepExecutors[istep.StepName(step.Executor)]
+	if !ok {
+		log.ERROR.Printf("task[%s] stepName[%s] executor[%s] not found", taskID, stepName, state.step.Executor)
+		return fmt.Errorf("step executor[%s] not found", step.Executor)
+	}
 
+	start := time.Now()
 	// step timeout
 	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
 	defer stepCancel()
