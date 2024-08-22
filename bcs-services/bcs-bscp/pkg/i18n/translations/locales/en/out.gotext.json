@@ -9,14 +9,14 @@
             "fuzzy": true
         },
         {
-            "id": "read file failed {ErrR}",
-            "message": "read file failed {ErrR}",
-            "translation": "read file failed {ErrR}",
+            "id": "read file failed, err: {ErrR}",
+            "message": "read file failed, err: {ErrR}",
+            "translation": "read file failed, err: {ErrR}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "ErrR",
-                    "string": "%[1]s",
+                    "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
@@ -26,14 +26,14 @@
             "fuzzy": true
         },
         {
-            "id": "create directory failed {Err}",
-            "message": "create directory failed {Err}",
-            "translation": "create directory failed {Err}",
+            "id": "create directory failed, err: {Err}",
+            "message": "create directory failed, err: {Err}",
+            "translation": "create directory failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
-                    "string": "%[1]s",
+                    "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
@@ -43,14 +43,14 @@
             "fuzzy": true
         },
         {
-            "id": "create temporary directory failed {Err}",
-            "message": "create temporary directory failed {Err}",
-            "translation": "create temporary directory failed {Err}",
+            "id": "create temporary directory failed, err: {Err}",
+            "message": "create temporary directory failed, err: {Err}",
+            "translation": "create temporary directory failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
-                    "string": "%[1]s",
+                    "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
@@ -85,14 +85,14 @@
             "fuzzy": true
         },
         {
-            "id": "decompression failed {Err}",
-            "message": "decompression failed {Err}",
-            "translation": "decompression failed {Err}",
+            "id": "decompression failed, err: {Err}",
+            "message": "decompression failed, err: {Err}",
+            "translation": "decompression failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
-                    "string": "%[1]s",
+                    "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
@@ -102,14 +102,14 @@
             "fuzzy": true
         },
         {
-            "id": "upload file failed {Err}",
-            "message": "upload file failed {Err}",
-            "translation": "upload file failed {Err}",
+            "id": "upload file failed, err: {Err}",
+            "message": "upload file failed, err: {Err}",
+            "translation": "upload file failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
-                    "string": "%[1]s",
+                    "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
@@ -119,14 +119,14 @@
             "fuzzy": true
         },
         {
-            "id": "detecting file conflicts failed {Err}",
-            "message": "detecting file conflicts failed {Err}",
-            "translation": "detecting file conflicts failed {Err}",
+            "id": "list template config failed, err: {Err}",
+            "message": "list template config failed, err: {Err}",
+            "translation": "list template config failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
                     "id": "Err",
-                    "string": "%[1]s",
+                    "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
@@ -155,6 +155,40 @@
                     "underlyingType": "int",
                     "argNum": 1,
                     "expr": "uploadErrCount"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list config item failed, err: {Err}",
+            "message": "list config item failed, err: {Err}",
+            "translation": "list config item failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get the current number of service config items failed, err: {Err}",
+            "message": "get the current number of service config items failed, err: {Err}",
+            "translation": "get the current number of service config items failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ],
             "fuzzy": true
@@ -189,6 +223,23 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "tools.BytesToHumanReadable(uint64(maxSize))"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "list templates failed, err: {Err}",
+            "message": "list templates failed, err: {Err}",
+            "translation": "list templates failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
                 }
             ],
             "fuzzy": true
@@ -289,6 +340,98 @@
             "fuzzy": true
         },
         {
+            "id": "app name {Name} already exists",
+            "message": "app name {Name} already exists",
+            "translation": "app name {Name} already exists",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "app alias {Alias} already exists",
+            "message": "app alias {Alias} already exists",
+            "translation": "app alias {Alias} already exists",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Alias",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Alias"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get app failed, err: {Err}",
+            "message": "get app failed, err: {Err}",
+            "translation": "get app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the specified type does not match the actual configuration",
+            "message": "the specified type does not match the actual configuration",
+            "translation": "the specified type does not match the actual configuration",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "delete app related resources failed, err: {Err}",
+            "message": "delete app related resources failed, err: {Err}",
+            "translation": "delete app related resources failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "delete app failed, err: {Err}",
+            "message": "delete app failed, err: {Err}",
+            "translation": "delete app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "app {AppId} not found",
             "message": "app {AppId} not found",
             "translation": "app {AppId} not found",
@@ -301,6 +444,57 @@
                     "underlyingType": "uint32",
                     "argNum": 1,
                     "expr": "req.AppId"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "business query failed, err: {Err}",
+            "message": "business query failed, err: {Err}",
+            "translation": "business query failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "app related biz {BizID} is not exist",
+            "message": "app related biz {BizID} is not exist",
+            "translation": "app related biz {BizID} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "BizID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "bizID"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the config file {Joindir_name} already exists in this space and cannot be created again",
+            "message": "the config file {Joindir_name} already exists in this space and cannot be created again",
+            "translation": "the config file {Joindir_name} already exists in this space and cannot be created again",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Joindir_name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path.Join(dir, name)"
                 }
             ],
             "fuzzy": true
@@ -559,6 +753,23 @@
             "fuzzy": true
         },
         {
+            "id": "the config file {Name} under this service already exists and cannot be created again",
+            "message": "the config file {Name} under this service already exists and cannot be created again",
+            "translation": "the config file {Name} under this service already exists and cannot be created again",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "delete one app template binding instance by app id failed, err: {Err}",
             "message": "delete one app template binding instance by app id failed, err: {Err}",
             "translation": "delete one app template binding instance by app id failed, err: {Err}",
@@ -719,6 +930,114 @@
             "fuzzy": true
         },
         {
+            "id": "get kv ({Key}) failed, err: {Err}",
+            "message": "get kv ({Key}) failed, err: {Err}",
+            "translation": "get kv ({Key}) failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]d",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Key"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the config item {Key} under this service already exists and cannot be created again",
+            "message": "the config item {Key} under this service already exists and cannot be created again",
+            "translation": "the config item {Key} under this service already exists and cannot be created again",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get app fail, key: {Key}, err: {Err}",
+            "message": "get app fail, key: {Key}, err: {Err}",
+            "translation": "get app fail, key: {Key}, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Spec.Key"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "kv type does not match the data type defined in the application",
+            "message": "kv type does not match the data type defined in the application",
+            "translation": "kv type does not match the data type defined in the application",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "create kv failed, err: {Err}",
+            "message": "create kv failed, err: {Err}",
+            "translation": "create kv failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "update kv failed, err: {Err}",
+            "message": "update kv failed, err: {Err}",
+            "translation": "update kv failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "get excluded kv failed, err: {Err}",
             "message": "get excluded kv failed, err: {Err}",
             "translation": "get excluded kv failed, err: {Err}",
@@ -731,31 +1050,6 @@
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
                     "expr": "err"
-                }
-            ],
-            "fuzzy": true
-        },
-        {
-            "id": "config item's same name {Name} and path {Path} already exists",
-            "message": "config item's same name {Name} and path {Path} already exists",
-            "translation": "config item's same name {Name} and path {Path} already exists",
-            "translatorComment": "Copied from source.",
-            "placeholders": [
-                {
-                    "id": "Name",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "req.Spec.Name"
-                },
-                {
-                    "id": "Path",
-                    "string": "%[2]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 2,
-                    "expr": "req.Spec.Path"
                 }
             ],
             "fuzzy": true
@@ -836,9 +1130,9 @@
             "fuzzy": true
         },
         {
-            "id": "delete template from template sets failed, err: {Err}, rid: {Rid}",
-            "message": "delete template from template sets failed, err: {Err}, rid: {Rid}",
-            "translation": "delete template from template sets failed, err: {Err}, rid: {Rid}",
+            "id": "delete template from template sets failed, err: {Err}",
+            "message": "delete template from template sets failed, err: {Err}",
+            "translation": "delete template from template sets failed, err: {Err}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
@@ -848,14 +1142,6 @@
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
                     "expr": "err"
-                },
-                {
-                    "id": "Rid",
-                    "string": "%[2]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 2,
-                    "expr": "kt.Rid"
                 }
             ],
             "fuzzy": true
@@ -1078,9 +1364,138 @@
             "fuzzy": true
         },
         {
-            "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
-            "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
-            "translation": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "invalid path, length should \u003e= 1",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path, length should \u003c= 1024",
+            "message": "invalid path, length should \u003c= 1024",
+            "translation": "invalid path, length should \u003c= 1024",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path, should start with '/'",
+            "message": "invalid path, should start with '/'",
+            "translation": "invalid path, should start with '/'",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Part}, path cannot all be '.'",
+            "message": "invalid path {Part}, path cannot all be '.'",
+            "translation": "invalid path {Part}, path cannot all be '.'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Part",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "part"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path, length should \u003c= 256",
+            "message": "invalid path, length should \u003c= 256",
+            "translation": "invalid path, length should \u003c= 256",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path,path does not conform to the win file path format specification",
+            "message": "invalid path,path does not conform to the win file path format specification",
+            "translation": "invalid path,path does not conform to the win file path format specification",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "reload file path is required",
+            "message": "reload file path is required",
+            "translation": "reload file path is required",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid reload file path, should \u003c= 128",
+            "message": "invalid reload file path, should \u003c= 128",
+            "translation": "invalid reload file path, should \u003c= 128",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "reload file path is not the absolute path",
+            "message": "reload file path is not the absolute path",
+            "translation": "reload file path is not the absolute path",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "{SideWorkspaceDir} sub path is system reserved path, do not allow to use",
+            "message": "{SideWorkspaceDir} sub path is system reserved path, do not allow to use",
+            "translation": "{SideWorkspaceDir} sub path is system reserved path, do not allow to use",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "SideWorkspaceDir",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "constant.SideWorkspaceDir"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "memo is required, can not be empty",
+            "message": "memo is required, can not be empty",
+            "translation": "memo is required, can not be empty",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid memo, length should \u003c= 200",
+            "message": "invalid memo, length should \u003c= 200",
+            "translation": "invalid memo, length should \u003c= 200",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "resource name '{LowerName}' is prefixed with '{Prefix}' is reserved name, which is not allows to use",
+            "message": "resource name '{LowerName}' is prefixed with '{Prefix}' is reserved name, which is not allows to use",
+            "translation": "resource name '{LowerName}' is prefixed with '{Prefix}' is reserved name, which is not allows to use",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "LowerName",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "lowerName"
+                },
+                {
+                    "id": "Prefix",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "prefix"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name, length should \u003e= 1",
+            "message": "invalid name, length should \u003e= 1",
+            "translation": "invalid name, length should \u003e= 1",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -1088,6 +1503,30 @@
             "id": "invalid name, length should \u003c= 128",
             "message": "invalid name, length should \u003c= 128",
             "translation": "invalid name, length should \u003c= 128",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name: {Name}, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers",
+            "message": "invalid name: {Name}, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers",
+            "translation": "invalid name: {Name}, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "message": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
+            "translation": "invalid name, length should \u003e= 9 and must start with prefix bk_bscp_ (ignore case)",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -1109,6 +1548,208 @@
             "fuzzy": true
         },
         {
+            "id": "invalid name: {Name}, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number",
+            "message": "invalid name: {Name}, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number",
+            "translation": "invalid name: {Name}, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name, length should \u003c= 64",
+            "message": "invalid name, length should \u003c= 64",
+            "translation": "invalid name, length should \u003c= 64",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name {Name}, name cannot all be '.'",
+            "message": "invalid name {Name}, name cannot all be '.'",
+            "translation": "invalid name {Name}, name cannot all be '.'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid namespace, length should \u003e= 1",
+            "message": "invalid namespace, length should \u003e= 1",
+            "translation": "invalid namespace, length should \u003e= 1",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid namespace, length should \u003c= 128",
+            "message": "invalid namespace, length should \u003c= 128",
+            "translation": "invalid namespace, length should \u003c= 128",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid username, length should \u003e= 1",
+            "message": "invalid username, length should \u003e= 1",
+            "translation": "invalid username, length should \u003e= 1",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid username, length should \u003c= 32",
+            "message": "invalid username, length should \u003c= 32",
+            "translation": "invalid username, length should \u003c= 32",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "app is nil",
+            "message": "app is nil",
+            "translation": "app is nil",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "create data failed, err: {Err}",
+            "message": "create data failed, err: {Err}",
+            "translation": "create data failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "create app failed, err: {Err}",
+            "message": "create app failed, err: {Err}",
+            "translation": "create app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "update app failed, err: {Err}",
+            "message": "update app failed, err: {Err}",
+            "translation": "update app failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]s",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "count app {AppID}'s config items failed, err: {Err}",
+            "message": "count app {AppID}'s config items failed, err: {Err}",
+            "translation": "count app {AppID}'s config items failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "appID"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get app {AppID}'s template binding failed, err: {Err}",
+            "message": "get app {AppID}'s template binding failed, err: {Err}",
+            "translation": "get app {AppID}'s template binding failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "appID"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the total number of app {AppID}'s config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "message": "the total number of app {AppID}'s config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "translation": "the total number of app {AppID}'s config items(including template and non-template)exceeded the limit {AppConfigCnt}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "appID"
+                },
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "appConfigCnt"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "hook is nil",
             "message": "hook is nil",
             "translation": "hook is nil",
@@ -1119,6 +1760,586 @@
             "id": "Unnamed Version",
             "message": "Unnamed Version",
             "translation": "Unnamed Version",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "appID can not be 0",
+            "message": "appID can not be 0",
+            "translation": "appID can not be 0",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "the total number of template set {TmplSetID}'s templates exceeded the limit {TmplSetTmplCnt}",
+            "message": "the total number of template set {TmplSetID}'s templates exceeded the limit {TmplSetTmplCnt}",
+            "translation": "the total number of template set {TmplSetID}'s templates exceeded the limit {TmplSetTmplCnt}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "TmplSetID",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "tmplSetID"
+                },
+                {
+                    "id": "TmplSetTmplCnt",
+                    "string": "%[2]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 2,
+                    "expr": "tmplSetTmplCnt"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "validate templates exist failed, err: {Err}",
+            "message": "validate templates exist failed, err: {Err}",
+            "translation": "validate templates exist failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template space id in {DiffIDs} is not exist",
+            "message": "template space id in {DiffIDs} is not exist",
+            "translation": "template space id in {DiffIDs} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template id in {DiffIDs} is not exist",
+            "message": "template id in {DiffIDs} is not exist",
+            "translation": "template id in {DiffIDs} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "validate template releases exist failed, err: {Err}",
+            "message": "validate template releases exist failed, err: {Err}",
+            "translation": "validate template releases exist failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template revision id in {DiffIDs} is not exist",
+            "message": "template revision id in {DiffIDs} is not exist",
+            "translation": "template revision id in {DiffIDs} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "validate template sets exist failed, err: {Err}",
+            "message": "validate template sets exist failed, err: {Err}",
+            "translation": "validate template sets exist failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template set id in {DiffIDs} is not exist",
+            "message": "template set id in {DiffIDs} is not exist",
+            "translation": "template set id in {DiffIDs} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template {Id} is not exist",
+            "message": "template {Id} is not exist",
+            "translation": "template {Id} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Id",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "id"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get template failed, err: {Err}",
+            "message": "get template failed, err: {Err}",
+            "translation": "get template failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template release {Id} is not exist",
+            "message": "template release {Id} is not exist",
+            "translation": "template release {Id} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Id",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "id"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get template release failed, err: {Err}",
+            "message": "get template release failed, err: {Err}",
+            "translation": "get template release failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template set {Id} is not exist",
+            "message": "template set {Id} is not exist",
+            "translation": "template set {Id} is not exist",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Id",
+                    "string": "%[1]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 1,
+                    "expr": "id"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get template set count failed, err: {Err}",
+            "message": "get template set count failed, err: {Err}",
+            "translation": "get template set count failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "there are template sets under the template space, need to delete them first",
+            "message": "there are template sets under the template space, need to delete them first",
+            "translation": "there are template sets under the template space, need to delete them first",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "get template count failed, err: {Err}",
+            "message": "get template count failed, err: {Err}",
+            "translation": "get template count failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "there are templates under the template space, need to delete them first",
+            "message": "there are templates under the template space, need to delete them first",
+            "translation": "there are templates under the template space, need to delete them first",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "validate templates in a template set failed, err: {Err}",
+            "message": "validate templates in a template set failed, err: {Err}",
+            "translation": "validate templates in a template set failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "template id in {DiffIDs} is not belong to template set id {TemplateSetID}",
+            "message": "template id in {DiffIDs} is not belong to template set id {TemplateSetID}",
+            "translation": "template id in {DiffIDs} is not belong to template set id {TemplateSetID}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "DiffIDs",
+                    "string": "%[1]v",
+                    "type": "[]uint32",
+                    "underlyingType": "[]uint32",
+                    "argNum": 1,
+                    "expr": "diffIDs"
+                },
+                {
+                    "id": "TemplateSetID",
+                    "string": "%[2]d",
+                    "type": "uint32",
+                    "underlyingType": "uint32",
+                    "argNum": 2,
+                    "expr": "templateSetID"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "id can not be set",
+            "message": "id can not be set",
+            "translation": "id can not be set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid biz id",
+            "message": "invalid biz id",
+            "translation": "invalid biz id",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid spec, is nil",
+            "message": "invalid spec, is nil",
+            "translation": "invalid spec, is nil",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "app spec is nil",
+            "message": "app spec is nil",
+            "translation": "app spec is nil",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "unknown config type: {ConfigType}",
+            "message": "unknown config type: {ConfigType}",
+            "translation": "unknown config type: {ConfigType}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "ConfigType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.ConfigType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "as.ConfigType"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "app's type can not be updated",
+            "message": "app's type can not be updated",
+            "translation": "app's type can not be updated",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "not support table config type for now",
+            "message": "not support table config type for now",
+            "translation": "not support table config type for now",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "unsupported config type: {ConfigType}",
+            "message": "unsupported config type: {ConfigType}",
+            "translation": "unsupported config type: {ConfigType}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "ConfigType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.ConfigType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "c"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "unsupported app reload type: {AppReloadType}",
+            "message": "unsupported app reload type: {AppReloadType}",
+            "translation": "unsupported app reload type: {AppReloadType}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppReloadType",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.AppReloadType",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "rt"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid data-type",
+            "message": "invalid data-type",
+            "translation": "invalid data-type",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "spec should be set",
+            "message": "spec should be set",
+            "translation": "spec should be set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid commit spec's content id",
+            "message": "invalid commit spec's content id",
+            "translation": "invalid commit spec's content id",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "commit spec's content is empty",
+            "message": "commit spec's content is empty",
+            "translation": "commit spec's content is empty",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "verify Windows file paths failed, path: {Path}, err: {Err}",
+            "message": "verify Windows file paths failed, path: {Path}, err: {Err}",
+            "translation": "verify Windows file paths failed, path: {Path}, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "verify Unix file paths failed, path: {Path}, err: {Err}",
+            "message": "verify Unix file paths failed, path: {Path}, err: {Err}",
+            "translation": "verify Unix file paths failed, path: {Path}, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "unsupported file format: {FileFormat}",
+            "message": "unsupported file format: {FileFormat}",
+            "translation": "unsupported file format: {FileFormat}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "FileFormat",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.FileFormat",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "f"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "unsupported file mode: {FileMode}",
+            "message": "unsupported file mode: {FileMode}",
+            "translation": "unsupported file mode: {FileMode}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "FileMode",
+                    "string": "%[1]s",
+                    "type": "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table.FileMode",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "f"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "content id can not set",
+            "message": "content id can not set",
+            "translation": "content id can not set",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid content signature, should be config's sha256 value",
+            "message": "invalid content signature, should be config's sha256 value",
+            "translation": "invalid content signature, should be config's sha256 value",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "content signature should be lowercase",
+            "message": "content signature should be lowercase",
+            "translation": "content signature should be lowercase",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid origin content signature, should be config's sha256 value",
+            "message": "invalid origin content signature, should be config's sha256 value",
+            "translation": "invalid origin content signature, should be config's sha256 value",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "origin content signature should be lowercase",
+            "message": "origin content signature should be lowercase",
+            "translation": "origin content signature should be lowercase",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid app id",
+            "message": "invalid app id",
+            "translation": "invalid app id",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "invalid config item id",
+            "message": "invalid config item id",
+            "translation": "invalid config item id",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -1152,6 +2373,106 @@
                     "underlyingType": "string",
                     "argNum": 1,
                     "expr": "t"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: {Err}",
+            "message": "get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: {Err}",
+            "translation": "get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "value type assertion failed, err: {Err}",
+            "message": "value type assertion failed, err: {Err}",
+            "translation": "value type assertion failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "authorize failed",
+            "message": "authorize failed",
+            "translation": "authorize failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "get permission to apply failed, err: {Err}",
+            "message": "get permission to apply failed, err: {Err}",
+            "translation": "get permission to apply failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "grpc status with details failed, err: {Err}",
+            "message": "grpc status with details failed, err: {Err}",
+            "translation": "grpc status with details failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "{Path2} and {Path1} path file conflict",
+            "message": "{Path2} and {Path1} path file conflict",
+            "translation": "{Path2} and {Path1} path file conflict",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path2",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path2"
+                },
+                {
+                    "id": "Path1",
+                    "string": "%[2]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 2,
+                    "expr": "path1"
                 }
             ],
             "fuzzy": true

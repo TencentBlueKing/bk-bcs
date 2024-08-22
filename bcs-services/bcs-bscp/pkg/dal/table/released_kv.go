@@ -12,7 +12,11 @@
 
 package table
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+)
 
 // ReleasedKv 已生成版本的kv
 type ReleasedKv struct {
@@ -72,7 +76,7 @@ func (rs RkvList) ResType() string {
 }
 
 // ValidateCreate validate ReleasedKv is valid or not when create ir.
-func (r *ReleasedKv) ValidateCreate() error {
+func (r *ReleasedKv) ValidateCreate(kit *kit.Kit) error {
 	if r.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -81,7 +85,7 @@ func (r *ReleasedKv) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := r.Spec.ValidateCreate(); err != nil {
+	if err := r.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 

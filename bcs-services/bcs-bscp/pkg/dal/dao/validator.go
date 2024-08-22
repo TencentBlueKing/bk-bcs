@@ -14,12 +14,13 @@ package dao
 
 import (
 	"errors"
-	"fmt"
 
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/types"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
@@ -62,12 +63,12 @@ func (dao *validatorDao) ValidateTmplSpacesExist(kit *kit.Kit, templateSpaceIDs 
 	q := dao.genQ.TemplateSpace.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateSpaceIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate templates exist failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "validate templates exist failed, err: %v", err))
 	}
 
 	diffIDs := tools.SliceDiff(templateSpaceIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template space id in %v is not exist", diffIDs)
+		return errf.Errorf(errf.InvalidRequest, i18n.T(kit, "template space id in %v is not exist", diffIDs))
 	}
 
 	return nil
@@ -79,12 +80,12 @@ func (dao *validatorDao) ValidateTemplatesExist(kit *kit.Kit, templateIDs []uint
 	q := dao.genQ.Template.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate templates exist failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "validate templates exist failed, err: %v", err))
 	}
 
 	diffIDs := tools.SliceDiff(templateIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template id in %v is not exist", diffIDs)
+		return errf.Errorf(errf.InvalidRequest, i18n.T(kit, "template id in %v is not exist", diffIDs))
 	}
 
 	return nil
@@ -96,12 +97,12 @@ func (dao *validatorDao) ValidateTmplRevisionsExist(kit *kit.Kit, templateRevisi
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate template releases exist failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "validate template releases exist failed, err: %v", err))
 	}
 
 	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template revision id in %v is not exist", diffIDs)
+		return errf.Errorf(errf.InvalidRequest, i18n.T(kit, "template revision id in %v is not exist", diffIDs))
 	}
 
 	return nil
@@ -114,12 +115,12 @@ func (dao *validatorDao) ValidateTmplRevisionsExistWithTx(kit *kit.Kit, tx *gen.
 	q := tx.TemplateRevision.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateRevisionIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate template releases exist failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "validate template releases exist failed, err: %v", err))
 	}
 
 	diffIDs := tools.SliceDiff(templateRevisionIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template revision id in %v is not exist", diffIDs)
+		return errf.Errorf(errf.InvalidRequest, i18n.T(kit, "template revision id in %v is not exist", diffIDs))
 	}
 
 	return nil
@@ -131,12 +132,12 @@ func (dao *validatorDao) ValidateTmplSetsExist(kit *kit.Kit, templateSetIDs []ui
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 	var existIDs []uint32
 	if err := q.Where(m.ID.In(templateSetIDs...)).Pluck(m.ID, &existIDs); err != nil {
-		return fmt.Errorf("validate template sets exist failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "validate template sets exist failed, err: %v", err))
 	}
 
 	diffIDs := tools.SliceDiff(templateSetIDs, existIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template set id in %v is not exist", diffIDs)
+		return errf.Errorf(errf.InvalidRequest, i18n.T(kit, "template set id in %v is not exist", diffIDs))
 	}
 
 	return nil
@@ -149,9 +150,9 @@ func (dao *validatorDao) ValidateTemplateExist(kit *kit.Kit, id uint32) error {
 
 	if _, err := q.Where(m.ID.Eq(id)).Take(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("template %d is not exist", id)
+			return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "template %d is not exist", id))
 		}
-		return fmt.Errorf("get template failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "get template failed, err: %v", err))
 	}
 
 	return nil
@@ -164,9 +165,9 @@ func (dao *validatorDao) ValidateTmplRevisionExist(kit *kit.Kit, id uint32) erro
 
 	if _, err := q.Where(m.ID.Eq(id)).Take(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("template release %d is not exist", id)
+			return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "template release %d is not exist", id))
 		}
-		return fmt.Errorf("get template release failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "get template release failed, err: %v", err))
 	}
 
 	return nil
@@ -179,9 +180,9 @@ func (dao *validatorDao) ValidateTmplSetExist(kit *kit.Kit, id uint32) error {
 
 	if _, err := q.Where(m.ID.Eq(id)).Take(); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("template set %d is not exist", id)
+			return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "template set %d is not exist", id))
 		}
-		return fmt.Errorf("get template set failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "get template set failed, err: %v", err))
 	}
 
 	return nil
@@ -197,19 +198,21 @@ func (dao *validatorDao) ValidateTmplSpaceNoSubRes(kit *kit.Kit, id uint32) erro
 	m := dao.genQ.TemplateSet
 	q := dao.genQ.TemplateSet.WithContext(kit.Ctx)
 	if tmplSetCnt, err = q.Where(m.TemplateSpaceID.Eq(id)).Count(); err != nil {
-		return fmt.Errorf("get template set count failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "get template set count failed, err: %v", err))
 	}
 	if tmplSetCnt > 0 {
-		return fmt.Errorf("there are template sets under the template space, need to delete them first")
+		return errf.Errorf(errf.InvalidRequest,
+			i18n.T(kit, "there are template sets under the template space, need to delete them first"))
 	}
 
 	tm := dao.genQ.Template
 	tq := dao.genQ.Template.WithContext(kit.Ctx)
 	if tmplCnt, err = tq.Where(tm.TemplateSpaceID.Eq(id)).Count(); err != nil {
-		return fmt.Errorf("get template count failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kit, "get template count failed, err: %v", err))
 	}
 	if tmplCnt > 0 {
-		return fmt.Errorf("there are templates under the template space, need to delete them first")
+		return errf.Errorf(errf.InvalidRequest,
+			i18n.T(kit, "there are templates under the template space, need to delete them first"))
 	}
 
 	return nil
@@ -226,12 +229,14 @@ func (dao *validatorDao) ValidateTmplsBelongToTmplSet(
 	}
 	var existIDs existT
 	if err := q.Select(m.TemplateIDs).Where(m.ID.Eq(templateSetID)).Scan(&existIDs); err != nil {
-		return fmt.Errorf("validate templates in a template set failed, err: %v", err)
+		return errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "validate templates in a template set failed, err: %v", err))
 	}
 
 	diffIDs := tools.SliceDiff(templateIDs, existIDs.TemplateIDs)
 	if len(diffIDs) > 0 {
-		return fmt.Errorf("template id in %v is not belong to template set id %d", diffIDs, templateSetID)
+		return errf.Errorf(errf.InvalidRequest,
+			i18n.T(kit, "template id in %v is not belong to template set id %d", diffIDs, templateSetID))
 	}
 
 	return nil

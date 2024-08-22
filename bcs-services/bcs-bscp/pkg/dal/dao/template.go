@@ -75,7 +75,7 @@ type templateDao struct {
 
 // UpdateWithTx Update one template instance with transaction.
 func (dao *templateDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Template) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 
@@ -143,7 +143,7 @@ func (dao *templateDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, templat
 	}
 
 	for i, item := range templates {
-		if err = item.ValidateCreate(); err != nil {
+		if err = item.ValidateCreate(kit); err != nil {
 			return err
 		}
 		item.ID = ids[i]
@@ -157,7 +157,7 @@ func (dao *templateDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, templat
 
 // Create one template instance.
 func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -196,7 +196,7 @@ func (dao *templateDao) Create(kit *kit.Kit, g *table.Template) (uint32, error) 
 
 // CreateWithTx create one template instance with transaction.
 func (dao *templateDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Template) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -222,7 +222,7 @@ func (dao *templateDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Tem
 
 // Update one template instance.
 func (dao *templateDao) Update(kit *kit.Kit, g *table.Template) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

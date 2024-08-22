@@ -76,7 +76,7 @@ func (dao *groupDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Group)
 		return 0, errf.New(errf.InvalidParameter, "group is nil")
 	}
 
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -106,7 +106,7 @@ func (dao *groupDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Group)
 		return errf.New(errf.InvalidParameter, "group is nil")
 	}
 
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 

@@ -65,7 +65,7 @@ func (dao *contentDao) Create(kit *kit.Kit, content *table.Content) (uint32, err
 		return 0, errf.New(errf.InvalidParameter, "content is nil")
 	}
 
-	if err := content.ValidateCreate(); err != nil {
+	if err := content.ValidateCreate(kit); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -109,7 +109,7 @@ func (dao *contentDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, content *tabl
 		return 0, errf.New(errf.InvalidParameter, "content is nil")
 	}
 
-	if err := content.ValidateCreate(); err != nil {
+	if err := content.ValidateCreate(kit); err != nil {
 		return 0, errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -144,7 +144,7 @@ func (dao *contentDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents
 		return err
 	}
 	for i, content := range contents {
-		if err := content.ValidateCreate(); err != nil {
+		if err := content.ValidateCreate(kit); err != nil {
 			return err
 		}
 		content.ID = ids[i]

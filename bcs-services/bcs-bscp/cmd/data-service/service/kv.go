@@ -42,19 +42,22 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		[]string{string(table.KvStateAdd), string(table.KvStateUnchange), string(table.KvStateRevise)})
 	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.NotFound,
+			i18n.T(kt, "get kv (%d) failed, err: %v", req.Spec.Key, err))
 	}
 	if !errors.Is(gorm.ErrRecordNotFound, err) {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, fmt.Errorf("kv same key %s already exists", req.Spec.Key)
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, "the config item %s under this service already exists and cannot be created again", req.Spec.Key))
 	}
 	// get app with id.
 	app, err := s.dao.App().Get(kt, req.Attachment.BizId, req.Attachment.AppId)
 	if err != nil {
-		return nil, fmt.Errorf("get app fail,err : %v", req.Spec.Key)
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get app fail, key: %s, err: %v", req.Spec.Key, err))
 	}
 	if !checkKVTypeMatch(table.DataType(req.Spec.KvType), app.Spec.DataType) {
-		return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+		return nil, errf.Errorf(errf.InvalidRequest,
+			i18n.T(kt, "kv type does not match the data type defined in the application"))
 	}
 
 	opt := &types.UpsertKvOption{
@@ -68,7 +71,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
 		logs.Errorf("create kv failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "create kv failed, err: %v", err))
 	}
 
 	kv := &table.Kv{
@@ -90,12 +93,11 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 	id, err := s.dao.Kv().Create(kt, kv)
 	if err != nil {
 		logs.Errorf("create kv failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "create kv failed, err: %v", err))
 	}
 
 	resp := &pbds.CreateResp{Id: id}
 	return resp, nil
-
 }
 
 // check KV Type Match
@@ -116,7 +118,8 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		[]string{string(table.KvStateAdd), string(table.KvStateUnchange), string(table.KvStateRevise)})
 	if err != nil {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, "get kv (%d) failed, err: %v", req.Spec.Key, err))
 	}
 
 	opt := &types.UpsertKvOption{
@@ -129,8 +132,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	// UpsertKv 创建｜更新kv
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
-		logs.Errorf("update kv failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "update kv failed, err: %v", err))
 	}
 
 	if kv.KvState == table.KvStateUnchange {
@@ -151,7 +153,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 	}
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "update kv failed, err: %v", err))
 	}
 
 	return new(pbbase.EmptyResp), nil
