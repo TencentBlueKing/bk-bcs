@@ -489,8 +489,12 @@ export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
+export const updateKv = (
+  bizId: string,
+  appId: number,
+  key: string,
+  editContent: { value: string; memo: string; secret_visible?: boolean },
+) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, editContent);
 
 /**
  * 删除kv

@@ -14,7 +14,6 @@
         :content="secretValue"
         :is-credential="selectType === 'certificate'"
         :height="400"
-        :is-edit="props.isEdit"
         @change="handlSecretChange" />
       <div
         v-if="selectTypeContent!.infoList.length > 0"
@@ -60,7 +59,7 @@
   </bk-form-item>
   <bk-checkbox
     class="visible-checkbox"
-    :disabled="props.isEdit"
+    :disabled="props.isEdit && initSecretUnVisible"
     :model-value="secretUnVisible"
     :before-change="handleChangeSecretUnVisible">
     {{ t('敏感信息不可见') }}
@@ -107,6 +106,7 @@
 
   const isCipherShowSecret = ref(true); // 密文展示敏感信息
   const secretUnVisible = ref(false); // 敏感信息不可见
+  const initSecretUnVisible = ref(false); // 初始敏感信息不可见
   const isShowVisibleDialog = ref(false);
   const secretValue = ref('');
   const isShowValidateInfo = ref(false);
@@ -123,6 +123,7 @@
     secretValue.value = secret_visible ? value : '';
     selectType.value = secret_type || 'password';
     secretUnVisible.value = !secret_visible;
+    initSecretUnVisible.value = !secret_visible;
   });
 
   const selectTypeContent = computed(() => {
@@ -186,6 +187,7 @@
     if (selectType.value === 'certificate') {
       selectTypeContent.value!.infoList = [];
     }
+    change();
   };
 
   const handleValueChange = (value: string, event: any) => {
@@ -320,6 +322,10 @@
   };
 
   const validateCertificate = (pem: string) => {
+    if (!pem) {
+      selectTypeContent.value!.infoList = [];
+      return;
+    }
     try {
       // Remove the PEM headers and footers
       const pemCleaned = pem

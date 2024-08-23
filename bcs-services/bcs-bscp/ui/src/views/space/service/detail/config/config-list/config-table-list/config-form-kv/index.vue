@@ -116,7 +116,7 @@
       },
       {
         validator: (value: string) => {
-          if (localVal.value.kv_type === 'secret' && localVal.value.secret_type === 'token') {
+          if (localVal.value.secret_type === 'token' && localVal.value.value) {
             return /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value);
           }
           return true;

@@ -9,7 +9,11 @@
           <slot name="rightHead">
             <div class="panel-name">{{ props.panelName }}</div>
           </slot>
-          <div v-if="props.diff.contentType === 'text'" class="fullscreen-btn">
+          <div v-if="props.diff.contentType === 'text'" class="action-btn">
+            <template v-if="props.diff.is_secret && props.diff.secret_visible">
+              <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
+              <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
+            </template>
             <FilliscreenLine
               v-if="!isFullScreen"
               v-bk-tooltips="{
@@ -47,7 +51,8 @@
             :base-variables="props.diff.base.variables"
             :base-permission="basePermission"
             :is-secret="props.diff.is_secret"
-            :secret-visible="props.diff.secret_visible" />
+            :secret-visible="props.diff.secret_visible"
+            :is-cipher-show="isCipherShowSecret" />
           <template v-else-if="props.diff.contentType === 'singleLineKV'">
             <SingleLineKV
               v-if="props.diff.singleLineKVDiff"
@@ -62,7 +67,7 @@
 <script setup lang="ts">
   import { ref, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
+  import { FilliscreenLine, UnfullScreen, Unvisible, Eye } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { IDiffDetail } from '../../../types/service';
   import { IFileConfigContentSummary } from '../../../types/config';
@@ -80,6 +85,8 @@
   }>();
 
   const isFullScreen = ref(false);
+
+  const isCipherShowSecret = ref(true);
 
   const currentPermission = computed(() => {
     if (!props.diff.base.permission) return;
@@ -161,14 +168,18 @@ ${t('用户组')}:${props.diff.base.permission?.user_group}`;
     .right-panel {
       position: relative;
       border-left: 1px solid #1d1d1d;
-      .fullscreen-btn {
+      .action-btn {
+        display: flex;
+        gap: 8px;
         position: absolute;
         top: 16px;
         right: 14px;
-        color: #979ba5;
-        cursor: pointer;
-        &:hover {
-          color: #3a84ff;
+        span {
+          cursor: pointer;
+          color: #979ba5;
+          &:hover {
+            color: #3a84ff;
+          }
         }
       }
     }

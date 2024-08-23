@@ -320,6 +320,8 @@
     return {
       contentType: 'text',
       id: config.id,
+      is_secret: !!config.secretType,
+      secret_visible: config.secret_visible,
       base: {
         content: config.baseContent,
         variables: [],

@@ -60,7 +60,7 @@
   const props = withDefaults(
     defineProps<{
       content: string;
-      isEdit: boolean;
+      isEdit?: boolean;
       isCredential?: boolean;
       height?: number;
     }>(),

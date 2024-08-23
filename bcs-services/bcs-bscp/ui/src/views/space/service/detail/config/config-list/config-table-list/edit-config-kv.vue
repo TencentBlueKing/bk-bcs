@@ -76,15 +76,17 @@
     if (configForm.value!.kv_type === 'number') {
       configForm.value!.value = configForm.value!.value.replace(/^0+(?=\d|$)/, '');
     }
+    const { value, memo, secret_type, secret_visible } = configForm.value as IConfigKvItem;
+    const editForm: { value: string; memo: string; secret_visible?: boolean } = {
+      value,
+      memo,
+    };
+    if (secret_type) {
+      editForm.secret_visible = secret_visible;
+    }
     try {
       pending.value = true;
-      await updateKv(
-        props.bkBizId,
-        props.appId,
-        configForm.value!.key,
-        configForm.value!.value,
-        configForm.value!.memo,
-      );
+      await updateKv(props.bkBizId, props.appId, configForm.value!.key, editForm);
       emits('confirm');
       close();
       Message({
