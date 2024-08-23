@@ -83,70 +83,19 @@ func (m *ModelTemplateSpaceCollect) ensureTable(ctx context.Context) error {
 	return nil
 }
 
-// GetTemplateSpaceCollect get a specific entity.TemplateSpaceCollect from database
-func (m *ModelTemplateSpaceCollect) GetTemplateSpaceCollect(ctx context.Context, id string) (
-	*entity.TemplateSpaceCollect, error) {
-	if id == "" {
-		return nil, fmt.Errorf("can not get with empty id")
-	}
-
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, fmt.Errorf("invalid id")
-	}
-
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		entity.FieldKeyObjectID: objectID,
-	})
-
-	templateSpaceCollect := &entity.TemplateSpaceCollect{}
-	if err := m.db.Table(m.tableName).Find(cond).One(ctx, templateSpaceCollect); err != nil {
-		return nil, err
-	}
-
-	return templateSpaceCollect, nil
-}
-
 // ListTemplateSpaceCollect get a list of entity.TemplateSpaceCollect by condition from database
 func (m *ModelTemplateSpaceCollect) ListTemplateSpaceCollect(
-	ctx context.Context, templateSpaceID, projectCode, username string) ([]*entity.TemplateSpaceAndCollect, error) {
-
-	t := make([]*entity.TemplateSpaceAndCollect, 0)
-	// 构建聚合管道, 文件夹名称有可能会更新，不想在这张表维护
-	match := operator.M{"projectCode": projectCode, "username": username}
-	if templateSpaceID != "" {
-		spaceID, err := primitive.ObjectIDFromHex(templateSpaceID)
-		if err != nil {
-			return nil, err
-		}
-		match[entity.FieldKeyTemplateSpaceID] = spaceID
-	}
-	pipeline := []operator.M{
-		{"$match": match},
-		{"$lookup": operator.M{
-			"from":         "bcsclusterresources_templatespace",
-			"localField":   "templateSpaceID",
-			"foreignField": "_id",
-			"as":           "templatespace",
-		}},
-		{"$unwind": "$templatespace"},
-		{"$project": operator.M{
-			"_id":             1,
-			"templateSpaceID": 1,
-			"projectCode":     1,
-			"username":        1,
-			"createAt":        1,
-			"name":            "$templatespace.name",
-		}},
-	}
-
-	err := m.db.Table(m.tableName).Aggregation(ctx, pipeline, &t)
-
-	if err != nil {
+	ctx context.Context, projectCode, username string) ([]*entity.TemplateSpaceCollect, error) {
+	ts := make([]*entity.TemplateSpaceCollect, 0)
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode: projectCode,
+		"username":                 username,
+	})
+	if err := m.db.Table(m.tableName).Find(cond).All(ctx, &ts); err != nil {
 		return nil, err
 	}
 
-	return t, nil
+	return ts, nil
 }
 
 // CreateTemplateSpaceCollect create a new entity.TemplateSpaceCollect into database

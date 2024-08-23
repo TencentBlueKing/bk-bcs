@@ -953,39 +953,7 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectCode}/template/space/collects": {
-      "get": {
-        "summary": "Get template space collect list",
-        "description": "获取模板文件文件夹收藏列表",
-        "operationId": "TemplateSet_ListTemplateSpaceCollect",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonListResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectCode",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "TemplateSet"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectCode}/template/space/collects/{id}": {
+    "/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects": {
       "delete": {
         "summary": "Delete template space collect",
         "description": "删除模板文件文件夹收藏",
@@ -1012,7 +980,7 @@
             "type": "string"
           },
           {
-            "name": "id",
+            "name": "templateSpaceID",
             "in": "path",
             "required": true,
             "type": "string"
@@ -1021,9 +989,7 @@
         "tags": [
           "TemplateSet"
         ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects": {
+      },
       "post": {
         "summary": "Create template space collect",
         "description": "创建模板文件文件夹收藏",
@@ -1219,50 +1185,6 @@
           "TemplateSet"
         ]
       },
-      "post": {
-        "summary": "Copy template space",
-        "description": "复制模板文件文件夹",
-        "operationId": "TemplateSet_CopyTemplateSpace",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectCode",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCopyTemplateSpaceReq"
-            }
-          }
-        ],
-        "tags": [
-          "TemplateSet"
-        ]
-      },
       "put": {
         "summary": "Update template space",
         "description": "更新模板文件文件夹",
@@ -1300,6 +1222,52 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesUpdateTemplateSpaceReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}/copy": {
+      "post": {
+        "summary": "Copy template space",
+        "description": "复制模板文件文件夹",
+        "operationId": "TemplateSet_CopyTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCopyTemplateSpaceReq"
             }
           }
         ],

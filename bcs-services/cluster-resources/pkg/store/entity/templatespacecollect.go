@@ -19,33 +19,8 @@ import (
 // TemplateSpaceCollect 定义了模板文件文件夹收藏的模型
 type TemplateSpaceCollect struct {
 	ID              primitive.ObjectID `json:"id" bson:"_id"`
-	TemplateSpaceID primitive.ObjectID `json:"templateSpaceID" bson:"templateSpaceID"`
+	TemplateSpaceID string             `json:"templateSpaceID" bson:"templateSpaceID"`
 	ProjectCode     string             `json:"projectCode" bson:"projectCode"`
 	Username        string             `json:"username" bson:"username"`
 	CreateAt        int64              `json:"createAt" bson:"createAt"`
-}
-
-// TemplateSpaceAndCollect 定义了模板文件文件夹及收藏的模型
-type TemplateSpaceAndCollect struct {
-	ID              primitive.ObjectID `json:"id" bson:"_id"`
-	TemplateSpaceID primitive.ObjectID `json:"templateSpaceID" bson:"templateSpaceID"`
-	ProjectCode     string             `json:"projectCode" bson:"projectCode"`
-	Username        string             `json:"username" bson:"username"`
-	CreateAt        int64              `json:"createAt" bson:"createAt"`
-	Name            string             `json:"name" bson:"name"` // 文件夹名称，从文件夹表获取
-}
-
-// ToMap trans template space collect to map
-func (t *TemplateSpaceAndCollect) ToMap() map[string]interface{} {
-	if t == nil {
-		return nil
-	}
-	m := make(map[string]interface{}, 0)
-	m["id"] = t.ID.Hex()
-	m["templateSpaceID"] = t.TemplateSpaceID.Hex()
-	m["projectCode"] = t.ProjectCode
-	m["username"] = t.Username
-	m["CreateAt"] = t.CreateAt
-	m["name"] = t.Name
-	return m
 }

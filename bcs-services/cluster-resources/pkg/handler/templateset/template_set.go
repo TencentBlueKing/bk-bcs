@@ -114,20 +114,6 @@ func (h *Handler) CopyTemplateSpace(
 	return nil
 }
 
-// ListTemplateSpaceCollect 获取模板文件文件夹收藏列表
-func (h *Handler) ListTemplateSpaceCollect(
-	ctx context.Context, in *clusterRes.ListTemplateSpaceCollectReq, out *clusterRes.CommonListResp) error {
-	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
-	data, err := action.List(ctx)
-	if err != nil {
-		return err
-	}
-	if out.Data, err = pbstruct.MapSlice2ListValue(data); err != nil {
-		return err
-	}
-	return nil
-}
-
 // CreateTemplateSpaceCollect 创建模板文件文件夹收藏
 func (h *Handler) CreateTemplateSpaceCollect(
 	ctx context.Context, in *clusterRes.CreateTemplateSpaceCollectReq, out *clusterRes.CommonResp) error {
@@ -146,7 +132,7 @@ func (h *Handler) CreateTemplateSpaceCollect(
 func (h *Handler) DeleteTemplateSpaceCollect(
 	ctx context.Context, in *clusterRes.DeleteTemplateSpaceCollectReq, out *clusterRes.CommonResp) error {
 	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
-	err := action.Delete(ctx, in.GetId())
+	err := action.Delete(ctx, in.GetTemplateSpaceID())
 	if err != nil {
 		return err
 	}
