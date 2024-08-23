@@ -1313,13 +1313,13 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.
 		}
 	}
 
-	templateSet, err := s.checkTemplateSetExceedsLimit(kit, req.BizId,
+	templateSet, templateSetExceedsQuantity, err := s.checkTemplateSetExceedsLimit(kit, req.BizId,
 		req.GetTemplateSetIds(), templateIDs, createTemplateNum)
 	if err != nil {
 		return nil, err
 	}
 
-	appReferenceTmplSet, err := s.checkAppReferenceTmplSetExceedsLimit(kit, req.BizId,
+	appReferenceTmplSet, appExceedsQuantity, err := s.checkAppReferenceTmplSetExceedsLimit(kit, req.BizId,
 		req.GetTemplateSetIds(), templateIDs, createTemplateNum)
 	if err != nil {
 		return nil, err
@@ -1330,19 +1330,22 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.
 		if len(item) > 0 {
 			for _, appId := range item {
 				results = append(results, &pbds.CheckTemplateSetReferencesAppsResp_Item{
-					TemplateSetId:           setId,
-					TemplateSetName:         templateSetNames[setId],
-					AppId:                   appId,
-					AppName:                 appNames[appId],
-					AppExceedsLimit:         appReferenceTmplSet[appId],
-					TemplateSetExceedsLimit: templateSet[setId],
+					TemplateSetId:              setId,
+					TemplateSetName:            templateSetNames[setId],
+					AppId:                      appId,
+					AppName:                    appNames[appId],
+					AppExceedsLimit:            appReferenceTmplSet[appId],
+					TemplateSetExceedsLimit:    templateSet[setId],
+					AppExceedsQuantity:         appExceedsQuantity[appId],
+					TemplateSetExceedsQuantity: templateSetExceedsQuantity[setId],
 				})
 			}
 		} else {
 			results = append(results, &pbds.CheckTemplateSetReferencesAppsResp_Item{
-				TemplateSetId:           setId,
-				TemplateSetName:         templateSetNames[setId],
-				TemplateSetExceedsLimit: templateSet[setId],
+				TemplateSetId:              setId,
+				TemplateSetName:            templateSetNames[setId],
+				TemplateSetExceedsLimit:    templateSet[setId],
+				TemplateSetExceedsQuantity: templateSetExceedsQuantity[setId],
 			})
 		}
 	}
@@ -1354,43 +1357,45 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.
 
 // 检测某个套餐是否超出限制
 func (s *Service) checkTemplateSetExceedsLimit(kt *kit.Kit, bizID uint32, templateSetIds []uint32,
-	templateIDs []uint32, additionalQuantity int) (map[uint32]bool, error) {
+	templateIDs []uint32, additionalQuantity int) (map[uint32]bool, map[uint32]uint32, error) {
 
 	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
 
 	// 1. 查询套餐数据
 	templateSets, err := s.dao.TemplateSet().ListByIDs(kt, templateSetIds)
 	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get template set failed, err: %s", err))
+		return nil, nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get template set failed, err: %s", err))
 	}
 
 	exceedsLimit := map[uint32]bool{}
-
+	exceedsQuantity := map[uint32]uint32{}
 	// 2. 验证是否超出套餐限制
 	for _, v := range templateSets {
 		mergedIDs := tools.MergeAndDeduplicate(v.Spec.TemplateIDs, templateIDs)
-		if len(mergedIDs)+additionalQuantity > tmplSetTmplCnt {
+		quantity := len(mergedIDs) + additionalQuantity
+		if quantity > tmplSetTmplCnt {
 			exceedsLimit[v.ID] = true
+			exceedsQuantity[v.ID] = uint32(quantity)
 		}
 	}
 
-	return exceedsLimit, nil
+	return exceedsLimit, exceedsQuantity, nil
 }
 
 // 检测某个服务是否超出限制
 func (s *Service) checkAppReferenceTmplSetExceedsLimit(kt *kit.Kit, bizID uint32, templateSetIDs,
-	templateIDs []uint32, additionalQuantity int) (map[uint32]bool, error) {
+	templateIDs []uint32, additionalQuantity int) (map[uint32]bool, map[uint32]uint32, error) {
 
 	// 4. 通过套餐获取绑定的服务数据
 	bindings, err := s.dao.AppTemplateBinding().GetBindingAppByTemplateSetID(kt, bizID, templateSetIDs)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 
-		return nil, errf.Errorf(errf.DBOpFailed,
+		return nil, nil, errf.Errorf(errf.DBOpFailed,
 			i18n.T(kt, "get app template bindings by template set ids, err: %s", err))
 	}
 
 	if bindings == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	betectedTemplateSetIDs := make(map[uint32]bool, 0)
@@ -1404,10 +1409,11 @@ func (s *Service) checkAppReferenceTmplSetExceedsLimit(kt *kit.Kit, bizID uint32
 	configCountWithTemplates, excludedTemplateSetIDs, err := s.countNumberAppTemplateBindings(kt, bizID, bindings,
 		betectedTemplateSetIDs, additionalQuantity)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	exceedsLimit := map[uint32]bool{}
+	exceedsQuantity := map[uint32]uint32{}
 	for _, templateBinding := range bindings {
 		for _, spec := range templateBinding.Spec.Bindings {
 			// 不需要处理的套餐忽略掉
@@ -1417,11 +1423,13 @@ func (s *Service) checkAppReferenceTmplSetExceedsLimit(kt *kit.Kit, bizID uint32
 			// 需验证套餐数量是否超出限制
 			// 需要验证的套餐配置ID和需要操作的配置文件ID合并，判断是否超出限制
 			mergedIDs := tools.MergeAndDeduplicate(excludedTemplateSetIDs[spec.TemplateSetID], templateIDs)
-			if len(mergedIDs)+configCountWithTemplates[templateBinding.Attachment.AppID] > appConfigCnt {
+			quantity := len(mergedIDs) + configCountWithTemplates[templateBinding.Attachment.AppID]
+			if quantity > appConfigCnt {
 				exceedsLimit[templateBinding.Attachment.AppID] = true
+				exceedsQuantity[templateBinding.Attachment.AppID] = uint32(quantity)
 			}
 		}
 	}
 
-	return exceedsLimit, nil
+	return exceedsLimit, exceedsQuantity, nil
 }

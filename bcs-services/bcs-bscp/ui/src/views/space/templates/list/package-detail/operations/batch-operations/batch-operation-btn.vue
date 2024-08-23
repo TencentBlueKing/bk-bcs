@@ -9,7 +9,7 @@
     @after-show="isPopoverOpen = true"
     @after-hidden="isPopoverOpen = false">
     <bk-button
-      :disabled="props.configs.length === 0 && !isAcrossChecked"
+      :disabled="props.configs.length === 0 && !props.isAcrossChecked"
       :class="['batch-set-btn', { 'popover-open': isPopoverOpen }]">
       {{ t('批量操作') }}
       <AngleDown class="angle-icon" />
@@ -29,18 +29,24 @@
       </div>
     </template>
   </bk-popover>
-  <AddToDialog v-model:show="isAddToDialogShow" :value="props.configs" @added="emits('refresh')" />
+  <AddToDialog
+    v-model:show="isAddToDialogShow"
+    :value="props.configs"
+    :is-across-checked="props.isAcrossChecked"
+    :data-count="props.dataCount"
+    @added="emits('refresh')" />
   <EditPermissionDialg
     v-model:show="isEditPermissionShow"
     :loading="editLoading"
-    :configs-length="isAcrossChecked ? dataCount - props.configs.length : props.configs.length"
+    :configs-length="props.isAcrossChecked ? props.dataCount - props.configs.length : props.configs.length"
     :configs="props.configs"
     @confirm="handleConfirmEditPermission($event)" />
   <BatchMoveOutFromPkgDialog
     v-model:show="isBatchMoveDialogShow"
     :current-pkg="props.currentPkg as number"
     :value="props.configs"
-    :value-length="isAcrossChecked ? dataCount - props.configs.length : props.configs.length"
+    :value-length="props.isAcrossChecked ? props.dataCount - props.configs.length : props.configs.length"
+    :is-across-checked="props.isAcrossChecked"
     @moved-out="emits('movedOut')" />
   <MoveOutFromPkgsDialog
     v-model:show="isSingleMoveDialogShow"
@@ -52,6 +58,8 @@
     v-model:show="isDeleteConfigDialogShow"
     :is-batch-delete="true"
     :configs="props.configs"
+    :is-across-checked="props.isAcrossChecked"
+    :data-count="props.dataCount"
     @deleted="emits('deleted')" />
 </template>
 <script lang="ts" setup>
@@ -59,10 +67,8 @@
   import { AngleDown } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
-  import { storeToRefs } from 'pinia';
   import Message from 'bkui-vue/lib/message';
   import { ITemplateConfigItem } from '../../../../../../../../types/template';
-  import useTemplateStore from '../../../../../../../store/template';
   import { batchEditTemplatePermission } from '../../../../../../../api/template';
   import AddToDialog from '../add-to-pkgs/add-to-dialog.vue';
   import EditPermissionDialg from '../edit-permission/edit-permission-dialog.vue';
@@ -76,7 +82,6 @@
     user_group: string;
   }
 
-  const { isAcrossChecked, dataCount } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
   const route = useRoute();
 
@@ -86,6 +91,8 @@
     configs: ITemplateConfigItem[];
     pkgType: string;
     currentPkg?: number | string;
+    isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
   const emits = defineEmits(['refresh', 'movedOut', 'deleted']);
@@ -140,8 +147,8 @@
         user_group,
         template_ids: props.configs.map((item) => item.id),
         app_ids: appIds,
-        template_space_id: bkBizId.value,
-        current_check_type: isAcrossChecked,
+        template_space_id: props.currentTemplateSpace,
+        exclusion_operation: props.isAcrossChecked,
         template_set_id: props.currentPkg !== undefined ? props.currentPkg : 0,
         no_set_specified: props.pkgType === 'without',
       };

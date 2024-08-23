@@ -19,7 +19,10 @@ import (
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ConfigItemColumns defines config item's columns
@@ -63,7 +66,7 @@ func (c ConfigItem) TableName() Name {
 }
 
 // ValidateCreate validate the config item's specific when create it.
-func (c ConfigItem) ValidateCreate() error {
+func (c ConfigItem) ValidateCreate(kit *kit.Kit) error {
 	if c.ID != 0 {
 		return errors.New("config item id can not be set")
 	}
@@ -72,7 +75,7 @@ func (c ConfigItem) ValidateCreate() error {
 		return errors.New("spec should be set")
 	}
 
-	if err := c.Spec.ValidateCreate(); err != nil {
+	if err := c.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -96,13 +99,13 @@ func (c ConfigItem) ValidateCreate() error {
 }
 
 // ValidateUpdate validate the config item's specific when update it.
-func (c ConfigItem) ValidateUpdate() error {
+func (c ConfigItem) ValidateUpdate(kit *kit.Kit) error {
 	if c.ID <= 0 {
 		return errors.New("config item id should be set")
 	}
 
 	if c.Spec != nil {
-		if err := c.Spec.ValidateUpdate(); err != nil {
+		if err := c.Spec.ValidateUpdate(kit); err != nil {
 			return err
 		}
 	}
@@ -142,7 +145,7 @@ func (c ConfigItem) ValidateDelete() error {
 }
 
 // ValidateRecover validate the config item's specific when recover it.
-func (c ConfigItem) ValidateRecover() error {
+func (c ConfigItem) ValidateRecover(kit *kit.Kit) error {
 	if c.ID == 0 {
 		return errors.New("config item id can not be set")
 	}
@@ -151,7 +154,7 @@ func (c ConfigItem) ValidateRecover() error {
 		return errors.New("spec should be set")
 	}
 
-	if err := c.Spec.ValidateCreate(); err != nil {
+	if err := c.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -216,29 +219,29 @@ type ConfigItemSpec struct {
 }
 
 // ValidateCreate validate the config item's specifics
-func (ci ConfigItemSpec) ValidateCreate() error {
+func (ci ConfigItemSpec) ValidateCreate(kit *kit.Kit) error {
 
-	if err := validator.ValidateFileName(ci.Name); err != nil {
+	if err := validator.ValidateFileName(kit, ci.Name); err != nil {
 		return err
 	}
 
-	if err := ci.FileType.Validate(); err != nil {
+	if err := ci.FileType.Validate(kit); err != nil {
 		return err
 	}
 
-	if err := ci.FileMode.Validate(); err != nil {
+	if err := ci.FileMode.Validate(kit); err != nil {
 		return err
 	}
 
-	if err := ValidatePath(ci.Path, ci.FileMode); err != nil {
-		return fmt.Errorf("%s err: %v", ci.Path, err)
-	}
-
-	if err := validator.ValidateMemo(ci.Memo, false); err != nil {
+	if err := ValidatePath(kit, ci.Path, ci.FileMode); err != nil {
 		return err
 	}
 
-	if err := ci.Permission.Validate(ci.FileMode); err != nil {
+	if err := validator.ValidateMemo(kit, ci.Memo, false); err != nil {
+		return err
+	}
+
+	if err := ci.Permission.Validate(kit, ci.FileMode); err != nil {
 		return err
 	}
 
@@ -246,25 +249,25 @@ func (ci ConfigItemSpec) ValidateCreate() error {
 }
 
 // ValidatePath validate path.
-func ValidatePath(path string, fileMode FileMode) error {
+func ValidatePath(kit *kit.Kit, path string, fileMode FileMode) error {
 	switch fileMode {
 	case Windows:
-		if err := validator.ValidateWinFilePath(path); err != nil {
-			return fmt.Errorf("%s err: %v", path, err)
+		if err := validator.ValidateWinFilePath(kit, path); err != nil {
+			return errors.New(i18n.T(kit, "verify Windows file paths failed, path: %s, err: %v", path, err))
 		}
 	case Unix:
-		if err := validator.ValidateUnixFilePath(path); err != nil {
-			return fmt.Errorf("%s err: %v", path, err)
+		if err := validator.ValidateUnixFilePath(kit, path); err != nil {
+			return errors.New(i18n.T(kit, "verify Unix file paths failed, path: %s, err: %v", path, err))
 		}
 	default:
-		return errors.New("unknown file mode " + string(fileMode))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "unknown file mode "+string(fileMode)))
 	}
 
 	return nil
 }
 
 // Validate file permission.
-func (f FilePermission) Validate(mode FileMode) error {
+func (f FilePermission) Validate(kit *kit.Kit, mode FileMode) error {
 	switch mode {
 	case Windows:
 		return errors.New("windows file mode not supported at the moment")
@@ -300,35 +303,35 @@ func (f FilePermission) Validate(mode FileMode) error {
 }
 
 // ValidateUpdate validate the config item's specifics when update it.
-func (ci ConfigItemSpec) ValidateUpdate() error {
+func (ci ConfigItemSpec) ValidateUpdate(kit *kit.Kit) error {
 
 	if len(ci.Name) != 0 {
-		if err := validator.ValidateFileName(ci.Name); err != nil {
+		if err := validator.ValidateFileName(kit, ci.Name); err != nil {
 			return err
 		}
 	}
 
 	if len(ci.FileType) != 0 {
-		if err := ci.FileType.Validate(); err != nil {
+		if err := ci.FileType.Validate(kit); err != nil {
 			return err
 		}
 	}
 
-	if err := ci.FileMode.Validate(); err != nil {
+	if err := ci.FileMode.Validate(kit); err != nil {
 		return err
 	}
 
-	if err := ValidatePath(ci.Path, ci.FileMode); err != nil {
+	if err := ValidatePath(kit, ci.Path, ci.FileMode); err != nil {
 		return err
 	}
 
 	if len(ci.Memo) != 0 {
-		if err := validator.ValidateMemo(ci.Memo, false); err != nil {
+		if err := validator.ValidateMemo(kit, ci.Memo, false); err != nil {
 			return err
 		}
 	}
 
-	if err := ci.Permission.Validate(ci.FileMode); err != nil {
+	if err := ci.Permission.Validate(kit, ci.FileMode); err != nil {
 		return err
 	}
 
@@ -391,12 +394,12 @@ const (
 type FileFormat string
 
 // Validate the file format is supported or not.
-func (f FileFormat) Validate() error {
+func (f FileFormat) Validate(kit *kit.Kit) error {
 	switch f {
 	case Text:
 	case Binary:
 	default:
-		return fmt.Errorf("unsupported file format: %s", f)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "unsupported file format: %s", f))
 	}
 
 	return nil
@@ -413,12 +416,12 @@ const (
 type FileMode string
 
 // Validate the file mode is supported or not.
-func (f FileMode) Validate() error {
+func (f FileMode) Validate(kit *kit.Kit) error {
 	switch f {
 	case Windows:
 	case Unix:
 	default:
-		return fmt.Errorf("unsupported file mode: %s", f)
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "unsupported file mode: %s", f))
 	}
 
 	return nil

@@ -327,10 +327,16 @@ const (
 	KubeConfigImport = "kubeConfig"
 	// CloudImport import
 	CloudImport = "cloud"
+	// MachineImport machine import
+	MachineImport = "machine"
+
 	// ImportType cloud import type
 	ImportType = "importType"
 	// ClusterResourceGroup cluster resource group
 	ClusterResourceGroup = "clusterResourceGroup"
+	// ClusterMachineImportNodes import nodes
+	ClusterMachineImportNodes = "clusterMachineImportNodes"
+
 	// NodeResourceGroup xxx
 	NodeResourceGroup = "nodeResourceGroup"
 

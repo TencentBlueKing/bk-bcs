@@ -149,7 +149,7 @@
 </template>
 <script lang="ts">
 import jsonp from 'jsonp';
-import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef, watch } from 'vue';
 
 import PopoverSelector from '../../components/popover-selector.vue';
 
@@ -190,7 +190,7 @@ export default defineComponent({
       });
     };
 
-    const { menusData: menus } = useMenu();
+    const { menusData: menus, leafMenus } = useMenu();
     const { config } = usePlatform();
     const appLogo = computed(() => config.appLogo || logoSvg);
     const appName = computed(() => config.i18n.productName);
@@ -360,6 +360,17 @@ export default defineComponent({
     const backToPreVersion = () => {
       window.open(window.BCS_CONFIG.backToLegacyButtonUrl);
     };
+
+    watch(route, () => {
+      if (!route.value.name) return;
+
+      const menu = leafMenus.value
+        .find(item => item.route === route.value.name || item.id === route.value.meta?.menuId);
+      if (menu) {
+        // 更新当前一级导航信息
+        $store.commit('updateCurNav', menu);
+      }
+    });
 
     onMounted(async () => {
       navRef.value && resizeObserver.observe(navRef.value);

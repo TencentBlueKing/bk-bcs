@@ -22,7 +22,7 @@ export interface ICommonQuery {
   search_key?: string;
   search_fields?: string;
   search_value?: string;
-  ids?: string;
+  ids?: number[];
   with_status?: boolean;
   kv_type?: string[];
   order?: string;

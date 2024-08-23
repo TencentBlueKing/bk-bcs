@@ -39,7 +39,7 @@
                     v-if="isUnNamedVersion && group.id !== 0"
                     v-cursor="{ active: !hasEditServicePerm }"
                     :class="['delete-btn', { 'bk-text-with-no-perm': !hasEditServicePerm }]"
-                    @click="handleDeletePkg(group.id, group.name, group.template_set_id)">
+                    @click="handleDeletePkg(group.id, group.name, group.template_set_id!)">
                     <Close class="close-icon" />
                     {{ t('移除套餐') }}
                   </div>
@@ -260,6 +260,7 @@
     v-model:isShow="isDeletePkgDialogShow"
     :title="t('确认移除该配置模板套餐？')"
     :confirm-text="t('移除')"
+    :pending="removePkgLoading"
     @confirm="handleDeletePkgConfirm">
     <div style="margin-bottom: 8px">
       {{ t('配置模板套餐') }}: <span style="color: #313238">{{ deleteTemplatePkgName }}</span>
@@ -388,6 +389,7 @@
   const deleteTemplatePkgId = ref(0);
   const templateSetId = ref(0);
   const statusFilterChecked = ref<string[]>([]);
+  const removePkgLoading = ref(false);
   const viewConfigSliderData = ref<{
     open: boolean;
     data: {
@@ -493,13 +495,15 @@
   );
 
   watch(
-    [() => configsCount.value, () => templatesCount.value],
+    [() => configList.value, () => templatesCount.value],
     () => {
+      const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
       configStore.$patch((state) => {
         state.allConfigCount = configsCount.value + templatesCount.value;
+        state.allExistConfigCount = existConfigCount + templatesCount.value;
       });
     },
-    { immediate: true },
+    { immediate: true, deep: true },
   );
 
   onMounted(async () => {
@@ -536,7 +540,7 @@
         all: true,
       };
       if (!createConfig) topIds.value = [];
-      if (topIds.value.length > 0) params.ids = topIds.value.join(',');
+      if (topIds.value.length > 0) params.ids = topIds.value;
       let res;
       if (isUnNamedVersion.value) {
         if (props.searchStr) {
@@ -787,16 +791,23 @@
 
   const handleDeletePkgConfirm = async () => {
     // await deleteBoundPkg(props.bkBizId, props.appId, bindingId.value, [deleteTemplatePkgId.value]);
-    await deleteCurrBoundPkg(props.bkBizId, props.appId, templateSetId.value);
-    await getBoundTemplateList();
-    tableGroupsData.value = transListToTableData();
-    emits('deleteConfig');
-    Message({
-      theme: 'success',
-      message: t('移除模板套餐成功'),
-    });
-    isDeletePkgDialogShow.value = false;
-    getAllConfigList();
+    try {
+      removePkgLoading.value = true;
+      await deleteCurrBoundPkg(props.bkBizId, props.appId, templateSetId.value);
+      await getBoundTemplateList();
+      tableGroupsData.value = transListToTableData();
+      emits('deleteConfig');
+      Message({
+        theme: 'success',
+        message: t('移除模板套餐成功'),
+      });
+      isDeletePkgDialogShow.value = false;
+      getAllConfigList();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      removePkgLoading.value = false;
+    }
   };
 
   // 非模板配置文件diff

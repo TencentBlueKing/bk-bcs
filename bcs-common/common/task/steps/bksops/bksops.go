@@ -12,3 +12,33 @@
 
 // Package bksops defines the step implemented.
 package bksops
+
+import (
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+)
+
+type sops struct {
+	bkAppCode   string
+	bkAppSecret string
+}
+
+func newSops(bkAppCode, bkAppSecret string) *sops {
+	return &sops{bkAppCode, bkAppSecret}
+}
+
+func (s *sops) Execute(c *istep.Context) error {
+	return nil
+}
+
+// 注意, Step名称不能修改
+const (
+	// BKSopsStep ...
+	BKSopsStep istep.StepName = "BK_SOPS"
+)
+
+// Register ...
+func Register(bkAppCode, bkAppSecret string) {
+	s := newSops(bkAppCode, bkAppSecret)
+
+	istep.Register(BKSopsStep, istep.StepExecutor(s))
+}

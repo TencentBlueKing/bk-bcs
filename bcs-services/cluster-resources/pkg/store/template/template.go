@@ -150,6 +150,31 @@ func (m *ModelTemplate) CreateTemplate(
 	return template.ID.Hex(), nil
 }
 
+// CreateTemplateBatch create a batch entity.Template into database
+func (m *ModelTemplate) CreateTemplateBatch(ctx context.Context, templates []*entity.Template) error {
+	if len(templates) == 0 {
+		return nil
+	}
+
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	insertValues := make([]interface{}, 0)
+	now := time.Now()
+	for _, template := range templates {
+		// id 覆盖及时间覆盖
+		template.ID = primitive.NewObjectIDFromTimestamp(now)
+		template.CreateAt = now.UTC().Unix()
+		template.UpdateAt = now.UTC().Unix()
+		insertValues = append(insertValues, template)
+	}
+	if _, err := m.db.Table(m.tableName).Insert(ctx, insertValues); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateTemplate update an entity.Template into database
 func (m *ModelTemplate) UpdateTemplate(ctx context.Context, id string, template entity.M) error {
 	if id == "" {

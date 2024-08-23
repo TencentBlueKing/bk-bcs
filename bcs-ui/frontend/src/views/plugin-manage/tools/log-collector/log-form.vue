@@ -350,7 +350,7 @@ import useLog, { IRuleData } from './use-log';
 import { ENCODE_LIST } from '@/common/constant';
 import Row from '@/components/layout/Row.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
-import { useCluster } from '@/composables/use-app';
+import { ICluster, useCluster } from '@/composables/use-app';
 import useFormLabel from '@/composables/use-form-label';
 import $i18n from '@/i18n/i18n-setup';
 import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
@@ -371,7 +371,8 @@ const props = defineProps({
 });
 
 const { clusterList } = useCluster();
-const curCluster = computed(() => clusterList.value?.find(item => item.clusterID === props.clusterId) || {});
+const curCluster = computed<Partial<ICluster>>(() => clusterList.value
+  ?.find(item => item.clusterID === props.clusterId) || {});
 
 watch(() => props.data, () => {
   handleSetFormData();
@@ -446,9 +447,9 @@ const formDataRules = ref({
       validator: () => {
         if (curCluster.value.is_shared) {
           // 共享集群不能选择全部命名空间
-          return formData.value.rule.config.namespaces.filter(item => !!item).length;
+          return formData.value.rule.config.namespaces?.filter(item => !!item).length;
         }
-        return !!formData.value.rule.config.namespaces.length;
+        return !!formData.value.rule.config.namespaces?.length;
       },
     },
   ],
@@ -548,7 +549,7 @@ const handleSetFormData = () => {
     formData.value.rule.config.conditions.type = '';
   }
   // 命名空间全部逻辑
-  if (!formData.value.rule.config.namespaces.length && (isEdit.value || props.fromOldRule)) {
+  if (!formData.value.rule.config.namespaces?.length && (isEdit.value || props.fromOldRule)) {
     formData.value.rule.config.namespaces = [''];
   }
 
@@ -615,7 +616,7 @@ const handleGetFormData = async () => {
     data.rule.config.conditions.separator_filters = [];
   }
   data.rule.config.conditions.type = data.rule.config.conditions.type || 'match';
-  data.rule.config.namespaces = data.rule.config.namespaces.filter(item => !!item);
+  data.rule.config.namespaces = data.rule.config.namespaces?.filter(item => !!item);
   data.rule.extra_labels = data.rule.extra_labels.filter(item => !!item.key);
   data.rule.config.paths = data.rule.config.paths.filter(item => !!item);
   if (!isContainerFile.value) {
@@ -638,7 +639,7 @@ const handleNsChange = (nsList) => {
   const last = nsList[nsList.length - 1];
   // 移除全选
   if (last) {
-    formData.value.rule.config.namespaces = formData.value.rule.config.namespaces.filter(item => !!item);
+    formData.value.rule.config.namespaces = formData.value.rule.config.namespaces?.filter(item => !!item);
   } else {
     formData.value.rule.config.namespaces = [''];
   }
@@ -715,7 +716,7 @@ watch(() => [
 ], async (newValue, oldValue) => {
   if (isEqual(newValue, oldValue)) return;
   // 目前接口只支持单命名空间的workload查询
-  const nsList = formData.value.rule.config.namespaces.filter(item => !!item);
+  const nsList = formData.value.rule.config.namespaces?.filter(item => !!item);
   if (nsList.length !== 1 || !formData.value.rule.config.container.workload_type) {
     workloadList.value = [];
     return;

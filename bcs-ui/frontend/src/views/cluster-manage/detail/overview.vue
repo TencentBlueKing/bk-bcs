@@ -1,13 +1,13 @@
 <!-- eslint-disable max-len -->
 <template>
   <div>
-    <div class="flex overflow-hidden py-[20px] h-[360px]">
+    <div class="flex overflow-hidden pt-[20px] pb-[20px] h-[360px]">
       <!--CPU使用率-->
       <div class="flex-1 w-0 mr-[24px]">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('metrics.cpuUsage') }}</span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(overviewData.cpu_usage.used, overviewData.cpu_usage.total) }}
               </span>
@@ -32,7 +32,7 @@
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('metrics.memUsage') }}</span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(overviewData.memory_usage.used_bytes, overviewData.memory_usage.total_bytes) }}
               </span>
@@ -57,7 +57,7 @@
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('metrics.diskUsage') }}</span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(overviewData.disk_usage.used_bytes, overviewData.disk_usage.total_bytes) }}
               </span>
@@ -102,7 +102,7 @@
             </bk-popover>
           </span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(overviewData.cpu_usage.request, overviewData.cpu_usage.total) }}
               </span>
@@ -145,7 +145,7 @@
             </bk-popover>
           </span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{
                   conversionPercentUsed(
@@ -175,7 +175,7 @@
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('metrics.diskIOUsage') }}</span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(
                   overviewData.diskio_usage.used, overviewData.diskio_usage.total) }}
@@ -205,7 +205,7 @@
             {{ $t('metrics.podUsage') }}
           </span>
           <div>
-            <div class="flex justify-end">
+            <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(overviewData.pod_usage.used, overviewData.pod_usage.total) }}
               </span>

@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package blueking xxx
 package blueking
 
 import (

@@ -290,12 +290,14 @@
   );
 
   watch(
-    () => configsCount.value,
+    () => configList.value,
     () => {
       configStore.$patch((state) => {
         state.allConfigCount = configsCount.value;
+        state.allExistConfigCount = configList.value.filter((item) => item.kv_state !== 'DELETE').length;
       });
     },
+    { immediate: true, deep: true },
   );
 
   watch(

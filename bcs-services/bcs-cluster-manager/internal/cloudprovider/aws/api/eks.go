@@ -40,6 +40,21 @@ func NewEksClient(opt *cloudprovider.CommonOption) (*EksClient, error) {
 	}, nil
 }
 
+// CreateEksCluster creates an eks cluster
+func (cli *EksClient) CreateEksCluster(input *eks.CreateClusterInput) (*eks.Cluster, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	output, err := cli.eksClient.CreateCluster(input)
+	if err != nil {
+		return nil, err
+	}
+
+	blog.Infof("eksClient create eks cluster[%s] success", *input.Name)
+	return output.Cluster, nil
+}
+
 // ListEksCluster get eks cluster list, region parameter init eks client
 func (cli *EksClient) ListEksCluster() ([]*string, error) {
 	if cli == nil {
@@ -52,6 +67,7 @@ func (cli *EksClient) ListEksCluster() ([]*string, error) {
 		return nil, err
 	}
 
+	blog.Infof("eksClient list eks clusters success")
 	return output.Clusters, nil
 }
 
@@ -69,7 +85,46 @@ func (cli *EksClient) GetEksCluster(clusterName string) (*eks.Cluster, error) {
 		return nil, err
 	}
 
+	blog.Infof("eksClient get eks cluster[%s] success", clusterName)
 	return output.Cluster, nil
+}
+
+// DeleteEksCluster deletes the eks cluster
+func (cli *EksClient) DeleteEksCluster(clusterName string) (*eks.Cluster, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	input := &eks.DeleteClusterInput{
+		Name: aws.String(clusterName),
+	}
+	output, err := cli.eksClient.DeleteCluster(input)
+	if err != nil {
+		return nil, err
+	}
+
+	blog.Infof("eksClient delete eks cluster[%s] success", clusterName)
+	return output.Cluster, nil
+}
+
+// ListNodegroups list eks node groups
+func (cli *EksClient) ListNodegroups(clusterName string) ([]*string, error) {
+	blog.Infof("ListNodegroups in cluster[%s]", clusterName)
+	output, err := cli.eksClient.ListNodegroups(&eks.ListNodegroupsInput{
+		ClusterName: aws.String(clusterName),
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Nodegroups == nil {
+		blog.Errorf("ListNodegroups resp is nil")
+		return nil, fmt.Errorf("ListNodegroups resp is nil")
+	}
+	blog.Infof("ListNodegroups[%+v] successful", aws.StringValueSlice(output.Nodegroups))
+
+	return output.Nodegroups, nil
 }
 
 // CreateNodegroup creates eks node group

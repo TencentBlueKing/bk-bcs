@@ -14,7 +14,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -51,25 +50,25 @@ func (s SumStep) GetName() string {
 	return sumMethod
 }
 
-// DoWork for worker exec task
-func (s SumStep) DoWork(ctx context.Context, step *istep.Work) error {
-	a, _ := step.GetParam(sumA.String())
-	b, _ := step.GetParam(sumB.String())
+// Execute for worker exec task
+func (s SumStep) Execute(c *istep.Context) error {
+	a, _ := c.GetParam(sumA.String())
+	b, _ := c.GetParam(sumB.String())
 
 	a1, _ := strconv.Atoi(a)
 	b1, _ := strconv.Atoi(b)
 
-	c := a1 + b1
-	_ = step.AddCommonParams(sumC.String(), fmt.Sprintf("%v", c))
+	c1 := a1 + b1
+	_ = c.AddCommonParam(sumC.String(), fmt.Sprintf("%v", c1))
 
-	fmt.Printf("%s %s %s sumC: %v\n", step.GetTaskID(), step.GetTaskType(), step.GetName(), c)
+	fmt.Printf("%s %s %s sumC: %v\n", c.GetTaskID(), c.GetTaskType(), c.GetName(), c)
 
 	return nil
 }
 
 // BuildStep build step
 func (s SumStep) BuildStep(kvs []istep.KeyValue, opts ...types.StepOption) *types.Step {
-	step := types.NewStep(s.GetName(), s.Alias(), opts...)
+	step := types.NewStep(s.GetName(), sumMethod, opts...)
 
 	// build step paras
 	for _, v := range kvs {

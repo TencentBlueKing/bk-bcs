@@ -51,3 +51,6 @@ const uiRequest = createRequest({
 });
 export const releaseNote = uiRequest('get', '/release_note');
 export const featureFlags = uiRequest('get', '/feature_flags');
+
+// AI小鲸
+export const assistant = uiRequest('post', '/assistant');

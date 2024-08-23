@@ -89,7 +89,7 @@ func (ipSelector *ipSelectorClient) GetBizTopoHostData(
 }
 
 // GetBizHostDetailedData xxx
-func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface,
+func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 	bizID int, module []HostModuleInfo) ([]HostDetailInfo, error) {
 
 	hostTopos, err := cmdb.FetchAllHostTopoRelationsByBizID(bizID)

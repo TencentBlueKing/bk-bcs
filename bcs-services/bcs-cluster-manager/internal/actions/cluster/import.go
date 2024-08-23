@@ -87,6 +87,9 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 			if ia.req.CloudMode.KubeConfig != "" {
 				return common.KubeConfigImport
 			}
+			if len(ia.req.CloudMode.NodeIps) > 0 {
+				return common.MachineImport
+			}
 			return common.CloudImport
 		}(),
 		IsShared:       ia.req.IsShared,
@@ -103,6 +106,9 @@ func (ia *ImportAction) constructCluster() *cmproto.Cluster {
 	}
 	if ia.req.GetCloudMode().GetResourceGroup() != "" {
 		cls.ExtraInfo[common.ClusterResourceGroup] = ia.req.GetCloudMode().GetResourceGroup()
+	}
+	if len(ia.req.GetCloudMode().GetNodeIps()) > 0 {
+		cls.ExtraInfo[common.ClusterMachineImportNodes] = strings.Join(ia.req.GetCloudMode().GetNodeIps(), ",")
 	}
 
 	return cls
@@ -389,8 +395,8 @@ func (ia *ImportAction) commonValidate(req *cmproto.ImportClusterReq) error {
 		return fmt.Errorf("ImportCluster CommonValidate failed: CloudMode empty")
 	}
 
-	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" {
-		return fmt.Errorf("ImportCluster CommonValidate CloudMode cloudID&kubeConfig empty")
+	if req.CloudMode.CloudID == "" && req.CloudMode.KubeConfig == "" && len(req.CloudMode.NodeIps) == 0 {
+		return fmt.Errorf("ImportCluster CommonValidate CloudMode cloudID&kubeConfig&nodeIps empty")
 	}
 	err := ia.checkCloudModeValidate(req.CloudMode)
 	if err != nil {

@@ -126,15 +126,15 @@ func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFun
 			return fn(ctx, req, rsp)
 		}
 
-		if len(authUser.Username) == 0 {
-			return errors.New("username is empty")
-		}
-
 		if g.checkUserPerm == nil {
 			return errors.New("check user permission function is not set")
 		}
 
-		if allow, err := g.checkUserPerm(ctx, req, authUser.Username); err != nil {
+		if len(authUser.GetUsername()) == 0 {
+			return errors.New("username & clientName is empty")
+		}
+
+		if allow, err := g.checkUserPerm(ctx, req, authUser.GetUsername()); err != nil {
 			return err
 		} else if !allow {
 			return errors.New("user not authorized")

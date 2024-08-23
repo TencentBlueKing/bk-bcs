@@ -107,9 +107,10 @@ func (h *HttpServerClient) ListAppMonitors(request *restful.Request, response *r
 
 	infoList := make([]InstalledScenarioInfo, 0)
 	for _, appMonitor := range appMonitorList.Items {
+		specBytes, _ := yaml.Marshal(appMonitor.Spec)
 		info := InstalledScenarioInfo{Name: appMonitor.Spec.Scenario,
 			Status:  string(appMonitor.Status.SyncStatus.State),
-			Message: appMonitor.Status.SyncStatus.Message}
+			Message: string(specBytes)}
 
 		panelSelector, err1 := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(map[string]string{
 			monitorextensionv1.LabelKeyForAppMonitorName: appMonitor.GetName(),

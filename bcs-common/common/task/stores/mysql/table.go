@@ -32,19 +32,21 @@ type TaskRecords struct {
 	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
+	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(255)"`
+	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(255)"`
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
 	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
-	CallBackFuncName    string            `json:"callBackFuncName" gorm:"type:varchar(255)"`
+	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
-	ExtraJson           string            `json:"extraJson" gorm:"type:text"`
+	CommonPayload       []byte            `json:"commonPayload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
 	ForceTerminate      bool              `json:"forceTerminate"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	Creator             string            `json:"creator" gorm:"type:varchar(255)"`
 	Updater             string            `json:"updater" gorm:"type:varchar(255)"`
 }
@@ -60,16 +62,19 @@ type StepRecords struct {
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
+	Executor            string            `json:"executor" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
-	Extras              string            `json:"extras" gorm:"type:text"`
+	Payload             []byte            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
+	ETA                 *time.Time        `json:"eta"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
 	RetryCount          uint32            `json:"retryCount"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
+	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 }
 
 // TableName ..
@@ -82,16 +87,18 @@ func (t *StepRecords) ToStep() *types.Step {
 	return &types.Step{
 		Name:                t.Name,
 		Alias:               t.Alias,
+		Executor:            t.Executor,
 		Params:              t.Params,
-		Extras:              t.Extras,
+		Payload:             t.Payload,
 		Status:              t.Status,
 		Message:             t.Message,
 		SkipOnFailed:        t.SkipOnFailed,
 		RetryCount:          t.RetryCount,
-		Start:               t.Start,
-		End:                 t.End,
+		MaxRetries:          t.MaxRetries,
 		ExecutionTime:       t.ExecutionTime,
 		MaxExecutionSeconds: t.MaxExecutionSeconds,
+		Start:               t.Start,
+		End:                 t.End,
 		LastUpdate:          t.UpdatedAt,
 	}
 }

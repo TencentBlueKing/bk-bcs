@@ -11,19 +11,31 @@
       v-for="(item, index) in labels"
       :key="index"
       :class="['key-value', { '!mb-0': index === (labels.length - 1) }]">
-      <Validate class="w-[100%]" :value="item.key" :rules="keyRules">
+      <span v-if="required" class="text-[#ea3636] mr-[12px]">*</span>
+      <Validate
+        class="w-[100%]"
+        :value="item.key"
+        :rules="[
+          ...keyRules,
+          {
+            message: $i18n.t('generic.validate.repeatKey'),
+            validator: (value, meta) => labels.filter((_, i) => i !== meta).every(d => d.key !== value),
+          },
+        ]"
+        :meta="index"
+        :required="required">
         <bcs-input
           v-model="item.key"
-          :placeholder="$t('generic.label.key')"
+          :placeholder="keyPlaceholder"
           ref="inputRef"
           @change="handleLabelKeyChange">
         </bcs-input>
       </Validate>
       <span class="ml8 mr8">=</span>
-      <Validate class="w-[100%]" :value="item.value" :rules="valueRules">
+      <Validate class="w-[100%]" :value="item.value" :rules="valueRules" :required="required && valueRequire">
         <bcs-input
           v-model="item.value"
-          :placeholder="$t('generic.label.value')"
+          :placeholder="valuePlaceholder"
           ref="inputRef"
           @change="handleLabelValueChange">
         </bcs-input>
@@ -83,6 +95,22 @@ export default defineComponent({
           validator: '^[A-Za-z0-9._/-]+$',
         },
       ],
+    },
+    required: {
+      type: Boolean,
+      default: false,
+    },
+    valueRequire: {
+      type: Boolean,
+      default: true,
+    },
+    keyPlaceholder: {
+      type: String,
+      default: $i18n.t('generic.label.key'),
+    },
+    valuePlaceholder: {
+      type: String,
+      default: $i18n.t('generic.label.value'),
     },
   },
   setup(props, ctx) {

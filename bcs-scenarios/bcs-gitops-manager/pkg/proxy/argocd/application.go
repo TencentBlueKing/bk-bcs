@@ -14,17 +14,25 @@ package argocd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
@@ -34,6 +42,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/resources"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/secretstore"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils/jsonq"
 )
@@ -46,6 +55,7 @@ type AppPlugin struct {
 	middleware    mw.MiddlewareInterface
 	permitChecker permitcheck.PermissionInterface
 	bcsStorage    bcsapi.Storage
+	secretStore   secretstore.SecretInterface
 }
 
 // all argocd application URL:
@@ -117,6 +127,8 @@ func (plugin *AppPlugin) Init() error {
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationParameters))
 	appRouter.Path("/workload_replicas_zero").Methods("PUT").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationWorkloadReplicasZero))
+	appRouter.Path("/sync_refresh").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.syncRefresh))
 
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))
@@ -597,4 +609,157 @@ func (plugin *AppPlugin) applicationWorkloadReplicasZero(r *http.Request) (*http
 			errors.Errorf("patch application workload to 0 failed: %s", strings.Join(errs, ", ")))
 	}
 	return r, mw.ReturnJSONResponse("ok")
+}
+
+func (plugin *AppPlugin) syncRefresh(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	argoApp, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appName,
+		permitcheck.AppViewRSAction)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	r = plugin.setApplicationAudit(r, argoApp.Spec.Project, appName, ctxutils.ApplicationRefresh, ctxutils.EmptyData)
+
+	timeCtx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+	// refresh application
+	argoAppClient := plugin.storage.GetAppClient()
+	refreshType := string(v1alpha1.RefreshTypeNormal)
+	if _, err = argoAppClient.Get(timeCtx, &appclient.ApplicationQuery{
+		Name:    &appName,
+		Refresh: &refreshType,
+	}); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, errors.Wrapf(err,
+			"refresh application '%s' failed", appName))
+	}
+	// get remote repo last-commit-id
+	lastCommitIDs, err := plugin.getApplicationLastCommitIDs(timeCtx, argoApp)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, errors.Wrapf(err,
+			"get application's source.repo last commit-id failed"))
+	}
+	blog.Infof("RequestID[%s] got the last-commit-ids: %v", ctxutils.RequestID(timeCtx), lastCommitIDs)
+	// ticker for check application got the latest commit-id
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			argoApp, err = plugin.storage.GetApplication(timeCtx, appName)
+			if err != nil {
+				return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+			}
+			if !argoApp.Spec.HasMultipleSources() {
+				if len(lastCommitIDs) != 1 {
+					return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf(
+						"application with single resource got not '1' last-commit-ids '%v'", lastCommitIDs))
+				}
+				if argoApp.Status.Sync.Revision != lastCommitIDs[0] {
+					continue
+				}
+				return r, mw.ReturnJSONResponse(argoApp)
+			}
+			revisions := argoApp.Status.Sync.Revisions
+			if len(lastCommitIDs) != len(revisions) {
+				return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf(
+					"application with multi-resources got last-commit-ids '%v', not same with reivions '%v'",
+					lastCommitIDs, revisions))
+			}
+			allMatch := true
+			for i := range lastCommitIDs {
+				if lastCommitIDs[i] != revisions[i] {
+					allMatch = false
+				}
+			}
+			if allMatch {
+				return r, mw.ReturnJSONResponse(argoApp)
+			}
+		case <-timeCtx.Done():
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("sync-refresh timeout"))
+		}
+	}
+}
+
+func (plugin *AppPlugin) getApplicationLastCommitIDs(ctx context.Context, argoApp *v1alpha1.Application) ([]string,
+	error) {
+	lastCommitIDs := make([]string, 0)
+	if !argoApp.Spec.HasMultipleSources() {
+		repoURL := argoApp.Spec.Source.RepoURL
+		revision := argoApp.Spec.Source.TargetRevision
+		commitID, err := plugin.getRepoLastCommitID(ctx, repoURL, revision)
+		if err != nil {
+			return nil, err
+		}
+		lastCommitIDs = append(lastCommitIDs, commitID)
+		return lastCommitIDs, nil
+	}
+	for i := range argoApp.Spec.Sources {
+		source := argoApp.Spec.Sources[i]
+		repoURL := source.RepoURL
+		revision := source.TargetRevision
+		commitID, err := plugin.getRepoLastCommitID(ctx, repoURL, revision)
+		if err != nil {
+			return nil, err
+		}
+		lastCommitIDs = append(lastCommitIDs, commitID)
+	}
+	return lastCommitIDs, nil
+}
+
+func (plugin *AppPlugin) getRepoLastCommitID(ctx context.Context, repoUrl, targetRevision string) (string, error) {
+	repoAuth, err := plugin.buildRepoAuth(ctx, repoUrl)
+	if err != nil {
+		return "", err
+	}
+	memStore := memory.NewStorage()
+	remoteRepo := git.NewRemote(memStore, &config.RemoteConfig{
+		Name: repoUrl,
+		URLs: []string{repoUrl},
+	})
+	refs, err := remoteRepo.List(&git.ListOptions{
+		Auth: repoAuth,
+	})
+	if err != nil {
+		return "", errors.Wrapf(err, "git repo '%s' fetch refs failed", repoUrl)
+	}
+	var lastCommitID string
+	for _, ref := range refs {
+		if ref.Name().Short() == targetRevision {
+			lastCommitID = ref.Hash().String()
+		}
+	}
+	if lastCommitID == "" {
+		return "", errors.Errorf("get repo '%s' not found target revision '%s'", repoUrl, targetRevision)
+	}
+	return lastCommitID, nil
+}
+
+func (plugin *AppPlugin) buildRepoAuth(ctx context.Context, repoUrl string) (transport.AuthMethod, error) {
+	argoDB := plugin.storage.GetArgoDB()
+	argoRepo, err := argoDB.GetRepository(ctx, repoUrl)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get repository '%s' from argo db failed", repoUrl)
+	}
+	if argoRepo == nil {
+		return nil, errors.Errorf("repository '%s' not found", repoUrl)
+	}
+	if argoRepo.Username != "" && argoRepo.Password != "" {
+		return &githttp.BasicAuth{
+			Username: argoRepo.Username,
+			Password: argoRepo.Password,
+		}, nil
+	}
+	if argoRepo.SSHPrivateKey != "" {
+		var publicKeys *ssh.PublicKeys
+		publicKeys, err = ssh.NewPublicKeys("git", []byte(argoRepo.SSHPrivateKey), "")
+		if err != nil {
+			return nil, errors.Wrapf(err, "create public keys failed")
+		}
+		return publicKeys, nil
+	}
+	return nil, errors.Errorf("not https/ssh authentication")
 }

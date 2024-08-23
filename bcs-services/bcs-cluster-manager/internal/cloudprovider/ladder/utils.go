@@ -47,7 +47,7 @@ const (
 )
 
 var (
-	poolInsufficientQuotaMessage = fmt.Errorf("额度不足, 请联系BCS助手")
+	poolInsufficientQuotaMessage = fmt.Errorf("额度不足, 请联系BCS助手") // nolint
 )
 
 var (

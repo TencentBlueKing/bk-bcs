@@ -9,8 +9,11 @@
           :hide-back="routeMeta.hideBack"
           :cluster-id="routeMeta.showClusterName ? $route.params.clusterId : ''"
           v-if="routeMeta.title" />
+        <KeepAlive>
+          <RouterView class="flex-1" v-if="$route.meta?.keepAlive" />
+        </KeepAlive>
         <!-- key为了解决旧版模板集刷新问题, 资源视图视图管理切换集群后不能刷新界面(不能用path作为Key) -->
-        <RouterView class="flex-1" :key="isDashboard ? 'dashboard' : $route.path" />
+        <RouterView class="flex-1" :key="routerViewKey" v-if="!$route.meta?.keepAlive" />
         <!-- 终端 -->
         <Terminal />
       </template>
@@ -56,6 +59,11 @@ export default defineComponent({
     const routeMeta = computed(() => currentRoute.value?.meta || {});
     const curProject = computed(() => $store.state.curProject);
     const hasNoAuthorizedProject = ref(false);
+
+    const routerViewKey = computed(() => {
+      if (routeMeta.value?.keepAlive) return routeMeta.value?.keepAlive;
+      return isDashboard.value ? 'dashboard' : currentRoute.value.path;
+    });
 
     // 设置项目缓存
     const handleSetProjectStorage = (data: IProject) => {
@@ -157,10 +165,12 @@ export default defineComponent({
         theme: 'warning',
         message: `Something is wrong with the component ${vm.$options.name} ${info}`,
       });
+      console.error(err, vm, info);
       return true;
     });
 
     return {
+      routerViewKey,
       loading,
       isDashboard,
       currentRoute,

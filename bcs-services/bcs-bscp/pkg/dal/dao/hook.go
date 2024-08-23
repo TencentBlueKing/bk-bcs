@@ -66,7 +66,7 @@ type hookDao struct {
 
 // UpdateWithTx update one hook instance with transaction.
 func (dao *hookDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 
@@ -152,7 +152,7 @@ func (dao *hookDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) (
 		return 0, errf.Errorf(errf.InvalidArgument, i18n.T(kit, "hook is nil"))
 	}
 
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -331,7 +331,7 @@ func (dao *hookDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.Hook) e
 
 // Update one hook instance.
 func (dao *hookDao) Update(kit *kit.Kit, g *table.Hook) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

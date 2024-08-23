@@ -34,7 +34,11 @@
         prop="flagDesc"
         show-overflow-tooltip>
       </bcs-table-column>
-      <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')" prop="defaultValue" v-if="!readonly"></bcs-table-column>
+      <bcs-table-column
+        :label="$t('cluster.nodeTemplate.kubelet.label.defaultValue')"
+        prop="defaultValue"
+        v-if="!readonly">
+      </bcs-table-column>
       <bcs-table-column :label="$t('cluster.nodeTemplate.kubelet.label.curValue')">
         <template #default="{ row }">
           <div class="kubelet-value">

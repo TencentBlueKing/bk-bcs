@@ -5,7 +5,15 @@
     current-pkg="all"
     :show-cited-by-pkgs-col="true"
     :show-bound-by-apps-col="true"
-    :get-config-list="getConfigList">
+    :get-config-list="getConfigList"
+    :is-across-checked="acrossCheckedType.isAcrossChecked"
+    :data-count="acrossCheckedType.dataCount"
+    @send-across-checked-type="
+      (checked, dataCount) => {
+        acrossCheckedType.isAcrossChecked = checked;
+        acrossCheckedType.dataCount = dataCount;
+      }
+    ">
     <template #tableOperations>
       <AddConfigs @refresh="refreshConfigList" />
       <BatchOperationButton
@@ -13,7 +21,9 @@
         :configs="selectedConfigs"
         :current-template-space="currentTemplateSpace"
         pkg-type="all"
-        @refresh="refreshConfigList"/>
+        :is-across-checked="acrossCheckedType.isAcrossChecked"
+        :data-count="acrossCheckedType.dataCount"
+        @refresh="refreshConfigList" />
     </template>
   </CommonConfigTable>
 </template>
@@ -35,6 +45,10 @@
 
   const configTable = ref();
   const selectedConfigs = ref<ITemplateConfigItem[]>([]);
+  const acrossCheckedType = ref<{ isAcrossChecked: boolean; dataCount: number }>({
+    isAcrossChecked: false,
+    dataCount: 0,
+  });
 
   const getConfigList = (params: ICommonQuery) => {
     console.log('All Config List Loading');

@@ -265,3 +265,37 @@ func (s *Service) ListTmplSetsOfBiz(ctx context.Context, req *pbcs.ListTmplSetsO
 	}
 	return resp, nil
 }
+
+// ListTemplateSetsAndRevisions 获取模板套餐下所有的模板版本
+func (s *Service) ListTemplateSetsAndRevisions(ctx context.Context, req *pbcs.ListTemplateSetsAndRevisionsReq) (
+	*pbcs.ListTemplateSetsAndRevisionsResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kit, res...); err != nil {
+		return nil, err
+	}
+
+	result, err := s.client.DS.ListTemplateSetsAndRevisions(kit.RpcCtx(), &pbds.ListTemplateSetsAndRevisionsReq{
+		BizId:         req.BizId,
+		TemplateSetId: req.TemplateSetId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	details := make([]*pbcs.ListTemplateSetsAndRevisionsResp_Detail, 0)
+	for _, v := range result.GetDetails() {
+		details = append(details, &pbcs.ListTemplateSetsAndRevisionsResp_Detail{
+			Template:         v.GetTemplate(),
+			TemplateRevision: v.GetTemplateRevision(),
+		})
+	}
+
+	return &pbcs.ListTemplateSetsAndRevisionsResp{
+		Details: details,
+	}, nil
+}

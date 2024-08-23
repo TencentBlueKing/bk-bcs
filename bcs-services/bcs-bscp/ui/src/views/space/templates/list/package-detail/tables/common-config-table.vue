@@ -135,6 +135,8 @@
       v-model:show="isAddToPkgsDialogShow"
       :value="crtConfig"
       :cite-by-pkg-ids="configCiteByPkgIds"
+      :is-across-checked="props.isAcrossChecked"
+      :data-count="props.dataCount"
       @added="handleAdded" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
@@ -147,7 +149,12 @@
       :space-id="spaceId"
       :current-template-space="currentTemplateSpace"
       :config="appBoundByTemplateSliderData.data" />
-    <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="crtConfig" @deleted="handleConfigsDeleted" />
+    <DeleteConfigDialog
+      v-model:show="isDeleteConfigDialogShow"
+      :configs="crtConfig"
+      :is-across-checked="props.isAcrossChecked"
+      :data-count="props.dataCount"
+      @deleted="handleConfigsDeleted" />
     <ViewConfig
       v-model:show="isViewConfigShow"
       :space-id="spaceId"
@@ -197,7 +204,7 @@
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, topIds, isAcrossChecked } = storeToRefs(templateStore);
+  const { currentTemplateSpace, topIds } = storeToRefs(templateStore);
   const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
@@ -207,9 +214,11 @@
     showBoundByAppsCol?: boolean; // 是否显示模板被服务引用列
     showDeleteAction?: boolean; // 是否显示删除操作
     getConfigList: Function;
+    isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
-  const emits = defineEmits(['update:selectedConfigs']);
+  const emits = defineEmits(['update:selectedConfigs', 'sendAcrossCheckedType']);
 
   const listLoading = ref(false);
   const list = ref<ITemplateConfigItem[]>([]);
@@ -236,6 +245,7 @@
   const editConfigId = ref(0);
   const selectConfigMemo = ref('');
   const configCiteByPkgIds = ref<number[]>([]);
+  const isAcrossChecked = ref(false);
 
   const crossPageSelect = computed(() => pagination.value.limit < pagination.value.count);
 
@@ -255,10 +265,9 @@
     },
   );
   watch(selections, () => {
-    templateStore.$patch((state) => {
-      state.isAcrossChecked = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
-    });
+    isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
     emits('update:selectedConfigs', selections.value);
+    emits('sendAcrossCheckedType', isAcrossChecked.value, pagination.value.count);
   });
 
   onMounted(() => {
@@ -287,7 +296,7 @@
       });
     }
     if (topIds.value.length > 0) {
-      params.ids = topIds.value.join(',');
+      params.ids = topIds.value;
     }
     if (searchStr.value) {
       params.search_fields = 'name,path,memo,creator,reviser';
@@ -296,9 +305,6 @@
     const res = await props.getConfigList(params);
     list.value = res.details;
     pagination.value.count = res.count;
-    templateStore.$patch((state) => {
-      state.dataCount = res.count;
-    });
     listLoading.value = false;
     const ids = list.value.map((item) => item.id);
     citeByPkgsList.value = [];
@@ -366,6 +372,7 @@
     // 根据选择类型决定传递的状态
     handleRowCheckChange(shouldBeChecked, row);
     emits('update:selectedConfigs', selections.value);
+    emits('sendAcrossCheckedType', isAcrossChecked.value, pagination.value.count);
   };
 
   // 选中状态
