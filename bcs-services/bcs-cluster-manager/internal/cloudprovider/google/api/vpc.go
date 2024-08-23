@@ -37,6 +37,28 @@ type VPCManager struct{}
 
 // ListVpcs list vpcs
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
+	client, err := NewComputeServiceClient(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
+	}
+
+	networks, err := client.ListNetworks(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("list networks failed, err %s", err.Error())
+	}
+
+	result := make([]*proto.CloudVpc, 0)
+	for _, v := range networks.Items {
+		if vpcID != "" && vpcID != v.Name {
+			continue
+		}
+		result = append(result, &proto.CloudVpc{
+			Name:     v.Name,
+			VpcId:    fmt.Sprint(v.Id),
+			Ipv4Cidr: v.IPv4Range,
+		})
+	}
+
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

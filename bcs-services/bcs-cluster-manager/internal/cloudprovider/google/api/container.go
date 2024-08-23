@@ -127,6 +127,19 @@ func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName st
 	return gkeCluster, nil
 }
 
+// CreateCluster create cluster
+func (cs *ContainerServiceClient) CreateCluster(ctx context.Context, req *container.CreateClusterRequest) (*container.Operation, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
+	req.Parent = parent
+	o, err := cs.containerServiceClient.Projects.Locations.Clusters.Create(parent, req).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gke client CreateCluster failed: %v", err)
+	}
+	blog.Infof("gke client CreateCluster successful, operation ID: %s", o.SelfLink)
+
+	return o, nil
+}
+
 // DeleteCluster delete cluster
 func (cs *ContainerServiceClient) DeleteCluster(ctx context.Context, clusterName string) error {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
@@ -199,10 +212,12 @@ func (cs *ContainerServiceClient) DeleteClusterNodePool(ctx context.Context, clu
 func (cs *ContainerServiceClient) GetGKEOperation(ctx context.Context, operationName string) (
 	*container.Operation, error) {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/operations/" + operationName
+	blog.Infof("11111111111111111111111111111111111111: %s", parent)
 	op, err := cs.containerServiceClient.Projects.Locations.Operations.Get(parent).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gke client GetGKEOperation failed: %v", err)
 	}
+	blog.Infof("22222222222222222222222222222222222222: %s", op.Status)
 
 	return op, nil
 }

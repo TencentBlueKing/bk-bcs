@@ -635,6 +635,21 @@ func (c *ComputeServiceClient) GetMachineType(ctx context.Context, location, mt 
 	return t, nil
 }
 
+// ListNetworks lists networks
+func (c *ComputeServiceClient) ListNetworks(ctx context.Context) (*compute.NetworkList, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client ListNetworks failed: gkeProjectId is required")
+	}
+
+	netsList, err := c.computeServiceClient.Networks.List(c.gkeProjectID).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client ListNetworks failed: %v", err)
+	}
+	blog.Infof("gce client ListNetworks successful")
+
+	return netsList, nil
+}
+
 // ListSubnetworks lists subnetworks
 func (c *ComputeServiceClient) ListSubnetworks(ctx context.Context, location string) (*compute.SubnetworkList, error) {
 	if c.gkeProjectID == "" {

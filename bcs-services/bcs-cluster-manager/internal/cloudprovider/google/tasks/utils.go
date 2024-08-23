@@ -15,12 +15,14 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	container "google.golang.org/api/container/v1"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
@@ -81,11 +83,73 @@ func checkGKEOperationStatus(containerCli *api.ContainerServiceClient, operation
 		}
 		if o.Status == "DONE" {
 			if o.Error != nil {
-				return fmt.Errorf("%d, %v", o.Error.Code, o.Error.Details)
+				return fmt.Errorf("operation error: %d, %v", o.Error.Code, o.Error.Details)
 			}
 			return loop.EndLoop
 		}
-		blog.Infof("taskID[%s] operation %s still running", taskID, o.SelfLink)
+		blog.Infof("taskID[%s] operation[%s] %s still running", taskID, o.Status, o.SelfLink)
 		return nil
 	}, loop.LoopInterval(d))
+}
+
+// GenerateCreateNodePoolInput generate create node pool input
+func GenerateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
+	if group.NodeTemplate.MaxPodsPerNode == 0 {
+		group.NodeTemplate.MaxPodsPerNode = 110
+	}
+	return &api.CreateNodePoolRequest{
+		NodePool: &api.NodePool{
+			// gke nodePool名称中不允许有大写字母
+			Name:             group.CloudNodeGroupID,
+			Config:           generateNodeConfig(group),
+			InitialNodeCount: 0,
+			Locations:        group.AutoScaling.Zones,
+			MaxPodsConstraint: &api.MaxPodsConstraint{
+				MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
+			},
+			Autoscaling: &api.NodePoolAutoscaling{
+				// 不开启谷歌云 CA 组件，因为需要部署 BCS 自己的 CA 组件
+				Enabled: false,
+			},
+			Management: generateNodeManagement(group, cluster),
+		},
+	}
+}
+
+// generateNodeConfig generate node config
+func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
+	if nodeGroup.LaunchTemplate == nil {
+		return nil
+	}
+	template := nodeGroup.LaunchTemplate
+	diskSize, _ := strconv.Atoi(template.SystemDisk.DiskSize)
+	conf := &api.NodeConfig{
+		MachineType: template.InstanceType,
+		Labels:      nodeGroup.NodeTemplate.Labels,
+		Taints:      api.MapTaints(nodeGroup.NodeTemplate.Taints),
+		DiskSizeGb:  int64(diskSize),
+		DiskType:    template.SystemDisk.DiskType,
+	}
+	if template.ImageInfo != nil {
+		conf.ImageType = template.ImageInfo.ImageName
+	}
+	return conf
+}
+
+// generateNodeManagement generate node management
+func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) *api.NodeManagement {
+	if nodeGroup.AutoScaling == nil {
+		return nil
+	}
+	nm := &api.NodeManagement{}
+	nm.AutoUpgrade = nodeGroup.AutoScaling.AutoUpgrade
+	nm.AutoRepair = nodeGroup.AutoScaling.ReplaceUnhealthy
+	if cluster.ExtraInfo != nil {
+		if cluster.ExtraInfo[api.GKEClusterReleaseChannel] != "" {
+			// when releaseChannel is set, autoUpgrade and autoRepair must be true
+			nm.AutoUpgrade = true
+			nm.AutoRepair = true
+		}
+	}
+	return nm
 }
