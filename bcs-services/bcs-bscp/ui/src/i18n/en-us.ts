@@ -314,7 +314,6 @@ export default {
   本次上线版本对以下分组实例: 'his version update will ',
   不会产生影响: 'not affect the following group instances',
   对比并上线: 'Compare and go online',
-  版本已上线: 'Version is online',
   请选择分组实例: 'Please select an online group',
   本次上线分组: 'This online group',
   上线说明: 'Online instructions',
@@ -475,6 +474,7 @@ export default {
   '上传后，该服务配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the service will exceed the maximum limit',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
   '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
+  '立即上线：点击“确认上线”后，配置版本将立即上线，适用于紧急更新等立即生效的场景定时上线：点击“确认上线”后，配置版本不会立即生效，可设定具体时间点，使版本在该时间自动上线，适用于非紧急更新场景，避免高峰时段上线，降低用户影响': '立即上线：点击“确认上线”后，配置版本将立即上线，适用于紧急更新等立即生效的场景\n定时上线：点击“确认上线”后，配置版本不会立即生效，可设定具体时间点，使版本在该时间自动上线，适用于非紧急更新场景，避免高峰时段上线，降低用户影响',
 
   // 分组管理
   新增分组: 'New group',

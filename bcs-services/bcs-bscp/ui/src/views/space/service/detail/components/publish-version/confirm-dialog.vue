@@ -77,26 +77,65 @@
       <bk-form-item :label="t('上线说明')" property="memo">
         <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :resize="true" />
       </bk-form-item>
+      <bk-form-item property="publishTime">
+        <template #label>
+          <span>{{ t('上线方式') }}</span>
+          <help-fill
+            v-bk-tooltips="{
+              content: publishTip,
+              placement: 'top-start',
+              theme: 'dark',
+            }"
+            class="mode-tip" />
+        </template>
+        <bk-loading :loading="pending">
+          <bk-radio-group v-model="localVal.publishType">
+            <!-- 未开启审批 -->
+            <template v-if="!isApprove">
+              <bk-radio label="Immediately">{{ t('立即上线') }}</bk-radio>
+              <bk-radio label="Periodically">{{ t('定时上线') }}</bk-radio>
+            </template>
+            <!-- 开启审批 -->
+            <template v-else>
+              <bk-radio label="Manually">{{ t('手动上线') }}</bk-radio>
+              <bk-radio label="Automatically">{{ t('审批通过后立即上线') }}</bk-radio>
+              <bk-radio label="Periodically">{{ t('定时上线') }}</bk-radio>
+            </template>
+          </bk-radio-group>
+          <bk-date-picker
+            v-if="localVal.publishType === 'Periodically'"
+            v-model="localVal.publishTime"
+            :editable="false"
+            :clearable="false"
+            :disabled-date="disabledDate"
+            :hide-disabled-options="true"
+            type="datetime">
+          </bk-date-picker>
+        </bk-loading>
+      </bk-form-item>
     </bk-form>
     <template #footer>
       <div class="dialog-footer">
-        <bk-button theme="primary" :loading="pending" @click="handleConfirm">{{ t('确定上线') }}</bk-button>
+        <bk-button theme="primary" :loading="pending" @click="handleConfirm">
+          {{ isApprove ? t('提交上线审批') : t('确定上线') }}
+        </bk-button>
         <bk-button :disabled="pending" @click="handleClose">{{ t('取消') }}</bk-button>
       </div>
     </template>
   </bk-dialog>
 </template>
 <script setup lang="ts">
-  import { ref, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   import { storeToRefs } from 'pinia';
   import { useI18n } from 'vue-i18n';
-  import { AngleDown, AngleRight, ArrowsRight } from 'bkui-vue/lib/icon';
-  import { publishVersion } from '../../../../../../api/config';
+  import { AngleDown, AngleRight, ArrowsRight, HelpFill } from 'bkui-vue/lib/icon';
+  import { publishVerSubmit, publishType } from '../../../../../../api/config';
   import { IGroupToPublish, IGroupPreviewItem } from '../../../../../../../types/group';
   import { IConfigVersion } from '../../../../../../../types/config';
   import useConfigStore from '../../../../../../store/config';
   import { aggregatePreviewData, aggregateExcludedData } from '../hooks/aggregate-groups';
   import RuleTag from '../../../../groups/components/rule-tag.vue';
+  import { datetimeFormat } from '../../../../../../utils';
 
   const versionStore = useConfigStore();
   const { versionData } = storeToRefs(versionStore);
@@ -107,6 +146,8 @@
     groups: number[];
     all: boolean;
     memo: string;
+    publishType: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
+    publishTime: Date | string;
   }
 
   interface IModifyReleasePreviewItem extends IGroupPreviewItem {
@@ -141,11 +182,15 @@
     groups: [],
     all: false,
     memo: '',
+    publishType: '',
+    publishTime: new Date(new Date().getTime() + 7200000), // 默认当前时间的后两小时
   });
   const previewData = ref<IModifyReleasePreviewItem[]>([]);
   const excludeGroups = ref<IGroupToPublish[]>([]);
   const pending = ref(false);
   const formRef = ref();
+  const isApprove = ref(false); // 服务的审批状态
+
   const rules = {
     memo: [
       {
@@ -153,7 +198,17 @@
         message: t('最大长度200个字符'),
       },
     ],
+    publishTime: [
+      {
+        validator: (value: Date) => value.getTime() >= Date.now(),
+        message: t('不能选择过去的时间'),
+      },
+    ],
   };
+
+  const publishTip = computed(() => {
+    return isApprove.value ? t('审批开启的文案') : t('审批关闭的文案');
+  });
 
   watch(
     () => props.show,
@@ -178,6 +233,7 @@
           list.push(...item.children);
         });
         excludeGroups.value = list;
+        loadPublishType();
       }
     },
   );
@@ -190,12 +246,18 @@
     { immediate: true },
   );
 
+  const disabledDate = (date: any) => {
+    return date && date.valueOf() < Date.now() - 86400000;
+  };
+
   const handleClose = () => {
     emits('update:show', false);
     localVal.value = {
       groups: [],
       all: false,
       memo: '',
+      publishType: '',
+      publishTime: new Date(new Date().getTime() + 7200000),
     };
   };
 
@@ -213,11 +275,14 @@
           params.groups = [];
         }
       }
-      const resp = await publishVersion(props.bkBizId, props.appId, versionData.value.id, params);
+      // 非定时上线，publishTime清空
+      params.publishTime =
+        localVal.value.publishType === 'Periodically' ? datetimeFormat(String(params.publishTime)) : '';
+      const resp = await publishVerSubmit(props.bkBizId, props.appId, versionData.value.id, params);
       handleClose();
       // 目前组件库dialog关闭自带250ms的延迟，所以这里延时300ms
       setTimeout(() => {
-        emits('confirm', resp.data.have_credentials as boolean);
+        emits('confirm', resp.data.have_credentials as boolean, params.publishType, params.publishTime);
       }, 300);
     } catch (e) {
       console.error(e);
@@ -231,6 +296,26 @@
       //     handleConfirm()
       //   }
       // })
+    } finally {
+      pending.value = false;
+    }
+  };
+
+  const loadPublishType = async () => {
+    try {
+      pending.value = true;
+      const resp = await publishType(props.bkBizId, props.appId);
+      const { is_approve, publish_type } = resp.data;
+      isApprove.value = is_approve;
+      // 审批类型
+      if (publish_type) {
+        localVal.value.publishType = publish_type;
+      } else {
+        // 无审批类型，默认选择选项的第一个
+        localVal.value.publishType = is_approve ? 'Manually' : 'Immediately';
+      }
+    } catch (error) {
+      console.log(error);
     } finally {
       pending.value = false;
     }
@@ -329,6 +414,13 @@
     .bk-button {
       margin-left: 8px;
     }
+  }
+  .mode-tip {
+    margin-left: 9px;
+    vertical-align: middle;
+    font-size: 14px;
+    color: #979ba5;
+    cursor: pointer;
   }
 </style>
 <style lang="scss">

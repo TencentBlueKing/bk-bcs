@@ -1,13 +1,30 @@
 <template>
-  <section class="create-version">
+  <section class="create-version" v-if="versionData.status.publish_status === 'partial_released'">
     <bk-button
-      v-if="versionData.status.publish_status === 'partial_released'"
+      v-if="
+        !approveData?.status || ![APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(approveData.status)
+      "
       v-cursor="{ active: !props.hasPerm }"
       theme="primary"
       :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
       :disabled="props.permCheckLoading"
       @click="handleBtnClick">
       {{ t('调整分组上线') }}
+    </bk-button>
+    <bk-button
+      v-if="approveData?.status === APPROVE_STATUS.PendPublish"
+      v-cursor="{ active: !props.hasPerm }"
+      v-bk-tooltips="{
+        disabled: approveData.type !== ONLINE_TYPE.Periodically,
+        content: approveData.time,
+        placement: 'bottom-end',
+      }"
+      :disabled="approveData.type === ONLINE_TYPE.Periodically"
+      theme="primary"
+      :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
+      @click="handleOnlineClick">
+      <!-- 审批通过时间在定时上线时间之后，后端自动转为手动上线 -->
+      {{ approveData.type === ONLINE_TYPE.Periodically ? t('等待定时上线') : t('确定上线') }}
     </bk-button>
     <Teleport to="body">
       <VersionLayout v-if="isSelectGroupPanelOpen">
@@ -90,6 +107,7 @@
   import ConfirmDialog from './publish-version/confirm-dialog.vue';
   import SelectGroup from './publish-version/select-group/index.vue';
   import PublishVersionDiff from './publish-version-diff.vue';
+  import { ONLINE_TYPE, APPROVE_STATUS } from '../../../../../constants/config';
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const serviceStore = useServiceStore();
@@ -103,6 +121,11 @@
     appId: number;
     permCheckLoading: boolean;
     hasPerm: boolean;
+    approveData: {
+      status: string;
+      time: string;
+      type: string;
+    };
   }>();
 
   const emit = defineEmits(['confirm']);
@@ -278,6 +301,11 @@
     }
   };
 
+  const handleOnlineClick = () => {
+    console.log('确定上线成功');
+    handleConfirm(true);
+  };
+
   // 打开上线版本确认弹窗
   const handleOpenPublishDialog = () => {
     if (groups.value.length === 0) {
@@ -293,8 +321,24 @@
     isDiffSliderShow.value = true;
   };
 
+  // 版本上线文案
+  const publishTitle = (type: string, time: string) => {
+    switch (type) {
+      case 'Manually':
+        // return t('待审批通过后，调整分组需手动进行上线操作');
+        return t('手动上线文案', { text: '调整分组' });
+      case 'Automatically':
+        // return t('待审批通过后，调整分组将自动上线');
+        return t('审批通过后上线文案', { text: '调整分组' });
+      case 'Periodically':
+        return t('调整分组定时上线文案', { time });
+      default:
+        return t('版本已上线');
+    }
+  };
+
   // 上线确认
-  const handleConfirm = (haveCredentials: boolean) => {
+  const handleConfirm = (haveCredentials: boolean, publishType = '', publishTime = '') => {
     console.log(haveCredentials);
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
@@ -304,14 +348,14 @@
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
-        title: t('调整分组上线成功'),
+        title: publishTitle(publishType, publishTime),
         dialogType: 'confirm',
       });
     } else {
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
-        title: t('调整分组上线成功'),
+        title: publishTitle(publishType, publishTime),
         confirmText: t('新增服务密钥'),
         cancelText: t('稍后再说'),
         onConfirm: () => {

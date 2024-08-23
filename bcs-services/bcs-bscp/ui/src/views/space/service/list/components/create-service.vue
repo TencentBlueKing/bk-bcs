@@ -6,7 +6,11 @@
     :before-close="handleBeforeClose"
     @closed="close">
     <div class="create-app-form">
-      <SearviceForm ref="formCompRef" :form-data="serviceData" @change="handleChange" />
+      <SearviceForm
+        ref="formCompRef"
+        :form-data="serviceData"
+        :approver-api="approverListApi()"
+        @change="handleChange" />
     </div>
     <div class="create-app-footer">
       <bk-button theme="primary" :loading="pending" @click="handleCreateConfirm">
@@ -44,7 +48,7 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../../store/global';
-  import { createApp } from '../../../../../api';
+  import { createApp, approverListApi } from '../../../../../api';
   import { IServiceEditForm } from '../../../../../../types/service';
   import { Done } from 'bkui-vue/lib/icon';
   import useModalCloseConfirmation from '../../../../../utils/hooks/use-modal-close-confirmation';
@@ -66,6 +70,11 @@
     config_type: 'file',
     data_type: 'any',
     memo: '', // @todo 包含换行符后接口会报错
+    is_approve: true,
+    approver: '',
+    approve_type: 'OrSign',
+    // encryptionSwtich: false,
+    // encryptionKey: '',
   });
   const formCompRef = ref();
   const pending = ref(false);
@@ -84,6 +93,11 @@
           config_type: 'file',
           data_type: 'any',
           memo: '',
+          is_approve: true,
+          approver: '',
+          approve_type: 'OrSign',
+          // encryptionSwtich: false,
+          // encryptionKey: '',
         };
       }
     },
@@ -95,6 +109,7 @@
   };
 
   const handleCreateConfirm = async () => {
+    formCompRef.value.validateApprover();
     await formCompRef.value.validate();
     pending.value = false;
     try {

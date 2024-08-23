@@ -182,11 +182,7 @@ export const downloadConfigContent = (bizId: string, appId: number, signature: s
  * @param signature 文件内容的SHA256值
  * @returns
  */
-export const getConfigUploadFileIsExist = (
-  bizId: string,
-  appId: number,
-  signature: string,
-) =>
+export const getConfigUploadFileIsExist = (bizId: string, appId: number, signature: string) =>
   http
     .get(`/biz/${bizId}/content/metadata`, {
       headers: {
@@ -277,6 +273,35 @@ export const publishVersion = (
     memo: string;
   },
 ) => http.post(`/config/update/strategy/publish/publish/release_id/${releaseId}/app_id/${appId}/biz_id/${bizId}`, data);
+
+/**
+ * 发布版本(增加审批)
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param data 参数
+ * @param publish_type 上线方式
+ * @param publish_time 定时上线时间
+ * @returns
+ */
+export const publishVerSubmit = (
+  bizId: string,
+  appId: number,
+  releaseId: number,
+  data: {
+    groups: Array<number>;
+    all: boolean;
+    memo: string;
+    publishType: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
+    publishTime: Date | string;
+  },
+) =>
+  http.post(`/config/biz_id/${bizId}/app_id/${appId}/release_id/${releaseId}/submit`, {
+    groups: data.groups,
+    all: data.all,
+    memo: data.memo,
+    publish_type: data.publishType,
+    publish_time: data.publishTime,
+  });
 
 /**
  * 获取服务下初始化脚本引用配置
@@ -663,3 +688,22 @@ export const importKvFormYaml = (bizId: string, appId: number, content: string) 
  */
 export const createVersionNameCheck = (bizId: string, appId: number, name: string) =>
   http.get(`/config/biz_id/${bizId}/app_id/${appId}/release/${name}/check`);
+
+/**
+ * 上次上线方式查询
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @returns
+ */
+export const publishType = (bizId: string, appId: number) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/last/select`);
+
+/**
+ * 版本上线状态查询
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const versionStatusQuery = (bizId: number, appId: number, releaseId: number) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/release_id/${releaseId}/status`);

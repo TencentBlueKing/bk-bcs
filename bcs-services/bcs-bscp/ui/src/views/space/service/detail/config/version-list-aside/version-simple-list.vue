@@ -125,12 +125,16 @@
       if (publishedVersionId.value) {
         versionDetail = versionList.value.find((item) => item.id === publishedVersionId.value);
         publishedVersionId.value = 0;
+        console.log(versionDetail, 'if+++++');
       } else {
         versionDetail = versionList.value[1];
+        console.log(versionDetail, 'else+++++');
       }
       if (versionDetail) {
         versionData.value = versionDetail;
         refreshVersionListFlag.value = false;
+        // 默认选中新增的版本时，路由参数versionId需要更新
+        router.push({ name: route.name as string, params: { versionId: versionDetail.id } });
       }
     }
   });

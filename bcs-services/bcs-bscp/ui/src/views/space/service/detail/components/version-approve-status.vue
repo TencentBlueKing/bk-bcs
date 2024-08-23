@@ -1,0 +1,132 @@
+<template>
+  <div class="version-approve-status" v-if="approverList && route.params.versionId">
+    <Spinner v-show="approveStatus === 0" class="spinner" />
+    <div v-show="approveStatus === 1" class="dot online"></div>
+    <div v-show="approveStatus === 2" class="dot offline"></div>
+    <span class="approve-status-text">{{ approveText }}</span>
+    <text-file
+      v-show="approveStatus > -1"
+      v-bk-tooltips="{
+        content: `审批人：${approverList}`,
+        placement: 'bottom',
+      }"
+      class="text-file" />
+  </div>
+</template>
+
+<script setup lang="ts">
+  import { ref, watch, onMounted } from 'vue';
+  import { Spinner, TextFile } from 'bkui-vue/lib/icon';
+  import { storeToRefs } from 'pinia';
+  import useConfigStore from '../../../../../store/config';
+  import { useRoute } from 'vue-router';
+  import { useI18n } from 'vue-i18n';
+  import { versionStatusQuery } from '../../../../../api/config';
+  import { APPROVE_TYPE } from '../../../../../constants/config';
+
+  const configStore = useConfigStore();
+  const { publishedVersionId } = storeToRefs(configStore);
+
+  const emits = defineEmits(['sendData']);
+
+  const route = useRoute();
+  const { t } = useI18n();
+
+  const approverList = ref(''); // 审批人
+  const approveStatus = ref(-1); // 审批图标状态展示
+  const approveText = ref(''); // 审批文案
+
+  watch([() => route.params, publishedVersionId], () => {
+    loadStatus();
+    console.log('watch');
+  });
+
+  onMounted(() => {
+    loadStatus();
+    console.log('Mounted');
+  });
+
+  const loadStatus = async () => {
+    // console.log('载入状态');
+    if (route.params.versionId) {
+      const { spaceId, appId, versionId } = route.params;
+      try {
+        const resp = await versionStatusQuery(Number(spaceId), Number(appId), Number(versionId));
+        console.log(resp);
+        const { spec } = resp.data;
+        approverList.value = spec.approver_progress; // 审批人
+        approveText.value = publishStatusText(spec.publish_status);
+        sendData(spec);
+      } catch (error) {
+        console.log(versionId);
+      } finally {
+        console.log(versionId);
+      }
+    }
+  };
+
+  const publishStatusText = (type: string) => {
+    switch (type) {
+      case 'PendApproval':
+        approveStatus.value = APPROVE_TYPE.PendApproval;
+        return t('待审批');
+      case 'RejectedApproval':
+        approveStatus.value = APPROVE_TYPE.Rejected;
+        return t('上线驳回');
+      case 'RevokedPublish':
+        approveStatus.value = APPROVE_TYPE.Rejected;
+        return t('撤销上线');
+      case 'PendPublish':
+        approveStatus.value = APPROVE_TYPE.PendPublish;
+        return t('审批通过');
+      case 'AlreadyPublish':
+      default:
+        approveStatus.value = -1;
+        return '';
+    }
+  };
+
+  const sendData = (data: any) => {
+    const approveData = {
+      status: data.publish_status,
+      time: data.publish_time,
+      type: data.publish_type,
+    };
+    emits('sendData', approveData);
+  };
+</script>
+
+<style lang="scss" scoped>
+  .version-approve-status {
+    margin: 0 16px 0 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .spinner {
+      margin-right: 8px;
+    }
+    .text-file {
+      font-size: 14px;
+      color: #63656e;
+    }
+  }
+  .approve-status-text {
+    margin-right: 8px;
+    font-size: 12px;
+    color: #63656e;
+  }
+  .dot {
+    margin-right: 8px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    &.online {
+      background: #3fc06d;
+      border: 3px solid #e0f5e7;
+    }
+    &.offline {
+      background: #979ba5;
+      border: 3px solid #eeeef0;
+    }
+  }
+</style>

@@ -1,13 +1,31 @@
 <template>
-  <section class="create-version">
+  <section class="publish-version" v-if="versionData.status.publish_status === 'not_released'">
     <bk-button
-      v-if="versionData.status.publish_status === 'not_released'"
+      v-if="
+        !approveData?.status ||
+        ![APPROVE_STATUS.PendPublish, APPROVE_STATUS.AlreadyPublish].includes(approveData.status)
+      "
       v-cursor="{ active: !props.hasPerm }"
       theme="primary"
       :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
-      :disabled="props.permCheckLoading"
+      :disabled="props.permCheckLoading || approveData?.status === APPROVE_STATUS.PendApproval"
       @click="handleBtnClick">
       {{ t('上线版本') }}
+    </bk-button>
+    <bk-button
+      v-if="approveData?.status === APPROVE_STATUS.PendPublish"
+      v-cursor="{ active: !props.hasPerm }"
+      v-bk-tooltips="{
+        disabled: approveData.type !== ONLINE_TYPE.Periodically,
+        content: approveData.time,
+        placement: 'bottom-end',
+      }"
+      theme="primary"
+      :class="['trigger-button', { 'bk-button-with-no-perm': !props.hasPerm }]"
+      :disabled="approveData.type === ONLINE_TYPE.Periodically"
+      @click="handleOnlineClick">
+      <!-- 审批通过时间在定时上线时间之后，后端自动转为手动上线 -->
+      {{ approveData.type === ONLINE_TYPE.Periodically ? t('等待定时上线') : t('确定上线') }}
     </bk-button>
     <Teleport to="body">
       <VersionLayout v-if="isSelectGroupPanelOpen">
@@ -84,6 +102,7 @@
   import ConfirmDialog from './confirm-dialog.vue';
   import SelectGroup from './select-group/index.vue';
   import PublishVersionDiff from '../publish-version-diff.vue';
+  import { ONLINE_TYPE, APPROVE_STATUS } from '../../../../../../constants/config';
 
   const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const serviceStore = useServiceStore();
@@ -97,6 +116,11 @@
     appId: number;
     permCheckLoading: boolean;
     hasPerm: boolean;
+    approveData: {
+      status: string;
+      time: string;
+      type: string;
+    };
   }>();
 
   const emit = defineEmits(['confirm']);
@@ -113,6 +137,11 @@
   const releaseType = ref('select');
   const groups = ref<IGroupToPublish[]>([]);
   const baseVersionId = ref(0);
+  // const approveData = ref<{
+  //   status: string;
+  //   time: string;
+  //   type: string;
+  // }>();
 
   const permissionQueryResource = computed(() => [
     {
@@ -227,6 +256,10 @@
     }
   };
 
+  const handleOnlineClick = () => {
+    handleConfirm(true);
+  };
+
   const handleOpenPublishDialog = () => {
     isConfirmDialogShow.value = true;
   };
@@ -237,8 +270,23 @@
     isDiffSliderShow.value = true;
   };
 
+  // 版本上线文案
+  const publishTitle = (type: string, time: string) => {
+    switch (type) {
+      case 'Manually':
+        return t('手动上线文案', { text: '版本' });
+      case 'Automatically':
+        // return t('待审批通过后，调整分组将自动上线');
+        return t('审批通过后上线文案', { text: '版本' });
+      case 'Periodically':
+        return t('定时上线文案', { time });
+      default:
+        return t('版本已上线');
+    }
+  };
+
   // 版本上线成功
-  const handleConfirm = (haveCredentials: boolean) => {
+  const handleConfirm = (haveCredentials: boolean, publishType = '', publishTime = '') => {
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
     handlePanelClose();
@@ -247,13 +295,13 @@
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
-        title: t('版本已上线'),
+        title: publishTitle(publishType, publishTime),
         dialogType: 'confirm',
       });
     } else {
       InfoBox({
         infoType: 'success',
-        title: t('版本已上线'),
+        title: publishTitle(publishType, publishTime),
         'ext-cls': 'info-box-style',
         confirmText: t('新增服务密钥'),
         cancelText: t('稍后再说'),
@@ -275,6 +323,11 @@
   });
 </script>
 <style lang="scss" scoped>
+  .publish-version {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
   .trigger-button {
     margin-left: 8px;
   }

@@ -16,6 +16,9 @@ export interface IAppItem {
     memo: string;
     alias: string;
     data_type: string;
+    is_approve: boolean;
+    approver: string;
+    approve_type: string;
   };
   revision: {
     creator: string;

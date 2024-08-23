@@ -114,3 +114,11 @@ export const loginOut = () =>
   http.get('/logout').then((resp) => {
     window.location.href = `${resp.data.login_url}${encodeURIComponent(window.location.href)}&is_from_logout=1`;
   });
+
+/**
+ * 审批人员名单
+ * @returns
+ */
+export const approverListApi = () =>
+  `${(window as any).User_Man_Host}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=1000&page=1`;
+// /api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=1000&page=1"

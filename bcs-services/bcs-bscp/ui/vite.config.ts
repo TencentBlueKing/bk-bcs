@@ -4,6 +4,7 @@ import eslintPlugin from 'vite-plugin-eslint';
 // import basicSsl from '@vitejs/plugin-basic-ssl';
 import viteCompression from 'vite-plugin-compression';
 import { visualizer } from 'rollup-plugin-visualizer';
+import vueJsx from '@vitejs/plugin-vue-jsx';
 
 const viteHtml = (options?: any) => ({
   name: 'vite-plugin-html-transform',
@@ -25,6 +26,7 @@ export default defineConfig(({ command, mode }) => {
       filter: /\.js|.css$/,
       threshold: 1,
     }),
+    vueJsx(),
   ];
   console.error('defineConfig command', command);
   if (command === 'build') {
