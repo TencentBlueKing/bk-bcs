@@ -35,7 +35,13 @@
           <template #default="{ row }">
             <div v-if="row.template_set_exceeds_limit" class="app-info">
               <span class="exceeds-limit">{{ row.template_set_name }}</span>
-              <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该套餐配置文件数量将超过最大限制' }" />
+              <InfoLine
+                class="warn-icon"
+                v-bk-tooltips="{
+                  content: $t('上传后，该套餐的配置文件数量将达到 {n} 个，超过了最大限制', {
+                    n: row.template_set_exceeds_quantity,
+                  }),
+                }" />
             </div>
             <span v-else>{{ row.template_set_name }}</span>
           </template>
@@ -45,7 +51,13 @@
             <div v-if="row.app_id">
               <div v-if="row.app_exceeds_limit" class="app-info" @click="goToConfigPage(row.app_id)">
                 <div v-overflow-title class="name-text">{{ row.app_name }}</div>
-                <InfoLine class="warn-icon" v-bk-tooltips="{ content: '上传后，该服务配置文件数量将超过最大限制' }" />
+                <InfoLine
+                  class="warn-icon"
+                  v-bk-tooltips="{
+                    content: $t('上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制', {
+                      n: row.app_exceeds_quantity,
+                    }),
+                  }" />
                 <LinkToApp class="link-icon" :id="row.app_id" />
               </div>
               <div v-else-if="row.app_id" class="app-info" @click="goToConfigPage(row.app_id)">
@@ -107,8 +119,10 @@
   const unSpecifiedSelected = computed(() => selectedPkgs.value.includes(0));
 
   // 套餐或服务是否有超出限制
-  const isExceedMaxFileCount = computed(() =>
-    citedList.value.some((item) => item.app_exceeds_limit || item.template_set_exceeds_limit),
+  const isExceedMaxFileCount = computed(
+    () =>
+      citedList.value.some((item) => item.app_exceeds_limit || item.template_set_exceeds_limit) &&
+      !unSpecifiedSelected.value,
   );
 
   onMounted(() => {
@@ -164,6 +178,7 @@
     } else {
       selectedPkgs.value = [];
     }
+    emits('toggleBtnDisabled', false);
   };
 
   const goToConfigPage = (id: number) => {

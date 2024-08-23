@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tasks xxx
 package tasks
 
 import (
@@ -20,14 +21,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 )
 
-// CheckCleanDBDataTask delete node and nodeGroup data in db
-func CheckCleanDBDataTask(taskID string, stepName string) error {
+// DeleteNodePoolTask delete node and nodeGroup in resource pool
+func DeleteNodePoolTask(taskID, stepName string) error {
 	// step1: delete nodes
 	// step2: delete consumer
-	// step3: delete nodegroup
 	start := time.Now()
 
 	// get task and task current step
@@ -37,17 +37,17 @@ func CheckCleanDBDataTask(taskID string, stepName string) error {
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("CheckCleanDBDataTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("DeleteNodePoolTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("CheckCleanDBDataTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+	blog.Infof("DeleteNodePoolTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// step login started here
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	group, err := cloudprovider.GetStorageModel().GetNodeGroup(context.Background(), nodeGroupID)
 	if err != nil {
-		blog.Errorf("CheckCleanDBDataTask[%s]: get NodeGroup %s to clean Node in task %s step %s failed, %s",
+		blog.Errorf("DeleteNodePoolTask[%s]: get NodeGroup %s to clean Node in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return fmt.Errorf("get NodeGroup failed %s", err.Error())
@@ -57,20 +57,20 @@ func CheckCleanDBDataTask(taskID string, stepName string) error {
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 	err = cloudprovider.GetStorageModel().DeleteNodesByIPs(context.Background(), ipList)
 	if err != nil {
-		blog.Errorf("CheckCleanDBDataTask[%s]: DeleteNodesByIPs failed: %v", taskID, err)
+		blog.Errorf("DeleteNodePoolTask[%s]: DeleteNodesByIPs failed: %v", taskID, err)
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return fmt.Errorf("DeleteNodesByIPs failed %s", err.Error())
 	}
 
 	// step2: delete consumer
-	err = tresource.GetResourceManagerClient().DeleteResourcePool(context.Background(), group.ConsumerID)
+	err = utils.DeleteResourcePoolAction(context.Background(), group.ConsumerID)
 	if err != nil {
-		blog.Errorf("CheckCleanDBDataTask[%s] DeleteResourcePool failed: %v", taskID, err)
+		blog.Errorf("DeleteNodePoolTask[%s] DeleteResourcePool failed: %v", taskID, err)
 	}
 
 	// update step
 	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CheckCleanDBDataTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
+		blog.Errorf("DeleteNodePoolTask[%s]: task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
 	}
 	return nil

@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package api xxx
-package api
+// Package blueking xxx
+package blueking
 
 import (
 	"context"
@@ -24,16 +24,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
-const (
-	cloudProvider = "blueking"
-)
-
 var nodeMgr sync.Once
 
 func init() {
 	nodeMgr.Do(func() {
 		// init Node
-		cloudprovider.InitNodeManager(cloudProvider, &NodeManager{})
+		cloudprovider.InitNodeManager(cloudName, &NodeManager{})
 	})
 }
 
@@ -60,7 +56,7 @@ func (nm *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) 
 // GetCloudRegions get regionInfo
 func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*proto.RegionInfo, error) {
 	// blueking cloud not need to implement interface
-	cloud, err := cloudprovider.GetStorageModel().GetCloudByProvider(context.Background(), cloudProvider)
+	cloud, err := cloudprovider.GetStorageModel().GetCloudByProvider(context.Background(), cloudName)
 	if err != nil {
 		return nil, err
 	}

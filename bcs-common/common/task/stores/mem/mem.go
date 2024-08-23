@@ -71,6 +71,6 @@ func (s *memStore) GetTask(ctx context.Context, taskID string) (*types.Task, err
 	return nil, fmt.Errorf("not found")
 }
 
-func (s *memStore) PatchTask(ctx context.Context, taskID string, patchs map[string]interface{}) error {
+func (s *memStore) PatchTask(ctx context.Context, opt *iface.PatchOption) error {
 	return types.ErrNotImplemented
 }

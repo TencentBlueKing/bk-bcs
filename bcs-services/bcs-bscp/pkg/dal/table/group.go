@@ -18,6 +18,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/selector"
 )
 
@@ -62,7 +63,7 @@ func (g Group) ResType() string {
 }
 
 // ValidateCreate validate group is valid or not when create it.
-func (g Group) ValidateCreate() error {
+func (g Group) ValidateCreate(kit *kit.Kit) error {
 
 	if g.ID > 0 {
 		return errors.New("id should not be set")
@@ -72,7 +73,7 @@ func (g Group) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := g.Spec.ValidateCreate(); err != nil {
+	if err := g.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -96,7 +97,7 @@ func (g Group) ValidateCreate() error {
 }
 
 // ValidateUpdate validate group is valid or not when update it.
-func (g Group) ValidateUpdate() error {
+func (g Group) ValidateUpdate(kit *kit.Kit) error {
 
 	if g.ID <= 0 {
 		return errors.New("id should be set")
@@ -105,7 +106,7 @@ func (g Group) ValidateUpdate() error {
 	changed := false
 	if g.Spec != nil {
 		changed = true
-		if err := g.Spec.ValidateUpdate(); err != nil {
+		if err := g.Spec.ValidateUpdate(kit); err != nil {
 			return err
 		}
 	}
@@ -204,8 +205,8 @@ func (g GroupMode) Validate() error {
 }
 
 // ValidateCreate validate group spec when it is created.
-func (g GroupSpec) ValidateCreate() error {
-	if err := validator.ValidateName(g.Name); err != nil {
+func (g GroupSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateName(kit, g.Name); err != nil {
 		return err
 	}
 	if err := g.Mode.Validate(); err != nil {
@@ -230,8 +231,8 @@ func (g GroupSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate group spec when it is updated.
-func (g GroupSpec) ValidateUpdate() error {
-	if err := validator.ValidateName(g.Name); err != nil {
+func (g GroupSpec) ValidateUpdate(kit *kit.Kit) error {
+	if err := validator.ValidateName(kit, g.Name); err != nil {
 		return err
 	}
 

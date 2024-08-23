@@ -146,7 +146,6 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
 		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
 	}
-	headers := map[string]string{"Content-Type": "application/json"}
 	// 组装请求参数
 	condition := map[string]interface{}{}
 	if username != "" {
@@ -162,14 +161,11 @@ func SearchBusiness(username string, bizID string) (*SearchBusinessData, error) 
 		Data: map[string]interface{}{
 			"condition":           condition,
 			"bk_supplier_account": supplierAccount,
-			"bk_app_code":         config.GlobalConf.App.Code,
-			"bk_app_secret":       config.GlobalConf.App.Secret,
-			"bk_username":         config.GlobalConf.CMDB.BKUsername,
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
 	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -273,7 +269,6 @@ func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
 		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
 	}
-	headers := map[string]string{"Content-Type": "application/json"}
 	// 组装请求参数
 	req := gorequest.SuperAgent{
 		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, getBizTopoPath),
@@ -281,14 +276,11 @@ func GetBusinessTopology(bizID string) ([]BusinessTopologyData, error) {
 		Data: map[string]interface{}{
 			"bk_biz_id":           bizID,
 			"bk_supplier_account": supplierAccount,
-			"bk_app_code":         config.GlobalConf.App.Code,
-			"bk_app_secret":       config.GlobalConf.App.Secret,
-			"bk_username":         config.GlobalConf.CMDB.BKUsername,
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
 	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
 	if err != nil {
 		return nil, errorx.NewRequestCMDBErr(err.Error())
 	}
@@ -313,7 +305,6 @@ func searchBusinessByIds(condition string, rules []map[string]interface{}) ([]Bu
 	if config.GlobalConf.CMDB.BKSupplierAccount != "" {
 		supplierAccount = config.GlobalConf.CMDB.BKSupplierAccount
 	}
-	headers := map[string]string{"Content-Type": "application/json"}
 	// 组装请求参数
 	req := gorequest.SuperAgent{
 		Url:    fmt.Sprintf("%s%s", config.GlobalConf.CMDB.Host, searchBizPath),
@@ -324,14 +315,11 @@ func searchBusinessByIds(condition string, rules []map[string]interface{}) ([]Bu
 				"rules":     rules,
 			},
 			"bk_supplier_account": supplierAccount,
-			"bk_app_code":         config.GlobalConf.App.Code,
-			"bk_app_secret":       config.GlobalConf.App.Secret,
-			"bk_username":         config.GlobalConf.CMDB.BKUsername,
 		},
 		Debug: config.GlobalConf.CMDB.Debug,
 	}
 	// 获取返回数据
-	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, headers)
+	body, err := component.Request(req, timeout, config.GlobalConf.CMDB.Proxy, component.GetAuthHeader())
 	if err != nil {
 		logging.Error("request search business failed, err: %s", err.Error())
 		return nil, fmt.Errorf("request search business failed, err: %s", err.Error())

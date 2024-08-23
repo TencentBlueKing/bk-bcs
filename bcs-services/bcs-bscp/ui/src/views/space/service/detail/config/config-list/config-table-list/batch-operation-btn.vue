@@ -92,7 +92,7 @@
     if (props.isFileType) {
       await batchDeleteServiceConfigs(props.bkBizId, props.appId, props.selectedIds);
     } else {
-      await batchDeleteKv(props.bkBizId, props.appId, props.selectedIds);
+      await batchDeleteKv(props.bkBizId, props.appId, props.selectedIds, props.isAcrossChecked);
     }
     Message({
       theme: 'success',

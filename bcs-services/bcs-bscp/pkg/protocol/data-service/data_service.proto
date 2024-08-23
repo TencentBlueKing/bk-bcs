@@ -127,6 +127,7 @@ service Data {
   rpc ListTemplatesByIDs(ListTemplatesByIDsReq) returns (ListTemplatesByIDsResp) {}
   rpc ListTemplatesNotBound(ListTemplatesNotBoundReq) returns (ListTemplatesNotBoundResp) {}
   rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {}
+  rpc ListTemplateSetsAndRevisions(ListTemplateSetsAndRevisionsReq) returns (ListTemplateSetsAndRevisionsResp) {}
   rpc ListTemplateByTuple(ListTemplateByTupleReq) returns (ListTemplateByTupleReqResp) {}
   rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesReqResp) {}
   rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {}
@@ -161,6 +162,7 @@ service Data {
   rpc GetReleasedAppBoundTmplRevision(GetReleasedAppBoundTmplRevisionReq)
       returns (GetReleasedAppBoundTmplRevisionResp) {}
   rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {}
+  rpc ImportFromTemplateSetToApp(ImportFromTemplateSetToAppReq) returns (pbbase.EmptyResp) {}
 
   // app template variables related interface.
   rpc ExtractAppTmplVariables(ExtractAppTmplVariablesReq) returns (ExtractAppTmplVariablesResp) {}
@@ -508,7 +510,7 @@ message ListConfigItemsReq {
   string search_value = 4;
   uint32 start = 5;
   uint32 limit = 6;
-  string ids = 7;
+  repeated uint32 ids = 7;
   bool all = 8;
   bool with_status = 9;
   // ADD、REVISE、DELETE、UNCHANGE
@@ -949,7 +951,7 @@ message ListTemplatesReq {
   string search_value = 4;
   uint32 start = 5;
   uint32 limit = 6;
-  string ids = 7;
+  repeated uint32 ids = 7;
   bool all = 8;
 }
 
@@ -1027,13 +1029,26 @@ message ListTmplsOfTmplSetReq {
   string search_value = 5;
   uint32 start = 6;
   uint32 limit = 7;
-  string ids = 8;
+  repeated uint32 ids = 8;
   bool all = 9;
 }
 
 message ListTmplsOfTmplSetResp {
   uint32 count = 1;
   repeated pbtemplate.Template details = 2;
+}
+
+message ListTemplateSetsAndRevisionsReq {
+  uint32 biz_id = 1;
+  uint32 template_set_id = 2;
+}
+
+message ListTemplateSetsAndRevisionsResp {
+  message Detail {
+    pbtemplate.Template template = 1;
+    repeated pbtr.TemplateRevision template_revision = 2;
+  }
+  repeated Detail details = 1;
 }
 
 message ListTemplateByTupleReq {
@@ -1311,6 +1326,26 @@ message CheckAppTemplateBindingResp {
   repeated pbatb.Conflict details = 1;
 }
 
+message ImportFromTemplateSetToAppReq {
+  message Binding {
+    message TemplateRevisionBinding {
+      uint32 template_id = 1;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      string template_name = 4;
+      string template_revision_name = 5;
+    }
+    uint32 template_set_id = 1;
+    uint32 template_space_id = 2;
+    string template_space_name = 3;
+    string template_set_name = 4;
+    repeated TemplateRevisionBinding template_revisions = 5;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated Binding bindings = 3;
+}
+
 message ExtractAppTmplVariablesReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1569,6 +1604,8 @@ message CheckTemplateSetReferencesAppsResp {
     string app_name = 4;
     bool app_exceeds_limit = 5;
     bool template_set_exceeds_limit = 6;
+    uint32 app_exceeds_quantity = 7;
+    uint32 template_set_exceeds_quantity = 8;
   }
   repeated Item items = 1;
 }

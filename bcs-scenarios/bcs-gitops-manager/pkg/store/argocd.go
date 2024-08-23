@@ -129,8 +129,14 @@ func (cd *argo) InitArgoDB(ctx context.Context) error {
 	return nil
 }
 
+// GetArgoDB return argodb object
 func (cd *argo) GetArgoDB() db.ArgoDB {
 	return cd.argoDB
+}
+
+// GetAppClient return argo app client
+func (cd *argo) GetAppClient() applicationpkg.ApplicationServiceClient {
+	return cd.appClient
 }
 
 // Stop control interface
@@ -396,6 +402,31 @@ func (cd *argo) ListClustersByProject(ctx context.Context, projID string) (*v1al
 			continue
 		}
 		if projectID == projID {
+			clusters = append(clusters, item)
+		}
+	}
+	cls.Items = clusters
+	return cls, nil
+}
+
+// ListClustersByProjectName will list clusters by project name
+func (cd *argo) ListClustersByProjectName(ctx context.Context, projectName string) (*v1alpha1.ClusterList, error) {
+	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
+	if err != nil {
+		if !utils.IsContextCanceled(err) {
+			metric.ManagerArgoOperateFailed.WithLabelValues("ListClustersByProject").Inc()
+		}
+		return nil, errors.Wrapf(err, "argocd list all clusters failed")
+	}
+
+	clusters := make([]v1alpha1.Cluster, 0, len(cls.Items))
+	for _, item := range cls.Items {
+		projectID, ok := item.Annotations[common.ProjectIDKey]
+		if item.Name != common.InClusterName && (!ok || projectID == "") {
+			blog.Errorf("cluster '%s' not have project id annotation", item.Name)
+			continue
+		}
+		if item.Project == projectName {
 			clusters = append(clusters, item)
 		}
 	}
@@ -860,6 +891,14 @@ func (cd *argo) deleteApplicationResource(ctx context.Context, application *v1al
 
 // GetApplicationSet query the ApplicationSet by name
 func (cd *argo) GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error) {
+	if cd.cacheSynced.Load() {
+		v, ok := cd.cacheAppSet.Load(name)
+		if !ok {
+			return nil, nil
+		}
+		return v.(*v1alpha1.ApplicationSet), nil
+	}
+
 	appset, err := cd.appsetClient.Get(ctx, &appsetpkg.ApplicationSetGetQuery{
 		Name: name,
 	})

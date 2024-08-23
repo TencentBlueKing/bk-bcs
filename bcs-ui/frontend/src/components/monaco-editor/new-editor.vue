@@ -8,7 +8,8 @@
 </template>
 <script lang="ts">
 import yamljs from 'js-yaml';
-import { computed, defineComponent, onBeforeMount, onMounted, ref, toRefs, watch } from 'vue';
+import * as monaco from 'monaco-editor';
+import { computed, defineComponent, onBeforeMount, onMounted, PropType, ref, toRefs, watch } from 'vue';
 
 import useEditor, { IDiffValue } from './use-editor';
 
@@ -31,12 +32,13 @@ export default defineComponent({
     height: { type: [String, Number], default: '100%' },
     original: { type: [String, Object], default: () => ({}) }, // 只有在diff模式下有效
     lang: { type: String, default: 'yaml' },
-    theme: { type: String, default: 'bcs-theme-yaml' },
+    theme: { type: String, default: 'vs-dark' },
     readonly: { type: Boolean, default: false },
-    options: { type: Object, default: () => ({}) },
+    options: { type: Object as PropType<monaco.editor.IStandaloneEditorConstructionOptions>, default: () => ({}) },
     ignoreKeys: { type: [Array, String], default: () => '' },
     fullScreen: { type: Boolean, default: false },
     isModelValue: { type: Boolean, default: false }, // 是否开启在value变化时自动更新编辑器值（不能和v-model同时使用，不然会出现编辑器一直跳到第一行）
+    multiDocument: { type: Boolean, default: false }, // 是否支持多个yaml编辑
   },
   setup(props, ctx) {
     const {
@@ -52,6 +54,7 @@ export default defineComponent({
       ignoreKeys,
       fullScreen,
       isModelValue,
+      multiDocument,
     } = toRefs(props);
 
     const tools = computed(() => {
@@ -63,12 +66,20 @@ export default defineComponent({
     });
     const onContentChange = (data: IDiffValue | string = '') => {
       const emitValue = typeof data === 'string' ? data : data.modified;
-      let resolveValue = '';
+      let resolveValue: string | Record<string, any> = '';
       switch (lang.value) {
-        case 'yaml':
+        case 'yaml':{
+          // 触发一次yaml格式校验（原始字符串需要校验）
+          let yamlToJson = {};
+          if (multiDocument.value) {
+            yamlToJson = yamljs.loadAll(emitValue) || [];
+          } else {
+            yamlToJson = yamljs.load(emitValue) || {};
+          }
           // 保留原始数据格式
-          resolveValue = isObject(value.value) ? (yamljs.load(emitValue) || {}) : emitValue;
+          resolveValue = isObject(value.value) ? yamlToJson : emitValue;
           break;
+        }
         default:
           resolveValue = emitValue;
       }
@@ -81,6 +92,8 @@ export default defineComponent({
       setValue: handleSetValue,
       getValue,
       layout,
+      getModel,
+      setPosition,
       navi,
       diffStat,
       editorErr,
@@ -205,9 +218,11 @@ export default defineComponent({
       layout,
       getValue,
       setValue,
+      getModel,
       update,
       nextDiffChange,
       previousDiffChange,
+      setPosition,
     };
   },
 });

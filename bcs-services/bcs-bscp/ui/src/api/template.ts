@@ -110,7 +110,7 @@ export const getAllPackagesGroupBySpace = (biz_id: string, params: { app_id?: nu
  * @returns
  */
 export const getTemplatesBySpaceId = (biz_id: string, template_space_id: number, params: ICommonQuery) =>
-  http.get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates`, { params }).then((res) => res.data);
+  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates_list`, params).then((res) => res.data);
 
 /**
  * 获取模板空间下未指定套餐的模板列表
@@ -223,9 +223,10 @@ export const getTemplatesByPackageId = (
   params: ICommonQuery,
 ) =>
   http
-    .get(`/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/templates`, {
+    .post(
+      `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_sets/${template_set_id}/templates`,
       params,
-    })
+    )
     .then((res) => res.data);
 
 /**
@@ -762,3 +763,12 @@ export const updateTemplateConfig = (
       params,
     )
     .then((res) => res.data);
+
+/**
+ * 根据模板套餐获取模板版本列表
+ * @param biz_id 业务ID
+ * @param template_id 模板ID
+ * @returns
+ */
+export const getTemplateRevisionsFromPkgId = (biz_id: string, pkgId: number) =>
+  http.get(`/config/biz/${biz_id}/template_sets/${pkgId}/template_revisions`).then((res) => res.data);

@@ -20,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -143,7 +144,7 @@ func (dao *kvDao) Create(kit *kit.Kit, kv *table.Kv) (uint32, error) {
 		return 0, fmt.Errorf("kv is nil")
 	}
 
-	if err := kv.ValidateCreate(); err != nil {
+	if err := kv.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -435,7 +436,7 @@ func (dao *kvDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.
 		return err
 	}
 	for i, kv := range kvs {
-		if e := kv.ValidateCreate(); e != nil {
+		if e := kv.ValidateCreate(kit); e != nil {
 			return e
 		}
 		kv.ID = ids[i]
@@ -492,7 +493,7 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 // ListAllByAppID list all Kv by appID
 func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, kvState []string) ([]*table.Kv, error) {
 	if appID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "appID can not be 0")
+		return nil, errf.New(errf.InvalidParameter, i18n.T(kit, "appID can not be 0"))
 	}
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")

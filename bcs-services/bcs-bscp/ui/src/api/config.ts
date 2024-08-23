@@ -28,7 +28,7 @@ export const getDefaultConfigScriptData = () => ({
  */
 export const getConfigList = (biz_id: string, app_id: number, query: ICommonQuery) =>
   http
-    .get(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { params: { ...query, with_status: true } })
+    .post(`/config/biz/${biz_id}/apps/${app_id}/config_items`, { ...query, with_status: true })
     .then((res) => res.data);
 
 /**
@@ -536,9 +536,10 @@ export const deleteKv = (bizId: string, appId: number, configId: number) =>
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param ids 配置项ID列表
+ * @param exclusion_operation 是否跨页
  */
-export const batchDeleteKv = (bizId: string, appId: number, ids: number[]) =>
-  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids });
+export const batchDeleteKv = (bizId: string, appId: number, ids: number[], exclusion_operation: boolean) =>
+  http.post(`config/biz/${bizId}/apps/${appId}/kvs/batch_delete`, { ids, exclusion_operation });
 
 /**
  * 获取已发布kv
@@ -688,6 +689,17 @@ export const importKvFormYaml = (bizId: string, appId: number, content: string) 
  */
 export const createVersionNameCheck = (bizId: string, appId: number, name: string) =>
   http.get(`/config/biz_id/${bizId}/app_id/${appId}/release/${name}/check`);
+
+/**
+ * 从配置模板导入配置文件
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param bindingId 模板和服务绑定关系ID
+ * @param params 更新参数
+ * @returns
+ */
+export const importConfigFromTemplate = (bizId: string, appId: number, query: any) =>
+  http.post(`/config/biz/${bizId}/apps/${appId}/template_bindings/import_template_set`, query);
 
 /**
  * 上次上线方式查询

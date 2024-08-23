@@ -167,6 +167,7 @@ func (t *TemplateVersionAction) List(
 			TemplateName:  tmp.Name,
 			Version:       tmp.DraftVersion,
 			Content:       tmp.DraftContent,
+			EditFormat:    tmp.DraftEditFormat,
 			Creator:       tmp.Updator,
 			CreateAt:      tmp.UpdateAt,
 			Draft:         true,

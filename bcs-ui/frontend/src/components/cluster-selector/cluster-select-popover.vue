@@ -44,7 +44,9 @@
             @mouseleave="hoverClusterID = ''"
             @click="handleClick(cluster)">
             <div class="flex-1 flex flex-col justify-center h-[50px]">
-              <span class="bcs-ellipsis leading-[20px]" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
+              <span class="bcs-ellipsis leading-[20px]" v-bk-overflow-tips="{ interactive: false }">
+                {{ cluster.clusterName }}
+              </span>
               <span
                 :class="[
                   'leading-[20px]',

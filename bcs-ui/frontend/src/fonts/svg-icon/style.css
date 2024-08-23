@@ -1,9 +1,9 @@
 @font-face {
 	font-family: "bcs-color";
-	src: url("fonts/iconcool.svg#iconcool") format("svg"),
-url("fonts/iconcool.ttf") format("truetype"),
-url("fonts/iconcool.woff") format("woff"),
-url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
+	src: url("@/fonts/svg-icon/fonts/iconcool.svg#iconcool") format("svg"),
+url("@/fonts/svg-icon/fonts/iconcool.ttf") format("truetype"),
+url("@/fonts/svg-icon/fonts/iconcool.woff") format("woff"),
+url("@/fonts/svg-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
     font-weight: normal;
     font-style: normal;
 }
@@ -38,6 +38,42 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-color-kubeconfig:before {
 	content: "\e103";
 }
+.bcs-icon-color-cuo:before {
+	content: "\e117";
+}
+.bcs-icon-color-dui:before {
+	content: "\e116";
+}
+.bcs-icon-color-tishi:before {
+	content: "\e115";
+}
+.bcs-icon-color-jiazai:before {
+	content: "\e10c";
+}
+.bcs-icon-color-abnormal:before {
+	content: "\e114";
+}
+.bcs-icon-color-normal:before {
+	content: "\e113";
+}
+.bcs-icon-color-default:before {
+	content: "\e112";
+}
+.bcs-icon-color-success:before {
+	content: "\e111";
+}
+.bcs-icon-color-failed:before {
+	content: "\e110";
+}
+.bcs-icon-color-waiting:before {
+	content: "\e10f";
+}
+.bcs-icon-color-warning-2:before {
+	content: "\e10d";
+}
 .bcs-icon-color-edit-tag:before {
 	content: "\e107";
+}
+.bcs-icon-color-status-unknown:before {
+	content: "\e11f";
 }

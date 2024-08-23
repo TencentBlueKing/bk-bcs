@@ -55,8 +55,14 @@ bcs:
         text: CMDB
         placeholder: Please select the CMDB business you want to bind
         emptyMsg: Please contact the operator of the CMDB business
-  newVersion: 'Version updated, would you like to refresh the interface?'
   preVersion: Return Old Version
+  newVersion:
+    title: Resource update reminder
+    p1: >-
+      The server-side resource file has been updated. Please refresh the page to
+      obtain the latest resources to avoid the failure of the front-end page
+      execution and cause trouble.
+    p2: 'Clicking OK will refresh the page, please pay attention to saving the data'
 blueking:
   onCall: Contact BK Customer Service
   support: Support
@@ -72,6 +78,11 @@ blueking:
   help: Help
   contact: Contact Us
   bk: BCS
+  aiScriptsAssistant:
+    desc: Ask AI Assistant
+    errTips: Ask AI Assistant to interpret the error message
+    loading: Loading
+    breakLoading: The chat has been interrupted
 k8s:
   namespace: Namespaces
   label: Labels
@@ -108,7 +119,6 @@ k8s:
       conditions in Readiness Gates are True.
 nav:
   dashboard: Dashboard
-  namespace: Namespaces
   workload: Workload
   configuration: Configuration
   storage: Storage
@@ -133,6 +143,7 @@ nav:
   network: Network
   cloudToken: Cloud Token
   tkexCRD: Kourse
+  templateFile: TemplateFile
 iam:
   title:
     perms: This operation requires the following permissions
@@ -246,6 +257,7 @@ generic:
     warning:
       '403': No permission operation
       '404': Page does not exist
+      invalid: Please enter a valid value
     success:
       ok: Done
       copy: Copied
@@ -270,6 +282,7 @@ generic:
       searchEmpty:
         text: The search result is empty
         subTitle: 'You can try adjusting keywords or {action}'
+      noMatchLabel: No matching Label
     info:
       tips: Tip
       refreshAuth: 'The current operation is permanent, please refresh the interface'
@@ -348,10 +361,13 @@ generic:
     query: Search
     create: Create
     submit: SUBMIT
-    reload: Reload
     copyAll: Copy All
     retry: Retry
     skip: Skip
+    export: Export
+    clone: Clone
+    know: I Know
+    confirmSave: Confirm save
     detail: Detail
   label:
     basicConfig: Basic config
@@ -403,6 +419,9 @@ generic:
     start: Start
     stop: Stop
     abnormal: Abnormal
+    updatedAt: Updated at
+    source: Source
+    batchSetting: 'Batch setting {0}'
     resourceName: Resource name
     resourceID: Resource ID
   status:
@@ -451,6 +470,7 @@ generic:
     required: Requiring item
     labelValueEmpty: The label value cannot be empty
     labelKey: 'only support letters, numbers and characters (-_./)'
+    SpeciaLabelKey: 'Invalid input, Please ensure your input follows Kubernetes label format'
     required1: TAINTS cannot have vacant fields
     annotationValueEmpty: The annotation value cannot be empty
     annotations: 'only support letters, numbers, space and characters (-_./)'
@@ -473,8 +493,10 @@ generic:
       dots.
     cidrConflict: 'CIDR conflicts with {cidr}, please re-enter.'
     fieldRequired: '{0} required'
+    fieldRepeat: '{0} repeat'
   title:
     curVersion: Current
+    diffVersion: Comparison version
     basicInfo: Basic Information
     basicInfo1: Info
     preview: Preview
@@ -755,7 +777,7 @@ cluster:
         article3: >-
           The number of nodes can be added with clusters (including Master nodes
           and node nodes) = (Number of IP -quantity of service) / single node
-          POD quantity upper limit.
+          POD quantity upper limit.       
         article1: >-
           The container network resources are limited, please allocate it
           reasonably. Under the current container network configuration, the
@@ -1453,6 +1475,8 @@ cluster:
       retry: Failure to retry
       setLabel: Set label
       setTaint: Set taint
+      addLabel: Add tag
+      addTaint: Add taint
       copy:
         text: Copy
         checkedIP: Copy check ip
@@ -1460,6 +1484,8 @@ cluster:
       cancelSelectAll: Cancel all data
       delete:
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
+      saveSetting: Change Preview
+      gotIt: Got it
     msg:
       labelDesc: Tag helps to sort out your resources
       selectedData: 'Selected {num}'
@@ -1473,8 +1499,20 @@ cluster:
       disableImportClusterAction: 'Kubeconfig imports cluster, node management function is unavailable'
       disableImportClusterAddNode: Importing a cluster does not support adding nodes from existing servers.
       hasNotNodePoolNode: There are nodes added by non-node pools among the selected nodes.
+      disableBatchSettingNodes: There are abnormal nodes among the selected nodes.
+      undo: undo
+      batchUndo: Batch undo
+      remove: remove
+      batchRemove: Batch remove
+      batchEdit: Batch edit
+      copyNodeIP: Click to Copy Node IP
+      note: 'Note: NoExecute taint may evict all Pods on the node; proceed with care.'
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
+      inputKey: Please enter the key
+      inputValue: Please enter the value
+      locationTag: Location tag
+      locationTaint: Location taint
     title:
       confirmAddNode: Determine the additional node
       confirmReAddNode: Confirm the re-added node
@@ -1483,6 +1521,14 @@ cluster:
       batchSetLabel:
         text: Set label batch
         desc: Batch settings only show the same key label
+      batchSetTaint:
+        text: Set taint batch
+      tableSetting: Table setting
+      fieldDisplaySettings: Field display settings
+      nodeSaveError: Some nodes failed to save
+      tabelTitle: >-
+        The following nodes encountered errors and failed during this batch
+        operation:
     label:
       podCounts: Pods
       index: No.
@@ -1492,6 +1538,11 @@ cluster:
         text: Node source
         add: Manually added
       nodePool: Node pool
+      thisAddition: This addition
+      thisRemoval: This removal
+      nodeNum: >-
+        This selection includes {nodeNum} nodes, and the batch edit label
+        content for this batch is as follows:
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate
@@ -3090,7 +3141,7 @@ huaweiCloud:
       and maintained by the Huawei team, and cluster administrators do not need
       to concern themselves with the management and maintenance of the cluster
       Master.
-    cluster: ''
+    cluster: Cluster
 importHuaweiCloud:
   title: Import a public cloud cluster - Huawei Cloud
   label:
@@ -3540,3 +3591,102 @@ container:
     reason: Reason
     exitCode: Exit code
     finishedAt: Finished at
+templateFile:
+  title:
+    file: Template File
+    createVersion: Create Version
+    createSpace: Create Folder
+    rename: Rename
+    versionManage: Version Management
+    modifyMetadata: Modify Metadata
+    editNewVersion: Edit New Version
+    deployFile: Deploy Template File
+    deploySetting: Deployment Settings
+    deployReview: Deployment Preview
+    disableYamlToForm: Unable to switch mode
+  button:
+    formMode: Form Mode
+    yamlMode: YAML Mode
+    createSpace: Create Folder
+    rename: Rename
+    createFile: Create Template File
+    delete: Delete
+    deploy: Deploy
+    previewAndDeploy: Preview and deploy
+    versionManage: Version Management
+    confirmDeploy: Confirm Deployment
+  placeholder:
+    searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
+    searchVersion: Version Number/Version Log/Updater
+  label:
+    name: Name
+    templateName: Template name
+    resourceType: Type
+    latestVersion: Latest Version
+    spaceName: Folder Name
+    kindType: Resource Type
+    workload: Workload
+    versionDesc: Version Log
+    desc: Template description
+    semver:
+      major: Major Version
+      minor: Minor Version
+      patch: Patch Version
+      preRelease: Pre-release Version
+    rebaseVersion: Select Load Version
+    version: Version Number
+    versionType: Version Type
+    fileVersion: Template File Version
+    params: Parameters
+    otherParams: Other Variables
+    semverNo: Semver no
+    semverDesc: Semver desc
+    byCluster: By Cluster
+    versionDiff: Version comparison
+    untitled: Untitled
+  tips:
+    disableYamlToFormReason: >-
+      Source file, {0}, please continue to use the source mode to edit the
+      template or modify and try again
+    preKind: Pre kind
+    nextKind: Next kind
+  tag:
+    draft: draft
+    baseOn: base on
+    latestUpdate: Last Updated
+templateSet:
+  title:
+    set: Template Set
+    versionManage: Version Management
+    addTemplateFile: Add Template File
+    modifyMetadata: Modify Metadata
+  label:
+    name: Template Name
+    appVersion: Application Version
+    desc: Template Set Description
+    templateFile: Template File
+    setVersion: Template Version
+    key: Keyword
+    label: Category Tag
+    versionNo: Version Number
+    set: Template Set
+  button:
+    addFile: Add Template File
+    existFile: Select Existing Template File
+    createFile: Create Template File
+    addNow: Add Now
+    versionManage: Version Management
+    deploy: Deploy Now
+  placeholder:
+    searchFile: Template Name/Resource Type
+    searchSet: Template Set Name/Version/Repository/Keyword/Updater
+    searchVersion: Version Number/Version Log/Updater
+  tips:
+    emptyTemplateFile: No Template File
+    listView: List View
+    cardView: Card View
+    cantDeploy: 'Cannot deploy: No saved versions'
+diff:
+  delete: Delete
+  change: Change
+  add: Add

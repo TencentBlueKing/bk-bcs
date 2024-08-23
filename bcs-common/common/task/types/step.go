@@ -20,7 +20,7 @@ import (
 
 // StepOptions xxx
 type StepOptions struct {
-	Retry               uint32
+	MaxRetries          uint32
 	SkipFailed          bool
 	MaxExecutionSeconds uint32
 }
@@ -28,10 +28,10 @@ type StepOptions struct {
 // StepOption xxx
 type StepOption func(opt *StepOptions)
 
-// WithStepRetry xxx
-func WithStepRetry(retry uint32) StepOption {
+// WithMaxRetries xxx
+func WithMaxRetries(count uint32) StepOption {
 	return func(opt *StepOptions) {
-		opt.Retry = retry
+		opt.MaxRetries = count
 	}
 }
 
@@ -50,22 +50,22 @@ func WithMaxExecutionSeconds(execSecs uint32) StepOption {
 }
 
 // NewStep return a new step by default params
-func NewStep(name string, alias string, opts ...StepOption) *Step {
-	defaultOptions := &StepOptions{Retry: 0}
+func NewStep(name string, executor string, opts ...StepOption) *Step {
+	defaultOptions := &StepOptions{MaxRetries: 0}
 	for _, opt := range opts {
 		opt(defaultOptions)
 	}
 
 	return &Step{
 		Name:                name,
-		Alias:               alias,
+		Executor:            executor,
 		Params:              map[string]string{},
-		Extras:              DefaultJsonExtrasContent,
+		Payload:             DefaultPayloadContent,
 		Status:              TaskStatusNotStarted,
 		Message:             "",
+		RetryCount:          0,
 		SkipOnFailed:        defaultOptions.SkipFailed,
-		RetryCount:          defaultOptions.Retry,
-		Start:               time.Now(),
+		MaxRetries:          defaultOptions.MaxRetries,
 		MaxExecutionSeconds: defaultOptions.MaxExecutionSeconds,
 	}
 }
@@ -73,12 +73,6 @@ func NewStep(name string, alias string, opts ...StepOption) *Step {
 // GetName return task name
 func (s *Step) GetName() string {
 	return s.Name
-}
-
-// SetName set task method
-func (s *Step) SetName(name string) *Step {
-	s.Name = name
-	return s
 }
 
 // GetAlias return task alias
@@ -109,16 +103,16 @@ func (s *Step) AddParam(key, value string) *Step {
 	return s
 }
 
-// GetParamsAll return all step params
-func (s *Step) GetParamsAll() map[string]string {
+// GetParams return all step params
+func (s *Step) GetParams() map[string]string {
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}
 	return s.Params
 }
 
-// SetParamMulti set step params by map
-func (s *Step) SetParamMulti(params map[string]string) {
+// SetParams set step params by map
+func (s *Step) SetParams(params map[string]string) {
 	if s.Params == nil {
 		s.Params = make(map[string]string, 0)
 	}
@@ -133,27 +127,46 @@ func (s *Step) SetNewParams(params map[string]string) *Step {
 	return s
 }
 
-// GetExtras return unmarshal step extras
-func (s *Step) GetExtras(obj interface{}) error {
-	if s.Extras == "" {
-		s.Extras = DefaultJsonExtrasContent
+// GetPayload return unmarshal step extras
+func (s *Step) GetPayload(obj interface{}) error {
+	if len(s.Payload) == 0 {
+		s.Payload = DefaultPayloadContent
 	}
-	return json.Unmarshal([]byte(s.Extras), obj)
+	return json.Unmarshal(s.Payload, obj)
 }
 
-// SetExtrasAll set step extras by json string
-func (s *Step) SetExtrasAll(obj interface{}) error {
+// SetPayload set step extras by json string
+func (s *Step) SetPayload(obj interface{}) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
 		return err
 	}
-	s.Extras = string(result)
+	s.Payload = result
 	return nil
 }
 
 // GetStatus return step status
 func (s *Step) GetStatus() string {
 	return s.Status
+}
+
+// IsCompleted return step completed or not
+func (s *Step) IsCompleted() bool {
+	// 已经完成
+	if s.Status == TaskStatusSuccess {
+		return true
+	}
+
+	// 失败需要看重试次数
+	if s.Status == TaskStatusFailure {
+		// 还有重试次数
+		if s.MaxRetries > 0 && s.RetryCount < s.MaxRetries {
+			return false
+		}
+		return true
+	}
+
+	return false
 }
 
 // SetStatus set status
@@ -164,9 +177,6 @@ func (s *Step) SetStatus(stat string) *Step {
 
 // GetMessage get step message
 func (s *Step) GetMessage() string {
-	if s.Message == "" {
-		return ""
-	}
 	return s.Message
 }
 
@@ -187,6 +197,12 @@ func (s *Step) SetSkipOnFailed(skipOnFailed bool) *Step {
 	return s
 }
 
+// SetMaxTries set step max retry count
+func (s *Step) SetMaxTries(count uint32) *Step {
+	s.MaxRetries = count
+	return s
+}
+
 // GetRetryCount get step retry count
 func (s *Step) GetRetryCount() uint32 {
 	return s.RetryCount
@@ -198,9 +214,31 @@ func (s *Step) AddRetryCount(count uint32) *Step {
 	return s
 }
 
+// SetCountdown step eta with countdown(seconds)
+func (s *Step) SetCountdown(c int) *Step {
+	// 默认就是立即执行, 0值忽略
+	if c <= 0 {
+		return s
+	}
+
+	t := time.Now().Add(time.Duration(c) * time.Second)
+	s.ETA = &t
+	return s
+}
+
+// SetETA step estimated time of arrival
+func (s *Step) SetETA(t time.Time) *Step {
+	if t.Before(time.Now()) {
+		return s
+	}
+
+	s.ETA = &t
+	return s
+}
+
 // GetStartTime get start time
-func (s *Step) GetStartTime() (time.Time, error) {
-	return s.Start, nil
+func (s *Step) GetStartTime() time.Time {
+	return s.Start
 }
 
 // SetStartTime update start time
@@ -210,8 +248,8 @@ func (s *Step) SetStartTime(t time.Time) *Step {
 }
 
 // GetEndTime get end time
-func (s *Step) GetEndTime() (time.Time, error) {
-	return s.End, nil
+func (s *Step) GetEndTime() time.Time {
+	return s.End
 }
 
 // SetEndTime set end time
@@ -223,7 +261,7 @@ func (s *Step) SetEndTime(t time.Time) *Step {
 
 // GetExecutionTime set execution time
 func (s *Step) GetExecutionTime() time.Duration {
-	return time.Duration(s.ExecutionTime)
+	return time.Duration(s.ExecutionTime) * time.Millisecond
 }
 
 // SetExecutionTime set execution time
@@ -232,20 +270,20 @@ func (s *Step) SetExecutionTime(start time.Time, end time.Time) *Step {
 	return s
 }
 
-// GetMaxExecutionSeconds get max execution seconds
-func (s *Step) GetMaxExecutionSeconds() time.Duration {
+// GetMaxExecution get max execution seconds
+func (s *Step) GetMaxExecution() time.Duration {
 	return time.Duration(s.MaxExecutionSeconds) * time.Second
 }
 
-// SetMaxExecutionSeconds set max execution seconds
-func (s *Step) SetMaxExecutionSeconds(maxExecutionSeconds time.Duration) *Step {
-	s.MaxExecutionSeconds = uint32(maxExecutionSeconds.Seconds())
+// SetMaxExecution set max execution seconds
+func (s *Step) SetMaxExecution(duration time.Duration) *Step {
+	s.MaxExecutionSeconds = uint32(duration.Seconds())
 	return s
 }
 
 // GetLastUpdate get last update time
-func (s *Step) GetLastUpdate() (time.Time, error) {
-	return s.LastUpdate, nil
+func (s *Step) GetLastUpdate() time.Time {
+	return s.LastUpdate
 }
 
 // SetLastUpdate set last update time

@@ -13,7 +13,6 @@
 package hello
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -30,15 +29,15 @@ var (
 )
 
 // Sum ...
-func Sum(ctx context.Context, step *istep.Work) error {
+func Sum(c *istep.Context) error {
 	// time.Sleep(30 * time.Second)
 
-	a, ok := step.GetParam(SumA.String())
+	a, ok := c.GetParam(SumA.String())
 	if !ok {
 		return fmt.Errorf("%w: param=%s", istep.ErrParamNotFound, SumA.String())
 	}
 
-	b, ok := step.GetParam(SumB.String())
+	b, ok := c.GetParam(SumB.String())
 	if !ok {
 		return fmt.Errorf("%w: param=%s", istep.ErrParamNotFound, SumB.String())
 	}
@@ -53,9 +52,9 @@ func Sum(ctx context.Context, step *istep.Work) error {
 		return err
 	}
 
-	c := a1 + b1
-	_ = step.AddCommonParams(SumC.String(), fmt.Sprintf("%v", c))
+	c1 := a1 + b1
+	_ = c.AddCommonParam(SumC.String(), fmt.Sprintf("%v", c1))
 
-	fmt.Printf("%s %s %s sumC: %v\n", step.GetTaskID(), step.GetTaskType(), step.GetName(), c)
+	fmt.Printf("%s %s %s sumC: %v\n", c.GetTaskID(), c.GetTaskType(), c.GetName(), c)
 	return nil
 }

@@ -24,13 +24,22 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"gopkg.in/yaml.v3"
 )
 
 // ScenarioInfo info of monitor scenario
 type ScenarioInfo struct {
-	Name       string
-	Readme     string
-	OptionInfo string
+	Name       string         `json:"name"`
+	Readme     string         `json:"readme"`
+	OptionInfo string         `json:"option_info"`
+	Config     ScenarioConfig `json:"config"`
+}
+
+// ScenarioConfig config
+type ScenarioConfig struct {
+	Label string `yaml:"label" json:"label"`
+	// if true, not visible for users
+	Invisible bool `yaml:"invisible" json:"invisible"`
 }
 
 // gitRepo clone git repo and pull in certain freq
@@ -235,10 +244,20 @@ func (gr *gitRepo) refreshScenarioInfos() error {
 		}
 		// 所有场景以目录形式存在
 		if file.IsDir() {
+			config := ScenarioConfig{}
+			configStr := readFileContent(filepath.Join(gr.Directory, file.Name(), "config.yaml"))
+			// 解析config失败时正常返回
+			if err1 := yaml.Unmarshal([]byte(configStr), &config); err1 != nil {
+				blog.Errorf("Scene[%s] unmarshal config failed, err: %s", file.Name(), err1.Error)
+			}
+			if config.Invisible {
+				continue
+			}
 			scenarioList = append(scenarioList, &ScenarioInfo{
 				Name:       file.Name(),
 				Readme:     readFileContent(filepath.Join(gr.Directory, file.Name(), "README.md")),
 				OptionInfo: readFileContent(filepath.Join(gr.Directory, file.Name(), "option.yaml")),
+				Config:     config,
 			})
 		}
 	}

@@ -58,7 +58,7 @@ func (dao *releasedKvDao) BulkCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []
 
 	// validate released kv field.
 	for _, kv := range kvs {
-		if err := kv.ValidateCreate(); err != nil {
+		if err := kv.ValidateCreate(kit); err != nil {
 			return err
 		}
 	}

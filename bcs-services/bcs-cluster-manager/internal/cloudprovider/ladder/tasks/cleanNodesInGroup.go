@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 )
 
 // RemoveNodesFromClusterTask remove nodes from cluster
@@ -132,7 +133,7 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	// return device from resource-manager module if ResourceModule true, else retain yunti style
-	orderID, err := destroyDeviceList(ctx, dependInfo, deviceList, operator)
+	orderID, err := utils.DestroyDeviceList(ctx, dependInfo, deviceList, operator)
 	if err != nil {
 		blog.Errorf("ReturnInstanceToResourcePoolTask[%s] destroyDeviceList[%v] from NodeGroup %s failed: %v",
 			taskID, nodeIDList, nodeGroupID, err.Error())

@@ -265,3 +265,46 @@ func (c *Client) ESBListBizHostsTopo(
 	}
 	return result, nil
 }
+
+// ESBSearchModule search module
+func (c *Client) ESBSearchModule(username string, req *ESBSearchModuleRequest) (*ESBSearchModuleResult, error) {
+
+	if req == nil {
+		return nil, fmt.Errorf("ESBSearchModule req is empty")
+	}
+
+	request := map[string]interface{}{
+		"bk_username": username,
+	}
+	if req.BkBizID != 0 {
+		request["bk_biz_id"] = req.BkBizID
+	}
+	if req.BkSetID != 0 {
+		request["bk_set_id"] = req.BkSetID
+	}
+	if req.Fields != nil {
+		request["fields"] = req.Fields
+	}
+	if req.Condition != nil {
+		request["condition"] = req.Condition
+	}
+	if req.Page != nil {
+		request["page"] = req.Page
+	}
+
+	common.MergeMap(request, c.baseReq)
+	result := new(ESBSearchModuleResult)
+	err := c.client.Post().
+		WithEndpoints([]string{c.host}).
+		WithBasePath("/api/c/compapi/v2/cc/").
+		SubPathf("search_module").
+		WithHeaders(c.defaultHeader).
+		Body(request).
+		Do().
+		Into(result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

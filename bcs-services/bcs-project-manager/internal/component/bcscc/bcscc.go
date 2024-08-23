@@ -151,10 +151,7 @@ func CreateProject(p *pm.Project) error {
 		Data:   data,
 	}
 	req.QueryData = url.Values{}
-	if bcsCCConf.UseGateway {
-		data["app_code"] = config.GlobalConf.App.Code
-		data["app_secret"] = config.GlobalConf.App.Secret
-	} else {
+	if !bcsCCConf.UseGateway {
 		accessToken, err := GetAccessToken()
 		if err != nil {
 			return err
@@ -180,10 +177,7 @@ func UpdateProject(p *pm.Project) error {
 		Data:   data,
 	}
 	req.QueryData = url.Values{}
-	if bcsCCConf.UseGateway {
-		data["app_code"] = config.GlobalConf.App.Code
-		data["app_secret"] = config.GlobalConf.App.Secret
-	} else {
+	if !bcsCCConf.UseGateway {
 		accessToken, err := GetAccessToken()
 		if err != nil {
 			return err
@@ -220,10 +214,7 @@ func CreateNamespace(projectCode, clusterID, name, creator string) error {
 		Data:   data,
 	}
 	req.QueryData = url.Values{}
-	if bcsCCConf.UseGateway {
-		data["app_code"] = config.GlobalConf.App.Code
-		data["app_secret"] = config.GlobalConf.App.Secret
-	} else {
+	if !bcsCCConf.UseGateway {
 		accessToken, err := GetAccessToken()
 		if err != nil {
 			return err
@@ -251,10 +242,7 @@ func ListNamespaces(projectCode, clusterID string) (*ListNamespaceData, error) {
 	}
 	req.QueryData = url.Values{}
 	req.QueryData.Add("desire_all_data", "1")
-	if bcsCCConf.UseGateway {
-		req.QueryData.Add("app_code", config.GlobalConf.App.Code)
-		req.QueryData.Add("app_secret", config.GlobalConf.App.Secret)
-	} else {
+	if !bcsCCConf.UseGateway {
 		accessToken, err := GetAccessToken()
 		if err != nil {
 			return nil, err
@@ -355,8 +343,7 @@ func constructProjectData(p *pm.Project) map[string]interface{} {
 
 func requestCommonAndParse(req gorequest.SuperAgent) error {
 	// 获取返回数据
-	headers := map[string]string{"Content-Type": "application/json"}
-	body, err := component.Request(req, timeout, "", headers)
+	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
 	if err != nil {
 		logging.Error("request paas-cc error, data: %v, err: %v", req.Data, err)
 		return errorx.NewRequestBCSCCErr(err.Error())
@@ -378,8 +365,7 @@ func requestCommonAndParse(req gorequest.SuperAgent) error {
 func requestListNamespacesAndParse(req gorequest.SuperAgent) (*ListNamespaceData, error) {
 
 	// 获取返回数据
-	headers := map[string]string{"Content-Type": "application/json"}
-	body, err := component.Request(req, timeout, "", headers)
+	body, err := component.Request(req, timeout, "", component.GetAuthHeader())
 	if err != nil {
 		logging.Error("request paas-cc error, data: %v, err: %v", req.Data, err)
 		return nil, errorx.NewRequestBCSCCErr(err.Error())

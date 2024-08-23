@@ -16,7 +16,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 )
 
 const (
@@ -25,17 +25,16 @@ const (
 
 type callBack struct{}
 
-// GetName 回调方法名称
-func (c *callBack) GetName() string {
-	return callBackName
-}
-
 // Callback 回调方法,根据任务成功状态更新实体对象状态
-func (c *callBack) Callback(isSuccess bool, task *types.Task) {
-	if isSuccess {
+func (cb *callBack) Callback(c *istep.Context, cbErr error) {
+	if cbErr != nil {
 		fmt.Println("success")
 		return
 	}
 
 	fmt.Println("failure")
+}
+
+func init() {
+	istep.RegisterCallback(istep.CallbackName(callBackName), &callBack{})
 }

@@ -30,6 +30,7 @@ type SecretInterface interface {
 	InitProjectSecret(ctx context.Context, project string) error
 	GetProjectSecret(ctx context.Context, project string) (string, error)
 	ListProjectSecrets(ctx context.Context, project string) ([]string, error)
+	DecryptManifest(ctx context.Context, project string, manifests []string) ([]string, error)
 }
 
 type secretStore struct {
@@ -150,4 +151,34 @@ func (s *secretStore) ListProjectSecrets(ctx context.Context, project string) ([
 		return result, nil
 	}
 	return nil, errors.Errorf("list secrets for project '%s' convert failed", project)
+}
+
+const (
+	decryptSecretPath = "/api/v1/decryption/manifest" // nolint
+)
+
+type decryptResp struct {
+	Manifests []string `json:"manifests"`
+}
+
+// DecryptManifest decrypt manifest from vault plugin server
+func (s *secretStore) DecryptManifest(ctx context.Context, project string, manifests []string) ([]string, error) {
+	bs, err := httputils.Send(ctx, &httputils.HTTPRequest{
+		Address: s.op.Address,
+		Port:    s.op.Port,
+		Path:    decryptSecretPath,
+		Method:  http.MethodPost,
+		Body: map[string]interface{}{
+			"project":   project,
+			"manifests": manifests,
+		},
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "decrypt manifests failed")
+	}
+	response := new(decryptResp)
+	if err = json.Unmarshal(bs, response); err != nil {
+		return nil, errors.Wrapf(err, "decrtyp manifest unmarshal failed")
+	}
+	return response.Manifests, nil
 }

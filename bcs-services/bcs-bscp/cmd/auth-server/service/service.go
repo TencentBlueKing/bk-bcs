@@ -517,6 +517,7 @@ func (s *Service) ListUserSpace(ctx context.Context, req *pbas.ListUserSpaceReq)
 			SpaceTypeId:   space.SpaceTypeID,
 			SpaceTypeName: space.SpaceTypeName,
 			SpaceUid:      space.SpaceUid,
+			SpaceEnName:   space.SpaceEnName,
 		})
 	}
 

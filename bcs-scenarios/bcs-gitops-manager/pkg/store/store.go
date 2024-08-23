@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -51,6 +52,7 @@ type Store interface {
 	Init() error
 	InitArgoDB(ctx context.Context) error
 	GetArgoDB() db.ArgoDB
+	GetAppClient() applicationpkg.ApplicationServiceClient
 	Stop()
 	GetOptions() *Options
 	ReturnArgoK8SClient() *argopkg.ArgoprojV1alpha1Client
@@ -68,6 +70,7 @@ type Store interface {
 	GetClusterFromDB(ctx context.Context, serverUrL string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
 	ListClustersByProject(ctx context.Context, projectID string) (*v1alpha1.ClusterList, error)
+	ListClustersByProjectName(ctx context.Context, projectName string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	DeleteCluster(ctx context.Context, name string) error
 

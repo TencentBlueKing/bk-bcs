@@ -135,6 +135,8 @@ func BKAssistantStream(ctx context.Context, bk_ticket, prompt, input, username s
 	}
 	req.Header.Set("X-Bkapi-Authorization", authHeader)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("X-Accel-Buffering", "no")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

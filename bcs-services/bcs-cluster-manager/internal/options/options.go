@@ -202,6 +202,7 @@ type AutoScaler struct {
 	ReleaseName      string `json:"releaseName"`
 	ReleaseNamespace string `json:"releaseNamespace"`
 	IsPublicRepo     bool   `json:"isPublicRepo"`
+	CaImageRegistry  string `json:"caImageRegistry"`
 }
 
 // BcsWatch config

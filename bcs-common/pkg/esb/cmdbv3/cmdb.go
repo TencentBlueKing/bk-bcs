@@ -46,6 +46,8 @@ type ClientInterface interface {
 	ESBGetBizInternalModule(usename string, bizID int64, bkSupplierAccount string) (*ESBGetBizInternalModuleResult, error)
 	ESBListBizHosts(username string, req *ESBListBizHostsRequest) (*ESBListBizHostsResult, error)
 	ESBListBizHostsTopo(username string, req *ESBListBizHostsTopoRequest) (*ESBListBizHostsTopoResult, error)
+	// ESBSearchModule 查询模块
+	ESBSearchModule(username string, req *ESBSearchModuleRequest) (*ESBSearchModuleResult, error)
 }
 
 // NewClientInterface create client interface

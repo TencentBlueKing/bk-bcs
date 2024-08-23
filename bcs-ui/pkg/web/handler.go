@@ -14,6 +14,7 @@
 package web
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
@@ -81,30 +82,23 @@ func (s *WebServer) Assistant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Stream {
-		w.Header().Set("Content-Type", "text/event-stream")
-		w.Header().Set("Transfer-Encoding", "chunked")
-		buf := make([]byte, 4096)
-		data := out.(io.ReadCloser)
-		defer data.Close()
-		for {
-			n, err := data.Read(buf)
-			if n > 0 {
-				_, writeErr := w.Write(buf[:n])
-				if writeErr != nil {
-					http.Error(w, "Error writing response", http.StatusInternalServerError)
-					return
-				}
-			}
-			if err != nil {
-				if err != io.EOF {
-					http.Error(w, fmt.Sprintf("Error reading from API, err %s", err), http.StatusInternalServerError)
-					return
-				}
-				break
+		body := out.(io.ReadCloser)
+		scanner := bufio.NewScanner(body)
+		scanner.Split(bufio.ScanLines)
+
+		w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		w.WriteHeader(http.StatusOK)
+
+		for scanner.Scan() {
+			// stream  类型返回需要加上 \n 换行符
+			fmt.Fprintf(w, "%s\n", scanner.Bytes())
+			// 立即 flush 到客户端
+			flusher, ok := w.(http.Flusher)
+			if ok {
+				flusher.Flush()
 			}
 		}
-		// r = r.WithContext(context.WithValue(r.Context(), render.ContentTypeCtxKey, render.ContentTypeEventStream))
-		// render.DefaultResponder(w, r, out)
 		return
 	}
 	resp.Data = map[string]interface{}{

@@ -183,3 +183,24 @@ utils::check_op() {
   fi
   return 0
 }
+
+#######################################
+# check if operate_project function exists
+# Arguments:
+# $1: Operate action
+# $2: Project name
+# Return:
+# "$1_$2" function exists return 0, else exit 1
+# function
+#######################################
+
+utils::get_arch() {
+  ARCH=$(uname -m)
+  if [[ "${ARCH}" == "x86_64" ]];then
+    ARCH="amd64"
+  elif [[ "${ARCH}" == "aarch64" ]];then
+    ARCH="arm64"
+  else
+    utils::log "FATAL" "unknown arch ${ARCH}"
+  fi
+}

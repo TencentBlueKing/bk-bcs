@@ -205,19 +205,10 @@
               },
             },
           },
-          tickCount: 5,
           min: 0,
         },
         count: {
-          grid: {
-            line: {
-              style: {
-                stroke: '#979BA5',
-                lineDash: [4, 5],
-              },
-            },
-          },
-          tickCount: 5,
+          grid: null,
           min: 0,
         },
       },

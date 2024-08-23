@@ -182,7 +182,12 @@ func (as *AutoScaler) GetValues() (string, error) {
 		Token:        op.ComponentDeploy.Token,
 		ReplicaCount: as.Replicas,
 		Encryption:   encryptNo,
-		Registry:     op.ComponentDeploy.Registry,
+		Registry: func() string {
+			if op.ComponentDeploy.AutoScaler.CaImageRegistry != "" {
+				return op.ComponentDeploy.AutoScaler.CaImageRegistry
+			}
+			return op.ComponentDeploy.Registry
+		}(),
 	}
 
 	if cmoptions.GetEditionInfo().IsInnerEdition() {

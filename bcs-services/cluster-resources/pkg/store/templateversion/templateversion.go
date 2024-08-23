@@ -194,6 +194,32 @@ func (m *ModelTemplateVersion) CreateTemplateVersion(
 	return templateVersion.ID.Hex(), nil
 }
 
+// CreateTemplateVersionBatch create a batch entity.TemplateVersion into database
+func (m *ModelTemplateVersion) CreateTemplateVersionBatch(
+	ctx context.Context, templateVersions []*entity.TemplateVersion) error {
+	if len(templateVersions) == 0 {
+		return nil
+	}
+
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	insertValues := make([]interface{}, 0)
+	now := time.Now()
+	for _, templateVersion := range templateVersions {
+		// id 覆盖及时间覆盖
+		templateVersion.ID = primitive.NewObjectIDFromTimestamp(now)
+		templateVersion.CreateAt = now.UTC().Unix()
+		insertValues = append(insertValues, templateVersion)
+	}
+
+	if _, err := m.db.Table(m.tableName).Insert(ctx, insertValues); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateTemplateVersion update an entity.TemplateVersion into database
 func (m *ModelTemplateVersion) UpdateTemplateVersion(ctx context.Context, id string, templateVersion entity.M) error {
 	if id == "" {

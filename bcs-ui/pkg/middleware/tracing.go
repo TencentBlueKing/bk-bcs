@@ -132,3 +132,10 @@ func (w responseWriter) Write(b []byte) (int, error) {
 	// 完成http.ResponseWriter.Write()原有功能
 	return w.ResponseWriter.Write(b)
 }
+
+func (w responseWriter) Flush() {
+	flusher, ok := w.ResponseWriter.(http.Flusher)
+	if ok {
+		flusher.Flush()
+	}
+}

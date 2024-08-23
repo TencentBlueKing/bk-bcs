@@ -3,14 +3,14 @@
     v-if="props.isBatchDelete"
     :title="
       t('确认删除所选的 {n} 个配置文件?', {
-        n: isAcrossChecked ? dataCount - props.configs.length : props.configs.length,
+        n: props.isAcrossChecked ? props.dataCount - props.configs.length : props.configs.length,
       })
     "
     header-align="left"
     :is-show="props.show"
     ext-cls="delete-confirm-dialog">
     <div class="tips">{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
-    <bk-table v-show="!isAcrossChecked" :data="props.configs" border="outer" max-height="200">
+    <bk-table v-show="!props.isAcrossChecked" :data="props.configs" border="outer" max-height="200">
       <bk-table-column :label="t('配置文件绝对路径')">
         <template #default="{ row }">
           <span v-if="row.spec">{{ fileAP(row) }}</span>
@@ -54,13 +54,15 @@
   import { deleteTemplate } from '../../../../../../../api/template';
   import DeleteConfirmDialog from '../../../../../../../components/delete-confirm-dialog.vue';
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { currentTemplateSpace, isAcrossChecked, dataCount } = storeToRefs(useTemplateStore());
+  const { currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
     show: boolean;
     configs: ITemplateConfigItem[];
     isBatchDelete?: boolean;
+    isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
   const emits = defineEmits(['update:show', 'deleted']);
@@ -80,7 +82,7 @@
     try {
       pending.value = true;
       const ids = props.configs.map((config) => config.id);
-      await deleteTemplate(spaceId.value, currentTemplateSpace.value, ids, isAcrossChecked.value);
+      await deleteTemplate(spaceId.value, currentTemplateSpace.value, ids, props.isAcrossChecked);
       close();
       setTimeout(() => {
         emits('deleted');

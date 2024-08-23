@@ -470,8 +470,8 @@ export default {
   上一步: 'Previous',
   上传至模板套餐: 'Upload to template package',
   '上传后，部分套餐/服务的配置文件数量将超过最大限制 ({n} 个文件)': 'After uploading, the number of configuration files in some packages/services will exceed the maximum limit ({n} files)',
-  '上传后，该套餐配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the package will exceed the maximum limit',
-  '上传后，该服务配置文件数量将超过最大限制': 'After uploading, the number of configuration files in the service will exceed the maximum limit',
+  '上传后，该套餐的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the package will reach {n}, exceeding the maximum limit',
+  '上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the service will reach {n}, exceeding the maximum limit',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
   '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
   '立即上线：点击“确认上线”后，配置版本将立即上线，适用于紧急更新等立即生效的场景定时上线：点击“确认上线”后，配置版本不会立即生效，可设定具体时间点，使版本在该时间自动上线，适用于非紧急更新场景，避免高峰时段上线，降低用户影响': '立即上线：点击“确认上线”后，配置版本将立即上线，适用于紧急更新等立即生效的场景\n定时上线：点击“确认上线”后，配置版本不会立即生效，可设定具体时间点，使版本在该时间自动上线，适用于非紧急更新场景，避免高峰时段上线，降低用户影响',
@@ -628,6 +628,7 @@ export default {
   批量移出套餐: 'Move out of package in batches',
   从其他空间导入: 'Import from another space',
   '确认删除所选的 {n} 个配置文件?': 'Confirm the deletion of the selected {n} configuration fils?',
+  'latest（当前最新为{n}）': 'latest (current latest is {n})',
 
   // 脚本管理
   全部脚本: 'All scripts',

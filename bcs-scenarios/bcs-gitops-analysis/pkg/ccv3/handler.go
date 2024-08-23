@@ -51,7 +51,6 @@ type queryRule struct {
 }
 
 type searchBusinessRequest struct {
-	appInfo           `json:",inline"`
 	Fields            []string           `json:"fields"`
 	BizPropertyFilter *bizPropertyFilter `json:"biz_property_filter,omitempty"`
 }
@@ -74,11 +73,6 @@ type searchBusinessResponseData struct {
 // SearchBusiness search businesses with bk_biz_ids
 func (h *handler) SearchBusiness(bkBizIds []int64) ([]CCBusiness, error) {
 	req := &searchBusinessRequest{
-		appInfo: appInfo{
-			AppCode:   h.op.Auth.AppCode,
-			AppSecret: h.op.Auth.AppSecret,
-			Operator:  "admin",
-		},
 		Fields: []string{"bk_biz_id", "bk_biz_name", "bk_biz_maintainer"},
 	}
 	if len(bkBizIds) != 0 {
@@ -98,7 +92,6 @@ func (h *handler) SearchBusiness(bkBizIds []int64) ([]CCBusiness, error) {
 		return nil, errors.Wrapf(err, "CC search business query failed")
 	}
 	resp := new(searchBusinessResponse)
-	fmt.Println(string(respBytes))
 	if err := json.Unmarshal(respBytes, resp); err != nil {
 		return nil, errors.Wrapf(err, "CC search business unmarshal failed")
 	}
@@ -110,6 +103,10 @@ func (h *handler) SearchBusiness(bkBizIds []int64) ([]CCBusiness, error) {
 	}
 	return nil, nil
 }
+
+var (
+	bkAuthFormat = `{"bk_app_code": "%s", "bk_app_secret": "%s", "bk_token": "%s"}`
+)
 
 func (h *handler) query(request interface{}, uri string) (resp []byte, err error) {
 	data, err := json.Marshal(request)
@@ -123,6 +120,8 @@ func (h *handler) query(request interface{}, uri string) (resp []byte, err error
 	}
 	httpRequest.Header.Set("Content-Type", "application/json")
 	httpRequest.Header.Set("Accept", "application/json")
+	httpRequest.Header.Set("X-Bkapi-Authorization", fmt.Sprintf(bkAuthFormat, h.op.Auth.AppCode,
+		h.op.Auth.AppSecret, "admin"))
 	c := &http.Client{
 		Timeout: time.Second * 20,
 	}

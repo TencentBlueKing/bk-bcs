@@ -267,11 +267,6 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context, req *pbcs.List
 	if err != nil {
 		return nil, fmt.Errorf("invalid template ids, %s", err)
 	}
-	idsLen := len(templateIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -422,11 +417,6 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbc
 	if err != nil {
 		return nil, fmt.Errorf("invalid template set ids, %s", err)
 	}
-	idsLen := len(templateSetIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -561,12 +551,14 @@ func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbcs.
 	result := make([]*pbcs.CheckTemplateSetReferencesAppsResp_Item, 0, len(resp.GetItems()))
 	for _, v := range resp.GetItems() {
 		result = append(result, &pbcs.CheckTemplateSetReferencesAppsResp_Item{
-			TemplateSetId:           v.GetTemplateSetId(),
-			TemplateSetName:         v.GetTemplateSetName(),
-			AppId:                   v.GetAppId(),
-			AppName:                 v.GetAppName(),
-			AppExceedsLimit:         v.GetAppExceedsLimit(),
-			TemplateSetExceedsLimit: v.GetTemplateSetExceedsLimit(),
+			TemplateSetId:              v.GetTemplateSetId(),
+			TemplateSetName:            v.GetTemplateSetName(),
+			AppId:                      v.GetAppId(),
+			AppName:                    v.GetAppName(),
+			AppExceedsLimit:            v.GetAppExceedsLimit(),
+			TemplateSetExceedsLimit:    v.GetTemplateSetExceedsLimit(),
+			AppExceedsQuantity:         v.GetAppExceedsQuantity(),
+			TemplateSetExceedsQuantity: v.GetTemplateSetExceedsQuantity(),
 		})
 	}
 

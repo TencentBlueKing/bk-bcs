@@ -141,7 +141,30 @@
               v-bk-tooltips="{ content: $t('generic.button.drain.tips'), disabled: !podDisabled, placement: 'right' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('generic.button.drain.text')}}</li>
             </div>
-            <li @click="handleBatchSetLabels">{{$t('cluster.nodeList.button.setLabel')}}</li>
+            <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('labels')">
+                {{$t('cluster.nodeList.button.setLabel')}}
+              </li>
+            </div>
+            <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('taints')">
+                {{$t('cluster.nodeList.button.setTaint')}}
+              </li>
+            </div>
             <div
               class="h-[32px]"
               v-bk-tooltips="{
@@ -187,6 +210,11 @@
           @change="searchSelectChange"
           @clear="handleClearSearchSelect">
         </bcs-search-select>
+        <div
+          class="flex items-center justify-center w-[32px] h-[32px] text-[12px] cursor-pointer ml-[10px] bcs-border"
+          @click="handleGetNodeData">
+          <i class="bcs-icon bcs-icon-reset"></i>
+        </div>
       </div>
     </div>
     <!-- 节点列表 -->
@@ -675,7 +703,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
+import { computed, defineComponent, onActivated, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
 
 import useTableAcrossCheck from '../../../composables/use-table-across-check';
@@ -951,7 +979,7 @@ export default defineComponent({
 
     watch(searchSelectValue, () => {
       handleResetPage();
-    });
+    }, { deep: true });
 
     // 表格设置字段配置
     const fields = [
@@ -1108,7 +1136,6 @@ export default defineComponent({
       handleUncordonNodes,
       schedulerNode,
       addNode,
-      getNodeOverview,
       retryTask,
       setNodeLabels,
       batchDeleteNodes,
@@ -1222,7 +1249,7 @@ export default defineComponent({
           if (item.id === 'ip') {
             // 处理IP字段多值情况
             item.values.forEach((v) => {
-              const splitCode = String(v).indexOf('|') > -1 ? '|' : ' ';
+              const splitCode = String(v?.id).indexOf('|') > -1 ? '|' : ' ';
               tmp.push(...v.id.trim().split(splitCode));
             });
           } else {
@@ -1234,7 +1261,7 @@ export default defineComponent({
         }
         searchValues.push({
           id: item.id,
-          value: new Set(tmp.map(t => padIPv6(t))),
+          value: new Set(tmp.map(t => padIPv6(t?.trim()))),
         });
       });
       return searchValues;
@@ -1725,11 +1752,20 @@ export default defineComponent({
         },
       });
     };
-    // 批量设置标签
-    const handleBatchSetLabels = () => {
+    // 批量设置标签和污点
+    const handleBatchSetNode = (type: 'labels'|'taints') => {
       if (!selections.value.length) return;
 
-      handleSetLabel(selections.value);
+      $router.push({
+        name: 'batchSettingNode',
+        params: {
+          clusterId: props.clusterId,
+          type,
+        },
+        query: {
+          nodeNameList: selections.value.map(item => item.nodeName).join(','),
+        },
+      });
     };
     // 批量删除节点
     const handleBatchDeleteNodes = () => {
@@ -1873,11 +1909,11 @@ export default defineComponent({
     const handleGetNodeOverview = async () => {
       const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]
         && ['RUNNING', 'REMOVABLE'].includes(item.status));
-      let nodes = data.map(item => item.nodeName) as string[];
+      const nodes = data.map(item => item.nodeName) as string[];
       const result = await getAllNodeOverview({
         clusterId: localClusterId.value,
-        nodes
-      }).catch(() => {})
+        nodes,
+      }).catch(() => {});
       for (const key in result) {
         set(nodeMetric.value, key, formatMetricData(result[key]));
       }
@@ -1925,6 +1961,12 @@ export default defineComponent({
     onMounted(async () => {
       getClusterDetail(curSelectedCluster.value.clusterID || '', true);
       await handleGetNodeData();
+      if (tableData.value.length) {
+        start();
+      }
+    });
+    onActivated(() => {
+      handleGetNodeData();
       if (tableData.value.length) {
         start();
       }
@@ -1987,7 +2029,7 @@ export default defineComponent({
       handleBatchEnableNodes,
       handleBatchStopNodes,
       handleBatchReAddNodes,
-      handleBatchSetLabels,
+      handleBatchSetNode,
       handleBatchDeleteNodes,
       handleAddNode,
       handleClusterChange,
