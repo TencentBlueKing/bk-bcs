@@ -71,8 +71,8 @@ type Task struct {
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Creator             string            `json:"creator"`
 	Updater             string            `json:"updater"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
+	Start               *time.Time        `json:"start"`
+	End                 *time.Time        `json:"end"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
 }
 
@@ -91,8 +91,8 @@ type Step struct {
 	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
+	Start               *time.Time        `json:"start"`
+	End                 *time.Time        `json:"end"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
 }
 

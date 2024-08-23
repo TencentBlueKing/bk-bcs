@@ -213,23 +213,29 @@ func (t *Task) SetForceTerminate(f bool) *Task {
 
 // GetStartTime get start time
 func (t *Task) GetStartTime() time.Time {
-	return t.Start
+	if t.Start == nil {
+		return time.Time{}
+	}
+	return *t.Start
 }
 
 // SetStartTime set start time
 func (t *Task) SetStartTime(time time.Time) *Task {
-	t.Start = time
+	t.Start = &time
 	return t
 }
 
 // GetEndTime get end time
 func (t *Task) GetEndTime() time.Time {
-	return t.End
+	if t.End == nil {
+		return time.Time{}
+	}
+	return *t.End
 }
 
 // SetEndTime set end time
 func (t *Task) SetEndTime(time time.Time) *Task {
-	t.End = time
+	t.End = &time
 	return t
 }
 

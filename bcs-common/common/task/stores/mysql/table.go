@@ -45,8 +45,8 @@ type TaskRecords struct {
 	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
+	Start               *time.Time        `json:"start"`
+	End                 *time.Time        `json:"end"`
 	Creator             string            `json:"creator" gorm:"type:varchar(255)"`
 	Updater             string            `json:"updater" gorm:"type:varchar(255)"`
 }
@@ -73,8 +73,8 @@ type StepRecords struct {
 	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Start               time.Time         `json:"start"`
-	End                 time.Time         `json:"end"`
+	Start               *time.Time        `json:"start"`
+	End                 *time.Time        `json:"end"`
 }
 
 // TableName ..
