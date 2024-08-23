@@ -17,6 +17,9 @@ import (
 	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // ContentColumns defines 's columns
@@ -60,16 +63,16 @@ func (c Content) TableName() Name {
 }
 
 // ValidateCreate validate create information when content is created.
-func (c Content) ValidateCreate() error {
+func (c Content) ValidateCreate(kit *kit.Kit) error {
 	if c.ID != 0 {
-		return errors.New("content id can not set")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "content id can not set"))
 	}
 
 	if c.Spec == nil {
-		return errors.New("spec should be set")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "spec should be set"))
 	}
 
-	if err := c.Spec.Validate(); err != nil {
+	if err := c.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -77,7 +80,7 @@ func (c Content) ValidateCreate() error {
 		return errors.New("attachment should be set")
 	}
 
-	if err := c.Attachment.Validate(); err != nil {
+	if err := c.Attachment.Validate(kit); err != nil {
 		return err
 	}
 
@@ -135,33 +138,35 @@ type ReleasedContentSpec struct {
 }
 
 // Validate content's spec
-func (cs ContentSpec) Validate() error {
+func (cs ContentSpec) Validate(kit *kit.Kit) error {
 	// a file's sha256 signature value's length is 64.
 	if len(cs.Signature) != 64 {
-		return errors.New("invalid content signature, should be config's sha256 value")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid content signature, should be config's sha256 value"))
 	}
 
 	if cs.Signature != strings.ToLower(cs.Signature) {
-		return errors.New("content signature should be lowercase")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "content signature should be lowercase"))
 	}
 	return nil
 }
 
 // Validate released content's spec
-func (cs ReleasedContentSpec) Validate() error {
+func (cs ReleasedContentSpec) Validate(kit *kit.Kit) error {
 	// a file's sha256 signature value's length is 64.
 	if len(cs.Signature) != 64 {
-		return errors.New("invalid content signature, should be config's sha256 value")
+		return errf.Errorf(errf.InvalidArgument,
+			i18n.T(kit, "invalid content signature, should be config's sha256 value"))
 	}
 	if len(cs.OriginSignature) != 64 {
-		return errors.New("invalid origin content signature, should be config's sha256 value")
+		return errf.Errorf(errf.InvalidArgument,
+			i18n.T(kit, "invalid origin content signature, should be config's sha256 value"))
 	}
 
 	if cs.Signature != strings.ToLower(cs.Signature) {
-		return errors.New("content signature should be lowercase")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "content signature should be lowercase"))
 	}
 	if cs.OriginSignature != strings.ToLower(cs.OriginSignature) {
-		return errors.New("origin content signature should be lowercase")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "origin content signature should be lowercase"))
 	}
 	return nil
 }
@@ -183,17 +188,17 @@ type ContentAttachment struct {
 }
 
 // Validate content attachment.
-func (c ContentAttachment) Validate() error {
+func (c ContentAttachment) Validate(kit *kit.Kit) error {
 	if c.BizID <= 0 {
-		return errors.New("invalid biz id")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid biz id"))
 	}
 
 	if c.AppID <= 0 {
-		return errors.New("invalid app id")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid app id"))
 	}
 
 	if c.ConfigItemID <= 0 {
-		return errors.New("invalid config item id")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid config item id"))
 	}
 
 	return nil

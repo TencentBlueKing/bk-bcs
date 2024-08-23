@@ -756,7 +756,7 @@ func (s *Service) genFinalATB(kt *kit.Kit, atb *table.AppTemplateBinding) error 
 // ValidateAppTemplateBindingUniqueKey validate the unique key name+path for an app.
 // if the unique key name+path exists in table app_template_binding for the app, return error.
 func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID uint32, name,
-	path string) error {
+	dir string) error {
 	opt := &types.BasePage{All: true}
 	details, _, err := s.dao.AppTemplateBinding().List(kt, bizID, appID, opt)
 	if err != nil {
@@ -774,8 +774,9 @@ func (s *Service) ValidateAppTemplateBindingUniqueKey(kt *kit.Kit, bizID, appID 
 		return err
 	}
 	for _, tr := range templateRevisions {
-		if name == tr.Spec.Name && path == tr.Spec.Path {
-			return fmt.Errorf("config item's same name %s and path %s already exists", name, path)
+		if name == tr.Spec.Name && dir == tr.Spec.Path {
+			return errf.Errorf(errf.InvalidRequest, i18n.T(kt,
+				"the config file %s already exists in this space and cannot be created again", path.Join(dir, name)))
 		}
 	}
 

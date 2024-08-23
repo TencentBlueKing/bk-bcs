@@ -58,8 +58,8 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 
 	// 1. 同一空间不能出现相同绝对路径的配置文件且同路径下不能出现同名的文件夹和文件 比如: /a.txt 和 /a/1.txt
 	if tools.CheckPathConflict(path.Join(req.Spec.Path, req.Spec.Name), existingPaths) {
-		return nil, errors.New(i18n.T(kt, "config item's same name %s and path %s already exists",
-			req.Spec.Name, req.Spec.Path))
+		return nil, errors.New(i18n.T(kt, "the config file %s already exists in this space and cannot be created again",
+			path.Join(req.Spec.Path, req.Spec.Name)))
 	}
 
 	if len(req.TemplateSetIds) > 0 {
@@ -600,7 +600,7 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, "delete template from template sets failed, err: %v, rid: %s", err, kt.Rid))
+			i18n.T(kt, "delete template from template sets failed, err: %v", err))
 	}
 
 	// 3. 通过套餐获取绑定的服务数据
@@ -610,7 +610,7 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kt, "get app template bindings by template set ids, err: %s", err))
+			i18n.T(kt, "get app template bindings by template set ids, err: %v", err))
 	}
 
 	// 4. 移除服务引用套餐下的模板
@@ -622,13 +622,14 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
 			return nil, errf.Errorf(errf.DBOpFailed,
-				i18n.T(kt, "batch update app template binding's failed, err: %s", err))
+				i18n.T(kt, "batch update app template binding's failed, err: %v", err))
 		}
 	}
 
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, "delete template from template sets failed, err: %v", e))
 	}
 
 	return new(pbbase.EmptyResp), nil

@@ -157,7 +157,7 @@ func (dao *credentialDao) BatchListByIDs(kit *kit.Kit, bizID uint32, ids []uint3
 
 // Create create credential
 func (dao *credentialDao) Create(kit *kit.Kit, g *table.Credential) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -298,7 +298,7 @@ func (dao *credentialDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, id 
 // Update update credential's name, description, enable
 // !Note: update credential should emit a update event.
 func (dao *credentialDao) Update(kit *kit.Kit, g *table.Credential) error {
-	if err := g.ValidateUpdate(); err != nil {
+	if err := g.ValidateUpdate(kit); err != nil {
 		return err
 	}
 

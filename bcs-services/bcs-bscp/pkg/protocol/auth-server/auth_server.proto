@@ -245,6 +245,7 @@ message Space {
   string space_type_id = 3;
   string space_type_name = 4;
   string space_uid = 5;
+  string space_en_name = 6;
 }
 
 message ListUserSpaceResp {

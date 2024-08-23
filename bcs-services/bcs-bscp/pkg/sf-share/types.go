@@ -23,6 +23,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
@@ -169,7 +170,7 @@ func (s SideAppMeta) Validate() error {
 	}
 
 	if len(s.Namespace) != 0 {
-		if err := validator.ValidateNamespace(s.Namespace); err != nil {
+		if err := validator.ValidateNamespace(kit.New(), s.Namespace); err != nil {
 			return fmt.Errorf("invalid sidecar's app namespace, err: %v", err)
 		}
 	}

@@ -15,11 +15,12 @@ package pbcs
 
 import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // Validate 新建服务校验
-func (r *CreateAppReq) Validate() error {
-	if err := validator.ValidateAppName(r.Name); err != nil {
+func (r *CreateAppReq) Validate(kt *kit.Kit) error {
+	if err := validator.ValidateAppName(kt, r.Name); err != nil {
 		return err
 	}
 	return nil
