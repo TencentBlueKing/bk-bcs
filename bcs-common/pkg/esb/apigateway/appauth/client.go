@@ -15,7 +15,9 @@ package appauth
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	paasclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
 )
@@ -51,19 +53,13 @@ func NewAuthClient(cfg *Config) (Client, error) {
 		c = &authClient{
 			config: cfg,
 			client: paasclient.NewRESTClientWithTLS(cfg.TLSConfig).
-				WithCredential(map[string]interface{}{
-					"app_code":   cfg.AppCode,
-					"app_secret": cfg.AppSecret,
-				}),
+				WithCredential(cfg.AppCode, cfg.AppSecret),
 		}
 	} else {
 		c = &authClient{
 			config: cfg,
 			client: paasclient.NewRESTClient().
-				WithCredential(map[string]interface{}{
-					"app_code":   cfg.AppCode,
-					"app_secret": cfg.AppSecret,
-				}),
+				WithCredential(cfg.AppCode, cfg.AppSecret),
 		}
 	}
 	return c, nil
@@ -82,13 +78,19 @@ func (c *authClient) GetAccessToken(env string) (string, error) {
 	}
 	request := map[string]interface{}{
 		"env_name":   env,
-		"app_code":   c.config.AppCode,
-		"app_secret": c.config.AppSecret,
 		"grant_type": PaasGrantTypeClient,
 	}
+	auth := map[string]string{
+		"app_code":   c.config.AppCode,
+		"app_secret": c.config.AppSecret,
+	}
+	authBytes, _ := json.Marshal(auth)
+	authHeader := http.Header{}
+	authHeader.Add("X-Bkapi-Authorization", string(authBytes))
 	var response OAuthResponse
 	err := c.client.Post().
 		WithEndpoints(c.config.Hosts).
+		WithHeaders(authHeader).
 		WithBasePath("/").
 		SubPathf("/auth_api/token/").
 		Body(request).

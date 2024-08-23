@@ -33,17 +33,11 @@ func NewClientInterface(host, appcode, appsecret string, tlsConf *tls.Config) Cl
 	if tlsConf != nil {
 		cli = paasclient.NewRESTClientWithTLS(tlsConf).
 			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
-			WithCredential(map[string]interface{}{
-				"app_code":   appcode,
-				"app_secret": appsecret,
-			})
+			WithCredential(appcode, appsecret)
 	} else {
 		cli = paasclient.NewRESTClient().
 			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
-			WithCredential(map[string]interface{}{
-				"app_code":   appcode,
-				"app_secret": appsecret,
-			})
+			WithCredential(appcode, appsecret)
 	}
 
 	return &Client{
