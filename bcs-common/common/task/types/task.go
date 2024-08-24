@@ -165,7 +165,7 @@ func (t *Task) GetCommonPayload(obj interface{}) error {
 	if len(t.CommonPayload) == 0 {
 		t.CommonPayload = DefaultPayloadContent
 	}
-	return json.Unmarshal(t.CommonPayload, obj)
+	return json.Unmarshal([]byte(t.CommonPayload), obj)
 }
 
 // SetCommonPayload set extra json
@@ -174,7 +174,7 @@ func (t *Task) SetCommonPayload(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	t.CommonPayload = result
+	t.CommonPayload = string(result)
 	return nil
 }
 

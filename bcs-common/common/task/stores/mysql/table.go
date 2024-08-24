@@ -39,7 +39,7 @@ type TaskRecords struct {
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
 	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
-	CommonPayload       []byte            `json:"commonPayload" gorm:"type:text"`
+	CommonPayload       string            `json:"commonPayload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
 	ForceTerminate      bool              `json:"forceTerminate"`
@@ -64,7 +64,7 @@ type StepRecords struct {
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
 	Executor            string            `json:"executor" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
-	Payload             []byte            `json:"payload" gorm:"type:text"`
+	Payload             string            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
 	ETA                 *time.Time        `json:"eta"`

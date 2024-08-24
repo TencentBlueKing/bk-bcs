@@ -26,6 +26,8 @@ const (
 	DefaultMaxExecuteTimeSeconds = 3600
 	// DefaultTaskMessage default message
 	DefaultTaskMessage = "task initializing"
+	// DefaultPayloadContent default json extras content
+	DefaultPayloadContent = "{}"
 )
 
 const (
@@ -48,8 +50,6 @@ const (
 )
 
 var (
-	// DefaultPayloadContent default json extras content
-	DefaultPayloadContent = []byte("{}")
 	// ErrNotImplemented not implemented error
 	ErrNotImplemented = errors.New("not implemented")
 )
@@ -65,7 +65,7 @@ type Task struct {
 	Steps               []*Step           `json:"steps"`
 	CallbackName        string            `json:"callbackName"`
 	CommonParams        map[string]string `json:"commonParams"`
-	CommonPayload       []byte            `json:"commonPayload"`
+	CommonPayload       string            `json:"commonPayload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
 	ForceTerminate      bool              `json:"forceTerminate"`
@@ -84,7 +84,7 @@ type Step struct {
 	Alias               string            `json:"alias"`
 	Executor            string            `json:"executor"`
 	Params              map[string]string `json:"params"`
-	Payload             []byte            `json:"payload"`
+	Payload             string            `json:"payload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
 	ETA                 *time.Time        `json:"eta"` // 延迟执行时间(Estimated Time of Arrival)

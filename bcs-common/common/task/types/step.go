@@ -132,7 +132,7 @@ func (s *Step) GetPayload(obj interface{}) error {
 	if len(s.Payload) == 0 {
 		s.Payload = DefaultPayloadContent
 	}
-	return json.Unmarshal(s.Payload, obj)
+	return json.Unmarshal([]byte(s.Payload), obj)
 }
 
 // SetPayload set step extras by json string
@@ -141,7 +141,7 @@ func (s *Step) SetPayload(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	s.Payload = result
+	s.Payload = string(result)
 	return nil
 }
 
