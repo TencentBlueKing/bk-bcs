@@ -328,8 +328,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	// step executed success
 	if state.step == nil {
-		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
-			taskID, stepName)
+		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip", taskID, stepName)
 		return nil
 	}
 
