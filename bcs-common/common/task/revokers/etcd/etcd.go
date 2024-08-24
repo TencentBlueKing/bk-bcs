@@ -35,7 +35,7 @@ type etcdRevoker struct {
 // New ..
 func New(ctx context.Context, conf *config.Config) (iface.Revoker, error) {
 	etcdConf := clientv3.Config{
-		Endpoints:   []string{conf.Broker},
+		Endpoints:   []string{conf.Broker}, // 复用broker的etcd配置
 		Context:     ctx,
 		DialTimeout: time.Second * 5,
 		TLS:         conf.TLSConfig,
@@ -55,7 +55,6 @@ func New(ctx context.Context, conf *config.Config) (iface.Revoker, error) {
 	go revoker.Run()
 
 	return &revoker, nil
-
 }
 
 func (r *etcdRevoker) Run() {
@@ -64,7 +63,6 @@ func (r *etcdRevoker) Run() {
 
 	for {
 		select {
-		// A way to stop this goroutine from b.StopConsuming
 		case <-r.ctx.Done():
 			return
 

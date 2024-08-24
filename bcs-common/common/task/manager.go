@@ -63,8 +63,8 @@ type ManagerConfig struct {
 	WorkerName   string
 	WorkerNum    int
 	Broker       ibroker.Broker
-	Backend      ibackend.Backend
 	Revoker      irevoker.Revoker
+	Backend      ibackend.Backend
 	Lock         ilock.Lock
 	Store        istore.Store
 	ServerConfig *config.Config
