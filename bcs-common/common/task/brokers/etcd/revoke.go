@@ -100,18 +100,6 @@ func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
 	}
 }
 
-func (b *etcdBroker) expireRevokeSign() {
-	b.mtx.Lock()
-	defer b.mtx.Unlock()
-
-	for taskID, sign := range b.revokeSignMap {
-		if time.Since(sign.registerTime) > time.Hour*24 {
-			sign.cancel()
-			delete(b.revokeSignMap, taskID)
-		}
-	}
-}
-
 func (b *etcdBroker) listWatchRevoke(ctx context.Context) error {
 	// List
 	listCtx, listCancel := context.WithTimeout(ctx, time.Second*10)
@@ -151,4 +139,16 @@ func (b *etcdBroker) listWatchRevoke(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (b *etcdBroker) expireRevokeSign() {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	for taskID, sign := range b.revokeSignMap {
+		if time.Since(sign.registerTime) > time.Hour*24 {
+			sign.cancel()
+			delete(b.revokeSignMap, taskID)
+		}
+	}
 }
