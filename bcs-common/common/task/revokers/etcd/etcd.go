@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package etcd is broker use etcd
+// Package etcd is revoker use etcd
 package etcd
 
 import (
