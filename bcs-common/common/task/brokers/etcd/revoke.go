@@ -27,9 +27,10 @@ const (
 )
 
 type revokeSign struct {
-	taskID string
-	ctx    context.Context
-	cancel context.CancelFunc
+	taskID       string
+	registerTime time.Time
+	ctx          context.Context
+	cancel       context.CancelFunc
 }
 
 // Revoke etcd revoker send sign
@@ -57,14 +58,16 @@ func (b *etcdBroker) RevokeCtx(taskID string) context.Context {
 
 	sign, ok := b.revokeSignMap[taskID]
 	if ok {
+		sign.registerTime = time.Now()
 		return sign.ctx
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sign = &revokeSign{
-		taskID: taskID,
-		ctx:    ctx,
-		cancel: cancel,
+		taskID:       taskID,
+		registerTime: time.Now(),
+		ctx:          ctx,
+		cancel:       cancel,
 	}
 	b.revokeSignMap[taskID] = sign
 
@@ -94,6 +97,18 @@ func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
 	_, err := b.client.Delete(ctx, key)
 	if err != nil {
 		log.ERROR.Printf("revoke %s failed: %s", key, err)
+	}
+}
+
+func (b *etcdBroker) expireRevokeSign() {
+	b.mtx.Lock()
+	defer b.mtx.Unlock()
+
+	for taskID, sign := range b.revokeSignMap {
+		if time.Since(sign.registerTime) > time.Hour*24 {
+			sign.cancel()
+			delete(b.revokeSignMap, taskID)
+		}
 	}
 }
 

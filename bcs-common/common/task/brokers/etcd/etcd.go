@@ -178,6 +178,8 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				return
 
 			case <-ticker.C:
+				b.expireRevokeSign()
+
 				err := b.listWatchRevoke(ctx)
 				if err != nil {
 					log.ERROR.Printf("list and watch revoke err: %s", err)
