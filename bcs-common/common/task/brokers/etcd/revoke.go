@@ -81,6 +81,7 @@ func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
 	b.mtx.Lock()
 	sign, ok := b.revokeSignMap[taskID]
 	if ok {
+		sign.cancel()
 		delete(b.revokeSignMap, taskID)
 	}
 	b.mtx.Unlock()
@@ -88,8 +89,6 @@ func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
 	if !ok {
 		return
 	}
-
-	sign.cancel()
 
 	ctx, cancel := context.WithTimeout(b.ctx, time.Second*5)
 	defer cancel()
