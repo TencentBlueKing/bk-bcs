@@ -14,11 +14,16 @@ package etcd
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"github.com/RichardKnop/machinery/v2/log"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
+)
+
+const (
+	revokePrefix = "/machinery/v2/revoker/tasks"
 )
 
 type revokeSign struct {
@@ -27,11 +32,11 @@ type revokeSign struct {
 	cancel context.CancelFunc
 }
 
-// Revoke etcd revoker
+// Revoke etcd revoker send sign
 func (b *etcdBroker) Revoke(ctx context.Context, taskID string) error {
-	key := "/machinery/v2/revoker/tasks"
+	key := revokePrefix + "/" + taskID
 
-	_, err := b.client.Put(ctx, key, taskID)
+	_, err := b.client.Put(ctx, key, time.Now().Format(time.RFC3339))
 	if err != nil {
 		return err
 	}
@@ -39,75 +44,7 @@ func (b *etcdBroker) Revoke(ctx context.Context, taskID string) error {
 	return nil
 }
 
-func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
-	key := string(kv.Key)
-
-	b.mtx.Lock()
-	sign, ok := b.revokeSignMap[key]
-	if ok {
-		delete(b.revokeSignMap, key)
-	}
-	b.mtx.Unlock()
-
-	if !ok {
-		return
-	}
-
-	sign.cancel()
-
-	ctx, cancel := context.WithTimeout(b.ctx, time.Second*10)
-	defer cancel()
-
-	_, err := b.client.Delete(ctx, key)
-	if err != nil {
-		log.ERROR.Printf("revoke %s failed: %s", key, err)
-	}
-}
-
-func (b *etcdBroker) listAndWatchRevoke(ctx context.Context) error {
-	key := "/machinery/v2/revoker/tasks"
-
-	// List
-	listCtx, listCancel := context.WithTimeout(ctx, time.Second*10)
-	defer listCancel()
-
-	resp, err := b.client.Get(listCtx, key, clientv3.WithPrefix(), clientv3.WithKeysOnly())
-	if err != nil {
-		return err
-	}
-
-	for _, kv := range resp.Kvs {
-		b.tryRevoke(kv)
-	}
-
-	// Watch
-	watchCtx, watchCancel := context.WithTimeout(ctx, time.Minute*10)
-	defer watchCancel()
-
-	watchOpts := []clientv3.OpOption{
-		clientv3.WithPrefix(),
-		clientv3.WithKeysOnly(),
-		clientv3.WithRev(resp.Header.Revision),
-	}
-	wc := b.client.Watch(watchCtx, key, watchOpts...)
-	for wresp := range wc {
-		if wresp.Err() != nil {
-			return watchCtx.Err()
-		}
-
-		for _, ev := range wresp.Events {
-			if ev.Type != clientv3.EventTypePut {
-				continue
-			}
-
-			b.tryRevoke(ev.Kv)
-		}
-	}
-
-	return nil
-}
-
-// RevokeCtx etcd revoker
+// RevokeCtx etcd revoker ctx
 func (b *etcdBroker) RevokeCtx(taskID string) context.Context {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
@@ -126,4 +63,71 @@ func (b *etcdBroker) RevokeCtx(taskID string) context.Context {
 	b.revokeSignMap[taskID] = sign
 
 	return sign.ctx
+}
+
+func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
+	key := string(kv.Key)
+	taskID := filepath.Base(key)
+
+	b.mtx.Lock()
+	sign, ok := b.revokeSignMap[taskID]
+	if ok {
+		delete(b.revokeSignMap, taskID)
+	}
+	b.mtx.Unlock()
+
+	if !ok {
+		return
+	}
+
+	sign.cancel()
+
+	ctx, cancel := context.WithTimeout(b.ctx, time.Second*5)
+	defer cancel()
+
+	_, err := b.client.Delete(ctx, key)
+	if err != nil {
+		log.ERROR.Printf("revoke %s failed: %s", key, err)
+	}
+}
+
+func (b *etcdBroker) listWatchRevoke(ctx context.Context) error {
+	// List
+	listCtx, listCancel := context.WithTimeout(ctx, time.Second*10)
+	defer listCancel()
+
+	resp, err := b.client.Get(listCtx, revokePrefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	if err != nil {
+		return err
+	}
+
+	for _, kv := range resp.Kvs {
+		b.tryRevoke(kv)
+	}
+
+	// Watch
+	watchCtx, watchCancel := context.WithTimeout(ctx, time.Minute*10)
+	defer watchCancel()
+
+	watchOpts := []clientv3.OpOption{
+		clientv3.WithPrefix(),
+		clientv3.WithKeysOnly(),
+		clientv3.WithRev(resp.Header.Revision),
+	}
+	wc := b.client.Watch(watchCtx, revokePrefix, watchOpts...)
+	for wresp := range wc {
+		if wresp.Err() != nil {
+			return watchCtx.Err()
+		}
+
+		for _, ev := range wresp.Events {
+			if ev.Type != clientv3.EventTypePut {
+				continue
+			}
+
+			b.tryRevoke(ev.Kv)
+		}
+	}
+
+	return nil
 }
