@@ -109,15 +109,22 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]typ
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		updateTask := getUpdateTaskRecord(task)
-		if err := tx.Model(&TaskRecords{}).Where("task_id = ?", task.TaskID).Updates(updateTask).Error; err != nil {
+		if err := tx.Model(&TaskRecords{}).
+			Where("task_id = ?", task.TaskID).
+			Select(updateTaskField).
+			Updates(updateTask).Error; err != nil {
 			return err
 		}
+
 		for _, step := range task.Steps {
 			if step.Name != task.CurrentStep {
 				continue
 			}
 			updateStep := getUpdateStepRecord(step)
-			if err := tx.Where("task_id = ? AND name= ?", task.TaskID, step.Name).Updates(updateStep).Error; err != nil {
+			if err := tx.Model(&StepRecords{}).
+				Where("task_id = ? AND name= ?", task.TaskID, step.Name).
+				Select(updateStepField).
+				Updates(updateStep).Error; err != nil {
 				return err
 			}
 		}
