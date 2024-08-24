@@ -218,8 +218,8 @@ func (m *TaskManager) Revoke(task *types.Task) error {
 		return fmt.Errorf("task revoker is required")
 	}
 
-	task.SetStatus(types.TaskStatusRevoke)
-	task.SetMessage("task revoked")
+	task.SetStatus(types.TaskStatusRevoked)
+	task.SetMessage("task has been revoked")
 
 	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
 		return err
@@ -406,7 +406,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	case <-revokeCtx.Done():
 		// task revoke
-		retErr := fmt.Errorf("task %s step %s has been revoke", taskID, step.GetName())
+		retErr := fmt.Errorf("task %s has been revoked", taskID)
 		state.updateStepFailure(start, retErr, false)
 
 		// 取消指令, 不再重试

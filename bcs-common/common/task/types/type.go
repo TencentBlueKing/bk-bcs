@@ -39,8 +39,8 @@ const (
 	TaskStatusFailure = "FAILURE"
 	// TaskStatusTimeout task run timeout
 	TaskStatusTimeout = "TIMEOUT"
-	// TaskStatusRevoke task revoke
-	TaskStatusRevoke = "REVOKE"
+	// TaskStatusRevoked task has been revoked
+	TaskStatusRevoked = "REVOKED"
 	// TaskStatusForceTerminate force task terminate
 	TaskStatusForceTerminate = "FORCETERMINATE"
 	// TaskStatusNotStarted force task terminate
