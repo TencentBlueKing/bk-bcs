@@ -38,7 +38,7 @@ func (b *etcdRevoker) Revoke(ctx context.Context, taskID string) error {
 	key := revokePrefix + "/" + taskID
 
 	// 2分钟自动过期
-	lease, err := b.client.Grant(ctx, int64(time.Second*120))
+	lease, err := b.client.Grant(ctx, 120)
 	if err != nil {
 		return err
 	}

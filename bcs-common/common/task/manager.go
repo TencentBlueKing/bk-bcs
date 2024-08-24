@@ -214,8 +214,8 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 // Revoke revoke the task
 func (m *TaskManager) Revoke(task *types.Task) error {
 	// task revoke
-	if m.cfg != nil && m.cfg.Revoker != nil {
-		return fmt.Errorf("task revoker not found")
+	if m.cfg == nil || m.cfg.Revoker == nil {
+		return fmt.Errorf("task revoker is required")
 	}
 
 	task.SetStatus(types.TaskStatusRevoke)
