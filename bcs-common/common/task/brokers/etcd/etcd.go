@@ -168,7 +168,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 		defer b.wg.Done()
 		defer cancel()
 
-		ticker := time.NewTicker(time.Second * 10)
+		ticker := time.NewTicker(time.Minute)
 		defer ticker.Stop()
 
 		for {

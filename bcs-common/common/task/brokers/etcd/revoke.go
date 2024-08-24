@@ -115,7 +115,7 @@ func (b *etcdBroker) listWatchRevoke(ctx context.Context) error {
 	}
 
 	// Watch
-	watchCtx, watchCancel := context.WithTimeout(ctx, time.Minute*10)
+	watchCtx, watchCancel := context.WithTimeout(ctx, time.Minute*60)
 	defer watchCancel()
 
 	watchOpts := []clientv3.OpOption{
