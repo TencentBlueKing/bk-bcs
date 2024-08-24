@@ -27,6 +27,7 @@ import (
 	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
 
+	irevoker "github.com/Tencent/bk-bcs/bcs-common/common/task/brokers/iface"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -208,6 +209,22 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 	return m.dispatchAt(task, stepName)
 }
 
+// Revoke revoke the task
+func (m *TaskManager) Revoke(task *types.Task) error {
+	revoker, ok := m.cfg.Broker.(irevoker.Revoker)
+	if !ok {
+		return types.ErrNotImplemented
+	}
+
+	task.SetStatus(types.TaskStatusRunning)
+	task.SetMessage("task retrying")
+
+	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
+		return err
+	}
+	return revoker.Revoke(context.Background(), task.TaskID)
+}
+
 // Dispatch dispatch task
 func (m *TaskManager) Dispatch(task *types.Task) error {
 	if err := task.Validate(); err != nil {
@@ -327,6 +344,14 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
 	defer stepCancel()
 
+	// task revoke
+	revokeCtx := context.TODO()
+	if m.cfg != nil && m.cfg.Broker != nil {
+		if revoker, ok := m.cfg.Broker.(irevoker.Revoker); ok {
+			revokeCtx = revoker.RevokeCtx(taskID)
+		}
+	}
+
 	// task timeout
 	t := state.task.GetStartTime()
 	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
@@ -380,10 +405,19 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 		return retErr
 
+	case <-revokeCtx.Done():
+		// task revoke
+		retErr := fmt.Errorf("task %s step %s has been revoke", taskID, step.GetName())
+		state.updateStepFailure(start, retErr, false)
+
+		// 取消指令, 不再重试
+		return retErr
+
 	case <-taskCtx.Done():
 		// task timeOut
 		retErr := fmt.Errorf("task %s exec timeout", taskID)
 		state.updateStepFailure(start, retErr, true)
+
 		// 整个任务结束
 		return retErr
 	}
