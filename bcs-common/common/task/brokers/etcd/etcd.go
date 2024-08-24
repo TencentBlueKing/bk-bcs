@@ -37,12 +37,11 @@ import (
 
 type etcdBroker struct {
 	common.Broker
-	ctx           context.Context
-	client        *clientv3.Client
-	wg            sync.WaitGroup
-	assignMap     map[string]bool
-	mtx           sync.Mutex
-	revokeSignMap map[string]*revokeSign
+	ctx       context.Context
+	client    *clientv3.Client
+	wg        sync.WaitGroup
+	assignMap map[string]bool
+	mtx       sync.Mutex
 }
 
 // New ..
@@ -60,11 +59,10 @@ func New(ctx context.Context, conf *config.Config) (iface.Broker, error) {
 	}
 
 	broker := etcdBroker{
-		Broker:        common.NewBroker(conf),
-		ctx:           ctx,
-		client:        client,
-		assignMap:     map[string]bool{},
-		revokeSignMap: map[string]*revokeSign{},
+		Broker:    common.NewBroker(conf),
+		ctx:       ctx,
+		client:    client,
+		assignMap: map[string]bool{},
 	}
 
 	return &broker, nil
@@ -158,31 +156,6 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				err := b.handleDelayedTask(ctx)
 				if err != nil {
 					log.ERROR.Printf("handleDelayedTask err: %s", err)
-				}
-			}
-		}
-	}()
-
-	b.wg.Add(1)
-	go func() {
-		defer b.wg.Done()
-		defer cancel()
-
-		ticker := time.NewTicker(time.Minute)
-		defer ticker.Stop()
-
-		for {
-			select {
-			// A way to stop this goroutine from b.StopConsuming
-			case <-b.GetStopChan():
-				return
-
-			case <-ticker.C:
-				b.expireRevokeSign()
-
-				err := b.listWatchRevoke(ctx)
-				if err != nil {
-					log.ERROR.Printf("list and watch revoke err: %s", err)
 				}
 			}
 		}

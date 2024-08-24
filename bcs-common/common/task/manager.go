@@ -27,7 +27,7 @@ import (
 	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
 
-	irevoker "github.com/Tencent/bk-bcs/bcs-common/common/task/brokers/iface"
+	irevoker "github.com/Tencent/bk-bcs/bcs-common/common/task/revokers/iface"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -64,6 +64,7 @@ type ManagerConfig struct {
 	WorkerNum    int
 	Broker       ibroker.Broker
 	Backend      ibackend.Backend
+	Revoker      irevoker.Revoker
 	Lock         ilock.Lock
 	Store        istore.Store
 	ServerConfig *config.Config
@@ -212,9 +213,9 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 
 // Revoke revoke the task
 func (m *TaskManager) Revoke(task *types.Task) error {
-	revoker, ok := m.cfg.Broker.(irevoker.Revoker)
-	if !ok {
-		return types.ErrNotImplemented
+	// task revoke
+	if m.cfg != nil && m.cfg.Revoker != nil {
+		return fmt.Errorf("task revoker not found")
 	}
 
 	task.SetStatus(types.TaskStatusRevoke)
@@ -223,7 +224,7 @@ func (m *TaskManager) Revoke(task *types.Task) error {
 	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
 		return err
 	}
-	return revoker.Revoke(context.Background(), task.TaskID)
+	return m.cfg.Revoker.Revoke(context.Background(), task.TaskID)
 }
 
 // Dispatch dispatch task
@@ -346,10 +347,8 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	// task revoke
 	revokeCtx := context.TODO()
-	if m.cfg != nil && m.cfg.Broker != nil {
-		if revoker, ok := m.cfg.Broker.(irevoker.Revoker); ok {
-			revokeCtx = revoker.RevokeCtx(taskID)
-		}
+	if m.cfg != nil && m.cfg.Revoker != nil {
+		revokeCtx = m.cfg.Revoker.RevokeCtx(taskID)
 	}
 
 	// task timeout

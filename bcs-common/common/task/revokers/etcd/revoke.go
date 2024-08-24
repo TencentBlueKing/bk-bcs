@@ -34,7 +34,7 @@ type revokeSign struct {
 }
 
 // Revoke etcd revoker send sign
-func (b *etcdBroker) Revoke(ctx context.Context, taskID string) error {
+func (b *etcdRevoker) Revoke(ctx context.Context, taskID string) error {
 	key := revokePrefix + "/" + taskID
 
 	// 2分钟自动过期
@@ -52,7 +52,7 @@ func (b *etcdBroker) Revoke(ctx context.Context, taskID string) error {
 }
 
 // RevokeCtx etcd revoker ctx
-func (b *etcdBroker) RevokeCtx(taskID string) context.Context {
+func (b *etcdRevoker) RevokeCtx(taskID string) context.Context {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 
@@ -74,7 +74,7 @@ func (b *etcdBroker) RevokeCtx(taskID string) context.Context {
 	return sign.ctx
 }
 
-func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
+func (b *etcdRevoker) tryRevoke(kv *mvccpb.KeyValue) {
 	key := string(kv.Key)
 	taskID := filepath.Base(key)
 
@@ -99,7 +99,7 @@ func (b *etcdBroker) tryRevoke(kv *mvccpb.KeyValue) {
 	}
 }
 
-func (b *etcdBroker) listWatchRevoke(ctx context.Context) error {
+func (b *etcdRevoker) listWatchRevoke(ctx context.Context) error {
 	// List
 	listCtx, listCancel := context.WithTimeout(ctx, time.Second*10)
 	defer listCancel()
@@ -140,7 +140,7 @@ func (b *etcdBroker) listWatchRevoke(ctx context.Context) error {
 	return nil
 }
 
-func (b *etcdBroker) expireRevokeSign() {
+func (b *etcdRevoker) expireRevokeSign() {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 
