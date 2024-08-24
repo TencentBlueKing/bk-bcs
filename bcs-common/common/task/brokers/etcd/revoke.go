@@ -36,7 +36,13 @@ type revokeSign struct {
 func (b *etcdBroker) Revoke(ctx context.Context, taskID string) error {
 	key := revokePrefix + "/" + taskID
 
-	_, err := b.client.Put(ctx, key, time.Now().Format(time.RFC3339))
+	// 2分钟自动过期
+	lease, err := b.client.Grant(ctx, int64(time.Second*120))
+	if err != nil {
+		return err
+	}
+
+	_, err = b.client.Put(ctx, key, time.Now().Format(time.RFC3339), clientv3.WithLease(lease.ID))
 	if err != nil {
 		return err
 	}
