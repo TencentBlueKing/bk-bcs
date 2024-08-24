@@ -217,8 +217,8 @@ func (m *TaskManager) Revoke(task *types.Task) error {
 		return types.ErrNotImplemented
 	}
 
-	task.SetStatus(types.TaskStatusRunning)
-	task.SetMessage("task retrying")
+	task.SetStatus(types.TaskStatusRevoke)
+	task.SetMessage("task revoked")
 
 	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
 		return err
