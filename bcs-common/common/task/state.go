@@ -83,8 +83,11 @@ func NewState(task *types.Task, stepName string) *State {
 // isTaskTerminated is terminated
 func (s *State) isTaskTerminated() bool {
 	status := s.task.GetStatus()
-	if status == types.TaskStatusFailure || status == types.TaskStatusForceTerminate ||
-		status == types.TaskStatusTimeout || status == types.TaskStatusSuccess {
+	if status == types.TaskStatusFailure ||
+		status == types.TaskStatusSuccess ||
+		status == types.TaskStatusForceTerminate ||
+		status == types.TaskStatusRevoked ||
+		status == types.TaskStatusTimeout {
 		return true
 	}
 	return false
