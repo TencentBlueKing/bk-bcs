@@ -60,6 +60,7 @@ type TaskManager struct { // nolint
 // ManagerConfig options for manager
 type ManagerConfig struct {
 	ModuleName   string
+	WorkerName   string
 	WorkerNum    int
 	Broker       ibroker.Broker
 	Backend      ibackend.Backend
@@ -118,7 +119,7 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		return err
 	}
 
-	if err := m.initWorker(cfg.WorkerNum); err != nil {
+	if err := m.initWorker(cfg.WorkerName, cfg.WorkerNum); err != nil {
 		return err
 	}
 
@@ -146,13 +147,13 @@ func (m *TaskManager) initServer() error {
 }
 
 // register step workers and init workers
-func (m *TaskManager) initWorker(workerNum int) error {
+func (m *TaskManager) initWorker(workerName string, workerNum int) error {
 	// register all workers
 	if err := m.registerStepWorkers(); err != nil {
 		return fmt.Errorf("register workers failed, err: %s", err.Error())
 	}
 
-	m.worker = m.server.NewWorker("", workerNum)
+	m.worker = m.server.NewWorker(workerName, workerNum)
 
 	preTaskHandler := func(signature *tasks.Signature) {
 		log.INFO.Printf("start task[%s] handler for: %s", signature.UUID, signature.Name)
