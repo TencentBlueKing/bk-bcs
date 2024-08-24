@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-// Package iface defines the interface for a task broker
+// Package iface defines the interface for a task revocation
 package iface
 
 import (
