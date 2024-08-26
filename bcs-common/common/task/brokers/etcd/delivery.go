@@ -107,14 +107,16 @@ func (d *deliver) assign(key string, node string) error {
 	go func() {
 		defer aliveCancel()
 
-		select {
-		case <-d.ctx.Done():
-			return
-		case <-aliveCtx.Done():
-			return
-		case _, ok := <-keepRespCh:
-			if !ok {
+		for {
+			select {
+			case <-d.ctx.Done():
 				return
+			case <-aliveCtx.Done():
+				return
+			case _, ok := <-keepRespCh:
+				if !ok {
+					return
+				}
 			}
 		}
 	}()
