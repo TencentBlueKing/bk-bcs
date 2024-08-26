@@ -13,9 +13,11 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -24,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
 func init() {
@@ -186,11 +189,41 @@ func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGro
 }
 
 // UpdateDesiredNodes update nodegroup desired node
-func (ng *NodeGroup) UpdateDesiredNodes(desiredNode uint32, group *proto.NodeGroup,
+func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*cloudprovider.ScalingResponse, error) {
-	// awsCloud支持连续扩容, 因此直接返回想扩容的节点数
+	if group == nil || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	taskType := cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode)
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid":   opt.Cluster.ClusterID,
+		"tasktype":    taskType,
+		"nodegroupid": group.NodeGroupID,
+		"status":      cloudprovider.TaskStatusRunning,
+	})
+	taskList, err := cloudprovider.GetStorageModel().ListTask(context.Background(), cond, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("UpdateDesiredNodes failed: %v", err)
+		return nil, err
+	}
+	if len(taskList) != 0 {
+		return nil, fmt.Errorf("gke task(%d) %s is still running", len(taskList), taskType)
+	}
+
+	needScaleOutNodes := desired - group.GetAutoScaling().GetDesiredSize()
+
+	blog.Infof("cluster[%s] nodeGroup[%s] current nodes[%d] desired nodes[%d] needNodes[%s]",
+		group.ClusterID, group.NodeGroupID, group.GetAutoScaling().GetDesiredSize(), desired, needScaleOutNodes)
+
+	if desired <= group.GetAutoScaling().GetDesiredSize() {
+		return nil, fmt.Errorf("NodeGroup %s current nodes %d larger than or equel to desired %d nodes",
+			group.Name, group.GetAutoScaling().GetDesiredSize(), desired)
+	}
+
 	return &cloudprovider.ScalingResponse{
-		ScalingUp: desiredNode,
+		ScalingUp: needScaleOutNodes,
 	}, nil
 }
 
