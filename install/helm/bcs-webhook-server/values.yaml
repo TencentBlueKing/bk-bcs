@@ -5,6 +5,10 @@
 plugins:
   dbpriv:
     enabled: false
+    servicePort: 443
+    serviceServerPort: 8089
+    dbmOptimizeEnabled: true
+    ticketTimer: 60
   imageloader:
     enabled: true
   randhostport:

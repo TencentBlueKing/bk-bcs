@@ -91,6 +91,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetClustersMetaData",
+			Path:    []string{"/clustermanager/v1/clusters/-/meta"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListNodesInCluster",
 			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 			Method:  []string{"GET"},
@@ -135,6 +141,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		{
 			Name:    "ClusterManager.AddSubnetToCluster",
 			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.SwitchClusterUnderlayNetwork",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/networks/underlay"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -421,6 +433,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.UpdateGroupAsTimeRange",
+			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/timerange"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 			Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 			Method:  []string{"GET"},
@@ -631,6 +649,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetServiceRoles",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/serviceroles"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetResourceGroups",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/resourcegroups"},
 			Method:  []string{"GET"},
@@ -735,6 +759,18 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 		{
 			Name:    "ClusterManager.ListOperationLogs",
 			Path:    []string{"/clustermanager/v1/operationlogs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListTaskStepLogs",
+			Path:    []string{"/clustermanager/v1/tasksteplogs"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "ClusterManager.ListTaskRecords",
+			Path:    []string{"/clustermanager/v1/taskrecords"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -880,6 +916,7 @@ type ClusterManagerService interface {
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...client.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...client.CallOption) (*DeleteNodesResponse, error)
 	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...client.CallOption) (*BatchDeleteClusterNodesResponse, error)
+	GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, opts ...client.CallOption) (*GetClustersMetaDataResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
@@ -888,6 +925,7 @@ type ClusterManagerService interface {
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error)
+	SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...client.CallOption) (*SwitchClusterUnderlayNetworkResp, error)
 	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...client.CallOption) (*CreateVirtualClusterResp, error)
 	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...client.CallOption) (*DeleteVirtualClusterResp, error)
 	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...client.CallOption) (*UpdateVirtualClusterQuotaResp, error)
@@ -941,6 +979,7 @@ type ClusterManagerService interface {
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...client.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...client.CallOption) (*UpdateGroupDesiredSizeResponse, error)
 	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...client.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
+	UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, opts ...client.CallOption) (*UpdateGroupAsTimeRangeResponse, error)
 	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error)
 	TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...client.CallOption) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
@@ -982,6 +1021,7 @@ type ClusterManagerService interface {
 	ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...client.CallOption) (*ListCloudAccountPermResponse, error)
 	VerifyCloudAccount(ctx context.Context, in *VerifyCloudAccountRequest, opts ...client.CallOption) (*VerifyCloudAccountResponse, error)
 	// Cloud Resource management
+	GetServiceRoles(ctx context.Context, in *GetServiceRolesRequest, opts ...client.CallOption) (*GetServiceRolesResponse, error)
 	GetResourceGroups(ctx context.Context, in *GetResourceGroupsRequest, opts ...client.CallOption) (*GetResourceGroupsResponse, error)
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...client.CallOption) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...client.CallOption) (*GetCloudRegionZonesResponse, error)
@@ -1001,6 +1041,10 @@ type ClusterManagerService interface {
 	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error)
+	// Task Step logs
+	ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error)
+	// Task records
+	ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, opts ...client.CallOption) (*ListTaskRecordsResponse, error)
 	// CleanDbHistoryData clean DB history data
 	CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...client.CallOption) (*CleanDbHistoryDataResponse, error)
 	// ** ResourceSchema **
@@ -1141,6 +1185,16 @@ func (c *clusterManagerService) BatchDeleteNodesFromCluster(ctx context.Context,
 	return out, nil
 }
 
+func (c *clusterManagerService) GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, opts ...client.CallOption) (*GetClustersMetaDataResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetClustersMetaData", in)
+	out := new(GetClustersMetaDataResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...client.CallOption) (*ListNodesInClusterResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodesInCluster", in)
 	out := new(ListNodesInClusterResponse)
@@ -1214,6 +1268,16 @@ func (c *clusterManagerService) ListCommonCluster(ctx context.Context, in *ListC
 func (c *clusterManagerService) AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.AddSubnetToCluster", in)
 	out := new(AddSubnetToClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...client.CallOption) (*SwitchClusterUnderlayNetworkResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.SwitchClusterUnderlayNetwork", in)
+	out := new(SwitchClusterUnderlayNetworkResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1691,6 +1755,16 @@ func (c *clusterManagerService) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *clusterManagerService) UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, opts ...client.CallOption) (*UpdateGroupAsTimeRangeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateGroupAsTimeRange", in)
+	out := new(UpdateGroupAsTimeRangeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...client.CallOption) (*GetExternalNodeScriptResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetExternalNodeScriptByGroupID", in)
 	out := new(GetExternalNodeScriptResponse)
@@ -2041,6 +2115,16 @@ func (c *clusterManagerService) VerifyCloudAccount(ctx context.Context, in *Veri
 	return out, nil
 }
 
+func (c *clusterManagerService) GetServiceRoles(ctx context.Context, in *GetServiceRolesRequest, opts ...client.CallOption) (*GetServiceRolesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetServiceRoles", in)
+	out := new(GetServiceRolesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetResourceGroups(ctx context.Context, in *GetResourceGroupsRequest, opts ...client.CallOption) (*GetResourceGroupsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetResourceGroups", in)
 	out := new(GetResourceGroupsResponse)
@@ -2214,6 +2298,26 @@ func (c *clusterManagerService) ListCloudRuntimeInfo(ctx context.Context, in *Li
 func (c *clusterManagerService) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...client.CallOption) (*ListOperationLogsResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListOperationLogs", in)
 	out := new(ListOperationLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...client.CallOption) (*ListTaskStepLogsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskStepLogs", in)
+	out := new(ListTaskStepLogsResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, opts ...client.CallOption) (*ListTaskRecordsResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListTaskRecords", in)
+	out := new(ListTaskRecordsResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2444,6 +2548,7 @@ type ClusterManagerHandler interface {
 	AddNodesToCluster(context.Context, *AddNodesRequest, *AddNodesResponse) error
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest, *DeleteNodesResponse) error
 	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest, *BatchDeleteClusterNodesResponse) error
+	GetClustersMetaData(context.Context, *GetClustersMetaDataRequest, *GetClustersMetaDataResponse) error
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest, *ListNodesInClusterResponse) error
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
@@ -2452,6 +2557,7 @@ type ClusterManagerHandler interface {
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	AddSubnetToCluster(context.Context, *AddSubnetToClusterReq, *AddSubnetToClusterResp) error
+	SwitchClusterUnderlayNetwork(context.Context, *SwitchClusterUnderlayNetworkReq, *SwitchClusterUnderlayNetworkResp) error
 	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq, *CreateVirtualClusterResp) error
 	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq, *DeleteVirtualClusterResp) error
 	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq, *UpdateVirtualClusterQuotaResp) error
@@ -2505,6 +2611,7 @@ type ClusterManagerHandler interface {
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest, *UpdateGroupDesiredNodeResponse) error
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest, *UpdateGroupDesiredSizeResponse) error
 	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest, *UpdateGroupMinMaxSizeResponse) error
+	UpdateGroupAsTimeRange(context.Context, *UpdateGroupAsTimeRangeRequest, *UpdateGroupAsTimeRangeResponse) error
 	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest, *GetExternalNodeScriptResponse) error
 	TransNodeGroupToNodeTemplate(context.Context, *TransNodeGroupToNodeTemplateRequest, *TransNodeGroupToNodeTemplateResponse) error
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
@@ -2546,6 +2653,7 @@ type ClusterManagerHandler interface {
 	ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest, *ListCloudAccountPermResponse) error
 	VerifyCloudAccount(context.Context, *VerifyCloudAccountRequest, *VerifyCloudAccountResponse) error
 	// Cloud Resource management
+	GetServiceRoles(context.Context, *GetServiceRolesRequest, *GetServiceRolesResponse) error
 	GetResourceGroups(context.Context, *GetResourceGroupsRequest, *GetResourceGroupsResponse) error
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest, *GetCloudRegionsResponse) error
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest, *GetCloudRegionZonesResponse) error
@@ -2565,6 +2673,10 @@ type ClusterManagerHandler interface {
 	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest, *ListOperationLogsResponse) error
+	// Task Step logs
+	ListTaskStepLogs(context.Context, *ListTaskStepLogsRequest, *ListTaskStepLogsResponse) error
+	// Task records
+	ListTaskRecords(context.Context, *ListTaskRecordsRequest, *ListTaskRecordsResponse) error
 	// CleanDbHistoryData clean DB history data
 	CleanDbHistoryData(context.Context, *CleanDbHistoryDataRequest, *CleanDbHistoryDataResponse) error
 	// ** ResourceSchema **
@@ -2614,6 +2726,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		AddNodesToCluster(ctx context.Context, in *AddNodesRequest, out *AddNodesResponse) error
 		DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, out *DeleteNodesResponse) error
 		BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, out *BatchDeleteClusterNodesResponse) error
+		GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, out *GetClustersMetaDataResponse) error
 		ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
@@ -2622,6 +2735,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error
+		SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, out *SwitchClusterUnderlayNetworkResp) error
 		CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error
 		DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, out *DeleteVirtualClusterResp) error
 		UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, out *UpdateVirtualClusterQuotaResp) error
@@ -2669,6 +2783,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, out *UpdateGroupDesiredNodeResponse) error
 		UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, out *UpdateGroupDesiredSizeResponse) error
 		UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, out *UpdateGroupMinMaxSizeResponse) error
+		UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, out *UpdateGroupAsTimeRangeResponse) error
 		GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error
 		TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, out *TransNodeGroupToNodeTemplateResponse) error
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
@@ -2704,6 +2819,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, out *ListCloudAccountResponse) error
 		ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, out *ListCloudAccountPermResponse) error
 		VerifyCloudAccount(ctx context.Context, in *VerifyCloudAccountRequest, out *VerifyCloudAccountResponse) error
+		GetServiceRoles(ctx context.Context, in *GetServiceRolesRequest, out *GetServiceRolesResponse) error
 		GetResourceGroups(ctx context.Context, in *GetResourceGroupsRequest, out *GetResourceGroupsResponse) error
 		GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, out *GetCloudRegionsResponse) error
 		GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, out *GetCloudRegionZonesResponse) error
@@ -2722,6 +2838,8 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
 		ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error
+		ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error
+		ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, out *ListTaskRecordsResponse) error
 		CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error
 		ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, out *CommonListResp) error
 		GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, out *CommonResp) error
@@ -2803,6 +2921,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetClustersMetaData",
+		Path:    []string{"/clustermanager/v1/clusters/-/meta"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodesInCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/node"},
 		Method:  []string{"GET"},
@@ -2847,6 +2971,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.AddSubnetToCluster",
 		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/subnets"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.SwitchClusterUnderlayNetwork",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/networks/underlay"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -3133,6 +3263,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateGroupAsTimeRange",
+		Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/timerange"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetExternalNodeScriptByGroupID",
 		Path:    []string{"/clustermanager/v1/nodegroups/{nodeGroupID}/script"},
 		Method:  []string{"GET"},
@@ -3343,6 +3479,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetServiceRoles",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/serviceroles"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetResourceGroups",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/resourcegroups"},
 		Method:  []string{"GET"},
@@ -3447,6 +3589,18 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListOperationLogs",
 		Path:    []string{"/clustermanager/v1/operationlogs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTaskStepLogs",
+		Path:    []string{"/clustermanager/v1/tasksteplogs"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListTaskRecords",
+		Path:    []string{"/clustermanager/v1/taskrecords"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3619,6 +3773,10 @@ func (h *clusterManagerHandler) BatchDeleteNodesFromCluster(ctx context.Context,
 	return h.ClusterManagerHandler.BatchDeleteNodesFromCluster(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, out *GetClustersMetaDataResponse) error {
+	return h.ClusterManagerHandler.GetClustersMetaData(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, out *ListNodesInClusterResponse) error {
 	return h.ClusterManagerHandler.ListNodesInCluster(ctx, in, out)
 }
@@ -3649,6 +3807,10 @@ func (h *clusterManagerHandler) ListCommonCluster(ctx context.Context, in *ListC
 
 func (h *clusterManagerHandler) AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error {
 	return h.ClusterManagerHandler.AddSubnetToCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, out *SwitchClusterUnderlayNetworkResp) error {
+	return h.ClusterManagerHandler.SwitchClusterUnderlayNetwork(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, out *CreateVirtualClusterResp) error {
@@ -3839,6 +4001,10 @@ func (h *clusterManagerHandler) UpdateGroupMinMaxSize(ctx context.Context, in *U
 	return h.ClusterManagerHandler.UpdateGroupMinMaxSize(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, out *UpdateGroupAsTimeRangeResponse) error {
+	return h.ClusterManagerHandler.UpdateGroupAsTimeRange(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, out *GetExternalNodeScriptResponse) error {
 	return h.ClusterManagerHandler.GetExternalNodeScriptByGroupID(ctx, in, out)
 }
@@ -3979,6 +4145,10 @@ func (h *clusterManagerHandler) VerifyCloudAccount(ctx context.Context, in *Veri
 	return h.ClusterManagerHandler.VerifyCloudAccount(ctx, in, out)
 }
 
+func (h *clusterManagerHandler) GetServiceRoles(ctx context.Context, in *GetServiceRolesRequest, out *GetServiceRolesResponse) error {
+	return h.ClusterManagerHandler.GetServiceRoles(ctx, in, out)
+}
+
 func (h *clusterManagerHandler) GetResourceGroups(ctx context.Context, in *GetResourceGroupsRequest, out *GetResourceGroupsResponse) error {
 	return h.ClusterManagerHandler.GetResourceGroups(ctx, in, out)
 }
@@ -4049,6 +4219,14 @@ func (h *clusterManagerHandler) ListCloudRuntimeInfo(ctx context.Context, in *Li
 
 func (h *clusterManagerHandler) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, out *ListOperationLogsResponse) error {
 	return h.ClusterManagerHandler.ListOperationLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, out *ListTaskStepLogsResponse) error {
+	return h.ClusterManagerHandler.ListTaskStepLogs(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, out *ListTaskRecordsResponse) error {
+	return h.ClusterManagerHandler.ListTaskRecords(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, out *CleanDbHistoryDataResponse) error {

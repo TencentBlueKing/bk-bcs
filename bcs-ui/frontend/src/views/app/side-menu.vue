@@ -61,13 +61,11 @@ import $store from '@/store';
 export default defineComponent({
   name: 'SideMenu',
   setup() {
-    const { menus, disabledMenuIDs, flatLeafMenus } = useMenu();
+    const { disabledMenuIDs, leafMenus } = useMenu();
     // 左侧菜单
     const activeMenu = ref<Partial<IMenu>>({});
     // 一级菜单
     const activeNav = ref<Partial<IMenu>>({});
-    // 所有叶子菜单项
-    const leafMenus = computed(() => flatLeafMenus(menus.value));
     // 当前路由
     const route = computed(() => toRef(reactive($router), 'currentRoute').value);
 

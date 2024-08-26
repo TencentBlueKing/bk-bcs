@@ -13,6 +13,7 @@
 package template
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -21,7 +22,11 @@ import (
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 
+	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
+	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -81,10 +86,10 @@ func buildTemplateSetsAnnotation(templates []*clusterRes.TemplateID) string {
 }
 
 // parseMultiTemplateFileVar parse template file variables from multiple templates
-func parseMultiTemplateFileVar(templates []string) []string {
+func parseMultiTemplateFileVar(templates []entity.TemplateDeploy) []string {
 	vars := make([]string, 0)
 	for _, template := range templates {
-		vars = append(vars, parseTemplateFileVar(template)...)
+		vars = append(vars, parseTemplateFileVar(template.Content)...)
 	}
 	return vars
 }
@@ -118,7 +123,8 @@ func replaceTemplateFileVar(template string, values map[string]string) string {
 }
 
 // patchTemplateAnnotations patch template annotations
-func patchTemplateAnnotations(manifest map[string]interface{}, username string) map[string]interface{} {
+func patchTemplateAnnotations(manifest map[string]interface{}, username, templateSpace, templateName,
+	templateVersion string) map[string]interface{} {
 	annos := mapx.GetMap(manifest, "metadata.annotations")
 	if len(annos) == 0 {
 		_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{})
@@ -126,15 +132,18 @@ func patchTemplateAnnotations(manifest map[string]interface{}, username string) 
 	if mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}) == "" {
 		_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.CreatorAnnoKey}, username)
 	}
-	if mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}) == "" {
-		_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}, username)
-	}
-	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateSourceType}, "template")
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}, username)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateSourceType},
+		resCsts.TemplateSourceTypeValue)
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey}, fmt.Sprintf("%s/%s",
+		templateSpace, templateName))
+	_ = mapx.SetItems(manifest, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey}, templateVersion)
 	return manifest
 }
 
 // convertManifestToString convert manifest to string
-func convertManifestToString(manifests []map[string]interface{}) (interface{}, error) {
+func convertManifestToString(
+	ctx context.Context, manifests []map[string]interface{}, clusterID string) (interface{}, error) {
 	result := make([]interface{}, 0)
 	for _, v := range manifests {
 		name := mapx.GetStr(v, "metadata.name")
@@ -143,10 +152,13 @@ func convertManifestToString(manifests []map[string]interface{}) (interface{}, e
 		if err != nil {
 			return nil, err
 		}
+		// 获取线上的版本
+		d2 := getK8sResource(ctx, kind, name, clusterID, v)
 		result = append(result, map[string]interface{}{
-			"name":    name,
-			"kind":    kind,
-			"content": string(d),
+			"name":            name,
+			"kind":            kind,
+			"content":         string(d),
+			"previousContent": d2,
 		})
 	}
 	return result, nil
@@ -154,4 +166,75 @@ func convertManifestToString(manifests []map[string]interface{}) (interface{}, e
 
 func isNSRequired(kind string) bool {
 	return !slice.StringInSlice(kind, []string{resCsts.PV, resCsts.SC, resCsts.ClusterRole, resCsts.ClusterRoleBinding})
+}
+
+// 获取k8s线上资源
+func getK8sResource(ctx context.Context, kind, name, clusterID string, v map[string]interface{}) string {
+	// deploy templates
+	clusterConf := res.NewClusterConf(clusterID)
+	// 获取线上的版本
+	groupVersion := mapx.GetStr(v, "apiVersion")
+	namespace := mapx.GetStr(v, "metadata.namespace")
+	if kind == "" {
+		return ""
+	}
+	k8sRes, err := res.GetGroupVersionResource(ctx, clusterConf, kind, groupVersion)
+	if err != nil {
+		// 报错不影响 preview 接口返回
+		klog.Errorf("get group version resource err: %v", err)
+		return ""
+	}
+	content, err := cli.NewResClient(clusterConf, k8sRes).Get(ctx, namespace, name, metav1.GetOptions{})
+	if err != nil {
+		// 报错不影响 preview 接口返回
+		klog.Errorf("new res client get err: %v", err)
+		return ""
+	}
+
+	// 裁剪线上版本内容
+	object := pruneResource(content.Object)
+
+	d2, err := yaml.Marshal(object)
+	if err != nil {
+		// 报错不影响 preview 接口返回
+		klog.Errorf("yaml marshal err: %v", err)
+		return ""
+	}
+	return string(d2)
+}
+
+// 裁剪资源，不需要的字段去除
+func pruneResource(m map[string]interface{}) map[string]interface{} {
+	// 需要删除的map key字段
+	pruneKey := [][]string{
+		{"metadata", "generation"},
+		{"metadata", "creationTimestamp"},
+		{"metadata", "resourceVersion"},
+		{"metadata", "uid"},
+		{"metadata", "managedFields"},
+		{"spec", "template", "metadata", "creationTimestamp"},
+		{"spec", "template", "spec", "schedulerName"},
+		{"spec", "template", "spec", "securityContext"},
+		{"status"},
+	}
+	// 仅能删除map[string] interface{}类型key值
+	// 无法对[]interface{}里面的字段进行删除
+	for _, value := range pruneKey {
+		lastKey := m
+		isDelete := true
+		for i := 0; i < len(value)-1; i++ {
+			l, ok := lastKey[value[i]].(map[string]interface{})
+			// 只要取不出就直接忽略这个key值
+			if !ok {
+				isDelete = false
+				break
+			}
+			lastKey = l
+		}
+		if isDelete {
+			delete(lastKey, value[len(value)-1])
+		}
+	}
+
+	return m
 }

@@ -23,12 +23,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-)
-
-const (
-	statusUpdateInterval = 30 * time.Second
 )
 
 // CloudCollector prometheus metric collector for cloud loadbalance
@@ -38,16 +35,20 @@ type CloudCollector struct {
 	k8sClient      client.Client
 	mutex          sync.Mutex
 	cache          StatusCache
+
+	statusUpdateIntervalSecs int
 }
 
 // NewCloudCollector create cloud collector
-func NewCloudCollector(cloudClient cloud.LoadBalance, k8sClient client.Client) *CloudCollector {
+func NewCloudCollector(cloudClient cloud.LoadBalance, k8sClient client.Client,
+	statusUpdateIntervalSecs int) *CloudCollector {
 	return &CloudCollector{
 		banckendMetric: newBackendHealthMetric(
 			namespaceForCloudBalance, "backend_status", "status for backend health", nil),
-		cloudClient: cloudClient,
-		k8sClient:   k8sClient,
-		cache:       NewStatusCache(),
+		cloudClient:              cloudClient,
+		k8sClient:                k8sClient,
+		cache:                    NewStatusCache(),
+		statusUpdateIntervalSecs: statusUpdateIntervalSecs,
 	}
 }
 
@@ -109,7 +110,10 @@ func (cc *CloudCollector) getLbMap(
 
 // Start run
 func (cc *CloudCollector) Start() {
-	tiker := time.NewTicker(statusUpdateInterval)
+	if cc.statusUpdateIntervalSecs == 0 {
+		return
+	}
+	tiker := time.NewTicker(time.Duration(cc.statusUpdateIntervalSecs) * time.Second)
 	for {
 		select {
 		case <-tiker.C:

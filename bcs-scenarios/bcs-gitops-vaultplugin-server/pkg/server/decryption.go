@@ -35,6 +35,8 @@ import (
 
 type decryptionManifestRequest struct {
 	Project   string   `json:"project"`
+	AppName   string   `json:"appName"`
+	Repos     []string `json:"repos"`
 	Manifests []string `json:"manifests"`
 }
 
@@ -50,12 +52,12 @@ func (s *Server) routerDecryptManifest(w http.ResponseWriter, r *http.Request) {
 			errors.Wrapf(err, "decryption manifest decode request body failed"))
 		return
 	}
-	if req.Manifests == nil || req.Project == "" {
-		s.responseError(r, w, http.StatusBadRequest,
-			errors.Errorf("request 'manifests' or 'project' required"))
+	projectName, err := s.getProjectNameFromDecryptRequest(r.Context(), req)
+	if err != nil {
+		s.responseError(r, w, http.StatusBadRequest, errors.Wrapf(err, "get project name from decrypt request failed"))
 		return
 	}
-	projectName := req.Project
+
 	secretKey, err := s.getSecretKeyForProject(r.Context(), projectName)
 	if err != nil {
 		s.responseError(r, w, http.StatusBadRequest,
@@ -74,6 +76,46 @@ func (s *Server) routerDecryptManifest(w http.ResponseWriter, r *http.Request) {
 	// nolint
 	bs, _ := json.Marshal(resp)
 	s.responseDirect(w, bs)
+}
+
+func (s *Server) getProjectNameFromDecryptRequest(ctx context.Context, req *decryptionManifestRequest) (string, error) {
+	if req.Project != "" {
+		return req.Project, nil
+	}
+	blog.Warnf("RequestID[%s] decrypt request project is empty: %v", requestID(ctx), *req)
+	var project string
+	defer func() {
+		blog.Infof("RequestID[%s] got project: %s", requestID(ctx), project)
+	}()
+	if req.AppName != "" {
+		argoApp, err := s.argoStore.GetApplication(ctx, req.AppName)
+		if err != nil {
+			return "", errors.Wrapf(err, "get application '%s' failed", req.AppName)
+		}
+		if argoApp == nil {
+			return "", errors.Errorf("application %s not found", req.AppName)
+		}
+		project = argoApp.Spec.Project
+		return project, nil
+	}
+	if len(req.Repos) != 0 {
+		for _, repo := range req.Repos {
+			argoRepo, err := s.argoStore.GetRepository(ctx, repo)
+			if err != nil {
+				return "", errors.Wrapf(err, "get repo '%s' failed", repo)
+			}
+			if argoRepo == nil {
+				blog.Warnf("RequestID[%s] repository '%s' not found", requestID(ctx), repo)
+				continue
+			}
+			project = argoRepo.Project
+		}
+		if project == "" {
+			return "", errors.Errorf("get project with repos '%v' not found", req.Repos)
+		}
+		return project, nil
+	}
+	return "", errors.Errorf("request param 'project' or 'appName' or 'repos' required")
 }
 
 func (s *Server) getSecretKeyForProject(ctx context.Context, project string) (string, error) {

@@ -105,6 +105,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.BcsAPI = &op.BcsAPI
 	userMgrConfig.Encrypt = op.Encrypt
 	userMgrConfig.Activity = op.Activity
+	userMgrConfig.EnableTokenSync = op.EnableTokenSync
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))

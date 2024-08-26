@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/envmanage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/template"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templatespace"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templatespacecollect"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/templateversion"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -53,7 +54,7 @@ func (h *Handler) GetTemplateSpace(
 func (h *Handler) ListTemplateSpace(
 	ctx context.Context, in *clusterRes.ListTemplateSpaceReq, out *clusterRes.CommonListResp) error {
 	action := templatespace.NewTemplateSpaceAction(h.model)
-	data, err := action.List(ctx)
+	data, err := action.List(ctx, in.Name)
 	if err != nil {
 		return err
 	}
@@ -99,6 +100,45 @@ func (h *Handler) DeleteTemplateSpace(
 	return nil
 }
 
+// CopyTemplateSpace 复制模板文件文件夹
+func (h *Handler) CopyTemplateSpace(
+	ctx context.Context, in *clusterRes.CopyTemplateSpaceReq, out *clusterRes.CommonResp) error {
+	action := templatespace.NewTemplateSpaceAction(h.model)
+	id, err := action.Copy(ctx, in.GetId())
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateTemplateSpaceCollect 创建模板文件文件夹收藏
+func (h *Handler) CreateTemplateSpaceCollect(
+	ctx context.Context, in *clusterRes.CreateTemplateSpaceCollectReq, out *clusterRes.CommonResp) error {
+	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
+	id, err := action.Create(ctx, in)
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteTemplateSpaceCollect 删除模板文件文件夹收藏
+func (h *Handler) DeleteTemplateSpaceCollect(
+	ctx context.Context, in *clusterRes.DeleteTemplateSpaceCollectReq, out *clusterRes.CommonResp) error {
+	action := templatespacecollect.NewTemplateSpaceCollectAction(h.model)
+	err := action.Delete(ctx, in.GetTemplateSpaceID())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetTemplateMetadata 获取模板文件元数据详情
 func (h *Handler) GetTemplateMetadata(
 	ctx context.Context, in *clusterRes.GetTemplateMetadataReq, out *clusterRes.CommonResp) error {
@@ -131,11 +171,11 @@ func (h *Handler) ListTemplateMetadata(
 func (h *Handler) CreateTemplateMetadata(
 	ctx context.Context, in *clusterRes.CreateTemplateMetadataReq, out *clusterRes.CommonResp) error {
 	action := template.NewTemplateAction(h.model)
-	id, err := action.Create(ctx, in)
+	id, versionID, err := action.Create(ctx, in)
 	if err != nil {
 		return err
 	}
-	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id}); err != nil {
+	if out.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"id": id, "versionID": versionID}); err != nil {
 		return err
 	}
 	return nil

@@ -39,6 +39,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	microGrpcServer "github.com/go-micro/plugins/v4/server/grpc"
@@ -414,6 +415,7 @@ func (hm *HelmManager) initMicro() error { // nolint
 			wrapper.ParseProjectIDWrapper,
 			authWrapper.AuthorizationFunc,
 			wrapper.NewAuditWrapper,
+			micro.NewTracingWrapper(),
 		),
 	)
 	svc.Init()

@@ -16,7 +16,10 @@ import (
 	"errors"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/enumor"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // CommitsColumns defines all the commits' columns.
@@ -61,16 +64,16 @@ func (c Commit) TableName() Name {
 }
 
 // ValidateCreate a commit related information when it be created.
-func (c Commit) ValidateCreate() error {
+func (c Commit) ValidateCreate(kit *kit.Kit) error {
 	if c.ID != 0 {
-		return errors.New("id should not be set")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "id should not be set"))
 	}
 
 	if c.Spec == nil {
-		return errors.New("spec should be set")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "spec should be set"))
 	}
 
-	if err := c.Spec.Validate(); err != nil {
+	if err := c.Spec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -119,24 +122,24 @@ type ReleasedCommitSpec struct {
 }
 
 // Validate commit specifics.
-func (c CommitSpec) Validate() error {
+func (c CommitSpec) Validate(kit *kit.Kit) error {
 	if c.ContentID <= 0 {
-		return errors.New("invalid commit spec's content id")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid commit spec's content id"))
 	}
 
 	if c.Content == nil {
-		return errors.New("commit spec's content is empty")
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "commit spec's content is empty"))
 	}
 
-	if err := validator.ValidateMemo(c.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, c.Memo, false); err != nil {
 		return err
 	}
 
-	return c.Content.Validate()
+	return c.Content.Validate(kit)
 }
 
 // Validate released commit specifics.
-func (c ReleasedCommitSpec) Validate() error {
+func (c ReleasedCommitSpec) Validate(kit *kit.Kit) error {
 	if c.ContentID <= 0 {
 		return errors.New("invalid commit spec's content id")
 	}
@@ -145,11 +148,11 @@ func (c ReleasedCommitSpec) Validate() error {
 		return errors.New("commit spec's content is empty")
 	}
 
-	if err := validator.ValidateMemo(c.Memo, false); err != nil {
+	if err := validator.ValidateMemo(kit, c.Memo, false); err != nil {
 		return err
 	}
 
-	return c.Content.Validate()
+	return c.Content.Validate(kit)
 }
 
 // CommitAttachmentColumns defines commit attachment's columns

@@ -278,7 +278,7 @@ func (t *Client) GetJobDetails(ctx context.Context, request *GetJobDetailRequest
 		GetJobDetailRequest: request,
 	}
 	data := &GetJobDetailData{}
-	uri := "/job/details/"
+	uri := fmt.Sprintf("/job/%d/details/", request.JobID)
 	baseResponse, err := t.SendRequest(ctx, http.MethodPost, uri, param, &data)
 	if err != nil {
 		return nil, err

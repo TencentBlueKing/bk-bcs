@@ -15,8 +15,11 @@ package templatespace
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -92,7 +95,7 @@ func (t *TemplateSpaceAction) Get(ctx context.Context, id string) (map[string]in
 }
 
 // List xxx
-func (t *TemplateSpaceAction) List(ctx context.Context) ([]map[string]interface{}, error) {
+func (t *TemplateSpaceAction) List(ctx context.Context, name string) ([]map[string]interface{}, error) {
 	if err := t.checkAccess(ctx); err != nil {
 		return nil, err
 	}
@@ -103,19 +106,46 @@ func (t *TemplateSpaceAction) List(ctx context.Context) ([]map[string]interface{
 	}
 
 	// 通过项目编码检索
-	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+	operatorM := operator.M{
 		entity.FieldKeyProjectCode: p.Code,
-	})
+	}
+	// 如果名称不为空，则通过文件夹名称模糊查询
+	if name != "" {
+		operatorM[entity.FieldKeyName] = operator.M{
+			"$regex": name,
+		}
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operatorM)
 
 	templateSpace, err := t.model.ListTemplateSpace(ctx, cond)
 	if err != nil {
 		return nil, err
 	}
 
-	m := make([]map[string]interface{}, 0)
-	for _, value := range templateSpace {
-		m = append(m, value.ToMap())
+	// 获取收藏的文件夹
+	collects, err := t.model.ListTemplateSpaceCollect(ctx, p.Code, ctxkey.GetUsernameFromCtx(ctx))
+	if err != nil {
+		return nil, err
 	}
+
+	m := make([]map[string]interface{}, 0)
+	topM := make([]map[string]interface{}, 0)
+	for _, value := range templateSpace {
+		fav := false
+		for _, v := range collects {
+			if value.ID.Hex() == v.TemplateSpaceID {
+				fav = true
+				value.Fav = true
+				topM = append(topM, value.ToMap())
+				break
+			}
+		}
+		if !fav {
+			m = append(m, value.ToMap())
+		}
+	}
+	m = append(topM, m...)
 	return m, nil
 }
 
@@ -257,4 +287,74 @@ func (t *TemplateSpaceAction) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+// Copy xxx
+func (t *TemplateSpaceAction) Copy(ctx context.Context, id string) (string, error) {
+	if err := t.checkAccess(ctx); err != nil {
+		return "", err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, id)
+	if err != nil {
+		return "", err
+	}
+
+	// 检验访问TemplateSpace 的权限
+	if templateSpace.ProjectCode != p.Code {
+		return "", errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
+	// 新生成文件夹名称
+	newSpaceName := templateSpace.Name + "_" + fmt.Sprintf("%d", time.Now().Unix())
+	// 旧文件夹名称须保留做查询
+	oldSpaceName := templateSpace.Name
+	templateSpace.Name = newSpaceName
+	// id重置，让底层重新生成
+	templateSpace.ID = primitive.NilObjectID
+
+	newId, err := t.model.CreateTemplateSpace(ctx, templateSpace)
+	if err != nil {
+		return "", err
+	}
+
+	// 通过项目编码、文件夹名称检索模板元数据及版本
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: oldSpaceName,
+	})
+	templates, err := t.model.ListTemplate(ctx, cond)
+	if err != nil {
+		return "", err
+	}
+
+	for _, template := range templates {
+		template.TemplateSpace = newSpaceName
+	}
+	// 批量创建模板元数据
+	err = t.model.CreateTemplateBatch(ctx, templates)
+	if err != nil {
+		return "", err
+	}
+
+	templateVersions, err := t.model.ListTemplateVersion(ctx, cond)
+	if err != nil {
+		return "", err
+	}
+
+	for _, templateVersion := range templateVersions {
+		templateVersion.TemplateSpace = newSpaceName
+	}
+
+	// 批量创建模板版本
+	err = t.model.CreateTemplateVersionBatch(ctx, templateVersions)
+	if err != nil {
+		return "", err
+	}
+	return newId, nil
 }

@@ -13,6 +13,7 @@
 package qcloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -54,7 +55,6 @@ func newtask() *Task {
 	task.works[createClusterShieldAlarmStep.StepMethod] = tasks.CreateClusterShieldAlarmTask
 	task.works[createTKEClusterStep.StepMethod] = tasks.CreateTkeClusterTask
 	task.works[checkTKEClusterStatusStep.StepMethod] = tasks.CheckTkeClusterStatusTask
-	task.works[enableTkeClusterVpcCniStep.StepMethod] = tasks.EnableTkeClusterVpcCniTask
 	task.works[checkCreateClusterNodeStatusStep.StepMethod] = tasks.CheckCreateClusterNodeStatusTask
 	task.works[registerManageClusterKubeConfigStep.StepMethod] = tasks.RegisterManageClusterKubeConfigTask
 	task.works[updateCreateClusterDBInfoStep.StepMethod] = tasks.UpdateCreateClusterDBInfoTask
@@ -66,7 +66,6 @@ func newtask() *Task {
 	// add node to cluster
 	task.works[modifyInstancesVpcStep.StepMethod] = tasks.ModifyInstancesVpcTask
 	task.works[checkInstanceStateStep.StepMethod] = tasks.CheckInstanceStateTask
-	task.works[addNodesShieldAlarmStep.StepMethod] = tasks.AddNodesShieldAlarmTask
 	task.works[addNodesToClusterStep.StepMethod] = tasks.AddNodesToClusterTask
 	task.works[checkAddNodesStatusStep.StepMethod] = tasks.CheckAddNodesStatusTask
 	task.works[updateAddNodeDBInfoStep.StepMethod] = tasks.UpdateNodeDBInfoTask
@@ -109,6 +108,11 @@ func newtask() *Task {
 	task.works[applyExternalNodeMachinesStep.StepMethod] = tasks.ApplyExternalNodeMachinesTask
 	task.works[checkExternalNodesEmptyStep.StepMethod] = tasks.CheckExternalNodesEmptyTask
 	// move nodes to nodeGroup task
+
+	// switch cluster vpc cni task
+	task.works[allocateClusterSubnetStep.StepMethod] = tasks.AllocateClusterSubnetTask
+	task.works[openClusterVpcCniStep.StepMethod] = tasks.OpenClusterVpcCniTask
+	task.works[closeClusterVpcCniStep.StepMethod] = tasks.CloseClusterVpcCniTask
 
 	return task
 }
@@ -232,9 +236,11 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		}
 	}
 
-	// step7: enable vpc-cni network mode when cluster enable vpc-cni
+	// step7: allocate vpc-cni subnet for cluster
+	createClusterTask.BuildAllocateSubnetTask(task)
+	// step8: enable vpc-cni network mode when cluster enable vpc-cni
 	createClusterTask.BuildEnableVpcCniStep(task)
-	// step8: update DB info by cluster data
+	// step9: update DB info by cluster data
 	createClusterTask.BuildUpdateTaskStatusStep(task)
 
 	// set current step
@@ -633,8 +639,9 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 	// step1: modify nodes vpc if need
 	addNodesTask.BuildModifyInstancesVpcStep(task)
 	addNodesTask.BuildCheckInstanceStateStep(task)
+	addNodesTask.BuildCheckNodeIpsInCmdbStep(task)
 	// step2: addNodes shield nodes alarm
-	addNodesTask.BuildShieldAlertStep(task)
+	common.BuildShieldAlertTaskStep(task, cls.GetClusterID())
 	// step3: addNodesToTKECluster add node to cluster
 	addNodesTask.BuildAddNodesToClusterStep(task)
 	// step4: check cluster add node status
@@ -1758,5 +1765,80 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	}
 	task.CurrentStep = task.StepSequence[0]
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
+	return task, nil
+}
+
+// BuildSwitchClusterNetworkTask build switch cluster network task
+func (t *Task) BuildSwitchClusterNetworkTask(
+	cls *proto.Cluster, subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
+	// validate request params
+	if cls == nil {
+		return nil, fmt.Errorf("BuildSwitchClusterNetworkTask cluster info empty")
+	}
+	if opt == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("BuildSwitchClusterNetworkTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskName:       cloudprovider.SwitchClusterUnderlayNetworkTask.String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchClusterUnderlayNetwork),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      cls.ClusterID,
+		ProjectID:      cls.ProjectID,
+		Creator:        opt.Operator,
+		Updater:        opt.Operator,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+
+	// generate taskName
+	taskName := fmt.Sprintf(switchClusterNetworkTemplate, cls.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+	task.CommonParams[cloudprovider.ClusterIDKey.String()] = cls.ClusterID
+	task.CommonParams[cloudprovider.CloudIDKey.String()] = opt.Cloud.CloudID
+	task.CommonParams[cloudprovider.CloudSystemID.String()] = cls.SystemID
+
+	subnetInfo, err := json.Marshal(subnet)
+	if err != nil {
+		return nil, fmt.Errorf("BuildSwitchClusterNetworkTask failed: %v", err)
+	}
+	isStaticIpModeInfo := strconv.FormatBool(opt.IsStaticIpMode)
+	claimExpiredSecondsInfo := strconv.Itoa(int(opt.ClaimExpiredSeconds))
+
+	// setting step details
+	switchClusterNetworkTask := &SwitchClusterNetworkTaskOption{
+		Cluster:                 cls,
+		SubnetInfo:              string(subnetInfo),
+		IsStaticIpModeInfo:      isStaticIpModeInfo,
+		ClaimExpiredSecondsInfo: claimExpiredSecondsInfo,
+	}
+
+	// 开启/关闭 tke集群vpc-cni网络模式
+	if opt.Disable {
+		// step1: 关闭vpc-cni模式
+		switchClusterNetworkTask.BuildClusterCloseVpcCniStep(task)
+	} else {
+		// step1. 分配子网
+		switchClusterNetworkTask.BuildAllocateClusterSubnetTask(task)
+		// step2. 开启vpc-cni
+		switchClusterNetworkTask.BuildClusterOpenVpcCniStep(task)
+	}
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildSwitchClusterNetworkTask task StepSequence empty")
+	}
+
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.OperatorKey.String()] = opt.Operator
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchClusterNetworkJob.String()
+
 	return task, nil
 }

@@ -158,6 +158,24 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 // syncTokenToRedis will fetch user token from bcs_tokens, and store it to redis
 func syncTokenToRedis() {
 	tokenStore := sqlstore.NewTokenStore(sqlstore.GCoreDB, config.GlobalCryptor)
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
+
+	if !config.GetGlobalConfig().EnableTokenSync {
+		syncToken(tokenStore)
+		return
+	}
+
+	for {
+		syncToken(tokenStore)
+		// nolint
+		select {
+		case <-ticker.C:
+		}
+	}
+}
+
+func syncToken(tokenStore sqlstore.TokenStore) {
 	tokens := tokenStore.GetAllNotExpiredTokens()
 	blog.Infof("sync token to redis, total %d", len(tokens))
 	done := 0

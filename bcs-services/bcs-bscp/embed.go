@@ -47,16 +47,19 @@ var (
 
 // IndexConfig 前端配置
 type IndexConfig struct {
-	RunEnv         string
-	StaticURL      string
-	IAMHost        string
-	CMDBHost       string
-	APIURL         string
-	SiteURL        string // vue 路由前缀
-	EnableBKNotice bool   // 是否启用蓝鲸通知中心
-	Helper         string
-	ProxyAPI       bool
-	FeedAddr       string
+	RunEnv               string
+	StaticURL            string
+	IAMHost              string
+	CMDBHost             string
+	APIURL               string
+	SiteURL              string // vue 路由前缀
+	EnableBKNotice       bool   // 是否启用蓝鲸通知中心
+	Helper               string
+	ProxyAPI             bool
+	GrpcAddr             string // feed-server grpc 地址
+	HttpAddr             string // feed-server http 地址
+	BKSharedResBaseJSURL string // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
+	NodeManHost          string
 }
 
 // EmbedWebServer 前端 web server
@@ -157,17 +160,20 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 	bscpConfig := string(configBytes)
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		tplData := map[string]string{
-			"BK_STATIC_URL":    conf.StaticURL,
-			"RUN_ENV":          conf.RunEnv,
-			"BK_BCS_BSCP_API":  conf.APIURL,
-			"BK_IAM_HOST":      conf.IAMHost,
-			"BK_CC_HOST":       conf.CMDBHost,
-			"BK_BSCP_CONFIG":   bscpConfig,
-			"SITE_URL":         conf.SiteURL,
-			"ENABLE_BK_NOTICE": strconv.FormatBool(conf.EnableBKNotice),
-			"HELPER":           conf.Helper,
-			"FEED_ADDR":        conf.FeedAddr,
+		tplData := map[string]interface{}{
+			"BK_STATIC_URL":             conf.StaticURL,
+			"RUN_ENV":                   conf.RunEnv,
+			"BK_BCS_BSCP_API":           conf.APIURL,
+			"BK_IAM_HOST":               conf.IAMHost,
+			"BK_CC_HOST":                conf.CMDBHost,
+			"BK_SHARED_RES_BASE_JS_URL": conf.BKSharedResBaseJSURL,
+			"BK_BSCP_CONFIG":            bscpConfig,
+			"SITE_URL":                  conf.SiteURL,
+			"ENABLE_BK_NOTICE":          conf.EnableBKNotice,
+			"HELPER":                    conf.Helper,
+			"GRPC_ADDR":                 conf.GrpcAddr,
+			"HTTP_ADDR":                 conf.HttpAddr,
+			"BK_NODE_HOST":              conf.NodeManHost,
 		}
 
 		// 本地开发模式 / 代理请求

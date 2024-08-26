@@ -15,35 +15,22 @@ package helm
 
 import (
 	"context"
-	"crypto/tls"
-	"errors"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
-	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-)
-
-var (
-	// errNotInited err server not init
-	errNotInited = errors.New("server not init")
-)
-
-const (
-	defaultTimeOut = time.Second * 10
-	retryCount     = 10
 )
 
 // helmClient helm-manager client
 var helmClient *HelmClient
 
 // SetHelmManagerClient set global helm-manager client
-func SetHelmManagerClient(opts *Options) error {
+func SetHelmManagerClient(opts *types.Options) error {
 	var err error
 	helmClient, err = NewHelmClient(opts)
 	if err != nil {
@@ -53,48 +40,22 @@ func SetHelmManagerClient(opts *Options) error {
 	return nil
 }
 
-// GetHelmManagerClient get user-manager client
+// GetHelmManagerClient get helm manager client
 func GetHelmManagerClient() *HelmClient {
 	return helmClient
 }
 
 // HelmClient client for helmmanager
 type HelmClient struct { // nolint
-	opts      *Options
+	opts      *types.Options
 	discovery *discovery.ModuleDiscovery
 	ctx       context.Context
 	cancel    context.CancelFunc
 }
 
-// Options for init clusterManager
-type Options struct {
-	Enable bool
-	// GateWay address
-	GateWay         string
-	Token           string
-	Module          string
-	EtcdRegistry    registry.Registry
-	ClientTLSConfig *tls.Config
-}
-
-func (o *Options) validate() bool {
-	if o == nil {
-		return false
-	}
-	if !o.Enable {
-		return false
-	}
-
-	if o.Module == "" {
-		o.Module = ModuleHelmManager
-	}
-
-	return true
-}
-
 // NewHelmClient init helm manager and start discovery module(helmmanager)
-func NewHelmClient(opts *Options) (*HelmClient, error) {
-	ok := opts.validate()
+func NewHelmClient(opts *types.Options) (*HelmClient, error) {
+	ok := opts.Validate()
 	if !ok {
 		return nil, nil
 	}
@@ -108,7 +69,7 @@ func NewHelmClient(opts *Options) (*HelmClient, error) {
 		helmClient.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
 		err := helmClient.discovery.Start()
 		if err != nil {
-			blog.Errorf("start discovery[%s] client failed: %v", ModuleHelmManager, err)
+			blog.Errorf("start discovery[%s] client failed: %v", types.ModuleHelmManager, err)
 			return nil, err
 		}
 	}
@@ -119,7 +80,7 @@ func NewHelmClient(opts *Options) (*HelmClient, error) {
 // GetHelmManagerClient get helm client
 func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, func(), error) {
 	if hm == nil {
-		return nil, nil, errNotInited
+		return nil, nil, types.ErrNotInited
 	}
 
 	conf := &bcsapi.Config{

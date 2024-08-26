@@ -114,6 +114,9 @@ type ControllerOption struct {
 
 	// IsFederationMode if true, watch multiClusterEndpoints for ingress
 	IsFederationMode bool
+
+	// HealthCheckIntervalSecs 健康检查指标拉取间隔，单位秒, 为0时不拉取
+	HealthCheckIntervalSecs int
 }
 
 // Conf 服务配置
@@ -229,6 +232,9 @@ func (op *ControllerOption) BindFromCommandLine() {
 	flag.IntVar(&op.ListenerAutoReconcileSeconds, "listener_auto_reconcile_seconds", 1200,
 		"seconds to auto reconcile listeners")
 	flag.BoolVar(&op.IsFederationMode, "is_federation_mode", false, "if true, watch multiClusterEndpoints for ingress ")
+
+	flag.IntVar(&op.HealthCheckIntervalSecs, "health_check_interval_secs", 30, "seconds for pull health metrics, "+
+		"turn off if set to 0")
 
 	flag.Parse()
 

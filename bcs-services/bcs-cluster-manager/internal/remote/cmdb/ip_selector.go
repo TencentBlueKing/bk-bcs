@@ -89,8 +89,9 @@ func (ipSelector *ipSelectorClient) GetBizTopoHostData(
 }
 
 // GetBizHostDetailedData xxx
-func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface,
+func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 	bizID int, module []HostModuleInfo) ([]HostDetailInfo, error) {
+
 	hostTopos, err := cmdb.FetchAllHostTopoRelationsByBizID(bizID)
 	if err != nil {
 		return nil, err
@@ -108,6 +109,7 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface,
 	if err != nil {
 		return nil, err
 	}
+
 	hostDataMap := make(map[int64]HostData, 0)
 	for _, host := range hostData {
 		if _, ok := hostDataMap[host.BKHostID]; !ok {
@@ -120,8 +122,7 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface,
 		hosts    = make([]HostDetailInfo, 0)
 		hostLock = &sync.RWMutex{}
 	)
-	pool := utils.NewRoutinePool(20)
-
+	pool := utils.NewRoutinePool(50)
 	defer pool.Close()
 
 	for _, result := range hostFilterResult {

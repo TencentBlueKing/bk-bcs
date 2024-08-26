@@ -17,6 +17,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/component"
 	cmoptions "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 )
 
 // GetWatchInstaller watch installer
@@ -24,7 +25,7 @@ func GetWatchInstaller(projectID string, namespace string) (install.Installer, e
 	op := cmoptions.GetGlobalCMOptions()
 
 	return component.GetComponentInstaller(component.InstallOptions{
-		InstallType:      op.ComponentDeploy.DeployService,
+		InstallType:      helm.Helm.String(),
 		ProjectID:        projectID,
 		ChartName:        op.ComponentDeploy.Watch.ChartName,
 		ReleaseNamespace: namespace,

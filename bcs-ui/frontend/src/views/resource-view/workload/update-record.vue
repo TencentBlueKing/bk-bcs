@@ -40,8 +40,15 @@
           width="180"
           prop="updater"
           show-overflow-tooltip>
+          <template #default="{ row }">
+            {{ row.updater || '--' }}
+          </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('updateRecord.label.createTime')" prop="createTime" width="180"></bcs-table-column>
+        <bcs-table-column :label="$t('updateRecord.label.createTime')" prop="createTime" width="180">
+          <template #default="{ row }">
+            {{row.createTime ? formatDate(row.createTime) : '--'}}
+          </template>
+        </bcs-table-column>
         <bcs-table-column :label="$t('updateRecord.label.operator')" width="120">
           <template #default="{ row }">
             <bcs-button text @click="showDiff(row)">{{ $t('updateRecord.button.diff') }}</bcs-button>
@@ -106,6 +113,7 @@ import { onBeforeMount, ref } from 'vue';
 import Rollback from './rollback.vue';
 import useRecords, { IRevisionData } from './use-records';
 
+import { formatDate } from '@/common/util';
 import ContentHeader from '@/components/layout/Header.vue';
 import Row from '@/components/layout/Row.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';

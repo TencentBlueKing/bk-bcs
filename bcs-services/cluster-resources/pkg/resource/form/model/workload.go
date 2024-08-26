@@ -22,6 +22,7 @@ type Deploy struct {
 
 // DeploySpec xxx
 type DeploySpec struct {
+	Labels         Labels         `structs:"labels"`
 	Replicas       DeployReplicas `structs:"replicas"`
 	NodeSelect     NodeSelect     `structs:"nodeSelect"`
 	Affinity       Affinity       `structs:"affinity"`
@@ -34,7 +35,7 @@ type DeploySpec struct {
 
 // DeployReplicas xxx
 type DeployReplicas struct {
-	Cnt                  int64  `structs:"cnt"`                  // 副本数量
+	Cnt                  string `structs:"cnt"`                  // 副本数量
 	UpdateStrategy       string `structs:"updateStrategy"`       // 更新策略
 	MaxSurge             int64  `structs:"maxSurge"`             // 最大调度 Pod 数量
 	MSUnit               string `structs:"msUnit"`               // 最大调度 Pod 数量单位（个/%）
@@ -54,6 +55,13 @@ type WorkloadVolume struct {
 	NFS       []NFSVolume      `structs:"nfs"`
 }
 
+// Labels xxx
+type Labels struct {
+	SelectorLabels    []Label `structs:"labels"`
+	TemplateLabels    []Label `structs:"templateLabels"`
+	JobTemplatelabels []Label `structs:"jobTemplatelabels"` // coronjob
+}
+
 // ContainerGroup xxx
 type ContainerGroup struct {
 	InitContainers []Container `structs:"initContainers"`
@@ -70,6 +78,7 @@ type DS struct {
 
 // DSSpec xxx
 type DSSpec struct {
+	Labels     Labels         `structs:"labels"`
 	Replicas   DSReplicas     `structs:"replicas"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
 	Affinity   Affinity       `structs:"affinity"`
@@ -97,6 +106,7 @@ type STS struct {
 
 // STSSpec xxx
 type STSSpec struct {
+	Labels          Labels             `structs:"labels"`
 	Replicas        STSReplicas        `structs:"replicas"`
 	VolumeClaimTmpl STSVolumeClaimTmpl `structs:"volumeClaimTmpl"`
 	NodeSelect      NodeSelect         `structs:"nodeSelect"`
@@ -111,7 +121,7 @@ type STSSpec struct {
 // STSReplicas xxx
 type STSReplicas struct {
 	SVCName        string `structs:"svcName"`
-	Cnt            int64  `structs:"cnt"`
+	Cnt            string `structs:"cnt"`
 	UpdateStrategy string `structs:"updateStrategy"`
 	PodManPolicy   string `structs:"podManPolicy"`
 	Partition      int64  `structs:"partition"`
@@ -142,6 +152,7 @@ type CJ struct {
 
 // CJSpec xxx
 type CJSpec struct {
+	Labels     Labels         `structs:"labels"`
 	JobManage  CJJobManage    `structs:"jobManage"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
 	Affinity   Affinity       `structs:"affinity"`
@@ -175,6 +186,7 @@ type Job struct {
 
 // JobSpec xxx
 type JobSpec struct {
+	Labels     Labels         `structs:"labels"`
 	JobManage  JobManage      `structs:"jobManage"`
 	NodeSelect NodeSelect     `structs:"nodeSelect"`
 	Affinity   Affinity       `structs:"affinity"`

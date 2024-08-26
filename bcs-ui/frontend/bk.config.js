@@ -36,34 +36,33 @@ module.exports = {
       devServer: {
         hot: true,
         host: process.env.BK_LOCAL_HOST,
-        https: true,
+        server: 'https',
         client: {
           webSocketURL: {
             port: process.env.BK_PORT || 8004
-          }
+          },
+          overlay: false
         },
-        proxy: {
-          '/api': {
-              target: process.env.BK_PROXY_DEVOPS_BCS_API_URL,
-              changeOrigin: true,
-              secure: false
+        proxy: [
+          {
+            context: ['/api', '/change_log'],
+            target: process.env.BK_PROXY_DEVOPS_BCS_API_URL,
+            changeOrigin: true,
+            secure: false
           },
-          '/change_log': {
-              target: process.env.BK_PROXY_DEVOPS_BCS_API_URL,
-              changeOrigin: true,
-              secure: false
+          {
+            context: ['/bcsapi/v4'],
+            target: process.env.BK_BCS_API_HOST,
+            changeOrigin: true,
+            secure: false
           },
-          '/bcsapi/v4': {
-              target: process.env.BK_BCS_API_HOST,
-              changeOrigin: true,
-              secure: false
-          },
-          '/bcsadmin/cvmcapacity': {
+          {
+            context: ['/bcsadmin/cvmcapacity'],
             target: process.env.BK_SRE_HOST,
             changeOrigin: true,
             secure: false
           }
-        }
+        ]
       },
       plugins: [
         new HtmlWebpackPlugin({

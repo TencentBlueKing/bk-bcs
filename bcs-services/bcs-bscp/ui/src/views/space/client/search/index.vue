@@ -4,7 +4,12 @@
       <ClientHeader :title="t('客户端查询')" @search="loadList" />
     </div>
     <div v-if="appId" class="content">
-      <BatchRetryBtn :bk-biz-id="bkBizId" :app-id="appId" :selections="selectedClient" @retried="handleRetryConfirm" />
+      <BatchRetryBtn
+        :bk-biz-id="bkBizId"
+        :app-id="appId"
+        :selections="selectedClient"
+        :is-across-checked="isAcrossChecked"
+        @retried="handleRetryConfirm" />
       <bk-loading style="min-height: 100px" :loading="listLoading">
         <bk-table
           ref="tableRef"
@@ -14,23 +19,26 @@
           :remote-pagination="true"
           :pagination="pagination"
           :key="appId"
-          :checked="selectedClient.map((item) => item.id)"
-          :is-row-select-enable="isRowSelectEnable"
           :settings="settings"
           show-overflow-tooltip
           @page-limit-change="handlePageLimitChange"
-          @page-value-change="loadList"
+          @page-value-change="loadList(true)"
           @column-filter="handleFilter"
-          @setting-change="handleSettingsChange"
-          @selection-change="handleSelectRow"
-          @select-all="handleSelectAll">
-          <template v-if="selectedClient.length" #prepend>
-            <div class="row-selection-display">
-              {{ t('当前已选择 {n} 个客户端，', { n: selectedClient.length }) }}
-              <bk-button text theme="primary" @click="handleClearSelection">{{ t('清除选择') }}</bk-button>
-            </div>
+          @setting-change="handleSettingsChange">
+          <template #prepend>
+            <render-table-tip />
           </template>
-          <bk-table-column type="selection" fixed="left" :min-width="48" :width="48"> </bk-table-column>
+          <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
+            <template #default="{ row }">
+              <across-check-box
+                :checked="isChecked(row)"
+                :disabled="
+                  row.client?.spec &&
+                  (row.client.spec.release_change_status !== 'Failed' || row.client.spec.online_status !== 'Online')
+                "
+                :handle-change="() => handleSelectionChange(row)" />
+            </template>
+          </bk-table-column>
           <bk-table-column label="UID" fixed="left" :width="254" prop="client.attachment.uid"></bk-table-column>
           <bk-table-column
             v-if="selectedShowColumn.includes('ip')"
@@ -61,15 +69,15 @@
           </bk-table-column>
           <bk-table-column
             v-if="selectedShowColumn.includes('current-version')"
-            :label="t('当前配置版本')"
+            :label="t('目标配置版本')"
             :width="140">
             <template #default="{ row }">
               <div
-                v-if="row.client && row.client.spec.current_release_id"
+                v-if="row.client && row.client.spec.target_release_id"
                 class="current-version"
-                @click="linkToApp(row.client.spec.current_release_id)">
+                @click="linkToApp(row.client.spec.target_release_id)">
                 <Share class="icon" />
-                <span class="text">{{ row.client.spec.current_release_name }}</span>
+                <span class="text">{{ row.client.spec.target_release_name }}</span>
               </div>
               <span v-else>--</span>
             </template>
@@ -195,7 +203,7 @@
             :label="t('客户端组件版本')"
             :width="128"
             prop="client.spec.client_version"></bk-table-column>
-          <bk-table-column :label="t('操作')" :width="160" fixed="right">
+          <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? 160 : 230" fixed="right">
             <template #default="{ row }">
               <div v-if="row.client">
                 <bk-button theme="primary" text @click="handleShowPullRecord(row.client.attachment.uid, row.client.id)">
@@ -230,7 +238,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, watch, onBeforeMount, onBeforeUnmount } from 'vue';
+  import { ref, watch, onBeforeMount, onBeforeUnmount, computed } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { Share, InfoLine, Spinner } from 'bkui-vue/lib/icon';
   import { storeToRefs } from 'pinia';
@@ -251,9 +259,12 @@
   import Exception from '../components/exception.vue';
   import BatchRetryBtn from './components/batch-retry-btn.vue';
   import RetryBtn from './components/retry-btn.vue';
+  import useTableAcrossCheck from '../../../../utils/hooks/use-table-acrosscheck';
+  import acrossCheckBox from '../../../../components/across-checkbox.vue';
+  import CheckType from '../../../../../types/across-checked';
   import { useI18n } from 'vue-i18n';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const clientStore = useClientStore();
   const { searchQuery } = storeToRefs(clientStore);
@@ -280,6 +291,8 @@
   const isShowPullRecordSlider = ref(false);
   const tableData = ref();
   const tableRef = ref();
+  const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
   const releaseChangeStatusFilterList = [
     {
@@ -308,6 +321,31 @@
   ];
   const onlineStatusFilterChecked = ref<string[]>([]);
   const pollTimer = ref(0);
+
+  // 当前页数据，不含禁用
+  const selecTableData = computed(() => {
+    return tableData.value
+      .filter(
+        (item: any) =>
+          item.client?.spec &&
+          !(item.client.spec.release_change_status !== 'Failed' || item.client.spec.online_status !== 'Online'),
+      )
+      .map((item: any) => ({
+        ...item,
+        id: item.client.id,
+        uid: item.client.attachment.uid,
+      }));
+  });
+  const crossPageSelect = computed(
+    () => pagination.value.limit < pagination.value.count && selecTableDataCount.value !== 0,
+  );
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: selecTableDataCount,
+      curPageData: selecTableData, // 当前页数据，不含禁用
+      rowKey: ['id'],
+      crossPageSelect,
+    });
 
   watch(
     () => route.params.appId,
@@ -350,6 +388,24 @@
     { deep: true },
   );
 
+  watch(
+    selections,
+    () => {
+      isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+      selectedClient.value = selections.value.map((item) => {
+        return {
+          id: item.client.id,
+          uid: item.client.attachment.uid,
+          current_release_name: item.client.spec.current_release_name,
+          target_release_name: item.client.spec.target_release_name,
+        };
+      });
+    },
+    {
+      deep: true,
+    },
+  );
+
   onBeforeMount(() => {
     const tableSet = localStorage.getItem('client-show-column');
     settings.value.size = 'medium';
@@ -367,12 +423,15 @@
     }
   });
 
-  const isRowSelectEnable = ({ row, isCheckAll }: any) =>
-    isCheckAll ||
-    !(
-      row.client.spec &&
-      (row.client.spec.release_change_status !== 'Failed' || row.client.spec.online_status !== 'Online')
-    );
+  // 行的启用/禁用
+  const isChecked = (row: any) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.client?.id === row.client?.id);
+    }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.client?.id === row.client?.id);
+  };
 
   const settings = ref({
     trigger: 'click',
@@ -472,48 +531,30 @@
   //     '客户端每 15 秒会向服务端发送一次心跳数据，如果服务端连续3个周期没有接收到客户端心跳数据，视客户端为离线状态',
   // };
 
-  const sortTableData = (tableData: any) => {
-    // 定义状态顺序
-    const statusOrder = {
-      Processing: 0, // 拉取中
-      Failed: 1, // 失败
-      Success: 2, // 成功
-    };
-
-    // 根据状态顺序排序表格数据
-    tableData.sort((a: any, b: any) => {
-      const statusA = a.client.spec.release_change_status;
-      const statusB = b.client.spec.release_change_status;
-
-      if (statusOrder[statusA as keyof typeof statusOrder] < statusOrder[statusB as keyof typeof statusOrder]) {
-        return -1;
-      }
-      if (statusOrder[statusA as keyof typeof statusOrder] > statusOrder[statusB as keyof typeof statusOrder]) {
-        return 1;
-      }
-      // 如果状态相同，则保持原顺序
-      return 0;
-    });
-
-    return tableData;
-  };
-
-  const loadList = async () => {
+  const loadList = async (pageChange = false) => {
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
     const params: IClinetCommonQuery = {
       start: pagination.value.limit * (pagination.value.current - 1),
       limit: pagination.value.limit,
       last_heartbeat_time: searchQuery.value.last_heartbeat_time,
       search: searchQuery.value.search,
+      order: {
+        desc: 'online_status',
+      },
     };
     try {
       listLoading.value = true;
       const res = await getClientQueryList(bkBizId.value, appId.value, params);
-      tableData.value = sortTableData(res.data.details);
+      tableData.value = res.data.details;
       tableData.value.forEach((item: any) => {
         const { client } = item;
         client.labels = Object.entries(JSON.parse(client.spec.labels)).map(([key, value]) => ({ key, value }));
       });
       pagination.value.count = res.data.count;
+      selecTableDataCount.value = Number(res.data.exclusion_count);
     } catch (error) {
       console.error(error);
     } finally {
@@ -573,60 +614,32 @@
   };
 
   // 选择单行
-  const handleSelectRow = ({ row, checked }: { row: any; checked: boolean }) => {
-    const index = selectedClient.value.findIndex((item) => item.id === row.client.id);
-    if (checked) {
-      if (index === -1) {
-        selectedClient.value.push({
-          id: row.client.id,
-          uid: row.client.attachment.uid,
-          current_release_name: row.client.spec.current_release_name,
-          target_release_name: row.client.spec.target_release_name,
-        });
-      }
-    } else {
-      if (index > -1) {
-        selectedClient.value.splice(index, 1);
-      }
-    }
-  };
-
-  // 全选/取消
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      tableData.value.forEach((item: any) => {
-        if (item.client.spec.release_change_status !== 'Failed' && item.spec.online_status !== 'Online') return;
-        if (!selectedClient.value.find((selected) => selected.id === item.client.id)) {
-          selectedClient.value.push({
-            id: item.client.id,
-            uid: item.client.attachment.uid,
-            current_release_name: item.client.spec.current_release_name,
-            target_release_name: item.client.spec.target_release_name,
-          });
-        }
-      });
-    } else {
-      selectedClient.value = [];
-    }
-  };
-
-  // 清空选择
-  const handleClearSelection = () => {
-    selectedClient.value = [];
-    tableRef.value.clearSelection();
+  const handleSelectionChange = (row: any) => {
+    const isSelected = selections.value.some((item) => item.client.id === row.client.id);
+    // 根据选择类型决定传递的状态
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
+    handleRowCheckChange(shouldBeChecked, { ...row, id: row.client.id });
   };
 
   const getErrorDetails = (item: any) => {
-    const { release_change_failed_reason, specific_failed_reason, failed_detail_reason } = item;
+    const {
+      release_change_failed_reason,
+      specific_failed_reason,
+      failed_detail_reason,
+      current_release_name,
+      target_release_name,
+    } = item;
     const category = CLIENT_ERROR_CATEGORY_MAP.find((item) => item.value === release_change_failed_reason)?.name;
     const subclasses = CLIENT_ERROR_SUBCLASSES_MAP.find((item) => item.value === specific_failed_reason)?.name || '--';
-    return `${t('错误类别')}: ${category}
+    return `【 ${current_release_name} -> ${target_release_name} 】
+    ${t('错误类别')}: ${category}
     ${t('错误子类别')}: ${subclasses}
     ${t('错误详情')}: ${failed_detail_reason}`;
   };
 
   // 重试成功
   const handleRetryConfirm = (ids: number[]) => {
+    handleClearSelection(); // 清空选择框
     ids.forEach((id) => {
       const index = selectedClient.value.findIndex((item) => item.id === id);
       if (index > -1) {

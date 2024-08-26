@@ -9,7 +9,7 @@
         type="textarea"
         :placeholder="t('请输入')"
         :rows="6"
-        :maxlength="256"
+        :maxlength="200"
         :resize="true"
         @input="change" />
     </bk-form-item>
@@ -105,7 +105,7 @@
         operator: userInfo.value.username,
       };
       const resp = await getAppList(bizId, query);
-      serviceList.value = resp.details;
+      serviceList.value = resp.details.filter((service: IAppItem) => service.spec.config_type === 'file');
     } catch (e) {
       console.error(e);
     } finally {

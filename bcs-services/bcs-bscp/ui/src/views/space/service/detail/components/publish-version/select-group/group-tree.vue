@@ -9,7 +9,8 @@
         v-model="searchStr"
         class="group-search-input"
         :placeholder="t('搜索版本/分组名称/标签key')"
-        :clearable="true">
+        :clearable="true"
+        v-bk-tooltips="{ content: t('搜索版本/分组名称/标签key'), disabled: locale === 'zh-cn' }">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -89,7 +90,7 @@
     children: IGroupNode[];
   }
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   // 将全量分组数据按照版本分组
   const categorizingData = () => {
@@ -229,7 +230,7 @@
     const list = props.value.slice();
 
     if ('children' in node) {
-      const parentNode = treeData.value.find((item) => item.id === node.id);
+      const parentNode = searchTreeData.value.find((item) => item.id === node.id);
       if (parentNode) {
         // 父节点
         parentNode.children.forEach((childNode) => {

@@ -82,6 +82,18 @@ const ResourceSecret = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/v
 const ResourceIngress = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/resource/ingress.vue');
 const HPAIndex = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/templateset/hpa/index.vue');
 
+// 模板文件
+const TemplateFile = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/index.vue');
+const AddTemplateFile = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/add-templatefile.vue');
+const TemplateFileDetail = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/file-detail.vue');
+const TemplateFileList = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/file-list.vue');
+const AddTemplateFileVersion = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/template-file/add-templatefile-version.vue');
+const TemplateFileDeploy = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/deploy/deploy.vue');
+
+// 模板集
+const TemplateSetV2 = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/new-template-set/index.vue');
+const CreateTemplateSetV2 = () => import(/* webpackChunkName: 'k8sTemplateset' */'@/views/deploy-manage/new-template-set/add-templateset.vue');
+
 const childRoutes = [
   // helm
   {
@@ -119,6 +131,82 @@ const childRoutes = [
     path: 'variable',
     name: 'variable',
     component: Variable,
+  },
+  // 模板集v2
+  {
+    path: 'template/set',
+    name: 'templatesetV2',
+    component: TemplateSetV2,
+  },
+  // 创建模板集
+  {
+    path: 'template/set/create',
+    name: 'createTemplatesetV2',
+    component: CreateTemplateSetV2,
+  },
+  // 模板文件
+  {
+    path: 'template/file',
+    name: 'templatefile',
+    props: route => ({ ...route.query, ...route.params }),
+    component: TemplateFile,
+    meta: {
+      keepAlive: 'templatefile',
+    },
+    children: [
+      // 模板文件列表
+      {
+        path: ':templateSpace',
+        props: route => ({ ...route.query, ...route.params }),
+        name: 'templateFileList',
+        component: TemplateFileList,
+        meta: {
+          menuId: 'TEMPLATE_FILE',
+          keepAlive: 'templatefile',
+        },
+      },
+      // 模板文件详情
+      {
+        path: ':templateSpace/:id',
+        props: route => ({ ...route.query, ...route.params }),
+        name: 'templateFileDetail',
+        component: TemplateFileDetail,
+        meta: {
+          menuId: 'TEMPLATE_FILE',
+          keepAlive: 'templatefile',
+        },
+      },
+    ],
+  },
+  // 创建模板文件
+  {
+    path: 'template/:templateSpace/file',
+    props: true,
+    name: 'addTemplateFile',
+    component: AddTemplateFile,
+    meta: {
+      menuId: 'TEMPLATE_FILE',
+    },
+  },
+  // 创建模板文件版本
+  {
+    path: 'template/file/:id/version/edit',
+    props: route => ({ ...route.query, ...route.params }),
+    name: 'addTemplateFileVersion',
+    component: AddTemplateFileVersion,
+    meta: {
+      menuId: 'TEMPLATE_FILE',
+    },
+  },
+  // 模板文件部署
+  {
+    path: 'template/deploy/file/:id',
+    props: route => ({ ...route.query, ...route.params }),
+    name: 'templateFileDeploy',
+    component: TemplateFileDeploy,
+    meta: {
+      menuId: 'TEMPLATE_FILE',
+    },
   },
   // 模板集
   {

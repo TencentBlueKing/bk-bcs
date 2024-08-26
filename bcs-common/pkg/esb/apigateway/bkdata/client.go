@@ -154,17 +154,11 @@ func (c *ClientCreator) NewClientFromConfig(conf BKDataClientConfig) ClientInter
 	if conf.TLSConf != nil {
 		cli = client.NewRESTClientWithTLS(conf.TLSConf).
 			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
-			WithCredential(map[string]interface{}{
-				"app_code":   conf.BkAppCode,
-				"app_secret": conf.BkAppSecret,
-			})
+			WithCredential(conf.BkAppCode, conf.BkAppSecret)
 	} else {
 		cli = client.NewRESTClient().
 			WithRateLimiter(throttle.NewTokenBucket(50, 50)).
-			WithCredential(map[string]interface{}{
-				"app_code":   conf.BkAppCode,
-				"app_secret": conf.BkAppSecret,
-			})
+			WithCredential(conf.BkAppCode, conf.BkAppSecret)
 	}
 	return &Client{
 		client: cli,

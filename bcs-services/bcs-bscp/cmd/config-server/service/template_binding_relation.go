@@ -267,11 +267,6 @@ func (s *Service) ListMultiTmplBoundTmplSets(ctx context.Context, req *pbcs.List
 	if err != nil {
 		return nil, fmt.Errorf("invalid template ids, %s", err)
 	}
-	idsLen := len(templateIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -422,11 +417,6 @@ func (s *Service) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, req *pbc
 	if err != nil {
 		return nil, fmt.Errorf("invalid template set ids, %s", err)
 	}
-	idsLen := len(templateSetIDs)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of template set ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -525,4 +515,54 @@ func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context, req *pbcs.
 		Details: rp.Details,
 	}
 	return resp, nil
+}
+
+// CheckTemplateSetReferencesApps 检测模板套餐绑定服务是否超出
+func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbcs.CheckTemplateSetReferencesAppsReq) (
+	*pbcs.CheckTemplateSetReferencesAppsResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(kit, res...); err != nil {
+		return nil, err
+	}
+
+	items := make([]*pbds.CheckTemplateSetReferencesAppsReq_Item, 0, len(req.GetItems()))
+	for _, v := range req.GetItems() {
+		items = append(items, &pbds.CheckTemplateSetReferencesAppsReq_Item{
+			Id:   v.GetId(),
+			Name: v.GetName(),
+		})
+	}
+
+	resp, err := s.client.DS.CheckTemplateSetReferencesApps(kit.RpcCtx(), &pbds.CheckTemplateSetReferencesAppsReq{
+		BizId:           req.GetBizId(),
+		TemplateSpaceId: req.GetTemplateSpaceId(),
+		TemplateSetIds:  req.GetTemplateSetIds(),
+		Items:           items,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*pbcs.CheckTemplateSetReferencesAppsResp_Item, 0, len(resp.GetItems()))
+	for _, v := range resp.GetItems() {
+		result = append(result, &pbcs.CheckTemplateSetReferencesAppsResp_Item{
+			TemplateSetId:              v.GetTemplateSetId(),
+			TemplateSetName:            v.GetTemplateSetName(),
+			AppId:                      v.GetAppId(),
+			AppName:                    v.GetAppName(),
+			AppExceedsLimit:            v.GetAppExceedsLimit(),
+			TemplateSetExceedsLimit:    v.GetTemplateSetExceedsLimit(),
+			AppExceedsQuantity:         v.GetAppExceedsQuantity(),
+			TemplateSetExceedsQuantity: v.GetTemplateSetExceedsQuantity(),
+		})
+	}
+
+	return &pbcs.CheckTemplateSetReferencesAppsResp{
+		Items: result,
+	}, nil
 }

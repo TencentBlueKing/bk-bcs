@@ -271,6 +271,8 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	importCluster.BuildImportClusterNodesStep(task)
 	// step3: install cluster watch component
 	common.BuildWatchComponentTaskStep(task, cls, "")
+	// step3: install image pull secret addon if config
+	common.BuildInstallImageSecretAddonTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -899,5 +901,11 @@ func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAuto
 // nolint function name should not exceed 35 characters
 func (t *Task) BuildSwitchAutoScalingOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildSwitchClusterNetworkTask switch cluster network mode
+func (t *Task) BuildSwitchClusterNetworkTask(cls *proto.Cluster,
+	subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

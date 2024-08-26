@@ -120,7 +120,7 @@
   import Message from 'bkui-vue/lib/message';
   import { debounce } from 'lodash';
 
-  const { spaceId, permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
+  const { permissionQuery, showApplyPermDialog } = storeToRefs(useGlobalStore());
   const { userInfo } = storeToRefs(useUserStore());
   const { t } = useI18n();
 
@@ -201,7 +201,7 @@
   const loadAppList = async () => {
     isLoading.value = true;
     try {
-      const bizId = spaceId.value;
+      const bizId = props.spaceId;
       const resp = await getAppList(bizId, filters.value);
       if (resp.details.length > 0) {
         const appIds = resp.details.map((item: IAppItem) => item.id);
@@ -262,7 +262,7 @@
   const handleDeleteConfirm = async () => {
     await deleteApp(deleteService.value!.id as number, deleteService.value!.biz_id);
     Message({
-      message: '删除服务成功',
+      message: t('删除服务成功'),
       theme: 'success',
     });
     loadAppList();

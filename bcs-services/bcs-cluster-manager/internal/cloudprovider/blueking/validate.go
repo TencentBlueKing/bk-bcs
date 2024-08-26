@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package blueking xxx
 package blueking
 
 import (
@@ -73,10 +74,16 @@ func (c *CloudValidate) ImportClusterValidate(req *proto.ImportClusterReq, opt *
 		return fmt.Errorf("%s ImportClusterValidate options is empty", cloudName)
 	}
 
-	if req.CloudMode.KubeConfig == "" {
-		return fmt.Errorf("%s ImportClusterValidate cluster kubeConfig empty", cloudName)
+	if len(req.GetCloudMode().GetNodeIps()) == 0 && req.CloudMode.KubeConfig == "" {
+		return fmt.Errorf("%s ImportClusterValidate cluster kubeConfig/nodeIps empty", cloudName)
 	}
 
+	// 机器导入模式
+	if len(req.GetCloudMode().GetNodeIps()) > 0 {
+		return nil
+	}
+
+	// kubeConfig模式
 	_, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 		FileName:    "",
 		YamlContent: req.CloudMode.KubeConfig,

@@ -13,9 +13,17 @@ export const K8S_LABEL_KEY = '^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9
 export const K8S_LABEL_VALUE = '^([a-zA-Z0-9]?([-_.a-zA-Z0-9]{0,61}[a-zA-Z0-9])?)?$';
 export const K8S_ANNOTATIONS_KEY = '^(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?/)?[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$';
 
+// 标签，污点正则
+export const LABEL_KEY_MAXL = '^(?=.{0,253}/|.{1,63}$)';
+export const LABEL_KEY_DOMAIN = '([a-z0-9]([-a-z0-9]*[a-z0-9])?(.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?';
+export const LABEL_KEY_PATH = '^(?=.{0,253}\/|.{1,63}$)([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*\/)?([A-Za-z0-9]([-A-Za-z0-9_\.]*[A-Za-z0-9])?)$';
+export const LABEL_VALUE = '^[A-Za-z0-9]([-A-Za-z0-9_.]{0,61}[A-Za-z0-9])?$';
+export const TAINT_VALUE = '^([A-Za-z0-9]([-A-Za-z0-9_.]{0,61}[A-Za-z0-9])?)?$';
+
 // 凭证 正则
 export const NAME_REGEX = '^[0-9a-zA-Z-]+$';
 export const SECRET_REGEX = '^[0-9a-zA-Z-~]+$';
+export const SECRETKEY_REGEX = '^[0-9a-zA-Z/-]+$';
 
 // 集群环境
 export const CLUSTER_ENV = {
@@ -263,3 +271,6 @@ export const diskEnum = [
 ];
 
 export const VUEX_STROAGE_KEY = '__bcs_vuex_stroage__';
+
+// BCS UI接口的前缀
+export const BCS_UI_PREFIX = `${window.BCS_CONFIG?.uiPrefix || ''}/bcsapi/v4/ui`;

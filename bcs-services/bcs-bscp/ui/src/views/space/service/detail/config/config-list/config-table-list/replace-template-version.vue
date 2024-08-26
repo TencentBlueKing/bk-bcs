@@ -10,7 +10,7 @@
     :cancel-text="t('取消')"
     @confirm="handleReplaceConfirm"
     @closed="close">
-    <bk-form ref="formRef" :model="{ selected }" label-width="120">
+    <bk-form ref="formRef" :model="{ selected }" :label-width="locale === 'zh-cn' ? 120 : 140">
       <bk-form-item :label="t('当前版本')">
         <div>{{ props.versionName }}</div>
       </bk-form-item>
@@ -62,7 +62,7 @@
     versionName: string;
   }>();
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const emits = defineEmits(['update:show', 'updated']);
 
   const loading = ref(false);

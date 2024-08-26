@@ -3,13 +3,20 @@
     :class="[{ 'bcs-validate': isError }, type]"
     @focusin="handleFocus"
     @focusout="handleBlur">
-    <slot></slot>
-    <span
-      class="error-tip"
-      v-if="isError"
-      v-bk-tooltips="errorMsg">
-      <i class="bk-icon icon-exclamation-circle-shape"></i>
-    </span>
+    <slot :is-error="isError"></slot>
+    <template v-if="isError">
+      <span
+        class="error-tip"
+        v-if="errorDisplayType === 'tooltips'"
+        v-bk-tooltips="errorMsg">
+        <i class="bk-icon icon-exclamation-circle-shape"></i>
+      </span>
+      <div
+        class="text-[#ea3636] text-[12px] leading-[18px]"
+        v-else-if="errorDisplayType === 'normal'">
+        {{ errorMsg }}
+      </div>
+    </template>
   </div>
 </template>
 <script lang="ts">
@@ -18,7 +25,7 @@ import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 import $i18n from '@/i18n/i18n-setup';
 
 export interface IValidate {
-  validator: Function | RegExp;
+  validator: Function | RegExp | string;
   message: string;
 }
 export default defineComponent({
@@ -55,6 +62,10 @@ export default defineComponent({
     required: {
       type: Boolean,
       default: false,
+    },
+    errorDisplayType: {
+      type: String as PropType<'tooltips'|'normal'>,
+      default: 'tooltips',
     },
   },
   emits: ['validate'],

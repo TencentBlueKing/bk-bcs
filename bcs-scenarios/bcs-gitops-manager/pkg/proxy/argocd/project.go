@@ -16,19 +16,18 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/analyze"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // ProjectPlugin for internal project authorization
 type ProjectPlugin struct {
 	*mux.Router
-	middleware     mw.MiddlewareInterface
-	analysisClient analyze.CollectApplication
+	middleware    mw.MiddlewareInterface
+	permitChecker permitcheck.PermissionInterface
 }
 
 // Init all project sub path handler
@@ -40,9 +39,6 @@ func (plugin *ProjectPlugin) Init() error {
 	// DELETE and Update /api/v1/projects/{name}
 	plugin.HandleFunc("/{name}", plugin.forbidden).Methods("DELETE")
 	plugin.HandleFunc("/{name}", plugin.forbidden).Methods("PUT")
-
-	plugin.Path("/{name}/application-collects").Methods("GET").
-		Handler(plugin.middleware.HttpWrapper(plugin.listApplicationCollects))
 
 	// requests by authorization
 	// GET /api/v1/projects
@@ -85,24 +81,11 @@ func (plugin *ProjectPlugin) listProjectsHandler(r *http.Request) (*http.Request
 // GET /api/v1/projects/{name}/syncwindows
 func (plugin *ProjectPlugin) projectViewsHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projectName := mux.Vars(r)["name"]
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectView)
+	argoProj, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+		permitcheck.ProjectViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' view permission failed", projectName))
 	}
-	return r, mw.ReturnArgoReverse()
-}
-
-func (plugin *ProjectPlugin) listApplicationCollects(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	projectName := mux.Vars(r)["name"]
-	_, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(), projectName, iam.ProjectView)
-	if statusCode != http.StatusOK {
-		return r, mw.ReturnErrorResponse(statusCode,
-			errors.Wrapf(err, "check project '%s' view permission failed", projectName))
-	}
-	prefers, err := plugin.analysisClient.ListApplicationCollects(projectName)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
-	}
-	return r, mw.ReturnJSONResponse(prefers)
+	return r, mw.ReturnJSONResponse(argoProj)
 }

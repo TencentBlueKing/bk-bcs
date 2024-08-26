@@ -4,7 +4,7 @@ kind: Deployment
 spec:
   selector:
     matchLabels:
-      {{- include "common.labelSlice2Map" .metadata.labels | indent 6 }}
+      {{- include "common.labelSlice2Map" .spec.labels.labels | indent 6 }}
   replicas: {{ .spec.replicas.cnt | default 0 }}
   strategy:
     type: {{ .spec.replicas.updateStrategy }}

@@ -15,7 +15,7 @@
       <div v-bkloading="{ isLoading }">
         <bk-table :data="actionList">
           <bk-table-column :label="$t('iam.label.system')" prop="system" min-width="150">
-            {{ $t('bcs.name') }}
+            {{ siteName }}
           </bk-table-column>
           <bk-table-column :label="$t('iam.label.action')" prop="auth" min-width="220">
             <template #default="{ row }">
@@ -50,6 +50,7 @@
 import actionsMap from './actions-map';
 
 import lockSvg from '@/images/lock-radius.svg';
+import usePlatform from '@/composables/use-platform';
 export default {
   name: 'ApplyPerm',
   data() {
@@ -63,10 +64,20 @@ export default {
       lockSvg,
       actionsMap,
       isLoading: false,
+      config: null,
     };
+  },
+  created() {
+    const { config } = usePlatform();
+    this.config = config;
   },
   destroyed() {
     this.applyUrl = '';
+  },
+  computed: {
+    siteName() {
+      return this.config.i18n?.name;
+    }
   },
   methods: {
     hide() {

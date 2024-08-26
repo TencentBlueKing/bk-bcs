@@ -62,8 +62,13 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 		return 0, err
 	}
 	for _, task := range taskResp.Data {
+		if listener.GetUptimeCheckTaskStatus().ID != 0 && task.ID == listener.GetUptimeCheckTaskStatus().ID {
+			cloudTask = task
+			break
+		}
 		if task.Name == taskName {
 			cloudTask = task
+			break
 		}
 	}
 	// 1. 有task， 但目前targetGroup为空 -> 需要删除对应拨测任务
@@ -80,17 +85,17 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 			return 0, nil
 		}
 
-		createTaskReq, err := m.transUptimeCheckTask(ctx, listener)
-		if err != nil {
-			return 0, err
+		createTaskReq, err1 := m.transUptimeCheckTask(ctx, listener)
+		if err1 != nil {
+			return 0, err1
 		}
 		if m.compareUptimeCheckTask(cloudTask, createTaskReq) {
-			resp, err1 := m.apiCli.UpdateUptimeCheckTask(ctx, createTaskReq)
-			if err1 != nil {
-				return 0, fmt.Errorf("update uptime check task failed, err: %v", err1)
+			resp, err2 := m.apiCli.UpdateUptimeCheckTask(ctx, createTaskReq)
+			if err2 != nil {
+				return 0, fmt.Errorf("update uptime check task failed, err: %v", err2)
 			}
-			if err = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err != nil {
-				return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err)
+			if err2 = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err1 != nil {
+				return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err2)
 			}
 		}
 
@@ -219,6 +224,9 @@ func (m *MonitorHelper) fillCreateOrUpdateReqDefault(req *CreateOrUpdateUptimeCh
 	}
 	if req.Config.Port == "" || req.Config.Port == "0" {
 		req.Config.Port = strconv.Itoa(listener.Spec.Port)
+		if uptimeCheckConfig.GetPortDefine() == networkextensionv1.PortDefineLast && listener.Spec.EndPort != 0 {
+			req.Config.Port = strconv.Itoa(listener.Spec.EndPort)
+		}
 	}
 
 	req.Config.Method = uptimeCheckConfig.Method
@@ -336,6 +344,11 @@ func (m *MonitorHelper) compareUptimeCheckTask(cloudTask *UptimeCheckTask, creat
 }
 
 func genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID string) string {
+	port := listener.Spec.Port
+	if listener.Spec.ListenerAttribute.UptimeCheck.GetPortDefine() == networkextensionv1.PortDefineLast && listener.Spec.
+		EndPort != 0 {
+		port = listener.Spec.EndPort
+	}
 	return fmt.Sprintf("bcs-%s-%s-%d/%s/%s", listener.Spec.LoadbalancerID, listener.Spec.Protocol,
-		listener.Spec.Port, bcsClusterID, listener.GetListenerSourceNamespace())
+		port, bcsClusterID, listener.GetListenerSourceNamespace())
 }

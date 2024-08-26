@@ -389,10 +389,17 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 	for _, mEps := range matchedMultiClusterEpsList {
 		for _, ep := range mEps.Spec.Endpoints {
 			for _, port := range ep.Ports {
-				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.
-					Protocol {
+				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.Protocol {
 					// 这里默认都是直通模式
 					if svcRoute.HostPort {
+						if port.HostPort == nil {
+							blog.Warnf("hostPort is true, but not found related definition in port [%s]",
+								*port.Name)
+							rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+								fmt.Sprintf("hostPort is true, but not found related definition in port [%s]",
+									*port.Name))
+							continue
+						}
 						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
 							IP:     ep.NodeAddresses[0],
 							Port:   int(*port.HostPort),
@@ -458,7 +465,7 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 
 	var retBackends []networkextensionv1.ListenerBackend
 	for _, pod := range podList {
-		if len(pod.Status.PodIP) == 0 || pod.Status.Phase != k8scorev1.PodRunning {
+		if !rc.checkPodNeedHandle(pod) {
 			continue
 		}
 		backendWeight := rc.getPodWeight(pod, weight)
@@ -616,4 +623,26 @@ func (rc *RuleConverter) patchPodLBWeightReady(pod *k8scorev1.Pod) error {
 		},
 	}
 	return rc.cli.Patch(context.TODO(), updatePod, client.RawPatch(k8stypes.MergePatchType, patchData))
+}
+
+// return true if pod need to be handled
+func (rc *RuleConverter) checkPodNeedHandle(pod *k8scorev1.Pod) bool {
+	if len(pod.Status.PodIP) == 0 || pod.Status.Phase != k8scorev1.PodRunning {
+		return false
+	}
+
+	containerAllDown := true
+	for _, containerStatus := range pod.Status.ContainerStatuses {
+		// if terminated is nil, means container is running or waiting
+		if containerStatus.State.Terminated == nil {
+			containerAllDown = false
+			break
+		}
+	}
+	// if all of pod's containers all down, no need to handle the pod
+	if containerAllDown {
+		blog.Infof("pod[%s/%s] containers all down, skip...", pod.GetNamespace(), pod.GetName())
+		return false
+	}
+	return true
 }

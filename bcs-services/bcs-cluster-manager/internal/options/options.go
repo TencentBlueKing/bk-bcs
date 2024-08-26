@@ -14,6 +14,7 @@
 package options
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encryptv2" // nolint
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -186,16 +187,6 @@ type IAMConfig struct {
 	ApplyPermAddress string `json:"applyPermAddress"`
 }
 
-// BCSAppConfig for bcs-app
-type BCSAppConfig struct {
-	Server     string `json:"server"`
-	AppCode    string `json:"appCode"`
-	AppSecret  string `json:"appSecret"`
-	BkUserName string `json:"bkUserName"`
-	Enable     bool   `json:"enable"`
-	Debug      bool   `json:"debug"`
-}
-
 // HelmConfig for helm
 type HelmConfig struct {
 	Enable bool `json:"enable"`
@@ -211,6 +202,7 @@ type AutoScaler struct {
 	ReleaseName      string `json:"releaseName"`
 	ReleaseNamespace string `json:"releaseNamespace"`
 	IsPublicRepo     bool   `json:"isPublicRepo"`
+	CaImageRegistry  string `json:"caImageRegistry"`
 }
 
 // BcsWatch config
@@ -232,16 +224,21 @@ type VirtualCluster struct {
 	IsPublicRepo  bool   `json:"isPublicRepo"`
 }
 
+// AddonData addon data
+type AddonData struct {
+	AddonName string `json:"addonName"`
+}
+
 // ComponentDeploy config
 type ComponentDeploy struct {
-	AutoScaler    AutoScaler     `json:"autoScaler"`
-	Watch         BcsWatch       `json:"watch"`
-	Vcluster      VirtualCluster `json:"vcluster"`
-	Registry      string         `json:"registry"`
-	BCSAPIGateway string         `json:"bcsApiGateway"`
-	Token         string         `json:"token"`
-	DeployService string         `json:"deployService"`
-	BcsClusterUrl string         `json:"bcsClusterUrl"`
+	AutoScaler      AutoScaler     `json:"autoScaler"`
+	Watch           BcsWatch       `json:"watch"`
+	Vcluster        VirtualCluster `json:"vcluster"`
+	ImagePullSecret AddonData      `json:"imagePullSecret"`
+	Registry        string         `json:"registry"`
+	BCSAPIGateway   string         `json:"bcsApiGateway"`
+	Token           string         `json:"token"`
+	BcsClusterUrl   string         `json:"bcsClusterUrl"`
 }
 
 // AuthConfig config for auth
@@ -308,12 +305,12 @@ type ClusterManagerOptions struct {
 	Job                JobConfig             `json:"job"`
 	Debug              bool                  `json:"debug"`
 	Version            BCSEdition            `json:"version"`
-	BCSAppConfig       BCSAppConfig          `json:"bcsapp"`
 	Helm               HelmConfig            `json:"helm"`
 	ComponentDeploy    ComponentDeploy       `json:"componentDeploy"`
 	ResourceSchemaPath string                `json:"resourceSchemaPath"`
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
+	TracingConfig      conf.TracingConfig    `json:"tracingConfig"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
 	Daemon             DaemonConfig          `json:"daemon"`
 	ServerConfig

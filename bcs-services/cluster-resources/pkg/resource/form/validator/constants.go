@@ -17,13 +17,13 @@ import resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/res
 // FormSupportedResAPIVersion 支持表单化的资源版本
 var FormSupportedResAPIVersion = map[string][]string{
 	// 工作负载类
-	resCsts.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	resCsts.DS:     {"apps/v1", "extensions/v1", "extensions/v1beta1"},
-	resCsts.STS:    {"apps/v1"},
+	resCsts.Deploy: {"apps/v1", "extensions/v1", "extensions/v1beta1", "apps/v1beta2"},
+	resCsts.DS:     {"apps/v1", "extensions/v1", "extensions/v1beta1", "apps/v1beta2"},
+	resCsts.STS:    {"apps/v1", "apps/v1beta2"},
 	resCsts.CJ:     {"batch/v1", "batch/v1beta1"},
-	resCsts.Job:    {"batch/v1"},
+	resCsts.Job:    {"batch/v1", "apps/v1beta2"},
 	resCsts.Po:     {"v1"},
-	resCsts.HPA:    {"autoscaling/v2beta2", "autoscaling/v2"},
+	resCsts.HPA:    {"autoscaling/v2", "autoscaling/v2beta2"},
 	// 网络类
 	resCsts.Ing: {"networking.k8s.io/v1", "networking.k8s.io/v1beta1", "extensions/v1beta1"},
 	resCsts.SVC: {"v1"},

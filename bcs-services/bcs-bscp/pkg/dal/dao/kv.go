@@ -20,6 +20,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -59,6 +60,10 @@ type Kv interface {
 		newKVStates table.KvState) error
 	// DeleteByStateWithTx deletes kv pairs with a specific state using a transaction
 	DeleteByStateWithTx(kit *kit.Kit, tx *gen.QueryTx, kv *table.Kv) error
+	// FetchIDsExcluding 获取指定ID后排除的ID
+	FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error)
+	// CountNumberUnDeleted 统计未删除的数量
+	CountNumberUnDeleted(kit *kit.Kit, bizID uint32, opt *types.ListKvOption) (int64, error)
 }
 
 var _ Kv = new(kvDao)
@@ -67,6 +72,38 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// CountNumberUnDeleted 统计未删除的数量
+func (dao *kvDao) CountNumberUnDeleted(kit *kit.Kit, bizID uint32, opt *types.ListKvOption) (int64, error) {
+	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(opt.AppID))
+	if opt.SearchKey != "" {
+		searchKey := "(?i)" + opt.SearchKey
+		q = q.Where(q.Where(q.Or(m.Key.Regexp(searchKey)).Or(m.Creator.Regexp(searchKey)).Or(
+			m.Reviser.Regexp(searchKey))))
+	}
+
+	if len(opt.Status) != 0 {
+		q = q.Where(m.KvState.In(opt.Status...))
+	}
+
+	return q.Where(m.BizID.Eq(opt.BizID)).Where(m.KvState.Neq(table.KvStateDelete.String())).Count()
+}
+
+// FetchIDsExcluding 获取指定ID后排除的ID
+func (dao *kvDao) FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error) {
+	m := dao.genQ.Kv
+	q := dao.genQ.Kv.WithContext(kit.Ctx)
+
+	var result []uint32
+	if err := q.Select(m.ID).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ID.NotIn(ids...)).
+		Pluck(m.ID, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // BatchDeleteWithTx batch delete content instances with transaction.
@@ -107,7 +144,7 @@ func (dao *kvDao) Create(kit *kit.Kit, kv *table.Kv) (uint32, error) {
 		return 0, fmt.Errorf("kv is nil")
 	}
 
-	if err := kv.ValidateCreate(); err != nil {
+	if err := kv.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -399,7 +436,7 @@ func (dao *kvDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, kvs []*table.
 		return err
 	}
 	for i, kv := range kvs {
-		if e := kv.ValidateCreate(); e != nil {
+		if e := kv.ValidateCreate(kit); e != nil {
 			return e
 		}
 		kv.ID = ids[i]
@@ -456,7 +493,7 @@ func (dao *kvDao) UpdateSelectedKVStates(kit *kit.Kit, tx *gen.QueryTx, bizID, a
 // ListAllByAppID list all Kv by appID
 func (dao *kvDao) ListAllByAppID(kit *kit.Kit, appID uint32, bizID uint32, kvState []string) ([]*table.Kv, error) {
 	if appID == 0 {
-		return nil, errf.New(errf.InvalidParameter, "appID can not be 0")
+		return nil, errf.New(errf.InvalidParameter, i18n.T(kit, "appID can not be 0"))
 	}
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "bizID can not be 0")

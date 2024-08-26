@@ -15,7 +15,6 @@ package parser
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -24,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
 
 // GetResParseFunc 获取资源对应 Parser
@@ -41,25 +41,22 @@ func GetResParseFunc(
 var sep = regexp.MustCompile("(?:^|\\s*\n)---\\s*")
 
 // SplitManifests takes a string of manifest and returns a map contains individual manifests
-func SplitManifests(bigFile string) map[string]string {
+func SplitManifests(bigFile string) []string {
 	// Basically, we're quickly splitting a stream of YAML documents into an
 	// array of YAML docs. The file name is just a place holder, but should be
 	// integer-sortable so that manifests get output in the same order as the
 	// input (see `BySplitManifestsOrder`).
-	tpl := "manifest-%d"
-	res := map[string]string{}
+	res := make([]string, 0)
 	// Making sure that any extra whitespace in YAML stream doesn't interfere in splitting documents correctly.
 	bigFileTmp := strings.TrimSpace(bigFile)
 	docs := sep.Split(bigFileTmp, -1)
-	var count int
 	for _, d := range docs {
 		if d == "" {
 			continue
 		}
 
 		d = strings.TrimSpace(d)
-		res[fmt.Sprintf(tpl, count)] = d
-		count++
+		res = append(res, d)
 	}
 	return res
 }
@@ -77,4 +74,17 @@ func GetManifestMetadata(manifest string) SimpleHead {
 		return entry
 	}
 	return entry
+}
+
+// GetResourceTypesFromManifest get resourceTypes from manifest
+func GetResourceTypesFromManifest(manifest string) []string {
+	resourceType := make([]string, 0)
+	manifests := SplitManifests(manifest)
+	for _, v := range manifests {
+		metadata := GetManifestMetadata(v)
+		if metadata.Kind != "" {
+			resourceType = append(resourceType, metadata.Kind)
+		}
+	}
+	return slice.RemoveDuplicateValues(resourceType)
 }

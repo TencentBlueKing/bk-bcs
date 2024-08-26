@@ -95,12 +95,19 @@ func (la *ListAction) validate() error {
 
 // getSharedCluster shared cluster
 func (la *ListAction) getSharedCluster() error {
+	conds := make([]*operator.Condition, 0)
+
 	condM := make(operator.M)
 	condM["isshared"] = true
 	condCluster := operator.NewLeafCondition(operator.Eq, condM)
-	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+	conds = append(conds, condCluster)
 
-	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+	if !la.req.GetAll() {
+		condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+		conds = append(conds, condStatus)
+	}
+
+	branchCond := operator.NewBranchCondition(operator.And, conds...)
 	clusterList, err := la.model.ListCluster(la.ctx, branchCond, &storeopt.ListOption{})
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		return err
@@ -138,6 +145,8 @@ func (la *ListAction) getSharedCluster() error {
 func (la *ListAction) listCluster() error {
 	getSharedCluster := true
 
+	conds := make([]*operator.Condition, 0)
+
 	condM := make(operator.M)
 	if len(la.req.ClusterName) != 0 {
 		condM["clustername"] = la.req.ClusterName
@@ -173,11 +182,15 @@ func (la *ListAction) listCluster() error {
 	if len(la.req.ClusterID) != 0 {
 		condM["clusterid"] = la.req.ClusterID
 	}
-
 	condCluster := operator.NewLeafCondition(operator.Eq, condM)
-	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+	conds = append(conds, condCluster)
 
-	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
+	if !la.req.All {
+		condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
+		conds = append(conds, condStatus)
+	}
+	branchCond := operator.NewBranchCondition(operator.And, conds...)
+
 	clusterList, err := la.model.ListCluster(la.ctx, branchCond, &storeopt.ListOption{})
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		return err
@@ -658,7 +671,7 @@ func (la *ListNodesInClusterAction) listNodes() error {
 	}
 
 	// get cluster nodes
-	k8sNodes := filterNodesRole(la.getK8sNodes(cmNodes), false)
+	k8sNodes := autils.FilterNodesRole(la.getK8sNodes(cmNodes), false)
 	la.nodes = mergeClusterNodes(la.cluster, cmNodes, k8sNodes)
 
 	return nil
@@ -826,7 +839,7 @@ func (la *ListMastersInClusterAction) listNodes() error {
 			return err
 		}
 
-		masters = filterNodesRole(masters, true)
+		masters = autils.FilterNodesRole(masters, true)
 		la.nodes = transK8sNodesToClusterNodes(la.req.ClusterID, masters)
 	}
 

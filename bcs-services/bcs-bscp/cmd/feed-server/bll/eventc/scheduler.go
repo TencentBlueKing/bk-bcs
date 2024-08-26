@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/samber/lo"
 	"go.uber.org/atomic"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/time/rate"
@@ -38,6 +39,7 @@ import (
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -322,10 +324,21 @@ func (sch *Scheduler) notifyOne(kt *kit.Kit, cursorID uint32, one *member) {
 func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.ReleaseCICache,
 	pre *types.ReleasedHookCache, post *types.ReleasedHookCache, releaseID uint32, cursorID uint32) *Event {
 	uriD := sch.provider.URIDecorator(inst.BizID)
-	ciMeta := make([]*sfs.ConfigItemMetaV1, len(ciList))
-	for idx, one := range ciList {
+	ciMeta := make([]*sfs.ConfigItemMetaV1, 0)
+	for _, one := range ciList {
 		cis := one.ConfigItemSpec
-		ciMeta[idx] = &sfs.ConfigItemMetaV1{
+		// filter out mismatched config items
+		// if inst.Match is empty, then all the config items are matched.
+		if len(inst.Match) > 0 {
+			isMatch := lo.SomeBy(inst.Match, func(scope string) bool {
+				ok, _ := tools.MatchConfigItem(scope, cis.Path, cis.Name)
+				return ok
+			})
+			if !isMatch {
+				continue
+			}
+		}
+		m := &sfs.ConfigItemMetaV1{
 			ID:       one.ID,
 			CommitID: one.CommitID,
 			ContentSpec: &pbct.ContentSpec{
@@ -358,6 +371,7 @@ func (sch *Scheduler) buildEvent(inst *sfs.InstanceSpec, ciList []*types.Release
 			},
 			RepositoryPath: uriD.Path(one.CommitSpec.Signature),
 		}
+		ciMeta = append(ciMeta, m)
 	}
 	var releaseName string
 	if len(ciList) > 0 {
@@ -430,9 +444,13 @@ func (sch *Scheduler) watchRetry() {
 func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.ReleaseKvCache, releaseID uint32,
 	cursorID uint32) *Event {
 
-	kvMeta := make([]*sfs.KvMetaV1, len(kvList))
-	for idx, one := range kvList {
-		kvMeta[idx] = &sfs.KvMetaV1{
+	kvMeta := make([]*sfs.KvMetaV1, 0)
+	for _, one := range kvList {
+		// filter out mismatched config items
+		if !tools.MatchPattern(one.Key, inst.Match) {
+			continue
+		}
+		m := &sfs.KvMetaV1{
 			ID:     one.ID,
 			Key:    one.Key,
 			KvType: one.KvType,
@@ -448,6 +466,7 @@ func (sch *Scheduler) buildEventForRkv(inst *sfs.InstanceSpec, kvList []*types.R
 			},
 			ContentSpec: pbct.PbContentSpec(one.ContentSpec),
 		}
+		kvMeta = append(kvMeta, m)
 	}
 
 	return &Event{

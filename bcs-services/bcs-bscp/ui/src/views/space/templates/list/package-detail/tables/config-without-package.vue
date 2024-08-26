@@ -6,21 +6,27 @@
     current-pkg="no_specified"
     :space-id="spaceId"
     :get-config-list="getConfigList"
-    :show-delete-action="true">
+    :show-delete-action="true"
+    :is-across-checked="acrossCheckedType.isAcrossChecked"
+    :data-count="acrossCheckedType.dataCount"
+    @send-across-checked-type="
+      (checked, dataCount) => {
+        acrossCheckedType.isAcrossChecked = checked;
+        acrossCheckedType.dataCount = dataCount;
+      }
+    ">
     <template #tableOperations>
-      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
-      <DeleteConfigs
+      <BatchOperationButton
         :space-id="spaceId"
-        :current-template-space="currentTemplateSpace"
         :configs="selectedConfigs"
+        :current-template-space="currentTemplateSpace"
+        pkg-type="without"
+        :is-across-checked="acrossCheckedType.isAcrossChecked"
+        :data-count="acrossCheckedType.dataCount"
+        @refresh="refreshConfigList"
         @deleted="handleConfigsDeleted" />
     </template>
   </CommonConfigTable>
-  <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="selectedConfigs" @added="refreshConfigList" />
-  <DeleteConfigDialog
-    v-model:show="isDeleteConfigDialogShow"
-    :configs="selectedConfigs"
-    @deleted="handleConfigsDeleted" />
 </template>
 <script lang="ts" setup>
   import { ref } from 'vue';
@@ -31,10 +37,7 @@
   import { ITemplateConfigItem } from '../../../../../../../types/template';
   import { getTemplatesWithNoSpecifiedPackage } from '../../../../../../api/template';
   import CommonConfigTable from './common-config-table.vue';
-  import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue';
-  import AddToDialog from '../operations/add-to-pkgs/add-to-dialog.vue';
-  import DeleteConfigs from '../operations/delete-configs/delete-button.vue';
-  import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
+  import BatchOperationButton from '../operations/batch-operations/batch-operation-btn.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
@@ -42,8 +45,10 @@
 
   const configTable = ref();
   const selectedConfigs = ref<ITemplateConfigItem[]>([]);
-  const isAddToPkgsDialogShow = ref(false);
-  const isDeleteConfigDialogShow = ref(false);
+  const acrossCheckedType = ref<{ isAcrossChecked: boolean; dataCount: number }>({
+    isAcrossChecked: false,
+    dataCount: 0,
+  });
 
   const getConfigList = (params: ICommonQuery) => {
     const res = getTemplatesWithNoSpecifiedPackage(spaceId.value, currentTemplateSpace.value, params);

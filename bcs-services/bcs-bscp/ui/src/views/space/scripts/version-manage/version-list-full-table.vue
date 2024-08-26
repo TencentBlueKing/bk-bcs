@@ -40,7 +40,7 @@
         </span>
       </template>
     </bk-table-column>
-    <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '240' : '300'" :fixed="'right'">
+    <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '240' : '330'" :fixed="'right'">
       <template #default="{ row }">
         <slot name="operations" :data="row"></slot>
       </template>

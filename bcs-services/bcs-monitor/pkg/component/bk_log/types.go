@@ -207,6 +207,10 @@ func (resp *ListBCSCollectorRespData) ToLogRule() LogRule {
 	rule := LogRule{
 		AddPodLabel: resp.AddPodLabel,
 		ExtraLabels: make([]Label, 0),
+		LogRuleContainer: LogRuleContainer{
+			Namespaces: make([]string, 0),
+			Paths:      make([]string, 0),
+		},
 	}
 	if resp.ExtraLabels != nil {
 		rule.ExtraLabels = resp.ExtraLabels

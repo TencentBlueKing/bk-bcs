@@ -26,10 +26,16 @@ const (
 	Bar ChartType = "bar"
 )
 
-// ClientConfigVersionChart 客户端配置图表
-type ClientConfigVersionChart struct {
+// CurrentConfigVersionChart 当前版本配置图表
+type CurrentConfigVersionChart struct {
 	CurrentReleaseID uint32 `json:"current_release_id"`
 	Count            int    `json:"count"`
+}
+
+// TargetConfigVersionChart 目标版本配置图表
+type TargetConfigVersionChart struct {
+	TargetReleaseID uint32 `json:"target_release_id"`
+	Count           int    `json:"count"`
 }
 
 // ChangeStatusChart 客户端变更状态图表

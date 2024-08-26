@@ -23,8 +23,8 @@
       end
 
       if obj.status.desired ~= nil then
-        if obj.status.succeed ~= nil then
-          if obj.status.desired == obj.status.succeed then
+        if obj.status.succeeded ~= nil then
+          if obj.status.desired == obj.status.succeeded then
             hs.status = "Healthy"
             return hs
           end

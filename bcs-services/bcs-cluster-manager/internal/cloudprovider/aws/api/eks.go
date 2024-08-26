@@ -40,6 +40,21 @@ func NewEksClient(opt *cloudprovider.CommonOption) (*EksClient, error) {
 	}, nil
 }
 
+// CreateEksCluster creates an eks cluster
+func (cli *EksClient) CreateEksCluster(input *eks.CreateClusterInput) (*eks.Cluster, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	output, err := cli.eksClient.CreateCluster(input)
+	if err != nil {
+		return nil, err
+	}
+
+	blog.Infof("eksClient create eks cluster[%s] success", *input.Name)
+	return output.Cluster, nil
+}
+
 // ListEksCluster get eks cluster list, region parameter init eks client
 func (cli *EksClient) ListEksCluster() ([]*string, error) {
 	if cli == nil {
@@ -52,6 +67,7 @@ func (cli *EksClient) ListEksCluster() ([]*string, error) {
 		return nil, err
 	}
 
+	blog.Infof("eksClient list eks clusters success")
 	return output.Clusters, nil
 }
 
@@ -69,16 +85,56 @@ func (cli *EksClient) GetEksCluster(clusterName string) (*eks.Cluster, error) {
 		return nil, err
 	}
 
+	blog.Infof("eksClient get eks cluster[%s] success", clusterName)
 	return output.Cluster, nil
 }
 
-// CreateNodegroup creates a eks node group
-func (cli *EksClient) CreateNodegroup(input *CreateNodegroupInput) (*eks.Nodegroup, error) {
-	blog.Infof("CreateNodegroup request: %s", utils.ToJSONString(input))
+// DeleteEksCluster deletes the eks cluster
+func (cli *EksClient) DeleteEksCluster(clusterName string) (*eks.Cluster, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
-	output, err := cli.eksClient.CreateNodegroup(generateAwsCreateNodegroupInput(input))
+
+	input := &eks.DeleteClusterInput{
+		Name: aws.String(clusterName),
+	}
+	output, err := cli.eksClient.DeleteCluster(input)
+	if err != nil {
+		return nil, err
+	}
+
+	blog.Infof("eksClient delete eks cluster[%s] success", clusterName)
+	return output.Cluster, nil
+}
+
+// ListNodegroups list eks node groups
+func (cli *EksClient) ListNodegroups(clusterName string) ([]*string, error) {
+	blog.Infof("ListNodegroups in cluster[%s]", clusterName)
+	output, err := cli.eksClient.ListNodegroups(&eks.ListNodegroupsInput{
+		ClusterName: aws.String(clusterName),
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Nodegroups == nil {
+		blog.Errorf("ListNodegroups resp is nil")
+		return nil, fmt.Errorf("ListNodegroups resp is nil")
+	}
+	blog.Infof("ListNodegroups[%+v] successful", aws.StringValueSlice(output.Nodegroups))
+
+	return output.Nodegroups, nil
+}
+
+// CreateNodegroup creates eks node group
+func (cli *EksClient) CreateNodegroup(input *CreateNodegroupInput) (*eks.Nodegroup, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+	newInput := generateAwsCreateNodegroupInput(input)
+	blog.Infof("CreateNodegroup request: %s", utils.ToJSONString(newInput))
+	output, err := cli.eksClient.CreateNodegroup(newInput)
 	if err != nil {
 		return nil, err
 	}
@@ -91,9 +147,9 @@ func (cli *EksClient) CreateNodegroup(input *CreateNodegroupInput) (*eks.Nodegro
 	return output.Nodegroup, nil
 }
 
-// DescribeNodegroup gets a eks node group info
+// DescribeNodegroup gets eks node group info
 func (cli *EksClient) DescribeNodegroup(ngName, clusterName *string) (*eks.Nodegroup, error) {
-	blog.Infof("DescribeNodegroup[%s] in cluster %s", ngName, clusterName)
+	blog.Infof("DescribeNodegroup[%s] in cluster %s", *ngName, *clusterName)
 	output, err := cli.eksClient.DescribeNodegroup(&eks.DescribeNodegroupInput{
 		NodegroupName: ngName,
 		ClusterName:   clusterName,
@@ -111,7 +167,7 @@ func (cli *EksClient) DescribeNodegroup(ngName, clusterName *string) (*eks.Nodeg
 	return output.Nodegroup, nil
 }
 
-// UpdateNodegroupConfig gets a eks node group info
+// UpdateNodegroupConfig gets eks node group info
 func (cli *EksClient) UpdateNodegroupConfig(input *eks.UpdateNodegroupConfigInput) (*eks.Update, error) {
 	blog.Infof("UpdateNodegroupConfig request: %s", utils.ToJSONString(input))
 	output, err := cli.eksClient.UpdateNodegroupConfig(input)
@@ -127,7 +183,7 @@ func (cli *EksClient) UpdateNodegroupConfig(input *eks.UpdateNodegroupConfigInpu
 	return output.Update, nil
 }
 
-// DeleteNodegroup deletes a eks node group
+// DeleteNodegroup deletes eks node group
 func (cli *EksClient) DeleteNodegroup(input *eks.DeleteNodegroupInput) (*eks.Nodegroup, error) {
 	blog.Infof("DeleteNodegroup request: %s", utils.ToJSONString(input))
 	if cli == nil {

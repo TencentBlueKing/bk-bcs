@@ -55,6 +55,12 @@ var (
 	errNotImplemented = errors.New("notImplemented")
 )
 
+// MetadataResponse 文件元数据响应
+type MetadataResponse struct {
+	Exists   bool            `json:"exists"`
+	Metadata *ObjectMetadata `json:"metadata"`
+}
+
 // ObjectMetadata 文件元数据
 type ObjectMetadata struct {
 	ByteSize int64  `json:"byte_size"`

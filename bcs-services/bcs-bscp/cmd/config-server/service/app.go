@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -31,6 +32,7 @@ import (
 	pbapp "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest/view/webannotation"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/natsort"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/space"
 )
 
@@ -38,7 +40,7 @@ import (
 func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.CreateAppResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
-	if err := req.Validate(); err != nil {
+	if err := req.Validate(kt); err != nil {
 		return nil, err
 	}
 
@@ -325,10 +327,15 @@ func (s *Service) ListAppsBySpaceRest(ctx context.Context,
 		}
 	}
 
+	sort.SliceStable(rp.Details, func(i, j int) bool {
+		return natsort.NaturalLess(rp.Details[i].Spec.Name, rp.Details[j].Spec.Name)
+	})
+
 	resp := &pbcs.ListAppsResp{
 		Count:   rp.Count,
 		Details: rp.Details,
 	}
+
 	return resp, nil
 }
 

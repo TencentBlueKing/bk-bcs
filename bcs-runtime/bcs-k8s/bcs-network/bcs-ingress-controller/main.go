@@ -18,7 +18,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -94,6 +96,8 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 
 	opts.SetFromEnv()
+	ctx, cancel := context.WithCancel(context.Background())
+	go StartSignalHandler(cancel, 3)
 
 	// init port pool cache
 	portPoolCache := portpoolcache.NewCache()
@@ -140,9 +144,9 @@ func main() {
 	if err = eventWatcher.Init(); err != nil {
 		blog.Fatalf("init event watcher failed: %v", err)
 	}
-	go eventWatcher.Start(context.Background())
+	go eventWatcher.Start(ctx)
 
-	validater, lbClient, nodeClient := initClient(opts, mgr.GetClient(), eventWatcher)
+	validater, lbClient, nodeClient := initClient(ctx, opts, mgr.GetClient(), eventWatcher)
 
 	if len(opts.Region) == 0 {
 		blog.Errorf("region cannot be empty")
@@ -170,7 +174,7 @@ func main() {
 	// ingressCache 缓存ingress相关的service/workload信息，避免量大时影响ingress调谐时间
 	ingressCache := ingresscache.NewDefaultCache()
 	if err = (&ingressctrl.IngressReconciler{
-		Ctx:                             context.Background(),
+		Ctx:                             ctx,
 		Client:                          mgr.GetClient(),
 		Log:                             ctrl.Log.WithName("controllers").WithName("Ingress"),
 		Option:                          opts,
@@ -186,7 +190,7 @@ func main() {
 	}
 
 	listenerReconciler := listenerctrl.NewListenerReconciler()
-	listenerReconciler.Ctx = context.Background()
+	listenerReconciler.Ctx = ctx
 	listenerReconciler.Client = mgr.GetClient()
 	listenerReconciler.CloudLb = lbClient
 	listenerReconciler.Option = opts
@@ -201,7 +205,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	portPoolReconciler := portpoolctrl.NewPortPoolReconciler(context.Background(), opts, lbClient,
+	portPoolReconciler := portpoolctrl.NewPortPoolReconciler(ctx, opts, lbClient,
 		mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), portPoolCache, lbIDCache, lbNameCache)
 	if err = portPoolReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port pool reconciler, err %s", err.Error())
@@ -210,21 +214,21 @@ func main() {
 
 	nodeBindCache := portbindingctrl.NewNodePortBindingCache()
 	portBindingReconciler := portbindingctrl.NewPortBindingReconciler(
-		context.Background(), opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache,
+		ctx, opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache,
 		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts.NodePortBindingNs, nodeBindCache)
 	if err = portBindingReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port binding reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
 
-	namespaceReconciler := namespacectrl.NewNamespaceReconciler(context.Background(), mgr.GetClient(), nodeBindCache)
+	namespaceReconciler := namespacectrl.NewNamespaceReconciler(ctx, mgr.GetClient(), nodeBindCache)
 	if err = namespaceReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create namespace reconciler, err %v", err)
 		os.Exit(1)
 	}
 
 	if opts.NodeInfoExporterOpen {
-		nodeReconciler := nodecontroller.NewNodeReconciler(context.Background(), mgr.GetClient(),
+		nodeReconciler := nodecontroller.NewNodeReconciler(ctx, mgr.GetClient(),
 			mgr.GetEventRecorderFor("bcs-ingress-controller"), opts, nodeCache, nodeClient)
 		if err = nodeReconciler.SetupWithManager(mgr); err != nil {
 			blog.Errorf("unable to create node reconciler, err %s", err.Error())
@@ -252,7 +256,7 @@ func main() {
 	mgr.Add(webhookServer) // nolint
 
 	// init cloud loadbalance backend status collector
-	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient())
+	collector := cloudcollector.NewCloudCollector(lbClient, mgr.GetClient(), opts.HealthCheckIntervalSecs)
 	go collector.Start()
 	metrics.Registry.MustRegister(collector)
 
@@ -266,7 +270,7 @@ func main() {
 	blog.Infof("starting http server")
 
 	// 定时执行检查
-	checkRunner := check.NewCheckRunner(context.Background())
+	checkRunner := check.NewCheckRunner(ctx)
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller")),
 			check.CheckPerMin).
@@ -348,7 +352,8 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 }
 
 // initClient 根据使用云厂商的不同，返回对应云厂商的实现
-func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher eventer.WatchEventInterface) (cloud.
+func initClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
+	eventWatcher eventer.WatchEventInterface) (cloud.
 	Validater, cloud.LoadBalance, cloudnode.NodeClient) {
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
@@ -365,7 +370,7 @@ func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher e
 			}
 		} else {
 			// NameSpacedLB在处理监听器时，会使用对应命名空间下的Secret作为云密钥
-			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher,
+			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher,
 				tencentcloud.NewClbWithSecret)
 		}
 		nodeClient = native.NewNativeNodeClient()
@@ -379,7 +384,7 @@ func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher e
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher, aws.NewElbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher, aws.NewElbWithSecret)
 		}
 		nodeClient = native.NewNativeNodeClient()
 
@@ -392,7 +397,7 @@ func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher e
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher,
+			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher,
 				gcp.NewGclbWithSecret)
 		}
 		nodeClient = native.NewNativeNodeClient()
@@ -406,7 +411,7 @@ func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher e
 				os.Exit(1)
 			}
 		} else {
-			lbClient = namespacedlb.NewNamespacedLB(cli, eventWatcher, azure.NewAlbWithSecret)
+			lbClient = namespacedlb.NewNamespacedLB(ctx, cli, eventWatcher, azure.NewAlbWithSecret)
 		}
 		nodeClient = native.NewNativeNodeClient()
 
@@ -415,4 +420,23 @@ func initClient(opts *option.ControllerOption, cli client.Client, eventWatcher e
 		os.Exit(1)
 	}
 	return validater, lbClient, nodeClient
+}
+
+// StartSignalHandler trap system signal for exit
+func StartSignalHandler(stop context.CancelFunc, gracefulExit int) {
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT)
+	<-ch
+	blog.Infof("server received stop signal.")
+	// trap system signal, stop
+	stop()
+	tick := time.NewTicker(time.Second * time.Duration(gracefulExit))
+	select {
+	case <-ch:
+		// double kill, just terminate immediately
+		os.Exit(0)
+	case <-tick.C:
+		// timeout
+		return
+	}
 }

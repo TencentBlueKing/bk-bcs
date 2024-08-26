@@ -15,6 +15,7 @@ package cmsi
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"net/http"
 
 	paasclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
@@ -50,7 +51,14 @@ type Client struct {
 	host          string
 	defaultHeader http.Header
 	client        *paasclient.RESTClient
-	baseReq       BaseReq
+	credential    Credential
+}
+
+// Credential credential to be filled in post body
+type Credential struct {
+	BKAppCode   string `json:"bk_app_code"`
+	BKAppSecret string `json:"bk_app_secret"`
+	BKUsername  string `json:"bk_username,omitempty"`
 }
 
 // SetDefaultHeader set default headers
@@ -58,19 +66,30 @@ func (c *Client) SetDefaultHeader(h http.Header) {
 	c.defaultHeader = h
 }
 
-// SetCommonReq set base request
-func (c *Client) SetCommonReq(br BaseReq) {
-	c.baseReq = br
+// GetHeader get headers
+func (c *Client) GetHeader() http.Header {
+	authBytes, _ := json.Marshal(c.credential)
+	c.defaultHeader.Add("X-Bkapi-Authorization", string(authBytes))
+	return c.defaultHeader
+}
+
+// WithCredential set credential
+func (c *Client) WithCredential(appCode, appSecret, username string) {
+	c.credential = Credential{
+		BKAppCode:   appCode,
+		BKAppSecret: appSecret,
+		BKUsername:  username,
+	}
 }
 
 // SendRtx send rtx message
 func (c *Client) SendRtx(req *SendRtxReq) (*SendRtxResp, error) {
 	resp := new(SendRtxResp)
-	req.BaseReq = c.baseReq
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cmsi/").
 		SubPathf("send_rtx").
+		WithHeaders(c.GetHeader()).
 		WithJSON(req).
 		Do().
 		Into(resp)
@@ -83,11 +102,11 @@ func (c *Client) SendRtx(req *SendRtxReq) (*SendRtxResp, error) {
 // SendVoiceMsg send voice message
 func (c *Client) SendVoiceMsg(req *SendVoiceMsgReq) (*SendVoiceMsgResp, error) {
 	resp := new(SendVoiceMsgResp)
-	req.BaseReq = c.baseReq
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cmsi/").
 		SubPathf("send_voice_msg").
+		WithHeaders(c.GetHeader()).
 		WithJSON(req).
 		Do().
 		Into(resp)
@@ -100,11 +119,11 @@ func (c *Client) SendVoiceMsg(req *SendVoiceMsgReq) (*SendVoiceMsgResp, error) {
 // SendMail send mail
 func (c *Client) SendMail(req *SendMailReq) (*SendMailResp, error) {
 	resp := new(SendMailResp)
-	req.BaseReq = c.baseReq
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cmsi/").
 		SubPathf("send_mail").
+		WithHeaders(c.GetHeader()).
 		WithJSON(req).
 		Do().
 		Into(resp)

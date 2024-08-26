@@ -14,11 +14,16 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 	"sync"
 
+	"gorm.io/gorm"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbtbr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-binding-relation"
@@ -1239,4 +1244,192 @@ func (s *Service) ListLatestTmplBoundUnnamedApps(ctx context.Context,
 		Details: details,
 	}
 	return resp, nil
+}
+
+// CheckTemplateSetReferencesApps 检测模板套餐绑定服务是否超出
+// nolint:funlen
+func (s *Service) CheckTemplateSetReferencesApps(ctx context.Context, req *pbds.CheckTemplateSetReferencesAppsReq) (
+	*pbds.CheckTemplateSetReferencesAppsResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	// 获取模板套餐信息
+	templateSets, err := s.dao.TemplateSet().ListByTemplateSpaceIdAndIds(kit, req.TemplateSpaceId, req.TemplateSetIds)
+	if err != nil {
+		return nil, err
+	}
+
+	templateSetNames := map[uint32]string{}
+	for _, v := range templateSets {
+		templateSetNames[v.ID] = v.Spec.Name
+	}
+
+	// 获取套餐引用的服务
+	bindings, err := s.dao.AppTemplateBinding().GetBindingAppByTemplateSetID(kit, req.BizId, req.TemplateSetIds)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	exists := map[uint32]bool{}
+	for _, v := range req.TemplateSetIds {
+		exists[v] = true
+	}
+
+	tmplSetAppsMap := make(map[uint32][]uint32)
+	appIds := []uint32{}
+	for _, binding := range bindings {
+		appIds = append(appIds, binding.Attachment.AppID)
+		for _, v := range binding.Spec.TemplateSetIDs {
+			if exists[v] {
+				tmplSetAppsMap[v] = append(tmplSetAppsMap[v], binding.Attachment.AppID)
+			}
+		}
+	}
+
+	for _, setId := range req.TemplateSetIds {
+		_, ok := tmplSetAppsMap[setId]
+		if !ok {
+			tmplSetAppsMap[setId] = []uint32{}
+		}
+	}
+
+	// 获取app信息
+	apps, err := s.dao.App().ListAppsByIDs(kit, appIds)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	appNames := map[uint32]string{}
+	for _, v := range apps {
+		appNames[v.ID] = v.Spec.Name
+	}
+
+	// 验证套餐以及引用服务是否超出
+	templateIDs := []uint32{}
+	createTemplateNum := 0
+	for _, item := range req.Items {
+		if item.GetId() != 0 {
+			templateIDs = append(templateIDs, item.GetId())
+		} else {
+			createTemplateNum++
+		}
+	}
+
+	templateSet, templateSetExceedsQuantity, err := s.checkTemplateSetExceedsLimit(kit, req.BizId,
+		req.GetTemplateSetIds(), templateIDs, createTemplateNum)
+	if err != nil {
+		return nil, err
+	}
+
+	appReferenceTmplSet, appExceedsQuantity, err := s.checkAppReferenceTmplSetExceedsLimit(kit, req.BizId,
+		req.GetTemplateSetIds(), templateIDs, createTemplateNum)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*pbds.CheckTemplateSetReferencesAppsResp_Item, 0)
+	for setId, item := range tmplSetAppsMap {
+		if len(item) > 0 {
+			for _, appId := range item {
+				results = append(results, &pbds.CheckTemplateSetReferencesAppsResp_Item{
+					TemplateSetId:              setId,
+					TemplateSetName:            templateSetNames[setId],
+					AppId:                      appId,
+					AppName:                    appNames[appId],
+					AppExceedsLimit:            appReferenceTmplSet[appId],
+					TemplateSetExceedsLimit:    templateSet[setId],
+					AppExceedsQuantity:         appExceedsQuantity[appId],
+					TemplateSetExceedsQuantity: templateSetExceedsQuantity[setId],
+				})
+			}
+		} else {
+			results = append(results, &pbds.CheckTemplateSetReferencesAppsResp_Item{
+				TemplateSetId:              setId,
+				TemplateSetName:            templateSetNames[setId],
+				TemplateSetExceedsLimit:    templateSet[setId],
+				TemplateSetExceedsQuantity: templateSetExceedsQuantity[setId],
+			})
+		}
+	}
+
+	return &pbds.CheckTemplateSetReferencesAppsResp{
+		Items: results,
+	}, nil
+}
+
+// 检测某个套餐是否超出限制
+func (s *Service) checkTemplateSetExceedsLimit(kt *kit.Kit, bizID uint32, templateSetIds []uint32,
+	templateIDs []uint32, additionalQuantity int) (map[uint32]bool, map[uint32]uint32, error) {
+
+	tmplSetTmplCnt := getTmplSetTmplCnt(bizID)
+
+	// 1. 查询套餐数据
+	templateSets, err := s.dao.TemplateSet().ListByIDs(kt, templateSetIds)
+	if err != nil {
+		return nil, nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get template set failed, err: %s", err))
+	}
+
+	exceedsLimit := map[uint32]bool{}
+	exceedsQuantity := map[uint32]uint32{}
+	// 2. 验证是否超出套餐限制
+	for _, v := range templateSets {
+		mergedIDs := tools.MergeAndDeduplicate(v.Spec.TemplateIDs, templateIDs)
+		quantity := len(mergedIDs) + additionalQuantity
+		if quantity > tmplSetTmplCnt {
+			exceedsLimit[v.ID] = true
+			exceedsQuantity[v.ID] = uint32(quantity)
+		}
+	}
+
+	return exceedsLimit, exceedsQuantity, nil
+}
+
+// 检测某个服务是否超出限制
+func (s *Service) checkAppReferenceTmplSetExceedsLimit(kt *kit.Kit, bizID uint32, templateSetIDs,
+	templateIDs []uint32, additionalQuantity int) (map[uint32]bool, map[uint32]uint32, error) {
+
+	// 4. 通过套餐获取绑定的服务数据
+	bindings, err := s.dao.AppTemplateBinding().GetBindingAppByTemplateSetID(kt, bizID, templateSetIDs)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+
+		return nil, nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kt, "get app template bindings by template set ids, err: %s", err))
+	}
+
+	if bindings == nil {
+		return nil, nil, nil
+	}
+
+	betectedTemplateSetIDs := make(map[uint32]bool, 0)
+	for _, v := range templateSetIDs {
+		betectedTemplateSetIDs[v] = true
+	}
+
+	appConfigCnt := getAppConfigCnt(bizID)
+
+	// 1. 统计服务下套餐的数量，不包含需要操作的套餐
+	configCountWithTemplates, excludedTemplateSetIDs, err := s.countNumberAppTemplateBindings(kt, bizID, bindings,
+		betectedTemplateSetIDs, additionalQuantity)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	exceedsLimit := map[uint32]bool{}
+	exceedsQuantity := map[uint32]uint32{}
+	for _, templateBinding := range bindings {
+		for _, spec := range templateBinding.Spec.Bindings {
+			// 不需要处理的套餐忽略掉
+			if !betectedTemplateSetIDs[spec.TemplateSetID] {
+				continue
+			}
+			// 需验证套餐数量是否超出限制
+			// 需要验证的套餐配置ID和需要操作的配置文件ID合并，判断是否超出限制
+			mergedIDs := tools.MergeAndDeduplicate(excludedTemplateSetIDs[spec.TemplateSetID], templateIDs)
+			quantity := len(mergedIDs) + configCountWithTemplates[templateBinding.Attachment.AppID]
+			if quantity > appConfigCnt {
+				exceedsLimit[templateBinding.Attachment.AppID] = true
+				exceedsQuantity[templateBinding.Attachment.AppID] = uint32(quantity)
+			}
+		}
+	}
+
+	return exceedsLimit, exceedsQuantity, nil
 }

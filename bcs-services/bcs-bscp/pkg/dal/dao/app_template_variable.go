@@ -32,6 +32,11 @@ type AppTemplateVariable interface {
 	Get(kit *kit.Kit, bizID, appID uint32) (*table.AppTemplateVariable, error)
 	// ListVariables lists all variables in app template variable
 	ListVariables(kit *kit.Kit, bizID, appID uint32) ([]*table.TemplateVariableSpec, error)
+	// DeleteWithTx delete one app template variable instance with transaction.
+	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error
+	// GetTemplateVariableWithTx get app template variable instance with transaction.
+	GetTemplateVariableWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) (
+		*table.AppTemplateVariable, error)
 }
 
 var _ AppTemplateVariable = new(appTemplateVariableDao)
@@ -40,6 +45,31 @@ type appTemplateVariableDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// GetTemplateVariableWithTx get app template variable instance with transaction.
+func (dao *appTemplateVariableDao) GetTemplateVariableWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32) (*table.AppTemplateVariable, error) {
+	m := dao.genQ.AppTemplateVariable
+
+	return tx.AppTemplateVariable.
+		WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Take()
+}
+
+// DeleteWithTx delete one app template variable instance with transaction.
+func (dao *appTemplateVariableDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32) error {
+
+	m := dao.genQ.AppTemplateVariable
+
+	_, err := tx.AppTemplateVariable.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Delete()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Upsert create or update one template variable instance.

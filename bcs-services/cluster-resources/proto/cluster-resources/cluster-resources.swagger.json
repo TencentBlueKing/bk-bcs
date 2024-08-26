@@ -503,6 +503,46 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources": {
+      "post": {
+        "summary": "Get multi cluster resources",
+        "description": "获取多集群原生资源列表",
+        "operationId": "MultiCluster_FetchMultiClusterApiResources",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterApiResourcesReq"
+            }
+          }
+        ],
+        "tags": [
+          "MultiCluster"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{crd}/custom_objects": {
       "post": {
         "summary": "Get multi cluster custom resources",
@@ -913,6 +953,88 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects": {
+      "delete": {
+        "summary": "Delete template space collect",
+        "description": "删除模板文件文件夹收藏",
+        "operationId": "TemplateSet_DeleteTemplateSpaceCollect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateSpaceID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      },
+      "post": {
+        "summary": "Create template space collect",
+        "description": "创建模板文件文件夹收藏",
+        "operationId": "TemplateSet_CreateTemplateSpaceCollect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateSpaceID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCreateTemplateSpaceCollectReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/template/spaces": {
       "get": {
         "summary": "Get template space list",
@@ -937,6 +1059,13 @@
             "name": "projectCode",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "文件夹名称.",
+            "in": "query",
+            "required": false,
             "type": "string"
           }
         ],
@@ -1093,6 +1222,52 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clusterresourcesUpdateTemplateSpaceReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}/copy": {
+      "post": {
+        "summary": "Copy template space",
+        "description": "复制模板文件文件夹",
+        "operationId": "TemplateSet_CopyTemplateSpace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCopyTemplateSpaceReq"
             }
           }
         ],
@@ -9846,6 +10021,21 @@
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
       "title": "CommonResp"
     },
+    "clusterresourcesCopyTemplateSpaceReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "文件夹 ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        }
+      },
+      "description": "复制模板文件文件夹",
+      "title": "CopyTemplateSpaceReq"
+    },
     "clusterresourcesCreateEnvManageReq": {
       "type": "object",
       "properties": {
@@ -9905,6 +10095,22 @@
         "content": {
           "type": "string",
           "title": "模板文件版本Content"
+        },
+        "isDraft": {
+          "type": "boolean",
+          "title": "是否草稿"
+        },
+        "draftVersion": {
+          "type": "string",
+          "title": "基于模板文件版本"
+        },
+        "draftContent": {
+          "type": "string",
+          "title": "模板文件草稿内容"
+        },
+        "draftEditFormat": {
+          "type": "string",
+          "title": "模板文件草稿编辑模式"
         }
       },
       "description": "创建模板文件元数据",
@@ -9963,6 +10169,21 @@
       "description": "创建模板集",
       "title": "CreateTemplateSetReq"
     },
+    "clusterresourcesCreateTemplateSpaceCollectReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "templateSpaceID": {
+          "type": "string",
+          "title": "模板文件文件夹ID"
+        }
+      },
+      "description": "创建模板文件文件夹收藏",
+      "title": "CreateTemplateSpaceCollectReq"
+    },
     "clusterresourcesCreateTemplateSpaceReq": {
       "type": "object",
       "properties": {
@@ -9996,6 +10217,10 @@
         "version": {
           "type": "string",
           "title": "模板文件版本"
+        },
+        "editFormat": {
+          "type": "string",
+          "title": "编辑模式"
         },
         "content": {
           "type": "string",
@@ -10099,6 +10324,39 @@
       },
       "description": "Echo API 响应",
       "title": "EchoResp"
+    },
+    "clusterresourcesFetchMultiClusterApiResourcesReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "clusterNamespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
+          },
+          "title": "集群和命名空间"
+        },
+        "onlyCrd": {
+          "type": "boolean",
+          "title": "是否只列出crd资源"
+        },
+        "viewID": {
+          "type": "string",
+          "title": "viewID"
+        },
+        "labelSelector": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clusterresourcesLabelSelector"
+          },
+          "title": "标签选择器"
+        }
+      },
+      "description": "获取多集群api资源请求体",
+      "title": "FetchMultiClusterApiResourcesReq"
     },
     "clusterresourcesFetchMultiClusterCustomResourceReq": {
       "type": "object",
@@ -10850,6 +11108,22 @@
         "versionMode": {
           "$ref": "#/definitions/clusterresourcesVersionMode",
           "title": "模板文件版本模式"
+        },
+        "isDraft": {
+          "type": "boolean",
+          "title": "是否草稿"
+        },
+        "draftVersion": {
+          "type": "string",
+          "title": "基于模板文件版本"
+        },
+        "draftContent": {
+          "type": "string",
+          "title": "模板文件草稿内容"
+        },
+        "draftEditFormat": {
+          "type": "string",
+          "title": "模板文件草稿编辑模式"
         }
       },
       "description": "更新模板文件元数据",

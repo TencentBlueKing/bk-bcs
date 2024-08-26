@@ -162,8 +162,8 @@ export const CLIENT_SEARCH_DATA = [
     value: 'label',
   },
   {
-    name: localT('当前配置版本'),
-    value: 'current_release_name',
+    name: localT('目标配置版本'),
+    value: 'target_release_name',
   },
   {
     name: localT('最近一次拉取配置状态'),
@@ -223,8 +223,8 @@ export const CLIENT_STATISTICS_SEARCH_DATA = [
     value: 'label',
   },
   {
-    name: localT('当前配置版本'),
-    value: 'current_release_name',
+    name: localT('目标配置版本'),
+    value: 'target_release_name',
   },
   // {
   //   name: '附加信息',

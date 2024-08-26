@@ -40,7 +40,10 @@ import {
   clusterOverview,
   clusterPodMetric,
 } from '@/api/base';
-import { clusterNodeMetric } from '@/api/modules/monitor';
+import { 
+  clusterNodeMetric,
+  clusterAllNodeOverview
+} from '@/api/modules/monitor';
 
 export default {
   namespaced: true,
@@ -366,6 +369,10 @@ export default {
     },
     async clusterNodeOverview(ctx, params) {
       const data = await clusterNodeOverview(params).catch(() => ({}));
+      return data;
+    },
+    async clusterAllNodeOverview(ctx, params) {
+      const data = await clusterAllNodeOverview(params).catch(() => ({}));
       return data;
     },
 

@@ -1949,6 +1949,53 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/serviceroles": {
+      "get": {
+        "summary": "查询awsCloud service role列表",
+        "description": "查询awsCloud service role列表",
+        "operationId": "ClusterManager_GetServiceRoles",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetServiceRolesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "roleType",
+            "description": "roleType. aws service role类型, 可选值为cluster,nodeGroup",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/subnets": {
       "get": {
         "summary": "查询vpc子网列表",
@@ -2022,6 +2069,13 @@
           {
             "name": "resourceGroupName",
             "description": "resourceGroupName. Azure Cloud中subnet所属resource group名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "name. 过滤查询子网名称包含name的子网",
             "in": "query",
             "required": false,
             "type": "string"
@@ -2779,6 +2833,14 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "all",
+            "description": "all. true时获取所有的集群信息,包括被软删除的集群; false时获取非DELETED状态的集群信息",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -3517,6 +3579,40 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/-/meta": {
+      "post": {
+        "summary": "查询多喝集群的元数据信息",
+        "description": "查询多个集群的元数据信息",
+        "operationId": "ClusterManager_GetClustersMetaData",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClustersMetaDataResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClustersMetaDataRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/module": {
       "put": {
         "summary": "更新集群master和node的转移模块信息",
@@ -3550,6 +3646,47 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/clustermanagerUpdateClusterModuleRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/clusters/{clusterID}/networks/underlay": {
+      "post": {
+        "summary": "切换集群的网络模式",
+        "description": "切换不同云集群的网络模式支持 underlay 网络模式(腾讯云支持vpc-cni等)",
+        "operationId": "ClusterManager_SwitchClusterUnderlayNetwork",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSwitchClusterUnderlayNetworkResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerSwitchClusterUnderlayNetworkReq"
             }
           }
         ],
@@ -4804,6 +4941,47 @@
         ]
       }
     },
+    "/clustermanager/v1/nodegroup/{nodeGroupID}/timerange": {
+      "post": {
+        "summary": "更新节点池定时扩缩容策略",
+        "description": "更新节点池定时扩缩容策略",
+        "operationId": "ClusterManager_UpdateGroupAsTimeRange",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateGroupAsTimeRangeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "nodeGroupID",
+            "description": "NodeGroupID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateGroupAsTimeRangeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/nodegroups/{nodeGroupID}/script": {
       "get": {
         "summary": "获取节点组的第三方节点上架脚本",
@@ -4997,6 +5175,27 @@
           {
             "name": "ipList",
             "description": "ipList. 通过,隔开ipList过滤任务",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskName",
+            "description": "taskName. 默认为空, 过滤任务名称维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceName",
+            "description": "resourceName. 默认为空, 过滤资源名称维度的操作审计",
             "in": "query",
             "required": false,
             "type": "string"
@@ -5894,6 +6093,95 @@
             "schema": {
               "$ref": "#/definitions/clustermanagerSkipTaskRequest"
             }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/taskrecords": {
+      "get": {
+        "summary": "查询任务记录列表",
+        "description": "查询任务记录列表",
+        "operationId": "ClusterManager_ListTaskRecords",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTaskRecordsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "taskID. 默认为空, 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
+    "/clustermanager/v1/tasksteplogs": {
+      "get": {
+        "summary": "查询任务步骤日志列表",
+        "description": "查询任务步骤日志列表",
+        "operationId": "ClusterManager_ListTaskStepLogs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListTaskStepLogsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskID",
+            "description": "taskID. 过滤任务维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "stepName",
+            "description": "stepName. 过滤任务步骤维度的操作审计",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "page. 页码",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 每页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
           }
         ],
         "tags": [
@@ -6836,10 +7124,10 @@
           "description": "开启自动升级GKE版本功能,如果集群为发布版本,则强制开启",
           "title": "autoUpgrade"
         },
-        "nodeRole": {
+        "serviceRole": {
           "type": "string",
           "description": "创建eks节点池时指定的iam角色名称",
-          "title": "nodeRole"
+          "title": "serviceRole"
         }
       },
       "title": "AutoScalingGroup define auto scaling information"
@@ -7538,6 +7826,12 @@
           "type": "string",
           "description": "vpcDomain内部域名配置",
           "title": "vpcDomain"
+        },
+        "disableCheckGroupResource": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "cloud是否关闭节点池资源quota校验开关",
+          "title": "disableCheckGroupResource"
         }
       },
       "description": "用于记录云公共配置信息",
@@ -7682,6 +7976,64 @@
           },
           "description": "cidr自动扩容步长设置",
           "title": "cidrStep"
+        },
+        "cidrSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerEnvCidrStep"
+          },
+          "description": "cidr自动扩容步长设置(随环境变量配置而变化)",
+          "title": "cidrSteps"
+        },
+        "serviceSteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "service数量扩容步长设置",
+          "title": "serviceSteps"
+        },
+        "perNodePodNum": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "单节点pod数量配置",
+          "title": "perNodePodNum"
+        },
+        "underlaySteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "underlay网络模式下用户手动分配子网的步长",
+          "title": "underlaySteps"
+        },
+        "underlayAutoSteps": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": "underlay网络模式下自动分配子网的步长",
+          "title": "underlayAutoSteps"
+        },
+        "underlayRatio": {
+          "type": "integer",
+          "format": "int64",
+          "description": "underlay网络模式下自动分配子网的步长",
+          "title": "underlayAutoSteps"
+        },
+        "vpcCniModes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNetworkMode"
+          },
+          "description": "vpc-cni插件下支持的网络模式",
+          "title": "vpcCniModes"
         }
       },
       "description": "用于记录公共网络配置信息",
@@ -8198,6 +8550,11 @@
           "format": "boolean",
           "description": "标记该集群是否是混部集群",
           "title": "isMixed"
+        },
+        "clusterIamRole": {
+          "type": "string",
+          "description": "aws的iam role, 用于创建eks集群",
+          "title": "clusterIamRole"
         }
       },
       "description": "记录集群信息，用于维护集群状态",
@@ -8623,6 +8980,24 @@
         }
       }
     },
+    "clustermanagerClusterMeta": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "集群Id",
+          "title": "clusterId"
+        },
+        "clusterNodeNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "集群节点数",
+          "title": "clusterNodeNum"
+        }
+      },
+      "description": "集群元数据信息列表",
+      "title": "ClusterMeta"
+    },
     "clustermanagerClusterMgr": {
       "type": "object",
       "properties": {
@@ -8668,6 +9043,14 @@
           "$ref": "#/definitions/clustermanagerAction",
           "description": "集群第三方节点空闲检查",
           "title": "checkExternalNodeEmptyAction"
+        },
+        "managedConfig": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerManagedConfig"
+          },
+          "description": "托管集群规格配置,目前适用于TKE",
+          "title": "managedConfig"
         }
       },
       "description": "用于记录集群层面固定、模板信息，帮助集群创建与维护.目前仅支持action(创建集群/删除集群/集群添加节点/集群删除节点)",
@@ -9819,6 +10202,11 @@
           "format": "boolean",
           "description": "标记该集群是否是混部集群, 默认是false",
           "title": "isMixed"
+        },
+        "clusterIamRole": {
+          "type": "string",
+          "description": "aws的iam role, 用于创建eks集群",
+          "title": "clusterIamRole"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -11332,6 +11720,18 @@
       "description": "开启NodeGroup自动扩缩容返回结果",
       "title": "EnableNodeGroupAutoScaleResponse"
     },
+    "clustermanagerEnvCidrStep": {
+      "type": "object",
+      "properties": {
+        "env": {
+          "type": "string"
+        },
+        "step": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
     "clustermanagerExistedSubnetIDs": {
       "type": "object",
       "properties": {
@@ -11840,6 +12240,63 @@
         "data"
       ]
     },
+    "clustermanagerGetClustersMetaDataRequest": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "集群列表",
+          "title": "clusters"
+        }
+      },
+      "description": "获取集群元数据信息",
+      "title": "GetClustersMetaDataRequest"
+    },
+    "clustermanagerGetClustersMetaDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerClusterMeta"
+          },
+          "description": "集群元数据信息列表",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询集群元数据信息返回",
+      "title": "GetClustersMetaDataResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerGetExternalNodeScriptResponse": {
       "type": "object",
       "properties": {
@@ -12293,6 +12750,38 @@
         }
       }
     },
+    "clustermanagerGetServiceRolesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerServiceRoleInfo"
+          },
+          "description": "获取到的信息",
+          "title": "data"
+        }
+      },
+      "description": "获取service role列表",
+      "title": "GetServiceRolesResponse"
+    },
     "clustermanagerGetTaskResponse": {
       "type": "object",
       "properties": {
@@ -12737,6 +13226,14 @@
           "type": "string",
           "description": "集群所在的资源组(azure云)",
           "title": "resourceGroup"
+        },
+        "nodeIps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "集群Master或者节点IP列表, 需要提前纳管至蓝鲸平台。通过反向代理实现集群纳管",
+          "title": "nodeIps"
         }
       },
       "description": "云provider导入集群模式",
@@ -14569,6 +15066,33 @@
         "data"
       ]
     },
+    "clustermanagerListTaskRecordsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerTaskRecordsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
     "clustermanagerListTaskResponse": {
       "type": "object",
       "properties": {
@@ -14609,6 +15133,63 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerListTaskStepLogsResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "$ref": "#/definitions/clustermanagerListTaskStepLogsResponseData",
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
+    },
+    "clustermanagerListTaskStepLogsResponseData": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "操作日志数量",
+          "title": "count"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskStepLogDetail"
+          },
+          "description": "返回数据",
+          "title": "results"
+        }
+      }
+    },
+    "clustermanagerManagedConfig": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "type": "string"
+        },
+        "desc": {
+          "type": "string"
+        }
+      }
     },
     "clustermanagerMapStruct": {
       "type": "object",
@@ -14835,6 +15416,21 @@
         }
       }
     },
+    "clustermanagerNetworkMode": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerNetworkSetting": {
       "type": "object",
       "properties": {
@@ -14876,14 +15472,14 @@
         },
         "subnetSource": {
           "$ref": "#/definitions/clustermanagerSubnetSource",
-          "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
-          "title": "isNonStaticIpMode"
+          "description": "集群VPC-CNI模式下的使用子网情况",
+          "title": "subnetSource"
         },
         "isStaticIpMode": {
           "type": "boolean",
           "format": "boolean",
           "description": "集群VPC-CNI模式是否为非固定IP，默认: FALSE 非固定IP",
-          "title": "isNonStaticIpMode"
+          "title": "isStaticIpMode"
         },
         "claimExpiredSeconds": {
           "type": "integer",
@@ -14919,6 +15515,16 @@
           "type": "string",
           "description": "集群service使用的IPv6地址池",
           "title": "serviceIPv6CIDR"
+        },
+        "status": {
+          "type": "string",
+          "description": "集群网络状态, 主要是变更网络组件过程中记录网络状态",
+          "title": "status"
+        },
+        "networkMode": {
+          "type": "string",
+          "description": "集群VpcCni网络模式(目前支持共享网卡模式tke-route-eni和独占网卡模式tke-direct-eni, 默认情况下是共享网卡模式)",
+          "title": "networkMode"
         }
       }
     },
@@ -16515,6 +17121,33 @@
       "description": "安全组信息",
       "title": "SecurityGroup"
     },
+    "clustermanagerServiceRoleInfo": {
+      "type": "object",
+      "properties": {
+        "roleName": {
+          "type": "string",
+          "description": "service role名称",
+          "title": "roleName"
+        },
+        "roleID": {
+          "type": "string",
+          "description": "service role ID",
+          "title": "roleID"
+        },
+        "arn": {
+          "type": "string",
+          "description": "service role arn",
+          "title": "arn"
+        },
+        "description": {
+          "type": "string",
+          "description": "service role描述",
+          "title": "description"
+        }
+      },
+      "description": "service role信息",
+      "title": "ServiceRoleInfo"
+    },
     "clustermanagerSkipTaskRequest": {
       "type": "object",
       "properties": {
@@ -16730,6 +17363,93 @@
           "title": "existed"
         }
       }
+    },
+    "clustermanagerSwitchClusterUnderlayNetworkReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "disable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "开关集群网络模式, 默认打开",
+          "title": "disable"
+        },
+        "subnet": {
+          "$ref": "#/definitions/clustermanagerSubnetSource",
+          "description": "添加子网的资源",
+          "title": "subnet"
+        },
+        "isStaticIpMode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否开启静态IP模式",
+          "title": "isStaticIpMode"
+        },
+        "claimExpiredSeconds": {
+          "type": "integer",
+          "format": "int64",
+          "description": "VPC-CNI网络模式下,弹性网卡IP回收时间",
+          "title": "claimExpiredSeconds"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人",
+          "title": "operator"
+        }
+      },
+      "description": "切换集群underlay网络模式请求",
+      "title": "SwitchClusterUnderlayNetworkReq",
+      "required": [
+        "clusterID",
+        "disable"
+      ]
+    },
+    "clustermanagerSwitchClusterUnderlayNetworkResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "task": {
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "集群创建任务（如果有），可用于查询自动化任务结果",
+          "title": "task"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属的集群权限",
+          "title": "web_annotations"
+        },
+        "cluster": {
+          "$ref": "#/definitions/clustermanagerCluster",
+          "description": "返回集群数据",
+          "title": "cluster"
+        }
+      },
+      "description": "切换集群网络模式返回",
+      "title": "SwitchClusterUnderlayNetworkResp",
+      "required": [
+        "code",
+        "message"
+      ]
     },
     "clustermanagerSyncAutoScalingOptionRequest": {
       "type": "object",
@@ -17088,6 +17808,110 @@
       "description": "集群管理，节点管理背后所映射任务信息，主要是关联的自动化步骤（整合云api与蓝鲸标准运维）",
       "title": "Task"
     },
+    "clustermanagerTaskRecordStep": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "任务名称",
+          "title": "name"
+        },
+        "status": {
+          "type": "string",
+          "description": "任务步骤状态(同上)",
+          "title": "status"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务开始时间戳",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskRecordStepData"
+          },
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        }
+      }
+    },
+    "clustermanagerTaskRecordStepData": {
+      "type": "object",
+      "properties": {
+        "log": {
+          "type": "string",
+          "description": "当前行内容",
+          "title": "log"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64",
+          "description": "时间戳",
+          "title": "timestamp"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        }
+      }
+    },
+    "clustermanagerTaskRecordsResponseData": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)",
+          "title": "status"
+        },
+        "step": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTaskRecordStep"
+          },
+          "description": "任务日志状态(waiting, loading, success, halfSuccess, failed, terminate)",
+          "title": "step"
+        }
+      }
+    },
+    "clustermanagerTaskStepLogDetail": {
+      "type": "object",
+      "properties": {
+        "taskID": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskID"
+        },
+        "stepName": {
+          "type": "string",
+          "description": "步骤名称",
+          "title": "stepName"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        },
+        "message": {
+          "type": "string",
+          "description": "日志信息",
+          "title": "message"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "发生时间",
+          "title": "createTime"
+        }
+      }
+    },
     "clustermanagerTemplateDetailInfo": {
       "type": "object",
       "properties": {
@@ -17164,7 +17988,7 @@
         },
         "zone": {
           "type": "string",
-          "description": "定时cron时区",
+          "description": "定时cron时区,如果不执行时区则默认是服务所在时区",
           "title": "zone"
         },
         "desiredNum": {
@@ -18364,6 +19188,64 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerUpdateGroupAsTimeRangeRequest": {
+      "type": "object",
+      "properties": {
+        "nodeGroupID": {
+          "type": "string",
+          "description": "NodeGroupID",
+          "title": "nodeGroupID"
+        },
+        "timeRanges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTimeRange"
+          },
+          "description": "定时自动扩容集群节点配置信息",
+          "title": "timeRanges"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作人员",
+          "title": "operator"
+        }
+      },
+      "description": "更新NodeGroup定时扩缩策略",
+      "title": "UpdateGroupAsTimeRangeRequest",
+      "required": [
+        "nodeGroupID",
+        "timeRanges"
+      ]
+    },
+    "clustermanagerUpdateGroupAsTimeRangeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "g更新NodeGroup定时扩缩节点策略请求结果",
+      "title": "UpdateGroupAsTimeRangeResponse"
     },
     "clustermanagerUpdateGroupDesiredNodeRequest": {
       "type": "object",

@@ -25,6 +25,7 @@ import (
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -39,15 +40,18 @@ type CreateAction struct {
 	req   *cmproto.CreateNodeGroupRequest
 	resp  *cmproto.CreateNodeGroupResponse
 
+	locker lock.DistributedLock
+
 	group   *cmproto.NodeGroup
 	cluster *cmproto.Cluster
 	cloud   *cmproto.Cloud
 }
 
 // NewCreateAction create namespace action
-func NewCreateAction(model store.ClusterManagerModel) *CreateAction {
+func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLock) *CreateAction {
 	return &CreateAction{
-		model: model,
+		model:  model,
+		locker: locker,
 	}
 }
 
@@ -218,8 +222,14 @@ func (ca *CreateAction) validate() error {
 func (ca *CreateAction) saveNodeGroup() error {
 	group := ca.constructNodeGroup()
 
+	// check resource pool quota
+	err := checkNodeGroupResourceValidate(ca.cloud.GetCloudProvider(), group, group.GetAutoScaling().GetMaxSize())
+	if err != nil {
+		return err
+	}
+
 	// store NodeGroup information to DB
-	if err := ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
+	if err = ca.model.CreateNodeGroup(ca.ctx, group); err != nil {
 		blog.Errorf("store nodegroup %+v information to DB failed, %s", group, err.Error())
 		return err
 	}
@@ -331,6 +341,12 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	ca.req = req
 	ca.resp = resp
 	ca.resp.Data = &cmproto.CreateNodeGroupResponseData{}
+
+	const (
+		createNodeGroupLockKey = "/bcs-services/bcs-cluster-manager/CreateNodeGroupAction"
+	)
+	ca.locker.Lock(createNodeGroupLockKey, []lock.LockOption{lock.LockTTL(time.Second * 5)}...) // nolint
+	defer ca.locker.Unlock(createNodeGroupLockKey)                                              // nolint
 
 	// getRelativeResource get cluster / cloud provider
 	if err := ca.getRelativeResource(); err != nil {

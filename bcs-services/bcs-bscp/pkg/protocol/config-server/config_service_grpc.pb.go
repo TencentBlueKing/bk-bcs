@@ -56,6 +56,7 @@ const (
 	Config_DeprecateRelease_FullMethodName                  = "/pbcs.Config/DeprecateRelease"
 	Config_UnDeprecateRelease_FullMethodName                = "/pbcs.Config/UnDeprecateRelease"
 	Config_DeleteRelease_FullMethodName                     = "/pbcs.Config/DeleteRelease"
+	Config_CheckReleaseName_FullMethodName                  = "/pbcs.Config/CheckReleaseName"
 	Config_CreateHook_FullMethodName                        = "/pbcs.Config/CreateHook"
 	Config_DeleteHook_FullMethodName                        = "/pbcs.Config/DeleteHook"
 	Config_BatchDeleteHook_FullMethodName                   = "/pbcs.Config/BatchDeleteHook"
@@ -85,14 +86,18 @@ const (
 	Config_UpdateTemplate_FullMethodName                    = "/pbcs.Config/UpdateTemplate"
 	Config_ListTemplates_FullMethodName                     = "/pbcs.Config/ListTemplates"
 	Config_BatchUpsertTemplates_FullMethodName              = "/pbcs.Config/BatchUpsertTemplates"
+	Config_BatchUpdateTemplatePermissions_FullMethodName    = "/pbcs.Config/BatchUpdateTemplatePermissions"
 	Config_AddTmplsToTmplSets_FullMethodName                = "/pbcs.Config/AddTmplsToTmplSets"
 	Config_DeleteTmplsFromTmplSets_FullMethodName           = "/pbcs.Config/DeleteTmplsFromTmplSets"
 	Config_ListTemplatesByIDs_FullMethodName                = "/pbcs.Config/ListTemplatesByIDs"
 	Config_ListTemplatesNotBound_FullMethodName             = "/pbcs.Config/ListTemplatesNotBound"
 	Config_ListTemplateByTuple_FullMethodName               = "/pbcs.Config/ListTemplateByTuple"
 	Config_ListTmplsOfTmplSet_FullMethodName                = "/pbcs.Config/ListTmplsOfTmplSet"
+	Config_ListTemplateSetsAndRevisions_FullMethodName      = "/pbcs.Config/ListTemplateSetsAndRevisions"
 	Config_CreateTemplateRevision_FullMethodName            = "/pbcs.Config/CreateTemplateRevision"
+	Config_UpdateTemplateRevision_FullMethodName            = "/pbcs.Config/UpdateTemplateRevision"
 	Config_ListTemplateRevisions_FullMethodName             = "/pbcs.Config/ListTemplateRevisions"
+	Config_GetTemplateRevision_FullMethodName               = "/pbcs.Config/GetTemplateRevision"
 	Config_ListTemplateRevisionsByIDs_FullMethodName        = "/pbcs.Config/ListTemplateRevisionsByIDs"
 	Config_ListTmplRevisionNamesByTmplIDs_FullMethodName    = "/pbcs.Config/ListTmplRevisionNamesByTmplIDs"
 	Config_CreateTemplateSet_FullMethodName                 = "/pbcs.Config/CreateTemplateSet"
@@ -111,7 +116,9 @@ const (
 	Config_GetReleasedAppBoundTmplRevision_FullMethodName   = "/pbcs.Config/GetReleasedAppBoundTmplRevision"
 	Config_UpdateAppBoundTmplRevisions_FullMethodName       = "/pbcs.Config/UpdateAppBoundTmplRevisions"
 	Config_DeleteAppBoundTmplSets_FullMethodName            = "/pbcs.Config/DeleteAppBoundTmplSets"
+	Config_RemoveAppBoundTmplSet_FullMethodName             = "/pbcs.Config/RemoveAppBoundTmplSet"
 	Config_CheckAppTemplateBinding_FullMethodName           = "/pbcs.Config/CheckAppTemplateBinding"
+	Config_ImportFromTemplateSetToApp_FullMethodName        = "/pbcs.Config/ImportFromTemplateSetToApp"
 	Config_ListTmplBoundCounts_FullMethodName               = "/pbcs.Config/ListTmplBoundCounts"
 	Config_ListTmplRevisionBoundCounts_FullMethodName       = "/pbcs.Config/ListTmplRevisionBoundCounts"
 	Config_ListTmplSetBoundCounts_FullMethodName            = "/pbcs.Config/ListTmplSetBoundCounts"
@@ -123,6 +130,7 @@ const (
 	Config_ListTmplRevisionBoundNamedApps_FullMethodName    = "/pbcs.Config/ListTmplRevisionBoundNamedApps"
 	Config_ListTmplSetBoundUnnamedApps_FullMethodName       = "/pbcs.Config/ListTmplSetBoundUnnamedApps"
 	Config_ListMultiTmplSetBoundUnnamedApps_FullMethodName  = "/pbcs.Config/ListMultiTmplSetBoundUnnamedApps"
+	Config_CheckTemplateSetReferencesApps_FullMethodName    = "/pbcs.Config/CheckTemplateSetReferencesApps"
 	Config_ListTmplSetBoundNamedApps_FullMethodName         = "/pbcs.Config/ListTmplSetBoundNamedApps"
 	Config_ListLatestTmplBoundUnnamedApps_FullMethodName    = "/pbcs.Config/ListLatestTmplBoundUnnamedApps"
 	Config_CreateTemplateVariable_FullMethodName            = "/pbcs.Config/CreateTemplateVariable"
@@ -182,6 +190,7 @@ const (
 	Config_ClientSpecificFailedReason_FullMethodName        = "/pbcs.Config/ClientSpecificFailedReason"
 	Config_CompareConfigItemConflicts_FullMethodName        = "/pbcs.Config/CompareConfigItemConflicts"
 	Config_CompareKvConflicts_FullMethodName                = "/pbcs.Config/CompareKvConflicts"
+	Config_GetTemplateAndNonTemplateCICount_FullMethodName  = "/pbcs.Config/GetTemplateAndNonTemplateCICount"
 )
 
 // ConfigClient is the client API for Config service.
@@ -221,6 +230,7 @@ type ConfigClient interface {
 	DeprecateRelease(ctx context.Context, in *DeprecateReleaseReq, opts ...grpc.CallOption) (*DeprecateReleaseResp, error)
 	UnDeprecateRelease(ctx context.Context, in *UnDeprecateReleaseReq, opts ...grpc.CallOption) (*UnDeprecateReleaseResp, error)
 	DeleteRelease(ctx context.Context, in *DeleteReleaseReq, opts ...grpc.CallOption) (*DeleteReleaseResp, error)
+	CheckReleaseName(ctx context.Context, in *CheckReleaseNameReq, opts ...grpc.CallOption) (*CheckReleaseNameResp, error)
 	CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error)
 	DeleteHook(ctx context.Context, in *DeleteHookReq, opts ...grpc.CallOption) (*DeleteHookResp, error)
 	BatchDeleteHook(ctx context.Context, in *BatchDeleteHookReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
@@ -252,14 +262,18 @@ type ConfigClient interface {
 	UpdateTemplate(ctx context.Context, in *UpdateTemplateReq, opts ...grpc.CallOption) (*UpdateTemplateResp, error)
 	ListTemplates(ctx context.Context, in *ListTemplatesReq, opts ...grpc.CallOption) (*ListTemplatesResp, error)
 	BatchUpsertTemplates(ctx context.Context, in *BatchUpsertTemplatesReq, opts ...grpc.CallOption) (*BatchUpsertTemplatesResp, error)
+	BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error)
 	AddTmplsToTmplSets(ctx context.Context, in *AddTmplsToTmplSetsReq, opts ...grpc.CallOption) (*AddTmplsToTmplSetsResp, error)
 	DeleteTmplsFromTmplSets(ctx context.Context, in *DeleteTmplsFromTmplSetsReq, opts ...grpc.CallOption) (*DeleteTmplsFromTmplSetsResp, error)
 	ListTemplatesByIDs(ctx context.Context, in *ListTemplatesByIDsReq, opts ...grpc.CallOption) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(ctx context.Context, in *ListTemplatesNotBoundReq, opts ...grpc.CallOption) (*ListTemplatesNotBoundResp, error)
 	ListTemplateByTuple(ctx context.Context, in *ListTemplateByTupleReq, opts ...grpc.CallOption) (*ListTemplateByTupleResp, error)
 	ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTmplSetReq, opts ...grpc.CallOption) (*ListTmplsOfTmplSetResp, error)
+	ListTemplateSetsAndRevisions(ctx context.Context, in *ListTemplateSetsAndRevisionsReq, opts ...grpc.CallOption) (*ListTemplateSetsAndRevisionsResp, error)
 	CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error)
+	UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*UpdateTemplateRevisionResp, error)
 	ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error)
+	GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
 	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
 	// (DeleteTemplateRevisionResp) {
@@ -287,7 +301,9 @@ type ConfigClient interface {
 	GetReleasedAppBoundTmplRevision(ctx context.Context, in *GetReleasedAppBoundTmplRevisionReq, opts ...grpc.CallOption) (*GetReleasedAppBoundTmplRevisionResp, error)
 	UpdateAppBoundTmplRevisions(ctx context.Context, in *UpdateAppBoundTmplRevisionsReq, opts ...grpc.CallOption) (*UpdateAppBoundTmplRevisionsResp, error)
 	DeleteAppBoundTmplSets(ctx context.Context, in *DeleteAppBoundTmplSetsReq, opts ...grpc.CallOption) (*DeleteAppBoundTmplSetsResp, error)
+	RemoveAppBoundTmplSet(ctx context.Context, in *RemoveAppBoundTmplSetReq, opts ...grpc.CallOption) (*RemoveAppBoundTmplSetResp, error)
 	CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error)
+	ImportFromTemplateSetToApp(ctx context.Context, in *ImportFromTemplateSetToAppReq, opts ...grpc.CallOption) (*ImportFromTemplateSetToAppResp, error)
 	ListTmplBoundCounts(ctx context.Context, in *ListTmplBoundCountsReq, opts ...grpc.CallOption) (*ListTmplBoundCountsResp, error)
 	ListTmplRevisionBoundCounts(ctx context.Context, in *ListTmplRevisionBoundCountsReq, opts ...grpc.CallOption) (*ListTmplRevisionBoundCountsResp, error)
 	ListTmplSetBoundCounts(ctx context.Context, in *ListTmplSetBoundCountsReq, opts ...grpc.CallOption) (*ListTmplSetBoundCountsResp, error)
@@ -299,6 +315,7 @@ type ConfigClient interface {
 	ListTmplRevisionBoundNamedApps(ctx context.Context, in *ListTmplRevisionBoundNamedAppsReq, opts ...grpc.CallOption) (*ListTmplRevisionBoundNamedAppsResp, error)
 	ListTmplSetBoundUnnamedApps(ctx context.Context, in *ListTmplSetBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListTmplSetBoundUnnamedAppsResp, error)
 	ListMultiTmplSetBoundUnnamedApps(ctx context.Context, in *ListMultiTmplSetBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListMultiTmplSetBoundUnnamedAppsResp, error)
+	CheckTemplateSetReferencesApps(ctx context.Context, in *CheckTemplateSetReferencesAppsReq, opts ...grpc.CallOption) (*CheckTemplateSetReferencesAppsResp, error)
 	ListTmplSetBoundNamedApps(ctx context.Context, in *ListTmplSetBoundNamedAppsReq, opts ...grpc.CallOption) (*ListTmplSetBoundNamedAppsResp, error)
 	ListLatestTmplBoundUnnamedApps(ctx context.Context, in *ListLatestTmplBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(ctx context.Context, in *CreateTemplateVariableReq, opts ...grpc.CallOption) (*CreateTemplateVariableResp, error)
@@ -361,6 +378,8 @@ type ConfigClient interface {
 	// config item compare conflicts related interface
 	CompareConfigItemConflicts(ctx context.Context, in *CompareConfigItemConflictsReq, opts ...grpc.CallOption) (*CompareConfigItemConflictsResp, error)
 	CompareKvConflicts(ctx context.Context, in *CompareKvConflictsReq, opts ...grpc.CallOption) (*CompareKvConflictsResp, error)
+	// 获取模板和非模板配置项数量
+	GetTemplateAndNonTemplateCICount(ctx context.Context, in *GetTemplateAndNonTemplateCICountReq, opts ...grpc.CallOption) (*GetTemplateAndNonTemplateCICountResp, error)
 }
 
 type configClient struct {
@@ -641,6 +660,15 @@ func (c *configClient) DeleteRelease(ctx context.Context, in *DeleteReleaseReq, 
 	return out, nil
 }
 
+func (c *configClient) CheckReleaseName(ctx context.Context, in *CheckReleaseNameReq, opts ...grpc.CallOption) (*CheckReleaseNameResp, error) {
+	out := new(CheckReleaseNameResp)
+	err := c.cc.Invoke(ctx, Config_CheckReleaseName_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateHook(ctx context.Context, in *CreateHookReq, opts ...grpc.CallOption) (*CreateHookResp, error) {
 	out := new(CreateHookResp)
 	err := c.cc.Invoke(ctx, Config_CreateHook_FullMethodName, in, out, opts...)
@@ -902,6 +930,15 @@ func (c *configClient) BatchUpsertTemplates(ctx context.Context, in *BatchUpsert
 	return out, nil
 }
 
+func (c *configClient) BatchUpdateTemplatePermissions(ctx context.Context, in *BatchUpdateTemplatePermissionsReq, opts ...grpc.CallOption) (*BatchUpdateTemplatePermissionsResp, error) {
+	out := new(BatchUpdateTemplatePermissionsResp)
+	err := c.cc.Invoke(ctx, Config_BatchUpdateTemplatePermissions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) AddTmplsToTmplSets(ctx context.Context, in *AddTmplsToTmplSetsReq, opts ...grpc.CallOption) (*AddTmplsToTmplSetsResp, error) {
 	out := new(AddTmplsToTmplSetsResp)
 	err := c.cc.Invoke(ctx, Config_AddTmplsToTmplSets_FullMethodName, in, out, opts...)
@@ -956,6 +993,15 @@ func (c *configClient) ListTmplsOfTmplSet(ctx context.Context, in *ListTmplsOfTm
 	return out, nil
 }
 
+func (c *configClient) ListTemplateSetsAndRevisions(ctx context.Context, in *ListTemplateSetsAndRevisionsReq, opts ...grpc.CallOption) (*ListTemplateSetsAndRevisionsResp, error) {
+	out := new(ListTemplateSetsAndRevisionsResp)
+	err := c.cc.Invoke(ctx, Config_ListTemplateSetsAndRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateTemplateRevision(ctx context.Context, in *CreateTemplateRevisionReq, opts ...grpc.CallOption) (*CreateTemplateRevisionResp, error) {
 	out := new(CreateTemplateRevisionResp)
 	err := c.cc.Invoke(ctx, Config_CreateTemplateRevision_FullMethodName, in, out, opts...)
@@ -965,9 +1011,27 @@ func (c *configClient) CreateTemplateRevision(ctx context.Context, in *CreateTem
 	return out, nil
 }
 
+func (c *configClient) UpdateTemplateRevision(ctx context.Context, in *UpdateTemplateRevisionReq, opts ...grpc.CallOption) (*UpdateTemplateRevisionResp, error) {
+	out := new(UpdateTemplateRevisionResp)
+	err := c.cc.Invoke(ctx, Config_UpdateTemplateRevision_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) ListTemplateRevisions(ctx context.Context, in *ListTemplateRevisionsReq, opts ...grpc.CallOption) (*ListTemplateRevisionsResp, error) {
 	out := new(ListTemplateRevisionsResp)
 	err := c.cc.Invoke(ctx, Config_ListTemplateRevisions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetTemplateRevision(ctx context.Context, in *GetTemplateRevisionReq, opts ...grpc.CallOption) (*GetTemplateRevisionResp, error) {
+	out := new(GetTemplateRevisionResp)
+	err := c.cc.Invoke(ctx, Config_GetTemplateRevision_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1136,9 +1200,27 @@ func (c *configClient) DeleteAppBoundTmplSets(ctx context.Context, in *DeleteApp
 	return out, nil
 }
 
+func (c *configClient) RemoveAppBoundTmplSet(ctx context.Context, in *RemoveAppBoundTmplSetReq, opts ...grpc.CallOption) (*RemoveAppBoundTmplSetResp, error) {
+	out := new(RemoveAppBoundTmplSetResp)
+	err := c.cc.Invoke(ctx, Config_RemoveAppBoundTmplSet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CheckAppTemplateBinding(ctx context.Context, in *CheckAppTemplateBindingReq, opts ...grpc.CallOption) (*CheckAppTemplateBindingResp, error) {
 	out := new(CheckAppTemplateBindingResp)
 	err := c.cc.Invoke(ctx, Config_CheckAppTemplateBinding_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ImportFromTemplateSetToApp(ctx context.Context, in *ImportFromTemplateSetToAppReq, opts ...grpc.CallOption) (*ImportFromTemplateSetToAppResp, error) {
+	out := new(ImportFromTemplateSetToAppResp)
+	err := c.cc.Invoke(ctx, Config_ImportFromTemplateSetToApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1238,6 +1320,15 @@ func (c *configClient) ListTmplSetBoundUnnamedApps(ctx context.Context, in *List
 func (c *configClient) ListMultiTmplSetBoundUnnamedApps(ctx context.Context, in *ListMultiTmplSetBoundUnnamedAppsReq, opts ...grpc.CallOption) (*ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	out := new(ListMultiTmplSetBoundUnnamedAppsResp)
 	err := c.cc.Invoke(ctx, Config_ListMultiTmplSetBoundUnnamedApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) CheckTemplateSetReferencesApps(ctx context.Context, in *CheckTemplateSetReferencesAppsReq, opts ...grpc.CallOption) (*CheckTemplateSetReferencesAppsResp, error) {
+	out := new(CheckTemplateSetReferencesAppsResp)
+	err := c.cc.Invoke(ctx, Config_CheckTemplateSetReferencesApps_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1775,6 +1866,15 @@ func (c *configClient) CompareKvConflicts(ctx context.Context, in *CompareKvConf
 	return out, nil
 }
 
+func (c *configClient) GetTemplateAndNonTemplateCICount(ctx context.Context, in *GetTemplateAndNonTemplateCICountReq, opts ...grpc.CallOption) (*GetTemplateAndNonTemplateCICountResp, error) {
+	out := new(GetTemplateAndNonTemplateCICountResp)
+	err := c.cc.Invoke(ctx, Config_GetTemplateAndNonTemplateCICount_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConfigServer is the server API for Config service.
 // All implementations should embed UnimplementedConfigServer
 // for forward compatibility
@@ -1812,6 +1912,7 @@ type ConfigServer interface {
 	DeprecateRelease(context.Context, *DeprecateReleaseReq) (*DeprecateReleaseResp, error)
 	UnDeprecateRelease(context.Context, *UnDeprecateReleaseReq) (*UnDeprecateReleaseResp, error)
 	DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error)
+	CheckReleaseName(context.Context, *CheckReleaseNameReq) (*CheckReleaseNameResp, error)
 	CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error)
 	DeleteHook(context.Context, *DeleteHookReq) (*DeleteHookResp, error)
 	BatchDeleteHook(context.Context, *BatchDeleteHookReq) (*BatchDeleteResp, error)
@@ -1843,14 +1944,18 @@ type ConfigServer interface {
 	UpdateTemplate(context.Context, *UpdateTemplateReq) (*UpdateTemplateResp, error)
 	ListTemplates(context.Context, *ListTemplatesReq) (*ListTemplatesResp, error)
 	BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesResp, error)
+	BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error)
 	AddTmplsToTmplSets(context.Context, *AddTmplsToTmplSetsReq) (*AddTmplsToTmplSetsResp, error)
 	DeleteTmplsFromTmplSets(context.Context, *DeleteTmplsFromTmplSetsReq) (*DeleteTmplsFromTmplSetsResp, error)
 	ListTemplatesByIDs(context.Context, *ListTemplatesByIDsReq) (*ListTemplatesByIDsResp, error)
 	ListTemplatesNotBound(context.Context, *ListTemplatesNotBoundReq) (*ListTemplatesNotBoundResp, error)
 	ListTemplateByTuple(context.Context, *ListTemplateByTupleReq) (*ListTemplateByTupleResp, error)
 	ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error)
+	ListTemplateSetsAndRevisions(context.Context, *ListTemplateSetsAndRevisionsReq) (*ListTemplateSetsAndRevisionsResp, error)
 	CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error)
+	UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*UpdateTemplateRevisionResp, error)
 	ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error)
+	GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error)
 	// 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
 	// rpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns
 	// (DeleteTemplateRevisionResp) {
@@ -1878,7 +1983,9 @@ type ConfigServer interface {
 	GetReleasedAppBoundTmplRevision(context.Context, *GetReleasedAppBoundTmplRevisionReq) (*GetReleasedAppBoundTmplRevisionResp, error)
 	UpdateAppBoundTmplRevisions(context.Context, *UpdateAppBoundTmplRevisionsReq) (*UpdateAppBoundTmplRevisionsResp, error)
 	DeleteAppBoundTmplSets(context.Context, *DeleteAppBoundTmplSetsReq) (*DeleteAppBoundTmplSetsResp, error)
+	RemoveAppBoundTmplSet(context.Context, *RemoveAppBoundTmplSetReq) (*RemoveAppBoundTmplSetResp, error)
 	CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error)
+	ImportFromTemplateSetToApp(context.Context, *ImportFromTemplateSetToAppReq) (*ImportFromTemplateSetToAppResp, error)
 	ListTmplBoundCounts(context.Context, *ListTmplBoundCountsReq) (*ListTmplBoundCountsResp, error)
 	ListTmplRevisionBoundCounts(context.Context, *ListTmplRevisionBoundCountsReq) (*ListTmplRevisionBoundCountsResp, error)
 	ListTmplSetBoundCounts(context.Context, *ListTmplSetBoundCountsReq) (*ListTmplSetBoundCountsResp, error)
@@ -1890,6 +1997,7 @@ type ConfigServer interface {
 	ListTmplRevisionBoundNamedApps(context.Context, *ListTmplRevisionBoundNamedAppsReq) (*ListTmplRevisionBoundNamedAppsResp, error)
 	ListTmplSetBoundUnnamedApps(context.Context, *ListTmplSetBoundUnnamedAppsReq) (*ListTmplSetBoundUnnamedAppsResp, error)
 	ListMultiTmplSetBoundUnnamedApps(context.Context, *ListMultiTmplSetBoundUnnamedAppsReq) (*ListMultiTmplSetBoundUnnamedAppsResp, error)
+	CheckTemplateSetReferencesApps(context.Context, *CheckTemplateSetReferencesAppsReq) (*CheckTemplateSetReferencesAppsResp, error)
 	ListTmplSetBoundNamedApps(context.Context, *ListTmplSetBoundNamedAppsReq) (*ListTmplSetBoundNamedAppsResp, error)
 	ListLatestTmplBoundUnnamedApps(context.Context, *ListLatestTmplBoundUnnamedAppsReq) (*ListLatestTmplBoundUnnamedAppsResp, error)
 	CreateTemplateVariable(context.Context, *CreateTemplateVariableReq) (*CreateTemplateVariableResp, error)
@@ -1952,6 +2060,8 @@ type ConfigServer interface {
 	// config item compare conflicts related interface
 	CompareConfigItemConflicts(context.Context, *CompareConfigItemConflictsReq) (*CompareConfigItemConflictsResp, error)
 	CompareKvConflicts(context.Context, *CompareKvConflictsReq) (*CompareKvConflictsResp, error)
+	// 获取模板和非模板配置项数量
+	GetTemplateAndNonTemplateCICount(context.Context, *GetTemplateAndNonTemplateCICountReq) (*GetTemplateAndNonTemplateCICountResp, error)
 }
 
 // UnimplementedConfigServer should be embedded to have forward compatible implementations.
@@ -2048,6 +2158,9 @@ func (UnimplementedConfigServer) UnDeprecateRelease(context.Context, *UnDeprecat
 func (UnimplementedConfigServer) DeleteRelease(context.Context, *DeleteReleaseReq) (*DeleteReleaseResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRelease not implemented")
 }
+func (UnimplementedConfigServer) CheckReleaseName(context.Context, *CheckReleaseNameReq) (*CheckReleaseNameResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckReleaseName not implemented")
+}
 func (UnimplementedConfigServer) CreateHook(context.Context, *CreateHookReq) (*CreateHookResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateHook not implemented")
 }
@@ -2135,6 +2248,9 @@ func (UnimplementedConfigServer) ListTemplates(context.Context, *ListTemplatesRe
 func (UnimplementedConfigServer) BatchUpsertTemplates(context.Context, *BatchUpsertTemplatesReq) (*BatchUpsertTemplatesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpsertTemplates not implemented")
 }
+func (UnimplementedConfigServer) BatchUpdateTemplatePermissions(context.Context, *BatchUpdateTemplatePermissionsReq) (*BatchUpdateTemplatePermissionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUpdateTemplatePermissions not implemented")
+}
 func (UnimplementedConfigServer) AddTmplsToTmplSets(context.Context, *AddTmplsToTmplSetsReq) (*AddTmplsToTmplSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTmplsToTmplSets not implemented")
 }
@@ -2153,11 +2269,20 @@ func (UnimplementedConfigServer) ListTemplateByTuple(context.Context, *ListTempl
 func (UnimplementedConfigServer) ListTmplsOfTmplSet(context.Context, *ListTmplsOfTmplSetReq) (*ListTmplsOfTmplSetResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplsOfTmplSet not implemented")
 }
+func (UnimplementedConfigServer) ListTemplateSetsAndRevisions(context.Context, *ListTemplateSetsAndRevisionsReq) (*ListTemplateSetsAndRevisionsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateSetsAndRevisions not implemented")
+}
 func (UnimplementedConfigServer) CreateTemplateRevision(context.Context, *CreateTemplateRevisionReq) (*CreateTemplateRevisionResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTemplateRevision not implemented")
 }
+func (UnimplementedConfigServer) UpdateTemplateRevision(context.Context, *UpdateTemplateRevisionReq) (*UpdateTemplateRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTemplateRevision not implemented")
+}
 func (UnimplementedConfigServer) ListTemplateRevisions(context.Context, *ListTemplateRevisionsReq) (*ListTemplateRevisionsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisions not implemented")
+}
+func (UnimplementedConfigServer) GetTemplateRevision(context.Context, *GetTemplateRevisionReq) (*GetTemplateRevisionResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateRevision not implemented")
 }
 func (UnimplementedConfigServer) ListTemplateRevisionsByIDs(context.Context, *ListTemplateRevisionsByIDsReq) (*ListTemplateRevisionsByIDsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTemplateRevisionsByIDs not implemented")
@@ -2213,8 +2338,14 @@ func (UnimplementedConfigServer) UpdateAppBoundTmplRevisions(context.Context, *U
 func (UnimplementedConfigServer) DeleteAppBoundTmplSets(context.Context, *DeleteAppBoundTmplSetsReq) (*DeleteAppBoundTmplSetsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAppBoundTmplSets not implemented")
 }
+func (UnimplementedConfigServer) RemoveAppBoundTmplSet(context.Context, *RemoveAppBoundTmplSetReq) (*RemoveAppBoundTmplSetResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveAppBoundTmplSet not implemented")
+}
 func (UnimplementedConfigServer) CheckAppTemplateBinding(context.Context, *CheckAppTemplateBindingReq) (*CheckAppTemplateBindingResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAppTemplateBinding not implemented")
+}
+func (UnimplementedConfigServer) ImportFromTemplateSetToApp(context.Context, *ImportFromTemplateSetToAppReq) (*ImportFromTemplateSetToAppResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImportFromTemplateSetToApp not implemented")
 }
 func (UnimplementedConfigServer) ListTmplBoundCounts(context.Context, *ListTmplBoundCountsReq) (*ListTmplBoundCountsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplBoundCounts not implemented")
@@ -2248,6 +2379,9 @@ func (UnimplementedConfigServer) ListTmplSetBoundUnnamedApps(context.Context, *L
 }
 func (UnimplementedConfigServer) ListMultiTmplSetBoundUnnamedApps(context.Context, *ListMultiTmplSetBoundUnnamedAppsReq) (*ListMultiTmplSetBoundUnnamedAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMultiTmplSetBoundUnnamedApps not implemented")
+}
+func (UnimplementedConfigServer) CheckTemplateSetReferencesApps(context.Context, *CheckTemplateSetReferencesAppsReq) (*CheckTemplateSetReferencesAppsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckTemplateSetReferencesApps not implemented")
 }
 func (UnimplementedConfigServer) ListTmplSetBoundNamedApps(context.Context, *ListTmplSetBoundNamedAppsReq) (*ListTmplSetBoundNamedAppsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTmplSetBoundNamedApps not implemented")
@@ -2425,6 +2559,9 @@ func (UnimplementedConfigServer) CompareConfigItemConflicts(context.Context, *Co
 }
 func (UnimplementedConfigServer) CompareKvConflicts(context.Context, *CompareKvConflictsReq) (*CompareKvConflictsResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CompareKvConflicts not implemented")
+}
+func (UnimplementedConfigServer) GetTemplateAndNonTemplateCICount(context.Context, *GetTemplateAndNonTemplateCICountReq) (*GetTemplateAndNonTemplateCICountResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTemplateAndNonTemplateCICount not implemented")
 }
 
 // UnsafeConfigServer may be embedded to opt out of forward compatibility for this service.
@@ -2978,6 +3115,24 @@ func _Config_DeleteRelease_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_CheckReleaseName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckReleaseNameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CheckReleaseName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CheckReleaseName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CheckReleaseName(ctx, req.(*CheckReleaseNameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateHook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateHookReq)
 	if err := dec(in); err != nil {
@@ -3500,6 +3655,24 @@ func _Config_BatchUpsertTemplates_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchUpdateTemplatePermissions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUpdateTemplatePermissionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUpdateTemplatePermissions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUpdateTemplatePermissions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUpdateTemplatePermissions(ctx, req.(*BatchUpdateTemplatePermissionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_AddTmplsToTmplSets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddTmplsToTmplSetsReq)
 	if err := dec(in); err != nil {
@@ -3608,6 +3781,24 @@ func _Config_ListTmplsOfTmplSet_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_ListTemplateSetsAndRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTemplateSetsAndRevisionsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListTemplateSetsAndRevisions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListTemplateSetsAndRevisions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListTemplateSetsAndRevisions(ctx, req.(*ListTemplateSetsAndRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateTemplateRevisionReq)
 	if err := dec(in); err != nil {
@@ -3626,6 +3817,24 @@ func _Config_CreateTemplateRevision_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_UpdateTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).UpdateTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_UpdateTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).UpdateTemplateRevision(ctx, req.(*UpdateTemplateRevisionReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTemplateRevisionsReq)
 	if err := dec(in); err != nil {
@@ -3640,6 +3849,24 @@ func _Config_ListTemplateRevisions_Handler(srv interface{}, ctx context.Context,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListTemplateRevisions(ctx, req.(*ListTemplateRevisionsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetTemplateRevision_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateRevisionReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetTemplateRevision(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetTemplateRevision_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetTemplateRevision(ctx, req.(*GetTemplateRevisionReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3968,6 +4195,24 @@ func _Config_DeleteAppBoundTmplSets_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_RemoveAppBoundTmplSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveAppBoundTmplSetReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).RemoveAppBoundTmplSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_RemoveAppBoundTmplSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).RemoveAppBoundTmplSet(ctx, req.(*RemoveAppBoundTmplSetReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckAppTemplateBindingReq)
 	if err := dec(in); err != nil {
@@ -3982,6 +4227,24 @@ func _Config_CheckAppTemplateBinding_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).CheckAppTemplateBinding(ctx, req.(*CheckAppTemplateBindingReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ImportFromTemplateSetToApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportFromTemplateSetToAppReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ImportFromTemplateSetToApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ImportFromTemplateSetToApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ImportFromTemplateSetToApp(ctx, req.(*ImportFromTemplateSetToAppReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -4180,6 +4443,24 @@ func _Config_ListMultiTmplSetBoundUnnamedApps_Handler(srv interface{}, ctx conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).ListMultiTmplSetBoundUnnamedApps(ctx, req.(*ListMultiTmplSetBoundUnnamedAppsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_CheckTemplateSetReferencesApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckTemplateSetReferencesAppsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).CheckTemplateSetReferencesApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_CheckTemplateSetReferencesApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).CheckTemplateSetReferencesApps(ctx, req.(*CheckTemplateSetReferencesAppsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5246,6 +5527,24 @@ func _Config_CompareKvConflicts_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_GetTemplateAndNonTemplateCICount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTemplateAndNonTemplateCICountReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetTemplateAndNonTemplateCICount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetTemplateAndNonTemplateCICount_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetTemplateAndNonTemplateCICount(ctx, req.(*GetTemplateAndNonTemplateCICountReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Config_ServiceDesc is the grpc.ServiceDesc for Config service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -5374,6 +5673,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteRelease_Handler,
 		},
 		{
+			MethodName: "CheckReleaseName",
+			Handler:    _Config_CheckReleaseName_Handler,
+		},
+		{
 			MethodName: "CreateHook",
 			Handler:    _Config_CreateHook_Handler,
 		},
@@ -5490,6 +5793,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_BatchUpsertTemplates_Handler,
 		},
 		{
+			MethodName: "BatchUpdateTemplatePermissions",
+			Handler:    _Config_BatchUpdateTemplatePermissions_Handler,
+		},
+		{
 			MethodName: "AddTmplsToTmplSets",
 			Handler:    _Config_AddTmplsToTmplSets_Handler,
 		},
@@ -5514,12 +5821,24 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_ListTmplsOfTmplSet_Handler,
 		},
 		{
+			MethodName: "ListTemplateSetsAndRevisions",
+			Handler:    _Config_ListTemplateSetsAndRevisions_Handler,
+		},
+		{
 			MethodName: "CreateTemplateRevision",
 			Handler:    _Config_CreateTemplateRevision_Handler,
 		},
 		{
+			MethodName: "UpdateTemplateRevision",
+			Handler:    _Config_UpdateTemplateRevision_Handler,
+		},
+		{
 			MethodName: "ListTemplateRevisions",
 			Handler:    _Config_ListTemplateRevisions_Handler,
+		},
+		{
+			MethodName: "GetTemplateRevision",
+			Handler:    _Config_GetTemplateRevision_Handler,
 		},
 		{
 			MethodName: "ListTemplateRevisionsByIDs",
@@ -5594,8 +5913,16 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Config_DeleteAppBoundTmplSets_Handler,
 		},
 		{
+			MethodName: "RemoveAppBoundTmplSet",
+			Handler:    _Config_RemoveAppBoundTmplSet_Handler,
+		},
+		{
 			MethodName: "CheckAppTemplateBinding",
 			Handler:    _Config_CheckAppTemplateBinding_Handler,
+		},
+		{
+			MethodName: "ImportFromTemplateSetToApp",
+			Handler:    _Config_ImportFromTemplateSetToApp_Handler,
 		},
 		{
 			MethodName: "ListTmplBoundCounts",
@@ -5640,6 +5967,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMultiTmplSetBoundUnnamedApps",
 			Handler:    _Config_ListMultiTmplSetBoundUnnamedApps_Handler,
+		},
+		{
+			MethodName: "CheckTemplateSetReferencesApps",
+			Handler:    _Config_CheckTemplateSetReferencesApps_Handler,
 		},
 		{
 			MethodName: "ListTmplSetBoundNamedApps",
@@ -5876,6 +6207,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CompareKvConflicts",
 			Handler:    _Config_CompareKvConflicts_Handler,
+		},
+		{
+			MethodName: "GetTemplateAndNonTemplateCICount",
+			Handler:    _Config_GetTemplateAndNonTemplateCICount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

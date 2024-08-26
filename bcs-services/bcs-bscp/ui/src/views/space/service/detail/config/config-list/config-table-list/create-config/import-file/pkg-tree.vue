@@ -31,7 +31,7 @@
 <script lang="ts" setup>
   import { computed } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { ITemplateBoundByAppData } from '../../../../../../../../../../types/config';
+  import { ITemplatePkgs } from '../../../../../../../../../../types/config';
   import { IAllPkgsGroupBySpaceInBiz, IPkgTreeItem } from '../../../../../../../../../../types/template';
   interface ISpaceTreeItem extends IPkgTreeItem {
     isOpen: boolean;
@@ -42,8 +42,8 @@
   const props = defineProps<{
     bkBizId: string;
     pkgList: IAllPkgsGroupBySpaceInBiz[];
-    imported: ITemplateBoundByAppData[]; // 编辑状态下已经选中的套餐，该列表下数据不可取消
-    value: ITemplateBoundByAppData[]; // 当前选中的套餐信息
+    imported: ITemplatePkgs[]; // 编辑状态下已经选中的套餐，该列表下数据不可取消
+    value: ITemplatePkgs[]; // 当前选中的套餐信息
     searchStr: string;
   }>();
 
@@ -96,6 +96,7 @@
           disabled: isPkgImported(pkg.template_set_id) || isEmpty,
           indeterminate: false,
           parentName: template_space_name,
+          template_space_id,
         };
         if (isEmpty) {
           emptyTplPkgNodes.push(node);
@@ -109,17 +110,22 @@
   });
 
   const handleNodeCheckChange = (node: ISpaceTreeItem, val: boolean) => {
+    console.log(node, 'node');
     const list = props.value.slice();
     if (node.children) {
       // 空间节点
-      const pkgNodes = node.children;
+      const searchText = props.searchStr.toLowerCase();
+      const pkgNodes = node.children.filter((item) => item.name.toLowerCase().includes(searchText));
       if (val) {
         pkgNodes.forEach((pkg) => {
           if (!pkg.disabled && !isPkgNodeChecked(pkg.id)) {
             list.push({
               template_set_id: pkg.id,
               template_revisions: [],
-              template_set_name: `${node.name} / ${pkg.name}`,
+              template_set_name: pkg.name,
+              template_space_id: node.id,
+              template_show_title: `${node.name} - ${pkg.name}`,
+              template_space_name: node.name,
             });
           }
         });
@@ -140,7 +146,10 @@
           list.push({
             template_set_id: node.id,
             template_revisions: [],
-            template_set_name: `${node.parentName}-${node.name}`,
+            template_set_name: node.name,
+            template_show_title: `${node.parentName} - ${node.name}`,
+            template_space_name: node.parentName!,
+            template_space_id: node.template_space_id!,
           });
         }
       } else {

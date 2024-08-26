@@ -6,7 +6,7 @@
         :class="{ fullscreen: isOpenFullScreen }"
         @mouseenter="isShowOperationBtn = true"
         @mouseleave="isShowOperationBtn = false">
-        <Card :title="$t('客户端配置版本')" :height="344">
+        <Card :title="$t('目标配置版本')" :height="344">
           <template #operation>
             <OperationBtn
               v-show="isShowOperationBtn"
@@ -116,7 +116,7 @@
     const routeData = router.resolve({
       name: 'client-search',
       params: { appId: props.appId, bizId: props.bkBizId },
-      query: { current_release_name: jumpVersionName.value, heartTime: searchQuery.value.last_heartbeat_time },
+      query: { target_release_name: jumpVersionName.value, heartTime: searchQuery.value.last_heartbeat_time },
     });
     window.open(routeData.href, '_blank');
   };

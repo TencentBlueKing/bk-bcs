@@ -10,10 +10,12 @@
  * limitations under the License.
  */
 
+// Package blueking xxx
 package blueking
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -57,6 +59,18 @@ func newtask() *Task {
 
 	// remove node from cluster
 	task.works[updateRemoveNodeDBInfoStep.StepMethod] = tasks.UpdateRemoveNodeDBInfoTask
+
+	// create resource pool
+	task.works[createNodePoolStep.StepMethod] = tasks.CreateNodePoolTask
+
+	// delete resource pool
+	task.works[deleteNodePoolStep.StepMethod] = tasks.DeleteNodePoolTask
+
+	// apply nodes from resource pool
+	task.works[applyNodesFromResourcePoolStep.StepMethod] = tasks.ApplyNodesFromResourcePoolTask
+
+	// return nodes to resource pool
+	task.works[returnNodesToResourcePoolStep.StepMethod] = tasks.ReturnNodesToResourcePoolTask
 
 	return task
 }
@@ -113,8 +127,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	taskName := fmt.Sprintf(createClusterTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// step1: call bkops preAction operation
-	// postAction bkops, platform run default steps
+	// step1: call bkops preAction operation 创建集群
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.CreateCluster != nil {
 		step := &template.BkSopsStepAction{
 			TaskName: template.SystemInit,
@@ -122,17 +135,38 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			Plugins:  opt.Cloud.ClusterManagement.CreateCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:   strings.Join(opt.WorkerNodes, ","),
-			BusinessID:   cls.BusinessID,
-			NodeOperator: opt.Operator,
-			Operator:     opt.Operator,
+			NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+			BusinessID:      cls.BusinessID,
+			NodeOperator:    opt.Operator,
+			Operator:        opt.Operator,
+			TranslateMethod: createClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
-	// step2: update cluster DB info and associated data
+	// step2: call bksops add nodes to cluster 上架节点
+	if len(opt.WorkerNodes) > 0 && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.AddNodesToCluster != nil {
+		step := &template.BkSopsStepAction{
+			TaskName: template.SystemInit,
+			Actions:  opt.Cloud.ClusterManagement.AddNodesToCluster.PreActions,
+			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
+			NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: addNodesToClusterStep.StepMethod,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step3: update cluster DB info and associated data
 	createClusterTask := &CreateClusterTaskOption{Cluster: cls, WorkerNodes: opt.WorkerNodes}
 	createClusterTask.BuildUpdateClusterDbInfoStep(task)
 
@@ -179,16 +213,38 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		CommonParams:   make(map[string]string),
 		ForceTerminate: false,
 	}
+	taskName := fmt.Sprintf(importClusterTaskTemplate, cls.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
 	// setting all steps details
-	// step0: create cluster shield alarm step
 	importNodesTask := &ImportClusterTaskOption{Cluster: cls}
+
+	// step0: 集群节点导入方式需要 安装websocket模式的kubeAgent，打通集群连接
+	if len(opt.CloudMode.GetNodeIps()) > 0 && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.ImportCluster != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.SystemInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				BusinessID:   cls.BusinessID,
+				Operator:     opt.Operator,
+				NodeOperator: opt.Operator,
+				NodeIPList:   strings.Join(opt.CloudMode.GetNodeIps(), ","),
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.ImportCluster, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildImportClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step0: import cluster nodes
 	importNodesTask.BuildImportClusterNodesStep(task)
 
 	// step1: install cluster watch component
 	if options.GetEditionInfo().IsCommunicationEdition() || options.GetEditionInfo().IsEnterpriseEdition() {
 		common.BuildWatchComponentTaskStep(task, cls, "")
 	}
+	// step2: install image pull secret addon if config
+	common.BuildInstallImageSecretAddonTaskStep(task, cls)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -249,8 +305,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 	taskName := fmt.Sprintf(deleteClusterTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
-	// step1: call bkops operation preAction
-	// validate bkops config
+	// step1: call bkops operation preAction to delete cluster
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil && opt.Cloud.ClusterManagement.DeleteCluster != nil {
 		step := &template.BkSopsStepAction{
 			TaskName: template.SystemInit,
@@ -258,11 +313,32 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 			Plugins:  opt.Cloud.ClusterManagement.DeleteCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			BusinessID: cls.BusinessID,
-			Operator:   opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: deleteClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildDeleteClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step2: clean master nodes
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
+		step := &template.BkSopsStepAction{
+			TaskName: template.SystemInit,
+			Actions:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.PreActions,
+			Plugins:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
+			NodeIPList:      strings.Join(cloudprovider.GetClusterMasterIPList(cls), ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: removeNodesFromClusterStep.StepMethod,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
@@ -281,6 +357,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 }
 
 // BuildAddNodesToClusterTask build addNodes task
+// nolint funlen
 func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Node,
 	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
 	// addNodesToCluster has only two steps:
@@ -339,13 +416,30 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:   strings.Join(nodeIPs, ","),
-			NodeOperator: opt.Operator,
-			BusinessID:   cls.BusinessID,
-			Operator:     opt.Operator,
+			NodeIPList:      strings.Join(nodeIPs, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: addNodesToClusterStep.StepMethod,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// 混部集群需要执行混部节点流程
+	if cls.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.NodeMixedInitCh,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				ShowSopsUrl:     true,
+				TranslateMethod: template.NodeMixedInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildScalingNodesTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
@@ -429,13 +523,14 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 			Plugins:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.Plugins,
 		}
 		err := step.BuildBkSopsStepAction(task, cls, template.ExtraInfo{
-			NodeIPList:   strings.Join(nodeIPs, ","),
-			NodeOperator: opt.Operator,
-			BusinessID:   cls.BusinessID,
-			Operator:     opt.Operator,
+			NodeIPList:      strings.Join(nodeIPs, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cls.BusinessID,
+			Operator:        opt.Operator,
+			TranslateMethod: removeNodesFromClusterStep.StepMethod,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("BuildAddNodesToClusterTask BuildBkSopsStepAction failed: %v", err)
+			return nil, fmt.Errorf("BuildRemoveNodesFromClusterTask BuildBkSopsStepAction failed: %v", err)
 		}
 	}
 
@@ -457,12 +552,138 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 
 // BuildCleanNodesInGroupTask clean specified nodes in NodeGroup
 // including remove nodes from NodeGroup, clean data in nodes
+// nolint funlen
 func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
-	// build task step1: move nodes out of nodegroup
-	//step2: delete nodes in cluster
-	//step3: delete nodes record in local storage
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// clean nodeGroup nodes in cloud only has four steps:
+	// step1: cordon nodes
+	// step2: user define processes
+	// step3: delete nodes in cluster
+	// step4: return nodes to resource pool
+
+	// validate request params
+	if nodes == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask nodes info empty")
+	}
+	if group == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask group info empty")
+	}
+	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask TaskOptions is lost")
+	}
+
+	var (
+		nodeIPs            = make([]string, 0)
+		nodeIDs, deviceIDs = make([]string, 0), make([]string, 0)
+	)
+	for _, node := range nodes {
+		nodeIPs = append(nodeIPs, node.InnerIP)
+		nodeIDs = append(nodeIDs, node.NodeID)
+		deviceIDs = append(deviceIDs, node.DeviceID)
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CleanNodeGroupNodes),
+		TaskName:       cloudprovider.CleanNodesInGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+		NodeIPList:     nodeIPs,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(cleanNodeGroupNodesTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	cleanNodeGroupNodes := &CleanNodesInGroupTaskOption{
+		Group:     group,
+		Cluster:   opt.Cluster,
+		NodeIPs:   nodeIPs,
+		NodeIDs:   nodeIDs,
+		DeviceIDs: deviceIDs,
+		Operator:  opt.Operator,
+	}
+
+	// step1: cordon nodes
+	common.BuildCordonNodesTaskStep(task, opt.Cluster.GetClusterID(), nodeIPs)
+
+	// step2: business user define processes, bksops or job
+	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        opt.Cluster.ClusterID,
+			Content:          group.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
+			Translate:        common.PreInitJob,
+		})
+	}
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleInExtraAddons != nil &&
+		len(group.NodeTemplate.ScaleInExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserPreInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserBeforeInit,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleInExtraAddons, true)
+		if err != nil {
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions "+
+				"BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step3: build sops task to delete node from cluster
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
+		step := &template.BkSopsStepAction{
+			TaskName: template.SystemInit,
+			Actions:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.PreActions,
+			Plugins:  opt.Cloud.ClusterManagement.DeleteNodesFromCluster.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, opt.Cluster, template.ExtraInfo{
+			NodeIPList:      strings.Join(nodeIPs, ","),
+			NodeOperator:    opt.Operator,
+			BusinessID:      cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, false),
+			ModuleID:        cloudprovider.GetScaleInModuleID(opt.AsOption, group.NodeTemplate),
+			Operator:        opt.Operator,
+			TranslateMethod: removeNodesFromClusterStep.StepMethod,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step4: return nodes to resource pool
+	cleanNodeGroupNodes.BuildReturnNodesToResourcePoolStep(task)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCleanNodesInGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+
+	// set global task paras
+	task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CleanNodeGroupNodesJob.String()
+	return task, nil
 }
 
 // BuildDeleteNodeGroupTask when delete nodegroup, we need to create background
@@ -471,18 +692,179 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 // @param group: need to delete
 func (t *Task) BuildDeleteNodeGroupTask(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
-	return nil, nil
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask group info empty")
+	}
+
+	if opt == nil || len(opt.Operator) == 0 || opt.Cloud == nil || opt.Cluster == nil {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask TaskOptions is lost")
+	}
+
+	var (
+		nodeIPs, nodeIDs, deviceIDs = make([]string, 0), make([]string, 0), make([]string, 0)
+	)
+	for _, node := range nodes {
+		nodeIPs = append(nodeIPs, node.InnerIP)
+		nodeIDs = append(nodeIDs, node.NodeID)
+		deviceIDs = append(deviceIDs, node.DeviceID) // nolint staticcheck (this result of append is never used)
+	}
+
+	// init task information
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.DeleteNodeGroup),
+		TaskName:       cloudprovider.DeleteNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        opt.Operator,
+		Updater:        opt.Operator,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(deleteNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	deleteNodeGroupOption := &DeleteNodeGroupOption{
+		NodeGroup: group,
+		Cluster:   opt.Cluster,
+		NodeIDs:   nodeIDs,
+		NodeIPs:   nodeIPs,
+		Operator:  opt.Operator,
+	}
+	// step1: previous call successful and delete local storage information
+	deleteNodeGroupOption.BuildDeleteCloudNodeGroupStep(task)
+	// step2: delete nodeGroup from CA
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildDeleteNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+
+	// Job-type
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.DeleteNodeGroupJob.String()
+	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+	task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+
+	return task, nil
 }
 
 // BuildCreateNodeGroupTask build create node group task
 func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
 	*proto.Task, error) {
-	return nil, nil
+	// bluekingCloud create nodeGroup steps
+	// step1: create underlying resourcePool and update nodeGroup relative info
+	// step2: deploy node group to cluster
+
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask group info empty")
+	}
+	if opt == nil || opt.Cluster == nil {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask TaskOptions is lost option or cluster")
+	}
+	err := opt.PoolInfo.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateNodeGroup),
+		TaskName:       cloudprovider.CreateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(createNodeGroupTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	createNodeGroupTask := &CreateNodeGroupOption{NodeGroup: group,
+		Cluster: opt.Cluster, PoolProvider: opt.PoolInfo.Provider, PoolID: opt.PoolInfo.ResourcePoolID}
+	// step1. call self resourcePool to create node group
+	createNodeGroupTask.BuildCreateCloudNodeGroupStep(task)
+	// step2. ensure autoscaler(安装/更新CA组件) in cluster
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCreateNodeGroupTask task StepSequence empty")
+	}
+
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateNodeGroupJob.String()
+
+	return task, nil
 }
 
 // BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
 func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroup),
+		TaskName:       cloudprovider.UpdateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupTaskTemplate, group.ClusterID, group.NodeGroupID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
+	return task, nil
 }
 
 // BuildMoveNodesToGroupTask when create cluster, we need to create background task,
@@ -492,27 +874,304 @@ func (t *Task) BuildMoveNodesToGroupTask(nodes []*proto.Node, group *proto.NodeG
 }
 
 // BuildUpdateDesiredNodesTask build update desired nodes task
+// nolint funlen
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
-	return nil, nil
+	// UpdateDesiredNodesTask has five steps:
+	// 1. call resource interface to apply for Instances
+	// 2. call sops task to add nodes to cluster
+	// 3. add annotation to nodes
+	// 4. add labels to nodes
+	// 5. unCordon nodes
+
+	// validate request params
+	if desired == 0 {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask desired nodes is zero")
+	}
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask group info is empty")
+	}
+	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask TaskOptions is lost")
+	}
+
+	// init task information
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroupDesiredNode),
+		TaskName:       cloudprovider.UpdateDesiredNodesTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        opt.Operator,
+		Updater:        opt.Operator,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupDesiredNodeTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	updateDesiredNodes := &UpdateDesiredNodesTaskOption{
+		Group:    group,
+		Cluster:  opt.Cluster,
+		Cloud:    opt.Cloud,
+		Desired:  desired,
+		Operator: opt.Operator,
+	}
+
+	// step1: apply for Instance from resourcePool
+	updateDesiredNodes.BuildApplyInstanceStep(task)
+
+	// 检测是否存在bkcc/检测是否安装agent/空闲检查等流程
+
+	// step2: call sops task to add nodes to cluster: install agent & trans module
+	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.AddNodesToCluster != nil && !group.GetNodeTemplate().GetSkipSystemInit() {
+		step := &template.BkSopsStepAction{
+			TaskName: template.SystemInit,
+			Actions:  opt.Cloud.ClusterManagement.AddNodesToCluster.PreActions,
+			Plugins:  opt.Cloud.ClusterManagement.AddNodesToCluster.Plugins,
+		}
+		err := step.BuildBkSopsStepAction(task, opt.Cluster, template.ExtraInfo{
+			NodeIPList:   "",
+			NodeOperator: opt.Operator,
+			BusinessID:   cloudprovider.GetBusinessID(opt.Cluster, opt.AsOption, group.NodeTemplate, true),
+			ModuleID: cloudprovider.GetScaleOutModuleID(opt.Cluster, opt.AsOption, group.NodeTemplate,
+				true),
+			Operator:        opt.Operator,
+			TranslateMethod: addNodesToClusterStep.StepMethod,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// transfer host module
+	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
+	}
+
+	// step3: 业务扩容节点后置自定义流程: 支持job后置脚本和标准运维任务
+	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        group.ClusterID,
+			Content:          group.NodeTemplate.UserScript,
+			NodeIps:          "",
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+			Translate:        common.PostInitJob,
+		})
+	}
+
+	// business define sops task
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.UserAfterInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserPostInit,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask business BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// 混部集群需要执行混部节点流程
+	if opt.Cluster.GetIsMixed() && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.CommonMixedAction != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.NodeMixedInitCh,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				NodeIPList:      "",
+				ShowSopsUrl:     true,
+				TranslateMethod: template.NodeMixedInit,
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CommonMixedAction, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildUpdateDesiredNodesTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step4: annotation nodes
+	updateDesiredNodes.BuildNodeAnnotationsStep(task)
+	// step5: nodes common labels: sZoneID / bizID
+	updateDesiredNodes.BuildNodeCommonLabelsStep(task)
+	// set node taint
+	common.BuildNodeTaintsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetTaintsByNg(opt.NodeGroup))
+	// step6: set resourcePool labels
+	updateDesiredNodes.BuildResourcePoolDeviceLabelStep(task)
+	// step7: unCordon nodes
+	updateDesiredNodes.BuildUnCordonNodesStep(task)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+
+	// set common parameters && JobType
+	task.CommonParams[cloudprovider.ClusterIDKey.String()] = group.ClusterID
+	task.CommonParams[cloudprovider.ScalingNodesNumKey.String()] = strconv.Itoa(int(desired))
+	// Job-type
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupDesiredNodeJob.String()
+	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
+
+	return task, nil
 }
 
 // BuildSwitchNodeGroupAutoScalingTask switch nodegroup auto scaling
 func (t *Task) BuildSwitchNodeGroupAutoScalingTask(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask nodegroup info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchNodeGroupAutoScaling),
+		TaskName:       cloudprovider.SwitchNodeGroupAutoScalingTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(switchNodeGroupAutoScalingTaskTemplate, group.ClusterID, group.Name)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildSwitchNodeGroupAutoScalingTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchNodeGroupAutoScalingJob.String()
+
+	return task, nil
 }
 
 // BuildUpdateAutoScalingOptionTask update auto scaling option
 func (t *Task) BuildUpdateAutoScalingOptionTask(scalingOption *proto.ClusterAutoScalingOption,
 	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if scalingOption == nil {
+		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask scaling option info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateAutoScalingOption),
+		TaskName:       cloudprovider.UpdateAutoScalingOptionTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      scalingOption.ClusterID,
+		ProjectID:      scalingOption.ProjectID,
+		Creator:        scalingOption.Creator,
+		Updater:        scalingOption.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateAutoScalingOptionTemplate, scalingOption.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, scalingOption.ClusterID, scalingOption.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateAutoScalingOptionTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateAutoScalingOptionJob.String()
+
+	return task, nil
 }
 
 // BuildSwitchAsOptionStatusTask switch auto scaling option status
 func (t *Task) BuildSwitchAsOptionStatusTask(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if scalingOption == nil {
+		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask scalingOption info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.SwitchAutoScalingOptionStatus),
+		TaskName:       cloudprovider.SwitchAutoScalingOptionStatusTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      scalingOption.ClusterID,
+		ProjectID:      scalingOption.ProjectID,
+		Creator:        scalingOption.Creator,
+		Updater:        scalingOption.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(switchAutoScalingOptionStatusTemplate, scalingOption.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, scalingOption.ClusterID, scalingOption.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildSwitchAutoScalingOptionStatusTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.SwitchAutoScalingOptionStatusJob.String()
+	return task, nil
 }
 
 // BuildAddExternalNodeToCluster add external to cluster
@@ -524,5 +1183,11 @@ func (t *Task) BuildAddExternalNodeToCluster(group *proto.NodeGroup, nodes []*pr
 // BuildDeleteExternalNodeFromCluster remove external node from cluster
 func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteExternalNodesOption) (*proto.Task, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// BuildSwitchClusterNetworkTask switch cluster network mode
+func (t *Task) BuildSwitchClusterNetworkTask(cls *proto.Cluster,
+	subnet *proto.SubnetSource, opt *cloudprovider.SwitchClusterNetworkOption) (*proto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

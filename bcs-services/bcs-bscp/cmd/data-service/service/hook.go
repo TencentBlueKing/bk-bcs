@@ -19,7 +19,9 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -35,7 +37,7 @@ func (s *Service) CreateHook(ctx context.Context, req *pbds.CreateHookReq) (*pbd
 
 	// GetByName get hook by name
 	if _, err := s.dao.Hook().GetByName(kt, req.Attachment.BizId, req.Spec.Name); err == nil {
-		return nil, fmt.Errorf("hook name %s already exists", req.Spec.Name)
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(kt, "hook name %s already exists", req.Spec.Name))
 	}
 
 	res := &table.Revision{
@@ -130,6 +132,11 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 		return nil, err
 	}
 
+	uncitedCount, err := s.dao.Hook().CountNumberUnReferences(kt, req.BizId, opt)
+	if err != nil {
+		return nil, err
+	}
+
 	result := []*pbds.ListHooksResp_Detail{}
 	for _, detail := range details {
 		result = append(result, &pbds.ListHooksResp_Detail{
@@ -141,9 +148,11 @@ func (s *Service) ListHooks(ctx context.Context, req *pbds.ListHooksReq) (*pbds.
 	}
 
 	resp := &pbds.ListHooksResp{
-		Count:   uint32(count),
-		Details: result,
+		Count:          uint32(count),
+		Details:        result,
+		ExclusionCount: uint32(uncitedCount),
 	}
+
 	return resp, nil
 }
 
@@ -386,4 +395,34 @@ func (s *Service) GetReleaseHook(ctx context.Context, req *pbds.GetReleaseHookRe
 	}
 
 	return resp, nil
+}
+
+// HookFetchIDsExcluding 获取指定ID后排除的ID
+func (s *Service) HookFetchIDsExcluding(ctx context.Context, req *pbds.HookFetchIDsExcludingReq) (
+	*pbds.HookFetchIDsExcludingResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Hook().FetchIDsExcluding(grpcKit, req.BizId, req.GetIds())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get excluded hook failed, err: %s", err))
+	}
+
+	return &pbds.HookFetchIDsExcludingResp{
+		Ids: ids,
+	}, nil
+}
+
+// GetHookReferencedIDs 获取脚本被引用的IDs
+func (s *Service) GetHookReferencedIDs(ctx context.Context, req *pbds.GetHookReferencedIDsReq) (
+	*pbds.GetHookReferencedIDsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ids, err := s.dao.Hook().GetReferencedIDs(grpcKit, req.BizId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "retrieve the referenced script failed, err: %s", err))
+	}
+
+	return &pbds.GetHookReferencedIDsResp{
+		Ids: ids,
+	}, nil
 }

@@ -42,7 +42,7 @@
     </template>
     <!-- 查看态 -->
     <template v-else>
-      <span class="flex-1">{{ label.key }}</span>
+      <span class="flex-1" v-bk-overflow-tips>{{ label.key }}</span>
       <span
         :class="[
           'flex items-center justify-center rounded-sm px-[8px]',
@@ -50,7 +50,7 @@
         ]">
         {{ label.operator || '=' }}
       </span>
-      <span class="flex-1">{{ label.value }}</span>
+      <span class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ label.value }}</span>
       <!-- <i
         class="bk-icon icon-edit-line text-[16px] text-[#979BA5] cursor-pointer"
         @click="handleEditLabel">

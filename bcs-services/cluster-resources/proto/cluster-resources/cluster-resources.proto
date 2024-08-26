@@ -1667,6 +1667,41 @@ service TemplateSet {
 		};
 	}
 
+	// 复制模板文件文件夹
+	rpc CopyTemplateSpace(CopyTemplateSpaceReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/spaces/{id}/copy"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "复制模板文件文件夹"
+			summary: "Copy template space"
+		};
+	}
+
+	// 创建模板文件文件夹收藏
+	rpc CreateTemplateSpaceCollect(CreateTemplateSpaceCollectReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建模板文件文件夹收藏"
+			summary: "Create template space collect"
+		};
+	}
+
+	// 删除模板文件文件夹收藏
+	rpc DeleteTemplateSpaceCollect(DeleteTemplateSpaceCollectReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/template/space/{templateSpaceID}/collects"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除模板文件文件夹收藏"
+			summary: "Delete template space collect"
+		};
+	}
+
 	// 获取模板文件元数据详情
 	rpc GetTemplateMetadata(GetTemplateMetadataReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -1903,6 +1938,17 @@ service MultiCluster {
 	rpc FetchMultiClusterResource(FetchMultiClusterResourceReq) returns (CommonResp) {
 		option (google.api.http) = {
 			post: "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/{kind}"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取多集群原生资源列表"
+			summary: "Get multi cluster resources"
+		};
+	}
+
+	rpc FetchMultiClusterApiResources(FetchMultiClusterApiResourcesReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources"
 			body: "*"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -2975,6 +3021,9 @@ message ListTemplateSpaceReq {
 	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹名称"
+	}];
 }
 
 message CreateTemplateSpaceReq {
@@ -3020,6 +3069,51 @@ message DeleteTemplateSpaceReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CopyTemplateSpaceReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CopyTemplateSpaceReq", description: "复制模板文件文件夹"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message ListTemplateSpaceCollectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "ListTemplateSpaceCollectReq", description: "获取模板文件文件夹收藏列表"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message CreateTemplateSpaceCollectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateTemplateSpaceCollectReq", description: "创建模板文件文件夹收藏"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹ID"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+}
+
+message DeleteTemplateSpaceCollectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteTemplateSpaceCollectReq", description: "删除单个模板文件文件夹收藏"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateSpaceID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹ID"
+	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 }
 
 message GetTemplateMetadataReq {
@@ -3070,9 +3164,21 @@ message CreateTemplateMetadataReq {
 	}];
 	string version = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本"
-	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	}];
 	string content = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本Content"
+	}];
+	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否草稿"
+	}];
+	string draftVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "基于模板文件版本"
+	}];
+	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿内容"
+	}];
+	string draftEditFormat = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿编辑模式"
 	}];
 }
 
@@ -3100,6 +3206,18 @@ message UpdateTemplateMetadataReq {
 	}];
 	VersionMode versionMode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本模式"
+	}];
+	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否草稿"
+	}];
+	string draftVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "基于模板文件版本"
+	}];
+	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿内容"
+	}];
+	string draftEditFormat = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件草稿编辑模式"
 	}];
 }
 
@@ -3177,13 +3295,16 @@ message CreateTemplateVersionReq {
 	string version = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
-	string content = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string editFormat = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "编辑模式"
+	}];
+	string content = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本Content"
 	}];
-	string templateID = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string templateID = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件元数据ID"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
-	bool force = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	bool force = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "能否被覆盖"
 	}];
 }
@@ -3411,6 +3532,27 @@ message FetchMultiClusterResourceReq {
 	uint32 offset = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "offset"
 	}, (validate.rules).uint32 = {gte: 0}];
+}
+
+message FetchMultiClusterApiResourcesReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "FetchMultiClusterApiResourcesReq", description: "获取多集群api资源请求体"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	repeated ClusterNamespaces clusterNamespaces = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群和命名空间"
+	}, (validate.rules).repeated = {min_items: 1}];
+	bool onlyCrd = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否只列出crd资源"
+	}];
+	string viewID = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "viewID"
+	}];
+	repeated LabelSelector labelSelector = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "标签选择器"
+	}];
 }
 
 message FetchMultiClusterCustomResourceReq {

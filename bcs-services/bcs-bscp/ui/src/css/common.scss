@@ -34,11 +34,23 @@
 .info-box-style .bk-modal-body{
   .bk-dialog-header {
     padding: 24px 24px 0;
+    .bk-dialog-title {
+      min-height: 27px;
+      height: auto !important;
+      white-space: normal;
+    }
   }
   .bk-modal-content {
     min-height: auto;
     padding: 0 50px 10px;
+    .bk-info-sub-title {
+      word-break: break-word !important;
+    }
   }
+}
+
+.bk-dialog-wrapper .bk-modal-wrapper .bk-dialog-header {
+  line-height: normal !important;
 }
 
 // 去掉组件库表格过滤自带的input

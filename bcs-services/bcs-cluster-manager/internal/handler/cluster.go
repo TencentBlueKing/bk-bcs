@@ -239,6 +239,21 @@ func (cm *ClusterManager) GetCluster(ctx context.Context,
 	return nil
 }
 
+// GetClustersMetaData implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetClustersMetaData(ctx context.Context,
+	req *cmproto.GetClustersMetaDataRequest, resp *cmproto.GetClustersMetaDataResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewGetClustersMetaDataAction(cm.model, cm.kubeOp)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetClustersMetaData", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: GetClustersMetaData, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListProjectCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListProjectCluster(ctx context.Context,
 	req *cmproto.ListProjectClusterReq, resp *cmproto.ListProjectClusterResp) error {
@@ -346,7 +361,7 @@ func (cm *ClusterManager) GetNodeInfo(ctx context.Context,
 	na := clusterac.NewGetNodeInfoAction(cm.model)
 	na.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("GetNodeInfo", "grpc", strconv.Itoa(int(resp.Code)), start)
-	blog.Infof("reqID: %s, action: GetNoe, req %v, resp %v", reqID, req, resp)
+	blog.Infof("reqID: %s, action: GetNodeInfo, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 
@@ -441,5 +456,22 @@ func (cm *ClusterManager) AddSubnetToCluster(ctx context.Context,
 	na.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("AddSubnetToCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: AddSubnetToCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// SwitchClusterUnderlayNetwork implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) SwitchClusterUnderlayNetwork(ctx context.Context,
+	req *cmproto.SwitchClusterUnderlayNetworkReq, resp *cmproto.SwitchClusterUnderlayNetworkResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewSwitchClusterUnderlayNetworkAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("SwitchClusterUnderlayNetwork", "grpc",
+		strconv.Itoa(int(resp.Code)), start)
+
+	blog.Infof("reqID: %s, action: SwitchClusterUnderlayNetwork, req %v, resp %v", reqID, req, resp)
 	return nil
 }

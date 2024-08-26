@@ -6,13 +6,15 @@
       :need-menu="needMenu"
       :default-open="openSideMenu"
       :hover-enter-delay="300"
-      @toggle-click="handleToggleClickNav">
+      @toggle-click="handleToggleClickNav"
+      @hover="handleInitSliderListHeight"
+      @leave="handleInitSliderListHeight">
       <template #side-header>
-        <span class="title-icon"><img src="@/images/bcs.svg" class="w-[28px] h-[28px]"></span>
+        <span class="title-icon"><img :src="appLogo" class="w-[28px] h-[28px]"></span>
         <span
           class="title-desc cursor-pointer"
           @click="handleGoHome">
-          {{ $INTERNAL ? $t('bcs.TKEx.title') : $t('bcs.intro.title') }}
+          {{ appName }}
         </span>
       </template>
       <template #header>
@@ -146,15 +148,20 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef } from 'vue';
+import jsonp from 'jsonp';
+import { computed, defineComponent, onBeforeUnmount, onMounted, reactive, ref, toRef, watch } from 'vue';
 
 import PopoverSelector from '../../components/popover-selector.vue';
 
 import useMenu, { IMenu } from './use-menu';
 
-import { releaseNote, switchLanguage } from '@/api/modules/project';
+import { releaseNote } from '@/api/modules/project';
+import { setCookie } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
+import useCalcHeight from '@/composables/use-calc-height';
+import usePlatform from '@/composables/use-platform';
 import $i18n from '@/i18n/i18n-setup';
+import logoSvg from '@/images/rtx.svg';
 import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
@@ -169,19 +176,36 @@ export default defineComponent({
     PopoverSelector,
   },
   setup() {
-    const { menusData: menus } = useMenu();
+    const { init } = useCalcHeight([
+      {
+        prop: 'height',
+        el: '.nav-slider-list',
+        calc: ['#bcs-notice-com', '.bk-navigation-header', '.nav-slider-footer'],
+      },
+    ]);
+    // 修复nav悬浮时高度被组件内部覆盖问题
+    const handleInitSliderListHeight = () => {
+      setTimeout(() => {
+        init();
+      });
+    };
+
+    const { menusData: menus, leafMenus } = useMenu();
+    const { config } = usePlatform();
+    const appLogo = computed(() => config.appLogo || logoSvg);
+    const appName = computed(() => config.i18n.productName);
     const langs = ref([
+      {
+        icon: 'bk-icon icon-chinese',
+        name: '中文',
+        id: 'zh-CN', // bcs 前端语言标识
+        locale: 'zh-cn', // cookie标识
+      },
       {
         icon: 'bk-icon icon-english',
         name: 'English',
         id: 'en-US',
         locale: 'en',
-      },
-      {
-        icon: 'bk-icon icon-chinese',
-        name: '中文',
-        id: 'zh-CN',
-        locale: 'zh-CN', // cookie标识
       },
     ]);
     const curLang = computed(() => langs.value.find(item => item.id === $i18n.locale) || { id: 'zh-CN', icon: 'bk-icon icon-chinese' });
@@ -265,6 +289,7 @@ export default defineComponent({
     const openSideMenu = computed(() => $store.state.openSideMenu);
     const handleToggleClickNav = (value) => {
       $store.commit('updateOpenSideMenu', !!value);
+      handleInitSliderListHeight();
     };
     // 首页
     const handleGoHome = () => {
@@ -282,10 +307,22 @@ export default defineComponent({
     const handleChangeLang = async (item) => {
       // $i18n.locale = item.id;// 后面 $router.go(0) 会重新加载界面，这里会导致一瞬间被切换了，然后界面再刷新
       langRef.value?.hide();
-      await switchLanguage({
-        lang: item.locale,
-      });
-      await $router.go(0);
+
+      // 设置cookie过期时间为366天
+      const date = new Date();
+      date.setTime(date.getTime() + 366 * 24 * 60 * 60 * 1000);
+      const expiresStr = date.toUTCString();
+
+      // 修改cookie
+      setCookie('blueking_language', item.locale, window.BK_DOMAIN, expiresStr);
+      // 修改用户管理语言
+      jsonp(
+        `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fe_update_user_language/?language=${item.locale}`,
+        { param: 'callback', timeout: 100 },
+        () => {
+          $router.go(0);
+        },
+      );
     };
     // 帮助文档
     const handleGotoHelp  = () => {
@@ -324,6 +361,17 @@ export default defineComponent({
       window.open(window.BCS_CONFIG.backToLegacyButtonUrl);
     };
 
+    watch(route, () => {
+      if (!route.value.name) return;
+
+      const menu = leafMenus.value
+        .find(item => item.route === route.value.name || item.id === route.value.meta?.menuId);
+      if (menu) {
+        // 更新当前一级导航信息
+        $store.commit('updateCurNav', menu);
+      }
+    });
+
     onMounted(async () => {
       navRef.value && resizeObserver.observe(navRef.value);
       releaseData.value = await releaseNote().catch(() => ({ changelog: [], feature: {} }));
@@ -338,6 +386,8 @@ export default defineComponent({
     });
 
     return {
+      appLogo,
+      appName,
       langRef,
       navRef,
       navItemRefs,
@@ -366,6 +416,7 @@ export default defineComponent({
       handleChangeMenu,
       resolveMenuLink,
       backToPreVersion,
+      handleInitSliderListHeight,
     };
   },
 });

@@ -54,6 +54,9 @@ var (
 	// GITHASH git hash for release.
 	GITHASH = "unknown"
 
+	// GITTAG xxx
+	GITTAG = "1.0.0"
+
 	// DEBUG if enable debug.
 	DEBUG = "false"
 
@@ -87,11 +90,11 @@ func FormatVersion(prefix string, format Format) string {
 	if prefix != "" {
 		prefix += " "
 	}
-	rawFormat := fmt.Sprintf("%sVersion  : %s\nBuildTime: %s\nGitHash  : %s\nGoVersion: %s\nClientType: %s",
-		prefix, VERSION, BUILDTIME, GITHASH, GoVersion, CLIENTTYPE)
-	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GoVersion": "%s",
+	rawFormat := fmt.Sprintf("%sVersion   :%s\nBuildTime :%s\nGitHash   :%s\nGITTAG    :%s\nGoVersion :%s\nClientType:%s",
+		prefix, VERSION, BUILDTIME, GITHASH, GITTAG, GoVersion, CLIENTTYPE)
+	jsonFormat := fmt.Sprintf(`%s{"Version": "%s", "BuildTime": "%s", "GitHash": "%s", "GITHASH": "%s", "GoVersion": "%s",
 	 "ClientType": "%s"}`,
-		prefix, VERSION, BUILDTIME, GITHASH, GoVersion, CLIENTTYPE)
+		prefix, VERSION, BUILDTIME, GITHASH, GITTAG, GoVersion, CLIENTTYPE)
 
 	switch format {
 	case Row:
@@ -114,6 +117,7 @@ func Version() *SysVersion {
 	return &SysVersion{
 		Version:    VERSION,
 		Hash:       GITHASH,
+		GITTAG:     GITTAG,
 		Time:       BUILDTIME,
 		GoVersion:  GoVersion,
 		ClientType: CLIENTTYPE,
@@ -153,6 +157,7 @@ func parseVersion(v string) ([3]uint32, error) {
 type SysVersion struct {
 	Version    string `json:"version"`
 	Hash       string `json:"hash"`
+	GITTAG     string `json:"git_tag"`
 	Time       string `json:"time"`
 	GoVersion  string `json:"go_version"`
 	ClientType string `json:"client_type"`

@@ -17,6 +17,14 @@
     prop: affinity
 {{- end }}
 
+{{- define "workload.labels" }}
+- - group:
+      - [ "labels" ]
+      - [ "templateLabels" ]
+      - [ "jobTemplatelabels" ]
+    prop: labels
+{{- end }}
+
 # 为 workload 污点/容忍添加 layout，限制运算符，影响，容忍时间的宽度
 {{- define "workload.toleration" }}
 - - group:

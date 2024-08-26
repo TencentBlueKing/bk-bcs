@@ -15,9 +15,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -30,7 +27,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/bcs"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/components/gse"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
@@ -40,14 +37,10 @@ import (
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbkv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/kv"
 	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/ratelimiter"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
 	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
-)
-
-var (
-	// LabelKeyAgentID is the key of agent id in bcs node labels.
-	LabelKeyAgentID = "bkcmdb.tencent.com/bk-agent-id"
 )
 
 // Handshake received handshake from sidecar to validate the app instance's authorization and legality.
@@ -97,7 +90,7 @@ func (s *Service) Handshake(ctx context.Context, hm *pbfs.HandshakeMessage) (*pb
 			Name: s.name,
 		},
 		RuntimeOption: &sfs.SidecarRuntimeOption{
-			BounceIntervalHour: s.dsSetting.BounceIntervalHour,
+			BounceIntervalHour: cc.FeedServer().Downstream.BounceIntervalHour,
 			Repository: &sfs.RepositoryV1{
 				Root: decorator.Root(),
 				Url:  decorator.Url(),
@@ -372,11 +365,11 @@ func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMeta
 	}
 	for _, ci := range metas.ConfigItems {
 		if len(match) > 0 {
-			isMatch := lo.Filter(match, func(scope string, _ int) bool {
+			isMatch := lo.SomeBy(match, func(scope string) bool {
 				ok, _ := tools.MatchConfigItem(scope, ci.ConfigItemSpec.Path, ci.ConfigItemSpec.Name)
 				return ok
 			})
-			if len(isMatch) == 0 {
+			if !isMatch {
 				continue
 			}
 		}
@@ -463,7 +456,37 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 		return nil, status.Errorf(codes.Aborted, "generate temp download url failed, %s", err.Error())
 	}
 
-	return &pbfs.GetDownloadURLResp{Url: downloadLink}, nil
+	if !s.rl.Enable() {
+		return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: 0}, nil
+	}
+	// 对于单个大文件下载，受限于单个客户端和服务端之间的带宽（比如为10MB/s=80Mb/s），而在存储服务端支持更高带宽的情况下（比如100MB/s），
+	// 哪怕单个文件2GB，在限流器阈值比单个客户端下载带宽高的情况下，还是应该允许其他客户端去存储服务端下载，
+	// 超过客户端下载带宽的大文件暂且按客户端带宽计入流控
+	// 多个大文件的持续下载，会影响到限流器流控的精确性，当前暂时只计入每个大文件首次一秒内的流控情况，后续的流量消耗不计入
+	var gWaitTimeMil, bWaitTimeMil int64
+	bandwidth := int(s.rl.ClientBandwidth()) * ratelimiter.MB
+	if int(req.FileMeta.CommitSpec.Content.ByteSize) > bandwidth {
+		gWaitTimeMil = s.rl.Global().WaitTimeMil(bandwidth)
+		bWaitTimeMil = s.rl.UseBiz(uint(req.BizId)).WaitTimeMil(bandwidth)
+	} else {
+		gWaitTimeMil = s.rl.Global().WaitTimeMil(int(req.FileMeta.CommitSpec.Content.ByteSize))
+		bWaitTimeMil = s.rl.UseBiz(uint(req.BizId)).WaitTimeMil(int(req.FileMeta.CommitSpec.Content.ByteSize))
+	}
+
+	// 分别统计全局和业务粒度流控情况
+	gs := s.rl.Global().Stats()
+	s.mc.collectDownload("0", gs.TotalByteSize, gs.DelayCnt, gs.DelayMilliseconds)
+	bs := s.rl.UseBiz(uint(req.BizId)).Stats()
+	logs.V(1).Infof("biz: %d, download file total byte size:%d, delay cnt:%d, delay milliseconds:%d",
+		req.BizId, bs.TotalByteSize, bs.DelayCnt, bs.DelayMilliseconds)
+	s.mc.collectDownload(fmt.Sprintf("%d", req.BizId), bs.TotalByteSize, bs.DelayCnt, bs.DelayMilliseconds)
+
+	// 优先使用流控时间长的
+	wt := bWaitTimeMil
+	if bWaitTimeMil < gWaitTimeMil {
+		wt = gWaitTimeMil
+	}
+	return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: wt}, nil
 }
 
 // PullKvMeta pull an app's latest release metadata only when the app's configures is kv type.
@@ -518,7 +541,7 @@ func (s *Service) PullKvMeta(ctx context.Context, req *pbfs.PullKvMetaReq) (*pbf
 		}
 
 		// 客户端匹配
-		if !matchPattern(kv.Key, req.Match) {
+		if !tools.MatchPattern(kv.Key, req.Match) {
 			continue
 		}
 
@@ -636,7 +659,7 @@ func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.Li
 		}
 
 		// 客户端匹配
-		if !matchPattern(d.Spec.Name, req.Match) {
+		if !tools.MatchPattern(d.Spec.Name, req.Match) {
 			continue
 		}
 
@@ -656,11 +679,6 @@ func (s *Service) ListApps(ctx context.Context, req *pbfs.ListAppsReq) (*pbfs.Li
 func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq) (*pbfs.AsyncDownloadResp, error) {
 	kit := kit.FromGrpcContext(ctx)
 
-	// TODO: 下发版本时包含是否支持 p2p 下载的标记，客户端根据标记决定是否通过 p2p 下载
-	// TODO: 大文件下载会导致接口超时，需要优化：
-	// 1. 服务端创建一个 task，返回 bscp 定义的 taskID 而不是 GSE taskID
-	// 2. task 包含两部分：下载文件到本地、p2p 传输文件到客户端
-
 	// 1. 鉴权
 	credential := getCredential(ctx)
 	app, err := s.bll.AppCache().GetMeta(kit, req.BizId, req.FileMeta.ConfigItemAttachment.AppId)
@@ -678,49 +696,21 @@ func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq)
 
 	gseConf := cc.FeedServer().GSE
 	if !gseConf.Enabled {
-		return nil, status.Error(codes.FailedPrecondition, "p2p download was disabled in server")
+		return nil, status.Error(codes.FailedPrecondition, "p2p download is disabled in server")
 	}
 
-	// 2. 获取服务端 agent_id 和 container_id
-	serverAgentID, serverContainerID, err := s.getAsyncDownloadServerInfo(ctx, gseConf)
+	// 2. 获取客户端信息，check 是否支持 p2p 下载
+	clientAgentID, clientContainerID, err := s.getAsyncDownloadAgentInfo(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. 获取客户端信息，check 是否支持 p2p 下载
-	clientAgentID, clientContainerID, err := s.getAsyncDownloadClientInfo(ctx, req)
+	// 3. 创建下载任务
+	taskID, err := s.bll.AsyncDownload().CreateAsyncDownloadTask(kit, req.BizId,
+		req.FileMeta.ConfigItemAttachment.AppId, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name,
+		clientAgentID, clientContainerID, req.FileMeta.ConfigItemSpec.Permission.User, req.FileDir,
+		req.FileMeta.CommitSpec.Content.Signature)
 	if err != nil {
-		return nil, err
-	}
-
-	// 4. 下载文件到本地
-	sourceDir := path.Join(cc.FeedServer().GSE.SourceDir, strconv.Itoa(int(req.BizId)))
-	if err = os.MkdirAll(sourceDir, os.ModePerm); err != nil {
-		return nil, err
-	}
-	// filepath = source/{biz_id}/{sha256}
-	signature := req.FileMeta.CommitSpec.Content.Signature
-	serverFilePath := path.Join(sourceDir, signature)
-	if err = s.checkAndDownloadFile(kit, serverFilePath, signature); err != nil {
-		return nil, err
-	}
-
-	// 5. 创建文件传输任务
-	taskID, err := gse.CreateTransferFileTask(ctx, serverAgentID, serverContainerID, sourceDir, gseConf.AgentUser,
-		signature, clientAgentID, clientContainerID, req.FileDir, req.FileMeta.ConfigItemSpec.Permission.User)
-	if err != nil {
-		return nil, fmt.Errorf("create transfer file task failed, %s", err.Error())
-	}
-
-	// 6. 任务 ID 及其相关信息存入 Redis
-	task := &types.AsyncDownloadTask{
-		BizID:    req.BizId,
-		AppID:    req.FileMeta.ConfigItemAttachment.AppId,
-		TaskID:   taskID,
-		FileName: req.FileMeta.ConfigItemSpec.Name,
-		FilePath: req.FileMeta.ConfigItemSpec.Path,
-	}
-	if err := s.bll.AsyncDownload().CreateAsyncDownloadTask(kit, task); err != nil {
 		return nil, err
 	}
 
@@ -730,7 +720,10 @@ func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq)
 	return r, nil
 }
 
-func (s *Service) getAsyncDownloadClientInfo(ctx context.Context, req *pbfs.AsyncDownloadReq) (
+// TODO: 优化点
+// 1. AgentID 和 ContainerID 的值可以缓存起来，一个客户端多次文件下载不用重复查询
+// 2. 客户端 AgentID 和 ContainerID 也可以在客户端注册的时候就获取到，不用每次请求都去查
+func (s *Service) getAsyncDownloadAgentInfo(ctx context.Context, req *pbfs.AsyncDownloadReq) (
 	agentID string, containerID string, err error) {
 	if req.BkAgentId != "" {
 		// target is node
@@ -762,78 +755,12 @@ func (s *Service) getAsyncDownloadClientInfo(ctx context.Context, req *pbfs.Asyn
 	if qErr != nil {
 		return "", "", qErr
 	}
-	agentID = node.Labels[LabelKeyAgentID]
+	agentID = node.Labels[constant.LabelKeyAgentID]
 	if agentID == "" {
 		return "", "", status.Errorf(codes.InvalidArgument, "bk-agent-id not found in client node %s/%s",
 			req.ClusterId, pod.Spec.NodeName)
 	}
 	return agentID, containerID, nil
-}
-
-func (s *Service) getAsyncDownloadServerInfo(ctx context.Context, gseConf cc.GSE) (
-	agentID string, containerID string, err error) {
-	if gseConf.NodeAgentID != "" {
-		// if serverAgentID configured, it measn feed server was deployed in binary mode, source is node
-		agentID = gseConf.NodeAgentID
-		return agentID, "", nil
-	}
-	// if serverAgentID not configured, it means feed server was deployed in container mode, source is container
-	if gseConf.ClusterID == "" || gseConf.PodID == "" {
-		return "", "", status.Error(codes.Internal, "server agent_id or (cluster_id and pod_id is required")
-	}
-	pod, qErr := bcs.QueryPod(ctx, gseConf.ClusterID, gseConf.PodID)
-	if qErr != nil {
-		return "", "", qErr
-	}
-	for _, container := range pod.Status.ContainerStatuses {
-		if container.Name == gseConf.ContainerName {
-			containerID = tools.SplitContainerID(container.ContainerID)
-		}
-	}
-	if containerID == "" {
-		return "", "", status.Errorf(codes.Internal, "server container %s not found in pod %s/%s",
-			gseConf.ContainerName, gseConf.ClusterID, gseConf.PodID)
-	}
-	node, qErr := bcs.QueryNode(ctx, gseConf.ClusterID, pod.Spec.NodeName)
-	if qErr != nil {
-		return "", "", qErr
-	}
-	agentID = node.Labels[LabelKeyAgentID]
-	if agentID == "" {
-		return "", "", status.Errorf(codes.Internal, "bk-agent-id not found in server node %s/%s",
-			gseConf.ClusterID, pod.Spec.NodeName)
-	}
-	return agentID, containerID, nil
-}
-
-func (s *Service) checkAndDownloadFile(kit *kit.Kit, filePath, signature string) error {
-	// block until file download
-	s.fileLock.Lock(filePath)
-	defer s.fileLock.Unlock(filePath)
-	if _, iErr := os.Stat(filePath); iErr != nil {
-		if !os.IsNotExist(iErr) {
-			return iErr
-		}
-		// not exists in feed server, download to local disk
-		file, iErr := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, os.ModePerm)
-		if iErr != nil {
-			return iErr
-		}
-		defer file.Close()
-
-		reader, _, iErr := s.provider.Download(kit, signature)
-		if iErr != nil {
-			return iErr
-		}
-		defer reader.Close()
-		if _, e := io.Copy(file, reader); e != nil {
-			return e
-		}
-		if e := file.Sync(); e != nil {
-			return e
-		}
-	}
-	return nil
 }
 
 // AsyncDownloadStatus 查询异步 p2p 下载任务状态
@@ -860,30 +787,160 @@ func (s *Service) AsyncDownloadStatus(ctx context.Context, req *pbfs.AsyncDownlo
 		return nil, status.Error(codes.PermissionDenied, "no permission download file")
 	}
 
-	// 2. 获取GSE任务状态
-	status, err := gse.TransferFileResult(ctx, task.TaskID)
+	taskStatus, err := s.bll.AsyncDownload().GetAsyncDownloadTaskStatus(kit, req.BizId, req.TaskId)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: 是否要保存任务开始时间，用以判断超时
-	return &pbfs.AsyncDownloadStatusResp{
+
+	var status pbfs.AsyncDownloadStatus
+
+	switch taskStatus {
+	case types.AsyncDownloadJobStatusSuccess:
+		status = pbfs.AsyncDownloadStatus_SUCCESS
+	case types.AsyncDownloadJobStatusPending, types.AsyncDownloadJobStatusRunning:
+		status = pbfs.AsyncDownloadStatus_DOWNLOADING
+	case types.AsyncDownloadJobStatusFailed, types.AsyncDownloadJobStatusTimeout:
+		status = pbfs.AsyncDownloadStatus_FAILED
+	}
+	resp := &pbfs.AsyncDownloadStatusResp{
 		Status: status,
-	}, nil
+	}
+	return resp, nil
 }
 
-// 匹配
-func matchPattern(name string, match []string) bool {
-	if len(match) == 0 {
-		return true
+// GetSingleKvMeta 获取单个kv mate data
+func (s *Service) GetSingleKvMeta(ctx context.Context, req *pbfs.GetSingleKvValueReq) (
+	*pbfs.GetSingleKvMetaResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
 	}
 
-	for _, m := range match {
-		ok, _ := path.Match(m, name)
-		if ok {
-			return true
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
+	}
+
+	if !credential.MatchKv(req.AppMeta.App, req.Key) {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.AppMeta.App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.AppMeta.App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
+	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.AppMeta.App)
+		}
+		return nil, err
+	}
+
+	var kvMetas *pbfs.KvMeta
+	for _, kv := range metas.Kvs {
+		if kv.Key != req.GetKey() {
+			continue
+		}
+		kvMetas = &pbfs.KvMeta{
+			Key:      req.GetKey(),
+			KvType:   kv.KvType,
+			Revision: kv.Revision,
+			KvAttachment: &pbkv.KvAttachment{
+				BizId: kv.KvAttachment.BizId,
+				AppId: kv.KvAttachment.AppId,
+			},
+			ContentSpec: kv.ContentSpec,
 		}
 	}
-	return false
+
+	resp := &pbfs.GetSingleKvMetaResp{
+		Data: kvMetas,
+	}
+
+	return resp, nil
+}
+
+// GetSingleKvValue 获取单个kv
+func (s *Service) GetSingleKvValue(ctx context.Context, req *pbfs.GetSingleKvValueReq) (
+	*pbfs.GetSingleKvValueResp, error) {
+
+	kt := kit.FromGrpcContext(ctx)
+	if req.GetAppMeta() == nil || req.GetAppMeta().App == "" {
+		return nil, status.Error(codes.InvalidArgument, "app_meta is required")
+	}
+
+	credential := getCredential(ctx)
+	if !credential.MatchApp(req.AppMeta.App) {
+		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", req.AppMeta.App)
+	}
+
+	if !credential.MatchKv(req.AppMeta.App, req.Key) {
+		return nil, status.Error(codes.PermissionDenied, "no permission get value")
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, req.BizId, req.GetAppMeta().App)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app id failed, %s", err.Error())
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, req.BizId, appID)
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "get app failed, %s", err.Error())
+	}
+
+	if app.ConfigType != table.KV {
+		return nil, status.Errorf(codes.Aborted, "app not %s type", table.KV)
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID:  req.BizId,
+		App:    req.GetAppMeta().App,
+		AppID:  appID,
+		Uid:    req.AppMeta.Uid,
+		Labels: req.AppMeta.Labels,
+	}
+
+	metas, err := s.bll.Release().ListAppLatestReleaseKvMeta(kt, meta)
+	if err != nil {
+		return nil, err
+	}
+
+	rkv, err := s.bll.RKvCache().GetKvValue(kt, req.BizId, appID, metas.ReleaseId, req.Key)
+	if err != nil {
+		// appid等未找到, 刷新缓存, 客户端重试请求
+		if isAppNotExistErr(err) {
+			s.bll.AppCache().RemoveCache(kt, req.BizId, req.GetAppMeta().App)
+		}
+
+		return nil, status.Errorf(codes.Aborted, "get rkv failed, %s", err.Error())
+	}
+
+	kv := &pbfs.GetSingleKvValueResp{
+		Data: rkv.Value,
+	}
+
+	return kv, nil
 }
 
 func (s *Service) handleResourceUsageMetrics(bizID uint32, appName string, resource sfs.ResourceUsage) {
@@ -891,5 +948,4 @@ func (s *Service) handleResourceUsageMetrics(bizID uint32, appName string, resou
 	s.mc.clientCurrentCPUUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(resource.CpuUsage)
 	s.mc.clientMaxMemUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(float64(resource.MemoryMaxUsage))
 	s.mc.clientCurrentMemUsage.WithLabelValues(strconv.Itoa(int(bizID)), appName).Set(float64(resource.MemoryUsage))
-
 }

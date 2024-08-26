@@ -1,0 +1,215 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.0
+  creationTimestamp: null
+  name: workflows.gitopsworkflow.bkbcs.tencent.com
+spec:
+  group: gitopsworkflow.bkbcs.tencent.com
+  names:
+    kind: Workflow
+    listKind: WorkflowList
+    plural: workflows
+    singular: workflow
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.project
+      name: PROJECT
+      type: string
+    - jsonPath: .spec.engine
+      name: ENGINE
+      type: string
+    - jsonPath: .status.phase
+      name: STATUS
+      type: string
+    - jsonPath: .spec.name
+      name: PPLINE-NAME
+      type: string
+    - jsonPath: .status.pipelineID
+      name: PIPELINE-ID
+      type: string
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: Workflow is the Schema for the workflow API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: WorkflowSpec is the specification details for workflow, users
+              can define workflow by fill on the content.
+            properties:
+              desc:
+                type: string
+              destroyOnDeletion:
+                type: boolean
+              disable:
+                type: boolean
+              engine:
+                default: bkdevops
+                description: engine defines the underlying pipeline implementation
+                  engine
+                enum:
+                - bkdevops
+                type: string
+              name:
+                description: the name of pipeline
+                type: string
+              params:
+                description: params are the global parameters of workflow, which user
+                  can custom changes
+                items:
+                  description: Parameter is key-value for workflow
+                  properties:
+                    name:
+                      type: string
+                    value:
+                      type: string
+                  type: object
+                type: array
+              project:
+                description: project defines the workflow belongs to which project
+                type: string
+              stages:
+                description: stages define the real execute orchestration checklist
+                  in order.
+                items:
+                  properties:
+                    condition:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    disabled:
+                      type: boolean
+                    jobs:
+                      items:
+                        properties:
+                          condition:
+                            additionalProperties:
+                              type: string
+                            type: object
+                          enable:
+                            type: boolean
+                          name:
+                            type: string
+                          runsOn:
+                            properties:
+                              image:
+                                type: string
+                              version:
+                                type: string
+                            type: object
+                          steps:
+                            items:
+                              properties:
+                                condition:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                disable:
+                                  type: boolean
+                                name:
+                                  type: string
+                                template:
+                                  type: string
+                                timeout:
+                                  format: int64
+                                  type: integer
+                                with:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                              required:
+                              - disable
+                              type: object
+                            type: array
+                          strategy:
+                            properties:
+                              fastKill:
+                                type: boolean
+                              matrix:
+                                additionalProperties:
+                                  items:
+                                    type: string
+                                  type: array
+                                type: object
+                              maxParallel:
+                                type: integer
+                            type: object
+                          timeout:
+                            format: int64
+                            type: integer
+                        type: object
+                      type: array
+                    name:
+                      type: string
+                    reviewMessage:
+                      type: string
+                    reviewNotifyGroup:
+                      items:
+                        type: string
+                      type: array
+                    reviewUsers:
+                      description: review configuration
+                      items:
+                        type: string
+                      type: array
+                    timeout:
+                      format: int64
+                      type: integer
+                  type: object
+                type: array
+              stepTemplates:
+                description: stepTemplates are the template of step, should define
+                  all the steps this workflow need in first
+                items:
+                  properties:
+                    condition:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    name:
+                      type: string
+                    plugin:
+                      description: 'bkdevops: type:atomCode:version, such-as: marketBuild:bcscmd-new:1.*'
+                      type: string
+                    timeout:
+                      format: int64
+                      type: integer
+                    with:
+                      additionalProperties:
+                        type: string
+                      type: object
+                  type: object
+                type: array
+            type: object
+          status:
+            properties:
+              lastUpdateTime:
+                format: date-time
+                type: string
+              message:
+                type: string
+              phase:
+                type: string
+              pipelineID:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

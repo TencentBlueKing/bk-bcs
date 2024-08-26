@@ -43,6 +43,7 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 		return newStatus, nil, nil
 	}
 	if newStatus.Revision == "" {
+		r.resetStatus(imageLoader, newStatus)
 		now := metav1.Now()
 		newStatus.StartTime = &now
 		newStatus.Revision = newRevision
@@ -72,14 +73,16 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 	} else if imageLoader.Spec.NodeSelector != nil {
 		err = r.handleNodeSelector(ctx, imageLoader, baseJob)
 	} else {
-		err = r.handleAllNode(ctx, imageLoader, baseJob)
+		err = r.handleAllNode(ctx, baseJob)
 	}
 	if err != nil {
 		return newStatus, nil, err
 	}
 	if baseJob.Spec.Completions == nil || *baseJob.Spec.Completions == 0 {
+		r.resetStatus(imageLoader, newStatus)
 		newStatus.ObservedGeneration = imageLoader.Generation
 		newStatus.Completed = newStatus.Desired
+		newStatus.Succeeded = newStatus.Desired
 		logger.Info("no node need to preload image")
 		r.Recorder.Eventf(imageLoader, corev1.EventTypeWarning, "Complete", "no node need to preload image")
 		return newStatus, nil, nil
@@ -136,6 +139,7 @@ func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
 		err := r.Get(ctx, types.NamespacedName{Namespace: loader.Namespace,
 			Name: getJobName(loader, i)}, job)
 		if err != nil && errors.IsNotFound(err) {
+			logger.Info(fmt.Sprintf("create job for %d image", i))
 			err = r.createJob(ctx, loader, baseJob, i)
 			if err != nil {
 				return err
@@ -150,6 +154,7 @@ func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
 
 func (r *ImageLoaderReconciler) createJob(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
 	baseJob *batchv1.Job, index int) error {
+	// some field may be nil after deepcopy
 	job := baseJob.DeepCopy()
 	modifyJob(job, loader, index)
 
@@ -229,7 +234,8 @@ func (r *ImageLoaderReconciler) updateStatus(ctx context.Context, loader *tkexv1
 				newStatus.Desired)
 			r.Recorder.Eventf(loader, corev1.EventTypeWarning, "Completed", "Some imageloader jobs failed")
 		}
-
+		return nil
 	}
+	logger.Info("waiting for job done")
 	return nil
 }

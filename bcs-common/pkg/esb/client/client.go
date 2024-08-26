@@ -42,7 +42,10 @@ func init() {
 }
 
 // Credential credential to be filled in post body
-type Credential map[string]interface{}
+type Credential struct {
+	AppCode   string `json:"app_code"`
+	AppSecret string `json:"app_secret"`
+}
 
 // RESTClient client with metrics, ratelimit and
 type RESTClient struct {
@@ -84,9 +87,10 @@ func (r *RESTClient) WithRateLimiter(th throttle.RateLimiter) *RESTClient {
 }
 
 // WithCredential set credential
-func (r *RESTClient) WithCredential(c Credential) *RESTClient {
-	if c != nil {
-		r.credential = c
+func (r *RESTClient) WithCredential(appCode, appSecret string) *RESTClient {
+	r.credential = Credential{
+		AppCode:   appCode,
+		AppSecret: appSecret,
 	}
 	return r
 }

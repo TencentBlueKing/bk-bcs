@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 )
 
 // MetricPlugin defines the metric plugin to proxy all the metrics
@@ -77,14 +78,14 @@ func (plugin *MetricPlugin) metric(r *http.Request) (*http.Request, *mw.HttpResp
 	}
 	result, err := query.Do(r.Context(), namespace, smName)
 	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, err)
 	}
 	return r, mw.ReturnDirectResponse(strings.Join(result, "\n"))
 }
 
 func (plugin *MetricPlugin) parseParam(ctx context.Context, r *http.Request) (string, string, *mw.HttpResponse) {
 	var namespace, smName string
-	user := mw.User(ctx)
+	user := ctxutils.User(ctx)
 	if !common.IsAdminUser(user.ClientID) {
 		return namespace, smName, mw.ReturnErrorResponse(http.StatusUnauthorized, errors.Errorf("not authorized"))
 	}

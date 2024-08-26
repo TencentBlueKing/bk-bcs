@@ -196,7 +196,6 @@
     height: calc(100vh - 101px);
     font-size: 12px;
     :deep(.bk-form-item) {
-      margin-bottom: 16px;
       .bk-form-label,
       .bk-form-content {
         line-height: 16px;

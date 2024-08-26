@@ -68,6 +68,9 @@ type RedisCacheClient struct {
 	cacheValid bool
 }
 
+// GroupKindVersionResource api-resouces model
+type GroupKindVersionResource []map[string]interface{}
+
 // RESTClient xxx
 func (d *RedisCacheClient) RESTClient() rest.Interface {
 	return d.delegate.RESTClient()
@@ -231,6 +234,17 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 	return filterResByKind(kind, d.clusterID, "", all)
 }
 
+// getPreferredApiResources 获取指定api资源当前集群 Preferred 版本列表
+func (d *RedisCacheClient) getPreferredApiResources(kind, crdName string) (map[string]GroupKindVersionResource, error) {
+	all, err := d.ServerPreferredResources()
+	if err != nil {
+		return map[string]GroupKindVersionResource{}, err
+	}
+
+	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
+	return filterApiResByKind(kind, crdName, all), nil
+}
+
 // readCache 读缓存逻辑
 func (d *RedisCacheClient) readCache(groupVersion string) ([]byte, error) {
 	if !d.Fresh() {
@@ -322,6 +336,25 @@ func GetGroupVersionResource(
 	return res, nil
 }
 
+// GetApiResources 根据配置，名称等信息，获取指定资源对应的 GetApiResources
+// 直接获取 preferred api version
+// 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
+func GetApiResources(
+	ctx context.Context, conf *ClusterConf, kind, crdName string) (map[string]GroupKindVersionResource, error) {
+	cli, err := NewRedisCacheClient4Conf(ctx, conf)
+	if err != nil {
+		return map[string]GroupKindVersionResource{}, err
+	}
+	// 查询 preferred version（含刷新缓存重试）
+	var res map[string]GroupKindVersionResource
+	res, err = cli.getPreferredApiResources(kind, crdName)
+	if err != nil || len(res) == 0 {
+		_ = cli.ClearCache()
+		return cli.getPreferredApiResources(kind, crdName)
+	}
+	return res, nil
+}
+
 // GetResPreferredVersion 获取某类资源在集群中的 Preferred 版本
 func GetResPreferredVersion(ctx context.Context, clusterID, kind string) (string, error) {
 	resInfo, err := GetGroupVersionResource(ctx, NewClusterConf(clusterID), kind, "")
@@ -342,6 +375,33 @@ func NewRedisCacheClient4Conf(ctx context.Context, conf *ClusterConf) (*RedisCac
 	}
 	rdsCache := redis.NewCache(ResCacheKeyPrefix, ResCacheTTL*time.Second)
 	return newRedisCacheClient(ctx, delegate, conf.ClusterID, rdsCache), nil
+}
+
+// filterApiResByKind 获取对应的api资源信息
+func filterApiResByKind(kind, crdName string, allRes []*metav1.APIResourceList) map[string]GroupKindVersionResource {
+	resources := make(map[string]GroupKindVersionResource, 0)
+	for _, apiResList := range allRes {
+		for _, res := range apiResList.APIResources {
+			// 可能存在如 v1 这种，只有 version，group 为空的情况
+			group, ver := "", apiResList.GroupVersion
+			if strings.Contains(apiResList.GroupVersion, "/") {
+				group, ver = stringx.Partition(apiResList.GroupVersion, "/")
+			}
+			if (kind != "" && res.Kind == kind) || (crdName != "" && res.Name == crdName) {
+				resources[apiResList.GroupVersion] = append(resources[apiResList.GroupVersion],
+					map[string]interface{}{
+						"group":      group,
+						"kind":       res.Kind,
+						"version":    ver,
+						"resource":   res.Name,
+						"namespaced": res.Namespaced,
+					})
+				return resources
+			}
+		}
+	}
+
+	return resources
 }
 
 // filterResByKind 根据 kind 过滤出对应的资源信息

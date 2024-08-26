@@ -188,7 +188,7 @@ export default defineComponent({
             title: $i18n.t('publicCloud.amazon.title'),
             desc: $i18n.t('publicCloud.amazon.desc'),
             type: 'amazonCloud',
-            disabled: true,
+            disabled: _INTERNAL_.value || !flagsMap.value.AZURECLOUD,
           },
           {
             icon: googleLogo,
@@ -219,7 +219,7 @@ export default defineComponent({
         subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
         desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
         type: 'kubeconfig',
-        disabled: _INTERNAL_.value,
+        // disabled: _INTERNAL_.value,
       },
     ]);
     const cardGroupList = computed(() => [
@@ -295,6 +295,11 @@ export default defineComponent({
         case 'huaweiCloud':
           $router.push({
             name: 'importHuaweiCluster',
+          });
+          break;
+        case 'amazonCloud':
+          $router.push({
+            name: 'importAwsCluster',
           });
           break;
       }

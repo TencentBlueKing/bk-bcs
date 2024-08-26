@@ -15,15 +15,13 @@ package main
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/webhook"
 )
 
 func main() {
-	cfg := new(options.Config)
-	conf.Parse(cfg)
+	cfg := options.Parse()
 	blog.InitLogs(cfg.LogConfig)
 	defer blog.CloseLogs()
 

@@ -141,7 +141,7 @@
         </Metric>
       </div>
       <bcs-tab class="workload-tab" :active.sync="activePanel" type="card" :label-height="42">
-        <bcs-tab-panel name="pod" label="Pods" v-bkloading="{ isLoading: podLoading }">
+        <bcs-tab-panel name="pod" label="Pods" v-bkloading="{ isLoading: podLoading }" render-directive="if">
           <div class="pod-info-header">
             <!-- <bk-button
               v-if="showBatchDispatch"
@@ -256,7 +256,7 @@
             </template>
           </bcs-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="event" :label="$t('generic.label.event')">
+        <bcs-tab-panel name="event" :label="$t('generic.label.event')" render-directive="if">
           <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
@@ -268,13 +268,13 @@
             v-if="!loading">
           </EventQueryTable>
         </bcs-tab-panel>
-        <bcs-tab-panel name="label" :label="$t('k8s.label')">
+        <bcs-tab-panel name="label" :label="$t('k8s.label')" render-directive="if">
           <bk-table :data="labels">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
           </bk-table>
         </bcs-tab-panel>
-        <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')">
+        <bcs-tab-panel name="annotations" :label="$t('k8s.annotation')" render-directive="if">
           <bk-table :data="annotations">
             <bk-table-column label="Key" prop="key"></bk-table-column>
             <bk-table-column label="Value" prop="value"></bk-table-column>
@@ -283,6 +283,7 @@
         <bcs-tab-panel
           name="selector"
           :label="$t('k8s.selector')"
+          render-directive="if"
           v-if="['deployments', 'statefulsets'].includes(category)">
           <bk-table :data="selectors">
             <bk-table-column label="Key" prop="key"></bk-table-column>
@@ -301,7 +302,7 @@
           :options="{
             roundedSelection: false,
             scrollBeyondLastLine: false,
-            renderLineHighlight: false,
+            renderLineHighlight: 'none',
           }"
           :value="yaml">
         </CodeEditor>

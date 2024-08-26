@@ -15,15 +15,12 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 )
 
 // CreateNodePoolTask create nodePool
@@ -65,7 +62,7 @@ func CreateNodePoolTask(taskID, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = createNodeGroupAction(ctx, dependInfo, cloudprovider.ResourcePoolData{
+	err = utils.CreateResourcePoolAction(ctx, dependInfo, cloudprovider.ResourcePoolData{
 		Provider:       poolProvider,
 		ResourcePoolID: resourcePoolID,
 	})
@@ -82,50 +79,4 @@ func CreateNodePoolTask(taskID, stepName string) error {
 		return err
 	}
 	return nil
-}
-
-func createNodeGroupAction(ctx context.Context, data *cloudprovider.CloudDependBasicInfo,
-	pool cloudprovider.ResourcePoolData) error {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-	consumerID, err := createResourcePool(ctx, data, pool)
-	if err != nil {
-		blog.Errorf("createNodeGroupAction[%s] failed: %v", taskID, err)
-		return err
-	}
-
-	err = cloudprovider.UpdateNodeGroupCloudAndModuleInfo(data.NodeGroup.NodeGroupID, consumerID,
-		true, data.Cluster.BusinessID)
-	if err != nil {
-		blog.Errorf("createNodeGroupAction[%s] UpdateNodeGroupCloudAndModuleInfo failed: %v", taskID, err)
-		return err
-	}
-
-	blog.Infof("createNodeGroupAction[%s] successful", taskID)
-	return nil
-}
-
-func createResourcePool(ctx context.Context, data *cloudprovider.CloudDependBasicInfo,
-	pool cloudprovider.ResourcePoolData) (string, error) {
-	taskID := cloudprovider.GetTaskIDFromContext(ctx)
-
-	consumerID, err := tresource.GetResourceManagerClient().CreateResourcePool(ctx, resource.ResourcePoolInfo{
-		Name:      data.NodeGroup.NodeGroupID,
-		Provider:  pool.Provider,
-		ClusterID: data.Cluster.ClusterID,
-		RelativeDevicePool: func() []string {
-			if pool.ResourcePoolID == "" {
-				return nil
-			}
-			return strings.Split(pool.ResourcePoolID, ",")
-		}(),
-		PoolID:   []string{pool.ResourcePoolID},
-		Operator: common.ClusterManager,
-	})
-	if err != nil {
-		blog.Errorf("task[%s] createResourcePool failed: %v", taskID, err)
-		return "", err
-	}
-
-	blog.Infof("task[%s] createResourcePool successful[%s]", taskID, consumerID)
-	return consumerID, nil
 }

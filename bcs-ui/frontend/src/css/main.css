@@ -1,4 +1,5 @@
 @tailwind components;
+@tailwind base;
 @tailwind utilities;
 
 @layer components {
@@ -133,6 +134,29 @@
   .bcs-rotate {
     transform: rotate(180deg);
   }
+
+  .bcs-prefix {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 8px;
+    height: 32px;
+    border: 1px solid #C4C6CC;
+  }
+
+  .bcs-required {
+    position: relative;
+    &::after {
+      color: #ea3636;
+      content: "*";
+      display: inline-block;
+      font-size: 12px;
+      height: 8px;
+      line-height: 1;
+      width: 8px;
+      text-align: right;
+      vertical-align: middle;
+    }
+  }
 }
 
 #app {
@@ -168,13 +192,17 @@
   }
 }
 
-.tippy-arrow {
-  width: 0 !important;
-  height: 0 !important;
+.tippy-tooltip.light-theme .tippy-arrow {
+  background: #fff;
+  box-shadow: 0 0 6px 0 #dcdee5;
 }
 
 .bcs-select-group {
   .bk-option-group-name {
     border-bottom: 0px !important;
   }
+}
+
+.bk-form-checkbox.is-checked .bk-checkbox:after {
+  box-sizing: content-box;
 }

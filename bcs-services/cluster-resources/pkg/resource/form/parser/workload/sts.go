@@ -34,6 +34,10 @@ func ParseSTS(manifest map[string]interface{}) map[string]interface{} {
 
 // ParseSTSSpec ...
 func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
+	selectorLables, _ := mapx.GetItems(manifest, "spec.selector.matchLabels")
+	common.ParseLabels(selectorLables, &spec.Labels.SelectorLabels)
+	templateLables, _ := mapx.GetItems(manifest, "spec.template.metadata.labels")
+	common.ParseLabels(templateLables, &spec.Labels.TemplateLabels)
 	ParseSTSReplicas(manifest, &spec.Replicas)
 	ParseSTSVolumeClaimTmpl(manifest, &spec.VolumeClaimTmpl)
 	tmplSpec, _ := mapx.GetItems(manifest, "spec.template.spec")
@@ -50,7 +54,7 @@ func ParseSTSSpec(manifest map[string]interface{}, spec *model.STSSpec) {
 // ParseSTSReplicas ...
 func ParseSTSReplicas(manifest map[string]interface{}, replicas *model.STSReplicas) {
 	replicas.SVCName = mapx.GetStr(manifest, "spec.serviceName")
-	replicas.Cnt = mapx.GetInt64(manifest, "spec.replicas")
+	replicas.Cnt = mapx.GetIntStr(manifest, "spec.replicas")
 	replicas.UpdateStrategy = mapx.Get(
 		manifest, "spec.updateStrategy.type", resCsts.DefaultUpdateStrategy,
 	).(string)

@@ -13,7 +13,11 @@
             @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
         </template>
         <template #head-suffix>
-          <bk-select v-model="selectTime" class="time-selector" :filterable="false" :clearable="false">
+          <bk-select
+            v-model="selectTime"
+            :class="['time-selector', { 'en-time-selector': locale === 'en' }]"
+            :filterable="false"
+            :clearable="false">
             <bk-option v-for="item in selectorTimeList" :id="item.value" :key="item.value" :name="item.label" />
           </bk-select>
         </template>
@@ -63,7 +67,7 @@
   import { useI18n } from 'vue-i18n';
   import { Share } from 'bkui-vue/lib/icon';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const router = useRouter();
 
@@ -201,19 +205,10 @@
               },
             },
           },
-          tickCount: 5,
           min: 0,
         },
         count: {
-          grid: {
-            line: {
-              style: {
-                stroke: '#979BA5',
-                lineDash: [4, 5],
-              },
-            },
-          },
-          tickCount: 5,
+          grid: null,
           min: 0,
         },
       },
@@ -310,6 +305,9 @@
     width: 88px;
     :deep(.bk-input) {
       height: 26px;
+    }
+    &.en-time-selector {
+      width: 120px;
     }
   }
   .fullscreen {

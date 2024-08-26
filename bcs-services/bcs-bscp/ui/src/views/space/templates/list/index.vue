@@ -3,7 +3,7 @@
     <bk-alert class="template-tips" theme="info">
       <div class="tips-wrapper">
         <div class="message">
-          {{ t('配置模板用于统一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。') }}
+          {{ t('配置模板用于同一业务下服务间配置文件复用，可以在创建服务配置时引用配置模板。') }}
         </div>
         <!-- <bk-button text theme="primary">go template</bk-button> -->
       </div>

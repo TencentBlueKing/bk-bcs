@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,9 +48,9 @@ type FeatureFlags struct {
 
 // FeatureBizView 业务白名单
 type FeatureBizView struct {
-	Default bool `yaml:"default"`
+	Default *bool `yaml:"default"`
 	// map[bizID]true/false
-	Spec map[string]bool `yaml:"spec"`
+	Spec map[string]*bool `yaml:"spec"`
 }
 
 // FeatureResourceLimit 业务资源限制
@@ -61,8 +62,72 @@ type FeatureResourceLimit struct {
 
 // ResourceLimit 资源限制配置项
 type ResourceLimit struct {
-	// 配置文件大小上限，单位 Mb
+	// MaxFileSize 配置文件大小上限，单位 MB，默认为200MB
 	MaxFileSize uint `json:"maxFileSize" yaml:"maxFileSize"`
+	// AppConfigCnt 单个app下允许创建的配置数（模版+非模版），默认为2000
+	AppConfigCnt uint `yaml:"appConfigCnt"`
+	// TmplSetTmplCnt 单个模版套餐下允许创建的模版数，默认为2000
+	TmplSetTmplCnt uint `yaml:"tmplSetTmplCnt"`
+	// MaxUploadContentLength 最大内容长度
+	MaxUploadContentLength uint `yaml:"maxUploadContentLength"`
+}
+
+// validate if the feature resource limit is valid or not.
+func (f FeatureFlags) validate() error {
+	for bizID := range f.BizView.Spec {
+		if _, err := strconv.Atoi(bizID); err != nil {
+			return fmt.Errorf("invalid featureFlags.BIZ_VIEW.spec.{bizID} value %s, "+
+				"biz id should be an interger", bizID)
+		}
+	}
+
+	for bizID := range f.ResourceLimit.Spec {
+		if _, err := strconv.Atoi(bizID); err != nil {
+			return fmt.Errorf("invalid featureFlags.RESOURCE_LIMIT.spec.{bizID} value %s, "+
+				"biz id should be an interger", bizID)
+		}
+	}
+
+	return nil
+}
+
+const (
+	// DefaultBizView is default biz view
+	DefaultBizView = true
+	// DefaultMaxFileSize is default max file size, unit is MB
+	DefaultMaxFileSize = 200
+	// DefaultAppConfigCnt is default app's config count
+	DefaultAppConfigCnt = 2000
+	// DefaultTmplSetTmplCnt is default template set's template count
+	DefaultTmplSetTmplCnt = 2000
+	// DefaultMaxUploadContentLength 默认最大内容长度(2048MB)
+	DefaultMaxUploadContentLength = 2 * 1024
+	// DefaultMaxUploadSingleContentLength 默认最大单个内容长度(200MB)
+	DefaultMaxUploadSingleContentLength = 200
+)
+
+// trySetDefault try set the default value of feature flag
+func (f *FeatureFlags) trySetDefault() {
+	if f.BizView.Default == nil {
+		bizView := DefaultBizView
+		f.BizView.Default = &bizView
+	}
+
+	if f.ResourceLimit.Default.MaxFileSize == 0 {
+		f.ResourceLimit.Default.MaxFileSize = DefaultMaxFileSize
+	}
+
+	if f.ResourceLimit.Default.AppConfigCnt == 0 {
+		f.ResourceLimit.Default.AppConfigCnt = DefaultAppConfigCnt
+	}
+
+	if f.ResourceLimit.Default.TmplSetTmplCnt == 0 {
+		f.ResourceLimit.Default.TmplSetTmplCnt = DefaultTmplSetTmplCnt
+	}
+
+	if f.ResourceLimit.Default.MaxUploadContentLength == 0 {
+		f.ResourceLimit.Default.MaxUploadContentLength = DefaultMaxUploadContentLength
+	}
 }
 
 // Service defines Setting related runtime.
@@ -239,8 +304,6 @@ func (rs RedisCluster) validate() error {
 type IAM struct {
 	// IAM api url.
 	APIURL string `yaml:"api_url"`
-	// Host is the host of current system, in the other word bk-bscp.
-	Host string `yaml:"host"`
 	// AppCode blueking belong to bscp's appcode.
 	AppCode string `yaml:"appCode"`
 	// AppSecret blueking belong to bscp app's secret.
@@ -252,10 +315,6 @@ type IAM struct {
 func (s IAM) validate() error {
 	if len(s.APIURL) == 0 {
 		return errors.New("iam api url is not set")
-	}
-
-	if len(s.Host) == 0 {
-		return errors.New("iam host is not set")
 	}
 
 	if len(s.AppCode) == 0 {
@@ -619,8 +678,10 @@ type Network struct {
 	// RpcPort is port where server listen to rpc port.
 	RpcPort uint `yaml:"rpcPort"`
 	// HttpPort is port where server listen to http port.
-	HttpPort uint      `yaml:"httpPort"`
-	TLS      TLSConfig `yaml:"tls"`
+	HttpPort uint `yaml:"httpPort"`
+	// GwHttpPort  is port where server listen to grpc-gateway http port.
+	GwHttpPort uint      `yaml:"gwHttpPort"`
+	TLS        TLSConfig `yaml:"tls"`
 }
 
 // trySetFlagBindIP try set flag bind ip, bindIP only can set by one of the flag or configuration file.
@@ -665,6 +726,9 @@ func (n *Network) trySetDefault() {
 		} else {
 			n.BindIPs = []string{n.BindIP}
 		}
+	}
+	if n.GwHttpPort == 0 {
+		n.GwHttpPort = 80
 	}
 }
 
@@ -768,8 +832,9 @@ type Esb struct {
 	// AppSecret is the blueking app secret of bscp to request esb.
 	AppSecret string `yaml:"appSecret"`
 	// User is the blueking user of bscp to request esb.
-	User string    `yaml:"user"`
-	TLS  TLSConfig `yaml:"tls"`
+	User     string    `yaml:"user"`
+	TLS      TLSConfig `yaml:"tls"`
+	BscpHost string    `yaml:"bscpHost"`
 }
 
 // validate esb runtime.
@@ -1033,6 +1098,104 @@ func (lm *MatchReleaseLimiter) trySetDefault() {
 	}
 }
 
+// RateLimiter defines the rate limiter options for traffic control.
+type RateLimiter struct {
+	Enable          bool    `yaml:"enable"`
+	ClientBandwidth uint    `yaml:"clientBandwidth"`
+	Global          BasicRL `yaml:"global"`
+	Biz             BizRLs  `yaml:"biz"`
+}
+
+// BizRLs defines the rate limiters for biz
+type BizRLs struct {
+	Default BasicRL          `yaml:"default"`
+	Spec    map[uint]BasicRL `yaml:"spec"`
+}
+
+// BasicRL defines the basic options for rate limiter.
+type BasicRL struct {
+	Limit uint `yaml:"limit"`
+	Burst uint `yaml:"burst"`
+}
+
+const (
+	// DefaultClientBandwidth default client bandwidth
+	DefaultClientBandwidth = 50 // 50MB/s = 400Mb/s
+	// DefaultGlobalRateLimit default global rate limit
+	DefaultGlobalRateLimit = 1000 // 1000MB/s = 8000Mb/s
+	// DefaultGlobalRateBurst default global rate burst
+	DefaultGlobalRateBurst = 2000 // 2000MB = 16000Mb
+	// DefaultBizRateLimit default biz rate limit
+	DefaultBizRateLimit = 100 // 100MB/s = 800Mb/s
+	// DefaultBizRateBurst default biz rate burst
+	DefaultBizRateBurst = 200 // 200MB = 1600Mb
+)
+
+// validate if the rate limiter is valid or not.
+func (rl RateLimiter) validate() error {
+	if rl.Biz.Default.Burst < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.biz.default.burst value %d, should >= rateLimiter.biz.default.limit "+
+			"value %d", rl.Global.Burst, rl.Global.Limit)
+	}
+
+	if rl.Global.Limit < rl.Biz.Default.Limit {
+		return fmt.Errorf("invalid rateLimiter.global.limit value %d, should >= rateLimiter.biz.default.limit value %d",
+			rl.Global.Limit, rl.ClientBandwidth)
+	}
+
+	if rl.Global.Burst < rl.Biz.Default.Burst {
+		return fmt.Errorf("invalid rateLimiter.global.burst value %d, should >= rateLimiter.biz.default.burst value %d",
+			rl.Global.Burst, rl.Global.Limit)
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Burst < l.Limit {
+			return fmt.Errorf("invalid rateLimiter.biz.spec.%d.burst value %d, "+
+				"should >= rateLimiter.biz.spec.%d.limit value %d", bizID, l.Burst, bizID, l.Limit)
+		}
+	}
+
+	return nil
+}
+
+// trySetDefault try set the default value of rate limiter
+func (rl *RateLimiter) trySetDefault() {
+	if rl.ClientBandwidth == 0 {
+		rl.ClientBandwidth = DefaultClientBandwidth
+	}
+
+	if rl.Global.Limit == 0 {
+		rl.Global.Limit = DefaultGlobalRateLimit
+	}
+
+	if rl.Global.Burst == 0 {
+		rl.Global.Burst = DefaultGlobalRateBurst
+	}
+
+	if rl.Biz.Default.Limit == 0 {
+		rl.Biz.Default.Limit = DefaultBizRateLimit
+	}
+
+	if rl.Biz.Default.Burst == 0 {
+		rl.Biz.Default.Burst = DefaultBizRateBurst
+	}
+
+	for bizID, l := range rl.Biz.Spec {
+		if l.Limit == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: DefaultBizRateLimit,
+				Burst: l.Burst,
+			}
+		}
+		if l.Burst == 0 {
+			rl.Biz.Spec[bizID] = BasicRL{
+				Limit: rl.Biz.Spec[bizID].Limit,
+				Burst: DefaultBizRateBurst,
+			}
+		}
+	}
+}
+
 // Credential credential encryption algorithm and master key
 type Credential struct {
 	MasterKey           string `yaml:"master_key"`
@@ -1113,7 +1276,7 @@ type BCS struct {
 	Token string `yaml:"token"`
 }
 
-// GSE defines all the gse related runtime.-
+// GSE defines all the gse related runtime.
 type GSE struct {
 	// Enabled is the flag to enable gse p2p download.
 	Enabled bool `yaml:"enabled"`
@@ -1131,17 +1294,36 @@ type GSE struct {
 	ContainerName string `yaml:"containerName"`
 	// AgentUser is the user exists in the feed server container/node.
 	AgentUser string `yaml:"agentUser"`
-	// SourceDir is the directory where the source file download to and stored.
-	SourceDir string `yaml:"sourceDir"`
+	// CacheDir is the directory where the source file download to and cached.
+	CacheDir string `yaml:"cacheDir"`
+	// CacheSizeGB is the cache size of the source file in the feed server.
+	CacheSizeGB uint `yaml:"cacheSizeGB"`
+	// CacheRetentionRate is the cache retention rate of the source file in the feed server.
+	CacheRetentionRate float64 `yaml:"cacheRetentionRate"`
+}
+
+func (g *GSE) trySetDefault() {
+	if g.AgentUser == "" {
+		g.AgentUser = "root"
+	}
+	if g.CacheDir == "" {
+		g.CacheDir = "/data/bscp/gse/cache"
+	}
+	if g.CacheSizeGB == 0 {
+		g.CacheSizeGB = 10
+	}
+	if g.CacheRetentionRate == 0 {
+		g.CacheRetentionRate = 0.5
+	}
 }
 
 func (g *GSE) getFromEnv() {
 	if len(g.NodeAgentID) == 0 {
-		g.NodeAgentID = os.Getenv("BSCP_NODE_AGENT_ID")
+		g.NodeAgentID = os.Getenv("NODE_AGENT_ID")
 	}
 
 	if len(g.ClusterID) == 0 {
-		g.ClusterID = os.Getenv("BSCP_CLUSTER_ID")
+		g.ClusterID = os.Getenv("CLUSTER_ID")
 	}
 
 	if len(g.PodID) == 0 {
@@ -1149,7 +1331,7 @@ func (g *GSE) getFromEnv() {
 	}
 
 	if len(g.ContainerName) == 0 {
-		g.ContainerName = os.Getenv("BSCP_CONTAINER_NAME")
+		g.ContainerName = os.Getenv("CONTAINER_NAME")
 	}
 }
 
@@ -1157,6 +1339,9 @@ func (g *GSE) getFromEnv() {
 func (g GSE) validate() error {
 	if !g.Enabled {
 		return nil
+	}
+	if g.Host == "" {
+		return errors.New("gse host is not set")
 	}
 	if g.NodeAgentID == "" && (g.ClusterID == "" || g.PodID == "" || g.ContainerName == "") {
 		return errors.New("to enable p2p download, either agent id must be set or cluster id, " +

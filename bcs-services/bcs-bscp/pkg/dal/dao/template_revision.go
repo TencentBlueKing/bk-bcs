@@ -54,6 +54,13 @@ type TemplateRevision interface {
 	BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, revisions []*table.TemplateRevision) error
 	// ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
 	ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit, templateIDs []uint32) ([]*table.TemplateRevision, error)
+	// GetLatestTemplateRevision get latest template revision.
+	GetLatestTemplateRevision(kit *kit.Kit, bizID, templateID uint32) (*table.TemplateRevision, error)
+	// GetTemplateRevisionById get template revision by id.
+	GetTemplateRevisionById(kit *kit.Kit, bizID, id uint32) (*table.TemplateRevision, error)
+	// ListLatestGroupByTemplateIdsWithTx Lists the latest version groups by template ids with transaction.
+	ListLatestGroupByTemplateIdsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+		templateIDs []uint32) ([]*table.TemplateRevision, error)
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -64,9 +71,51 @@ type templateRevisionDao struct {
 	auditDao AuditDao
 }
 
+// ListLatestGroupByTemplateIdsWithTx Lists the latest version groups by template ids with transaction.
+func (dao *templateRevisionDao) ListLatestGroupByTemplateIdsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	templateIDs []uint32) ([]*table.TemplateRevision, error) {
+
+	m := dao.genQ.TemplateRevision
+	q := tx.TemplateRevision.WithContext(kit.Ctx)
+	// 根据templateIDs获取一列最大 templateRevisionIDs
+	// 再通过最大 templateRevisionIDs 获取 templateRevision 数据
+	var templateRevisionIDs []struct{ Id uint32 }
+	if err := q.Select(m.ID.Max().As("id")).
+		Where(m.BizID.Eq(bizID), m.TemplateID.In(templateIDs...)).
+		Group(m.TemplateID).
+		Scan(&templateRevisionIDs); err != nil {
+		return nil, err
+	}
+	ids := []uint32{}
+	for _, item := range templateRevisionIDs {
+		ids = append(ids, item.Id)
+	}
+	find, err := q.Where(m.ID.In(ids...)).Find()
+	if err != nil {
+		return nil, err
+	}
+	return find, nil
+}
+
+// GetTemplateRevisionById get template revision by id.
+func (dao *templateRevisionDao) GetTemplateRevisionById(kit *kit.Kit, bizID uint32, id uint32) (
+	*table.TemplateRevision, error) {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
+	return q.Where(m.BizID.Eq(bizID), m.ID.Eq(id)).Take()
+}
+
+// GetLatestTemplateRevision get latest template revision.
+func (dao *templateRevisionDao) GetLatestTemplateRevision(kit *kit.Kit, bizID uint32, templateID uint32) (
+	*table.TemplateRevision, error) {
+	m := dao.genQ.TemplateRevision
+	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
+	return q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID)).Order(m.ID.Desc()).Take()
+}
+
 // Create one template revision instance.
 func (dao *templateRevisionDao) Create(kit *kit.Kit, g *table.TemplateRevision) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -105,7 +154,7 @@ func (dao *templateRevisionDao) Create(kit *kit.Kit, g *table.TemplateRevision) 
 
 // CreateWithTx create one template revision instance with transaction.
 func (dao *templateRevisionDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.TemplateRevision) (uint32, error) {
-	if err := g.ValidateCreate(); err != nil {
+	if err := g.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -204,13 +253,8 @@ func (dao *templateRevisionDao) GetByUniqueKey(kit *kit.Kit, bizID, templateID u
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
 
-	templateRevision, err := q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID),
+	return q.Where(m.BizID.Eq(bizID), m.TemplateID.Eq(templateID),
 		m.RevisionName.Eq(revisionName)).Take()
-	if err != nil {
-		return nil, fmt.Errorf("get template revision failed, err: %v", err)
-	}
-
-	return templateRevision, nil
 }
 
 // ListByIDs list template revisions by template revision ids.
@@ -280,30 +324,24 @@ func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return err
 	}
 	for i, item := range revisions {
-		if err := item.ValidateCreate(); err != nil {
+		if err := item.ValidateCreate(kit); err != nil {
 			return err
 		}
 		item.ID = ids[i]
 	}
-	return tx.Query.TemplateRevision.WithContext(kit.Ctx).Save(revisions...)
+	return tx.Query.TemplateRevision.WithContext(kit.Ctx).CreateInBatches(revisions, 200)
 }
 
 // ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids
-// nolint
 func (dao *templateRevisionDao) ListLatestRevisionsGroupByTemplateIds(kit *kit.Kit,
 	templateIDs []uint32) ([]*table.TemplateRevision, error) {
 	m := dao.genQ.TemplateRevision
 	// 根据templateIDs获取一列最大 templateRevisionIDs
 	// 再通过最大 templateRevisionIDs 获取 templateRevision 数据
-	var templateRevisionIDs []struct {
-		Id uint32
-	}
-	err := m.WithContext(kit.Ctx).
-		Select(m.ID.Max().As("id")).
-		Where(m.TemplateID.In(templateIDs...)).
+	var templateRevisionIDs []struct{ Id uint32 }
+	if err := m.WithContext(kit.Ctx).Select(m.ID.Max().As("id")).Where(m.TemplateID.In(templateIDs...)).
 		Group(m.TemplateID).
-		Scan(&templateRevisionIDs)
-	if err != nil {
+		Scan(&templateRevisionIDs); err != nil {
 		return nil, err
 	}
 	ids := []uint32{}

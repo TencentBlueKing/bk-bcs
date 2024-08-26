@@ -20,18 +20,16 @@ import (
 	"time"
 
 	"github.com/RichardKnop/machinery/v2"
-	"github.com/RichardKnop/machinery/v2/backends/mongo"
-	"github.com/RichardKnop/machinery/v2/brokers/amqp"
+	ibackend "github.com/RichardKnop/machinery/v2/backends/iface"
+	ibroker "github.com/RichardKnop/machinery/v2/brokers/iface"
 	"github.com/RichardKnop/machinery/v2/config"
-	"github.com/RichardKnop/machinery/v2/locks/eager"
+	ilock "github.com/RichardKnop/machinery/v2/locks/iface"
+	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
-	driver "go.mongodb.org/mongo-driver/mongo"
-	mopt "go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/task/store"
-	types "github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	bcsmongo "github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
+	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
+	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
 const (
@@ -40,73 +38,75 @@ const (
 )
 
 // BrokerConfig config for go-machinery broker
-type BrokerConfig struct {
-	QueueAddress string `json:"address"`
-	Exchange     string `json:"exchange"`
-}
 
-// Manager manager for task server
-type Manager struct {
+// TaskManager manager for task server
+type TaskManager struct { // nolint
 	moduleName string
 	lock       sync.Locker
 	server     *machinery.Server
 	worker     *machinery.Worker
 
-	brokerConfig *BrokerConfig
-	mongoConfig  *bcsmongo.Options
+	workerNum         int
+	stepExecutors     map[istep.StepName]istep.StepExecutor
+	callbackExecutors map[istep.CallbackName]istep.CallbackExecutor
+	cfg               *ManagerConfig
+	store             istore.Store
 
-	workerNum     int
-	stepWorkers   map[string]StepWorkerInterface
-	callBackFuncs map[string]CallbackInterface
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 // ManagerConfig options for manager
 type ManagerConfig struct {
-	ModuleName  string
-	StepWorkers []StepWorkerInterface
-	CallBacks   []CallbackInterface
-	WorkerNum   int
-	Broker      *BrokerConfig
-	Backend     *bcsmongo.Options
+	ModuleName   string
+	WorkerNum    int
+	Broker       ibroker.Broker
+	Backend      ibackend.Backend
+	Lock         ilock.Lock
+	Store        istore.Store
+	ServerConfig *config.Config
 }
 
-// NewManager create new manager
-func NewManager() *Manager {
-	m := &Manager{
-		lock:      &sync.Mutex{},
-		workerNum: DefaultWorkerConcurrency,
+// NewTaskManager create new manager
+func NewTaskManager() *TaskManager {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	m := &TaskManager{
+		ctx:           ctx,
+		cancel:        cancel,
+		lock:          &sync.Mutex{},
+		workerNum:     DefaultWorkerConcurrency,
+		stepExecutors: istep.GetRegisters(), // get all step workers
+		cfg:           &ManagerConfig{},
 	}
 	return m
 }
 
 // Init init machinery server and worker
-func (m *Manager) Init(cfg *ManagerConfig) error {
+func (m *TaskManager) Init(cfg *ManagerConfig) error {
 	err := m.validate(cfg)
 	if err != nil {
 		return err
 	}
 
-	m.brokerConfig = cfg.Broker
-	m.mongoConfig = cfg.Backend
+	if cfg.ServerConfig == nil {
+		cfg.ServerConfig = &config.Config{
+			ResultsExpireIn: 3600 * 48,
+			NoUnixSignals:   true,
+		}
+	}
+	m.cfg = cfg
+	m.store = cfg.Store
+
+	if m.stepExecutors == nil {
+		m.stepExecutors = make(map[istep.StepName]istep.StepExecutor)
+	}
+
+	m.callbackExecutors = istep.GetCallbackRegisters()
+
 	m.moduleName = cfg.ModuleName
 	if cfg.WorkerNum != 0 {
 		m.workerNum = cfg.WorkerNum
-	}
-
-	// save step workers and check duplicate
-	for _, w := range cfg.StepWorkers {
-		if _, ok := m.stepWorkers[w.GetName()]; ok {
-			return fmt.Errorf("step [%s] already exists", w.GetName())
-		}
-		m.stepWorkers[w.GetName()] = w
-	}
-
-	// save callbacks and check duplicate
-	for _, c := range cfg.CallBacks {
-		if _, ok := m.callBackFuncs[c.GetName()]; ok {
-			return fmt.Errorf("callback func [%s] already exists", c.GetName())
-		}
-		m.callBackFuncs[c.GetName()] = c
 	}
 
 	if err := m.initGlobalStorage(); err != nil {
@@ -124,80 +124,28 @@ func (m *Manager) Init(cfg *ManagerConfig) error {
 	return nil
 }
 
-func (m *Manager) validate(c *ManagerConfig) error {
+func (m *TaskManager) initGlobalStorage() error {
+	globalStorage = m.store
+	return nil
+}
+
+func (m *TaskManager) validate(c *ManagerConfig) error {
 	// module name check
 	if c.ModuleName == "" {
 		return fmt.Errorf("module name is empty")
 	}
 
-	// step worker check
-	if c.StepWorkers == nil || len(c.StepWorkers) == 0 {
-		return fmt.Errorf("step worker is empty")
-	}
-
-	// broker config check
-	if c.Broker == nil || c.Broker.Exchange == "" || c.Broker.QueueAddress == "" {
-		return fmt.Errorf("broker config is empty")
-	}
-
-	if c.Backend == nil {
-		return fmt.Errorf("backend config is empty")
-	}
-
 	return nil
 }
 
-func (m *Manager) initGlobalStorage() error {
-	mongoDB, err := bcsmongo.NewDB(m.mongoConfig)
-	if err != nil {
-		return fmt.Errorf("init mongo db failed, err %s", err.Error())
-	}
-	if err = mongoDB.Ping(); err != nil {
-		return fmt.Errorf("ping mongo db failed, err %s", err.Error())
-	}
-
-	if m.moduleName == "" {
-		return fmt.Errorf("module name is empty")
-	}
-	modelSet := store.NewModelSet(mongoDB, m.moduleName)
-	globalStorage = modelSet
-	return nil
-}
-
-func (m *Manager) initServer() error {
-	mongoCli, err := newMongoCli(m.mongoConfig)
-	if err != nil {
-		return err
-	}
-
-	config := &config.Config{
-		Broker:          m.brokerConfig.QueueAddress,
-		DefaultQueue:    m.brokerConfig.Exchange,
-		ResultsExpireIn: 3600 * 48,
-		MongoDB: &config.MongoDBConfig{
-			Client:   mongoCli,
-			Database: m.mongoConfig.Database,
-		},
-		AMQP: &config.AMQPConfig{
-			Exchange:      m.brokerConfig.Exchange,
-			ExchangeType:  "direct",
-			BindingKey:    m.brokerConfig.Exchange,
-			PrefetchCount: 50,
-		},
-	}
-	broker := amqp.New(config)
-	backend, err := mongo.New(config)
-	if err != nil {
-		return fmt.Errorf("task server init mongo backend failed, %s", err.Error())
-	}
-	lock := eager.New()
-	m.server = machinery.NewServer(config, broker, backend, lock)
+func (m *TaskManager) initServer() error {
+	m.server = machinery.NewServer(m.cfg.ServerConfig, m.cfg.Broker, m.cfg.Backend, m.cfg.Lock)
 
 	return nil
 }
 
 // register step workers and init workers
-func (m *Manager) initWorker(workerNum int) error {
+func (m *TaskManager) initWorker(workerNum int) error {
 	// register all workers
 	if err := m.registerStepWorkers(); err != nil {
 		return fmt.Errorf("register workers failed, err: %s", err.Error())
@@ -206,13 +154,13 @@ func (m *Manager) initWorker(workerNum int) error {
 	m.worker = m.server.NewWorker("", workerNum)
 
 	preTaskHandler := func(signature *tasks.Signature) {
-		fmt.Printf("start task handler for: %s", signature.Name)
+		log.INFO.Printf("start task[%s] handler for: %s", signature.UUID, signature.Name)
 	}
 	postTaskHandler := func(signature *tasks.Signature) {
-		fmt.Printf("end task handler for: %s", signature.Name)
+		log.INFO.Printf("end task[%s] handler for: %s", signature.UUID, signature.Name)
 	}
 	errorHandler := func(err error) {
-		fmt.Printf("task error handler: %s", err)
+		log.INFO.Printf("task error handler: %s", err)
 	}
 
 	m.worker.SetPreTaskHandler(preTaskHandler)
@@ -223,266 +171,227 @@ func (m *Manager) initWorker(workerNum int) error {
 }
 
 // Run start worker
-func (m *Manager) Run() {
-	// start worker
-	go func() {
-		if err := m.worker.Launch(); err != nil {
-			errMsg := fmt.Sprintf("task server worker launch failed, %s", err.Error())
-			panic(errMsg)
-		}
-	}()
+func (m *TaskManager) Run() error {
+	return m.worker.Launch()
 }
 
 // GetTaskWithID get task by taskid
-func (m *Manager) GetTaskWithID(ctx context.Context, taskid string) (*types.Task, error) {
-	return getGlobalStorage().GetTask(ctx, taskid)
-}
-
-// ListTask return tasks with conditions
-func (m *Manager) ListTask(ctx context.Context, cond *operator.Condition, opt *store.ListOption) ([]types.Task, error) {
-	return getGlobalStorage().ListTask(ctx, cond, opt)
+func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.Task, error) {
+	return GetGlobalStorage().GetTask(ctx, taskId)
 }
 
 // UpdateTask update task
 // ! warning: modify task status will cause task status not consistent
-func (m *Manager) UpdateTask(ctx context.Context, task *types.Task) error {
-	return getGlobalStorage().UpdateTask(ctx, task)
-}
-
-// PatchTaskInfo update task info
-// ! warning: modify task status will cause task status not consistent
-func (m *Manager) PatchTaskInfo(ctx context.Context, taskID string, patchs map[string]interface{}) error {
-	// warning:
-	return getGlobalStorage().PatchTask(ctx, taskID, patchs)
+func (m *TaskManager) UpdateTask(ctx context.Context, task *types.Task) error {
+	return GetGlobalStorage().UpdateTask(ctx, task)
 }
 
 // RetryAll reset status to running and dispatch all tasks
-func (m *Manager) RetryAll(task *types.Task) error {
+func (m *TaskManager) RetryAll(task *types.Task) error {
 	task.SetStatus(types.TaskStatusRunning)
 	task.SetMessage("task retrying")
 
-	if err := getGlobalStorage().UpdateTask(context.Background(), task); err != nil {
+	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
 		return err
 	}
 	return m.dispatchAt(task, "")
 }
 
 // RetryAt reset status to running and dispatch tasks which begin with stepName
-func (m *Manager) RetryAt(task *types.Task, stepName string) error {
+func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 	task.SetStatus(types.TaskStatusRunning)
 	task.SetMessage("task retrying")
 
-	if err := getGlobalStorage().UpdateTask(context.Background(), task); err != nil {
+	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
 		return err
 	}
 	return m.dispatchAt(task, stepName)
 }
 
 // Dispatch dispatch task
-func (m *Manager) Dispatch(task *types.Task) error {
-	if err := getGlobalStorage().CreateTask(context.Background(), task); err != nil {
+func (m *TaskManager) Dispatch(task *types.Task) error {
+	if err := task.Validate(); err != nil {
 		return err
 	}
+
+	if err := GetGlobalStorage().CreateTask(context.Background(), task); err != nil {
+		return err
+	}
+
 	return m.dispatchAt(task, "")
 }
 
-// dispatchAt task to machinery
-func (m *Manager) dispatchAt(task *types.Task, stepNameBegin string) error {
+func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin string) []*tasks.Signature {
 	var signatures []*tasks.Signature
-	for _, stepName := range task.StepSequence {
+
+	for _, step := range task.Steps {
 		// skip steps which before begin step, empty str not skip any steps
-		if stepName != "" && stepName != stepNameBegin {
+		if step.Name != "" && stepNameBegin != "" && step.Name != stepNameBegin {
 			continue
 		}
+
+		// build signature from step
 		signature := &tasks.Signature{
-			UUID: fmt.Sprintf("task-%s-%s", task.GetTaskID(), stepName),
-			Name: stepName,
+			UUID: fmt.Sprintf("%s-%s", task.TaskID, step.Name),
+			Name: step.Executor,
+			ETA:  step.ETA,
 			// two parameters: taskID, stepName
-			Args:                        []tasks.Arg{{Type: "string", Value: task.GetTaskID()}, {Type: "string", Value: stepName}},
+			Args: []tasks.Arg{
+				{
+					Name:  "task_id",
+					Type:  "string",
+					Value: task.GetTaskID(),
+				},
+				{
+					Name:  "step_name",
+					Type:  "string",
+					Value: step.Name,
+				},
+			},
+
 			IgnoreWhenTaskNotRegistered: true,
 		}
+
 		signatures = append(signatures, signature)
 	}
+
+	return signatures
+}
+
+// dispatchAt task to machinery
+func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
+	signatures := m.transTaskToSignature(task, stepNameBegin)
 
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
-	// create chain
-	chain, _ := tasks.NewChain(signatures...)
-
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	if task.GetMaxExecutionSeconds() != time.Duration(0) {
-		ctx, cancelFunc = context.WithTimeout(ctx, task.GetMaxExecutionSeconds())
+	// sending to workers
+	chain, err := tasks.NewChain(signatures...)
+	if err != nil {
+		log.ERROR.Printf("taskManager[%s] DispatchChainTask NewChain failed: %v", task.GetTaskID(), err)
+		return err
 	}
-	defer cancelFunc()
 
-	//send chain to machinery
-	asyncResult, err := m.server.SendChainWithContext(ctx, chain)
+	// send chain to machinery & ctx for tracing
+	_, err = m.server.SendChainWithContext(context.Background(), chain)
 	if err != nil {
 		return fmt.Errorf("send chain to machinery failed: %s", err.Error())
 	}
-
-	// get results
-	go func(t *types.Task, c *tasks.Chain) {
-		// check async results
-		for retry := 3; retry > 0; retry-- {
-			results, err := asyncResult.Get(time.Second * 5)
-			if err != nil {
-				fmt.Printf("tracing task %s result failed, %s. retry %d", t.GetTaskID(), err.Error(), retry)
-				continue
-			}
-			// check results
-			fmt.Printf("tracing task %s result %s", t.GetTaskID(), tasks.HumanReadableResults(results))
-		}
-	}(task, chain)
 
 	return nil
 }
 
 // registerStepWorkers build machinery workers for all step worker
-func (m *Manager) registerStepWorkers() error {
+func (m *TaskManager) registerStepWorkers() error {
 	allTasks := make(map[string]interface{}, 0)
-	for stepName, stepWorker := range m.stepWorkers {
-		do := stepWorker.DoWork
-
-		t := func(taskID string, stepName string) error {
-			start := time.Now()
-			state, step, err := m.getTaskStateAndCurrentStep(taskID, stepName)
-			if err != nil {
-				return err
-			}
-			// step executed success
-			if step == nil {
-				return nil
-			}
-
-			ctx, cancel := context.WithTimeout(context.Background(), step.GetMaxExecutionSeconds())
-			defer cancel()
-			stepDone := make(chan bool, 1)
-
-			go func() {
-				// call step worker
-				if err = do(state); err != nil {
-					if err := state.updateStepFailure(start, step.GetStepName(), err); err != nil {
-						fmt.Printf("update step %s to failure failed: %s", step.GetStepName(), err.Error())
-					}
-
-					// step done
-					stepDone <- true
-					return
-				}
-
-				if err := state.updateStepSuccess(start, step.GetStepName()); err != nil {
-					fmt.Printf("update step %s to success failed: %s", step.GetStepName(), err.Error())
-				}
-
-				// step done
-				stepDone <- true
-			}()
-
-			select {
-			case <-ctx.Done():
-				retErr := fmt.Errorf("step %s timeout", step.GetStepName())
-				if err := state.updateStepFailure(start, step.GetStepName(), retErr); err != nil {
-					fmt.Printf("update step %s to failure failed: %s", step.GetStepName(), err.Error())
-				}
-				if !step.GetSkipOnFailed() {
-					return retErr
-				}
-				return nil
-			case <-stepDone:
-				// step done
-				if err != nil && !step.GetSkipOnFailed() {
-					return err
-				}
-				return nil
-			}
+	for stepName := range m.stepExecutors {
+		name := string(stepName)
+		if _, ok := allTasks[name]; ok {
+			return fmt.Errorf("task %s already exists", name)
 		}
-
-		if _, ok := allTasks[stepName]; ok {
-			return fmt.Errorf("task %s already exists", stepName)
-		}
-		allTasks[stepName] = t
+		allTasks[name] = m.doWork
 	}
 	err := m.server.RegisterTasks(allTasks)
 	return err
 }
 
-// getTaskStateAndCurrentStep get task state and current step
-func (m *Manager) getTaskStateAndCurrentStep(taskid, stepName string) (*State, *types.Step, error) {
-	task, err := getGlobalStorage().GetTask(context.Background(), taskid)
+// doWork machinery 通用处理函数
+func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
+	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
+
+	log.INFO.Printf("start to execute task[%s] stepName[%s]", taskID, stepName)
+
+	state, err := m.getTaskState(taskID, stepName)
 	if err != nil {
-		return nil, nil, fmt.Errorf("get task %s information failed, %s", taskid, err.Error())
+		log.ERROR.Printf("task[%s] stepName[%s] getTaskState failed: %v",
+			taskID, stepName, err)
+		return err
 	}
 
-	if task.CommonParams == nil {
-		task.CommonParams = make(map[string]string, 0)
+	// step executed success
+	if state.step == nil {
+		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
+			taskID, stepName, err)
+		return nil
 	}
 
-	state := NewState(task, stepName)
-	if state.isTaskTerminated() {
-		return nil, nil, fmt.Errorf("task %s is terminated, step %s skip", taskid, stepName)
-	}
-	step, err := state.isReadyToStep(stepName)
-	if err != nil {
-		return nil, nil, fmt.Errorf("task %s step %s is not ready, %s", taskid, stepName, err.Error())
-	}
-	if step == nil {
-		// step successful and skip
-		return state, nil, nil
+	step := state.step
+	stepExecutor, ok := m.stepExecutors[istep.StepName(step.Executor)]
+	if !ok {
+		log.ERROR.Printf("task[%s] stepName[%s] executor[%s] not found", taskID, stepName, state.step.Executor)
+		return fmt.Errorf("step executor[%s] not found", step.Executor)
 	}
 
-	// inject call back func
-	if state.task.GetCallback() != "" {
-		if callback, ok := m.callBackFuncs[state.task.GetCallback()]; ok {
-			state.callBack = callback.Callback
+	start := time.Now()
+	// step timeout
+	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
+	defer stepCancel()
+
+	// task timeout
+	t := state.task.GetStartTime()
+	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
+	defer taskCancel()
+
+	tmpCh := make(chan error, 1)
+	go func() {
+		// call step worker
+		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
+		tmpCh <- stepExecutor.Execute(execCtx)
+	}()
+
+	select {
+	case retErr := <-tmpCh:
+		log.INFO.Printf("task %s step %s errLocal: %v", taskID, stepName, retErr)
+
+		// update task & step status
+		if retErr == nil {
+			state.updateStepSuccess(start)
+			return nil
 		}
-	}
+		state.updateStepFailure(start, retErr, false)
 
-	return state, nil, nil
+		if step.GetSkipOnFailed() {
+			return nil
+		}
+
+		if step.GetRetryCount() < step.MaxRetries {
+			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
+			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
+				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
+			return tasks.NewErrRetryTaskLater(retErr.Error(), retryIn)
+		}
+
+		return retErr
+
+	case <-stepCtx.Done():
+		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
+		state.updateStepFailure(start, retErr, false)
+
+		if step.GetSkipOnFailed() {
+			return nil
+		}
+
+		if step.GetRetryCount() < step.MaxRetries {
+			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
+			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
+				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
+			return tasks.NewErrRetryTaskLater("some error", retryIn)
+		}
+
+		return retErr
+
+	case <-taskCtx.Done():
+		// task timeOut
+		retErr := fmt.Errorf("task %s exec timeout", taskID)
+		state.updateStepFailure(start, retErr, true)
+		// 整个任务结束
+		return retErr
+	}
 }
 
-func newMongoCli(opt *bcsmongo.Options) (*driver.Client, error) {
-	credential := mopt.Credential{
-		AuthMechanism: opt.AuthMechanism,
-		AuthSource:    opt.AuthDatabase,
-		Username:      opt.Username,
-		Password:      opt.Password,
-		PasswordSet:   true,
-	}
-	if len(credential.AuthMechanism) == 0 {
-		credential.AuthMechanism = "SCRAM-SHA-256"
-	}
-	// construct mongo client options
-	mCliOpt := &mopt.ClientOptions{
-		Auth:  &credential,
-		Hosts: opt.Hosts,
-	}
-	if opt.MaxPoolSize != 0 {
-		mCliOpt.MaxPoolSize = &opt.MaxPoolSize
-	}
-	if opt.MinPoolSize != 0 {
-		mCliOpt.MinPoolSize = &opt.MinPoolSize
-	}
-	var timeoutDuration time.Duration
-	if opt.ConnectTimeoutSeconds != 0 {
-		timeoutDuration = time.Duration(opt.ConnectTimeoutSeconds) * time.Second
-	}
-	mCliOpt.ConnectTimeout = &timeoutDuration
-
-	// create mongo client
-	mCli, err := driver.NewClient(mCliOpt)
-	if err != nil {
-		return nil, err
-	}
-	// connect to mongo
-	if err = mCli.Connect(context.TODO()); err != nil {
-		return nil, err
-	}
-
-	if err = mCli.Ping(context.TODO(), nil); err != nil {
-		return nil, err
-	}
-
-	return mCli, nil
+// Stop running
+func (m *TaskManager) Stop() {
+	// should set NoUnixSignals
+	m.worker.Quit()
+	m.cancel()
 }

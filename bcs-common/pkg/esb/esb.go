@@ -91,10 +91,15 @@ func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interfac
 		return nil, fmt.Errorf("payload can't be nil")
 	}
 	// set payload app parameter
-	payload[EsbRequestPayloadAppcode] = esb.AppCode
-	payload[EsbRequestPayloadAppsecret] = esb.AppSecret
-	payload[EsbRequestPayloadOperator] = esb.AppOperator
 	payloadBytes, _ := json.Marshal(payload)
+
+	auth := map[string]string{
+		EsbRequestPayloadAppcode:   esb.AppCode,
+		EsbRequestPayloadAppsecret: esb.AppSecret,
+		EsbRequestPayloadOperator:  esb.AppOperator,
+	}
+	authBytes, _ := json.Marshal(auth)
+
 	// new request body
 	body := bytes.NewBuffer(payloadBytes)
 	// request url
@@ -104,6 +109,7 @@ func (esb *EsbClient) RequestEsb(method, url string, payload map[string]interfac
 	req, _ := http.NewRequest(method, url, body)
 	// set header application/json
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Bkapi-Authorization", string(authBytes))
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {

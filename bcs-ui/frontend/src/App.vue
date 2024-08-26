@@ -12,6 +12,19 @@
     <PermDialog ref="applyPermRef" />
     <!-- 登录弹窗 -->
     <BkPaaSLogin ref="loginRef" :width="$INTERNAL ? 700 : 400" :height="$INTERNAL ? 510 : 400" />
+    <!-- 资源更新提示 -->
+    <bcs-dialog
+      v-model="showResourceUpdateDialog"
+      theme="warning"
+      :mask-close="false"
+      header-position="left"
+      footer-position="center"
+      :title="$t('bcs.newVersion.title')"
+      width="480"
+      @confirm="reloadPage">
+      <p class="text-[14px] leading-[21px] !text-left">{{ $t('bcs.newVersion.p1') }}</p>
+      <p class="text-[14px] leading-[21px] !text-left mt-[10px]">{{ $t('bcs.newVersion.p2') }}</p>
+    </bcs-dialog>
   </div>
 </template>
 <script lang="ts" setup>
@@ -21,21 +34,22 @@ import NoticeComponent from '@blueking/notice-component-vue2';
 
 import '@blueking/notice-component-vue2/dist/style.css';
 import { bus } from '@/common/bus';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import { BCS_UI_PREFIX } from '@/common/constant';
 import { useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
-import $i18n from '@/i18n/i18n-setup';
+import usePlatform from '@/composables/use-platform';
 import PermDialog from '@/views/app/apply-perm.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import Navigation from '@/views/app/navigation.vue';
 
 const { getUserInfo } = useAppData();
+const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
 const isLoading = ref(false);
 const applyPermRef = ref<any>(null);
 const loginRef = ref<any>(null);
 
 // 通知
-const apiUrl = ref('/bcsapi/v4/ui/announcements');
+const apiUrl = ref(`${BCS_UI_PREFIX}/announcements`);
 // 设置内容高度
 const noticeRef = ref();
 const { init } = useCalcHeight([
@@ -79,22 +93,14 @@ const validateAllowDomains = () => {
 // 校验资源是否更新
 const resourceHash = ref('');
 const flag = ref(false);
+const showResourceUpdateDialog = ref(false);
 const validateResourceVersion = () => {
   setTimeout(async () => {
     try {
       const res = await fetch(`${window.BK_STATIC_URL}/static/static_version.txt`, { cache: 'no-store' });
       const hash = await res?.text();
       if (resourceHash.value && (resourceHash.value !== hash)) {
-        $bkInfo({
-          type: 'warning',
-          clsName: 'custom-info-confirm',
-          title: $i18n.t('bcs.newVersion'),
-          defaultInfo: true,
-          okText: $i18n.t('generic.button.reload'),
-          confirmFn: () => {
-            window.location.reload();
-          },
-        });
+        showResourceUpdateDialog.value = true;
         flag.value = true;
       }
       resourceHash.value = hash;
@@ -103,6 +109,9 @@ const validateResourceVersion = () => {
       console.log(err);
     }
   }, 15000);
+};
+const reloadPage = () => {
+  window.location.reload();
 };
 
 // observer noticeRef
@@ -121,6 +130,7 @@ onMounted(async () => {
   validateResourceVersion();
   validateAllowDomains();
 
+  await getPlatformInfo();
   window.$loginModal = loginRef.value;
   setTimeout(() => {
     observerNoticeEl();
@@ -128,7 +138,8 @@ onMounted(async () => {
   isLoading.value = true;
   await getUserInfo();
   isLoading.value = false;
-  document.title = $i18n.t('bcs.title');
+  setDocumentTitle(config.i18n);
+  setShortcutIcon(config.favicon);
 });
 
 onBeforeUnmount(() => {

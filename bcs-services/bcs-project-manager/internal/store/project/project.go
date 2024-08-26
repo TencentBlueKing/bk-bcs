@@ -260,15 +260,22 @@ func (m *ModelProject) ListProjects(ctx context.Context, cond *operator.Conditio
 // SearchProjects query project sort by ids
 // NOCC:golint/fnsize(设计如此:该方法较长且不可拆分)
 // nolint
-func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchKey, kind string,
+func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, limitIDs []string, searchKey, kind string,
 	pagination *page.Pagination) ([]Project, int64, error) {
 	if pagination.Limit == 0 {
 		pagination.Limit = page.DefaultPageLimit
 	}
 	projectList := make([]Project, 0)
 	matchElement := bson.D{}
+	queryElement := bson.A{}
 	if kind != "" {
-		matchElement = append(matchElement, bson.E{Key: "kind", Value: kind})
+		queryElement = append(queryElement, bson.D{{"kind", bson.D{{"$eq", kind}}}})
+	}
+	if len(limitIDs) != 0 {
+		queryElement = append(queryElement, bson.D{{"projectID", bson.D{{"$in", limitIDs}}}})
+	}
+	if len(queryElement) != 0 {
+		matchElement = append(matchElement, bson.E{Key: "$and", Value: queryElement})
 	}
 	if searchKey != "" {
 		matchElement = append(matchElement, bson.E{Key: "$or", Value: bson.A{
@@ -281,29 +288,44 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 	matchPipline := bson.D{{"$match", matchElement}}
 	pipeline := mongo.Pipeline{}
 	countPipeline := mongo.Pipeline{}
-	if kind != "" || searchKey != "" {
+	if kind != "" || searchKey != "" || len(limitIDs) != 0 {
 		pipeline = append(pipeline, matchPipline)
 		countPipeline = append(countPipeline, matchPipline)
 	}
-	pipeline = append(pipeline, bson.D{
-		{"$addFields", bson.D{
-			{"authorized", bson.D{
-				{"$cond", bson.D{
-					{"if", bson.D{{"$in", bson.A{"$projectID", ids}}}},
-					{"then", 1},
-					{"else", 0},
+	if len(ids) != 0 {
+		pipeline = append(pipeline, bson.D{
+			{"$addFields", bson.D{
+				{"authorized", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.D{{"$in", bson.A{"$projectID", ids}}}},
+						{"then", 1},
+						{"else", 0},
+					}},
+				}},
+				// kind 为 k8s 则认为开启了容器服务，排在前面
+				{"enabled", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.D{{"$eq", bson.A{"$kind", "k8s"}}}},
+						{"then", 1},
+						{"else", 0},
+					}},
 				}},
 			}},
-			// kind 为 k8s 则认为开启了容器服务，排在前面
-			{"enabled", bson.D{
-				{"$cond", bson.D{
-					{"if", bson.D{{"$eq", bson.A{"$kind", "k8s"}}}},
-					{"then", 1},
-					{"else", 0},
+		})
+	} else {
+		pipeline = append(pipeline, bson.D{
+			{"$addFields", bson.D{
+				// kind 为 k8s 则认为开启了容器服务，排在前面
+				{"enabled", bson.D{
+					{"$cond", bson.D{
+						{"if", bson.D{{"$eq", bson.A{"$kind", "k8s"}}}},
+						{"then", 1},
+						{"else", 0},
+					}},
 				}},
 			}},
-		}},
-	})
+		})
+	}
 	pipeline = append(pipeline,
 		bson.D{{"$project", bson.D{
 			{"createTime", 1},
@@ -358,29 +380,4 @@ func (m *ModelProject) SearchProjects(ctx context.Context, ids []string, searchK
 		count = counts[0].Count
 	}
 	return projectList, count, nil
-}
-
-// ListProjectByIDs query project by project ids
-func (m *ModelProject) ListProjectByIDs(ctx context.Context, kind string, ids []string, pagination *page.Pagination) (
-	[]Project, int64, error) {
-	projectList := make([]Project, 0)
-	condKind := make(operator.M)
-	condID := make(operator.M)
-	if kind != "" {
-		condKind["kind"] = kind
-	}
-	condID["projectID"] = ids
-	cond := operator.NewBranchCondition(operator.And,
-		operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
-	finder := m.db.Table(m.tableName).Find(cond)
-	// 获取总量
-	total, err := finder.Count(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-	// 拉取满足项目 ID 的全量数据
-	if err := finder.All(ctx, &projectList); err != nil {
-		return nil, 0, err
-	}
-	return projectList, total, nil
 }

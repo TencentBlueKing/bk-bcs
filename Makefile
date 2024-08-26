@@ -365,6 +365,10 @@ gitops-gitgenerator-webhook:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-gitgenerator-webhook
 	cd bcs-scenarios/bcs-gitops-manager && make gitgenerator-webhook && cd -
 
+gitops-workflow:
+	mkdir -p ${SCENARIOSPACKAGE}/bcs-gitops-workflow
+	cd bcs-scenarios/bcs-gitops-workflow && make gitops-workflow && cd -
+
 terraform-controller:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-terraform-controller
 	cd bcs-scenarios/bcs-terraform-controller && make terraform-controller && cd -

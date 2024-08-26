@@ -245,7 +245,7 @@ containerRes:
             ui:rules:
               - required
               - maxLength128
-              - nameRegex
+              - nameRegexWithVar
           type:
             title: {{ i18n "指标类型" .lang }}
             type: string
@@ -457,7 +457,7 @@ object:
             ui:rules:
               - required
               - maxLength128
-              - nameRegex
+              - nameRegexWithVar
           type:
             title: {{ i18n "指标类型" .lang }}
             type: string

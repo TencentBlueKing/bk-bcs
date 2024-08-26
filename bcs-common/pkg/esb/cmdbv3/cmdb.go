@@ -15,6 +15,7 @@ package cmdbv3
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"net/http"
 
 	paasclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
@@ -46,6 +47,8 @@ type ClientInterface interface {
 	ESBGetBizInternalModule(usename string, bizID int64, bkSupplierAccount string) (*ESBGetBizInternalModuleResult, error)
 	ESBListBizHosts(username string, req *ESBListBizHostsRequest) (*ESBListBizHostsResult, error)
 	ESBListBizHostsTopo(username string, req *ESBListBizHostsTopoRequest) (*ESBListBizHostsTopoResult, error)
+	// ESBSearchModule 查询模块
+	ESBSearchModule(username string, req *ESBSearchModuleRequest) (*ESBSearchModuleResult, error)
 }
 
 // NewClientInterface create client interface
@@ -60,9 +63,9 @@ func NewClientInterface(host string, tlsConf *tls.Config) *Client {
 	}
 
 	return &Client{
-		host:    host,
-		client:  cli,
-		baseReq: make(map[string]interface{}),
+		host:          host,
+		client:        cli,
+		defaultHeader: http.Header{},
 	}
 }
 
@@ -71,7 +74,14 @@ type Client struct {
 	host          string
 	defaultHeader http.Header
 	client        *paasclient.RESTClient
-	baseReq       map[string]interface{}
+	credential    Credential
+}
+
+// Credential credential to be filled in post body
+type Credential struct {
+	BKAppCode   string `json:"bk_app_code"`
+	BKAppSecret string `json:"bk_app_secret"`
+	BKUsername  string `json:"bk_username,omitempty"`
 }
 
 // SetDefaultHeader set default headers
@@ -79,10 +89,19 @@ func (c *Client) SetDefaultHeader(h http.Header) {
 	c.defaultHeader = h
 }
 
-// SetCommonReq set base req
-func (c *Client) SetCommonReq(args map[string]interface{}) {
-	for k, v := range args {
-		c.baseReq[k] = v
+// GetHeader get headers
+func (c *Client) GetHeader() http.Header {
+	authBytes, _ := json.Marshal(c.credential)
+	c.defaultHeader.Add("X-Bkapi-Authorization", string(authBytes))
+	return c.defaultHeader
+}
+
+// WithCredential set credential
+func (c *Client) WithCredential(appCode, appSecret, username string) {
+	c.credential = Credential{
+		BKAppCode:   appCode,
+		BKAppSecret: appSecret,
+		BKUsername:  username,
 	}
 }
 
@@ -96,7 +115,7 @@ func (c *Client) CreatePod(bizID int64, data *CreatePod) (*CreatedOneOptionResul
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
 		SubPathf("/create/container/bk_biz_id/%d/pod", bizID).
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(req).
 		Do().
 		Into(result)
@@ -116,7 +135,7 @@ func (c *Client) CreateManyPod(bizID int64, data *CreateManyPod) (*CreatedManyOp
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
 		SubPathf("createmany/container/bk_biz_id/%d/pod", bizID).
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(req).
 		Do().
 		Into(result)
@@ -137,7 +156,7 @@ func (c *Client) UpdatePod(bizID int64, data *UpdatePod) (*UpdatedOptionResult, 
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
 		SubPathf("update/container/bk_biz_id/%d/pod", bizID).
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(req).
 		Do().
 		Into(result)
@@ -157,7 +176,7 @@ func (c *Client) DeletePod(bizID int64, data *DeletePod) (*DeletedOptionResult, 
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
 		SubPathf("delete/container/bk_biz_id/%d/pod", bizID).
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(req).
 		Do().
 		Into(result)
@@ -187,7 +206,7 @@ func (c *Client) ListClusterPods(bizID int64, clusterID string) (*ListPodsResult
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
 		SubPathf("findmany/container/bk_biz_id/%d/pod", bizID).
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -204,7 +223,7 @@ func (c *Client) SearchBusinessTopoWithStatistics(bizID int64) (*SearchBusinessT
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/v3/").
 		SubPathf("find/topoinst_with_statistics/biz/%d", bizID).
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Do().
 		Into(result)
 	if err != nil {

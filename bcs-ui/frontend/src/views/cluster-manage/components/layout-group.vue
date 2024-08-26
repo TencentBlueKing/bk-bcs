@@ -63,10 +63,11 @@ export default defineComponent({
     position: relative;
     display: flex;
     align-items: center;
-    background: #F5F7FA;
+    background: #F0F1F5;
     color: #313238;
+    border-radius: 2px;
     .icon {
-      color: #DCDEE5;
+      color: #979BA5;
       display: flex;
       align-items: center;
       justify-content: center;

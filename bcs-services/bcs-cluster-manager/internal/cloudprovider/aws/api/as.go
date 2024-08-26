@@ -40,7 +40,7 @@ func NewAutoScalingClient(opt *cloudprovider.CommonOption) (*AutoScalingClient, 
 // DescribeAutoScalingGroups describes AutoScalingGroups
 func (as *AutoScalingClient) DescribeAutoScalingGroups(input *autoscaling.DescribeAutoScalingGroupsInput) (
 	[]*autoscaling.Group, error) {
-	blog.Infof("DescribeAutoScalingGroups input: %", utils.ToJSONString(input))
+	blog.Infof("DescribeAutoScalingGroups input: %s", utils.ToJSONString(input))
 	output, err := as.asClient.DescribeAutoScalingGroups(input)
 	if err != nil {
 		blog.Errorf("DescribeAutoScalingGroups failed: %v", err)
@@ -50,9 +50,20 @@ func (as *AutoScalingClient) DescribeAutoScalingGroups(input *autoscaling.Descri
 		blog.Errorf("DescribeAutoScalingGroups lose response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}
-	blog.Infof("DescribeAutoScalingGroups %s successful: %", utils.ToJSONString(input))
 
 	return output.AutoScalingGroups, nil
+}
+
+// UpdateAutoScalingGroup update AutoScalingGroup
+func (as *AutoScalingClient) UpdateAutoScalingGroup(input *autoscaling.UpdateAutoScalingGroupInput) error {
+	blog.Infof("UpdateAutoScalingGroup input: %s", utils.ToJSONString(input))
+	_, err := as.asClient.UpdateAutoScalingGroup(input)
+	if err != nil {
+		blog.Errorf("UpdateAutoScalingGroup failed: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 // SetDesiredCapacity describes AutoScalingGroups
@@ -76,7 +87,7 @@ func (as *AutoScalingClient) SetDesiredCapacity(asgName string, capacity int64) 
 // TerminateInstanceInAutoScalingGroup terminates instance in AutoScalingGroups
 func (as *AutoScalingClient) TerminateInstanceInAutoScalingGroup(
 	input *autoscaling.TerminateInstanceInAutoScalingGroupInput) (*autoscaling.Activity, error) {
-	blog.Infof("TerminateInstanceInAutoScalingGroup input: %", utils.ToJSONString(input))
+	blog.Infof("TerminateInstanceInAutoScalingGroup input: %s", utils.ToJSONString(input))
 	output, err := as.asClient.TerminateInstanceInAutoScalingGroup(input)
 	if err != nil {
 		blog.Errorf("TerminateInstanceInAutoScalingGroup failed: %v", err)
@@ -89,7 +100,7 @@ func (as *AutoScalingClient) TerminateInstanceInAutoScalingGroup(
 
 // DetachInstances detach instances in AutoScalingGroups
 func (as *AutoScalingClient) DetachInstances(input *autoscaling.DetachInstancesInput) ([]*autoscaling.Activity, error) {
-	blog.Infof("DetachInstances input: %", utils.ToJSONString(input))
+	blog.Infof("DetachInstances input: %s", utils.ToJSONString(input))
 	output, err := as.asClient.DetachInstances(input)
 	if err != nil {
 		blog.Errorf("DetachInstances failed: %v", err)

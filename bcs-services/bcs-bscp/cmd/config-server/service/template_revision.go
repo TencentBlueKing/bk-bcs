@@ -195,11 +195,6 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context, req *pbcs.
 	if len(ids) > 0 {
 		return nil, fmt.Errorf("repeated ids: %v, id must be unique", ids)
 	}
-	idsLen := len(req.TemplateIds)
-	if idsLen == 0 || idsLen > constant.ArrayInputLenLimit {
-		return nil, fmt.Errorf("the length of ids is %d, it must be within the range of [1,%d]",
-			idsLen, constant.ArrayInputLenLimit)
-	}
 
 	res := []*meta.ResourceAttribute{
 		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
@@ -221,6 +216,100 @@ func (s *Service) ListTmplRevisionNamesByTmplIDs(ctx context.Context, req *pbcs.
 
 	resp := &pbcs.ListTmplRevisionNamesByTmplIDsResp{
 		Details: rp.Details,
+	}
+	return resp, nil
+}
+
+// GetTemplateRevision 根据版本号获取 TemplateRevisions
+func (s *Service) GetTemplateRevision(ctx context.Context, req *pbcs.GetTemplateRevisionReq) (
+	*pbcs.GetTemplateRevisionResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	tr, err := s.client.DS.GetTemplateRevision(grpcKit.RpcCtx(), &pbds.GetTemplateRevisionReq{
+		BizId:        req.GetBizId(),
+		TemplateId:   req.GetTemplateId(),
+		RevisionName: req.GetRevisionName(),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbcs.GetTemplateRevisionResp{
+		Detail: &pbcs.GetTemplateRevisionResp_TemplateRevision{
+			TemplateId:           tr.GetDetail().GetTemplateId(),
+			Name:                 tr.GetDetail().GetName(),
+			Path:                 tr.GetDetail().GetPath(),
+			TemplateRevisionId:   tr.GetDetail().GetTemplateRevisionId(),
+			TemplateRevisionName: tr.GetDetail().GetTemplateRevisionName(),
+			TemplateRevisionMemo: tr.GetDetail().GetTemplateRevisionMemo(),
+			FileType:             tr.GetDetail().GetFileType(),
+			FileMode:             tr.GetDetail().GetFileMode(),
+			User:                 tr.GetDetail().GetUser(),
+			UserGroup:            tr.GetDetail().GetUserGroup(),
+			Privilege:            tr.GetDetail().GetPrivilege(),
+			Signature:            tr.GetDetail().GetSignature(),
+			ByteSize:             tr.GetDetail().GetByteSize(),
+			Creator:              tr.GetDetail().GetCreator(),
+			CreateAt:             tr.GetDetail().GetCreateAt(),
+			Md5:                  tr.GetDetail().GetMd5(),
+			IsLatest:             tr.GetDetail().GetIsLatest(),
+		},
+	}, nil
+}
+
+// UpdateTemplateRevision implements pbcs.ConfigServer.
+func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbcs.UpdateTemplateRevisionReq) (
+	*pbcs.UpdateTemplateRevisionResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+	}
+	if err := s.authorizer.Authorize(grpcKit, res...); err != nil {
+		return nil, err
+	}
+
+	metadata, err := s.client.provider.Metadata(grpcKit, req.Sign)
+	if err != nil {
+		logs.Errorf("validate file content uploaded failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	r := &pbds.UpdateTemplateRevisionReq{
+		Attachment: &pbtr.TemplateRevisionAttachment{
+			BizId:           grpcKit.BizID,
+			TemplateSpaceId: req.TemplateSpaceId,
+			TemplateId:      req.TemplateId,
+		},
+		Spec: &pbtr.TemplateRevisionSpec{
+			RevisionName: req.RevisionName,
+			RevisionMemo: req.RevisionMemo,
+			Name:         req.Name,
+			Path:         req.Path,
+			FileType:     req.FileType,
+			FileMode:     req.FileMode,
+			Permission: &pbci.FilePermission{
+				User:      req.User,
+				UserGroup: req.UserGroup,
+				Privilege: req.Privilege,
+			},
+			ContentSpec: &pbcontent.ContentSpec{
+				Signature: req.Sign,
+				ByteSize:  req.ByteSize,
+				Md5:       metadata.Md5,
+			},
+		},
+		TemplateRevisionId: req.GetTemplateRevisionId(),
+	}
+	rp, err := s.client.DS.UpdateTemplateRevision(grpcKit.RpcCtx(), r)
+	if err != nil {
+		logs.Errorf("update template Revision failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resp := &pbcs.UpdateTemplateRevisionResp{
+		Id: rp.Id,
 	}
 	return resp, nil
 }

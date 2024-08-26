@@ -7,16 +7,11 @@
         n: conflictFileCount,
       })
     " />
-  <section class="config-list-wrapper">
+  <section :class="['config-list-wrapper', { 'has-conflict': isFileType && conflictFileCount > 0 }]">
     <div class="operate-area">
       <div class="operate-btns">
         <template v-if="versionData.status.publish_status === 'editing'">
-          <CreateConfig
-            :bk-biz-id="props.bkBizId"
-            :app-id="props.appId"
-            @created="refreshConfigList"
-            @imported="refreshConfigList"
-            @uploaded="refreshConfigList(true)" />
+          <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @created="refreshConfigList(true)" />
           <EditVariables v-if="isFileType" ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
         <ViewVariables
@@ -29,19 +24,23 @@
           :app-id="props.appId"
           :version-id="versionData.id"
           :version-name="versionData.spec.name" />
-        <BatchDeleteKv
+        <BatchOperationBtn
           v-if="versionData.status.publish_status === 'editing'"
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
           :selected-ids="selectedIds"
           :is-file-type="isFileType"
+          :selected-items="selectedItems"
+          :is-across-checked="isAcrossChecked"
+          :data-count="selecTableDataCount"
           @deleted="handleBatchDeleted" />
       </div>
       <SearchInput
         v-model="searchStr"
         class="config-search-input"
         :width="280"
-        :placeholder="t('配置文件名/创建人/修改人')" />
+        :placeholder="t('配置文件绝对路径/创建人/修改人')"
+        v-bk-tooltips="{ content: t('配置文件绝对路径/创建人/修改人'), disabled: locale === 'zh-cn' }" />
     </div>
     <section class="config-list-table">
       <TableWithTemplates
@@ -52,15 +51,22 @@
         :search-str="searchStr"
         @clear-str="clearStr"
         @delete-config="refreshVariable"
-        @update-selected-ids="selectedIds = $event" />
+        @update-selected-ids="selectedIds = $event"
+        @update-selected-items="selectedItems = $event" />
       <TableWithKv
         v-else
         ref="tableRef"
         :bk-biz-id="props.bkBizId"
         :app-id="props.appId"
         :search-str="searchStr"
+        @send-table-data-count="selecTableDataCount = $event"
         @clear-str="clearStr"
-        @update-selected-ids="selectedIds = $event" />
+        @update-selected-ids="
+          (data) => {
+            selectedIds = data.selectedConfigIds;
+            isAcrossChecked = data.isAcrossChecked;
+          }
+        " />
     </section>
   </section>
 </template>
@@ -77,13 +83,13 @@
   import TableWithTemplates from './tables/table-with-templates.vue';
   import TableWithKv from './tables/table-with-kv.vue';
   import ConfigExport from './config-export.vue';
-  import BatchDeleteKv from './batch-delete-btn.vue';
+  import BatchOperationBtn from './batch-operation-btn.vue';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
   const { versionData, conflictFileCount } = storeToRefs(configStore);
   const { isFileType } = storeToRefs(serviceStore);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const props = defineProps<{
     bkBizId: string;
@@ -94,10 +100,13 @@
   const searchStr = ref('');
   const editVariablesRef = ref();
   const selectedIds = ref<number[]>([]);
+  const selectedItems = ref<any[]>([]);
+  const isAcrossChecked = ref(false);
+  const selecTableDataCount = ref(0);
 
-  const refreshConfigList = (isBatchUpload = false) => {
+  const refreshConfigList = (createConfig = false) => {
     if (isFileType.value) {
-      tableRef.value.refresh(isBatchUpload);
+      tableRef.value.refresh(createConfig);
       refreshVariable();
     } else {
       tableRef.value.refresh();
@@ -114,7 +123,7 @@
 
   // 批量删除配置项回调
   const handleBatchDeleted = () => {
-    tableRef.value.refreshAfterBatchDelete();
+    tableRef.value.refreshAfterBatchSet();
   };
 
   defineExpose({
@@ -126,6 +135,9 @@
     position: relative;
     padding: 0 24px 24px 24px;
     height: 100%;
+    &.has-conflict {
+      height: calc(100% - 34px);
+    }
   }
   .operate-area {
     display: flex;

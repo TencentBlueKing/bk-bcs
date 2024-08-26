@@ -142,6 +142,16 @@
           </template>
           <AutoScaler :cluster-id="clusterId" />
         </bcs-tab-panel>
+        <bcs-tab-panel
+          name="record"
+          :label="$t('cluster.title.opRecord')"
+          render-directive="if"
+          v-if="normalStatusList.includes(curCluster.status || '') && curCluster.provider === 'tencentCloud'">
+          <template #label>
+            {{ $t('cluster.title.opRecord') }}
+          </template>
+          <TaskRecord class="p-[20px]" :cluster-id="clusterId" />
+        </bcs-tab-panel>
       </template>
     </bcs-tab>
   </div>
@@ -156,6 +166,7 @@ import StatusIcon from '@/components/status-icon';
 import { ICluster, useCluster } from '@/composables/use-app';
 import $router from '@/router';
 import Info from '@/views/cluster-manage/detail/basic-info.vue';
+import TaskRecord from '@/views/cluster-manage/detail/cluster-record.vue';
 import Master from '@/views/cluster-manage/detail/master.vue';
 import Network from '@/views/cluster-manage/detail/network.vue';
 import Overview from '@/views/cluster-manage/detail/overview.vue';
@@ -232,7 +243,7 @@ watch(
        */
       if (
         (!showAutoScaler.value && activeTabName.value === 'autoscaler')
-        || (curCluster.value.clusterType === 'virtual' && !['overview', 'info', 'quota'].includes(activeTabName.value))
+        || (curCluster.value.clusterType === 'virtual' && !['overview', 'namespace', 'info', 'quota'].includes(activeTabName.value))
         || (curCluster.value.clusterType !== 'virtual' && activeTabName.value === 'quota')
       ) {
         activeTabName.value = 'overview';
@@ -248,8 +259,8 @@ watch(
         activeTabName.value = 'info';
       }
 
-      // kubeconfig集群只有总揽、基本信息、节点列表
-      if (isKubeConfigImportCluster.value && !['overview', 'info', 'node'].includes(activeTabName.value)) {
+      // kubeconfig集群只有总览、命名空间、基本信息、节点列表
+      if (isKubeConfigImportCluster.value && !['overview', 'namespace', 'info', 'node'].includes(activeTabName.value)) {
         activeTabName.value = 'overview';
       }
     });

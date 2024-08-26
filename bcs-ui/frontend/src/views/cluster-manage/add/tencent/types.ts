@@ -216,6 +216,11 @@ export interface ISubnet{
   }
 }
 
+export interface ISubnetItem {
+  zone: string
+  ipCnt: number|string
+}
+
 export interface IInstanceType{
   'nodeType': string
   'typeName': string

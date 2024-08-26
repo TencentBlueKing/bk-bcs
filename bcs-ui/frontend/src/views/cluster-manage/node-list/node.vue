@@ -9,14 +9,13 @@
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
         <i18n path="cluster.nodeList.article2">
-          <span place="nodes" class="num">{{nodesCount}}</span>
-          <span place="realRemainNodesCount" class="num">{{realRemainNodesCount || 0}}</span>
+          <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
+          <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
         </i18n>
-        <template v-if="curSelectedCluster.provider === 'tencentCloud'">
-          <i18n path="cluster.nodeList.article3" v-if="maxRemainNodesCount > 0 && cidrLen <= 3">
-            <span place="maxRemainNodesCount" class="num">{{maxRemainNodesCount}}</span>
+        <template v-if="clusterData.provider === 'tencentCloud'">
+          <i18n path="cluster.nodeList.article3">
+            <span place="maxRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterMaxNodeNum || '--' }}</span>
           </i18n>
-          <span v-else-if="cidrLen >= 4">{{ $t('cluster.nodeList.article4') }}</span>
         </template>
       </div>
     </bcs-alert>
@@ -85,7 +84,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigImportCluster"
+              :disabled="isKubeConfigImportCluster || ['awsCloud'].includes(curSelectedCluster.provider || '')"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -142,7 +141,30 @@
               v-bk-tooltips="{ content: $t('generic.button.drain.tips'), disabled: !podDisabled, placement: 'right' }">
               <li :disabled="podDisabled" @click="handleBatchPodScheduler">{{$t('generic.button.drain.text')}}</li>
             </div>
-            <li @click="handleBatchSetLabels">{{$t('cluster.nodeList.button.setLabel')}}</li>
+            <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('labels')">
+                {{$t('cluster.nodeList.button.setLabel')}}
+              </li>
+            </div>
+            <div
+              v-bk-tooltips="{
+                content: $t('cluster.nodeList.tips.disableBatchSettingNodes'),
+                disabled: !selections.some(item => !['RUNNING'].includes(item.status)),
+                placement: 'right'
+              }">
+              <li
+                :disabled="selections.some(item => !['RUNNING'].includes(item.status))"
+                @click="handleBatchSetNode('taints')">
+                {{$t('cluster.nodeList.button.setTaint')}}
+              </li>
+            </div>
             <div
               class="h-[32px]"
               v-bk-tooltips="{
@@ -188,6 +210,11 @@
           @change="searchSelectChange"
           @clear="handleClearSearchSelect">
         </bcs-search-select>
+        <div
+          class="flex items-center justify-center w-[32px] h-[32px] text-[12px] cursor-pointer ml-[10px] bcs-border"
+          @click="handleGetNodeData">
+          <i class="bcs-icon bcs-icon-reset"></i>
+        </div>
       </div>
     </div>
     <!-- 节点列表 -->
@@ -676,7 +703,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
+import { computed, defineComponent, onActivated, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
 
 import useTableAcrossCheck from '../../../composables/use-table-across-check';
@@ -692,7 +719,7 @@ import useNode from './use-node';
 import { setClusterModule } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
-import { copyText, formatBytes, getCidrIpNum, padIPv6 } from '@/common/util';
+import { copyText, formatBytes, padIPv6 } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsCascade from '@/components/cascade.vue';
@@ -952,7 +979,7 @@ export default defineComponent({
 
     watch(searchSelectValue, () => {
       handleResetPage();
-    });
+    }, { deep: true });
 
     // 表格设置字段配置
     const fields = [
@@ -1109,11 +1136,11 @@ export default defineComponent({
       handleUncordonNodes,
       schedulerNode,
       addNode,
-      getNodeOverview,
       retryTask,
       setNodeLabels,
       batchDeleteNodes,
       taskDetail,
+      getAllNodeOverview,
     } = useNode();
 
     const tableLoading = ref(false);
@@ -1128,7 +1155,7 @@ export default defineComponent({
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
-      || curSelectedCluster.value.provider === 'huaweiCloud')
+      || curSelectedCluster.value.provider === 'huaweiCloud' || curSelectedCluster.value.provider === 'awsCloud')
       && !row.nodeGroupID;
     // 全量表格数据
     const tableData = ref<any[]>([]);
@@ -1222,7 +1249,7 @@ export default defineComponent({
           if (item.id === 'ip') {
             // 处理IP字段多值情况
             item.values.forEach((v) => {
-              const splitCode = String(v).indexOf('|') > -1 ? '|' : ' ';
+              const splitCode = String(v?.id).indexOf('|') > -1 ? '|' : ' ';
               tmp.push(...v.id.trim().split(splitCode));
             });
           } else {
@@ -1234,7 +1261,7 @@ export default defineComponent({
         }
         searchValues.push({
           id: item.id,
-          value: new Set(tmp.map(t => padIPv6(t))),
+          value: new Set(tmp.map(t => padIPv6(t?.trim()))),
         });
       });
       return searchValues;
@@ -1725,11 +1752,20 @@ export default defineComponent({
         },
       });
     };
-    // 批量设置标签
-    const handleBatchSetLabels = () => {
+    // 批量设置标签和污点
+    const handleBatchSetNode = (type: 'labels'|'taints') => {
       if (!selections.value.length) return;
 
-      handleSetLabel(selections.value);
+      $router.push({
+        name: 'batchSettingNode',
+        params: {
+          clusterId: props.clusterId,
+          type,
+        },
+        query: {
+          nodeNameList: selections.value.map(item => item.nodeName).join(','),
+        },
+      });
     };
     // 批量删除节点
     const handleBatchDeleteNodes = () => {
@@ -1873,18 +1909,14 @@ export default defineComponent({
     const handleGetNodeOverview = async () => {
       const data = curPageData.value.filter(item => !nodeMetric.value[item.nodeName]
         && ['RUNNING', 'REMOVABLE'].includes(item.status));
-      const promiseList: Promise<any>[] = [];
-      for (const row of data) {
-        (function (item) {
-          promiseList.push(getNodeOverview({
-            nodeIP: item.nodeName,
-            clusterId: localClusterId.value,
-          }).then((data) => {
-            set(nodeMetric.value, item.nodeName, formatMetricData(data));
-          }));
-        }(row));
+      const nodes = data.map(item => item.nodeName) as string[];
+      const result = await getAllNodeOverview({
+        clusterId: localClusterId.value,
+        nodes,
+      }).catch(() => {});
+      for (const key in result) {
+        set(nodeMetric.value, key, formatMetricData(result[key]));
       }
-      await Promise.all(promiseList);
     };
     watch(curPageData, async () => {
       await handleGetNodeOverview();
@@ -1926,56 +1958,15 @@ export default defineComponent({
       }
     }, 5000);
 
-    // eslint-disable-next-line max-len
-    const nodesCount = computed(() => tableData.value.length + Object.keys(curSelectedCluster.value?.master || {}).length);
-
-    // 容器网络网段数量
-    const cidrLen = computed(() => {
-      const { multiClusterCIDR = [] } = curSelectedCluster.value?.networkSettings || {};
-      // +1 是clusterIPv4CIDR占有一个网段
-      return multiClusterCIDR.length + 1;
-    });
-    // 当前CIDR可添加节点数
-    const realRemainNodesCount = computed(() => {
-      const {
-        maxNodePodNum = 0,
-        maxServiceNum = 0,
-        clusterIPv4CIDR = 0,
-        multiClusterCIDR = [],
-      } = curSelectedCluster.value?.networkSettings || {};
-      const totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce<number>((pre, cidr) => {
-        pre += getCidrIpNum(cidr);
-        return pre;
-      }, 0);
-      return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
-    });
-    // 扩容后最大节点数量
-    const maxRemainNodesCount = computed(() => {
-      const {
-        cidrStep = 0,
-        maxNodePodNum = 0,
-        maxServiceNum = 0,
-        clusterIPv4CIDR = 0,
-        multiClusterCIDR = [],
-      } = curSelectedCluster.value?.networkSettings || {};
-      let totalCidrStep = 0;
-      if (multiClusterCIDR.length < 3) {
-        totalCidrStep = (5 - multiClusterCIDR.length) * cidrStep + multiClusterCIDR.reduce((pre, cidr) => {
-          pre += getCidrIpNum(cidr);
-          return pre;
-        }, 0);
-      } else {
-        totalCidrStep = [clusterIPv4CIDR, ...multiClusterCIDR].reduce<number>((pre, cidr) => {
-          pre += getCidrIpNum(cidr);
-          return pre;
-        }, 0);
-      }
-      return Math.floor((totalCidrStep - maxServiceNum - maxNodePodNum * nodesCount.value) / maxNodePodNum);
-    });
-
     onMounted(async () => {
       getClusterDetail(curSelectedCluster.value.clusterID || '', true);
       await handleGetNodeData();
+      if (tableData.value.length) {
+        start();
+      }
+    });
+    onActivated(() => {
+      handleGetNodeData();
       if (tableData.value.length) {
         start();
       }
@@ -1985,12 +1976,8 @@ export default defineComponent({
       stop();
     });
     return {
-      cidrLen,
       copyList,
       metricColumnConfig,
-      nodesCount,
-      realRemainNodesCount,
-      maxRemainNodesCount,
       curSelectedCluster,
       clusterData, // 全量数据
       logSideDialogConf,
@@ -2042,7 +2029,7 @@ export default defineComponent({
       handleBatchEnableNodes,
       handleBatchStopNodes,
       handleBatchReAddNodes,
-      handleBatchSetLabels,
+      handleBatchSetNode,
       handleBatchDeleteNodes,
       handleAddNode,
       handleClusterChange,

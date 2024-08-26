@@ -18,9 +18,11 @@ import (
 	"sync"
 
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	argopkg "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned/typed/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/argoproj/argo-cd/v2/util/db"
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
@@ -50,8 +52,10 @@ type Store interface {
 	Init() error
 	InitArgoDB(ctx context.Context) error
 	GetArgoDB() db.ArgoDB
+	GetAppClient() applicationpkg.ApplicationServiceClient
 	Stop()
 	GetOptions() *Options
+	ReturnArgoK8SClient() *argopkg.ArgoprojV1alpha1Client
 
 	// Project interface
 	CreateProject(ctx context.Context, pro *v1alpha1.AppProject) error
@@ -65,7 +69,8 @@ type Store interface {
 	GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error)
 	GetClusterFromDB(ctx context.Context, serverUrL string) (*v1alpha1.Cluster, error)
 	ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error)
-	ListClustersByProject(ctx context.Context, project string) (*v1alpha1.ClusterList, error)
+	ListClustersByProject(ctx context.Context, projectID string) (*v1alpha1.ClusterList, error)
+	ListClustersByProjectName(ctx context.Context, projectName string) (*v1alpha1.ClusterList, error)
 	UpdateCluster(ctx context.Context, cluster *v1alpha1.Cluster) error
 	DeleteCluster(ctx context.Context, name string) error
 
@@ -87,6 +92,8 @@ type Store interface {
 		live *unstructured.Unstructured, hideData bool) error
 	UpdateApplicationSpec(ctx context.Context, spec *appclient.ApplicationUpdateSpecRequest) (
 		*v1alpha1.ApplicationSpec, error)
+	PatchApplicationResource(ctx context.Context, appName string, resource *v1alpha1.ResourceStatus, patch,
+		patchType string) error
 
 	AllApplicationSets() []*v1alpha1.ApplicationSet
 	RefreshApplicationSet(namespace, name string) error

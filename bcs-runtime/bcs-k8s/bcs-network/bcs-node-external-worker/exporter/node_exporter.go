@@ -146,7 +146,7 @@ func (n *NodeExporter) updateExternalIPInConfigMap(externalIP string) error {
 				return fmt.Errorf("get configmap failed, err: %s", err.Error())
 			}
 			blog.Infof("not found configMap '%s/%s'", n.Opts.Namespace, n.Opts.ExternalIPConfigMapName)
-			if err = n.createExternalIPConfigmap(); err != nil {
+			if err = n.createExternalIPConfigmap(externalIP); err != nil {
 				return err
 			}
 			return nil
@@ -162,13 +162,13 @@ func (n *NodeExporter) updateExternalIPInConfigMap(externalIP string) error {
 }
 
 // create configmap if not exist
-func (n *NodeExporter) createExternalIPConfigmap() error {
+func (n *NodeExporter) createExternalIPConfigmap(externalIP string) error {
 	configMap := &k8scorev1.ConfigMap{}
 	configMap.SetNamespace(n.Opts.Namespace)
 	configMap.SetName(n.Opts.ExternalIPConfigMapName)
 
 	configMap.Data = map[string]string{
-		n.Opts.NodeName: n.externalIP,
+		n.Opts.NodeName: externalIP,
 	}
 
 	if err := n.K8sClient.Create(n.Ctx, configMap); err != nil {

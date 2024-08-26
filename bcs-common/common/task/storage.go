@@ -13,14 +13,14 @@
 // Package task is a package for task management
 package task
 
-import store "github.com/Tencent/bk-bcs/bcs-common/common/task/store"
+import istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 
 var (
 	// globalStorage used for state and task manager
-	globalStorage store.TaskManagerModel
+	globalStorage istore.Store
 )
 
-// GetStorageModel for cluster manager storage tools
-func getGlobalStorage() store.TaskManagerModel {
+// GetGlobalStorage for cluster manager storage tools
+func GetGlobalStorage() istore.Store {
 	return globalStorage
 }

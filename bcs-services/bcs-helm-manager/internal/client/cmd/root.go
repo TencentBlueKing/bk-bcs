@@ -66,6 +66,7 @@ func init() {
 	rootCMD.AddCommand(upgradeCMD)
 	rootCMD.AddCommand(rollbackCMD)
 	rootCMD.AddCommand(pushCMD)
+	rootCMD.AddCommand(diffCMD)
 	flag.StringVar(&cfgFile, "config", defaultCfgFile, "config file, yaml mode")
 	rootCMD.PersistentFlags().StringVarP(
 		&flagOutput, "output", "o", "", "output format, one of json|wide")

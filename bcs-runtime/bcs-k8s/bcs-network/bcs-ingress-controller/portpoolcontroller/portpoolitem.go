@@ -24,6 +24,7 @@ import (
 	gocache "github.com/patrickmn/go-cache"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8slabels "k8s.io/apimachinery/pkg/labels"
+	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -278,23 +279,31 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 					blog.Warnf("create listener %s failed, err %s", tmpName, inErr.Error())
 				}
 			} else {
-				// 部分旧版本监听器labels不全需要补齐
-				if !checkListenerLabels(listener.Labels, ppih.PortPoolName, item.ItemName) {
-					poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, item.ItemName)
-					listener.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
-					listener.Labels[netextv1.LabelKeyForOwnerKind] = constant.KindPortPool
-					listener.Labels[netextv1.LabelKeyForOwnerName] = ppih.PortPoolName
-					if inErr := retry.RetryOnConflict(retry.DefaultBackoff, func() error {
-						return ppih.K8sClient.Update(context.Background(), listener,
-							&client.UpdateOptions{},
-						)
-					}); inErr != nil {
-						blog.Warnf("update listener %s failed, err %s", tmpName, inErr.Error())
-					}
-				}
-				if !reflect.DeepEqual(listener.Spec.Certificate, item.Certificate) {
-					listener.Spec.Certificate = item.Certificate
-					if err = ppih.K8sClient.Update(context.Background(), listener); err != nil {
+				if !checkListenerLabels(listener.Labels, ppih.PortPoolName,
+					item.ItemName) || !reflect.DeepEqual(listener.Spec.Certificate,
+					item.Certificate) || !reflect.DeepEqual(listener.
+					Spec.ListenerAttribute, ppih.ListenerAttr) {
+					if err = retry.RetryOnConflict(retry.DefaultBackoff, func() error {
+						li := &netextv1.Listener{}
+						if inErr := ppih.K8sClient.Get(context.Background(), k8stypes.NamespacedName{
+							Namespace: listener.GetNamespace(),
+							Name:      listener.GetName(),
+						}, li); inErr != nil {
+							return inErr
+						}
+						// 部分旧版本监听器labels不全需要补齐
+						poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, item.ItemName)
+						li.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
+						li.Labels[netextv1.LabelKeyForOwnerKind] = constant.KindPortPool
+						li.Labels[netextv1.LabelKeyForOwnerName] = ppih.PortPoolName
+
+						li.Spec.Certificate = item.Certificate
+						li.Spec.ListenerAttribute = ppih.ListenerAttr
+						if inErr := ppih.K8sClient.Update(context.Background(), li); inErr != nil {
+							return inErr
+						}
+						return nil
+					}); err != nil {
 						blog.Errorf("update listener %s failed, err %s", tmpName, err.Error())
 						notReady = true
 					}

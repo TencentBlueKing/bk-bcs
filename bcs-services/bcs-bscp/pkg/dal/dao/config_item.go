@@ -20,9 +20,11 @@ import (
 	"gorm.io/gen/field"
 	"gorm.io/gorm"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
@@ -62,6 +64,12 @@ type ConfigItem interface {
 	RecoverConfigItem(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
 	// UpdateWithTx one configItem instance with transaction.
 	UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, configItem *table.ConfigItem) error
+	// GetConfigItemCount 获取配置项数量
+	GetConfigItemCount(kit *kit.Kit, bizID uint32, appID uint32) (int64, error)
+	// ListConfigItemCount 展示配置项数量
+	ListConfigItemCount(kit *kit.Kit, bizID uint32, appID []uint32) ([]types.ListConfigItemCount, error)
+	// GetConfigItemCount 获取配置项数量带有事务
+	GetConfigItemCountWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, appID uint32) (int64, error)
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -71,6 +79,42 @@ type configItemDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// GetConfigItemCountWithTx 获取配置项数量带有事务
+func (dao *configItemDao) GetConfigItemCountWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32) (int64, error) {
+
+	m := dao.genQ.ConfigItem
+
+	return tx.ConfigItem.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Count()
+}
+
+// ListConfigItemCount 展示配置项数量
+func (dao *configItemDao) ListConfigItemCount(kit *kit.Kit, bizID uint32, appID []uint32) (
+	[]types.ListConfigItemCount, error) {
+	m := dao.genQ.ConfigItem
+
+	var result []types.ListConfigItemCount
+	err := dao.genQ.ConfigItem.WithContext(kit.Ctx).Select(m.AppID, m.ID.Count().As("count")).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appID...)).Group(m.AppID).Scan(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+// GetConfigItemCount 获取配置项数量
+func (dao *configItemDao) GetConfigItemCount(kit *kit.Kit, bizID uint32, appID uint32) (int64, error) {
+
+	m := dao.genQ.ConfigItem
+
+	return dao.genQ.ConfigItem.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).
+		Count()
 }
 
 // UpdateWithTx one configItem instance with transaction.
@@ -92,7 +136,7 @@ func (dao *configItemDao) UpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 		ci.Spec.FileMode = fileMode
 	}
 
-	if err := ci.ValidateUpdate(); err != nil {
+	if err := ci.ValidateUpdate(kit); err != nil {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -135,7 +179,7 @@ func (dao *configItemDao) RecoverConfigItem(kit *kit.Kit, tx *gen.QueryTx, ci *t
 		return errors.New("config item is nil")
 	}
 
-	if err := ci.ValidateRecover(); err != nil {
+	if err := ci.ValidateRecover(kit); err != nil {
 		return err
 	}
 
@@ -173,7 +217,7 @@ func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 		return 0, errors.New("config item is nil")
 	}
 
-	if err := ci.ValidateCreate(); err != nil {
+	if err := ci.ValidateCreate(kit); err != nil {
 		return 0, err
 	}
 
@@ -215,7 +259,7 @@ func (dao *configItemDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		return err
 	}
 	for i, configItem := range configItems {
-		if err := configItem.ValidateCreate(); err != nil {
+		if err := configItem.ValidateCreate(kit); err != nil {
 			return err
 		}
 		configItem.ID = ids[i]
@@ -246,7 +290,7 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 		ci.Spec.FileMode = fileMode
 	}
 
-	if err := ci.ValidateUpdate(); err != nil {
+	if err := ci.ValidateUpdate(kit); err != nil {
 		return errf.New(errf.InvalidParameter, err.Error())
 	}
 
@@ -454,18 +498,47 @@ func (dao *configItemDao) validateAttachmentAppExist(kit *kit.Kit, am *table.Con
 }
 
 // ValidateAppCINumber verify whether the current number of app config items has reached the maximum.
+// the number is the total count of template and non-template config items
 func (dao *configItemDao) ValidateAppCINumber(kt *kit.Kit, tx *gen.QueryTx, bizID, appID uint32) error {
+	// get non-template config count
 	m := tx.ConfigItem
 	count, err := m.WithContext(kt.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID)).Count()
 	if err != nil {
-		return fmt.Errorf("count app %d's config items failed, err: %v", appID, err)
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kt, "count app %d's config items failed, err: %v", appID, err))
 	}
 
-	if err := table.ValidateAppCINumber(count); err != nil {
-		return err
+	// get template config count
+	tm := tx.AppTemplateBinding
+	tcount := 0
+	var atb *table.AppTemplateBinding
+	atb, err = tm.WithContext(kt.Ctx).Where(tm.BizID.Eq(bizID), tm.AppID.Eq(appID)).Take()
+	if err != nil {
+		// if not found, means the count should be 0
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return errf.Errorf(errf.InvalidRequest, i18n.T(kt, "get app %d's template binding failed, err: %v", appID, err))
+		}
+	} else {
+		tcount = len(atb.Spec.TemplateRevisionIDs)
+	}
+
+	total := int(count) + tcount
+	appConfigCnt := getAppConfigCnt(bizID)
+	if total > appConfigCnt {
+		return errf.New(errf.InvalidParameter,
+			i18n.T(kt, "the total number of app %d's config items(including template and non-template)exceeded the limit %d",
+				appID, appConfigCnt))
 	}
 
 	return nil
+}
+
+func getAppConfigCnt(bizID uint32) int {
+	if resLimit, ok := cc.DataService().FeatureFlags.ResourceLimit.Spec[fmt.Sprintf("%d", bizID)]; ok {
+		if resLimit.AppConfigCnt > 0 {
+			return int(resLimit.AppConfigCnt)
+		}
+	}
+	return int(cc.DataService().FeatureFlags.ResourceLimit.Default.AppConfigCnt)
 }
 
 // queryFileMode query config item file mode field.
@@ -479,7 +552,7 @@ func (dao *configItemDao) queryFileMode(kt *kit.Kit, id, bizID uint32) (
 		return "", errf.New(errf.DBOpFailed, fmt.Sprintf("get config item %d file mode failed", id))
 	}
 
-	if err := ci.Spec.FileMode.Validate(); err != nil {
+	if err := ci.Spec.FileMode.Validate(kt); err != nil {
 		return "", errf.New(errf.InvalidParameter, err.Error())
 	}
 

@@ -7,10 +7,11 @@
       <bk-input
         v-model="searchStr"
         class="search-script-input"
-        :placeholder="t('配置文件名称/路径/描述/创建人/更新人')"
+        :placeholder="t('配置文件绝对路径/描述/创建人/更新人')"
         :clearable="true"
         @clear="refreshList()"
-        @input="handleSearchInputChange">
+        @input="handleSearchInputChange"
+        v-bk-tooltips="{ content: t('配置文件绝对路径/描述/创建人/更新人'), disabled: locale === 'zh-cn' }">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -25,13 +26,18 @@
         :remote-pagination="true"
         :pagination="pagination"
         @page-limit-change="handlePageLimitChange"
-        @page-value-change="refreshList($event, true)"
-        @selection-change="handleSelectionChange"
-        @select-all="handleSelectAll">
-        <bk-table-column type="selection" :min-width="40" :width="40"></bk-table-column>
+        @page-value-change="handlePageChange($event)">
+        <template #prepend>
+          <render-table-tip />
+        </template>
+        <bk-table-column :min-width="73" :width="73" :label="renderSelection">
+          <template #default="{ row }">
+            <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
+          </template>
+        </bk-table-column>
         <bk-table-column :label="t('配置文件绝对路径')">
           <template #default="{ row }">
-            <div v-if="row.spec" v-overflow-title class="config-name" @click="goToViewVersionManage(row.id)">
+            <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row)">
               {{ fileAP(row) }}
             </div>
           </template>
@@ -78,11 +84,11 @@
             </template>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('操作')" :width="locale === 'zh-CN' ? '160' : '200'" fixed="right">
+        <bk-table-column :label="t('操作')" :width="locale === 'zh-cn' ? '160' : '200'" fixed="right">
           <template #default="{ row, index }">
             <div class="actions-wrapper">
               <slot name="columnOperations" :config="row">
-                <bk-button theme="primary" text @click="goToCreateVersionManage(row.id)">{{ t('编辑') }}</bk-button>
+                <bk-button theme="primary" text @click="handleEditConfig(row)">{{ t('编辑') }}</bk-button>
                 <bk-button theme="primary" text @click="goToVersionManage(row.id)">{{ t('版本管理') }}</bk-button>
                 <bk-popover
                   theme="light template-config-actions-popover"
@@ -94,7 +100,9 @@
                   </div>
                   <template #content>
                     <div class="config-actions">
-                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row)">{{ t('添加至套餐') }}</div>
+                      <div class="action-item" @click="handleOpenAddToPkgsDialog(row, index)">
+                        {{ t('添加至套餐') }}
+                      </div>
                       <div
                         v-if="citeByPkgsList[index]?.length > 0"
                         class="action-item"
@@ -103,7 +111,7 @@
                       </div>
                       <DownloadConfig
                         class="action-item"
-                        theme="default"
+                        theme=""
                         :text="$t('下载模板文件')"
                         :space-id="spaceId"
                         :template-space-id="currentTemplateSpace"
@@ -123,11 +131,17 @@
         </template>
       </bk-table>
     </bk-loading>
-    <AddToDialog v-model:show="isAddToPkgsDialogShow" :value="crtConfig" @added="handleAdded" />
+    <AddToDialog
+      v-model:show="isAddToPkgsDialogShow"
+      :value="crtConfig"
+      :cite-by-pkg-ids="configCiteByPkgIds"
+      :is-across-checked="props.isAcrossChecked"
+      :data-count="props.dataCount"
+      @added="handleAdded" />
     <MoveOutFromPkgsDialog
       v-model:show="isMoveOutFromPkgsDialogShow"
       :id="crtConfig.length > 0 ? crtConfig[0].id : 0"
-      :name="crtConfig.length > 0 ? crtConfig[0].spec.name : ''"
+      :name="crtConfig.length > 0 ? fileAP(crtConfig[0]) : ''"
       :current-pkg="props.currentPkg"
       @moved-out="handleMovedOut" />
     <AppsBoundByTemplate
@@ -135,11 +149,28 @@
       :space-id="spaceId"
       :current-template-space="currentTemplateSpace"
       :config="appBoundByTemplateSliderData.data" />
-    <DeleteConfigDialog v-model:show="isDeleteConfigDialogShow" :configs="crtConfig" @deleted="handleConfigsDeleted" />
+    <DeleteConfigDialog
+      v-model:show="isDeleteConfigDialogShow"
+      :configs="crtConfig"
+      :is-across-checked="props.isAcrossChecked"
+      :data-count="props.dataCount"
+      @deleted="handleConfigsDeleted" />
+    <ViewConfig
+      v-model:show="isViewConfigShow"
+      :space-id="spaceId"
+      :id="viewConfig?.id as number"
+      :memo="selectConfigMemo"
+      @open-edit="handleEditConfig(viewConfig as ITemplateConfigItem)" />
+    <EditConfig
+      v-model:show="isEditConfigShow"
+      :memo="selectConfigMemo"
+      :space-id="spaceId"
+      :id="editConfigId"
+      @edited="refreshList" />
   </div>
 </template>
 <script lang="ts" setup>
-  import { onMounted, ref, watch, computed } from 'vue';
+  import { onMounted, ref, watch, computed, toRef } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRouter } from 'vue-router';
   import { storeToRefs } from 'pinia';
@@ -148,11 +179,13 @@
   import useGlobalStore from '../../../../../../store/global';
   import useTemplateStore from '../../../../../../store/template';
   import { ICommonQuery } from '../../../../../../../types/index';
+  import CheckType from '../../../../../../../types/across-checked';
   import useTablePagination from '../../../../../../utils/hooks/use-table-pagination';
+  import useTableAcrossCheck from '../../../../../../utils/hooks/use-table-acrosscheck';
   import {
-    ITemplateConfigItem,
     ITemplateCitedCountDetailItem,
     ITemplateCitedByPkgs,
+    ITemplateConfigItem,
   } from '../../../../../../../types/template';
   import { getPackagesByTemplateIds, getCountsByTemplateIds } from '../../../../../../api/template';
   import { datetimeFormat } from '../../../../../../utils/index';
@@ -163,13 +196,15 @@
   import TableEmpty from '../../../../../../components/table/table-empty.vue';
   import DownloadConfig from '../operations/download-config/download-config.vue';
   import DeleteConfigDialog from '../operations/delete-configs/delete-config-dialog.vue';
+  import acrossCheckBox from '../../../../../../components/across-checkbox.vue';
+  import ViewConfig from '../operations/view-config/view-config.vue';
+  import EditConfig from '../operations/edit-config/edit-config.vue';
 
   const router = useRouter();
   const { t, locale } = useI18n();
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
-  const { currentTemplateSpace, versionListPageShouldOpenEdit, versionListPageShouldOpenView, batchUploadIds } =
-    storeToRefs(templateStore);
+  const { currentTemplateSpace, topIds } = storeToRefs(templateStore);
   const { pagination, updatePagination } = useTablePagination('commonConfigTable');
 
   const props = defineProps<{
@@ -179,9 +214,11 @@
     showBoundByAppsCol?: boolean; // 是否显示模板被服务引用列
     showDeleteAction?: boolean; // 是否显示删除操作
     getConfigList: Function;
+    isAcrossChecked: boolean;
+    dataCount: number;
   }>();
 
-  const emits = defineEmits(['update:selectedConfigs']);
+  const emits = defineEmits(['update:selectedConfigs', 'sendAcrossCheckedType']);
 
   const listLoading = ref(false);
   const list = ref<ITemplateConfigItem[]>([]);
@@ -202,6 +239,23 @@
   });
   const crtConfig = ref<ITemplateConfigItem[]>([]);
   const isSearchEmpty = ref(false);
+  const isViewConfigShow = ref(false);
+  const viewConfig = ref<ITemplateConfigItem>();
+  const isEditConfigShow = ref(false);
+  const editConfigId = ref(0);
+  const selectConfigMemo = ref('');
+  const configCiteByPkgIds = ref<number[]>([]);
+  const isAcrossChecked = ref(false);
+
+  const crossPageSelect = computed(() => pagination.value.limit < pagination.value.count);
+
+  const { selectType, selections, renderSelection, renderTableTip, handleRowCheckChange, handleClearSelection } =
+    useTableAcrossCheck({
+      dataCount: toRef(pagination.value, 'count'),
+      curPageData: list, // 当前页数据
+      rowKey: ['id'],
+      crossPageSelect,
+    });
 
   watch(
     () => props.currentPkg,
@@ -210,8 +264,14 @@
       loadConfigList();
     },
   );
+  watch(selections, () => {
+    isAcrossChecked.value = [CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value);
+    emits('update:selectedConfigs', selections.value);
+    emits('sendAcrossCheckedType', isAcrossChecked.value, pagination.value.count);
+  });
 
   onMounted(() => {
+    handleClearSelection();
     loadConfigList();
   });
 
@@ -224,15 +284,19 @@
     return `${path}/${name}`;
   });
 
-  const loadConfigList = async (isBatchUpload = false) => {
+  const loadConfigList = async (createConfig = false) => {
     listLoading.value = true;
     const params: ICommonQuery = {
       start: (pagination.value.current - 1) * pagination.value.limit,
       limit: pagination.value.limit,
     };
-    if (!isBatchUpload) batchUploadIds.value = [];
-    if (batchUploadIds.value.length > 0) {
-      params.ids = batchUploadIds.value.join(',');
+    if (!createConfig) {
+      templateStore.$patch((state) => {
+        state.topIds = [];
+      });
+    }
+    if (topIds.value.length > 0) {
+      params.ids = topIds.value;
     }
     if (searchStr.value) {
       params.search_fields = 'name,path,memo,creator,reviser';
@@ -271,10 +335,19 @@
     boundByAppsCountLoading.value = false;
   };
 
-  const refreshList = (current = 1, isBatchUpload = false) => {
+  // 翻页
+  const handlePageChange = (event: number) => {
+    refreshList(event, true, true);
+  };
+
+  const refreshList = (current = 1, createConfig = false, pageChange = false) => {
     isSearchEmpty.value = searchStr.value !== '';
     pagination.value.current = current;
-    loadConfigList(isBatchUpload);
+    // 非跨页全选/半选 需要重置全选状态
+    if (![CheckType.HalfAcrossChecked, CheckType.AcrossChecked].includes(selectType.value) || !pageChange) {
+      handleClearSelection();
+    }
+    loadConfigList(createConfig);
   };
 
   // 模板移出或删除后刷新列表
@@ -282,38 +355,41 @@
     if (num === list.value.length && pagination.value.current > 1) {
       pagination.value.current -= 1;
     }
-    batchUploadIds.value = [];
+    templateStore.$patch((state) => {
+      state.topIds = [];
+    });
     refreshList();
   };
 
-  const handleSearchInputChange = debounce(() => refreshList(), 300);
-  const handleSelectionChange = ({ checked, row }: { checked: boolean; row: ITemplateConfigItem }) => {
-    const configs = props.selectedConfigs.slice();
-    if (checked) {
-      if (!configs.find((item) => item.id === row.id)) {
-        configs.push(row);
-      }
-    } else {
-      const index = configs.findIndex((item) => item.id === row.id);
-      if (index > -1) {
-        configs.splice(index, 1);
-      }
-    }
-    emits('update:selectedConfigs', configs);
+  const handleSearchInputChange = debounce(() => {
+    refreshList();
+  }, 300);
+
+  const handleSelectionChange = (row: ITemplateConfigItem) => {
+    const isSelected = selections.value.some((item) => item.id === row.id);
+    // const isAcrossChecked = [CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value);
+    const shouldBeChecked = isAcrossChecked.value ? isSelected : !isSelected;
+    // 根据选择类型决定传递的状态
+    handleRowCheckChange(shouldBeChecked, row);
+    emits('update:selectedConfigs', selections.value);
+    emits('sendAcrossCheckedType', isAcrossChecked.value, pagination.value.count);
   };
 
-  const handleSelectAll = ({ checked }: { checked: boolean }) => {
-    if (checked) {
-      emits('update:selectedConfigs', list.value);
-    } else {
-      emits('update:selectedConfigs', []);
+  // 选中状态
+  const isChecked = (row: ITemplateConfigItem) => {
+    if (![CheckType.AcrossChecked, CheckType.HalfAcrossChecked].includes(selectType.value)) {
+      // 当前页状态传递
+      return selections.value.some((item) => item.id === row.id);
     }
+    // 跨页状态传递
+    return !selections.value.some((item) => item.id === row.id);
   };
 
   // 添加至套餐
-  const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem) => {
+  const handleOpenAddToPkgsDialog = (config: ITemplateConfigItem, index: number) => {
     isAddToPkgsDialogShow.value = true;
     crtConfig.value = [config];
+    configCiteByPkgIds.value = citeByPkgsList.value[index].map((pkg) => pkg.template_set_id);
   };
 
   // 从套餐移除
@@ -372,19 +448,22 @@
     });
   };
 
-  const goToViewVersionManage = (id: number) => {
-    versionListPageShouldOpenView.value = true;
-    goToVersionManage(id);
+  const handleViewConfig = (config: ITemplateConfigItem) => {
+    isViewConfigShow.value = true;
+    viewConfig.value = config;
+    selectConfigMemo.value = config.spec.memo;
   };
 
-  const goToCreateVersionManage = (id: number) => {
-    versionListPageShouldOpenEdit.value = true;
-    goToVersionManage(id);
+  const handleEditConfig = (config: ITemplateConfigItem) => {
+    isViewConfigShow.value = false;
+    isEditConfigShow.value = true;
+    editConfigId.value = config.id;
+    selectConfigMemo.value = config.spec.memo;
   };
 
   // 设置新增行的标记class
   const getRowCls = (data: ITemplateConfigItem) => {
-    if (batchUploadIds.value.includes(data.id)) {
+    if (topIds.value.includes(data.id)) {
       return 'new-row-marked';
     }
     return '';
@@ -461,6 +540,8 @@
   }
   .config-table {
     :deep(.bk-table-body) {
+      max-height: calc(100vh - 320px);
+      overflow: auto;
       tr.new-row-marked td {
         background: #f2fff4 !important;
       }

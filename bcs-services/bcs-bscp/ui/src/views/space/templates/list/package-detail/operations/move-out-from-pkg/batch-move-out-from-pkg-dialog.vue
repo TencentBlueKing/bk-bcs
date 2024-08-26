@@ -12,7 +12,7 @@
     @confirm="handleConfirm"
     @closed="close">
     <div class="selected-mark">
-      {{ t('已选') }} <span class="num">{{ props.value.length }}</span> {{ t('个配置文件') }}
+      {{ t('已选') }} <span class="num">{{ props.valueLength }}</span> {{ t('个配置文件') }}
     </div>
     <p class="tips">{{ t('以下服务配置的未命名版本中引用此套餐的内容也将更新') }}</p>
     <div class="service-table">
@@ -45,13 +45,15 @@
   import LinkToApp from '../../../components/link-to-app.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
-  const { packageList, currentTemplateSpace, currentPkg } = storeToRefs(useTemplateStore());
+  const { packageList, currentTemplateSpace } = storeToRefs(useTemplateStore());
   const { t } = useI18n();
 
   const props = defineProps<{
     show: boolean;
     currentPkg: number;
     value: ITemplateConfigItem[];
+    valueLength: number;
+    isAcrossChecked: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'movedOut']);
@@ -96,17 +98,25 @@
       params,
     );
     citedList.value = res.details;
+    console.log('res.details', res.details);
     loading.value = false;
   };
 
   const handleConfirm = async () => {
-    const pkg = packageList.value.find((item) => item.id === currentPkg.value);
+    const pkg = packageList.value.find((item) => item.id === props.currentPkg);
     if (!pkg) return;
 
     try {
       pending.value = true;
       const ids = props.value.map((item) => item.id);
-      await moveOutTemplateFromPackage(spaceId.value, currentTemplateSpace.value, ids, [currentPkg.value as number]);
+      await moveOutTemplateFromPackage(
+        spaceId.value,
+        currentTemplateSpace.value,
+        ids,
+        [props.currentPkg as number],
+        props.isAcrossChecked,
+        pkg.id, // 全部配置文件/未指定套餐没有移出套餐选项
+      );
       emits('movedOut');
       close();
       Message({

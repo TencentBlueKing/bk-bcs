@@ -6,6 +6,12 @@
     </div>
   </div>
   <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
+  <div v-if="errorMessage" ref="errorMsgRef" class="error-msg-container">
+    <span class="error-icon">
+      <Close />
+    </span>
+    <span class="message">{{ errorMessage }}</span>
+  </div>
 </template>
 <script setup lang="ts">
   import { ref, watch, onMounted, nextTick, computed } from 'vue';
@@ -15,6 +21,7 @@
   import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker.js?worker';
   import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker.js?worker';
   import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker.js?worker';
+  import { Close } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../types/variable';
   import useEditorVariableReplace from '../../utils/hooks/use-editor-variable-replace';
   import { useRoute } from 'vue-router';
@@ -53,12 +60,30 @@
       language?: string;
       errorLine?: errorLineItem[];
       placeholder?: string[];
+      lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
+      minimap?: boolean;
+      verticalScrollbarSize?: number;
+      horizonScrollbarSize?: number;
+      renderLineHighlight?: 'none' | 'gutter' | 'line' | 'all' | undefined;
+      renderIndentGuides?: boolean;
+      folding?: boolean;
+      alwaysConsumeMouseWheel?: boolean;
+      contextmenu?: boolean;
     }>(),
     {
       variables: () => [],
       editable: true,
       lfEol: true,
       language: '',
+      lineNumbers: 'on',
+      minimap: true,
+      verticalScrollbarSize: 10,
+      horizonScrollbarSize: 10,
+      renderLineHighlight: 'all',
+      renderIndentGuides: true,
+      folding: true,
+      alwaysConsumeMouseWheel: true,
+      contextmenu: true,
     },
   );
 
@@ -75,6 +100,8 @@
   const variableNameList = ref<string[]>(['']);
   const privateVariableNameList = ref<string[]>(['']);
   const isShowPlaceholder = ref(true);
+  const errorMessage = ref('');
+  const errorMsgRef = ref();
 
   watch(
     () => props.modelValue,
@@ -123,6 +150,24 @@
     },
   );
 
+  watch(
+    () => errorMessage.value,
+    (newVal, oldVal) => {
+      nextTick(() => {
+        if (newVal !== oldVal) {
+          if (newVal) {
+            if (errorMsgRef.value) {
+              const errorMsgHeight = errorMsgRef.value.clientHeight;
+              codeEditorRef.value.style.height = `calc(100% - ${errorMsgHeight}px)`;
+            }
+          } else {
+            codeEditorRef.value.style.height = '100%';
+          }
+        }
+      });
+    },
+  );
+
   const tabSize = computed(() => {
     if (props.language === 'xml' || props.language === 'yaml') return 2;
     return 4;
@@ -130,7 +175,7 @@
 
   onMounted(() => {
     handleVariableList();
-    aotoCompletion();
+    autoCompletion();
     if (!editor) {
       registerLanguage();
       editor = monaco.editor.create(codeEditorRef.value as HTMLElement, {
@@ -144,6 +189,19 @@
         unicodeHighlight: {
           ambiguousCharacters: false,
         },
+        lineNumbers: props.lineNumbers,
+        minimap: {
+          enabled: props.minimap,
+        },
+        scrollbar: {
+          verticalScrollbarSize: props.verticalScrollbarSize,
+          horizontalScrollbarSize: props.horizonScrollbarSize,
+          alwaysConsumeMouseWheel: props.alwaysConsumeMouseWheel,
+        },
+        renderLineHighlight: props.renderLineHighlight,
+        renderIndentGuides: props.renderIndentGuides,
+        folding: props.folding,
+        contextmenu: props.contextmenu,
       });
     }
     if (props.lfEol) {
@@ -237,8 +295,9 @@
       brackets: [['{', '}']],
     });
   };
+
   // 联想输入
-  const aotoCompletion = () => {
+  const autoCompletion = () => {
     editorVariableProvide = monaco.languages.registerCompletionItemProvider(props.language || 'custom-language', {
       triggerCharacters: ['{'], // 触发自动补全的字符
       provideCompletionItems(model: any, position: any) {
@@ -292,21 +351,34 @@
 
   // 校验xml、yaml、json数据类型
   const validate = (val: string) => {
-    console.log(props.language, 'd');
+    const markers = getValidateDetail(val);
+
+    if (markers.length > 0) {
+      const { startLineNumber, startColumn, message } = markers[0];
+      errorMessage.value =
+        props.language === 'json' ? message : `${message} at line ${startLineNumber}, column ${startColumn}`;
+    } else {
+      errorMessage.value = '';
+    }
+
+    // 编辑器设置错误标记
+    monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
+
+    return markers.length === 0;
+  };
+
+  const getValidateDetail = (val: string) => {
     let markers: any[] = [];
+
     if (props.language === 'xml') {
       markers = validateXML(val);
     } else if (props.language === 'yaml') {
       markers = validateYAML(val);
     } else if (props.language === 'json') {
-      return validateJSON(val);
-    } else {
-      return;
+      markers = validateJSON(val);
     }
-    // 添加错误行
-    monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
-    // 返回当前内容是否正确
-    return !markers.length;
+
+    return markers;
   };
 
   // @bug vue3的Teleport组件销毁时，子组件的onBeforeUnmount不会被执行，会出现内存泄漏，目前尚未被修复 https://github.com/vuejs/core/issues/6347
@@ -318,6 +390,28 @@
   //     editorHoverProvider.dispose()
   //   }
   // })
+  const validateAndMarkErrorLine = (val: string) => {
+    const markers = getValidateDetail(val);
+    if (markers.length > 0) {
+      setLineRevealAndSelected(markers[0].startLineNumber);
+    }
+    // 编辑器设置错误标记
+    monaco.editor.setModelMarkers(editor.getModel() as monaco.editor.ITextModel, 'error', markers);
+    return markers.length === 0;
+  };
+
+  // 将某一行滚动到编辑器中心并选中
+  const setLineRevealAndSelected = (lineNumber: number) => {
+    const lineContent = editor.getModel()!.getLineContent(lineNumber);
+    const range = new monaco.Range(lineNumber, 1, lineNumber, lineContent.length + 1);
+    editor.revealLineInCenter(lineNumber);
+    editor.setSelection(range);
+  };
+
+  // 返回滚动条顶部
+  const scrollToTop = () => {
+    editor.revealLineNearTop(0);
+  };
   const destroy = () => {
     if (editor) {
       editor.dispose();
@@ -334,6 +428,8 @@
     destroy,
     openSearch,
     validate,
+    validateAndMarkErrorLine,
+    scrollToTop,
   });
 </script>
 <style lang="scss" scoped>
@@ -366,6 +462,29 @@
       .lineContent {
         color: #63656e;
       }
+    }
+  }
+  .error-msg-container {
+    display: flex;
+    align-items: flex-start;
+    padding: 8px 16px;
+    background: #212121;
+    border-left: 4px solid #b34747;
+    max-height: 60px;
+    overflow: auto;
+    .error-icon {
+      display: flex;
+      align-items: center;
+      color: #b34747;
+      height: 20px;
+      font-size: 12px;
+    }
+    .message {
+      margin-left: 8px;
+      color: #dcdee5;
+      line-height: 20px;
+      font-size: 12px;
+      word-break: break-all;
     }
   }
 </style>

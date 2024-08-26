@@ -14,11 +14,15 @@
 package tools
 
 import (
+	"errors"
 	"fmt"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // GetIntList 获取Int列表, 解析BizID时使用
@@ -220,7 +224,7 @@ type CIUniqueKey struct {
 // DetectFilePathConflicts 检测文件路径冲突
 // 示例 /a 和 /a 两者路径+名称全等忽略
 // 示例 /a 和 /a/1.txt 两者同级下出现同名的文件夹和文件会视为错误
-func DetectFilePathConflicts(a []CIUniqueKey, b []CIUniqueKey) error {
+func DetectFilePathConflicts(kt *kit.Kit, a []CIUniqueKey, b []CIUniqueKey) error {
 	for _, v1 := range a {
 		path1 := path.Join(v1.Path, v1.Name)
 		for _, v2 := range b {
@@ -229,10 +233,84 @@ func DetectFilePathConflicts(a []CIUniqueKey, b []CIUniqueKey) error {
 				continue
 			}
 			if strings.HasPrefix(path1+"/", path2+"/") || strings.HasPrefix(path2+"/", path1+"/") {
-				return fmt.Errorf("%s and %s path file conflict", path2, path1)
+				return errors.New(i18n.T(kt, "%s and %s path file conflict", path2, path1))
 			}
 		}
 	}
 
 	return nil
+}
+
+// MergeAndDeduplicate 合并并去重两个数组
+// 示例 a []uint32{1,3,5,6}  b []uint32{2,3,7,4} return []uint32{1,2,3,5,7,6,4}
+func MergeAndDeduplicate(a, b []uint32) []uint32 {
+	// 使用 map 来记录已经存在的元素
+	elementMap := make(map[uint32]bool)
+	var result []uint32
+
+	// 合并数组 a 和 b
+	for _, v := range append(a, b...) {
+		if !elementMap[v] {
+			elementMap[v] = true
+			result = append(result, v)
+		}
+	}
+
+	return result
+}
+
+// Difference 返回在数组 a 中但不在数组 b 中的元素
+// 返回值是一个包含在数组 a 中但不在数组 b 中的去重后的元素的数组
+// 示例 a []uint32{1,3,5,6}  b []uint32{2,3,7,4} return []uint32{1,5,6}
+func Difference(a, b []uint32) []uint32 {
+	// 使用map来记录数组b中的元素
+	bMap := make(map[uint32]bool)
+	for _, num := range b {
+		bMap[num] = true
+	}
+
+	var result []uint32
+	// 遍历数组a，如果元素不在b中，则添加到结果中
+	for _, num := range a {
+		if !bMap[num] {
+			result = append(result, num)
+		}
+	}
+
+	return result
+}
+
+// MatchPattern reports whether name matches the shell pattern.
+func MatchPattern(name string, match []string) bool {
+	if len(match) == 0 {
+		return true
+	}
+
+	for _, m := range match {
+		ok, _ := path.Match(m, name)
+		if ok {
+			return true
+		}
+	}
+	return false
+}
+
+// BytesToHumanReadable converts bytes to a human-readable format (KB, MB, GB)
+func BytesToHumanReadable(bytes uint64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+	)
+
+	switch {
+	case bytes >= GB:
+		return fmt.Sprintf("%.2f GB", float64(bytes)/GB)
+	case bytes >= MB:
+		return fmt.Sprintf("%.2f MB", float64(bytes)/MB)
+	case bytes >= KB:
+		return fmt.Sprintf("%.2f KB", float64(bytes)/KB)
+	default:
+		return fmt.Sprintf("%d bytes", bytes)
+	}
 }

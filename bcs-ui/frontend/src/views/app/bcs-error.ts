@@ -62,6 +62,7 @@ export function errorHandler(err, config: IConfig = {}) {
 
 export default class BcsErrorPlugin {
   public static install(Vue: VueConstructor) {
+    if (process.env.NODE_ENV === 'development') return;// dev模式直接抛异常
     Vue.config.errorHandler = (err, vm, info) => {
       errorHandler(err, {
         filename: vm?.$options?.name,

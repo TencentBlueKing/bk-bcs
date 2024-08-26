@@ -334,9 +334,10 @@ func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map
 	// only handle not ca nodes
 	if len(node.ClusterID) != 0 && node.NodeGroupID == "" && node.Status == common.StatusRunning {
 		cluster, err := ca.model.GetCluster(ca.ctx, node.ClusterID)
-		if err == nil {
-			nodeResult.ClusterName = cluster.GetClusterName()
+		if err != nil {
+			return nodeResult, nil
 		}
+		nodeResult.ClusterName = cluster.GetClusterName()
 
 		// check node exist in cluster
 		if cluster.Status == common.StatusDeleted || !ca.checkNodeIPInCluster(node.ClusterID, node.InnerIP) {
@@ -498,6 +499,115 @@ func (ga *GetNodeInfoAction) Handle(ctx context.Context, req *cmproto.GetNodeInf
 		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+// GetClustersMetaDataAction action for get cluster meta
+type GetClustersMetaDataAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.GetClustersMetaDataRequest
+	resp  *cmproto.GetClustersMetaDataResponse
+	k8sOp *clusterops.K8SOperator
+
+	clustersMeta []*cmproto.ClusterMeta
+}
+
+// NewGetClustersMetaDataAction get clusters meta action
+func NewGetClustersMetaDataAction(model store.ClusterManagerModel,
+	k8sOp *clusterops.K8SOperator) *GetClustersMetaDataAction {
+	return &GetClustersMetaDataAction{
+		model: model,
+		k8sOp: k8sOp,
+	}
+}
+
+func (ga *GetClustersMetaDataAction) getClusterNodeNum(clusterId string) uint32 {
+	listNodesAction := NewListNodesInClusterAction(ga.model, ga.k8sOp)
+
+	var (
+		listNodesReq = &cmproto.ListNodesInClusterRequest{
+			ClusterID: clusterId,
+		}
+		listNodesResp = &cmproto.ListNodesInClusterResponse{}
+	)
+
+	// list nodes
+	listNodesAction.Handle(ga.ctx, listNodesReq, listNodesResp)
+
+	if listNodesResp.GetCode() != 0 || !listNodesResp.GetResult() {
+		blog.Errorf("GetClustersMetaDataAction[%s] getClusterNodeNum failed: %v",
+			clusterId, listNodesResp.GetMessage())
+		return 0
+	}
+
+	return uint32(len(listNodesResp.GetData()))
+}
+
+func (ga *GetClustersMetaDataAction) setResp(code uint32, msg string) {
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+
+	ga.resp.Data = ga.clustersMeta
+}
+
+func (ga *GetClustersMetaDataAction) validate() error {
+	return ga.req.Validate()
+}
+
+func (ga *GetClustersMetaDataAction) getClustersMeta() {
+	clusterIds := ga.req.GetClusters()
+
+	var (
+		lock = sync.Mutex{}
+	)
+
+	if ga.clustersMeta == nil {
+		ga.clustersMeta = make([]*cmproto.ClusterMeta, 0)
+	}
+	concurency := utils.NewRoutinePool(20)
+	defer concurency.Close()
+
+	for i := range clusterIds {
+		concurency.Add(1)
+		go func(clusterId string) {
+			defer utils.RecoverPrintStack("GetClustersMetaDataAction")
+			defer concurency.Done()
+			clusterMeta := &cmproto.ClusterMeta{
+				ClusterId: clusterId,
+			}
+
+			nodeNum := ga.getClusterNodeNum(clusterId)
+			clusterMeta.ClusterNodeNum = nodeNum
+
+			lock.Lock()
+			defer lock.Unlock()
+			ga.clustersMeta = append(ga.clustersMeta, clusterMeta)
+		}(clusterIds[i])
+	}
+	concurency.Wait()
+}
+
+// Handle delete cluster nodes request
+func (ga *GetClustersMetaDataAction) Handle(ctx context.Context, req *cmproto.GetClustersMetaDataRequest,
+	resp *cmproto.GetClustersMetaDataResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("get clusters meta failed, req or resp is empty")
+		return
+	}
+	ga.ctx = ctx
+	ga.req = req
+	ga.resp = resp
+
+	// check request parameter validate
+	err := ga.validate()
+	if err != nil {
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+	ga.getClustersMeta()
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

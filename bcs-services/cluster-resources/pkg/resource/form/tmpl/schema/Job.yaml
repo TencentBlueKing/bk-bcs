@@ -6,6 +6,7 @@ properties:
     title: {{ i18n "配置信息" .lang }}
     type: object
     properties:
+      {{- include "workload.labels" . | indent 6 }}
       {{- include "workload.jobManage" . | indent 6 }}
       {{- include "workload.nodeSelect" . | indent 6 }}
       {{- include "workload.affinity" . | indent 6 }}
@@ -21,6 +22,7 @@ properties:
         type: card
         verifiable: true
     ui:order:
+      - labels
       - jobManage
       - nodeSelect
       - affinity

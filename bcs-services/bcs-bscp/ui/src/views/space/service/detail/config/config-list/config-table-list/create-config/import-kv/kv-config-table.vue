@@ -11,7 +11,6 @@
     <bk-table
       v-show="expand"
       :data="data"
-      :max-height="'330'"
       :border="['outer', 'row', 'col']"
       class="kv-config-table"
       :cell-class="getCellCls"
@@ -19,7 +18,7 @@
       <bk-table-column :label="$t('配置项名称')" prop="key" width="320" property="key"></bk-table-column>
       <bk-table-column :label="$t('数据类型')" prop="kv_type" width="200" property="type"></bk-table-column>
       <bk-table-column :label="$t('配置项值预览')" prop="value" width="280" property="value"> </bk-table-column>
-      <bk-table-column :label="$t('配置项描述')" prop="memo" property="memo" >
+      <bk-table-column :label="$t('配置项描述')" prop="memo" property="memo">
         <template #default="{ row }">
           <div v-if="row.key" class="memo">
             <div v-if="memoEditKey !== row.key" class="memo-display" @click="handleOpenMemoEdit(row.key)">
@@ -78,6 +77,7 @@
       data.value = cloneDeep(props.tableData);
       initData.value = cloneDeep(props.tableData);
     },
+    { deep: true },
   );
 
   watch(

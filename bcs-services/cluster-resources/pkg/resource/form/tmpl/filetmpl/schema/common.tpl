@@ -2,13 +2,6 @@
 metadata:
   title: {{ i18n "基本信息" .lang }}
   type: object
-  required:
-    - name
-    - namespace
-    # 部分资源类型允许不填写 labels
-    {{- if isLabelRequired .kind }}
-    - labels
-    {{- end }}
   properties:
     name:
       title: {{ i18n "名称" .lang }}
@@ -18,28 +11,10 @@ metadata:
       ui:component:
         props:
           disabled: {{ eq .action "update" }}
-      ui:rules:
-        - required
-        - maxLength128
-        - nameRegex
-    namespace:
-      title: {{ i18n "命名空间" .lang }}
-      type: string
-      default: {{ .namespace }}
-      ui:component:
-        props:
-          visible: {{ isNSRequired .kind }}
-      ui:rules:
-        - required
-        - maxLength64
-        - nameRegex
+          visible: false
     labels:
       title: {{ i18n "标签" .lang }}
       type: array
-      {{- if isLabelAsSelector .kind }}
-      description: {{ i18n "将作为 Pod & Selector 标签" .lang }}
-      {{- end }}
-      minItems: {{ if isLabelRequired .kind }} 1 {{ else }} 0 {{ end }}
       items:
         properties:
           key:
@@ -48,13 +23,13 @@ metadata:
             ui:rules:
               - required
               - maxLength128
-              - labelKeyRegex
+              - labelKeyRegexWithVar
           value:
             title: {{ i18n "值" .lang }}
             type: string
             ui:rules:
               - maxLength64
-              - labelValRegex
+              - labelValRegexWithVar
         type: object
       ui:component:
         name: bfArray
@@ -106,7 +81,7 @@ metadata:
   ui:group:
     props:
       border: false
-      showTitle: true
+      showTitle: false
       type: card
       hideEmptyRow: true
 {{- end }}

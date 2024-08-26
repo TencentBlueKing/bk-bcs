@@ -89,6 +89,7 @@ func (wh *watchHandler) subscribe() error {
 				AppID:      one.AppID,
 				Uid:        one.Uid,
 				Labels:     one.Labels,
+				Match:      one.Match,
 				ConfigType: meta.ConfigType,
 			},
 			Receiver: eventc.InitReceiver(wh.eventReceiver, wh.cancelCtx),

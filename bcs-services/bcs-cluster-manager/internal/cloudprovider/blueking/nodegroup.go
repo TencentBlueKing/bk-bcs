@@ -13,6 +13,10 @@
 package blueking
 
 import (
+	"fmt"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 )
@@ -28,20 +32,85 @@ type NodeGroup struct {
 // CreateNodeGroup create nodegroup by cloudprovider api, only create NodeGroup entity
 func (ng *NodeGroup) CreateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.CreateNodeGroupOption) (
 	*proto.Task, error) {
-	return nil, nil
+	if opt.OnlyData {
+		return nil, nil
+	}
+
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		return nil, err
+	}
+	task, err := mgr.BuildCreateNodeGroupTask(group, opt)
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
 }
 
 // DeleteNodeGroup delete nodegroup by cloudprovider api, all nodes belong to NodeGroup
 // will be released. Task is backgroup automatic task
 func (ng *NodeGroup) DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node,
 	opt *cloudprovider.DeleteNodeGroupOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request
+	if group == nil {
+		return nil, fmt.Errorf("lost clean nodes or group")
+	}
+
+	if opt == nil || len(opt.Region) == 0 || opt.Account == nil ||
+		len(opt.Account.SecretID) == 0 || len(opt.Account.SecretKey) == 0 || opt.Cloud == nil {
+		return nil, fmt.Errorf("lost connect cloud_provider auth information")
+	}
+	if opt.OnlyData {
+		return nil, nil
+	}
+
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		return nil, err
+	}
+	task, err := mgr.BuildDeleteNodeGroupTask(group, nodes, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
 }
 
 // UpdateNodeGroup update specified nodegroup configuration
 func (ng *NodeGroup) UpdateNodeGroup(
 	group *proto.NodeGroup, opt *cloudprovider.UpdateNodeGroupOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if group == nil || opt == nil {
+		return nil, fmt.Errorf("UpdateNodeGroup group or opt is nil")
+	}
+	if opt.Cluster == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("UpdateNodeGroup lost validate data")
+	}
+	// only update nodegroup data, not build task
+	if opt.OnlyData {
+		return nil, nil
+	}
+
+	if group.NodeGroupID == "" || group.ClusterID == "" {
+		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
+	}
+
+	err := cloudprovider.UpdateNodeGroupCloudAndModuleInfo(group.NodeGroupID, group.ConsumerID,
+		true, opt.Cluster.BusinessID)
+	if err != nil {
+		return nil, err
+	}
+
+	// build task
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		return nil, err
+	}
+	task, err := mgr.BuildUpdateNodeGroupTask(group, &opt.CommonOption)
+	if err != nil {
+		return nil, err
+	}
+
+	return task, nil
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
@@ -70,19 +139,101 @@ func (ng *NodeGroup) RemoveNodesFromGroup(nodes []*proto.Node, group *proto.Node
 // CleanNodesInGroup clean specified nodes in NodeGroup,
 func (ng *NodeGroup) CleanNodesInGroup(nodes []*proto.Node, group *proto.NodeGroup,
 	opt *cloudprovider.CleanNodesOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request
+	if len(nodes) == 0 || group == nil {
+		return nil, fmt.Errorf("lost clean nodes or group")
+	}
+	if opt == nil || opt.Cluster == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("lost cluster or cloud information")
+	}
+
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when CleanNodesInGroup %s failed, %s",
+			cloudName, group.Name, err.Error())
+		return nil, err
+	}
+	task, err := mgr.BuildCleanNodesInGroupTask(nodes, group, opt)
+	if err != nil {
+		blog.Errorf("build CleanNodesInGroup task for cluster %s with cloudprovider %s failed, %s",
+			group.ClusterID, cloudName, err.Error())
+		return nil, err
+	}
+	return task, nil
 }
 
 // UpdateDesiredNodes update nodegroup desired node
 func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 	opt *cloudprovider.UpdateDesiredNodeOption) (*cloudprovider.ScalingResponse, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if group == nil || opt == nil || opt.Cluster == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	// scaling nodes with desired, first get all node for status filtering
+	// check if nodes are already in cluster
+	goodNodes, err := cloudprovider.ListNodesInClusterNodePool(opt.Cluster.ClusterID, group.NodeGroupID)
+	if err != nil {
+		blog.Errorf("cloudprovider qcloud get NodeGroup %s all Nodes failed, %s", group.NodeGroupID, err.Error())
+		return nil, err
+	}
+
+	// check incoming nodes
+	inComingNodes, err := cloudprovider.GetNodesNumWhenApplyInstanceTask(opt.Cluster.ClusterID, group.NodeGroupID,
+		cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.UpdateNodeGroupDesiredNode),
+		cloudprovider.TaskStatusRunning,
+		[]string{cloudprovider.GetTaskType(opt.Cloud.CloudProvider, cloudprovider.ApplyInstanceMachinesTask)})
+	if err != nil {
+		blog.Errorf("UpdateDesiredNodes GetNodesNumWhenApplyInstanceTask failed: %v", err)
+		return nil, err
+	}
+
+	// cluster current node
+	current := len(goodNodes) + inComingNodes
+
+	nodeNames := make([]string, 0)
+	for _, node := range goodNodes {
+		nodeNames = append(nodeNames, node.InnerIP)
+	}
+	blog.Infof("NodeGroup %s has total nodes %d, current capable nodes %d, current incoming nodes %d, "+
+		"desired nodes %d, details %v", group.NodeGroupID, len(goodNodes), current, inComingNodes, desired, nodeNames)
+
+	if current >= int(desired) {
+		blog.Infof("NodeGroup %s current capable nodes %d larger than desired %d nodes, nothing to do",
+			group.NodeGroupID, current, desired)
+		return &cloudprovider.ScalingResponse{
+				ScalingUp:    0,
+				CapableNodes: nodeNames,
+			}, fmt.Errorf("NodeGroup %s UpdateDesiredNodes nodes %d larger than desired %d nodes",
+				group.NodeGroupID, current, desired)
+	}
+
+	// current scale nodeNum
+	scalingUp := int(desired) - current
+
+	return &cloudprovider.ScalingResponse{
+		ScalingUp:    uint32(scalingUp),
+		CapableNodes: nodeNames,
+	}, nil
 }
 
 // SwitchNodeGroupAutoScaling switch nodegroup autoscaling
 func (ng *NodeGroup) SwitchNodeGroupAutoScaling(group *proto.NodeGroup, enable bool,
 	opt *cloudprovider.SwitchNodeGroupAutoScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when SwitchNodeGroupAutoScaling %s failed, %s",
+			cloudName, group.NodeGroupID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildSwitchNodeGroupAutoScalingTask(group, enable, opt)
+	if err != nil {
+		blog.Errorf("build SwitchNodeGroupAutoScaling task for nodeGroup %s with cloudprovider %s failed, %s",
+			group.NodeGroupID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
 }
 
 // CreateAutoScalingOption create cluster autoscaling option, cloudprovider will
@@ -104,13 +255,41 @@ func (ng *NodeGroup) DeleteAutoScalingOption(scalingOption *proto.ClusterAutoSca
 // Implementation is optional.
 func (ng *NodeGroup) UpdateAutoScalingOption(scalingOption *proto.ClusterAutoScalingOption,
 	opt *cloudprovider.UpdateScalingOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cloudprovider.UpdateAutoScalingOptionModuleInfo(scalingOption.ClusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	task, err := mgr.BuildUpdateAutoScalingOptionTask(scalingOption, opt)
+	if err != nil {
+		return nil, err
+	}
+	return task, nil
 }
 
 // SwitchAutoScalingOptionStatus switch cluster autoscaling option status
 func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterAutoScalingOption, enable bool,
 	opt *cloudprovider.CommonOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	mgr, err := cloudprovider.GetTaskManager(cloudName)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when SwitchAutoScalingOptionStatus %s failed, %s",
+			cloudName, scalingOption.ClusterID, err.Error(),
+		)
+		return nil, err
+	}
+	task, err := mgr.BuildSwitchAsOptionStatusTask(scalingOption, enable, opt)
+	if err != nil {
+		blog.Errorf("build SwitchAutoScalingOptionStatus task for cluster %s with cloudprovider %s failed, %s",
+			scalingOption.ClusterID, cloudName, err.Error(),
+		)
+		return nil, err
+	}
+	return task, nil
 }
 
 // AddExternalNodeToCluster add external to cluster
@@ -131,6 +310,6 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(region, instanceType string, groupId string) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
 	return nil
 }

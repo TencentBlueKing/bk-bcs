@@ -17,10 +17,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbtemplate "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template"
+	pbtr "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-revision"
 	pbtset "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/template-set"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
@@ -144,6 +148,15 @@ func (s *Service) UpdateTemplateSet(ctx context.Context, req *pbds.UpdateTemplat
 	// 1. update template set
 	if err = s.dao.TemplateSet().UpdateWithTx(kt, tx, templateSet); err != nil {
 		logs.Errorf("update template set failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	// validate template set's templates count.
+	if err = s.dao.TemplateSet().ValidateTmplNumber(kt, tx, req.Attachment.BizId, req.Id); err != nil {
+		logs.Errorf("validate template set's templates count failed, err: %v, rid: %s", err, kt.Rid)
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
@@ -431,4 +444,56 @@ func (s *Service) ListTmplSetsOfBiz(ctx context.Context, req *pbds.ListTmplSetsO
 		Details: details,
 	}
 	return resp, nil
+}
+
+// ListTemplateSetsAndRevisions 获取模板套餐下所有的模板版本
+func (s *Service) ListTemplateSetsAndRevisions(ctx context.Context, req *pbds.ListTemplateSetsAndRevisionsReq) (
+	*pbds.ListTemplateSetsAndRevisionsResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	// 获取模板套餐数据
+	templateSet, err := s.dao.TemplateSet().GetByTemplateSetByID(kit, req.BizId, req.TemplateSetId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kit, "get template set data failed, err: %s", err))
+	}
+
+	if templateSet == nil {
+		return nil, errors.New(i18n.T(kit, "template set data is empty"))
+	}
+
+	templateIDs := tools.RemoveDuplicates(templateSet.Spec.TemplateIDs)
+
+	// 获取模板数据
+	templates, err := s.dao.Template().ListByIDs(kit, templateIDs)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kit, "list templates data failed, err: %s", err))
+	}
+
+	if templates == nil {
+		return nil, errors.New(i18n.T(kit, "template data is empty"))
+	}
+
+	revisions, err := s.dao.TemplateRevision().ListByTemplateIDs(kit, req.BizId, templateIDs)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kit, "list templates revisions data failed, err: %s", err))
+	}
+
+	templateRevisionsMap := make(map[uint32][]*pbtr.TemplateRevision, 0)
+	for _, v := range revisions {
+		templateRevisionsMap[v.Attachment.TemplateID] = append(templateRevisionsMap[v.Attachment.TemplateID],
+			pbtr.PbTemplateRevision(v))
+	}
+
+	result := make([]*pbds.ListTemplateSetsAndRevisionsResp_Detail, 0)
+	for _, v := range templates {
+		result = append(result, &pbds.ListTemplateSetsAndRevisionsResp_Detail{
+			Template:         pbtemplate.PbTemplate(v),
+			TemplateRevision: templateRevisionsMap[v.ID],
+		})
+	}
+
+	return &pbds.ListTemplateSetsAndRevisionsResp{
+		Details: result,
+	}, nil
 }

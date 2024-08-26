@@ -142,6 +142,14 @@
           <bcs-button
             theme="primary"
             class="w-[88px] mt-[16px]"
+            v-authority="{
+              actionId: 'cluster_view',
+              resourceName: curCluster?.clusterName,
+              permCtx: {
+                project_id: curProject.projectID,
+                cluster_id: clusterId
+              }
+            }"
             @click="confirmUpdate">
             {{ $t('logCollector.action.enable') }}
           </bcs-button>
@@ -155,6 +163,14 @@
         <bcs-button
           theme="primary"
           class="w-[88px] mt-[16px]"
+          v-authority="{
+            actionId: 'cluster_view',
+            resourceName: curCluster?.clusterName,
+            permCtx: {
+              project_id: curProject.projectID,
+              cluster_id: clusterId
+            }
+          }"
           @click="confirmUpdate">{{ $t('logCollector.action.reInstall') }}</bcs-button>
       </bcs-exception>
       <template v-else>
@@ -396,6 +412,7 @@ import usePageConf from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import $store from '@/store';
 
 const { curClusterId, clusterList } = useCluster();
 
@@ -408,6 +425,8 @@ const handleShowList = () => {
   showEditStatus.value = false;
   // handleGetLogCollectorRules();
 };
+
+const curProject = computed(() => $store.state.curProject);
 
 watch(clusterId, () => {
   handleInitData();

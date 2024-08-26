@@ -21,10 +21,10 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	"github.com/pkg/errors"
+	"github.com/sourcegraph/conc/stream"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -37,6 +37,8 @@ import (
 	"k8s.io/client-go/rest"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 )
 
 // ApplicationDryRunRequest defines the dry-run request
@@ -90,7 +92,7 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "build request failed"))
 	}
-	blog.Infof("RequestID[%s] received dry-run request: %v", mw.RequestID(r.Context()), req)
+	blog.Infof("RequestID[%s] received dry-run request: %v", ctxutils.RequestID(r.Context()), req)
 	application, err := plugin.checkApplicationDryRunRequest(r.Context(), req)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
@@ -108,12 +110,12 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 	}
 	resp := &ApplicationDryRunResponse{
 		Code:      0,
-		RequestID: mw.RequestID(r.Context()),
+		RequestID: ctxutils.RequestID(r.Context()),
 		Data: &ApplicationDryRunData{
 			Cluster:       application.Spec.Destination.Server,
-			RepoUrl:       application.Spec.Source.RepoURL,
+			RepoUrl:       application.Spec.GetSource().RepoURL,
 			LocalRevision: req.Revision,
-			LiveRevision:  application.Spec.Source.TargetRevision,
+			LiveRevision:  application.Spec.GetSource().TargetRevision,
 			Result:        result,
 		},
 	}
@@ -122,9 +124,11 @@ func (plugin *AppPlugin) applicationDryRun(r *http.Request) (*http.Request, *mw.
 
 func (plugin *AppPlugin) handleApplicationDryRun(ctx context.Context, req *ApplicationDryRunRequest,
 	application *v1alpha1.Application) ([]*ApplicationDryRunManifest, error) {
-	if len(req.Revisions) != 0 {
-		for i := range application.Spec.Sources {
-			application.Spec.Sources[i].TargetRevision = req.Revisions[i]
+	if application.Spec.HasMultipleSources() {
+		for i := range req.Revisions {
+			if i < len(application.Spec.Sources) {
+				application.Spec.Sources[i].TargetRevision = req.Revisions[i]
+			}
 		}
 	} else if req.Revision != "" {
 		application.Spec.Source.TargetRevision = req.Revision
@@ -149,43 +153,40 @@ func (plugin *AppPlugin) handleApplicationDryRun(ctx context.Context, req *Appli
 }
 
 // nolint
-func (plugin *AppPlugin) checkApplicationDryRunRequest(ctx context.Context,
-	req *ApplicationDryRunRequest) (*v1alpha1.Application, error) {
-	application := new(v1alpha1.Application)
+func (plugin *AppPlugin) checkApplicationDryRunRequest(ctx context.Context, req *ApplicationDryRunRequest) (
+	*v1alpha1.Application, error) {
+	argoApplication := new(v1alpha1.Application)
 	if req.ApplicationName != "" {
-		var statusCode int
 		var err error
-		application, statusCode, err = plugin.middleware.CheckApplicationPermission(ctx, req.ApplicationName,
-			iamnamespace.NameSpaceScopedView)
-		if statusCode != http.StatusOK {
+		argoApplication, _, err = plugin.permitChecker.CheckApplicationPermission(ctx, req.ApplicationName,
+			permitcheck.AppViewRSAction)
+		if err != nil {
 			return nil, errors.Wrapf(err, "check application permission failed")
 		}
 	} else if req.ApplicationManifests != "" {
-		var statusCode int
 		var err error
-		if err = json.Unmarshal([]byte(req.ApplicationManifests), application); err != nil {
+		if err = json.Unmarshal([]byte(req.ApplicationManifests), argoApplication); err != nil {
 			return nil, errors.Wrapf(err, "unmarshal applicationManifests failed")
 		}
-		statusCode, err = plugin.middleware.CheckCreateApplication(ctx, application)
-		if statusCode != http.StatusOK {
+		_, err = plugin.permitChecker.CheckApplicationCreate(ctx, argoApplication)
+		if err != nil {
 			return nil, errors.Wrapf(err, "check create application failed")
 		}
-		blog.Infof("RequestID[%s] checked create application permission", mw.RequestID(ctx))
+		blog.Infof("RequestID[%s] checked create application permission", ctxutils.RequestID(ctx))
 	} else {
 		return nil, errors.Errorf("request body 'applicationName' or 'applicationManifests' cannot be empty")
 	}
-	if application.Spec.HasMultipleSources() {
-		if len(req.Revisions) != 0 && len(req.Revisions) != len(application.Spec.Sources) {
-			return nil, errors.Errorf("application has '%d' resources, but request body 'revisions' only "+
-				"have '%d'. Or you can set empty 'revisions', we will use default revisions in application",
-				len(application.Spec.Sources), len(req.Revisions))
+	if argoApplication.Spec.HasMultipleSources() {
+		if len(req.Revisions) != 0 && len(req.Revisions) > len(argoApplication.Spec.Sources) {
+			return nil, errors.Errorf("application has '%d' resources but 'revisions' have '%d' items",
+				len(argoApplication.Spec.Sources), len(req.Revisions))
 		}
-		return application, nil
+		return argoApplication, nil
 	}
-	if application.Spec.Source == nil {
+	if argoApplication.Spec.Source == nil {
 		return nil, errors.Errorf("application spec.source is nil")
 	}
-	return application, nil
+	return argoApplication, nil
 }
 
 func buildDryRunRequest(r *http.Request) (*ApplicationDryRunRequest, error) {
@@ -213,15 +214,21 @@ func (plugin *AppPlugin) applicationManifests(ctx context.Context, application *
 		return nil, errors.Errorf("application manifests response length is 0")
 	}
 	manifestResponse := resp[0]
-	manifestMap, err := decodeManifest(application, manifestResponse)
+	manifestMap, err := plugin.decodeManifest(ctx, application, manifestResponse)
 	if err != nil {
 		return nil, errors.Wrapf(err, "decode application manifest failed")
 	}
+	blog.Infof("RequestID[%s] application get manifest success", ctxutils.RequestID(ctx))
 	return manifestMap, nil
 }
 
-func decodeManifest(application *v1alpha1.Application,
+func (plugin *AppPlugin) decodeManifest(ctx context.Context, application *v1alpha1.Application,
 	resp *apiclient.ManifestResponse) (map[string]*unstructured.Unstructured, error) {
+	newManifests, err := plugin.secretStore.DecryptManifest(ctx, application.Spec.Project, resp.Manifests)
+	if err != nil {
+		return nil, errors.Wrapf(err, "decrypt application manifest failed")
+	}
+	resp.Manifests = newManifests
 	result := make(map[string]*unstructured.Unstructured)
 	decode := serializer.NewCodecFactory(runtime.NewScheme()).UniversalDeserializer().Decode
 	for i := range resp.Manifests {
@@ -268,115 +275,14 @@ func (plugin *AppPlugin) manifestDryRun(ctx context.Context, app *v1alpha1.Appli
 		return nil, errors.Wrapf(err, "create dynamic client for cluster '%s' failed", clusterServer)
 	}
 
-	results := make([]*ApplicationDryRunManifest, 0, len(manifests))
-	for _, manifest := range manifests {
-		local := manifest.RenderObj
-		dryRunManifest := &ApplicationDryRunManifest{
-			Namespace: local.GetNamespace(),
-			Name:      local.GetName(),
-			Group:     local.GroupVersionKind().Group,
-			Version:   local.GroupVersionKind().Version,
-			Kind:      local.GetKind(),
-		}
-		gvk := local.GroupVersionKind().GroupVersion().String() + "/" + local.GetKind()
-		resource, ok := gvr[gvk]
-		if !ok {
-			dryRunManifest.IsSucceed = false
-			dryRunManifest.ErrMessage = fmt.Sprintf("cluster '%s' get resource from gvk '%s' not found",
-				clusterServer, gvk)
-			results = append(results, dryRunManifest)
-			continue
-		}
-
-		localGVR := local.GroupVersionKind().GroupVersion().WithResource(resource.Name)
-		localName := local.GetName()
-		localNamespace := local.GetNamespace()
-		// NOTE: there should set namespace empty if resource is not namespaced
-		if !resource.Namespaced {
-			localNamespace = ""
-			dryRunManifest.Namespace = localNamespace
-		}
-		_, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-			Get(ctx, localName, metav1.GetOptions{})
-		if err != nil && !k8serrors.IsNotFound(err) {
-			dryRunManifest.IsSucceed = false
-			dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s' with gvr '%v' from namespace '%s' failed: %s",
-				local.GetName(), localGVR, localNamespace, err.Error())
-			results = append(results, dryRunManifest)
-			continue
-		}
-		var updatedObj *unstructured.Unstructured
-		var dryRunError error
-		var isExisted bool
-		// there will create resource with dry-run if resource not exist
-		if k8serrors.IsNotFound(err) {
-			isExisted = false
-			if !resource.Namespaced {
-				// dry-run object when resource not namespaced
-				updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-					Create(ctx, local,
-						metav1.CreateOptions{
-							DryRun:       []string{metav1.DryRunAll},
-							FieldManager: "kubectl-client-side-apply",
-						})
-				if err != nil {
-					dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
-						"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
-				}
-			} else {
-				if _, err = dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
-					Resource: "namespaces"}).Get(ctx, localNamespace, metav1.GetOptions{}); err != nil {
-					// return local if namespace not exist, no need dry-run it
-					if k8serrors.IsNotFound(err) {
-						updatedObj = local.DeepCopy()
-					} else {
-						dryRunError = errors.Wrapf(err, "get namespace '%s' failed", localNamespace)
-					}
-				} else {
-					// dry-run object with exist namespace
-					updatedObj, err = dynamicClient.Resource(localGVR).Namespace(localNamespace).
-						Create(ctx, local,
-							metav1.CreateOptions{
-								DryRun:       []string{metav1.DryRunAll},
-								FieldManager: "kubectl-client-side-apply",
-							})
-					if err != nil {
-						dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
-							"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
-					}
-				}
-			}
-		} else {
-			// there will patch resource with dry-run if resource exist
-			var localBS []byte
-			localBS, err = local.MarshalJSON()
-			if err != nil {
-				return nil, errors.Wrapf(err, "marshal local object json failed")
-			}
-			isExisted = true
-			if updatedObj, err = dynamicClient.
-				Resource(localGVR).
-				Namespace(localNamespace).
-				Patch(ctx, local.GetName(), types.MergePatchType,
-					localBS, metav1.PatchOptions{
-						DryRun:       []string{metav1.DryRunAll},
-						FieldManager: "kubectl-client-side-apply",
-					}); err != nil {
-				dryRunError = errors.Wrapf(err, "dry-run with exist resource '%s' with gvr '%v' "+
-					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
-			}
-		}
-		dryRunManifest.Existed = isExisted
-		if dryRunError == nil {
-			updatedObj.SetManagedFields(nil)
-			dryRunManifest.IsSucceed = true
-			dryRunManifest.Merged = updatedObj
-		} else {
-			dryRunManifest.IsSucceed = false
-			dryRunManifest.ErrMessage = dryRunError.Error()
-		}
-		results = append(results, dryRunManifest)
+	drHandler := &dryRunHandler{
+		manifests:     manifests,
+		gvr:           gvr,
+		clusterServer: clusterServer,
+		dynamicClient: dynamicClient,
+		concurrent:    100,
 	}
+	results := drHandler.Handle(ctx)
 	return results, nil
 }
 
@@ -401,4 +307,149 @@ func getGroupVersionKindResource(config *rest.Config) (map[string]metav1.APIReso
 		}
 	}
 	return result, nil
+}
+
+type dryRunHandler struct {
+	manifests     []*ApplicationDryRunManifest
+	gvr           map[string]metav1.APIResource
+	clusterServer string
+	dynamicClient dynamic.Interface
+
+	concurrent int
+}
+
+func (h *dryRunHandler) Handle(ctx context.Context) []*ApplicationDryRunManifest {
+	results := make([]*ApplicationDryRunManifest, 0, len(h.manifests))
+	s := stream.New().WithMaxGoroutines(h.concurrent)
+	for _, elem := range h.manifests {
+		newElem := elem
+		s.Go(func() stream.Callback {
+			mf := h.dryRunManifest(ctx, newElem)
+			results = append(results, mf)
+			return func() {}
+		})
+	}
+	s.Wait()
+	return results
+}
+
+func (h *dryRunHandler) dryRunManifest(ctx context.Context,
+	manifest *ApplicationDryRunManifest) *ApplicationDryRunManifest {
+	local := manifest.RenderObj
+	dryRunManifest := &ApplicationDryRunManifest{
+		Namespace: local.GetNamespace(),
+		Name:      local.GetName(),
+		Group:     local.GroupVersionKind().Group,
+		Version:   local.GroupVersionKind().Version,
+		Kind:      local.GetKind(),
+	}
+	gvk := local.GroupVersionKind().GroupVersion().String() + "/" + local.GetKind()
+	resource, ok := h.gvr[gvk]
+	if !ok {
+		dryRunManifest.IsSucceed = false
+		dryRunManifest.ErrMessage = fmt.Sprintf("cluster '%s' get resource from gvk '%s' not found",
+			h.clusterServer, gvk)
+		return dryRunManifest
+	}
+
+	localGVR := local.GroupVersionKind().GroupVersion().WithResource(resource.Name)
+	localName := local.GetName()
+	localNamespace := local.GetNamespace()
+	// NOTE: there should set namespace empty if resource is not namespaced
+	if !resource.Namespaced {
+		localNamespace = ""
+		dryRunManifest.Namespace = localNamespace
+	}
+	_, err := h.dynamicClient.Resource(localGVR).Namespace(localNamespace).
+		Get(ctx, localName, metav1.GetOptions{})
+	if err != nil && !k8serrors.IsNotFound(err) {
+		dryRunManifest.IsSucceed = false
+		dryRunManifest.ErrMessage = fmt.Sprintf("get resource '%s' with gvr '%v' from namespace '%s' failed: %s",
+			local.GetName(), localGVR, localNamespace, err.Error())
+		return dryRunManifest
+	}
+	updatedObj, isExisted, dryRunError := h.dryRunActualResource(ctx, local, !k8serrors.IsNotFound(err),
+		resource, localGVR, localNamespace)
+	dryRunManifest.Existed = isExisted
+	if dryRunError == nil {
+		if updatedObj != nil {
+			updatedObj.SetManagedFields(nil)
+		}
+		dryRunManifest.IsSucceed = true
+		dryRunManifest.Merged = updatedObj
+	} else {
+		dryRunManifest.IsSucceed = false
+		dryRunManifest.ErrMessage = dryRunError.Error()
+	}
+	return dryRunManifest
+}
+
+func (h *dryRunHandler) dryRunActualResource(ctx context.Context, local *unstructured.Unstructured, exist bool,
+	localResource metav1.APIResource,
+	localGVR schema.GroupVersionResource,
+	localNamespace string) (*unstructured.Unstructured, bool, error) {
+	var updatedObj *unstructured.Unstructured
+	var dryRunError error
+	var isExisted bool
+	// there will patch resource with dry-run if resource exist
+	if exist {
+		localBS, err := local.MarshalJSON()
+		if err != nil {
+			dryRunError = errors.Wrapf(err, "marshal local object json failed")
+		} else {
+			isExisted = true
+			if updatedObj, err = h.dynamicClient.
+				Resource(localGVR).
+				Namespace(localNamespace).
+				Patch(ctx, local.GetName(), types.MergePatchType,
+					localBS, metav1.PatchOptions{
+						DryRun:       []string{metav1.DryRunAll},
+						FieldManager: "kubectl-client-side-apply",
+					}); err != nil {
+				dryRunError = errors.Wrapf(err, "dry-run with exist resource '%s' with gvr '%v' "+
+					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+			}
+		}
+		return updatedObj, isExisted, dryRunError
+	}
+
+	// there will create resource with dry-run if resource not exist
+	isExisted = false
+	var err error
+	if !localResource.Namespaced {
+		// dry-run object when resource not namespaced
+		updatedObj, err = h.dynamicClient.Resource(localGVR).Namespace(localNamespace).
+			Create(ctx, local,
+				metav1.CreateOptions{
+					DryRun:       []string{metav1.DryRunAll},
+					FieldManager: "kubectl-client-side-apply",
+				})
+		if err != nil {
+			dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+				"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+		}
+	} else {
+		if _, err = h.dynamicClient.Resource(schema.GroupVersionResource{Group: "", Version: "v1",
+			Resource: "namespaces"}).Get(ctx, localNamespace, metav1.GetOptions{}); err != nil {
+			// return local if namespace not exist, no need dry-run it
+			if k8serrors.IsNotFound(err) {
+				updatedObj = local.DeepCopy()
+			} else {
+				dryRunError = errors.Wrapf(err, "get namespace '%s' failed", localNamespace)
+			}
+		} else {
+			// dry-run object with exist namespace
+			updatedObj, err = h.dynamicClient.Resource(localGVR).Namespace(localNamespace).
+				Create(ctx, local,
+					metav1.CreateOptions{
+						DryRun:       []string{metav1.DryRunAll},
+						FieldManager: "kubectl-client-side-apply",
+					})
+			if err != nil {
+				dryRunError = errors.Wrapf(err, "dry-run not exist resource '%s' with gvr '%v' "+
+					"and namespace '%s' failed", local.GetName(), localGVR, localNamespace)
+			}
+		}
+	}
+	return updatedObj, isExisted, dryRunError
 }

@@ -185,7 +185,6 @@
       const rules = selector.labels_and || selector.labels_or || [];
       return { id: group_id, name: group_name, release_id, release_name, rules };
     });
-
     groupListLoading.value = false;
   };
 

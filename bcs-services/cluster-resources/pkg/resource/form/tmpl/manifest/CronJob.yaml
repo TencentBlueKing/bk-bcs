@@ -17,9 +17,12 @@ spec:
   startingDeadlineSeconds: {{ .spec.jobManage.startingDDLSecs }}
   {{- end }}
   jobTemplate:
+    jobTemplate:
+    {{- if .spec.labels.jobTemplatelabels }}
     metadata:
       labels:
-        {{- include "common.labelSlice2Map" .metadata.labels | indent 8 }}
+        {{- include "common.labelSlice2Map" .spec.labels.jobTemplatelabels | indent 8 }}
+    {{- end }}
     spec:
       # Job 无需手动配置 Selector https://stackoverflow.com/questions/64223630/job-invalid-selector-not-auto-generated
       {{- if .spec.jobManage.completions }}

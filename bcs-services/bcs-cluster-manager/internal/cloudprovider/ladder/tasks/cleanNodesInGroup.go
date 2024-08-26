@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 )
 
 // RemoveNodesFromClusterTask remove nodes from cluster
@@ -61,7 +62,7 @@ func RemoveNodesFromClusterTask(taskID, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	success, err := business.RemoveNodesFromCluster(ctx, dependInfo, nodeIDs, true)
 	if err != nil {
@@ -113,7 +114,6 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 
 	nodeIDList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIDsKey.String(), ",")
 	deviceList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.DeviceIDsKey.String(), ",")
-	nodeIPList := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
 
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
@@ -131,10 +131,9 @@ func ReturnInstanceToResourcePoolTask(taskID, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	cloudprovider.ShieldHostAlarm(ctx, dependInfo.Cluster.BusinessID, nodeIPList) // nolint
 
 	// return device from resource-manager module if ResourceModule true, else retain yunti style
-	orderID, err := destroyDeviceList(ctx, dependInfo, deviceList, operator)
+	orderID, err := utils.DestroyDeviceList(ctx, dependInfo, deviceList, operator)
 	if err != nil {
 		blog.Errorf("ReturnInstanceToResourcePoolTask[%s] destroyDeviceList[%v] from NodeGroup %s failed: %v",
 			taskID, nodeIDList, nodeGroupID, err.Error())

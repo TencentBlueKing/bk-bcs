@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -38,8 +39,8 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 		return nil, err
 	}
 
-	if _, err := s.dao.HookRevision().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId,
-		req.Spec.Name); err == nil {
+	if _, errH := s.dao.HookRevision().GetByName(kt, req.Attachment.BizId, req.Attachment.HookId,
+		req.Spec.Name); errH == nil {
 		return nil, fmt.Errorf("hook revision name %s already exists", req.Spec.Name)
 	}
 
@@ -62,10 +63,20 @@ func (s *Service) CreateHookRevision(ctx context.Context,
 		},
 	}
 
-	id, err := s.dao.HookRevision().Create(kt, hookRevision)
+	tx := s.dao.GenQuery().Begin()
+
+	id, err := s.dao.HookRevision().CreateWithTx(kt, tx, hookRevision)
 	if err != nil {
 		logs.Errorf("create HookRevision failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
 		return nil, err
+	}
+
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
+		return nil, e
 	}
 
 	resp := &pbds.CreateResp{Id: id}
@@ -213,7 +224,6 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 			return nil, e
 		}
 	}
-
 	// 2. 上线脚本版本
 	hookRevision, err := s.dao.HookRevision().Get(kt, req.BizId, req.HookId, req.Id)
 	if err != nil {
@@ -223,6 +233,31 @@ func (s *Service) PublishHookRevision(ctx context.Context, req *pbds.PublishHook
 		}
 		return nil, err
 	}
+
+	// 如果是未发布 => 发布, 需要更新脚本的更新时间和更新人
+	if hookRevision.Spec.State == table.HookRevisionStatusNotDeployed {
+		hook, err := s.dao.Hook().GetByID(kt, req.GetBizId(), req.GetHookId())
+		if err != nil {
+			logs.Errorf("get hook (%d) failed, err: %v, rid: %s", req.GetHookId(), err, kt.Rid)
+			return nil, err
+		}
+		hookData := &table.Hook{
+			ID: hook.ID, Spec: hook.Spec, Attachment: hook.Attachment,
+			Revision: &table.Revision{
+				Creator:   hook.Revision.Creator,
+				CreatedAt: hook.Revision.CreatedAt,
+				Reviser:   kt.User,
+				UpdatedAt: time.Now().UTC(),
+			},
+		}
+		if err = s.dao.Hook().UpdateWithTx(kt, tx, hookData); err != nil {
+			logs.Errorf("update hook failed, err: %v, rid: %s", err, kt.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+			}
+		}
+	}
+
 	hookRevision.Revision.Reviser = kt.User
 	hookRevision.Spec.State = table.HookRevisionStatusDeployed
 	if e := s.dao.HookRevision().UpdatePubStateWithTx(kt, tx, hookRevision); e != nil {

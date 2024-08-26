@@ -13,6 +13,7 @@
 package template
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -151,4 +152,44 @@ func TestReplaceTemplateFileVar(t *testing.T) {
 			t.Errorf("input: %s, expect: %v, actual: %v", c.input, c.expect, actual)
 		}
 	}
+}
+
+func TestPruneResource(t *testing.T) {
+	m := map[string]interface{}{
+		"kind":       "Deployment",
+		"apiVersion": "apps/v1",
+		"metadata": map[string]interface{}{
+			"name":       "template-test",
+			"generation": 2,
+			"labels": map[string]interface{}{
+				"app": "template-test",
+			},
+			"annotations": map[string]interface{}{
+				"analysis.crane.io/resource-recommendation": "containers:\n- containerName: main\n  target:\n    " +
+					"cpu: 114m\n    memory: \"120586239\"\n",
+				"deployment.kubernetes.io/revision": "1",
+				"io.tencent.bcs.editFormat":         "form",
+				"io.tencent.paas.creator":           "lxf",
+				"io.tencent.paas.source_type":       "template",
+				"io.tencent.paas.template_name":     "bcs-service",
+				"io.tencent.paas.template_version":  "0.0.1",
+				"io.tencent.paas.updator":           "lxf",
+			},
+			"namespace":         "bcs-system",
+			"uid":               "b5417ae4-62bf-4d98-96c6-d2d888393ade",
+			"resourceVersion":   "120939293",
+			"creationTimestamp": "2024-07-05T10:01:06Z",
+			"managedFields": []map[string]interface{}{
+				{
+					"manager":    "__debug_bin534202415",
+					"operation":  "Update",
+					"apiVersion": "apps/v1",
+					"time":       "2024-07-05T10:01:06Z",
+					"fieldsType": "FieldsV1",
+				},
+			},
+		},
+	}
+	result := pruneResource(m)
+	fmt.Println(result)
 }

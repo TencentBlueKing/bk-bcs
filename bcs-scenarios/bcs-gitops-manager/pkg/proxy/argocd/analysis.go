@@ -17,13 +17,14 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -31,8 +32,9 @@ import (
 type AnalysisPlugin struct {
 	*mux.Router
 
-	middleware mw.MiddlewareInterface
-	store      store.Store
+	middleware    mw.MiddlewareInterface
+	permitChecker permitcheck.PermissionInterface
+	store         store.Store
 }
 
 // Init the http route for analysis
@@ -83,8 +85,8 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppP
 		result := make([]v1alpha1.AppProject, 0, len(projects))
 		for i := range projects {
 			projectName := projects[i]
-			argoProj, statusCode, err := plugin.middleware.CheckProjectPermission(r.Context(),
-				projectName, iam.ProjectView)
+			argoProj, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectName,
+				permitcheck.ProjectViewRSAction)
 			if statusCode != http.StatusOK {
 				return false, nil, errors.Wrapf(err, "check project '%s' permission failed", projectName)
 			}
@@ -93,7 +95,7 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppP
 		return false, result, nil
 	}
 
-	user := mw.User(r.Context())
+	user := ctxutils.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
 		return false, nil, fmt.Errorf("query param 'projects' cannot be empty")
 	}
@@ -106,7 +108,7 @@ func (plugin *AnalysisPlugin) checkQuery(r *http.Request) (bool, []v1alpha1.AppP
 
 // common check admin user
 func (plugin *AnalysisPlugin) common(r *http.Request) (*http.Request, *mw.HttpResponse) {
-	user := mw.User(r.Context())
+	user := ctxutils.User(r.Context())
 	if !common.IsAdminUser(user.ClientID) {
 		return r, mw.ReturnErrorResponse(http.StatusForbidden, errors.Errorf("admin api"))
 	}

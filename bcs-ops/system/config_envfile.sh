@@ -51,6 +51,7 @@ init_env() {
   BK_HOME=${BK_HOME:-"/data/bcs"}
   K8S_IPv6_STATUS=${K8S_IPv6_STATUS:-"Disable"}
   LAN_IP=${LAN_IP:-}
+  LAN_DEV=${LAN_DEV:-}
   LAN_IPv6=${LAN_IPv6:-}
   BCS_SYSCTL=${BCS_SYSCTL:=1}
   if [[ -z ${LAN_IP} ]] && [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
@@ -171,9 +172,9 @@ EOF
 check_env() {
   trap "utils::on_ERR;" ERR
   # match k8s_ver
-  if ! [[ $K8S_VER =~ ^1\.2[0-4] ]]; then
+  if ! [[ $K8S_VER =~ ^1\.2[0-8] ]]; then
     utils::log "ERROR" \
-      "Only support K8S_VER 1.2[0-4].x, here is :${K8S_VER}"
+      "Only support K8S_VER 1.2[0-8].x, here is :${K8S_VER}"
   fi
 
   # match cri and k8s_ver
@@ -239,6 +240,7 @@ render_env() {
 # bcs config begin
 ## HOST
 BK_HOME="${BK_HOME}"
+LAN_DEV="${LAN_DEV}"
 LAN_IP="${LAN_IP}"
 $(
     [[ ${K8S_IPv6_STATUS,,} == "dualstack" ]] \

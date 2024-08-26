@@ -6,7 +6,7 @@
       <bk-radio label="json">JSON</bk-radio>
       <bk-radio label="yaml">YAML</bk-radio>
     </bk-radio-group>
-    <div class="tips">{{ tips }}</div>
+    <div :class="['tips', { 'en-tips': locale === 'en' }]">{{ tips }}</div>
   </div>
   <div :class="['content-wrapper', { 'show-example': isShowFormateExample }]">
     <KvContentEditor
@@ -29,7 +29,7 @@
   import KvContentEditor from '../../../../components/kv-import-editor.vue';
   import FormatExample from './format-example.vue';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const props = defineProps<{
     bkBizId: string;
@@ -76,6 +76,9 @@
     margin-left: 70px;
     font-size: 12px;
     color: #979ba5;
+    &.en-tips {
+      margin-left: 122px;
+    }
   }
   .content-wrapper {
     width: 100%;

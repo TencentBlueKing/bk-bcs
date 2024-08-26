@@ -92,10 +92,11 @@
       </bcs-table-column>
       <bcs-table-column :label="$t('googleCloud.label.operate')" width="100" show-overflow-tooltip>
         <template #default="{ row }">
-          <span v-bk-tooltips="{
-            content: $t('importGoogleCloud.tips.disabledTips'),
-            disabled: !row.clusters.length
-          }">
+          <span
+            v-bk-tooltips="{
+              content: $t('importGoogleCloud.tips.disabledTips'),
+              disabled: !row.clusters.length
+            }">
             <bcs-button
               text
               :disabled="!!row.clusters.length"

@@ -134,7 +134,8 @@ service Config {
   }
   rpc ListConfigItems(ListConfigItemsReq) returns (ListConfigItemsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/config_items"
+      body: "*"
     };
   }
   rpc ListReleasedConfigItems(ListReleasedConfigItemsReq) returns (ListReleasedConfigItemsResp) {
@@ -218,6 +219,12 @@ service Config {
       delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/releases/{release_id}"
     };
   }
+  rpc CheckReleaseName(CheckReleaseNameReq) returns (CheckReleaseNameResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/release/{name}/check"
+    };
+  }
+
   rpc CreateHook(CreateHookReq) returns (CreateHookResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/hooks"
@@ -381,8 +388,8 @@ service Config {
   }
   rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
-           "templates"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates_list"
+      body: "*"
     };
   }
   rpc BatchUpsertTemplates(BatchUpsertTemplatesReq) returns (BatchUpsertTemplatesResp) {
@@ -392,16 +399,22 @@ service Config {
       body: "*"
     };
   }
+  rpc BatchUpdateTemplatePermissions(BatchUpdateTemplatePermissionsReq) returns (BatchUpdateTemplatePermissionsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/templates/batch_update_templates_permissions"
+      body: "*"
+    };
+  }
   rpc AddTmplsToTmplSets(AddTmplsToTmplSetsReq) returns (AddTmplsToTmplSetsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/"
             "templates/add_to_template_sets"
       body: "*"
     };
   }
   rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (DeleteTmplsFromTmplSetsResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/"
             "templates/delete_from_template_sets"
       body: "*"
     };
@@ -427,8 +440,14 @@ service Config {
   }
   rpc ListTmplsOfTmplSet(ListTmplsOfTmplSetReq) returns (ListTmplsOfTmplSetResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
-           "template_sets/{template_set_id}/templates"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "template_sets/{template_set_id}/templates"
+      body: "*"
+    };
+  }
+  rpc ListTemplateSetsAndRevisions(ListTemplateSetsAndRevisionsReq) returns (ListTemplateSetsAndRevisionsResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/template_sets/{template_set_id}/template_revisions"
     };
   }
 
@@ -439,10 +458,22 @@ service Config {
       body: "*"
     };
   }
+  rpc UpdateTemplateRevision(UpdateTemplateRevisionReq) returns (UpdateTemplateRevisionResp) {
+    option (google.api.http) = {
+      put: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+           "templates/{template_id}/template_revisions"
+      body: "*"
+    };
+  }
   rpc ListTemplateRevisions(ListTemplateRevisionsReq) returns (ListTemplateRevisionsResp) {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
            "templates/{template_id}/template_revisions"
+    };
+  }
+  rpc GetTemplateRevision(GetTemplateRevisionReq) returns (GetTemplateRevisionResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/templates/{template_id}/template_revisions"
     };
   }
   /* 暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）
@@ -568,10 +599,21 @@ option (google.api.http) = {
               "{binding_id}/template_sets"
     };
   }
+  rpc RemoveAppBoundTmplSet(RemoveAppBoundTmplSetReq) returns (RemoveAppBoundTmplSetResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_set/{template_set_id}"
+    };
+  }
   rpc CheckAppTemplateBinding(CheckAppTemplateBindingReq) returns (CheckAppTemplateBindingResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/"
             "conflict_check"
+      body: "*"
+    };
+  }
+  rpc ImportFromTemplateSetToApp(ImportFromTemplateSetToAppReq) returns (ImportFromTemplateSetToAppResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/template_bindings/import_template_set"
       body: "*"
     };
   }
@@ -647,6 +689,13 @@ option (google.api.http) = {
     option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
            "template_sets/bound_unnamed_app_details"
+    };
+  }
+  rpc CheckTemplateSetReferencesApps(CheckTemplateSetReferencesAppsReq) returns (CheckTemplateSetReferencesAppsResp) {
+    option (google.api.http) = {
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
+            "template_sets/check_template_set_references_apps"
+      body: "*"
     };
   }
   rpc ListTmplSetBoundNamedApps(ListTmplSetBoundNamedAppsReq) returns (ListTmplSetBoundNamedAppsResp) {
@@ -1013,6 +1062,14 @@ option (google.api.http) = {
       get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/compare_conflicts"
     };
   }
+
+  // 获取模板和非模板配置项数量
+  rpc GetTemplateAndNonTemplateCICount(GetTemplateAndNonTemplateCICountReq)
+      returns (GetTemplateAndNonTemplateCICountResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/config_items/count"
+    };
+  }
 }
 
 message UpdateCredentialScopeReq {
@@ -1206,11 +1263,18 @@ message BatchUpsertConfigItemsReq {
     string privilege = 8;
     string sign = 9;
     uint64 byte_size = 10;
+    string md5 = 11;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
   repeated ConfigItem items = 3;
   bool replace_all = 4;
+  repeated pbtv.TemplateVariableSpec variables = 5;  // 非配置模板和模板配置变量
+  message TemplateBinding {
+    uint32 template_space_id = 1;
+    pbatb.TemplateBinding template_binding = 2;
+  }
+  repeated TemplateBinding bindings = 6;  // 绑定的套餐
 }
 
 message BatchUpsertConfigItemsResp {
@@ -1294,7 +1358,7 @@ message ListConfigItemsReq {
   string search_value = 4;
   uint32 start = 5;
   uint32 limit = 6;
-  string ids = 7;
+  repeated uint32 ids = 7;
   bool all = 8;
   bool with_status = 9;
   // ADD、REVISE、DELETE、UNCHANGE
@@ -1397,6 +1461,16 @@ message CreateReleaseResp {
   uint32 id = 1;
 }
 
+message CheckReleaseNameReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string name = 3;
+}
+
+message CheckReleaseNameResp {
+  bool exist = 1;
+}
+
 message ListReleasesReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1474,6 +1548,7 @@ message BatchDeleteHookReq {
   uint32 biz_id = 1;
   repeated uint32 ids = 2;
   bool force = 3;
+  bool exclusion_operation = 4;
 }
 
 message UpdateHookReq {
@@ -1505,6 +1580,7 @@ message ListHooksResp {
   }
   uint32 count = 1;
   repeated Detail details = 2;
+  uint32 exclusion_count = 3;  // 排除禁用的数量
 }
 
 message ListHookTagsReq {
@@ -1775,6 +1851,7 @@ message BatchDeleteTemplateReq {
   uint32 template_space_id = 2;
   string template_ids = 3;
   bool force = 4;
+  bool exclusion_operation = 5;
 }
 
 message BatchDeleteTemplateResp {}
@@ -1786,7 +1863,7 @@ message ListTemplatesReq {
   string search_value = 4;
   uint32 start = 5;
   uint32 limit = 6;
-  string ids = 7;
+  repeated uint32 ids = 7;
   bool all = 8;
 }
 
@@ -1810,13 +1887,32 @@ message BatchUpsertTemplatesReq {
     string privilege = 9;
     string sign = 10;
     uint64 byte_size = 11;
+    string md5 = 12;
   }
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
   repeated Item items = 3;
+  repeated uint32 template_set_ids = 4;
 }
 
 message BatchUpsertTemplatesResp {
+  repeated uint32 ids = 1;
+}
+
+message BatchUpdateTemplatePermissionsReq {
+  uint32 biz_id = 1;
+  repeated uint32 template_ids = 2;
+  string user = 3;
+  string user_group = 4;
+  string privilege = 5;
+  repeated uint32 app_ids = 6;    // 服务ID
+  bool exclusion_operation = 7;   // 是否排除操作
+  uint32 template_set_id = 8;     // 套餐ID, 具体操作的哪个套餐
+  bool no_set_specified = 9;      // 是否未指定套餐, 区分全部套餐和未指定套餐
+  uint32 template_space_id = 10;  // 模板空间ID
+}
+
+message BatchUpdateTemplatePermissionsResp {
   repeated uint32 ids = 1;
 }
 
@@ -1825,6 +1921,9 @@ message AddTmplsToTmplSetsReq {
   uint32 template_space_id = 2;
   repeated uint32 template_ids = 3;
   repeated uint32 template_set_ids = 4;
+  bool exclusion_operation = 5;
+  uint32 template_set_id = 6;  // 套餐ID, 具体操作的哪个套餐
+  bool no_set_specified = 7;   // 是否未指定套餐, 区分全部套餐和未指定套餐
 }
 
 message AddTmplsToTmplSetsResp {}
@@ -1834,6 +1933,9 @@ message DeleteTmplsFromTmplSetsReq {
   uint32 template_space_id = 2;
   repeated uint32 template_ids = 3;
   repeated uint32 template_set_ids = 4;
+  bool exclusion_operation = 5;
+  uint32 template_set_id = 6;  // 套餐ID, 具体操作的哪个套餐
+  bool no_set_specified = 7;   // 是否未指定套餐, 区分全部套餐和未指定套餐
 }
 
 message DeleteTmplsFromTmplSetsResp {}
@@ -1888,13 +1990,26 @@ message ListTmplsOfTmplSetReq {
   string search_value = 5;
   uint32 start = 6;
   uint32 limit = 7;
-  string ids = 8;
+  repeated uint32 ids = 8;
   bool all = 9;
 }
 
 message ListTmplsOfTmplSetResp {
   uint32 count = 1;
   repeated pbtemplate.Template details = 2;
+}
+
+message ListTemplateSetsAndRevisionsReq {
+  uint32 biz_id = 1;
+  uint32 template_set_id = 2;
+}
+
+message ListTemplateSetsAndRevisionsResp {
+  message Detail {
+    pbtemplate.Template template = 1;
+    repeated pbtr.TemplateRevision template_revision = 2;
+  }
+  repeated Detail details = 1;
 }
 
 message CreateTemplateRevisionReq {
@@ -1918,6 +2033,28 @@ message CreateTemplateRevisionResp {
   uint32 id = 1;
 }
 
+message UpdateTemplateRevisionReq {
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  uint32 template_id = 3;
+  string revision_name = 4;
+  string revision_memo = 5;
+  string name = 6;
+  string path = 7;
+  string file_type = 8;  // file_type is enum type
+  string file_mode = 9;  // file_mode is enum type
+  string user = 10;
+  string user_group = 11;
+  string privilege = 12;
+  string sign = 13;
+  uint64 byte_size = 14;
+  uint32 template_revision_id = 15;
+}
+
+message UpdateTemplateRevisionResp {
+  uint32 id = 1;
+}
+
 message ListTemplateRevisionsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -1932,6 +2069,35 @@ message ListTemplateRevisionsReq {
 message ListTemplateRevisionsResp {
   uint32 count = 1;
   repeated pbtr.TemplateRevision details = 2;
+}
+
+message GetTemplateRevisionReq {
+  uint32 biz_id = 1;
+  uint32 template_id = 2;
+  string revision_name = 3;
+}
+
+message GetTemplateRevisionResp {
+  message TemplateRevision {
+    uint32 template_id = 1;
+    string name = 2;
+    string path = 3;
+    uint32 template_revision_id = 4;
+    string template_revision_name = 5;
+    string template_revision_memo = 6;
+    string file_type = 7;
+    string file_mode = 8;
+    string user = 9;
+    string user_group = 10;
+    string privilege = 11;
+    string signature = 12;
+    uint64 byte_size = 13;
+    string creator = 14;
+    string create_at = 15;
+    string md5 = 16;
+    bool is_latest = 17;
+  }
+  TemplateRevision detail = 1;
 }
 
 message DeleteTemplateRevisionReq {
@@ -2132,6 +2298,14 @@ message DeleteAppBoundTmplSetsReq {
 
 message DeleteAppBoundTmplSetsResp {}
 
+message RemoveAppBoundTmplSetReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 template_set_id = 3;
+}
+
+message RemoveAppBoundTmplSetResp {}
+
 message CheckAppTemplateBindingReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -2141,6 +2315,28 @@ message CheckAppTemplateBindingReq {
 message CheckAppTemplateBindingResp {
   repeated pbatb.Conflict details = 1;
 }
+
+message ImportFromTemplateSetToAppReq {
+  message Binding {
+    message TemplateRevisionBinding {
+      uint32 template_id = 1;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      string template_name = 4;
+      string template_revision_name = 5;
+    }
+    uint32 template_set_id = 1;
+    uint32 template_space_id = 2;
+    string template_space_name = 3;
+    string template_set_name = 4;
+    repeated TemplateRevisionBinding template_revisions = 5;
+  }
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  repeated Binding bindings = 3;
+}
+
+message ImportFromTemplateSetToAppResp {}
 
 message ListTmplBoundCountsReq {
   uint32 biz_id = 1;
@@ -2293,6 +2489,31 @@ message ListMultiTmplSetBoundUnnamedAppsReq {
 message ListMultiTmplSetBoundUnnamedAppsResp {
   uint32 count = 1;
   repeated pbtbr.MultiTemplateSetBoundUnnamedAppDetail details = 2;
+}
+
+message CheckTemplateSetReferencesAppsReq {
+  message Item {
+    uint32 id = 1;
+    string name = 2;
+  }
+  uint32 biz_id = 1;
+  uint32 template_space_id = 2;
+  repeated uint32 template_set_ids = 3;
+  repeated Item items = 4;
+}
+
+message CheckTemplateSetReferencesAppsResp {
+  message Item {
+    uint32 template_set_id = 1;
+    string template_set_name = 2;
+    uint32 app_id = 3;
+    string app_name = 4;
+    bool app_exceeds_limit = 5;
+    bool template_set_exceeds_limit = 6;
+    uint32 app_exceeds_quantity = 7;
+    uint32 template_set_exceeds_quantity = 8;
+  }
+  repeated Item items = 1;
 }
 
 message ListTmplSetBoundNamedAppsReq {
@@ -2608,6 +2829,7 @@ message ListKvsReq {
 message ListKvsResp {
   uint32 count = 1;
   repeated pbkv.Kv details = 2;
+  uint32 exclusion_count = 3;  // 排除删除后的数量
 }
 
 message DeleteKvReq {
@@ -2621,12 +2843,14 @@ message DeleteKvResp {}
 message BatchDeleteBizResourcesReq {
   uint32 biz_id = 1;
   repeated uint32 ids = 2;
+  bool exclusion_operation = 3;
 }
 
 message BatchDeleteAppResourcesReq {
   uint32 biz_id = 1;
   uint32 app_id = 2;
   repeated uint32 ids = 3;
+  bool exclusion_operation = 4;
 }
 
 message BatchDeleteResp {
@@ -2701,6 +2925,7 @@ message ListClientsResp {
   }
   uint32 count = 1;
   repeated Item details = 2;
+  uint32 exclusion_count = 9;  // 排除离线的数量
 }
 
 message ListClientEventsReq {
@@ -2730,6 +2955,7 @@ message RetryClientsReq {
   uint32 app_id = 2;
   repeated uint32 client_ids = 3;
   bool all = 4;
+  bool exclusion_operation = 5;
 }
 
 message RetryClientsResp {}
@@ -2802,23 +3028,34 @@ message CompareConfigItemConflictsReq {
 }
 
 message CompareConfigItemConflictsResp {
-  message ConfigItem {
-    string name = 1;
-    string path = 2;
-    string file_type = 3;  // file_type is enum type, source resource reference:
-                           // pkg/dal/table/config_item.go
-    string file_mode = 4;  // file_mode is enum type, source resource reference:
-                           // pkg/dal/table/config_item.go
-    string memo = 5;
-    string user = 6;
-    string user_group = 7;
-    string privilege = 8;
-    string sign = 9;
-    uint64 byte_size = 10;
-    uint32 id = 11;
+  message NonTemplateConfig {
+    uint32 id = 1;
+    pbci.ConfigItemSpec config_item_spec = 2;
+    repeated pbtv.TemplateVariableSpec variables = 3;
+    bool is_exist = 4;
+    string signature = 5;
+    uint64 byte_size = 6;
+    string md5 = 7;
   }
-  repeated ConfigItem exist = 1;
-  repeated ConfigItem non_exist = 2;
+  message TemplateConfig {
+    message TemplateRevisionDetail {
+      uint32 template_id = 1;
+      uint32 template_revision_id = 2;
+      bool is_latest = 3;
+      repeated pbtv.TemplateVariableSpec variables = 5;
+    }
+    uint32 template_space_id = 1;
+    string template_space_name = 2;
+    uint32 template_set_id = 3;
+    string template_set_name = 4;
+    bool is_exist = 5;
+    repeated TemplateRevisionDetail template_revisions = 6;
+    bool template_space_exist = 7;
+    bool template_set_exist = 8;
+    bool template_set_is_empty = 9;
+  }
+  repeated NonTemplateConfig non_template_configs = 2;
+  repeated TemplateConfig template_configs = 1;
 }
 
 message CompareKvConflictsReq {
@@ -2837,4 +3074,14 @@ message CompareKvConflictsResp {
   }
   repeated Kv exist = 1;
   repeated Kv non_exist = 2;
+}
+
+message GetTemplateAndNonTemplateCICountReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}
+
+message GetTemplateAndNonTemplateCICountResp {
+  uint64 config_item_count = 1;
+  uint64 template_config_item_count = 2;
 }

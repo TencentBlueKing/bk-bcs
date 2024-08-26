@@ -20,6 +20,7 @@ local http = require("resty.http")
 local ipmatcher = require("resty.ipmatcher")
 local sub_str = string.sub
 local str_find = core.string.find
+local socket = require("socket")
 
 local ngx = ngx
 local ngx_shared = ngx.shared
@@ -160,6 +161,27 @@ local function parse_domain_for_node(node)
         end
     end
 end
+
+-- 定义一个函数check_tcp_node_health，用于检查TCP节点的健康状态
+local function check_tcp_node_health(host, port)
+    -- 创建一个TCP套接字对象
+    local tcp = assert(socket.tcp())
+    -- 设置套接字的超时时间为2秒
+    tcp:settimeout(2)
+    -- 尝试连接到指定的主机和端口
+    local success, err = tcp:connect(host, port)
+    -- 无论连接成功与否，都关闭套接字
+    tcp:close()
+    -- 如果连接成功，返回true
+    if success then
+        return true
+    else
+        -- 如果连接失败，记录错误日志并返回false
+        core.log.error("Failed to connect to ", host, ":", port, " - ", err)
+        return false
+    end
+end
+
 
 local function set_upstream(upstream_info, ctx, conf)
     local nodes = upstream_info.nodes
@@ -313,6 +335,28 @@ local function periodly_sync_cluster_credentials_in_master()
                 upstream_nodes[i].port = port
             end
         end
+
+        -- 检查cluster_credential中的clientModule是否为空
+        if cluster_credential["clientModule"] == "" then
+            -- 如果为空，则创建一个空表来存储健康节点
+            local healthy_nodes = {}
+            -- 遍历upstream_nodes中的每个节点
+            for _, node in ipairs(upstream_nodes) do
+                -- 调用check_tcp_node_health函数检查节点的健康状态
+                local is_healthy = check_tcp_node_health(node.host, node.port)
+                -- 如果节点健康，则将其添加到healthy_nodes表中
+                if is_healthy then
+                    table_insert(healthy_nodes, node)
+                else
+                    -- 如果节点不健康，记录警告日志
+                    core.log.warn("Node ", node.host, ":", node.port, " is unhealthy")
+                end
+            end
+            -- 将upstream_nodes更新为只包含健康节点的列表
+            upstream_nodes = healthy_nodes
+        end
+
+
         upstream["nodes"] = upstream_nodes
         cluster_info["upstream"] = upstream
         if cluster_info_cache then

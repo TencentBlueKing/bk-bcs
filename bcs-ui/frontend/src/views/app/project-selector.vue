@@ -76,11 +76,13 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeMount, onMounted, ref, watch } from 'vue';
+import { computed, defineComponent, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import useProjects, { IProjectPerm } from '../project-manage/project/use-project';
 
+import { bus } from '@/common/bus';
 import cancelRequest from '@/common/cancel-request';
+import { setCookie } from '@/common/util';
 import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
@@ -192,6 +194,8 @@ export default defineComponent({
         // query: currentRoute.query,
       });
       await cancelRequest();
+      // 设置项目cookie，防止第一次请求还是之前的cookie
+      setCookie('X-BCS-Project-Code', projectCode, window.BK_DOMAIN);
       window.location.href = href;
     };
     // 项目管理
@@ -212,8 +216,17 @@ export default defineComponent({
     });
 
     onMounted(() => {
+      bus.$on('refresh-project-list', async () => {
+        loading.value = true;
+        await handleInitProjectList();
+        loading.value = false;
+      });
       // hack 禁用select输入框
       selectRef.value?.$refs?.createInput?.setAttribute('readonly', true);
+    });
+
+    onBeforeUnmount(() => {
+      bus.$off('refresh-project-list');
     });
 
     return {

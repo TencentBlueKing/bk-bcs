@@ -22,6 +22,7 @@ import (
 var NoAuthMethod = []string{
 	// 集群相关
 	"ClusterManager.ListCommonCluster",
+	"ClusterManager.GetClustersMetaData",
 
 	// 节点相关
 	"ClusterManager.GetNodeInfo",
@@ -68,6 +69,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.CreateCloudAccount",
 	"ClusterManager.ListCloudAccount",
 	"ClusterManager.ListCloudAccountToPerm",
+	"ClusterManager.GetServiceRoles",
 
 	// cloud module flag
 	"ClusterManager.ListCloudModuleFlag",
@@ -89,6 +91,8 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetResourceGroups",
 
 	"ClusterManager.ListOperationLogs",
+	"ClusterManager.ListTaskStepLogs",
+	"ClusterManager.ListTaskRecords",
 	"ClusterManager.ListResourceSchema",
 	"ClusterManager.GetResourceSchema",
 
@@ -117,20 +121,21 @@ var NoAuthMethod = []string{
 // ActionPermissions action 对应权限中心的权限
 var ActionPermissions = map[string]string{
 	// cluster
-	"ClusterManager.CreateCluster":             cluster.CanCreateClusterOperation,
-	"ClusterManager.RetryCreateClusterTask":    cluster.CanCreateClusterOperation,
-	"ClusterManager.ImportCluster":             cluster.CanCreateClusterOperation,
-	"ClusterManager.UpdateCluster":             cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteCluster":             cluster.CanDeleteClusterOperation,
-	"ClusterManager.GetCluster":                cluster.CanViewClusterOperation,
-	"ClusterManager.ListProjectCluster":        project.CanViewProjectOperation,
-	"ClusterManager.ListCluster":               project.CanViewProjectOperation,
-	"ClusterManager.ListCommonCluster":         "",
-	"ClusterManager.CreateVirtualCluster":      cluster.CanCreateClusterOperation,
-	"ClusterManager.DeleteVirtualCluster":      cluster.CanDeleteClusterOperation,
-	"ClusterManager.UpdateVirtualClusterQuota": cluster.CanManageClusterOperation,
-	"ClusterManager.AddSubnetToCluster":        cluster.CanManageClusterOperation,
-	"ClusterManager.UpdateClusterModule":       cluster.CanManageClusterOperation,
+	"ClusterManager.CreateCluster":                cluster.CanCreateClusterOperation,
+	"ClusterManager.RetryCreateClusterTask":       cluster.CanCreateClusterOperation,
+	"ClusterManager.ImportCluster":                cluster.CanCreateClusterOperation,
+	"ClusterManager.UpdateCluster":                cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteCluster":                cluster.CanDeleteClusterOperation,
+	"ClusterManager.GetCluster":                   cluster.CanViewClusterOperation,
+	"ClusterManager.ListProjectCluster":           project.CanViewProjectOperation,
+	"ClusterManager.ListCluster":                  project.CanViewProjectOperation,
+	"ClusterManager.ListCommonCluster":            "",
+	"ClusterManager.CreateVirtualCluster":         cluster.CanCreateClusterOperation,
+	"ClusterManager.DeleteVirtualCluster":         cluster.CanDeleteClusterOperation,
+	"ClusterManager.UpdateVirtualClusterQuota":    cluster.CanManageClusterOperation,
+	"ClusterManager.AddSubnetToCluster":           cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateClusterModule":          cluster.CanManageClusterOperation,
+	"ClusterManager.SwitchClusterUnderlayNetwork": cluster.CanManageClusterOperation,
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
@@ -161,18 +166,19 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListClusterCredential":   "",
 
 	// nodeGroup
-	"ClusterManager.CreateNodeGroup":      cluster.CanManageClusterOperation,
-	"ClusterManager.UpdateNodeGroup":      cluster.CanManageClusterOperation,
-	"ClusterManager.DeleteNodeGroup":      cluster.CanManageClusterOperation,
-	"ClusterManager.GetNodeGroup":         cluster.CanViewClusterOperation,
-	"ClusterManager.ListNodeGroup":        cluster.CanViewClusterOperation,
-	"ClusterManager.ListClusterNodeGroup": cluster.CanViewClusterOperation,
-	"ClusterManager.MoveNodesToGroup":     cluster.CanManageClusterOperation,
-	"ClusterManager.RemoveNodesFromGroup": cluster.CanManageClusterOperation,
-	"ClusterManager.CleanNodesInGroup":    cluster.CanManageClusterOperation,
-	"ClusterManager.CleanNodesInGroupV2":  cluster.CanManageClusterOperation,
-	"ClusterManager.ListNodesInGroup":     cluster.CanViewClusterOperation,
-	"ClusterManager.ListNodesInGroupV2":   cluster.CanViewClusterOperation,
+	"ClusterManager.CreateNodeGroup":        cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateNodeGroup":        cluster.CanManageClusterOperation,
+	"ClusterManager.DeleteNodeGroup":        cluster.CanManageClusterOperation,
+	"ClusterManager.GetNodeGroup":           cluster.CanViewClusterOperation,
+	"ClusterManager.ListNodeGroup":          cluster.CanViewClusterOperation,
+	"ClusterManager.ListClusterNodeGroup":   cluster.CanViewClusterOperation,
+	"ClusterManager.MoveNodesToGroup":       cluster.CanManageClusterOperation,
+	"ClusterManager.RemoveNodesFromGroup":   cluster.CanManageClusterOperation,
+	"ClusterManager.CleanNodesInGroup":      cluster.CanManageClusterOperation,
+	"ClusterManager.CleanNodesInGroupV2":    cluster.CanManageClusterOperation,
+	"ClusterManager.ListNodesInGroup":       cluster.CanViewClusterOperation,
+	"ClusterManager.ListNodesInGroupV2":     cluster.CanViewClusterOperation,
+	"ClusterManager.UpdateGroupAsTimeRange": cluster.CanManageClusterOperation,
 
 	"ClusterManager.UpdateGroupDesiredNode":         cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateGroupDesiredSize":         cluster.CanManageClusterOperation,
@@ -230,6 +236,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudAccount":    cloudaccount.CanUseCloudAccountOperation,
 	"ClusterManager.MigrateCloudAccount": "",
 	"ClusterManager.VerifyCloudAccount":  "",
+	"ClusterManager.GetServiceRoles":     "",
 
 	// cloud component paras
 	"ClusterManager.CreateCloudModuleFlag": "",
@@ -249,6 +256,8 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListCloudRuntimeInfo":    "",
 	"ClusterManager.ListCloudInstances":      "",
 	"ClusterManager.ListOperationLogs":       "",
+	"ClusterManager.ListTaskStepLogs":        "",
+	"ClusterManager.TaskRecords":             "",
 	"ClusterManager.ListResourceSchema":      "",
 	"ClusterManager.GetResourceSchema":       "",
 	"ClusterManager.QueryPermByActionID":     "",

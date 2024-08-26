@@ -33,7 +33,7 @@ func checkListenerLabels(labels map[string]string, portPoolName, itemName string
 	return true
 }
 
-func checkPortPoolStatus(pool *netextv1.PortPool) string {
+func getPortPoolStatus(pool *netextv1.PortPool) string {
 	statusReady := true
 	for _, ts := range pool.Status.PoolItemStatuses {
 		if ts.Status != constant.PortPoolItemStatusReady {

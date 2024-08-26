@@ -23,6 +23,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
 	pbcommit "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/commit"
 	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
@@ -134,6 +135,8 @@ type SideAppMeta struct {
 	Namespace string            `json:"namespace"`
 	Uid       string            `json:"uid"`
 	Labels    map[string]string `json:"labels"`
+	// Match is app config item's match conditions
+	Match []string `json:"match"`
 	// CurrentReleaseID is sidecar's current effected release id.
 	CurrentReleaseID uint32 `json:"currentReleaseID"`
 	// sidecar's current cursor id
@@ -167,7 +170,7 @@ func (s SideAppMeta) Validate() error {
 	}
 
 	if len(s.Namespace) != 0 {
-		if err := validator.ValidateNamespace(s.Namespace); err != nil {
+		if err := validator.ValidateNamespace(kit.New(), s.Namespace); err != nil {
 			return fmt.Errorf("invalid sidecar's app namespace, err: %v", err)
 		}
 	}
@@ -224,12 +227,14 @@ type ReleaseEventMetaV1 struct {
 
 // InstanceSpec defines the specifics for an app instance to watch the event.
 type InstanceSpec struct {
-	BizID      uint32            `json:"bizID"`
-	AppID      uint32            `json:"appID"`
-	App        string            `json:"app"`
-	Uid        string            `json:"uid"`
-	Labels     map[string]string `json:"labels"`
-	ConfigType table.ConfigType  `json:"configType"`
+	BizID  uint32            `json:"bizID"`
+	AppID  uint32            `json:"appID"`
+	App    string            `json:"app"`
+	Uid    string            `json:"uid"`
+	Labels map[string]string `json:"labels"`
+	// Match is app config item's match conditions
+	Match      []string         `json:"match"`
+	ConfigType table.ConfigType `json:"configType"`
 }
 
 // Validate the instance spec is valid or not

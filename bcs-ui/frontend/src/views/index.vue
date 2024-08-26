@@ -9,8 +9,11 @@
           :hide-back="routeMeta.hideBack"
           :cluster-id="routeMeta.showClusterName ? $route.params.clusterId : ''"
           v-if="routeMeta.title" />
+        <KeepAlive>
+          <RouterView class="flex-1" v-if="$route.meta?.keepAlive" />
+        </KeepAlive>
         <!-- key为了解决旧版模板集刷新问题, 资源视图视图管理切换集群后不能刷新界面(不能用path作为Key) -->
-        <RouterView class="flex-1" :key="isDashboard ? 'dashboard' : $route.path" />
+        <RouterView class="flex-1" :key="routerViewKey" v-if="!$route.meta?.keepAlive" />
         <!-- 终端 -->
         <Terminal />
       </template>
@@ -25,11 +28,13 @@
 </template>
 <script lang="ts">
 /* eslint-disable camelcase */
+import cookie from 'cookie';
 import { computed, defineComponent, onErrorCaptured, onMounted, reactive, ref, toRef } from 'vue';
 
 import useProjects from './project-manage/project/use-project';
 
 import $bkMessage from '@/common/bkmagic';
+import { setCookie } from '@/common/util';
 import ContentHeader from '@/components/layout/Header.vue';
 import { IProject } from '@/composables/use-app';
 import $router from '@/router';
@@ -55,6 +60,11 @@ export default defineComponent({
     const curProject = computed(() => $store.state.curProject);
     const hasNoAuthorizedProject = ref(false);
 
+    const routerViewKey = computed(() => {
+      if (routeMeta.value?.keepAlive) return routeMeta.value?.keepAlive;
+      return isDashboard.value ? 'dashboard' : currentRoute.value.path;
+    });
+
     // 设置项目缓存
     const handleSetProjectStorage = (data: IProject) => {
       // 缓存当前项目信息
@@ -62,6 +72,12 @@ export default defineComponent({
       // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
       currentRoute.value.params.projectId = data.projectID;
       currentRoute.value.params.projectCode = data.projectCode;
+      const curCookieProjectCode = cookie.parse(document.cookie)?.['X-BCS-Project-Code'];
+      setCookie('X-BCS-Project-Code', data.projectCode, window.BK_DOMAIN);
+      if (curCookieProjectCode && curCookieProjectCode !== data.projectCode) {
+        // 判断cookie和当前项目code是否一致，不一致刷新当前界面
+        window.location.reload();
+      }
     };
     // 校验项目Code
     const validateProjectCode = async () => {
@@ -149,10 +165,12 @@ export default defineComponent({
         theme: 'warning',
         message: `Something is wrong with the component ${vm.$options.name} ${info}`,
       });
+      console.error(err, vm, info);
       return true;
     });
 
     return {
+      routerViewKey,
       loading,
       isDashboard,
       currentRoute,

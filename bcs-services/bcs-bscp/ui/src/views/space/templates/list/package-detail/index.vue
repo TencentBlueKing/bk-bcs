@@ -14,7 +14,7 @@
     </div>
     <div v-if="isPackage" class="app-list-panel">
       <div class="panel-switch-trigger" @click="isAppsPanelOpen = !isAppsPanelOpen">
-        <div :class="{ 'en-text': locale === 'en-US' }">{{ t('使用模板') }}</div>
+        <div :class="{ 'en-text': locale === 'en' }">{{ t('使用模板') }}</div>
         <AngleDoubleRightLine v-if="isAppsPanelOpen" class="arrow-icon" />
         <AngleDoubleLeftLine v-else class="arrow-icon" />
       </div>

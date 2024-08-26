@@ -3,9 +3,9 @@
     <div class="head-left">
       <div class="title-wrap" @click="router.push({ name: 'service-all', params: { spaceId } })">
         <span class="logo">
-          <img src="../assets/logo.svg" alt="" />
+          <img :src="appGlobalConfig.appLogo || logo" alt="BSCP" />
         </span>
-        <span class="head-title"> {{ t('服务配置中心') }} </span>
+        <span class="head-title"> {{ appGlobalConfig.i18n.name }} </span>
       </div>
       <div class="head-routes">
         <div v-for="nav in navList" :key="nav.id" :class="['nav-item', { actived: isFirstNavActived(nav.module) }]">
@@ -77,11 +77,11 @@
           <span :class="['bk-bscp-icon', locale === 'zh-cn' ? 'icon-lang-cn' : 'icon-lang-en']"></span>
         </div>
         <template #content>
-          <div class="international-item" @click="switchLanguage('en')">
-            <span class="bk-bscp-icon icon-lang-en"></span> English
-          </div>
           <div class="international-item" @click="switchLanguage('zh-cn')">
             <span class="bk-bscp-icon icon-lang-cn"></span> 中文
+          </div>
+          <div class="international-item" @click="switchLanguage('en')">
+            <span class="bk-bscp-icon icon-lang-en"></span> English
           </div>
         </template>
       </bk-popover>
@@ -127,6 +127,7 @@
   import useTemplateStore from '../store/template';
   import { ISpaceDetail } from '../../types/index';
   import { loginOut } from '../api/index';
+  import logo from '../assets/logo.svg';
   import type { IVersionLogItem } from '../../types/version-log';
   import VersionLog from './version-log.vue';
   import features from './features-dialog.vue';
@@ -144,6 +145,7 @@
     showPermApplyPage,
     showApplyPermDialog,
     permissionQuery,
+    appGlobalConfig,
   } = storeToRefs(useGlobalStore());
   const { userInfo } = storeToRefs(useUserStore());
   const templateStore = useTemplateStore();
@@ -174,6 +176,7 @@
         { id: 'client-statistics', module: 'client-statistics', name: t('客户端统计') },
         { id: 'client-search', module: 'client-search', name: t('客户端查询') },
         { id: 'credentials-management', module: 'credentials', name: t('客户端密钥') },
+        { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
   ]);
@@ -214,8 +217,8 @@
     return spaceFeatureFlags.value.BIZ_VIEW && !showPermApplyPage.value && route.meta.navModule === secondNavName;
   };
 
-  const handleNavClick = (navId: String) => {
-    if (navId === 'service-all' || navId === 'client-statistics' || navId === 'client-search') {
+  const handleNavClick = (navId: string) => {
+    if (['service-all', 'client-statistics', 'client-search', 'configuration-example'].includes(navId)) {
       const lastAccessedServiceDetail = localStorage.getItem('lastAccessedServiceDetail');
       if (lastAccessedServiceDetail) {
         const detail = JSON.parse(lastAccessedServiceDetail);
@@ -311,15 +314,36 @@
   const logList = ref<IVersionLogItem[]>([]);
   const isShowVersionLog = ref(false);
   // @ts-ignore
-  const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
-    as: 'raw',
-    eager: true,
+  // const modules = import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
+  //   as: 'raw',
+  //   eager: true,
+  // });
+  // const modules = import.meta.glob('../../../docs/changelog/en_US/*.md', {
+  //   as: 'raw',
+  //   eager: true,
+  // });
+
+  const logModules = computed(() => {
+    if (locale.value === 'zh-cn') {
+      // @ts-ignore
+      return import.meta.glob('../../../docs/changelog/zh_CN/*.md', {
+        as: 'raw',
+        eager: true,
+      });
+    }
+    // @ts-ignore
+    return import.meta.glob('../../../docs/changelog/en_US/*.md', {
+      as: 'raw',
+      eager: true,
+    });
   });
-  Object.keys(modules).forEach((path) => {
+  Object.keys(logModules.value).forEach((path) => {
+    const separator = locale.value === 'zh-cn' ? 'CN/' : 'US/';
     logList.value!.push({
-      title: path.split('CN/')[1].split('_')[0],
-      date: path.split('CN/')[1].split('_')[1].slice(0, -3),
-      detail: md.render(modules[path]),
+      title: path.split(separator)[1].split('_')[0],
+      date: path.split(separator)[1].split('_')[1].slice(0, -3),
+      // @ts-ignore
+      detail: md.render(logModules.value[path]),
     });
   });
 
@@ -331,9 +355,22 @@
   const featuresContent = ref('');
   const isShowFeatures = ref(false);
   // @ts-ignore
-  const module = import.meta.glob('../../../docs/features/features.md', { as: 'raw', eager: true });
-  Object.keys(module).forEach((path) => {
-    featuresContent.value = md.render(module[path]);
+  const featuresModule = computed(() => {
+    if (locale.value === 'zh-cn') {
+      // @ts-ignore
+      return import.meta.glob('../../../docs/features/features.md', {
+        as: 'raw',
+        eager: true,
+      });
+    }
+    // @ts-ignore
+    return import.meta.glob('../../../docs/features/features_en.md', {
+      as: 'raw',
+      eager: true,
+    });
+  });
+  Object.keys(featuresModule.value).forEach((path) => {
+    featuresContent.value = md.render(featuresModule.value[path]);
   });
   const handleLoginOut = () => {
     loginOut();
@@ -419,6 +456,7 @@
               line-height: 40px;
               padding: 0 16px;
               font-size: 14px;
+              white-space: nowrap;
               a {
                 color: #96a2b9;
               }
@@ -572,17 +610,18 @@
     cursor: pointer;
   }
   .international {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 20px;
+    cursor: pointer;
     &:hover {
-      background-color: #fff;
+      background-color: rgba(150, 162, 185, 0.3);
       span {
-        color: #3a84ff;
+        color: #ffffff;
       }
     }
   }

@@ -27,6 +27,7 @@ export default defineComponent({
         running: 'green',
         completed: 'green',
         failed: 'red',
+        FAILURE: 'red',
         terminating: 'blue',
         true: 'green',
         false: 'red',
@@ -51,12 +52,28 @@ export default defineComponent({
     const color = computed(() => statusColorMap.value[status.value.toLowerCase()]
       || statusColorMap.value[status.value]);
     const statusClass = computed(() => (type.value === 'persistence'
-      ? `status-icon status-${color.value}`
-      : `status-icon-result status-${color.value}-result`));
+      ? (svgEnums[color.value] || svgEnums.orange)
+      : (resultEnums[color.value] || resultEnums.orange)));
     const statusText = computed(() => {
       if (hideText.value) return '';
       return statusTextMap.value[status.value] || status.value || $i18n.t('generic.status.unknown1');
     });
+
+    const svgEnums = {
+      green: 'normal',
+      red: 'abnormal',
+      blue: 'status-unknown',
+      gray: 'status-unknown',
+      orange: 'warning-2',
+    };
+
+    const resultEnums = {
+      green: 'success',
+      red: 'failed',
+      blue: 'default',
+      gray: 'default',
+      orange: 'waiting',
+    };
 
     return {
       statusClass,
@@ -75,16 +92,18 @@ export default defineComponent({
         }} />
       : (
         <div class="dashboard-status">
-            <span class={this.statusClass}></span>
-            {
-                this.$scopedSlots.default
-                  ? this.$scopedSlots.default(this.status)
-                  : <span
-                      class={['status-name bcs-ellipsis', this.message ? 'bcs-border-tips !flex-none' : '']}
-                      v-bk-tooltips={{ content: this.message, disabled: !this.message }}>
-                      {this.statusText}
-                    </span>
-            }
+          <svg class={['mr-[5px]', 'size-[16px]']}>
+            <use xlinkHref={`#bcs-icon-color-${this.statusClass}`}></use>
+          </svg>
+          {
+              this.$scopedSlots.default
+                ? this.$scopedSlots.default(this.status)
+                : <span
+                    class={['status-name bcs-ellipsis', this.message ? 'bcs-border-tips !flex-none' : '']}
+                    v-bk-tooltips={{ content: this.message, disabled: !this.message }}>
+                    {this.statusText}
+                  </span>
+          }
         </div>
       );
   },

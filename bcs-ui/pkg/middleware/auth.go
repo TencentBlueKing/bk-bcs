@@ -28,6 +28,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/rest"
 )
 
+const (
+	// AuthUserKey is the key for user in context
+	AuthUserKey ContextValueKey = "X-Bcs-User"
+	// BKTicketKey is the key for bk ticket in context
+	BKTicketKey ContextValueKey = "X-Bcs-BKTicket"
+)
+
+// ContextValueKey is the key for context value
+type ContextValueKey string
+
 // NeedProjectAuthorization middleware for project authorization
 func NeedProjectAuthorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -140,4 +150,78 @@ func BCSJWTDecode(jwtToken string) (*auth.UserClaimsInfo, error) {
 
 	}
 	return claims, nil
+}
+
+// Authentication middleware for authentication
+func Authentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.G.IsLocalDevMode() {
+			// skip auth in local dev mode
+			ctx := context.WithValue(r.Context(), AuthUserKey, &auth.UserClaimsInfo{UserName: "anonymous"})
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+			return
+		}
+		claims, err := decodeBCSJwtFromContext(r.Context(), r)
+		if err != nil {
+			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())
+			return
+		}
+		if claims.UserName == "" {
+			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, "auth failed, username is empty")
+			return
+		}
+
+		// set auth user to context
+		ctx := context.WithValue(r.Context(), AuthUserKey, claims)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// BKTicket middleware for get bk ticket from cookie
+func BKTicket(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("bk_ticket")
+		if err != nil || cookie == nil || cookie.Value == "" {
+			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, "user is not invalid")
+			return
+		}
+
+		// set auth user to context
+		ctx := context.WithValue(r.Context(), BKTicketKey, cookie.Value)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// GetBKTicketByRequest get the bk_ticket by request
+func GetBKTicketByRequest(r *http.Request) string {
+	cookie, err := r.Cookie("bk_ticket")
+	if err == nil && cookie != nil {
+		return cookie.Value
+	}
+
+	return ""
+}
+
+// GetUserFromContext returns the user info in context
+func GetUserFromContext(ctx context.Context) (*auth.UserClaimsInfo, error) {
+	authUser, ok := ctx.Value(AuthUserKey).(*auth.UserClaimsInfo)
+	if !ok {
+		return nil, errors.New("get user from context failed, user not found")
+	}
+	return authUser, nil
+}
+
+// MustGetUserFromContext returns the user info in context
+func MustGetUserFromContext(ctx context.Context) *auth.UserClaimsInfo {
+	authUser, _ := ctx.Value(AuthUserKey).(*auth.UserClaimsInfo)
+	return authUser
+}
+
+// MustGetBKTicketFromContext returns the bk ticket in context
+func MustGetBKTicketFromContext(ctx context.Context) string {
+	bkTicket, _ := ctx.Value(BKTicketKey).(string)
+	return bkTicket
 }

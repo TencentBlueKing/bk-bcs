@@ -34,6 +34,9 @@ export interface ICluster {
     serviceIPv4CIDR: string
     isStaticIpMode: boolean
     eniSubnetIDs: string[]
+    enableVPCCni: boolean
+    status: string
+    networkMode: 'tke-route-eni' | 'tke-direct-eni'
   }
   master: any
   provider: CloudID,
@@ -159,6 +162,7 @@ export function useAppData() {
   const defaultFlags = {
     CLOUDTOKEN: false,
     PROJECT_LIST: false,
+    AZURECLOUD: true,
   };
   async function getFeatureFlags(params: { projectCode: string }) {
     const data = await featureFlagsApi(params).catch(() => ({}));

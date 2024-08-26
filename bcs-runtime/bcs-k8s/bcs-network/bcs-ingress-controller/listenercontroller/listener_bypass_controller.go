@@ -25,6 +25,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
@@ -112,6 +113,12 @@ func (lc *ListenerBypassReconciler) Reconcile(req ctrl.Request) (ctrl.Result, er
 		return ctrl.Result{}, nil
 	}
 
+	if err := lc.ensureFinalizer(listener); err != nil {
+		blog.Errorf("ensure finalizer for listeners '%s/%s' failed, err: %s", listener.GetNamespace(),
+			listener.GetNamespace(), err.Error())
+		return ctrl.Result{}, err
+	}
+
 	taskID, err := lc.monitorHelper.EnsureUptimeCheck(context.TODO(), listener)
 	if err != nil {
 		blog.Errorf("ensure uptime check for listener '%s/%s' failed, err: %s", listener.GetNamespace(),
@@ -132,11 +139,35 @@ func (lc *ListenerBypassReconciler) Reconcile(req ctrl.Request) (ctrl.Result, er
 	return ctrl.Result{}, nil
 }
 
+func (lc *ListenerBypassReconciler) ensureFinalizer(listener *networkextensionv1.Listener) error {
+	if common.ContainsString(listener.Finalizers, constant.FinalizerNameUptimeCheck) {
+		return nil
+	}
+
+	if err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		li := &networkextensionv1.Listener{}
+		if err := lc.Client.Get(context.TODO(), k8stypes.NamespacedName{
+			Namespace: listener.Namespace,
+			Name:      listener.Name,
+		}, li); err != nil {
+			return err
+		}
+
+		li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+
+		return lc.Client.Update(context.TODO(), li)
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SetupWithManager set reconciler
 func (lc *ListenerBypassReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.Listener{}).
 		WithEventFilter(getListenerByPassPredicate()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
 		Complete(lc)
 }
 
@@ -156,7 +187,7 @@ func (lc *ListenerBypassReconciler) updateListenerStatus(namespacedName k8stypes
 			Msg:    msg,
 		}
 		if err := lc.Client.Update(context.TODO(), li, &client.UpdateOptions{}); err != nil {
-			blog.Errorf("update failed, err: %s", err.Error())
+			blog.Errorf("update uptime_check status failed, err: %s", err.Error())
 			return err
 		}
 		return nil
@@ -172,11 +203,11 @@ func getListenerByPassPredicate() predicate.Predicate {
 			if !okNew || !okOld {
 				return false
 			}
-			if !newListener.IsUptimeCheckEnable() && !oldListener.IsUptimeCheckEnable() {
-				return false
-			}
 			if newListener.DeletionTimestamp != nil {
 				return true
+			}
+			if !newListener.IsUptimeCheckEnable() && !oldListener.IsUptimeCheckEnable() {
+				return false
 			}
 			if reflect.DeepEqual(newListener.Spec, oldListener.Spec) {
 				blog.V(5).Infof("listener %+v updated, but spec not change", oldListener)

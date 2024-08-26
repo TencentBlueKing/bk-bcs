@@ -46,13 +46,13 @@
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="lebel" :label="$t('k8s.label')">
-        <bk-table :data="handleTransformObjToArr(data.metadata.labels)">
+        <bk-table :data="handleTransformObjToArr(data?.metadata?.labels)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>
       </bcs-tab-panel>
       <bcs-tab-panel name="annotation" :label="$t('k8s.annotation')">
-        <bk-table :data="handleTransformObjToArr(data.metadata.annotations)">
+        <bk-table :data="handleTransformObjToArr(data?.metadata?.annotations)">
           <bk-table-column label="Key" prop="key"></bk-table-column>
           <bk-table-column label="Value" prop="value"></bk-table-column>
         </bk-table>

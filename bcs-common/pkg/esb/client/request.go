@@ -160,13 +160,18 @@ func (r *Request) WithJSON(jsonBody interface{}) *Request {
 	return r
 }
 
+func (r *Request) getHeader() http.Header {
+	defaultHeader := http.Header{}
+	authBytes, _ := json.Marshal(r.client.credential)
+	if r.headers == nil {
+		r.headers = defaultHeader
+	}
+	r.headers.Add("X-Bkapi-Authorization", string(authBytes))
+	return r.headers
+}
+
 func (r *Request) getBody() interface{} {
 	if r.mapBody != nil {
-		if len(r.client.credential) > 0 {
-			for key, obj := range r.client.credential {
-				r.mapBody[key] = obj
-			}
-		}
 		return r.mapBody
 	}
 	if r.jsonBody != nil {
@@ -265,8 +270,10 @@ func (r *Request) Do() *Result {
 				return result
 			}
 
+			headers := r.getHeader()
+
 			blog.V(2).Infof("do request to url %s\n", url)
-			resp, err := r.client.httpCli.RequestEx(url, r.method, r.headers, bodyData)
+			resp, err := r.client.httpCli.RequestEx(url, r.method, headers, bodyData)
 			if err != nil {
 				blog.Errorf("RESTClient method:%s url:%s err %s", r.method, url, err.Error())
 				// retry now

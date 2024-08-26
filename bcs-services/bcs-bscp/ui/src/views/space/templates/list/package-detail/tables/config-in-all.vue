@@ -5,10 +5,25 @@
     current-pkg="all"
     :show-cited-by-pkgs-col="true"
     :show-bound-by-apps-col="true"
-    :get-config-list="getConfigList">
+    :get-config-list="getConfigList"
+    :is-across-checked="acrossCheckedType.isAcrossChecked"
+    :data-count="acrossCheckedType.dataCount"
+    @send-across-checked-type="
+      (checked, dataCount) => {
+        acrossCheckedType.isAcrossChecked = checked;
+        acrossCheckedType.dataCount = dataCount;
+      }
+    ">
     <template #tableOperations>
       <AddConfigs @refresh="refreshConfigList" />
-      <BatchAddTo :configs="selectedConfigs" @refresh="refreshConfigList" />
+      <BatchOperationButton
+        :space-id="spaceId"
+        :configs="selectedConfigs"
+        :current-template-space="currentTemplateSpace"
+        pkg-type="all"
+        :is-across-checked="acrossCheckedType.isAcrossChecked"
+        :data-count="acrossCheckedType.dataCount"
+        @refresh="refreshConfigList" />
     </template>
   </CommonConfigTable>
 </template>
@@ -22,7 +37,7 @@
   import { getTemplatesBySpaceId } from '../../../../../../api/template';
   import CommonConfigTable from './common-config-table.vue';
   import AddConfigs from '../operations/add-configs/add-button.vue';
-  import BatchAddTo from '../operations/add-to-pkgs/add-to-button.vue';
+  import BatchOperationButton from '../operations/batch-operations/batch-operation-btn.vue';
 
   const { spaceId } = storeToRefs(useGlobalStore());
   const templateStore = useTemplateStore();
@@ -30,15 +45,19 @@
 
   const configTable = ref();
   const selectedConfigs = ref<ITemplateConfigItem[]>([]);
+  const acrossCheckedType = ref<{ isAcrossChecked: boolean; dataCount: number }>({
+    isAcrossChecked: false,
+    dataCount: 0,
+  });
 
   const getConfigList = (params: ICommonQuery) => {
     console.log('All Config List Loading');
     return getTemplatesBySpaceId(spaceId.value, currentTemplateSpace.value, params);
   };
 
-  const refreshConfigList = (isBatchUpload = false) => {
-    if (isBatchUpload) {
-      configTable.value.refreshList(1, isBatchUpload);
+  const refreshConfigList = (createConfig = false) => {
+    if (createConfig) {
+      configTable.value.refreshList(1, createConfig);
     } else {
       configTable.value.refreshList();
     }

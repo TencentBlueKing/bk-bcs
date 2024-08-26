@@ -3,7 +3,7 @@
     v-if="isFileType"
     :key="appData.id"
     style="margin-left: 8px"
-    :disabled="allConfigCount === 0 || conflictFileCount > 0"
+    :disabled="allExistConfigCount === 0 || conflictFileCount > 0"
     @click="handleExportFile">
     {{ $t('打包下载') }}
   </bk-button>
@@ -16,7 +16,7 @@
     trigger="click"
     @after-show="isPopoverOpen = true"
     @after-hidden="isPopoverOpen = false">
-    <bk-button>{{ $t('导出至') }}</bk-button>
+    <bk-button :disabled="allExistConfigCount === 0">{{ $t('导出至') }}</bk-button>
     <template #content>
       <div class="export-config-operations">
         <div v-for="item in exportItem" :key="item.value" class="operation-item" @click="handleExportKv(item.value)">
@@ -37,7 +37,7 @@
   const serviceStore = useServiceStore();
   const configStore = useConfigStore();
   const { appData, isFileType } = storeToRefs(serviceStore);
-  const { allConfigCount, conflictFileCount } = storeToRefs(configStore);
+  const { allExistConfigCount, conflictFileCount } = storeToRefs(configStore);
 
   const props = defineProps<{
     bkBizId: string;

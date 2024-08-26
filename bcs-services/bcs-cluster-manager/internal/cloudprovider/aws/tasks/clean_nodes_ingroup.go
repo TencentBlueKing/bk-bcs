@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
@@ -111,7 +111,7 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 	var (
 		instanceIDList, validateInstances = make([]string, 0), make([]string, 0)
 	)
-	asgInstances, err := getInstancesFromAsg(asCli, asgName, taskID)
+	asgInstances, err := getInstancesFromAsg(asCli, asgName)
 	if err != nil {
 		blog.Errorf("removeAsgInstances[%s] getInstancesFromAsg[%s] failed: %v", taskID, asgName, err.Error())
 		return err
@@ -130,26 +130,25 @@ func removeAsgInstances(ctx context.Context, info *cloudprovider.CloudDependBasi
 	}
 
 	blog.Infof("removeAsgInstances[%s] validateInstances[%v]", taskID, validateInstances)
-	ec2Cli, err := api.NewEC2Client(info.CmOption)
-	if err != nil {
-		blog.Errorf("removeAsgInstances[%s] get ec2 client failed: %v", taskID, err.Error())
-		return err
-	}
-	err = retry.Do(func() error {
-		_, terErr := ec2Cli.TerminateInstances(&ec2.TerminateInstancesInput{
-			InstanceIds: aws.StringSlice(validateInstances),
-		})
-		if terErr != nil {
-			blog.Errorf("removeAsgInstances[%s] RemoveInstances failed: %v", taskID, terErr)
-			return terErr
+
+	for _, id := range validateInstances {
+		err = retry.Do(func() error {
+			_, terErr := asCli.TerminateInstanceInAutoScalingGroup(&autoscaling.TerminateInstanceInAutoScalingGroupInput{
+				InstanceId:                     aws.String(id),
+				ShouldDecrementDesiredCapacity: aws.Bool(true),
+			})
+			if terErr != nil {
+				blog.Errorf("removeAsgInstances[%s] RemoveInstances[%s] failed: %v", taskID, id, terErr)
+				return terErr
+			}
+
+			blog.Infof("removeAsgInstances[%s] RemoveInstances[%s] successful", taskID, id)
+			return nil
+		}, retry.Attempts(3))
+
+		if err != nil {
+			return err
 		}
-
-		blog.Infof("removeAsgInstances[%s] RemoveInstances[%v] successful", taskID, nodeIDs)
-		return nil
-	}, retry.Attempts(3))
-
-	if err != nil {
-		return err
 	}
 
 	return nil

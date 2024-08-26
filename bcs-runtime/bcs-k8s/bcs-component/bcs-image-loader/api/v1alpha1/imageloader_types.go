@@ -53,6 +53,9 @@ type ImageLoaderSpec struct {
 	// defaults to 3
 	// +kubebuilder:default=3
 	BackoffLimit int32 `json:"backoffLimit"`
+
+	// Tolerations is a list of tolerations applied to the job.
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
 }
 
 // ImageLoaderNodeSelector is a selector over nodes

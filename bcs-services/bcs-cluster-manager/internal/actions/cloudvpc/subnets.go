@@ -62,9 +62,11 @@ func (la *ListSubnetsAction) validate() error {
 		return err
 	}
 
-	err = validate.ListCloudSubnetsValidate(la.req, la.account.Account)
-	if err != nil {
-		return err
+	if la.account != nil {
+		err = validate.ListCloudSubnetsValidate(la.req, la.account.Account)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -143,8 +145,20 @@ func (la *ListSubnetsAction) ListCloudSubnets() error {
 		subnets[i].ZoneName = zoneMap[subnets[i].Zone]
 	}
 
+	// filter name subnets
+	filterNameSubnets := make([]*cmproto.Subnet, 0)
+	if la.req.GetName() != "" {
+		for i := range subnets {
+			if strings.Contains(subnets[i].SubnetName, la.req.GetName()) {
+				filterNameSubnets = append(filterNameSubnets, subnets[i])
+			}
+		}
+	} else {
+		filterNameSubnets = append(filterNameSubnets, subnets...)
+	}
+
 	if la.req.SubnetID == "" {
-		la.subnets = subnets
+		la.subnets = filterNameSubnets
 		return nil
 	}
 
