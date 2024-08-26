@@ -92,6 +92,9 @@ func (d *driver) autoCreateTable() error {
 	if err := d.createTable(tableAppSetClusterScope, &AppSetClusterScope{}); err != nil {
 		return errors.Wrapf(err, "create table '%s' failed", tableUserAudit)
 	}
+	if err := d.createTable(tableExternalUserPermission, &ExternalUserPermission{}); err != nil {
+		return errors.Wrapf(err, "create table '%s' failed", tableExternalUserPermission)
+	}
 	return nil
 }
 
@@ -460,4 +463,81 @@ func (d *driver) DeleteAppSetClusterScope(appSet string) error {
 		return errors.Wrapf(err, "delete appset's cluster scope failed")
 	}
 	return nil
+}
+
+// CreateExternalUserPermission create ExternalUserPermission
+func (d *driver) CreateExternalUserPermission(externalPermission *ExternalUserPermission) error {
+	if err := d.db.Table(tableExternalUserPermission).Create(&externalPermission).Error; err != nil {
+		if strings.Contains(err.Error(), "Duplicate") {
+			// ignore exist
+			return nil
+		}
+		return errors.Wrapf(err, "save externaluser permission failed")
+	}
+	return nil
+}
+
+// DeleteExternalUserProject remove a externaluser's project permission
+func (d *driver) DeleteExternalUserProject(user, project string) error {
+	if err := d.db.Table(tableExternalUserPermission).
+		Where("project = ?", project).
+		Where("user = ?", user).Delete(&ExternalUserPermission{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		return errors.Wrapf(err, "delete externaluser's project permission failed")
+	}
+	return nil
+}
+
+// ListExternalUserPermission list externaluser's permission by username
+func (d *driver) ListExternalUserPermission(user string) ([]*ExternalUserPermission, error) {
+	rows, err := d.db.Table(tableExternalUserPermission).Where("user = ?", user).Rows()
+	if err != nil {
+		return nil, errors.Wrapf(err, "query externaluser permission failed")
+	}
+	defer rows.Close() // nolint
+	res := make([]*ExternalUserPermission, 0)
+	for rows.Next() {
+		ep := new(ExternalUserPermission)
+		if err = d.db.ScanRows(rows, ep); err != nil {
+			return nil, errors.Wrapf(err, "scan externaluser permission failed")
+		}
+		res = append(res, ep)
+	}
+	return res, nil
+}
+
+// CheckExternalUserPermission check externaluser's permission by username and project
+func (d *driver) CheckExternalUserPermission(user, project string) (bool, error) {
+	rows, err := d.db.Table(tableExternalUserPermission).Where("user = ?", user).
+		Where("project = ?", project).Rows()
+	if err != nil {
+		return false, errors.Wrapf(err, "query externaluser permission failed")
+	}
+	defer rows.Close() // nolint
+
+	for rows.Next() {
+		return true, nil
+	}
+	return false, nil
+}
+
+// ListExternalUserPermissionByProject list project's externaluser by projectcode
+func (d *driver) ListExternalUserPermissionByProject(project string) ([]*ExternalUserPermission, error) {
+	rows, err := d.db.Table(tableExternalUserPermission).Where("project = ?", project).Rows()
+	if err != nil {
+		return nil, errors.Wrapf(err, "query externaluser permission by project failed")
+	}
+	defer rows.Close() // nolint
+
+	res := make([]*ExternalUserPermission, 0)
+	for rows.Next() {
+		ep := new(ExternalUserPermission)
+		if err = d.db.ScanRows(rows, ep); err != nil {
+			return nil, errors.Wrapf(err, "scan externaluser permission failed")
+		}
+		res = append(res, ep)
+	}
+	return res, nil
 }
