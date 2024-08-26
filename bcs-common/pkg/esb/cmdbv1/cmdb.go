@@ -15,12 +15,12 @@ package cmdbv1
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	paasclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/common"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 )
 
@@ -41,9 +41,9 @@ func NewClientInterface(host string, tlsConf *tls.Config) *Client {
 			WithRateLimiter(throttle.NewTokenBucket(100, 100))
 	}
 	return &Client{
-		host:    host,
-		client:  cli,
-		baseReq: make(map[string]interface{}),
+		host:          host,
+		client:        cli,
+		defaultHeader: http.Header{},
 	}
 }
 
@@ -52,7 +52,14 @@ type Client struct {
 	host          string
 	defaultHeader http.Header
 	client        *paasclient.RESTClient
-	baseReq       map[string]interface{}
+	credential    Credential
+}
+
+// Credential credential to be filled in post body
+type Credential struct {
+	BKAppCode   string `json:"bk_app_code"`
+	BKAppSecret string `json:"bk_app_secret"`
+	BKUsername  string `json:"bk_username,omitempty"`
 }
 
 // SetDefaultHeader set default headers
@@ -60,10 +67,19 @@ func (c *Client) SetDefaultHeader(h http.Header) {
 	c.defaultHeader = h
 }
 
-// SetCommonReq set base req
-func (c *Client) SetCommonReq(args map[string]interface{}) {
-	for k, v := range args {
-		c.baseReq[k] = v
+// GetHeader get headers
+func (c *Client) GetHeader() http.Header {
+	authBytes, _ := json.Marshal(c.credential)
+	c.defaultHeader.Add("X-Bkapi-Authorization", string(authBytes))
+	return c.defaultHeader
+}
+
+// WithCredential set credential
+func (c *Client) WithCredential(appCode, appSecret, username string) {
+	c.credential = Credential{
+		BKAppCode:   appCode,
+		BKAppSecret: appSecret,
+		BKUsername:  username,
 	}
 }
 
@@ -89,13 +105,12 @@ func (c *Client) ESBTransHostModule(username string, assetIDs []string, appID, m
 		"app_id":                strconv.FormatInt(appID, 10),
 		"host_module_condition": hostConditions,
 	}
-	common.MergeMap(req, c.baseReq)
 	result := new(ESBTransHostModuleResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/component/compapi/cc/").
 		SubPathf("host_module").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(req).
 		Do().
 		Into(result)

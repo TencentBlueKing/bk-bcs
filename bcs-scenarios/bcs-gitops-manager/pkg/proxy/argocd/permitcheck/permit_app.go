@@ -97,7 +97,13 @@ func (c *checker) getMultiApplicationMultiActionPermission(ctx context.Context, 
 	result := &UserResourcePermission{
 		ResourceType:  AppRSType,
 		ResourcePerms: make(map[string]map[RSAction]bool),
+		ActionPerms: map[RSAction]bool{AppViewRSAction: true, AppCreateRSAction: true, AppUpdateRSAction: true,
+			AppDeleteRSAction: true},
 	}
+	if len(resultApps) == 0 {
+		return resultApps, result, http.StatusOK, nil
+	}
+
 	canView := false
 	canCreate := false
 	canUpdate := false

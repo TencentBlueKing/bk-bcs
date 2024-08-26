@@ -16,6 +16,7 @@ import (
 	"errors"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // TemplateSpace 模版空间
@@ -47,7 +48,7 @@ func (t *TemplateSpace) ResType() string {
 }
 
 // ValidateCreate validate template space is valid or not when create it.
-func (t *TemplateSpace) ValidateCreate() error {
+func (t *TemplateSpace) ValidateCreate(kit *kit.Kit) error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -56,7 +57,7 @@ func (t *TemplateSpace) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := t.Spec.ValidateCreate(); err != nil {
+	if err := t.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -80,14 +81,14 @@ func (t *TemplateSpace) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template space is valid or not when update it.
-func (t *TemplateSpace) ValidateUpdate() error {
+func (t *TemplateSpace) ValidateUpdate(kit *kit.Kit) error {
 
 	if t.ID <= 0 {
 		return errors.New("id should be set")
 	}
 
 	if t.Spec != nil {
-		if err := t.Spec.ValidateUpdate(); err != nil {
+		if err := t.Spec.ValidateUpdate(kit); err != nil {
 			return err
 		}
 	}
@@ -135,8 +136,8 @@ type TemplateSpaceSpec struct {
 }
 
 // ValidateCreate validate template space spec when it is created.
-func (t *TemplateSpaceSpec) ValidateCreate() error {
-	if err := validator.ValidateName(t.Name); err != nil {
+func (t *TemplateSpaceSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateName(kit, t.Name); err != nil {
 		return err
 	}
 
@@ -144,8 +145,8 @@ func (t *TemplateSpaceSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template space spec when it is updated.
-func (t *TemplateSpaceSpec) ValidateUpdate() error {
-	if err := validator.ValidateMemo(t.Memo, false); err != nil {
+func (t *TemplateSpaceSpec) ValidateUpdate(kit *kit.Kit) error {
+	if err := validator.ValidateMemo(kit, t.Memo, false); err != nil {
 		return err
 	}
 

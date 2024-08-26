@@ -16,6 +16,7 @@ import (
 	"errors"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/validator"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
 // TemplateRevision 模版版本
@@ -47,7 +48,7 @@ func (t *TemplateRevision) ResType() string {
 }
 
 // ValidateCreate validate template revision is valid or not when create it.
-func (t *TemplateRevision) ValidateCreate() error {
+func (t *TemplateRevision) ValidateCreate(kit *kit.Kit) error {
 	if t.ID > 0 {
 		return errors.New("id should not be set")
 	}
@@ -56,7 +57,7 @@ func (t *TemplateRevision) ValidateCreate() error {
 		return errors.New("spec not set")
 	}
 
-	if err := t.Spec.ValidateCreate(); err != nil {
+	if err := t.Spec.ValidateCreate(kit); err != nil {
 		return err
 	}
 
@@ -109,36 +110,36 @@ type TemplateRevisionSpec struct {
 }
 
 // ValidateCreate validate template revision spec when it is created.
-func (t *TemplateRevisionSpec) ValidateCreate() error {
-	if err := validator.ValidateReleaseName(t.RevisionName); err != nil {
+func (t *TemplateRevisionSpec) ValidateCreate(kit *kit.Kit) error {
+	if err := validator.ValidateReleaseName(kit, t.RevisionName); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateMemo(t.RevisionMemo, false); err != nil {
+	if err := validator.ValidateMemo(kit, t.RevisionMemo, false); err != nil {
 		return err
 	}
 
-	if err := validator.ValidateFileName(t.Name); err != nil {
+	if err := validator.ValidateFileName(kit, t.Name); err != nil {
 		return err
 	}
 
-	if err := t.FileType.Validate(); err != nil {
+	if err := t.FileType.Validate(kit); err != nil {
 		return err
 	}
 
-	if err := t.FileMode.Validate(); err != nil {
+	if err := t.FileMode.Validate(kit); err != nil {
 		return err
 	}
 
-	if err := ValidatePath(t.Path, Unix); err != nil {
+	if err := ValidatePath(kit, t.Path, Unix); err != nil {
 		return err
 	}
 
-	if err := t.Permission.Validate(t.FileMode); err != nil {
+	if err := t.Permission.Validate(kit, t.FileMode); err != nil {
 		return err
 	}
 
-	if err := t.ContentSpec.Validate(); err != nil {
+	if err := t.ContentSpec.Validate(kit); err != nil {
 		return err
 	}
 
@@ -146,8 +147,8 @@ func (t *TemplateRevisionSpec) ValidateCreate() error {
 }
 
 // ValidateUpdate validate template revision spec when it is updated.
-func (t *TemplateRevisionSpec) ValidateUpdate() error {
-	if err := validator.ValidateMemo(t.RevisionMemo, false); err != nil {
+func (t *TemplateRevisionSpec) ValidateUpdate(kit *kit.Kit) error {
+	if err := validator.ValidateMemo(kit, t.RevisionMemo, false); err != nil {
 		return err
 	}
 

@@ -31,7 +31,7 @@ func NewHello() istep.StepExecutor {
 func (s *hello) Execute(c *istep.Context) error {
 	fmt.Println("Hello")
 	// time.Sleep(30 * time.Second)
-	if err := c.AddCommonParams("name", "hello"); err != nil {
+	if err := c.AddCommonParam("name", "hello"); err != nil {
 		return err
 	}
 	return nil

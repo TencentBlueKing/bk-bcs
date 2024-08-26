@@ -60,8 +60,9 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 
 	// validate in table config_items
 	if tools.CheckPathConflict(path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name), existingPaths) {
-		return nil, fmt.Errorf("config item's same name %s and path %s already exists",
-			req.ConfigItemSpec.Name, req.ConfigItemSpec.Path)
+		return nil, errf.Errorf(errf.InvalidRequest,
+			i18n.T(grpcKit, "the config file %s under this service already exists and cannot be created again",
+				path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)))
 	}
 
 	tx := s.dao.GenQuery().Begin()
@@ -166,7 +167,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 			Name: item.GetConfigItemSpec().GetName(), Path: item.GetConfigItemSpec().GetPath(),
 		})
 	}
-	if err = tools.DetectFilePathConflicts(file2, file1); err != nil {
+	if err = tools.DetectFilePathConflicts(grpcKit, file2, file1); err != nil {
 		return nil, err
 	}
 
@@ -366,7 +367,7 @@ func (s *Service) verifyAppLimitHasBeenExceeded(kit *kit.Kit, tx *gen.QueryTx, b
 	// 非模板配置数+当前套餐配置数+历史套餐配置数+待创建的配置项数
 	if int(configItemCount)+currentTemplateSetNum+historyTemplateSetNum+createConfigItemNum > appConfigCnt {
 		return errf.New(errf.InvalidParameter,
-			fmt.Sprintf("the total number of app %s's config items(including template and non-template)"+
+			i18n.T(kit, "the total number of app %s config items(including template and non-template)"+
 				"exceeded the limit %d", app.Spec.Name, appConfigCnt))
 	}
 
@@ -1275,7 +1276,7 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 		})
 	}
 
-	if err = tools.DetectFilePathConflicts(file1, file2); err != nil {
+	if err = tools.DetectFilePathConflicts(grpcKit, file1, file2); err != nil {
 		return nil, err
 	}
 

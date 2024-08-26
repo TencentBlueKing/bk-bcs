@@ -213,10 +213,30 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 		CommonParams:   make(map[string]string),
 		ForceTerminate: false,
 	}
+	taskName := fmt.Sprintf(importClusterTaskTemplate, cls.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
 	// setting all steps details
-	// step0: create cluster shield alarm step
 	importNodesTask := &ImportClusterTaskOption{Cluster: cls}
+
+	// step0: 集群节点导入方式需要 安装websocket模式的kubeAgent，打通集群连接
+	if len(opt.CloudMode.GetNodeIps()) > 0 && opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
+		opt.Cloud.ClusterManagement.ImportCluster != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.SystemInit,
+			Cluster:  cls,
+			Extra: template.ExtraInfo{
+				BusinessID:   cls.BusinessID,
+				Operator:     opt.Operator,
+				NodeOperator: opt.Operator,
+				NodeIPList:   strings.Join(opt.CloudMode.GetNodeIps(), ","),
+			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.ImportCluster, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildImportClusterTask BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step0: import cluster nodes
 	importNodesTask.BuildImportClusterNodesStep(task)
 
 	// step1: install cluster watch component

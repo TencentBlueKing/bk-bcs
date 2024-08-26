@@ -334,9 +334,10 @@ func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map
 	// only handle not ca nodes
 	if len(node.ClusterID) != 0 && node.NodeGroupID == "" && node.Status == common.StatusRunning {
 		cluster, err := ca.model.GetCluster(ca.ctx, node.ClusterID)
-		if err == nil {
-			nodeResult.ClusterName = cluster.GetClusterName()
+		if err != nil {
+			return nodeResult, nil
 		}
+		nodeResult.ClusterName = cluster.GetClusterName()
 
 		// check node exist in cluster
 		if cluster.Status == common.StatusDeleted || !ca.checkNodeIPInCluster(node.ClusterID, node.InnerIP) {

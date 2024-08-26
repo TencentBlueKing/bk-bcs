@@ -16,7 +16,7 @@
     "@blueking/bkui-library": "^0.0.0-beta.6",
     "@blueking/ip-selector": "0.2.0-beta.1",
     "@blueking/login-modal": "^1.0.2",
-    "@blueking/notice-component-vue2": "^2.0.4",
+    "@blueking/notice-component-vue2": "^2.0.5",
     "@blueking/platform-config": "^1.0.5",
     "@blueking/task-log": "^0.0.1",
     "@blueking/user-selector": "^1.0.9",

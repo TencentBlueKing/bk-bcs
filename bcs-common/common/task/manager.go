@@ -210,6 +210,10 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 
 // Dispatch dispatch task
 func (m *TaskManager) Dispatch(task *types.Task) error {
+	if err := task.Validate(); err != nil {
+		return err
+	}
+
 	if err := GetGlobalStorage().CreateTask(context.Background(), task); err != nil {
 		return err
 	}
@@ -229,18 +233,22 @@ func (m *TaskManager) transTaskToSignature(task *types.Task, stepNameBegin strin
 		// build signature from step
 		signature := &tasks.Signature{
 			UUID: fmt.Sprintf("%s-%s", task.TaskID, step.Name),
-			Name: step.Name,
+			Name: step.Executor,
+			ETA:  step.ETA,
 			// two parameters: taskID, stepName
 			Args: []tasks.Arg{
 				{
+					Name:  "task_id",
 					Type:  "string",
 					Value: task.GetTaskID(),
 				},
 				{
+					Name:  "step_name",
 					Type:  "string",
 					Value: step.Name,
 				},
 			},
+
 			IgnoreWhenTaskNotRegistered: true,
 		}
 
@@ -265,24 +273,10 @@ func (m *TaskManager) dispatchAt(task *types.Task, stepNameBegin string) error {
 	}
 
 	// send chain to machinery & ctx for tracing
-	asyncResult, err := m.server.SendChainWithContext(context.Background(), chain)
+	_, err = m.server.SendChainWithContext(context.Background(), chain)
 	if err != nil {
 		return fmt.Errorf("send chain to machinery failed: %s", err.Error())
 	}
-
-	// get results
-	go func(t *types.Task, _ *tasks.Chain) {
-		// check async results
-		for retry := 3; retry > 0; retry-- {
-			results, err := asyncResult.Get(time.Second * 5)
-			if err != nil {
-				fmt.Printf("tracing task %s result failed, %s. retry %d\n", t.GetTaskID(), err.Error(), retry)
-				continue
-			}
-			// check results
-			log.INFO.Printf("tracing task %s result %s", t.GetTaskID(), tasks.HumanReadableResults(results))
-		}
-	}(task, chain)
 
 	return nil
 }
@@ -302,36 +296,39 @@ func (m *TaskManager) registerStepWorkers() error {
 }
 
 // doWork machinery 通用处理函数
-func (m *TaskManager) doWork(taskID string, stepName string) error {
+func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	defer RecoverPrintStack(fmt.Sprintf("%s-%s", taskID, stepName))
-
-	stepWorker, ok := m.stepExecutors[istep.StepName(stepName)]
-	if !ok {
-		return fmt.Errorf("step worker %s not found", stepName)
-	}
 
 	log.INFO.Printf("start to execute task[%s] stepName[%s]", taskID, stepName)
 
-	start := time.Now()
-	state, step, err := m.getTaskStateAndCurrentStep(taskID, stepName)
+	state, err := m.getTaskState(taskID, stepName)
 	if err != nil {
-		log.ERROR.Printf("task[%s] stepName[%s] getTaskStateAndCurrentStep failed: %v",
+		log.ERROR.Printf("task[%s] stepName[%s] getTaskState failed: %v",
 			taskID, stepName, err)
 		return err
 	}
+
 	// step executed success
-	if step == nil {
+	if state.step == nil {
 		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
 			taskID, stepName, err)
 		return nil
 	}
 
+	step := state.step
+	stepExecutor, ok := m.stepExecutors[istep.StepName(step.Executor)]
+	if !ok {
+		log.ERROR.Printf("task[%s] stepName[%s] executor[%s] not found", taskID, stepName, state.step.Executor)
+		return fmt.Errorf("step executor[%s] not found", step.Executor)
+	}
+
+	start := time.Now()
 	// step timeout
 	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
 	defer stepCancel()
 
 	// task timeout
-	t, _ := state.task.GetStartTime()
+	t := state.task.GetStartTime()
 	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
 	defer taskCancel()
 
@@ -339,51 +336,55 @@ func (m *TaskManager) doWork(taskID string, stepName string) error {
 	go func() {
 		// call step worker
 		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
-		tmpCh <- stepWorker.Execute(execCtx)
+		tmpCh <- stepExecutor.Execute(execCtx)
 	}()
 
 	select {
-	case errLocal := <-tmpCh:
-		log.INFO.Printf("task %s step %s errLocal: %v", taskID, stepName, errLocal)
+	case retErr := <-tmpCh:
+		log.INFO.Printf("task %s step %s errLocal: %v", taskID, stepName, retErr)
 
 		// update task & step status
-		if errLocal != nil {
-			if err := state.updateStepFailure(start, step.GetName(), errLocal, false); err != nil {
-				log.INFO.Printf("task %s update step %s to failure failed: %s",
-					taskID, step.GetName(), errLocal.Error())
-			}
-		} else {
-			if err := state.updateStepSuccess(start, step.GetName()); err != nil {
-				log.INFO.Printf("task %s update step %s to success failed: %s",
-					taskID, step.GetName(), err.Error())
-			}
+		if retErr == nil {
+			state.updateStepSuccess(start)
+			return nil
+		}
+		state.updateStepFailure(start, retErr, false)
+
+		if step.GetSkipOnFailed() {
+			return nil
 		}
 
-		if errLocal != nil && !step.GetSkipOnFailed() {
-			return errLocal
+		if step.GetRetryCount() < step.MaxRetries {
+			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
+			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
+				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
+			return tasks.NewErrRetryTaskLater(retErr.Error(), retryIn)
 		}
 
-		return nil
+		return retErr
 
 	case <-stepCtx.Done():
 		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-		errLocal := state.updateStepFailure(start, step.GetName(), retErr, false)
-		if errLocal != nil {
-			log.INFO.Printf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
+		state.updateStepFailure(start, retErr, false)
+
+		if step.GetSkipOnFailed() {
+			return nil
 		}
-		if !step.GetSkipOnFailed() {
-			return retErr
+
+		if step.GetRetryCount() < step.MaxRetries {
+			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
+			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
+				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
+			return tasks.NewErrRetryTaskLater("some error", retryIn)
 		}
-		return nil
+
+		return retErr
 
 	case <-taskCtx.Done():
 		// task timeOut
 		retErr := fmt.Errorf("task %s exec timeout", taskID)
-		errLocal := state.updateStepFailure(start, step.GetName(), retErr, true)
-		if errLocal != nil {
-			log.ERROR.Printf("update step %s to failure failed: %s", step.GetName(), errLocal.Error())
-		}
-
+		state.updateStepFailure(start, retErr, true)
+		// 整个任务结束
 		return retErr
 	}
 }

@@ -233,7 +233,11 @@ func (plugin *GrpcPlugin) handleRepoAccess(r *http.Request) (*http.Request, *mw.
 	}
 	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repoAccess.Repo,
 		permitcheck.RepoViewRSAction)
-	if statusCode != http.StatusOK {
+	if err != nil {
+		// fix repo not create yet
+		if strings.Contains(err.Error(), "not found") {
+			return r, mw.ReturnArgoReverse()
+		}
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check project '%s' edit permission failed", repoAccess.Project))
 	}

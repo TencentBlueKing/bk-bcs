@@ -7,7 +7,7 @@ bcs-ops:
       containerd: "1.6.21"
       runc: "1.1.8"
       docker: "19.03.9"
-      jq: "1.6"
+      jq: "1.7.1"
       yq: "4.30.6"
 
     images:
@@ -39,7 +39,7 @@ bcs-ops:
       containerd: "1.6.21"
       runc: "1.1.8"
       docker: "19.03.9"
-      jq: "1.6"
+      jq: "1.7.1"
       yq: "4.30.6"
 
     images:
@@ -69,7 +69,7 @@ bcs-ops:
       crictl: "1.24.2"
       containerd: "1.6.21"
       runc: "1.1.8"
-      jq: "1.6"
+      jq: "1.7.1"
       yq: "4.30.6"
 
     images:
@@ -100,7 +100,7 @@ bcs-ops:
       crictl: "1.24.2"
       containerd: "1.6.21"
       runc: "1.1.8"
-      jq: "1.6"
+      jq: "1.7.1"
       yq: "4.30.6"
 
     images:
@@ -130,7 +130,7 @@ bcs-ops:
       crictl: "1.24.2"
       containerd: "1.6.21"
       runc: "1.1.8"
-      jq: "1.6"
+      jq: "1.7.1"
       yq: "4.30.6"
 
     images:

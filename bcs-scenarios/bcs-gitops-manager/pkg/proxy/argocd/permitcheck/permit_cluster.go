@@ -81,7 +81,12 @@ func (c *checker) getMultiClustersMultiActionsPermission(ctx context.Context, pr
 	result := &UserResourcePermission{
 		ResourceType:  ClusterRSType,
 		ResourcePerms: make(map[string]map[RSAction]bool),
+		ActionPerms:   map[RSAction]bool{ClusterViewRSAction: true},
 	}
+	if len(resultClusters) == 0 {
+		return resultClusters, result, http.StatusOK, nil
+	}
+
 	allView := false
 	for proj, argoClusters := range projClusters {
 		_, projPermits, statusCode, err := c.getProjectMultiActionsPermission(ctx, proj)

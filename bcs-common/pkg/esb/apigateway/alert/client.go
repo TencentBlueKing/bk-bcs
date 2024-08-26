@@ -15,7 +15,9 @@ package alert
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	paasclient "github.com/Tencent/bk-bcs/bcs-common/pkg/esb/client"
@@ -103,17 +105,19 @@ type alertClient struct {
 func (cli *alertClient) SendServiceAlert(module string, message string) error {
 
 	payload := newServiceAlert(module, message, cli.config.LocalIP)
+	auth := map[string]string{
+		"app_code":   cli.config.AppCode,
+		"app_secret": cli.config.AppSecret,
+	}
+	authBytes, _ := json.Marshal(auth)
+	authHeader := http.Header{}
+	authHeader.Add("X-Bkapi-Authorization", string(authBytes))
 
 	result := cli.client.Post().
 		WithEndpoints(cli.config.Hosts).
 		WithBasePath("/").
-		SubPathf(
-			fmt.Sprintf(
-				"/prod/api/v1/bcs/alerts?app_code='%s'&app_secret='%s'",
-				cli.config.AppCode,
-				cli.config.AppSecret,
-			),
-		).
+		WithHeaders(authHeader).
+		SubPathf("/prod/api/v1/bcs/alerts").
 		Body(payload).
 		WithTimeout(time.Second * 3).
 		Do()
@@ -126,17 +130,19 @@ func (cli *alertClient) SendServiceAlert(module string, message string) error {
 // SendClusterAlert implementation
 func (cli *alertClient) SendClusterAlert(cluster, module string, message string) error {
 	payload := newClusterAlert(cluster, module, message, cli.config.LocalIP)
+	auth := map[string]string{
+		"app_code":   cli.config.AppCode,
+		"app_secret": cli.config.AppSecret,
+	}
+	authBytes, _ := json.Marshal(auth)
+	authHeader := http.Header{}
+	authHeader.Add("X-Bkapi-Authorization", string(authBytes))
 
 	result := cli.client.Post().
 		WithEndpoints(cli.config.Hosts).
 		WithBasePath("/").
-		SubPathf(
-			fmt.Sprintf(
-				"/prod/api/v1/bcs/alerts?app_code='%s'&app_secret='%s'",
-				cli.config.AppCode,
-				cli.config.AppSecret,
-			),
-		).
+		WithHeaders(authHeader).
+		SubPathf("/prod/api/v1/bcs/alerts").
 		Body(payload).
 		WithTimeout(time.Second * 3).
 		Do()
@@ -157,16 +163,18 @@ func (cli *alertClient) SendCustomAlert(annotation, label map[string]string) err
 		annotationKey: annotation,
 		labelKey:      label,
 	}
+	auth := map[string]string{
+		"app_code":   cli.config.AppCode,
+		"app_secret": cli.config.AppSecret,
+	}
+	authBytes, _ := json.Marshal(auth)
+	authHeader := http.Header{}
+	authHeader.Add("X-Bkapi-Authorization", string(authBytes))
 	result := cli.client.Post().
 		WithEndpoints(cli.config.Hosts).
 		WithBasePath("/").
-		SubPathf(
-			fmt.Sprintf(
-				"/prod/api/v1/bcs/alerts?app_code='%s'&app_secret='%s'",
-				cli.config.AppCode,
-				cli.config.AppSecret,
-			),
-		).
+		WithHeaders(authHeader).
+		SubPathf("/prod/api/v1/bcs/alerts").
 		Body(payload).
 		WithTimeout(time.Second * 3).
 		Do()

@@ -632,7 +632,7 @@ func getApiReSourcesManifest(ctx context.Context, crdName, clusterID string) (ma
 	if len(s) > 1 {
 		group = s[1]
 	}
-	apiResources, err := res.GetApiResources(ctx, res.NewClusterConf(clusterID), "")
+	apiResources, err := res.GetApiResources(ctx, res.NewClusterConf(clusterID), "", crdName)
 	if err != nil {
 		return manifest, err
 	}

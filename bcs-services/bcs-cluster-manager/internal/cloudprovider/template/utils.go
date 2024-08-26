@@ -337,5 +337,12 @@ func getSelfBuilderClusterEnvs(cls *proto.Cluster) (string, error) {
 
 	envs = append(envs, cni, apiServerHa)
 
+	for key := range cls.ExtraInfo {
+		if !iutils.StringInSlice(key, []string{common.ClusterMachineImportNodes,
+			common.ImportType, common.ClusterResourceGroup}) && cls.ExtraInfo[key] != "" {
+			envs = append(envs, getEnv(key, cls.ExtraInfo[key]))
+		}
+	}
+
 	return strings.Join(envs, ";"), nil
 }

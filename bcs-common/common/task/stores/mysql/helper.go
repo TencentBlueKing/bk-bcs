@@ -23,11 +23,14 @@ func getStepRecords(t *types.Task) []*StepRecords {
 			TaskID:              t.TaskID,
 			Name:                step.Name,
 			Alias:               step.Alias,
+			Executor:            step.Executor,
 			Payload:             step.Payload,
 			Status:              step.Status,
 			Message:             step.Message,
 			SkipOnFailed:        step.SkipOnFailed,
+			ETA:                 step.ETA,
 			RetryCount:          step.RetryCount,
+			MaxRetries:          step.MaxRetries,
 			Params:              step.Params,
 			Start:               step.Start,
 			End:                 step.End,
@@ -103,6 +106,7 @@ func getUpdateTaskRecord(t *types.Task) *TaskRecords {
 	record := &TaskRecords{
 		CurrentStep:   t.CurrentStep,
 		CommonParams:  t.CommonParams,
+		CommonPayload: t.CommonPayload,
 		Status:        t.Status,
 		Message:       t.Message,
 		Start:         t.Start,
@@ -115,15 +119,14 @@ func getUpdateTaskRecord(t *types.Task) *TaskRecords {
 
 func getUpdateStepRecord(t *types.Step) *StepRecords {
 	record := &StepRecords{
-		Params:              t.Params,
-		Payload:             t.Payload,
-		Status:              t.Status,
-		Message:             t.Message,
-		Start:               t.Start,
-		End:                 t.End,
-		ExecutionTime:       t.ExecutionTime,
-		RetryCount:          t.RetryCount,
-		MaxExecutionSeconds: t.MaxExecutionSeconds,
+		Params:        t.Params,
+		Payload:       t.Payload,
+		Status:        t.Status,
+		Message:       t.Message,
+		Start:         t.Start,
+		End:           t.End,
+		ExecutionTime: t.ExecutionTime,
+		RetryCount:    t.RetryCount,
 	}
 	return record
 }

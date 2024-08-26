@@ -55,6 +55,7 @@ func (s *Server) routerDecryptManifest(w http.ResponseWriter, r *http.Request) {
 	projectName, err := s.getProjectNameFromDecryptRequest(r.Context(), req)
 	if err != nil {
 		s.responseError(r, w, http.StatusBadRequest, errors.Wrapf(err, "get project name from decrypt request failed"))
+		return
 	}
 
 	secretKey, err := s.getSecretKeyForProject(r.Context(), projectName)

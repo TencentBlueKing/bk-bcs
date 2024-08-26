@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -69,28 +70,12 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// import cluster instances
-	err = importClusterInstances(basicInfo)
-	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
-		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
+	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	// update cluster info
-	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	err = importClusterNodes(ctx, basicInfo)
 	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: UpdateCluster failed: %v", taskID, err)
-		retErr := fmt.Errorf("UpdateCluster failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-	// import cluster clusterCredential
-	err = importClusterCredential(basicInfo)
-	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: importClusterCredential failed: %v", taskID, err)
-		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
+		blog.Errorf("ImportClusterNodesTask[%s] failed: %v", taskID, err)
+		retErr := fmt.Errorf("ImportClusterNodesTask failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -101,6 +86,34 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 			taskID, taskID, stepName)
 		return err
 	}
+	return nil
+}
+
+func importClusterNodes(ctx context.Context, basicInfo *cloudprovider.CloudDependBasicInfo) error {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// import cluster instances
+	err := importClusterInstances(basicInfo)
+	if err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskId, err)
+		return err
+	}
+
+	// update cluster info
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
+	if err != nil {
+		blog.Errorf("ImportClusterNodesTask[%s]: UpdateCluster failed: %v", taskId, err)
+		return err
+	}
+	// import cluster clusterCredential
+	if basicInfo.Cluster.ImportCategory == icommon.KubeConfigImport {
+		err = importClusterCredential(basicInfo)
+		if err != nil {
+			blog.Errorf("ImportClusterNodesTask[%s]: importClusterCredential failed: %v", taskId, err)
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -126,7 +139,21 @@ func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
 }
 
 func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	masterIPs, nodeIPs, err := getClusterInstancesByKubeConfig(data)
+	var (
+		err                error
+		masterIPs, nodeIPs []types.NodeAddress
+	)
+
+	// 通过导入方式执行不同的流程
+	switch data.Cluster.ImportCategory {
+	case icommon.KubeConfigImport:
+		masterIPs, nodeIPs, err = getClusterInstancesByKubeConfig(data)
+	case icommon.MachineImport:
+		masterIPs, nodeIPs, err = getClusterInstancesByK8sOps(data)
+	default:
+		retErr := fmt.Errorf("not supported importCategory: %s", data.Cluster.ImportCategory)
+		return retErr
+	}
 	if err != nil {
 		return err
 	}
@@ -210,6 +237,19 @@ func getNodeIP(node v1.Node) types.NodeAddress {
 	return nodeAddress
 }
 
+func getClusterInstancesByK8sOps(data *cloudprovider.CloudDependBasicInfo) ([]types.NodeAddress,
+	[]types.NodeAddress, error) {
+	k8sOps := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
+	nodeList, err := k8sOps.ListClusterNodes(context.Background(), data.Cluster.GetClusterID())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	masterIPs, nodeIPs := getMasterNodeIps(nodeList)
+	blog.Infof("get cluster[%s] masterIPs[%v] nodeIPs[%v]", data.Cluster.ClusterID, masterIPs, nodeIPs)
+	return masterIPs, nodeIPs, nil
+}
+
 func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) ([]types.NodeAddress,
 	[]types.NodeAddress, error) {
 
@@ -226,19 +266,30 @@ func getClusterInstancesByKubeConfig(data *cloudprovider.CloudDependBasicInfo) (
 	if err != nil {
 		return nil, nil, err
 	}
-
-	masterIPs, nodeIPs := make([]types.NodeAddress, 0), make([]types.NodeAddress, 0)
+	nodes := make([]*v1.Node, 0)
 	for i := range nodeList.Items {
-		ip := getNodeIP(nodeList.Items[i])
-		ok := utils.IsMasterNode(nodeList.Items[i].Labels)
+		nodes = append(nodes, &nodeList.Items[i])
+	}
+
+	masterIPs, nodeIPs := getMasterNodeIps(nodes)
+	blog.Infof("get cluster[%s] masterIPs[%v] nodeIPs[%v]", data.Cluster.ClusterID, masterIPs, nodeIPs)
+	return masterIPs, nodeIPs, nil
+}
+
+func getMasterNodeIps(nodes []*v1.Node) ([]types.NodeAddress, []types.NodeAddress) {
+	masterIPs, nodeIPs := make([]types.NodeAddress, 0), make([]types.NodeAddress, 0)
+
+	for i := range nodes {
+		ip := getNodeIP(*nodes[i])
+		ok := utils.IsMasterNode(nodes[i].Labels)
 		if ok {
 			masterIPs = append(masterIPs, ip)
 			continue
 		}
 		nodeIPs = append(nodeIPs, ip)
 	}
-	blog.Infof("get cluster[%s] masterIPs[%v] nodeIPs[%v]", data.Cluster.ClusterID, masterIPs, nodeIPs)
-	return masterIPs, nodeIPs, nil
+
+	return masterIPs, nodeIPs
 }
 
 func transInstanceIPToNodes(ipList []types.NodeAddress, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {

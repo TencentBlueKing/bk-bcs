@@ -36,7 +36,7 @@ _curl_jq() {
 
   name="jq"
   ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
-  file="${name}-${ver}.xz"
+  file="${name}-${ver}-${ARCH}.xz"
   url=${REPO_URL:-}/${file}
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
@@ -64,6 +64,8 @@ main() {
   done
   jq_ver=$(awk '/jq/{gsub("\"","",$2);print $2;exit}' \
     "${ROOT_DIR}"/env/offline-manifest.yaml)
+
+  utils::get_arch
 
   if ! command -v jq >/dev/null; then
     if [[ -n ${BCS_OFFLINE:-} ]]; then

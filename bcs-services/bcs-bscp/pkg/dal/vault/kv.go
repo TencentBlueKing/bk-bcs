@@ -15,7 +15,9 @@ package vault
 import (
 	"fmt"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -91,14 +93,14 @@ func (s *set) GetKvByVersion(kit *kit.Kit, opt *types.GetKvByVersion) (kvType ta
 
 	kvTypeStr, ok := kv.Data["kv_type"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("failed to get 'kv_type' as a string from kv.Data,"+
-			" err : %v", err)
+		return "", "", errf.Errorf(errf.InvalidRequest, i18n.T(kit, `get 'kv_type' as a string 
+		from kv.Data failed, err: %v`, err))
 	}
 	kvType = table.DataType(kvTypeStr)
 
 	value, ok = kv.Data["value"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("value type assertion failed: err : %v", err)
+		return "", "", errf.Errorf(errf.InvalidRequest, i18n.T(kit, "value type assertion failed, err: %v", err))
 	}
 
 	return kvType, value, nil

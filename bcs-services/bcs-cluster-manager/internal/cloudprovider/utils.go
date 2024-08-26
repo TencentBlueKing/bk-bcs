@@ -392,8 +392,9 @@ func UpdateClusterCredentialByConfig(clusterID string, config *types.Config) err
 		clientKey = string(config.AuthInfos[0].AuthInfo.ClientKeyData)
 	}
 
-	if server == "" || caCertData == "" || (token == "" && (clientCert == "" || clientKey == "")) {
-		return fmt.Errorf("importClusterCredential parse kubeConfig failed: %v", "[server|caCertData|token] null")
+	if server == "" || (token == "" && (clientCert == "" || clientKey == "")) {
+		return fmt.Errorf("importClusterCredential parse kubeConfig "+
+			"failed: %v", "[server|token｜clientCert] empty")
 	}
 
 	// need to handle crypt

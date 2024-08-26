@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/RichardKnop/machinery/v2/log"
+	"github.com/RichardKnop/machinery/v2/retry"
 )
 
 // RecoverPrintStack capture panic and print stack
@@ -101,4 +102,13 @@ func LoopDoFunc(ctx context.Context, do func() error, ops ...LoopOption) error {
 			return err
 		}
 	}
+}
+
+// retryNext 计算重试时间, 基于Fibonacci
+func retryNext(count int) int {
+	start := 1
+	for i := 0; i < count; i++ {
+		start = retry.FibonacciNext(start)
+	}
+	return start
 }
