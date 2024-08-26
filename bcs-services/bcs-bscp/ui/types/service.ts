@@ -14,7 +14,7 @@ export interface ISingleLineKVDIffItem {
   name: string;
   diffType: string;
   is_secret: boolean;
-  secret_visible: boolean;
+  secret_hidden: boolean;
   base: {
     content: string;
   };
@@ -29,7 +29,7 @@ export interface IDiffDetail {
   contentType: 'file' | 'text' | 'singleLineKV';
   id: number | string;
   is_secret: boolean;
-  secret_visible: boolean;
+  secret_hidden: boolean;
   base: {
     content: string | IFileConfigContentSummary;
     language?: string;

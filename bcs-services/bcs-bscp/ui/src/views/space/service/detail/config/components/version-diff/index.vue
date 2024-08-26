@@ -79,7 +79,7 @@
     id: 0,
     contentType: 'text',
     is_secret: false,
-    secret_visible: true,
+    secret_hidden: false,
     current: {
       language: '',
       content: '',

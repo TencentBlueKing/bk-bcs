@@ -12,9 +12,9 @@
           <div class="left-version-content">
             <div class="content-box">
               <div v-if="diffItem.is_secret" class="secret-content">
-                <template v-if="diffItem.secret_visible">
+                <template v-if="!diffItem.secret_hidden">
                   <span>{{ diffItem.isCipherShowValue ? '********' : diffItem.base.content }}</span>
-                  <div v-if="diffItem.secret_visible" class="actions">
+                  <div v-if="!diffItem.secret_hidden" class="actions">
                     <Unvisible
                       v-if="diffItem.isCipherShowValue"
                       class="view-icon"
@@ -30,7 +30,7 @@
           <div class="right-version-content">
             <div class="content-box">
               <div v-if="diffItem.is_secret" class="secret-content">
-                <template v-if="diffItem.secret_visible">
+                <template v-if="!diffItem.secret_hidden">
                   <span>{{ diffItem.isCipherShowValue ? '********' : diffItem.current.content }}</span>
                   <div class="actions">
                     <Unvisible

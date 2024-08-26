@@ -49,7 +49,7 @@
     value: '',
     memo: '',
     secret_type: '',
-    secret_visible: true,
+    secret_hidden: false,
   });
   watch(
     () => props.show,
@@ -61,7 +61,7 @@
           value: '',
           memo: '',
           secret_type: '',
-          secret_visible: true,
+          secret_hidden: false,
         };
         content.value = '';
         isFormChange.value = false;

@@ -119,11 +119,11 @@
 
   onMounted(() => {
     if (!props.isEdit) return;
-    const { secret_type, secret_visible, value } = props.config;
-    secretValue.value = secret_visible ? value : '';
+    const { secret_type, secret_hidden, value } = props.config;
+    secretValue.value = secret_hidden ? '' : value;
     selectType.value = secret_type || 'password';
-    secretUnVisible.value = !secret_visible;
-    initSecretUnVisible.value = !secret_visible;
+    secretUnVisible.value = secret_hidden;
+    initSecretUnVisible.value = secret_hidden;
   });
 
   const selectTypeContent = computed(() => {
@@ -318,7 +318,7 @@
   };
 
   const change = () => {
-    emits('change', { value: secretValue.value, secret_type: selectType.value, visible: !secretUnVisible.value });
+    emits('change', { value: secretValue.value, secret_type: selectType.value, visible: secretUnVisible.value });
   };
 
   const validateCertificate = (pem: string) => {

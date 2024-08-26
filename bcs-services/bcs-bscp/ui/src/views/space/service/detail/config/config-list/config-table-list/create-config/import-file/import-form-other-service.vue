@@ -66,12 +66,19 @@
         all: true,
       };
       const resp = await getAppList(props.bkBizId, query);
+      let currentType = 'any';
       serviceList.value = resp.details.filter((app: IAppItem) => {
         if (isFileType.value) {
           return app.spec.config_type === 'file' && app.id !== props.appId;
         }
         return app.spec.config_type === 'kv' && app.id !== props.appId;
       });
+      if (!isFileType.value) {
+        currentType = resp.details.find((app: IAppItem) => app.id === props.appId)?.spec.data_type || 'any';
+        if (currentType !== 'any') {
+          serviceList.value = serviceList.value.filter((app: IAppItem) => app.spec.data_type === currentType);
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {

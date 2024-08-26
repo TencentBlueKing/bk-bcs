@@ -508,6 +508,16 @@ export default {
   '访问令牌格式不正确（只支持 OAuth2.0 与 JWT 类型的访问令牌）': 'The access token format is incorrect (only OAuth2.0 and JWT type access tokens are supported)',
   新建配置项成功: 'Configuration item created successfully',
   '敏感数据不可见，无法查看实际内容': 'Sensitive data is not visible and cannot view the actual content',
+  '普通文本格式：': 'Normal text format：',
+  'key 数据类型 value 描述（可选）': 'key data_type value description (optional)',
+  '敏感文本格式：': 'Sensitive text format：',
+  'key 数据类型 凭证类型 value 是否可见 描述（可选）': 'key data_type credential_type value visibility description (optional)',
+  '密码示例：': 'Password example：',
+  'API密钥示例：': 'API key example：',
+  '访问令牌示例：': 'Access token example：',
+  '类型必须为 string , number 或者secret': 'Type must be string, number or secret',
+  '敏感信息类型必须为password,secret_key,token': 'Sensitive information type must be password, secret_key, token',
+  是否可见必须为visible或者invisible: 'Visibility must be visible or invisible',
 
   // 分组管理
   新增分组: 'New group',

@@ -41,7 +41,7 @@
         <template #default="{ row }">
           <kvValuePreview
             v-if="row.spec"
-            :is-visible="row.spec.secret_visible"
+            :is-visible="!row.spec.secret_hidden"
             :key="row.id"
             :value="row.spec.value"
             :type="row.spec.kv_type"

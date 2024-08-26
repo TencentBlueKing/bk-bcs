@@ -169,7 +169,7 @@
   }) => {
     localVal.value.value = value;
     localVal.value.secret_type = secret_type;
-    localVal.value.secret_visible = visible;
+    localVal.value.secret_hidden = visible;
     change();
   };
 

@@ -76,13 +76,13 @@
     if (configForm.value!.kv_type === 'number') {
       configForm.value!.value = configForm.value!.value.replace(/^0+(?=\d|$)/, '');
     }
-    const { value, memo, secret_type, secret_visible } = configForm.value as IConfigKvItem;
-    const editForm: { value: string; memo: string; secret_visible?: boolean } = {
+    const { value, memo, secret_type, secret_hidden } = configForm.value as IConfigKvItem;
+    const editForm: { value: string; memo: string; secret_hidden?: boolean } = {
       value,
       memo,
     };
     if (secret_type) {
-      editForm.secret_visible = secret_visible;
+      editForm.secret_hidden = secret_hidden;
     }
     try {
       pending.value = true;

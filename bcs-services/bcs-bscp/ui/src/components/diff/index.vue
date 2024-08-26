@@ -10,7 +10,7 @@
             <div class="panel-name">{{ props.panelName }}</div>
           </slot>
           <div v-if="props.diff.contentType === 'text'" class="action-btn">
-            <template v-if="props.diff.is_secret && props.diff.secret_visible">
+            <template v-if="props.diff.is_secret && !props.diff.secret_hidden">
               <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
               <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
             </template>
@@ -51,7 +51,7 @@
             :base-variables="props.diff.base.variables"
             :base-permission="basePermission"
             :is-secret="props.diff.is_secret"
-            :secret-visible="props.diff.secret_visible"
+            :secret-visible="!props.diff.secret_hidden"
             :is-cipher-show="isCipherShowSecret" />
           <template v-else-if="props.diff.contentType === 'singleLineKV'">
             <SingleLineKV

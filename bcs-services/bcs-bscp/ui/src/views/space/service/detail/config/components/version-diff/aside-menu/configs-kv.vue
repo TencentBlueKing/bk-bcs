@@ -65,7 +65,7 @@
     baseContent: string;
     currentContent: string;
     secretType: string;
-    secret_visible: boolean;
+    secret_hidden: boolean;
   }
 
   interface IDiffGroupData {
@@ -188,7 +188,7 @@
         id: currentItem.id,
         baseContent,
         currentContent: currentItem.spec.value,
-        secret_visible: currentItem.spec.secret_visible,
+        secret_hidden: currentItem.spec.secret_hidden,
       });
     });
     // 计算当前版本删除项
@@ -204,7 +204,7 @@
           id: baseItem.id,
           baseContent: baseItem.spec.value,
           currentContent: '',
-          secret_visible: baseItem.spec.secret_visible,
+          secret_hidden: baseItem.spec.secret_hidden,
         });
       }
     });
@@ -295,13 +295,13 @@
     // 单行配置
     if (SINGLE_LINE_TYPE.includes(config.kvType) || SINGLE_LINE_TYPE.includes(config.secretType)) {
       const configs: ISingleLineKVDIffItem[] = list.map((item) => {
-        const { diffType, id, key, baseContent, currentContent, secretType, secret_visible } = item;
+        const { diffType, id, key, baseContent, currentContent, secretType, secret_hidden } = item;
         return {
           id,
           name: key,
           diffType,
           is_secret: !!secretType,
-          secret_visible,
+          secret_hidden,
           base: {
             content: baseContent,
           },
@@ -321,7 +321,7 @@
       contentType: 'text',
       id: config.id,
       is_secret: !!config.secretType,
-      secret_visible: config.secret_visible,
+      secret_hidden: config.secret_hidden,
       base: {
         content: config.baseContent,
         variables: [],

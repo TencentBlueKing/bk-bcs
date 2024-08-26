@@ -107,47 +107,4 @@
       }
     }
   }
-  .placeholderBox {
-    height: 100%;
-    background-color: #1e1e1e;
-    box-sizing: content-box;
-    .placeholderLine {
-      display: flex;
-      height: 19px;
-      line-height: 19px;
-      .lineNumber {
-        font-family: Consolas, 'Courier New', monospace;
-        width: 64px;
-        text-align: center;
-        color: #979ba5;
-        font-size: 14px;
-      }
-      .lineContent {
-        color: #63656e;
-      }
-    }
-  }
-  .error-msg-container {
-    display: flex;
-    align-items: flex-start;
-    padding: 8px 16px;
-    background: #212121;
-    border-left: 4px solid #b34747;
-    max-height: 60px;
-    overflow: auto;
-    .error-icon {
-      display: flex;
-      align-items: center;
-      color: #b34747;
-      height: 20px;
-      font-size: 12px;
-    }
-    .message {
-      margin-left: 8px;
-      color: #dcdee5;
-      line-height: 20px;
-      font-size: 12px;
-      word-break: break-all;
-    }
-  }
 </style>

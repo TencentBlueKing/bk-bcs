@@ -20,7 +20,7 @@
             </bk-form-item>
             <bk-form-item :label="t('配置项值')">
               <div v-if="props.config.spec.kv_type === 'secret'" class="secret-value">
-                <span v-if="!props.config.spec.secret_visible" class="un-view-value">
+                <span v-if="props.config.spec.secret_hidden" class="un-view-value">
                   {{ t('敏感数据不可见，无法查看实际内容') }}
                 </span>
                 <template v-else>
