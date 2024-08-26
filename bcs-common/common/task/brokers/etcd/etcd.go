@@ -35,6 +35,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+const (
+	pendingTaskPrefix  = "/machinery/v2/broker/pending_tasks"
+	delayedTaskPrefix  = "/machinery/v2/broker/delayed_tasks"
+	delayedTaskLockKey = "/machinery/v2/lock/delayed_tasks"
+)
+
 type etcdBroker struct {
 	common.Broker
 	ctx       context.Context
@@ -196,7 +202,6 @@ func (b *etcdBroker) consume(deliveries <-chan Delivery, concurrency int, taskPr
 	}
 
 	return eg.Wait()
-
 }
 
 // consumeOne processes a single message using TaskProcessor
@@ -236,18 +241,21 @@ func (b *etcdBroker) Publish(ctx context.Context, signature *tasks.Signature) er
 		return fmt.Errorf("JSON marshal error: %s", err)
 	}
 
-	key := fmt.Sprintf("/machinery/v2/broker/pending_tasks/%s/%s", signature.RoutingKey, signature.UUID)
+	key := fmt.Sprintf("%s/%s/%s", pendingTaskPrefix, signature.RoutingKey, signature.UUID)
 
 	// Check the ETA signature field, if it is set and it is in the future,
 	// delay the task
 	if signature.ETA != nil && signature.ETA.After(now) {
-		key = fmt.Sprintf("/machinery/v2/broker/delayed_tasks/eta-%d/%s/%s",
-			signature.ETA.UnixMilli(), signature.RoutingKey, signature.UUID)
-		_, err = b.client.Put(ctx, key, string(msg))
-		return err
+		key = fmt.Sprintf("%s/eta-%d/%s/%s",
+			delayedTaskPrefix, signature.ETA.UnixMilli(), signature.RoutingKey, signature.UUID)
 	}
 
 	_, err = b.client.Put(ctx, key, string(msg))
+	if err != nil {
+		log.ERROR.Printf("Publish queue[%s] new message: %s", key, string(msg))
+	} else {
+		log.DEBUG.Printf("Publish queue[%s] new message: %s", key, string(msg))
+	}
 	return err
 }
 
@@ -282,7 +290,7 @@ func (b *etcdBroker) GetPendingTasks(queue string) ([]*tasks.Signature, error) {
 		queue = b.GetConfig().DefaultQueue
 	}
 
-	key := fmt.Sprintf("/machinery/v2/broker/pending_tasks/%s", queue)
+	key := fmt.Sprintf("%s/%s", pendingTaskPrefix, queue)
 	items, err := b.getTasks(b.ctx, key)
 	if err != nil {
 		return nil, err
@@ -293,9 +301,7 @@ func (b *etcdBroker) GetPendingTasks(queue string) ([]*tasks.Signature, error) {
 
 // GetDelayedTasks 任务统计可使用
 func (b *etcdBroker) GetDelayedTasks() ([]*tasks.Signature, error) {
-	key := "/machinery/v2/broker/delayed_tasks"
-
-	items, err := b.getTasks(b.ctx, key)
+	items, err := b.getTasks(b.ctx, delayedTaskPrefix)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +350,7 @@ func (b *etcdBroker) setAssign(key string, assign bool) bool {
 }
 
 func (b *etcdBroker) listWatchTasks(ctx context.Context, queue string) error {
-	keyPrefix := fmt.Sprintf("/machinery/v2/broker/pending_tasks/%s", queue)
+	keyPrefix := fmt.Sprintf("%s/%s", pendingTaskPrefix, queue)
 
 	// List
 	listCtx, listCancel := context.WithTimeout(ctx, time.Second*10)
@@ -418,15 +424,14 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 	}
 	defer s.Orphan()
 
-	lockKey := "/machinery/v2/lock/delayed_tasks"
-	m := concurrency.NewMutex(s, lockKey)
+	m := concurrency.NewMutex(s, delayedTaskLockKey)
 
 	if err = m.Lock(ctx); err != nil {
 		return err
 	}
 	defer m.Unlock(ctx) // nolint
 
-	keyPrefix := "/machinery/v2/broker/delayed_tasks/eta-"
+	keyPrefix := fmt.Sprintf("%s/eta-", delayedTaskPrefix)
 	end := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	resp, err := b.client.Get(b.ctx, keyPrefix+"0", clientv3.WithRange(keyPrefix+end))
 	if err != nil {
@@ -439,9 +444,10 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 			log.WARNING.Printf("invalid delay task %s, continue", key)
 			continue
 		}
+		pendingKey := fmt.Sprintf("%s/%s/%s", pendingTaskPrefix, parts[6], parts[7])
+
 		cmp := clientv3.Compare(clientv3.ModRevision(key), "=", kv.ModRevision)
 		deleteReq := clientv3.OpDelete(key)
-		pendingKey := fmt.Sprintf("/machinery/v2/broker/pending_tasks/%s/%s", parts[6], parts[7])
 		putReq := clientv3.OpPut(pendingKey, string(kv.Value))
 		c, err := b.client.Txn(b.ctx).If(cmp).Then(deleteReq, putReq).Commit()
 		if err != nil {

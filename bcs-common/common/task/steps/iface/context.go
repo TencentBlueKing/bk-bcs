@@ -14,6 +14,7 @@ package iface
 
 import (
 	"context"
+	"time"
 
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -132,6 +133,14 @@ func (t *Context) SetParams(params map[string]string) error {
 // GetPayload return unmarshal step extras
 func (t *Context) GetPayload(obj interface{}) error {
 	return t.currentStep.GetPayload(obj)
+}
+
+// GetStartTime return step start time
+func (t *Context) GetStartTime() time.Time {
+	if t.currentStep.Start == nil {
+		return time.Time{}
+	}
+	return *t.currentStep.Start
 }
 
 // SetPayload set step extras by json string
