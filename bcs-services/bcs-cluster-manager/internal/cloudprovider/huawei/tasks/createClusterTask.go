@@ -281,7 +281,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		case api.Error:
 			blog.Errorf("checkClusterStatus[%s] cluster[%s] error: %s", taskID, info.Cluster.ClusterID)
 			return fmt.Errorf("checkClusterStatus[%s] status error, reason: %s",
-				info.Cluster.ClusterID, cluster.Status.Reason)
+				info.Cluster.ClusterID, *cluster.Status.Reason)
 		}
 
 		return nil
@@ -297,7 +297,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 }
 
 // CreateCCENodeGroupTask create cce node group
-func CreateCCENodeGroupTask(taskID string, stepName string) error {
+func CreateCCENodeGroupTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -434,7 +434,7 @@ func CreateCCENodeGroupTask(taskID string, stepName string) error {
 }
 
 // CheckCCENodeGroupsStatusTask check cce nodegroups status
-func CheckCCENodeGroupsStatusTask(taskID string, stepName string) error {
+func CheckCCENodeGroupsStatusTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -457,6 +457,13 @@ func CheckCCENodeGroupsStatusTask(taskID string, stepName string) error {
 		ClusterID: clusterID,
 		CloudID:   cloudID,
 	})
+	if err != nil {
+		blog.Errorf("CheckCCENodeGroupsStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err) // nolint
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
 
 	cceCli, err := api.NewCceClient(dependInfo.CmOption)
 	if err != nil {
@@ -646,6 +653,10 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 
 		return nil
 	}, loop.LoopInterval(10*time.Second))
+	if err != nil {
+		blog.Errorf("checkClusterNodesStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
+		return err
+	}
 
 	return nil
 }

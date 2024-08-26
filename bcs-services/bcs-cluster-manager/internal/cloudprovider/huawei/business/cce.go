@@ -18,16 +18,17 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+// DeleteClusterInstance delete cluster instance
 func DeleteClusterInstance(client *api.CceClient, clusterID string, nodes []model.Node) ([]string, error) {
 	success := make([]string, 0)
 	for _, node := range nodes {
@@ -42,7 +43,7 @@ func DeleteClusterInstance(client *api.CceClient, clusterID string, nodes []mode
 	return success, nil
 }
 
-func deleteNode(client *api.CceClient, clusterID string, nodes model.Node) {}
+func deleteNode(client *api.CceClient, clusterID string, nodes model.Node) {} // nolint
 
 // FilterClusterInstanceFromNodesIDs nodeIDs existInCluster or notExistInCluster
 func FilterClusterInstanceFromNodesIDs(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
@@ -133,6 +134,7 @@ func CheckClusterDeletedNodes(ctx context.Context, info *cloudprovider.CloudDepe
 	return nil
 }
 
+// DeleteTkeClusterByClusterId delete cluster by clusterId
 func DeleteTkeClusterByClusterId(ctx context.Context, opt *cloudprovider.CommonOption,
 	clsId string, deleteMode string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)

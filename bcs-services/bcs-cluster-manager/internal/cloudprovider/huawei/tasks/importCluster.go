@@ -88,6 +88,10 @@ func importClusterCredential(info *cloudprovider.CloudDependBasicInfo) error {
 
 		kubeConfig, err := cli.GetClusterKubeConfig(info.Cluster.SystemID,
 			info.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet())
+		if err != nil {
+			return err
+		}
+
 		info.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
 
 		err = cloudprovider.UpdateCluster(info.Cluster)

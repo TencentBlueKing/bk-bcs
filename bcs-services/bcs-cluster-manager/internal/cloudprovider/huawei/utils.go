@@ -271,6 +271,7 @@ func (cn *CreateClusterTaskOption) BuildNodeAnnotationsTaskStep(task *proto.Task
 	task.StepSequence = append(task.StepSequence, nodeSetAnnotationsActionStep.StepMethod+"-"+cn.NodeGroupID)
 }
 
+// BuildInstallGseAgentTaskStep build install gse agent task step
 func (cn *CreateClusterTaskOption) BuildInstallGseAgentTaskStep(task *proto.Task, gseInfo *common.GseInstallInfo,
 	options ...cloudprovider.StepOption) {
 	installGseStep := cloudprovider.InitTaskStep(installGseAgentStep, options...)
@@ -296,7 +297,9 @@ func (cn *CreateClusterTaskOption) BuildInstallGseAgentTaskStep(task *proto.Task
 	task.StepSequence = append(task.StepSequence, installGseAgentStep.StepMethod+"-"+cn.NodeGroupID)
 }
 
-func (cn *CreateClusterTaskOption) BuildTransferHostModuleStep(task *proto.Task, businessID string, moduleID string, masterModuleID string) {
+// BuildTransferHostModuleStep build transfer host module step
+func (cn *CreateClusterTaskOption) BuildTransferHostModuleStep(task *proto.Task,
+	businessID string, moduleID string, masterModuleID string) {
 	transStep := cloudprovider.InitTaskStep(transferHostModuleStep)
 
 	transStep.Params[cloudprovider.BKBizIDKey.String()] = businessID

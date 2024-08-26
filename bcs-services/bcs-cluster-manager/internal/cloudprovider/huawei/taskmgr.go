@@ -95,7 +95,7 @@ func (t *Task) GetAllTask() map[string]interface{} {
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
 	*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("BuildCreateClusterTask cluster info empty")

@@ -27,7 +27,7 @@ import (
 )
 
 // DeleteClusterTask delete cluster task
-func DeleteClusterTask(taskID string, stepName string) error {
+func DeleteClusterTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 	// get task and task current step
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
@@ -76,14 +76,14 @@ func DeleteClusterTask(taskID string, stepName string) error {
 
 	if (clusterStatus == icommon.StatusCreateClusterFailed ||
 		clusterStatus == icommon.StatusDeleteClusterFailed) && dependInfo.Cluster.GetSystemID() != "" {
-		nodes, err := client.ListClusterNodes(dependInfo.Cluster.SystemID)
-		if err != nil {
-			return err
+		nodes, listErr := client.ListClusterNodes(dependInfo.Cluster.SystemID)
+		if listErr != nil {
+			return listErr
 		}
 
-		ids, err := business.DeleteClusterInstance(client, dependInfo.Cluster.SystemID, nodes)
-		if err != nil {
-			blog.Errorf("DeleteClusterTask[%s] DeleteClusterInstance failed: %v", taskID, err)
+		ids, delErr := business.DeleteClusterInstance(client, dependInfo.Cluster.SystemID, nodes)
+		if delErr != nil {
+			blog.Errorf("DeleteClusterTask[%s] DeleteClusterInstance failed: %v", taskID, delErr)
 		} else {
 			blog.Infof("DeleteClusterTask[%s] DeleteClusterInstance success: %v", taskID, ids)
 		}
