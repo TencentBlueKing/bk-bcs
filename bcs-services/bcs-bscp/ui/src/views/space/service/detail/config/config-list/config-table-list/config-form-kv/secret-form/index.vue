@@ -243,42 +243,29 @@
     validateSecretValue();
   };
 
+  // 更新状态的函数
+  const updateStatus = (index: number, status: 'success' | 'warn') => {
+    selectTypeContent.value!.infoList[index].status = status;
+  };
+
   // 校验密钥内容
   const validateSecretValue = () => {
-    if (selectType.value === 'password') {
-      if (secretValue.value.length < 8 || secretValue.value.length > 64) {
-        selectTypeContent.value!.infoList[0].status = 'warn';
-      } else {
-        selectTypeContent.value!.infoList[0].status = 'success';
-      }
-      if (checkSecretFormat()) {
-        selectTypeContent.value!.infoList[1].status = 'success';
-      } else {
-        selectTypeContent.value!.infoList[1].status = 'warn';
-      }
-    } else if (selectType.value === 'secret_key') {
-      if (secretValue.value.length < 16 || secretValue.value.length > 64) {
-        selectTypeContent.value!.infoList[0].status = 'warn';
-      } else {
-        selectTypeContent.value!.infoList[0].status = 'success';
-      }
-      if (checkSecretFormat(false)) {
-        selectTypeContent.value!.infoList[1].status = 'success';
-      } else {
-        selectTypeContent.value!.infoList[1].status = 'warn';
-      }
-    } else if (selectType.value === 'token') {
-      if (secretValue.value.length < 32 || secretValue.value.length > 512) {
-        selectTypeContent.value!.infoList[0].status = 'warn';
-      } else {
-        selectTypeContent.value!.infoList[0].status = 'success';
-      }
-      if (checkSecretFormat(false)) {
-        selectTypeContent.value!.infoList[1].status = 'success';
-      } else {
-        selectTypeContent.value!.infoList[1].status = 'warn';
-      }
-    }
+    const lengthConstraints = {
+      password: { min: 8, max: 64 },
+      secret_key: { min: 16, max: 64 },
+      token: { min: 32, max: 512 },
+    };
+
+    // 类型断言
+    const { min, max } = lengthConstraints[selectType.value as keyof typeof lengthConstraints] || {
+      min: 0,
+      max: Infinity,
+    };
+    const isValidLength = secretValue.value.length >= min && secretValue.value.length <= max;
+    updateStatus(0, isValidLength ? 'success' : 'warn');
+
+    const formatIsValid = checkSecretFormat(selectType.value === 'password');
+    updateStatus(1, formatIsValid ? 'success' : 'warn');
   };
 
   // 判断input框内容格式
