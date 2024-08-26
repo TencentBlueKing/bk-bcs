@@ -166,7 +166,9 @@ func (r *Request) getHeader() http.Header {
 	if r.headers == nil {
 		r.headers = defaultHeader
 	}
-	r.headers.Add("X-Bkapi-Authorization", string(authBytes))
+	if r.headers.Get("X-Bkapi-Authorization") == "" {
+		r.headers.Set("X-Bkapi-Authorization", string(authBytes))
+	}
 	return r.headers
 }
 

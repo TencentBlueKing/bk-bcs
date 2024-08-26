@@ -92,7 +92,7 @@ func (c *Client) SetDefaultHeader(h http.Header) {
 // GetHeader get headers
 func (c *Client) GetHeader() http.Header {
 	authBytes, _ := json.Marshal(c.credential)
-	c.defaultHeader.Add("X-Bkapi-Authorization", string(authBytes))
+	c.defaultHeader.Set("X-Bkapi-Authorization", string(authBytes))
 	return c.defaultHeader
 }
 

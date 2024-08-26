@@ -108,9 +108,9 @@ func (t *ExtraTokenHandler) GetTokenByUserAndClusterID(request *restful.Request,
 	bizResult, err := t.cmdbClient.ESBSearchBusiness("", map[string]interface{}{
 		"bk_biz_id": intBizID,
 	})
-	if bizResult == nil || bizResult.Data == nil || len(bizResult.Data.Info) == 0 {
+	if bizResult == nil || bizResult.Data == nil || len(bizResult.Data.Info) == 0 || err != nil {
 		message := fmt.Sprintf("business %s is not found", businessID)
-		blog.Error(message)
+		blog.Errorf("message: %s, err: %v, result: %v", message, err, bizResult)
 		metrics.ReportRequestAPIMetrics("GetTokenByUserAndClusterID", request.Request.Method, metrics.ErrStatus, start)
 		utils.WriteForbiddenError(response, 400, message)
 		return

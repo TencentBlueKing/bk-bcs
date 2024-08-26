@@ -26,7 +26,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb"
 	"github.com/robfig/cron"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/lock"
@@ -276,10 +275,8 @@ func (t *tokenNotify) requestEsb(method, url string, payload map[string]interfac
 	if payload == nil {
 		return nil, fmt.Errorf("payload can't be nil")
 	}
-	// set payload app parameter
-	payload[esb.EsbRequestPayloadAppcode] = t.appCode
-	payload[esb.EsbRequestPayloadAppsecret] = t.appSecret
 	payloadBytes, _ := json.Marshal(payload)
+	authBytes, _ := json.Marshal(map[string]string{"app_code": t.appCode, "app_secret": t.appSecret})
 	// new request body
 	body := bytes.NewBuffer(payloadBytes)
 	// request url
@@ -289,6 +286,7 @@ func (t *tokenNotify) requestEsb(method, url string, payload map[string]interfac
 	req, _ := http.NewRequest(method, url, body)
 	// set header application/json
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Bkapi-Authorization", string(authBytes))
 	httpClient := &http.Client{}
 	resp, err := httpClient.Do(req)
 	if err != nil {
