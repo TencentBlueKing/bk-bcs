@@ -639,8 +639,11 @@ func (plugin *AppPlugin) syncRefresh(r *http.Request) (*http.Request, *mw.HttpRe
 	// get remote repo last-commit-id
 	lastCommitIDs, err := plugin.getApplicationLastCommitIDs(timeCtx, argoApp)
 	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, errors.Wrapf(err,
-			"get application's source.repo last commit-id failed"))
+		// we cannot check without clone repo if targetRevision is just a commit-hash, just sleep 5 seconds
+		blog.Warnf("RequestID[%s] got last-commit for '%s' failed: %s", ctxutils.
+			RequestID(r.Context()), appName, err)
+		time.Sleep(5 * time.Second)
+		return r, mw.ReturnJSONResponse(argoApp)
 	}
 	blog.Infof("RequestID[%s] got the last-commit-ids: %v", ctxutils.RequestID(timeCtx), lastCommitIDs)
 	// ticker for check application got the latest commit-id

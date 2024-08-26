@@ -176,7 +176,7 @@ type elementMarketBuild struct {
 	ClassType     string      `json:"classType,omitempty"`
 	ExecuteCount  int64       `json:"executeCount,omitempty"`
 	Data          struct {
-		Input map[string]string `json:"input,omitempty"`
+		Input map[string]interface{} `json:"input,omitempty"`
 	} `json:"data"`
 	AdditionalOptions *controlOption `json:"additionalOptions,omitempty"`
 }
