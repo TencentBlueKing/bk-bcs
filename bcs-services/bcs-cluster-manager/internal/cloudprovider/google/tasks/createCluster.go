@@ -94,6 +94,16 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	dependInfo.Cluster.SystemID = clsId
+	err = cloudprovider.UpdateCluster(dependInfo.Cluster)
+	if err != nil {
+		blog.Errorf("createGKECluster[%s] update cluster systemID[%s] failed %s",
+			taskID, dependInfo.Cluster.ClusterID, err.Error())
+		retErr := fmt.Errorf("call createGKECluster updateClusterSystemID[%s] api err: %s",
+			dependInfo.Cluster.ClusterID, err.Error())
+		return retErr
+	}
+
 	// update response information to task common params
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
@@ -118,9 +128,8 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return "", fmt.Errorf("create GkeService failed")
 	}
 
-	info.Cluster.SystemID = strings.ToLower(info.Cluster.ClusterID)
-
-	cluster, err := client.GetCluster(context.Background(), info.Cluster.SystemID)
+	clusterName := strings.ToLower(info.Cluster.ClusterID)
+	cluster, err := client.GetCluster(context.Background(), clusterName)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Not found") && !strings.Contains(err.Error(), "notFound") {
 			return "", fmt.Errorf("createGKECluster[%s] get cluster failed, %v", taskID, err)
@@ -128,7 +137,7 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	}
 
 	if cluster != nil && cluster.Name != "" {
-		return info.Cluster.SystemID, nil
+		return clusterName, nil
 	}
 
 	req, err := generateCreateClusterRequest(info, groups)
@@ -141,17 +150,9 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return "", fmt.Errorf("createGKECluster[%s] create cluster failed, %v", taskID, err)
 	}
 
-	err = cloudprovider.UpdateCluster(info.Cluster)
-	if err != nil {
-		blog.Errorf("createGKECluster[%s] updateClusterSystemID[%s] failed %s",
-			taskID, info.Cluster.ClusterID, err.Error())
-		retErr := fmt.Errorf("call createGKECluster updateClusterSystemID[%s] api err: %s",
-			info.Cluster.ClusterID, err.Error())
-		return "", retErr
-	}
 	blog.Infof("createGKECluster[%s] call createGKECluster UpdateClusterSystemID successful", taskID)
 
-	return info.Cluster.SystemID, nil
+	return clusterName, nil
 }
 
 func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (

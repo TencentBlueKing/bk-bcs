@@ -212,12 +212,10 @@ func (cs *ContainerServiceClient) DeleteClusterNodePool(ctx context.Context, clu
 func (cs *ContainerServiceClient) GetGKEOperation(ctx context.Context, operationName string) (
 	*container.Operation, error) {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/operations/" + operationName
-	blog.Infof("11111111111111111111111111111111111111: %s", parent)
 	op, err := cs.containerServiceClient.Projects.Locations.Operations.Get(parent).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gke client GetGKEOperation failed: %v", err)
 	}
-	blog.Infof("22222222222222222222222222222222222222: %s", op.Status)
 
 	return op, nil
 }

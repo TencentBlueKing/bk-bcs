@@ -157,58 +157,61 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildRegisterClsKubeConfigStep(task)
 	// step7: install cluster watch component
 	common.BuildWatchComponentTaskStep(task, cls, "")
-	// step8: 若需要则设置节点注解
-	common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
-		if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
-			return opt.NodeTemplate.GetAnnotations()
+
+	if cls.ManageType == icommon.ClusterManageTypeIndependent {
+		// step8: 若需要则设置节点注解
+		common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
+			if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
+				return opt.NodeTemplate.GetAnnotations()
+			}
+			return nil
+		}())
+
+		// step9: install gse agent
+		common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+			ClusterId:          cls.ClusterID,
+			BusinessId:         cls.BusinessID,
+			CloudArea:          cls.GetClusterBasicSettings().GetArea(),
+			User:               cls.GetNodeSettings().GetWorkerLogin().GetInitLoginUsername(),
+			Passwd:             cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword(),
+			KeyInfo:            cls.GetNodeSettings().GetWorkerLogin().GetKeyPair(),
+			AllowReviseCloudId: icommon.True,
+		}, cloudprovider.WithStepAllowSkip(true))
+
+		// step10: transfer host module
+		moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+		if moduleID != "" {
+			common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
+				GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
 		}
-		return nil
-	}())
 
-	// step9: install gse agent
-	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-		ClusterId:          cls.ClusterID,
-		BusinessId:         cls.BusinessID,
-		CloudArea:          cls.GetClusterBasicSettings().GetArea(),
-		User:               cls.GetNodeSettings().GetWorkerLogin().GetInitLoginUsername(),
-		Passwd:             cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword(),
-		KeyInfo:            cls.GetNodeSettings().GetWorkerLogin().GetKeyPair(),
-		AllowReviseCloudId: icommon.True,
-	}, cloudprovider.WithStepAllowSkip(true))
-
-	// step10: transfer host module
-	moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
-	if moduleID != "" {
-		common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
-			GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
-	}
-
-	// step11: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
-	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
-		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: cls.ClusterID,
-			Content:   opt.NodeTemplate.UserScript,
-			// dynamic node ips
-			NodeIps:   "",
-			Operator:  opt.Operator,
-			StepName:  common.PostInitStepJob,
-			Translate: common.PostInitJob,
-		})
-	}
-	// business post define sops task or script
-	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
-		err := template.BuildSopsFactory{
-			StepName: template.UserAfterInit,
-			Cluster:  cls,
-			Extra: template.ExtraInfo{
+		// step11: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+		if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
+			common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+				ClusterID: cls.ClusterID,
+				Content:   opt.NodeTemplate.UserScript,
 				// dynamic node ips
-				NodeIPList:      "",
-				NodeOperator:    opt.Operator,
-				ShowSopsUrl:     true,
-				TranslateMethod: template.UserPostInit,
-			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
-		if err != nil {
-			return nil, fmt.Errorf("BuildCreateClusterTask business BuildBkSopsStepAction failed: %v", err)
+				NodeIps:   "",
+				Operator:  opt.Operator,
+				StepName:  common.PostInitStepJob,
+				Translate: common.PostInitJob,
+			})
+		}
+		// business post define sops task or script
+		if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
+			err := template.BuildSopsFactory{
+				StepName: template.UserAfterInit,
+				Cluster:  cls,
+				Extra: template.ExtraInfo{
+					// dynamic node ips
+					NodeIPList:      "",
+					NodeOperator:    opt.Operator,
+					ShowSopsUrl:     true,
+					TranslateMethod: template.UserPostInit,
+				}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
+			if err != nil {
+				return nil, fmt.Errorf("BuildCreateClusterTask business BuildBkSopsStepAction failed: %v", err)
+			}
 		}
 	}
 
