@@ -342,7 +342,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	start := time.Now()
 	// step timeout
-	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
+	stepCtx, stepCancel := GetTimeOutCtx(context.Background(), step.MaxExecutionSeconds)
 	defer stepCancel()
 
 	// task revoke
@@ -353,7 +353,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	// task timeout
 	t := state.task.GetStartTime()
-	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
+	taskCtx, taskCancel := GetDeadlineCtx(context.Background(), &t, state.task.MaxExecutionSeconds)
 	defer taskCancel()
 
 	tmpCh := make(chan error, 1)
@@ -419,6 +419,11 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 		// 整个任务结束
 		return retErr
+
+	case <-m.ctx.Done():
+		// task manager stop
+		log.INFO.Printf("task manager stop, task %s step %s will retry later", taskID, stepName)
+		return tasks.NewErrRetryTaskLater("task manager stop", time.Second*5)
 	}
 }
 
