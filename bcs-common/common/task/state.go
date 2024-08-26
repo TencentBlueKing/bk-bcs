@@ -113,18 +113,29 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 		return nil, fmt.Errorf("step %s is not exist", stepName)
 	}
 
-	// return nil & nil means step had been executed
-	if curStep.IsCompleted() {
-		// step is success, skip
-		return nil, nil
-	}
-
 	defer func() {
 		// update Task in storage
 		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
 			log.ERROR.Printf("task %s update step %s failed: %s", s.task.TaskID, curStep.GetName(), err.Error())
 		}
 	}()
+
+	// return nil & nil means step had been executed
+	if curStep.IsCompleted() {
+		// 如果是重试等, 需要更新任务状态
+		if s.isLastStep(curStep) {
+			if curStep.Status == types.TaskStatusSuccess {
+				s.task.SetStatus(types.TaskStatusSuccess).SetMessage("task finished successfully")
+			} else {
+				s.task.SetStatus(types.TaskStatusFailure).SetMessage(fmt.Sprintf("step %s running failed", curStep.Name))
+			}
+			endTime := time.Now()
+			s.task.SetExecutionTime(s.task.GetStartTime(), endTime).SetLastUpdate(endTime)
+		}
+
+		// step is success, skip
+		return nil, nil
+	}
 
 	// not first time to execute current step
 	if curStep.GetStatus() == types.TaskStatusFailure {
@@ -164,7 +175,7 @@ func (s *State) updateStepSuccess(start time.Time) {
 		SetLastUpdate(endTime)
 
 	// last step
-	if s.isLastStep() {
+	if s.isLastStep(s.step) {
 		s.task.SetEndTime(endTime).
 			SetStatus(types.TaskStatusSuccess).
 			SetMessage("task finished successfully")
@@ -215,7 +226,7 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskTimeOut bo
 	}
 
 	// last step failed and skipOnFailed is true, update task status to success
-	if s.isLastStep() {
+	if s.isLastStep(s.step) {
 		if s.step.GetSkipOnFailed() {
 			s.task.SetStatus(types.TaskStatusSuccess).SetMessage("task finished successfully")
 		} else {
@@ -251,7 +262,7 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskTimeOut bo
 	}
 }
 
-func (s *State) isLastStep() bool {
+func (s *State) isLastStep(step *types.Step) bool {
 	count := len(s.task.Steps)
 	// 没有step默认返回false
 	if count == 0 {
@@ -259,12 +270,12 @@ func (s *State) isLastStep() bool {
 	}
 
 	// 非最后一步
-	if s.step.GetName() != s.task.Steps[count-1].Name {
+	if step.GetName() != s.task.Steps[count-1].Name {
 		return false
 	}
 
 	// 最后一步还需要看重试次数
-	return s.step.IsCompleted()
+	return step.IsCompleted()
 }
 
 // GetCommonParam get common params by key
