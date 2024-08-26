@@ -7,7 +7,7 @@
           <span v-bk-tooltips="$t('generic.msg.info.development')">{{ $t('cluster.create.label.applyResource') }}</span>
         </bk-radio>
         <bk-radio :disabled="disabled" value="existNodes">
-          {{ $t('cluster.create.label.useExitHost') }}
+          {{ $t('manualNode.title.source.existingServer') }}
         </bk-radio>
       </bk-radio-group>
     </bk-form-item>
