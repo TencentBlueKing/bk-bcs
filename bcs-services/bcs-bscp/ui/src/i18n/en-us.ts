@@ -475,6 +475,8 @@ export default {
   '上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the service will reach {n}, exceeding the maximum limit',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
   '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
+  查看全部配置项: 'View all configuration items',
+  只看冲突配置项: 'Only view conflict configuration items     ',
 
   // 分组管理
   新增分组: 'New group',
