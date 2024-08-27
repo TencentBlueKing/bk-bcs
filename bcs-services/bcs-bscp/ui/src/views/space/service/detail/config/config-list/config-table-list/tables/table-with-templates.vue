@@ -20,7 +20,7 @@
           </tr>
         </thead>
         <tbody>
-          <template v-for="(group, index) in tableGroupsData" :key="group.id" v-if="allConfigCount !== 0">
+          <template v-for="(group, index) in showTableGroupData" :key="group.id" v-if="allConfigCount !== 0">
             <tr
               :class="[
                 'config-groups-table-tr',
@@ -33,7 +33,7 @@
                 <div class="configs-group">
                   <div class="name-wrapper" @click="group.expand = !group.expand">
                     <DownShape :class="['fold-icon', { fold: !group.expand }]" />
-                    {{ group.name }}
+                    <span>{{ `${group.name} ( ${group.configs.length} )` }}</span>
                   </div>
                   <div
                     v-if="isUnNamedVersion && group.id !== 0"
@@ -354,7 +354,7 @@
   const { t, locale } = useI18n();
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
-  const { versionData, allConfigCount } = storeToRefs(configStore);
+  const { versionData, allConfigCount, onlyViewConflict } = storeToRefs(configStore);
   const { checkPermBeforeOperate } = serviceStore;
   const { permCheckLoading, hasEditServicePerm, topIds } = storeToRefs(serviceStore);
 
@@ -434,6 +434,18 @@
   // 全选checkbox选中状态
   const isIndeterminate = computed(() => {
     return selectedConfigItems.value.length > 0 && selectedConfigItems.value.length <= configsCount.value;
+  });
+
+  const showTableGroupData = computed(() => {
+    if (onlyViewConflict.value) {
+      return tableGroupsData.value.map((group) => {
+        return {
+          ...group,
+          configs: group.configs.filter((config) => config.is_conflict),
+        };
+      });
+    }
+    return tableGroupsData.value;
   });
 
   const deleteConfigTips = computed(() => {
