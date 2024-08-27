@@ -15,6 +15,7 @@ package huawei
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 
@@ -147,7 +148,7 @@ func clusterNetworkSettingByCCE(cls *cmproto.Cluster, cluster *model.ShowCluster
 				return err
 			}
 
-			cls.NetworkSettings.MaxNodePodNum = uint32(num)
+			cls.NetworkSettings.MaxNodePodNum = uint32(math.Pow(2, float64(32-num)))
 		}
 	}
 

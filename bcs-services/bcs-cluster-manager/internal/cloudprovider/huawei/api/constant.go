@@ -23,6 +23,8 @@ const (
 	Creating = "Creating"
 	// Deleting 删除中
 	Deleting = "Deleting"
+	// Error 错误
+	Error = "Error"
 )
 
 // cluster type
@@ -87,4 +89,27 @@ const (
 	SubnetScopeCenter = "center"
 	// SubnetScopeAz {azId}表示作用域为具体的AZ
 	SubnetScopeAz = "azId"
+)
+
+const (
+	// ClusterInstallAddonsExternalInstall cluster.install.addons.external/install
+	ClusterInstallAddonsExternalInstall = "cluster.install.addons.external/install"
+	// ClusterInstallAddonsExternalInstallValue xxx
+	ClusterInstallAddonsExternalInstallValue = `[{"addonTemplateName":"icagent",
+	"extendParam":{"logSwitch":"false","tDSEnable":"true"}}]`
+
+	// ClusterInstallAddonsInstall cluster.install.addons/install
+	ClusterInstallAddonsInstall = "cluster.install.addons/install"
+	// ClusterInstallAddonsInstallValue xxx
+	ClusterInstallAddonsInstallValue = `[{"addonTemplateName":"coredns",
+	"values":{"flavor":{"name":20000,"recommend_cluster_flavor_types":["xlarge"],
+	"replicas":4,"resources":[{"limitsCpu":"2000m","limitsMem":"2048Mi",
+	"name":"coredns","requestsCpu":"2000m","requestsMem":"2048Mi"}],
+	"category":["CCE","Turbo"]}}},{"addonTemplateName":"everest"},
+	{"addonTemplateName":"node-local-dns"},{"addonTemplateName":"npd"}]`
+)
+
+const (
+	ContainerNetworkModeVpcRouter = "vpc-router"
+	ContainerNetworkModeOverlayL2 = "overlay_l2"
 )
