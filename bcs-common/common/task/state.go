@@ -24,6 +24,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
+// taskEndStatus task结束状态,处理超时和revoke
+type taskEndStatus struct {
+	status   string
+	messsage string
+}
+
 // getTaskStateAndCurrentStep get task state and current step
 func (m *TaskManager) getTaskState(taskId, stepName string) (*State, error) {
 	task, err := GetGlobalStorage().GetTask(context.Background(), taskId)
@@ -189,7 +195,7 @@ func (s *State) updateStepSuccess(start time.Time) {
 }
 
 // updateStepFailure update step status to failure
-func (s *State) updateStepFailure(start time.Time, stepErr error, taskTimeOut bool) {
+func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *taskEndStatus) {
 	defer func() {
 		// update Task in storage
 		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
@@ -214,8 +220,8 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskTimeOut bo
 		SetLastUpdate(endTime)
 
 	// 任务超时, 整体结束
-	if taskTimeOut {
-		s.task.SetStatus(types.TaskStatusTimeout).SetMessage("task timeout")
+	if taskStatus != nil {
+		s.task.SetStatus(taskStatus.status).SetMessage(taskStatus.messsage)
 
 		// callback
 		if s.cbExecutor != nil {

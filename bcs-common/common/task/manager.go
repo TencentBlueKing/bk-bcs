@@ -372,7 +372,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 			state.updateStepSuccess(start)
 			return nil
 		}
-		state.updateStepFailure(start, retErr, false)
+		state.updateStepFailure(start, retErr, nil)
 
 		if step.GetSkipOnFailed() {
 			return nil
@@ -389,7 +389,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	case <-stepCtx.Done():
 		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-		state.updateStepFailure(start, retErr, false)
+		state.updateStepFailure(start, retErr, nil)
 
 		if step.GetSkipOnFailed() {
 			return nil
@@ -407,7 +407,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	case <-revokeCtx.Done():
 		// task revoke
 		retErr := fmt.Errorf("task %s has been revoked", taskID)
-		state.updateStepFailure(start, retErr, false)
+		state.updateStepFailure(start, retErr, &taskEndStatus{types.TaskStatusRevoked, "task has been revoked"})
 
 		// 取消指令, 不再重试
 		return retErr
@@ -415,7 +415,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	case <-taskCtx.Done():
 		// task timeOut
 		retErr := fmt.Errorf("task %s exec timeout", taskID)
-		state.updateStepFailure(start, retErr, true)
+		state.updateStepFailure(start, retErr, &taskEndStatus{types.TaskStatusTimeout, "task timeout"})
 
 		// 整个任务结束
 		return retErr
