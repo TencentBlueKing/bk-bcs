@@ -75,6 +75,7 @@ type handler struct {
 	argoStreamSession *session.ArgoStreamSession
 	terraformSession  *session.TerraformSession
 	analysisSession   *session.AnalysisSession
+	preCheckSession   *session.PreCheckSession
 
 	tracer func(context.Context) error
 }
@@ -96,6 +97,7 @@ func NewMiddlewareHandler(permitChecker permitcheck.PermissionInterface) Middlew
 		projectPermission:   project.NewBCSProjectPermClient(op.IAMClient),
 		clusterPermission:   cluster.NewBCSClusterPermClient(op.IAMClient),
 		namespacePermission: namespace.NewBCSNamespacePermClient(op.IAMClient),
+		preCheckSession:     session.NewPreCheckSession(),
 	}
 }
 
@@ -130,6 +132,7 @@ func (h *handler) HttpWrapper(handler HttpHandler) http.Handler {
 		terraformSession:  h.terraformSession,
 		analysisSession:   h.analysisSession,
 		monitorSession:    h.monitorSession,
+		preCheckSession:   h.preCheckSession,
 	}
 	blog.Infof("[Trace] request handler '%s' add to otel", handlerName)
 	return otelhttp.NewHandler(hw, handlerName)

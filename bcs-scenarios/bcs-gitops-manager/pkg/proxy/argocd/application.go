@@ -176,14 +176,43 @@ func (plugin *AppPlugin) listApplicationsHandler(r *http.Request) (*http.Request
 	if len(projects) == 0 {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'projects' cannot be empty"))
 	}
-	appList, statusCode, err := plugin.middleware.ListApplications(r.Context(), &appclient.ApplicationQuery{
-		Projects: projects,
-	})
-	if err != nil {
-		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list applications by project '%v' from "+
-			"storage failed", projects))
+	query := &appclient.ApplicationQuery{Projects: projects}
+	repo := r.URL.Query().Get("repo")
+	if repo != "" {
+		query.Repo = &repo
 	}
-
+	targetRevision := r.URL.Query().Get("targetRevision")
+	if targetRevision != "" && repo == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query param 'repo' cannot be empty when target revision is not empty"))
+	}
+	selectors := r.URL.Query()["selector"]
+	appList := &v1alpha1.ApplicationList{Items: make([]v1alpha1.Application, 0)}
+	if len(selectors) != 0 {
+		for _, selector := range selectors {
+			query.Selector = &selector
+			apps, statusCode, err := plugin.middleware.ListApplications(r.Context(), query)
+			if err != nil {
+				return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list applications by project '%v' from "+
+					"storage failed", projects))
+			}
+			if len(apps.Items) != 0 {
+				appList.ListMeta = apps.ListMeta
+				appList.TypeMeta = apps.TypeMeta
+				appList.Items = append(appList.Items, apps.Items...)
+			}
+		}
+	} else {
+		apps, statusCode, err := plugin.middleware.ListApplications(r.Context(), query)
+		if err != nil {
+			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "list applications by project '%v' from "+
+				"storage failed", projects))
+		}
+		appList = apps
+	}
+	if targetRevision != "" {
+		filterAppsByTargetRevision(appList, targetRevision, repo)
+	}
 	fields := r.URL.Query().Get("fields")
 	if fields == "" {
 		return r, mw.ReturnJSONResponse(appList)
@@ -765,4 +794,22 @@ func (plugin *AppPlugin) buildRepoAuth(ctx context.Context, repoUrl string) (tra
 		return publicKeys, nil
 	}
 	return nil, errors.Errorf("not https/ssh authentication")
+}
+
+func filterAppsByTargetRevision(appList *v1alpha1.ApplicationList, target string, repo string) {
+	filterApps := make([]v1alpha1.Application, 0)
+	for _, item := range appList.Items {
+		if item.Spec.HasMultipleSources() {
+			for _, source := range item.Spec.Sources {
+				if source.RepoURL == repo && source.TargetRevision == target {
+					filterApps = append(filterApps, item)
+				}
+			}
+			continue
+		}
+		if item.Spec.Source.TargetRevision == target {
+			filterApps = append(filterApps, item)
+		}
+	}
+	appList.Items = filterApps
 }
