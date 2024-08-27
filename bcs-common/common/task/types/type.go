@@ -43,8 +43,6 @@ const (
 	TaskStatusTimeout = "TIMEOUT"
 	// TaskStatusRevoked task has been revoked
 	TaskStatusRevoked = "REVOKED"
-	// TaskStatusForceTerminate force task terminate
-	TaskStatusForceTerminate = "FORCETERMINATE"
 	// TaskStatusNotStarted force task terminate
 	TaskStatusNotStarted = "NOTSTARTED"
 )
@@ -68,13 +66,12 @@ type Task struct {
 	CommonPayload       string            `json:"commonPayload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
-	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Creator             string            `json:"creator"`
 	Updater             string            `json:"updater"`
-	Start               *time.Time        `json:"start"`
-	End                 *time.Time        `json:"end"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
 }
 
@@ -93,8 +90,8 @@ type Step struct {
 	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Start               *time.Time        `json:"start"`
-	End                 *time.Time        `json:"end"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
 }
 

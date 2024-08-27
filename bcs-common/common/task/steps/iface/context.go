@@ -137,10 +137,7 @@ func (t *Context) GetPayload(obj interface{}) error {
 
 // GetStartTime return step start time
 func (t *Context) GetStartTime() time.Time {
-	if t.currentStep.Start == nil {
-		return time.Time{}
-	}
-	return *t.currentStep.Start
+	return t.currentStep.Start
 }
 
 // SetPayload set step extras by json string

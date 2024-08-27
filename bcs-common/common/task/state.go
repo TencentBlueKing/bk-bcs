@@ -91,7 +91,6 @@ func (s *State) isTaskTerminated() bool {
 	status := s.task.GetStatus()
 	if status == types.TaskStatusFailure ||
 		status == types.TaskStatusSuccess ||
-		status == types.TaskStatusForceTerminate ||
 		status == types.TaskStatusRevoked ||
 		status == types.TaskStatusTimeout {
 		return true
@@ -107,8 +106,6 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	case types.TaskStatusInit:
 		s.task.SetStartTime(nowTime)
 	case types.TaskStatusRunning:
-	case types.TaskStatusForceTerminate:
-		return nil, fmt.Errorf("task %s state for terminate", s.task.GetTaskID())
 	default:
 		return nil, fmt.Errorf("task %s is not running, state is %s", s.task.GetTaskID(), s.task.GetStatus())
 	}

@@ -238,30 +238,24 @@ func (s *Step) SetETA(t time.Time) *Step {
 
 // GetStartTime get start time
 func (s *Step) GetStartTime() time.Time {
-	if s.Start == nil {
-		return time.Time{}
-	}
-	return *s.Start
+	return s.Start
 }
 
 // SetStartTime update start time
 func (s *Step) SetStartTime(t time.Time) *Step {
-	s.Start = &t
+	s.Start = t
 	return s
 }
 
 // GetEndTime get end time
 func (s *Step) GetEndTime() time.Time {
-	if s.End == nil {
-		return time.Time{}
-	}
-	return *s.End
+	return s.End
 }
 
 // SetEndTime set end time
 func (s *Step) SetEndTime(t time.Time) *Step {
 	// set end time
-	s.End = &t
+	s.End = t
 	return s
 }
 

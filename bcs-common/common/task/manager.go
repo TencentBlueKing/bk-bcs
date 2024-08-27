@@ -421,9 +421,9 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 		return retErr
 
 	case <-m.ctx.Done():
-		// task manager stop
+		// task manager stop, try later
 		log.INFO.Printf("task manager stop, task %s step %s will retry later", taskID, stepName)
-		return tasks.NewErrRetryTaskLater("task manager stop", time.Second*5)
+		return tasks.NewErrRetryTaskLater("task manager stop", time.Second*10)
 	}
 }
 

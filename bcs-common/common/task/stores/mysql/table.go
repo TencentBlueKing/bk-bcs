@@ -27,6 +27,12 @@ import (
 3. string 类型必须指定类型和长度，字段是索引的，设置为 varchar(191)
 **/
 
+var (
+	// UnixZeroTime mysql 8.0 版本以上不能写入, 使用unix 0时作为zero time
+	// https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+	UnixZeroTime = time.Unix(0, 0)
+)
+
 // TaskRecords 任务记录
 type TaskRecords struct {
 	gorm.Model
@@ -45,8 +51,8 @@ type TaskRecords struct {
 	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Start               *time.Time        `json:"start"`
-	End                 *time.Time        `json:"end"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 	Creator             string            `json:"creator" gorm:"type:varchar(255)"`
 	Updater             string            `json:"updater" gorm:"type:varchar(255)"`
 }
@@ -54,6 +60,17 @@ type TaskRecords struct {
 // TableName ..
 func (t *TaskRecords) TableName() string {
 	return "task_records"
+}
+
+// BeforeCreate ..
+func (t *TaskRecords) BeforeCreate(tx *gorm.DB) (err error) {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
 }
 
 // StepRecords 步骤记录
@@ -73,13 +90,24 @@ type StepRecords struct {
 	MaxRetries          uint32            `json:"maxRetries"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
-	Start               *time.Time        `json:"start"`
-	End                 *time.Time        `json:"end"`
+	Start               time.Time         `json:"start"`
+	End                 time.Time         `json:"end"`
 }
 
 // TableName ..
 func (t *StepRecords) TableName() string {
 	return "task_step_records"
+}
+
+// BeforeCreate ..
+func (t *StepRecords) BeforeCreate(tx *gorm.DB) (err error) {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
 }
 
 // ToStep 类型转换
