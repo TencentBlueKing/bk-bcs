@@ -625,7 +625,7 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 		return resp, fmt.Errorf("fiel upload fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
 
-	resp.ByteSize = uint64(result.ByteSize)
+	resp.ByteSize = uint64(fileInfo.Size())
 	resp.Sign = result.Sha256
 	resp.Md5 = repoRes.Md5
 
