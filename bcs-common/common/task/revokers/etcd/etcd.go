@@ -58,7 +58,7 @@ func New(ctx context.Context, conf *config.Config) (iface.Revoker, error) {
 }
 
 func (r *etcdRevoker) Run() {
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(time.Minute * 10)
 	defer ticker.Stop()
 
 	for {
