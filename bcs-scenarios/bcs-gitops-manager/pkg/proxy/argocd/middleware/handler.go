@@ -173,7 +173,7 @@ func (h *handler) listAuthorizedProjects(ctx context.Context, names []string) (*
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "list projects failed")
 	}
-	projectIDs := make([]string, 0, len(projectList.Items))
+	projects := make(map[string]string)
 	controlledProjects := make(map[string]v1alpha1.AppProject)
 	for i, proj := range projectList.Items {
 		projectID := common.GetBCSProjectID(proj.Annotations)
@@ -184,13 +184,14 @@ func (h *handler) listAuthorizedProjects(ctx context.Context, names []string) (*
 			continue
 		}
 		controlledProjects[projectID] = projectList.Items[i]
-		projectIDs = append(projectIDs, projectID)
+		projects[proj.Name] = projectID
 	}
-	if len(projectIDs) == 0 {
+	if len(projects) == 0 {
+		blog.Warnf("RequestID[%s] get empty projects with query: %v", ctxutils.RequestID(ctx), names)
 		return &v1alpha1.AppProjectList{}, http.StatusOK, nil
 	}
 
-	projectAuth, err := h.listAuthorizedProjectsByID(ctx, projectIDs)
+	projectAuth, err := h.listAuthorizedProjectsByID(ctx, projects)
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "project permission auth center failed")
 	}
@@ -206,15 +207,15 @@ func (h *handler) listAuthorizedProjects(ctx context.Context, names []string) (*
 	return projectList, http.StatusOK, nil
 }
 
-func (h *handler) listAuthorizedProjectsByID(ctx context.Context, projectIDs []string) (map[string]bool, error) {
-	result, err := h.permitChecker.GetProjectMultiPermission(ctx, projectIDs, []permitcheck.RSAction{
+func (h *handler) listAuthorizedProjectsByID(ctx context.Context, projects map[string]string) (map[string]bool, error) {
+	result, err := h.permitChecker.GetProjectMultiPermission(ctx, projects, []permitcheck.RSAction{
 		permitcheck.ProjectViewRSAction})
 	if err != nil {
 		return nil, err
 	}
 	projectAuth := make(map[string]bool)
-	for pid, permits := range result {
-		projectAuth[pid] = permits[permitcheck.ProjectViewRSAction]
+	for projID, permits := range result {
+		projectAuth[projID] = permits[permitcheck.ProjectViewRSAction]
 	}
 	return projectAuth, nil
 }

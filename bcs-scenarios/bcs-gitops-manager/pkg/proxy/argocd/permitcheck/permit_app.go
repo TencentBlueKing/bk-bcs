@@ -118,7 +118,7 @@ func (c *checker) getMultiApplicationMultiActionPermission(ctx context.Context, 
 			return nil, nil, http.StatusInternalServerError, errors.Wrapf(err,
 				"build cluster namespace map failed")
 		}
-		permits, err := c.getBCSNamespaceScopedPermission(ctx, contextGetProjID(ctx), clusterNamespaceMap)
+		permits, err := c.getBCSNamespaceScopedPermission(ctx, proj, contextGetProjID(ctx), clusterNamespaceMap)
 		if err != nil {
 			return nil, nil, http.StatusInternalServerError, errors.Wrapf(err,
 				"auth center failed for project '%s'", contextGetProjName(ctx))
@@ -251,9 +251,10 @@ func (c *checker) CheckApplicationCreate(ctx context.Context, app *v1alpha1.Appl
 	if err != nil {
 		return statusCode, err
 	}
-	permits, err := c.getBCSNamespaceScopedPermission(ctx, contextGetProjID(ctx), map[string]map[string]struct{}{
-		clusterName: {clusterNamespace: struct{}{}},
-	})
+	permits, err := c.getBCSNamespaceScopedPermission(ctx, projectName, contextGetProjID(ctx),
+		map[string]map[string]struct{}{
+			clusterName: {clusterNamespace: struct{}{}},
+		})
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
