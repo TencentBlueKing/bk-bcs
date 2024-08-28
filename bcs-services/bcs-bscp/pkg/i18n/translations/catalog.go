@@ -39,239 +39,270 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"%s and %s path file conflict":                                                        175,
-	"%s sub path is system reserved path, do not allow to use":                            98,
-	"Unnamed Version":                                                                     122,
-	"app %d not found":                                                                    28,
-	"app %s is not file type":                                                             43,
-	"app alias %s already exists":                                                         23,
-	"app is nil":                                                                          114,
-	"app name %s already exists":                                                          22,
-	"app related biz %d is not exist":                                                     30,
-	"app spec is nil":                                                                     147,
-	"app's type can not be updated":                                                       149,
-	"appID can not be 0":                                                                  123,
-	"attachment not set":                                                                  87,
-	"authorize failed":                                                                    172,
-	"batch add templates to template sets failed, err: %s":                                66,
-	"batch create contents failed, err: %s":                                               47,
-	"batch delete config items failed":                                                    16,
-	"batch delete failed":                                                                 19,
-	"batch delete groups failed":                                                          17,
-	"batch update app template binding's failed, err: %s":                                 65,
-	"batch update app template binding's failed, err: %v":                                 71,
-	"business query failed, err: %v":                                                      29,
-	"client ids is empty":                                                                 15,
-	"commit spec's content is empty":                                                      156,
-	"content id can not set":                                                              161,
-	"content signature should be lowercase":                                               163,
-	"count app %d's config items failed, err: %v":                                         118,
-	"count the number of app configs failed, err: %s":                                     77,
-	"count the number of service configurations failed, err: %s":                          42,
-	"create app failed, err: %v":                                                          116,
-	"create data failed, err: %v":                                                         115,
-	"create directory failed, err: %v":                                                    2,
-	"create kv failed, err: %v":                                                           61,
-	"create temporary directory failed, err: %v":                                          3,
-	"db operation failed":                                                                 83,
-	"decompress file failed, exceeding the maximum file limit threshold of %d":            12,
-	"decompress the file. The size of file %s exceeds the maximum limit of %s":            4,
-	"decompression failed, err: %v":                                                       5,
-	"default_val %s is not a number type":                                                 168,
-	"delete app failed, err: %v":                                                          27,
-	"delete app related resources failed, err: %v":                                        26,
-	"delete one app template binding instance by app id failed, err: %s":                  46,
-	"delete one app template variable failed, err: %s":                                    48,
-	"delete template from template sets failed, err: %v":                                  69,
-	"get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: %v":                        170,
-	"get app %d's template binding failed, err: %v":                                       119,
-	"get app fail, key: %s, err: %v":                                                      59,
-	"get app failed, err: %v":                                                             24,
-	"get app template bindings by template set ids, err: %s":                              64,
-	"get app template bindings by template set ids, err: %v":                              70,
-	"get excluded hook failed, err: %s":                                                   55,
-	"get excluded kv failed, err: %s":                                                     63,
-	"get kv (%d) failed, err: %v":                                                         57,
-	"get permission to apply failed, err: %v":                                             173,
-	"get reference template set under this app failed, err: %s":                           51,
-	"get template binding relationships through business and service IDs failed, err: %s": 50,
-	"get template count failed, err: %v":                                                  140,
-	"get template failed, err: %v":                                                        133,
-	"get template release failed, err: %v":                                                135,
-	"get template set count failed, err: %v":                                              138,
-	"get template set data failed, err: %s":                                               67,
-	"get template set failed, err: %s":                                                    74,
-	"get template set failed, err: %v":                                                    137,
+	"%s and %s path file conflict":                                             199,
+	"%s sub path is system reserved path, do not allow to use":                 121,
+	"%s type not supported":                                                    24,
+	"Unnamed Version":                                                          145,
+	"app %d not found":                                                         44,
+	"app %s is not file type":                                                  59,
+	"app alias %s already exists":                                              39,
+	"app is nil":                                                               137,
+	"app name %s already exists":                                               38,
+	"app related biz %d is not exist":                                          46,
+	"app spec is nil":                                                          171,
+	"app's type can not be updated":                                            173,
+	"appID can not be 0":                                                       146,
+	"attachment not set":                                                       110,
+	"authorize failed":                                                         196,
+	"batch add templates to template sets failed, err: %s":                     89,
+	"batch create contents failed, err: %s":                                    63,
+	"batch delete config items failed":                                         17,
+	"batch delete failed":                                                      20,
+	"batch delete groups failed":                                               18,
+	"batch import of KV config failed, err: %v":                                82,
+	"batch update app template binding's failed, err: %s":                      88,
+	"batch update app template binding's failed, err: %v":                      94,
+	"bizID can not be 0":                                                       147,
+	"business query failed, err: %v":                                           45,
+	"clearing draft area failed, err: %v":                                      84,
+	"client ids is empty":                                                      16,
+	"commit spec's content is empty":                                           180,
+	"config item %s format error":                                              27,
+	"config item %s json format error":                                         28,
+	"config item %s kv type error":                                             25,
+	"config item %s secret hidden error":                                       30,
+	"config item %s secret type error, err: %v":                                32,
+	"config item %s value error":                                               33,
+	"config item %s yaml format error":                                         29,
+	"content id can not set":                                                   185,
+	"content signature should be lowercase":                                    187,
+	"count app %d's config items failed, err: %v":                              141,
+	"count the number of app configs failed, err: %s":                          100,
+	"count the number of service configurations failed, err: %s":               58,
+	"create app failed, err: %v":                                               139,
+	"create data failed, err: %v":                                              138,
+	"create directory failed, err: %v":                                         2,
+	"create kv failed, err: %v":                                                77,
+	"create temporary directory failed, err: %v":                               3,
+	"db operation failed":                                                      106,
+	"decompress file failed, exceeding the maximum file limit threshold of %d": 12,
+	"decompress the file. The size of file %s exceeds the maximum limit of %s": 4,
+	"decompression failed, err: %v":                                            5,
+	"default_val %s is not a number type":                                      192,
+	"delete app failed, err: %v":                                               43,
+	"delete app related resources failed, err: %v":                             42,
+	"delete one app template binding instance by app id failed, err: %s":       62,
+	"delete one app template variable failed, err: %s":                         64,
+	"delete template from template sets failed, err: %v":                       92,
+	"format error, please check the key: %s":                                   26,
+	"get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: %v":             194,
+	"get app %d's template binding failed, err: %v":                            142,
+	"get app fail, key: %s, err: %v":                                           75,
+	"get app failed, err: %v":                                                  40,
+	"get app template bindings by template set ids, err: %s":                   87,
+	"get app template bindings by template set ids, err: %v":                   93,
+	"get excluded hook failed, err: %s":                                        71,
+	"get excluded kv failed, err: %s":                                          86,
+	"get kv (%d) failed, err: %v":                                              73,
+	"get permission to apply failed, err: %v":                                  197,
+	"get reference template set under this app failed, err: %s":                67,
+	"get template binding relationships through business and service IDs failed, err: %s": 66,
+	"get template count failed, err: %v":                                                  164,
+	"get template failed, err: %v":                                                        157,
+	"get template release failed, err: %v":                                                159,
+	"get template set count failed, err: %v":                                              162,
+	"get template set data failed, err: %s":                                               90,
+	"get template set failed, err: %s":                                                    97,
+	"get template set failed, err: %v":                                                    161,
 	"get the current number of service config items failed, err: %v":                      11,
-	"grpc status with details failed, err: %v":                                            174,
-	"hook is nil":                      121,
-	"hook name %s already exists":      54,
-	"id can not be set":                144,
+	"grpc status with details failed, err: %v":                                            198,
+	"hook is nil":                      144,
+	"hook name %s already exists":      70,
+	"id can not be set":                168,
 	"id is required":                   0,
-	"id should not be set":             85,
-	"invalid app id":                   166,
-	"invalid argument":                 84,
-	"invalid biz id":                   145,
-	"invalid commit spec's content id": 155,
-	"invalid config item id":           167,
-	"invalid content signature, should be config's sha256 value": 162,
-	"invalid data-type":                       153,
-	"invalid memo, length should <= 200":      100,
-	"invalid name %s, name cannot all be '.'": 109,
-	"invalid name, length should <= 128":      103,
-	"invalid name, length should <= 64":       108,
-	"invalid name, length should >= 1":        102,
-	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                                                      105,
-	"invalid name: %s, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number": 107,
-	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)":                              106,
-	"invalid name: %s, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers":                      104,
-	"invalid namespace, length should <= 128":                                               111,
-	"invalid namespace, length should >= 1":                                                 110,
-	"invalid origin content signature, should be config's sha256 value":                     164,
-	"invalid path %s, path cannot all be '.' ":                                              92,
-	"invalid path, length should <= 1024":                                                   90,
-	"invalid path, length should <= 256":                                                    93,
-	"invalid path, length should >= 1":                                                      89,
-	"invalid path, should start with '/'":                                                   91,
-	"invalid path,path does not conform to the win file path format specification":          94,
-	"invalid reload file path, should <= 128":                                               96,
-	"invalid spec, is nil":                                                                  146,
-	"invalid username, length should <= 32":                                                 113,
-	"invalid username, length should >= 1":                                                  112,
-	"kv type does not match the data type defined in the application":                       60,
-	"list app template bindings by app ids failed, err: %s":                                 73,
-	"list apps by app ids failed, err: %s":                                                  76,
+	"id should not be set":             108,
+	"invalid app id":                   190,
+	"invalid argument":                 107,
+	"invalid biz id":                   169,
+	"invalid commit spec's content id": 179,
+	"invalid config item id":           191,
+	"invalid content signature, should be config's sha256 value": 186,
+	"invalid data-type":                       177,
+	"invalid memo, length should <= 200":      123,
+	"invalid name %s, name cannot all be '.'": 132,
+	"invalid name, length should <= 128":      126,
+	"invalid name, length should <= 64":       131,
+	"invalid name, length should >= 1":        125,
+	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                                                      128,
+	"invalid name: %s, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number": 130,
+	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)":                              129,
+	"invalid name: %s, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers":                      127,
+	"invalid namespace, length should <= 128":                                               134,
+	"invalid namespace, length should >= 1":                                                 133,
+	"invalid origin content signature, should be config's sha256 value":                     188,
+	"invalid path %s, path cannot all be '.' ":                                              115,
+	"invalid path, length should <= 1024":                                                   113,
+	"invalid path, length should <= 256":                                                    116,
+	"invalid path, length should >= 1":                                                      112,
+	"invalid path, should start with '/'":                                                   114,
+	"invalid path,path does not conform to the win file path format specification":          117,
+	"invalid reload file path, should <= 128":                                               119,
+	"invalid spec, is nil":                                                                  170,
+	"invalid username, length should <= 32":                                                 136,
+	"invalid username, length should >= 1":                                                  135,
+	"json format error, err: %v":                                                            22,
+	"kv type does not match the data type defined in the application":                       76,
+	"list app template bindings by app ids failed, err: %s":                                 96,
+	"list apps by app ids failed, err: %s":                                                  99,
 	"list config item failed, err: %v":                                                      10,
+	"list kv failed, err: %v":                                                               81,
 	"list template config failed, err: %v":                                                  7,
-	"list template revisions failed, err: %v":                                               39,
-	"list template sets by template set ids failed, err: %s":                                52,
-	"list template sets by template set ids failed, err: %v":                                32,
-	"list template spaces failed, err: %v":                                                  34,
-	"list templates by tuple failed, err: %v":                                               72,
-	"list templates data failed, err: %s":                                                   79,
+	"list template revisions failed, err: %v":                                               55,
+	"list template sets by template set ids failed, err: %s":                                68,
+	"list template sets by template set ids failed, err: %v":                                48,
+	"list template spaces failed, err: %v":                                                  50,
+	"list templates by tuple failed, err: %v":                                               95,
+	"list templates data failed, err: %s":                                                   102,
 	"list templates failed, err: %v":                                                        14,
-	"list templates of template set failed, err: %v":                                        37,
-	"list templates revisions data failed, err: %s":                                         81,
-	"memo is required, can not be empty":                                                    99,
-	"not support table config type for now":                                                 150,
-	"obtain the number of configuration items":                                              49,
-	"origin content signature should be lowercase":                                          165,
+	"list templates of template set failed, err: %v":                                        53,
+	"list templates revisions data failed, err: %s":                                         104,
+	"memo is required, can not be empty":                                                    122,
+	"not a KV type service":                                                                 80,
+	"not legal JSON data":                                                                   21,
+	"not support table config type for now":                                                 174,
+	"obtain the number of configuration items":                                              65,
+	"origin content signature should be lowercase":                                          189,
 	"read file failed, err: %v":                                                             1,
-	"reload file path is not the absolute path":                                             97,
-	"reload file path is required":                                                          95,
-	"remove the template set bound to the app failed, err: %s":                              53,
-	"resource name '%s' is prefixed with '%s' is reserved name, which is not allows to use": 101,
-	"retrieve the referenced script failed, err: %s":                                        56,
-	"revision not set":                                                                      88,
-	"same template variable name %s already exists":                                         82,
-	"spec not set":             86,
-	"spec should be set":       154,
-	"template %d is not exist": 132,
-	"template data is empty":   80,
-	"template id in %v is not belong to template set id %d": 143,
-	"template id in %v is not exist":                        127,
-	"template release %d is not exist":                      134,
-	"template revision id in %v is not exist":               129,
-	"template set %d is not exist":                          136,
-	"template set %s not found":                             36,
-	"template set data is empty":                            78,
-	"template set id in %v is not exist":                    131,
-	"template space %s not found":                           35,
-	"template space id in %v is not exist":                  126,
-	"template variable name must start with %s":             20,
-	"template version %s in template file %s \n\t\t\t\thas been removed. Please import the set again":            40,
-	"the config file %s already exists in this space and cannot be created again":                                31,
-	"the config file %s under this service already exists and cannot be created again":                           45,
-	"the config item %s under this service already exists and cannot be created again":                           58,
-	"the length of hook ids is %d, it must be within the range of [1,%d]":                                        18,
-	"the length of template variable ids is %d, it must be within the range of [1,%d]":                           21,
-	"the specified type does not match the actual configuration":                                                 25,
-	"the template file %s in the template set \n\t\t\t\t%s has been removed. Please import the set again":        38,
-	"the total number of app %d's config items(including template and non-template)exceeded the limit %d":        120,
-	"the total number of app %s config items(including template and non-template)exceeded the limit %d":          44,
-	"the total number of template set %d's templates exceeded the limit %d":                                      124,
-	"the total number of template set %s templates exceeded the limit %d":                                        75,
-	"the version number %s in the template file %s is not the \n\t\tlatest version. Please import the set again": 41,
-	"there are template sets under the template space, need to delete them first":                                139,
-	"there are templates under the template space, need to delete them first":                                    141,
-	"there is no template file under this template set":                                                          68,
-	"unknown config type: %s":                                          148,
-	"unsupported app reload type: %s":                                  152,
-	"unsupported config type: %s":                                      151,
-	"unsupported file format: %s":                                      159,
-	"unsupported file mode: %s":                                        160,
-	"unsupported variable type: %s":                                    169,
-	"update app failed, err: %s":                                       117,
-	"update app template binding failed, err: %v":                      33,
-	"update kv failed, err: %v":                                        62,
+	"reload file path is not the absolute path":                                             120,
+	"reload file path is required":                                                          118,
+	"remove the template set bound to the app failed, err: %s":                              69,
+	"resource name '%s' is prefixed with '%s' is reserved name, which is not allows to use": 124,
+	"retrieve the referenced script failed, err: %s":                                        72,
+	"revision not set":                                                                      111,
+	"same template variable name %s already exists":                                         105,
+	"save kv failed":                                                                        85,
+	"sensitive data is not visible, unable to view actual content":                          79,
+	"sensitive information cannot be exported":                                              15,
+	"spec not set":             109,
+	"spec should be set":       178,
+	"template %d is not exist": 156,
+	"template data is empty":   103,
+	"template id in %v is not belong to template set id %d": 167,
+	"template id in %v is not exist":                        151,
+	"template release %d is not exist":                      158,
+	"template revision id in %v is not exist":               153,
+	"template set %d is not exist":                          160,
+	"template set %s not found":                             52,
+	"template set data is empty":                            101,
+	"template set id in %v is not exist":                    155,
+	"template space %s not found":                           51,
+	"template space id in %v is not exist":                  150,
+	"template variable name must start with %s":             36,
+	"template version %s in template file %s \n\t\t\t\thas been removed. Please import the set again":                                                                                              56,
+	"the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers": 35,
+	"the certificate format is incorrect, only X.509 format is supported":                                                                                                                          34,
+	"the config file %s already exists in this space and cannot be created again":                                                                                                                  47,
+	"the config file %s under this service already exists and cannot be created again":                                                                                                             61,
+	"the config item %s under this service already exists and cannot be created again":                                                                                                             74,
+	"the key type for config item %s cannot be empty":                                                                                                                                              31,
+	"the length of hook ids is %d, it must be within the range of [1,%d]":                                                                                                                          19,
+	"the length of template variable ids is %d, it must be within the range of [1,%d]":                                                                                                             37,
+	"the specified type does not match the actual configuration":                                                                                                                                   41,
+	"the template file %s in the template set \n\t\t\t\t%s has been removed. Please import the set again":                                                                                          54,
+	"the total number of app %d's config items(including template and non-template)exceeded the limit %d":                                                                                          143,
+	"the total number of app %s config items(including template and non-template)exceeded the limit %d":                                                                                            60,
+	"the total number of template set %d's templates exceeded the limit %d":                                                                                                                        148,
+	"the total number of template set %s templates exceeded the limit %d":                                                                                                                          98,
+	"the type of config item %s is incorrect":                                                                                                                                                      83,
+	"the version number %s in the template file %s is not the \n\t\tlatest version. Please import the set again":                                                                                   57,
+	"there are template sets under the template space, need to delete them first":                                                                                                                  163,
+	"there are templates under the template space, need to delete them first":                                                                                                                      165,
+	"there is no template file under this template set":                                                                                                                                            91,
+	"unknown config type: %s":                                          172,
+	"unsupported app reload type: %s":                                  176,
+	"unsupported config type: %s":                                      175,
+	"unsupported file format: %s":                                      183,
+	"unsupported file mode: %s":                                        184,
+	"unsupported variable type: %s":                                    193,
+	"update app failed, err: %s":                                       140,
+	"update app template binding failed, err: %v":                      49,
+	"update kv failed, err: %v":                                        78,
 	"upload completed":                                                 8,
 	"upload completed, %d failed":                                      9,
 	"upload failed, please make sure the file size does not exceed %s": 13,
 	"upload file failed, err: %v":                                      6,
-	"validate template releases exist failed, err: %v":                 128,
-	"validate template sets exist failed, err: %v":                     130,
-	"validate templates exist failed, err: %v":                         125,
-	"validate templates in a template set failed, err: %v":             142,
-	"value type assertion failed, err: %v":                             171,
-	"verify Unix file paths failed, path: %s, err: %v":                 158,
-	"verify Windows file paths failed, path: %s, err: %v":              157,
+	"validate template releases exist failed, err: %v":                 152,
+	"validate template sets exist failed, err: %v":                     154,
+	"validate templates exist failed, err: %v":                         149,
+	"validate templates in a template set failed, err: %v":             166,
+	"value type assertion failed, err: %v":                             195,
+	"verify Unix file paths failed, path: %s, err: %v":                 182,
+	"verify Windows file paths failed, path: %s, err: %v":              181,
+	"yaml format error, err: %v":                                       23,
 }
 
-var enIndex = []uint32{ // 177 elements
+var enIndex = []uint32{ // 201 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x0000002c, 0x00000050,
 	0x0000007e, 0x000000cd, 0x000000ee, 0x0000010d,
 	0x00000135, 0x00000146, 0x00000165, 0x00000189,
 	0x000001cb, 0x00000217, 0x0000025b, 0x0000027d,
-	0x00000291, 0x000002b2, 0x000002cd, 0x00000317,
-	0x0000032b, 0x00000358, 0x000003af, 0x000003cd,
-	0x000003ec, 0x00000407, 0x00000442, 0x00000472,
-	0x00000490, 0x000004a4, 0x000004c6, 0x000004e9,
+	0x000002a6, 0x000002ba, 0x000002db, 0x000002f6,
+	0x00000340, 0x00000354, 0x00000368, 0x00000386,
+	0x000003a4, 0x000003bd, 0x000003dd, 0x00000407,
+	0x00000426, 0x0000044a, 0x0000046e, 0x00000494,
 	// Entry 20 - 3F
-	0x00000538, 0x00000572, 0x000005a1, 0x000005c9,
-	0x000005e8, 0x00000605, 0x00000637, 0x0000069c,
-	0x000006c7, 0x00000728, 0x00000796, 0x000007d4,
-	0x000007ef, 0x00000857, 0x000008ab, 0x000008f1,
-	0x0000091a, 0x0000094e, 0x00000977, 0x000009ce,
-	0x00000a0b, 0x00000a45, 0x00000a81, 0x00000aa0,
-	0x00000ac5, 0x00000af7, 0x00000b19, 0x00000b6d,
-	0x00000b92, 0x00000bd2, 0x00000bef, 0x00000c0c,
+	0x000004c7, 0x000004f7, 0x00000515, 0x00000559,
+	0x00000612, 0x0000063f, 0x00000696, 0x000006b4,
+	0x000006d3, 0x000006ee, 0x00000729, 0x00000759,
+	0x00000777, 0x0000078b, 0x000007ad, 0x000007d0,
+	0x0000081f, 0x00000859, 0x00000888, 0x000008b0,
+	0x000008cf, 0x000008ec, 0x0000091e, 0x00000983,
+	0x000009ae, 0x00000a0f, 0x00000a7d, 0x00000abb,
+	0x00000ad6, 0x00000b3e, 0x00000b92, 0x00000bd8,
 	// Entry 40 - 5F
-	0x00000c2f, 0x00000c69, 0x00000ca0, 0x00000cd8,
-	0x00000d01, 0x00000d33, 0x00000d69, 0x00000da3,
-	0x00000dda, 0x00000e05, 0x00000e3e, 0x00000e62,
-	0x00000eac, 0x00000ed4, 0x00000f07, 0x00000f22,
-	0x00000f49, 0x00000f60, 0x00000f91, 0x00000fc2,
-	0x00000fd6, 0x00000fe7, 0x00000ffc, 0x00001009,
-	0x0000101c, 0x0000102d, 0x0000104e, 0x00001072,
-	0x00001096, 0x000010c6, 0x000010e9, 0x00001136,
+	0x00000c01, 0x00000c35, 0x00000c5e, 0x00000cb5,
+	0x00000cf2, 0x00000d2c, 0x00000d68, 0x00000d87,
+	0x00000dac, 0x00000dde, 0x00000e00, 0x00000e54,
+	0x00000e79, 0x00000eb9, 0x00000ed6, 0x00000ef3,
+	0x00000f30, 0x00000f46, 0x00000f61, 0x00000f8e,
+	0x00000fb9, 0x00000fe0, 0x00000fef, 0x00001012,
+	0x0000104c, 0x00001083, 0x000010bb, 0x000010e4,
+	0x00001116, 0x0000114c, 0x00001186, 0x000011bd,
 	// Entry 60 - 7F
-	0x00001153, 0x0000117b, 0x000011a5, 0x000011e1,
-	0x00001204, 0x00001227, 0x00001283, 0x000012a4,
-	0x000012c7, 0x00001355, 0x000013a8, 0x0000142a,
-	0x000014c5, 0x000014e7, 0x00001512, 0x00001538,
-	0x00001560, 0x00001585, 0x000015ab, 0x000015b6,
-	0x000015d5, 0x000015f3, 0x00001611, 0x00001643,
-	0x00001677, 0x000016e1, 0x000016ed, 0x000016fd,
-	0x00001710, 0x0000175c, 0x00001788, 0x000017b0,
+	0x000011e8, 0x00001221, 0x00001245, 0x0000128f,
+	0x000012b7, 0x000012ea, 0x00001305, 0x0000132c,
+	0x00001343, 0x00001374, 0x000013a5, 0x000013b9,
+	0x000013ca, 0x000013df, 0x000013ec, 0x000013ff,
+	0x00001410, 0x00001431, 0x00001455, 0x00001479,
+	0x000014a9, 0x000014cc, 0x00001519, 0x00001536,
+	0x0000155e, 0x00001588, 0x000015c4, 0x000015e7,
+	0x0000160a, 0x00001666, 0x00001687, 0x000016aa,
 	// Entry 80 - 9F
-	0x000017d2, 0x00001806, 0x00001831, 0x00001861,
-	0x00001887, 0x000018a3, 0x000018c3, 0x000018e7,
-	0x0000190f, 0x0000192f, 0x00001953, 0x0000197d,
-	0x000019c9, 0x000019ef, 0x00001a37, 0x00001a6f,
-	0x00001aab, 0x00001abd, 0x00001acc, 0x00001ae1,
-	0x00001af1, 0x00001b0c, 0x00001b2a, 0x00001b50,
-	0x00001b6f, 0x00001b92, 0x00001ba4, 0x00001bb7,
-	0x00001bd8, 0x00001bf7, 0x00001c31, 0x00001c68,
+	0x00001738, 0x0000178b, 0x0000180d, 0x000018a8,
+	0x000018ca, 0x000018f5, 0x0000191b, 0x00001943,
+	0x00001968, 0x0000198e, 0x00001999, 0x000019b8,
+	0x000019d6, 0x000019f4, 0x00001a26, 0x00001a5a,
+	0x00001ac4, 0x00001ad0, 0x00001ae0, 0x00001af3,
+	0x00001b06, 0x00001b52, 0x00001b7e, 0x00001ba6,
+	0x00001bc8, 0x00001bfc, 0x00001c27, 0x00001c57,
+	0x00001c7d, 0x00001c99, 0x00001cb9, 0x00001cdd,
 	// Entry A0 - BF
-	0x00001c87, 0x00001ca4, 0x00001cbb, 0x00001cf6,
-	0x00001d1c, 0x00001d5e, 0x00001d8b, 0x00001d9a,
-	0x00001db1, 0x00001dd8, 0x00001df9, 0x00001e36,
-	0x00001e5e, 0x00001e6f, 0x00001e9a, 0x00001ec6,
-	0x00001ee9,
-} // Size: 732 bytes
+	0x00001d05, 0x00001d25, 0x00001d49, 0x00001d73,
+	0x00001dbf, 0x00001de5, 0x00001e2d, 0x00001e65,
+	0x00001ea1, 0x00001eb3, 0x00001ec2, 0x00001ed7,
+	0x00001ee7, 0x00001f02, 0x00001f20, 0x00001f46,
+	0x00001f65, 0x00001f88, 0x00001f9a, 0x00001fad,
+	0x00001fce, 0x00001fed, 0x00002027, 0x0000205e,
+	0x0000207d, 0x0000209a, 0x000020b1, 0x000020ec,
+	0x00002112, 0x00002154, 0x00002181, 0x00002190,
+	// Entry C0 - DF
+	0x000021a7, 0x000021ce, 0x000021ef, 0x0000222c,
+	0x00002254, 0x00002265, 0x00002290, 0x000022bc,
+	0x000022df,
+} // Size: 828 bytes
 
-const enData string = "" + // Size: 7913 bytes
+const enData string = "" + // Size: 8927 bytes
 	"\x02id is required\x02read file failed, err: %[1]v\x02create directory f" +
 	"ailed, err: %[1]v\x02create temporary directory failed, err: %[1]v\x02de" +
 	"compress the file. The size of file %[1]s exceeds the maximum limit of %" +
@@ -281,72 +312,87 @@ const enData string = "" + // Size: 7913 bytes
 	"t the current number of service config items failed, err: %[1]v\x02decom" +
 	"press file failed, exceeding the maximum file limit threshold of %[1]d" +
 	"\x02upload failed, please make sure the file size does not exceed %[1]s" +
-	"\x02list templates failed, err: %[1]v\x02client ids is empty\x02batch de" +
-	"lete config items failed\x02batch delete groups failed\x02the length of " +
-	"hook ids is %[1]d, it must be within the range of [1,%[2]d]\x02batch del" +
-	"ete failed\x02template variable name must start with %[1]s\x02the length" +
-	" of template variable ids is %[1]d, it must be within the range of [1,%[" +
-	"2]d]\x02app name %[1]s already exists\x02app alias %[1]s already exists" +
-	"\x02get app failed, err: %[1]v\x02the specified type does not match the " +
-	"actual configuration\x02delete app related resources failed, err: %[1]v" +
-	"\x02delete app failed, err: %[1]v\x02app %[1]d not found\x02business que" +
-	"ry failed, err: %[1]v\x02app related biz %[1]d is not exist\x02the confi" +
-	"g file %[1]s already exists in this space and cannot be created again" +
-	"\x02list template sets by template set ids failed, err: %[1]v\x02update " +
-	"app template binding failed, err: %[1]v\x02list template spaces failed, " +
-	"err: %[1]v\x02template space %[1]s not found\x02template set %[1]s not f" +
-	"ound\x02list templates of template set failed, err: %[1]v\x02the templat" +
-	"e file %[1]s in the template set \x0a\x09\x09\x09\x09%[2]s has been remo" +
-	"ved. Please import the set again\x02list template revisions failed, err:" +
-	" %[1]v\x02template version %[1]s in template file %[2]s \x0a\x09\x09\x09" +
-	"\x09has been removed. Please import the set again\x02the version number " +
-	"%[1]s in the template file %[2]s is not the \x0a\x09\x09latest version. " +
-	"Please import the set again\x02count the number of service configuration" +
-	"s failed, err: %[1]s\x02app %[1]s is not file type\x02the total number o" +
-	"f app %[1]s config items(including template and non-template)exceeded th" +
-	"e limit %[2]d\x02the config file %[1]s under this service already exists" +
-	" and cannot be created again\x02delete one app template binding instance" +
-	" by app id failed, err: %[1]s\x02batch create contents failed, err: %[1]" +
-	"s\x02delete one app template variable failed, err: %[1]s\x02obtain the n" +
-	"umber of configuration items\x02get template binding relationships throu" +
-	"gh business and service IDs failed, err: %[1]s\x02get reference template" +
-	" set under this app failed, err: %[1]s\x02list template sets by template" +
-	" set ids failed, err: %[1]s\x02remove the template set bound to the app " +
-	"failed, err: %[1]s\x02hook name %[1]s already exists\x02get excluded hoo" +
-	"k failed, err: %[1]s\x02retrieve the referenced script failed, err: %[1]" +
-	"s\x02get kv (%[1]d) failed, err: %[2]v\x02the config item %[1]s under th" +
-	"is service already exists and cannot be created again\x02get app fail, k" +
-	"ey: %[1]s, err: %[2]v\x02kv type does not match the data type defined in" +
-	" the application\x02create kv failed, err: %[1]v\x02update kv failed, er" +
-	"r: %[1]v\x02get excluded kv failed, err: %[1]s\x02get app template bindi" +
-	"ngs by template set ids, err: %[1]s\x02batch update app template binding" +
-	"'s failed, err: %[1]s\x02batch add templates to template sets failed, er" +
-	"r: %[1]s\x02get template set data failed, err: %[1]s\x02there is no temp" +
-	"late file under this template set\x02delete template from template sets " +
-	"failed, err: %[1]v\x02get app template bindings by template set ids, err" +
-	": %[1]v\x02batch update app template binding's failed, err: %[1]v\x02lis" +
-	"t templates by tuple failed, err: %[1]v\x02list app template bindings by" +
-	" app ids failed, err: %[1]s\x02get template set failed, err: %[1]s\x02th" +
-	"e total number of template set %[1]s templates exceeded the limit %[2]d" +
-	"\x02list apps by app ids failed, err: %[1]s\x02count the number of app c" +
-	"onfigs failed, err: %[1]s\x02template set data is empty\x02list template" +
-	"s data failed, err: %[1]s\x02template data is empty\x02list templates re" +
-	"visions data failed, err: %[1]s\x02same template variable name %[1]s alr" +
-	"eady exists\x02db operation failed\x02invalid argument\x02id should not " +
-	"be set\x02spec not set\x02attachment not set\x02revision not set\x02inva" +
-	"lid path, length should >= 1\x02invalid path, length should <= 1024\x02i" +
-	"nvalid path, should start with '/'\x04\x00\x01 +\x02invalid path %[1]s, " +
-	"path cannot all be '.'\x02invalid path, length should <= 256\x02invalid " +
-	"path,path does not conform to the win file path format specification\x02" +
-	"reload file path is required\x02invalid reload file path, should <= 128" +
-	"\x02reload file path is not the absolute path\x02%[1]s sub path is syste" +
-	"m reserved path, do not allow to use\x02memo is required, can not be emp" +
-	"ty\x02invalid memo, length should <= 200\x02resource name '%[1]s' is pre" +
-	"fixed with '%[2]s' is reserved name, which is not allows to use\x02inval" +
-	"id name, length should >= 1\x02invalid name, length should <= 128\x02inv" +
-	"alid name: %[1]s, only allows to include english、numbers、underscore (_)、" +
-	"hyphen (-), and must start and end with an english、numbers\x02invalid na" +
-	"me, length should >= 9 and must start with prefix bk_bscp_ (ignore case)" +
+	"\x02list templates failed, err: %[1]v\x02sensitive information cannot be" +
+	" exported\x02client ids is empty\x02batch delete config items failed\x02" +
+	"batch delete groups failed\x02the length of hook ids is %[1]d, it must b" +
+	"e within the range of [1,%[2]d]\x02batch delete failed\x02not legal JSON" +
+	" data\x02json format error, err: %[1]v\x02yaml format error, err: %[1]v" +
+	"\x02%[1]s type not supported\x02config item %[1]s kv type error\x02forma" +
+	"t error, please check the key: %[1]s\x02config item %[1]s format error" +
+	"\x02config item %[1]s json format error\x02config item %[1]s yaml format" +
+	" error\x02config item %[1]s secret hidden error\x02the key type for conf" +
+	"ig item %[1]s cannot be empty\x02config item %[1]s secret type error, er" +
+	"r: %[2]v\x02config item %[1]s value error\x02the certificate format is i" +
+	"ncorrect, only X.509 format is supported\x02the access token format is i" +
+	"ncorrect. Currently only OAtuh 2.0 and jwt formats \x0a\x09\x09\x09are s" +
+	"upported. The length is 32-512 characters, including uppercase and lower" +
+	"case letters and numbers\x02template variable name must start with %[1]s" +
+	"\x02the length of template variable ids is %[1]d, it must be within the " +
+	"range of [1,%[2]d]\x02app name %[1]s already exists\x02app alias %[1]s a" +
+	"lready exists\x02get app failed, err: %[1]v\x02the specified type does n" +
+	"ot match the actual configuration\x02delete app related resources failed" +
+	", err: %[1]v\x02delete app failed, err: %[1]v\x02app %[1]d not found\x02" +
+	"business query failed, err: %[1]v\x02app related biz %[1]d is not exist" +
+	"\x02the config file %[1]s already exists in this space and cannot be cre" +
+	"ated again\x02list template sets by template set ids failed, err: %[1]v" +
+	"\x02update app template binding failed, err: %[1]v\x02list template spac" +
+	"es failed, err: %[1]v\x02template space %[1]s not found\x02template set " +
+	"%[1]s not found\x02list templates of template set failed, err: %[1]v\x02" +
+	"the template file %[1]s in the template set \x0a\x09\x09\x09\x09%[2]s ha" +
+	"s been removed. Please import the set again\x02list template revisions f" +
+	"ailed, err: %[1]v\x02template version %[1]s in template file %[2]s \x0a" +
+	"\x09\x09\x09\x09has been removed. Please import the set again\x02the ver" +
+	"sion number %[1]s in the template file %[2]s is not the \x0a\x09\x09late" +
+	"st version. Please import the set again\x02count the number of service c" +
+	"onfigurations failed, err: %[1]s\x02app %[1]s is not file type\x02the to" +
+	"tal number of app %[1]s config items(including template and non-template" +
+	")exceeded the limit %[2]d\x02the config file %[1]s under this service al" +
+	"ready exists and cannot be created again\x02delete one app template bind" +
+	"ing instance by app id failed, err: %[1]s\x02batch create contents faile" +
+	"d, err: %[1]s\x02delete one app template variable failed, err: %[1]s\x02" +
+	"obtain the number of configuration items\x02get template binding relatio" +
+	"nships through business and service IDs failed, err: %[1]s\x02get refere" +
+	"nce template set under this app failed, err: %[1]s\x02list template sets" +
+	" by template set ids failed, err: %[1]s\x02remove the template set bound" +
+	" to the app failed, err: %[1]s\x02hook name %[1]s already exists\x02get " +
+	"excluded hook failed, err: %[1]s\x02retrieve the referenced script faile" +
+	"d, err: %[1]s\x02get kv (%[1]d) failed, err: %[2]v\x02the config item %[" +
+	"1]s under this service already exists and cannot be created again\x02get" +
+	" app fail, key: %[1]s, err: %[2]v\x02kv type does not match the data typ" +
+	"e defined in the application\x02create kv failed, err: %[1]v\x02update k" +
+	"v failed, err: %[1]v\x02sensitive data is not visible, unable to view ac" +
+	"tual content\x02not a KV type service\x02list kv failed, err: %[1]v\x02b" +
+	"atch import of KV config failed, err: %[1]v\x02the type of config item %" +
+	"[1]s is incorrect\x02clearing draft area failed, err: %[1]v\x02save kv f" +
+	"ailed\x02get excluded kv failed, err: %[1]s\x02get app template bindings" +
+	" by template set ids, err: %[1]s\x02batch update app template binding's " +
+	"failed, err: %[1]s\x02batch add templates to template sets failed, err: " +
+	"%[1]s\x02get template set data failed, err: %[1]s\x02there is no templat" +
+	"e file under this template set\x02delete template from template sets fai" +
+	"led, err: %[1]v\x02get app template bindings by template set ids, err: %" +
+	"[1]v\x02batch update app template binding's failed, err: %[1]v\x02list t" +
+	"emplates by tuple failed, err: %[1]v\x02list app template bindings by ap" +
+	"p ids failed, err: %[1]s\x02get template set failed, err: %[1]s\x02the t" +
+	"otal number of template set %[1]s templates exceeded the limit %[2]d\x02" +
+	"list apps by app ids failed, err: %[1]s\x02count the number of app confi" +
+	"gs failed, err: %[1]s\x02template set data is empty\x02list templates da" +
+	"ta failed, err: %[1]s\x02template data is empty\x02list templates revisi" +
+	"ons data failed, err: %[1]s\x02same template variable name %[1]s already" +
+	" exists\x02db operation failed\x02invalid argument\x02id should not be s" +
+	"et\x02spec not set\x02attachment not set\x02revision not set\x02invalid " +
+	"path, length should >= 1\x02invalid path, length should <= 1024\x02inval" +
+	"id path, should start with '/'\x04\x00\x01 +\x02invalid path %[1]s, path" +
+	" cannot all be '.'\x02invalid path, length should <= 256\x02invalid path" +
+	",path does not conform to the win file path format specification\x02relo" +
+	"ad file path is required\x02invalid reload file path, should <= 128\x02r" +
+	"eload file path is not the absolute path\x02%[1]s sub path is system res" +
+	"erved path, do not allow to use\x02memo is required, can not be empty" +
+	"\x02invalid memo, length should <= 200\x02resource name '%[1]s' is prefi" +
+	"xed with '%[2]s' is reserved name, which is not allows to use\x02invalid" +
+	" name, length should >= 1\x02invalid name, length should <= 128\x02inval" +
+	"id name: %[1]s, only allows to include english、numbers、underscore (_)、hy" +
+	"phen (-), and must start and end with an english、numbers\x02invalid name" +
+	", length should >= 9 and must start with prefix bk_bscp_ (ignore case)" +
 	"\x02invalid name: %[1]s, only allows to include english、numbers、undersco" +
 	"re (_), and must start with prefix bk_bscp_ (ignore case)\x02invalid nam" +
 	"e: %[1]s, only allows to include Chinese, English,numbers, underscore (_" +
@@ -359,151 +405,166 @@ const enData string = "" + // Size: 7913 bytes
 	"]s\x02count app %[1]d's config items failed, err: %[2]v\x02get app %[1]d" +
 	"'s template binding failed, err: %[2]v\x02the total number of app %[1]d'" +
 	"s config items(including template and non-template)exceeded the limit %[" +
-	"2]d\x02hook is nil\x02Unnamed Version\x02appID can not be 0\x02the total" +
-	" number of template set %[1]d's templates exceeded the limit %[2]d\x02va" +
-	"lidate templates exist failed, err: %[1]v\x02template space id in %[1]v " +
-	"is not exist\x02template id in %[1]v is not exist\x02validate template r" +
-	"eleases exist failed, err: %[1]v\x02template revision id in %[1]v is not" +
-	" exist\x02validate template sets exist failed, err: %[1]v\x02template se" +
-	"t id in %[1]v is not exist\x02template %[1]d is not exist\x02get templat" +
-	"e failed, err: %[1]v\x02template release %[1]d is not exist\x02get templ" +
-	"ate release failed, err: %[1]v\x02template set %[1]d is not exist\x02get" +
-	" template set failed, err: %[1]v\x02get template set count failed, err: " +
-	"%[1]v\x02there are template sets under the template space, need to delet" +
-	"e them first\x02get template count failed, err: %[1]v\x02there are templ" +
-	"ates under the template space, need to delete them first\x02validate tem" +
-	"plates in a template set failed, err: %[1]v\x02template id in %[1]v is n" +
-	"ot belong to template set id %[2]d\x02id can not be set\x02invalid biz i" +
-	"d\x02invalid spec, is nil\x02app spec is nil\x02unknown config type: %[1" +
-	"]s\x02app's type can not be updated\x02not support table config type for" +
-	" now\x02unsupported config type: %[1]s\x02unsupported app reload type: %" +
-	"[1]s\x02invalid data-type\x02spec should be set\x02invalid commit spec's" +
-	" content id\x02commit spec's content is empty\x02verify Windows file pat" +
-	"hs failed, path: %[1]s, err: %[2]v\x02verify Unix file paths failed, pat" +
-	"h: %[1]s, err: %[2]v\x02unsupported file format: %[1]s\x02unsupported fi" +
-	"le mode: %[1]s\x02content id can not set\x02invalid content signature, s" +
-	"hould be config's sha256 value\x02content signature should be lowercase" +
-	"\x02invalid origin content signature, should be config's sha256 value" +
-	"\x02origin content signature should be lowercase\x02invalid app id\x02in" +
-	"valid config item id\x02default_val %[1]s is not a number type\x02unsupp" +
-	"orted variable type: %[1]s\x02get 'kv_type' as a string \x0a\x09\x09from" +
-	" kv.Data failed, err: %[1]v\x02value type assertion failed, err: %[1]v" +
-	"\x02authorize failed\x02get permission to apply failed, err: %[1]v\x02gr" +
-	"pc status with details failed, err: %[1]v\x02%[1]s and %[2]s path file c" +
-	"onflict"
+	"2]d\x02hook is nil\x02Unnamed Version\x02appID can not be 0\x02bizID can" +
+	" not be 0\x02the total number of template set %[1]d's templates exceeded" +
+	" the limit %[2]d\x02validate templates exist failed, err: %[1]v\x02templ" +
+	"ate space id in %[1]v is not exist\x02template id in %[1]v is not exist" +
+	"\x02validate template releases exist failed, err: %[1]v\x02template revi" +
+	"sion id in %[1]v is not exist\x02validate template sets exist failed, er" +
+	"r: %[1]v\x02template set id in %[1]v is not exist\x02template %[1]d is n" +
+	"ot exist\x02get template failed, err: %[1]v\x02template release %[1]d is" +
+	" not exist\x02get template release failed, err: %[1]v\x02template set %[" +
+	"1]d is not exist\x02get template set failed, err: %[1]v\x02get template " +
+	"set count failed, err: %[1]v\x02there are template sets under the templa" +
+	"te space, need to delete them first\x02get template count failed, err: %" +
+	"[1]v\x02there are templates under the template space, need to delete the" +
+	"m first\x02validate templates in a template set failed, err: %[1]v\x02te" +
+	"mplate id in %[1]v is not belong to template set id %[2]d\x02id can not " +
+	"be set\x02invalid biz id\x02invalid spec, is nil\x02app spec is nil\x02u" +
+	"nknown config type: %[1]s\x02app's type can not be updated\x02not suppor" +
+	"t table config type for now\x02unsupported config type: %[1]s\x02unsuppo" +
+	"rted app reload type: %[1]s\x02invalid data-type\x02spec should be set" +
+	"\x02invalid commit spec's content id\x02commit spec's content is empty" +
+	"\x02verify Windows file paths failed, path: %[1]s, err: %[2]v\x02verify " +
+	"Unix file paths failed, path: %[1]s, err: %[2]v\x02unsupported file form" +
+	"at: %[1]s\x02unsupported file mode: %[1]s\x02content id can not set\x02i" +
+	"nvalid content signature, should be config's sha256 value\x02content sig" +
+	"nature should be lowercase\x02invalid origin content signature, should b" +
+	"e config's sha256 value\x02origin content signature should be lowercase" +
+	"\x02invalid app id\x02invalid config item id\x02default_val %[1]s is not" +
+	" a number type\x02unsupported variable type: %[1]s\x02get 'kv_type' as a" +
+	" string \x0a\x09\x09from kv.Data failed, err: %[1]v\x02value type assert" +
+	"ion failed, err: %[1]v\x02authorize failed\x02get permission to apply fa" +
+	"iled, err: %[1]v\x02grpc status with details failed, err: %[1]v\x02%[1]s" +
+	" and %[2]s path file conflict"
 
-var zhIndex = []uint32{ // 177 elements
+var zhIndex = []uint32{ // 201 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x0000002e, 0x0000004d,
 	0x00000072, 0x000000be, 0x000000d7, 0x000000f6,
 	0x0000011b, 0x00000128, 0x00000143, 0x00000165,
-	0x00000165, 0x000001a7, 0x000001da, 0x000001ff,
-	0x00000213, 0x0000022f, 0x00000248, 0x00000288,
-	0x0000029b, 0x000002c5, 0x0000030b, 0x00000328,
-	0x00000345, 0x00000364, 0x0000038c, 0x000003b7,
-	0x000003d6, 0x000003f3, 0x00000412, 0x00000438,
+	0x00000199, 0x000001db, 0x0000020e, 0x00000233,
+	0x0000024c, 0x00000260, 0x0000027c, 0x00000295,
+	0x000002d5, 0x000002e8, 0x000002fc, 0x0000031d,
+	0x0000033e, 0x00000354, 0x00000371, 0x00000394,
+	0x000003b1, 0x000003d2, 0x000003f3, 0x00000422,
 	// Entry 20 - 3F
-	0x00000476, 0x000004ac, 0x000004d7, 0x000004fc,
-	0x00000519, 0x00000536, 0x00000567, 0x000005b4,
-	0x000005d9, 0x00000626, 0x00000679, 0x000006a4,
-	0x000006c7, 0x00000738, 0x00000778, 0x000007a3,
-	0x000007c8, 0x000007ed, 0x00000803, 0x00000845,
-	0x0000087c, 0x000008b2, 0x000008d1, 0x000008ee,
-	0x00000919, 0x00000941, 0x00000966, 0x000009a1,
-	0x000009cc, 0x00000a06, 0x00000a21, 0x00000a3c,
+	0x0000044e, 0x0000047d, 0x00000497, 0x000004c3,
+	0x00000534, 0x0000055e, 0x000005a4, 0x000005c1,
+	0x000005de, 0x000005fd, 0x00000625, 0x00000650,
+	0x0000066f, 0x0000068c, 0x000006ab, 0x000006d1,
+	0x0000070e, 0x00000744, 0x0000076f, 0x00000794,
+	0x000007b1, 0x000007ce, 0x000007ff, 0x0000084c,
+	0x00000871, 0x000008be, 0x00000911, 0x0000093c,
+	0x0000095f, 0x000009d0, 0x00000a10, 0x00000a3b,
 	// Entry 40 - 5F
-	0x00000a63, 0x00000a9c, 0x00000acd, 0x00000afb,
-	0x00000b23, 0x00000b45, 0x00000b76, 0x00000baf,
-	0x00000be0, 0x00000bff, 0x00000c35, 0x00000c57,
-	0x00000c9e, 0x00000cc8, 0x00000cf3, 0x00000d0c,
-	0x00000d31, 0x00000d44, 0x00000d6f, 0x00000d99,
-	0x00000da8, 0x00000db5, 0x00000dca, 0x00000dde,
-	0x00000df8, 0x00000e10, 0x00000e30, 0x00000e53,
-	0x00000e75, 0x00000eac, 0x00000ece, 0x00000f07,
+	0x00000a60, 0x00000a85, 0x00000a9b, 0x00000add,
+	0x00000b14, 0x00000b4a, 0x00000b69, 0x00000b86,
+	0x00000bb1, 0x00000bd9, 0x00000bfe, 0x00000c39,
+	0x00000c64, 0x00000c9e, 0x00000cb9, 0x00000cd4,
+	0x00000d05, 0x00000d1d, 0x00000d3e, 0x00000d65,
+	0x00000d88, 0x00000daa, 0x00000db9, 0x00000de0,
+	0x00000e19, 0x00000e4a, 0x00000e78, 0x00000ea0,
+	0x00000ec2, 0x00000ef3, 0x00000f2c, 0x00000f5d,
 	// Entry 60 - 7F
-	0x00000f26, 0x00000f54, 0x00000f7f, 0x00000fb5,
-	0x00000fd6, 0x00000ff8, 0x00001049, 0x00001069,
-	0x00001089, 0x00001110, 0x00001163, 0x000011dc,
-	0x00001275, 0x00001296, 0x000012c8, 0x000012ee,
-	0x00001316, 0x00001339, 0x0000135d, 0x0000136a,
-	0x00001383, 0x000013a2, 0x000013c1, 0x000013f3,
-	0x00001429, 0x00001479, 0x00001489, 0x00001499,
-	0x000014a9, 0x000014f2, 0x0000151d, 0x00001543,
+	0x00000f7c, 0x00000fb2, 0x00000fd4, 0x0000101b,
+	0x00001045, 0x00001070, 0x00001089, 0x000010ae,
+	0x000010c1, 0x000010ec, 0x00001116, 0x00001125,
+	0x00001132, 0x00001147, 0x0000115b, 0x00001175,
+	0x0000118d, 0x000011ad, 0x000011d0, 0x000011f2,
+	0x00001229, 0x0000124b, 0x00001284, 0x000012a3,
+	0x000012d1, 0x000012fc, 0x00001332, 0x00001353,
+	0x00001375, 0x000013c6, 0x000013e6, 0x00001406,
 	// Entry 80 - 9F
-	0x00001563, 0x00001594, 0x000015ba, 0x000015eb,
-	0x00001611, 0x00001628, 0x00001647, 0x00001664,
-	0x00001689, 0x000016a6, 0x000016c8, 0x000016f3,
-	0x00001723, 0x00001748, 0x00001772, 0x000017a3,
-	0x000017d8, 0x000017e8, 0x000017fd, 0x0000180a,
-	0x0000181d, 0x0000183b, 0x00001854, 0x00001870,
-	0x00001891, 0x000018b2, 0x000018cb, 0x000018d8,
-	0x000018eb, 0x000018f8, 0x00001933, 0x0000196b,
+	0x0000148d, 0x000014e0, 0x00001559, 0x000015f2,
+	0x00001613, 0x00001645, 0x0000166b, 0x00001693,
+	0x000016b6, 0x000016da, 0x000016e7, 0x00001700,
+	0x0000171f, 0x0000173e, 0x00001770, 0x000017a6,
+	0x000017f6, 0x00001806, 0x00001816, 0x00001826,
+	0x00001826, 0x0000186f, 0x0000189a, 0x000018c0,
+	0x000018e0, 0x00001911, 0x00001937, 0x00001968,
+	0x0000198e, 0x000019a5, 0x000019c4, 0x000019e1,
 	// Entry A0 - BF
-	0x0000198c, 0x000019ad, 0x000019ba, 0x000019e9,
-	0x000019ff, 0x00001a37, 0x00001a53, 0x00001a65,
-	0x00001a7a, 0x00001a9f, 0x00001ac0, 0x00001b01,
-	0x00001b23, 0x00001b30, 0x00001b4f, 0x00001b79,
-	0x00001b9c,
-} // Size: 732 bytes
+	0x00001a06, 0x00001a23, 0x00001a45, 0x00001a70,
+	0x00001aa0, 0x00001ac5, 0x00001aef, 0x00001b20,
+	0x00001b55, 0x00001b65, 0x00001b7a, 0x00001b87,
+	0x00001b9a, 0x00001bb8, 0x00001bd1, 0x00001bed,
+	0x00001c0e, 0x00001c2f, 0x00001c48, 0x00001c55,
+	0x00001c68, 0x00001c75, 0x00001cb0, 0x00001ce8,
+	0x00001d09, 0x00001d2a, 0x00001d37, 0x00001d66,
+	0x00001d7c, 0x00001db4, 0x00001dd0, 0x00001de2,
+	// Entry C0 - DF
+	0x00001df7, 0x00001e1c, 0x00001e3d, 0x00001e7e,
+	0x00001ea0, 0x00001ead, 0x00001ecc, 0x00001ef6,
+	0x00001f19,
+} // Size: 828 bytes
 
-const zhData string = "" + // Size: 7068 bytes
+const zhData string = "" + // Size: 7961 bytes
 	"\x02id不能为空\x02读取文件失败, err: %[1]v\x02创建目录失败, err: %[1]v\x02创建临时目录失败, err:" +
 	" %[1]v\x02解压文件失败, 文件 %[1]s 的大小超过了最大限制阈值 %[2]s\x02解压失败, err: %[1]v\x02上传文" +
 	"件失败, err: %[1]v\x02获取模板配置失败, err: %[1]v\x02上传完成\x02上传完成, %[1]d 失败\x02获" +
-	"取配置项失败, err: %[1]v\x02解压文件失败, 超过了文件数量最大限制阈值 %[1]d\x02上传失败, 请确保文件大小不超过 " +
-	"%[1]s\x02获取模板数据失败, err: %[1]v\x02客户端 id 为空\x02批量删除配置项失败\x02批量删除群组失败\x02脚" +
-	"本id列表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02批量删除失败\x02模版变量名必须以%[1]s前缀开头\x02全局变" +
-	"量id列表的长度为%[1]d, 长度范围必须为[1,%[2]d]\x02服务名称 %[1]s 已存在\x02服务别名 %[1]s 已存在" +
-	"\x02获取服务失败, err: %[1]v\x02指定的类型与实际配置不匹配\x02删除服务相关资源失败, err: %[1]v\x02删除服" +
-	"务失败, err: %[1]v\x02ID为%[1]d的服务不存在\x02业务查询失败, err: %[1]v\x02服务相关的业务 %[1" +
-	"]d 不存在\x02此空间下配置文件 %[1]s 已存在，无法重复创建\x02按模板套餐ID列出模板套餐失败, err: %[1]v\x02更新" +
-	"服务模板绑定失败, err: %[1]v\x02列出模板空间失败, err: %[1]v\x02模板空间 %[1]s 不存在\x02模板套餐" +
-	" %[1]s 不存在\x02获取模板套餐下的模板失败, err: %[1]v\x02模板套餐 %[2]s 中的模板文件 %[1]s 被移除, 请" +
-	"重新导入套餐\x02获取模板版本失败, err: %[1]v\x02模板文件 %[2]s 中的模板版本 %[1]s 被移除, 请重新导入套餐" +
-	"\x02模板文件 %[2]s 中的版本号 %[1]s 不是最新版本, 请重新导入套餐\x02统计服务配置数量失败, err: %[1]s\x02" +
-	"该服务 %[1]s 不是文件类型\x02服务 %[1]s 的配置项总数（包括模板和非模板）超过单服务最大配置文件数量限制 %[2]d\x02" +
-	"此服务下的配置文件 %[1]s 已存在, 无法重复创建\x02移除服务模板套餐失败, err: %[1]s\x02批量创建内容失败, err" +
-	": %[1]s\x02删除模板变量失败, err: %[1]s\x02获取配置项数量\x02通过业务和服务ID获取模板绑定关系失败, err: " +
-	"%[1]s\x02获取该服务下的引用模板集失败, err: %[1]s\x02按模板套餐ID列出模板套餐失败, err: %[1]s\x02移除" +
-	"套餐失败, err: %[1]s\x02脚本名称 %[1]s 已存在\x02获取排除后的脚本失败, err: %[1]s\x02检索引用的脚" +
-	"本失败, err: %[1]s\x02获取 kv (%[1]d) 失败, err: %[2]v\x02该服务下的配置项%[1]s已存在, 无" +
-	"法重复创建\x02获取服务失败, key: %[1]s, err: %[2]v\x02kv 类型与服务类型中定义的数据类型不匹配\x02创建" +
-	"kv失败, err: %[1]v\x02更新kv失败, err: %[1]v\x02获取排除后的kv失败, err: %[1]s\x02按模板集" +
-	"ID获取应用程序模板绑定, err: %[1]s\x02批量更新应用模板绑定失败, err: %[1]s\x02模板集批量添加模板失败, err" +
-	": %[1]s\x02获取模板集数据失败, err: %[1]s\x02此模板集下没有模板文件\x02从模板套餐中删除模板失败, err: %[" +
-	"1]v\x02按模板集ID获取应用程序模板绑定, err: %[1]v\x02批量更新应用模板绑定失败, err: %[1]v\x02列出模板失" +
-	"败, err: %[1]v\x02按服务ID列出应用模板绑定失败, err: %[1]s\x02获取模板集失败, err: %[1]s" +
-	"\x02模板套餐 %[1]s 超过单套餐最大配置文件数量限制 %[2]d\x02按服务ID列出服务失败, err: %[1]s\x02统计服务配" +
-	"置数量失败, err: %[1]s\x02模板套餐数据为空\x02列出模板数据失败, err: %[1]s\x02模板数据为空\x02列出模" +
-	"板版本数据失败, err: %[1]s\x02同名的模版变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不应该被设置" +
-	"\x02spec没有被设置\x02attachment没有被设置\x02revision没有被设置\x02路径无效, 长度应为 >= 1\x02" +
-	"路径无效, 长度应为 <= 1024\x02路径无效, 应以“/”开头\x04\x00\x01 2\x02路径 %[1]s 无效, 路径不能" +
-	"全部为“.”\x02路径无效, 长度应为 <= 256\x02路径无效, 路径不符合win文件路径格式规范\x02需要重新加载文件路径" +
-	"\x02重新加载文件路径无效, 应该 <= 128\x02重新加载文件路径不是绝对路径\x02%[1]s 子路径为系统保留路径, 不允许使用" +
-	"\x02描述为必填项, 不能为空\x02描述无效, 长度应为 <= 200\x02资源名称“%[1]s”以“%[2]s”为前缀, 是保留名称, " +
-	"不允许使用\x02名称无效, 长度应为 >= 1\x02无效名称, 长度应该<=128\x02无效名称：%[1]s, 只允许包含英文、数字、" +
-	"下划线（_）、连字符（-）, 且必须以英文、数字开头和结尾\x02无效名称, 长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）" +
-	"\x02无效名称：%[1]s, 只允许英文、数字、下划线（_）, 且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, " +
-	"只允许包含中文、英文、数字、下划线（_）、连字符（-）, 且必须以中文、英文或数字开头和结尾\x02名称无效, 长度应为 <= 64\x02" +
-	"名称 %[1]s 无效, 名称不能全部为“.”\x02命名空间无效, 长度应为 >= 1\x02命名空间无效, 长度应为 <= 128" +
-	"\x02用户名无效, 长度应为 >= 1\x02用户名无效, 长度应为 <= 32\x02服务为空\x02创建失败, err: %[1]v" +
-	"\x02创建服务失败, err: %[1]v\x02更新服务失败, err: %[1]s\x02统计服务 %[1]d 的配置项失败, err: " +
-	"%[2]v\x02获取服务 %[1]d 的模板绑定失败,  err: %[2]v\x02服务 %[1]d 的配置项总数（包括模板和非模板）超出限" +
-	"制 %[2]d\x02脚本不存在\x02未命名版本\x02appID不能为0\x02模板套餐 %[1]d's 超过单套餐最大配置文件数量限制" +
-	" %[2]d\x02验证模板是否存在失败, err: %[1]v\x02%[1]v 中的模板空间 ID 不存在\x02%[1]v 中的模板 ID" +
-	" 不存在\x02验证模板版本是否存在失败, err: %[1]v\x02%[1]v 中的模板版本 ID 不存在\x02验证模板套餐是否存在失败," +
-	" err: %[1]v\x02%[1]v 中的模板套餐 ID 不存在\x02模板 %[1]d 不存在\x02获取模板失败, err: %[1]v" +
-	"\x02模板版本 %[1]d 不存在\x02获取模板版本失败, err: %[1]v\x02模板套餐 %[1]d 不存在\x02获取模板集失败," +
-	" err: %[1]v\x02统计模板套餐数量失败, err: %[1]v\x02模板空间下有模板套餐, 需要先删除\x02获取模板数量失败, " +
-	"err: %[1]v\x02模板空间下有模板, 需要先删除\x02验证模板套餐中的模板失败, err: %[1]v\x02%[1]v 中的模板 " +
-	"ID 不属于模板套餐 ID %[2]d\x02ID 不能为空\x02无法验证业务ID\x02参数为空\x02服务参数为空\x02未知的配置类型：" +
-	"%[1]s\x02服务类型不能编辑\x02暂不支持表配置类型\x02不支持的配置类型：%[1]s\x02不支持的服务类型：%[1]s\x02无法" +
-	"验证数据类型\x02参数为空\x02无法验证参数\x02参数为空\x02验证 Windows 文件路径失败, path: %[1]s, er" +
-	"r: %[2]v\x02验证 Unix 文件路径失败, path: %[1]s, err: %[2]v\x02不支持的文件格式：%[1]s" +
-	"\x02不支持的文件模式：%[1]s\x02参数为空\x02内容签名无效, 应为配置的 sha256 值\x02内容签名应小写\x02无效的原始" +
-	"内容签名, 应为配置的 sha256 值\x02原始内容签名应小写\x02无效的服务ID\x02无效的配置项ID\x02default_va" +
-	"l %[1]s 不是数字类型\x02不支持的变量类型：%[1]s\x02从 kv.Data 获取“kv_type”作为字符串失败, err: %" +
-	"[1]v\x02值类型断言失败, err: %[1]v\x02授权失败\x02获取权限失败, err: %[1]v\x02grpc 状态详细信息" +
-	"失败, err: %[1]v\x02%[1]s 与 %[2]s 路径文件冲突"
+	"取配置项失败, err: %[1]v\x02获取当前服务配置项数量失败, err: %[1]v\x02解压文件失败, 超过了文件数量最大限制" +
+	"阈值 %[1]d\x02上传失败, 请确保文件大小不超过 %[1]s\x02获取模板数据失败, err: %[1]v\x02敏感信息无法导出" +
+	"\x02客户端 id 为空\x02批量删除配置项失败\x02批量删除群组失败\x02脚本id列表的长度为%[1]d, 长度范围必须为[1,%[2" +
+	"]d]\x02批量删除失败\x02JSON数据不合法\x02json 格式化错误, err: %[1]v\x02yaml 格式化错误, err:" +
+	" %[1]v\x02%[1]s 类型不支持\x02配置项 %[1]s 类型错误\x02格式错误, 请检查键：%[1]s\x02配置项 %[1]s" +
+	" 格式错误\x02配置项 %[1]s json格式错误\x02配置项 %[1]s yaml格式错误\x02配置项 %[1]s 密钥是否显示设置错" +
+	"误\x02配置项 %[1]s 的密钥类型不能为空\x02配置项 %[1]s 密钥类型错误, err: %[2]v\x02配置项 %[1]s " +
+	"值错误\x02证书格式不正确, 仅支持X.509格式\x02token格式错误, 目前仅支持OAuth2.0和jwt格式, 长度为32-51" +
+	"2个字符, 包括大小写字母和数字\x02模版变量名必须以%[1]s前缀开头\x02全局变量id列表的长度为%[1]d, 长度范围必须为[1,%[" +
+	"2]d]\x02服务名称 %[1]s 已存在\x02服务别名 %[1]s 已存在\x02获取服务失败, err: %[1]v\x02指定的类型与" +
+	"实际配置不匹配\x02删除服务相关资源失败, err: %[1]v\x02删除服务失败, err: %[1]v\x02ID为%[1]d的服务" +
+	"不存在\x02业务查询失败, err: %[1]v\x02服务相关的业务 %[1]d 不存在\x02此空间下配置文件 %[1]s 已存在, " +
+	"无法重复创建\x02按模板套餐ID列出模板套餐失败, err: %[1]v\x02更新服务模板绑定失败, err: %[1]v\x02列出模" +
+	"板空间失败, err: %[1]v\x02模板空间 %[1]s 不存在\x02模板套餐 %[1]s 不存在\x02获取模板套餐下的模板失败," +
+	" err: %[1]v\x02模板套餐 %[2]s 中的模板文件 %[1]s 被移除, 请重新导入套餐\x02获取模板版本失败, err: %[" +
+	"1]v\x02模板文件 %[2]s 中的模板版本 %[1]s 被移除, 请重新导入套餐\x02模板文件 %[2]s 中的版本号 %[1]s 不是" +
+	"最新版本, 请重新导入套餐\x02统计服务配置数量失败, err: %[1]s\x02该服务 %[1]s 不是文件类型\x02服务 %[1]" +
+	"s 的配置项总数（包括模板和非模板）超过单服务最大配置文件数量限制 %[2]d\x02此服务下的配置文件 %[1]s 已存在, 无法重复创建" +
+	"\x02移除服务模板套餐失败, err: %[1]s\x02批量创建内容失败, err: %[1]s\x02删除模板变量失败, err: %[1" +
+	"]s\x02获取配置项数量\x02通过业务和服务ID获取模板绑定关系失败, err: %[1]s\x02获取该服务下的引用模板集失败, err:" +
+	" %[1]s\x02按模板套餐ID列出模板套餐失败, err: %[1]s\x02移除套餐失败, err: %[1]s\x02脚本名称 %[1]" +
+	"s 已存在\x02获取排除后的脚本失败, err: %[1]s\x02检索引用的脚本失败, err: %[1]s\x02获取 kv (%[1]d" +
+	") 失败, err: %[2]v\x02该服务下的配置项%[1]s已存在, 无法重复创建\x02获取服务失败, key: %[1]s, err:" +
+	" %[2]v\x02kv 类型与服务类型中定义的数据类型不匹配\x02创建kv失败, err: %[1]v\x02更新kv失败, err: %[" +
+	"1]v\x02敏感数据不可见，无法查看实际内容\x02不是kv类型的服务\x02获取kv列表失败, err: %[1]v\x02批量导入KV配置" +
+	"失败, err: %[1]v\x02配置项 %[1]s 的类型不正确\x02清除草稿区失败, err: %[1]v\x02kv保持失败" +
+	"\x02获取排除后的kv失败, err: %[1]s\x02按模板集ID获取应用程序模板绑定, err: %[1]s\x02批量更新应用模板绑定" +
+	"失败, err: %[1]s\x02模板集批量添加模板失败, err: %[1]s\x02获取模板集数据失败, err: %[1]s\x02" +
+	"此模板集下没有模板文件\x02从模板套餐中删除模板失败, err: %[1]v\x02按模板集ID获取应用程序模板绑定, err: %[1]" +
+	"v\x02批量更新应用模板绑定失败, err: %[1]v\x02列出模板失败, err: %[1]v\x02按服务ID列出应用模板绑定失败, " +
+	"err: %[1]s\x02获取模板集失败, err: %[1]s\x02模板套餐 %[1]s 超过单套餐最大配置文件数量限制 %[2]d" +
+	"\x02按服务ID列出服务失败, err: %[1]s\x02统计服务配置数量失败, err: %[1]s\x02模板套餐数据为空\x02列出模" +
+	"板数据失败, err: %[1]s\x02模板数据为空\x02列出模板版本数据失败, err: %[1]s\x02同名的模版变量名称%[1]" +
+	"s已存在\x02db操作失败\x02无效参数\x02id不应该被设置\x02spec没有被设置\x02attachment没有被设置\x02re" +
+	"vision没有被设置\x02路径无效, 长度应为 >= 1\x02路径无效, 长度应为 <= 1024\x02路径无效, 应以“/”开头" +
+	"\x04\x00\x01 2\x02路径 %[1]s 无效, 路径不能全部为“.”\x02路径无效, 长度应为 <= 256\x02路径无效, " +
+	"路径不符合win文件路径格式规范\x02需要重新加载文件路径\x02重新加载文件路径无效, 应该 <= 128\x02重新加载文件路径不是绝" +
+	"对路径\x02%[1]s 子路径为系统保留路径, 不允许使用\x02描述为必填项, 不能为空\x02描述无效, 长度应为 <= 200" +
+	"\x02资源名称“%[1]s”以“%[2]s”为前缀, 是保留名称, 不允许使用\x02名称无效, 长度应为 >= 1\x02无效名称, 长度应" +
+	"该<=128\x02无效名称：%[1]s, 只允许包含英文、数字、下划线（_）、连字符（-）, 且必须以英文、数字开头和结尾\x02无效名称" +
+	", 长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, 只允许英文、数字、下划线（_）, 且必须以bk_" +
+	"bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, 只允许包含中文、英文、数字、下划线（_）、连字符（-）, 且必须以中文、英文或数" +
+	"字开头和结尾\x02名称无效, 长度应为 <= 64\x02名称 %[1]s 无效, 名称不能全部为“.”\x02命名空间无效, 长度应为 " +
+	">= 1\x02命名空间无效, 长度应为 <= 128\x02用户名无效, 长度应为 >= 1\x02用户名无效, 长度应为 <= 32\x02" +
+	"服务为空\x02创建失败, err: %[1]v\x02创建服务失败, err: %[1]v\x02更新服务失败, err: %[1]s" +
+	"\x02统计服务 %[1]d 的配置项失败, err: %[2]v\x02获取服务 %[1]d 的模板绑定失败,  err: %[2]v\x02" +
+	"服务 %[1]d 的配置项总数（包括模板和非模板）超出限制 %[2]d\x02脚本不存在\x02未命名版本\x02appID不能为0\x02" +
+	"模板套餐 %[1]d's 超过单套餐最大配置文件数量限制 %[2]d\x02验证模板是否存在失败, err: %[1]v\x02%[1]v " +
+	"中的模板空间 ID 不存在\x02%[1]v 中的模板 ID 不存在\x02验证模板版本是否存在失败, err: %[1]v\x02%[1]" +
+	"v 中的模板版本 ID 不存在\x02验证模板套餐是否存在失败, err: %[1]v\x02%[1]v 中的模板套餐 ID 不存在\x02模板" +
+	" %[1]d 不存在\x02获取模板失败, err: %[1]v\x02模板版本 %[1]d 不存在\x02获取模板版本失败, err: %[1" +
+	"]v\x02模板套餐 %[1]d 不存在\x02获取模板集失败, err: %[1]v\x02统计模板套餐数量失败, err: %[1]v" +
+	"\x02模板空间下有模板套餐, 需要先删除\x02获取模板数量失败, err: %[1]v\x02模板空间下有模板, 需要先删除\x02验证模板" +
+	"套餐中的模板失败, err: %[1]v\x02%[1]v 中的模板 ID 不属于模板套餐 ID %[2]d\x02ID 不能为空\x02无" +
+	"法验证业务ID\x02参数为空\x02服务参数为空\x02未知的配置类型：%[1]s\x02服务类型不能编辑\x02暂不支持表配置类型" +
+	"\x02不支持的配置类型：%[1]s\x02不支持的服务类型：%[1]s\x02无法验证数据类型\x02参数为空\x02无法验证参数\x02参数" +
+	"为空\x02验证 Windows 文件路径失败, path: %[1]s, err: %[2]v\x02验证 Unix 文件路径失败, pa" +
+	"th: %[1]s, err: %[2]v\x02不支持的文件格式：%[1]s\x02不支持的文件模式：%[1]s\x02参数为空\x02内容签" +
+	"名无效, 应为配置的 sha256 值\x02内容签名应小写\x02无效的原始内容签名, 应为配置的 sha256 值\x02原始内容签名应" +
+	"小写\x02无效的服务ID\x02无效的配置项ID\x02default_val %[1]s 不是数字类型\x02不支持的变量类型：%[1]" +
+	"s\x02从 kv.Data 获取“kv_type”作为字符串失败, err: %[1]v\x02值类型断言失败, err: %[1]v\x02" +
+	"授权失败\x02获取权限失败, err: %[1]v\x02grpc 状态详细信息失败, err: %[1]v\x02%[1]s 与 %[2" +
+	"]s 路径文件冲突"
 
-	// Total table size 16445 bytes (16KiB); checksum: 5567453D
+	// Total table size 18544 bytes (18KiB); checksum: FFD0F6A6
