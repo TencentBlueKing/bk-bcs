@@ -137,5 +137,5 @@ func clusterNetworkSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster, ipv4
 
 // UpdateClusterCloudInfo update cluster cloud info
 func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *cmproto.Cluster) error {
-	return cloudprovider.ErrCloudNotImplemented
+	return nil
 }

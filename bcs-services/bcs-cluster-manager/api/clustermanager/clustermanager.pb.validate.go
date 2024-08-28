@@ -28013,6 +28013,8 @@ func (m *InstanceType) Validate() error {
 
 	}
 
+	// no validation rules for AvailableQuota
+
 	return nil
 }
 
