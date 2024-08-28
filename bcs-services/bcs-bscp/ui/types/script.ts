@@ -1,6 +1,8 @@
 export const enum EScriptType {
   Shell = 'shell',
   Python = 'python',
+  Bat = 'bat',
+  Powershell = 'powershell',
 }
 
 // 脚本列表查询请求参数
