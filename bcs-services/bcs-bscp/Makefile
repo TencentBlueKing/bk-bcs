@@ -188,10 +188,6 @@ build_feed:
 build_frontend:
 	cd ui; npm install --legacy-peer-deps; npm run build
 
-.PHONY: build_ui
-build_ui:
-	${GOBUILD} -ldflags ${LDVersionFLAG} -o bscp-ui ./cmd/ui
-
 .PHONY: docker
 docker:
 	@docker build -t bk-bscp-hyper:latest .
