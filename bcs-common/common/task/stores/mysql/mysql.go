@@ -81,7 +81,7 @@ func (s *mysqlStore) initDsn(raw string) {
 func (s *mysqlStore) EnsureTable(ctx context.Context, dst ...any) error {
 	// 没有自定义数据, 使用默认表结构
 	if len(dst) == 0 {
-		dst = []any{&TaskRecords{}, &StepRecords{}}
+		dst = []any{&TaskRecord{}, &StepRecord{}}
 	}
 	return s.db.AutoMigrate(dst...)
 }
@@ -93,7 +93,7 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 			return err
 		}
 
-		steps := getStepRecords(task)
+		steps := getStepRecord(task)
 		if err := tx.CreateInBatches(steps, 100).Error; err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]typ
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
 		updateTask := getUpdateTaskRecord(task)
-		if err := tx.Model(&TaskRecords{}).
+		if err := tx.Model(&TaskRecord{}).
 			Where("task_id = ?", task.TaskID).
 			Select(updateTaskField).
 			Updates(updateTask).Error; err != nil {
@@ -121,7 +121,7 @@ func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 				continue
 			}
 			updateStep := getUpdateStepRecord(step)
-			if err := tx.Model(&StepRecords{}).
+			if err := tx.Model(&StepRecord{}).
 				Where("task_id = ? AND name= ?", task.TaskID, step.Name).
 				Select(updateStepField).
 				Updates(updateStep).Error; err != nil {
@@ -134,10 +134,10 @@ func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 
 func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
 	return s.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("task_id = ?", taskID).Delete(&TaskRecords{}).Error; err != nil {
+		if err := tx.Where("task_id = ?", taskID).Delete(&TaskRecord{}).Error; err != nil {
 			return err
 		}
-		if err := tx.Where("task_id = ?", taskID).Delete(&StepRecords{}).Error; err != nil {
+		if err := tx.Where("task_id = ?", taskID).Delete(&StepRecord{}).Error; err != nil {
 			return err
 		}
 		return nil
@@ -145,15 +145,15 @@ func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
 }
 
 func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, error) {
-	stepRecords := []*StepRecords{}
-	if err := s.db.Where("task_id = ?", taskID).Find(&stepRecords).Error; err != nil {
+	stepRecord := []*StepRecord{}
+	if err := s.db.Where("task_id = ?", taskID).Find(&stepRecord).Error; err != nil {
 		return nil, err
 	}
-	taskRecord := TaskRecords{}
+	taskRecord := TaskRecord{}
 	if err := s.db.Where("task_id = ?", taskID).First(&taskRecord).Error; err != nil {
 		return nil, err
 	}
-	return toTask(&taskRecord, stepRecords), nil
+	return toTask(&taskRecord, stepRecord), nil
 }
 
 func (s *mysqlStore) PatchTask(ctx context.Context, opt *iface.PatchOption) error {

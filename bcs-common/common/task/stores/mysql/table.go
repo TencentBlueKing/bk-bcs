@@ -33,8 +33,8 @@ var (
 	UnixZeroTime = time.Unix(0, 0)
 )
 
-// TaskRecords 任务记录
-type TaskRecords struct {
+// TaskRecord 任务记录
+type TaskRecord struct {
 	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
@@ -58,12 +58,12 @@ type TaskRecords struct {
 }
 
 // TableName ..
-func (t *TaskRecords) TableName() string {
+func (t *TaskRecord) TableName() string {
 	return "task_records"
 }
 
 // BeforeCreate ..
-func (t *TaskRecords) BeforeCreate(tx *gorm.DB) (err error) {
+func (t *TaskRecord) BeforeCreate(tx *gorm.DB) (err error) {
 	if t.Start.IsZero() {
 		t.Start = UnixZeroTime
 	}
@@ -73,8 +73,19 @@ func (t *TaskRecords) BeforeCreate(tx *gorm.DB) (err error) {
 	return nil
 }
 
-// StepRecords 步骤记录
-type StepRecords struct {
+// BeforeUpdate ..
+func (t *TaskRecord) BeforeUpdate(tx *gorm.DB) (err error) {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
+}
+
+// StepRecord 步骤记录
+type StepRecord struct {
 	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
 	Name                string            `json:"name" gorm:"type:varchar(255)"`
@@ -95,12 +106,23 @@ type StepRecords struct {
 }
 
 // TableName ..
-func (t *StepRecords) TableName() string {
+func (t *StepRecord) TableName() string {
 	return "task_step_records"
 }
 
 // BeforeCreate ..
-func (t *StepRecords) BeforeCreate(tx *gorm.DB) (err error) {
+func (t *StepRecord) BeforeCreate(tx *gorm.DB) (err error) {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
+}
+
+// BeforeUpdate ..
+func (t *StepRecord) BeforeUpdate(tx *gorm.DB) (err error) {
 	if t.Start.IsZero() {
 		t.Start = UnixZeroTime
 	}
@@ -111,7 +133,7 @@ func (t *StepRecords) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 // ToStep 类型转换
-func (t *StepRecords) ToStep() *types.Step {
+func (t *StepRecord) ToStep() *types.Step {
 	return &types.Step{
 		Name:                t.Name,
 		Alias:               t.Alias,
