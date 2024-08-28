@@ -68,6 +68,7 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 	results := make([]*proto.CloudVpc, 0)
 	for _, v := range vpcs {
 		results = append(results, &proto.CloudVpc{
+			Name:  *v.VpcId,
 			VpcId: *v.VpcId,
 			Ipv4Cidr: func(v *ec2.Vpc) string {
 				if v.CidrBlockAssociationSet != nil {
