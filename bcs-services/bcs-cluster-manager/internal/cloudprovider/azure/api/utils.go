@@ -1467,13 +1467,13 @@ func VmIDToNodeID(vm *armcompute.VirtualMachineScaleSetVM) string {
 
 // SetUserData 设置用户数据
 func SetUserData(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) {
-	if group.LaunchTemplate == nil || len(group.LaunchTemplate.UserData) == 0 {
+	if group.GetNodeTemplate() == nil || len(group.GetNodeTemplate().GetPreStartUserScript()) == 0 {
 		return
 	}
 	if set == nil || set.Properties == nil || set.Properties.VirtualMachineProfile == nil {
 		return
 	}
-	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.LaunchTemplate.UserData)
+	set.Properties.VirtualMachineProfile.UserData = to.Ptr(group.GetNodeTemplate().GetPreStartUserScript())
 }
 
 // SetImageReferenceNull 镜像引用-暂时置空处理，若不置空会导致无法更新set
