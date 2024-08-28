@@ -157,6 +157,7 @@
     .actions {
       display: flex;
       align-items: center;
+      gap: 10px;
       .action-icon {
         color: #979ba5;
         cursor: pointer;
@@ -179,7 +180,6 @@
     font-size: 12px;
     width: 24px;
     height: 24px;
-    margin-right: 10px;
     color: #979ba5;
     cursor: pointer;
   }

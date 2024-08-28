@@ -3,14 +3,16 @@
     <div :class="['config-content-editor', { fullscreen: isOpenFullScreen }]" :style="editorStyle">
       <div class="editor-title">
         <div class="tips">
-          <template v-if="props.showTips">
+          <div v-if="isCredential && props.isEdit">
             <InfoLine class="info-icon" />
-            {{ t('仅支持大小不超过') }}{{ props.sizeLimit }}M
-          </template>
+            {{ t('目前只支持 X.509 类型证书') }}
+          </div>
         </div>
         <div class="btns">
+          <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
+          <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
           <ReadFileContent
-            v-if="editable"
+            v-if="props.isEdit"
             v-bk-tooltips="{
               content: t('上传'),
               placement: 'top',
@@ -36,13 +38,12 @@
         </div>
       </div>
       <div class="editor-content">
-        <CodeEditor
+        <SecretEditor
           ref="codeEditorRef"
-          :model-value="props.content"
-          :variables="props.variables"
-          :editable="editable"
-          :language="props.language"
-          @update:model-value="emits('change', $event)" />
+          :model-value="secretValue"
+          :is-cipher="isCipherShowSecret"
+          :editable="isEdit"
+          @update:model-value="handleSecretChange" />
       </div>
     </div>
   </Teleport>
@@ -51,29 +52,22 @@
   import { ref, computed, onBeforeUnmount } from 'vue';
   import { useI18n } from 'vue-i18n';
   import BkMessage from 'bkui-vue/lib/message';
-  import { InfoLine, FilliscreenLine, UnfullScreen } from 'bkui-vue/lib/icon';
-  import { IVariableEditParams } from '../../../../../../../types/variable';
-  import ReadFileContent from './read-file-content.vue';
-  import CodeEditor from '../../../../../../components/code-editor/index.vue';
+  import { InfoLine, FilliscreenLine, UnfullScreen, Unvisible, Eye } from 'bkui-vue/lib/icon';
+  import SecretEditor from './secret-editor.vue';
+  import ReadFileContent from '../../../../../config/components/read-file-content.vue';
 
   const { t } = useI18n();
   const props = withDefaults(
     defineProps<{
       content: string;
-      editable: boolean;
-      variables?: IVariableEditParams[];
-      sizeLimit?: number;
-      language?: string;
-      showTips?: boolean;
+      isEdit?: boolean;
+      isCredential?: boolean;
       height?: number;
     }>(),
     {
-      variables: () => [],
-      editable: true,
-      sizeLimit: 100,
-      language: '',
-      showTips: true,
       height: 640,
+      isCredential: true,
+      isEdit: true,
     },
   );
 
@@ -81,6 +75,8 @@
 
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
+  const isCipherShowSecret = ref(true); // 密文展示敏感信息
+  const secretValue = ref(props.content);
 
   const editorStyle = computed(() => {
     return {
@@ -91,10 +87,6 @@
   onBeforeUnmount(() => {
     codeEditorRef.value.destroy();
   });
-
-  const handleFileReadComplete = (content: string) => {
-    emits('change', content);
-  };
 
   // 打开全屏
   const handleOpenFullScreen = () => {
@@ -116,6 +108,15 @@
     if (event.code === 'Escape') {
       isOpenFullScreen.value = false;
     }
+  };
+
+  const handleFileReadComplete = (content: string) => {
+    secretValue.value = content;
+    emits('change', content);
+  };
+
+  const handleSecretChange = (secret: string) => {
+    emits('change', secret);
   };
 </script>
 <style lang="scss" scoped>
@@ -147,7 +148,8 @@
       .btns {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
+        font-size: 14px;
         & > span {
           cursor: pointer;
           &:hover {

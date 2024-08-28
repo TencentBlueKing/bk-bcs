@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    width="640"
+    width="960"
     :title="t('编辑配置项')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
@@ -26,7 +26,7 @@
   import { ref, watch } from 'vue';
   import { useI18n } from 'vue-i18n';
   import Message from 'bkui-vue/lib/message';
-  import ConfigForm from './config-form-kv.vue';
+  import ConfigForm from './config-form-kv/index.vue';
   import { updateKv } from '../../../../../../../api/config';
   import { IConfigKvItem } from '../../../../../../../../types/config';
   import useModalCloseConfirmation from '../../../../../../../utils/hooks/use-modal-close-confirmation';
@@ -76,15 +76,17 @@
     if (configForm.value!.kv_type === 'number') {
       configForm.value!.value = configForm.value!.value.replace(/^0+(?=\d|$)/, '');
     }
+    const { value, memo, secret_type, secret_hidden } = configForm.value as IConfigKvItem;
+    const editForm: { value: string; memo: string; secret_hidden?: boolean } = {
+      value,
+      memo,
+    };
+    if (secret_type) {
+      editForm.secret_hidden = secret_hidden;
+    }
     try {
       pending.value = true;
-      await updateKv(
-        props.bkBizId,
-        props.appId,
-        configForm.value!.key,
-        configForm.value!.value,
-        configForm.value!.memo,
-      );
+      await updateKv(props.bkBizId, props.appId, configForm.value!.key, editForm);
       emits('confirm');
       close();
       Message({

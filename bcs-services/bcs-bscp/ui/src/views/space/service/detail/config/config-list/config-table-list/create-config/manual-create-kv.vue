@@ -1,6 +1,6 @@
 <template>
   <bk-sideslider
-    width="640"
+    width="960"
     :title="t('新增配置项')"
     :is-show="props.show"
     :before-close="handleBeforeClose"
@@ -26,7 +26,7 @@
   import { IConfigKvEditParams } from '../../../../../../../../../types/config';
   import { createKv } from '../../../../../../../../api/config';
   import useModalCloseConfirmation from '../../../../../../../../utils/hooks/use-modal-close-confirmation';
-  import ConfigForm from '../config-form-kv.vue';
+  import ConfigForm from '../config-form-kv/index.vue';
   import useServiceStore from '../../../../../../../../store/service';
 
   const serviceStore = useServiceStore();
@@ -43,11 +43,13 @@
   const content = ref('');
   const formRef = ref();
   const isFormChange = ref(false);
-  const configForm = ref({
+  const configForm = ref<IConfigKvEditParams>({
     key: '',
     kv_type: '',
     value: '',
     memo: '',
+    secret_type: '',
+    secret_hidden: false,
   });
   watch(
     () => props.show,
@@ -58,6 +60,8 @@
           kv_type: '',
           value: '',
           memo: '',
+          secret_type: '',
+          secret_hidden: false,
         };
         content.value = '';
         isFormChange.value = false;
@@ -94,7 +98,7 @@
       close();
       Message({
         theme: 'success',
-        message: '新建配置项成功',
+        message: t('新建配置项成功'),
       });
     } catch (e) {
       console.log(e);
