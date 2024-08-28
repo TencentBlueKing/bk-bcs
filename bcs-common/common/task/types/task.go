@@ -75,7 +75,6 @@ func NewTask(o TaskInfo, opts ...TaskOption) *Task {
 		TaskIndex:           o.TaskIndex,
 		TaskIndexType:       o.TaskIndexType,
 		Status:              TaskStatusInit,
-		ForceTerminate:      false,
 		Steps:               make([]*Step, 0),
 		Creator:             o.Creator,
 		Updater:             o.Creator,
@@ -165,7 +164,7 @@ func (t *Task) GetCommonPayload(obj interface{}) error {
 	if len(t.CommonPayload) == 0 {
 		t.CommonPayload = DefaultPayloadContent
 	}
-	return json.Unmarshal(t.CommonPayload, obj)
+	return json.Unmarshal([]byte(t.CommonPayload), obj)
 }
 
 // SetCommonPayload set extra json
@@ -174,7 +173,7 @@ func (t *Task) SetCommonPayload(obj interface{}) error {
 	if err != nil {
 		return err
 	}
-	t.CommonPayload = result
+	t.CommonPayload = string(result)
 	return nil
 }
 
@@ -197,17 +196,6 @@ func (t *Task) GetMessage() string {
 // SetMessage set message
 func (t *Task) SetMessage(msg string) *Task {
 	t.Message = msg
-	return t
-}
-
-// GetForceTerminate get force terminate
-func (t *Task) GetForceTerminate() bool {
-	return t.ForceTerminate
-}
-
-// SetForceTerminate set force terminate
-func (t *Task) SetForceTerminate(f bool) *Task {
-	t.ForceTerminate = f
 	return t
 }
 

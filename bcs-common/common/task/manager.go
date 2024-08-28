@@ -27,6 +27,7 @@ import (
 	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
 
+	irevoker "github.com/Tencent/bk-bcs/bcs-common/common/task/revokers/iface"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -59,8 +60,10 @@ type TaskManager struct { // nolint
 // ManagerConfig options for manager
 type ManagerConfig struct {
 	ModuleName   string
+	WorkerName   string
 	WorkerNum    int
 	Broker       ibroker.Broker
+	Revoker      irevoker.Revoker
 	Backend      ibackend.Backend
 	Lock         ilock.Lock
 	Store        istore.Store
@@ -117,7 +120,7 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		return err
 	}
 
-	if err := m.initWorker(cfg.WorkerNum); err != nil {
+	if err := m.initWorker(cfg.WorkerName, cfg.WorkerNum); err != nil {
 		return err
 	}
 
@@ -145,13 +148,13 @@ func (m *TaskManager) initServer() error {
 }
 
 // register step workers and init workers
-func (m *TaskManager) initWorker(workerNum int) error {
+func (m *TaskManager) initWorker(workerName string, workerNum int) error {
 	// register all workers
 	if err := m.registerStepWorkers(); err != nil {
 		return fmt.Errorf("register workers failed, err: %s", err.Error())
 	}
 
-	m.worker = m.server.NewWorker("", workerNum)
+	m.worker = m.server.NewWorker(workerName, workerNum)
 
 	preTaskHandler := func(signature *tasks.Signature) {
 		log.INFO.Printf("start task[%s] handler for: %s", signature.UUID, signature.Name)
@@ -206,6 +209,22 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 		return err
 	}
 	return m.dispatchAt(task, stepName)
+}
+
+// Revoke revoke the task
+func (m *TaskManager) Revoke(task *types.Task) error {
+	// task revoke
+	if m.cfg == nil || m.cfg.Revoker == nil {
+		return fmt.Errorf("task revoker is required")
+	}
+
+	task.SetStatus(types.TaskStatusRevoked)
+	task.SetMessage("task has been revoked")
+
+	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
+		return err
+	}
+	return m.cfg.Revoker.Revoke(context.Background(), task.TaskID)
 }
 
 // Dispatch dispatch task
@@ -310,8 +329,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	// step executed success
 	if state.step == nil {
-		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
-			taskID, stepName, err)
+		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip", taskID, stepName)
 		return nil
 	}
 
@@ -324,12 +342,18 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	start := time.Now()
 	// step timeout
-	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
+	stepCtx, stepCancel := GetTimeOutCtx(context.Background(), step.MaxExecutionSeconds)
 	defer stepCancel()
+
+	// task revoke
+	revokeCtx := context.TODO()
+	if m.cfg != nil && m.cfg.Revoker != nil {
+		revokeCtx = m.cfg.Revoker.RevokeCtx(taskID)
+	}
 
 	// task timeout
 	t := state.task.GetStartTime()
-	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
+	taskCtx, taskCancel := GetDeadlineCtx(context.Background(), &t, state.task.MaxExecutionSeconds)
 	defer taskCancel()
 
 	tmpCh := make(chan error, 1)
@@ -348,7 +372,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 			state.updateStepSuccess(start)
 			return nil
 		}
-		state.updateStepFailure(start, retErr, false)
+		state.updateStepFailure(start, retErr, nil)
 
 		if step.GetSkipOnFailed() {
 			return nil
@@ -365,7 +389,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	case <-stepCtx.Done():
 		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-		state.updateStepFailure(start, retErr, false)
+		state.updateStepFailure(start, retErr, nil)
 
 		if step.GetSkipOnFailed() {
 			return nil
@@ -380,12 +404,26 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 		return retErr
 
+	case <-revokeCtx.Done():
+		// task revoke
+		retErr := fmt.Errorf("task %s has been revoked", taskID)
+		state.updateStepFailure(start, retErr, &taskEndStatus{types.TaskStatusRevoked, "task has been revoked"})
+
+		// 取消指令, 不再重试
+		return retErr
+
 	case <-taskCtx.Done():
 		// task timeOut
 		retErr := fmt.Errorf("task %s exec timeout", taskID)
-		state.updateStepFailure(start, retErr, true)
+		state.updateStepFailure(start, retErr, &taskEndStatus{types.TaskStatusTimeout, "task timeout"})
+
 		// 整个任务结束
 		return retErr
+
+	case <-m.ctx.Done():
+		// task manager stop, try later
+		log.INFO.Printf("task manager stop, task %s step %s will retry later", taskID, stepName)
+		return tasks.NewErrRetryTaskLater("task manager stop", time.Second*10)
 	}
 }
 
