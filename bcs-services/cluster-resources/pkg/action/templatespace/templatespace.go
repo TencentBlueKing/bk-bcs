@@ -123,10 +123,29 @@ func (t *TemplateSpaceAction) List(ctx context.Context, name string) ([]map[stri
 		return nil, err
 	}
 
-	m := make([]map[string]interface{}, 0)
-	for _, value := range templateSpace {
-		m = append(m, value.ToMap())
+	// 获取收藏的文件夹
+	collects, err := t.model.ListTemplateSpaceCollect(ctx, p.Code, ctxkey.GetUsernameFromCtx(ctx))
+	if err != nil {
+		return nil, err
 	}
+
+	m := make([]map[string]interface{}, 0)
+	topM := make([]map[string]interface{}, 0)
+	for _, value := range templateSpace {
+		fav := false
+		for _, v := range collects {
+			if value.ID.Hex() == v.TemplateSpaceID {
+				fav = true
+				value.Fav = true
+				topM = append(topM, value.ToMap())
+				break
+			}
+		}
+		if !fav {
+			m = append(m, value.ToMap())
+		}
+	}
+	m = append(topM, m...)
 	return m, nil
 }
 

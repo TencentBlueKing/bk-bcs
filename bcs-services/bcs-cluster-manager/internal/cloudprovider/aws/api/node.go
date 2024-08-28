@@ -82,8 +82,22 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo,
 	}
 
 	cloudInstanceTypes := make([]*ec2.InstanceTypeInfo, 0)
-	err = client.ec2Client.DescribeInstanceTypesPages(&ec2.DescribeInstanceTypesInput{MaxResults: aws.Int64(limit)},
-		func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
+
+	err = client.ec2Client.DescribeInstanceTypesPages(
+		&ec2.DescribeInstanceTypesInput{
+			MaxResults: aws.Int64(limit),
+			// 过滤支持x86的机型, 适配AL2_x86_86镜像
+			Filters: []*ec2.Filter{
+				{
+					Name:   aws.String("processor-info.supported-architecture"),
+					Values: aws.StringSlice([]string{"x86_64"}),
+				},
+				{
+					Name:   aws.String("supported-usage-class"),
+					Values: aws.StringSlice([]string{"on-demand"}),
+				},
+			},
+		}, func(page *ec2.DescribeInstanceTypesOutput, lastPage bool) bool {
 			cloudInstanceTypes = append(cloudInstanceTypes, page.InstanceTypes...)
 			return !lastPage
 		})

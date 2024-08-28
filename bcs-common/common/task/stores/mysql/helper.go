@@ -61,7 +61,6 @@ func getTaskRecord(t *types.Task) *TaskRecords {
 		CommonPayload:       t.CommonPayload,
 		Status:              t.Status,
 		Message:             t.Message,
-		ForceTerminate:      t.ForceTerminate,
 		Start:               t.Start,
 		End:                 t.End,
 		ExecutionTime:       t.ExecutionTime,
@@ -85,7 +84,6 @@ func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
 		CommonPayload:       task.CommonPayload,
 		Status:              task.Status,
 		Message:             task.Message,
-		ForceTerminate:      task.ForceTerminate,
 		Start:               task.Start,
 		End:                 task.End,
 		ExecutionTime:       task.ExecutionTime,
@@ -101,6 +99,33 @@ func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
 	}
 	return t
 }
+
+var (
+	// updateTaskField task 支持更新的字段
+	updateTaskField = []string{
+		"CurrentStep",
+		"CommonParams",
+		"CommonPayload",
+		"Status",
+		"Message",
+		"Start",
+		"End",
+		"ExecutionTime",
+		"Updater",
+	}
+
+	// updateStepField step 支持更新的字段
+	updateStepField = []string{
+		"Params",
+		"Payload",
+		"Status",
+		"Message",
+		"Start",
+		"End",
+		"ExecutionTime",
+		"RetryCount",
+	}
+)
 
 func getUpdateTaskRecord(t *types.Task) *TaskRecords {
 	record := &TaskRecords{

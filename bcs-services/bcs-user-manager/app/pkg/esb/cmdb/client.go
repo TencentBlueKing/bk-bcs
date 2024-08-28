@@ -35,11 +35,7 @@ func InitCMDBClient(op *options.UserManagerOptions) error {
 		return fmt.Errorf("error decrypting cmdb app secret, %s", err.Error())
 	}
 	cli := cmdbv3.NewClientInterface(op.Cmdb.Host, nil)
-	cli.SetCommonReq(map[string]interface{}{
-		"bk_app_code":   op.Cmdb.AppCode,
-		"bk_app_secret": string(appSecret),
-		"bk_username":   op.Cmdb.BkUserName,
-	})
+	cli.WithCredential(op.Cmdb.AppCode, string(appSecret), op.Cmdb.BkUserName)
 	CMDBClient = cli
 	return nil
 }

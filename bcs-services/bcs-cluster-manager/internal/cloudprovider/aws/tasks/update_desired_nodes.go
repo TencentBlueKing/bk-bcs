@@ -145,8 +145,15 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
+	asgInfo, err := asCli.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []*string{&asgName}})
+	if err != nil {
+		blog.Errorf("getInstancesFromAsg DescribeAutoScalingGroups[%s] failed: %v", asgName, err)
+		return err
+	}
+
 	err = loop.LoopDoFunc(context.Background(), func() error {
-		err = asCli.SetDesiredCapacity(asgName, int64(nodeNum))
+		err = asCli.SetDesiredCapacity(asgName, *asgInfo[0].DesiredCapacity+int64(nodeNum))
 		if err != nil {
 			if strings.Contains(err.Error(), autoscaling.ErrCodeScalingActivityInProgressFault) {
 				blog.Infof("applyInstanceMachines[%s] ScaleOutInstances: %v", taskID,
@@ -159,6 +166,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return loop.EndLoop
 	}, loop.LoopInterval(10*time.Second))
 	if err != nil {
+		_ = asCli.SetDesiredCapacity(asgName, *asgInfo[0].DesiredCapacity)
 		return fmt.Errorf("applyInstanceMachines[%s] SetDesiredCapacity failed: %v", taskID, err)
 	}
 
@@ -218,7 +226,6 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 
 	if len(successIns) > 0 {
 		state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()] = strings.Join(successIns, ",")
-		state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(successIns, ",")
 		state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(successIns, ",")
 	}
 
@@ -228,6 +235,8 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 		blog.Errorf("recordClusterInstanceToDB[%s] failed: %v", taskID, err)
 	}
 	if len(nodeIPs) > 0 {
+		state.Task.NodeIPList = nodeIPs
+		state.Task.CommonParams[cloudprovider.OriginNodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 		state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	}
 
@@ -311,6 +320,13 @@ func differentInstance(rootCtx context.Context, info *cloudprovider.CloudDependB
 	[]*autoscaling.Instance, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
 	res := make([]*autoscaling.Instance, 0)
+
+	// 获取 node map
+	nodeMap, err := getNodeMap(rootCtx, info)
+	if err != nil {
+		return nil, err
+	}
+
 	asgName, err := getAsgNameByNodeGroup(rootCtx, info)
 	if err != nil {
 		return nil, err
@@ -323,15 +339,26 @@ func differentInstance(rootCtx context.Context, info *cloudprovider.CloudDependB
 
 	timeCtx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
-	instances := make([]*autoscaling.Instance, 0)
 	err = loop.LoopDoFunc(timeCtx, func() error {
-		instances, err = getInstancesFromAsg(asCli, asgName)
-		if err != nil {
-			return err
+		newInstances := make([]*autoscaling.Instance, 0)
+
+		instances, errGet := getInstancesFromAsg(asCli, asgName)
+		if errGet != nil {
+			return errGet
 		}
 
-		blog.Infof("differentInstance[%s] instances[%d], desired[%d]", taskID, len(instances), nodeNum)
-		if len(instances) == int(nodeNum) {
+		// 比对
+		for _, vm := range instances {
+			nodeID := *vm.InstanceId
+			if _, ok := nodeMap[nodeID]; !ok {
+				// 如果当前vm不存在于nodeMap中，则为扩容出来的机器
+				newInstances = append(newInstances, vm)
+			}
+		}
+
+		blog.Infof("differentInstance[%s] instances[%d], desired[%d]", taskID, len(newInstances), nodeNum)
+		if len(newInstances) == int(nodeNum) {
+			res = newInstances
 			return loop.EndLoop
 		}
 
@@ -339,21 +366,6 @@ func differentInstance(rootCtx context.Context, info *cloudprovider.CloudDependB
 	}, loop.LoopInterval(30*time.Second))
 	if err != nil {
 		return nil, err
-	}
-
-	// 获取 node map
-	nodeMap, err := getNodeMap(rootCtx, info)
-	if err != nil {
-		return nil, err
-	}
-
-	// 比对
-	for _, vm := range instances {
-		nodeID := *vm.InstanceId
-		if _, ok := nodeMap[nodeID]; !ok {
-			// 如果当前vm不存在于nodeMap中，则为扩容出来的机器
-			res = append(res, vm)
-		}
 	}
 
 	return res, nil
@@ -423,6 +435,7 @@ func transInstancesToNode(ctx context.Context, state *cloudprovider.TaskState, s
 		for i := range nodes {
 			successNodeNames[i] = nodes[i].NodeName
 		}
+		state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(successNodeNames, ",")
 		state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(successNodeNames, ",")
 		state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()] = strings.Join(successNodeNames, ",")
 	}
@@ -483,6 +496,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	successNodeNames := strings.Split(state.Task.CommonParams[cloudprovider.SuccessNodeIDsKey.String()], ",")
+	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successNodeNames) == 0 {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: check parameter validate failed", taskID)
@@ -505,11 +519,24 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	successInstances, failureInstances, err := checkClusterInstanceStatus(ctx, dependInfo, successNodeNames)
-	if err != nil {
+	if err != nil || len(successInstances) == 0 {
+		if manual != common.True {
+			// rollback failed nodes
+			_ = returnEksInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
+		}
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+	}
+
+	// rollback abnormal nodes
+	if len(failureInstances) > 0 {
+		blog.Errorf("CheckClusterNodesStatusTask[%s] handle failedNodes[%v]", taskID, failureInstances)
+		errMsg := returnEksInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
+		if errMsg != nil {
+			blog.Errorf("CheckClusterNodesStatusTask[%s] returnInstancesAndCleanNodes failed %v", taskID, errMsg)
+		}
 	}
 
 	// update response information to task common params
@@ -623,4 +650,61 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 
 	return addSuccessNodes, addFailureNodes, nil
+}
+
+func returnEksInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	instanceNames []string) error { // nolint
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	if len(instanceNames) == 0 {
+		blog.Infof("returnEksInstancesAndCleanNodes[%s] instanceNames empty", taskID)
+		return nil
+	}
+
+	instanceIDs := make([]string, 0)
+
+	// delete db data record
+	for _, name := range instanceNames {
+		node, err := cloudprovider.GetStorageModel().GetNodeByName(context.Background(),
+			info.Cluster.ClusterID, name)
+		if err != nil {
+			blog.Errorf("returnEksInstancesAndCleanNodes[%s] GetNodeByName[%s] failed: %v",
+				taskID, name, err)
+		}
+		instanceIDs = append(instanceIDs, node.NodeID)
+
+		err = cloudprovider.GetStorageModel().DeleteClusterNodeByName(context.Background(),
+			info.Cluster.ClusterID, name)
+		if err != nil {
+			blog.Errorf("returnEksInstancesAndCleanNodes[%s] DeleteClusterNodeByName[%s] failed: %v",
+				taskID, name, err)
+		} else {
+			blog.Infof("returnEksInstancesAndCleanNodes[%s] DeleteClusterNodeByName success[%+v]", taskID, name)
+		}
+	}
+
+	if len(instanceIDs) == 0 {
+		blog.Errorf("returnEksInstancesAndCleanNodes[%s] got empty instanceID from storage", taskID)
+		return fmt.Errorf("returnEksInstancesAndCleanNodes got empty instanceID from storage")
+	}
+
+	// delete instances
+	err := removeAsgInstances(ctx, info, instanceNames)
+	if err != nil {
+		blog.Errorf("returnEksInstancesAndCleanNodes[%s] removeMigInstances[%+v] "+
+			"failed: %v", taskID, instanceNames, err)
+	} else {
+		blog.Infof("returnEksInstancesAndCleanNodes[%s] removeMigInstances[%+v] success", taskID, instanceNames)
+	}
+
+	// rollback nodeGroup desired size
+	err = cloudprovider.UpdateNodeGroupDesiredSize(info.NodeGroup.NodeGroupID, len(instanceNames), true)
+	if err != nil {
+		blog.Errorf("returnEksInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize failed: %v", taskID, err)
+	} else {
+		blog.Infof("returnEksInstancesAndCleanNodes[%s] UpdateNodeGroupDesiredSize success[%v]",
+			taskID, len(instanceNames))
+	}
+
+	return nil
 }

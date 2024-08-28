@@ -16,8 +16,6 @@ package templatespacecollect
 import (
 	"context"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
@@ -67,30 +65,6 @@ func (t *TemplateSpaceCollectAction) checkAccess(ctx context.Context) error {
 	return nil
 }
 
-// List xxx
-func (t *TemplateSpaceCollectAction) List(ctx context.Context) ([]map[string]interface{}, error) {
-	if err := t.checkAccess(ctx); err != nil {
-		return nil, err
-	}
-
-	p, err := project.FromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// 通过项目编码、用户名称检索
-	templateSpaceCollect, err := t.model.ListTemplateSpaceCollect(ctx, "", p.Code, ctxkey.GetUsernameFromCtx(ctx))
-	if err != nil {
-		return nil, err
-	}
-
-	m := make([]map[string]interface{}, 0)
-	for _, value := range templateSpaceCollect {
-		m = append(m, value.ToMap())
-	}
-	return m, nil
-}
-
 // Create xxx
 func (t *TemplateSpaceCollectAction) Create(
 	ctx context.Context, req *clusterRes.CreateTemplateSpaceCollectReq) (string, error) {
@@ -105,21 +79,19 @@ func (t *TemplateSpaceCollectAction) Create(
 
 	username := ctxkey.GetUsernameFromCtx(ctx)
 	// 检测用户是否已经收藏
-	templateSpaceCollects, err := t.model.ListTemplateSpaceCollect(ctx, req.TemplateSpaceID, p.Code, username)
+	templateSpaceCollects, err := t.model.ListTemplateSpaceCollect(ctx, p.Code, username)
 	if err != nil {
 		return "", err
 	}
 
-	if len(templateSpaceCollects) > 0 {
-		return templateSpaceCollects[0].ID.Hex(), nil
+	for _, v := range templateSpaceCollects {
+		if v.TemplateSpaceID == req.GetTemplateSpaceID() {
+			return v.ID.Hex(), nil
+		}
 	}
 
-	templateSpaceID, err := primitive.ObjectIDFromHex(req.TemplateSpaceID)
-	if err != nil {
-		return "", err
-	}
 	templateSpaceCollect := &entity.TemplateSpaceCollect{
-		TemplateSpaceID: templateSpaceID,
+		TemplateSpaceID: req.GetTemplateSpaceID(),
 		ProjectCode:     p.Code,
 		Username:        username,
 	}
@@ -140,19 +112,17 @@ func (t *TemplateSpaceCollectAction) Delete(ctx context.Context, id string) erro
 	if err != nil {
 		return err
 	}
-	// 通过id检索
-	templateSpaceCollect, err := t.model.GetTemplateSpaceCollect(ctx, id)
+	username := ctxkey.GetUsernameFromCtx(ctx)
+	templateSpaceCollect, err := t.model.ListTemplateSpaceCollect(ctx, p.Code, username)
 	if err != nil {
 		return err
 	}
 
-	// 检验更新 TemplateSpace 的权限
-	if templateSpaceCollect.ProjectCode != p.Code || templateSpaceCollect.Username != ctxkey.GetUsernameFromCtx(ctx) {
-		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	for _, v := range templateSpaceCollect {
+		if v.TemplateSpaceID == id {
+			return t.model.DeleteTemplateSpaceCollect(ctx, v.ID.Hex())
+		}
 	}
 
-	if err := t.model.DeleteTemplateSpaceCollect(ctx, id); err != nil {
-		return err
-	}
 	return nil
 }

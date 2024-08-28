@@ -98,10 +98,28 @@ func (d *deliver) assign(key string, node string) error {
 	}
 
 	aliveCtx, aliveCancel := context.WithCancel(d.ctx)
-	if _, err = d.client.KeepAlive(aliveCtx, grantResp.ID); err != nil {
+	keepRespCh, err := d.client.KeepAlive(aliveCtx, grantResp.ID)
+	if err != nil {
 		aliveCancel()
 		return err
 	}
+
+	go func() {
+		defer aliveCancel()
+
+		for {
+			select {
+			case <-d.ctx.Done():
+				return
+			case <-aliveCtx.Done():
+				return
+			case _, ok := <-keepRespCh:
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
 
 	d.aliveCancel = aliveCancel
 	d.signature = signature

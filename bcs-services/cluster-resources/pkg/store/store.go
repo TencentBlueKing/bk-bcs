@@ -47,9 +47,8 @@ type ClusterResourcesModel interface {
 	DeleteTemplateSpace(ctx context.Context, id string) error
 
 	// 模板文件文件夹收藏
-	GetTemplateSpaceCollect(ctx context.Context, id string) (*entity.TemplateSpaceCollect, error)
 	ListTemplateSpaceCollect(
-		ctx context.Context, templateSpaceID, projectCode, username string) ([]*entity.TemplateSpaceAndCollect, error)
+		ctx context.Context, projectCode, username string) ([]*entity.TemplateSpaceCollect, error)
 	CreateTemplateSpaceCollect(
 		ctx context.Context, templateSpaceCollect *entity.TemplateSpaceCollect) (string, error)
 	DeleteTemplateSpaceCollect(ctx context.Context, id string) error

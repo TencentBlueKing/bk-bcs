@@ -155,7 +155,9 @@ func (q *APIServerQuery) FetchApiResources(ctx context.Context, kind string) (ma
 	if err != nil {
 		return nil, err
 	}
-	return resources, nil
+	resp := make(map[string]interface{}, 0)
+	resp["resources"] = resources
+	return resp, nil
 }
 
 // listResource 列出多集群资源
@@ -186,10 +188,10 @@ func listResource(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterN
 
 // listApiResource 列出多集群资源
 func listApiResource(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterNamespaces, kind string,
-	opts metav1.ListOptions) (map[string]interface{}, error) {
+	opts metav1.ListOptions) ([]interface{}, error) {
 	errGroups := errgroup.Group{}
 	errGroups.SetLimit(10)
-	results := make(map[string]interface{}, 0)
+	results := make([]interface{}, 0)
 	mux := sync.Mutex{}
 	for _, v := range clusterdNamespaces {
 		ns := v
@@ -206,7 +208,7 @@ func listApiResource(ctx context.Context, clusterdNamespaces []*clusterRes.Clust
 			}
 			mux.Lock()
 			defer mux.Unlock()
-			results[ns.ClusterID] = result
+			results = append(results, result)
 			return nil
 		})
 	}
@@ -275,7 +277,7 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 func listNamespaceApiResources(ctx context.Context, clusterID string, namespaces []string, kind string,
 	opts metav1.ListOptions) (map[string]res.GroupKindVersionResource, error) {
 	clusterConf := res.NewClusterConf(clusterID)
-	k8sResources, err := res.GetApiResources(ctx, clusterConf, kind)
+	k8sResources, err := res.GetApiResources(ctx, clusterConf, kind, "")
 	if err != nil {
 		log.Error(ctx, "get api resource error, %v", err)
 		// 多集群查询场景，如果 crd 不存在，直接返回空

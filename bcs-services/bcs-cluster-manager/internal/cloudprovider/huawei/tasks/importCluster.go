@@ -79,15 +79,35 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	return nil
 }
 
-func importClusterCredential(data *cloudprovider.CloudDependBasicInfo) error {
-	configByte, _ := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
+func importClusterCredential(info *cloudprovider.CloudDependBasicInfo) error {
+	if info.Cluster.KubeConfig == "" {
+		cli, err := api.NewCceClient(info.CmOption)
+		if err != nil {
+			return err
+		}
+
+		kubeConfig, err := cli.GetClusterKubeConfig(info.Cluster.SystemID,
+			info.Cluster.GetClusterAdvanceSettings().GetClusterConnectSetting().GetIsExtranet())
+		if err != nil {
+			return err
+		}
+
+		info.Cluster.KubeConfig, _ = encrypt.Encrypt(nil, kubeConfig)
+
+		err = cloudprovider.UpdateCluster(info.Cluster)
+		if err != nil {
+			return err
+		}
+	}
+
+	configByte, _ := encrypt.Decrypt(nil, info.Cluster.KubeConfig)
 
 	typesConfig := &types.Config{}
 	err := json.Unmarshal([]byte(configByte), typesConfig)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal kubeconfig, %v", err)
 	}
-	err = cloudprovider.UpdateClusterCredentialByConfig(data.Cluster.ClusterID, typesConfig)
+	err = cloudprovider.UpdateClusterCredentialByConfig(info.Cluster.ClusterID, typesConfig)
 	if err != nil {
 		return err
 	}

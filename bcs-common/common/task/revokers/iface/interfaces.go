@@ -10,17 +10,15 @@
  * limitations under the License.
  */
 
-package entity
+// Package iface defines the interface for a task revocation
+package iface
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"context"
 )
 
-// TemplateSpaceCollect 定义了模板文件文件夹收藏的模型
-type TemplateSpaceCollect struct {
-	ID              primitive.ObjectID `json:"id" bson:"_id"`
-	TemplateSpaceID string             `json:"templateSpaceID" bson:"templateSpaceID"`
-	ProjectCode     string             `json:"projectCode" bson:"projectCode"`
-	Username        string             `json:"username" bson:"username"`
-	CreateAt        int64              `json:"createAt" bson:"createAt"`
+// Revoker is an interface for task revocation
+type Revoker interface {
+	Revoke(ctx context.Context, taskID string) error
+	RevokeCtx(taskID string) context.Context
 }

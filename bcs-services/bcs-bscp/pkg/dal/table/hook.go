@@ -145,6 +145,12 @@ const (
 
 	// Python is the type for python hook
 	Python ScriptType = "python"
+
+	// Bat is the type for bat hook
+	Bat ScriptType = "bat"
+
+	// PowerShell is the type for powershell hook
+	PowerShell ScriptType = "powershell"
 )
 
 // ScriptType is the type of hook script
@@ -163,6 +169,8 @@ func (s ScriptType) Validate() error {
 	switch s {
 	case Shell:
 	case Python:
+	case Bat:
+	case PowerShell:
 	default:
 		return fmt.Errorf("unsupported hook type: %s", s)
 	}
