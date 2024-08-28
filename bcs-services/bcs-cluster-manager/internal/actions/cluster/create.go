@@ -350,36 +350,28 @@ func (ca *CreateAction) createNodegroupInDB(cls *cmproto.Cluster) error {
 			ng.CreateTime = timeStr
 			ng.UpdateTime = timeStr
 
+			if ng.LaunchTemplate == nil {
+				return fmt.Errorf("createNodegroup[%s] empty LaunchTemplate", ng.Name)
+			}
+
 			// base64 encode secret file
-			if ng.LaunchTemplate != nil && ng.LaunchTemplate.KeyPair != nil {
+			if ng.LaunchTemplate.KeyPair != nil {
 				if len(ng.LaunchTemplate.KeyPair.KeySecret) > 0 {
-					ng.LaunchTemplate.KeyPair.KeySecret, _ = encrypt.Encrypt(nil,
-						ng.LaunchTemplate.KeyPair.KeySecret)
+					ng.LaunchTemplate.KeyPair.KeySecret, _ = encrypt.Encrypt(nil, ng.LaunchTemplate.KeyPair.KeySecret)
 				}
 				if len(ng.LaunchTemplate.KeyPair.KeyPublic) > 0 {
-					ng.LaunchTemplate.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil,
-						ng.LaunchTemplate.KeyPair.KeyPublic)
+					ng.LaunchTemplate.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, ng.LaunchTemplate.KeyPair.KeyPublic)
 				}
 			}
-			if ng.LaunchTemplate != nil && ng.LaunchTemplate.InitLoginPassword != "" {
-				ng.LaunchTemplate.InitLoginPassword, _ = encrypt.Encrypt(nil,
-					ng.LaunchTemplate.InitLoginPassword)
+			if len(ng.LaunchTemplate.InitLoginPassword) > 0 {
+				ng.LaunchTemplate.InitLoginPassword, _ = encrypt.Encrypt(nil, ng.LaunchTemplate.InitLoginPassword)
 			}
 
 			// base64 encode script file
-			if ng.NodeTemplate != nil {
-				ng.NodeTemplate.UserScript = utils.Base64Encode(ng.NodeTemplate.UserScript)
-				ng.NodeTemplate.PreStartUserScript = utils.Base64Encode(ng.NodeTemplate.PreStartUserScript)
-				ng.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPreScript)
-				ng.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPostScript)
-			}
-			// base64 encode script file
-			if ng.NodeTemplate != nil {
-				ng.NodeTemplate.UserScript = utils.Base64Encode(ng.NodeTemplate.UserScript)
-				ng.NodeTemplate.PreStartUserScript = utils.Base64Encode(ng.NodeTemplate.PreStartUserScript)
-				ng.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPreScript)
-				ng.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPostScript)
-			}
+			ng.NodeTemplate.UserScript = utils.Base64Encode(ng.NodeTemplate.UserScript)
+			ng.NodeTemplate.PreStartUserScript = utils.Base64Encode(ng.NodeTemplate.PreStartUserScript)
+			ng.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPreScript)
+			ng.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPostScript)
 
 			err := ca.model.CreateNodeGroup(context.Background(), ng)
 			if err != nil {

@@ -160,8 +160,7 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 
 	resourceGroup, ok := opt.Cluster.ExtraInfo[common.NodeResourceGroup]
 	if !ok {
-		return nil, fmt.Errorf("get azure networkResourceGroup failed,"+
-			" no such info in cluster[%s] extraInfo", opt.Cluster.ClusterID)
+		return nil, fmt.Errorf("get nodeResourceGroup failed from cluster[%s] extraInfo", opt.Cluster.ClusterID)
 	}
 	if netResourceGroup, ok2 := opt.Cluster.ExtraInfo[common.NetworkResourceGroup]; ok2 {
 		resourceGroup = netResourceGroup

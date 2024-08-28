@@ -986,7 +986,10 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		}
 		for _, n := range nodes {
 			if n.Status == "running" {
+				n.Status = common.StatusRunning
 				addSuccessNodes = append(addSuccessNodes, n.InnerIP)
+			} else {
+				n.Status = common.StatusAddNodesFailed
 			}
 			n.NodeGroupID = nodeGroup.NodeGroupID
 			err = cloudprovider.GetStorageModel().CreateNode(context.Background(), n)
