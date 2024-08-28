@@ -68,6 +68,7 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 	results := make([]*proto.CloudVpc, 0)
 	for _, v := range vpcs {
 		results = append(results, &proto.CloudVpc{
+			Name:  *v.VpcId,
 			VpcId: *v.VpcId,
 			Ipv4Cidr: func(v *ec2.Vpc) string {
 				if v.CidrBlockAssociationSet != nil {
@@ -118,11 +119,12 @@ func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.
 	result := make([]*proto.Subnet, 0)
 	for _, v := range cloudSubnets {
 		subnet := &proto.Subnet{
-			VpcID:      aws.StringValue(v.VpcId),
-			SubnetID:   aws.StringValue(v.SubnetId),
-			SubnetName: aws.StringValue(v.SubnetId),
-			CidrRange:  aws.StringValue(v.CidrBlock),
-			Zone:       aws.StringValue(v.AvailabilityZone),
+			VpcID:                   aws.StringValue(v.VpcId),
+			SubnetID:                aws.StringValue(v.SubnetId),
+			SubnetName:              aws.StringValue(v.SubnetId),
+			CidrRange:               aws.StringValue(v.CidrBlock),
+			AvailableIPAddressCount: uint64(aws.Int64Value(v.AvailableIpAddressCount)),
+			Zone:                    aws.StringValue(v.AvailabilityZone),
 		}
 
 		ipv6CidrBlocks := make([]string, 0)

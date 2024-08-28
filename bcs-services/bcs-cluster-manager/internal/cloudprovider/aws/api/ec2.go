@@ -14,10 +14,11 @@ package api
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-
-	"github.com/aws/aws-sdk-go/service/ec2"
 )
 
 // EC2Client aws ec2 client
@@ -213,6 +214,24 @@ func (c *EC2Client) TerminateInstances(input *ec2.TerminateInstancesInput) ([]*e
 // DescribeInstanceTypes gets vm instance types
 func (c *EC2Client) DescribeInstanceTypes(input *ec2.DescribeInstanceTypesInput) (
 	*ec2.DescribeInstanceTypesOutput, error) {
+	// 过滤支持x86机型, 适配AL2_x86_86镜像
+	defaultFilter := []*ec2.Filter{
+		{
+			Name:   aws.String("processor-info.supported-architecture"),
+			Values: aws.StringSlice([]string{"x86_64"}),
+		},
+		{
+			Name:   aws.String("supported-usage-class"),
+			Values: aws.StringSlice([]string{"on-demand"}),
+		},
+	}
+
+	if input.Filters != nil {
+		input.Filters = append(input.Filters, defaultFilter...)
+	} else {
+		input.Filters = defaultFilter
+	}
+
 	blog.Infof("DescribeInstanceTypes input: %s", utils.ToJSONString(input))
 	output, err := c.ec2Client.DescribeInstanceTypes(input)
 	if err != nil {

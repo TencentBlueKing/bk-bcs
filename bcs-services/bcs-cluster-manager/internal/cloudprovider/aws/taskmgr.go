@@ -464,8 +464,42 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 
 	// step1: cluster scaleIn to clean cluster nodes
 	common.BuildCordonNodesTaskStep(task, opt.Cluster.ClusterID, nodeIPs)
-	// step2: cluster delete nodes
+	// step2. business user define flow
+	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        opt.Cluster.ClusterID,
+			Content:          group.NodeTemplate.ScaleInPreScript,
+			NodeIps:          strings.Join(nodeIPs, ","),
+			Operator:         opt.Operator,
+			StepName:         common.PreInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
+		})
+	}
+
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleInExtraAddons != nil &&
+		len(group.NodeTemplate.ScaleInExtraAddons.PreActions) > 0 {
+		err := template.BuildSopsFactory{
+			StepName: template.UserPreInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				InstancePasswd: "",
+				NodeIPList:     strings.Join(nodeIPs, ","),
+				NodeOperator:   opt.Operator,
+				ShowSopsUrl:    true,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleInExtraAddons, true)
+		if err != nil {
+			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions "+
+				"BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step3: cluster delete nodes
 	cleanNodes.BuildCleanNodeGroupNodesStep(task)
+	// step4: check deleted node status
+	common.BuildCheckClusterCleanNodesTaskStep(task, group.Provider, opt.Cluster.ClusterID, nodeIDs)
+
+	// step5: remove host from cmdb
+	common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -592,23 +626,59 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	updateDesired.BuildApplyInstanceMachinesStep(task)
 	// step2. check cluster nodes and all nodes status is running
 	updateDesired.BuildCheckClusterNodeStatusStep(task)
-	// install gse agent
+	// step3. install gse agent
 	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-		ClusterId:  opt.Cluster.ClusterID,
-		BusinessId: opt.Cluster.BusinessID,
-		CloudArea:  group.GetArea(),
-		User:       group.GetLaunchTemplate().GetInitLoginUsername(),
-		Passwd:     passwd,
-		KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
-		Port:       "",
+		ClusterId:   opt.Cluster.ClusterID,
+		NodeGroupId: group.NodeGroupID,
+		BusinessId:  opt.Cluster.BusinessID,
+		CloudArea:   group.GetArea(),
+		User:        group.GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:      passwd,
+		KeyInfo:     group.GetLaunchTemplate().GetKeyPair(),
+		Port:        "",
 	})
-	// transfer host module
-	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
-		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
-		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, opt.Cluster.GetClusterBasicSettings().GetModule().
-			GetWorkerModuleID(), opt.Cluster.GetClusterBasicSettings().GetModule().GetMasterModuleID())
+	// step4. transfer host module
+	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
+	if moduleID != "" {
+		common.BuildTransferHostModuleStep(task, opt.Cluster.BusinessID, moduleID, "")
 	}
-	common.BuildUnCordonNodesTaskStep(task, group.ClusterID, nil)
+
+	// step5. business define sops task 支持脚本和标准运维流程
+	if group.NodeTemplate != nil && len(group.NodeTemplate.UserScript) > 0 {
+		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+			ClusterID:        group.ClusterID,
+			Content:          group.NodeTemplate.UserScript,
+			NodeIps:          "",
+			Operator:         opt.Operator,
+			StepName:         common.PostInitStepJob,
+			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+		})
+	}
+
+	if group.NodeTemplate != nil && group.NodeTemplate.ScaleOutExtraAddons != nil {
+		err := template.BuildSopsFactory{
+			StepName: template.UserAfterInit,
+			Cluster:  opt.Cluster,
+			Extra: template.ExtraInfo{
+				InstancePasswd:     passwd,
+				NodeIPList:         "",
+				NodeOperator:       opt.Operator,
+				ShowSopsUrl:        true,
+				ExternalNodeScript: "",
+				NodeGroupID:        group.NodeGroupID,
+			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
+		if err != nil {
+			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)
+		}
+	}
+
+	// step6: set node labels
+	common.BuildNodeLabelsTaskStep(task, opt.Cluster.ClusterID, nil, cloudprovider.GetLabelsByNg(opt.NodeGroup))
+	// step7: set node annotations
+	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
+		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
+	// step8: remove inner nodes taints
+	common.BuildRemoveInnerTaintTaskStep(task, group)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
