@@ -209,6 +209,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		}
 	} else {
 		for _, ng := range groups {
+			ng.CloudNodeGroupID = strings.ToLower(ng.NodeGroupID)
 			nodePool := generateNodePool(GenerateCreateNodePoolInput(ng, info.Cluster))
 			req.Cluster.NodePools = append(req.Cluster.NodePools, nodePool)
 		}
@@ -463,10 +464,11 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 		index := 0
 		running, failure := make([]string, 0), make([]string, 0)
 		for _, group := range nodeGroups {
-			np, errPool := client.GetClusterNodePool(context.Background(), systemID, group.CloudNodeGroupID)
+			cloudNodeGroupID := strings.ToLower(group.NodeGroupID)
+			np, errPool := client.GetClusterNodePool(context.Background(), systemID, cloudNodeGroupID)
 			if errPool != nil {
 				blog.Errorf("taskID[%s] GetClusterNodePool[%s/%s] failed: %v", taskID, systemID,
-					group.CloudNodeGroupID, errPool)
+					cloudNodeGroupID, errPool)
 				return nil
 			}
 			if np == nil {
@@ -476,7 +478,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 			switch {
 			case np.Status == api.NodeGroupStatusProvisioning:
 				blog.Infof("taskID[%s] GetClusterNodePool[%s] still creating, status[%s]",
-					taskID, group.CloudNodeGroupID, np.Status)
+					taskID, cloudNodeGroupID, np.Status)
 				return nil
 			case np.Status == api.NodeGroupStatusRunning:
 				if !utils.StringInSlice(group.NodeGroupID, running) {
@@ -556,7 +558,7 @@ func UpdateGKENodesGroupToDBTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("UpdateGKENodesGroupToDBTask[%s] updateNodeGroups[%s] failed: %v",
 			taskID, clusterID, err)
-		retErr := fmt.Errorf("UpdateGKENodesGroupToDBTask[%s] timeout|abnormal", clusterID)
+		retErr := fmt.Errorf("UpdateGKENodesGroupToDBTask[%s] update nodegroups failed, %s", clusterID, err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -600,6 +602,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return fmt.Errorf("updateNodeGroups GetNodeGroupByGroupID failed, %s", err.Error())
 		}
 
+		group.CloudNodeGroupID = strings.ToLower(group.NodeGroupID)
 		np, errPool := containerCli.GetClusterNodePool(context.Background(),
 			info.Cluster.SystemID, group.CloudNodeGroupID)
 		if errPool != nil {

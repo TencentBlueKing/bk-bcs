@@ -347,7 +347,7 @@ func GetInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute
 	}
 	var it *compute.InstanceTemplate
 	if utils.StringInSlice("instanceTemplates", itInfo) {
-		it, err = computeCli.GetInstanceTemplate(context.Background(), itInfo[(len(itInfo)-1)])
+		it, err = computeCli.GetInstanceTemplate(context.Background(), itInfo[3], itInfo[(len(itInfo)-1)])
 		if err != nil {
 			blog.Errorf("GetInstanceTemplate failed: %v", err)
 			return nil, err

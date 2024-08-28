@@ -338,14 +338,24 @@ func (c *ComputeServiceClient) GetMigInstances(ctx context.Context, location, na
 }
 
 // GetInstanceTemplate get the instanceTemplate
-func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, name string) (
+func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, location, name string) (
 	*compute.InstanceTemplate, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate failed: gkeProjectId is required")
 	}
 
+	var (
+		err error
+		it  *compute.InstanceTemplate
+	)
+
+	switch c.getLocationType(location) {
+	case locationTypeZones:
+		it, err = c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
+	case locationTypeRegions:
+		it, err = c.computeServiceClient.RegionInstanceTemplates.Get(c.gkeProjectID, location, name).Context(ctx).Do()
+	}
 	// instance template
-	it, err := c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate[%s] failed: %v", name, err)
 	}

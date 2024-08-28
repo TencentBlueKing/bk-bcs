@@ -253,7 +253,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 	// get instanceTemplate info
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
 	if err != nil {
-		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] GetInstanceTemplate failed: %v", taskID, err)
 		return nil, nil, err
 	}
 
