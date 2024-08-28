@@ -659,7 +659,7 @@ func (s *Service) ListReleases(ctx context.Context, req *pbds.ListReleasesReq) (
 				releasedGroups = append(releasedGroups, &pbrelease.ReleaseStatus_ReleasedGroup{
 					Id:   0,
 					Name: "默认分组",
-					Mode: table.Default.String(),
+					Mode: table.GroupModeDefault.String(),
 				})
 			}
 			for _, group := range groups {

@@ -39,9 +39,11 @@ func (k *KvSpec) KvSpec() *table.KvSpec {
 	}
 
 	return &table.KvSpec{
-		Key:    k.Key,
-		KvType: table.DataType(k.KvType),
-		Memo:   k.Memo,
+		Key:          k.Key,
+		KvType:       table.DataType(k.KvType),
+		SecretType:   table.SecretType(k.SecretType),
+		SecretHidden: k.SecretHidden,
+		Memo:         k.Memo,
 	}
 }
 
@@ -82,10 +84,12 @@ func PbKvSpec(spec *table.KvSpec, value string) *KvSpec {
 	}
 
 	return &KvSpec{
-		Key:    spec.Key,
-		KvType: string(spec.KvType),
-		Value:  value,
-		Memo:   spec.Memo,
+		Key:          spec.Key,
+		KvType:       string(spec.KvType),
+		Value:        value,
+		Memo:         spec.Memo,
+		SecretType:   string(spec.SecretType),
+		SecretHidden: spec.SecretHidden,
 	}
 }
 

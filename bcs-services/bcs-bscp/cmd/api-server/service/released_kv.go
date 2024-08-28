@@ -28,6 +28,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/config-server"
@@ -144,7 +145,7 @@ func (m *kvService) Export(w http.ResponseWriter, r *http.Request) {
 			_ = render.Render(w, r, rest.BadRequest(err))
 			return
 		}
-		outData = kvsToOutData(kvs.Details)
+		outData = kvsToOutData(kt, kvs.Details)
 	} else {
 		req := &pbcs.ListReleasedKvsReq{
 			BizId:     kt.BizID,
@@ -157,7 +158,7 @@ func (m *kvService) Export(w http.ResponseWriter, r *http.Request) {
 			_ = render.Render(w, r, rest.BadRequest(err))
 			return
 		}
-		outData = rkvsToOutData(rkvs.Details)
+		outData = rkvsToOutData(kt, rkvs.Details)
 	}
 
 	var exporter Exporter
@@ -196,7 +197,7 @@ type RkvOutData struct {
 	Memo   string `json:"memo" yaml:"memo" xml:"memo"`
 }
 
-func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
+func rkvsToOutData(kt *kit.Kit, details []*pbrkv.ReleasedKv) map[string]interface{} {
 	d := map[string]interface{}{}
 	for _, rkv := range details {
 		var value interface{}
@@ -204,6 +205,9 @@ func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
 		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
+		}
+		if rkv.Spec.SecretHidden {
+			value = i18n.T(kt, "sensitive information cannot be exported")
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
@@ -215,7 +219,7 @@ func rkvsToOutData(details []*pbrkv.ReleasedKv) map[string]interface{} {
 	return d
 }
 
-func kvsToOutData(details []*pbkv.Kv) map[string]interface{} {
+func kvsToOutData(kt *kit.Kit, details []*pbkv.Kv) map[string]interface{} {
 	d := map[string]interface{}{}
 	for _, rkv := range details {
 		var value interface{}
@@ -223,6 +227,9 @@ func kvsToOutData(details []*pbkv.Kv) map[string]interface{} {
 		if rkv.Spec.KvType == string(table.KvNumber) {
 			i, _ := strconv.Atoi(rkv.Spec.Value)
 			value = i
+		}
+		if rkv.Spec.SecretHidden {
+			value = i18n.T(kt, "sensitive information cannot be exported")
 		}
 		d[rkv.Spec.Key] = map[string]interface{}{
 			"kv_type": rkv.Spec.KvType,
