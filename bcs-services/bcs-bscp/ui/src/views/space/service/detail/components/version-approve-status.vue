@@ -38,29 +38,23 @@
 
   watch([() => route.params, publishedVersionId], () => {
     loadStatus();
-    console.log('watch');
   });
 
   onMounted(() => {
     loadStatus();
-    console.log('Mounted');
   });
 
   const loadStatus = async () => {
-    // console.log('载入状态');
     if (route.params.versionId) {
       const { spaceId, appId, versionId } = route.params;
       try {
-        const resp = await versionStatusQuery(Number(spaceId), Number(appId), Number(versionId));
-        console.log(resp);
+        const resp = await versionStatusQuery(String(spaceId), Number(appId), Number(versionId));
         const { spec } = resp.data;
         approverList.value = spec.approver_progress; // 审批人
         approveText.value = publishStatusText(spec.publish_status);
         sendData(spec);
       } catch (error) {
-        console.log(versionId);
-      } finally {
-        console.log(versionId);
+        console.log(error);
       }
     }
   };

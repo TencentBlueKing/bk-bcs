@@ -711,11 +711,21 @@ export const publishType = (bizId: string, appId: number) =>
   http.get(`/config/biz_id/${bizId}/app_id/${appId}/last/select`);
 
 /**
- * 版本上线状态查询
+ * 当前版本状态查询
  * @param bizId 业务ID
  * @param appId 应用ID
  * @param releaseId 版本ID
  * @returns
  */
-export const versionStatusQuery = (bizId: number, appId: number, releaseId: number) =>
+export const versionStatusQuery = (bizId: string, appId: number, releaseId: number) =>
   http.get(`/config/biz_id/${bizId}/app_id/${appId}/release_id/${releaseId}/status`);
+
+/**
+ * 当前服务下 所有版本上线状态检查
+ * @param bizId 业务ID
+ * @param appId 应用ID
+ * @param releaseId 版本ID
+ * @returns
+ */
+export const versionStatusCheck = (bizId: string, appId: number) =>
+  http.get(`/config/biz_id/${bizId}/app_id/${appId}/last/publish`);

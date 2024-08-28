@@ -24,10 +24,10 @@
   );
 
   const handleLinkTo = () => {
-    console.log('跳转服务上线记录');
+    console.log('跳转服务上线记录'); // 等接口更新
   };
   const handleUndo = () => {
-    console.log('撤销');
+    console.log('撤销'); // 等接口更新
   };
 </script>
 

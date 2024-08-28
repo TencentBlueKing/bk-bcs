@@ -112,7 +112,7 @@
     footer-align="center"
     confirm-text="再想想"
     cancel-text="仍要关闭"
-    :close-icon="false"
+    :close-icon="true"
     :show-mask="true"
     :quick-close="false"
     :multi-instance="false"
