@@ -26,7 +26,7 @@
                 <template v-else>
                   <SecretEditor
                     v-if="
-                      props.config.spec.secret_type === 'customize' || props.config.spec.secret_type === 'certificate'
+                      props.config.spec.secret_type === 'custom' || props.config.spec.secret_type === 'certificate'
                     "
                     :is-edit="false"
                     :content="props.config.spec.value" />

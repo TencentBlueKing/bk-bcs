@@ -9,7 +9,7 @@
         {{ item.label }}
       </div>
     </div>
-    <div v-if="selectType === 'certificate' || selectType === 'customize'" class="certificate-content">
+    <div v-if="selectType === 'certificate' || selectType === 'custom'" class="certificate-content">
       <SecretContentEditor
         :content="secretValue"
         :is-credential="selectType === 'certificate'"
@@ -175,7 +175,7 @@
     },
     {
       label: t('自定义'),
-      value: 'customize',
+      value: 'custom',
       infoList: [],
     },
   ];
