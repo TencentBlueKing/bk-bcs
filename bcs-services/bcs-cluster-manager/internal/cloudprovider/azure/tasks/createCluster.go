@@ -636,8 +636,8 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return fmt.Errorf("get cloud aks client err, %s", err.Error())
 		}
 
-		aksAgentPool, err := cli.GetPoolAndReturn(ctx, getClusterResourceGroup(info.Cluster), info.Cluster.SystemID,
-			getCloudNodeGroupID(nodeGroup))
+		aksAgentPool, err := cli.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
+			info.Cluster.SystemID, getCloudNodeGroupID(nodeGroup))
 		if err != nil {
 			blog.Errorf("updateNodeGroups[%s] GetPoolAndReturn failed: %v", taskID, err)
 			return fmt.Errorf("updateNodeGroups GetPoolAndReturn[%s] failed, %s",

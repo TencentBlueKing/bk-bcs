@@ -253,7 +253,6 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 	}
 
 	nodeGroupResource, ok := cluster.ExtraInfo[common.NodeResourceGroup]
-	clusterGroupResource, ok := cluster.ExtraInfo[common.ClusterResourceGroup]
 	if !ok {
 		ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 		defer cancel()
@@ -263,26 +262,31 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 		clsResourceGroup := cloudprovider.GetClusterResourceGroup(info.Cluster)
 		cloudCluster, err = client.GetCluster(ctx, info, clsResourceGroup)
 		if err != nil {
-			return errors.Wrapf(err, "createAgentPool[%s]: call GetCluster falied", taskID)
+			return errors.Wrapf(err, "setVmSets[%s]: call GetCluster falied", taskID)
 		}
 		nodeGroupResource = *cloudCluster.Properties.NodeResourceGroup
+	}
+
+	netGroupResource, ok2 := cluster.ExtraInfo[common.NetworkResourceGroup]
+	if !ok2 {
+		return fmt.Errorf("setVmSets[%s] get netGroupResource failed", taskID)
 	}
 
 	ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 	defer cancel()
 	set, err := client.MatchNodeGroup(ctx, nodeGroupResource, info.NodeGroup.CloudNodeGroupID)
 	if err != nil {
-		return errors.Wrapf(err, "createAgentPool[%s]: call MatchNodeGroup[%s][%s] falied", taskID,
+		return errors.Wrapf(err, "setVmSets[%s]: call MatchNodeGroup[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
 
-	_, err = updateVmss(ctx, client, group, set, nodeGroupResource, clusterGroupResource)
+	_, err = updateVmss(ctx, client, group, set, nodeGroupResource, netGroupResource)
 	if err != nil {
-		return errors.Wrapf(err, "createAgentPool[%s]: call UpdateVmss[%s][%s] falied", taskID,
+		return errors.Wrapf(err, "setVmSets[%s]: call UpdateVmss[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
 
-	blog.Infof("createAgentPool[%s]: %s set node password or purchase data disk and system disk successful",
+	blog.Infof("setVmSets[%s]: %s set node password or purchase data disk and system disk successful",
 		taskID, *set.Name)
 
 	return nil

@@ -23,7 +23,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -150,35 +149,6 @@ func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClu
 
 // GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
-	if err != nil {
-		return nil, fmt.Errorf("create azure client failed, %v", err)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-
-	resourceGroup, ok := opt.Cluster.ExtraInfo[common.NodeResourceGroup]
-	if !ok {
-		return nil, fmt.Errorf("get nodeResourceGroup failed from cluster[%s] extraInfo", opt.Cluster.ClusterID)
-	}
-	if netResourceGroup, ok2 := opt.Cluster.ExtraInfo[common.NetworkResourceGroup]; ok2 {
-		resourceGroup = netResourceGroup
-	}
-	// 如果网络资源组存在,则将其赋值给节点资源组
-	opt.Cluster.ExtraInfo[common.NodeResourceGroup] = resourceGroup
-
-	// get vpcID for cluster
-	vn, err := client.ListVirtualNetwork(ctx, resourceGroup)
-	if err != nil {
-		return nil, err
-	}
-	if len(vn) == 0 {
-		return nil, fmt.Errorf("get VPC failed for cluster[%s], empty response", opt.Cluster.ClusterID)
-	}
-
-	opt.Cluster.VpcID = *vn[0].Name
-
 	return opt.Cluster, nil
 }
 
