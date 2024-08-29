@@ -34,8 +34,9 @@ func FormatIng(manifest map[string]interface{}) map[string]interface{} {
 
 	// 根据不同 api 版本，选择不同的解析 Rules 方法
 	parseRulesFunc := map[string]func(map[string]interface{}) []map[string]interface{}{
-		"networking.k8s.io/v1": parseV1IngRules,
-		"extensions/v1beta1":   parseV1beta1IngRules,
+		"networking.k8s.io/v1":      parseV1IngRules,
+		"networking.k8s.io/v1beta1": parseV1IngRules,
+		"extensions/v1beta1":        parseV1beta1IngRules,
 	}[manifest["apiVersion"].(string)]
 
 	ret["hosts"] = parseIngHosts(manifest)
