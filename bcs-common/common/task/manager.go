@@ -15,6 +15,7 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -372,12 +373,23 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 			state.updateStepSuccess(start)
 			return nil
 		}
-		state.updateStepFailure(start, retErr, nil)
 
 		if step.GetSkipOnFailed() {
+			state.updateStepFailure(start, retErr, nil)
 			return nil
 		}
 
+		// 单步骤主动revoke的不再重试
+		if errors.Is(retErr, istep.ErrRevoked) {
+			taskEnd := &taskEndStatus{
+				types.TaskStatusFailure,
+				fmt.Sprintf("step %s running failed, err: %s", stepName, retErr),
+			}
+			state.updateStepFailure(start, retErr, taskEnd)
+			return retErr
+		}
+
+		state.updateStepFailure(start, retErr, nil)
 		if step.GetRetryCount() < step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
