@@ -143,3 +143,6 @@
 .icon-terminal:before {
   content: '\e127';
 }
+.icon-warning-circle:before {
+  content: '\e128';
+}
