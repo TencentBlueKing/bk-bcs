@@ -72,6 +72,7 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 		userName := req.Header.Get(common.HeaderBKUserName)
 		user.UserName = userName
 	}
+	user.IsTencent = true
 	if strings.HasPrefix(user.GetUser(), poTencentUserPrefix) {
 		user.UserName = strings.TrimPrefix(user.UserName, poTencentUserPrefix)
 		user.IsTencent = false

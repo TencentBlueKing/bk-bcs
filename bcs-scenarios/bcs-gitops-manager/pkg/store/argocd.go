@@ -303,7 +303,9 @@ func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error 
 	_, err := cd.clusterClient.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
 	if err != nil {
 		if !utils.IsContextCanceled(err) && !utils.IsPermissionDenied(err) && !utils.IsUnauthenticated(err) {
-			metric.ManagerArgoOperateFailed.WithLabelValues("CreateCluster").Inc()
+			// ignore this metric
+			// metric.ManagerArgoOperateFailed.WithLabelValues("CreateCluster").Inc()
+			return errors.Wrapf(err, "cluster not normal")
 		}
 		return errors.Wrapf(err, "argocd create cluster '%s' failed", cls.Name)
 	}
