@@ -59,7 +59,7 @@ func mig20240822160103Up(tx *gorm.DB) error {
 
 	// ReleasedKvs add new column
 	if !tx.Migrator().HasColumn(&ReleasedKvs{}, "secret_type") {
-		if err := tx.Migrator().AddColumn(&Kvs{}, "secret_type"); err != nil {
+		if err := tx.Migrator().AddColumn(&ReleasedKvs{}, "secret_type"); err != nil {
 			return err
 		}
 	}
