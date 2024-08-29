@@ -157,7 +157,7 @@
         {
             "id": "get the current number of service config items failed, err: {Err}",
             "message": "get the current number of service config items failed, err: {Err}",
-            "translation": "",
+            "translation": "获取当前服务配置项总数失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -719,6 +719,106 @@
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
                     "expr": "e"
+                }
+            ]
+        },
+        {
+            "id": "get config item failed, err: {Err}",
+            "message": "get config item failed, err: {Err}",
+            "translation": "获取配置项失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the data has not been deleted",
+            "message": "the data has not been deleted",
+            "translation": "配置项没有被删除"
+        },
+        {
+            "id": "get the latest released version failed, err: {Err}",
+            "message": "get the latest released version failed, err: {Err}",
+            "translation": "获取最新发布版本失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get the published config failed, err: {Err}",
+            "message": "get the published config failed, err: {Err}",
+            "translation": "获取已发布的配置失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "recovery failed. A file with the same path exists and is not in a new state",
+            "message": "recovery failed. A file with the same path exists and is not in a new state",
+            "translation": "恢复失败。具有相同路径的文件已存在，但未处于新状态"
+        },
+        {
+            "id": "recover config item failed, err: {Err}",
+            "message": "recover config item failed, err: {Err}",
+            "translation": "恢复配置项失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get records greater than the latest released version failed, err: {Err}",
+            "message": "get records greater than the latest released version failed, err: {Err}",
+            "translation": "获取大于最新发布版本的记录失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "message": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "translation": "该服务配置项的总数（包括模板和非模板）超出限制 {AppConfigCnt}",
+            "placeholders": [
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "appConfigCnt"
                 }
             ]
         },

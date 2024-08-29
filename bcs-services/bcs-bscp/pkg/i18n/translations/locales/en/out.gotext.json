@@ -821,6 +821,122 @@
             "fuzzy": true
         },
         {
+            "id": "get config item failed, err: {Err}",
+            "message": "get config item failed, err: {Err}",
+            "translation": "get config item failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the data has not been deleted",
+            "message": "the data has not been deleted",
+            "translation": "the data has not been deleted",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "get the latest released version failed, err: {Err}",
+            "message": "get the latest released version failed, err: {Err}",
+            "translation": "get the latest released version failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get the published config failed, err: {Err}",
+            "message": "get the published config failed, err: {Err}",
+            "translation": "get the published config failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "recovery failed. A file with the same path exists and is not in a new state",
+            "message": "recovery failed. A file with the same path exists and is not in a new state",
+            "translation": "recovery failed. A file with the same path exists and is not in a new state",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "recover config item failed, err: {Err}",
+            "message": "recover config item failed, err: {Err}",
+            "translation": "recover config item failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get records greater than the latest released version failed, err: {Err}",
+            "message": "get records greater than the latest released version failed, err: {Err}",
+            "translation": "get records greater than the latest released version failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "message": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "translation": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "appConfigCnt"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "obtain the number of configuration items",
             "message": "obtain the number of configuration items",
             "translation": "obtain the number of configuration items",
