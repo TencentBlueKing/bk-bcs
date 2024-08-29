@@ -1084,6 +1084,7 @@ cluster:
         status: Node pool status
         name: Node pool name
         detail: View node pool details
+        serviceRole: Service role
       title:
         nodeConfig: Node configuration
         initConfig: Initialization configuration
@@ -1167,6 +1168,12 @@ cluster:
             GPSSD: Ultra-High I/O Cloud Disk
             SSD: General-Purpose SSD Cloud Disk
             ESSD: Extreme I/O Cloud Disk
+            gp2: General Purpose SSD gp2
+            gp3: General Purpose SSD gp3
+            io1: Provisioned IOPS io1
+            io2: Provisioned IOPS io2
+            st1: Throughput Optimized HDD st1
+            sc1: Cold HDD sc1
           disk:
             system: System disk
             data: Data disk
@@ -1207,9 +1214,11 @@ cluster:
             The internal cloud environment is automatically allocated by the
             product according to the VPC where the cluster is located.
           placeholder: System automatic allocation
+          validate: Please select at least two subnets from different availability zones
           label:
             subnetID: Subnet id
             subnetName: Subnet name
+            zone: Zone
             remainIp: IP
             unUsedReason:
               text: Used for reason
@@ -3288,6 +3297,10 @@ azureCA:
     dataDisk: >-
       After purchasing a data disk and adding nodes, you need to manually format
       and mount the disk.
+  password:
+    set: Set password
+    confirm: Confirm password
+awsCA:
   password:
     set: Set password
     confirm: Confirm password

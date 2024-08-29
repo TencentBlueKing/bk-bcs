@@ -57,6 +57,14 @@ const HuaweiNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/vi
 // 编辑配置
 const HuaweiEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/huawei/edit-node-pool.vue');
 
+// aws ca
+// 新建节点池
+const AwsNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/aws/node-pool.vue');
+// 扩缩容记录
+const AwsNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/aws/node-pool-detail.vue');
+// 编辑配置
+const AwsEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/aws/edit-node-pool.vue');
+
 // 集群管理
 export default [
   {
@@ -306,6 +314,9 @@ export default [
         case 'huaweiCloud':
           name = 'huaweiNodePool';
           break;
+        case 'awsCloud':
+          name = 'awsNodePool';
+          break;
       }
       name ? next({
         name,
@@ -338,6 +349,9 @@ export default [
         case 'huaweiCloud':
           name = 'huaweiEditNodePool';
           break;
+        case 'awsCloud':
+          name = 'awsEditNodePool';
+          break;
       }
       name ? next({
         name,
@@ -369,6 +383,9 @@ export default [
           break;
         case 'huaweiCloud':
           name = 'huaweiNodePoolDetail';
+          break;
+        case 'awsCloud':
+          name = 'awsNodePoolDetail';
           break;
       }
       name ? next({
@@ -477,6 +494,37 @@ export default [
     name: 'batchSettingNode',
     props: route => ({ ...route.query, ...route.params }),
     component: batchSettingNode,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // aws ca
+  {
+    path: 'cluster/:clusterId/aws/nodepools',
+    name: 'awsNodePool',
+    props: true,
+    component: AwsNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/aws/nodepools/:nodeGroupID',
+    name: 'awsEditNodePool',
+    props: true,
+    component: AwsEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/aws/nodepools/:nodeGroupID/detail',
+    name: 'awsNodePoolDetail',
+    props: true,
+    component: AwsNodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,
