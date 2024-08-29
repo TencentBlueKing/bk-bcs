@@ -385,10 +385,9 @@ export const moveOutTemplateFromPackage = (
   template_ids: number[],
   template_set_ids: number[],
   exclusion_operation: boolean,
-  template_set_id: number | string,
 ) =>
   http.post(
-    `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/delete_from_template_sets`,
+    `/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/delete_from_template_sets`,
     {
       template_ids,
       template_set_ids,

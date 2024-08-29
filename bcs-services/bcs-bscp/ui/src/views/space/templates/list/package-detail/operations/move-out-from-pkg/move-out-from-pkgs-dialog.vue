@@ -193,7 +193,6 @@
         [props.id],
         selectedPkgs.value,
         false,
-        typeof props.currentPkg === 'string' ? 0 : props.currentPkg,
       );
       emits('movedOut');
       close();
