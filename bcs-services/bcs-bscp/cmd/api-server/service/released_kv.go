@@ -214,6 +214,13 @@ func rkvsToOutData(kt *kit.Kit, details []*pbrkv.ReleasedKv) map[string]interfac
 			"value":   value,
 			"memo":    rkv.Spec.Memo,
 		}
+
+		if rkv.Spec.KvType == string(table.KvSecret) {
+			existingData := d[rkv.Spec.Key].(map[string]interface{})
+			existingData["secret_type"] = rkv.Spec.SecretType
+			existingData["secret_hidden"] = rkv.Spec.SecretHidden
+			d[rkv.Spec.Key] = existingData
+		}
 	}
 
 	return d
@@ -236,6 +243,14 @@ func kvsToOutData(kt *kit.Kit, details []*pbkv.Kv) map[string]interface{} {
 			"value":   value,
 			"memo":    rkv.Spec.Memo,
 		}
+
+		if rkv.Spec.KvType == string(table.KvSecret) {
+			existingData := d[rkv.Spec.Key].(map[string]interface{})
+			existingData["secret_type"] = rkv.Spec.SecretType
+			existingData["secret_hidden"] = rkv.Spec.SecretHidden
+			d[rkv.Spec.Key] = existingData
+		}
+
 	}
 
 	return d

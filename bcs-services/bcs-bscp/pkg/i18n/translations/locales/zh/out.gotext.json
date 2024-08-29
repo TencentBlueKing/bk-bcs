@@ -456,6 +456,11 @@
             ]
         },
         {
+            "id": "please set a password",
+            "message": "please set a password",
+            "translation": "请设置密码"
+        },
+        {
             "id": "the certificate format is incorrect, only X.509 format is supported",
             "message": "the certificate format is incorrect, only X.509 format is supported",
             "translation": "证书格式不正确, 仅支持X.509格式"

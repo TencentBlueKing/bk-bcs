@@ -749,6 +749,9 @@ func isNumber(value interface{}) bool {
 
 // 验证密钥的值
 func verifySecretVaule(kit *kit.Kit, secretType, value string) error {
+	if value == "敏感信息无法导出" {
+		return errors.New(i18n.T(kit, `please set a password`))
+	}
 	switch secretType {
 	case string(table.SecretTypeCertificate):
 		if !validateCertificate(value) {

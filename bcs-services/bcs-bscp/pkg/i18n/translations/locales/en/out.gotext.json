@@ -524,6 +524,13 @@
             "fuzzy": true
         },
         {
+            "id": "please set a password",
+            "message": "please set a password",
+            "translation": "please set a password",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "the certificate format is incorrect, only X.509 format is supported",
             "message": "the certificate format is incorrect, only X.509 format is supported",
             "translation": "the certificate format is incorrect, only X.509 format is supported",
