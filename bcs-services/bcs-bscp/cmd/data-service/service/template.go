@@ -563,7 +563,7 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 	if err = s.dao.Validator().ValidateTemplatesExist(kt, templateIds); err != nil {
 		return nil, err
 	}
-	if err = s.dao.Validator().ValidateTmplSetsExist(kt, req.TemplateSetIds); err != nil {
+	if err = s.dao.Validator().ValidateTmplSetsExist(kt, []uint32{req.TemplateSetId}); err != nil {
 		return nil, err
 	}
 
@@ -604,7 +604,8 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbds.DeleteT
 	}
 
 	// 3. 通过套餐获取绑定的服务数据
-	bindings, err := s.dao.AppTemplateBinding().GetBindingAppByTemplateSetID(kt, req.BizId, req.TemplateSetIds)
+	bindings, err := s.dao.AppTemplateBinding().GetBindingAppByTemplateSetID(kt, req.BizId,
+		[]uint32{req.TemplateSetId})
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
