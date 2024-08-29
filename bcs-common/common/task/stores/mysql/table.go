@@ -63,7 +63,7 @@ func (t *TaskRecord) TableName() string {
 }
 
 // BeforeCreate ..
-func (t *TaskRecord) BeforeCreate(tx *gorm.DB) (err error) {
+func (t *TaskRecord) BeforeCreate(tx *gorm.DB) error {
 	if t.Start.IsZero() {
 		t.Start = UnixZeroTime
 	}
@@ -74,7 +74,7 @@ func (t *TaskRecord) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 // BeforeUpdate ..
-func (t *TaskRecord) BeforeUpdate(tx *gorm.DB) (err error) {
+func (t *TaskRecord) BeforeUpdate(tx *gorm.DB) error {
 	if t.Start.IsZero() {
 		t.Start = UnixZeroTime
 	}
@@ -111,7 +111,7 @@ func (t *StepRecord) TableName() string {
 }
 
 // BeforeCreate ..
-func (t *StepRecord) BeforeCreate(tx *gorm.DB) (err error) {
+func (t *StepRecord) BeforeCreate(tx *gorm.DB) error {
 	if t.Start.IsZero() {
 		t.Start = UnixZeroTime
 	}
@@ -122,7 +122,7 @@ func (t *StepRecord) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 // BeforeUpdate ..
-func (t *StepRecord) BeforeUpdate(tx *gorm.DB) (err error) {
+func (t *StepRecord) BeforeUpdate(tx *gorm.DB) error {
 	if t.Start.IsZero() {
 		t.Start = UnixZeroTime
 	}
