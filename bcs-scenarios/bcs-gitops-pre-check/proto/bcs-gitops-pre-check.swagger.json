@@ -1,0 +1,625 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "proto/bcs-gitops-pre-check.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "GitOpsPreCheck"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/v1/precheck/mr/info": {
+      "get": {
+        "summary": "获取mr信息",
+        "description": "获取mr信息",
+        "operationId": "GitOpsPreCheck_GetMrInfo",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/precheckGetMrInfoRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "repository",
+            "description": "repository. 仓库地址",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "mrIID",
+            "description": "mrIID. mrIID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GitOpsPreCheck"
+        ]
+      }
+    },
+    "/api/v1/precheck/record": {
+      "post": {
+        "summary": "补录preCheck任务",
+        "description": "补录preCheck任务",
+        "operationId": "GitOpsPreCheck_RecordTaskByPlugin",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/precheckPreCheckTaskRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/precheckPreCheckTask"
+            }
+          }
+        ],
+        "tags": [
+          "GitOpsPreCheck"
+        ]
+      }
+    },
+    "/api/v1/precheck/task": {
+      "get": {
+        "summary": "查询单个preCheck任务",
+        "description": "查询单个preCheck任务",
+        "operationId": "GitOpsPreCheck_GetTaskByID",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/precheckPreCheckTaskRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "description": "id. id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "project",
+            "description": "project. project",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GitOpsPreCheck"
+        ]
+      },
+      "put": {
+        "summary": "更新单个preCheck任务",
+        "description": "更新单个preCheck任务",
+        "operationId": "GitOpsPreCheck_UpdateTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/precheckPreCheckTaskRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/precheckPreCheckTask"
+            }
+          }
+        ],
+        "tags": [
+          "GitOpsPreCheck"
+        ]
+      }
+    },
+    "/api/v1/precheck/tasks": {
+      "get": {
+        "summary": "查询单个preCheck任务",
+        "description": "查询单个preCheck任务",
+        "operationId": "GitOpsPreCheck_ListTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/precheckListPreCheckTaskRsp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projects",
+            "description": "projects. 项目",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "repos",
+            "description": "repos. 仓库",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "startTime",
+            "description": "startTime. 开始时间",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endTime",
+            "description": "endTime. 结束时间",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "limit. 单页数量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "offset",
+            "description": "offset. 偏移量",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "withDetail",
+            "description": "withDetail. 是否返回详情",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "tags": [
+          "GitOpsPreCheck"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "precheckApplicationCheckDetail": {
+      "type": "object",
+      "properties": {
+        "checkDetail": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/precheckApplicationDetail"
+          },
+          "description": "Check detail",
+          "title": "checkDetail"
+        }
+      }
+    },
+    "precheckApplicationDetail": {
+      "type": "object",
+      "properties": {
+        "finish": {
+          "type": "boolean",
+          "description": "Finish",
+          "title": "finish"
+        },
+        "detail": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/precheckResourceCheckDetail"
+          },
+          "description": "detail",
+          "title": "detail"
+        },
+        "message": {
+          "type": "string",
+          "description": "message",
+          "title": "message"
+        }
+      }
+    },
+    "precheckGetMrInfoRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestID"
+        },
+        "data": {
+          "$ref": "#/definitions/precheckMRInfoData",
+          "description": "返回的设备列表",
+          "title": "data"
+        }
+      },
+      "description": "获取mrInfo响应",
+      "title": "GetMrInfoRsp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "precheckListPreCheckTaskRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/precheckPreCheckTask"
+          },
+          "description": "返回的设备列表",
+          "title": "data"
+        }
+      },
+      "description": "部署前检查task列表响应",
+      "title": "ListPreCheckTaskRsp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "precheckMRInfoData": {
+      "type": "object",
+      "properties": {
+        "sourceBranch": {
+          "type": "string",
+          "description": "Source branch",
+          "title": "sourceBranch"
+        },
+        "targetBranch": {
+          "type": "string",
+          "description": "Target branch",
+          "title": "targetBranch"
+        },
+        "creator": {
+          "type": "string",
+          "description": "Creator",
+          "title": "creator"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "Create time",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "Update time",
+          "title": "updateTime"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title",
+          "title": "title"
+        },
+        "mrMessage": {
+          "type": "string",
+          "description": "MR message",
+          "title": "mrMessage"
+        },
+        "repository": {
+          "type": "string",
+          "description": "Repository",
+          "title": "repository"
+        },
+        "sourceCommit": {
+          "type": "string",
+          "description": "Source commit",
+          "title": "sourceCommit"
+        },
+        "targetCommit": {
+          "type": "string",
+          "description": "Target commit",
+          "title": "targetCommit"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "description": "id",
+          "title": "id"
+        },
+        "iid": {
+          "type": "integer",
+          "format": "int64",
+          "description": "iid",
+          "title": "iid"
+        }
+      }
+    },
+    "precheckPreCheckTask": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "task ID",
+          "title": "id"
+        },
+        "project": {
+          "type": "string",
+          "description": "Project",
+          "title": "project"
+        },
+        "repositoryAddr": {
+          "type": "string",
+          "description": "Repository address",
+          "title": "repositoryAddr"
+        },
+        "mrIid": {
+          "type": "string",
+          "description": "MR IID",
+          "title": "mrIID"
+        },
+        "checkCallbackGit": {
+          "type": "boolean",
+          "description": "Check callback Git",
+          "title": "checkCallbackGit"
+        },
+        "checkRevision": {
+          "type": "string",
+          "description": "Check revision",
+          "title": "checkRevision"
+        },
+        "applicationName": {
+          "type": "string",
+          "description": "Application name",
+          "title": "applicationName"
+        },
+        "triggerType": {
+          "type": "string",
+          "description": "Trigger type",
+          "title": "triggerType"
+        },
+        "tag": {
+          "type": "string",
+          "description": "Tag",
+          "title": "tag"
+        },
+        "checkDetail": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/precheckApplicationCheckDetail"
+          },
+          "description": "Check detail",
+          "title": "checkDetail"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "Create time",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "Update time",
+          "title": "updateTime"
+        },
+        "triggerByUser": {
+          "type": "string",
+          "description": "Trigger by user",
+          "title": "triggerByUser"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "Create by",
+          "title": "createBy"
+        },
+        "finish": {
+          "type": "boolean",
+          "description": "Finish",
+          "title": "finish"
+        },
+        "flowID": {
+          "type": "string",
+          "description": "flow ID",
+          "title": "flowID"
+        },
+        "involvedApplications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "involvedApplications",
+          "title": "involvedApplications"
+        }
+      }
+    },
+    "precheckPreCheckTaskRsp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求ID",
+          "title": "requestID"
+        },
+        "data": {
+          "$ref": "#/definitions/precheckPreCheckTask",
+          "description": "返回的设备列表",
+          "title": "data"
+        }
+      },
+      "description": "部署前检查响应",
+      "title": "PreCheckTaskRsp",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "precheckResourceCheckDetail": {
+      "type": "object",
+      "properties": {
+        "finish": {
+          "type": "boolean",
+          "description": "Finish",
+          "title": "finish"
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "Resource type",
+          "title": "resourceType"
+        },
+        "resourceName": {
+          "type": "string",
+          "description": "Resource name",
+          "title": "resourceName"
+        },
+        "apiVersion": {
+          "type": "string",
+          "description": "api version",
+          "title": "apiVersion"
+        },
+        "detail": {
+          "type": "string",
+          "description": "Detail",
+          "title": "detail"
+        },
+        "pass": {
+          "type": "boolean",
+          "description": "pass",
+          "title": "pass"
+        },
+        "cluster": {
+          "type": "string",
+          "description": "cluster",
+          "title": "cluster"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "namespace",
+          "title": "namespace"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string",
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        }
+      },
+      "additionalProperties": {},
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

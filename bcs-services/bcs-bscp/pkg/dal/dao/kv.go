@@ -64,6 +64,9 @@ type Kv interface {
 	FetchIDsExcluding(kit *kit.Kit, bizID uint32, appID uint32, ids []uint32) ([]uint32, error)
 	// CountNumberUnDeleted 统计未删除的数量
 	CountNumberUnDeleted(kit *kit.Kit, bizID uint32, opt *types.ListKvOption) (int64, error)
+	// ListAllByAppIDWithTx list all Kv by appID using a transaction
+	ListAllByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32, bizID uint32,
+		kvState []string) ([]*table.Kv, error)
 }
 
 var _ Kv = new(kvDao)
@@ -72,6 +75,23 @@ type kvDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// ListAllByAppIDWithTx list all Kv by appID using a transaction
+func (dao *kvDao) ListAllByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID uint32, bizID uint32,
+	kvState []string) ([]*table.Kv, error) {
+
+	if appID == 0 {
+		return nil, errf.New(errf.InvalidParameter, i18n.T(kit, "appID can not be 0"))
+	}
+	if bizID == 0 {
+		return nil, errf.New(errf.InvalidParameter, i18n.T(kit, "bizID can not be 0"))
+	}
+	m := dao.genQ.Kv
+	return tx.Kv.
+		WithContext(kit.Ctx).
+		Where(m.AppID.Eq(appID), m.BizID.Eq(bizID), m.KvState.In(kvState...)).
+		Find()
 }
 
 // CountNumberUnDeleted 统计未删除的数量
@@ -195,7 +215,7 @@ func (dao *kvDao) Update(kit *kit.Kit, kv *table.Kv) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.Kv.WithContext(kit.Ctx)
 		if _, e := q.Where(m.BizID.Eq(kv.Attachment.BizID), m.ID.Eq(kv.ID)).Select(m.Version, m.UpdatedAt,
-			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize, m.Memo).Updates(kv); e != nil {
+			m.Reviser, m.KvState, m.Signature, m.Md5, m.ByteSize, m.Memo, m.SecretHidden).Updates(kv); e != nil {
 			return e
 		}
 

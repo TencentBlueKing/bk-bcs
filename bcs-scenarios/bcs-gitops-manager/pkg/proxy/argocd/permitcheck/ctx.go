@@ -72,8 +72,8 @@ func (c *checker) createPermitContext(ctx context.Context, project string) (*per
 	if err != nil {
 		return nil, statusCode, err
 	}
-	result, err := c.getBCSMultiProjectPermission(ctx, []string{projID}, []RSAction{ProjectViewRSAction,
-		ProjectEditRSAction, ProjectDeleteRSAction})
+	result, err := c.getBCSMultiProjectPermission(ctx, map[string]string{project: projID},
+		[]RSAction{ProjectViewRSAction, ProjectEditRSAction, ProjectDeleteRSAction})
 	if err != nil {
 		return nil, http.StatusInternalServerError, errors.Wrapf(err, "get project '%s' permission failed",
 			project)

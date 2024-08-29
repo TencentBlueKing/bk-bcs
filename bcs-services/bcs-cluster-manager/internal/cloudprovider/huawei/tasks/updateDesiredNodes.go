@@ -136,7 +136,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
-	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID, nodeNum)
+	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID, nodeNum, true)
 	if err != nil {
 		return err
 	}

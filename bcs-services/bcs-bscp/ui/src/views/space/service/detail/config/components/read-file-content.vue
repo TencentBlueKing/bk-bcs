@@ -52,7 +52,6 @@
   .read-file-content {
     display: inline-flex;
     align-items: center;
-    margin-right: 10px;
   }
   .upload-icon {
     font-size: 14px;

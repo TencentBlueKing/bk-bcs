@@ -23,6 +23,8 @@ message KvSpec {
   string kv_type = 2;
   string value = 3;
   string memo = 4;
+  string secret_type = 5;
+  bool secret_hidden = 6;
 }
 
 // KvAttachment source resource reference: pkg/dal/table/kvs.go

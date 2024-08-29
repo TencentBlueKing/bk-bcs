@@ -226,6 +226,11 @@ func MapToTaints(taints []*proto.Taint) []*Taint {
 			Value:  aws.String(v.Value),
 			Effect: aws.String(taintTransEffect(v.Effect))})
 	}
+	// attention: eks not support addNodes to set unScheduled nodes, thus realize this feature by taint
+	result = append(result, &Taint{
+		Key:    aws.String(utils.BCSNodeGroupTaintKey),
+		Value:  aws.String(utils.BCSNodeGroupTaintValue),
+		Effect: aws.String(utils.BCSNodeGroupGkeTaintEffect)})
 
 	return result
 }

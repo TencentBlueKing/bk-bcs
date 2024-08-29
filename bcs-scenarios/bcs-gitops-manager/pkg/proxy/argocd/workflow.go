@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	workflowv1 "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-workflow/pkg/apis/gitopsworkflow/v1"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -231,6 +232,16 @@ func (plugin *WorkflowPlugin) executeHandler(r *http.Request) (*http.Request, *m
 	if httpResp != nil {
 		return r, httpResp
 	}
+	executeParams := wf.Spec.Params
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		blog.Warnf("get body failed:%s", err.Error())
+	}
+	if body != nil {
+		if err = json.Unmarshal(body, &executeParams); err != nil {
+			blog.Warnf("unmarshal body to executeParams failed:%s", err.Error())
+		}
+	}
 	user := ctxutils.User(r.Context())
 	controller := true
 	block := true
@@ -265,6 +276,7 @@ func (plugin *WorkflowPlugin) executeHandler(r *http.Request) (*http.Request, *m
 		Spec: workflowv1.WorkflowHistorySpec{
 			TriggerByWorkflow: true,
 			TriggerType:       "manual",
+			Params:            executeParams,
 		},
 	}
 	if err := plugin.workflowStore.ExecuteWorkflow(r.Context(), history); err != nil {

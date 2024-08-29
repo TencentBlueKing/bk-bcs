@@ -2791,6 +2791,8 @@ message CreateKvReq {
   string kv_type = 4;
   string value = 5;
   string memo = 6;
+  string secret_type = 7;
+  bool secret_hidden = 8;
 }
 
 message CreateKvResp {
@@ -2803,6 +2805,8 @@ message UpdateKvReq {
   string key = 4;
   string memo = 5;
   string value = 6;
+  string secret_type = 7;
+  bool secret_hidden = 8;
 }
 
 message UpdateKvResp {}
@@ -2864,6 +2868,8 @@ message BatchUpsertKvsReq {
     string kv_type = 2;
     string value = 3;
     string memo = 4;
+    string secret_type = 5;
+    bool secret_hidden = 6;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;

@@ -132,7 +132,7 @@ func (ga *GetProviderResourceUsageAction) getBizInfoByPools() error {
 		lock              = sync.Mutex{}
 	)
 
-	concurency := utils.NewRoutinePool(10)
+	concurency := utils.NewRoutinePool(50)
 	defer concurency.Close()
 
 	for region, insTypes := range ga.regionInsTypes {

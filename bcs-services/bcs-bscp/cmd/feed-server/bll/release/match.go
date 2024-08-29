@@ -90,7 +90,7 @@ func (rs *ReleasedService) matchReleasedGroupWithLabels(
 	var def *matchedMeta
 	for _, group := range groups {
 		switch group.Mode {
-		case table.Debug:
+		case table.GroupModeDebug:
 			if group.UID == meta.Uid {
 				matchedList = append(matchedList, &matchedMeta{
 					ReleaseID:  group.ReleaseID,
@@ -98,7 +98,7 @@ func (rs *ReleasedService) matchReleasedGroupWithLabels(
 					StrategyID: group.StrategyID,
 				})
 			}
-		case table.Custom:
+		case table.GroupModeCustom:
 			if group.Selector == nil {
 				return nil, errf.New(errf.InvalidParameter, "custom group must have selector")
 			}
@@ -113,7 +113,7 @@ func (rs *ReleasedService) matchReleasedGroupWithLabels(
 					StrategyID: group.StrategyID,
 				})
 			}
-		case table.Default:
+		case table.GroupModeDefault:
 			def = &matchedMeta{
 				ReleaseID:  group.ReleaseID,
 				GroupID:    group.GroupID,

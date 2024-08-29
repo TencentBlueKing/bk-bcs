@@ -12,35 +12,37 @@
         @click="handleCopyText" />
     </div>
     <div class="content">
-      <div class="format">
-        <div v-if="format === 'text'">
-          <div>{{ $t('文本格式') }}:</div>
-          <div>key {{ $t('数据类型') }} value {{ $t('描述') }}</div>
-        </div>
-        <div v-else-if="format === 'json'">
-          <div>JSON {{ $t('格式') }}:</div>
-          <div>{{ `{“key”: {“kv_type”: ${$t('数据类型')}, “value”: ${$t('配置项值')} \}\}` }}</div>
-        </div>
-        <div v-else>
-          <div>YAML {{ $t('格式') }}:</div>
-          <div>key {{ $t('数据类型') }} value {{ $t('描述') }}</div>
-        </div>
+      <template v-if="format === 'text'">
+        <template v-for="item in textFormat" :key="item.formatTite">
+          <div class="formate">
+            <div>{{ item.formatTitle }}</div>
+            <div>{{ item.formatContent }}</div>
+          </div>
+          <div class="example">
+            <div v-for="exampleList in item.example" :key="exampleList.title">
+              <div>{{ exampleList.title }}</div>
+              <div v-for="(example, index) in exampleList.list" :key="index" class="text-example">
+                <span>{{ example.key }}</span>
+                <span class="type">{{ example.type }}</span>
+                <span v-if="example.secret_type">{{ example.secret_type }}</span>
+                <span>{{ example.value }}</span>
+                <span>{{ example.secret_hidden }}</span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </template>
+      <div v-else-if="format === 'json'">
+        <div>JSON {{ $t('格式') }}:</div>
+        <div>{{ `{“key”: {“kv_type”: ${$t('数据类型')}, “value”: ${$t('配置项值')} \}\}` }}</div>
       </div>
-      <div class="example">
+      <div v-else>
+        <div>YAML {{ $t('格式') }}:</div>
+        <div>key {{ $t('数据类型') }} value {{ $t('描述') }}</div>
+      </div>
+      <div v-if="format !== 'text'" class="example">
         <div>{{ $t('示例') }}:</div>
-        <div v-if="format === 'text'">
-          <div class="data">
-            <span class="key">string_key</span>
-            <span class="type">string</span>
-            <span class="value">strign_value</span>
-          </div>
-          <div class="data">
-            <span class="key">number_key</span>
-            <span class="type">number</span>
-            <span class="value">100</span>
-          </div>
-        </div>
-        <bk-input v-else v-model="copyContent" type="textarea" :read-only="true" :resize="false" />
+        <bk-input v-model="copyContent" type="textarea" :read-only="true" :resize="false" />
       </div>
     </div>
   </div>
@@ -58,11 +60,84 @@
     format: string;
   }>();
 
+  const textFormat = [
+    {
+      formatTitle: t('普通文本格式：'),
+      formatContent: t('key 数据类型 value 描述（可选）'),
+      example: [
+        {
+          title: t('示例：'),
+          list: [
+            {
+              key: 'string_key',
+              type: 'string',
+              secret_type: '',
+              value: 'string_value',
+              secret_hidden: '',
+            },
+            {
+              key: 'number_key',
+              type: 'number',
+              secret_type: '',
+              value: 100,
+              secret_hidden: '',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      formatTitle: t('敏感文本格式：'),
+      formatContent: t('key 数据类型 凭证类型 value 是否可见 描述（可选）'),
+      example: [
+        {
+          title: t('密码示例：'),
+          list: [
+            {
+              key: 'user_name',
+              type: 'secret',
+              secret_type: 'password',
+              value: 'password_value',
+              secret_hidden: 'visible',
+            },
+          ],
+        },
+        {
+          title: t('API密钥示例：'),
+          list: [
+            {
+              key: 'api_key_name',
+              type: 'secret',
+              secret_type: 'secret_key',
+              value: 'api_key_value',
+              secret_hidden: 'invisible',
+            },
+          ],
+        },
+        {
+          title: t('访问令牌示例：'),
+          list: [
+            {
+              key: 'access_token_name',
+              type: 'secret',
+              secret_type: 'token',
+              value: 'access_token_value',
+              secret_hidden: 'invisible',
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
   /* eslint-disable */
   const copyContent = computed(() => {
     if (props.format === 'text') {
       return `string_key string strign_value
-number_key number 100`;
+number_key number 100
+user_name secret password password_value visible
+api_key_name secret secret_key api_key_value invisible
+access_token_name secret token access_token_value invisible`;
     }
     if (props.format === 'json') {
       return `{
@@ -147,14 +222,19 @@ xml_key:
       }
     }
     .content {
-      padding-top: 16px;
       color: #c4c6cc;
       font-size: 13px;
+      .formate {
+        margin-top: 16px;
+      }
+      .text-example {
+        display: flex;
+        gap: 8px;
+      }
       .example {
         margin-top: 13px;
         .type {
           color: #ff9c01;
-          margin: 0 8px;
         }
       }
     }

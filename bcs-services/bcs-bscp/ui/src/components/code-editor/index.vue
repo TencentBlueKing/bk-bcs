@@ -5,12 +5,14 @@
       <div class="lineContent">{{ content }}</div>
     </div>
   </div>
-  <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-wrapper" ref="codeEditorRef"></section>
-  <div v-if="errorMessage" ref="errorMsgRef" class="error-msg-container">
-    <span class="error-icon">
-      <Close />
-    </span>
-    <span class="message">{{ errorMessage }}</span>
+  <div class="code-editor-wrapper">
+    <section v-show="!isShowPlaceholder || !placeholder" class="code-editor-content" ref="codeEditorRef"></section>
+    <div v-if="errorMessage" ref="errorMsgRef" class="error-msg-container">
+      <span class="error-icon">
+        <Close />
+      </span>
+      <span class="message">{{ errorMessage }}</span>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -435,6 +437,9 @@
 <style lang="scss" scoped>
   .code-editor-wrapper {
     height: 100%;
+    .code-editor-content {
+      height: 100%;
+    }
     :deep(.monaco-editor) {
       width: 100%;
       .template-variable-item {

@@ -172,7 +172,7 @@
         <div class="table-row">
           <div class="not-editable td-cell name">
             <bk-overflow-title type="tips">
-              {{ item.path + item.name }}
+              {{ fileAP(item) }}
             </bk-overflow-title>
           </div>
           <div class="not-editable td-cell type">
@@ -290,6 +290,15 @@
     },
     { deep: true },
   );
+
+  // 配置文件绝对路径
+  const fileAP = (config: IConfigImportItem) => {
+    const { path, name } = config;
+    if (path.endsWith('/')) {
+      return `${path}${name}`;
+    }
+    return `${path}/${name}`;
+  };
 
   // 将权限数字拆分成三个分组配置
   const privilegeGroupsValue = computed(() => (privilege: string) => {

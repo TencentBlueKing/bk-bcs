@@ -6608,6 +6608,8 @@ func (m *InternetAccessible) Validate() error {
 
 	// no validation rules for BandwidthPackageId
 
+	// no validation rules for PublicIP
+
 	return nil
 }
 
@@ -9569,10 +9571,10 @@ func (m *CreateClusterReq) Validate() error {
 		}
 	}
 
-	if utf8.RuneCountInString(m.GetVpcID()) > 32 {
+	if utf8.RuneCountInString(m.GetVpcID()) > 40 {
 		return CreateClusterReqValidationError{
 			field:  "VpcID",
-			reason: "value length must be at most 32 runes",
+			reason: "value length must be at most 40 runes",
 		}
 	}
 
@@ -9620,12 +9622,7 @@ func (m *CreateClusterReq) Validate() error {
 
 	// no validation rules for IsExclusive
 
-	if _, ok := _CreateClusterReq_ClusterType_InLookup[m.GetClusterType()]; !ok {
-		return CreateClusterReqValidationError{
-			field:  "ClusterType",
-			reason: "value must be in list [federation single]",
-		}
-	}
+	// no validation rules for ClusterType
 
 	// no validation rules for FederationClusterID
 
@@ -9857,11 +9854,6 @@ var _CreateClusterReq_Environment_InLookup = map[string]struct{}{
 var _CreateClusterReq_EngineType_InLookup = map[string]struct{}{
 	"k8s":   {},
 	"mesos": {},
-}
-
-var _CreateClusterReq_ClusterType_InLookup = map[string]struct{}{
-	"federation": {},
-	"single":     {},
 }
 
 // Validate checks the field values on CreateClusterResp with the rules defined
@@ -28013,6 +28005,8 @@ func (m *InstanceType) Validate() error {
 
 	}
 
+	// no validation rules for AvailableQuota
+
 	return nil
 }
 
@@ -30347,6 +30341,8 @@ func (m *Subnet) Validate() error {
 			}
 		}
 	}
+
+	// no validation rules for HwNeutronSubnetID
 
 	return nil
 }

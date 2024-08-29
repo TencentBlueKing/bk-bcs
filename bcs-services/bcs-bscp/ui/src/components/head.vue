@@ -68,7 +68,7 @@
               <span class="text">{{ item.space_name }}</span>
               <span class="id">({{ item.space_id }})</span>
             </div>
-            <span class="tag">{{ item.space_type_name }}</span>
+            <span class="tag">{{ locale === 'zh-cn' ? item.space_type_name : item.space_en_name }}</span>
           </div>
         </template>
       </bk-select>

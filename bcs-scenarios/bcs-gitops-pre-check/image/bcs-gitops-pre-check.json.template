@@ -1,0 +1,62 @@
+{
+  "log_dir": "${log_dir}",
+  "v": ${bcsGitopsPreCheckVerbosity},
+  "alsologtostderr": true,
+  "log_max_size": 500,
+  "log_max_num": 10,
+  "logtostderr": false,
+  "stderrthreshold": "2",
+  "adminNamespace": "${bcsGitopsPreCheckServiceNamespace}",
+  "storage":{
+    "endpoints":"${bcsGitopsPreCheckMongo}",
+    "database":"${bcsGitopsPreCheckMongoDB}",
+    "username":"${bcsGitopsPreCheckMongoUser}",
+    "password":"${bcsGitopsPreCheckMongoPassword}"
+  },
+  "dbConfig": {
+    "username": "${bcsDatabaseUsername}",
+    "password": "${bcsDatabasePassword}",
+    "addr": "${bcsDatabaseAddr}",
+    "database": "${bcsDatabaseName}",
+    "limitQps": ${bcsDatabaseLimitQps}
+  },
+  "registry": {
+    "endpoints": "${bcsEtcdHost}",
+    "cert": "${bcsEtcdCertFile}",
+    "key": "${bcsEtcdKeyFile}",
+    "ca": "${bcsEtcdCAFile}"
+  },
+  "gateway": {
+      "endpoint": "${bcsGatewayEndpoint}",
+      "token": "${bcsGatewayToken}"
+  },
+  "address": "${localIp}",
+  "port": ${bcsGitopsPreCheckPort},
+  "httpport": ${bcsGitopsPreCheckHTTPPort},
+  "metricport": ${bcsGitopsPreCheckMetricPort},
+  "serverca": "${caFile}",
+  "servercert": "${serverCertFile}",
+  "serverkey": "${serverKeyFile}",
+  "clientca": "${caFile}",
+  "clientcert": "${clientCertFile}",
+  "clientkey": "${clientKeyFile}",
+  "debug": ${bcsGitopsPreCheckDebug},
+  "maxRecvMsgSize": ${maxRecvMsgSize},
+  "appConfig": {
+    "appCode": "${bcsGitopsPreCheckAppCode}",
+    "appSecret": "${bcsGitopsPreCheckAppSecret}",
+    "userName": "${bcsGitopsPreCheckUserName}",
+    "accessToken": "${accessToken}"
+  },
+  "endPoints": {
+    "tGit": "${tGitEndpoint}",
+    "tGitSubStr": "${tGitSubStr}",
+    "tGitCommunity": "${tGitCommunityEndpoint}",
+    "tGitCommunitySubStr": "${tGitCommunitySubStr}",
+    "gitlab": "${gitlabEndpoint}",
+    "gitlabSubStr": "${gitlabSubStr}",
+    "tGitOut": "${tGitOutEndpoint}",
+    "tGitOutSubStr": "${tGitOutSubStr}",
+    "powerApp": "${powerAppEndpoint}"
+  }
+}

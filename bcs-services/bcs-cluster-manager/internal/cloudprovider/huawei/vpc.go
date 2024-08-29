@@ -110,6 +110,7 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 			Zone:                    subnetZone,
 			ZoneName:                subnetZoneName,
 			AvailableIPAddressCount: uint64(cnt),
+			HwNeutronSubnetID:       s.NeutronSubnetId,
 		})
 	}
 

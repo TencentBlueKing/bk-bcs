@@ -54,11 +54,12 @@ end
 -- get_username_for_token used for LoginTokenAuthentication
 function _M.get_username_for_token(credential, bk_login_host)
     local httpc = http.new()
-    local res, err = httpc:request_uri(bk_login_host .. "/login/accounts/is_login/", {
+    local res, err = httpc:request_uri(bk_login_host .. "/accounts/is_login/", {
         method = "GET",
         query = {bk_token = credential.user_token},
         headers = {
             ["Content-Type"] = "application/json",
+            ["X-Bkapi-Authorization"] = authorization,
         },
     })
 
@@ -89,11 +90,13 @@ end
 -- get_username_for_token_esb used for LoginTokenAuthentication
 function _M.get_username_for_token_esb(credential, conf)
     local httpc = http.new()
+    local authorization = string.format('{"bk_app_code": "%s", "bk_app_secret": "%s"}', conf.bk_app_code, conf.bk_app_secret)
     local res, err = httpc:request_uri(conf.bk_login_host_esb .. "/api/c/compapi/v2/bk_login/is_login/", {
         method = "GET",
-        query = {bk_token = credential.user_token, bk_app_code = conf.bk_app_code, bk_app_secret = conf.bk_app_secret},
+        query = {bk_token = credential.user_token},
         headers = {
             ["Content-Type"] = "application/json",
+            ["X-Bkapi-Authorization"] = authorization,
         },
     })
 

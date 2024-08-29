@@ -58,6 +58,18 @@ func (plugin *PermissionPlugin) Init() error {
 	// 校验用户是否具备 BCS 的资源权限
 	plugin.Path("/check_bcs_permissions").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.checkBcsPermissions))
+
+	// 给外部用户授权,只允许tencentUser调用
+	plugin.Path("/add_externaluser_permission").Methods("POST").
+		Handler(plugin.middleware.HttpWrapper(plugin.addExternalUserPermission))
+
+	// 删除外部用户的项目权限,只允许tencentUser调用
+	plugin.Path("/del_externaluser_permission").Methods("DELETE").
+		Handler(plugin.middleware.HttpWrapper(plugin.deleteExternalUserProject))
+
+	// 列出外部用户拥有的权限
+	plugin.Path("/list_externaluser_permissions").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.listExternalUserPermission))
 	return nil
 }
 
@@ -168,4 +180,79 @@ func (plugin *PermissionPlugin) checkBcsPermissions(r *http.Request) (*http.Requ
 		return r, mw.ReturnErrorResponse(http.StatusForbidden, fmt.Errorf("forbidden"))
 	}
 	return r, mw.ReturnJSONResponse("ok")
+}
+
+func (plugin *PermissionPlugin) addExternalUserPermission(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := ctxutils.User(r.Context())
+	if !user.IsTencent {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, fmt.Errorf("user not authorized"))
+	}
+	externalUser := r.URL.Query().Get("external_user")
+	if externalUser == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query param 'external_user' cannot be empty"))
+	}
+	project := r.URL.Query().Get("project_code")
+	if project == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query param 'project_code' cannot be empty"))
+	}
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), project, permitcheck.ProjectEditRSAction)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(status, err)
+	}
+	if err := plugin.db.CreateExternalUserPermission(&dao.ExternalUserPermission{
+		User:    externalUser,
+		Project: project,
+	}); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse(map[string]string{
+		"user":    externalUser,
+		"project": project,
+	})
+}
+
+func (plugin *PermissionPlugin) listExternalUserPermission(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := ctxutils.User(r.Context())
+	exteralUser := ""
+	if user.IsTencent {
+		exteralUser = r.URL.Query().Get("external_user")
+		if exteralUser == "" {
+			return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'external_user' cannot be empty"))
+		}
+	} else {
+		exteralUser = user.UserName
+	}
+	permssions, err := plugin.db.ListExternalUserPermission(exteralUser)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnJSONResponse(map[string]interface{}{
+		"user":        exteralUser,
+		"permissions": permssions,
+	})
+}
+
+func (plugin *PermissionPlugin) deleteExternalUserProject(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	user := ctxutils.User(r.Context())
+	if !user.IsTencent {
+		return r, mw.ReturnErrorResponse(http.StatusForbidden, fmt.Errorf("user not authorized"))
+	}
+	project := r.URL.Query().Get("project_code")
+	if project == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'project_code' cannot be empty"))
+	}
+	externalUser := r.URL.Query().Get("external_user")
+	if externalUser == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf("query param 'external_user' cannot be empty"))
+	}
+	_, status, err := plugin.permitChecker.CheckProjectPermission(r.Context(), project, permitcheck.ProjectEditRSAction)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(status, err)
+	}
+	if err := plugin.db.DeleteExternalUserProject(externalUser, project); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, err)
+	}
+	return r, mw.ReturnDirectResponse("ok")
 }

@@ -17,12 +17,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
@@ -50,19 +52,41 @@ func (c *checker) getProjectWithID(ctx context.Context, projectName string) (*v1
 }
 
 // getBCSMultiProjectPermission get mutli-projects permission
-func (c *checker) getBCSMultiProjectPermission(ctx context.Context, projectIDs []string,
+func (c *checker) getBCSMultiProjectPermission(ctx context.Context, projects map[string]string,
 	actions []RSAction) (map[string]map[RSAction]bool, error) {
 	user := ctxutils.User(ctx)
 	if c.isAdminUser(user.GetUser()) {
 		result := make(map[string]map[RSAction]bool)
-		for _, projectID := range projectIDs {
+		for _, projectID := range projects {
 			result[projectID] = map[RSAction]bool{
 				ProjectViewRSAction: true, ProjectEditRSAction: true, ProjectDeleteRSAction: true,
 			}
 		}
 		return result, nil
 	}
+	// rewrite not tencent user with only-view permission
+	if !user.IsTencent {
+		result := make(map[string]map[RSAction]bool)
+		for projName, projID := range projects {
+			result[projID] = map[RSAction]bool{
+				ProjectViewRSAction:   false,
+				ProjectEditRSAction:   false,
+				ProjectDeleteRSAction: false,
+			}
+			authed, err := dao.GlobalDB().CheckExternalUserPermission(user.GetUser(), projName)
+			if err != nil {
+				blog.Errorf("check external user permission error: %v", err)
+				continue
+			}
+			result[projID][ProjectViewRSAction] = authed
+		}
+		return result, nil
+	}
 
+	projectIDs := make([]string, 0, len(projects))
+	for _, projectID := range projects {
+		projectIDs = append(projectIDs, projectID)
+	}
 	bcsActions := make([]string, 0)
 	for _, action := range actions {
 		switch action {
@@ -104,13 +128,7 @@ func (c *checker) getBCSMultiProjectPermission(ctx context.Context, projectIDs [
 			}
 		}
 	}
-	// rewrite not tencent user with only-view permission
-	if !user.IsTencent {
-		for k := range newResult {
-			newResult[k][ProjectEditRSAction] = false
-			newResult[k][ProjectDeleteRSAction] = false
-		}
-	}
+
 	return newResult, nil
 }
 
@@ -141,7 +159,7 @@ func (c *checker) getBCSClusterCreatePermission(ctx context.Context, projectID s
 }
 
 // getBCSNamespaceScopedPermission get bcs namespace scoped permission
-func (c *checker) getBCSNamespaceScopedPermission(ctx context.Context, projectID string,
+func (c *checker) getBCSNamespaceScopedPermission(ctx context.Context, proj, projectID string,
 	clusterNS map[string]map[string]struct{}) (map[string]map[string]bool, error) {
 	user := ctxutils.User(ctx)
 	if c.isAdminUser(user.GetUser()) {
@@ -151,6 +169,26 @@ func (c *checker) getBCSNamespaceScopedPermission(ctx context.Context, projectID
 				result[authutils.CalcIAMNsID(cls, ns)] = map[string]bool{
 					string(iamnamespace.NameSpaceScopedCreate): true, string(iamnamespace.NameSpaceScopedDelete): true,
 					string(iamnamespace.NameSpaceScopedUpdate): true,
+				}
+			}
+		}
+		return result, nil
+	}
+	// rewrite not tencent user with only-view permission
+	if !user.IsTencent {
+		result := make(map[string]map[string]bool)
+		authed, err := dao.GlobalDB().CheckExternalUserPermission(user.GetUser(), proj)
+		if err != nil {
+			blog.Errorf("check external user permission error: %v", err)
+			authed = false
+		}
+		for cls, nsMap := range clusterNS {
+			for ns := range nsMap {
+				result[authutils.CalcIAMNsID(cls, ns)] = map[string]bool{
+					string(iamnamespace.NameSpaceScopedView):   authed,
+					string(iamnamespace.NameSpaceScopedCreate): false,
+					string(iamnamespace.NameSpaceScopedDelete): false,
+					string(iamnamespace.NameSpaceScopedUpdate): false,
 				}
 			}
 		}
@@ -169,16 +207,6 @@ func (c *checker) getBCSNamespaceScopedPermission(ctx context.Context, projectID
 	}
 
 	var permits map[string]map[string]bool
-	defer func() {
-		// rewrite not tencent user with only-view permission
-		if !user.IsTencent {
-			for k := range permits {
-				permits[k][string(iamnamespace.NameSpaceScopedCreate)] = false
-				permits[k][string(iamnamespace.NameSpaceScopedDelete)] = false
-				permits[k][string(iamnamespace.NameSpaceScopedUpdate)] = false
-			}
-		}
-	}()
 	var err error
 	for i := 0; i < 5; i++ {
 		permits, err = c.namespacePermission.GetMultiNamespaceMultiActionPerm(user.GetUser(), projNsData, []string{

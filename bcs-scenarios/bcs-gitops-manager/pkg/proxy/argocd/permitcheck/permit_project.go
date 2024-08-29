@@ -25,9 +25,9 @@ import (
 )
 
 // GetProjectMultiPermission get multi projects permission
-func (c *checker) GetProjectMultiPermission(ctx context.Context, projectIDs []string,
+func (c *checker) GetProjectMultiPermission(ctx context.Context, projects map[string]string,
 	actions []RSAction) (map[string]map[RSAction]bool, error) {
-	return c.getBCSMultiProjectPermission(ctx, projectIDs, actions)
+	return c.getBCSMultiProjectPermission(ctx, projects, actions)
 }
 
 // CheckProjectPermission check permission for project

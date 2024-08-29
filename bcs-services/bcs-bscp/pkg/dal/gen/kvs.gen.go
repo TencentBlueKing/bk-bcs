@@ -33,6 +33,8 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 	_kv.Memo = field.NewString(tableName, "memo")
 	_kv.KvType = field.NewString(tableName, "kv_type")
 	_kv.Version = field.NewUint32(tableName, "version")
+	_kv.SecretType = field.NewString(tableName, "secret_type")
+	_kv.SecretHidden = field.NewBool(tableName, "secret_hidden")
 	_kv.BizID = field.NewUint32(tableName, "biz_id")
 	_kv.AppID = field.NewUint32(tableName, "app_id")
 	_kv.Creator = field.NewString(tableName, "creator")
@@ -51,22 +53,24 @@ func newKv(db *gorm.DB, opts ...gen.DOOption) kv {
 type kv struct {
 	kvDo kvDo
 
-	ALL       field.Asterisk
-	ID        field.Uint32
-	KvState   field.String
-	Key       field.String
-	Memo      field.String
-	KvType    field.String
-	Version   field.Uint32
-	BizID     field.Uint32
-	AppID     field.Uint32
-	Creator   field.String
-	Reviser   field.String
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	Signature field.String
-	ByteSize  field.Uint64
-	Md5       field.String
+	ALL          field.Asterisk
+	ID           field.Uint32
+	KvState      field.String
+	Key          field.String
+	Memo         field.String
+	KvType       field.String
+	Version      field.Uint32
+	SecretType   field.String
+	SecretHidden field.Bool
+	BizID        field.Uint32
+	AppID        field.Uint32
+	Creator      field.String
+	Reviser      field.String
+	CreatedAt    field.Time
+	UpdatedAt    field.Time
+	Signature    field.String
+	ByteSize     field.Uint64
+	Md5          field.String
 
 	fieldMap map[string]field.Expr
 }
@@ -89,6 +93,8 @@ func (k *kv) updateTableName(table string) *kv {
 	k.Memo = field.NewString(table, "memo")
 	k.KvType = field.NewString(table, "kv_type")
 	k.Version = field.NewUint32(table, "version")
+	k.SecretType = field.NewString(table, "secret_type")
+	k.SecretHidden = field.NewBool(table, "secret_hidden")
 	k.BizID = field.NewUint32(table, "biz_id")
 	k.AppID = field.NewUint32(table, "app_id")
 	k.Creator = field.NewString(table, "creator")
@@ -122,13 +128,15 @@ func (k *kv) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (k *kv) fillFieldMap() {
-	k.fieldMap = make(map[string]field.Expr, 15)
+	k.fieldMap = make(map[string]field.Expr, 17)
 	k.fieldMap["id"] = k.ID
 	k.fieldMap["kv_state"] = k.KvState
 	k.fieldMap["key"] = k.Key
 	k.fieldMap["memo"] = k.Memo
 	k.fieldMap["kv_type"] = k.KvType
 	k.fieldMap["version"] = k.Version
+	k.fieldMap["secret_type"] = k.SecretType
+	k.fieldMap["secret_hidden"] = k.SecretHidden
 	k.fieldMap["biz_id"] = k.BizID
 	k.fieldMap["app_id"] = k.AppID
 	k.fieldMap["creator"] = k.Creator

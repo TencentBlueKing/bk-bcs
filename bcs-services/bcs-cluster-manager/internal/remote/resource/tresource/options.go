@@ -126,6 +126,8 @@ const (
 	userQuota      = "userQuota"
 	usedQuota      = "usedQuota"
 	availableQuota = "availableQuota"
+	// OverSold ratio
+	OverSold       = "oversold"
 )
 
 // PoolLabel xxx
