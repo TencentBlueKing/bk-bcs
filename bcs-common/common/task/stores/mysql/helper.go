@@ -93,8 +93,17 @@ func toTask(task *TaskRecord, steps []*StepRecord) *types.Task {
 		Updater:             task.Updater,
 	}
 
-	t.Steps = make([]*types.Step, 0, len(steps))
+	stepMap := map[string]*StepRecord{}
 	for _, step := range steps {
+		stepMap[step.Name] = step
+	}
+
+	t.Steps = make([]*types.Step, 0, len(task.StepSequence))
+	for _, step := range task.StepSequence {
+		step, ok := stepMap[step]
+		if !ok {
+			continue
+		}
 		t.Steps = append(t.Steps, step.ToStep())
 	}
 	return t
