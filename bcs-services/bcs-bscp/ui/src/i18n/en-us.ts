@@ -481,6 +481,8 @@ export default {
   '上传后，该服务的配置文件数量将达到 {n} 个，超过了最大限制': 'After uploading, the number of configuration files in the service will reach {n}, exceeding the maximum limit',
   '文件上传准备中，请稍候…': 'File upload is in preparation, please wait...',
   '( 后台已存在此文件，上传快速完成 )': '( The background already has this file, the upload is completed quickly )',
+  查看全部配置项: 'View all configuration items',
+  只看冲突配置项: 'Only view conflict configuration items     ',
   '已限制该服务下所有配置项数据类型为{n}，如需其他数据类型，请调整服务属性下的数据类型': 'All configuration item data types under the service are limited to {n}, if you need other data types, please adjust the data type under the service attributes',
   敏感信息不可见: 'Sensitive information is not visible',
   '「敏感信息不可见」启用提示': '"Sensitive information is not visible" enabled prompt',

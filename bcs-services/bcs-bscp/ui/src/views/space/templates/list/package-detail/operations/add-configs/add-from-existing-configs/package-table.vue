@@ -5,44 +5,43 @@
       <div class="title">{{ props.pkg.name }}</div>
     </div>
     <div v-show="props.open" class="config-table-wrapper">
-      <table class="config-table">
-        <thead>
-          <tr>
-            <th class="th-cell name">
-              <div class="name-info">
-                <bk-checkbox
-                  :model-value="isAllSelected"
-                  :indeterminate="isIndeterminate"
-                  @change="handleAllSelectionChange" />
-                <div class="name-text">{{ t('配置文件绝对路径') }}</div>
-              </div>
-            </th>
-            <th class="th-cell memo">{{ t('配置文件描述') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="config in props.configList" :key="config.id">
-            <td class="td-cell name">
+      <div class="config-table">
+        <div class="table-row">
+          <div class="th-cell name">
+            <div class="name-info">
+              <bk-checkbox
+                :model-value="isAllSelected"
+                :indeterminate="isIndeterminate"
+                @change="handleAllSelectionChange" />
+              <div class="name-text">{{ t('配置文件绝对路径') }}</div>
+            </div>
+          </div>
+          <div class="th-cell memo">{{ t('配置文件描述') }}</div>
+        </div>
+        <RecycleScroller class="table-body" :items="props.configList" :item-size="44" key-field="id" v-slot="{ item }">
+          <div class="table-row">
+            <div class="td-cell name">
               <div class="cell name-info">
                 <bk-checkbox
-                  :model-value="isConfigSelected(config.id)"
-                  @change="handleConfigSelectionChange($event, config)" />
-                <div class="name-text">{{ fileAP(config) }}</div>
+                  :model-value="isConfigSelected(item.id)"
+                  @change="handleConfigSelectionChange($event, item)" />
+                <div class="name-text">{{ fileAP(item) }}</div>
               </div>
-            </td>
-            <td class="td-cell name">
+            </div>
+            <div class="td-cell name">
               <div class="cell">
-                {{ config.spec.memo || '--' }}
+                {{ item.spec.memo || '--' }}
               </div>
-            </td>
-          </tr>
-          <tr v-if="props.configList.length === 0">
+            </div>
+          </div>
+
+          <div v-if="props.configList.length === 0" class="table-row">
             <td class="td-cell" :colspan="2">
               <bk-exception class="empty-tips" type="empty" scene="part">{{ t('暂无配置文件') }}</bk-exception>
             </td>
-          </tr>
-        </tbody>
-      </table>
+          </div>
+        </RecycleScroller>
+      </div>
     </div>
   </div>
 </template>
@@ -155,18 +154,24 @@
     width: 100%;
     border: 1px solid #dcdee5;
     border-top: none;
-    table-layout: fixed;
-    border-collapse: collapse;
     thead {
       position: sticky;
       top: 0;
       z-index: 1;
     }
+    .table-body {
+      max-height: calc(60vh - 44px);
+    }
+    .table-row {
+      display: flex;
+    }
     .th-cell {
       padding: 0 16px;
       height: 42px;
+      width: 196px;
       color: #313238;
       font-size: 12px;
+      line-height: 42px;
       font-weight: normal;
       text-align: left;
       background: #fafbfd;
@@ -175,6 +180,7 @@
     .td-cell {
       padding: 0 16px;
       text-align: left;
+      width: 196px;
       border-bottom: 1px solid #dcdee5;
     }
     .cell {
