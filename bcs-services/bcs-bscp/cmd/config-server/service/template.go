@@ -15,8 +15,13 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -281,7 +286,7 @@ func (s *Service) AddTmplsToTmplSets(ctx context.Context, req *pbcs.AddTmplsToTm
 
 // DeleteTmplsFromTmplSets delete templates from template sets
 func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbcs.DeleteTmplsFromTmplSetsReq) (
-	*pbcs.DeleteTmplsFromTmplSetsResp, error) {
+	*pbcs.BatchDeleteResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
 	res := []*meta.ResourceAttribute{
@@ -291,22 +296,53 @@ func (s *Service) DeleteTmplsFromTmplSets(ctx context.Context, req *pbcs.DeleteT
 		return nil, err
 	}
 
-	r := &pbds.DeleteTmplsFromTmplSetsReq{
-		BizId:              req.BizId,
-		TemplateSpaceId:    req.TemplateSpaceId,
-		TemplateIds:        req.TemplateIds,
-		TemplateSetIds:     req.TemplateSetIds,
-		ExclusionOperation: req.ExclusionOperation,
-		TemplateSetId:      req.TemplateSetId,
-		NoSetSpecified:     req.NoSetSpecified,
+	eg, egCtx := errgroup.WithContext(grpcKit.RpcCtx())
+	eg.SetLimit(10)
+
+	var successfulIDs, failedIDs []uint32
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetTemplateSetIds() {
+		tid := v
+		eg.Go(func() error {
+
+			r := &pbds.DeleteTmplsFromTmplSetsReq{
+				BizId:              req.BizId,
+				TemplateSpaceId:    req.TemplateSpaceId,
+				TemplateSetId:      tid,
+				TemplateIds:        req.TemplateIds,
+				ExclusionOperation: req.ExclusionOperation,
+				NoSetSpecified:     req.NoSetSpecified,
+			}
+
+			if _, err := s.client.DS.DeleteTmplsFromTmplSets(egCtx, r); err != nil {
+				logs.Errorf("delete template from template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, tid)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, tid)
+			mux.Unlock()
+			return nil
+		})
 	}
 
-	if _, err := s.client.DS.DeleteTmplsFromTmplSets(grpcKit.RpcCtx(), r); err != nil {
-		logs.Errorf("update template failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("delete template from template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "delete template from template sets failed"))
 	}
 
-	return &pbcs.DeleteTmplsFromTmplSetsResp{}, nil
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.GetTemplateSetIds()) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(grpcKit, "delete template from template sets failed"))
+	}
+
+	return &pbcs.BatchDeleteResp{SuccessfulIds: successfulIDs, FailedIds: failedIDs}, nil
 }
 
 // ListTemplatesByIDs list templates by ids
