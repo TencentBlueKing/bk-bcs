@@ -98,7 +98,7 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 	k := fmt.Sprintf(lockKey, strings.TrimRight(key, "/"))
 	m := concurrency.NewMutex(s, k)
 
-	ctx, cancel := context.WithTimeout(l.ctx, time.Second*2)
+	ctx, cancel := context.WithTimeout(l.ctx, time.Second*5)
 	defer cancel()
 
 	if err := m.Lock(ctx); err != nil {

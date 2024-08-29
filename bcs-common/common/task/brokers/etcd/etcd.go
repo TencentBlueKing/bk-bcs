@@ -499,7 +499,7 @@ func (b *etcdBroker) listWatchPendingTask(ctx context.Context, queue string) err
 }
 
 func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
-	ttl := time.Second * 10
+	ttl := time.Second * 30
 	ctx, cancel := context.WithTimeout(ctx, ttl)
 	defer cancel()
 
