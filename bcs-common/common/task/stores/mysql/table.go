@@ -48,7 +48,6 @@ type TaskRecord struct {
 	CommonPayload       string            `json:"commonPayload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
-	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Start               time.Time         `json:"start"`
