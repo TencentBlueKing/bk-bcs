@@ -6,7 +6,11 @@
           'inline-flex items-center justify-center h-[32px] bg-[#EAEBF0] px-[12px]',
           'text-[#313238] text-[14px] font-bold rounded-full mr-[16px]'
         ]">
-        {{ `${spaceDetail?.name} / ${fileMetadata?.name}` }}
+        <div class="flex items-center">
+          <span>{{ spaceDetail?.name }}</span>
+          <i class="bcs-icon bcs-icon-angle-right font-bold mx-[3px] text-[11px]"></i>
+          <span>{{ fileMetadata?.name }}</span>
+        </div>
         <i class="bcs-icon-btn ml-[10px] bk-icon icon-edit-line" @click="showMetadataDialog = true"></i>
       </span>
       <!-- 版本列表 -->
