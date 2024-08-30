@@ -3617,6 +3617,7 @@ templateFile:
     deploySetting: Deployment Settings
     deployReview: Deployment Preview
     disableYamlToForm: Unable to switch mode
+    fileList: File List
   button:
     formMode: Form Mode
     yamlMode: YAML Mode
@@ -3628,9 +3629,15 @@ templateFile:
     previewAndDeploy: Preview and deploy
     versionManage: Version Management
     confirmDeploy: Confirm Deployment
+    import: Import
+    export: Export
+    AddToFavorites: Add to Favorites
+    RemoveFromFavorites: Remove from Favorites
+    exportFolder: Export Folder
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
     searchVersion: Version Number/Version Log/Updater
+    searchSpace: Folder Name
   label:
     name: Name
     templateName: Template name
@@ -3663,6 +3670,8 @@ templateFile:
       template or modify and try again
     preKind: Pre kind
     nextKind: Next kind
+    bookmark: Bookmark folder
+    unbookmark: Unbookmark
   tag:
     draft: draft
     baseOn: base on

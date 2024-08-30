@@ -1,12 +1,21 @@
 <template>
   <div class="flex flex-col bg-[#FAFBFD] h-full" v-bkloading="{ isLoading: fileStore.spaceLoading }">
-    <div class="flex items-center h-[42px] px-[24px]">
-      <bcs-button class="!px-[0px]" text size="small" @click="showCreateFileDialog">
-        <span class="inline-flex items-center">
-          <i class="relative !top-[0px] text-[14px] mr-[5px] bk-icon icon-plus-circle-shape"></i>
-          {{ $t('templateFile.button.createSpace') }}
-        </span>
-      </bcs-button>
+    <div class="flex items-center h-[42px] pr-[8px] pl-[14px] justify-between">
+      <span class="text-[13px] font-bold">{{ $t('templateFile.title.fileList') }}</span>
+      <div class="flex items-center">
+        <i
+          class="text-[16px] mr-[5px] bcs-icon bcs-icon-xinjianwenjianjia
+            cursor-pointer hover:text-[#3a84ff] transition"
+          @click="showCreateFileDialog"></i>
+      </div>
+    </div>
+    <div class="flex-[0_0_auto] flex items-center justify-center p-[8px] pt-0">
+      <bk-input
+        left-icon="bk-icon icon-search"
+        clearable
+        :placeholder="$t('templateFile.placeholder.searchSpace')"
+        v-model.trim="searchKey">
+      </bk-input>
     </div>
     <div class="flex-1 overflow-auto">
       <!-- 空间列表 -->
@@ -26,8 +35,11 @@
             @mouseenter="hoverItemID = space.id"
             @mouseleave="hoverItemID = ''"
             @click="handleChangeSpace(space.id)">
-            <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">
-              {{ space.name }}
+            <span class="flex items-center">
+              <i
+                class="bcs-icon bcs-icon-star-shape text-[#ffb848] mr-[3px]"
+                v-if="space?.fav"></i>
+              <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">{{ space.name }}</span>
             </span>
             <!-- 空间操作 -->
             <span v-if="hoverItemID === space.id || curPopover === space.id" @click.stop>
@@ -40,12 +52,18 @@
                     <li class="bcs-dropdown-item" @click="showRenameSpaceDialog(space)">
                       {{ $t('templateFile.button.rename') }}
                     </li>
-                    <li
-                      class="bcs-dropdown-item"
-                      @click="addTemplateFile(space)">{{ $t('templateFile.button.createFile') }}</li>
-                    <li
-                      class="bcs-dropdown-item"
-                      @click="deleteSpace(space)">{{ $t('templateFile.button.delete') }}</li>
+                    <li class="bcs-dropdown-item" @click="addTemplateFile(space)">
+                      {{ $t('templateFile.button.createFile') }}
+                    </li>
+                    <li class="bcs-dropdown-item" @click="handleFavorite(space)">
+                      {{ space?.fav ?
+                        $t('templateFile.button.RemoveFromFavorites') :
+                        $t('templateFile.button.AddToFavorites')
+                      }}
+                    </li>
+                    <li class="bcs-dropdown-item" @click="deleteSpace(space)">
+                      {{ $t('templateFile.button.delete') }}
+                    </li>
                   </ul>
                 </template>
               </PopoverSelector>
@@ -149,7 +167,7 @@
 import { cloneDeep } from 'lodash';
 import { onBeforeMount, ref, set, watch } from 'vue';
 
-import { store as fileStore, updateListTemplateSpaceList, updateTemplateMetadataList } from './use-store';
+import { searchKey, store as fileStore, updateListTemplateSpaceList, updateTemplateMetadataList } from './use-store';
 import VersionList from './version-list.vue';
 
 import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
@@ -240,6 +258,16 @@ async function listTemplateSpace() {
   initCollapseSpaceID();
 }
 
+// 收藏操作
+async function handleFavorite(space) {
+  if (space.fav) {
+    await TemplateSetService.UnCollectFolder({ $templateSpaceID: space.id });
+  } else {
+    await TemplateSetService.CollectFolder({ $templateSpaceID: space.id });
+  }
+  updateListTemplateSpaceList();
+};
+
 // 获取空间下文件列表
 async function getTemplateMetadata(spaceID: string) {
   await updateTemplateMetadataList(spaceID);
@@ -316,7 +344,6 @@ function addTemplateFile(space: ITemplateSpaceData) {
 // 删除工作空间
 async function deleteSpace(space: ITemplateSpaceData) {
   if (!space.id) return;
-
   $bkInfo({
     type: 'warning',
     clsName: 'custom-info-confirm',
@@ -382,7 +409,6 @@ const showVersionList = ref(false);
 function mangeFileVersion(space: ITemplateSpaceData, file: IListTemplateMetadataItem) {
   curEditSpace.value = cloneDeep(space);
   curEditFile.value = cloneDeep(file);
-  hidePopover();
   showVersionList.value = true;
 }
 
@@ -398,7 +424,6 @@ function deployFile(file: IListTemplateMetadataItem) {
 
 // 克隆版本
 function cloneVersion(file: IListTemplateMetadataItem) {
-  hidePopover();
   $router.push({
     name: 'addTemplateFile',
     params: {
@@ -479,6 +504,10 @@ watch(() => props.templateSpace, () => {
   if (!props.templateSpace) {
     handleChangeSpace(fileStore.spaceList[0]?.id);
   }
+});
+
+watch(searchKey, () => {
+  updateListTemplateSpaceList();
 });
 
 onBeforeMount(() => {

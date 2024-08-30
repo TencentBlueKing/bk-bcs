@@ -767,6 +767,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-lock-line:before {
 	content: "\e209";
 }
+.bcs-icon-abnormal:before {
+	content: "\e242";
+}
 .bcs-icon-binding:before {
 	content: "\e1fa";
 }
@@ -863,11 +866,17 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-mobanpeizhi:before {
 	content: "\e223";
 }
+.bcs-icon-warning-2:before {
+	content: "\e243";
+}
 .bcs-icon-machine:before {
 	content: "\e224";
 }
 .bcs-icon-helm-app:before {
 	content: "\e225";
+}
+.bcs-icon-normal:before {
+	content: "\e244";
 }
 .bcs-icon-terminal:before {
 	content: "\e226";
@@ -880,6 +889,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .bcs-icon-kuai:before {
 	content: "\e229";
+}
+.bcs-icon-unknown:before {
+	content: "\e241";
 }
 .bcs-icon-hot:before {
 	content: "\e22b";
@@ -925,4 +937,10 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 }
 .bcs-icon-templete:before {
 	content: "\e23e";
+}
+.bcs-icon-operations:before {
+	content: "\e240";
+}
+.bcs-icon-xinjianwenjianjia:before {
+	content: "\e245";
 }

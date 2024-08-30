@@ -352,6 +352,7 @@ declare namespace ClusterResource {
   }
   export interface ListTemplateSpaceReq {
     $projectCode?: string // 项目编码
+    name?: string // 文件夹名称
   }
   export interface CreateTemplateSpaceReq {
     $projectCode?: string // 项目编码
