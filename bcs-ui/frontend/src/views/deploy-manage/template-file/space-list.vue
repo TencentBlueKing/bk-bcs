@@ -37,7 +37,7 @@
             @click="handleChangeSpace(space.id)">
             <span class="flex items-center">
               <i
-                class="bcs-icon bcs-icon-star-shape text-[#ffb848] mr-[3px]"
+                class="bcs-icon bcs-icon-star-shape text-[#ff9C01] mr-[3px] leading-[18px]"
                 v-if="space?.fav"></i>
               <span class="bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">{{ space.name }}</span>
             </span>

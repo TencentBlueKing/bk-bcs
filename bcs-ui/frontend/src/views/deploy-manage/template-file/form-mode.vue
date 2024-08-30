@@ -100,10 +100,11 @@
                   v-if="form.formData.metadata"
                   :rules="[
                     {
-                      validator: handleValidator,
+                      validator: () => handleValidatorName(index),
                       message: $t('generic.validate.fieldRepeat', [$t('generic.label.resourceName')])
                     }
                   ]"
+                  trigger="blur"
                   ref="validateRefs">
                   <bcs-input
                     class="flex-1"
@@ -232,15 +233,16 @@ const formToJson = computed(() => schemaFormData.value.reduce<Array<string>>((pr
 }, []));
 
 // 资源名称唯一校验
-function handleValidator(name) {
-  let count = 0;
-  for (const item of schemaFormData.value) {
-    if (count === 2) break;
-    if (item.formData?.metadata?.name === name) {
-      count += 1;
-    }
-  }
-  return count === 1;
+function handleValidatorName(index: number) {
+  const item = schemaFormData.value[index];
+  if (!item) return false;
+
+  const name = item?.formData?.metadata?.name || '';
+  const kind = item?.kind;
+
+  return !schemaFormData.value
+    .filter((_, i) => i !== index) // 排除当前index
+    .some(form => form.formData?.metadata?.name === name && form.kind === kind);// 同种kind的name不能重复
 }
 
 const curResourceType = computed(() => schemaFormData.value.reduce<ClusterResource.FormResourceType[]>((pre, item) => {

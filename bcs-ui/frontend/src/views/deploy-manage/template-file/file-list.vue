@@ -22,10 +22,14 @@
           v-bk-tooltips="spaceDetail?.fav ? $t('templateFile.tips.unbookmark') : $t('templateFile.tips.bookmark')"
           :class="[
             'cursor-pointer transition flex items-center justify-center',
-            'h-[32px] px-[10px] border-[1px] rounded-sm border-[#cfd1d6] ml-[10px]',
-            spaceDetail?.fav ? 'text-[#ffb848]' : '',
+            'size-[32px] px-[10px] border-[1px] rounded-sm border-[#c4c6cc] ml-[10px]',
+            spaceDetail?.fav ? 'text-[#ff9C01]' : '',
           ]">
-          <i class="bcs-icon bcs-icon-star-shape"></i>
+          <i
+            :class="[
+              'bcs-icon size-[16px]',
+              spaceDetail?.fav ? 'bcs-icon-star-shape' : 'bcs-icon-star text-[#979ba5]'
+            ]"></i>
         </span>
       </template>
       <template #right>
@@ -345,6 +349,7 @@ async function toggleFavSpace() {
   } else {
     await TemplateSetService.CollectFolder({ $templateSpaceID: spaceDetail.value?.id });
   }
+  getTemplateSpace();
   updateListTemplateSpaceList();
 }
 
