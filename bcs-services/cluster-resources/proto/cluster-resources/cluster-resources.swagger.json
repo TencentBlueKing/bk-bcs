@@ -10096,6 +10096,10 @@
           "type": "string",
           "title": "模板文件版本Content"
         },
+        "editFormat": {
+          "type": "string",
+          "title": "编辑模式"
+        },
         "isDraft": {
           "type": "boolean",
           "title": "是否草稿"
