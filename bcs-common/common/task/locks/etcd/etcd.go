@@ -27,6 +27,10 @@ import (
 	"go.etcd.io/etcd/client/v3/concurrency"
 )
 
+const (
+	lockKey = "/machinery/v2/lock/%s"
+)
+
 var (
 	// ErrLockFailed ..
 	ErrLockFailed = errors.New("etcd lock: failed to acquire lock")
@@ -91,8 +95,8 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 	}
 	defer s.Orphan()
 
-	lockKey := fmt.Sprintf("/machinery/v2/lock/%s", strings.TrimRight(key, "/"))
-	m := concurrency.NewMutex(s, lockKey)
+	k := fmt.Sprintf(lockKey, strings.TrimRight(key, "/"))
+	m := concurrency.NewMutex(s, k)
 
 	ctx, cancel := context.WithTimeout(l.ctx, time.Second*2)
 	defer cancel()

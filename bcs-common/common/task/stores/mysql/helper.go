@@ -16,10 +16,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
-func getStepRecords(t *types.Task) []*StepRecords {
-	records := make([]*StepRecords, 0, len(t.Steps))
+func getStepRecord(t *types.Task) []*StepRecord {
+	records := make([]*StepRecord, 0, len(t.Steps))
 	for _, step := range t.Steps {
-		record := &StepRecords{
+		record := &StepRecord{
 			TaskID:              t.TaskID,
 			Name:                step.Name,
 			Alias:               step.Alias,
@@ -42,13 +42,13 @@ func getStepRecords(t *types.Task) []*StepRecords {
 
 	return records
 }
-func getTaskRecord(t *types.Task) *TaskRecords {
+func getTaskRecord(t *types.Task) *TaskRecord {
 	stepSequence := make([]string, 0, len(t.Steps))
 	for i := range t.Steps {
 		stepSequence = append(stepSequence, t.Steps[i].Name)
 	}
 
-	record := &TaskRecords{
+	record := &TaskRecord{
 		TaskID:              t.TaskID,
 		TaskType:            t.TaskType,
 		TaskIndex:           t.TaskIndex,
@@ -71,7 +71,7 @@ func getTaskRecord(t *types.Task) *TaskRecords {
 	return record
 }
 
-func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
+func toTask(task *TaskRecord, steps []*StepRecord) *types.Task {
 	t := &types.Task{
 		TaskID:              task.TaskID,
 		TaskType:            task.TaskType,
@@ -127,8 +127,8 @@ var (
 	}
 )
 
-func getUpdateTaskRecord(t *types.Task) *TaskRecords {
-	record := &TaskRecords{
+func getUpdateTaskRecord(t *types.Task) *TaskRecord {
+	record := &TaskRecord{
 		CurrentStep:   t.CurrentStep,
 		CommonParams:  t.CommonParams,
 		CommonPayload: t.CommonPayload,
@@ -142,8 +142,8 @@ func getUpdateTaskRecord(t *types.Task) *TaskRecords {
 	return record
 }
 
-func getUpdateStepRecord(t *types.Step) *StepRecords {
-	record := &StepRecords{
+func getUpdateStepRecord(t *types.Step) *StepRecord {
+	record := &StepRecord{
 		Params:        t.Params,
 		Payload:       t.Payload,
 		Status:        t.Status,

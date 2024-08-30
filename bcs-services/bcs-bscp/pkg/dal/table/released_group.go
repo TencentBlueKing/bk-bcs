@@ -81,10 +81,10 @@ func (c ReleasedGroup) ValidateCreate() error {
 	if err := c.Mode.Validate(); err != nil {
 		return err
 	}
-	if c.Mode == Custom && c.Selector == nil {
+	if c.Mode == GroupModeCustom && c.Selector == nil {
 		return errors.New("selector should be set when mode is custom")
 	}
-	if c.Mode == Debug && c.UID == "" {
+	if c.Mode == GroupModeDebug && c.UID == "" {
 		return errors.New("uid should be set when mode is debug")
 	}
 

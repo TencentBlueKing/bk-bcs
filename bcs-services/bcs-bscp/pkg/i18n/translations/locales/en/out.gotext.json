@@ -245,6 +245,13 @@
             "fuzzy": true
         },
         {
+            "id": "sensitive information cannot be exported",
+            "message": "sensitive information cannot be exported",
+            "translation": "sensitive information cannot be exported",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "client ids is empty",
             "message": "client ids is empty",
             "translation": "client ids is empty",
@@ -294,6 +301,246 @@
             "id": "batch delete failed",
             "message": "batch delete failed",
             "translation": "batch delete failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "not legal JSON data",
+            "message": "not legal JSON data",
+            "translation": "not legal JSON data",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "json format error, err: {Err}",
+            "message": "json format error, err: {Err}",
+            "translation": "json format error, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "yaml format error, err: {Err}",
+            "message": "yaml format error, err: {Err}",
+            "translation": "yaml format error, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "{Format} type not supported",
+            "message": "{Format} type not supported",
+            "translation": "{Format} type not supported",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Format",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Format"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} kv type error",
+            "message": "config item {Key} kv type error",
+            "translation": "config item {Key} kv type error",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "format error, please check the key: {Key}",
+            "message": "format error, please check the key: {Key}",
+            "translation": "format error, please check the key: {Key}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} format error",
+            "message": "config item {Key} format error",
+            "translation": "config item {Key} format error",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} json format error",
+            "message": "config item {Key} json format error",
+            "translation": "config item {Key} json format error",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} yaml format error",
+            "message": "config item {Key} yaml format error",
+            "translation": "config item {Key} yaml format error",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} secret hidden error",
+            "message": "config item {Key} secret hidden error",
+            "translation": "config item {Key} secret hidden error",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the key type for config item {Key} cannot be empty",
+            "message": "the key type for config item {Key} cannot be empty",
+            "translation": "the key type for config item {Key} cannot be empty",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} secret type error, err: {Err}",
+            "message": "config item {Key} secret type error, err: {Err}",
+            "translation": "config item {Key} secret type error, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "config item {Key} value error",
+            "message": "config item {Key} value error",
+            "translation": "config item {Key} value error",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "please set a password",
+            "message": "please set a password",
+            "translation": "please set a password",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "the certificate format is incorrect, only X.509 format is supported",
+            "message": "the certificate format is incorrect, only X.509 format is supported",
+            "translation": "the certificate format is incorrect, only X.509 format is supported",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
+            "message": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
+            "translation": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -821,6 +1068,122 @@
             "fuzzy": true
         },
         {
+            "id": "get config item failed, err: {Err}",
+            "message": "get config item failed, err: {Err}",
+            "translation": "get config item failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the data has not been deleted",
+            "message": "the data has not been deleted",
+            "translation": "the data has not been deleted",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "get the latest released version failed, err: {Err}",
+            "message": "get the latest released version failed, err: {Err}",
+            "translation": "get the latest released version failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get the published config failed, err: {Err}",
+            "message": "get the published config failed, err: {Err}",
+            "translation": "get the published config failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "recovery failed. A file with the same path exists and is not in a new state",
+            "message": "recovery failed. A file with the same path exists and is not in a new state",
+            "translation": "recovery failed. A file with the same path exists and is not in a new state",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "recover config item failed, err: {Err}",
+            "message": "recover config item failed, err: {Err}",
+            "translation": "recover config item failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "get records greater than the latest released version failed, err: {Err}",
+            "message": "get records greater than the latest released version failed, err: {Err}",
+            "translation": "get records greater than the latest released version failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "message": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "translation": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "appConfigCnt"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
             "id": "obtain the number of configuration items",
             "message": "obtain the number of configuration items",
             "translation": "obtain the number of configuration items",
@@ -1035,6 +1398,95 @@
                     "expr": "err"
                 }
             ],
+            "fuzzy": true
+        },
+        {
+            "id": "sensitive data is not visible, unable to view actual content",
+            "message": "sensitive data is not visible, unable to view actual content",
+            "translation": "sensitive data is not visible, unable to view actual content",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "not a KV type service",
+            "message": "not a KV type service",
+            "translation": "not a KV type service",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "list kv failed, err: {Err}",
+            "message": "list kv failed, err: {Err}",
+            "translation": "list kv failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "batch import of KV config failed, err: {Err}",
+            "message": "batch import of KV config failed, err: {Err}",
+            "translation": "batch import of KV config failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "the type of config item {Key} is incorrect",
+            "message": "the type of config item {Key} is incorrect",
+            "translation": "the type of config item {Key} is incorrect",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v.KvSpec.Key"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "clearing draft area failed, err: {Err}",
+            "message": "clearing draft area failed, err: {Err}",
+            "translation": "clearing draft area failed, err: {Err}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "save kv failed",
+            "message": "save kv failed",
+            "translation": "save kv failed",
+            "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
@@ -1767,6 +2219,13 @@
             "id": "appID can not be 0",
             "message": "appID can not be 0",
             "translation": "appID can not be 0",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "bizID can not be 0",
+            "message": "bizID can not be 0",
+            "translation": "bizID can not be 0",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },

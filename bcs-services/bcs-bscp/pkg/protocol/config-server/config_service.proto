@@ -412,9 +412,9 @@ service Config {
       body: "*"
     };
   }
-  rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (DeleteTmplsFromTmplSetsResp) {
+  rpc DeleteTmplsFromTmplSets(DeleteTmplsFromTmplSetsReq) returns (BatchDeleteResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/template_set/{template_set_id}/"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/"
             "templates/delete_from_template_sets"
       body: "*"
     };
@@ -1931,14 +1931,11 @@ message AddTmplsToTmplSetsResp {}
 message DeleteTmplsFromTmplSetsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
-  repeated uint32 template_ids = 3;
-  repeated uint32 template_set_ids = 4;
+  repeated uint32 template_set_ids = 3;
+  repeated uint32 template_ids = 4;
   bool exclusion_operation = 5;
-  uint32 template_set_id = 6;  // 套餐ID, 具体操作的哪个套餐
-  bool no_set_specified = 7;   // 是否未指定套餐, 区分全部套餐和未指定套餐
+  bool no_set_specified = 6;  // 是否未指定套餐, 区分全部套餐和未指定套餐
 }
-
-message DeleteTmplsFromTmplSetsResp {}
 
 message ListTemplatesByIDsReq {
   uint32 biz_id = 1;
@@ -2791,6 +2788,8 @@ message CreateKvReq {
   string kv_type = 4;
   string value = 5;
   string memo = 6;
+  string secret_type = 7;
+  bool secret_hidden = 8;
 }
 
 message CreateKvResp {
@@ -2803,6 +2802,8 @@ message UpdateKvReq {
   string key = 4;
   string memo = 5;
   string value = 6;
+  string secret_type = 7;
+  bool secret_hidden = 8;
 }
 
 message UpdateKvResp {}
@@ -2864,6 +2865,8 @@ message BatchUpsertKvsReq {
     string kv_type = 2;
     string value = 3;
     string memo = 4;
+    string secret_type = 5;
+    bool secret_hidden = 6;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;

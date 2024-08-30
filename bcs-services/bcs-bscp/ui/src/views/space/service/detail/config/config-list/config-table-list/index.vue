@@ -1,12 +1,18 @@
 <template>
-  <bk-alert
-    v-if="isFileType && conflictFileCount > 0"
-    theme="warning"
-    :title="
-      t('模板套餐导入完成，存在 {n} 个冲突配置项，请修改配置项信息或删除对应模板套餐，否则无法生成版本。', {
-        n: conflictFileCount,
-      })
-    " />
+  <bk-alert v-if="isFileType && conflictFileCount > 0" theme="warning">
+    <template #title>
+      <span>
+        {{
+          t('模板套餐导入完成，存在 {n} 个冲突配置项，请修改配置项信息或删除对应模板套餐，否则无法生成版本。', {
+            n: conflictFileCount,
+          })
+        }}
+        <bk-button theme="primary" text @click="handleToggleViewConfig">
+          {{ onlyViewConflict ? t('查看全部配置项') : t('只看冲突配置项') }}
+        </bk-button>
+      </span>
+    </template>
+  </bk-alert>
   <section :class="['config-list-wrapper', { 'has-conflict': isFileType && conflictFileCount > 0 }]">
     <div class="operate-area">
       <div class="operate-btns">
@@ -87,7 +93,7 @@
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
-  const { versionData, conflictFileCount } = storeToRefs(configStore);
+  const { versionData, conflictFileCount, onlyViewConflict } = storeToRefs(configStore);
   const { isFileType } = storeToRefs(serviceStore);
   const { t, locale } = useI18n();
 
@@ -124,6 +130,12 @@
   // 批量删除配置项回调
   const handleBatchDeleted = () => {
     tableRef.value.refreshAfterBatchSet();
+  };
+
+  const handleToggleViewConfig = () => {
+    configStore.$patch((state) => {
+      state.onlyViewConflict = !state.onlyViewConflict;
+    });
   };
 
   defineExpose({

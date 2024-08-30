@@ -171,16 +171,16 @@ type GroupSpec struct {
 }
 
 const (
-	// Custom means this is a user customed group, it's selector is defined by user
-	Custom GroupMode = "custom"
-	// Debug means that this group can noly set UID,
+	// GroupModeCustom means this is a user customed group, it's selector is defined by user
+	GroupModeCustom GroupMode = "custom"
+	// GroupModeDebug means that this group can noly set UID,
 	// in other word can only select specific instance
-	Debug GroupMode = "debug"
-	// Default will select instances that won't be selected by any other released groups
-	Default GroupMode = "default"
-	// BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
-	// Note: BuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
-	BuiltIn GroupMode = "builtin"
+	GroupModeDebug GroupMode = "debug"
+	// GroupModeDefault will select instances that won't be selected by any other released groups
+	GroupModeDefault GroupMode = "default"
+	// GroupModeBuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
+	// Note: GroupModeBuiltIn define bscp built-in group,eg. ClusterID, Namespace, CMDBModuleID...
+	GroupModeBuiltIn GroupMode = "builtin"
 )
 
 // GroupMode is the mode of an group works in
@@ -194,9 +194,9 @@ func (g GroupMode) String() string {
 // Validate strategy set type.
 func (g GroupMode) Validate() error {
 	switch g {
-	case Custom:
-	case Debug:
-	case Default:
+	case GroupModeCustom:
+	case GroupModeDebug:
+	case GroupModeDefault:
 	default:
 		return fmt.Errorf("unsupported group working mode: %s", g)
 	}
@@ -213,14 +213,14 @@ func (g GroupSpec) ValidateCreate(kit *kit.Kit) error {
 		return err
 	}
 	switch g.Mode {
-	case Custom:
+	case GroupModeCustom:
 		if g.Selector == nil || g.Selector.IsEmpty() {
 			return errors.New("group works in custom mode, selector should be set")
 		}
 		if err := g.Selector.Validate(); err != nil {
 			return fmt.Errorf("group works in custom mode, selector is invalid, err: %v", err)
 		}
-	case Debug:
+	case GroupModeDebug:
 		if g.UID == "" {
 			return errors.New("group works in debug mode, uid should be set")
 		}

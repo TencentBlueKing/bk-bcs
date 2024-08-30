@@ -73,7 +73,7 @@
   }
   .tips {
     flex-basis: 100%;
-    margin-left: 70px;
+    margin-left: 92px;
     font-size: 12px;
     color: #979ba5;
     &.en-tips {

@@ -14,11 +14,14 @@ package service
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/json"
+	"encoding/pem"
 	"encoding/xml"
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -50,16 +53,22 @@ func (s *Service) CreateKv(ctx context.Context, req *pbcs.CreateKvReq) (*pbcs.Cr
 		return nil, err
 	}
 
+	if err := verifySecretVaule(grpcKit, req.SecretType, req.Value); err != nil {
+		return nil, err
+	}
+
 	r := &pbds.CreateKvReq{
 		Attachment: &pbkv.KvAttachment{
 			BizId: grpcKit.BizID,
 			AppId: req.AppId,
 		},
 		Spec: &pbkv.KvSpec{
-			Key:    req.Key,
-			Memo:   req.Memo,
-			KvType: req.KvType,
-			Value:  req.Value,
+			Key:          req.Key,
+			Memo:         req.Memo,
+			KvType:       req.KvType,
+			Value:        req.Value,
+			SecretType:   req.SecretType,
+			SecretHidden: req.SecretHidden,
 		},
 	}
 	rp, err := s.client.DS.CreateKv(grpcKit.RpcCtx(), r)
@@ -86,15 +95,20 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbcs.UpdateKvReq) (*pbcs.Up
 		return nil, err
 	}
 
+	if err := verifySecretVaule(grpcKit, req.SecretType, req.Value); err != nil {
+		return nil, err
+	}
+
 	r := &pbds.UpdateKvReq{
 		Attachment: &pbkv.KvAttachment{
 			BizId: grpcKit.BizID,
 			AppId: req.AppId,
 		},
 		Spec: &pbkv.KvSpec{
-			Key:   req.Key,
-			Value: req.Value,
-			Memo:  req.Memo,
+			Key:          req.Key,
+			Value:        req.Value,
+			Memo:         req.Memo,
+			SecretHidden: req.SecretHidden,
 		},
 	}
 	if _, err := s.client.DS.UpdateKv(grpcKit.RpcCtx(), r); err != nil {
@@ -283,10 +297,12 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbcs.BatchUpsertKvsRe
 				AppId: req.AppId,
 			},
 			KvSpec: &pbkv.KvSpec{
-				Key:    kv.Key,
-				KvType: kv.KvType,
-				Value:  kv.Value,
-				Memo:   kv.Memo,
+				Key:          kv.Key,
+				KvType:       kv.KvType,
+				Value:        kv.Value,
+				Memo:         kv.Memo,
+				SecretType:   kv.SecretType,
+				SecretHidden: kv.SecretHidden,
 			},
 		})
 	}
@@ -462,20 +478,20 @@ func (s *Service) ImportKvs(ctx context.Context, req *pbcs.ImportKvsReq) (*pbcs.
 	switch req.Format {
 	case "json":
 		if !json.Valid([]byte(req.GetData())) {
-			return nil, errors.New("not legal JSON data")
+			return nil, errors.New(i18n.T(grpcKit, "not legal JSON data"))
 		}
 		if err := json.Unmarshal([]byte(req.GetData()), &kvMap); err != nil {
-			return nil, err
+			return nil, errors.New(i18n.T(grpcKit, "json format error, err: %v", err))
 		}
 	case "yaml":
 		if err := yaml.Unmarshal([]byte(req.GetData()), &kvMap); err != nil {
-			return nil, err
+			return nil, errors.New(i18n.T(grpcKit, "yaml format error, err: %v", err))
 		}
 	default:
-		return nil, fmt.Errorf("%s type not supported", req.Format)
+		return nil, errors.New(i18n.T(grpcKit, "%s type not supported", req.Format))
 	}
 
-	kvs, err := handleKv(kvMap)
+	kvs, err := handleKv(grpcKit, kvMap)
 	if err != nil {
 		return nil, err
 	}
@@ -492,7 +508,7 @@ func (s *Service) ImportKvs(ctx context.Context, req *pbcs.ImportKvsReq) (*pbcs.
 	return &pbcs.ImportKvsResp{}, nil
 }
 
-func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, error) {
+func handleKv(kit *kit.Kit, result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, error) {
 	kvMap := []*pbcs.BatchUpsertKvsReq_Kv{}
 	for key, value := range result {
 		var kVType string
@@ -514,60 +530,130 @@ func handleKv(result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, erro
 				})
 			}
 		} else {
-			kvType, okType := entry["kv_type"].(string)
-			kvValue, okVal := entry["value"]
-			if !okType && !okVal {
-				return nil, fmt.Errorf("file format error, please check the key: %s", key)
+
+			kvType, err := checkKvType(kit, key, entry)
+			if err != nil {
+				return nil, err
 			}
-			if err := validateKvType(kvType); err != nil {
-				return nil, fmt.Errorf("key: %s %s", key, err.Error())
+
+			kvValue, err := checkKv(kit, kvType, key, entry)
+			if err != nil {
+				return nil, err
 			}
-			var memo string
-			kvMemo, okMemo := entry["memo"].(string)
-			if okMemo {
-				memo = kvMemo
+
+			secretType, secretHidden, err := checkSecret(kit, kvType, key, entry)
+			if err != nil {
+				return nil, err
 			}
-			var val string
-			val = fmt.Sprintf("%v", kvValue)
-			// json 和 yaml 都需要格式化
-			if kvType == string(table.KvJson) {
-				v, ok := kvValue.(string)
-				if !ok {
-					return nil, fmt.Errorf("key: %s format error", key)
-				}
-				mv, err := json.Marshal(v)
-				if err != nil {
-					return nil, fmt.Errorf("key: %s json marshal error", key)
-				}
-				// 需要处理转义符
-				var data interface{}
-				err = json.Unmarshal(mv, &data)
-				if err != nil {
-					return nil, fmt.Errorf("key: %s json unmarshal error", key)
-				}
-				val, ok = data.(string)
-				if !ok {
-					return nil, fmt.Errorf("key: %s format error", key)
-				}
-			} else if kvType == string(table.KvYAML) {
-				_, ok := kvValue.(string)
-				if !ok {
-					ys, err := yaml.Marshal(kvValue)
-					if err != nil {
-						return nil, fmt.Errorf("key: %s yaml marshal error", key)
-					}
-					val = string(ys)
-				}
-			}
+
+			kvMemo, _ := entry["memo"].(string)
+
 			kvMap = append(kvMap, &pbcs.BatchUpsertKvsReq_Kv{
-				Key:    key,
-				Value:  val,
-				KvType: kvType,
-				Memo:   memo,
+				Key:          key,
+				Value:        kvValue,
+				KvType:       kvType,
+				Memo:         kvMemo,
+				SecretType:   secretType,
+				SecretHidden: secretHidden,
 			})
 		}
 	}
 	return kvMap, nil
+}
+
+func checkKvType(kit *kit.Kit, key string, entry map[string]interface{}) (string, error) {
+
+	kvType, ok := entry["kv_type"].(string)
+	if !ok {
+		return "", errors.New(i18n.T(kit, "config item %s kv type error", key))
+	}
+
+	if err := validateKvType(kvType); err != nil {
+		return kvType, fmt.Errorf("config item %s %v", key, err)
+	}
+
+	return kvType, nil
+}
+
+func checkKv(kit *kit.Kit, kvType, key string, entry map[string]interface{}) (string, error) {
+
+	kvValue, okVal := entry["value"]
+	if !okVal {
+		return "", errors.New(i18n.T(kit, "format error, please check the key: %s", key))
+	}
+	val := fmt.Sprintf("%v", kvValue)
+	// json 和 yaml 都需要格式化
+	if kvType == string(table.KvJson) {
+
+		v, ok := kvValue.(string)
+		if !ok {
+			return "", errors.New(i18n.T(kit, "config item %s format error", key))
+		}
+
+		mv, err := json.Marshal(v)
+		if err != nil {
+			return "", errors.New(i18n.T(kit, "config item %s json format error", key))
+		}
+
+		// 需要处理转义符
+		var data interface{}
+		err = json.Unmarshal(mv, &data)
+		if err != nil {
+			return "", errors.New(i18n.T(kit, "config item %s json format error", key))
+		}
+		val, ok = data.(string)
+		if !ok {
+			return "", errors.New(i18n.T(kit, "config item %s format error", key))
+		}
+	} else if kvType == string(table.KvYAML) {
+		_, ok := kvValue.(string)
+		if !ok {
+			ys, err := yaml.Marshal(kvValue)
+			if err != nil {
+				return "", errors.New(i18n.T(kit, "config item %s yaml format error", key))
+			}
+			val = string(ys)
+		}
+	}
+
+	return val, nil
+}
+
+func checkSecret(kit *kit.Kit, kvType, key string, entry map[string]interface{}) (string, bool, error) {
+
+	var secretHidden bool
+
+	// 不是密钥类型
+	if kvType != string(table.KvSecret) {
+		return "", secretHidden, nil
+	}
+
+	// 判断是否隐藏
+	secretHidden, okSecretHidden := entry["secret_hidden"].(bool)
+	if !okSecretHidden {
+		return "", secretHidden, errors.New(i18n.T(kit, "config item %s secret hidden error", key))
+	}
+
+	secretType, ok := entry["secret_type"].(string)
+	if !ok || secretType == "" {
+		return secretType, secretHidden, errors.New(i18n.T(kit, "the key type for config item %s cannot be empty", key))
+	}
+
+	// 验证密钥类型
+	if err := validateSecretType(secretType); err != nil {
+		return secretType, secretHidden, errors.New(i18n.T(kit, "config item %s secret type error, err: %v", key, err))
+	}
+
+	// 验证密钥值
+	kvValue, okVal := entry["value"].(string)
+	if !okVal {
+		return secretType, secretHidden, errors.New(i18n.T(kit, "config item %s value error", key))
+	}
+	if err := verifySecretVaule(kit, secretType, kvValue); err != nil {
+		return secretType, secretHidden, fmt.Errorf("config item %s %v", key, err)
+	}
+
+	return secretType, secretHidden, nil
 }
 
 // 验证kv类型
@@ -579,8 +665,23 @@ func validateKvType(kvType string) error {
 	case string(table.KvJson):
 	case string(table.KvYAML):
 	case string(table.KvXml):
+	case string(table.KvSecret):
 	default:
 		return errors.New("invalid data-type")
+	}
+	return nil
+}
+
+// 验证密钥类型
+func validateSecretType(secretType string) error {
+	switch secretType {
+	case string(table.SecretTypePassword):
+	case string(table.SecretTypeCertificate):
+	case string(table.SecretTypeSecretKey):
+	case string(table.SecretTypeToken):
+	case string(table.SecretTypeCustom):
+	default:
+		return errors.New("invalid secret-type")
 	}
 	return nil
 }
@@ -644,4 +745,57 @@ func isNumber(value interface{}) bool {
 	default:
 		return false
 	}
+}
+
+// 验证密钥的值
+func verifySecretVaule(kit *kit.Kit, secretType, value string) error {
+	if value == "敏感信息无法导出" {
+		return errors.New(i18n.T(kit, `please set a password`))
+	}
+	switch secretType {
+	case string(table.SecretTypeCertificate):
+		if !validateCertificate(value) {
+			return errors.New(i18n.T(kit, `the certificate format is incorrect, only X.509 format is supported`))
+		}
+	case string(table.SecretTypeToken):
+		if !validateToken(value) {
+			return errors.New(i18n.T(kit, `the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats 
+			are supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers`))
+		}
+	default:
+		return nil
+	}
+
+	return nil
+}
+
+// 验证令牌
+func validateToken(token string) bool {
+	// 令牌长度必须在 32 到 512 个字符之间，并且只包含大小写字母和数字
+	if len(token) < 32 || len(token) > 512 {
+		return false
+	}
+
+	matched, err := regexp.MatchString(`^[a-zA-Z0-9]+$`, token)
+	if err != nil {
+		return false
+	}
+
+	return matched
+}
+
+// 验证证书
+func validateCertificate(certPEM string) bool {
+	// 解析PEM编码的证书
+	block, _ := pem.Decode([]byte(certPEM))
+	if block == nil || block.Type != "CERTIFICATE" {
+		return false
+	}
+
+	// 尝试解析X.509证书
+	if _, err := x509.ParseCertificate(block.Bytes); err != nil {
+		return false
+	}
+
+	return true
 }

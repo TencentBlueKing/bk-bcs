@@ -27,14 +27,6 @@ func (v *VersionChangePayload) PbClientMetric() (*pbclient.Client, error) {
 	if v == nil {
 		return nil, errors.New("VersionChangePayload is nil, can not be convert to proto")
 	}
-	var currentReleaseId uint32
-	// 在clien表中更新目标ID和当前ID
-	// 如果成功了CurrentReleaseId和TargetReleaseId是一致的
-	if v.Application.ReleaseChangeStatus == Success {
-		currentReleaseId = v.Application.TargetReleaseID
-	} else {
-		currentReleaseId = v.Application.CurrentReleaseID
-	}
 
 	data := &pbclient.Client{
 		Spec: &pbclient.ClientSpec{
@@ -56,7 +48,7 @@ func (v *VersionChangePayload) PbClientMetric() (*pbclient.Client, error) {
 				MemoryMinUsage: v.ResourceUsage.MemoryMinUsage,
 				MemoryAvgUsage: v.ResourceUsage.MemoryAvgUsage,
 			},
-			CurrentReleaseId:          currentReleaseId,
+			CurrentReleaseId:          v.Application.CurrentCursorID,
 			TargetReleaseId:           v.Application.TargetReleaseID,
 			ReleaseChangeStatus:       v.Application.ReleaseChangeStatus.String(),
 			ReleaseChangeFailedReason: v.Application.FailedReason.String(),

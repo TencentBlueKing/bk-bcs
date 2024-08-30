@@ -5,6 +5,7 @@ export interface ISpaceDetail {
   space_name: string;
   space_type_id: number;
   space_type_name: string;
+  space_en_name: string;
   space_uid: number;
 }
 

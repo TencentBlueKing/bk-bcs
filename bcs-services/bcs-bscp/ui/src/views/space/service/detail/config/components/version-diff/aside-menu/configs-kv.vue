@@ -64,6 +64,8 @@
     key: string;
     baseContent: string;
     currentContent: string;
+    secretType: string;
+    secret_hidden: boolean;
   }
 
   interface IDiffGroupData {
@@ -89,7 +91,7 @@
 
   const emits = defineEmits(['selected']);
 
-  const SINGLE_LINE_TYPE = ['string', 'number'];
+  const SINGLE_LINE_TYPE = ['string', 'number', 'password', 'secret_key', 'token'];
 
   const bkBizId = ref(String(route.params.spaceId));
   const appId = ref(Number(route.params.appId));
@@ -181,10 +183,12 @@
       list.push({
         diffType,
         kvType: currentItem.spec.kv_type,
+        secretType: currentItem.spec.secret_type,
         key: currentItem.spec.key,
         id: currentItem.id,
         baseContent,
         currentContent: currentItem.spec.value,
+        secret_hidden: currentItem.spec.secret_hidden,
       });
     });
     // 计算当前版本删除项
@@ -195,10 +199,12 @@
         list.push({
           diffType: isBaseVersionExist.value ? 'delete' : '',
           kvType: baseItem.spec.kv_type,
+          secretType: baseItem.spec.secret_type,
           key: baseItem.spec.key,
           id: baseItem.id,
           baseContent: baseItem.spec.value,
           currentContent: '',
+          secret_hidden: baseItem.spec.secret_hidden,
         });
       }
     });
@@ -219,7 +225,7 @@
       );
     }
     resultList.forEach((item) => {
-      if (SINGLE_LINE_TYPE.includes(item.kvType)) {
+      if (SINGLE_LINE_TYPE.includes(item.kvType) || SINGLE_LINE_TYPE.includes(item.secretType)) {
         if (groupedList[0]?.name === 'singleLine') {
           groupedList[0].configs.push(item);
         } else {
@@ -287,13 +293,15 @@
   // 差异对比详情数据
   const getConfigDiffDetail = (config: IConfigDiffItem, list: IConfigDiffItem[]) => {
     // 单行配置
-    if (SINGLE_LINE_TYPE.includes(config.kvType)) {
+    if (SINGLE_LINE_TYPE.includes(config.kvType) || SINGLE_LINE_TYPE.includes(config.secretType)) {
       const configs: ISingleLineKVDIffItem[] = list.map((item) => {
-        const { diffType, id, key, baseContent, currentContent } = item;
+        const { diffType, id, key, baseContent, currentContent, secretType, secret_hidden } = item;
         return {
           id,
           name: key,
           diffType,
+          is_secret: !!secretType,
+          secret_hidden,
           base: {
             content: baseContent,
           },
@@ -312,6 +320,8 @@
     return {
       contentType: 'text',
       id: config.id,
+      is_secret: !!config.secretType,
+      secret_hidden: config.secret_hidden,
       base: {
         content: config.baseContent,
         variables: [],

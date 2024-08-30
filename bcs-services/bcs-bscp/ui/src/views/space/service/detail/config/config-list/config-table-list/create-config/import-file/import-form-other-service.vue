@@ -10,7 +10,21 @@
         auto-focus
         :clearable="false"
         @select="handleSelectApp">
-        <bk-option v-for="item in serviceList" :id="item.id" :key="item.id" :name="item.spec.name" />
+        <bk-option
+          v-for="item in serviceList"
+          :id="item.id"
+          :key="item.id"
+          :name="item.spec.name"
+          :disabled="appDiabled(item)">
+          <span
+            v-bk-tooltips="{
+              content: $t('当前服务仅允许导入数据类型为 {n} 的服务配置项', { n: kvAppType }),
+              disabled: !appDiabled(item),
+              extCls: 'disabled-service-tips',
+            }">
+            {{ item.spec.name }}
+          </span>
+        </bk-option>
       </bk-select>
     </div>
     <div class="select-version">
@@ -30,7 +44,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, computed } from 'vue';
   import { storeToRefs } from 'pinia';
   import { getAppList } from '../../../../../../../../../api';
   import { getConfigVersionList } from '../../../../../../../../../api/config';
@@ -53,9 +67,14 @@
   const serviceList = ref<IAppItem[]>([]);
   const versionList = ref<IConfigVersion[]>([]);
   const versionListLoading = ref(false);
+  const kvAppType = ref('any');
 
   onMounted(() => {
     loadServiceList();
+  });
+
+  const appDiabled = computed(() => (app: IAppItem) => {
+    return !isFileType.value && kvAppType.value !== 'any' && app.spec.data_type !== kvAppType.value;
   });
 
   const loadServiceList = async () => {
@@ -72,6 +91,24 @@
         }
         return app.spec.config_type === 'kv' && app.id !== props.appId;
       });
+      if (!isFileType.value) {
+        kvAppType.value = resp.details.find((app: IAppItem) => app.id === props.appId)?.spec.data_type || 'any';
+        if (kvAppType.value !== 'any') {
+          serviceList.value.sort((a, b) => {
+            // 判断 a 和 b 是否匹配 kvAppType.value
+            const aMatches = a.spec.data_type === kvAppType.value;
+            const bMatches = b.spec.data_type === kvAppType.value;
+
+            // 如果 a 匹配，b 不匹配，a 应该排在前面
+            if (aMatches && !bMatches) return -1;
+            // 如果 b 匹配，a 不匹配，b 应该排在前面
+            if (bMatches && !aMatches) return 1;
+
+            // 如果 a 和 b 都匹配或都不匹配，保持原有顺序
+            return 0;
+          });
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -108,5 +145,11 @@
   }
   .select-version {
     display: flex;
+  }
+</style>
+
+<style>
+  .disabled-service-tips {
+    z-index: 9999 !important;
   }
 </style>

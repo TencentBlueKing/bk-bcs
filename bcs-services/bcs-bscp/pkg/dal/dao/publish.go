@@ -271,7 +271,7 @@ func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.
 		ID: 0,
 		Spec: &table.GroupSpec{
 			Name:     "默认分组",
-			Mode:     table.Default,
+			Mode:     table.GroupModeDefault,
 			Public:   true,
 			Selector: new(selector.Selector),
 			UID:      "",

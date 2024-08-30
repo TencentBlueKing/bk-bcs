@@ -1,27 +1,34 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item :label="t('配置项名称')" property="key" :required="true">
-      <bk-input v-model="localVal.key" :disabled="props.editMode" @input="change" :placeholder="t('请输入')" />
-    </bk-form-item>
+    <div class="form-row">
+      <bk-form-item :label="t('配置项名称')" property="key" :required="true">
+        <bk-input
+          class="name-input"
+          v-model="localVal.key"
+          :disabled="props.editMode"
+          @input="change"
+          :placeholder="t('请输入')" />
+      </bk-form-item>
+      <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
+        <bk-select v-model="localVal.kv_type" class="type-select" :disabled="selectDisabled">
+          <bk-option v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :id="kvType.id" :name="kvType.name" />
+        </bk-select>
+      </bk-form-item>
+    </div>
     <bk-form-item :label="t('配置项描述')" property="memo">
       <bk-input v-model="localVal.memo" type="textarea" :maxlength="200" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
-    <bk-form-item :label="t('数据类型')" property="kv_type" :required="true" :description="typeDescription">
-      <bk-radio-group v-model="localVal.kv_type">
-        <bk-radio
-          v-for="kvType in CONFIG_KV_TYPE"
-          :key="kvType.id"
-          :label="kvType.id"
-          :disabled="radioDisabled(kvType.id)">
-          {{ kvType.name }}
-        </bk-radio>
-      </bk-radio-group>
-    </bk-form-item>
-    <bk-form-item :label="t('配置项值')" property="value" :required="true">
+    <SecretForm
+      v-if="localVal.kv_type === 'secret'"
+      ref="secretRef"
+      :config="props.config"
+      :is-edit="editMode"
+      @change="handleSecretChange" />
+    <bk-form-item v-else :label="t('配置项值')" property="value" :required="true">
       <bk-input
         v-if="localVal.kv_type === 'string' || localVal.kv_type === 'number'"
         v-model.trim="localVal!.value"
-        :placeholder="stringTypePlaceholder"
+        class="value-input"
         @input="change" />
       <KvConfigContentEditor
         v-else
@@ -37,11 +44,12 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { CONFIG_KV_TYPE } from '../../../../../../../constants/config';
-  import KvConfigContentEditor from '../../components/kv-config-content-editor.vue';
-  import { IConfigKvEditParams } from '../../../../../../../../types/config';
-  import useServiceStore from '../../../../../../../store/service';
+  import { CONFIG_KV_TYPE } from '../../../../../../../../constants/config';
+  import KvConfigContentEditor from '../../../components/kv-config-content-editor.vue';
+  import { IConfigKvEditParams } from '../../../../../../../../../types/config';
+  import useServiceStore from '../../../../../../../../store/service';
   import { storeToRefs } from 'pinia';
+  import SecretForm from './secret-form/index.vue';
 
   const serviceStore = useServiceStore();
   const { appData } = storeToRefs(serviceStore);
@@ -53,7 +61,6 @@
       editMode?: boolean;
       bkBizId: string;
       id: number; // 服务ID或者模板空间ID
-      isTpl?: boolean; // 是否未模板配置文件，非模板配置文件和模板配置文件的上传、下载接口参数有差异
     }>(),
     {
       editMode: false,
@@ -61,6 +68,7 @@
   );
 
   const KvCodeEditorRef = ref();
+  const secretRef = ref();
   const formRef = ref();
   const localVal = ref({
     ...props.config,
@@ -69,24 +77,14 @@
 
   const typeDescription = computed(() => {
     if (appData.value.spec.data_type !== 'any' && !props.editMode) {
-      return `已限制该服务下所有配置项数据类型为${appData.value.spec.data_type}，如需其他数据类型，请调整服务属性下的数据类型`;
+      return t('已限制该服务下所有配置项数据类型为{n}，如需其他数据类型，请调整服务属性下的数据类型', {
+        n: appData.value.spec.data_type,
+      });
     }
     return '';
   });
 
-  const radioDisabled = computed(() => (kvTypeId: string) => {
-    if (appData.value.spec.data_type !== 'any' || props.editMode) {
-      return kvTypeId !== localVal.value.kv_type;
-    }
-    return false;
-  });
-
-  const stringTypePlaceholder = computed(() => {
-    if (localVal.value.kv_type === 'string') {
-      return t('请输入(仅支持大小不超过2M)');
-    }
-    return t('请输入');
-  });
+  const selectDisabled = computed(() => appData.value.spec.data_type !== 'any' || props.editMode);
 
   const rules = {
     key: [
@@ -116,10 +114,18 @@
         },
         message: t('配置项值不为数字'),
       },
+      {
+        validator: (value: string) => {
+          if (localVal.value.secret_type === 'token' && localVal.value.value) {
+            return /[a-z]/.test(value) && /[A-Z]/.test(value) && /\d/.test(value);
+          }
+          return true;
+        },
+        message: t('访问令牌格式不正确（只支持 OAuth2.0 与 JWT 类型的访问令牌）'),
+      },
     ],
   };
 
-  // 新建文件任意类型默认选中string
   onMounted(() => {
     if (!props.editMode) {
       localVal.value.kv_type = appData.value.spec.data_type! === 'any' ? 'string' : appData.value.spec.data_type!;
@@ -139,6 +145,9 @@
       case 'yaml':
         return KvCodeEditorRef.value.validate();
     }
+    if (localVal.value.secret_type === 'certificate') {
+      return secretRef.value.validate();
+    }
     return true;
   };
 
@@ -146,6 +155,21 @@
 
   const handleStringContentChange = (val: string) => {
     localVal.value!.value = val;
+    change();
+  };
+
+  const handleSecretChange = ({
+    value,
+    secret_type,
+    visible,
+  }: {
+    value: string;
+    secret_type: string;
+    visible: boolean;
+  }) => {
+    localVal.value.value = value;
+    localVal.value.secret_type = secret_type;
+    localVal.value.secret_hidden = visible;
     change();
   };
 
@@ -158,5 +182,16 @@
 <style lang="scss" scoped>
   :deep(.bk-form-item:last-child) {
     margin-bottom: 0;
+  }
+  .form-row {
+    display: flex;
+    justify-content: space-between;
+    .name-input,
+    .type-select {
+      width: 428px;
+    }
+  }
+  .value-input {
+    width: 428px;
   }
 </style>
