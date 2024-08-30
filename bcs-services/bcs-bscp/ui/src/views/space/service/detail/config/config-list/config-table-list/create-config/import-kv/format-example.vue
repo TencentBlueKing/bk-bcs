@@ -14,7 +14,7 @@
     <div class="content">
       <template v-if="format === 'text'">
         <template v-for="item in textFormat" :key="item.formatTite">
-          <div class="formate">
+          <div class="format">
             <div>{{ item.formatTitle }}</div>
             <div>{{ item.formatContent }}</div>
           </div>
@@ -32,13 +32,34 @@
           </div>
         </template>
       </template>
-      <div v-else-if="format === 'json'">
+      <div v-else-if="format === 'json'" class="format">
         <div>JSON {{ $t('格式') }}:</div>
-        <div>{{ `{“key”: {“kv_type”: ${$t('数据类型')}, “value”: ${$t('配置项值')} \}\}` }}</div>
+        <div>
+          {{
+            `{“key”:
+              {
+                “kv_type”: ${$t('数据类型')},
+                “value”: ${$t('配置项值')},
+                "secret_hidden": ${$t('是否可见')},
+                "secret_type": ${$t('密钥类型')}
+                “memo”: ${$t('描述')},
+              \}
+            \}`
+          }}
+        </div>
       </div>
-      <div v-else>
+      <div v-else class="format">
         <div>YAML {{ $t('格式') }}:</div>
-        <div>key {{ $t('数据类型') }} value {{ $t('描述') }}</div>
+        <div>
+          {{
+            `key:
+              “kv_type”: ${$t('数据类型')},
+              “value”: ${$t('配置项值')},
+              "secret_hidden": ${$t('是否可见')},
+              "secret_type": ${$t('密钥类型')}
+              “memo”: ${$t('描述')},`
+          }}
+        </div>
       </div>
       <div v-if="format !== 'text'" class="example">
         <div>{{ $t('示例') }}:</div>
@@ -164,6 +185,41 @@ access_token_name secret token access_token_value invisible`;
   "yaml_demo": {
     "kv_type": "yaml",
     "value": "name: John Doe\\nage: 30\\ncity: New York\\nhobbies:\\n  - reading\\n  - travelling\\n  - sports"
+  },
+ "access_token_name": {
+    "kv_type": "secret",
+    "memo": "",
+    "secret_hidden": true,
+    "secret_type": "secret_key",
+    "value": "1111"
+  },
+  "api_key_name": {
+    "kv_type": "secret",
+    "memo": "",
+    "secret_hidden": false,
+    "secret_type": "certificate",
+    "value": ""
+  },
+  "password": {
+    "kv_type": "secret",
+    "memo": "",
+    "secret_hidden": false,
+    "secret_type": "password",
+    "value": "123456789"
+  },
+  "token": {
+    "kv_type": "secret",
+    "memo": "",
+    "secret_hidden": false,
+    "secret_type": "token",
+    "value": "43aCW6xQaseokNwhJRRDqFXrtfvzQFdb"
+  },
+  "user_name": {
+    "kv_type": "secret",
+    "memo": "",
+    "secret_hidden": false,
+    "secret_type": "password",
+    "value": "password_value"
   }
 }`;
     }
@@ -188,7 +244,37 @@ json_key:
 xml_key:
     kv_type: xml
     value: |-
-       <xml> xml_value </xml>`;
+       <xml> xml_value </xml>
+access_token_name:
+    kv_type: secret
+    memo: ""
+    secret_hidden: true
+    secret_type: secret_key
+    value: "1111"
+api_key_name:
+    kv_type: secret
+    memo: ""
+    secret_hidden: false
+    secret_type: certificate
+    value: ""
+password:
+    kv_type: secret
+    memo: ""
+    secret_hidden: false
+    secret_type: password
+    value: "123456789"
+token:
+    kv_type: secret
+    memo: ""
+    secret_hidden: false
+    secret_type: token
+    value: Z9AQpo3zoZ0DUG4pJX5C9A0QKQgLLlp5WpaeiE19hdtUCgqBtXIZlGXz5qMyDbFJ
+user_name:
+    kv_type: secret
+    memo: ""
+    secret_hidden: false
+    secret_type: password
+    value: password_value`;
   });
   /* eslint-enable */
 
@@ -224,9 +310,7 @@ xml_key:
     .content {
       color: #c4c6cc;
       font-size: 13px;
-      .formate {
-        margin-top: 16px;
-      }
+
       .text-example {
         display: flex;
         gap: 8px;
@@ -237,6 +321,9 @@ xml_key:
           color: #ff9c01;
         }
       }
+    }
+    .format {
+      margin-top: 16px;
     }
   }
   :deep(.bk-textarea) {

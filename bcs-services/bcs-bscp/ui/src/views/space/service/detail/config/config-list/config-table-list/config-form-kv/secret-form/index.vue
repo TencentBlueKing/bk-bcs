@@ -40,9 +40,9 @@
           @focus="handleInputFocus"
           @blur="isShowValidateInfo = false">
           <template #suffix>
-            <info-line
+            <span
               v-if="selectTypeContent!.infoList.some((item) => item.status === 'warn') && secretValue"
-              class="warn-icon" />
+              class="bk-bscp-icon icon-warning-circle warn-icon" />
             <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
             <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
           </template>
@@ -85,7 +85,7 @@
 <script lang="ts" setup>
   import { ref, computed, onMounted } from 'vue';
   import { useI18n } from 'vue-i18n';
-  import { Eye, Unvisible, InfoLine } from 'bkui-vue/lib/icon';
+  import { Eye, Unvisible } from 'bkui-vue/lib/icon';
   import { IConfigKvEditParams } from '../../../../../../../../../../types/config';
   import SecretContentEditor from './secret-content-editor.vue';
   import forge from 'node-forge';
@@ -400,6 +400,7 @@
     .warn-icon {
       font-size: 14px;
       color: #ff9c01;
+      line-height: 30px;
     }
   }
 

@@ -479,7 +479,7 @@ export const createKv = (bizId: string, appId: number, kv: any) =>
  * @returns
  */
 export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
-  http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then((res) => res.data);
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/list`, query).then((res) => res.data);
 
 /**
  * 更新kv
