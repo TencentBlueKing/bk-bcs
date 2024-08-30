@@ -91,6 +91,17 @@ func (t *TemplateSpaceAction) Get(ctx context.Context, id string) (map[string]in
 		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
 	}
 
+	collects, err := t.model.ListTemplateSpaceCollect(ctx, p.Code, ctxkey.GetUsernameFromCtx(ctx))
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range collects {
+		if v.TemplateSpaceID == id {
+			templateSpace.Fav = true
+			break
+		}
+	}
+
 	return templateSpace.ToMap(), nil
 }
 
