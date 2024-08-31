@@ -115,6 +115,7 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	if !ok {
 		return nil, fmt.Errorf("step %s is not exist", stepName)
 	}
+	s.task.SetCurrentStep(stepName).SetLastUpdate(nowTime)
 
 	defer func() {
 		// update Task in storage
@@ -124,20 +125,48 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	}()
 
 	// return nil & nil means step had been executed
+	// if task retring and so on, shoud update task status and ignore callback because task actually not execute
 	if curStep.IsCompleted() {
-		// 如果是重试等, 需要更新任务状态
-		if s.isLastStep(curStep) {
-			if curStep.Status == types.TaskStatusSuccess {
-				s.task.SetStatus(types.TaskStatusSuccess).SetMessage("task finished successfully")
-			} else {
-				s.task.SetStatus(types.TaskStatusFailure).SetMessage(fmt.Sprintf("step %s running failed", curStep.Name))
+		// task success
+		taskStartTime := s.task.GetStartTime()
+		if curStep.GetStatus() == types.TaskStatusSuccess {
+			if s.isLastStep(curStep) {
+				s.task.SetEndTime(nowTime).
+					SetExecutionTime(taskStartTime, nowTime).
+					SetStatus(types.TaskStatusSuccess).
+					SetMessage("task finished successfully")
 			}
-			endTime := time.Now()
-			s.task.SetExecutionTime(s.task.GetStartTime(), endTime).SetLastUpdate(endTime)
+			// step is success, skip
+			return nil, nil
 		}
 
-		// step is success, skip
-		return nil, nil
+		// task failed
+		failMsg := fmt.Sprintf("step %s running failed", curStep.Name)
+		if s.isLastStep(curStep) {
+			if curStep.GetSkipOnFailed() {
+				s.task.SetEndTime(nowTime).
+					SetExecutionTime(taskStartTime, nowTime).
+					SetStatus(types.TaskStatusSuccess).
+					SetMessage("task finished successfully")
+				return nil, nil
+			}
+
+			s.task.SetEndTime(nowTime).
+				SetExecutionTime(taskStartTime, nowTime).
+				SetStatus(types.TaskStatusFailure).
+				SetMessage(failMsg)
+			return nil, fmt.Errorf(failMsg)
+		}
+
+		if curStep.GetSkipOnFailed() {
+			return nil, nil
+		}
+
+		s.task.SetEndTime(nowTime).
+			SetExecutionTime(taskStartTime, nowTime).
+			SetStatus(types.TaskStatusFailure).
+			SetMessage(failMsg)
+		return nil, fmt.Errorf(failMsg)
 	}
 
 	// not first time to execute current step
@@ -150,7 +179,7 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 		SetMessage("step ready to run").
 		SetLastUpdate(nowTime)
 
-	s.task.SetCurrentStep(stepName).SetStatus(types.TaskStatusRunning).SetMessage("task running")
+	s.task.SetStatus(types.TaskStatusRunning).SetMessage("task running")
 	return curStep, nil
 }
 
@@ -202,14 +231,19 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 
 	endTime := time.Now()
 
-	stepMsg := fmt.Sprintf("running failed, err=%s", stepErr)
+	stepFailMsg := fmt.Sprintf("running failed, err=%s", stepErr)
+	taskFailMsg := fmt.Sprintf("step %s running failed, err=%s", s.step.Name, stepErr)
 	if s.step.MaxRetries > 0 {
-		stepMsg = fmt.Sprintf("running failed, err=%s, retried=%d", stepErr, s.step.GetRetryCount())
+		stepFailMsg = fmt.Sprintf("running failed, err=%s, retried=%d, maxRetries=%d",
+			stepErr, s.step.GetRetryCount(), s.step.MaxRetries)
+		taskFailMsg = fmt.Sprintf("step %s running failed, err=%s, retried=%d, maxRetries=%d",
+			s.step.Name, stepErr, s.step.GetRetryCount(), s.step.MaxRetries)
 	}
+
 	s.step.SetEndTime(endTime).
 		SetExecutionTime(start, endTime).
 		SetStatus(types.TaskStatusFailure).
-		SetMessage(stepMsg).
+		SetMessage(stepFailMsg).
 		SetLastUpdate(endTime)
 
 	taskStartTime := s.task.GetStartTime()
@@ -218,7 +252,9 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 
 	// 任务超时, 整体结束
 	if taskStatus != nil {
-		s.task.SetStatus(taskStatus.status).SetMessage(taskStatus.messsage)
+		s.task.SetEndTime(endTime).
+			SetStatus(taskStatus.status).
+			SetMessage(taskStatus.messsage)
 
 		// callback
 		if s.cbExecutor != nil {
@@ -231,9 +267,15 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 	// last step failed and skipOnFailed is true, update task status to success
 	if s.isLastStep(s.step) {
 		if s.step.GetSkipOnFailed() {
-			s.task.SetStatus(types.TaskStatusSuccess).SetMessage("task finished successfully")
+			// ignore error
+			stepErr = nil
+			s.task.SetEndTime(endTime).
+				SetStatus(types.TaskStatusSuccess).
+				SetMessage("task finished successfully")
 		} else {
-			s.task.SetStatus(types.TaskStatusFailure).SetMessage(fmt.Sprintf("step %s running failed", s.step.Name))
+			s.task.SetEndTime(endTime).
+				SetStatus(types.TaskStatusFailure).
+				SetMessage(taskFailMsg)
 		}
 
 		// callback
@@ -244,6 +286,12 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 		return
 	}
 
+	// 重试流程中
+	if s.step.GetRetryCount() < s.step.MaxRetries {
+		s.task.SetStatus(types.TaskStatusRunning).SetMessage(taskFailMsg)
+		return
+	}
+
 	// 忽略错误
 	if s.step.GetSkipOnFailed() {
 		msg := fmt.Sprintf("step %s running failed, with skip on failed", s.step.Name)
@@ -251,18 +299,10 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 		return
 	}
 
-	// 重试流程中
-	if s.step.MaxRetries > 0 {
-		msg := fmt.Sprintf("step %s running failed, with retried=%d, maxRetries=%d",
-			s.step.Name, s.step.GetRetryCount(), s.step.MaxRetries)
-
-		if s.step.GetRetryCount() < s.step.MaxRetries {
-			s.task.SetStatus(types.TaskStatusRunning).SetMessage(msg)
-		} else {
-			// 重试次数用完
-			s.task.SetStatus(types.TaskStatusFailure).SetMessage(msg)
-		}
-	}
+	// 重试次数用完且没有忽略错误
+	s.task.SetEndTime(endTime).
+		SetStatus(types.TaskStatusFailure).
+		SetMessage(taskFailMsg)
 }
 
 func (s *State) isLastStep(step *types.Step) bool {

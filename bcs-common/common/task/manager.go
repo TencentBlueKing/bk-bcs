@@ -374,11 +374,6 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 			return nil
 		}
 
-		if step.GetSkipOnFailed() {
-			state.updateStepFailure(start, retErr, nil)
-			return nil
-		}
-
 		// 单步骤主动revoke的不再重试
 		if errors.Is(retErr, istep.ErrRevoked) {
 			taskEnd := &taskEndStatus{
@@ -397,21 +392,25 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 			return tasks.NewErrRetryTaskLater(retErr.Error(), retryIn)
 		}
 
+		if step.GetSkipOnFailed() {
+			return nil
+		}
+
 		return retErr
 
 	case <-stepCtx.Done():
 		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
 		state.updateStepFailure(start, retErr, nil)
 
-		if step.GetSkipOnFailed() {
-			return nil
-		}
-
 		if step.GetRetryCount() < step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
 				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
-			return tasks.NewErrRetryTaskLater("some error", retryIn)
+			return tasks.NewErrRetryTaskLater(retErr.Error(), retryIn)
+		}
+
+		if step.GetSkipOnFailed() {
+			return nil
 		}
 
 		return retErr
