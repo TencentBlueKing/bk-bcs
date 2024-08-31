@@ -47,6 +47,8 @@ type ReleasedCI interface {
 	ListAllByReleaseIDs(kit *kit.Kit, releasedIDs []uint32, bizID uint32) ([]*table.ReleasedConfigItem, error)
 	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
 	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
+	// ListAllCISigns lists all config item signatures of one biz
+	ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error)
 }
 
 var _ ReleasedCI = new(releasedCIDao)
@@ -213,4 +215,18 @@ func (dao *releasedCIDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.Que
 	m := tx.ReleasedConfigItem
 	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
 	return err
+}
+
+// ListAllCISigns lists all config item signatures of one biz
+func (dao *releasedCIDao) ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error) {
+	m := dao.genQ.ReleasedConfigItem
+	q := dao.genQ.ReleasedConfigItem.WithContext(kit.Ctx)
+	var signs []string
+	if err := q.Select(m.Signature.Distinct()).
+		Where(m.BizID.Eq(bizID)).
+		Pluck(m.Signature, &signs); err != nil {
+		return nil, err
+	}
+
+	return signs, nil
 }

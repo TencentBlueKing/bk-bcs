@@ -36,6 +36,8 @@ type Content interface {
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
 	// BatchDeleteWithTx batch delete content data instance with transaction.
 	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, contentIDs []uint32) error
+	// ListAllCISigns lists all config item signatures of one biz
+	ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error)
 }
 
 var _ Content = new(contentDao)
@@ -191,4 +193,18 @@ func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.Conten
 	}
 
 	return nil
+}
+
+// ListAllCISigns lists all config item signatures of one biz
+func (dao *contentDao) ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error) {
+	m := dao.genQ.Content
+	q := dao.genQ.Content.WithContext(kit.Ctx)
+	var signs []string
+	if err := q.Select(m.Signature.Distinct()).
+		Where(m.BizID.Eq(bizID)).
+		Pluck(m.Signature, &signs); err != nil {
+		return nil, err
+	}
+
+	return signs, nil
 }

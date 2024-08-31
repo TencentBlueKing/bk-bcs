@@ -141,8 +141,8 @@ func (s *Manager) AllSpaces() []*Space {
 	return s.cachedSpace
 }
 
-// allCMDBSpaces 返回全量CMDB空间
-func (s *Manager) allCMDBSpaces() map[string]struct{} {
+// AllCMDBSpaces 返回全量CMDB空间
+func (s *Manager) AllCMDBSpaces() map[string]struct{} {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 
@@ -239,7 +239,7 @@ func BuildSpaceUid(t Type, id string) string {
 
 // HasCMDBSpace checks if cmdb space exists
 func (s *Manager) HasCMDBSpace(spaceId string) bool {
-	if _, ok := s.allCMDBSpaces()[spaceId]; ok {
+	if _, ok := s.AllCMDBSpaces()[spaceId]; ok {
 		return true
 	}
 
@@ -256,7 +256,7 @@ func (s *Manager) HasCMDBSpace(spaceId string) bool {
 	s.requestedCmdbSpaces[spaceId] = struct{}{}
 	s.mtx.Unlock()
 
-	if _, ok := s.allCMDBSpaces()[spaceId]; ok {
+	if _, ok := s.AllCMDBSpaces()[spaceId]; ok {
 		return true
 	}
 	return false

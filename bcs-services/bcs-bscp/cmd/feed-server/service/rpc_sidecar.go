@@ -457,7 +457,10 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	}
 
 	if !s.rl.Enable() {
-		return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: 0}, nil
+		return &pbfs.GetDownloadURLResp{
+			Url:         downloadLink[0], // 保留Url兼容老版客户端，DownloadLink方法返回无错误则downloadLink长度必大于0，无需判断
+			Urls:        downloadLink,
+			WaitTimeMil: 0}, nil
 	}
 	// 对于单个大文件下载，受限于单个客户端和服务端之间的带宽（比如为10MB/s=80Mb/s），而在存储服务端支持更高带宽的情况下（比如100MB/s），
 	// 哪怕单个文件2GB，在限流器阈值比单个客户端下载带宽高的情况下，还是应该允许其他客户端去存储服务端下载，
@@ -486,7 +489,10 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	if bWaitTimeMil < gWaitTimeMil {
 		wt = gWaitTimeMil
 	}
-	return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: wt}, nil
+	return &pbfs.GetDownloadURLResp{
+		Url:         downloadLink[0], // 保留Url兼容老版客户端，DownloadLink方法返回无错误则downloadLink长度必大于0，无需判断
+		Urls:        downloadLink,
+		WaitTimeMil: wt}, nil
 }
 
 // PullKvMeta pull an app's latest release metadata only when the app's configures is kv type.

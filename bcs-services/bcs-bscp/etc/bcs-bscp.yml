@@ -56,13 +56,33 @@ redisCluster:
   password:
   db: 1
 
-# feed server
-repository:
-  endpoints:
-    - xxx
-  token: xx
-  project: bscp
-  user: xx
 downstream:
   bounceIntervalHour: 48
 
+# 文件存储配置，兼容原有配置，原有配置为主存储master配置
+repository:
+  # 文件存储类型，当前支持bkrepo、s3类型，s3实现为cos存储，默认为bkrepo
+  storageType: bkrepo
+  #storageType: s3
+  bkRepo:
+    endpoints:
+    project:
+    username:
+    password:
+  redisCluster:
+    db:
+    endpoints:
+    password:
+  # 是否开启高可用，使用主从模式，支持读高可用（写主并同步给从，主从均可读），默认为false（即只使用主存储master配置），为true时需有slave配置
+  enableHA:
+  # 高可用下的主从同步周期，用于全量同步，单位为秒，默认是1天，最小值为1小时，低于最小值会重置为默认值
+  syncPeriodSeconds:
+  slave:
+    #storageType: bkrepo
+    storageType: s3
+    s3:
+      endpoint:
+      accessKeyID:
+      secretAccessKey:
+      useSSL:
+      bucketName:

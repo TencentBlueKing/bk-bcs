@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net"
@@ -34,6 +35,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
@@ -42,6 +44,8 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/space"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -80,12 +84,15 @@ func Run(opt *options.Option) error {
 }
 
 type dataService struct {
-	serve   *grpc.Server
-	gwServe *http.Server
-	service *service.Service
-	sd      serviced.Service
-	daoSet  dao.Set
-	vault   vault.Set
+	serve    *grpc.Server
+	gwServe  *http.Server
+	service  *service.Service
+	sd       serviced.Service
+	daoSet   dao.Set
+	vault    vault.Set
+	esb      client.Client
+	spaceMgr *space.Manager
+	repo     repository.Provider
 }
 
 // prepare do prepare jobs before run data service.
@@ -160,6 +167,34 @@ func (ds *dataService) prepare(opt *options.Option) error {
 
 	ds.vault = vaultSet
 
+	// initialize esb client
+	settings := cc.DataService().Esb
+	esbCli, err := client.NewClient(&settings, metrics.Register())
+	if err != nil {
+		return fmt.Errorf("new esb client failed, err: %v", err)
+	}
+	ds.esb = esbCli
+
+	// initialize space manager
+	spaceMgr, err := space.NewSpaceMgr(context.Background(), esbCli)
+	if err != nil {
+		return fmt.Errorf("init space manager failed, err: %v", err)
+	}
+	ds.spaceMgr = spaceMgr
+
+	// initialize repo provider
+	repo, err := repository.NewProvider(cc.DataService().Repo)
+	if err != nil {
+		return fmt.Errorf("new repo provider failed, err: %v", err)
+	}
+	ds.repo = repo
+
+	// sync files from master to slave repo
+	if cc.DataService().Repo.EnableHA {
+		repoSyncer := service.NewRepoSyncer(ds.daoSet, ds.repo, ds.spaceMgr, ds.sd)
+		repoSyncer.Run()
+	}
+
 	return nil
 }
 
@@ -197,7 +232,7 @@ func (ds *dataService) listenAndServe() error {
 	}
 
 	serve := grpc.NewServer(opts...)
-	svc, err := service.NewService(ds.sd, ds.daoSet, ds.vault)
+	svc, err := service.NewService(ds.sd, ds.daoSet, ds.vault, ds.esb, ds.repo)
 	if err != nil {
 		return err
 	}
