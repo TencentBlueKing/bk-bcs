@@ -224,16 +224,16 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 	}
 	_ = g.Wait()
 
+	cost := time.Since(start)
 	stat := syncStat{
 		bizID:       int32(bizID),
 		total:       int32(len(signs)),
 		success:     success,
 		failed:      failed,
-		costSeconds: time.Since(start).Seconds(),
+		costSeconds: cost.Seconds(),
 	}
 	stats = append(stats, stat)
-	logs.Infof("sync biz [%d] repo files finished, cost time: %s, rid: %s, stat: %#v",
-		bizID, stat.costSeconds, kt.Rid, stat)
+	logs.Infof("sync biz [%d] repo files finished, cost time: %s, rid: %s, stat: %#v", bizID, cost, kt.Rid, stat)
 }
 
 // syncIncremental syncs incremental files
