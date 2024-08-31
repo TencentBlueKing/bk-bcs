@@ -35,7 +35,7 @@ func TestLock(t *testing.T) {
 	require.NoError(t, err)
 
 	lockDuration := time.Second * 10
-	err = locker.Lock("test_lock", int64(lockDuration))
+	err = locker.Lock("test_lock", GetLockExpireNs(lockDuration))
 	assert.NoError(t, err)
 
 	var wg sync.WaitGroup
@@ -44,11 +44,11 @@ func TestLock(t *testing.T) {
 		defer wg.Done()
 
 		st := time.Now()
-		err = locker.Lock("test_lock", int64(lockDuration))
+		err = locker.Lock("test_lock", GetLockExpireNs(lockDuration))
 		assert.ErrorIs(t, err, ErrLockFailed)
 
 		time.Sleep(time.Second * 5)
-		err = locker.Lock("test_lock", int64(lockDuration))
+		err = locker.Lock("test_lock", GetLockExpireNs(lockDuration))
 		assert.NoError(t, err)
 		duration := time.Since(st)
 		assert.True(t, duration > lockDuration, "lock duration %s should be greater than %s", duration, lockDuration)
@@ -67,16 +67,16 @@ func TestLockWithRetries(t *testing.T) {
 	require.NoError(t, err)
 
 	lockDuration := time.Second * 10
-	err = locker.Lock("test_retry_lock", int64(lockDuration))
+	err = locker.Lock("test_retry_lock", GetLockExpireNs(lockDuration))
 	assert.NoError(t, err)
+	st := time.Now()
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
-		st := time.Now()
-		err = locker.LockWithRetries("test_retry_lock", int64(lockDuration))
+		err = locker.LockWithRetries("test_retry_lock", GetLockExpireNs(lockDuration))
 		assert.NoError(t, err)
 		duration := time.Since(st)
 		assert.True(t, duration > lockDuration, "lock duration %s should be greater than %s", duration, lockDuration)
@@ -95,7 +95,7 @@ func TestLockWithMs(t *testing.T) {
 	require.NoError(t, err)
 
 	lockDuration := time.Millisecond * 10
-	err = locker.Lock("test_retry_lock_ms", int64(lockDuration))
+	err = locker.Lock("test_retry_lock_ms", GetLockExpireNs(lockDuration))
 	assert.NoError(t, err)
 
 	var wg sync.WaitGroup
@@ -104,7 +104,7 @@ func TestLockWithMs(t *testing.T) {
 		defer wg.Done()
 
 		st := time.Now()
-		err = locker.LockWithRetries("test_retry_lock_ms", int64(lockDuration))
+		err = locker.LockWithRetries("test_retry_lock_ms", GetLockExpireNs(lockDuration))
 		assert.NoError(t, err)
 		duration := time.Since(st)
 		assert.True(t, duration > lockDuration, "lock duration %s should be greater than %s", duration, lockDuration)

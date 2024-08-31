@@ -85,7 +85,14 @@ func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 
 // Lock If TTL is < 1s, the default 1s TTL will be used.
 func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
-	ttl := time.Duration(unixTsToExpireNs)
+	now := time.Now().UnixNano()
+	expireTTL := time.Duration(unixTsToExpireNs - now)
+
+	// etcd ttl单位是s,往上取整
+	ttl := time.Duration(int(expireTTL.Seconds())) * time.Second
+	if ttl < expireTTL {
+		ttl += time.Second
+	}
 
 	// etcd 不能设置小于1s的ttl
 	if ttl < time.Second {
@@ -104,6 +111,7 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 	ctx, cancel := context.WithTimeout(l.ctx, time.Second*5)
 	defer cancel()
 
+	// 阻塞等待锁
 	if err := m.Lock(ctx); err != nil {
 		_ = s.Close()
 		if errors.Is(err, context.DeadlineExceeded) {
@@ -114,4 +122,9 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 
 	log.INFO.Printf("acquired lock=%s, duration=%s", key, ttl)
 	return nil
+}
+
+// GetLockExpireNs 获取锁的过期时间
+func GetLockExpireNs(duration time.Duration) int64 {
+	return time.Now().Add(duration).UnixNano()
 }

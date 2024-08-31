@@ -506,8 +506,8 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 
 	m := concurrency.NewMutex(s, delayedTaskLockKey)
 
-	// 最长等待1min获取锁
-	lockCtx, lockCancel := context.WithTimeout(ctx, time.Minute)
+	// 最长等待30s获取锁
+	lockCtx, lockCancel := context.WithTimeout(ctx, time.Second*30)
 	defer lockCancel()
 	if err = m.Lock(lockCtx); err != nil {
 		return err
@@ -522,8 +522,8 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 		}
 	}()
 
-	// 最多处理10分钟
-	handleCtx, handleCancel := context.WithTimeout(ctx, time.Minute*10)
+	// 异步任务随时可能插入, 最多处理1分钟后重新获取任务列表(aka 异步任务到期后, 最多延迟1分钟放到pending队列)
+	handleCtx, handleCancel := context.WithTimeout(ctx, time.Minute)
 	defer handleCancel()
 
 	keyPrefix := fmt.Sprintf("%s/eta-", delayedTaskPrefix)
