@@ -1,9 +1,16 @@
 package etcd
 
 import (
+	"context"
+	"os"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/RichardKnop/machinery/v2/config"
+	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFindTaskKey(t *testing.T) {
@@ -35,4 +42,52 @@ func TestFindTaskKey(t *testing.T) {
 			assert.Equal(t, tt.key, k)
 		})
 	}
+}
+
+func TestHandleDelayedTask(t *testing.T) {
+	endpoints := os.Getenv("ETCDCTL_ENDPOINTS")
+	if endpoints == "" {
+		t.Skip("ETCDCTL_ENDPOINTS is not set")
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	eta := time.Now().Add(time.Second * 10)
+	mytask := &tasks.Signature{
+		Name:       "test_task",
+		UUID:       "test-0",
+		RoutingKey: "test",
+		ETA:        &eta,
+	}
+	broker, err := New(ctx, &config.Config{Broker: endpoints})
+	etcdBroker := broker.(*etcdBroker)
+	require.NoError(t, err)
+
+	err = broker.Publish(ctx, mytask)
+	require.NoError(t, err)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		err := etcdBroker.handleDelayedTask(ctx)
+		assert.NoError(t, err)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// 排到等待
+		time.Sleep(time.Second)
+
+		err := etcdBroker.handleDelayedTask(ctx)
+		assert.NoError(t, err)
+	}()
+
+	wg.Wait()
+
+	// 完成后，上面的锁需要立即释放
+	err = etcdBroker.handleDelayedTask(ctx)
+	assert.NoError(t, err)
 }
