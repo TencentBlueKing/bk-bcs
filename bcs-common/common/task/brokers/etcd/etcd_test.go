@@ -54,8 +54,8 @@ func TestHandleDelayedTask(t *testing.T) {
 	ctx := context.Background()
 	eta := time.Now().Add(time.Second * 10)
 	mytask := &tasks.Signature{
-		Name:       "test_task",
-		UUID:       "test-0",
+		Name:       "test_delay_task",
+		UUID:       "test-delay-0",
 		RoutingKey: "test",
 		ETA:        &eta,
 	}
@@ -90,4 +90,45 @@ func TestHandleDelayedTask(t *testing.T) {
 	// 完成后，上面的锁需要立即释放
 	err = etcdBroker.handleDelayedTask(ctx)
 	assert.NoError(t, err)
+}
+
+func TestListWatchPendingTask(t *testing.T) {
+	endpoints := os.Getenv("ETCDCTL_ENDPOINTS")
+	if endpoints == "" {
+		t.Skip("ETCDCTL_ENDPOINTS is not set")
+	}
+	t.Parallel()
+
+	st := time.Now()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	mytask := &tasks.Signature{
+		Name:       "test_task",
+		UUID:       "test-0",
+		RoutingKey: "test",
+	}
+	broker, err := New(ctx, &config.Config{Broker: endpoints})
+	etcdBroker := broker.(*etcdBroker)
+	require.NoError(t, err)
+
+	err = broker.Publish(ctx, mytask)
+	require.NoError(t, err)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		err := etcdBroker.listWatchPendingTask(ctx, "test")
+		assert.NoError(t, err)
+		_, ok := etcdBroker.pendingTask["test/test-0"]
+		assert.True(t, ok)
+		assert.GreaterOrEqual(t, len(etcdBroker.pendingTask), 1)
+		duration := time.Since(st)
+		assert.True(t, duration > time.Second*15, "lock duration %s should be greater than 15s", duration)
+	}()
+	wg.Wait()
 }
