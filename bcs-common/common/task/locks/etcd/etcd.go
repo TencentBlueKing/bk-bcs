@@ -92,7 +92,6 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 		ttl = time.Second
 	}
 
-	// 创建一个新的session
 	s, err := concurrency.NewSession(l.client, concurrency.WithTTL(int(ttl.Seconds())))
 	if err != nil {
 		return err
@@ -107,6 +106,9 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 
 	if err := m.Lock(ctx); err != nil {
 		_ = s.Close()
+		if errors.Is(err, context.DeadlineExceeded) {
+			return ErrLockFailed
+		}
 		return err
 	}
 

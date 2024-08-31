@@ -190,9 +190,6 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 			log.INFO.Printf("handle delayed task stopped")
 		}()
 
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-
 		for {
 			select {
 			// A way to stop this goroutine from b.StopConsuming
@@ -200,11 +197,12 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				return
 			case <-ctx.Done():
 				return
-			case <-ticker.C:
+			default:
 				err := b.handleDelayedTask(ctx)
 				if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 					log.ERROR.Printf("handle delayed task failed, err: %s", err)
 				}
+				time.Sleep(time.Second)
 			}
 		}
 	}()

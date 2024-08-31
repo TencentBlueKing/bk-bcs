@@ -45,7 +45,7 @@ func TestLock(t *testing.T) {
 
 		st := time.Now()
 		err = locker.Lock("test_lock", int64(lockDuration))
-		assert.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.ErrorIs(t, err, ErrLockFailed)
 
 		time.Sleep(time.Second * 5)
 		err = locker.Lock("test_lock", int64(lockDuration))

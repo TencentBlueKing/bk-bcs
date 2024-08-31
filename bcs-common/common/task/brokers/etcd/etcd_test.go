@@ -78,7 +78,7 @@ func TestHandleDelayedTask(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		// 排到等待
+		// 排队等待
 		time.Sleep(time.Second)
 
 		err := etcdBroker.handleDelayedTask(ctx)
