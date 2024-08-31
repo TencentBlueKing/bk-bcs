@@ -91,7 +91,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 
 	// Channel to which we will push tasks ready for processing by worker
 	deliveries := make(chan Delivery)
-	defer log.INFO.Printf("stop consuming done")
+	defer log.INFO.Printf("stop all consuming and handle done")
 	defer b.wg.Wait()
 
 	ctx, cancel := context.WithCancel(b.ctx)
@@ -208,9 +208,11 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 	}()
 
 	if err := b.consume(deliveries, concurrency, taskProcessor); err != nil {
+		log.WARNING.Printf("consume stopped, err=%v, will retry=%t", err, b.GetRetry())
 		return b.GetRetry(), err
 	}
 
+	log.INFO.Printf("consume stopped, will retry=%t", b.GetRetry())
 	return b.GetRetry(), nil
 }
 
@@ -239,9 +241,7 @@ func (b *etcdBroker) consume(deliveries <-chan Delivery, concurrency int, taskPr
 		})
 	}
 
-	err := eg.Wait()
-	log.INFO.Printf("consume stopped, err=%v", err)
-	return err
+	return eg.Wait()
 }
 
 // consumeOne processes a single message using TaskProcessor

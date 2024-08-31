@@ -65,7 +65,7 @@ func New(ctx context.Context, conf *config.Config, retries int) (iface.Lock, err
 	return &lock, nil
 }
 
-// LockWithRetries lock with retries, if TTL is <= 1s, the default 1s TTL will be used.
+// LockWithRetries lock with retries, if TTL is < 1s, the default 1s TTL will be used.
 func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	i := 0
 	for ; i < l.retries; i++ {
@@ -83,7 +83,7 @@ func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	return ErrLockFailed
 }
 
-// Lock If TTL is <= 1s, the default 1s TTL will be used.
+// Lock If TTL is < 1s, the default 1s TTL will be used.
 func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 	ttl := time.Duration(unixTsToExpireNs)
 
