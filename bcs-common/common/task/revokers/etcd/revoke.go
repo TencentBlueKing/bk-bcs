@@ -90,7 +90,7 @@ func (b *etcdRevoker) tryRevoke(kv *mvccpb.KeyValue) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(b.ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := b.client.Delete(ctx, key)
