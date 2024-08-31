@@ -65,7 +65,7 @@ func New(ctx context.Context, conf *config.Config, retries int) (iface.Lock, err
 	return &lock, nil
 }
 
-// LockWithRetries ..
+// LockWithRetries lock with retries, if TTL is <= 1s, the default 1s TTL will be used.
 func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	i := 0
 	for ; i < l.retries; i++ {
@@ -83,10 +83,14 @@ func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	return ErrLockFailed
 }
 
-// Lock ..
+// Lock If TTL is <= 1s, the default 1s TTL will be used.
 func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
-	now := time.Now().UnixNano()
-	ttl := time.Duration(unixTsToExpireNs + 1 - now)
+	ttl := time.Duration(unixTsToExpireNs)
+
+	// etcd 不能设置小于1s的ttl
+	if ttl < time.Second {
+		ttl = time.Second
+	}
 
 	// 创建一个新的session
 	s, err := concurrency.NewSession(l.client, concurrency.WithTTL(int(ttl.Seconds())))
