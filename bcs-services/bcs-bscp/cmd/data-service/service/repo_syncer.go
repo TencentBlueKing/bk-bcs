@@ -240,8 +240,6 @@ func (s *RepoSyncer) syncIncremental(kt *kit.Kit) {
 	client := syncMgr.QueueClient()
 	syncQueue := syncMgr.QueueName()
 	ackQueue := syncMgr.AckQueueName()
-	workerCount := 10
-	var wg sync.WaitGroup
 
 	// consider the service crash, the ackQueue may have some messages, we move them to syncQueue and handle them again
 	mvCnt := 0
@@ -261,6 +259,9 @@ func (s *RepoSyncer) syncIncremental(kt *kit.Kit) {
 		logs.Errorf("have moved %d msg from ackQueue to syncQueue", mvCnt)
 	}
 
+	// sync files concurrently
+	workerCount := 10
+	var wg sync.WaitGroup
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
 		go func() {

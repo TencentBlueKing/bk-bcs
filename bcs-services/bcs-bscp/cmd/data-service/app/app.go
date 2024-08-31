@@ -146,26 +146,10 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	state := crontab.NewSyncClientOnlineState(ds.daoSet, ds.sd)
 	state.Run()
 
-	// initial Vault set
-	vaultSet, err := vault.NewSet(cc.DataService().Vault)
-	if err != nil {
-		return fmt.Errorf("initial vault set failed, err: %v", err)
+	// initialize vault
+	if ds.vault, err = initVault(); err != nil {
+		return err
 	}
-	// 挂载目录
-	exists, err := vaultSet.IsMountPathExists(vault.MountPath)
-	if err != nil {
-		return fmt.Errorf("error checking mount path: %v", err)
-	}
-	if !exists {
-		mountConfig := &api.MountInput{
-			Type: "kv-v2",
-		}
-		if err = vaultSet.CreateMountPath(vault.MountPath, mountConfig); err != nil {
-			return fmt.Errorf("initial vault mount path failed, err: %v", err)
-		}
-	}
-
-	ds.vault = vaultSet
 
 	// initialize esb client
 	settings := cc.DataService().Esb
@@ -196,6 +180,27 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	}
 
 	return nil
+}
+
+func initVault() (vault.Set, error) {
+	vaultSet, err := vault.NewSet(cc.DataService().Vault)
+	if err != nil {
+		return nil, fmt.Errorf("initial vault set failed, err: %v", err)
+	}
+	// 挂载目录
+	exists, err := vaultSet.IsMountPathExists(vault.MountPath)
+	if err != nil {
+		return nil, fmt.Errorf("error checking mount path: %v", err)
+	}
+	if !exists {
+		mountConfig := &api.MountInput{
+			Type: "kv-v2",
+		}
+		if err = vaultSet.CreateMountPath(vault.MountPath, mountConfig); err != nil {
+			return nil, fmt.Errorf("initial vault mount path failed, err: %v", err)
+		}
+	}
+	return vaultSet, nil
 }
 
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
