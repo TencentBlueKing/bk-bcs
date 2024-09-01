@@ -92,6 +92,55 @@ func TestHandleDelayedTask(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestHandleDelayedMultiTask(t *testing.T) {
+	endpoints := os.Getenv("ETCDCTL_ENDPOINTS")
+	if endpoints == "" {
+		t.Skip("ETCDCTL_ENDPOINTS is not set")
+	}
+	t.Parallel()
+
+	ctx := context.Background()
+	eta := time.Now().Add(time.Second * 10)
+	mytask := &tasks.Signature{
+		Name:       "test_delay_task",
+		UUID:       "test-delay-00",
+		RoutingKey: "test",
+		ETA:        &eta,
+	}
+	broker, err := New(ctx, &config.Config{Broker: endpoints})
+	etcdBroker := broker.(*etcdBroker)
+	require.NoError(t, err)
+
+	err = broker.Publish(ctx, mytask)
+	require.NoError(t, err)
+
+	eta = time.Now().Add(time.Second * 5)
+	err = broker.Publish(ctx, &tasks.Signature{
+		Name:       "test_delay_task1",
+		UUID:       "test-delay-01",
+		RoutingKey: "test",
+		ETA:        &eta,
+	})
+	require.NoError(t, err)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		taskSlice, err := broker.GetDelayedTasks()
+		assert.NoError(t, err)
+		assert.True(t, len(taskSlice) >= 2)
+		// 排队等待
+		time.Sleep(time.Second * 10)
+
+		err = etcdBroker.handleDelayedTask(ctx)
+		assert.NoError(t, err)
+	}()
+
+	wg.Wait()
+}
+
 func TestListWatchPendingTask(t *testing.T) {
 	endpoints := os.Getenv("ETCDCTL_ENDPOINTS")
 	if endpoints == "" {

@@ -528,7 +528,12 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 
 	keyPrefix := fmt.Sprintf("%s/eta-", delayedTaskPrefix)
 	end := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	resp, err := b.client.Get(handleCtx, keyPrefix+"0", clientv3.WithRange(keyPrefix+end))
+	rangeOpts := []clientv3.OpOption{
+		clientv3.WithRange(keyPrefix + end),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), // 按时间排序,优先处理最早的任务
+		clientv3.WithLimit(10000),
+	}
+	resp, err := b.client.Get(handleCtx, keyPrefix+"0", rangeOpts...)
 	if err != nil {
 		return err
 	}
@@ -552,7 +557,7 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 		putReq := clientv3.OpPut(pendingKey, string(kv.Value))
 		c, err := b.client.Txn(handleCtx).If(cmp).Then(deleteReq, putReq).Commit()
 		if err != nil {
-			return fmt.Errorf("handle delay task %s: %w", key, err)
+			return fmt.Errorf("handle delay task %s failed, err: %w", key, err)
 		}
 		if !c.Succeeded {
 			log.WARNING.Printf("handle delay task %s not success", key)
