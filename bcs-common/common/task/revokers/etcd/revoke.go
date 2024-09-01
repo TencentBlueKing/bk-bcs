@@ -140,7 +140,7 @@ func (b *etcdRevoker) listWatchRevoke(ctx context.Context) error {
 	return nil
 }
 
-func (b *etcdRevoker) expireRevokeSign() {
+func (b *etcdRevoker) cleanupRevokeSign() {
 	b.mtx.Lock()
 	defer b.mtx.Unlock()
 

@@ -29,6 +29,7 @@ type etcdRevoker struct {
 	ctx           context.Context
 	client        *clientv3.Client
 	mtx           sync.Mutex
+	wg            sync.WaitGroup
 	revokeSignMap map[string]*revokeSign
 }
 
@@ -58,21 +59,42 @@ func New(ctx context.Context, conf *config.Config) (iface.Revoker, error) {
 }
 
 func (r *etcdRevoker) Run() {
-	ticker := time.NewTicker(time.Minute * 10)
-	defer ticker.Stop()
+	// list and watch revoke sign
+	r.wg.Add(1)
+	go func() {
+		defer r.wg.Done()
 
-	for {
-		select {
-		case <-r.ctx.Done():
-			return
-
-		case <-ticker.C:
-			r.expireRevokeSign()
-
-			err := r.listWatchRevoke(r.ctx)
-			if err != nil {
-				log.ERROR.Printf("list and watch revoke err: %s", err)
+		for {
+			select {
+			case <-r.ctx.Done():
+				return
+			default:
+				err := r.listWatchRevoke(r.ctx)
+				if err != nil {
+					log.ERROR.Printf("list and watch revoke failed, err: %s", err)
+					time.Sleep(time.Second)
+				}
 			}
 		}
-	}
+	}()
+
+	// cleanup revoke sign
+	r.wg.Add(1)
+	go func() {
+		defer r.wg.Done()
+
+		ticker := time.NewTicker(time.Minute * 10)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-r.ctx.Done():
+				return
+			case <-ticker.C:
+				r.cleanupRevokeSign()
+			}
+		}
+	}()
+
+	r.wg.Wait()
 }

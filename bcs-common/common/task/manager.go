@@ -365,26 +365,24 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	}()
 
 	select {
-	case retErr := <-tmpCh:
-		log.INFO.Printf("task %s step %s errLocal: %v", taskID, stepName, retErr)
+	case stepErr := <-tmpCh:
+		log.INFO.Printf("task %s step %s exec done, duration=%s, err=%v",
+			taskID, stepName, time.Since(start), stepErr)
 
 		// update task & step status
-		if retErr == nil {
+		if stepErr == nil {
 			state.updateStepSuccess(start)
 			return nil
 		}
 
+		retErr := fmt.Errorf("task %s step %s running failed, err=%s", taskID, stepName, stepErr)
 		// 单步骤主动revoke的不再重试
-		if errors.Is(retErr, istep.ErrRevoked) {
-			taskEnd := &taskEndStatus{
-				types.TaskStatusFailure,
-				fmt.Sprintf("step %s running failed, err: %s", stepName, retErr),
-			}
-			state.updateStepFailure(start, retErr, taskEnd)
+		if errors.Is(stepErr, istep.ErrRevoked) {
+			state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusFailure})
 			return retErr
 		}
 
-		state.updateStepFailure(start, retErr, nil)
+		state.updateStepFailure(start, stepErr, nil)
 		if step.GetRetryCount() < step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
@@ -399,8 +397,10 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 		return retErr
 
 	case <-stepCtx.Done():
-		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-		state.updateStepFailure(start, retErr, nil)
+		stepErr := fmt.Errorf("step exec timeout")
+
+		retErr := fmt.Errorf("%w, task=%s, step=%s", stepErr, taskID, stepName)
+		state.updateStepFailure(start, stepErr, nil)
 
 		if step.GetRetryCount() < step.MaxRetries {
 			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
@@ -417,16 +417,18 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	case <-revokeCtx.Done():
 		// task revoke
-		retErr := fmt.Errorf("task %s has been revoked", taskID)
-		state.updateStepFailure(start, retErr, &taskEndStatus{types.TaskStatusRevoked, "task has been revoked"})
+		stepErr := fmt.Errorf("task has been revoked")
+		retErr := fmt.Errorf("%w, task=%s, step=%s", stepErr, taskID, stepName)
+		state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusRevoked})
 
 		// 取消指令, 不再重试
 		return retErr
 
 	case <-taskCtx.Done():
-		// task timeOut
-		retErr := fmt.Errorf("task %s exec timeout", taskID)
-		state.updateStepFailure(start, retErr, &taskEndStatus{types.TaskStatusTimeout, "task timeout"})
+		// task timeout
+		stepErr := fmt.Errorf("task exec timeout")
+		retErr := fmt.Errorf("%w, task=%s, step=%s", stepErr, taskID, stepName)
+		state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusTimeout})
 
 		// 整个任务结束
 		return retErr

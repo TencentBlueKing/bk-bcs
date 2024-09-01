@@ -252,9 +252,12 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 
 	// 任务超时, 整体结束
 	if taskStatus != nil {
+		if taskStatus.messsage != "" {
+			taskFailMsg = taskStatus.messsage
+		}
 		s.task.SetEndTime(endTime).
 			SetStatus(taskStatus.status).
-			SetMessage(taskStatus.messsage)
+			SetMessage(taskFailMsg)
 
 		// callback
 		if s.cbExecutor != nil {
