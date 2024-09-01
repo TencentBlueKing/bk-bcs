@@ -518,7 +518,7 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 		defer unlockCancel()
 
 		if err = m.Unlock(unlockCtx); err != nil {
-			log.ERROR.Printf("unlock delayed task lock err: %s", err)
+			log.ERROR.Printf("unlock delayed task failed, err: %s", err)
 		}
 	}()
 

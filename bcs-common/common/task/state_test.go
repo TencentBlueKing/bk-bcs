@@ -16,9 +16,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/stores/mem"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestIsReadyToStep(t *testing.T) {

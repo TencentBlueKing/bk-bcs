@@ -19,10 +19,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/RichardKnop/machinery/v2/config"
-	"github.com/RichardKnop/machinery/v2/tasks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/RichardKnop/machinery/v2/config"
+	"github.com/RichardKnop/machinery/v2/tasks"
 )
 
 func TestFindTaskKey(t *testing.T) {
