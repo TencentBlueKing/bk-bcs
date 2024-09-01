@@ -116,6 +116,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				err := b.listWatchRunningTask(ctx)
 				if err != nil {
 					log.ERROR.Printf("list watch running task failed, err: %s", err)
+					time.Sleep(time.Second)
 				}
 			}
 		}
@@ -141,6 +142,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				err := b.listWatchPendingTask(ctx, queue)
 				if err != nil {
 					log.ERROR.Printf("list watch pending task failed, err: %s", err)
+					time.Sleep(time.Second)
 				}
 			}
 		}
