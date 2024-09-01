@@ -208,11 +208,11 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 	}()
 
 	if err := b.consume(deliveries, concurrency, taskProcessor); err != nil {
-		log.WARNING.Printf("consume stopped, err=%v, will retry=%t", err, b.GetRetry())
+		log.WARNING.Printf("consume stopped, err=%v, retry=%t", err, b.GetRetry())
 		return b.GetRetry(), err
 	}
 
-	log.INFO.Printf("consume stopped, will retry=%t", b.GetRetry())
+	log.INFO.Printf("consume stopped, retry=%t", b.GetRetry())
 	return b.GetRetry(), nil
 }
 
