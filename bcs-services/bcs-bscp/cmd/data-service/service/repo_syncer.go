@@ -148,8 +148,10 @@ const failedLimit = 100
 func (s *RepoSyncer) syncAll(kt *kit.Kit) {
 	logs.Infof("start to sync all repo files")
 	start := time.Now()
-	// clear stats data
+	// clear related data for every sync cycle
 	stats = make([]syncStat, 0)
+	noFileInMaster = make([]noFiles, 0)
+	syncFailedCnt = 0
 	// get all biz
 	bizs := s.spaceMgr.AllCMDBSpaces()
 	// sync files for all bizs
