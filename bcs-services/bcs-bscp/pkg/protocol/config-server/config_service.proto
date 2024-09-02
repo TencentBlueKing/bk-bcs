@@ -388,7 +388,7 @@ service Config {
   }
   rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates_list"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/list"
       body: "*"
     };
   }
@@ -904,7 +904,8 @@ option (google.api.http) = {
   };
   rpc ListKvs(ListKvsReq) returns (ListKvsResp) {
     option (google.api.http) = {
-      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs"
+      post: "/api/v1/config/biz/{biz_id}/apps/{app_id}/kvs/list"
+      body: "*"
     };
   };
   rpc DeleteKv(DeleteKvReq) returns (DeleteKvResp) {
@@ -2822,7 +2823,7 @@ message ListKvsReq {
   repeated string kv_type = 11;
   string sort = 12;
   string order = 13;
-  string top_ids = 14;
+  repeated uint32 top_ids = 14;  // 置顶的ID
   // ADD、REVISE、DELETE、UNCHANGE
   repeated string status = 15;
 }
@@ -3074,6 +3075,8 @@ message CompareKvConflictsResp {
     string kv_type = 2;
     string value = 3;
     string memo = 4;
+    string secret_type = 5;
+    bool secret_hidden = 6;
   }
   repeated Kv exist = 1;
   repeated Kv non_exist = 2;

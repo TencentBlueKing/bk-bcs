@@ -177,8 +177,6 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		Sort:  req.Sort,
 		Order: types.Order(req.Order),
 	}
-	// StrToUint32Slice the comma separated string goes to uint32 slice
-	topIds, _ := tools.StrToUint32Slice(req.TopIds)
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
@@ -187,7 +185,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
-		TopIDs:    topIds,
+		TopIDs:    req.TopIds,
 		Status:    req.Status,
 	}
 	po := &types.PageOption{
@@ -231,12 +229,7 @@ func (s *Service) setKvTypeAndValue(kt *kit.Kit, details []*table.Kv) ([]*pbkv.K
 		if err != nil {
 			return nil, err
 		}
-		// value 是否隐藏
-		if one.Spec.SecretHidden {
-			kvValue = i18n.T(kt, "sensitive data is not visible, unable to view actual content")
-		}
 		kvs = append(kvs, pbkv.PbKv(one, kvValue))
-
 	}
 
 	return kvs, nil
