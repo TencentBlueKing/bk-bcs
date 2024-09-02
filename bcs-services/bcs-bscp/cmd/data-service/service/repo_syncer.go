@@ -259,6 +259,7 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 	}
 	_ = g.Wait()
 
+	close(noFilesCh)
 	cost := time.Since(start)
 	stat := syncStat{
 		bizID:       int32(bizID),
