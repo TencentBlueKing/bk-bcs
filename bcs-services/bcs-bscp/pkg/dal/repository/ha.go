@@ -13,6 +13,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -275,29 +276,35 @@ func (s *SyncManager) ParseQueueMsg(msg string) (uint32, string, error) {
 	return uint32(bizID), elements[1], nil
 }
 
+// ErrNoFileInMaster is error of no file in master
+var ErrNoFileInMaster = errors.New("file not found in master")
+
 // Sync syncs file from master to slave
-func (s *SyncManager) Sync(kt *kit.Kit, sign string) error {
-	_, err := s.slave.Metadata(kt, sign)
+func (s *SyncManager) Sync(kt *kit.Kit, sign string) (skip bool, err error) {
+	_, err = s.slave.Metadata(kt, sign)
 	// the file already exists in slave repo, return directly
 	if err == nil {
-		return nil
+		return true, nil
 	}
 	// if the error is not 404 which means the slave repo service has some trouble, return directly
 	if err != errf.ErrFileContentNotFound {
-		return fmt.Errorf("sync file from master to slave failed, slave metadata err: %v", err)
+		return false, fmt.Errorf("sync file from master to slave failed, slave metadata err: %v", err)
 	}
 
 	reader, _, err := s.master.Download(kt, sign)
 	if err != nil {
-		return fmt.Errorf("sync file from master to slave failed, master download err: %v", err)
+		if err == errf.ErrFileContentNotFound {
+			return false, ErrNoFileInMaster
+		}
+		return false, fmt.Errorf("sync file from master to slave failed, master download err: %v", err)
 	}
 	defer reader.Close()
 
 	// stream the downloaded content to slave repo for uploading
 	_, err = s.slave.Upload(kt, sign, reader)
 	if err != nil {
-		return fmt.Errorf("sync file from master to slave failed, slave upload err: %v", err)
+		return false, fmt.Errorf("sync file from master to slave failed, slave upload err: %v", err)
 	}
 
-	return nil
+	return false, nil
 }

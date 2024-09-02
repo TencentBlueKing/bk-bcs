@@ -127,12 +127,19 @@ type syncStat struct {
 	total       int32
 	success     int32
 	failed      int32
+	skip        int32
 	costSeconds float64
 }
 
+type noFiles struct {
+	bizID     int32
+	fileSigns []string
+}
+
 var (
-	stats         []syncStat
-	syncFailedCnt int32
+	stats          []syncStat
+	noFileInMaster []noFiles
+	syncFailedCnt  int32
 )
 
 const failedLimit = 100
@@ -194,16 +201,36 @@ func (s *RepoSyncer) syncAll(kt *kit.Kit) {
 	}
 
 	logs.Infof("sync all repo files finished, cost time: %s, rid: %s, stats: %#v", time.Since(start), kt.Rid, stats)
+	if len(noFileInMaster) > 0 {
+		logs.Infof("sync all repo files found some files not in master, please check the master repo, rid: %s, "+
+			"info: %#v", kt.Rid, noFileInMaster)
+	}
 }
 
 // syncOneBiz syncs all files under one biz concurrently
 func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 	start := time.Now()
 	syncMgr := s.repo.SyncManager()
-	var success, failed int32
+	var success, failed, skip int32
+	noFilesCh := make(chan string, 1)
+	var nofiles []string
+
+	// save info for no file in master
+	go func() {
+		for file := range noFilesCh {
+			nofiles = append(nofiles, file)
+		}
+		if len(nofiles) > 0 {
+			noFileInMaster = append(noFileInMaster, noFiles{
+				bizID:     int32(bizID),
+				fileSigns: nofiles,
+			})
+		}
+	}()
+
+	// sync files concurrently
 	g, _ := errgroup.WithContext(context.Background())
 	g.SetLimit(10)
-
 	for _, si := range signs {
 		sign := si
 		g.Go(func() error {
@@ -212,10 +239,18 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 			}
 			kt2 := kt.Clone()
 			kt2.BizID = bizID
-			if err := syncMgr.Sync(kt2, sign); err != nil {
+			isSkip, err := syncMgr.Sync(kt2, sign)
+			if err != nil {
 				logs.Errorf("sync file sign %s for biz %d failed, err: %v, rid: %s", sign, bizID, err, kt2.Rid)
 				atomic.AddInt32(&failed, 1)
 				atomic.AddInt32(&syncFailedCnt, 1)
+				if err == repository.ErrNoFileInMaster {
+					noFilesCh <- sign
+				}
+				return err
+			}
+			if isSkip {
+				atomic.AddInt32(&skip, 1)
 			} else {
 				atomic.AddInt32(&success, 1)
 			}
@@ -230,6 +265,7 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 		total:       int32(len(signs)),
 		success:     success,
 		failed:      failed,
+		skip:        skip,
 		costSeconds: cost.Seconds(),
 	}
 	stats = append(stats, stat)
@@ -292,9 +328,13 @@ func (s *RepoSyncer) syncIncremental(kt *kit.Kit) {
 
 				// sync the file with the specific bizID and signature
 				kt2.BizID = bizID
-				if err = syncMgr.Sync(kt2, sign); err != nil {
+				if _, err = syncMgr.Sync(kt2, sign); err != nil {
 					logs.Errorf("sync file failed, err: %v, rid: %s", err, kt2.Rid)
-					// if failed, retry after a delay
+					// if failed for no file in master, continue and not to retry it
+					if err == repository.ErrNoFileInMaster {
+						continue
+					}
+					// if failed for other reasons, retry after a delay
 					go retryMessage(kt2, syncMgr, ackQueue, msg, sign)
 					continue
 				} else {
@@ -329,7 +369,7 @@ func retryMessage(kt *kit.Kit, syncMgr *repository.SyncManager, ackQueue, msg, s
 		}
 		count++
 
-		if err := syncMgr.Sync(kt, sign); err != nil {
+		if _, err := syncMgr.Sync(kt, sign); err != nil {
 			logs.Errorf("sync retry count %d failed, err: %v, rid: %s", count, err, kt.Rid)
 			// retry failed beyond the limit, return and all-sync mechanism will handle it
 			if count >= limit {
