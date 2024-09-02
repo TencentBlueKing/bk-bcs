@@ -91,7 +91,8 @@ func (t *Task) GetAllTask() map[string]interface{} {
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) ( // nolint
+	*proto.Task, error) {
 	// create cluster currently only has three steps:
 	// 1. call blueking CreateTKECluster bksops to create cluster
 	// 2. update cluster DB info when create cluster successful

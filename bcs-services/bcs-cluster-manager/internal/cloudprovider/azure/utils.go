@@ -19,6 +19,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var (
@@ -27,6 +28,8 @@ var (
 
 // task template name
 const (
+	// createClusterTaskTemplate bk-sops add task template
+	createClusterTaskTemplate = "aks-create cluster: %s"
 	// deleteClusterTaskTemplate bk-sops add task template
 	deleteClusterTaskTemplate = "aks-delete cluster: %s"
 	// createNodeGroupTaskTemplate bk-sops add task template
@@ -47,6 +50,36 @@ const (
 
 // tasks
 var (
+	// create cluster task
+	createAKSClusterStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateAKSClusterTask", cloudName),
+		StepName:   "创建集群",
+	}
+	checkAKSClusterStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckAKSClusterStatusTask", cloudName),
+		StepName:   "检测集群状态",
+	}
+	checkAKSNodeGroupsStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckAKSNodeGroupsStatusTask", cloudName),
+		StepName:   "检测集群节点池状态",
+	}
+	updateAKSNodeGroupsToDBStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-UpdateAKSNodesGroupToDBTask", cloudName),
+		StepName:   "更新节点池信息",
+	}
+	checkCreateClusterNodeStatusStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CheckCreateClusterNodeStatusTask", cloudName),
+		StepName:   "检测集群节点状态",
+	}
+	registerAKSClusterKubeConfigStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-RegisterAKSClusterKubeConfigTask", cloudName),
+		StepName:   "注册集群连接信息",
+	}
+	updateAKSNodesToDBStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-UpdateAKSNodesToDBTask", cloudName),
+		StepName:   "更新任务状态",
+	}
+
 	// import cluster task
 	importClusterNodesStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-ImportClusterNodesTask", cloudName),
@@ -59,7 +92,7 @@ var (
 
 	// delete cluster task
 	deleteAKSClusterStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-DeleteGKEClusterTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-DeleteAKSClusterTask", cloudName),
 		StepName:   "删除集群",
 	}
 	cleanClusterDBInfoStep = cloudprovider.StepInfo{
@@ -98,11 +131,96 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
-	updateDesiredNodesDBInfoStep = cloudprovider.StepInfo{ // nolint
-		StepMethod: fmt.Sprintf("%s-UpdateDesiredNodesDBInfoTask", cloudName),
-		StepName:   "更新节点数据",
-	}
 )
+
+// CreateClusterTaskOption 创建集群构建step子任务
+type CreateClusterTaskOption struct {
+	Cluster      *proto.Cluster
+	NodeGroupIDs []string
+}
+
+// BuildCreateClusterStep 创建集群任务
+func (cn *CreateClusterTaskOption) BuildCreateClusterStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(createAKSClusterStep)
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	createStep.Params[cloudprovider.NodeGroupIDKey.String()] = strings.Join(cn.NodeGroupIDs, ",")
+
+	task.Steps[createAKSClusterStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, createAKSClusterStep.StepMethod)
+}
+
+// BuildCheckClusterStatusStep 检测集群状态任务
+func (cn *CreateClusterTaskOption) BuildCheckClusterStatusStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkAKSClusterStatusStep)
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[checkAKSClusterStatusStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkAKSClusterStatusStep.StepMethod)
+}
+
+// BuildCheckNodeGroupsStatusStep 检测集群节点池状态任务
+func (cn *CreateClusterTaskOption) BuildCheckNodeGroupsStatusStep(task *proto.Task) {
+	checkStep := cloudprovider.InitTaskStep(checkAKSNodeGroupsStatusStep)
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	checkStep.Params[cloudprovider.NodeGroupIDKey.String()] = strings.Join(cn.NodeGroupIDs, ",")
+
+	task.Steps[checkAKSNodeGroupsStatusStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, checkAKSNodeGroupsStatusStep.StepMethod)
+}
+
+// BuildUpdateNodeGroupsToDBStep 更新集群节点池信息任务
+func (cn *CreateClusterTaskOption) BuildUpdateNodeGroupsToDBStep(task *proto.Task) {
+	updateStep := cloudprovider.InitTaskStep(updateAKSNodeGroupsToDBStep)
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	updateStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[updateAKSNodeGroupsToDBStep.StepMethod] = updateStep
+	task.StepSequence = append(task.StepSequence, updateAKSNodeGroupsToDBStep.StepMethod)
+}
+
+// BuildCheckClusterNodesStatusStep 检测创建集群节点状态任务
+func (cn *CreateClusterTaskOption) BuildCheckClusterNodesStatusStep(task *proto.Task) {
+	createStep := cloudprovider.InitTaskStep(checkCreateClusterNodeStatusStep)
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[checkCreateClusterNodeStatusStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, checkCreateClusterNodeStatusStep.StepMethod)
+}
+
+// BuildUpdateNodesToDBStep 更新集群节点信息任务
+func (cn *CreateClusterTaskOption) BuildUpdateNodesToDBStep(task *proto.Task) {
+	updateStep := cloudprovider.InitTaskStep(updateAKSNodesToDBStep)
+	updateStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	updateStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[updateAKSNodesToDBStep.StepMethod] = updateStep
+	task.StepSequence = append(task.StepSequence, updateAKSNodesToDBStep.StepMethod)
+}
+
+// BuildRegisterClsKubeConfigStep 托管集群注册连接信息
+func (cn *CreateClusterTaskOption) BuildRegisterClsKubeConfigStep(task *proto.Task) {
+	registerStep := cloudprovider.InitTaskStep(registerAKSClusterKubeConfigStep)
+	registerStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	registerStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	registerStep.Params[cloudprovider.IsExtranetKey.String()] = icommon.True
+
+	task.Steps[registerAKSClusterKubeConfigStep.StepMethod] = registerStep
+	task.StepSequence = append(task.StepSequence, registerAKSClusterKubeConfigStep.StepMethod)
+}
+
+// BuildImportClusterNodesStep 纳管集群节点
+func (cn *CreateClusterTaskOption) BuildImportClusterNodesStep(task *proto.Task) {
+	importNodesStep := cloudprovider.InitTaskStep(importClusterNodesStep)
+	importNodesStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	importNodesStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[importClusterNodesStep.StepMethod] = importNodesStep
+	task.StepSequence = append(task.StepSequence, importClusterNodesStep.StepMethod)
+}
 
 // ImportClusterTaskOption 纳管集群
 type ImportClusterTaskOption struct {

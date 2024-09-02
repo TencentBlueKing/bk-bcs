@@ -337,7 +337,7 @@ func (ca *CreateAction) generateClusterID(cls *cmproto.Cluster) error {
 	return nil
 }
 
-func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
+func (ca *CreateAction) createNodegroupInDB(cls *cmproto.Cluster) error {
 	timeStr := time.Now().Format(time.RFC3339)
 	if ca.req.NodeGroups != nil {
 		for _, ng := range ca.req.NodeGroups {
@@ -354,38 +354,28 @@ func (ca *CreateAction) createNodegroup(cls *cmproto.Cluster) error {
 				return fmt.Errorf("createNodegroup[%s] empty LaunchTemplate", ng.Name)
 			}
 
-			if ng.LaunchTemplate.InitLoginPassword != "" {
-				enPasswd, err := encrypt.Encrypt(nil, ng.LaunchTemplate.InitLoginPassword)
-				if err != nil {
-					return fmt.Errorf("createNodegroup[%s] Encrypt InitLoginPassword failed", ng.Name)
+			// base64 encode secret file
+			if ng.LaunchTemplate.KeyPair != nil {
+				if len(ng.LaunchTemplate.KeyPair.KeySecret) > 0 {
+					ng.LaunchTemplate.KeyPair.KeySecret, _ = encrypt.Encrypt(nil, ng.LaunchTemplate.KeyPair.KeySecret)
 				}
-				ng.LaunchTemplate.InitLoginPassword = enPasswd
-			}
-			if ng.LaunchTemplate.GetKeyPair() != nil && ng.LaunchTemplate.GetKeyPair().GetKeySecret() != "" {
-				keySecret, err := encrypt.Encrypt(nil, ng.LaunchTemplate.GetKeyPair().GetKeySecret())
-				if err != nil {
-					return fmt.Errorf("createNodegroup[%s] Encrypt KeySecret failed", ng.Name)
+				if len(ng.LaunchTemplate.KeyPair.KeyPublic) > 0 {
+					ng.LaunchTemplate.KeyPair.KeyPublic, _ = encrypt.Encrypt(nil, ng.LaunchTemplate.KeyPair.KeyPublic)
 				}
-				ng.LaunchTemplate.KeyPair.KeySecret = keySecret
 			}
-			if ng.LaunchTemplate.GetKeyPair() != nil && ng.LaunchTemplate.GetKeyPair().GetKeyPublic() != "" {
-				keyPublic, err := encrypt.Encrypt(nil, ng.LaunchTemplate.GetKeyPair().GetKeyPublic())
-				if err != nil {
-					return fmt.Errorf("createNodegroup[%s] Encrypt KeyPublic failed", ng.Name)
-				}
-				ng.LaunchTemplate.KeyPair.KeyPublic = keyPublic
+			if len(ng.LaunchTemplate.InitLoginPassword) > 0 {
+				ng.LaunchTemplate.InitLoginPassword, _ = encrypt.Encrypt(nil, ng.LaunchTemplate.InitLoginPassword)
 			}
+
 			// base64 encode script file
-			if ng.NodeTemplate != nil {
-				ng.NodeTemplate.UserScript = utils.Base64Encode(ng.NodeTemplate.UserScript)
-				ng.NodeTemplate.PreStartUserScript = utils.Base64Encode(ng.NodeTemplate.PreStartUserScript)
-				ng.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPreScript)
-				ng.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPostScript)
-			}
+			ng.NodeTemplate.UserScript = utils.Base64Encode(ng.NodeTemplate.UserScript)
+			ng.NodeTemplate.PreStartUserScript = utils.Base64Encode(ng.NodeTemplate.PreStartUserScript)
+			ng.NodeTemplate.ScaleInPreScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPreScript)
+			ng.NodeTemplate.ScaleInPostScript = utils.Base64Encode(ng.NodeTemplate.ScaleInPostScript)
 
 			err := ca.model.CreateNodeGroup(context.Background(), ng)
 			if err != nil {
-				blog.Errorf("save NodeGroup %s information to store failed, %s", ng.NodeGroupID, err.Error())
+				blog.Errorf("createNodegroupInDB %s failed, %s", ng.NodeGroupID, err.Error())
 				if errors.Is(err, drivers.ErrTableRecordDuplicateKey) {
 					ca.resp.Data = cls
 					ca.setResp(common.BcsErrClusterManagerDatabaseRecordDuplicateKey, err.Error())
@@ -456,7 +446,7 @@ func (ca *CreateAction) Handle(ctx context.Context, req *cmproto.CreateClusterRe
 	}
 
 	// create nodeGroups
-	err = ca.createNodegroup(cls)
+	err = ca.createNodegroupInDB(cls)
 	if err != nil {
 		blog.Errorf("createNodegroup failed: %v", err)
 		return

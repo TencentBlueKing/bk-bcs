@@ -16,7 +16,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
@@ -97,8 +96,8 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateCloudNodeGroupIDInNodeGroup successful",
-		taskID)
+	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool updateCloudNodeGroupIDInNodeGroup"+
+		" successful", taskID)
 
 	if state.Task.CommonParams == nil { // update response information to task common params
 		state.Task.CommonParams = make(map[string]string)
@@ -253,7 +252,8 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
 	}
 
-	nodeGroupResource, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
+	nodeGroupResource, ok := cluster.ExtraInfo[common.NodeResourceGroup]
+	clusterGroupResource, ok := cluster.ExtraInfo[common.ClusterResourceGroup]
 	if !ok {
 		ctx, cancel := context.WithTimeout(rootCtx, 30*time.Second)
 		defer cancel()
@@ -276,54 +276,16 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
 
-	group.AutoScaling.AutoScalingName = api.RegexpSetNodeGroupResourcesName(set)
-	// 设置虚拟规模集网络
-	err = api.SetVmSetNetWork(ctx, client, group, set)
+	_, err = updateVmss(ctx, client, group, set, nodeGroupResource, clusterGroupResource)
 	if err != nil {
-		return errors.Wrapf(err, "createAgentPool[%s]: call SetVmSetNetWork[%s][%s] falied", taskID,
+		return errors.Wrapf(err, "createAgentPool[%s]: call UpdateVmss[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
-	// 设置虚拟规模密码
-	api.SetVmSetPasswd(group, set)
-	// 设置虚拟规模SSH免密登录公钥
-	api.SetVmSetSSHPublicKey(group, set)
 
-	// 已经创建了系统盘, 无需再购买
-	// if lc.SystemDisk != nil {
-	//	 api.BuySystemDisk(group, set)
-	// }
-
-	// 买数据盘
-	if len(lc.DataDisks) != 0 {
-		api.BuyDataDisk(group, set)
-	}
-	// 用户数据
-	api.SetUserData(group, set)
-	api.SetImageReferenceNull(set)
-
-	// 设置自定义脚本会导致VM加入集群失败!!!
-	// api.SetVmSetCustomScript(group, set)
-
-	ctx, cancel = context.WithTimeout(rootCtx, 5*time.Minute)
-	defer cancel()
-	vmSet, err := client.UpdateSetWithName(ctx, set, nodeGroupResource, *set.Name) // 设置节点密码 或 购买数据盘、系统盘
-	if err != nil {
-		blog.Errorf(err.Error())
-		return errors.Wrapf(err, "createAgentPool[%s]: call UpdateSetWithName[%s][%s] failed, "+
-			"unable to set node password or purchase data disk and system disk", taskID, nodeGroupResource, *set.Name)
-	}
 	blog.Infof("createAgentPool[%s]: %s set node password or purchase data disk and system disk successful",
-		taskID, *vmSet.Name)
+		taskID, *set.Name)
 
 	return nil
-}
-
-func setCloudNodeGroupID(group *proto.NodeGroup) {
-	if group == nil || len(group.NodeGroupID) == 0 {
-		return
-	}
-	idx := strings.LastIndexByte(group.NodeGroupID, '-')
-	group.CloudNodeGroupID = strings.ToLower(group.NodeGroupID[idx+1:])
 }
 
 // updateCloudNodeGroupIDInNodeGroup set nodegroup cloudNodeGroupID
