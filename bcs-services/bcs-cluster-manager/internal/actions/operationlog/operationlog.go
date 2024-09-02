@@ -87,6 +87,9 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 	if ua.req.ResourceName != "" {
 		conds = append(conds, util.Condition(operator.Eq, "resourcename", []string{ua.req.ResourceName}))
 	}
+	if ua.req.OpUser != "" {
+		conds = append(conds, util.Condition(operator.Eq, "opuser", []string{ua.req.OpUser}))
+	}
 
 	if ua.req.StartTime > 0 && ua.req.EndTime > 0 {
 		// time range condition
@@ -134,10 +137,9 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 	}
 	var taskIDs []string
 	for _, v := range opLogs {
-		if len(v.TaskID) == 0 {
-			continue
+		if len(v.TaskID) > 0 {
+			taskIDs = append(taskIDs, v.TaskID)
 		}
-		taskIDs = append(taskIDs, v.TaskID)
 
 		createTime := utils.TransTimeFormat(v.CreateTime)
 		ua.resp.Data.Results = append(ua.resp.Data.Results, &cmproto.OperationLogDetail{
