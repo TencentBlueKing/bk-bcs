@@ -16,7 +16,6 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"os"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -104,14 +103,14 @@ func (r *RabbitMQ) EnsureExchange(chn *amqp.Channel) error {
 // DeclareQueue declare a queue
 func (r *RabbitMQ) DeclareQueue(chn *amqp.Channel, queueName string, args amqp.Table) error {
 	// Make sure we process 1 message at a time
-	if err := chn.Qos(1, 0, false); err != nil {
+	if err := chn.Qos(10, 0, false); err != nil {
 		return err
 	}
 	_, err := chn.QueueDeclare(
 		queueName,
 		true,
-		false,
 		true,
+		false,
 		false,
 		args,
 		// amqp.Table{"x-expires": 60000},
@@ -140,17 +139,12 @@ func (r *RabbitMQ) BindQueue(chn *amqp.Channel, queueName, exchangeName string, 
 }
 
 // StartConsumer start a consumer
-func (r *RabbitMQ) StartConsumer(chn *amqp.Channel, queueName string, handler handler.Handler, done <-chan bool) error {
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "unknown"
-	}
-	consumer := fmt.Sprintf("%s.%s", hostname, queueName)
-
+func (r *RabbitMQ) StartConsumer(
+	chn *amqp.Channel, consumer, queueName string, handler handler.Handler, done <-chan bool) error {
 	messages, err := chn.Consume(
 		queueName,
 		consumer,
-		false,
+		true,
 		false,
 		false,
 		false,
