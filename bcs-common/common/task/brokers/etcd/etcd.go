@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -90,7 +91,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 
 	// Channel to which we will push tasks ready for processing by worker
 	deliveries := make(chan Delivery)
-	defer log.INFO.Printf("stop consuming done")
+	defer log.INFO.Printf("stop all consuming and handle done")
 	defer b.wg.Wait()
 
 	ctx, cancel := context.WithCancel(b.ctx)
@@ -115,6 +116,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				err := b.listWatchRunningTask(ctx)
 				if err != nil {
 					log.ERROR.Printf("list watch running task failed, err: %s", err)
+					time.Sleep(time.Second)
 				}
 			}
 		}
@@ -140,6 +142,7 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				err := b.listWatchPendingTask(ctx, queue)
 				if err != nil {
 					log.ERROR.Printf("list watch pending task failed, err: %s", err)
+					time.Sleep(time.Second)
 				}
 			}
 		}
@@ -189,9 +192,6 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 			log.INFO.Printf("handle delayed task stopped")
 		}()
 
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-
 		for {
 			select {
 			// A way to stop this goroutine from b.StopConsuming
@@ -199,19 +199,22 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 				return
 			case <-ctx.Done():
 				return
-			case <-ticker.C:
+			default:
 				err := b.handleDelayedTask(ctx)
-				if err != nil {
+				if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 					log.ERROR.Printf("handle delayed task failed, err: %s", err)
 				}
+				time.Sleep(time.Second)
 			}
 		}
 	}()
 
 	if err := b.consume(deliveries, concurrency, taskProcessor); err != nil {
+		log.WARNING.Printf("consume stopped, err=%v, retry=%t", err, b.GetRetry())
 		return b.GetRetry(), err
 	}
 
+	log.INFO.Printf("consume stopped, retry=%t", b.GetRetry())
 	return b.GetRetry(), nil
 }
 
@@ -240,9 +243,7 @@ func (b *etcdBroker) consume(deliveries <-chan Delivery, concurrency int, taskPr
 		})
 	}
 
-	err := eg.Wait()
-	log.INFO.Printf("consume stopped, err=%v", err)
-	return err
+	return eg.Wait()
 }
 
 // consumeOne processes a single message using TaskProcessor
@@ -499,31 +500,54 @@ func (b *etcdBroker) listWatchPendingTask(ctx context.Context, queue string) err
 }
 
 func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
-	ttl := time.Second * 10
-	ctx, cancel := context.WithTimeout(ctx, ttl)
-	defer cancel()
-
-	// 创建一个新的session
-	s, err := concurrency.NewSession(b.client, concurrency.WithTTL(int(ttl.Seconds())))
+	s, err := concurrency.NewSession(b.client)
 	if err != nil {
 		return err
 	}
-	defer s.Orphan()
+	defer s.Close() // nolint
 
 	m := concurrency.NewMutex(s, delayedTaskLockKey)
 
-	if err = m.Lock(ctx); err != nil {
+	// 最长等待30s获取锁
+	lockCtx, lockCancel := context.WithTimeout(ctx, time.Second*30)
+	defer lockCancel()
+	if err = m.Lock(lockCtx); err != nil {
 		return err
 	}
-	defer m.Unlock(ctx) // nolint
+
+	defer func() {
+		unlockCtx, unlockCancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer unlockCancel()
+
+		if err = m.Unlock(unlockCtx); err != nil {
+			log.ERROR.Printf("unlock delayed task failed, err: %s", err)
+		}
+	}()
+
+	// 异步任务随时可能插入, 最多处理1分钟后重新获取任务列表(aka 异步任务到期后, 最多延迟1分钟放到pending队列)
+	handleCtx, handleCancel := context.WithTimeout(ctx, time.Minute)
+	defer handleCancel()
 
 	keyPrefix := fmt.Sprintf("%s/eta-", delayedTaskPrefix)
 	end := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	resp, err := b.client.Get(ctx, keyPrefix+"0", clientv3.WithRange(keyPrefix+end))
+	rangeOpts := []clientv3.OpOption{
+		clientv3.WithRange(keyPrefix + end),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), // 按时间排序,优先处理最早的任务
+		clientv3.WithLimit(10000),
+	}
+	resp, err := b.client.Get(handleCtx, keyPrefix+"0", rangeOpts...)
 	if err != nil {
 		return err
 	}
+
 	for _, kv := range resp.Kvs {
+		// 超时控制
+		select {
+		case <-handleCtx.Done():
+			return handleCtx.Err()
+		default:
+		}
+
 		key := string(kv.Key)
 		taskKey := findTaskKey(key)
 		if taskKey == "" {
@@ -533,9 +557,9 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 		cmp := clientv3.Compare(clientv3.ModRevision(key), "=", kv.ModRevision)
 		deleteReq := clientv3.OpDelete(key)
 		putReq := clientv3.OpPut(pendingKey, string(kv.Value))
-		c, err := b.client.Txn(ctx).If(cmp).Then(deleteReq, putReq).Commit()
+		c, err := b.client.Txn(handleCtx).If(cmp).Then(deleteReq, putReq).Commit()
 		if err != nil {
-			return fmt.Errorf("handle delay task %s: %w", key, err)
+			return fmt.Errorf("handle delay task %s failed, err: %w", key, err)
 		}
 		if !c.Succeeded {
 			log.WARNING.Printf("handle delay task %s not success", key)

@@ -14,10 +14,16 @@ package iface
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+)
+
+var (
+	// ErrRevoked step has been revoked
+	ErrRevoked = errors.New("revoked")
 )
 
 // Context 当前执行的任务
