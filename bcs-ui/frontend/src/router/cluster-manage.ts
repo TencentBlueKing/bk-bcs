@@ -16,6 +16,7 @@ const CreateK8SCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import-cluster.vue');
 const ImportGoogleCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/google-cloud.vue');
+const importBkSopsCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import-bkSops.vue');
 const ImportAzureCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/azure-cloud.vue');
 const ImportHuaweiCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/huawei-cloud.vue');
 const ImportAwsCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/amazon-cloud.vue');
@@ -164,6 +165,18 @@ export default [
     path: 'clusters/import/google-cloud',
     name: 'importGoogleCluster',
     component: ImportGoogleCluster,
+    props: true,
+    meta: {
+      menuId: 'CLUSTER',
+      title: window.i18n.t('cluster.create.title.import'),
+      hideMenu: true,
+    },
+  },
+  // 导入集群 - bk-sops
+  {
+    path: 'clusters/import/bk-sops',
+    name: 'importBkSopsCluster',
+    component: importBkSopsCluster,
     props: true,
     meta: {
       menuId: 'CLUSTER',

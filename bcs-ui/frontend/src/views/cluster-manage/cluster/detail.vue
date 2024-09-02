@@ -123,9 +123,9 @@ watch(activeTabName, () => {
 const { clusterList } = useCluster();
 const curCluster = computed<Partial<ICluster>>(() => clusterList.value
   .find(item => item.clusterID === props.clusterId) || {});
-  // kubeConfig导入集群
+  // kubeConfig导入集群||控制面导入集群
 const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategory === 'importer'
-      && curCluster.value.importCategory === 'kubeConfig');
+      && (curCluster.value.importCategory === 'kubeConfig' || curCluster.value.importCategory === 'machine'));
 // // 云区域详情
 // const cloudDetail = ref<Record<string, any>|null>(null);
 // const handleGetCloudDetail = async () => {

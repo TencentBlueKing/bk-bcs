@@ -1149,9 +1149,9 @@ export default defineComponent({
     const curSelectedCluster = computed<Partial<ICluster>>(() => clusterList.value
       .find(item => item.clusterID === localClusterId.value) || {});
     const isImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer');
-    // kubeConfig导入集群
+    // kubeConfig导入集群||控制面导入集群
     const isKubeConfigImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer'
-      && curSelectedCluster.value.importCategory === 'kubeConfig');
+      && (curSelectedCluster.value.importCategory === 'kubeConfig' || curSelectedCluster.value.importCategory === 'machine'));
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'

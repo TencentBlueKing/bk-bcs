@@ -28,6 +28,7 @@ bcs:
     kubeConfig: KubeConfig
     cloud: Cloud credential import
     platform: Platform created
+    machine: Machine
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -703,6 +704,14 @@ cluster:
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
           Google Cloud, Huawei Cloud
+      bkSops:
+        title: Imported Cluster (via bk-sops)
+        subTitle: >-
+          You can import any external cluster by executing a bk-sops task on
+          control plane hosts
+        desc: >-
+          By executing bk-sops task on the control plane hosts, automatically
+          install the agent in the cluster to manage external clusters.
     label:
       clusterVersion: Version
       desc: Description
@@ -774,10 +783,6 @@ cluster:
           desc: >-
             Node pod CIDR cannot be adjusted after allocation Please fill in
             after careful evaluation
-        article3: >-
-          The number of nodes can be added with clusters (including Master nodes
-          and node nodes) = (Number of IP -quantity of service) / single node
-          POD quantity upper limit.       
         article1: >-
           The container network resources are limited, please allocate it
           reasonably. Under the current container network configuration, the
@@ -786,6 +791,10 @@ cluster:
           When the container network resources are excessive, the container
           network will be automatically scale-up. After the capacity is
           expanded, the cluster can be added at most {count}.
+        article3: >-
+          The number of nodes can be added with clusters (including Master nodes
+          and node nodes) = (Number of IP -quantity of service) / single node
+          POD quantity upper limit.       
       networkMode:
         text: Network Mode
         cni:
@@ -3096,6 +3105,19 @@ importGoogleCloud:
     regions: Regions
   tips:
     disabledTips: Credentials associated with the cluster and cannot be deleted
+importBkSopsCloud:
+  title: Import a public cloud cluster - BK SOPS
+  label:
+    clusterName: Cluster name
+    controlPanel: Control Panel
+    addServer: Add Server
+    advancedParameters: Advanced Parameters
+    desc: Description
+  button:
+    import: Import
+  message:
+    nodeTips: You can import through the cluster master node and execute kubectl commands.
+    errorAgent: The import of the node agent is abnormal.
 azureCloud:
   button:
     create: Create

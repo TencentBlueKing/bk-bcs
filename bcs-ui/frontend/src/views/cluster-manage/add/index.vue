@@ -220,6 +220,14 @@ export default defineComponent({
         type: 'kubeconfig',
         // disabled: _INTERNAL_.value,
       },
+      {
+        icon: 'bcs-icon-operations',
+        title: $i18n.t('cluster.create.type.bkSops.title'),
+        subTitle: $i18n.t('cluster.create.type.bkSops.subTitle'),
+        desc: $i18n.t('cluster.create.type.bkSops.desc'),
+        type: 'bk-sops',
+        disabled: false,
+      },
     ]);
     const cardGroupList = computed(() => [
       {
@@ -299,6 +307,11 @@ export default defineComponent({
         case 'amazonCloud':
           $router.push({
             name: 'importAwsCluster',
+          });
+          break;
+        case 'bk-sops':
+          $router.push({
+            name: 'importBkSopsCluster',
           });
           break;
       }

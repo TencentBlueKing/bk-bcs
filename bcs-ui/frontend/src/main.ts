@@ -30,6 +30,7 @@ import BkTrace from '@blueking/bk-trace';
 
 import '@/common/bkmagic';
 import '@/fonts/svg-icon/iconcool';
+import '@/fonts/font-icon/iconcool';
 import '@/views/app/performance';
 import '@blueking/bkui-library';
 import App from '@/App.vue';
