@@ -44,25 +44,18 @@ import (
 )
 
 // CreateConfigItem create config item.
-func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) { // nolint
+func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// get all configuration files under this service
-	items, err := s.dao.ConfigItem().ListAllByAppID(grpcKit,
-		req.ConfigItemAttachment.AppId, req.ConfigItemAttachment.BizId)
-	if err != nil {
-		return nil, err
-	}
-	existingPaths := []string{}
-	for _, v := range items {
-		existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
-	}
+	newFiles := []tools.CIUniqueKey{{
+		Name: req.ConfigItemSpec.Path,
+		Path: req.ConfigItemSpec.Name,
+	}}
 
-	// validate in table config_items
-	if tools.CheckPathConflict(path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name), existingPaths) {
-		return nil, errf.Errorf(errf.InvalidRequest,
-			i18n.T(grpcKit, "the config file %s under this service already exists and cannot be created again",
-				path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)))
+	// 检测配置项路径冲突以及是否超出服务限制
+	if err := s.checkRestorePrerequisites(grpcKit, req.ConfigItemAttachment.BizId, req.ConfigItemAttachment.AppId,
+		newFiles, nil); err != nil {
+		return nil, err
 	}
 
 	tx := s.dao.GenQuery().Begin()
@@ -1267,9 +1260,14 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
 	}
 
+	newFiles := []tools.CIUniqueKey{{
+		Name: releaseCi.ConfigItemSpec.Name,
+		Path: releaseCi.ConfigItemSpec.Path,
+	}}
+
 	// 检测配置项路径冲突以及是否超出服务限制
 	if err = s.checkRestorePrerequisites(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
-		releaseCi, ci); err != nil {
+		newFiles, ci); err != nil {
 		return nil, err
 	}
 
@@ -1353,30 +1351,25 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 }
 
 // 检测恢复配置文件的前置条件
-func (s *Service) checkRestorePrerequisites(kit *kit.Kit, bizID, appID uint32, releaseCi *table.ReleasedConfigItem,
+func (s *Service) checkRestorePrerequisites(kit *kit.Kit, bizID, appID uint32, newFiles []tools.CIUniqueKey,
 	ci *table.ConfigItem) error {
-
-	// 检测文件冲突
-	// /a 和 /a/1.txt这类的冲突
-	file1 := []tools.CIUniqueKey{{
-		Name: releaseCi.ConfigItemSpec.Name,
-		Path: releaseCi.ConfigItemSpec.Path,
-	}}
 
 	// 获取指定服务下的配置项
 	configs, err := s.dao.ConfigItem().ListAllByAppID(kit, appID, bizID)
 	if err != nil {
 		return err
 	}
-	file2 := []tools.CIUniqueKey{}
+	existingFiles := []tools.CIUniqueKey{}
 	for _, v := range configs {
-		file2 = append(file2, tools.CIUniqueKey{
+		existingFiles = append(existingFiles, tools.CIUniqueKey{
 			Name: v.Spec.Name,
 			Path: v.Spec.Path,
 		})
 	}
 
-	if err = tools.DetectFilePathConflicts(kit, file1, file2); err != nil {
+	// 检测文件冲突
+	// /a 和 /a/1.txt这类的冲突
+	if err = tools.DetectFilePathConflicts(kit, newFiles, existingFiles); err != nil {
 		return err
 	}
 
@@ -1896,7 +1889,9 @@ func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbd
 	}
 	templateConfigItemCount := 0
 	if binding != nil {
-		templateConfigItemCount = len(binding.Spec.TemplateIDs)
+		for _, binding := range binding.Spec.Bindings {
+			templateConfigItemCount += len(binding.TemplateRevisions)
+		}
 	}
 
 	return &pbds.GetTemplateAndNonTemplateCICountResp{

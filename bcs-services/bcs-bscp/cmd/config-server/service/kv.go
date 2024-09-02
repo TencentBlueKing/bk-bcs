@@ -161,6 +161,16 @@ func (s *Service) ListKvs(ctx context.Context, req *pbcs.ListKvsReq) (*pbcs.List
 		return nil, err
 	}
 
+	// 敏感信息类型需要判断是否隐藏密码
+	for _, v := range rp.GetDetails() {
+		if v.Spec.KvType != string(table.KvSecret) {
+			continue
+		}
+		if v.Spec.SecretHidden {
+			v.Spec.Value = i18n.T(grpcKit, "sensitive data is not visible, unable to view actual content")
+		}
+	}
+
 	resp := &pbcs.ListKvsResp{
 		Count:          rp.Count,
 		Details:        rp.Details,
@@ -441,10 +451,12 @@ func (s *Service) CompareKvConflicts(ctx context.Context, req *pbcs.CompareKvCon
 
 	newKv := func(v *pbrkv.ReleasedKv) *pbcs.CompareKvConflictsResp_Kv {
 		return &pbcs.CompareKvConflictsResp_Kv{
-			Key:    v.Spec.Key,
-			KvType: v.Spec.KvType,
-			Value:  v.Spec.Value,
-			Memo:   v.Spec.Memo,
+			Key:          v.Spec.Key,
+			KvType:       v.Spec.KvType,
+			SecretType:   v.Spec.SecretType,
+			SecretHidden: v.Spec.SecretHidden,
+			Value:        v.Spec.Value,
+			Memo:         v.Spec.Memo,
 		}
 	}
 
