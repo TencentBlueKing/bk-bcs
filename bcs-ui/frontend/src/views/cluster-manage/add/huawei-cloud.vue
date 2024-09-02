@@ -130,7 +130,7 @@ import { computed, onBeforeMount, ref, watch } from 'vue';
 import { cloudClusterList, cloudRegionByAccount, importCluster } from '@/api/base';
 import { nodemanCloud } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
-import { useConfig } from '@/composables/use-app';
+import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
@@ -320,7 +320,7 @@ const testClusterImport = async () => {
   isValidate.value = !validateErrMsg.value;
   testing.value = false;
 };
-const { _INTERNAL_ } = useConfig();
+const { _INTERNAL_ } = useAppData();
 // 集群导入
 const curProject = computed(() => $store.state.curProject);
 const user = computed(() => $store.state.user);

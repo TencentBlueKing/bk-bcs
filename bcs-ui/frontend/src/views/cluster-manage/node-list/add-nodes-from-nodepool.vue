@@ -94,7 +94,7 @@ import { useClusterInfo } from '../cluster/use-cluster';
 import { desirednode, nodeGroups } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import { ICluster, useConfig } from '@/composables/use-app';
+import { ICluster, useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -179,7 +179,7 @@ export default defineComponent({
       nodeGroupLoading.value = false;
     };
     const user = computed(() => $store.state.user);
-    const { _INTERNAL_ } = useConfig();
+    const { _INTERNAL_ } = useAppData();
     const saving = ref(false);
     // 从节点池添加节点
     const handleAddDesiredSize = async () => {

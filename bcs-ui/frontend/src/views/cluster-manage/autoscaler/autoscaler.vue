@@ -770,7 +770,7 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
-import { ICluster, useConfig, useProject } from '@/composables/use-app';
+import { ICluster, useAppData, useProject } from '@/composables/use-app';
 import useAutoCols from '@/composables/use-auto-cols';
 import useDebouncedRef from '@/composables/use-debounce';
 import useInterval from '@/composables/use-interval';
@@ -896,7 +896,7 @@ export default defineComponent({
         desc: $i18n.t('cluster.ca.autoScalerDownConfig.skipNodesWithLocalStorage.desc'),
       },
     ]);
-    const { _INTERNAL_ } = useConfig();
+    const { _INTERNAL_ } = useAppData();
     const getAutoScalerConfig = async () => {
       if (!props.clusterId) return;
       autoscalerData.value = await $store.dispatch('clustermanager/clusterAutoScaling', {

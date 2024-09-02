@@ -73,7 +73,7 @@
 import { computed, defineComponent, ref } from 'vue';
 
 import BcsContent from '@/components/layout/Content.vue';
-import { useAppData, useConfig } from '@/composables/use-app';
+import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
 import azureLogo from '@/images/azure.png';
@@ -94,8 +94,7 @@ export default defineComponent({
   name: 'ClusterType',
   components: { BcsContent },
   setup() {
-    const { _INTERNAL_ } = useConfig();
-    const { flagsMap } = useAppData();
+    const { flagsMap, _INTERNAL_ } = useAppData();
     const createList = ref<ICard[]>([
       {
         icon: 'bcs-icon-color-tencentcloud',

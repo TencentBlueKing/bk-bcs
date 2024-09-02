@@ -62,20 +62,7 @@ export interface ICluster {
   // 从clusterExtraInfo中merge过来的
   autoScale: boolean
 }
-/**
- * 获取项目文档配置信息
- * @returns
- */
-export function useConfig() {
-  // 当前版本的文档链接信息
-  const PROJECT_CONFIG = ref(window.BCS_CONFIG);
-  // 是否是内部版
-  const _INTERNAL_ = computed(() => !['ce', 'ee'].includes(window.REGION));
-  return {
-    PROJECT_CONFIG,
-    _INTERNAL_,
-  };
-}
+
 /**
  * 获取项目相关配置
  */
@@ -147,9 +134,10 @@ export function useCluster() {
   };
 }
 /**
- * APP相关信息,eg: 用户, feature_flag
+ * APP相关信息,eg: 用户, feature_flag, 文档配置等
  */
 export function useAppData() {
+  // 用户信息
   const user = computed(() => $store.state.user);
   async function getUserInfo() {
     const data = await userInfo().catch(() => ({}));
@@ -157,8 +145,8 @@ export function useAppData() {
     return data;
   }
 
+  // 特性开关(菜单等)
   const flagsMap = computed(() => $store.state.featureFlags);
-  // 默认菜单配置项
   const defaultFlags = {
     CLOUDTOKEN: false,
     PROJECT_LIST: false,
@@ -169,10 +157,19 @@ export function useAppData() {
     $store.commit('updateFeatureFlags', Object.assign(defaultFlags, data));
     return data;
   }
+
+  // 当前版本的文档链接信息
+  const linksMap = ref(window.BCS_CONFIG);
+
+  // 是否是内部版
+  const _INTERNAL_ = computed(() => !['ce', 'ee'].includes(window.REGION));
+
   return {
     user,
-    getUserInfo,
     flagsMap,
+    linksMap,
+    _INTERNAL_,
+    getUserInfo,
     getFeatureFlags,
   };
 }

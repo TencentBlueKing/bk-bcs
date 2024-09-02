@@ -115,7 +115,7 @@
           :options="{
             roundedSelection: false,
             scrollBeyondLastLine: false,
-            renderLineHighlight: false,
+            renderLineHighlight: 'none',
           }"
           :value="previewData">
         </CodeEditor>

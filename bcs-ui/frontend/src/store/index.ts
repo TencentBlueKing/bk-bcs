@@ -55,7 +55,7 @@ import storage from '@/store/modules/storage';
 import templateset from '@/store/modules/templateset';
 import token from '@/store/modules/token';
 import variable from '@/store/modules/variable';
-import { IMenu } from '@/views/app/use-menu';
+import { IMenu, MenuID } from '@/views/app/use-menu';
 
 Vue.use(Vuex);
 // cookie 中 zh-cn / en
@@ -66,8 +66,10 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
   lang = 'en-US';
 }
 
+type FeatureFlagKey = MenuID | 'k8s' | 'VCLUSTER' | 'BKAI';
+
 const store = new Vuex.Store<{
-  featureFlags: Record<string, boolean>
+  featureFlags: Record<FeatureFlagKey, boolean>
   curProject: IProject | Record<string, any>
   curCluster: ICluster
   curNav: IMenu | Record<string, any>
