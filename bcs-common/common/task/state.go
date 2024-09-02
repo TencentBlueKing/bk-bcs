@@ -15,6 +15,7 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -290,7 +291,7 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 	}
 
 	// 重试流程中
-	if s.step.GetRetryCount() < s.step.MaxRetries {
+	if !errors.Is(stepErr, istep.ErrRevoked) && s.step.GetRetryCount() < s.step.MaxRetries {
 		s.task.SetStatus(types.TaskStatusRunning).SetMessage(taskFailMsg)
 		return
 	}
