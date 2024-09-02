@@ -521,6 +521,8 @@ export default {
   '敏感信息类型必须为password,secret_key,token': 'Sensitive information type must be password, secret_key, token',
   是否可见必须为visible或者invisible: 'Visibility must be visible or invisible',
   '当前服务仅允许导入数据类型为 {n} 的服务配置项': 'The current service only allows import of service configuration items of data type {n}',
+  是否可见: 'visibility',
+  密钥类型: 'secret_type',
 
   // 分组管理
   新增分组: 'New group',

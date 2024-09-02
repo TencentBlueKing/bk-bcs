@@ -518,6 +518,8 @@ export default {
   '敏感信息类型必须为password,secret_key,token': '敏感信息类型必须为password,secret_key,token',
   是否可见必须为visible或者invisible: '是否可见必须为visible或者invisible',
   '当前服务仅允许导入数据类型为 {n} 的服务配置项': '当前服务仅允许导入数据类型为 {n} 的服务配置项',
+  是否可见: '是否可见',
+  密钥类型: '密钥类型',
 
   // 分组管理
   新增分组: '新增分组',

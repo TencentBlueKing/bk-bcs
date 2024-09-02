@@ -33,7 +33,11 @@
                 <div class="configs-group">
                   <div class="name-wrapper" @click="group.expand = !group.expand">
                     <DownShape :class="['fold-icon', { fold: !group.expand }]" />
-                    <span>{{ `${group.name} ( ${group.configs.length} )` }}</span>
+                    <span>
+                      {{
+                        `${group.name} ( ${group.configs.filter((config) => config.file_state !== 'DELETE').length} )`
+                      }}
+                    </span>
                   </div>
                   <div
                     v-if="isUnNamedVersion && group.id !== 0"
