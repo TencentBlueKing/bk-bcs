@@ -424,11 +424,14 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	}
 
 	var (
-		nodeIPs, nodeIDs = make([]string, 0), make([]string, 0)
+		nodeIPs, nodeIDs, nodeNames = make([]string, 0), make([]string, 0), make([]string, 0)
 	)
 	for _, node := range nodes {
 		nodeIPs = append(nodeIPs, node.InnerIP)
 		nodeIDs = append(nodeIDs, node.NodeID)
+		if node.NodeName != "" {
+			nodeNames = append(nodeNames, node.NodeName)
+		}
 	}
 
 	nowStr := time.Now().Format(time.RFC3339)
@@ -497,7 +500,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step3: cluster delete nodes
 	cleanNodes.BuildCleanNodeGroupNodesStep(task)
 	// step4: check deleted node status
-	common.BuildCheckClusterCleanNodesTaskStep(task, group.Provider, opt.Cluster.ClusterID, nodeIDs)
+	common.BuildCheckClusterCleanNodesTaskStep(task, group.Provider, opt.Cluster.ClusterID, nodeNames)
 
 	// step5: remove host from cmdb
 	common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
