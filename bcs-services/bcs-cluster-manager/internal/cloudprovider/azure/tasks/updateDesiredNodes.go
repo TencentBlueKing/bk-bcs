@@ -156,10 +156,10 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 
 	// update agent pool desired size
 	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
-		blog.Errorf("applyInstanceMachines[%s] scaleUpNodePool[%s] failed: %v", taskId, *agentPool.Name, err)
+		blog.Errorf("applyInstanceMachines[%s] failed: %v", taskId, err)
 		return err
 	}
-	blog.Infof("applyInstanceMachines[%s] scaleUpNodePool[%s] success", taskId, *agentPool.Name)
+	blog.Infof("applyInstanceMachines[%s] success", taskId)
 
 	// check agent
 	err = checkScaleUp(ctx, client, info)
@@ -374,13 +374,13 @@ func differentInstance(rootCtx context.Context, client api.AksService, info *clo
 	// 获取 vmScaleSet node list
 	vmList, err := client.ListInstanceAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "scaleUpNodePool[%s] ListInstanceAndReturn failed", taskID)
+		return nil, errors.Wrapf(err, "differentInstance[%s] ListInstanceAndReturn failed", taskID)
 	}
 
 	// 获取 node map
 	nodeMap, err := getNodeMap(rootCtx, taskID, info)
 	if err != nil {
-		return nil, errors.Wrapf(err, "scaleUpNodePool[%s] getNodeMap failed", taskID)
+		return nil, errors.Wrapf(err, "differentInstance[%s] getNodeMap failed", taskID)
 	}
 
 	// 比对
@@ -405,7 +405,7 @@ func getNodeMap(ctx context.Context, taskID string, info *cloudprovider.CloudDep
 	nodes, err := cloudprovider.GetStorageModel().ListNode(ctx, cond, &storeopt.ListOption{All: true})
 	if err != nil {
 		return nil, errors.Wrapf(err,
-			"scaleUpNodePool[%s] list group nodes in nodegroup %s for Cluster %s failed", taskID,
+			"getNodeMap[%s] list group nodes in nodegroup %s for Cluster %s failed", taskID,
 			group.NodeGroupID, info.Cluster.ClusterID)
 	}
 	// list to map

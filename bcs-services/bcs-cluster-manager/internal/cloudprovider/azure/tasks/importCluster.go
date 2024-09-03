@@ -216,10 +216,6 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 // importNodeResourceGroup 导入nodeResourceGroup
 func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	cluster := info.Cluster
-	if cluster.ExtraInfo != nil && len(cluster.ExtraInfo[common.NodeResourceGroup]) > 0 {
-		return nil
-	}
-
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
 		return errors.Wrapf(err, "create AksService failed")
@@ -237,6 +233,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	}
 
 	cluster.ExtraInfo[common.NodeResourceGroup] = *managedCluster.Properties.NodeResourceGroup
+	blog.Infof("importNodeResourceGroup got nodeResourceGroup: %s", *managedCluster.Properties.NodeResourceGroup)
 
 	var sysPoolName string
 	for _, pool := range managedCluster.Properties.AgentPoolProfiles {
@@ -253,6 +250,7 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	if len(subnetResourceGroup) != 0 {
 		cluster.ExtraInfo[common.NetworkResourceGroup] = subnetResourceGroup
 	}
+	blog.Infof("importNodeResourceGroup got networkResourceGroup: %s", subnetResourceGroup)
 
 	return nil
 }
@@ -265,20 +263,21 @@ func importVpcID(info *cloudprovider.CloudDependBasicInfo) error {
 		return errors.Wrapf(err, "create AksService failed")
 	}
 
-	nodeResourceGroup := cloudprovider.GetNodeResourceGroup(cluster)
-	blog.Infof("importVpcID nodeResourceGroup:%s", nodeResourceGroup)
+	networkResourceGroup := cloudprovider.GetNetworkResourceGroup(cluster)
+	blog.Infof("importVpcID networkResourceGroup:%s", networkResourceGroup)
 
 	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 	defer cancel()
 
-	list, err := client.ListVirtualNetwork(ctx, nodeResourceGroup)
+	list, err := client.ListVirtualNetwork(ctx, networkResourceGroup)
 	if err != nil {
 		return errors.Wrapf(err, "call ListVirtualNetwork failed")
 	}
 
 	// blog.Infof("importVpcID list:%s", toPrettyJsonString(list))
 	if len(list) > 0 {
-		cluster.VpcID = *list[0].ID
+		vpcinfo := strings.Split(*list[0].ID, "/")
+		cluster.VpcID = vpcinfo[len(vpcinfo)-1]
 	}
 
 	return nil

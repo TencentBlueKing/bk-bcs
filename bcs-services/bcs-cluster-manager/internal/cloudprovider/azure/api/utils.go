@@ -938,7 +938,7 @@ func (c *nodeToVm) setLocation() {
 }
 
 // SetVmSetNetWork 设置虚拟规模集网络
-func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup, crg string,
+func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup, rg, nrg string,
 	set *armcompute.VirtualMachineScaleSet) error {
 	vpcID := group.AutoScaling.VpcID
 	subnetIDs := group.AutoScaling.SubnetIDs
@@ -952,15 +952,15 @@ func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGr
 		return fmt.Errorf("SetVmSetNetWork vpcID or subnetID for scaleset %s is empty", *set.Name)
 	}
 
-	subnetDetail, err := client.GetSubnet(ctx, crg, vpcID, subnetIDs[0])
+	subnetDetail, err := client.GetSubnet(ctx, nrg, vpcID, subnetIDs[0])
 	if err != nil {
 		blog.Errorf("SetVmSetNetWork GetSubnet %s failed, %v", subnetIDs[0], err)
 		return err
 	}
 	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
 		IPConfigurations[0].Properties.Subnet.ID = subnetDetail.ID
-
-	sg, err := client.GetNetworkSecurityGroups(ctx, crg, group.LaunchTemplate.SecurityGroupIDs[0])
+	//	仍然使用本集群默认的安全组,
+	sg, err := client.GetNetworkSecurityGroups(ctx, rg, group.LaunchTemplate.SecurityGroupIDs[0])
 	if err != nil {
 		blog.Errorf("SetVmSetNetWork GetNetworkSecurityGroups %s failed, %v",
 			group.LaunchTemplate.SecurityGroupIDs[0], err)
