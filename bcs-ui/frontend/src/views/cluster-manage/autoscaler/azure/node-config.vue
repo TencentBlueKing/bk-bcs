@@ -306,7 +306,7 @@
             error-display-type="normal"
             required>
             <bcs-table
-              :data="filterSubnetsList"
+              :data="sortSubnetsList"
               row-class-name="table-row-enable"
               v-bkloading="{ isLoading: subnetsLoading }"
               @row-click="handleCheckSubnets">
@@ -765,7 +765,7 @@ export default defineComponent({
       zoneName: string
       subnetID: string
     }>>([]);
-    const filterSubnetsList = computed(() => subnetsList.value
+    const sortSubnetsList = computed(() => subnetsList.value
       .sort((pre, current) => {
         const isPreDisabled = curInstanceItem.value.zones?.includes(pre.zone);
         const isCurrentDisabled = curInstanceItem.value.zones?.includes(current.zone);
@@ -775,20 +775,14 @@ export default defineComponent({
 
         return 0;
       }));
-    const subnetsRowClass = ({ row }) => {
-      if (curInstanceItem.value.zones?.includes(row.zone)) {
-        // return 'table-row-enable';
-      }
-      // return 'table-row-disabled';
-      return 'table-row-enable';
-    };
     const handleGetSubnets = async () => {
       subnetsLoading.value = true;
       subnetsList.value = await $store.dispatch('clustermanager/cloudSubnets', {
         $cloudID: cluster.value.provider,
-        resourceGroupName: cluster.value.extraInfo.nodeResourceGroup,
         accountID: cluster.value.cloudAccountID,
         vpcID: cluster.value.vpcID,
+        resourceGroupName: clusterData.value.extraInfo?.networkResourceGroup
+        || clusterData.value.extraInfo?.nodeResourceGroup,
       });
       subnetsLoading.value = false;
     };
@@ -902,7 +896,7 @@ export default defineComponent({
       // 子网
       subnetsLoading,
       subnetsList,
-      filterSubnetsList,
+      sortSubnetsList,
       clusterOS,
       zoneListLoading,
       zoneList,
@@ -946,8 +940,6 @@ export default defineComponent({
       clusterAdvanceSettings,
       handleSpecifiedZoneChange,
       handleGetCloudSecurityGroups,
-      // 子网
-      subnetsRowClass,
       handleCheckSubnets,
     };
   },

@@ -120,9 +120,6 @@
               @click="showDataDisks = true">{{$t('generic.button.view')}}</bk-button>
           </bk-form-item>
         </bk-form>
-        <div class="mt20 mb10 panel-header">
-          <span class="title">{{$t('cluster.nodeTemplate.kubelet.title.argsConfig')}}</span>
-        </div>
         <bcs-tab class="mt20">
           <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.userScript')" name="scaleOutPostAction">
             <UserAction

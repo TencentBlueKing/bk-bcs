@@ -144,7 +144,7 @@ export default defineComponent({
             icon: huaweiLogo,
             title: $i18n.t('publicCloud.huawei.title'),
             desc: $i18n.t('publicCloud.huawei.desc'),
-            type: 'azureCloud',
+            type: 'huaweiCloud',
             disabled: true,
           },
         ],
@@ -171,7 +171,7 @@ export default defineComponent({
         icon: 'bcs-icon-color-publiccloud',
         title: $i18n.t('cluster.create.type.cloudProvider.title'),
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
-        desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
+        desc: $i18n.t('cluster.create.type.cloudProvider.importDesc'),
         type: 'import-cloud',
         disabled: _INTERNAL_.value,
         children: [
@@ -213,12 +213,11 @@ export default defineComponent({
         ],
       },
       {
-        icon: 'bcs-icon-color-kubeconfig',
+        icon: 'bcs-icon-color-k8s',
         title: $i18n.t('cluster.create.type.kubeconfig.title'),
         subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
         desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
         type: 'kubeconfig',
-        // disabled: _INTERNAL_.value,
       },
       {
         icon: 'bcs-icon-operations',
@@ -226,7 +225,7 @@ export default defineComponent({
         subTitle: $i18n.t('cluster.create.type.bkSops.subTitle'),
         desc: $i18n.t('cluster.create.type.bkSops.desc'),
         type: 'bk-sops',
-        disabled: false,
+        disabled: !flagsMap.value.IMPORTSOPSCLUSTER,
       },
     ]);
     const cardGroupList = computed(() => [

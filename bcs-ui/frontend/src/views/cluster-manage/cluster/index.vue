@@ -161,7 +161,7 @@
 <script lang="ts">
 /* eslint-disable camelcase */
 import { throttle } from 'lodash';
-import { computed, defineComponent, onMounted, ref, set, watch } from 'vue';
+import { computed, defineComponent, onActivated, onMounted, ref, set, watch } from 'vue';
 
 import ApplyHost from '../components/apply-host.vue';
 
@@ -557,6 +557,13 @@ export default defineComponent({
       handleScollActiveClusterIntoView();
       await handleGetClusterList();
       await handleGetClusterNodes();
+    });
+
+    // 激活时重新更新列表
+    onActivated(() => {
+      handleGetClusterList().then(() => {
+        handleGetClusterNodes();
+      });
     });
 
     return {

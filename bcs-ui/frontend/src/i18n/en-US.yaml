@@ -705,6 +705,9 @@ cluster:
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
           Google Cloud, Huawei Cloud
+        importDesc: >-
+          Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
+          Google Cloud, Huawei Cloud
       bkSops:
         title: Imported Cluster (via bk-sops)
         subTitle: >-

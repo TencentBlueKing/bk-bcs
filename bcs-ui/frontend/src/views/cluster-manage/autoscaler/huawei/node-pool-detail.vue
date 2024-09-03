@@ -126,10 +126,6 @@
             <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
           </bk-form-item>
         </bk-form>
-        <!-- <div class="mt20 mb10 panel-header">
-          <span class="title">{{$t('cluster.nodeTemplate.kubelet.title.argsConfig')}}</span>
-        </div>
-        <kubeletParams readonly v-model="nodePoolData.nodeTemplate.extraArgs.kubelet" /> -->
         <bcs-tab class="mt20">
           <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.preStartUserScript')" name="scaleOutPreAction">
             <UserAction

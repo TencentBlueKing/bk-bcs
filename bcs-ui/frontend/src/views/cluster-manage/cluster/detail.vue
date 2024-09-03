@@ -123,9 +123,11 @@ watch(activeTabName, () => {
 const { clusterList } = useCluster();
 const curCluster = computed<Partial<ICluster>>(() => clusterList.value
   .find(item => item.clusterID === props.clusterId) || {});
-  // kubeConfig导入集群||控制面导入集群
+// kubeConfig导入集群
 const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategory === 'importer'
-      && (curCluster.value.importCategory === 'kubeConfig' || curCluster.value.importCategory === 'machine'));
+      && curCluster.value.importCategory === 'kubeConfig');
+// 控制面导入集群
+const isKubeAgentImportCluster = computed(() => curCluster.value.clusterCategory === 'importer' && curCluster.value.importCategory === 'machine');
 // // 云区域详情
 // const cloudDetail = ref<Record<string, any>|null>(null);
 // const handleGetCloudDetail = async () => {
@@ -171,8 +173,7 @@ const tabs = computed(() => [
     label: 'cluster.detail.title.network',
     component: Network,
     isShow: (curCluster.value?.is_shared
-      || (curCluster.value.clusterType !== 'virtual'
-      && !isKubeConfigImportCluster.value)),
+      || (curCluster.value.clusterType !== 'virtual' && !isKubeConfigImportCluster.value && !isKubeAgentImportCluster.value)),
     componentConfig: {
       clusterId: props.clusterId,
     },

@@ -39,7 +39,7 @@
           <svg class="size-[20px] mr-[10px]">
             <use :xlink:href="providerNameMap[row.provider].className"></use>
           </svg>
-          <span class="text-[14px]">{{ providerNameMap[row.provider].label }}</span>
+          <span class="text-[12px] bcs-ellipsis">{{ providerNameMap[row.provider].label }}</span>
         </div>
       </template>
     </bk-table-column>

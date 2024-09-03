@@ -755,7 +755,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, defineComponent, getCurrentInstance, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import useNode from '../node-list/use-node';
 
@@ -1953,6 +1953,10 @@ export default defineComponent({
       stopPoolInterval();
       stopNodeInterval();
       stopTaskPool();
+    });
+
+    onActivated(() => {
+      handleGetNodePoolList();
     });
     return {
       curCluster,

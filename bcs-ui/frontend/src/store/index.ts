@@ -66,7 +66,7 @@ if (['zh-CN', 'zh-cn', 'cn', 'zhCN', 'zhcn'].indexOf(lang) > -1) {
   lang = 'en-US';
 }
 
-type FeatureFlagKey = MenuID | 'k8s' | 'VCLUSTER' | 'BKAI';
+type FeatureFlagKey = MenuID | 'k8s' | 'VCLUSTER' | 'BKAI' | 'IMPORTSOPSCLUSTER';
 
 const store = new Vuex.Store<{
   featureFlags: Record<FeatureFlagKey, boolean>
