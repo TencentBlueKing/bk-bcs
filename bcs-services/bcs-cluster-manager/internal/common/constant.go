@@ -241,6 +241,11 @@ const (
 	// CloudClusterTypeNative cloud cluster type for ECK native
 	CloudClusterTypeNative = "K8SEXTENSION_NATIVE"
 
+	// CloudClusterNodeGroupTypeSystem AKS NodeGroup type System
+	CloudClusterNodeGroupTypeSystem = "System"
+	// CloudClusterNodeGroupTypeUser AKS NodeGroup type User
+	CloudClusterNodeGroupTypeUser = "User"
+
 	// NodeRoleMaster node role master
 	NodeRoleMaster = "MASTER_ETCD"
 	// NodeRoleWorker node role worker
@@ -339,6 +344,8 @@ const (
 
 	// NodeResourceGroup xxx
 	NodeResourceGroup = "nodeResourceGroup"
+	// NetworkResourceGroup network resource group
+	NetworkResourceGroup = "networkResourceGroup"
 
 	// CloudProjectId cloud project id
 	CloudProjectId = "cloudProjectId"

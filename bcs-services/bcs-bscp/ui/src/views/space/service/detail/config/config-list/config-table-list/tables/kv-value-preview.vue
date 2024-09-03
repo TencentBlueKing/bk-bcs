@@ -1,22 +1,38 @@
 <template>
   <div class="kv-value-preview">
-    <div ref="valueRef" :class="['value-wrapper', { expanded: isExpanded }]">{{ props.value }}</div>
-    <div class="operate-btns">
-      <template v-if="showExpandOrFoldBtn">
-        <bk-button v-if="isExpanded" text theme="primary" @click="isExpanded = false">{{ $t('收起') }}</bk-button>
-        <bk-button v-else text theme="primary" @click="isExpanded = true">{{ $t('展开') }}</bk-button>
-      </template>
-      <bk-button v-if="showViewAllBtn" text theme="primary" @click="emits('viewAll')">
-        {{ $t('查看完整配置') }}
-      </bk-button>
+    <div class="value-content">
+      <div ref="valueRef" :class="['value-wrapper', { expanded: isExpanded }]">
+        <template v-if="props.type === 'secret'">
+          <div v-if="props.isVisible" class="secret-value">
+            <span>{{ isCipherShowSecret ? '******' : props.value }}</span>
+          </div>
+          <span v-else class="un-view-value">{{ $t('敏感数据不可见，无法查看实际内容') }}</span>
+        </template>
+        <span v-else>{{ props.value }}</span>
+      </div>
+      <div class="operate-btns">
+        <template v-if="showExpandOrFoldBtn">
+          <bk-button v-if="isExpanded" text theme="primary" @click="isExpanded = false">{{ $t('收起') }}</bk-button>
+          <bk-button v-else text theme="primary" @click="isExpanded = true">{{ $t('展开') }}</bk-button>
+        </template>
+        <bk-button v-if="showViewAllBtn" text theme="primary" @click="emits('viewAll')">
+          {{ $t('查看完整配置') }}
+        </bk-button>
+      </div>
     </div>
-    <Copy class="copy-icon" @click="handleCopyText" />
+    <span class="actions">
+      <template v-if="props.type === 'secret' && $props.isVisible">
+        <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
+        <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
+      </template>
+      <Copy v-if="props.isVisible" class="copy-icon" @click="handleCopyText" />
+    </span>
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, onMounted } from 'vue';
+  import { ref, computed, onMounted, watch, nextTick } from 'vue';
   import Message from 'bkui-vue/lib/message';
-  import { Copy } from 'bkui-vue/lib/icon';
+  import { Copy, Unvisible, Eye } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import { copyToClipBoard } from '../../../../../../../../utils/index';
 
@@ -26,11 +42,14 @@
 
   const props = defineProps<{
     value: string;
+    type: string;
+    isVisible: boolean;
   }>();
 
   const isExpanded = ref(false); // 是否已展开
   const scrollHeight = ref(0); // value高度
   const valueRef = ref();
+  const isCipherShowSecret = ref(true);
 
   const showExpandOrFoldBtn = computed(() => scrollHeight.value > 100); // value内容高度超出5行时（5 * 20），显示展开/收起按钮
   const showViewAllBtn = computed(() => scrollHeight.value > 200 && isExpanded.value); // 内容如果超出10行，展开后，显示查看全部按钮
@@ -40,6 +59,15 @@
       scrollHeight.value = valueRef.value.scrollHeight;
     }
   });
+
+  watch(
+    () => isCipherShowSecret.value,
+    () => {
+      nextTick(() => {
+        scrollHeight.value = valueRef.value.scrollHeight;
+      });
+    },
+  );
 
   const handleCopyText = () => {
     copyToClipBoard(props.value);
@@ -51,7 +79,10 @@
 </script>
 <style lang="scss" scoped>
   .kv-value-preview {
-    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
     padding: 10px 20px 10px 0;
   }
   .value-wrapper {
@@ -70,15 +101,28 @@
       margin-left: 8px;
     }
   }
-  .copy-icon {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translateY(-50%);
-    color: #979ba5;
-    cursor: pointer;
-    &:hover {
-      color: #3a84ff;
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    .copy-icon {
+      color: #979ba5;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
+      }
     }
+    .view-icon {
+      cursor: pointer;
+      font-size: 14px;
+      color: #979ba5;
+      &:hover {
+        color: #3a84ff;
+      }
+    }
+  }
+
+  .un-view-value {
+    color: #c4c6cc;
   }
 </style>

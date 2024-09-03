@@ -3,6 +3,7 @@ export interface ITemplateSpaceData {
   'id': string
   'name': string
   'projectCode': string
+  'fav': boolean
 }
 
 export interface ISchemaData {

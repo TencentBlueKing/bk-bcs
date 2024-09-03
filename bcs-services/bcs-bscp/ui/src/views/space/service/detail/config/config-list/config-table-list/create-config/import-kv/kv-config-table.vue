@@ -17,7 +17,13 @@
       show-overflow-tooltip>
       <bk-table-column :label="$t('配置项名称')" prop="key" width="320" property="key"></bk-table-column>
       <bk-table-column :label="$t('数据类型')" prop="kv_type" width="200" property="type"></bk-table-column>
-      <bk-table-column :label="$t('配置项值预览')" prop="value" width="280" property="value"> </bk-table-column>
+      <bk-table-column :label="$t('配置项值预览')" prop="value" width="280">
+        <template #default="{ row }">
+          <div v-if="row.key" :class="{ hidden: isSecretHidden(row) }" type="tips">
+            {{ isSecretHidden(row) ? $t('敏感数据不可见，无法查看实际内容') : row.value }}
+          </div>
+        </template>
+      </bk-table-column>
       <bk-table-column :label="$t('配置项描述')" prop="memo" property="memo">
         <template #default="{ row }">
           <div v-if="row.key" class="memo">
@@ -48,7 +54,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, nextTick, watch, onMounted } from 'vue';
+  import { ref, nextTick, watch, onMounted, computed } from 'vue';
   import { IConfigKvItem } from '../../../../../../../../../../types/config';
   import { DownShape } from 'bkui-vue/lib/icon';
   import { cloneDeep, isEqual } from 'lodash';
@@ -90,6 +96,10 @@
     },
     { deep: true },
   );
+
+  const isSecretHidden = computed(() => (config: IConfigKvItem) => {
+    return config.kv_type === 'secret' && config.secret_hidden;
+  });
 
   const handleDelete = (item: IConfigKvItem) => {
     const index = data.value.findIndex((kv) => kv.key === item.key);
@@ -183,5 +193,9 @@
         color: #3a84ff;
       }
     }
+  }
+
+  .hidden {
+    color: #c4c6cc;
   }
 </style>

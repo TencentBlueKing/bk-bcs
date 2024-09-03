@@ -1407,6 +1407,20 @@ func GetNodeResourceGroup(cls *proto.Cluster) string {
 	return ""
 }
 
+// GetNetworkResourceGroup other resource group
+func GetNetworkResourceGroup(cls *proto.Cluster) string {
+	if cls.GetExtraInfo() == nil {
+		return ""
+	}
+
+	rg, ok := cls.GetExtraInfo()[common.NetworkResourceGroup]
+	if ok {
+		return rg
+	}
+
+	return ""
+}
+
 // ListProjectNotifyTemplates list project notify templates
 func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
 	condM := make(operator.M)

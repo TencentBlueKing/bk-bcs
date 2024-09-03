@@ -323,7 +323,7 @@ func (t *Task) BuildDeleteClusterTask(cls *proto.Cluster, opt *cloudprovider.Del
 		DeleteMode:        opt.DeleteMode.String(),
 		LastClusterStatus: opt.LatsClusterStatus,
 	}
-	// step1: DeleteEKSCluster delete tke cluster
+	// step1: DeleteEKSCluster delete eks cluster
 	deleteClusterTask.BuildDeleteEKSClusterStep(task)
 	// step2: update cluster DB info and associated data
 	deleteClusterTask.BuildCleanClusterDBInfoStep(task)
@@ -387,9 +387,9 @@ func (t *Task) BuildCreateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 
 	// setting all steps details
 	createNodeGroup := &CreateNodeGroupTaskOption{Group: group}
-	// step1. call gke create node group
+	// step1. call eks create node group
 	createNodeGroup.BuildCreateCloudNodeGroupStep(task)
-	// step2. wait gke create node group complete
+	// step2. wait eks create node group complete
 	createNodeGroup.BuildCheckCloudNodeGroupStatusStep(task)
 	// step3. ensure autoscaler in cluster
 	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
@@ -424,11 +424,14 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	}
 
 	var (
-		nodeIPs, nodeIDs = make([]string, 0), make([]string, 0)
+		nodeIPs, nodeIDs, nodeNames = make([]string, 0), make([]string, 0), make([]string, 0)
 	)
 	for _, node := range nodes {
 		nodeIPs = append(nodeIPs, node.InnerIP)
 		nodeIDs = append(nodeIDs, node.NodeID)
+		if node.NodeName != "" {
+			nodeNames = append(nodeNames, node.NodeName)
+		}
 	}
 
 	nowStr := time.Now().Format(time.RFC3339)
@@ -449,6 +452,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 		CommonParams:   make(map[string]string),
 		ForceTerminate: false,
 		NodeGroupID:    group.NodeGroupID,
+		NodeIPList:     nodeIPs,
 	}
 	// generate taskName
 	taskName := fmt.Sprintf(cleanNodeGroupNodesTaskTemplate, group.ClusterID, group.Name)
@@ -496,7 +500,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	// step3: cluster delete nodes
 	cleanNodes.BuildCleanNodeGroupNodesStep(task)
 	// step4: check deleted node status
-	common.BuildCheckClusterCleanNodesTaskStep(task, group.Provider, opt.Cluster.ClusterID, nodeIDs)
+	common.BuildCheckClusterCleanNodesTaskStep(task, group.Provider, opt.Cluster.ClusterID, nodeNames)
 
 	// step5: remove host from cmdb
 	common.BuildRemoveHostStep(task, opt.Cluster.BusinessID, nodeIPs)
@@ -622,7 +626,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		Desired:  desired,
 		Operator: opt.Operator,
 	}
-	// step1. call qcloud interface to set desired nodes
+	// step1. call aws interface to set desired nodes
 	updateDesired.BuildApplyInstanceMachinesStep(task)
 	// step2. check cluster nodes and all nodes status is running
 	updateDesired.BuildCheckClusterNodeStatusStep(task)

@@ -173,19 +173,20 @@ type OrderInstanceList struct {
 
 // InstanceType instance type info
 type InstanceType struct {
-	NodeType       string
-	TypeName       string
-	NodeFamily     string
-	Cpu            uint32
-	Memory         uint32
-	Gpu            uint32
-	Status         string
-	UnitPrice      float32
-	Zones          []string
-	Provider       string
-	ResourcePoolID string
-	SystemDisk     *DataDisk
-	DataDisks      []*DataDisk
+	NodeType          string
+	TypeName          string
+	NodeFamily        string
+	Cpu               uint32
+	Memory            uint32
+	Gpu               uint32
+	Status            string
+	UnitPrice         float32
+	Zones             []string
+	Provider          string
+	ResourcePoolID    string
+	SystemDisk        *DataDisk
+	DataDisks         []*DataDisk
+	OversoldAvailable int32
 }
 
 // InstanceSpec size
@@ -266,11 +267,24 @@ type DevicePoolInfo struct {
 	Used      int32
 	Available int32
 
+	OversoldTotal     int32
+	OversoldAvailable int32
+
 	Status string // 节点池状态
 
 	// 节点池被占用情况
 	GroupUsed  int
 	GroupQuota int
+}
+
+// PoolUsage device pool usage
+type PoolUsage struct {
+	Total     int32
+	Used      int32
+	Available int32
+
+	OversoldTotal     int32
+	OversoldAvailable int32
 }
 
 // UsageRatio ratio

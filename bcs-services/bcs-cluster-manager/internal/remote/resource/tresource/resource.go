@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -314,47 +315,8 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 		pools []*DevicePool
 		err   error
 	)
-	err = retry.Do(func() error {
-		cli, closeCon, errGet := rm.getResourceManagerClient()
-		if errGet != nil {
-			blog.Errorf("GetInstanceTypesV2[%s] GetResourceManagerClient failed: %v", traceID, errGet)
-			return errGet
-		}
-		defer func() {
-			if closeCon != nil {
-				closeCon()
-			}
-		}()
 
-		var (
-			// limit for all devicePool
-			limit  int64 = 10000
-			onSale       = true
-		)
-
-		req := &ListDevicePoolReq{
-			Limit:  &limit,
-			Onsale: &onSale,
-			Region: &region,
-		}
-		if len(spec.Provider) > 0 {
-			req.Provider = append(req.Provider, spec.Provider)
-		}
-
-		// list device pool
-		resp, errList := cli.ListDevicePool(ctx, req)
-		if errList != nil {
-			blog.Errorf("GetInstanceTypesV2[%s] ListDevicePool failed: %v", traceID, errList)
-			return errList
-		}
-		if *resp.Code != 0 || !*resp.Result {
-			blog.Errorf("GetInstanceTypesV2[%s] ListDevicePool failed: %v", traceID, resp.Message)
-			return errors.New(*resp.Message)
-		}
-		pools = resp.Data
-
-		return nil
-	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second*3))
+	pools, err = rm.listDevicePools(ctx, spec.Provider, region, "")
 	if err != nil {
 		blog.Errorf("GetInstanceTypesV2[%s] failed: %v", traceID, err)
 		return nil, err
@@ -391,14 +353,11 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 		}
 
 		// available quota
-		var quota uint64
-		availableQuota, ok := labels[AvailableQuota.String()]
-		if ok {
-			quota, _ = strconv.ParseUint(availableQuota, 10, 64)
-		}
+		poolUsage := getDevicePoolUsage(pool)
+
 		// instanceType sell status
 		status := common.InstanceSell
-		if quota == 0 {
+		if poolUsage.OversoldAvailable <= 0 {
 			status = common.InstanceSoldOut
 		}
 
@@ -439,6 +398,7 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 
 				return nil
 			}(),
+			OversoldAvailable: poolUsage.OversoldAvailable,
 		})
 	}
 
@@ -832,6 +792,44 @@ func (rm *ResManClient) GetRegionInstanceTypesFromPools(ctx context.Context, pro
 	return regionInsTypes, nil
 }
 
+func getDevicePoolUsage(pool *DevicePool) resource.PoolUsage {
+	var (
+		err error
+
+		poolUsage resource.PoolUsage
+		oversold  float64 = 1
+	)
+	v, ok := pool.GetLabels()[userQuota]
+	if ok {
+		total, _ := utils.StringToInt(v)
+		poolUsage.Total = int32(total)
+	}
+	v, ok = pool.GetLabels()[usedQuota]
+	if ok {
+		used, _ := utils.StringToInt(v)
+		poolUsage.Used = int32(used)
+	}
+	v, ok = pool.GetLabels()[availableQuota]
+	if ok {
+		available, _ := utils.StringToInt(v)
+		poolUsage.Available = int32(available)
+	}
+
+	// oversold ratio
+	v, ok = pool.GetLabels()[OverSold]
+	if ok {
+		oversold, err = strconv.ParseFloat(v, 64)
+		if err != nil || oversold <= 1 {
+			oversold = 1
+		}
+	}
+
+	poolUsage.OversoldTotal = int32(math.Floor(float64(poolUsage.Total) * oversold))
+	poolUsage.OversoldAvailable = int32(math.Floor(float64(poolUsage.Total)*oversold)) - int32(poolUsage.Used)
+
+	return poolUsage
+}
+
 // ListRegionZonePools 获取可用区维度的资源池信息 & 可用区列表
 func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string, region, insType string) (
 	map[string]*resource.DevicePoolInfo, []string, error) {
@@ -850,19 +848,7 @@ func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string
 	)
 
 	for _, pool := range pools {
-		var total, used, available int
-		v, ok := pool.GetLabels()[userQuota]
-		if ok {
-			total, _ = utils.StringToInt(v)
-		}
-		v, ok = pool.GetLabels()[usedQuota]
-		if ok {
-			used, _ = utils.StringToInt(v)
-		}
-		v, ok = pool.GetLabels()[availableQuota]
-		if ok {
-			available, _ = utils.StringToInt(v)
-		}
+		poolUsage := getDevicePoolUsage(pool)
 
 		if len(pool.GetBaseConfig().Zone.GetZone()) == 0 {
 			continue
@@ -874,10 +860,13 @@ func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string
 			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
 			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
 			InstanceType: pool.GetBaseConfig().GetInstanceType(),
-			Total:        int32(total),
-			Used:         int32(used),
-			Available:    int32(available),
+			Total:        poolUsage.Total,
+			Used:         poolUsage.Used,
+			Available:    poolUsage.Available,
 			Status:       pool.GetStatus(),
+
+			OversoldTotal:     poolUsage.OversoldTotal,
+			OversoldAvailable: poolUsage.OversoldAvailable,
 		}
 
 		zones = append(zones, pool.GetBaseConfig().Zone.GetZone())
@@ -905,37 +894,32 @@ func (rm *ResManClient) ListAvailableInsufficientPools(ctx context.Context, prov
 	)
 
 	for _, pool := range pools {
-		var total, available int
-		v, ok := pool.GetLabels()[userQuota]
-		if ok {
-			total, _ = utils.StringToInt(v)
-		}
-		v, ok = pool.GetLabels()[availableQuota]
-		if ok {
-			available, _ = utils.StringToInt(v)
-		}
+		poolUsage := getDevicePoolUsage(pool)
 
 		if len(pool.GetBaseConfig().Zone.GetZone()) == 0 {
 			continue
 		}
 
-		if ratio.QuotaRatio != nil && ((float64(available)/float64(total))*100 > float64(*ratio.QuotaRatio)) {
+		if ratio.QuotaRatio != nil && ((float64(poolUsage.Available)/float64(poolUsage.Total))*100 >
+			float64(*ratio.QuotaRatio)) {
 			continue
 		}
 
-		if ratio.QuotaCount != nil && (available > *ratio.QuotaCount) {
+		if ratio.QuotaCount != nil && (poolUsage.Available > int32(*ratio.QuotaCount)) {
 			continue
 		}
 
 		filterPools = append(filterPools, &resource.DevicePoolInfo{
-			PoolId:       *pool.Id,
-			PoolName:     *pool.Name,
-			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
-			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
-			InstanceType: pool.GetBaseConfig().GetInstanceType(),
-			Total:        int32(total),
-			Available:    int32(available),
-			Status:       pool.GetStatus(),
+			PoolId:            *pool.Id,
+			PoolName:          *pool.Name,
+			Region:            pool.GetBaseConfig().GetZone().GetRegion(),
+			Zone:              pool.GetBaseConfig().GetZone().GetZone(),
+			InstanceType:      pool.GetBaseConfig().GetInstanceType(),
+			Total:             poolUsage.Total,
+			Available:         poolUsage.Available,
+			Status:            pool.GetStatus(),
+			OversoldTotal:     poolUsage.OversoldTotal,
+			OversoldAvailable: poolUsage.OversoldAvailable,
 		})
 	}
 

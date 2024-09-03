@@ -196,11 +196,16 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		middleware:    middleware,
 		permitChecker: permitChecker,
 	}
+	preCheckPlugin := &PreCheckPlugin{
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/precheck").Subrouter(),
+		middleware:    middleware,
+		permitChecker: permitChecker,
+	}
 	initializer := []func() error{
 		auditPlugin.Init, projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
 		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
-		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init, workflowPlugin.Init,
+		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init, workflowPlugin.Init, preCheckPlugin.Init,
 	}
 
 	// access deny URL, keep in mind that there are paths need to proxy

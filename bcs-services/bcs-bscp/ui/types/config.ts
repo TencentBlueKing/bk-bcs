@@ -93,6 +93,8 @@ export interface IConfigKvEditParams {
   kv_type: string;
   value: string;
   memo: string;
+  secret_hidden: boolean;
+  secret_type: string; // 密钥类型
 }
 
 // 文件配置概览内容
@@ -225,6 +227,8 @@ export interface IConfigKvItem {
   kv_type: string;
   value: string;
   memo: string;
+  secret_hidden: boolean;
+  secret_type: string;
   is_exist?: boolean;
 }
 

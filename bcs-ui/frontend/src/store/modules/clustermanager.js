@@ -36,6 +36,7 @@ import {
   cloudList,
   cloudModulesParamsList,
   cloudOsImage,
+  cloudNoderoles,
   cloudRegion,
   cloudRegionByAccount,
   cloudResourceGroupByAccount,
@@ -267,6 +268,11 @@ export default {
     // 云镜像列表
     async cloudOsImage(ctx, params) {
       const data = await cloudOsImage(params).catch(() => []);
+      return data;
+    },
+    // IAM角色
+    async cloudNoderoles(ctx, params) {
+      const data = await cloudNoderoles(params).catch(() => []);
       return data;
     },
     // Node机型列表

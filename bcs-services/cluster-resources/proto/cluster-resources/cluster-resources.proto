@@ -3168,16 +3168,19 @@ message CreateTemplateMetadataReq {
 	string content = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件版本Content"
 	}];
-	bool isDraft = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string editFormat = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "编辑模式"
+	}];
+	bool isDraft = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "是否草稿"
 	}];
-	string draftVersion = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string draftVersion = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "基于模板文件版本"
 	}];
-	string draftContent = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string draftContent = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿内容"
 	}];
-	string draftEditFormat = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+	string draftEditFormat = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿编辑模式"
 	}];
 }

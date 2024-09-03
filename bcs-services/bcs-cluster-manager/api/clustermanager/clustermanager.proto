@@ -11336,6 +11336,10 @@ message InstanceType {
     title : "dataDisks",
     description : "机型数据盘, 主要用于自建资源池. 仅仅provider为self时, 需要关注"
   }];
+  uint32 availableQuota = 14 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableQuota",
+    description : "该机型可用的quota容量"
+  }];
 }
 
 message GetMasterSuggestedMachinesRequest {

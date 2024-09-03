@@ -42,7 +42,7 @@ type Storage interface {
 	QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, error)
 	// QueryK8SPod query k8s pods
 	// query all pod information in specified cluster
-	QueryK8SPod(cluster, namespace string) ([]*storage.Pod, error)
+	QueryK8SPod(cluster, namespace string, pods ...string) ([]*storage.Pod, error)
 	// GetIPPoolDetailInfo get all underlay ip information
 	GetIPPoolDetailInfo(clusterID string) ([]*storage.IPPool, error)
 	// ListCustomResource list custom resources, Unmarshalled to dest.
@@ -57,7 +57,7 @@ type Storage interface {
 	// DeleteCustomResourceIndex delete custom resources' index
 	DeleteCustomResourceIndex(resourceType string, indexName string) error
 	// QueryK8SNamespace query all namespace in specified cluster
-	QueryK8SNamespace(cluster string) ([]*storage.Namespace, error)
+	QueryK8SNamespace(cluster string, namespaces ...string) ([]*storage.Namespace, error)
 	// QueryK8SDeployment query all deployment in specified cluster
 	QueryK8SDeployment(cluster, namespace string) ([]*storage.Deployment, error)
 	// QueryK8SDaemonSet query all daemonset in specified cluster
@@ -603,35 +603,51 @@ func (c *StorageCli) QueryK8SDeployment(cluster, namespace string) ([]*storage.D
 }
 
 // QueryK8SNamespace query all namespace in specified cluster
-func (c *StorageCli) QueryK8SNamespace(cluster string) ([]*storage.Namespace, error) {
+func (c *StorageCli) QueryK8SNamespace(cluster string, namespaces ...string) ([]*storage.Namespace, error) {
 	subPath := "/k8s/dynamic/cluster_resources/clusters/%s/Namespace"
 
-	var namespaces []*storage.Namespace
-	offset := 0
-	for {
-		var namespacesTmp []*storage.Namespace
-		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, path)
-		if err != nil {
-			return nil, err
-		}
+	var nsList []*storage.Namespace
+	if len(namespaces) != 0 {
+		for _, ns := range namespaces {
+			var nsTmp *storage.Namespace
+			path := fmt.Sprintf("%s/%s?limit=%d", subPath, ns, storageRequestLimit)
+			response, err := c.query(cluster, path)
+			if err != nil {
+				return nil, err
+			}
 
-		if err := json.Unmarshal(response.Data, &namespacesTmp); err != nil {
-			return nil, fmt.Errorf("namespaces slice decode err: %s", err.Error())
+			if err := json.Unmarshal(response.Data, &nsTmp); err != nil {
+				return nil, fmt.Errorf("namespaces slice decode err: %s", err.Error())
+			}
+			nsList = append(nsList, nsTmp)
 		}
-		namespaces = append(namespaces, namespacesTmp...)
-		if len(namespacesTmp) == storageRequestLimit {
-			offset += storageRequestLimit
-			continue
+	} else {
+		offset := 0
+		for {
+			var nsListTmp []*storage.Namespace
+			path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+			response, err := c.query(cluster, path)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := json.Unmarshal(response.Data, &nsListTmp); err != nil {
+				return nil, fmt.Errorf("namespaces slice decode err: %s", err.Error())
+			}
+			nsList = append(nsList, nsListTmp...)
+			if len(nsListTmp) == storageRequestLimit {
+				offset += storageRequestLimit
+				continue
+			}
+			break
 		}
-		break
 	}
 
-	if len(namespaces) == 0 {
+	if len(nsList) == 0 {
 		blog.V(5).Infof("query kubernetes empty namespaces in cluster %s", cluster)
 		return nil, nil
 	}
-	return namespaces, nil
+	return nsList, nil
 }
 
 func (c *StorageCli) query(cluster, subPath string) (*BasicResponse, error) {
@@ -697,35 +713,52 @@ func (c *StorageCli) QueryMesosTaskgroup(cluster string) ([]*storage.Taskgroup, 
 }
 
 // QueryK8SPod query all pod information in specified cluster
-func (c *StorageCli) QueryK8SPod(cluster, namespace string) ([]*storage.Pod, error) {
+func (c *StorageCli) QueryK8SPod(cluster, namespace string, pods ...string) ([]*storage.Pod, error) {
 	subPath := "/k8s/dynamic/namespace_resources/clusters/%s/namespaces/" + namespace + "/Pod"
-	var pods []*storage.Pod
-	offset := 0
-	for {
-		var podsTmp []*storage.Pod
-		path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
-		response, err := c.query(cluster, path)
-		if err != nil {
-			return nil, err
-		}
+	var podList []*storage.Pod
 
-		if err := json.Unmarshal(response.Data, &podsTmp); err != nil {
-			return nil, fmt.Errorf("pods slice decode err: %s", err.Error())
+	if len(pods) != 0 {
+		for _, pod := range pods {
+			var podsTmp *storage.Pod
+			path := fmt.Sprintf("%s/%s?limit=%d", subPath, pod, storageRequestLimit)
+			response, err := c.query(cluster, path)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := json.Unmarshal(response.Data, &podsTmp); err != nil {
+				return nil, fmt.Errorf("pods slice decode err: %s", err.Error())
+			}
+			podList = append(podList, podsTmp)
 		}
-		pods = append(pods, podsTmp...)
-		if len(podsTmp) == storageRequestLimit {
-			offset += storageRequestLimit
-			continue
+	} else {
+		offset := 0
+		for {
+			var podsTmp []*storage.Pod
+			path := fmt.Sprintf("%s?offset=%d&limit=%d", subPath, offset, storageRequestLimit)
+			response, err := c.query(cluster, path)
+			if err != nil {
+				return nil, err
+			}
+
+			if err := json.Unmarshal(response.Data, &podsTmp); err != nil {
+				return nil, fmt.Errorf("pods slice decode err: %s", err.Error())
+			}
+			podList = append(podList, podsTmp...)
+			if len(podsTmp) == storageRequestLimit {
+				offset += storageRequestLimit
+				continue
+			}
+			break
 		}
-		break
 	}
 
-	if len(pods) == 0 {
+	if len(podList) == 0 {
 		// No pod data retrieve from bcs-storage
 		blog.V(5).Infof("query kubernetes empty pods in cluster %s", cluster)
 		return nil, nil
 	}
-	return pods, nil
+	return podList, nil
 }
 
 // GetIPPoolDetailInfo get all underlay ip information

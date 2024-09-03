@@ -35,13 +35,55 @@ func init() {
 	})
 }
 
-// CloudValidate qcloud validate management implementation
+// CloudValidate azure validate management implementation
 type CloudValidate struct {
 }
 
 // CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	// call azure interface to check cluster
+	if c == nil || req == nil || opt == nil {
+		return fmt.Errorf("%s CreateClusterValidate request&options is empty", cloudName)
+	}
+
+	if len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 || len(opt.Account.ClientID) == 0 ||
+		len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate lost valid crendential info", cloudName)
+	}
+
+	_, ok := req.GetExtraInfo()[common.ClusterResourceGroup]
+	if !ok {
+		return fmt.Errorf("%s CreateClusterValidate clusterResourceGroup is empty", cloudName)
+	}
+
+	if len(req.NodeGroups) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate nodeGroup is empty", cloudName)
+	}
+
+	exist := false
+	for _, ng := range req.NodeGroups {
+		if ng.NodeGroupType != common.CloudClusterNodeGroupTypeSystem &&
+			ng.NodeGroupType != common.CloudClusterNodeGroupTypeUser {
+			return fmt.Errorf("%s CreateClusterValidate nodeGroup type is not valid, should be in %s|%s",
+				cloudName, common.CloudClusterNodeGroupTypeSystem, common.CloudClusterNodeGroupTypeUser)
+		}
+		if ng.NodeGroupType == common.CloudClusterNodeGroupTypeSystem {
+			exist = true
+		}
+	}
+	if !exist {
+		return fmt.Errorf("%s CreateClusterValidate system nodegroup is not set", cloudName)
+	}
+
+	// default not handle systemReinstall
+	req.SystemReinstall = true
+
+	// cluster category
+	if len(req.ClusterCategory) == 0 {
+		req.ClusterCategory = common.Builder
+	}
+
+	return nil
 }
 
 // CreateCloudAccountValidate create cloud account validate

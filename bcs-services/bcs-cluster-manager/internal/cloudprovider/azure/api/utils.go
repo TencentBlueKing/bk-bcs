@@ -27,7 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
@@ -184,9 +183,9 @@ func (c *nodeGroupToPool) setOSAndInstanceType() {
 func (c *nodeGroupToPool) setOrchestratorVersion() { // nolint
 	// BCS暂无设置K8S版本需求
 	// runTimeInfo := b.group.NodeTemplate.Runtime
-	//// 默认为空
+	// 默认为空
 	// b.pool.Properties.OrchestratorVersion = to.Ptr("")
-	//// 若有运行时，则按Runtime版本
+	// 若有运行时，则按Runtime版本
 	// if runTimeInfo != nil {
 	//	b.pool.Properties.OrchestratorVersion = to.Ptr(runTimeInfo.RuntimeVersion)
 	// }
@@ -510,11 +509,11 @@ func (c *poolToNodeGroup) setCurrentOrchestratorVersion() { // nolint
 func (c *poolToNodeGroup) setStatus() {
 	switch *c.properties.ProvisioningState {
 	case NormalState:
-		c.group.Status = api.NodeGroupLifeStateNormal
+		c.group.Status = NodeGroupLifeStateNormal
 	case CreatingState:
-		c.group.Status = api.NodeGroupLifeStateCreating
+		c.group.Status = NodeGroupLifeStateCreating
 	case UpdatingState:
-		c.group.Status = api.NodeGroupLifeStateUpdating
+		c.group.Status = NodeGroupLifeStateUpdating
 	default:
 		c.group.Status = strings.ToLower(*c.properties.ProvisioningState)
 	}
@@ -939,54 +938,36 @@ func (c *nodeToVm) setLocation() {
 }
 
 // SetVmSetNetWork 设置虚拟规模集网络
-func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup,
+func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup, rg, nrg string,
 	set *armcompute.VirtualMachineScaleSet) error {
 	vpcID := group.AutoScaling.VpcID
-	subnets := group.AutoScaling.SubnetIDs
-	if len(vpcID) == 0 || len(subnets) == 0 {
-		return fmt.Errorf("SetVmSetNetWork vpcID or subnetID can not be empty")
+	subnetIDs := group.AutoScaling.SubnetIDs
+	if len(vpcID) == 0 || len(subnetIDs) == 0 || len(group.LaunchTemplate.SecurityGroupIDs) == 0 {
+		return fmt.Errorf("SetVmSetNetWork vpcID, subnetID or SecurityGroupIDs can not be empty")
 	}
 
 	defaultVpcIDs := ParseSetReturnSubnetNames(set)
 	defaultSubnets := ParseSetReturnSubnetIDs(set)
-	ipConfigs := set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
-		IPConfigurations
-
-	if len(defaultVpcIDs) == 0 || len(defaultSubnets) == 0 || len(ipConfigs) == 0 {
-		return fmt.Errorf("SetVmSetNetWork vpcID, subnetID or ipConfigs for scaleset %s is empty", *set.Name)
+	if len(defaultVpcIDs) == 0 || len(defaultSubnets) == 0 {
+		return fmt.Errorf("SetVmSetNetWork vpcID or subnetID for scaleset %s is empty", *set.Name)
 	}
 
-	defaultSubnetID := ipConfigs[0].Properties.Subnet.ID
-	newSubnetID := to.Ptr(strings.ReplaceAll(
-		strings.ReplaceAll(*defaultSubnetID, defaultVpcIDs[0], vpcID), defaultSubnets[0], subnets[0]))
-
-	// 设置子网
-	for k := range ipConfigs {
-		ipConfigs[k].Properties.Subnet.ID = newSubnetID
-	}
-
-	if len(group.LaunchTemplate.SecurityGroupIDs) == 0 {
-		return fmt.Errorf("SetVmSetNetWork security group can not be empty")
-	}
-
-	subnetDetail, err := client.GetSubnet(ctx, group.AutoScaling.AutoScalingName, vpcID, subnets[0])
+	subnetDetail, err := client.GetSubnet(ctx, nrg, vpcID, subnetIDs[0])
 	if err != nil {
-		blog.Errorf("SetVmSetNetWork GetSubnet %s failed, %v", subnets[0], err)
+		blog.Errorf("SetVmSetNetWork GetSubnet %s failed, %v", subnetIDs[0], err)
 		return err
 	}
-
-	// 设置网络安全组
-	idx := strings.LastIndex(*subnetDetail.Properties.NetworkSecurityGroup.ID, "/")
-	oldSg := (*subnetDetail.Properties.NetworkSecurityGroup.ID)[idx+1:]
-	newSgID := strings.ReplaceAll(*subnetDetail.Properties.NetworkSecurityGroup.ID,
-		oldSg, group.LaunchTemplate.SecurityGroupIDs[0])
-	subnetDetail.Properties.NetworkSecurityGroup.ID = to.Ptr(newSgID)
-
-	_, err = client.UpdateSubnet(ctx, group.AutoScaling.AutoScalingName, vpcID, subnets[0], *subnetDetail)
+	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
+		IPConfigurations[0].Properties.Subnet.ID = subnetDetail.ID
+	//	仍然使用本集群默认的安全组,
+	sg, err := client.GetNetworkSecurityGroups(ctx, rg, group.LaunchTemplate.SecurityGroupIDs[0])
 	if err != nil {
-		blog.Errorf("SetVmSetNetWork UpdateSubnet security group failed, %v", err)
+		blog.Errorf("SetVmSetNetWork GetNetworkSecurityGroups %s failed, %v",
+			group.LaunchTemplate.SecurityGroupIDs[0], err)
 		return err
 	}
+	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
+		NetworkSecurityGroup.ID = sg.ID
 
 	return nil
 }
@@ -1313,6 +1294,20 @@ func regexpSetSubnetName(set *armcompute.VirtualMachineScaleSet) []string {
 	return result
 }
 
+// RegexpSetSubnetResourceGroup 通过正则解析 VMSSs subnet resourceGroup
+func RegexpSetSubnetResourceGroup(set *armcompute.VirtualMachineScaleSet) string {
+	subnetIDs := checkSetSubnetID(set)
+	reg := regexp.MustCompile("/resourceGroups/(.+?)/")
+	for _, id := range subnetIDs {
+		res := reg.FindStringSubmatch(id)
+		if len(res) <= 1 {
+			continue
+		}
+		return res[1]
+	}
+	return ""
+}
+
 // checkVmSubnetID VirtualMachineScaleSetVM subnetID字段不为空检查
 func checkVmSubnetID(vm *armcompute.VirtualMachineScaleSetVM) []string {
 	if vm == nil {
@@ -1505,8 +1500,7 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 	for k := range group.Tags {
 		pool.Properties.Tags[k] = to.Ptr(group.Tags[k])
 	}
-
-	if group.NodeTemplate != nil && len(group.NodeTemplate.GetLabels()) > 0 {
+	if group.NodeTemplate != nil {
 		pool.Properties.NodeLabels = make(map[string]*string)
 		for k := range group.NodeTemplate.Labels {
 			pool.Properties.NodeLabels[k] = to.Ptr(group.NodeTemplate.Labels[k])

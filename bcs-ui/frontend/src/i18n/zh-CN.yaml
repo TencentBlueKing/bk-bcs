@@ -893,6 +893,7 @@ cluster:
         status: 节点池状态
         name: 节点池名称
         detail: 查看节点池详情
+        serviceRole: IAM角色
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
@@ -964,6 +965,12 @@ cluster:
             SSD: 超高IO云硬盘
             GPSSD: 通用性SSD云硬盘
             ESSD: 极速IO云硬盘
+            gp3: 通用型SSD(gp3)
+            gp2: 通用型SSD(gp2)
+            io2: 预调配IOPS SSD(io2)
+            io1: 预调配IOPS SSD(io1)
+            st1: 高吞吐量HDD(st1)
+            sc1: 吞吐量优化型Cold HDD(sc1)
           disk:
             system: 系统盘
             data: 数据盘
@@ -994,9 +1001,11 @@ cluster:
           title: 支持子网
           desc: 内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区
           placeholder: 系统自动分配
+          validate: 请选择至少两个不同可用区的子网
           label:
             subnetID: 子网ID
             subnetName: 子网名称
+            zone: 可用区
             remainIp: 剩余IP数
             unUsedReason:
               text: 不可用原因
@@ -2622,6 +2631,11 @@ azureCA:
   password:
     set: 设置密码
     confirm: 确认密码
+awsCA:
+  label: {}
+  password:
+    set: 设置密码
+    confirm: 确认密码
 regions:
   asia: 亚洲
   australia: 澳洲
@@ -2889,6 +2903,7 @@ templateFile:
     deploySetting: 部署设置
     deployReview: 部署预览
     disableYamlToForm: 无法切换模式
+    fileList: 文件列表
   button:
     formMode: 表单模式
     yamlMode: YAML模式
@@ -2900,9 +2915,15 @@ templateFile:
     previewAndDeploy: 预览并部署
     versionManage: 版本管理
     confirmDeploy: 确认部署
+    import: 导入文件包
+    export: 导出全部
+    AddToFavorites: 收藏文件夹
+    RemoveFromFavorites: 取消收藏
+    exportFolder: 导出文件夹
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
+    searchSpace: 搜索文件夹
   label:
     name: 名称
     templateName: 模板名称
@@ -2933,6 +2954,8 @@ templateFile:
     disableYamlToFormReason: '源码文件中，{0}，请继续使用源码模式编辑模板或修改再尝试'
     preKind: 上一个类型
     nextKind: 下一个类型
+    bookmark: 收藏文件夹
+    unbookmark: 取消收藏
   tag:
     draft: 草稿
     baseOn: 基于

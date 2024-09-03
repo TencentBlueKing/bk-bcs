@@ -143,6 +143,12 @@ type MonitorConfig struct {
 	Port    string `json:"port"`
 }
 
+// PreCheckConfig preCheck server info
+type PreCheckConfig struct {
+	Address string `json:"address"`
+	Port    string `json:"port"`
+}
+
 // AnalysisServer defines the configuration of analysis server
 type AnalysisServer struct {
 	Address string `json:"address"`

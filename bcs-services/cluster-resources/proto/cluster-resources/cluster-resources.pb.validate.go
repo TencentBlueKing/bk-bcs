@@ -10489,6 +10489,8 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for Content
 
+	// no validation rules for EditFormat
+
 	// no validation rules for IsDraft
 
 	// no validation rules for DraftVersion

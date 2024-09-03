@@ -17,6 +17,20 @@
         <bcs-button theme="primary" @click="addTemplateFile">
           {{ $t('templateFile.button.createFile') }}
         </bcs-button>
+        <span
+          @click="toggleFavSpace"
+          v-bk-tooltips="spaceDetail?.fav ? $t('templateFile.tips.unbookmark') : $t('templateFile.tips.bookmark')"
+          :class="[
+            'cursor-pointer transition flex items-center justify-center',
+            'size-[32px] px-[10px] border-[1px] rounded-sm border-[#c4c6cc] ml-[10px]',
+            spaceDetail?.fav ? 'text-[#ff9C01]' : '',
+          ]">
+          <i
+            :class="[
+              'bcs-icon size-[16px]',
+              spaceDetail?.fav ? 'bcs-icon-star-shape' : 'bcs-icon-star text-[#979ba5]'
+            ]"></i>
+        </span>
       </template>
       <template #right>
         <bcs-input
@@ -325,6 +339,18 @@ function refresh() {
   showVersionList.value = false;
   getTemplateMetadata();
   updateTemplateMetadataList(props.templateSpace);
+}
+
+// 收藏文件夹
+async function toggleFavSpace() {
+  if (!spaceDetail.value?.id) return;
+  if (spaceDetail.value?.fav) {
+    await TemplateSetService.UnCollectFolder({ $templateSpaceID: spaceDetail.value?.id });
+  } else {
+    await TemplateSetService.CollectFolder({ $templateSpaceID: spaceDetail.value?.id });
+  }
+  getTemplateSpace();
+  updateListTemplateSpaceList();
 }
 
 watch(() => props.templateSpace, () => {

@@ -150,7 +150,7 @@ func (s *Service) ListAppGroups(ctx context.Context, req *pbds.ListAppGroupsReq)
 		Spec: &table.GroupSpec{
 			Name:     "默认分组",
 			Public:   true,
-			Mode:     table.Default,
+			Mode:     table.GroupModeDefault,
 			Selector: new(selector.Selector),
 			UID:      "",
 		},

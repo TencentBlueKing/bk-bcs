@@ -48,111 +48,18 @@
       type="card-tab"
       class="cluster-detail-tab"
       v-if="panelStatus !== 'hidden'">
-      <!-- 共享集群 -->
-      <template v-if="curCluster.is_shared">
-        <bcs-tab-panel name="namespace" :label="$t('k8s.namespace')" render-directive="if">
-          <Namespace class="p-[20px]" :cluster-id="clusterId" :namespace="namespace" />
-        </bcs-tab-panel>
-        <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
-          <Info class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel name="network" :label="$t('cluster.detail.title.network')" render-directive="if">
-          <Network class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-      </template>
-      <!--vcluster-->
-      <template v-else-if="curCluster.clusterType === 'virtual'">
-        <bcs-tab-panel
-          name="overview"
-          :label="$t('cluster.detail.title.overview')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '')">
-          <Overview class="px-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="namespace"
-          :label="$t('k8s.namespace')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '')">
-          <Namespace class="p-[20px]" :cluster-id="clusterId" :namespace="namespace" />
-        </bcs-tab-panel>
-        <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
-          <Info class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="quota"
-          :label="$t('cluster.detail.title.quota')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '')">
-          <VClusterQuota class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-      </template>
-      <!--其他集群-->
-      <template v-else>
-        <bcs-tab-panel
-          name="overview"
-          :label="$t('cluster.detail.title.overview')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '')">
-          <Overview class="px-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="namespace"
-          :label="$t('k8s.namespace')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '')">
-          <Namespace class="p-[20px]" :cluster-id="clusterId" :namespace="namespace" />
-        </bcs-tab-panel>
-        <bcs-tab-panel name="info" :label="$t('generic.title.basicInfo1')" render-directive="if">
-          <Info class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="network"
-          :label="$t('cluster.detail.title.network')"
-          render-directive="if"
-          v-if="!isKubeConfigImportCluster">
-          <Network class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="master"
-          :label="$t('cluster.detail.title.controlConfig')"
-          render-directive="if"
-          v-if="!isKubeConfigImportCluster">
-          <Master class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="node"
-          :label="$t('cluster.detail.title.nodeList')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '')">
-          <Node
-            class="p-[20px]"
-            :cluster-id="clusterId"
-            hide-cluster-select
-            from-cluster />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="autoscaler"
-          :label="$t('cluster.detail.title.autoScaler')"
-          render-directive="if"
-          ref="autoScalerTabRef"
-          v-if="showAutoScaler && normalStatusList.includes(curCluster.status || '')">
-          <template #label>
-            {{ $t('cluster.detail.title.autoScaler') }}
-          </template>
-          <AutoScaler :cluster-id="clusterId" />
-        </bcs-tab-panel>
-        <bcs-tab-panel
-          name="record"
-          :label="$t('cluster.title.opRecord')"
-          render-directive="if"
-          v-if="normalStatusList.includes(curCluster.status || '') && curCluster.provider === 'tencentCloud'">
-          <template #label>
-            {{ $t('cluster.title.opRecord') }}
-          </template>
-          <TaskRecord class="p-[20px]" :cluster-id="clusterId" />
-        </bcs-tab-panel>
-      </template>
+      <!-- 渲染标签页 -->
+      <bcs-tab-panel
+        v-for="(tab, index) in realTabs"
+        :key="`${index}-${tab.name}`"
+        :name="tab.name"
+        :label="$t(tab.label)"
+        render-directive="if">
+        <template #label>
+          {{ $t(tab.label) }}
+        </template>
+        <component :is="tab.component" class="p-[20px]" v-bind="tab.componentConfig" />
+      </bcs-tab-panel>
     </bcs-tab>
   </div>
 </template>
@@ -204,7 +111,7 @@ const normalStatusList = ref(['CONNECT-FAILURE', 'RUNNING']);
 
 const activeTabName = ref(props.active);
 watch(activeTabName, () => {
-  if ($router.currentRoute?.query?.active === activeTabName.value) return;
+  if (props.active === activeTabName.value) return;
   // 更新路由
   $router.replace({
     query: {
@@ -228,45 +135,120 @@ const isKubeConfigImportCluster = computed(() => curCluster.value.clusterCategor
 // };
 const showAutoScaler = computed(() => !!curCluster.value?.autoScale);
 
-watch(
-  [
-    () => showAutoScaler.value,
-    () => activeTabName.value,
-    () => props.clusterId,
-  ],
-  () => {
-    setTimeout(() => {
-      /**
-       * - 当前集群不支持autoscaler需要跳转回overview tab
-       * - 托管集群只有overview、basicInfo和quota三个tab详情
-       * - 共享集群只有命名空间、基本信息和网络配置
-       */
-      if (
-        (!showAutoScaler.value && activeTabName.value === 'autoscaler')
-        || (curCluster.value.clusterType === 'virtual' && !['overview', 'namespace', 'info', 'quota'].includes(activeTabName.value))
-        || (curCluster.value.clusterType !== 'virtual' && activeTabName.value === 'quota')
-      ) {
-        activeTabName.value = 'overview';
-      }
-
-      if (curCluster.value.is_shared && !['namespace', 'info', 'network'].includes(activeTabName.value)) {
-        activeTabName.value = 'namespace';
-      }
-
-      // 非正常集群只能看基本信息、网络和master
-      if (!normalStatusList.value.includes(curCluster.value.status || '')
-        && !['info', 'network', 'master'].includes(activeTabName.value)) {
-        activeTabName.value = 'info';
-      }
-
-      // kubeconfig集群只有总览、命名空间、基本信息、节点列表
-      if (isKubeConfigImportCluster.value && !['overview', 'namespace', 'info', 'node'].includes(activeTabName.value)) {
-        activeTabName.value = 'overview';
-      }
-    });
+const tabs = computed(() => [
+  {
+    name: 'overview', // 默认显示的tab
+    label: 'cluster.detail.title.overview', // tab名称
+    component: Overview, // tab对应的组件
+    isShow: !curCluster.value?.is_shared
+      && normalStatusList.value.includes(curCluster.value.status || ''), // 是否显示该tab
+    componentConfig: {
+      clusterId: props.clusterId,
+    }, // tab对应的组件配置
   },
-  { immediate: true },
-);
+  {
+    name: 'namespace',
+    label: 'k8s.namespace',
+    component: Namespace,
+    isShow: (curCluster.value?.is_shared
+    || normalStatusList.value.includes(curCluster.value.status || '')),
+    componentConfig: {
+      clusterId: props.clusterId,
+      namespace: props.namespace,
+    },
+  },
+  {
+    name: 'info',
+    label: 'generic.title.basicInfo1',
+    component: Info,
+    isShow: true,
+    componentConfig: {
+      clusterId: props.clusterId,
+    },
+  },
+  {
+    name: 'network',
+    label: 'cluster.detail.title.network',
+    component: Network,
+    isShow: (curCluster.value?.is_shared
+      || (curCluster.value.clusterType !== 'virtual'
+      && !isKubeConfigImportCluster.value)),
+    componentConfig: {
+      clusterId: props.clusterId,
+    },
+  },
+  {
+    name: 'master',
+    label: 'cluster.detail.title.controlConfig',
+    component: Master,
+    isShow: (!curCluster.value?.is_shared
+      && curCluster.value.clusterType !== 'virtual'
+      && !isKubeConfigImportCluster.value),
+    componentConfig: {
+      clusterId: props.clusterId,
+    },
+  },
+  {
+    name: 'node',
+    label: 'cluster.detail.title.nodeList',
+    component: Node,
+    isShow: (!curCluster.value?.is_shared
+      && curCluster.value.clusterType !== 'virtual'
+      && normalStatusList.value.includes(curCluster.value.status || '')),
+    componentConfig: {
+      clusterId: props.clusterId,
+      fromCluster: true,
+      hideClusterSelect: true,
+    },
+  },
+  {
+    name: 'autoscaler',
+    label: 'cluster.detail.title.autoScaler',
+    component: AutoScaler,
+    isShow: (!curCluster.value?.is_shared
+      && curCluster.value.clusterType !== 'virtual'
+      && normalStatusList.value.includes(curCluster.value.status || '')
+      && showAutoScaler.value),
+    componentConfig: {
+      clusterId: props.clusterId,
+    },
+  },
+  {
+    name: 'taskRecord',
+    label: 'cluster.title.opRecord',
+    component: TaskRecord,
+    isShow: (!curCluster.value?.is_shared
+      && curCluster.value.clusterType !== 'virtual'
+      && normalStatusList.value.includes(curCluster.value.status || '')
+      && curCluster.value.provider === 'tencentCloud'),
+    componentConfig: {
+      clusterId: props.clusterId,
+    },
+  },
+  {
+    name: 'quota',
+    label: 'cluster.detail.title.quota',
+    component: VClusterQuota,
+    isShow: (!curCluster.value?.is_shared
+      && curCluster.value.clusterType === 'virtual'
+      && normalStatusList.value.includes(curCluster.value.status || '')),
+    componentConfig: {
+      clusterId: props.clusterId,
+    },
+  },
+]);
+
+const realTabs = computed(() => tabs.value.filter(tab => tab.isShow));
+
+watch([
+  () => showAutoScaler.value,
+  () => activeTabName.value,
+  () => props.clusterId,
+], () => {
+  if (!realTabs.value.some(item => item.name === activeTabName.value)) {
+    activeTabName.value = realTabs.value?.[0]?.name || '';
+  }
+}, { immediate: true });
 
 // resize event
 const modalRef = ref();

@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
@@ -279,10 +280,49 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
 				}
 				return disks
 			}(),
+			AvailableQuota: uint32(t.OversoldAvailable),
 		})
 	}
 
 	blog.Infof("getInnerInstanceTypes successful[%+v]", instanceTypes)
+
+	if info.Provider == resource.SelfPool || info.Provider == resource.CrPool {
+		return instanceTypes, nil
+	}
+
+	// 获取当前资源池的使用情况 & 超卖情况
+	var (
+		barrier = utils.NewRoutinePool(50)
+		lock    = sync.Mutex{}
+	)
+	defer barrier.Close()
+
+	for i := range instanceTypes {
+		barrier.Add(1)
+		// query available vpc
+		go func(i int) {
+			defer func() {
+				barrier.Done()
+			}()
+
+			pools, errLocal := daemon.GetRegionDevicePoolDetail(cloudprovider.GetStorageModel(), info.Region,
+				instanceTypes[i].NodeType, nil)
+			if errLocal != nil {
+				blog.Errorf("get region %s instanceType %s device pool detail failed, %s",
+					info.Region, instanceTypes[i].NodeType, err.Error())
+				return
+			}
+			for pid := range pools {
+				if utils.StringInSlice(pools[pid].Zone, instanceTypes[pid].Zones) {
+					lock.Lock()
+					instanceTypes[i].AvailableQuota = uint32(pools[pid].OversoldTotal) - uint32(pools[pid].GroupQuota)
+					lock.Unlock()
+				}
+			}
+		}(i)
+	}
+	barrier.Wait()
+
 	return instanceTypes, nil
 }
 

@@ -479,7 +479,7 @@ export const createKv = (bizId: string, appId: number, kv: any) =>
  * @returns
  */
 export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
-  http.get(`/config/biz/${bizId}/apps/${appId}/kvs`, { params: query }).then((res) => res.data);
+  http.post(`/config/biz/${bizId}/apps/${appId}/kvs/list`, query).then((res) => res.data);
 
 /**
  * 更新kv
@@ -489,8 +489,12 @@ export const getKvList = (bizId: string, appId: number, query: ICommonQuery) =>
  * @param value 配置值
  * @returns
  */
-export const updateKv = (bizId: string, appId: number, key: string, value: string, memo: string) =>
-  http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, { value, memo });
+export const updateKv = (
+  bizId: string,
+  appId: number,
+  key: string,
+  editContent: { value: string; memo: string; secret_hidden?: boolean },
+) => http.put(`/config/biz/${bizId}/apps/${appId}/kvs/${key}`, editContent);
 
 /**
  * 删除kv

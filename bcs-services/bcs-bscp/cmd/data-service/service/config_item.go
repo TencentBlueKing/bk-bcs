@@ -44,25 +44,18 @@ import (
 )
 
 // CreateConfigItem create config item.
-func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) { // nolint
+func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
-	// get all configuration files under this service
-	items, err := s.dao.ConfigItem().ListAllByAppID(grpcKit,
-		req.ConfigItemAttachment.AppId, req.ConfigItemAttachment.BizId)
-	if err != nil {
-		return nil, err
-	}
-	existingPaths := []string{}
-	for _, v := range items {
-		existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
-	}
+	newFiles := []tools.CIUniqueKey{{
+		Name: req.ConfigItemSpec.Path,
+		Path: req.ConfigItemSpec.Name,
+	}}
 
-	// validate in table config_items
-	if tools.CheckPathConflict(path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name), existingPaths) {
-		return nil, errf.Errorf(errf.InvalidRequest,
-			i18n.T(grpcKit, "the config file %s under this service already exists and cannot be created again",
-				path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)))
+	// 检测配置项路径冲突以及是否超出服务限制
+	if err := s.checkRestorePrerequisites(grpcKit, req.ConfigItemAttachment.BizId, req.ConfigItemAttachment.AppId,
+		newFiles, nil); err != nil {
+		return nil, err
 	}
 
 	tx := s.dao.GenQuery().Begin()
@@ -1232,81 +1225,73 @@ func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbds.ListConfi
 }
 
 // UnDeleteConfigItem 配置项未命名版本恢复
-func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConfigItemReq) (*pbbase.EmptyResp, error) { // nolint
-	grpcKit := kit.FromGrpcContext(ctx)
+// nolint:funlen
+func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConfigItemReq) (*pbbase.EmptyResp, error) {
 
+	grpcKit := kit.FromGrpcContext(ctx)
 	// 判断是否需要恢复
 	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
 	}
 	if configItem != nil && configItem.ID != 0 {
-		return nil, errors.New("The data has not been deleted")
+		return nil, errors.New(i18n.T(grpcKit, "the data has not been deleted"))
 	}
 
 	// 获取该服务最新发布的 release_id
 	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
 	if err != nil {
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "get the latest released version failed, err: %v", err))
 	}
 
 	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
 	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
 		release.Attachment.AppID, release.ID, req.GetId())
 	if err != nil {
-		return nil, err
-	}
-
-	// 检测文件冲突
-	// /a 和 /a/1.txt这类的冲突
-	file1 := []tools.CIUniqueKey{{
-		Name: releaseCi.ConfigItemSpec.Name,
-		Path: releaseCi.ConfigItemSpec.Path,
-	}}
-
-	configs, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.Attachment.AppId, req.Attachment.BizId)
-	if err != nil {
-		return nil, err
-	}
-	file2 := []tools.CIUniqueKey{}
-	for _, v := range configs {
-		file2 = append(file2, tools.CIUniqueKey{
-			Name: v.Spec.Name,
-			Path: v.Spec.Path,
-		})
-	}
-
-	if err = tools.DetectFilePathConflicts(grpcKit, file1, file2); err != nil {
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "get the published config failed, err: %v", err))
 	}
 
 	ci, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
 		releaseCi.ConfigItemSpec.Name, releaseCi.ConfigItemSpec.Path)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
+	}
+
+	newFiles := []tools.CIUniqueKey{{
+		Name: releaseCi.ConfigItemSpec.Name,
+		Path: releaseCi.ConfigItemSpec.Path,
+	}}
+
+	// 检测配置项路径冲突以及是否超出服务限制
+	if err = s.checkRestorePrerequisites(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
+		newFiles, ci); err != nil {
 		return nil, err
 	}
 
-	commitID := []uint32{}
-	contentID := []uint32{}
+	commitID, contentID := []uint32{}, []uint32{}
 	tx := s.dao.GenQuery().Begin()
 	// 判断是不是新增的数据
 	if ci != nil && ci.ID != 0 {
 		rci, errCi := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
 			release.Attachment.AppID, release.ID, ci.ID)
 		if errCi != nil && !errors.Is(errCi, gorm.ErrRecordNotFound) {
-			return nil, errCi
+			return nil, errf.Errorf(errf.DBOpFailed,
+				i18n.T(grpcKit, "get the published config failed, err: %v", errCi))
 		}
 		if rci != nil && rci.ID != 0 {
-			return nil, errors.New("recovery failed. A file with the same path exists and is not in a new state")
+			return nil, errors.New(i18n.T(grpcKit,
+				`recovery failed. A file with the same path exists and is not in a new state`))
 		}
-
-		err = s.dao.ConfigItem().DeleteWithTx(grpcKit, tx, ci)
-		if err != nil {
+		if err = s.dao.ConfigItem().DeleteWithTx(grpcKit, tx, ci); err != nil {
 			logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 			}
-			return nil, err
+			return nil, errf.Errorf(errf.DBOpFailed,
+				i18n.T(grpcKit, "recover config item failed, err: %v", err))
 		}
 	}
 
@@ -1315,8 +1300,10 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
 		req.Attachment.AppId, req.Id)
 	if err != nil {
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "get records greater than the latest released version failed, err: %v", err))
 	}
+
 	for _, v := range rc {
 		commitID = append(commitID, v.ID)
 		contentID = append(contentID, v.Spec.ContentID)
@@ -1327,7 +1314,8 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", err))
 	}
 
 	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
@@ -1335,7 +1323,8 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", err))
 	}
 
 	data := &table.ConfigItem{
@@ -1349,14 +1338,67 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConf
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
 		}
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", err))
 	}
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
-		return nil, e
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", e))
 	}
 
 	return new(pbbase.EmptyResp), nil
+}
+
+// 检测恢复配置文件的前置条件
+func (s *Service) checkRestorePrerequisites(kit *kit.Kit, bizID, appID uint32, newFiles []tools.CIUniqueKey,
+	ci *table.ConfigItem) error {
+
+	// 获取指定服务下的配置项
+	configs, err := s.dao.ConfigItem().ListAllByAppID(kit, appID, bizID)
+	if err != nil {
+		return err
+	}
+	existingFiles := []tools.CIUniqueKey{}
+	for _, v := range configs {
+		existingFiles = append(existingFiles, tools.CIUniqueKey{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
+
+	// 检测文件冲突
+	// /a 和 /a/1.txt这类的冲突
+	if err = tools.DetectFilePathConflicts(kit, newFiles, existingFiles); err != nil {
+		return err
+	}
+
+	// 获取当前服务配置项数+模板数量
+	configItemCount, err := s.GetTemplateAndNonTemplateCICount(kit.RpcCtx(),
+		&pbds.GetTemplateAndNonTemplateCICountReq{
+			BizId: bizID,
+			AppId: appID,
+		})
+	if err != nil {
+		return err
+	}
+
+	totalConfigItemCount := int(configItemCount.GetConfigItemCount()) +
+		int(configItemCount.GetTemplateConfigItemCount()) + 1
+
+	if ci != nil && ci.ID != 0 {
+		totalConfigItemCount--
+	}
+
+	appConfigCnt := getAppConfigCnt(bizID)
+
+	if totalConfigItemCount > appConfigCnt {
+		return errf.New(errf.InvalidParameter,
+			i18n.T(kit, `the total number of config items(including template and non-template) 
+			exceeded the limit %d`, appConfigCnt))
+	}
+
+	return nil
 }
 
 // UndoConfigItem 撤消配置项
@@ -1847,7 +1889,9 @@ func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbd
 	}
 	templateConfigItemCount := 0
 	if binding != nil {
-		templateConfigItemCount = len(binding.Spec.TemplateIDs)
+		for _, binding := range binding.Spec.Bindings {
+			templateConfigItemCount += len(binding.TemplateRevisions)
+		}
 	}
 
 	return &pbds.GetTemplateAndNonTemplateCICountResp{

@@ -349,7 +349,7 @@ local function periodly_sync_cluster_credentials_in_master()
                     table_insert(healthy_nodes, node)
                 else
                     -- 如果节点不健康，记录警告日志
-                    core.log.warn("Node ", node.host, ":", node.port, " is unhealthy")
+                    core.log.warn("Cluster ", cluster_credential["clusterID"], " Node ", node.host, ":", node.port, " is unhealthy")
                 end
             end
             -- 将upstream_nodes更新为只包含健康节点的列表

@@ -110,7 +110,7 @@ export const getAllPackagesGroupBySpace = (biz_id: string, params: { app_id?: nu
  * @returns
  */
 export const getTemplatesBySpaceId = (biz_id: string, template_space_id: number, params: ICommonQuery) =>
-  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates_list`, params).then((res) => res.data);
+  http.post(`/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/list`, params).then((res) => res.data);
 
 /**
  * 获取模板空间下未指定套餐的模板列表
@@ -385,10 +385,9 @@ export const moveOutTemplateFromPackage = (
   template_ids: number[],
   template_set_ids: number[],
   exclusion_operation: boolean,
-  template_set_id: number | string,
 ) =>
   http.post(
-    `/config/biz/${biz_id}/template_spaces/${template_space_id}/template_set/${template_set_id}/templates/delete_from_template_sets`,
+    `/config/biz/${biz_id}/template_spaces/${template_space_id}/templates/delete_from_template_sets`,
     {
       template_ids,
       template_set_ids,

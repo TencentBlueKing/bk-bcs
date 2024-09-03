@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -37,17 +38,19 @@ import (
 
 const (
 	pendingTaskPrefix  = "/machinery/v2/broker/pending_tasks"
+	runningTaskPrefix  = "/machinery/v2/broker/running_tasks"
 	delayedTaskPrefix  = "/machinery/v2/broker/delayed_tasks"
 	delayedTaskLockKey = "/machinery/v2/lock/delayed_tasks"
 )
 
 type etcdBroker struct {
 	common.Broker
-	ctx       context.Context
-	client    *clientv3.Client
-	wg        sync.WaitGroup
-	assignMap map[string]bool
-	mtx       sync.Mutex
+	ctx         context.Context
+	client      *clientv3.Client
+	wg          sync.WaitGroup
+	pendingTask map[string]struct{}
+	runningTask map[string]struct{}
+	mtx         sync.RWMutex
 }
 
 // New ..
@@ -65,10 +68,11 @@ func New(ctx context.Context, conf *config.Config) (iface.Broker, error) {
 	}
 
 	broker := etcdBroker{
-		Broker:    common.NewBroker(conf),
-		ctx:       ctx,
-		client:    client,
-		assignMap: map[string]bool{},
+		Broker:      common.NewBroker(conf),
+		ctx:         ctx,
+		client:      client,
+		pendingTask: make(map[string]struct{}),
+		runningTask: make(map[string]struct{}),
 	}
 
 	return &broker, nil
@@ -87,28 +91,61 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 
 	// Channel to which we will push tasks ready for processing by worker
 	deliveries := make(chan Delivery)
+	defer log.INFO.Printf("stop all consuming and handle done")
+	defer b.wg.Wait()
 
 	ctx, cancel := context.WithCancel(b.ctx)
 	defer cancel()
 
-	// list watch task
+	// list watch running task
 	b.wg.Add(1)
 	go func() {
-		defer b.wg.Done()
+		defer func() {
+			cancel()
+			b.wg.Done()
+			log.INFO.Printf("list watch running task stopped")
+		}()
 
 		for {
 			select {
-			// A way to stop this goroutine from b.StopConsuming
 			case <-b.GetStopChan():
 				return
+			case <-ctx.Done():
+				return
 			default:
-				err := b.listWatchTasks(ctx, getQueue(b.GetConfig(), taskProcessor))
+				err := b.listWatchRunningTask(ctx)
 				if err != nil {
-					log.ERROR.Printf("handle list watch task err: %s", err)
+					log.ERROR.Printf("list watch running task failed, err: %s", err)
+					time.Sleep(time.Second)
 				}
 			}
 		}
+	}()
 
+	// list watch pending task
+	b.wg.Add(1)
+	go func() {
+		defer func() {
+			cancel()
+			b.wg.Done()
+			log.INFO.Printf("list watch pending task stopped")
+		}()
+
+		queue := getQueue(b.GetConfig(), taskProcessor)
+		for {
+			select {
+			case <-b.GetStopChan():
+				return
+			case <-ctx.Done():
+				return
+			default:
+				err := b.listWatchPendingTask(ctx, queue)
+				if err != nil {
+					log.ERROR.Printf("list watch pending task failed, err: %s", err)
+					time.Sleep(time.Second)
+				}
+			}
+		}
 	}()
 
 	// A receiving goroutine keeps popping messages from the queue by BLPOP
@@ -116,22 +153,25 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 	// we send it to the deliveries channel
 	b.wg.Add(1)
 	go func() {
-		defer b.wg.Done()
-		defer cancel()
+		defer func() {
+			cancel()
+			close(deliveries)
+			b.wg.Done()
+			log.INFO.Printf("handle next task stopped")
+		}()
 
 		for {
 			select {
-			// A way to stop this goroutine from b.StopConsuming
 			case <-b.GetStopChan():
-				close(deliveries)
 				return
-
+			case <-ctx.Done():
+				return
 			default:
 				if !taskProcessor.PreConsumeHandler() {
 					continue
 				}
 
-				task := b.nextTask(getQueue(b.GetConfig(), taskProcessor), consumerTag)
+				task := b.nextTask(ctx, getQueue(b.GetConfig(), taskProcessor), consumerTag)
 				if task == nil {
 					time.Sleep(time.Second)
 					continue
@@ -146,33 +186,35 @@ func (b *etcdBroker) StartConsuming(consumerTag string, concurrency int, taskPro
 	// channel for consumption by the worker
 	b.wg.Add(1)
 	go func() {
-		defer b.wg.Done()
-		defer cancel()
-
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
+		defer func() {
+			cancel()
+			b.wg.Done()
+			log.INFO.Printf("handle delayed task stopped")
+		}()
 
 		for {
 			select {
 			// A way to stop this goroutine from b.StopConsuming
 			case <-b.GetStopChan():
 				return
-
-			case <-ticker.C:
+			case <-ctx.Done():
+				return
+			default:
 				err := b.handleDelayedTask(ctx)
-				if err != nil {
-					log.ERROR.Printf("handleDelayedTask err: %s", err)
+				if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+					log.ERROR.Printf("handle delayed task failed, err: %s", err)
 				}
+				time.Sleep(time.Second)
 			}
 		}
 	}()
 
 	if err := b.consume(deliveries, concurrency, taskProcessor); err != nil {
+		log.WARNING.Printf("consume stopped, err=%v, retry=%t", err, b.GetRetry())
 		return b.GetRetry(), err
 	}
 
-	b.wg.Wait()
-
+	log.INFO.Printf("consume stopped, retry=%t", b.GetRetry())
 	return b.GetRetry(), nil
 }
 
@@ -267,10 +309,6 @@ func (b *etcdBroker) getTasks(ctx context.Context, key string) ([]*tasks.Signatu
 
 	result := make([]*tasks.Signature, 0, len(resp.Kvs))
 	for _, kv := range resp.Kvs {
-		if strings.Contains(string(kv.Key), "/assign") {
-			continue
-		}
-
 		signature := new(tasks.Signature)
 		decoder := json.NewDecoder(bytes.NewReader(kv.Value))
 		decoder.UseNumber()
@@ -309,26 +347,35 @@ func (b *etcdBroker) GetDelayedTasks() ([]*tasks.Signature, error) {
 	return items, nil
 }
 
-func (b *etcdBroker) nextTask(queue string, consumerTag string) Delivery {
+func (b *etcdBroker) nextTask(ctx context.Context, queue string, consumerTag string) Delivery {
 	b.mtx.Lock()
-	assignMap := make(map[string]bool, len(b.assignMap))
-	for k, v := range b.assignMap {
-		assignMap[k] = v
+	runningTask := make(map[string]struct{}, len(b.runningTask))
+	for k, v := range b.runningTask {
+		runningTask[k] = v
+	}
+	pendingTask := make(map[string]struct{}, len(b.pendingTask))
+	for k, v := range b.pendingTask {
+		pendingTask[k] = v
 	}
 	b.mtx.Unlock()
 
-	for k, assigned := range assignMap {
-		if assigned {
-			continue
-		}
+	for k := range pendingTask {
 		if !strings.Contains(k, queue) {
 			continue
 		}
 
-		d, err := NewDelivery(b.ctx, b.client, k, consumerTag)
+		if _, ok := runningTask[k]; ok {
+			continue
+		}
+
+		d, err := NewDelivery(ctx, b.client, k, consumerTag)
 		if err != nil {
 			continue
 		}
+
+		b.mtx.Lock()
+		b.runningTask[k] = struct{}{}
+		b.mtx.Unlock()
 
 		return d
 	}
@@ -336,20 +383,64 @@ func (b *etcdBroker) nextTask(queue string, consumerTag string) Delivery {
 	return nil
 }
 
-func (b *etcdBroker) setAssign(key string, assign bool) bool {
-	if !strings.Contains(key, "/assign") {
-		return false
+func (b *etcdBroker) listWatchRunningTask(ctx context.Context) error {
+	// List
+	listCtx, listCancel := context.WithTimeout(ctx, time.Second*10)
+	defer listCancel()
+	resp, err := b.client.Get(listCtx, runningTaskPrefix, clientv3.WithPrefix(), clientv3.WithKeysOnly())
+	if err != nil {
+		return err
 	}
-	k := strings.TrimSuffix(key, "/assign")
 
-	if _, ok := b.assignMap[k]; ok {
-		b.assignMap[k] = assign
+	b.mtx.Lock()
+	b.runningTask = make(map[string]struct{})
+	for _, kv := range resp.Kvs {
+		key := string(kv.Key)
+		taskKey := findTaskKey(key)
+		if taskKey == "" {
+			continue
+		}
+		b.runningTask[taskKey] = struct{}{}
+	}
+	b.mtx.Unlock()
+
+	// Watch
+	watchCtx, watchCancel := context.WithTimeout(ctx, time.Minute*10)
+	defer watchCancel()
+
+	watchOpts := []clientv3.OpOption{
+		clientv3.WithPrefix(),
+		clientv3.WithKeysOnly(),
+		clientv3.WithRev(resp.Header.Revision),
+	}
+	wc := b.client.Watch(watchCtx, runningTaskPrefix, watchOpts...)
+	for wresp := range wc {
+		if wresp.Err() != nil {
+			return watchCtx.Err()
+		}
+
+		b.mtx.Lock()
+		for _, ev := range wresp.Events {
+			key := string(ev.Kv.Key)
+			taskKey := findTaskKey(key)
+			if taskKey == "" {
+				continue
+			}
+			if ev.Type == clientv3.EventTypeDelete {
+				delete(b.runningTask, taskKey)
+			}
+
+			if ev.Type == clientv3.EventTypePut {
+				b.runningTask[taskKey] = struct{}{}
+			}
+		}
+		b.mtx.Unlock()
 	}
 
-	return true
+	return nil
 }
 
-func (b *etcdBroker) listWatchTasks(ctx context.Context, queue string) error {
+func (b *etcdBroker) listWatchPendingTask(ctx context.Context, queue string) error {
 	keyPrefix := fmt.Sprintf("%s/%s", pendingTaskPrefix, queue)
 
 	// List
@@ -361,13 +452,14 @@ func (b *etcdBroker) listWatchTasks(ctx context.Context, queue string) error {
 	}
 
 	b.mtx.Lock()
-	b.assignMap = map[string]bool{}
+	b.pendingTask = make(map[string]struct{})
 	for _, kv := range resp.Kvs {
 		key := string(kv.Key)
-		if b.setAssign(key, true) {
+		taskKey := findTaskKey(key)
+		if taskKey == "" {
 			continue
 		}
-		b.assignMap[key] = false
+		b.pendingTask[taskKey] = struct{}{}
 	}
 	b.mtx.Unlock()
 
@@ -389,23 +481,18 @@ func (b *etcdBroker) listWatchTasks(ctx context.Context, queue string) error {
 		b.mtx.Lock()
 		for _, ev := range wresp.Events {
 			key := string(ev.Kv.Key)
+			taskKey := findTaskKey(key)
+			if taskKey == "" {
+				continue
+			}
 			if ev.Type == clientv3.EventTypeDelete {
-				if b.setAssign(key, false) {
-					continue
-				}
-
-				delete(b.assignMap, key)
+				delete(b.pendingTask, taskKey)
 			}
 
 			if ev.Type == clientv3.EventTypePut {
-				if b.setAssign(key, true) {
-					continue
-				}
-
-				b.assignMap[key] = false
+				b.pendingTask[taskKey] = struct{}{}
 			}
 		}
-
 		b.mtx.Unlock()
 	}
 
@@ -413,45 +500,66 @@ func (b *etcdBroker) listWatchTasks(ctx context.Context, queue string) error {
 }
 
 func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
-	ttl := time.Second * 10
-	ctx, cancel := context.WithTimeout(ctx, ttl)
-	defer cancel()
-
-	// 创建一个新的session
-	s, err := concurrency.NewSession(b.client, concurrency.WithTTL(int(ttl.Seconds())))
+	s, err := concurrency.NewSession(b.client)
 	if err != nil {
 		return err
 	}
-	defer s.Orphan()
+	defer s.Close() // nolint
 
 	m := concurrency.NewMutex(s, delayedTaskLockKey)
 
-	if err = m.Lock(ctx); err != nil {
+	// 最长等待30s获取锁
+	lockCtx, lockCancel := context.WithTimeout(ctx, time.Second*30)
+	defer lockCancel()
+	if err = m.Lock(lockCtx); err != nil {
 		return err
 	}
-	defer m.Unlock(ctx) // nolint
+
+	defer func() {
+		unlockCtx, unlockCancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer unlockCancel()
+
+		if err = m.Unlock(unlockCtx); err != nil {
+			log.ERROR.Printf("unlock delayed task failed, err: %s", err)
+		}
+	}()
+
+	// 异步任务随时可能插入, 最多处理1分钟后重新获取任务列表(aka 异步任务到期后, 最多延迟1分钟放到pending队列)
+	handleCtx, handleCancel := context.WithTimeout(ctx, time.Minute)
+	defer handleCancel()
 
 	keyPrefix := fmt.Sprintf("%s/eta-", delayedTaskPrefix)
 	end := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	resp, err := b.client.Get(b.ctx, keyPrefix+"0", clientv3.WithRange(keyPrefix+end))
+	rangeOpts := []clientv3.OpOption{
+		clientv3.WithRange(keyPrefix + end),
+		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), // 按时间排序,优先处理最早的任务
+		clientv3.WithLimit(10000),
+	}
+	resp, err := b.client.Get(handleCtx, keyPrefix+"0", rangeOpts...)
 	if err != nil {
 		return err
 	}
+
 	for _, kv := range resp.Kvs {
+		// 超时控制
+		select {
+		case <-handleCtx.Done():
+			return handleCtx.Err()
+		default:
+		}
+
 		key := string(kv.Key)
-		parts := strings.Split(key, "/")
-		if len(parts) != 8 {
-			log.WARNING.Printf("invalid delay task %s, continue", key)
+		taskKey := findTaskKey(key)
+		if taskKey == "" {
 			continue
 		}
-		pendingKey := fmt.Sprintf("%s/%s/%s", pendingTaskPrefix, parts[6], parts[7])
-
+		pendingKey := fmt.Sprintf("%s/%s", pendingTaskPrefix, taskKey)
 		cmp := clientv3.Compare(clientv3.ModRevision(key), "=", kv.ModRevision)
 		deleteReq := clientv3.OpDelete(key)
 		putReq := clientv3.OpPut(pendingKey, string(kv.Value))
-		c, err := b.client.Txn(b.ctx).If(cmp).Then(deleteReq, putReq).Commit()
+		c, err := b.client.Txn(handleCtx).If(cmp).Then(deleteReq, putReq).Commit()
 		if err != nil {
-			return fmt.Errorf("handle delay task %s: %w", key, err)
+			return fmt.Errorf("handle delay task %s failed, err: %w", key, err)
 		}
 		if !c.Succeeded {
 			log.WARNING.Printf("handle delay task %s not success", key)
@@ -469,4 +577,28 @@ func getQueue(config *config.Config, taskProcessor iface.TaskProcessor) string {
 		return config.DefaultQueue
 	}
 	return customQueue
+}
+
+// findTaskKey return {queue}/{taskID}
+func findTaskKey(key string) string {
+	switch {
+	case strings.HasPrefix(key, pendingTaskPrefix+"/"):
+		return key[len(pendingTaskPrefix)+1:]
+
+	case strings.HasPrefix(key, runningTaskPrefix+"/"):
+		return key[len(runningTaskPrefix)+1:]
+
+	case strings.HasPrefix(key, delayedTaskPrefix):
+		// {delayedTaskPrefix}/eta-{ms}/{queue}/{taskID}
+		parts := strings.Split(key, "/")
+		if len(parts) != 8 {
+			log.WARNING.Printf("invalid delay task %s, just ignore", key)
+			return ""
+		}
+		return fmt.Sprintf("%s/%s", parts[6], parts[7])
+
+	default:
+		log.WARNING.Printf("invalid task %s, just ignore", key)
+		return ""
+	}
 }

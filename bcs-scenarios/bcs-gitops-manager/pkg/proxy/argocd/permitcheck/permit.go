@@ -87,7 +87,7 @@ type UpdatePermissionRequest struct {
 
 // PermissionInterface defines the interface of permission
 type PermissionInterface interface {
-	GetProjectMultiPermission(ctx context.Context, projectIDs []string, actions []RSAction) (
+	GetProjectMultiPermission(ctx context.Context, projects map[string]string, actions []RSAction) (
 		map[string]map[RSAction]bool, error)
 
 	CheckProjectPermission(ctx context.Context, project string, action RSAction) (*v1alpha1.AppProject, int, error)

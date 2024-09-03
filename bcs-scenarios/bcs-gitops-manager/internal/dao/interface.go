@@ -133,6 +133,13 @@ type AppSetClusterScope struct {
 	UpdateTime time.Time `json:"updateTime" gorm:"column:updateTime;type:datetime DEFAULT NULL"`
 }
 
+// ExternalUserPermission 定义 外部用户 的授权访问
+type ExternalUserPermission struct {
+	ID      int64  `json:"id" gorm:"column:id;primaryKey;type:int(11) AUTO_INCREMENT NOT NULL"`
+	User    string `json:"user" gorm:"uniqueIndex:idx_user_project;column:user;type:varchar(64) NOT NULL"`
+	Project string `json:"project" gorm:"uniqueIndex:idx_user_project;column:project;type:varchar(256) NOT NULL"`
+}
+
 // Encode 针对大字符串在保存前进行压缩
 func (ahm *ApplicationHistoryManifest) Encode() error {
 	appYaml, err := utils.GzipEncode(utils.StringToSliceByte(ahm.ApplicationYaml))
@@ -182,11 +189,12 @@ func (ahm *ApplicationHistoryManifest) GetApplicationYaml() string {
 }
 
 const (
-	tableActivityUser       = "bcs_gitops_activity_user" // nolint
-	tableHistoryManifest    = "bcs_gitops_app_history_manifest"
-	tableUserPermission     = "bcs_gitops_user_permission"
-	tableUserAudit          = "bcs_gitops_user_audit"
-	tableAppSetClusterScope = "bcs_gitops_appset_cluster_scope"
+	tableActivityUser           = "bcs_gitops_activity_user" // nolint
+	tableHistoryManifest        = "bcs_gitops_app_history_manifest"
+	tableUserPermission         = "bcs_gitops_user_permission"
+	tableUserAudit              = "bcs_gitops_user_audit"
+	tableAppSetClusterScope     = "bcs_gitops_appset_cluster_scope"
+	tableExternalUserPermission = "bcs_gitops_externaluser_permission"
 )
 
 // Interface xxx interface
@@ -212,4 +220,10 @@ type Interface interface {
 	UpdateAppSetClusterScope(appSet, clusters string) error
 	GetAppSetClusterScope(appSet string) (*AppSetClusterScope, error)
 	DeleteAppSetClusterScope(appSet string) error
+
+	CreateExternalUserPermission(externalPermission *ExternalUserPermission) error
+	DeleteExternalUserProject(user, project string) error
+	ListExternalUserPermission(user string) ([]*ExternalUserPermission, error)
+	CheckExternalUserPermission(user, project string) (bool, error)
+	ListExternalUserPermissionByProject(project string) ([]*ExternalUserPermission, error)
 }

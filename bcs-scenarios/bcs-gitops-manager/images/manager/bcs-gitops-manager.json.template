@@ -78,6 +78,10 @@
     "address": "${bcsMonitorAddress}",
     "port": "${bcsMonitorPort}"
   },
+  "preCheckConfig": {
+    "address": "${bcsPreCheckAddress}",
+    "port": "${bcsPreCheckPort}"
+  },
   "terraformServer": {
     "address": "${bcsTerraformAddress}",
     "port": "${bcsTerraformPort}"
