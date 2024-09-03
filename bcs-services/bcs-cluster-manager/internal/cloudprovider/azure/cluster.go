@@ -23,7 +23,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -40,9 +39,41 @@ func init() {
 type Cluster struct {
 }
 
-// CreateCluster create kubenretes cluster according cloudprovider
+// CreateCluster create kubernetes cluster according cloudprovider
 func (c *Cluster) CreateCluster(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// call azure interface to create cluster
+	if cls == nil {
+		return nil, fmt.Errorf("%s CreateCluster cluster is empty", cloudName)
+	}
+
+	if opt == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("%s CreateCluster cluster opt or cloud is empty", cloudName)
+	}
+
+	if opt.Account == nil || len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 ||
+		len(opt.Account.ClientID) == 0 || len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("%s CreateCluster opt lost valid crendential info", cloudName)
+	}
+
+	// GetTaskManager for nodegroup manager initialization
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when CreateCluster %s failed, %s",
+			opt.Cloud.CloudID, cls.ClusterName, err.Error(),
+		)
+		return nil, err
+	}
+
+	// build create cluster task
+	task, err := mgr.BuildCreateClusterTask(cls, opt)
+	if err != nil {
+		blog.Errorf("build CreateCluster task for cluster %s with cloudprovider %s failed, %s",
+			cls.ClusterName, cls.Provider, err.Error(),
+		)
+		return nil, err
+	}
+
+	return task, nil
 }
 
 // CreateVirtualCluster create virtual cluster by cloud provider
@@ -61,10 +92,15 @@ func (c *Cluster) DeleteVirtualCluster(cls *proto.Cluster,
 func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClusterOption) (*proto.Task, error) {
 	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("get cloud %s TaskManager when ImportCluster %d failed, %s",
+		blog.Errorf("get cloud %s TaskManager when ImportCluster %s failed, %s",
 			opt.Cloud.CloudID, cls.ClusterName, err.Error(),
 		)
 		return nil, err
+	}
+
+	if opt.Account == nil || len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 ||
+		len(opt.Account.ClientID) == 0 || len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("%s ImportCluster opt lost valid crendential info", cloudName)
 	}
 
 	// build import cluster task
@@ -81,35 +117,38 @@ func (c *Cluster) ImportCluster(cls *proto.Cluster, opt *cloudprovider.ImportClu
 
 // DeleteCluster delete kubenretes cluster according cloudprovider
 func (c *Cluster) DeleteCluster(cls *proto.Cluster, opt *cloudprovider.DeleteClusterOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if cls == nil {
+		return nil, fmt.Errorf("%s DeleteCluster cluster is empty", cloudName)
+	}
+
+	if opt.Account == nil || len(opt.Account.SubscriptionID) == 0 || len(opt.Account.TenantID) == 0 ||
+		len(opt.Account.ClientID) == 0 || len(opt.Account.ClientSecret) == 0 || len(opt.Region) == 0 {
+		return nil, fmt.Errorf("%s DeleteCluster opt lost valid crendential info", cloudName)
+	}
+
+	// GetTaskManager for nodegroup manager initialization
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
+	if err != nil {
+		blog.Errorf("get cloud %s TaskManager when DeleteCluster %s failed, %s",
+			opt.Cloud.CloudID, cls.ClusterName, err.Error(),
+		)
+		return nil, err
+	}
+
+	// build delete cluster task
+	task, err := mgr.BuildDeleteClusterTask(cls, opt)
+	if err != nil {
+		blog.Errorf("build DeleteCluster task for cluster %s with cloudprovider %s failed, %s",
+			cls.ClusterName, cls.Provider, err.Error(),
+		)
+		return nil, err
+	}
+
+	return task, nil
 }
 
 // GetCluster get kubernetes cluster detail information according cloudprovider
 func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
-	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
-	if err != nil {
-		return nil, fmt.Errorf("create azure client failed, %v", err)
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
-	defer cancel()
-
-	// get vpcID for cluster
-	ng, ok := opt.Cluster.ExtraInfo[common.NodeResourceGroup]
-	if !ok {
-		return nil, fmt.Errorf("get azure nodeResourceGroup failed,"+
-			" no such info in cluster[%s] extraInfo", opt.Cluster.ClusterID)
-	}
-	vn, err := client.ListVirtualNetwork(ctx, ng)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(vn) == 0 {
-		return nil, fmt.Errorf("get VPC failed for cluster[%s], empty response", opt.Cluster.ClusterID)
-	}
-
-	opt.Cluster.VpcID = *vn[0].Name
-
 	return opt.Cluster, nil
 }
 

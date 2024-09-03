@@ -65,7 +65,7 @@ func New(ctx context.Context, conf *config.Config, retries int) (iface.Lock, err
 	return &lock, nil
 }
 
-// LockWithRetries ..
+// LockWithRetries lock with retries, if TTL is < 1s, the default 1s TTL will be used.
 func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	i := 0
 	for ; i < l.retries; i++ {
@@ -83,12 +83,22 @@ func (l *etcdLock) LockWithRetries(key string, unixTsToExpireNs int64) error {
 	return ErrLockFailed
 }
 
-// Lock ..
+// Lock If TTL is < 1s, the default 1s TTL will be used.
 func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 	now := time.Now().UnixNano()
-	ttl := time.Duration(unixTsToExpireNs + 1 - now)
+	expireTTL := time.Duration(unixTsToExpireNs - now)
 
-	// 创建一个新的session
+	// etcd ttl单位是s,往上取整
+	ttl := time.Duration(int(expireTTL.Seconds())) * time.Second
+	if ttl < expireTTL {
+		ttl += time.Second
+	}
+
+	// etcd 不能设置小于1s的ttl
+	if ttl < time.Second {
+		ttl = time.Second
+	}
+
 	s, err := concurrency.NewSession(l.client, concurrency.WithTTL(int(ttl.Seconds())))
 	if err != nil {
 		return err
@@ -98,14 +108,23 @@ func (l *etcdLock) Lock(key string, unixTsToExpireNs int64) error {
 	k := fmt.Sprintf(lockKey, strings.TrimRight(key, "/"))
 	m := concurrency.NewMutex(s, k)
 
-	ctx, cancel := context.WithTimeout(l.ctx, time.Second*2)
+	ctx, cancel := context.WithTimeout(l.ctx, time.Second*5)
 	defer cancel()
 
+	// 阻塞等待锁
 	if err := m.Lock(ctx); err != nil {
 		_ = s.Close()
+		if errors.Is(err, context.DeadlineExceeded) {
+			return ErrLockFailed
+		}
 		return err
 	}
 
 	log.INFO.Printf("acquired lock=%s, duration=%s", key, ttl)
 	return nil
+}
+
+// GetLockExpireNs 获取锁的过期时间
+func GetLockExpireNs(duration time.Duration) int64 {
+	return time.Now().Add(duration).UnixNano()
 }

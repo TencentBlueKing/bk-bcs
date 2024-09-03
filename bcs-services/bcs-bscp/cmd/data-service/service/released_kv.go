@@ -16,7 +16,6 @@ import (
 	"context"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
@@ -105,10 +104,6 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbds.ListReleasedKvR
 		if err != nil {
 			logs.Errorf("get vault released kv failed, err: %v, rid: %s", err, kt.Rid)
 			return nil, err
-		}
-		// value 是否隐藏
-		if detail.Spec.SecretHidden {
-			val = i18n.T(kt, "sensitive data is not visible, unable to view actual content")
 		}
 		rkvs = append(rkvs, pbrkv.PbRKv(detail, val))
 	}

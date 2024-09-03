@@ -73,7 +73,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 
 // UpdateClusterCloudInfo update cluster info by cloud
 func (c *CloudInfoManager) UpdateClusterCloudInfo(cls *proto.Cluster) error {
-	// call qcloud interface to init cluster defaultConfig
+	// call azure interface to init cluster defaultConfig
 	if c == nil || cls == nil {
 		return fmt.Errorf("%s UpdateClusterCloudInfo request is empty", cloudName)
 	}

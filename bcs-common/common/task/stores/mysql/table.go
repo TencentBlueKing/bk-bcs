@@ -48,7 +48,6 @@ type TaskRecord struct {
 	CommonPayload       string            `json:"commonPayload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
-	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Start               time.Time         `json:"start"`
@@ -87,8 +86,8 @@ func (t *TaskRecord) BeforeUpdate(tx *gorm.DB) error {
 // StepRecord 步骤记录
 type StepRecord struct {
 	gorm.Model
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
-	Name                string            `json:"name" gorm:"type:varchar(255)"`
+	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id_step_name"`
+	Name                string            `json:"name" gorm:"type:varchar(255);uniqueIndex:idx_task_id_step_name"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
 	Executor            string            `json:"executor" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`

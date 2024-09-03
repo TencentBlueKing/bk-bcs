@@ -19,7 +19,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
@@ -41,32 +40,19 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 	// step login started here
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
-
-	cloud, cluster, err := actions.GetCloudAndCluster(cloudprovider.GetStorageModel(), cloudID, clusterID)
-	if err != nil {
-		blog.Errorf("DeleteAKSClusterTask[%s]: get cloud/project for cluster %s in BasicInfo %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// get dependency resource for cloudprovider operation
-	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     cloud,
-		AccountID: cluster.CloudAccountID,
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("DeleteAKSClusterTask[%s]: get credential for cluster %s in BasicInfo %s step %s failed, %s",
-			taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
+		blog.Errorf("DeleteAKSClusterTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("DeleteAKSClusterTask GetClusterDependBasicInfo failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	cmOption.Region = cluster.Region
 
 	// get azure client
-	cli, err := api.NewAksServiceImplWithCommonOption(cmOption)
+	cli, err := api.NewAksServiceImplWithCommonOption(dependInfo.CmOption)
 	if err != nil {
 		blog.Errorf("DeleteAKSClusterTask[%s]: get azure client for cluster[%s] in BasicInfo %s step %s failed, %s",
 			taskID, clusterID, taskID, stepName, err.Error())
@@ -75,8 +61,16 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	if cluster.SystemID != "" {
-		err = cli.DeleteClusterWithName(context.Background(), cmOption.Account.ResourceGroupName, cluster.SystemID)
+	resourceGroup, ok := dependInfo.Cluster.ExtraInfo[icommon.ClusterResourceGroup]
+	if !ok {
+		blog.Errorf("DeleteAKSClusterTask[%s] get cluster[%s] resourceGroup failed", taskID, clusterID)
+		retErr := fmt.Errorf("get cluster[%s] resourceGroup failed", clusterID)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	if dependInfo.Cluster.SystemID != "" {
+		err = cli.DeleteClusterWithName(context.Background(), resourceGroup, dependInfo.Cluster.SystemID)
 		if err != nil {
 			blog.Errorf("DeleteAKSClusterTask[%s]: call azure DeleteAKSCluster failed: %v",
 				taskID, err)
@@ -86,7 +80,7 @@ func DeleteAKSClusterTask(taskID string, stepName string) error {
 		}
 		_ = cloudprovider.UpdateClusterSystemID(clusterID, "")
 		blog.Infof("DeleteAKSClusterTask[%s]: DeleteAKSCluster[%s] successful",
-			taskID, cluster.SystemID)
+			taskID, dependInfo.Cluster.SystemID)
 	} else {
 		blog.Infof("DeleteAKSClusterTask[%s]: DeleteAKSCluster skip current step because SystemID empty", taskID)
 	}
