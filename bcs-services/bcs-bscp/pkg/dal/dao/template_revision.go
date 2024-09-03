@@ -61,7 +61,7 @@ type TemplateRevision interface {
 	// ListLatestGroupByTemplateIdsWithTx Lists the latest version groups by template ids with transaction.
 	ListLatestGroupByTemplateIdsWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
 		templateIDs []uint32) ([]*table.TemplateRevision, error)
-	// ListAllCISigns lists all config item signatures of one biz
+	// ListAllCISigns lists all template ci of one biz, no need care about apps for the unbound template ci
 	ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error)
 }
 
@@ -357,7 +357,7 @@ func (dao *templateRevisionDao) ListLatestRevisionsGroupByTemplateIds(kit *kit.K
 	return find, nil
 }
 
-// ListAllCISigns lists all config item signatures of one biz
+// ListAllCISigns lists all template ci of one biz, no need care about apps for the unbound template ci
 func (dao *templateRevisionDao) ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error) {
 	m := dao.genQ.TemplateRevision
 	q := dao.genQ.TemplateRevision.WithContext(kit.Ctx)
