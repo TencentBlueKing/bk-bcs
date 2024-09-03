@@ -14,6 +14,7 @@ package service
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -148,19 +149,27 @@ const failedLimit = 100
 func (s *RepoSyncer) syncAll(kt *kit.Kit) {
 	logs.Infof("start to sync all repo files")
 	start := time.Now()
+
 	// clear related data for every sync cycle
 	stats = make([]syncStat, 0)
 	noFileInMaster = make([]noFiles, 0)
 	syncFailedCnt = 0
-	// get all biz
-	bizs := s.spaceMgr.AllCMDBSpaces()
+
+	// get all sorted bizs
+	allBizs := s.spaceMgr.AllCMDBSpaces()
+	bizs := make([]int, 0, len(allBizs))
+	for biz := range allBizs {
+		bizID, _ := strconv.Atoi(biz)
+		bizs = append(bizs, bizID)
+	}
+	sort.Ints(bizs)
+
 	// sync files for all bizs
 	// we think the file count would not be too large for every biz, eg:<100000
 	// so, we directly retrieve all file signatures under one biz from the db
 	// this syncs biz serially (one by one) , and sync files under every biz concurrently
 	for biz := range bizs {
-		b, _ := strconv.Atoi(biz)
-		bizID := uint32(b)
+		bizID := uint32(biz)
 		var allSigns []string
 		var normalSigns, releasedNormalSigns, tmplSigns, releasedTmplSigns []string
 		var err error
@@ -214,21 +223,8 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 	start := time.Now()
 	syncMgr := s.repo.SyncManager()
 	var success, failed, skip int32
-	noFilesCh := make(chan string, 1)
 	var nofiles []string
-
-	// save info for no file in master
-	go func() {
-		for file := range noFilesCh {
-			nofiles = append(nofiles, file)
-		}
-		if len(nofiles) > 0 {
-			noFileInMaster = append(noFileInMaster, noFiles{
-				bizID:     int32(bizID),
-				fileSigns: nofiles,
-			})
-		}
-	}()
+	var mu sync.Mutex
 
 	// sync files concurrently
 	g, _ := errgroup.WithContext(context.Background())
@@ -247,7 +243,9 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 				atomic.AddInt32(&failed, 1)
 				atomic.AddInt32(&syncFailedCnt, 1)
 				if err == repository.ErrNoFileInMaster {
-					noFilesCh <- sign
+					mu.Lock()
+					nofiles = append(nofiles, sign)
+					mu.Unlock()
 				}
 				return err
 			}
@@ -261,7 +259,13 @@ func (s *RepoSyncer) syncOneBiz(kt *kit.Kit, bizID uint32, signs []string) {
 	}
 	_ = g.Wait()
 
-	close(noFilesCh)
+	if len(nofiles) > 0 {
+		noFileInMaster = append(noFileInMaster, noFiles{
+			bizID:     int32(bizID),
+			fileSigns: nofiles,
+		})
+	}
+
 	cost := time.Since(start)
 	stat := syncStat{
 		bizID:       int32(bizID),
