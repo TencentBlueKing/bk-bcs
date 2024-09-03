@@ -83,11 +83,11 @@ func (s *mysqlStore) EnsureTable(ctx context.Context, dst ...any) error {
 	if len(dst) == 0 {
 		dst = []any{&TaskRecord{}, &StepRecord{}}
 	}
-	return s.db.AutoMigrate(dst...)
+	return s.db.WithContext(ctx).AutoMigrate(dst...)
 }
 
 func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		record := getTaskRecord(task)
 		if err := tx.Create(record).Error; err != nil {
 			return err
@@ -103,11 +103,11 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 }
 
 func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
-	return nil, nil
+	return nil, types.ErrNotImplemented
 }
 
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		updateTask := getUpdateTaskRecord(task)
 		if err := tx.Model(&TaskRecord{}).
 			Where("task_id = ?", task.TaskID).
@@ -133,10 +133,11 @@ func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 }
 
 func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
-	return s.db.Transaction(func(tx *gorm.DB) error {
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("task_id = ?", taskID).Delete(&TaskRecord{}).Error; err != nil {
 			return err
 		}
+
 		if err := tx.Where("task_id = ?", taskID).Delete(&StepRecord{}).Error; err != nil {
 			return err
 		}
@@ -145,12 +146,14 @@ func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
 }
 
 func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, error) {
-	stepRecord := []*StepRecord{}
-	if err := s.db.Where("task_id = ?", taskID).Find(&stepRecord).Error; err != nil {
+	tx := s.db.WithContext(ctx)
+	taskRecord := TaskRecord{}
+	if err := tx.Where("task_id = ?", taskID).First(&taskRecord).Error; err != nil {
 		return nil, err
 	}
-	taskRecord := TaskRecord{}
-	if err := s.db.Where("task_id = ?", taskID).First(&taskRecord).Error; err != nil {
+
+	stepRecord := []*StepRecord{}
+	if err := tx.Where("task_id = ?", taskID).Find(&stepRecord).Error; err != nil {
 		return nil, err
 	}
 	return toTask(&taskRecord, stepRecord), nil

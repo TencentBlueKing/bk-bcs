@@ -15,6 +15,7 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -290,7 +291,7 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 	}
 
 	// 重试流程中
-	if s.step.GetRetryCount() < s.step.MaxRetries {
+	if !errors.Is(stepErr, istep.ErrRevoked) && s.step.GetRetryCount() < s.step.MaxRetries {
 		s.task.SetStatus(types.TaskStatusRunning).SetMessage(taskFailMsg)
 		return
 	}
@@ -310,9 +311,9 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 
 func (s *State) isLastStep(step *types.Step) bool {
 	count := len(s.task.Steps)
-	// 没有step默认返回false
+	// 没有step也就没有后续流程, 返回true
 	if count == 0 {
-		return false
+		return true
 	}
 
 	// 非最后一步
