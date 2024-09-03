@@ -53,6 +53,8 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var qps float64
+	var burst int
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
@@ -62,6 +64,8 @@ func main() {
 		"If set the metrics endpoint is served securely")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	flag.Float64Var(&qps, "client-qps", 20.0, "The maximum QPS to the master from this client, default 20")
+	flag.IntVar(&burst, "client-burst", 30, "The maximum burst for throttle, default 30")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -90,7 +94,10 @@ func main() {
 		TLSOpts: tlsOpts,
 	})
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	kubeConfig := ctrl.GetConfigOrDie()
+	kubeConfig.QPS = float32(qps)
+	kubeConfig.Burst = burst
+	mgr, err := ctrl.NewManager(kubeConfig, ctrl.Options{
 		Scheme: scheme,
 		Metrics: metricsserver.Options{
 			BindAddress:   metricsAddr,
