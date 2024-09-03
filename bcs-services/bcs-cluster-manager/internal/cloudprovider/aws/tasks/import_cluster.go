@@ -76,7 +76,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	return nil
 }
 
-// ImportClusterNodesTask call gkeInterface or kubeConfig import cluster nodes
+// ImportClusterNodesTask call eksInterface or kubeConfig import cluster nodes
 func ImportClusterNodesTask(taskID string, stepName string) error {
 	start := time.Now()
 	// get task information and validate

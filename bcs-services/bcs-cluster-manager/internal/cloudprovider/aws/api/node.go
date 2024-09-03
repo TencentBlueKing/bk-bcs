@@ -272,8 +272,8 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 	return nodes, nil
 }
 
-// InstanceToNode parse Instance information in qcloud to Node in clustermanager
-// @param Instance: qcloud instance information, can not be nil;
+// InstanceToNode parse Instance information in aws to Node in clustermanager
+// @param Instance: aws instance information, can not be nil;
 // @return Node: cluster-manager node information;
 func InstanceToNode(inst *ec2.Instance) *proto.Node {
 	node := &proto.Node{
