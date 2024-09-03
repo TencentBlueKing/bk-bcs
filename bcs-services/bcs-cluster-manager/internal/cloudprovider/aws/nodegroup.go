@@ -209,7 +209,7 @@ func (ng *NodeGroup) UpdateDesiredNodes(desired uint32, group *proto.NodeGroup,
 		return nil, err
 	}
 	if len(taskList) != 0 {
-		return nil, fmt.Errorf("gke task(%d) %s is still running", len(taskList), taskType)
+		return nil, fmt.Errorf("eks task(%d) %s is still running", len(taskList), taskType)
 	}
 
 	needScaleOutNodes := desired - group.GetAutoScaling().GetDesiredSize()
