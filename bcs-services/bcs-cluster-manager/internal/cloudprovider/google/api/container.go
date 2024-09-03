@@ -167,6 +167,18 @@ func (cs *ContainerServiceClient) CreateClusterNodePool(ctx context.Context, req
 	return o, nil
 }
 
+// ListClusterNodePool list a node pool
+func (cs *ContainerServiceClient) ListClusterNodePool(ctx context.Context,
+	clusterName string) ([]*container.NodePool, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
+	nodegroups, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.List(parent).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gke client ListClusterNodePool failed: %v", err)
+	}
+
+	return nodegroups.NodePools, nil
+}
+
 // GetClusterNodePool get the node pool
 func (cs *ContainerServiceClient) GetClusterNodePool(ctx context.Context, clusterName, nodePoolName string) (
 	*container.NodePool, error) {

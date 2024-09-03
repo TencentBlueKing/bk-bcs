@@ -167,6 +167,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			return nil
 		}())
 
+		task.CommonParams[cloudprovider.PasswordKey.String()] = cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword()
+
 		// step9: install gse agent
 		common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
 			ClusterId:          cls.ClusterID,

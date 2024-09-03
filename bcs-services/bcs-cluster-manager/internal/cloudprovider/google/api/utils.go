@@ -357,6 +357,44 @@ func GetInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute
 	return nil, fmt.Errorf("GetInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
 }
 
+// CreateInstanceTemplate create zonal/regional InstanceTemplate
+func CreateInstanceTemplate(computeCli *ComputeServiceClient, url string, it *compute.InstanceTemplate) (*compute.Operation, error) {
+	itInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("CreateInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+
+	if utils.StringInSlice("instanceTemplates", itInfo) {
+		o, err := computeCli.CreateInstanceTemplate(context.Background(), itInfo[3], it)
+		if err != nil {
+			blog.Errorf("CreateInstanceTemplate failed: %v", err)
+			return nil, err
+		}
+		return o, nil
+	}
+	return nil, fmt.Errorf("CreateInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
+}
+
+// DeleteInstanceTemplate create zonal/regional InstanceTemplate
+func DeleteInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute.Operation, error) {
+	itInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("CreateInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+
+	if utils.StringInSlice("instanceTemplates", itInfo) {
+		o, err := computeCli.DeleteInstanceTemplate(context.Background(), itInfo[3], itInfo[(len(itInfo)-1)])
+		if err != nil {
+			blog.Errorf("CreateInstanceTemplate failed: %v", err)
+			return nil, err
+		}
+		return o, nil
+	}
+	return nil, fmt.Errorf("CreateInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
+}
+
 // GetOperation get zonal/regional/global Operation
 func GetOperation(computeCli *ComputeServiceClient, url string) (*compute.Operation, error) {
 	opInfo, err := GetGCEResourceInfo(url)
