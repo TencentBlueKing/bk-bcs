@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -764,36 +763,12 @@ func verifySecretVaule(kit *kit.Kit, secretType, value string) error {
 	if value == "敏感信息无法导出" {
 		return errors.New(i18n.T(kit, `please set a password`))
 	}
-	switch secretType {
-	case string(table.SecretTypeCertificate):
-		if !validateCertificate(value) {
-			return errors.New(i18n.T(kit, `the certificate format is incorrect, only X.509 format is supported`))
-		}
-	case string(table.SecretTypeToken):
-		if !validateToken(value) {
-			return errors.New(i18n.T(kit, `the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats 
-			are supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers`))
-		}
-	default:
-		return nil
+
+	if secretType == string(table.SecretTypeCertificate) && !validateCertificate(value) {
+		return errors.New(i18n.T(kit, `the certificate format is incorrect, only X.509 format is supported`))
 	}
 
 	return nil
-}
-
-// 验证令牌
-func validateToken(token string) bool {
-	// 令牌长度必须在 32 到 512 个字符之间，并且只包含大小写字母和数字
-	if len(token) < 32 || len(token) > 512 {
-		return false
-	}
-
-	matched, err := regexp.MatchString(`^[a-zA-Z0-9]+$`, token)
-	if err != nil {
-		return false
-	}
-
-	return matched
 }
 
 // 验证证书
