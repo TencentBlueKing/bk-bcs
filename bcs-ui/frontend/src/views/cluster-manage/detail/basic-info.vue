@@ -5,7 +5,12 @@
       v-bkloading="{ isLoading }">
       <DescList class="row-span-3" :title="$t('cluster.title.clusterInfo')">
         <bk-form-item :label="$t('cluster.labels.Kubernetes')">
-          {{ clusterProvider || '--' }}
+          <div class="flex items-center">
+            <svg class="size-[20px] mr-[5px]" v-if="providerNameMap[clusterProvider]">
+              <use :xlink:href="providerNameMap[clusterProvider]?.className"></use>
+            </svg>
+            <span>{{ providerNameMap[clusterProvider]?.label || '--' }}</span>
+          </div>
         </bk-form-item>
         <bk-form-item :label="$t('tke.label.account')" v-if="clusterData.cloudAccountID">
           <LoadingIcon v-if="cloudAccountLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
@@ -287,12 +292,9 @@ export default defineComponent({
     const clusterVersion = computed(() => clusterData.value?.clusterBasicSettings?.version || '--');
     const runtimeVersion = computed(() => clusterData.value?.clusterAdvanceSettings?.runtimeVersion || '--');
     const containerRuntime = computed(() => clusterData.value?.clusterAdvanceSettings?.containerRuntime || '--');
-    const providerMap = {
-      tencentPublicCloud: $i18n.t('provider.tencentPublicCloud'),
-    };
     const clusterProvider = computed(() => {
       if (clusterData.value.clusterType === 'virtual') return clusterData.value?.extraInfo?.provider;
-      return providerMap[clusterData.value?.provider] || clusterData.value?.provider;
+      return clusterData.value?.provider;
     });
     const clusterType = computed(() => getClusterTypeName(clusterData.value));
     // 修改集群信息
@@ -355,6 +357,7 @@ export default defineComponent({
       cloudAccounts,
       nodemanCloudList,
       handleGetNodeManCloud,
+      providerNameMap,
     } = useCloud();
 
     const cloudAccount = computed(() => {
@@ -438,6 +441,7 @@ export default defineComponent({
       handleSaveNodemanArea,
       handleEditNodemanArea,
       handleAreaListChange,
+      providerNameMap,
     };
   },
 });

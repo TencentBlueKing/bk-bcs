@@ -599,6 +599,7 @@ cluster:
     importCategory: 添加方式
     maxPodNum: Pod IP数量上限
     clusterLabel: 集群标签
+    provider: 提供商
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -2899,7 +2900,13 @@ tkeCa:
       yunti: 云梯资源池(平台提供)
       self: 自建资源池
 provider:
-  tencentPublicCloud: 腾讯云公有云
+  tencentyun: 腾讯自研云
+  huaweiyun: 华为云
+  yamaxunyun: 亚马逊云
+  gugeyun: 谷歌云
+  weiruanyun: 微软云
+  blueKingyun: K8S原生
+  tencentPublicCloud: 腾讯公有云
 container:
   label:
     restartCnt: 重启次数

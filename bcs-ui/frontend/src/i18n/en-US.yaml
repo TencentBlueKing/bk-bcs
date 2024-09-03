@@ -660,6 +660,7 @@ cluster:
     maxPodNum: Max pod number
     clusterLabel: Label
     hideSharedCluster: Hide shared cluster
+    provider: Provider
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -3617,6 +3618,12 @@ tkeCa:
       about the system disk and data disk. At least one data disk of 100GB or
       more is required.
 provider:
+  tencentyun: TencentCloud
+  huaweiyun: HuaweiCloud
+  yamaxunyun: AwsCloud
+  gugeyun: gcpCloud
+  weiruanyun: AzureCloud
+  blueKingyun: BlueKingCloud
   tencentPublicCloud: TencentPublicCloud
 container:
   label:
