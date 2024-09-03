@@ -114,7 +114,7 @@ func (cc *ClientConfig) CreatePassCCClusterSnapshoot(cluster *proto.Cluster) err
 	)
 
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Post(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -159,7 +159,7 @@ func (cc *ClientConfig) DeletePassCCCluster(projectID, clusterID string) error {
 	)
 
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Delete(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -205,7 +205,7 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(
 	)
 
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Get(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -252,7 +252,7 @@ func (cc *ClientConfig) CreatePassCCCluster(cluster *proto.Cluster) error {
 	)
 
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Post(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -301,7 +301,7 @@ func (cc *ClientConfig) UpdatePassCCCluster(cluster *proto.Cluster) error {
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Put(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -328,17 +328,29 @@ func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, err
 		return "", errServerNotInit
 	}
 
+	var (
+		appToken = ""
+		err      error
+	)
+
 	if clientAuth != nil {
-		return clientAuth.GetAccessToken(utils.BkAppUser{
+		appToken, err = clientAuth.GetAccessToken(utils.BkAppUser{
+			BkAppCode:   cc.appCode,
+			BkAppSecret: cc.appSecret,
+		})
+	} else {
+		appToken, err = auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
 			BkAppCode:   cc.appCode,
 			BkAppSecret: cc.appSecret,
 		})
 	}
+	if err != nil {
+		return "", err
+	}
+	token := utils.BkAccessToken{AccessToken: appToken}
 
-	return auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
-		BkAppCode:   cc.appCode,
-		BkAppSecret: cc.appSecret,
-	})
+	tokenStr, _ := json.Marshal(token)
+	return string(tokenStr), nil
 }
 
 func (cc *ClientConfig) transClusterToClusterSnap(cls *proto.Cluster) *CreateClusterConfParams {

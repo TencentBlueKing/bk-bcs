@@ -305,20 +305,22 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
 				barrier.Done()
 			}()
 
-			pools, errLocal := daemon.GetRegionDevicePoolDetail(cloudprovider.GetStorageModel(), info.Region,
-				instanceTypes[i].NodeType, nil)
-			if errLocal != nil {
-				blog.Errorf("get region %s instanceType %s device pool detail failed, %s",
-					info.Region, instanceTypes[i].NodeType, err.Error())
+			poolQuota, exist := daemon.GetResourceDevicePoolData(instanceTypes[i].ResourcePoolID)
+			if exist {
+				lock.Lock()
+				instanceTypes[i].AvailableQuota = func() uint32 {
+					if uint32(poolQuota.OversoldTotal) <= uint32(poolQuota.GroupQuota) {
+						return 0
+					}
+					return uint32(poolQuota.OversoldTotal) - uint32(poolQuota.GroupQuota)
+				}()
+				lock.Unlock()
+
 				return
 			}
-			for pid := range pools {
-				if utils.StringInSlice(pools[pid].Zone, instanceTypes[pid].Zones) {
-					lock.Lock()
-					instanceTypes[i].AvailableQuota = uint32(pools[pid].OversoldTotal) - uint32(pools[pid].GroupQuota)
-					lock.Unlock()
-				}
-			}
+
+			blog.Infof("getInnerInstanceTypes region[%s] insType[%s] devicePoolId[%s] not exist",
+				info.Region, instanceTypes[i].NodeType, instanceTypes[i].ResourcePoolID)
 		}(i)
 	}
 	barrier.Wait()
