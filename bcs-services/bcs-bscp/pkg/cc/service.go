@@ -196,6 +196,7 @@ type CacheServiceSetting struct {
 	Credential   Credential   `yaml:"credential"`
 	Sharding     Sharding     `yaml:"sharding"`
 	RedisCluster RedisCluster `yaml:"redisCluster"`
+	Gorm         Gorm         `yaml:"gorm"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -215,6 +216,7 @@ func (s *CacheServiceSetting) trySetDefault() {
 	s.Log.trySetDefault()
 	s.Sharding.trySetDefault()
 	s.RedisCluster.trySetDefault()
+	s.Gorm.trySetDefault()
 }
 
 // Validate CacheServiceSetting option.
@@ -233,6 +235,10 @@ func (s CacheServiceSetting) Validate() error {
 	}
 
 	if err := s.RedisCluster.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Gorm.validate(); err != nil {
 		return err
 	}
 
@@ -300,6 +306,7 @@ type DataServiceSetting struct {
 	Repo         Repository   `yaml:"repository"`
 	Vault        Vault        `yaml:"vault"`
 	FeatureFlags FeatureFlags `yaml:"featureFlags"`
+	Gorm         Gorm         `yaml:"gorm"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
@@ -321,6 +328,7 @@ func (s *DataServiceSetting) trySetDefault() {
 	s.Repo.trySetDefault()
 	s.Vault.getConfigFromEnv()
 	s.FeatureFlags.trySetDefault()
+	s.Gorm.trySetDefault()
 }
 
 // Validate DataServiceSetting option.
@@ -351,6 +359,10 @@ func (s DataServiceSetting) Validate() error {
 	}
 
 	if err := s.FeatureFlags.validate(); err != nil {
+		return err
+	}
+
+	if err := s.Gorm.validate(); err != nil {
 		return err
 	}
 
@@ -535,7 +547,7 @@ func (s *VaultServerSetting) trySetFlagPort(port, grpcPort int) error {
 	return s.Network.trySetFlagPort(port, grpcPort)
 }
 
-// trySetDefault set the CacheServiceSetting default value if user not configured.
+// trySetDefault set the VaultServerSetting default value if user not configured.
 func (s *VaultServerSetting) trySetDefault() {
 	s.Network.trySetDefault()
 	s.Service.trySetDefault()
@@ -543,7 +555,7 @@ func (s *VaultServerSetting) trySetDefault() {
 	s.Sharding.trySetDefault()
 }
 
-// Validate CacheServiceSetting option.
+// Validate VaultServerSetting option.
 func (s VaultServerSetting) Validate() error {
 
 	if err := s.Network.validate(); err != nil {
