@@ -34,11 +34,10 @@ func NewByTaskBuilder(builder types.TaskBuilder, opts ...types.TaskOption) (*typ
 	task.Steps = steps
 	task.CurrentStep = steps[0].GetName()
 
-	// 自定义extraJson等
-	newTask, err := builder.BuildTask(*task)
-	if err != nil {
+	// 自定义任务超时, commonParams, commonPayload等
+	if err := builder.FinalizeTask(task); err != nil {
 		return nil, err
 	}
 
-	return &newTask, nil
+	return task, nil
 }

@@ -24,8 +24,8 @@ import (
 // TaskBuilder ...
 type TaskBuilder interface { // nolint
 	TaskInfo() TaskInfo
-	Steps() ([]*Step, error) // Steps init step and define StepSequence
-	BuildTask(t Task) (Task, error)
+	Steps() ([]*Step, error)    // Steps init step and define StepSequence
+	FinalizeTask(t *Task) error // FinalizeTask for custom task
 }
 
 // TaskOptions xxx
