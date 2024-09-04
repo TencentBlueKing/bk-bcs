@@ -559,8 +559,8 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	instanceNames []string) ([]string, []string, []string, error) { //  nolint
+func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
+	instanceNames []string) ([]string, []string, []string, error) {
 	var (
 		addSuccessNodes   = make([]string, 0)
 		addFailureNodes   = make([]string, 0)

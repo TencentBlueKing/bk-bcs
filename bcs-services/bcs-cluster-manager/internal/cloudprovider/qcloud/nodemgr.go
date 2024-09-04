@@ -228,7 +228,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 }
 
 // getInnerInstanceTypes get inner instance types info
-func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
+func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( // nolint
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 

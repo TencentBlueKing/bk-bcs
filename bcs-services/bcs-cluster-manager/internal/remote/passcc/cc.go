@@ -329,7 +329,7 @@ func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, err
 	}
 
 	var (
-		appToken = ""
+		appToken string
 		err      error
 	)
 
