@@ -61,17 +61,19 @@
 
   const emits = defineEmits(['toggleOpen', 'update:selectedConfigs', 'change']);
 
+  const selectedConfigIds = computed(() => new Set(props.selectedConfigs.map((item) => item.id)));
+
   const isAllSelected = computed(() => {
-    const res = props.configList.length > 0 && props.configList.every((item) => isConfigSelected(item.id));
-    return res;
+    return props.configList.every((item) => selectedConfigIds.value.has(item.id));
   });
 
   const isIndeterminate = computed(() => {
-    const res = props.configList.length > 0 && props.selectedConfigs.length > 0 && !isAllSelected.value;
-    return res;
+    const selectedCount = props.selectedConfigs.length;
+    const totalCount = props.configList.length;
+    return selectedCount > 0 && selectedCount < totalCount && !isAllSelected.value;
   });
 
-  const isConfigSelected = (id: number) => props.selectedConfigs.findIndex((item) => item.id === id) > -1;
+  const isConfigSelected = (id: number) => selectedConfigIds.value.has(id);
 
   const handleAllSelectionChange = (checked: boolean) => {
     const configs = props.selectedConfigs.slice();
