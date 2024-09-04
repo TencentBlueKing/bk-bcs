@@ -189,33 +189,33 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
 
 	req := &armcontainerservice.ManagedCluster{
-		Location: to.Ptr(cluster.Region),
-		Name:     to.Ptr(cluster.ClusterName),
+		Location: to.Ptr(cluster.Region),      // nolint
+		Name:     to.Ptr(cluster.ClusterName), // nolint
 		Tags: func() map[string]*string {
 			tags := make(map[string]*string)
 			for k, v := range cluster.ClusterBasicSettings.ClusterTags {
-				tags[k] = to.Ptr(v)
+				tags[k] = to.Ptr(v) // nolint
 			}
 			return tags
 		}(),
 		Properties: &armcontainerservice.ManagedClusterProperties{
 			AgentPoolProfiles: agentPools,
-			KubernetesVersion: to.Ptr(cluster.ClusterBasicSettings.Version),
+			KubernetesVersion: to.Ptr(cluster.ClusterBasicSettings.Version), // nolint
 			LinuxProfile: &armcontainerservice.LinuxProfile{
-				AdminUsername: to.Ptr(adminUserName),
+				AdminUsername: to.Ptr(adminUserName), // nolint
 				SSH: &armcontainerservice.SSHConfiguration{
 					PublicKeys: keys,
 				},
 			},
 			DNSPrefix: to.Ptr("111-dns"),
 			NetworkProfile: &armcontainerservice.NetworkProfile{
-				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),
-				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)),
-				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},
+				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
+				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
+				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
 			},
 			ServicePrincipalProfile: &armcontainerservice.ManagedClusterServicePrincipalProfile{
-				ClientID: to.Ptr(info.CmOption.Account.ClientID),
-				Secret:   to.Ptr(info.CmOption.Account.ClientSecret),
+				ClientID: to.Ptr(info.CmOption.Account.ClientID),     // nolint
+				Secret:   to.Ptr(info.CmOption.Account.ClientSecret), // nolint
 			},
 		},
 	}
