@@ -56,7 +56,7 @@ var (
 type Task struct {
 	TaskIndex           string            `json:"taskIndex"`
 	TaskIndexType       string            `json:"taskIndexType"`
-	TaskID              string            `json:"taskId"`
+	TaskID              string            `json:"taskID"`
 	TaskType            string            `json:"taskType"`
 	TaskName            string            `json:"taskName"`
 	CurrentStep         string            `json:"currentStep"`

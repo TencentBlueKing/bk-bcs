@@ -24,7 +24,8 @@ import (
 字段规范:
 1. 字段名使用驼峰命名法，表字段使用 _ 分隔
 2. bool/int/float/datetime 等类型使用默认字段类型
-3. string 类型必须指定类型和长度，字段是索引的，设置为 varchar(191)
+3. string 类型必须指定类型和长度
+4. index 固定varchar(191), (mysql 5.6索引长度限制767byte, utf8mb4下最长191)
 **/
 
 var (
