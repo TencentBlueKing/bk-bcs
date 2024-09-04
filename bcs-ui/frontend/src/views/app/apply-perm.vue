@@ -49,8 +49,8 @@
 <script>
 import actionsMap from './actions-map';
 
-import lockSvg from '@/images/lock-radius.svg';
 import usePlatform from '@/composables/use-platform';
+import lockSvg from '@/images/lock-radius.svg';
 export default {
   name: 'ApplyPerm',
   data() {
@@ -67,17 +67,17 @@ export default {
       config: null,
     };
   },
+  computed: {
+    siteName() {
+      return this.config.i18n?.name;
+    },
+  },
   created() {
     const { config } = usePlatform();
     this.config = config;
   },
   destroyed() {
     this.applyUrl = '';
-  },
-  computed: {
-    siteName() {
-      return this.config.i18n?.name;
-    }
   },
   methods: {
     hide() {

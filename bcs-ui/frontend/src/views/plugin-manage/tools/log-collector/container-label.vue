@@ -23,12 +23,13 @@
           <span class="flex flex-1 items-center justify-center">
             {{ item.operator }}
           </span>
-          <i :class="[
-            'bk-icon icon-angle-down relative transition-all text-[18px] text-[#979BA5]',
-            {
-              'bcs-rotate': !isHide && activeOpIndex === index
-            }
-          ]"></i>
+          <i
+            :class="[
+              'bk-icon icon-angle-down relative transition-all text-[18px] text-[#979BA5]',
+              {
+                'bcs-rotate': !isHide && activeOpIndex === index
+              }
+            ]"></i>
         </span>
         <template #content>
           <li

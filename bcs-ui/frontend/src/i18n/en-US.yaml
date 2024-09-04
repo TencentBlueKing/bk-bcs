@@ -3120,7 +3120,9 @@ importBkSopsCloud:
   button:
     import: Import
   message:
-    nodeTips: You can import through the cluster master node and execute kubectl commands.
+    nodeTips: >-
+      You can import through the cluster master node and execute kubectl
+      commands.
     errorAgent: The import of the node agent is abnormal.
 azureCloud:
   button:
@@ -3653,7 +3655,6 @@ templateFile:
   button:
     formMode: Form Mode
     yamlMode: YAML Mode
-    createSpace: Create Folder
     rename: Rename
     createFile: Create Template File
     delete: Delete
@@ -3661,11 +3662,8 @@ templateFile:
     previewAndDeploy: Preview and deploy
     versionManage: Version Management
     confirmDeploy: Confirm Deployment
-    import: Import
-    export: Export
     AddToFavorites: Add to Favorites
     RemoveFromFavorites: Remove from Favorites
-    exportFolder: Export Folder
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
     searchVersion: Version Number/Version Log/Updater

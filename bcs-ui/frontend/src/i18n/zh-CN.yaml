@@ -2652,7 +2652,6 @@ azureCA:
     set: 设置密码
     confirm: 确认密码
 awsCA:
-  label: {}
   password:
     set: 设置密码
     confirm: 确认密码
@@ -2933,7 +2932,6 @@ templateFile:
   button:
     formMode: 表单模式
     yamlMode: YAML模式
-    createSpace: 新建文件夹
     rename: 重命名
     createFile: 新建模板文件
     delete: 删除
@@ -2941,11 +2939,8 @@ templateFile:
     previewAndDeploy: 预览并部署
     versionManage: 版本管理
     confirmDeploy: 确认部署
-    import: 导入文件包
-    export: 导出全部
     AddToFavorites: 收藏文件夹
     RemoveFromFavorites: 取消收藏
-    exportFolder: 导出文件夹
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人

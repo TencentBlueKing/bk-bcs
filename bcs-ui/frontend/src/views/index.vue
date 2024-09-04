@@ -72,10 +72,16 @@ export default defineComponent({
       // 设置路由projectId和projectCode信息（旧模块很多地方用到），后续路由切换时也会在全局导航钩子上注入这个两个参数
       currentRoute.value.params.projectId = data.projectID;
       currentRoute.value.params.projectCode = data.projectCode;
+      // 获取上一次的项目Code
       const curCookieProjectCode = cookie.parse(document.cookie)?.['X-BCS-Project-Code'];
+      // 设置当前项目Code
       setCookie('X-BCS-Project-Code', data.projectCode, window.BK_DOMAIN);
-      if (curCookieProjectCode && curCookieProjectCode !== data.projectCode) {
-        // 判断cookie和当前项目code是否一致，不一致刷新当前界面
+      // 判断cookie和当前项目code是否一致，不一致刷新当前界面
+      if (
+        cookie.parse(document.cookie)?.['X-BCS-Project-Code'] === data.projectCode // 判断是否设置cookie成功，防止无限刷新
+        && curCookieProjectCode
+        && curCookieProjectCode !== data.projectCode
+      ) {
         window.location.reload();
       }
     };

@@ -199,7 +199,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
-import UserAction from '../user-action.vue';
+import UserAction from '../components/user-action.vue';
 
 import { nodemanCloudList } from '@/api/base';
 import { cloudsZones } from '@/api/modules/cluster-manager';

@@ -734,7 +734,7 @@ import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import TopoSelector from '@/views/cluster-manage/autoscaler/topo-select-tree.vue';
+import TopoSelector from '@/views/cluster-manage/autoscaler/components/topo-select-tree.vue';
 import ApplyHost from '@/views/cluster-manage/components/apply-host.vue';
 import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';

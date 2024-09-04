@@ -193,12 +193,12 @@ import Namespace from './namespace-v2.vue';
 import { IListTemplateMetadataItem, IPreviewItem, ITemplateVersionItem, IVarItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
 import AiAssistant from '@/components/ai-assistant.vue';
+import FormGroup from '@/components/form-group.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import useFullScreen from '@/composables/use-fullscreen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 import EditorStatus from '@/views/resource-view/resource-update/editor-status.vue';
 

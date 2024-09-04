@@ -53,6 +53,3 @@ const quota = computed<{
 });
 
 </script>
-<style lang="postcss" scoped>
-@import './form.css';
-</style>

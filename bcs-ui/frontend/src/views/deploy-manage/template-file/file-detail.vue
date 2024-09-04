@@ -86,9 +86,9 @@ import YamlMode from './yaml-mode.vue';
 import { IListTemplateMetadataItem, ITemplateSpaceData, ITemplateVersionItem } from '@/@types/cluster-resource-patch';
 import { ResourceService, TemplateSetService  } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
+import SelectExtension from '@/components/select-extension.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 interface Props {
   templateSpace: string  // 空间
