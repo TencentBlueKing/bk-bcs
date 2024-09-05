@@ -336,7 +336,7 @@ func (s *State) AddCommonParam(key, value string) *State {
 	return s
 }
 
-// GetCommonPayload get extra params by obj
+// GetCommonPayload unmarchal payload by obj
 func (s *State) GetCommonPayload(obj interface{}) error {
 	return s.task.GetCommonPayload(obj)
 }

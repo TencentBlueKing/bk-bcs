@@ -159,7 +159,7 @@ func (t *Task) SetCallback(callBackName string) *Task {
 	return t
 }
 
-// GetCommonPayload get extra json
+// GetCommonPayload unmarshal common payload to struct obj
 func (t *Task) GetCommonPayload(obj interface{}) error {
 	if len(t.CommonPayload) == 0 {
 		t.CommonPayload = DefaultPayloadContent
@@ -167,7 +167,7 @@ func (t *Task) GetCommonPayload(obj interface{}) error {
 	return json.Unmarshal([]byte(t.CommonPayload), obj)
 }
 
-// SetCommonPayload set extra json
+// SetCommonPayload marshal struct obj to common payload
 func (t *Task) SetCommonPayload(obj interface{}) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
