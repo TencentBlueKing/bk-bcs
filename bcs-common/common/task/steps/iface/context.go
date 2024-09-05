@@ -86,12 +86,12 @@ func (c *Context) AddCommonParam(k, v string) error {
 }
 
 // GetCommonPayload unmarshal task common payload to struct obj
-func (c *Context) GetCommonPayload(obj interface{}) error {
+func (c *Context) GetCommonPayload(obj any) error {
 	return c.task.GetCommonPayload(obj)
 }
 
 // SetCommonPayload marshal struct obj to task common payload and save to store
-func (c *Context) SetCommonPayload(obj interface{}) error {
+func (c *Context) SetCommonPayload(obj any) error {
 	if err := c.task.SetCommonPayload(obj); err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (c *Context) SetParams(params map[string]string) error {
 }
 
 // GetPayload return unmarshal step payload
-func (c *Context) GetPayload(obj interface{}) error {
+func (c *Context) GetPayload(obj any) error {
 	return c.currentStep.GetPayload(obj)
 }
 
@@ -147,7 +147,7 @@ func (c *Context) GetStartTime() time.Time {
 }
 
 // SetPayload marshal struct obj to step payload and save to store
-func (c *Context) SetPayload(obj interface{}) error {
+func (c *Context) SetPayload(obj any) error {
 	if err := c.currentStep.SetPayload(obj); err != nil {
 		return err
 	}

@@ -337,12 +337,12 @@ func (s *State) AddCommonParam(key, value string) *State {
 }
 
 // GetCommonPayload unmarchal payload by obj
-func (s *State) GetCommonPayload(obj interface{}) error {
+func (s *State) GetCommonPayload(obj any) error {
 	return s.task.GetCommonPayload(obj)
 }
 
 // SetCommonPayload set extra params by obj
-func (s *State) SetCommonPayload(obj interface{}) error {
+func (s *State) SetCommonPayload(obj any) error {
 	return s.task.SetCommonPayload(obj)
 }
 
