@@ -56,7 +56,7 @@ func (t *Context) GetTaskID() string {
 
 // GetTaskName get task name
 func (t *Context) GetTaskName() string {
-	return t.task.GetTaskID()
+	return t.task.GetTaskName()
 }
 
 // GetTaskType get task type
@@ -82,7 +82,7 @@ func (t *Context) GetCommonParam(key string) (string, bool) {
 // AddCommonParam add task common params
 func (t *Context) AddCommonParam(k, v string) error {
 	_ = t.task.AddCommonParam(k, v)
-	return nil
+	return t.store.UpdateTask(t.ctx, t.task)
 }
 
 // GetCommonPayload get task extra json
