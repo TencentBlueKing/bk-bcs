@@ -59,7 +59,7 @@
   </bk-form-item>
   <bk-checkbox
     class="visible-checkbox"
-    :disabled="props.isEdit && initSecretUnVisible"
+    :disabled="props.isEdit"
     :model-value="secretUnVisible"
     :before-change="handleChangeSecretUnVisible">
     {{ t('敏感信息不可见') }}
@@ -106,7 +106,6 @@
 
   const isCipherShowSecret = ref(true); // 密文展示敏感信息
   const secretUnVisible = ref(false); // 敏感信息不可见
-  const initSecretUnVisible = ref(false); // 初始敏感信息不可见
   const isShowVisibleDialog = ref(false);
   const secretValue = ref('');
   const isShowValidateInfo = ref(false);
@@ -123,7 +122,6 @@
     secretValue.value = secret_hidden ? '' : value;
     selectType.value = secret_type || 'password';
     secretUnVisible.value = secret_hidden;
-    initSecretUnVisible.value = secret_hidden;
   });
 
   const selectTypeContent = computed(() => {
