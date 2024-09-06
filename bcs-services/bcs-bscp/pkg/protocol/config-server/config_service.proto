@@ -388,7 +388,7 @@ service Config {
   }
   rpc ListTemplates(ListTemplatesReq) returns (ListTemplatesResp) {
     option (google.api.http) = {
-      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates_list"
+      post: "/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/list"
       body: "*"
     };
   }
