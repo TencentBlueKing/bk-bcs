@@ -133,7 +133,6 @@
       if (props.format === 'text') {
         handleValidateEditor();
       } else {
-        console.log(codeEditorRef.value.validate(val), 'c', props.format, val);
         nextTick(() => emits('hasError', !codeEditorRef.value.validate(val)));
       }
     },
