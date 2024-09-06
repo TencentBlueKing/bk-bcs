@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package task is a package for task management
 package task
 
 import (
