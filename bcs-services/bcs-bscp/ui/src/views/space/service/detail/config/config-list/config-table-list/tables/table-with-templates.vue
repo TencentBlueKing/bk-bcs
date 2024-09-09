@@ -582,6 +582,11 @@
       });
       configsCount.value = res.count;
       conflictCount.value = res.conflict_number || 0;
+      if (conflictCount.value === 0) {
+        configStore.$patch((state) => {
+          state.onlyViewConflict = false;
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
