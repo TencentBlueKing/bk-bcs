@@ -3652,6 +3652,7 @@ templateFile:
     deployReview: Deployment Preview
     disableYamlToForm: Unable to switch mode
     fileList: File List
+    clone: Clone
   button:
     formMode: Form Mode
     yamlMode: YAML Mode

@@ -2929,6 +2929,7 @@ templateFile:
     deployReview: 部署预览
     disableYamlToForm: 无法切换模式
     fileList: 文件列表
+    clone: 克隆
   button:
     formMode: 表单模式
     yamlMode: YAML模式

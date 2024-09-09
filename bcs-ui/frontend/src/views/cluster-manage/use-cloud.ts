@@ -90,7 +90,7 @@ export default function () {
     },
     tencentPublicCloud: {
       label: $i18n.t('provider.tencentPublicCloud'),
-      className: '#bcs-icon-color-publiccloud',
+      className: '#bcs-icon-color-tencentcloud',
     },
   };
 

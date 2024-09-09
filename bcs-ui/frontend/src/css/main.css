@@ -220,6 +220,11 @@
   box-shadow: 0 0 6px 0 #dcdee5;
 }
 
+.tippy-tooltip .tippy-arrow {
+  width: 0;
+  height: 0;
+}
+
 .bcs-select-group {
   .bk-option-group-name {
     border-bottom: 0px !important;
