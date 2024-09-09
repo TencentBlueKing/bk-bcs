@@ -163,7 +163,7 @@ export interface IVersionDistributionPieItem {
 export interface IExampleFormData {
   clientKey: string;
   privacyCredential: string;
-  tempDir?: string;
+  tempDir: string;
   httpConfigName?: string;
   labelArr: string[];
   clusterSwitch?: boolean;
