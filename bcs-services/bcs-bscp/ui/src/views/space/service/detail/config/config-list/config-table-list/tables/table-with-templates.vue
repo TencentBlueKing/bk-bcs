@@ -432,6 +432,7 @@
   const tableRef = ref();
   const collapseHeader = ref();
   const selectedConfigItems = ref<IConfigItem[]>([]);
+  const conflictCount = ref(0);
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
@@ -514,18 +515,6 @@
     },
   );
 
-  watch(
-    [() => configList.value, () => templatesCount.value],
-    () => {
-      const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
-      configStore.$patch((state) => {
-        state.allConfigCount = configsCount.value + templatesCount.value;
-        state.allExistConfigCount = existConfigCount + templatesCount.value;
-      });
-    },
-    { immediate: true, deep: true },
-  );
-
   onMounted(async () => {
     tableRef.value.addEventListener('scroll', handleScroll);
     await getBindingId();
@@ -545,6 +534,12 @@
     const currentSearchStr = props.searchStr;
     loading.value = true;
     await Promise.all([getCommonConfigList(createConfig), getBoundTemplateList()]);
+    const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
+    configStore.$patch((state) => {
+      state.conflictFileCount = conflictCount.value;
+      state.allConfigCount = configsCount.value + templatesCount.value;
+      state.allExistConfigCount = existConfigCount + templatesCount.value;
+    });
     loading.value = false;
     // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
     if (currentSearchStr !== props.searchStr) return;
@@ -586,9 +581,12 @@
         return 0;
       });
       configsCount.value = res.count;
-      configStore.$patch((state) => {
-        state.conflictFileCount = res.conflict_number || 0;
-      });
+      conflictCount.value = res.conflict_number || 0;
+      if (conflictCount.value === 0) {
+        configStore.$patch((state) => {
+          state.onlyViewConflict = false;
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
