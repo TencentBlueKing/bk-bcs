@@ -19,7 +19,7 @@
         :pagination="pagination"
         :key="isFileType"
         @page-value-change="loadCredentialRulePreviewList">
-        <bk-table-column :label="isFileType ? t('配置文件绝对路径') : t('配置项')">
+        <bk-table-column :label="isFileType ? t('配置文件名') : t('配置项')">
           <template #default="{ row }">
             <div v-if="row.name">
               {{ isFileType ? fileAP(row) : row.name }}
@@ -70,7 +70,7 @@
     { deep: true },
   );
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = computed(() => ({ name, path }: { name: string; path: string }) => {
     if (path.endsWith('/')) {
       return `${path}${name}`;
@@ -78,7 +78,7 @@
     return `${path}/${name}`;
   });
 
-  const inputPlaceholder = computed(() => (isFileType.value ? t('请输入配置文件绝对路径') : t('请输入配置项名称')));
+  const inputPlaceholder = computed(() => (isFileType.value ? t('请输入配置文件名') : t('请输入配置项名称')));
 
   const tableEmptyText = computed(() => {
     return props.rule?.appName ? t('没有匹配到配置项') : t('请先在左侧表单设置关联规则并预览');
@@ -136,7 +136,7 @@
         }
       }
       .totle {
-        padding:0 16px;
+        padding: 0 16px;
         height: 24px;
         background: #eaebf0;
         border-radius: 12px;

@@ -1,11 +1,11 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item :label="t('配置文件绝对路径')" property="fileAP" :required="true">
+    <bk-form-item :label="t('配置文件名')" property="fileAP" :required="true">
       <bk-input
         v-model="localVal.fileAP"
-        :placeholder="t('请输入配置文件的绝对路径')"
+        :placeholder="t('请输入配置文件的完整路径和文件名，例如：/etc/nginx/nginx.conf')"
         :disabled="isEdit"
-        @input="change" />
+        @input="handleFileAPInput" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
       <bk-input
@@ -225,7 +225,7 @@
   const fileDownloading = ref(false);
   const uploadFile = ref<IUploadFile>();
   const rules = {
-    // 配置文件绝对路径校验规则，path+filename
+    // 配置文件名校验规则，path+filename
     fileAP: [
       {
         validator: (val: string) => {
@@ -567,6 +567,14 @@
     localVal.value.name = fileAP.slice(lastSlashIndex + 1);
     localVal.value.path = fileAP.slice(0, lastSlashIndex + 1);
     emits('change', localVal.value, content);
+  };
+
+  const handleFileAPInput = () => {
+    // 用户输入文件名 补全路径
+    if (localVal.value.fileAP && !localVal.value.fileAP.startsWith('/')) {
+      localVal.value.fileAP = `/${localVal.value.fileAP}`;
+    }
+    change();
   };
 
   defineExpose({

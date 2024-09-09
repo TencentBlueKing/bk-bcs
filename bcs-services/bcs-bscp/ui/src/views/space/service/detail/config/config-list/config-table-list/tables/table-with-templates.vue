@@ -7,7 +7,7 @@
             <th v-if="isUnNamedVersion" class="selection">
               <bk-checkbox :model-value="isIndeterminate" :indeterminate="isIndeterminate" @change="handleSelectAll" />
             </th>
-            <th class="name">{{ t('配置文件绝对路径') }}</th>
+            <th class="name">{{ t('配置文件名') }}</th>
             <th class="version">{{ t('配置模板版本') }}</th>
             <th class="user">{{ t('创建人') }}</th>
             <th class="user">{{ t('修改人') }}</th>
@@ -466,7 +466,7 @@
     return '';
   });
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: IConfigTableItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {

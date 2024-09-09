@@ -290,7 +290,7 @@
     },
   );
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: IConfigImportItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {

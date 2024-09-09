@@ -18,7 +18,7 @@
       </div>
     </div>
     <div v-if="isOpenSearch" class="search-wrapper">
-      <SearchInput v-model="searchStr" :placeholder="t('搜索配置文件名称')" @search="handleSearch" />
+      <SearchInput v-model="searchStr" :placeholder="t('搜索配置文件名')" @search="handleSearch" />
     </div>
     <div :class="['groups-wrapper', { 'en-groups-wrapper': locale === 'en' }]">
       <div v-for="group in groupedConfigListOnShow" class="config-group-item" :key="group.id">
