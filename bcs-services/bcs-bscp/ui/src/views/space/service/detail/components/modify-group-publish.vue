@@ -295,7 +295,6 @@
 
   // 上线确认
   const handleConfirm = (haveCredentials: boolean) => {
-    console.log(haveCredentials);
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
     handlePanelClose();
@@ -315,7 +314,7 @@
         confirmText: t('配置客户端'),
         cancelText: t('稍后再说'),
         onConfirm: () => {
-          router.push({ name: 'credentials-management' });
+          router.push({ name: 'configuration-example' });
         },
       });
     }
