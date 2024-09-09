@@ -10,7 +10,7 @@
     </div>
     <div class="table-container" v-show="expand">
       <div class="table-head">
-        <div class="th-cell name">{{ t('配置文件绝对路径') }}</div>
+        <div class="th-cell name">{{ t('配置文件名') }}</div>
         <div class="th-cell type">{{ t('配置文件格式') }}</div>
         <div class="th-cell memo">
           <div class="th-cell-edit">
@@ -291,7 +291,7 @@
     { deep: true },
   );
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: IConfigImportItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {

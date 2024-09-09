@@ -7,7 +7,7 @@
             <th v-if="isUnNamedVersion" class="selection">
               <bk-checkbox :model-value="isIndeterminate" :indeterminate="isIndeterminate" @change="handleSelectAll" />
             </th>
-            <th class="name">{{ t('配置文件绝对路径') }}</th>
+            <th class="name">{{ t('配置文件名') }}</th>
             <th class="version">{{ t('配置模板版本') }}</th>
             <th class="user">{{ t('创建人') }}</th>
             <th class="user">{{ t('修改人') }}</th>
@@ -55,7 +55,12 @@
                 <div class="configs-list-wrapper">
                   <table class="config-list-table">
                     <tbody>
-                      <RecycleScroller :items="group.configs" key-field="id" :item-size="40" class="scroller">
+                      <RecycleScroller
+                        :key="configList.length"
+                        :items="group.configs"
+                        key-field="id"
+                        :item-size="40"
+                        class="scroller">
                         <template #default="{ item }">
                           <div :class="getRowCls(item)">
                             <td v-if="isUnNamedVersion" class="selection">
@@ -466,7 +471,7 @@
     return '';
   });
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: IConfigTableItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {
@@ -913,7 +918,8 @@
 
     // 获取冲突的模板套裁数据 直接覆盖
     await getBoundTemplateList();
-    tableGroupsData.value = transListToTableData();
+    const pkgsGroups = groupTplsByPkg(templateGroupList.value);
+    tableGroupsData.value = [tableGroupsData.value[0], ...pkgsGroups];
     tableGroupsData.value
       .find((group) => group.id === 0)!
       .configs.find((config) => config.id === recoverConfig.value!.id)!.file_state = 'UNCHANGE';
@@ -929,8 +935,7 @@
         }
       });
     if (oldConfigIndex.value !== -1) {
-      const configs = tableGroupsData.value.find((group) => group.id === 0)?.configs;
-      configs!.splice(oldConfigIndex.value, 1);
+      tableGroupsData.value.find((group) => group.id === 0)!.configs.splice(oldConfigIndex.value, 1);
     }
   };
 

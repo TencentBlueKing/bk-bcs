@@ -85,7 +85,7 @@
       </bk-popover>
       <bk-dropdown trigger="hover" ext-cls="dropdown" :is-show="isShowDropdown" @hide="isShowDropdown = false">
         <bk-button text :class="['dropdown-trigger', isShowDropdown ? 'active' : '']">
-          <help-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
+          <help-document-fill width="16" height="16" :fill="isShowDropdown ? '#fff' : '#96a2b9'" />
         </bk-button>
         <template #content>
           <bk-dropdown-menu ext-cls="dropdown-menu">
@@ -119,7 +119,7 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute, useRouter, RouteRecordName } from 'vue-router';
   import { storeToRefs } from 'pinia';
-  import { AngleDown, HelpFill, DownShape, Plus } from 'bkui-vue/lib/icon';
+  import { AngleDown, HelpDocumentFill, DownShape, Plus } from 'bkui-vue/lib/icon';
   import useGlobalStore from '../store/global';
   import useUserStore from '../store/user';
   import useTemplateStore from '../store/template';

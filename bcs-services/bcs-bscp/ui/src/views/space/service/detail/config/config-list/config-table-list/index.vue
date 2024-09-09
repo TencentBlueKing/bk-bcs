@@ -45,8 +45,8 @@
         v-model="searchStr"
         class="config-search-input"
         :width="280"
-        :placeholder="t('配置文件绝对路径/创建人/修改人')"
-        v-bk-tooltips="{ content: t('配置文件绝对路径/创建人/修改人'), disabled: locale === 'zh-cn' }" />
+        :placeholder="t('配置文件名/创建人/修改人')"
+        v-bk-tooltips="{ content: t('配置文件名/创建人/修改人'), disabled: locale === 'zh-cn' }" />
     </div>
     <section class="config-list-table">
       <TableWithTemplates

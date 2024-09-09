@@ -217,7 +217,7 @@
       handleClose();
       // 目前组件库dialog关闭自带250ms的延迟，所以这里延时300ms
       setTimeout(() => {
-        emits('confirm', resp.data.have_credentials as boolean);
+        emits('confirm', resp.data.have_pull as boolean);
       }, 300);
     } catch (e) {
       console.error(e);
