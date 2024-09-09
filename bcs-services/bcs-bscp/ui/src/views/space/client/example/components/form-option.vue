@@ -31,7 +31,8 @@
         <span class="description-em">
           &nbsp;{{ `${formData.tempDir}/${appId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
         </span>
-        <Copy class="copy-icon" @click="handleCopyText(formData.tempDir)" />
+        <!-- 复制按钮，待设计给出样式后再放出来 -->
+        <!-- <Copy class="copy-icon" @click="handleCopyText(formData.tempDir)" /> -->
       </div>
     </bk-form-item>
     <bk-form-item v-if="props.httpConfigShow" property="httpConfigName" :required="props.httpConfigShow">
@@ -78,15 +79,15 @@
   import { onMounted, ref, Ref, watch, inject } from 'vue';
   import { useRoute } from 'vue-router';
   import KeySelect from './key-selector.vue';
-  import { Info, Copy } from 'bkui-vue/lib/icon';
+  import { Info } from 'bkui-vue/lib/icon';
   import AddLabel from './add-label.vue';
   // import p2pAcceleration from './p2p-acceleration.vue';
   import p2pLabel from './p2p-label.vue';
   import { IExampleFormData } from '../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { cloneDeep } from 'lodash';
-  import { copyToClipBoard } from '../../../../../utils/index';
-  import BkMessage from 'bkui-vue/lib/message';
+  // import { copyToClipBoard } from '../../../../../utils/index';
+  // import BkMessage from 'bkui-vue/lib/message';
 
   const props = withDefaults(
     defineProps<{
@@ -235,21 +236,21 @@
   };
 
   // 复制
-  const handleCopyText = async (text: string) => {
-    try {
-      await formRef.value.validate('tempDir');
-      copyToClipBoard(text);
-      BkMessage({
-        theme: 'success',
-        message: t('目录复制成功'),
-      });
-    } catch (error) {
-      BkMessage({
-        theme: 'error',
-        message: error,
-      });
-    }
-  };
+  // const handleCopyText = async (text: string) => {
+  //   try {
+  //     await formRef.value.validate('tempDir');
+  //     copyToClipBoard(text);
+  //     BkMessage({
+  //       theme: 'success',
+  //       message: t('目录复制成功'),
+  //     });
+  //   } catch (error) {
+  //     BkMessage({
+  //       theme: 'error',
+  //       message: error,
+  //     });
+  //   }
+  // };
 
   const sendAll = () => {
     const filterFormData = cloneDeep(formData.value);
