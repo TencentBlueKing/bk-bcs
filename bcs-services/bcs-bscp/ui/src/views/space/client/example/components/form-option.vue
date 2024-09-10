@@ -29,7 +29,7 @@
       <div class="directory-description">
         {{ t('客户端下载配置文件后，会将其保存在') }}
         <span class="description-em">
-          &nbsp;{{ `${formData.tempDir}/${appId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
+          &nbsp;{{ `${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
         </span>
         <!-- 复制按钮，待设计给出样式后再放出来 -->
         <!-- <Copy class="copy-icon" @click="handleCopyText(formData.tempDir)" /> -->
@@ -128,7 +128,7 @@
     //   value: '', // 集群id
     // },
   });
-  const appId = ref(Number(route.params.appId));
+  const spaceId = ref(Number(route.params.spaceId));
 
   const rules = {
     clientKey: [
