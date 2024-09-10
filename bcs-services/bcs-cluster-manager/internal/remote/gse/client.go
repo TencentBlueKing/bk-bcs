@@ -24,6 +24,7 @@ import (
 	"github.com/kirito41dd/xslice"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -244,6 +245,7 @@ func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusResp
 		respData = &GetAgentStatusRespV2{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -254,9 +256,11 @@ func (c *Client) GetAgentStatusV2(req *GetAgentStatusReqV2) (*GetAgentStatusResp
 		Send(req).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("gse", "GetAgentStatusV2", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetAgentStatus failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("gse", "GetAgentStatusV2", "http", metrics.LibCallStatusOK, start)
 
 	if respData.Code != 0 {
 		blog.Errorf("call api GetAgentStatus failed: %s, request_id: %s", respData.Message,
@@ -285,6 +289,7 @@ func (c *Client) GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, 
 		respData = &GetAgentStatusResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -295,9 +300,11 @@ func (c *Client) GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, 
 		Send(req).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("gse", "GetAgentStatusV1", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetAgentStatus failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("gse", "GetAgentStatusV1", "http", metrics.LibCallStatusOK, start)
 
 	if respData.Code != 0 {
 		blog.Errorf("call api GetAgentStatus failed: %s, request_id: %s", respData.Message,

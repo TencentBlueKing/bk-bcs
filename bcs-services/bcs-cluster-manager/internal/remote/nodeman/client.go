@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -121,6 +122,7 @@ func (c *Client) CloudList(ctx context.Context) ([]CloudListData, error) {
 
 	language := i18n.LanguageFromCtx(ctx)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Get(reqURL).
@@ -131,9 +133,11 @@ func (c *Client) CloudList(ctx context.Context) ([]CloudListData, error) {
 		SetDebug(c.serverDebug).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("nodeman", "CloudList", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api CloudList failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("nodeman", "CloudList", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api CloudList failed: %v", respData)
@@ -157,6 +161,7 @@ func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstal
 		respData = &JobInstallResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -167,9 +172,11 @@ func (c *Client) JobInstall(jobType JobType, hosts []JobInstallHost) (*JobInstal
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("nodeman", "JobInstall", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api JobInstall failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("nodeman", "JobInstall", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api JobInstall failed: %v", respData)
@@ -192,6 +199,7 @@ func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
 		respData = &JobDetailsResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -202,9 +210,11 @@ func (c *Client) JobDetails(jobID int) (*JobDetailsData, error) {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("nodeman", "JobDetails", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api JobDetails failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("nodeman", "JobDetails", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api JobDetails failed: %v", respData)
@@ -227,6 +237,7 @@ func (c *Client) ListHosts(bkBizID, page, pageSize int) (*ListHostsData, error) 
 		respData = &ListHostsResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -237,9 +248,11 @@ func (c *Client) ListHosts(bkBizID, page, pageSize int) (*ListHostsData, error) 
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("nodeman", "ListHosts", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api ListHosts failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("nodeman", "ListHosts", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api ListHosts failed: %v", respData)
