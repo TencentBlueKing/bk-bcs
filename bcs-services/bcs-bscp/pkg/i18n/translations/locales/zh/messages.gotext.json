@@ -140,17 +140,17 @@
             ]
         },
         {
-            "id": "list config item failed, err: {Err}",
-            "message": "list config item failed, err: {Err}",
-            "translation": "获取配置项失败, err: {Err}",
+            "id": "list config item failed, err: {ErrC}",
+            "message": "list config item failed, err: {ErrC}",
+            "translation": "获取配置项失败, err: {ErrC}",
             "placeholders": [
                 {
-                    "id": "Err",
+                    "id": "ErrC",
                     "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
-                    "expr": "err"
+                    "expr": "errC"
                 }
             ]
         },
