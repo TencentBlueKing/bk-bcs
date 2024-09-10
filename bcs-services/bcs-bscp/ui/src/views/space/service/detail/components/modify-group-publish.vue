@@ -294,12 +294,12 @@
   };
 
   // 上线确认
-  const handleConfirm = (haveCredentials: boolean) => {
+  const handleConfirm = (havePull: boolean) => {
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
     handlePanelClose();
     emit('confirm');
-    if (haveCredentials) {
+    if (havePull) {
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
