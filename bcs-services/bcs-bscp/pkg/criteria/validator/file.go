@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -24,24 +25,30 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
-// validUnixFileSubPathRegexp sub path support character:
-// 必须以 / 开头，且不能出现连续的 /
-var validUnixFileSubPathRegexp = regexp.MustCompile(`^(/[^/]+)+/?$`)
-
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(kit *kit.Kit, path string) error {
 	if len(path) < 1 {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, length should >= 1"))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, length should >= 1", path))
 	}
 
 	if len(path) > 1024 {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, length should <= 1024"))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, length should <= 1024", path))
 	}
 
-	// 必须以 / 开头，且不能出现连续的 /
-	if !validUnixFileSubPathRegexp.MatchString(path) {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path must start"+
-			"with '/' and cannot have consecutive '/'", path))
+	// 1. 检查是否以 '/' 开头
+	if !strings.HasPrefix(path, "/") {
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path must start with '/'", path))
+	}
+
+	// 2. 检查是否包含连续的 '/'
+	if strings.Contains(path, "//") {
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path"+
+			"cannot contain consecutive '/'", path))
+	}
+
+	// 3. 检查是否以 '/' 结尾（除非是根路径）
+	if len(path) > 1 && strings.HasSuffix(path, "/") {
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path cannot end with '/'", path))
 	}
 
 	return nil

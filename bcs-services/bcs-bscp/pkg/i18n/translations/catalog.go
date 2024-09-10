@@ -39,21 +39,21 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"%s and %s path file conflict":                                                        207,
-	"%s sub path is system reserved path, do not allow to use":                            128,
+	"%s and %s path file conflict":                                                        210,
+	"%s sub path is system reserved path, do not allow to use":                            131,
 	"%s type not supported":                                                               25,
-	"Unnamed Version":                                                                     153,
+	"Unnamed Version":                                                                     156,
 	"app %d not found":                                                                    46,
 	"app %s is not file type":                                                             61,
 	"app alias %s already exists":                                                         41,
-	"app is nil":                                                                          145,
+	"app is nil":                                                                          148,
 	"app name %s already exists":                                                          40,
 	"app related biz %d is not exist":                                                     48,
-	"app spec is nil":                                                                     179,
-	"app's type can not be updated":                                                       181,
-	"appID can not be 0":                                                                  154,
+	"app spec is nil":                                                                     182,
+	"app's type can not be updated":                                                       184,
+	"appID can not be 0":                                                                  157,
 	"attachment not set":                                                                  118,
-	"authorize failed":                                                                    204,
+	"authorize failed":                                                                    207,
 	"batch add templates to template sets failed, err: %s":                                97,
 	"batch create contents failed, err: %s":                                               64,
 	"batch delete config items failed":                                                    17,
@@ -62,11 +62,11 @@ var messageKeyToIndex = map[string]int{
 	"batch import of KV config failed, err: %v":                                           90,
 	"batch update app template binding's failed, err: %s":                                 96,
 	"batch update app template binding's failed, err: %v":                                 102,
-	"bizID can not be 0":                                                                  155,
+	"bizID can not be 0":                                                                  158,
 	"business query failed, err: %v":                                                      47,
 	"clearing draft area failed, err: %v":                                                 92,
 	"client ids is empty":                                                                 16,
-	"commit spec's content is empty":                                                      188,
+	"commit spec's content is empty":                                                      191,
 	"config item %s format error":                                                         28,
 	"config item %s json format error":                                                    29,
 	"config item %s kv type error":                                                        26,
@@ -74,13 +74,13 @@ var messageKeyToIndex = map[string]int{
 	"config item %s secret type error, err: %v":                                           33,
 	"config item %s value error":                                                          34,
 	"config item %s yaml format error":                                                    30,
-	"content id can not set":                                                              193,
-	"content signature should be lowercase":                                               195,
-	"count app %d's config items failed, err: %v":                                         149,
+	"content id can not set":                                                              196,
+	"content signature should be lowercase":                                               198,
+	"count app %d's config items failed, err: %v":                                         152,
 	"count the number of app configs failed, err: %s":                                     108,
 	"count the number of service configurations failed, err: %s":                          60,
-	"create app failed, err: %v":                                                          147,
-	"create data failed, err: %v":                                                         146,
+	"create app failed, err: %v":                                                          150,
+	"create data failed, err: %v":                                                         149,
 	"create directory failed, err: %v":                                                    2,
 	"create kv failed, err: %v":                                                           86,
 	"create temporary directory failed, err: %v":                                          3,
@@ -88,7 +88,7 @@ var messageKeyToIndex = map[string]int{
 	"decompress file failed, exceeding the maximum file limit threshold of %d":            12,
 	"decompress the file. The size of file %s exceeds the maximum limit of %s":            4,
 	"decompression failed, err: %v":                                                       5,
-	"default_val %s is not a number type":                                                 200,
+	"default_val %s is not a number type":                                                 203,
 	"delete app failed, err: %v":                                                          45,
 	"delete app related resources failed, err: %v":                                        44,
 	"delete one app template binding instance by app id failed, err: %s":                  63,
@@ -96,8 +96,8 @@ var messageKeyToIndex = map[string]int{
 	"delete template from template sets failed":                                           37,
 	"delete template from template sets failed, err: %v":                                  100,
 	"format error, please check the key: %s":                                              27,
-	"get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: %v":                        202,
-	"get app %d's template binding failed, err: %v":                                       150,
+	"get 'kv_type' as a string \n\t\tfrom kv.Data failed, err: %v":                        205,
+	"get app %d's template binding failed, err: %v":                                       153,
 	"get app fail, key: %s, err: %v":                                                      84,
 	"get app failed, err: %v":                                                             42,
 	"get app template bindings by template set ids, err: %s":                              95,
@@ -106,55 +106,58 @@ var messageKeyToIndex = map[string]int{
 	"get excluded hook failed, err: %s":                                                   80,
 	"get excluded kv failed, err: %s":                                                     94,
 	"get kv (%d) failed, err: %v":                                                         82,
-	"get permission to apply failed, err: %v":                                             205,
+	"get permission to apply failed, err: %v":                                             208,
 	"get records greater than the latest released version failed, err: %v":                72,
 	"get reference template set under this app failed, err: %s":                           76,
 	"get template binding relationships through business and service IDs failed, err: %s": 75,
-	"get template count failed, err: %v":                                                  172,
-	"get template failed, err: %v":                                                        165,
-	"get template release failed, err: %v":                                                167,
-	"get template set count failed, err: %v":                                              170,
+	"get template count failed, err: %v":                                                  175,
+	"get template failed, err: %v":                                                        168,
+	"get template release failed, err: %v":                                                170,
+	"get template set count failed, err: %v":                                              173,
 	"get template set data failed, err: %s":                                               98,
 	"get template set failed, err: %s":                                                    105,
-	"get template set failed, err: %v":                                                    169,
+	"get template set failed, err: %v":                                                    172,
 	"get the current number of service config items failed, err: %v":                      11,
 	"get the latest released version failed, err: %v":                                     68,
 	"get the published config failed, err: %v":                                            69,
-	"grpc status with details failed, err: %v":                                            206,
-	"hook is nil":                      152,
+	"grpc status with details failed, err: %v":                                            209,
+	"hook is nil":                      155,
 	"hook name %s already exists":      79,
-	"id can not be set":                176,
+	"id can not be set":                179,
 	"id is required":                   0,
 	"id should not be set":             116,
-	"invalid app id":                   198,
+	"invalid app id":                   201,
 	"invalid argument":                 115,
-	"invalid biz id":                   177,
-	"invalid commit spec's content id": 187,
-	"invalid config item id":           199,
-	"invalid content signature, should be config's sha256 value": 194,
-	"invalid data-type":                       185,
-	"invalid memo, length should <= 200":      130,
-	"invalid name %s, name cannot all be '.'": 139,
-	"invalid name %s, there can't be any /":   140,
-	"invalid name, length should <= 128":      133,
-	"invalid name, length should <= 64":       138,
-	"invalid name, length should >= 1":        132,
-	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                                                      135,
-	"invalid name: %s, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number": 137,
-	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)":                              136,
-	"invalid name: %s, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers":                      134,
-	"invalid namespace, length should <= 128":                                               142,
-	"invalid namespace, length should >= 1":                                                 141,
-	"invalid origin content signature, should be config's sha256 value":                     196,
-	"invalid path %s, the path must startwith '/' and cannot have consecutive '/'":          122,
-	"invalid path, length should <= 1024":                                                   121,
-	"invalid path, length should <= 256":                                                    123,
-	"invalid path, length should >= 1":                                                      120,
-	"invalid path,path does not conform to the win file path format specification":          124,
-	"invalid reload file path, should <= 128":                                               126,
-	"invalid spec, is nil":                                                                  178,
-	"invalid username, length should <= 32":                                                 144,
-	"invalid username, length should >= 1":                                                  143,
+	"invalid biz id":                   180,
+	"invalid commit spec's content id": 190,
+	"invalid config item id":           202,
+	"invalid content signature, should be config's sha256 value": 197,
+	"invalid data-type":                       188,
+	"invalid memo, length should <= 200":      133,
+	"invalid name %s, name cannot all be '.'": 142,
+	"invalid name %s, there can't be any /":   143,
+	"invalid name, length should <= 128":      136,
+	"invalid name, length should <= 64":       141,
+	"invalid name, length should >= 1":        135,
+	"invalid name, length should >= 9 and must start with prefix bk_bscp_ (ignore case)":                                                                      138,
+	"invalid name: %s, only allows to include Chinese, English,numbers, underscore (_),hyphen (-), and must start and end with Chinese, English, or a number": 140,
+	"invalid name: %s, only allows to include english、numbers、underscore (_), and must start with prefix bk_bscp_ (ignore case)":                              139,
+	"invalid name: %s, only allows to include english、numbers、underscore (_)、hyphen (-), and must start and end with an english、numbers":                      137,
+	"invalid namespace, length should <= 128":                                               145,
+	"invalid namespace, length should >= 1":                                                 144,
+	"invalid origin content signature, should be config's sha256 value":                     199,
+	"invalid path %s, length should <= 1024":                                                121,
+	"invalid path %s, length should >= 1":                                                   120,
+	"invalid path %s, the path cannot end with '/'":                                         124,
+	"invalid path %s, the path must start with '/'":                                         122,
+	"invalid path %s, the pathcannot contain consecutive '/'":                               123,
+	"invalid path, length should <= 256":                                                    126,
+	"invalid path, length should >= 1":                                                      125,
+	"invalid path,path does not conform to the win file path format specification":          127,
+	"invalid reload file path, should <= 128":                                               129,
+	"invalid spec, is nil":                                                                  181,
+	"invalid username, length should <= 32":                                                 147,
+	"invalid username, length should >= 1":                                                  146,
 	"json format error, err: %v":                                                            23,
 	"kv type does not match the data type defined in the application":                       85,
 	"list app template bindings by app ids failed, err: %s":                                 104,
@@ -171,20 +174,20 @@ var messageKeyToIndex = map[string]int{
 	"list templates failed, err: %v":                                                        14,
 	"list templates of template set failed, err: %v":                                        55,
 	"list templates revisions data failed, err: %s":                                         112,
-	"memo is required, can not be empty":                                                    129,
+	"memo is required, can not be empty":                                                    132,
 	"not a KV type service":                                                                 88,
 	"not legal JSON data":                                                                   22,
-	"not support table config type for now":                                                 182,
+	"not support table config type for now":                                                 185,
 	"obtain the number of configuration items":                                              74,
-	"origin content signature should be lowercase":                                          197,
+	"origin content signature should be lowercase":                                          200,
 	"please set a password":                                                                 35,
 	"read file failed, err: %v":                                                             1,
 	"recover config item failed, err: %v":                                                   71,
 	"recovery failed. A file with the same path exists and is not in a new state":           70,
-	"reload file path is not the absolute path":                                             127,
-	"reload file path is required":                                                          125,
+	"reload file path is not the absolute path":                                             130,
+	"reload file path is required":                                                          128,
 	"remove the template set bound to the app failed, err: %s":                              78,
-	"resource name '%s' is prefixed with '%s' is reserved name, which is not allows to use": 131,
+	"resource name '%s' is prefixed with '%s' is reserved name, which is not allows to use": 134,
 	"retrieve the referenced script failed, err: %s":                                        81,
 	"revision not set":                                                                      119,
 	"same template variable name %s already exists":                                         113,
@@ -192,19 +195,19 @@ var messageKeyToIndex = map[string]int{
 	"sensitive data is not visible, unable to view actual content": 21,
 	"sensitive information cannot be exported":                     15,
 	"spec not set":             117,
-	"spec should be set":       186,
-	"template %d is not exist": 164,
+	"spec should be set":       189,
+	"template %d is not exist": 167,
 	"template data is empty":   111,
-	"template id in %v is not belong to template set id %d": 175,
-	"template id in %v is not exist":                        159,
-	"template release %d is not exist":                      166,
-	"template revision id in %v is not exist":               161,
-	"template set %d is not exist":                          168,
+	"template id in %v is not belong to template set id %d": 178,
+	"template id in %v is not exist":                        162,
+	"template release %d is not exist":                      169,
+	"template revision id in %v is not exist":               164,
+	"template set %d is not exist":                          171,
 	"template set %s not found":                             54,
 	"template set data is empty":                            109,
-	"template set id in %v is not exist":                    163,
+	"template set id in %v is not exist":                    166,
 	"template space %s not found":                           53,
-	"template space id in %v is not exist":                  158,
+	"template space id in %v is not exist":                  161,
 	"template variable name must start with %s":             38,
 	"template version %s in template file %s \n\t\t\t\thas been removed. Please import the set again": 58,
 	"the certificate format is incorrect, only X.509 format is supported":                             36,
@@ -216,40 +219,40 @@ var messageKeyToIndex = map[string]int{
 	"the length of template variable ids is %d, it must be within the range of [1,%d]":                           39,
 	"the specified type does not match the actual configuration":                                                 43,
 	"the template file %s in the template set \n\t\t\t\t%s has been removed. Please import the set again":        56,
-	"the total number of app %d's config items(including template and non-template)exceeded the limit %d":        151,
+	"the total number of app %d's config items(including template and non-template)exceeded the limit %d":        154,
 	"the total number of app %s config items(including template and non-template)exceeded the limit %d":          62,
 	"the total number of config items(including template and non-template) \n\t\t\texceeded the limit %d":        73,
-	"the total number of template set %d's templates exceeded the limit %d":                                      156,
+	"the total number of template set %d's templates exceeded the limit %d":                                      159,
 	"the total number of template set %s templates exceeded the limit %d":                                        106,
 	"the type of config item %s is incorrect":                                                                    91,
 	"the version number %s in the template file %s is not the \n\t\tlatest version. Please import the set again": 59,
-	"there are template sets under the template space, need to delete them first":                                171,
-	"there are templates under the template space, need to delete them first":                                    173,
+	"there are template sets under the template space, need to delete them first":                                174,
+	"there are templates under the template space, need to delete them first":                                    176,
 	"there is no template file under this template set":                                                          99,
-	"unknown config type: %s":                                          180,
-	"unsupported app reload type: %s":                                  184,
-	"unsupported config type: %s":                                      183,
-	"unsupported file format: %s":                                      191,
-	"unsupported file mode: %s":                                        192,
-	"unsupported variable type: %s":                                    201,
-	"update app failed, err: %s":                                       148,
+	"unknown config type: %s":                                          183,
+	"unsupported app reload type: %s":                                  187,
+	"unsupported config type: %s":                                      186,
+	"unsupported file format: %s":                                      194,
+	"unsupported file mode: %s":                                        195,
+	"unsupported variable type: %s":                                    204,
+	"update app failed, err: %s":                                       151,
 	"update app template binding failed, err: %v":                      51,
 	"update kv failed, err: %v":                                        87,
 	"upload completed":                                                 8,
 	"upload completed, %d failed":                                      9,
 	"upload failed, please make sure the file size does not exceed %s": 13,
 	"upload file failed, err: %v":                                      6,
-	"validate template releases exist failed, err: %v":                 160,
-	"validate template sets exist failed, err: %v":                     162,
-	"validate templates exist failed, err: %v":                         157,
-	"validate templates in a template set failed, err: %v":             174,
-	"value type assertion failed, err: %v":                             203,
-	"verify Unix file paths failed, path: %s, err: %v":                 190,
-	"verify Windows file paths failed, path: %s, err: %v":              189,
+	"validate template releases exist failed, err: %v":                 163,
+	"validate template sets exist failed, err: %v":                     165,
+	"validate templates exist failed, err: %v":                         160,
+	"validate templates in a template set failed, err: %v":             177,
+	"value type assertion failed, err: %v":                             206,
+	"verify Unix file paths failed, path: %s, err: %v":                 193,
+	"verify Windows file paths failed, path: %s, err: %v":              192,
 	"yaml format error, err: %v":                                       24,
 }
 
-var enIndex = []uint32{ // 209 elements
+var enIndex = []uint32{ // 212 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x0000002c, 0x00000050,
 	0x0000007e, 0x000000cd, 0x000000ee, 0x0000010d,
@@ -284,35 +287,35 @@ var enIndex = []uint32{ // 209 elements
 	0x000013a8, 0x000013db, 0x000013f6, 0x0000141d,
 	0x00001434, 0x00001465, 0x00001496, 0x000014aa,
 	0x000014bb, 0x000014d0, 0x000014dd, 0x000014f0,
-	0x00001501, 0x00001522, 0x00001546, 0x00001596,
-	0x000015b9, 0x00001606, 0x00001623, 0x0000164b,
+	0x00001501, 0x00001528, 0x00001552, 0x00001583,
+	0x000015be, 0x000015ef, 0x00001610, 0x00001633,
 	// Entry 80 - 9F
-	0x00001675, 0x000016b1, 0x000016d4, 0x000016f7,
-	0x00001753, 0x00001774, 0x00001797, 0x00001825,
-	0x00001878, 0x000018fa, 0x00001995, 0x000019b7,
-	0x000019e2, 0x00001a0b, 0x00001a31, 0x00001a59,
-	0x00001a7e, 0x00001aa4, 0x00001aaf, 0x00001ace,
-	0x00001aec, 0x00001b0a, 0x00001b3c, 0x00001b70,
-	0x00001bda, 0x00001be6, 0x00001bf6, 0x00001c09,
-	0x00001c1c, 0x00001c68, 0x00001c94, 0x00001cbc,
+	0x00001680, 0x0000169d, 0x000016c5, 0x000016ef,
+	0x0000172b, 0x0000174e, 0x00001771, 0x000017cd,
+	0x000017ee, 0x00001811, 0x0000189f, 0x000018f2,
+	0x00001974, 0x00001a0f, 0x00001a31, 0x00001a5c,
+	0x00001a85, 0x00001aab, 0x00001ad3, 0x00001af8,
+	0x00001b1e, 0x00001b29, 0x00001b48, 0x00001b66,
+	0x00001b84, 0x00001bb6, 0x00001bea, 0x00001c54,
+	0x00001c60, 0x00001c70, 0x00001c83, 0x00001c96,
 	// Entry A0 - BF
-	0x00001cde, 0x00001d12, 0x00001d3d, 0x00001d6d,
-	0x00001d93, 0x00001daf, 0x00001dcf, 0x00001df3,
-	0x00001e1b, 0x00001e3b, 0x00001e5f, 0x00001e89,
-	0x00001ed5, 0x00001efb, 0x00001f43, 0x00001f7b,
-	0x00001fb7, 0x00001fc9, 0x00001fd8, 0x00001fed,
-	0x00001ffd, 0x00002018, 0x00002036, 0x0000205c,
-	0x0000207b, 0x0000209e, 0x000020b0, 0x000020c3,
-	0x000020e4, 0x00002103, 0x0000213d, 0x00002174,
+	0x00001ce2, 0x00001d0e, 0x00001d36, 0x00001d58,
+	0x00001d8c, 0x00001db7, 0x00001de7, 0x00001e0d,
+	0x00001e29, 0x00001e49, 0x00001e6d, 0x00001e95,
+	0x00001eb5, 0x00001ed9, 0x00001f03, 0x00001f4f,
+	0x00001f75, 0x00001fbd, 0x00001ff5, 0x00002031,
+	0x00002043, 0x00002052, 0x00002067, 0x00002077,
+	0x00002092, 0x000020b0, 0x000020d6, 0x000020f5,
+	0x00002118, 0x0000212a, 0x0000213d, 0x0000215e,
 	// Entry C0 - DF
-	0x00002193, 0x000021b0, 0x000021c7, 0x00002202,
-	0x00002228, 0x0000226a, 0x00002297, 0x000022a6,
-	0x000022bd, 0x000022e4, 0x00002305, 0x00002342,
-	0x0000236a, 0x0000237b, 0x000023a6, 0x000023d2,
-	0x000023f5,
-} // Size: 860 bytes
+	0x0000217d, 0x000021b7, 0x000021ee, 0x0000220d,
+	0x0000222a, 0x00002241, 0x0000227c, 0x000022a2,
+	0x000022e4, 0x00002311, 0x00002320, 0x00002337,
+	0x0000235e, 0x0000237f, 0x000023bc, 0x000023e4,
+	0x000023f5, 0x00002420, 0x0000244c, 0x0000246f,
+} // Size: 872 bytes
 
-const enData string = "" + // Size: 9205 bytes
+const enData string = "" + // Size: 9327 bytes
 	"\x02id is required\x02read file failed, err: %[1]v\x02create directory f" +
 	"ailed, err: %[1]v\x02create temporary directory failed, err: %[1]v\x02de" +
 	"compress the file. The size of file %[1]s exceeds the maximum limit of %" +
@@ -393,66 +396,68 @@ const enData string = "" + // Size: 9205 bytes
 	" %[1]s\x02template data is empty\x02list templates revisions data failed" +
 	", err: %[1]s\x02same template variable name %[1]s already exists\x02db o" +
 	"peration failed\x02invalid argument\x02id should not be set\x02spec not " +
-	"set\x02attachment not set\x02revision not set\x02invalid path, length sh" +
-	"ould >= 1\x02invalid path, length should <= 1024\x02invalid path %[1]s, " +
-	"the path must startwith '/' and cannot have consecutive '/'\x02invalid p" +
-	"ath, length should <= 256\x02invalid path,path does not conform to the w" +
-	"in file path format specification\x02reload file path is required\x02inv" +
-	"alid reload file path, should <= 128\x02reload file path is not the abso" +
-	"lute path\x02%[1]s sub path is system reserved path, do not allow to use" +
-	"\x02memo is required, can not be empty\x02invalid memo, length should <=" +
-	" 200\x02resource name '%[1]s' is prefixed with '%[2]s' is reserved name," +
-	" which is not allows to use\x02invalid name, length should >= 1\x02inval" +
-	"id name, length should <= 128\x02invalid name: %[1]s, only allows to inc" +
-	"lude english、numbers、underscore (_)、hyphen (-), and must start and end w" +
-	"ith an english、numbers\x02invalid name, length should >= 9 and must star" +
-	"t with prefix bk_bscp_ (ignore case)\x02invalid name: %[1]s, only allows" +
-	" to include english、numbers、underscore (_), and must start with prefix b" +
-	"k_bscp_ (ignore case)\x02invalid name: %[1]s, only allows to include Chi" +
-	"nese, English,numbers, underscore (_),hyphen (-), and must start and end" +
-	" with Chinese, English, or a number\x02invalid name, length should <= 64" +
-	"\x02invalid name %[1]s, name cannot all be '.'\x02invalid name %[1]s, th" +
-	"ere can't be any /\x02invalid namespace, length should >= 1\x02invalid n" +
-	"amespace, length should <= 128\x02invalid username, length should >= 1" +
-	"\x02invalid username, length should <= 32\x02app is nil\x02create data f" +
-	"ailed, err: %[1]v\x02create app failed, err: %[1]v\x02update app failed," +
-	" err: %[1]s\x02count app %[1]d's config items failed, err: %[2]v\x02get " +
-	"app %[1]d's template binding failed, err: %[2]v\x02the total number of a" +
-	"pp %[1]d's config items(including template and non-template)exceeded the" +
-	" limit %[2]d\x02hook is nil\x02Unnamed Version\x02appID can not be 0\x02" +
-	"bizID can not be 0\x02the total number of template set %[1]d's templates" +
-	" exceeded the limit %[2]d\x02validate templates exist failed, err: %[1]v" +
-	"\x02template space id in %[1]v is not exist\x02template id in %[1]v is n" +
-	"ot exist\x02validate template releases exist failed, err: %[1]v\x02templ" +
-	"ate revision id in %[1]v is not exist\x02validate template sets exist fa" +
-	"iled, err: %[1]v\x02template set id in %[1]v is not exist\x02template %[" +
-	"1]d is not exist\x02get template failed, err: %[1]v\x02template release " +
-	"%[1]d is not exist\x02get template release failed, err: %[1]v\x02templat" +
-	"e set %[1]d is not exist\x02get template set failed, err: %[1]v\x02get t" +
-	"emplate set count failed, err: %[1]v\x02there are template sets under th" +
-	"e template space, need to delete them first\x02get template count failed" +
-	", err: %[1]v\x02there are templates under the template space, need to de" +
-	"lete them first\x02validate templates in a template set failed, err: %[1" +
-	"]v\x02template id in %[1]v is not belong to template set id %[2]d\x02id " +
-	"can not be set\x02invalid biz id\x02invalid spec, is nil\x02app spec is " +
-	"nil\x02unknown config type: %[1]s\x02app's type can not be updated\x02no" +
-	"t support table config type for now\x02unsupported config type: %[1]s" +
-	"\x02unsupported app reload type: %[1]s\x02invalid data-type\x02spec shou" +
-	"ld be set\x02invalid commit spec's content id\x02commit spec's content i" +
-	"s empty\x02verify Windows file paths failed, path: %[1]s, err: %[2]v\x02" +
-	"verify Unix file paths failed, path: %[1]s, err: %[2]v\x02unsupported fi" +
-	"le format: %[1]s\x02unsupported file mode: %[1]s\x02content id can not s" +
-	"et\x02invalid content signature, should be config's sha256 value\x02cont" +
-	"ent signature should be lowercase\x02invalid origin content signature, s" +
-	"hould be config's sha256 value\x02origin content signature should be low" +
-	"ercase\x02invalid app id\x02invalid config item id\x02default_val %[1]s " +
-	"is not a number type\x02unsupported variable type: %[1]s\x02get 'kv_type" +
-	"' as a string \x0a\x09\x09from kv.Data failed, err: %[1]v\x02value type " +
-	"assertion failed, err: %[1]v\x02authorize failed\x02get permission to ap" +
-	"ply failed, err: %[1]v\x02grpc status with details failed, err: %[1]v" +
-	"\x02%[1]s and %[2]s path file conflict"
+	"set\x02attachment not set\x02revision not set\x02invalid path %[1]s, len" +
+	"gth should >= 1\x02invalid path %[1]s, length should <= 1024\x02invalid " +
+	"path %[1]s, the path must start with '/'\x02invalid path %[1]s, the path" +
+	"cannot contain consecutive '/'\x02invalid path %[1]s, the path cannot en" +
+	"d with '/'\x02invalid path, length should >= 1\x02invalid path, length s" +
+	"hould <= 256\x02invalid path,path does not conform to the win file path " +
+	"format specification\x02reload file path is required\x02invalid reload f" +
+	"ile path, should <= 128\x02reload file path is not the absolute path\x02" +
+	"%[1]s sub path is system reserved path, do not allow to use\x02memo is r" +
+	"equired, can not be empty\x02invalid memo, length should <= 200\x02resou" +
+	"rce name '%[1]s' is prefixed with '%[2]s' is reserved name, which is not" +
+	" allows to use\x02invalid name, length should >= 1\x02invalid name, leng" +
+	"th should <= 128\x02invalid name: %[1]s, only allows to include english、" +
+	"numbers、underscore (_)、hyphen (-), and must start and end with an englis" +
+	"h、numbers\x02invalid name, length should >= 9 and must start with prefix" +
+	" bk_bscp_ (ignore case)\x02invalid name: %[1]s, only allows to include e" +
+	"nglish、numbers、underscore (_), and must start with prefix bk_bscp_ (igno" +
+	"re case)\x02invalid name: %[1]s, only allows to include Chinese, English" +
+	",numbers, underscore (_),hyphen (-), and must start and end with Chinese" +
+	", English, or a number\x02invalid name, length should <= 64\x02invalid n" +
+	"ame %[1]s, name cannot all be '.'\x02invalid name %[1]s, there can't be " +
+	"any /\x02invalid namespace, length should >= 1\x02invalid namespace, len" +
+	"gth should <= 128\x02invalid username, length should >= 1\x02invalid use" +
+	"rname, length should <= 32\x02app is nil\x02create data failed, err: %[1" +
+	"]v\x02create app failed, err: %[1]v\x02update app failed, err: %[1]s\x02" +
+	"count app %[1]d's config items failed, err: %[2]v\x02get app %[1]d's tem" +
+	"plate binding failed, err: %[2]v\x02the total number of app %[1]d's conf" +
+	"ig items(including template and non-template)exceeded the limit %[2]d" +
+	"\x02hook is nil\x02Unnamed Version\x02appID can not be 0\x02bizID can no" +
+	"t be 0\x02the total number of template set %[1]d's templates exceeded th" +
+	"e limit %[2]d\x02validate templates exist failed, err: %[1]v\x02template" +
+	" space id in %[1]v is not exist\x02template id in %[1]v is not exist\x02" +
+	"validate template releases exist failed, err: %[1]v\x02template revision" +
+	" id in %[1]v is not exist\x02validate template sets exist failed, err: %" +
+	"[1]v\x02template set id in %[1]v is not exist\x02template %[1]d is not e" +
+	"xist\x02get template failed, err: %[1]v\x02template release %[1]d is not" +
+	" exist\x02get template release failed, err: %[1]v\x02template set %[1]d " +
+	"is not exist\x02get template set failed, err: %[1]v\x02get template set " +
+	"count failed, err: %[1]v\x02there are template sets under the template s" +
+	"pace, need to delete them first\x02get template count failed, err: %[1]v" +
+	"\x02there are templates under the template space, need to delete them fi" +
+	"rst\x02validate templates in a template set failed, err: %[1]v\x02templa" +
+	"te id in %[1]v is not belong to template set id %[2]d\x02id can not be s" +
+	"et\x02invalid biz id\x02invalid spec, is nil\x02app spec is nil\x02unkno" +
+	"wn config type: %[1]s\x02app's type can not be updated\x02not support ta" +
+	"ble config type for now\x02unsupported config type: %[1]s\x02unsupported" +
+	" app reload type: %[1]s\x02invalid data-type\x02spec should be set\x02in" +
+	"valid commit spec's content id\x02commit spec's content is empty\x02veri" +
+	"fy Windows file paths failed, path: %[1]s, err: %[2]v\x02verify Unix fil" +
+	"e paths failed, path: %[1]s, err: %[2]v\x02unsupported file format: %[1]" +
+	"s\x02unsupported file mode: %[1]s\x02content id can not set\x02invalid c" +
+	"ontent signature, should be config's sha256 value\x02content signature s" +
+	"hould be lowercase\x02invalid origin content signature, should be config" +
+	"'s sha256 value\x02origin content signature should be lowercase\x02inval" +
+	"id app id\x02invalid config item id\x02default_val %[1]s is not a number" +
+	" type\x02unsupported variable type: %[1]s\x02get 'kv_type' as a string " +
+	"\x0a\x09\x09from kv.Data failed, err: %[1]v\x02value type assertion fail" +
+	"ed, err: %[1]v\x02authorize failed\x02get permission to apply failed, er" +
+	"r: %[1]v\x02grpc status with details failed, err: %[1]v\x02%[1]s and %[2" +
+	"]s path file conflict"
 
-var zhIndex = []uint32{ // 209 elements
+var zhIndex = []uint32{ // 212 elements
 	// Entry 0 - 1F
 	0x00000000, 0x0000000f, 0x0000002e, 0x0000004d,
 	0x00000072, 0x000000be, 0x000000d7, 0x000000f6,
@@ -487,35 +492,35 @@ var zhIndex = []uint32{ // 209 elements
 	0x00001129, 0x00001154, 0x0000116d, 0x00001192,
 	0x000011a5, 0x000011d0, 0x000011fa, 0x00001209,
 	0x00001216, 0x0000122b, 0x0000123f, 0x00001259,
-	0x00001271, 0x00001291, 0x000012b4, 0x00001302,
-	0x00001324, 0x0000135d, 0x0000137c, 0x000013aa,
+	0x00001271, 0x00001299, 0x000012c4, 0x000012f7,
+	0x00001330, 0x00001363, 0x00001383, 0x000013a5,
 	// Entry 80 - 9F
-	0x000013d5, 0x0000140b, 0x0000142c, 0x0000144e,
-	0x0000149f, 0x000014bf, 0x000014df, 0x00001566,
-	0x000015b9, 0x00001632, 0x000016cb, 0x000016ec,
-	0x0000171e, 0x00001740, 0x00001766, 0x0000178e,
-	0x000017b1, 0x000017d5, 0x000017e2, 0x000017fb,
-	0x0000181a, 0x00001839, 0x0000186b, 0x000018a1,
-	0x000018f1, 0x00001901, 0x00001911, 0x00001921,
-	0x00001921, 0x0000196a, 0x00001995, 0x000019bb,
+	0x000013de, 0x000013fd, 0x0000142b, 0x00001456,
+	0x0000148c, 0x000014ad, 0x000014cf, 0x00001520,
+	0x00001540, 0x00001560, 0x000015e7, 0x0000163a,
+	0x000016b3, 0x0000174c, 0x0000176d, 0x0000179f,
+	0x000017c1, 0x000017e7, 0x0000180f, 0x00001832,
+	0x00001856, 0x00001863, 0x0000187c, 0x0000189b,
+	0x000018ba, 0x000018ec, 0x00001922, 0x00001972,
+	0x00001982, 0x00001992, 0x000019a2, 0x000019a2,
 	// Entry A0 - BF
-	0x000019db, 0x00001a0c, 0x00001a32, 0x00001a63,
-	0x00001a89, 0x00001aa0, 0x00001abf, 0x00001adc,
-	0x00001b01, 0x00001b1e, 0x00001b40, 0x00001b6b,
-	0x00001b9b, 0x00001bc0, 0x00001bea, 0x00001c1b,
-	0x00001c50, 0x00001c60, 0x00001c75, 0x00001c82,
-	0x00001c95, 0x00001cb3, 0x00001ccc, 0x00001ce8,
-	0x00001d09, 0x00001d2a, 0x00001d43, 0x00001d50,
-	0x00001d63, 0x00001d70, 0x00001dab, 0x00001de3,
+	0x000019eb, 0x00001a16, 0x00001a3c, 0x00001a5c,
+	0x00001a8d, 0x00001ab3, 0x00001ae4, 0x00001b0a,
+	0x00001b21, 0x00001b40, 0x00001b5d, 0x00001b82,
+	0x00001b9f, 0x00001bc1, 0x00001bec, 0x00001c1c,
+	0x00001c41, 0x00001c6b, 0x00001c9c, 0x00001cd1,
+	0x00001ce1, 0x00001cf6, 0x00001d03, 0x00001d16,
+	0x00001d34, 0x00001d4d, 0x00001d69, 0x00001d8a,
+	0x00001dab, 0x00001dc4, 0x00001dd1, 0x00001de4,
 	// Entry C0 - DF
-	0x00001e04, 0x00001e25, 0x00001e32, 0x00001e61,
-	0x00001e77, 0x00001eaf, 0x00001ecb, 0x00001edd,
-	0x00001ef2, 0x00001f17, 0x00001f38, 0x00001f79,
-	0x00001f9b, 0x00001fa8, 0x00001fc7, 0x00001ff1,
-	0x00002014,
-} // Size: 860 bytes
+	0x00001df1, 0x00001e2c, 0x00001e64, 0x00001e85,
+	0x00001ea6, 0x00001eb3, 0x00001ee2, 0x00001ef8,
+	0x00001f30, 0x00001f4c, 0x00001f5e, 0x00001f73,
+	0x00001f98, 0x00001fb9, 0x00001ffa, 0x0000201c,
+	0x00002029, 0x00002048, 0x00002072, 0x00002095,
+} // Size: 872 bytes
 
-const zhData string = "" + // Size: 8212 bytes
+const zhData string = "" + // Size: 8341 bytes
 	"\x02id不能为空\x02读取文件失败, err: %[1]v\x02创建目录失败, err: %[1]v\x02创建临时目录失败, err:" +
 	" %[1]v\x02解压文件失败, 文件 %[1]s 的大小超过了最大限制阈值 %[2]s\x02解压失败, err: %[1]v\x02上传文" +
 	"件失败, err: %[1]v\x02获取模板配置失败, err: %[1]v\x02上传完成\x02上传完成, %[1]d 失败\x02获" +
@@ -554,17 +559,18 @@ const zhData string = "" + // Size: 8212 bytes
 	": %[1]s\x02模板套餐 %[1]s 超过单套餐最大配置文件数量限制 %[2]d\x02按服务ID列出服务失败, err: %[1]s" +
 	"\x02统计服务配置数量失败, err: %[1]s\x02模板套餐数据为空\x02列出模板数据失败, err: %[1]s\x02模板数据为空" +
 	"\x02列出模板版本数据失败, err: %[1]s\x02同名的模版变量名称%[1]s已存在\x02db操作失败\x02无效参数\x02id不" +
-	"应该被设置\x02spec没有被设置\x02attachment没有被设置\x02revision没有被设置\x02路径无效, 长度应为 >" +
-	"= 1\x02路径无效, 长度应为 <= 1024\x02路径 %[1]s 无效, 路径必须以“/”开头，不能有连续的“/”\x02路径无效, " +
-	"长度应为 <= 256\x02路径无效, 路径不符合win文件路径格式规范\x02需要重新加载文件路径\x02重新加载文件路径无效, 应该 " +
-	"<= 128\x02重新加载文件路径不是绝对路径\x02%[1]s 子路径为系统保留路径, 不允许使用\x02描述为必填项, 不能为空\x02描" +
-	"述无效, 长度应为 <= 200\x02资源名称“%[1]s”以“%[2]s”为前缀, 是保留名称, 不允许使用\x02名称无效, 长度应为" +
-	" >= 1\x02无效名称, 长度应该<=128\x02无效名称：%[1]s, 只允许包含英文、数字、下划线（_）、连字符（-）, 且必须以英文" +
-	"、数字开头和结尾\x02无效名称, 长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, 只允许英文、" +
-	"数字、下划线（_）, 且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, 只允许包含中文、英文、数字、下划线（_）" +
-	"、连字符（-）, 且必须以中文、英文或数字开头和结尾\x02名称无效, 长度应为 <= 64\x02名称 %[1]s 无效, 名称不能全部为" +
-	"“.”\x02名称 %[1]s 无效，不能有 /\x02命名空间无效, 长度应为 >= 1\x02命名空间无效, 长度应为 <= 128" +
-	"\x02用户名无效, 长度应为 >= 1\x02用户名无效, 长度应为 <= 32\x02服务为空\x02创建失败, err: %[1]v" +
+	"应该被设置\x02spec没有被设置\x02attachment没有被设置\x02revision没有被设置\x02路径 %[1]s 无效，" +
+	"长度应为 >= 1\x02路径 %[1]s 无效，长度应为 <= 1024\x02路径 %[1]s 无效，路径必须以“/”开头\x02路径 " +
+	"%[1]s 无效，路径不能包含连续的“/”\x02路径 %[1]s 无效，路径不能以“/”结尾\x02路径无效, 长度应为 >= 1\x02路径" +
+	"无效, 长度应为 <= 256\x02路径无效, 路径不符合win文件路径格式规范\x02需要重新加载文件路径\x02重新加载文件路径无效," +
+	" 应该 <= 128\x02重新加载文件路径不是绝对路径\x02%[1]s 子路径为系统保留路径, 不允许使用\x02描述为必填项, 不能为空" +
+	"\x02描述无效, 长度应为 <= 200\x02资源名称“%[1]s”以“%[2]s”为前缀, 是保留名称, 不允许使用\x02名称无效, 长" +
+	"度应为 >= 1\x02无效名称, 长度应该<=128\x02无效名称：%[1]s, 只允许包含英文、数字、下划线（_）、连字符（-）, 且" +
+	"必须以英文、数字开头和结尾\x02无效名称, 长度应该>=9且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, 只" +
+	"允许英文、数字、下划线（_）, 且必须以bk_bscp_前缀开头（忽略大小写）\x02无效名称：%[1]s, 只允许包含中文、英文、数字、下" +
+	"划线（_）、连字符（-）, 且必须以中文、英文或数字开头和结尾\x02名称无效, 长度应为 <= 64\x02名称 %[1]s 无效, 名称" +
+	"不能全部为“.”\x02名称 %[1]s 无效，不能有 /\x02命名空间无效, 长度应为 >= 1\x02命名空间无效, 长度应为 <= " +
+	"128\x02用户名无效, 长度应为 >= 1\x02用户名无效, 长度应为 <= 32\x02服务为空\x02创建失败, err: %[1]v" +
 	"\x02创建服务失败, err: %[1]v\x02更新服务失败, err: %[1]s\x02统计服务 %[1]d 的配置项失败, err: " +
 	"%[2]v\x02获取服务 %[1]d 的模板绑定失败,  err: %[2]v\x02服务 %[1]d 的配置项总数（包括模板和非模板）超出限" +
 	"制 %[2]d\x02脚本不存在\x02未命名版本\x02appID不能为0\x02模板套餐 %[1]d's 超过单套餐最大配置文件数量限制" +
@@ -584,4 +590,4 @@ const zhData string = "" + // Size: 8212 bytes
 	"[1]v\x02值类型断言失败, err: %[1]v\x02授权失败\x02获取权限失败, err: %[1]v\x02grpc 状态详细信息" +
 	"失败, err: %[1]v\x02%[1]s 与 %[2]s 路径文件冲突"
 
-	// Total table size 19137 bytes (18KiB); checksum: 9C1FA17
+	// Total table size 19412 bytes (18KiB); checksum: 7462D0FD
