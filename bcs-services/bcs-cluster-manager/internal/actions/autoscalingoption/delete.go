@@ -14,10 +14,13 @@ package autoscalingoption
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -29,6 +32,8 @@ type DeleteAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.DeleteAutoScalingOptionRequest
 	resp  *cmproto.DeleteAutoScalingOptionResponse
+
+	cluster *cmproto.Cluster
 }
 
 // NewDeleteAction create delete action for online cluster credential
@@ -42,6 +47,15 @@ func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Code = code
 	da.resp.Message = msg
 	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+func (da *DeleteAction) getRelativeResource() error {
+	cluster, err := da.model.GetCluster(da.ctx, da.req.ClusterID)
+	if err == nil {
+		da.cluster = cluster
+	}
+
+	return nil
 }
 
 // Handle handle delete cluster credential
@@ -60,6 +74,11 @@ func (da *DeleteAction) Handle(
 		return
 	}
 
+	if err := da.getRelativeResource(); err != nil {
+		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
 	// try to get original data for return
 	deleteOption, err := da.model.GetAutoScalingOption(da.ctx, da.req.ClusterID)
 	if err != nil {
@@ -70,6 +89,22 @@ func (da *DeleteAction) Handle(
 	if err := da.model.DeleteAutoScalingOption(da.ctx, da.req.ClusterID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	// create operationLog
+	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
+		ResourceType: common.AutoScalingOption.String(),
+		ResourceID:   da.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("删除集群[%s]扩缩容配置", da.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    da.req.ClusterID,
+		ProjectID:    da.cluster.ProjectID,
+		ResourceName: da.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("DeleteAutoScalingOption[%s] CreateOperationLog failed: %v", da.req.ClusterID, err)
 	}
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

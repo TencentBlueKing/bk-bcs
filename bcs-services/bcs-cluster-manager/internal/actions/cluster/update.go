@@ -421,6 +421,19 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 		return
 	}
 
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   "",
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新node信息"),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+	})
+	if err != nil {
+		blog.Errorf("UpdateNode CreateOperationLog failed: %v", err)
+	}
+
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 

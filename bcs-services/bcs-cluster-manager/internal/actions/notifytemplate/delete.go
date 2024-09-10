@@ -15,11 +15,16 @@ package notifytemplate
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -31,6 +36,7 @@ type DeleteAction struct {
 	template *cmproto.NotifyTemplate
 	req      *cmproto.DeleteNotifyTemplateRequest
 	resp     *cmproto.DeleteNotifyTemplateResponse
+	project  *bcsproject.Project
 }
 
 // NewDeleteAction create delete action for notifyTemplate
@@ -57,6 +63,11 @@ func (da *DeleteAction) validate() error {
 	}
 
 	da.template = template
+
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(da.req.ProjectID, true)
+	if errLocal == nil {
+		da.project = proInfo
+	}
 	return nil
 }
 
@@ -79,6 +90,20 @@ func (da *DeleteAction) Handle(
 	if err := da.model.DeleteNotifyTemplate(da.ctx, da.req.ProjectID, da.req.NotifyTemplateID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err := da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
+		ResourceType: common.Project.String(),
+		ResourceID:   req.ProjectID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("项目[%s]删除通知模板信息[%s]", da.project.GetName(), req.NotifyTemplateID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ProjectID:    req.ProjectID,
+		ResourceName: da.project.GetName(),
+	})
+	if err != nil {
+		blog.Errorf("DeleteNotifyTemplate[%s] CreateOperationLog failed: %v", req.ProjectID, err)
 	}
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

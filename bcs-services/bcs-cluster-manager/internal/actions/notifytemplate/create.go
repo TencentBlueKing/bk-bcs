@@ -20,11 +20,14 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -34,6 +37,8 @@ type CreateAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.CreateNotifyTemplateRequest
 	resp  *cmproto.CreateNotifyTemplateResponse
+
+	project *bcsproject.Project
 }
 
 // NewCreateAction create notifyTemplate action
@@ -102,6 +107,20 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		return
 	}
 
+	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
+		ResourceType: common.Project.String(),
+		ResourceID:   req.ProjectID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("项目[%s]创建通知模版[%s]", ca.project.GetName(), req.Name),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ProjectID:    req.ProjectID,
+		ResourceName: ca.project.GetName(),
+	})
+	if err != nil {
+		blog.Errorf("CreateNotifyTemplate[%s] CreateOperationLog failed: %v", req.ProjectID, err)
+	}
+
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
@@ -113,6 +132,11 @@ func (ca *CreateAction) validate() error {
 	err = ca.checkNotifyTemplateName()
 	if err != nil {
 		return err
+	}
+
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ca.req.ProjectID, true)
+	if errLocal == nil {
+		ca.project = proInfo
 	}
 
 	return nil

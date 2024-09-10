@@ -14,11 +14,14 @@ package cluster
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -116,6 +119,21 @@ func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ua.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新虚拟集群[%s]配额", ua.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("UpdateVirtualCluster[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
