@@ -1799,23 +1799,9 @@
             "fuzzy": true
         },
         {
-            "id": "invalid path, length should \u003e= 1",
-            "message": "invalid path, length should \u003e= 1",
-            "translation": "invalid path, length should \u003e= 1",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "invalid path, length should \u003c= 1024",
-            "message": "invalid path, length should \u003c= 1024",
-            "translation": "invalid path, length should \u003c= 1024",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "invalid path {Path}, the path must startwith '/' and cannot have consecutive '/'",
-            "message": "invalid path {Path}, the path must startwith '/' and cannot have consecutive '/'",
-            "translation": "invalid path {Path}, the path must startwith '/' and cannot have consecutive '/'",
+            "id": "invalid path {Path}, length should \u003e= 1",
+            "message": "invalid path {Path}, length should \u003e= 1",
+            "translation": "invalid path {Path}, length should \u003e= 1",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
@@ -1827,6 +1813,81 @@
                     "expr": "path"
                 }
             ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, length should \u003c= 1024",
+            "message": "invalid path {Path}, length should \u003c= 1024",
+            "translation": "invalid path {Path}, length should \u003c= 1024",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, the path must start with '/'",
+            "message": "invalid path {Path}, the path must start with '/'",
+            "translation": "invalid path {Path}, the path must start with '/'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translation": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, the path cannot end with '/'",
+            "message": "invalid path {Path}, the path cannot end with '/'",
+            "translation": "invalid path {Path}, the path cannot end with '/'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "invalid path, length should \u003e= 1",
+            "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
