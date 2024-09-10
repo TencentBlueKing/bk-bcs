@@ -22,9 +22,8 @@ import (
 
 // esbAuthTransport esb auth transport
 type esbAuthTransport struct {
-	Transport  http.RoundTripper
-	commParams *types.CommParams
-	authValue  string
+	Transport http.RoundTripper
+	authValue string
 }
 
 // newEsbAuthTransport .
@@ -35,9 +34,8 @@ func newEsbAuthTransport(cfg *cc.Esb, transport http.RoundTripper) (http.RoundTr
 		return nil, err
 	}
 	t := &esbAuthTransport{
-		commParams: params,
-		authValue:  string(value),
-		Transport:  transport,
+		authValue: string(value),
+		Transport: transport,
 	}
 	return t, nil
 }
