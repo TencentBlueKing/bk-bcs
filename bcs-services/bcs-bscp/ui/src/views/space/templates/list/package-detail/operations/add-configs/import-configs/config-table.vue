@@ -230,7 +230,7 @@
   import { useI18n } from 'vue-i18n';
   import { DownShape, EditLine } from 'bkui-vue/lib/icon';
   import { IConfigImportItem } from '../../../../../../../../../types/config';
-  import { isEqual } from 'lodash';
+  import { cloneDeep, isEqual } from 'lodash';
   import Message from 'bkui-vue/lib/message';
 
   const { t } = useI18n();
@@ -287,8 +287,8 @@
           fileAP,
         };
       });
-      data.value = configList;
-      initData.value = configList;
+      data.value = cloneDeep(configList);
+      initData.value = cloneDeep(configList);
     },
     { deep: true, immediate: true },
   );
