@@ -26,7 +26,7 @@ import (
 
 // validUnixFileSubPathRegexp sub path support character:
 // 必须以 / 开头，且不能出现连续的 /
-var validUnixFileSubPathRegexp = regexp.MustCompile(`^\/([^\/])+$`)
+var validUnixFileSubPathRegexp = regexp.MustCompile(`^(/[^/]+)+/?$`)
 
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(kit *kit.Kit, path string) error {
