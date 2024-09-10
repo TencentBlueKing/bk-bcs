@@ -34,6 +34,7 @@ func newApp(db *gorm.DB, opts ...gen.DOOption) app {
 	_app.Memo = field.NewString(tableName, "memo")
 	_app.Alias_ = field.NewString(tableName, "alias")
 	_app.DataType = field.NewString(tableName, "data_type")
+	_app.LastConsumedTime = field.NewTime(tableName, "last_consumed_time")
 	_app.Creator = field.NewString(tableName, "creator")
 	_app.Reviser = field.NewString(tableName, "reviser")
 	_app.CreatedAt = field.NewTime(tableName, "created_at")
@@ -47,18 +48,19 @@ func newApp(db *gorm.DB, opts ...gen.DOOption) app {
 type app struct {
 	appDo appDo
 
-	ALL        field.Asterisk
-	ID         field.Uint32
-	BizID      field.Uint32
-	Name       field.String
-	ConfigType field.String
-	Memo       field.String
-	Alias_     field.String
-	DataType   field.String
-	Creator    field.String
-	Reviser    field.String
-	CreatedAt  field.Time
-	UpdatedAt  field.Time
+	ALL              field.Asterisk
+	ID               field.Uint32
+	BizID            field.Uint32
+	Name             field.String
+	ConfigType       field.String
+	Memo             field.String
+	Alias_           field.String
+	DataType         field.String
+	LastConsumedTime field.Time
+	Creator          field.String
+	Reviser          field.String
+	CreatedAt        field.Time
+	UpdatedAt        field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -82,6 +84,7 @@ func (a *app) updateTableName(table string) *app {
 	a.Memo = field.NewString(table, "memo")
 	a.Alias_ = field.NewString(table, "alias")
 	a.DataType = field.NewString(table, "data_type")
+	a.LastConsumedTime = field.NewTime(table, "last_consumed_time")
 	a.Creator = field.NewString(table, "creator")
 	a.Reviser = field.NewString(table, "reviser")
 	a.CreatedAt = field.NewTime(table, "created_at")
@@ -110,7 +113,7 @@ func (a *app) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *app) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 11)
+	a.fieldMap = make(map[string]field.Expr, 12)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["biz_id"] = a.BizID
 	a.fieldMap["name"] = a.Name
@@ -118,6 +121,7 @@ func (a *app) fillFieldMap() {
 	a.fieldMap["memo"] = a.Memo
 	a.fieldMap["alias"] = a.Alias_
 	a.fieldMap["data_type"] = a.DataType
+	a.fieldMap["last_consumed_time"] = a.LastConsumedTime
 	a.fieldMap["creator"] = a.Creator
 	a.fieldMap["reviser"] = a.Reviser
 	a.fieldMap["created_at"] = a.CreatedAt
