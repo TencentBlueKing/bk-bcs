@@ -263,6 +263,11 @@
             "translation": "批量删除失败"
         },
         {
+            "id": "sensitive data is not visible, unable to view actual content",
+            "message": "sensitive data is not visible, unable to view actual content",
+            "translation": "敏感数据不可见，无法查看实际内容"
+        },
+        {
             "id": "not legal JSON data",
             "message": "not legal JSON data",
             "translation": "JSON数据不合法"
@@ -466,9 +471,9 @@
             "translation": "证书格式不正确, 仅支持X.509格式"
         },
         {
-            "id": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
-            "message": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
-            "translation": "token格式错误, 目前仅支持OAuth2.0和jwt格式, 长度为32-512个字符, 包括大小写字母和数字"
+            "id": "delete template from template sets failed",
+            "message": "delete template from template sets failed",
+            "translation": ""
         },
         {
             "id": "template variable name must start with {TemplateVariablePrefix}",
@@ -876,21 +881,6 @@
             ]
         },
         {
-            "id": "the config file {Name} under this service already exists and cannot be created again",
-            "message": "the config file {Name} under this service already exists and cannot be created again",
-            "translation": "此服务下的配置文件 {Name} 已存在, 无法重复创建",
-            "placeholders": [
-                {
-                    "id": "Name",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)"
-                }
-            ]
-        },
-        {
             "id": "delete one app template binding instance by app id failed, err: {Err}",
             "message": "delete one app template binding instance by app id failed, err: {Err}",
             "translation": "移除服务模板套餐失败, err: {Err}",
@@ -1225,11 +1215,6 @@
                     "expr": "err"
                 }
             ]
-        },
-        {
-            "id": "sensitive data is not visible, unable to view actual content",
-            "message": "sensitive data is not visible, unable to view actual content",
-            "translation": "敏感数据不可见，无法查看实际内容"
         },
         {
             "id": "not a KV type service",
@@ -1590,22 +1575,17 @@
             "translation": "路径无效, 长度应为 \u003c= 1024"
         },
         {
-            "id": "invalid path, should start with '/'",
-            "message": "invalid path, should start with '/'",
-            "translation": "路径无效, 应以“/”开头"
-        },
-        {
-            "id": "invalid path {Part}, path cannot all be '.'",
-            "message": "invalid path {Part}, path cannot all be '.'",
-            "translation": "路径 {Part} 无效, 路径不能全部为“.”",
+            "id": "invalid path {Path}, the path must startwith '/' and cannot have consecutive '/'",
+            "message": "invalid path {Path}, the path must startwith '/' and cannot have consecutive '/'",
+            "translation": "路径 {Path} 无效, 路径必须以“/”开头，不能有连续的“/”",
             "placeholders": [
                 {
-                    "id": "Part",
+                    "id": "Path",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "part"
+                    "expr": "path"
                 }
             ]
         },
@@ -1751,6 +1731,21 @@
             "id": "invalid name {Name}, name cannot all be '.'",
             "message": "invalid name {Name}, name cannot all be '.'",
             "translation": "名称 {Name} 无效, 名称不能全部为“.”",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid name {Name}, there can't be any /",
+            "message": "invalid name {Name}, there can't be any /",
+            "translation": "名称 {Name} 无效，不能有 /",
             "placeholders": [
                 {
                     "id": "Name",
