@@ -90,7 +90,7 @@ export default {
   版本日志: 'Release Notes',
   功能特性: 'Features',
   问题反馈: 'Feedback',
-  退出登录: 'Sign out',
+  退出登录: 'Sign Out',
   新建业务: 'New Business Creation',
   模板与变量: 'Templates and Variables',
   模板管理: 'Template Management',
