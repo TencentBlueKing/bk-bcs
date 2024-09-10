@@ -7,7 +7,7 @@
     </div>
     <div v-if="expand" v-bkloading="{ loading: listLoading }" class="template-table">
       <div class="table-head">
-        <div class="th-cell">{{ t('配置文件绝对路径') }}</div>
+        <div class="th-cell">{{ t('配置文件名') }}</div>
         <div class="th-cell">{{ t('版本号') }}</div>
       </div>
       <RecycleScroller
@@ -103,7 +103,7 @@
     setTemplatesDefaultVersion();
   });
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = computed(() => (config: ITemplateConfigWithVersions) => {
     const { path, name } = config.spec;
     if (path.endsWith('/')) {

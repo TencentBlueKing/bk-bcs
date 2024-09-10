@@ -24,7 +24,8 @@ import (
 字段规范:
 1. 字段名使用驼峰命名法，表字段使用 _ 分隔
 2. bool/int/float/datetime 等类型使用默认字段类型
-3. string 类型必须指定类型和长度，字段是索引的，设置为 varchar(191)
+3. string 类型必须指定类型和长度
+4. index 固定varchar(191), (mysql 5.6索引长度限制767byte, utf8mb4下最长191)
 **/
 
 var (
@@ -36,7 +37,7 @@ var (
 // TaskRecord 任务记录
 type TaskRecord struct {
 	gorm.Model
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
+	TaskID              string            `json:"taskID" gorm:"type:varchar(191);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
 	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(255)"`
 	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(255)"`
@@ -86,8 +87,8 @@ func (t *TaskRecord) BeforeUpdate(tx *gorm.DB) error {
 // StepRecord 步骤记录
 type StepRecord struct {
 	gorm.Model
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id_step_name"`
-	Name                string            `json:"name" gorm:"type:varchar(255);uniqueIndex:idx_task_id_step_name"`
+	TaskID              string            `json:"taskID" gorm:"type:varchar(191);uniqueIndex:idx_task_id_step_name"`
+	Name                string            `json:"name" gorm:"type:varchar(191);uniqueIndex:idx_task_id_step_name"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
 	Executor            string            `json:"executor" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`

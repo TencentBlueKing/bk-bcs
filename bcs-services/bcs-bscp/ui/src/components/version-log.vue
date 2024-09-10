@@ -21,7 +21,7 @@
             <slot>
               <span class="item-title">{{ item.title }}</span>
               <span class="item-date">{{ item.date }}</span>
-              <span v-if="index === 0" :class="['item-current', { en: locale === 'en' }]">{{ t('当前版本') }}</span>
+              <span v-if="index === 0" class="item-current">{{ t('当前版本') }}</span>
             </slot>
           </li>
         </ul>
@@ -40,7 +40,7 @@
   import { useI18n } from 'vue-i18n';
   import type { IVersionLogItem } from '../../types/version-log';
 
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const props = withDefaults(
     defineProps<{
       logList: IVersionLogItem[];

@@ -24,8 +24,8 @@ import (
 // TaskBuilder ...
 type TaskBuilder interface { // nolint
 	TaskInfo() TaskInfo
-	Steps() ([]*Step, error) // Steps init step and define StepSequence
-	BuildTask(t Task) (Task, error)
+	Steps() ([]*Step, error)    // Steps init step and define StepSequence
+	FinalizeTask(t *Task) error // FinalizeTask for custom task
 }
 
 // TaskOptions xxx
@@ -159,16 +159,16 @@ func (t *Task) SetCallback(callBackName string) *Task {
 	return t
 }
 
-// GetCommonPayload get extra json
-func (t *Task) GetCommonPayload(obj interface{}) error {
+// GetCommonPayload unmarshal common payload to struct obj
+func (t *Task) GetCommonPayload(obj any) error {
 	if len(t.CommonPayload) == 0 {
 		t.CommonPayload = DefaultPayloadContent
 	}
 	return json.Unmarshal([]byte(t.CommonPayload), obj)
 }
 
-// SetCommonPayload set extra json
-func (t *Task) SetCommonPayload(obj interface{}) error {
+// SetCommonPayload marshal struct obj to common payload
+func (t *Task) SetCommonPayload(obj any) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
 		return err

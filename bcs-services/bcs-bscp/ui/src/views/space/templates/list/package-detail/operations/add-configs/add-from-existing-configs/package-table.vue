@@ -13,7 +13,7 @@
                 :model-value="isAllSelected"
                 :indeterminate="isIndeterminate"
                 @change="handleAllSelectionChange" />
-              <div class="name-text">{{ t('配置文件绝对路径') }}</div>
+              <div class="name-text">{{ t('配置文件名') }}</div>
             </div>
           </div>
           <div class="th-cell memo">{{ t('配置文件描述') }}</div>
@@ -113,7 +113,7 @@
     emits('change');
   };
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: ITemplateConfigItem) => {
     const { path, name } = config.spec;
     if (path.endsWith('/')) {

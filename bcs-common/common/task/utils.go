@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package task xxx
 package task
 
 import (
@@ -26,7 +25,7 @@ import (
 // RecoverPrintStack capture panic and print stack
 func RecoverPrintStack(proc string) {
 	if r := recover(); r != nil {
-		log.ERROR.Printf("[%s][recover] panic: %v, stack %v\n", proc, r, string(debug.Stack()))
+		log.ERROR.Printf("[%s][recover] panic: %v, stack %s", proc, r, debug.Stack())
 		return
 	}
 }
