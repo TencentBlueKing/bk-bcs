@@ -46,11 +46,6 @@ func ValidateUnixFilePath(kit *kit.Kit, path string) error {
 			"cannot contain consecutive '/'", path))
 	}
 
-	// 3. 检查是否以 '/' 结尾（除非是根路径）
-	if len(path) > 1 && strings.HasSuffix(path, "/") {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path cannot end with '/'", path))
-	}
-
 	return nil
 }
 
