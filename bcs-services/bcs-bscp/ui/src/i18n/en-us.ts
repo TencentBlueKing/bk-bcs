@@ -522,6 +522,7 @@ export default {
   是否可见: 'visibility',
   密钥类型: 'secret_type',
   '请输入配置文件的完整路径和文件名，例如：/etc/nginx/nginx.conf': 'Please enter the complete path and file name of the configuration file, for example: /etc/nginx/nginx.conf',
+  '对于Windows客户端，以上文件权限、用户及用户组设置不生效，可在后置脚本中处理文件权限': 'For Windows clients, the above file permission, user and user group settings do not take effect, and file permissions can be handled in the post-script',
 
   // 分组管理
   新增分组: 'New group',

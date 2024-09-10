@@ -168,11 +168,11 @@
         </div>
         <div class="th-cell delete"></div>
       </div>
-      <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="name" v-slot="{ item, index }">
+      <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="fileAP" v-slot="{ item, index }">
         <div class="table-row">
           <div class="not-editable td-cell name">
             <bk-overflow-title type="tips">
-              {{ fileAP(item) }}
+              {{ item.fileAP }}
             </bk-overflow-title>
           </div>
           <div class="not-editable td-cell type">
@@ -230,7 +230,7 @@
   import { useI18n } from 'vue-i18n';
   import { DownShape, EditLine } from 'bkui-vue/lib/icon';
   import { IConfigImportItem } from '../../../../../../../../../types/config';
-  import { cloneDeep, isEqual } from 'lodash';
+  import { isEqual } from 'lodash';
   import Message from 'bkui-vue/lib/message';
 
   const { t } = useI18n();
@@ -274,8 +274,21 @@
   watch(
     () => props.tableData,
     () => {
-      data.value = cloneDeep(props.tableData);
-      initData.value = cloneDeep(props.tableData);
+      const configList = props.tableData.map((item) => {
+        const { path, name } = item;
+        let fileAP;
+        if (path.endsWith('/')) {
+          fileAP = `${path}${name}`;
+        } else {
+          fileAP = `${path}/${name}`;
+        }
+        return {
+          ...item,
+          fileAP,
+        };
+      });
+      data.value = configList;
+      initData.value = configList;
     },
     { deep: true, immediate: true },
   );
@@ -290,15 +303,6 @@
     },
     { deep: true },
   );
-
-  // 配置文件名
-  const fileAP = (config: IConfigImportItem) => {
-    const { path, name } = config;
-    if (path.endsWith('/')) {
-      return `${path}${name}`;
-    }
-    return `${path}/${name}`;
-  };
 
   // 将权限数字拆分成三个分组配置
   const privilegeGroupsValue = computed(() => (privilege: string) => {
