@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -26,8 +25,8 @@ import (
 )
 
 // validUnixFileSubPathRegexp sub path support character:
-// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '.'
-var validUnixFileSubPathRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]{}]+$")
+// 必须以 / 开头，且不能出现连续的 /
+var validUnixFileSubPathRegexp = regexp.MustCompile(`^\/([^\/])+$`)
 
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(kit *kit.Kit, path string) error {
@@ -39,35 +38,10 @@ func ValidateUnixFilePath(kit *kit.Kit, path string) error {
 		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, length should <= 1024"))
 	}
 
-	// 1. should start with '/'
-	if !strings.HasPrefix(path, "/") {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, should start with '/'"))
-	}
-
-	// Split the path into parts
-	parts := strings.Split(path, "/")[1:] // Ignore the first empty part due to the leading '/'
-
-	if strings.HasSuffix(path, "/") {
-		parts = parts[:len(parts)-1] // Ignore the last empty part due to the trailing '/'
-	}
-
-	// Iterate over each part to validate
-	for _, part := range parts {
-
-		// 2. the verification path cannot all be '{'. '}'
-		if dotsRegexp.MatchString(part) {
-			return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, path cannot all be '.' ", part))
-		}
-
-		// 3. each sub path support character:
-		// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
-		if !validUnixFileSubPathRegexp.MatchString(part) {
-			return errf.Errorf(errf.InvalidArgument, i18n.T(kit, fmt.Sprintf(`invalid path, each sub path should only
-			 contain chinese, english, number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '{'. '}`)))
-		}
-
-		// 4. each sub path should be separated by '/'
-		// (handled by strings.Split above)
+	// 必须以 / 开头，且不能出现连续的 /
+	if !validUnixFileSubPathRegexp.MatchString(path) {
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path must start"+
+			"with '/' and cannot have consecutive '/'", path))
 	}
 
 	return nil
