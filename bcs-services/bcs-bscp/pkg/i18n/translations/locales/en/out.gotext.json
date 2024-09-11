@@ -9,6 +9,13 @@
             "fuzzy": true
         },
         {
+            "id": "invalid file name",
+            "message": "invalid file name",
+            "translation": "invalid file name",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "read file failed, err: {ErrR}",
             "message": "read file failed, err: {ErrR}",
             "translation": "read file failed, err: {ErrR}",
@@ -1853,23 +1860,6 @@
             "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
             "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
             "translation": "invalid path {Path}, the pathcannot contain consecutive '/'",
-            "translatorComment": "Copied from source.",
-            "placeholders": [
-                {
-                    "id": "Path",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path"
-                }
-            ],
-            "fuzzy": true
-        },
-        {
-            "id": "invalid path {Path}, the path cannot end with '/'",
-            "message": "invalid path {Path}, the path cannot end with '/'",
-            "translation": "invalid path {Path}, the path cannot end with '/'",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
