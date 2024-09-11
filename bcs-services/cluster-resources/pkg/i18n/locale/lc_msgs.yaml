@@ -6,6 +6,8 @@
   en: "Do not have permission to view this project"
 - msgID: 无权限访问
   en: "No access permission"
+- msgID: templateSpaceNames没找到或者无权限访问
+  en: "templateSpaceNames not found or no access permission"
 - msgID: 环境名称已存在
   en: "The environment name already exists."
 - msgID: 视图名称重复
