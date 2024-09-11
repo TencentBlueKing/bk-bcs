@@ -41,7 +41,9 @@
               <template #content>
                 <div>{{ t('只能输入三位 0~7 数字') }}</div>
                 <div class="privilege-tips-btn-area">
-                  <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{ t('我知道了') }}</bk-button>
+                  <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{
+                    t('我知道了')
+                  }}</bk-button>
                 </div>
               </template>
             </bk-popover>
@@ -578,6 +580,9 @@
       justify-content: space-between;
       :deep(.bk-form-item) {
         margin-bottom: 0px;
+        .bk-form-error {
+          position: inherit;
+        }
       }
     }
     .user-tips {

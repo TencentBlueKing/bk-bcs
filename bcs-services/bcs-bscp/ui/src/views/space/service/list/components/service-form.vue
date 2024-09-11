@@ -113,6 +113,7 @@
     } else {
       localData.value.data_type = '';
     }
+    handleChange();
   };
 
   const handleChange = () => {
