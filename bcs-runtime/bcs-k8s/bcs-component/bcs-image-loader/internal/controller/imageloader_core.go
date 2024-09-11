@@ -68,13 +68,7 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 
 	// 2. create jobs if need
 	baseJob := newJob(imageLoader)
-	if imageLoader.Spec.PodSelector != nil {
-		err = r.handlePodSelector(ctx, imageLoader, baseJob)
-	} else if imageLoader.Spec.NodeSelector != nil {
-		err = r.handleNodeSelector(ctx, imageLoader, baseJob)
-	} else {
-		err = r.handleAllNode(ctx, baseJob)
-	}
+	err = r.handleSelector(ctx, imageLoader, baseJob)
 	if err != nil {
 		return newStatus, nil, err
 	}

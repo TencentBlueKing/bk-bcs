@@ -21,6 +21,7 @@ import (
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 )
 
 // Client is an interface that defines methods for getting client instances.
@@ -56,56 +57,60 @@ type CMDBClient interface {
 	GetBS2IDByBizID(int64) (int, error)
 	// GetBizInfo returns the Business information for the given Biz ID.
 	GetBizInfo(int64) (*Business, error)
-	// GetHostInfo returns the Host information for the given list of host IDs.
+	// GetHostInfo returns the Host information for the given list of host IPs.
 	GetHostInfo([]string) (*[]HostData, error)
+	// GetHostsByBiz returns the Host information for the given list of host IPs
+	GetHostsByBiz(int64, []string) (*[]HostData, error)
 
 	// GetBcsNamespace returns the BCS namespace information for the given request.
-	GetBcsNamespace(*GetBcsNamespaceRequest) (*[]bkcmdbkube.Namespace, error)
+	GetBcsNamespace(request *GetBcsNamespaceRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Namespace, error)
 	// GetBcsNode returns the BCS node information for the given request.
-	GetBcsNode(*GetBcsNodeRequest) (*[]bkcmdbkube.Node, error)
+	GetBcsNode(request *GetBcsNodeRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Node, error)
 	// GetBcsWorkload returns the BCS workload information for the given request.
-	GetBcsWorkload(*GetBcsWorkloadRequest) (*[]interface{}, error)
+	GetBcsWorkload(request *GetBcsWorkloadRequest, db *gorm.DB, withDB bool) (*[]interface{}, error)
 	// GetBcsPod returns the BCS pod information for the given request.
-	GetBcsPod(*GetBcsPodRequest) (*[]bkcmdbkube.Pod, error)
+	GetBcsPod(request *GetBcsPodRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Pod, error)
 	// GetBcsCluster returns the BCS cluster information for the given request.
-	GetBcsCluster(*GetBcsClusterRequest) (*[]bkcmdbkube.Cluster, error)
+	GetBcsCluster(request *GetBcsClusterRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Cluster, error)
 	// GetBcsContainer retrieves the BCS container information based on the provided request.
-	GetBcsContainer(request *GetBcsContainerRequest) (*[]bkcmdbkube.Container, error)
+	GetBcsContainer(request *GetBcsContainerRequest, db *gorm.DB, withDB bool) (*[]Container, error)
 
 	// CreateBcsNode creates a new BCS node with the given request.
-	CreateBcsNode(*CreateBcsNodeRequest) (*[]int64, error)
+	CreateBcsNode(request *CreateBcsNodeRequest, db *gorm.DB) (*[]int64, error)
 	// DeleteBcsNode deletes the BCS node with the given request.
-	DeleteBcsNode(*DeleteBcsNodeRequest) error
+	DeleteBcsNode(request *DeleteBcsNodeRequest, db *gorm.DB) error
 	// UpdateBcsNode updates the BCS node with the given request.
-	UpdateBcsNode(*UpdateBcsNodeRequest) error
+	UpdateBcsNode(request *UpdateBcsNodeRequest, db *gorm.DB) error
 
 	// CreateBcsNamespace creates a new BCS namespace with the given request.
-	CreateBcsNamespace(*CreateBcsNamespaceRequest) (*[]int64, error)
+	CreateBcsNamespace(request *CreateBcsNamespaceRequest, db *gorm.DB) (*[]int64, error)
 	// DeleteBcsNamespace deletes the BCS namespace with the given request.
-	DeleteBcsNamespace(*DeleteBcsNamespaceRequest) error
+	DeleteBcsNamespace(request *DeleteBcsNamespaceRequest, db *gorm.DB) error
 	// UpdateBcsNamespace updates the BCS namespace with the given request.
-	UpdateBcsNamespace(*UpdateBcsNamespaceRequest) error
+	UpdateBcsNamespace(request *UpdateBcsNamespaceRequest, db *gorm.DB) error
 
 	// CreateBcsWorkload creates a new BCS workload with the given request.
-	CreateBcsWorkload(*CreateBcsWorkloadRequest) (*[]int64, error)
+	CreateBcsWorkload(request *CreateBcsWorkloadRequest, db *gorm.DB) (*[]int64, error)
 	// DeleteBcsWorkload deletes the BCS workload with the given request.
-	DeleteBcsWorkload(*DeleteBcsWorkloadRequest) error
+	DeleteBcsWorkload(request *DeleteBcsWorkloadRequest, db *gorm.DB) error
 	// UpdateBcsWorkload updates the BCS workload with the given request.
-	UpdateBcsWorkload(*UpdateBcsWorkloadRequest) error
+	UpdateBcsWorkload(request *UpdateBcsWorkloadRequest, db *gorm.DB) error
 
 	// CreateBcsPod creates a new BCS pod with the given request.
-	CreateBcsPod(*CreateBcsPodRequest) (*[]int64, error)
+	CreateBcsPod(request *CreateBcsPodRequest, db *gorm.DB) (*[]int64, error)
 	// DeleteBcsPod deletes the BCS pod with the given request.
-	DeleteBcsPod(*DeleteBcsPodRequest) error
+	DeleteBcsPod(request *DeleteBcsPodRequest, db *gorm.DB) error
 
 	// CreateBcsCluster creates a new BCS cluster with the given request.
-	CreateBcsCluster(*CreateBcsClusterRequest) (int64, error)
+	CreateBcsCluster(request *CreateBcsClusterRequest, db *gorm.DB) (int64, error)
 	// UpdateBcsCluster updates the BCS cluster with the given request.
-	UpdateBcsCluster(*UpdateBcsClusterRequest) error
+	UpdateBcsCluster(request *UpdateBcsClusterRequest, db *gorm.DB) error
 	// DeleteBcsCluster deletes the BCS cluster with the given request.
-	DeleteBcsCluster(*DeleteBcsClusterRequest) error
+	DeleteBcsCluster(request *DeleteBcsClusterRequest, db *gorm.DB) error
 	// UpdateBcsClusterType updates the BCS cluster type with the given request.
-	UpdateBcsClusterType(request *UpdateBcsClusterTypeRequest) error
-
-	DeleteBcsClusterAll(*DeleteBcsClusterAllRequest) error
+	UpdateBcsClusterType(request *UpdateBcsClusterTypeRequest, db *gorm.DB) error
+	// DeleteBcsClusterAll 删除所有的BCS集群，根据给定的请求。
+	// 参数request包含了删除BCS集群所需的信息。
+	// 参数db是gorm数据库连接实例，用于执行数据库操作。
+	DeleteBcsClusterAll(request *DeleteBcsClusterAllRequest, db *gorm.DB) error
 }

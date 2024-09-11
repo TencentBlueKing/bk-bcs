@@ -9733,6 +9733,10 @@ func (m *CopyTemplateSpaceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Name
+
+	// no validation rules for Description
+
 	if len(errors) > 0 {
 		return CopyTemplateSpaceReqMultiError(errors)
 	}

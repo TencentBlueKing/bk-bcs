@@ -324,7 +324,7 @@
           :options="{
             roundedSelection: false,
             scrollBeyondLastLine: false,
-            renderLineHighlight: false,
+            renderLineHighlight: 'none',
           }"
           :value="yaml">
         </CodeEditor>
@@ -344,7 +344,7 @@ import { timeFormat } from '@/common/util';
 import Metric from '@/components/metric.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import StatusIcon from '@/components/status-icon';
-import { useCluster, useConfig, useProject } from '@/composables/use-app';
+import { useAppData, useCluster, useProject } from '@/composables/use-app';
 import fullScreen from '@/directives/full-screen';
 import $store from '@/store';
 import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
@@ -425,7 +425,7 @@ export default defineComponent({
     }));
 
     // 容器
-    const { _INTERNAL_ } = useConfig();
+    const { _INTERNAL_ } = useAppData();
     const container = ref<any[]>([]);
     const containerLoading = ref(false);
     const logLinks = ref({});

@@ -20,6 +20,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/axgle/mahonia"
+	"github.com/saintfish/chardet"
+
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 )
 
@@ -35,6 +38,23 @@ func NewZipArchive(destPath string, limitFileSize int64) ZipArchive {
 		destPath:      destPath,
 		limitFileSize: limitFileSize,
 	}
+}
+
+// 检测源字符集 转换成utf-8
+func checkCharacterSets(src string) (string, error) {
+
+	// 创建字符集检测器
+	detector := chardet.NewTextDetector()
+
+	// 检测字符集
+	result, err := detector.DetectBest([]byte(src))
+	if err != nil {
+		return "", err
+	}
+
+	decoder := mahonia.NewDecoder(result.Charset)
+
+	return decoder.ConvertString(src), nil
 }
 
 // UnZipPack decompresses the zip package and receives the parameter io.Reader
@@ -97,8 +117,12 @@ func (z ZipArchive) unpackZip(zr *zip.Reader) error {
 }
 
 func (z ZipArchive) unzipFile(f *zip.File) error {
+	fileName, err := checkCharacterSets(f.Name)
+	if err != nil {
+		return err
+	}
 	if f.FileInfo().IsDir() {
-		if err := os.MkdirAll(filepath.Join(z.destPath, f.Name), f.Mode().Perm()); err != nil {
+		if err = os.MkdirAll(filepath.Join(z.destPath, fileName), f.Mode().Perm()); err != nil {
 			return err
 		}
 		return nil
@@ -111,8 +135,7 @@ func (z ZipArchive) unzipFile(f *zip.File) error {
 		// NOCC:gas/error(ignore)
 		_ = rc.Close()
 	}()
-
-	filePath := sanitize(f.Name)
+	filePath := sanitize(fileName)
 	z.destPath = filepath.Join(z.destPath, filePath)
 
 	fileDir := filepath.Dir(z.destPath)

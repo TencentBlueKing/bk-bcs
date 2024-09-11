@@ -76,7 +76,7 @@ func setModuleInfo(group *proto.NodeGroup, bkBizIDString string) {
 	}
 }
 
-func getClusterResourceGroup(cls *proto.Cluster) string {
+func getClusterResourceGroup(cls *proto.Cluster) string { // nolint
 	if cls.GetExtraInfo() == nil {
 		return ""
 	}

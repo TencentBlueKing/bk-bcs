@@ -364,7 +364,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error { // nolint
 	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
 	if err == nil && cloud.GetConfInfo().GetDisableCheckGroupResource() {
 		return nil

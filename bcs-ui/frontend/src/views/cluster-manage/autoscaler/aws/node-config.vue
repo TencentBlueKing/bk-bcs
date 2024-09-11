@@ -386,11 +386,11 @@
 import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
+import FormGroup from '@/components/form-group.vue';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
@@ -457,7 +457,7 @@ export default defineComponent({
       name: defaultValues.value.name || '', // 节点名称
       nodeOS: defaultValues.value.launchTemplate?.imageInfo?.imageName || '', // 节点操作系统
       autoScaling: {
-        serviceRole: defaultValues.value.autoScaling.serviceRole || '', //iam角色
+        serviceRole: defaultValues.value.autoScaling.serviceRole || '', // iam角色
         vpcID: '', // todo 放在basic-pool-info组件比较合适
         subnetIDs: defaultValues.value.autoScaling.subnetIDs || [], // 支持子网
       },
@@ -608,7 +608,7 @@ export default defineComponent({
         $cloudID: cluster.value.provider,
         accountID: cluster.value.cloudAccountID,
         operator: $store.state.user.username,
-        roleType: 'nodeGroup'
+        roleType: 'nodeGroup',
       });
       nodeRolesLoading.value = false;
     };
@@ -660,8 +660,8 @@ export default defineComponent({
         const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
         timer && clearTimeout(timer);
         timer = setTimeout(() => {
-          pageChange(Math.ceil((index+1)/pagination.value.limit));
-        },100)
+          pageChange(Math.ceil((index + 1) / pagination.value.limit));
+        }, 100);
       }
       handleResetPage();
     });
@@ -685,7 +685,7 @@ export default defineComponent({
       }, []);
       return sortBy(data);
     });
-    
+
     const CPU = ref('');
     const Mem = ref('');
     watch(() => [
@@ -825,9 +825,7 @@ export default defineComponent({
       subnetID: string
     }>>([]);
     const filterSubnetsList = computed(() => subnetsList.value);
-    const subnetsRowClass = ({ row }) => {
-      return 'table-row-enable';
-    };
+    const subnetsRowClass = ({ row }) => 'table-row-enable';
     const handleGetSubnets = async () => {
       subnetsLoading.value = true;
       subnetsList.value = await $store.dispatch('clustermanager/cloudSubnets', {
@@ -839,7 +837,6 @@ export default defineComponent({
       subnetsLoading.value = false;
     };
     const handleCheckSubnets = (row) => {
-
       const index = nodePoolConfig.value.autoScaling.subnetIDs.indexOf(row.subnetID);
       if (index > -1) {
         nodePoolConfig.value.autoScaling.subnetIDs.splice(index, 1);

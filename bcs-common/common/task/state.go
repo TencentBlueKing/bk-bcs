@@ -10,7 +10,6 @@
  * limitations under the License.
  */
 
-// Package task is a package for task management
 package task
 
 import (
@@ -325,43 +324,7 @@ func (s *State) isLastStep(step *types.Step) bool {
 	return step.IsCompleted()
 }
 
-// GetCommonParam get common params by key
-func (s *State) GetCommonParam(key string) (string, bool) {
-	return s.task.GetCommonParam(key)
-}
-
-// AddCommonParam add common params
-func (s *State) AddCommonParam(key, value string) *State {
-	s.task.AddCommonParam(key, value)
-	return s
-}
-
-// GetCommonPayload get extra params by obj
-func (s *State) GetCommonPayload(obj interface{}) error {
-	return s.task.GetCommonPayload(obj)
-}
-
-// SetCommonPayload set extra params by obj
-func (s *State) SetCommonPayload(obj interface{}) error {
-	return s.task.SetCommonPayload(obj)
-}
-
-// GetStepParam get step params by key
-func (s *State) GetStepParam(stepName, key string) (string, bool) {
-	return s.task.GetStepParam(stepName, key)
-}
-
-// AddStepParams add step params
-func (s *State) AddStepParams(stepName, key, value string) error {
-	return s.task.AddStepParams(stepName, key, value)
-}
-
 // GetTask get task
 func (s *State) GetTask() *types.Task {
 	return s.task
-}
-
-// GetStep get step by stepName
-func (s *State) GetStep(stepName string) (*types.Step, bool) {
-	return s.task.GetStep(stepName)
 }

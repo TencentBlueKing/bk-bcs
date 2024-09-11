@@ -75,6 +75,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm/tmp"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/audit"
 	ssmAuth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
@@ -496,6 +497,12 @@ func (cm *ClusterManager) initJWTClient() error {
 	return auth.InitJWTClient(cm.opt)
 }
 
+// initCache for cache init
+func (cm *ClusterManager) initCache() error {
+	cache.InitCache()
+	return nil
+}
+
 // init client permissions
 func (cm *ClusterManager) initClientPermissions() error {
 	auth.ClientPermissions = make(map[string][]string, 0)
@@ -650,7 +657,11 @@ func (cm *ClusterManager) initK8SOperator() {
 
 // init daemon
 func (cm *ClusterManager) initDaemon() {
-	cm.daemon = daemon.NewDaemon(0, cm.model, cm.locker, daemon.DaemonOptions{EnableDaemon: cm.opt.Daemon.Enable})
+	cm.daemon = daemon.NewDaemon(0, cm.model, cm.locker, daemon.DaemonOptions{
+		EnableDaemon:             cm.opt.Daemon.Enable,
+		EnableAllocateCidrDaemon: cm.opt.Daemon.EnableAllocateCidr,
+		EnableInsTypeUsage:       cm.opt.Daemon.EnableInsTypeUsage,
+	})
 }
 
 // initRegistry etcd registry
@@ -1102,6 +1113,10 @@ func (cm *ClusterManager) Init() error {
 	cm.initK8SOperator()
 	// init IAM client
 	if err := cm.initIAMClient(); err != nil {
+		return err
+	}
+	// init cache
+	if err := cm.initCache(); err != nil {
 		return err
 	}
 

@@ -45,112 +45,112 @@ func NewContext(ctx context.Context, store istore.Store, task *types.Task, curre
 }
 
 // Context returns the step's context
-func (t *Context) Context() context.Context {
-	return t.ctx
+func (c *Context) Context() context.Context {
+	return c.ctx
 }
 
 // GetTaskID get task id
-func (t *Context) GetTaskID() string {
-	return t.task.GetTaskID()
+func (c *Context) GetTaskID() string {
+	return c.task.GetTaskID()
 }
 
 // GetTaskName get task name
-func (t *Context) GetTaskName() string {
-	return t.task.GetTaskID()
+func (c *Context) GetTaskName() string {
+	return c.task.GetTaskName()
 }
 
 // GetTaskType get task type
-func (t *Context) GetTaskType() string {
-	return t.task.GetTaskType()
+func (c *Context) GetTaskType() string {
+	return c.task.GetTaskType()
 }
 
 // GetTaskIndex get task index
-func (t *Context) GetTaskIndex() string {
-	return t.task.GetTaskIndex()
+func (c *Context) GetTaskIndex() string {
+	return c.task.GetTaskIndex()
 }
 
 // GetTaskStatus get task status
-func (t *Context) GetTaskStatus() string {
-	return t.task.GetStatus()
+func (c *Context) GetTaskStatus() string {
+	return c.task.GetStatus()
 }
 
 // GetCommonParam get current task param
-func (t *Context) GetCommonParam(key string) (string, bool) {
-	return t.task.GetCommonParam(key)
+func (c *Context) GetCommonParam(key string) (string, bool) {
+	return c.task.GetCommonParam(key)
 }
 
-// AddCommonParam add task common params
-func (t *Context) AddCommonParam(k, v string) error {
-	_ = t.task.AddCommonParam(k, v)
-	return nil
+// AddCommonParam add task common param and save to store
+func (c *Context) AddCommonParam(k, v string) error {
+	_ = c.task.AddCommonParam(k, v)
+	return c.store.UpdateTask(c.ctx, c.task)
 }
 
-// GetCommonPayload get task extra json
-func (t *Context) GetCommonPayload(obj interface{}) error {
-	return t.task.GetCommonPayload(obj)
+// GetCommonPayload unmarshal task common payload to struct obj
+func (c *Context) GetCommonPayload(obj any) error {
+	return c.task.GetCommonPayload(obj)
 }
 
-// SetCommonPayload set task extra json
-func (t *Context) SetCommonPayload(obj interface{}) error {
-	if err := t.task.SetCommonPayload(obj); err != nil {
+// SetCommonPayload marshal struct obj to task common payload and save to store
+func (c *Context) SetCommonPayload(obj any) error {
+	if err := c.task.SetCommonPayload(obj); err != nil {
 		return err
 	}
 
-	return t.store.UpdateTask(t.ctx, t.task)
+	return c.store.UpdateTask(c.ctx, c.task)
 }
 
 // GetName get current step name
-func (t *Context) GetName() string {
-	return t.currentStep.GetName()
+func (c *Context) GetName() string {
+	return c.currentStep.GetName()
 }
 
 // GetStatus get current step status
-func (t *Context) GetStatus() string {
-	return t.currentStep.GetStatus()
+func (c *Context) GetStatus() string {
+	return c.currentStep.GetStatus()
 }
 
-// GetRetryCount get current step retrycount
-func (t *Context) GetRetryCount() uint32 {
-	return t.currentStep.GetRetryCount()
+// GetRetryCount get current step retry count
+func (c *Context) GetRetryCount() uint32 {
+	return c.currentStep.GetRetryCount()
 }
 
-// GetParam get current step param
-func (t *Context) GetParam(key string) (string, bool) {
-	return t.currentStep.GetParam(key)
+// GetParam get current step param by key
+func (c *Context) GetParam(key string) (string, bool) {
+	return c.currentStep.GetParam(key)
 }
 
-// AddParam set step param by key,value
-func (t *Context) AddParam(key string, value string) error {
-	_ = t.currentStep.AddParam(key, value)
-	return t.store.UpdateTask(t.ctx, t.task)
+// AddParam set step param by key,value and save to store
+func (c *Context) AddParam(key string, value string) error {
+	_ = c.currentStep.AddParam(key, value)
+	return c.store.UpdateTask(c.ctx, c.task)
 }
 
 // GetParams return all step params
-func (t *Context) GetParams() map[string]string {
-	return t.currentStep.GetParams()
+func (c *Context) GetParams() map[string]string {
+	return c.currentStep.GetParams()
 }
 
-// SetParams return all step params
-func (t *Context) SetParams(params map[string]string) error {
-	t.currentStep.SetParams(params)
-	return t.store.UpdateTask(t.ctx, t.task)
+// SetParams set all step params and save to store
+func (c *Context) SetParams(params map[string]string) error {
+	c.currentStep.SetParams(params)
+	return c.store.UpdateTask(c.ctx, c.task)
 }
 
-// GetPayload return unmarshal step extras
-func (t *Context) GetPayload(obj interface{}) error {
-	return t.currentStep.GetPayload(obj)
+// GetPayload return unmarshal step payload
+func (c *Context) GetPayload(obj any) error {
+	return c.currentStep.GetPayload(obj)
 }
 
 // GetStartTime return step start time
-func (t *Context) GetStartTime() time.Time {
-	return t.currentStep.Start
+func (c *Context) GetStartTime() time.Time {
+	return c.currentStep.Start
 }
 
-// SetPayload set step extras by json string
-func (t *Context) SetPayload(obj interface{}) error {
-	if err := t.currentStep.SetPayload(obj); err != nil {
+// SetPayload marshal struct obj to step payload and save to store
+func (c *Context) SetPayload(obj any) error {
+	if err := c.currentStep.SetPayload(obj); err != nil {
 		return err
 	}
 
-	return t.store.UpdateTask(t.ctx, t.task)
+	return c.store.UpdateTask(c.ctx, c.task)
 }

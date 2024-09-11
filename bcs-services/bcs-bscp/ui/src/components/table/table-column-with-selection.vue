@@ -1,5 +1,5 @@
 <template>
-  <bk-table-column label="配置文件名称">
+  <bk-table-column label="配置文件名">
     <bk-checkbox></bk-checkbox>
     aaa
   </bk-table-column>

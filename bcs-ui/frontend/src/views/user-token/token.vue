@@ -254,7 +254,7 @@ export default defineComponent({
     const options = ref({
       roundedSelection: false,
       scrollBeyondLastLine: false,
-      renderLineHighlight: false,
+      renderLineHighlight: 'none',
     });
     // 用户信息
     const user = computed(() => $store.state.user);

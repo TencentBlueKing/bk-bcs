@@ -11,7 +11,7 @@
       <bk-tab v-model:active="activeTab" type="card-grid" ext-cls="view-config-tab">
         <bk-tab-panel name="content" :label="t('配置文件信息')">
           <bk-form label-width="100" form-type="vertical">
-            <bk-form-item :label="t('配置文件绝对路径')">{{ fileAP() }}</bk-form-item>
+            <bk-form-item :label="t('配置文件名')">{{ fileAP() }}</bk-form-item>
             <bk-form-item :label="t('配置文件描述')">
               <div class="memo">{{ configDetail.memo || configDetail.revision_memo || '--' }}</div>
             </bk-form-item>
@@ -173,7 +173,7 @@
     },
   );
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = () => {
     const { path, name } = configDetail.value;
     if (path.endsWith('/')) {

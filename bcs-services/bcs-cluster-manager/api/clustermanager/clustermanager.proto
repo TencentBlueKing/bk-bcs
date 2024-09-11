@@ -12310,6 +12310,10 @@ message ListOperationLogsRequest {
     title: "resourceName",
     description: "默认为空, 过滤资源名称维度的操作审计"
   }];
+  string opUser = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "opUser",
+    description: "默认为空, 发起者筛选"
+  }];
 }
 
 message ListTaskStepLogsRequest {

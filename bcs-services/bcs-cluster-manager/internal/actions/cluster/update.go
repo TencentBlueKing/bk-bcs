@@ -25,6 +25,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -300,6 +301,23 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *cmproto.UpdateClusterRe
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	// create operationLog
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ua.cluster.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s修改基本信息", ua.cluster.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("UpdateCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
+	}
+
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 

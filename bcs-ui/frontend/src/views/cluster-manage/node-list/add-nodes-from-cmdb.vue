@@ -117,7 +117,7 @@ import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import LoginType from '@/views/cluster-manage/add/form/login-type.vue';
+import LoginType from '@/views/cluster-manage/add/components/login-type.vue';
 
 export default defineComponent({
   components: { IpSelector, StatusIcon, ConfirmDialog, TemplateSelector, LoginType },

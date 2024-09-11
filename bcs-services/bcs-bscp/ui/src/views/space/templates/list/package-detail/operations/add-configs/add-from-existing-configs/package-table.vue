@@ -13,7 +13,7 @@
                 :model-value="isAllSelected"
                 :indeterminate="isIndeterminate"
                 @change="handleAllSelectionChange" />
-              <div class="name-text">{{ t('配置文件绝对路径') }}</div>
+              <div class="name-text">{{ t('配置文件名') }}</div>
             </div>
           </div>
           <div class="th-cell memo">{{ t('配置文件描述') }}</div>
@@ -61,17 +61,19 @@
 
   const emits = defineEmits(['toggleOpen', 'update:selectedConfigs', 'change']);
 
+  const selectedConfigIds = computed(() => new Set(props.selectedConfigs.map((item) => item.id)));
+
   const isAllSelected = computed(() => {
-    const res = props.configList.length > 0 && props.configList.every((item) => isConfigSelected(item.id));
-    return res;
+    return props.configList.every((item) => selectedConfigIds.value.has(item.id));
   });
 
   const isIndeterminate = computed(() => {
-    const res = props.configList.length > 0 && props.selectedConfigs.length > 0 && !isAllSelected.value;
-    return res;
+    const selectedCount = props.selectedConfigs.length;
+    const totalCount = props.configList.length;
+    return selectedCount > 0 && selectedCount < totalCount && !isAllSelected.value;
   });
 
-  const isConfigSelected = (id: number) => props.selectedConfigs.findIndex((item) => item.id === id) > -1;
+  const isConfigSelected = (id: number) => selectedConfigIds.value.has(id);
 
   const handleAllSelectionChange = (checked: boolean) => {
     const configs = props.selectedConfigs.slice();
@@ -111,7 +113,7 @@
     emits('change');
   };
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: ITemplateConfigItem) => {
     const { path, name } = config.spec;
     if (path.endsWith('/')) {

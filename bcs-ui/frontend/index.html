@@ -33,7 +33,7 @@
     var BK_SHARED_RES_BASE_JS_URL = '<%= process.env.BK_SHARED_RES_BASE_JS_URL %>'
 
     // 加载配置文件
-    window.BCS_CONFIG = JSON.parse('<%= process.env.BK_BCS_CONFIG %>')
+    window.BCS_CONFIG = JSON.parse('<%= process.env.BK_BCS_CONFIG %>' || '{}')
 </script>
 </body>
 </html>

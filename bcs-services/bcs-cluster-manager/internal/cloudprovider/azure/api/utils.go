@@ -1418,7 +1418,7 @@ func handlerIPConfig(config *armnetwork.InterfaceIPConfiguration) (string, bool)
 	// (https://learn.microsoft.com/zh-cn/azure/virtual-network
 	// /virtual-networks-faq#what-address-ranges-can-i-use-in-my-vnets)
 	ip := net.ParseIP(*config.Properties.PrivateIPAddress)
-	if !(ip != nil && ip.IsPrivate()) { // 取反
+	if ip == nil {
 		return "", false
 	}
 	return ip.String(), true

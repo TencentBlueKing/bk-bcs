@@ -386,7 +386,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 			Items: batch,
 		})
 		if errC != nil {
-			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "list config item failed, err: %v", err))))
+			_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "list config item failed, err: %v", errC))))
 			return
 		}
 		for _, item := range tuple.GetDetails() {

@@ -127,16 +127,16 @@ func (s *Step) SetNewParams(params map[string]string) *Step {
 	return s
 }
 
-// GetPayload return unmarshal step extras
-func (s *Step) GetPayload(obj interface{}) error {
+// GetPayload unmarshal step payload to struct obj
+func (s *Step) GetPayload(obj any) error {
 	if len(s.Payload) == 0 {
 		s.Payload = DefaultPayloadContent
 	}
 	return json.Unmarshal([]byte(s.Payload), obj)
 }
 
-// SetPayload set step extras by json string
-func (s *Step) SetPayload(obj interface{}) error {
+// SetPayload marshal struct obj to step payload
+func (s *Step) SetPayload(obj any) error {
 	result, err := json.Marshal(obj)
 	if err != nil {
 		return err

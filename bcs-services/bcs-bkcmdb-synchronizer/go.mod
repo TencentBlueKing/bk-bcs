@@ -9,7 +9,7 @@ replace (
 
 require (
 	configcenter v0.0.0-00010101000000-000000000000
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418123107-72b120390195
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240830030550-c83253c3a207
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/kirito41dd/xslice v0.0.1
@@ -19,6 +19,8 @@ require (
 	github.com/rabbitmq/amqp091-go v1.5.0
 	go-micro.dev/v4 v4.8.1
 	google.golang.org/grpc v1.62.1
+	gorm.io/driver/sqlite v1.5.6
+	gorm.io/gorm v1.25.11
 	k8s.io/api v0.24.2
 )
 
@@ -77,6 +79,8 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/joyt/godate v0.0.0-20150226210126-7151572574a7 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -87,6 +91,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattbaird/jsonpatch v0.0.0-20200820163806-098863c1fc24 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/mitchellh/hashstructure v1.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

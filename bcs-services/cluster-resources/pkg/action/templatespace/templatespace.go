@@ -301,7 +301,7 @@ func (t *TemplateSpaceAction) Delete(ctx context.Context, id string) error {
 }
 
 // Copy xxx
-func (t *TemplateSpaceAction) Copy(ctx context.Context, id string) (string, error) {
+func (t *TemplateSpaceAction) Copy(ctx context.Context, id, name, desc string) (string, error) {
 	if err := t.checkAccess(ctx); err != nil {
 		return "", err
 	}
@@ -322,12 +322,29 @@ func (t *TemplateSpaceAction) Copy(ctx context.Context, id string) (string, erro
 	}
 
 	// 新生成文件夹名称
-	newSpaceName := templateSpace.Name + "_" + fmt.Sprintf("%d", time.Now().Unix())
+	if name == "" {
+		name = templateSpace.Name + "_" + fmt.Sprintf("%d", time.Now().Unix())
+	}
+
+	// 检测是否重复
+	nameCond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyName:        name,
+		entity.FieldKeyProjectCode: p.Code,
+	})
+	templateSpaces, err := t.model.ListTemplateSpace(ctx, nameCond)
+	if err != nil {
+		return "", err
+	}
+	if len(templateSpaces) > 0 {
+		return "", errorx.New(errcode.DuplicationNameErr, i18n.GetMsg(ctx, "文件夹名称重复"))
+	}
+
 	// 旧文件夹名称须保留做查询
 	oldSpaceName := templateSpace.Name
-	templateSpace.Name = newSpaceName
+	templateSpace.Name = name
 	// id重置，让底层重新生成
 	templateSpace.ID = primitive.NilObjectID
+	templateSpace.Description = desc
 
 	newId, err := t.model.CreateTemplateSpace(ctx, templateSpace)
 	if err != nil {
@@ -345,7 +362,7 @@ func (t *TemplateSpaceAction) Copy(ctx context.Context, id string) (string, erro
 	}
 
 	for _, template := range templates {
-		template.TemplateSpace = newSpaceName
+		template.TemplateSpace = name
 	}
 	// 批量创建模板元数据
 	err = t.model.CreateTemplateBatch(ctx, templates)
@@ -359,7 +376,7 @@ func (t *TemplateSpaceAction) Copy(ctx context.Context, id string) (string, erro
 	}
 
 	for _, templateVersion := range templateVersions {
-		templateVersion.TemplateSpace = newSpaceName
+		templateVersion.TemplateSpace = name
 	}
 
 	// 批量创建模板版本

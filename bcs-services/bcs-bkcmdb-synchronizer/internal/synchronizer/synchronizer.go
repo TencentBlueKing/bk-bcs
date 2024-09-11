@@ -17,10 +17,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	_ "net/http/pprof" //nolint
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
@@ -37,12 +39,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/mq"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/mq/rabbitmq"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/db/sqlite"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/syncer"
 )
 
 const (
 	// FullSynchronizationTicker xxx
-	FullSynchronizationTicker = 100000
+	FullSynchronizationTicker = 30
 )
 
 // Synchronizer the synchronizer
@@ -184,8 +187,8 @@ func (s *Synchronizer) Run() {
 		blackList = strings.Split(s.BkcmdbSynchronizerOption.Synchronizer.BlackList, ",")
 	}
 
-	blog.Infof("whiteList: %v, len: ", whiteList, len(whiteList))
-	blog.Infof("blackList: %v, len: ", blackList, len(blackList))
+	blog.Infof("whiteList: %v, len: %d", whiteList, len(whiteList))
+	blog.Infof("blackList: %v, len: %d", blackList, len(blackList))
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -205,6 +208,7 @@ func (s *Synchronizer) Run() {
 	}
 
 	chn, err := s.MQ.GetChannel()
+	defer chn.Close()
 
 	err = s.MQ.EnsureExchange(chn)
 	if err != nil {
@@ -212,11 +216,11 @@ func (s *Synchronizer) Run() {
 		return
 	}
 
-	err = chn.Close()
-	if err != nil {
-		blog.Errorf("close channel failed, err: %s", err.Error())
-		return
-	}
+	//err = chn.Close()
+	//if err != nil {
+	//	blog.Errorf("close channel failed, err: %s", err.Error())
+	//	return
+	//}
 
 	cmCli, err := s.getClusterManagerGrpcGwClient()
 	if err != nil {
@@ -224,105 +228,191 @@ func (s *Synchronizer) Run() {
 		return
 	}
 
-	ticker := time.NewTicker(FullSynchronizationTicker * time.Hour)
-	defer ticker.Stop()
-	for ; true; <-ticker.C {
-		blog.Infof("start sync at %s", time.Now().Format("2006-01-02 15:04:05"))
+	blog.Infof("start sync at %s", time.Now().Format("2006-01-02 15:04:05"))
 
-		err = s.MQ.Close()
-		if err != nil {
-			blog.Errorf("close rabbitmq failed, err: %s", err.Error())
-		}
+	//err = s.MQ.Close()
+	//if err != nil {
+	//	blog.Errorf("close rabbitmq failed, err: %s", err.Error())
+	//}
 
-		lcReq := cmp.ListClusterReq{}
-		//if s.BkcmdbSynchronizerOption.Synchronizer.Env != "stag" {
-		//	lcReq.Environment = s.BkcmdbSynchronizerOption.Synchronizer.Env
-		//}
+	lcReq := cmp.ListClusterReq{}
+	//if s.BkcmdbSynchronizerOption.Synchronizer.Env != "stag" {
+	//	lcReq.Environment = s.BkcmdbSynchronizerOption.Synchronizer.Env
+	//}
 
-		resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
-		if err != nil {
-			blog.Errorf("list cluster failed, err: %s", err.Error())
-			return
-		}
+	resp, err := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+	if err != nil {
+		blog.Errorf("list cluster failed, err: %s", err.Error())
+		return
+	}
 
-		clusters := resp.Data
-		clusterMap := make(map[string]*cmp.Cluster)
-		var clusterList ClusterList
+	clusters := resp.Data
+	clusterMap := make(map[string]*cmp.Cluster)
+	var clusterList ClusterList
 
-		for _, cluster := range clusters {
-			if len(whiteList) > 0 {
-				if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
-					continue
-				}
-			}
-
-			if len(blackList) > 0 {
-				if exit, _ := common.InArray(cluster.ClusterID, blackList); exit {
-					continue
-				}
-			}
-
-			if cluster.ClusterType == "virtual" {
+	for _, cluster := range clusters {
+		if len(whiteList) > 0 {
+			if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
 				continue
 			}
+		}
 
-			if _, ok := clusterMap[cluster.ClusterID]; ok {
-				if cluster.IsShared {
-					clusterMap[cluster.ClusterID] = cluster
-				}
-			} else {
+		if len(blackList) > 0 {
+			if exit, _ := common.InArray(cluster.ClusterID, blackList); exit {
+				continue
+			}
+		}
+
+		if cluster.ClusterType == "virtual" {
+			continue
+		}
+
+		if _, ok := clusterMap[cluster.ClusterID]; ok {
+			if cluster.IsShared {
 				clusterMap[cluster.ClusterID] = cluster
-				clusterList = append(clusterList, cluster.ClusterID)
 			}
-
+		} else {
+			clusterMap[cluster.ClusterID] = cluster
+			clusterList = append(clusterList, cluster.ClusterID)
 		}
 
-		blog.Infof("clusterList: %v", clusterList)
+	}
 
-		sort.Sort(clusterList)
+	blog.Infof("clusterList: %v", clusterList)
 
-		replicas := s.BkcmdbSynchronizerOption.Synchronizer.Replicas
+	sort.Sort(clusterList)
 
-		workList := clusterList[podIndex*len(clusterList)/replicas : (podIndex+1)*len(clusterList)/replicas]
+	replicas := s.BkcmdbSynchronizerOption.Synchronizer.Replicas
 
-		blog.Infof("workList: %v", workList)
+	workList := clusterList[podIndex*len(clusterList)/replicas : (podIndex+1)*len(clusterList)/replicas]
 
-		gm := common.NewGoroutineManager(s.syncWorker)
+	blog.Infof("workList: %v", workList)
 
-		for _, w := range workList {
-			gm.Start(w, clusterMap[w])
-			blog.Infof("%s started", w)
+	gm := common.NewGoroutineManager(s.syncWorker)
+
+	for _, w := range workList {
+		blog.Infof("%s started", w)
+		gm.Start(w, clusterMap[w])
+	}
+
+	//for _, cluster := range clusterMap {
+	//	if exist, _ := common.InArray(cluster.ClusterID, clusterList); exist {
+	//		go s.sync(cluster)
+	//	}
+	//	////s.Sync(cluster)
+	//	//go s.sync(cluster)
+	//}
+	go func() {
+		http.HandleFunc("/restart", common.HandleRestart(gm))
+		http.HandleFunc("/list", common.HandleList(gm))
+		http.HandleFunc("/worklist", common.HandleWorkList(gm, workList))
+		http.HandleFunc("/syncStorage", s.syncStorageHandler(clusterMap))
+		http.HandleFunc("/syncStore", s.syncStoreHandler(clusterMap))
+
+		if err := http.ListenAndServe(":8080", nil); err != nil {
+			blog.Errorf("Goroutine Manager start error: %v\n", err)
 		}
+	}()
 
-		//for _, cluster := range clusterMap {
-		//	if exist, _ := common.InArray(cluster.ClusterID, clusterList); exist {
-		//		go s.sync(cluster)
-		//	}
-		//	////s.Sync(cluster)
-		//	//go s.sync(cluster)
-		//}
-		go func() {
-			http.HandleFunc("/restart", common.HandleRestart(gm))
-			http.HandleFunc("/list", common.HandleList(gm))
-			http.HandleFunc("/worklist", common.HandleWorkList(gm, workList))
-			if err := http.ListenAndServe(":8080", nil); err != nil {
-				blog.Errorf("Goroutine Manager start error: %v\n", err)
-			}
-		}()
+	//for _, w := range workList {
+	//	blog.Infof("%s started syncStore", w)
+	//	time.Sleep(time.Second * 10)
+	//	bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w], nil, false)
+	//	if err != nil {
+	//		blog.Errorf("get bk cluster failed, err: %s", err.Error())
+	//		continue
+	//	}
+	//	s.syncStore(bkCluster, false)
+	//}
 
-		blog.Infof("start consumer success")
-		tickerChecker := time.NewTicker(1 * time.Minute)
-		defer tickerChecker.Stop()
-		for ; true; <-tickerChecker.C {
-			blog.Infof("tickerChecker")
+	go func() {
+		time.Sleep(time.Second * 10)
+		ticker := time.NewTicker(60 * time.Minute)
+		defer ticker.Stop()
+		for ; true; <-ticker.C {
+			blog.Infof("ticker syncStorage")
 			for _, w := range workList {
-				if exit, _ := common.InArray(w, gm.List()); !exit {
-					gm.Start(w, clusterMap[w])
-					blog.Infof("%s restarted", w)
+				bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w], nil, false)
+				if err != nil {
+					blog.Errorf("get bk cluster failed, err: %s", err.Error())
+					continue
+				}
+				go s.syncStorage(clusterMap[w], bkCluster)
+				time.Sleep(time.Minute)
+			}
+		}
+	}()
+
+	//go func() {
+	//	ticker := time.NewTicker(30 * time.Minute)
+	//	defer ticker.Stop()
+	//	for ; true; <-ticker.C {
+	//		blog.Infof("ticker SyncNodes")
+	//		for _, w := range workList {
+	//			bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w])
+	//			if err != nil {
+	//				blog.Errorf("get bk cluster failed, err: %s", err.Error())
+	//				return
+	//			}
+	//			s.Syncer.SyncNodes(clusterMap[w], bkCluster)
+	//		}
+	//	}
+	//}()
+
+	blog.Infof("start consumer success")
+
+	//for _, w := range workList {
+	//	blog.Infof("%s started syncStorage", w)
+	//	bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w])
+	//	if err != nil {
+	//		blog.Errorf("get bk cluster failed, err: %s", err.Error())
+	//		continue
+	//	}
+	//	s.syncStorage(clusterMap[w], bkCluster)
+	//}
+
+	//for _, w := range workList {
+	//	blog.Infof("%s started syncStore", w)
+	//	bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w], nil, false)
+	//	if err != nil {
+	//		blog.Errorf("get bk cluster failed, err: %s", err.Error())
+	//		continue
+	//	}
+	//	s.syncStore(bkCluster)
+	//}
+
+	tickerChecker := time.NewTicker(5 * time.Minute)
+	defer tickerChecker.Stop()
+	for ; true; <-tickerChecker.C {
+		blog.Infof("tickerChecker")
+		for _, w := range workList {
+			chnQ, _ := s.MQ.GetChannel()
+			if qInfo, errQ := chnQ.QueueInspect(w); errQ != nil {
+				blog.Errorf("Failed to inspect the queue %s: %v", w, errQ)
+			} else {
+				blog.Infof("Messages in queue %s: %d", w, qInfo.Messages)
+				if qInfo.Messages > 1000000 {
+					_, err = chnQ.QueuePurge(w, false)
+					if err != nil {
+						blog.Errorf("Failed to delete the queue %s: %v", w, err)
+					}
+					gm.Restart(w, clusterMap[w])
+					//bkCluster, err := s.Syncer.GetBkCluster(clusterMap[w])
+					//if err != nil {
+					//	blog.Errorf("get bk cluster failed, err: %s", err.Error())
+					//	return
+					//}
+					//go s.syncStorage(clusterMap[w], bkCluster)
+					blog.Infof("Messages in queue %s: %d, is greater than 10000, restarting", w, qInfo.Messages)
+					continue
 				}
 			}
+			chnQ.Close()
+			if exit, _ := common.InArray(w, gm.List()); !exit {
+				gm.Start(w, clusterMap[w])
+				blog.Infof("%s restarted", w)
+			}
 		}
-
 	}
 }
 
@@ -336,43 +426,102 @@ func (s *Synchronizer) Sync(cluster *cmp.Cluster) {
 	// go common.Recoverer(1, func() { s.syncMQ(cluster) })
 }
 
+func (s *Synchronizer) syncStorageHandler(clusterMap map[string]*cmp.Cluster) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := r.URL.Query().Get("cluster")
+		if clusterId == "" {
+			http.Error(w, "缺少cluster", http.StatusBadRequest)
+			return
+		}
+
+		bkCluster, err := s.Syncer.GetBkCluster(clusterMap[clusterId], nil, false)
+		if err != nil {
+			blog.Errorf("get bk cluster failed, err: %s", err.Error())
+			http.Error(w, "get bk cluster failed", http.StatusBadRequest)
+			return
+		}
+
+		go s.syncStorage(clusterMap[clusterId], bkCluster)
+		fmt.Fprintf(w, "BcsClusterID: %s\n syncStorage started.", clusterId)
+	}
+}
+
+func (s *Synchronizer) syncStoreHandler(clusterMap map[string]*cmp.Cluster) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := r.URL.Query().Get("cluster")
+		if clusterId == "" {
+			http.Error(w, "缺少cluster", http.StatusBadRequest)
+			return
+		}
+
+		bkCluster, err := s.Syncer.GetBkCluster(clusterMap[clusterId], nil, false)
+		if err != nil {
+			blog.Errorf("get bk cluster failed, err: %s", err.Error())
+			http.Error(w, "get bk cluster failed", http.StatusBadRequest)
+			return
+		}
+
+		go s.syncStore(bkCluster, true)
+		fmt.Fprintf(w, "BcsClusterID: %s\n syncStore started.", clusterId)
+	}
+}
+
 func (s *Synchronizer) syncStorage(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) {
-	err := s.Syncer.SyncPods(cluster, bkCluster)
-	if err != nil {
-		blog.Errorf("sync pod failed, err: %s", err.Error())
+	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + bkCluster.Uid + ".db"
+
+	db := sqlite.Open(path)
+	if db == nil {
+		blog.Errorf("open db failed, path: %s", path)
 	}
 
-	err = s.Syncer.SyncWorkloads(cluster, bkCluster)
-	if err != nil {
-		blog.Errorf("sync workload failed, err: %s", err.Error())
-	}
+	s.syncStore(bkCluster, false)
+	blog.Infof("syncStorage %s started", cluster.ClusterID)
+	// err := s.Syncer.SyncPods(cluster, bkCluster, db)
+	// if err != nil {
+	//	blog.Errorf("sync pod failed, err: %s", err.Error())
+	// }
 
-	err = s.Syncer.SyncNamespaces(cluster, bkCluster)
+	// err := s.Syncer.SyncWorkloads(cluster, bkCluster, db)
+	// if err != nil {
+	//	blog.Errorf("sync workload failed, err: %s", err.Error())
+	// }
+
+	err := s.Syncer.SyncNamespaces(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync namespace failed, err: %s", err.Error())
 	}
 
-	err = s.Syncer.SyncNodes(cluster, bkCluster)
+	err = s.Syncer.SyncNodes(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync node failed, err: %s", err.Error())
 	}
 
-	err = s.Syncer.SyncWorkloads(cluster, bkCluster)
+	err = s.Syncer.SyncWorkloads(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync workload failed, err: %s", err.Error())
 	}
 
-	err = s.Syncer.SyncPods(cluster, bkCluster)
+	err = s.Syncer.SyncPods(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync pod failed, err: %s", err.Error())
+	}
+	blog.Infof("syncStorage %s finished", cluster.ClusterID)
+}
+
+func (s *Synchronizer) syncStore(bkCluster *bkcmdbkube.Cluster, force bool) {
+	blog.Infof("syncStore %s started", bkCluster.Uid)
+	err := s.Syncer.SyncStore(bkCluster, force)
+	if err != nil {
+		blog.Errorf("SyncStore failed, err: %s", err.Error())
 	}
 }
 
 // Sync sync the cluster
+// nolint funlen
 func (s *Synchronizer) sync(done <-chan bool, cluster *cmp.Cluster) {
 	if cluster.Status != "RUNNING" || cluster.EngineType != "k8s" {
 		blog.Infof("skip sync cluster %s", cluster.ClusterID)
-		bkCluster, err := s.Syncer.GetBkCluster(cluster)
+		bkCluster, err := s.Syncer.GetBkCluster(cluster, nil, false)
 		if err != nil {
 			blog.Errorf("get bk cluster failed, err: %s", err.Error())
 			return
@@ -400,13 +549,13 @@ func (s *Synchronizer) sync(done <-chan bool, cluster *cmp.Cluster) {
 		return
 	}
 
-	bkCluster, err := s.Syncer.GetBkCluster(cluster)
-	if err != nil {
-		blog.Errorf("get bk cluster failed, err: %s", err.Error())
-		return
-	}
-
-	go s.syncStorage(cluster, bkCluster)
+	// bkCluster, err := s.Syncer.GetBkCluster(cluster)
+	// if err != nil {
+	//	blog.Errorf("get bk cluster failed, err: %s", err.Error())
+	//	return
+	// }
+	//
+	// go s.syncStorage(cluster, bkCluster)
 
 	err = s.MQ.BindQueue(
 		chn,
@@ -419,17 +568,78 @@ func (s *Synchronizer) sync(done <-chan bool, cluster *cmp.Cluster) {
 		return
 	}
 
-	// h := handler.NewBcsBkcmdbSynchronizerHandler(s.Syncer)
-	err = s.MQ.StartConsumer(
-		chn,
-		cluster.ClusterID,
-		s.Handler,
-		done,
-	)
+	// headerKey := "resourceType"
+	// headerValues := []string{
+	//	"Pod",
+	//	"Deployment",
+	//	"StatefulSet",
+	//	"DaemonSet",
+	//	"GameDeployment",
+	//	"GameStatefulSet",
+	//	"Namespace",
+	//	"Node",
+	// }
+	//
+	// for _, value := range headerValues {
+	//	bindingArgs := amqp.Table{
+	//		"x-match":   "all", // Matching any of the values
+	//		headerKey:   value,
+	//		"clusterId": cluster.ClusterID,
+	//	}
+	//
+	//	err = s.MQ.BindQueue(
+	//		chn,
+	//		cluster.ClusterID,
+	//		fmt.Sprintf("%s.headers", s.BkcmdbSynchronizerOption.RabbitMQ.SourceExchange),
+	//		bindingArgs,
+	//	)
+	//	if err != nil {
+	//		blog.Errorf("bind queue failed, err: %s", err.Error())
+	//		return
+	//	}
+	// }
+
+	var wg sync.WaitGroup
+	time.Sleep(time.Second * 10)
+
+	hostname, err := os.Hostname()
 	if err != nil {
-		blog.Errorf("start consumer failed, err: %s", err.Error())
-		return
+		hostname = "unknown"
 	}
+
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			consumer := fmt.Sprintf("%s.%s.%d", hostname, cluster.ClusterID, i)
+			err = s.MQ.StartConsumer(
+				chn,
+				consumer,
+				cluster.ClusterID,
+				s.Handler,
+				done,
+			)
+
+			if err != nil {
+				blog.Errorf("start consumer failed, err: %s", err.Error())
+				// return
+			}
+
+		}(i)
+	}
+
+	wg.Wait()
+
+	// err = s.MQ.StartConsumer(
+	//	chn,
+	//	cluster.ClusterID,
+	//	s.Handler,
+	//	done,
+	// )
+	// if err != nil {
+	//	blog.Errorf("start consumer failed, err: %s", err.Error())
+	//	return
+	// }
 
 }
 

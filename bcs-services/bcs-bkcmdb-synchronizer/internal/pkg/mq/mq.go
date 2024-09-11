@@ -40,5 +40,5 @@ type MQ interface {
 	BindQueue(*amqp.Channel, string, string, amqp.Table) error
 
 	// StartConsumer is a method that starts a consumer for the message queue.
-	StartConsumer(*amqp.Channel, string, handler.Handler, <-chan bool) error
+	StartConsumer(*amqp.Channel, string, string, handler.Handler, <-chan bool) error
 }
