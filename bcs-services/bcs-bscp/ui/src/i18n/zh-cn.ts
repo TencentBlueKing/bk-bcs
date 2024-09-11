@@ -870,6 +870,7 @@ export default {
   'HTTP(S)接口调用': 'HTTP(S)接口调用',
   '请输入BCS 集群 ID，替换下方示例代码后，再尝试复制示例': '请输入BCS 集群 ID，替换下方示例代码后，再尝试复制示例',
   'BCS集群ID须符合以下格式：BCS-K8S-xxxxx，其中xxxxx为5位数字': 'BCS集群ID须符合以下格式：BCS-K8S-xxxxx，其中xxxxx为5位数字',
+  一键复制: '一键复制',
 
   // 公共组件
   页面不存在: '页面不存在',
