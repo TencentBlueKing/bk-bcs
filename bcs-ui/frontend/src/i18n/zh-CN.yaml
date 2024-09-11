@@ -2986,7 +2986,7 @@ templateFile:
     nextKind: 下一个类型
     bookmark: 收藏文件夹
     unbookmark: 取消收藏
-    uploadTips: 支持rar、zip等类型压缩包，文件小于{0}M
+    uploadTips: 支持.tgz, .tar.gz类型压缩包，文件小于{0}M
     createSpace: 新建文件夹
   tag:
     draft: 草稿

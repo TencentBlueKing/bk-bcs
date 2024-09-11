@@ -195,7 +195,7 @@
       <bcs-upload
         :tip="$t('templateFile.tips.uploadTips', [50])"
         with-credentials
-        accept=".rar,.zip,.7z,.tar,.tgz"
+        accept=".tgz,.tar.gz"
         :custom-request="customRequest"
         :limit="1"
         :size="50"
