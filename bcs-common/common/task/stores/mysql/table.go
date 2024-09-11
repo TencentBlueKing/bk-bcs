@@ -94,7 +94,7 @@ type StepRecord struct {
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
 	Payload             string            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
-	Message             string            `json:"message" gorm:"type:varchar(255)"`
+	Message             string            `json:"message" gorm:"type:text"`
 	ETA                 *time.Time        `json:"eta"`
 	SkipOnFailed        bool              `json:"skipOnFailed"`
 	RetryCount          uint32            `json:"retryCount"`
@@ -142,6 +142,7 @@ func (t *StepRecord) ToStep() *types.Step {
 		Payload:             t.Payload,
 		Status:              t.Status,
 		Message:             t.Message,
+		ETA:                 t.ETA,
 		SkipOnFailed:        t.SkipOnFailed,
 		RetryCount:          t.RetryCount,
 		MaxRetries:          t.MaxRetries,
