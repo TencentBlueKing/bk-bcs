@@ -258,7 +258,11 @@
         confirmText: t('配置客户端'),
         cancelText: t('稍后再说'),
         onConfirm: () => {
-          router.push({ name: 'configuration-example' });
+          const routeData = router.resolve({
+            name: 'configuration-example',
+            params: { spaceId: props.bkBizId, appId: props.appId },
+          });
+          window.open(routeData.href, '_blank');
         },
       });
     }
