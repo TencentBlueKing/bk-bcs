@@ -168,8 +168,8 @@
         </div>
         <div class="th-cell delete"></div>
       </div>
-      <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="fileAP" v-slot="{ item, index }">
-        <div class="table-row">
+      <div class="table-body">
+        <div class="table-row" v-for="(item, index) in data" :key="item.fileAP">
           <div class="not-editable td-cell name">
             <bk-overflow-title type="tips">
               {{ item.fileAP }}
@@ -220,7 +220,7 @@
             <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(index)"></i>
           </div>
         </div>
-      </RecycleScroller>
+      </div>
     </div>
   </div>
 </template>
@@ -463,6 +463,7 @@
     }
     .table-body {
       max-height: 400px;
+      overflow-y: auto;
     }
     .th-cell {
       padding-left: 16px;
