@@ -232,6 +232,7 @@ generic:
       network: 网络错误
       system: 系统异常
       data: 获取数据失败
+      import: 导入失败
     warning:
       '403': 无权限操作
       '404': 页面不存在
@@ -2929,6 +2930,7 @@ templateFile:
     deployReview: 部署预览
     disableYamlToForm: 无法切换模式
     fileList: 文件列表
+    import: 导入文件包
     clone: 克隆
   button:
     formMode: 表单模式
@@ -2942,6 +2944,9 @@ templateFile:
     confirmDeploy: 确认部署
     AddToFavorites: 收藏文件夹
     RemoveFromFavorites: 取消收藏
+    import: 导入文件包
+    export: 导出全部
+    exportFolder: 导出文件夹
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
@@ -2978,6 +2983,8 @@ templateFile:
     nextKind: 下一个类型
     bookmark: 收藏文件夹
     unbookmark: 取消收藏
+    uploadTips: 支持rar、zip等类型压缩包，文件小于{0}M
+    createSpace: 新建文件夹
   tag:
     draft: 草稿
     baseOn: 基于

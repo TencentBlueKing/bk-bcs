@@ -255,6 +255,7 @@ generic:
       network: Network Error
       system: System Error
       data: Data acquisition failure
+      import: Import failure
     warning:
       '403': No permission operation
       '404': Page does not exist
@@ -3652,6 +3653,7 @@ templateFile:
     deployReview: Deployment Preview
     disableYamlToForm: Unable to switch mode
     fileList: File List
+    import: Import file package
     clone: Clone
   button:
     formMode: Form Mode
@@ -3665,6 +3667,9 @@ templateFile:
     confirmDeploy: Confirm Deployment
     AddToFavorites: Add to Favorites
     RemoveFromFavorites: Remove from Favorites
+    import: Import
+    export: Export all folders
+    exportFolder: Export Folder
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
     searchVersion: Version Number/Version Log/Updater
@@ -3703,6 +3708,8 @@ templateFile:
     nextKind: Next kind
     bookmark: Bookmark folder
     unbookmark: Unbookmark
+    uploadTips: Supports compressed files in formats such as RAR and ZIP, with a maximum size of {0}MB
+    createSpace: Create Folder
   tag:
     draft: draft
     baseOn: base on

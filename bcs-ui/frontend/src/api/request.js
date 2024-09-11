@@ -23,7 +23,7 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
-import http from '@/api';
+import http, { streamTypes } from '@/api';
 import { json2Query } from '@/common/util';
 
 const methodsWithoutData = ['get', 'head', 'options', 'delete'];
@@ -80,7 +80,17 @@ export const request = (method, url) => (params = {}, config = {}) => {
   const reqMethod = method.toLowerCase();
   const reqConfig = Object.assign({}, defaultConfig, config);
 
-  const { url: newUrl, params: newParams } = parseUrl(reqMethod, resolveUrlPrefix(url), params);
+  let newUrl;
+  let newParams;
+  if (streamTypes.includes(config.responseType) || params instanceof FormData) {
+    const result = parseUrl(reqMethod, resolveUrlPrefix(url), {});
+    newUrl = result.url;
+    newParams = params;
+  } else {
+    const result = parseUrl(reqMethod, resolveUrlPrefix(url), params);
+    newUrl = result.url;
+    newParams = result.params;
+  }
   const req = http[reqMethod](newUrl, newParams, reqConfig);
   return req.then((res) => {
     if (reqConfig.needRes) return Promise.resolve(res);

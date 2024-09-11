@@ -61,3 +61,11 @@ export const multiClusterResources = viewRequest('post', '/multi_cluster_resourc
 export const multiClusterResourcesCRD = viewRequest('post', '/multi_cluster_resources/$crd/custom_objects');
 export const multiClusterCustomResourceDefinition = viewRequest('post', '/multi_cluster_resources/$crd');
 export const multiClusterResourcesCount = viewRequest('post', '/multi_cluster_resources_count');
+
+// 模板文件
+const templateRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/clusterresources/api/v1/projects/$projectCode',
+});
+export const exportTemplate = templateRequest('post', '/export/template');
+export const importTemplate = templateRequest('post', '/import/template');
