@@ -26,13 +26,17 @@
       <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
     <bk-form-item v-if="props.directoryShow">
-      <div class="directory-description">
+      <div class="directory-description" :class="{ 'offset-margin': tempDirValidateStatus }">
         {{ t('客户端下载配置文件后，会将其保存在') }}
-        <span class="description-em">
+        <span
+          v-bk-tooltips="{
+            content: $t('一键复制'),
+            placement: 'top',
+          }"
+          class="description-em"
+          @click="handleCopyText(`${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files`)">
           &nbsp;{{ `${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
         </span>
-        <!-- 复制按钮，待设计给出样式后再放出来 -->
-        <!-- <Copy class="copy-icon" @click="handleCopyText(formData.tempDir)" /> -->
       </div>
     </bk-form-item>
     <bk-form-item v-if="props.httpConfigShow" property="httpConfigName" :required="props.httpConfigShow">
@@ -76,7 +80,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, Ref, watch, inject } from 'vue';
+  import { onMounted, ref, Ref, watch, inject, computed } from 'vue';
   import { useRoute } from 'vue-router';
   import KeySelect from './key-selector.vue';
   import { Info } from 'bkui-vue/lib/icon';
@@ -86,8 +90,8 @@
   import { IExampleFormData } from '../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { cloneDeep } from 'lodash';
-  // import { copyToClipBoard } from '../../../../../utils/index';
-  // import BkMessage from 'bkui-vue/lib/message';
+  import { copyToClipBoard } from '../../../../../utils/index';
+  import BkMessage from 'bkui-vue/lib/message';
 
   const props = withDefaults(
     defineProps<{
@@ -206,6 +210,11 @@
     ],
   };
 
+  // 临时目录校验，用于底部提示文案摆放位置
+  const tempDirValidateStatus = computed(() => {
+    return rules.tempDir.every((ruleItem) => ruleItem.validator(formData.value.tempDir));
+  });
+
   watch(formData.value, () => {
     sendAll();
   });
@@ -236,21 +245,21 @@
   };
 
   // 复制
-  // const handleCopyText = async (text: string) => {
-  //   try {
-  //     await formRef.value.validate('tempDir');
-  //     copyToClipBoard(text);
-  //     BkMessage({
-  //       theme: 'success',
-  //       message: t('目录复制成功'),
-  //     });
-  //   } catch (error) {
-  //     BkMessage({
-  //       theme: 'error',
-  //       message: error,
-  //     });
-  //   }
-  // };
+  const handleCopyText = async (text: string) => {
+    try {
+      await formRef.value.validate('tempDir');
+      copyToClipBoard(text);
+      BkMessage({
+        theme: 'success',
+        message: t('目录复制成功'),
+      });
+    } catch (error) {
+      BkMessage({
+        theme: 'error',
+        message: error,
+      });
+    }
+  };
 
   const sendAll = () => {
     const filterFormData = cloneDeep(formData.value);
@@ -292,13 +301,18 @@
     margin-top: -18px;
   }
   .directory-description {
-    margin: -12px -25px 4px 0;
+    margin: -6px 0 4px 0;
     display: flex;
     align-items: center;
     font-size: 12px;
+    line-height: 18px;
     color: #979ba5;
     white-space: nowrap;
     overflow: hidden;
+    transition: margin 0.1s;
+    &.offset-margin {
+      margin-top: -20px;
+    }
     .copy-icon {
       margin-left: 12px;
       font-size: 14px;
@@ -309,9 +323,17 @@
     }
   }
   .description-em {
+    margin-left: 4px;
+    padding: 0 4px;
     flex: 0 1 auto;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    background-color: #f5f7fa;
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
+      background-color: #f0f5ff;
+    }
   }
 </style>

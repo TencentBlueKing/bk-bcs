@@ -106,7 +106,8 @@ func (t *TemplateSpaceAction) Get(ctx context.Context, id string) (map[string]in
 }
 
 // List xxx
-func (t *TemplateSpaceAction) List(ctx context.Context, name string) ([]map[string]interface{}, error) {
+func (t *TemplateSpaceAction) List(
+	ctx context.Context, req *clusterRes.ListTemplateSpaceReq) ([]map[string]interface{}, error) {
 	if err := t.checkAccess(ctx); err != nil {
 		return nil, err
 	}
@@ -121,9 +122,16 @@ func (t *TemplateSpaceAction) List(ctx context.Context, name string) ([]map[stri
 		entity.FieldKeyProjectCode: p.Code,
 	}
 	// 如果名称不为空，则通过文件夹名称模糊查询
-	if name != "" {
+	if req.GetName() != "" {
 		operatorM[entity.FieldKeyName] = operator.M{
-			"$regex": name,
+			"$regex": req.GetName(),
+		}
+	}
+
+	// 文件夹标签筛选
+	if len(req.GetTags()) != 0 {
+		operatorM[entity.FieldKeyTags] = operator.M{
+			"$all": req.GetTags(),
 		}
 	}
 
@@ -189,6 +197,7 @@ func (t *TemplateSpaceAction) Create(ctx context.Context, req *clusterRes.Create
 		Name:        req.GetName(),
 		ProjectCode: p.Code,
 		Description: req.GetDescription(),
+		Tags:        req.GetTags(),
 	}
 	id, err := t.model.CreateTemplateSpace(ctx, templateSpace)
 	if err != nil {
@@ -257,6 +266,7 @@ func (t *TemplateSpaceAction) Update(ctx context.Context, req *clusterRes.Update
 	updateTemplateSpace := entity.M{
 		"name":        req.GetName(),
 		"description": req.GetDescription(),
+		"tags":        req.GetTags(),
 	}
 	if err = t.model.UpdateTemplateSpace(ctx, req.GetId(), updateTemplateSpace); err != nil {
 		return err

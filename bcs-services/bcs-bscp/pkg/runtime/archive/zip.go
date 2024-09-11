@@ -14,14 +14,15 @@ package archive
 
 import (
 	"archive/zip"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"time"
 
-	"github.com/axgle/mahonia"
-	"github.com/saintfish/chardet"
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 )
@@ -38,23 +39,6 @@ func NewZipArchive(destPath string, limitFileSize int64) ZipArchive {
 		destPath:      destPath,
 		limitFileSize: limitFileSize,
 	}
-}
-
-// 检测源字符集 转换成utf-8
-func checkCharacterSets(src string) (string, error) {
-
-	// 创建字符集检测器
-	detector := chardet.NewTextDetector()
-
-	// 检测字符集
-	result, err := detector.DetectBest([]byte(src))
-	if err != nil {
-		return "", err
-	}
-
-	decoder := mahonia.NewDecoder(result.Charset)
-
-	return decoder.ConvertString(src), nil
 }
 
 // UnZipPack decompresses the zip package and receives the parameter io.Reader
@@ -117,12 +101,17 @@ func (z ZipArchive) unpackZip(zr *zip.Reader) error {
 }
 
 func (z ZipArchive) unzipFile(f *zip.File) error {
-	fileName, err := checkCharacterSets(f.Name)
-	if err != nil {
-		return err
+	var decodeName string
+	if f.Flags == 0 {
+		decoder := transform.NewReader(bytes.NewReader([]byte(f.Name)), simplifiedchinese.GB18030.NewDecoder())
+		content, _ := io.ReadAll(decoder)
+		decodeName = string(content)
+	} else {
+		decodeName = f.Name
 	}
+
 	if f.FileInfo().IsDir() {
-		if err = os.MkdirAll(filepath.Join(z.destPath, fileName), f.Mode().Perm()); err != nil {
+		if err := os.MkdirAll(filepath.Join(z.destPath, decodeName), f.Mode().Perm()); err != nil {
 			return err
 		}
 		return nil
@@ -135,7 +124,7 @@ func (z ZipArchive) unzipFile(f *zip.File) error {
 		// NOCC:gas/error(ignore)
 		_ = rc.Close()
 	}()
-	filePath := sanitize(fileName)
+	filePath := sanitize(decodeName)
 	z.destPath = filepath.Join(z.destPath, filePath)
 
 	fileDir := filepath.Dir(z.destPath)

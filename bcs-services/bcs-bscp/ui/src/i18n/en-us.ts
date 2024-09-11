@@ -867,6 +867,7 @@ export default {
   'HTTP(S)接口调用': 'HTTP(S) interface invocation',
   '请输入BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please enter the BCS cluster ID, replace the example code below, and then try copying the example',
   'BCS集群ID须符合以下格式：BCS-K8S-xxxxx，其中xxxxx为5位数字': 'The BCS cluster ID must follow the format: BCS-K8S-xxxxx, where xxxxx is a five-digit numbe',
+  一键复制: 'Copy',
 
   // 公共组件
   页面不存在: 'Page does not exist',
