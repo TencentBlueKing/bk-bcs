@@ -1594,6 +1594,9 @@ cluster:
         selectAllNs: All namespaces
         kernel: Core
         runtime: Runtime
+  operateRecord:
+    placeholder:
+      searchRecord: 'Search for resource name, resource ID, status, or initiator'
 deploy:
   helm:
     title:

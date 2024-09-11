@@ -1300,6 +1300,9 @@ cluster:
         selectAllNs: 全部命名空间
         kernel: 内核
         runtime: 运行时
+  operateRecord:
+    placeholder:
+      searchRecord: 搜索资源名称、资源ID、状态、发起者
 deploy:
   helm:
     title:
