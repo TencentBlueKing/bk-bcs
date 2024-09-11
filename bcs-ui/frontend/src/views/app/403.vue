@@ -30,9 +30,9 @@ import { defineComponent, onBeforeMount, PropType, ref } from 'vue';
 import useProjects from '../project-manage/project/use-project';
 
 import $bkMessage from '@/common/bkmagic';
+import usePlatform from '@/composables/use-platform';
 import $router from '@/router';
 import actionsMap from '@/views/app/actions-map';
-import usePlatform from '@/composables/use-platform';
 
 interface IPerms {
   action_list: Array<{

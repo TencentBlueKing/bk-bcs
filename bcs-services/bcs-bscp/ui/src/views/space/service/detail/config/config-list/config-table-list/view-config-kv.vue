@@ -25,9 +25,7 @@
                 </span>
                 <template v-else>
                   <SecretEditor
-                    v-if="
-                      props.config.spec.secret_type === 'custom' || props.config.spec.secret_type === 'certificate'
-                    "
+                    v-if="props.config.spec.secret_type === 'custom' || props.config.spec.secret_type === 'certificate'"
                     :is-edit="false"
                     :content="props.config.spec.value" />
                   <span v-else class="secret-single-line-value">
@@ -62,7 +60,7 @@
       </bk-tab>
     </div>
     <section class="action-btns">
-      <bk-button v-if="config.kv_state !== 'DELETE'" theme="primary" @click="emits('openEdit')">
+      <bk-button v-if="showEditBtn" theme="primary" @click="emits('openEdit')">
         {{ t('编辑') }}
       </bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>

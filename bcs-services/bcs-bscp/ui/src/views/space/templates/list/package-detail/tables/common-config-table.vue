@@ -7,11 +7,11 @@
       <bk-input
         v-model="searchStr"
         class="search-script-input"
-        :placeholder="t('配置文件绝对路径/描述/创建人/更新人')"
+        :placeholder="t('配置文件名/描述/创建人/更新人')"
         :clearable="true"
         @clear="refreshList()"
         @input="handleSearchInputChange"
-        v-bk-tooltips="{ content: t('配置文件绝对路径/描述/创建人/更新人'), disabled: locale === 'zh-cn' }">
+        v-bk-tooltips="{ content: t('配置文件名/描述/创建人/更新人'), disabled: locale === 'zh-cn' }">
         <template #suffix>
           <Search class="search-input-icon" />
         </template>
@@ -35,7 +35,7 @@
             <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('配置文件绝对路径')">
+        <bk-table-column :label="t('配置文件名')">
           <template #default="{ row }">
             <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row)">
               {{ fileAP(row) }}
@@ -275,7 +275,7 @@
     loadConfigList();
   });
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = computed(() => (config: ITemplateConfigItem) => {
     const { path, name } = config.spec;
     if (path.endsWith('/')) {

@@ -10031,6 +10031,14 @@
         "projectCode": {
           "type": "string",
           "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "描述"
         }
       },
       "description": "复制模板文件文件夹",

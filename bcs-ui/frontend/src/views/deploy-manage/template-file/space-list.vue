@@ -52,6 +52,9 @@
                     <li class="bcs-dropdown-item" @click="showRenameSpaceDialog(space)">
                       {{ $t('templateFile.button.rename') }}
                     </li>
+                    <li class="bcs-dropdown-item" @click="showCloneSpaceDialog(space)">
+                      {{ $t('generic.button.clone') }}
+                    </li>
                     <li class="bcs-dropdown-item" @click="addTemplateFile(space)">
                       {{ $t('templateFile.button.createFile') }}
                     </li>
@@ -117,7 +120,7 @@
     <!-- 新增 & 修改文件夹 -->
     <bcs-dialog
       v-model="showNameDialog"
-      :title="isRename ? $t('templateFile.title.rename') : $t('templateFile.title.createSpace')"
+      :title="typeText.title[curType]"
       width="480"
       header-position="left">
       <bcs-form :label-width="110">
@@ -141,7 +144,7 @@
             :loading="saving"
             :disabled="!curEditSpace.name"
             @click="fileNameConfirm">
-            {{ isRename ? $t('generic.button.save') : $t('generic.button.create') }}
+            {{ typeText.button[curType] }}
           </bcs-button>
           <bcs-button @click="showNameDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
         </div>
@@ -280,43 +283,71 @@ const curEditSpace = ref<Pick<ITemplateSpaceData, 'name'|'id'>>({
   name: '',
   id: '',
 });
-const isRename = ref(false);
+const curType = ref<'create' | 'rename' | 'clone'>('create');
+const typeText = ref({
+  title: {
+    create: $i18n.t('templateFile.title.createSpace'),
+    rename: $i18n.t('templateFile.title.rename'),
+    clone: $i18n.t('templateFile.title.clone'),
+  },
+  button: {
+    create: $i18n.t('generic.button.create'),
+    rename: $i18n.t('generic.button.save'),
+    clone: $i18n.t('generic.button.clone'),
+  },
+  message: {
+    create: $i18n.t('generic.msg.success.create'),
+    rename: $i18n.t('generic.msg.success.save'),
+    clone: $i18n.t('generic.msg.success.ok'),
+  },
+});
 const saving = ref(false);
 function showCreateFileDialog() {
   curEditSpace.value = { name: '', id: '' };
-  isRename.value = false;
+  curType.value = 'create';
   showNameDialog.value = true;
 };
 function showRenameSpaceDialog(space: ITemplateSpaceData) {
   curEditSpace.value = cloneDeep(space);
-  isRename.value = true;
+  curType.value = 'rename';
+  showNameDialog.value = true;
+}
+function showCloneSpaceDialog(space: ITemplateSpaceData) {
+  curEditSpace.value = cloneDeep(space);
+  curType.value = 'clone';
   showNameDialog.value = true;
 }
 // 创建 & 编辑工作空间的对话框确认事件
 async function fileNameConfirm() {
-  if (!curEditSpace.value?.name || (isRename.value && !curEditSpace.value?.id)) return;
+  if (!curEditSpace.value?.name || (curType.value !== 'create' && !curEditSpace.value?.id)) return;
 
   saving.value = true;
   let res;
-  if (isRename.value) {
+  if (curType.value === 'rename') {
     res = await TemplateSetService.UpdateTemplateSpace({
       name: curEditSpace.value.name,
       description: '',
       $id: curEditSpace.value.id,
     }, { globalError: false, needRes: true }).catch(() => false);
-  } else {
+  } else if (curType.value === 'create') {
     res = await TemplateSetService.CreateTemplateSpace({
       name: curEditSpace.value.name,
       description: '',
+    }, { globalError: false, needRes: true }).catch(() => false);
+  } else {
+    res = await TemplateSetService.CloneTemplateSpace({
+      name: curEditSpace.value.name,
+      description: '',
+      $id: curEditSpace.value.id,
     }, { globalError: false, needRes: true }).catch(() => false);
   }
   if (res && res?.code === 0) {
     $bkMessage({
       theme: 'success',
-      message: isRename.value ? $i18n.t('generic.msg.success.save') : $i18n.t('generic.msg.success.create'),
+      message: typeText.value.message[curType.value],
     });
     await listTemplateSpace();
-    if (!isRename.value) {
+    if (curType.value !== 'rename') {
       // 跳转到新增的空间下
       handleChangeSpace(res?.data?.id);
     } else {

@@ -182,7 +182,9 @@
         }
     },
     "daemon": {
-        "enable": ${bcsDaemonEnable}
+        "enable": ${bcsDaemonEnable},
+        "enableInsTypeUsage": ${enableInsTypeUsage},
+        "enableAllocateCidr": ${enableAllocateCidr}
     },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",

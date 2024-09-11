@@ -28,6 +28,11 @@ var (
 	ErrServerNotInit = errors.New("server not inited")
 )
 
+// BkAccessToken bk app token
+type BkAccessToken struct {
+	AccessToken string `json:"access_token"`
+}
+
 // BkAppUser appCode/appSecret
 type BkAppUser struct {
 	BkAppCode   string `json:"bk_app_code"`

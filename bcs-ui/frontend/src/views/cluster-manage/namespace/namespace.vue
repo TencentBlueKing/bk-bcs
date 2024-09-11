@@ -440,7 +440,7 @@
 </template>
 
 <script lang="ts">
-import { computed, CreateElement, defineComponent, onBeforeMount, reactive, ref, toRef, watch } from 'vue';
+import { computed, CreateElement, defineComponent, onActivated, onBeforeMount, reactive, ref, toRef, watch } from 'vue';
 
 import StatusIcon from '../../../components/status-icon';
 import usePage from '../../../composables/use-page';
@@ -709,6 +709,7 @@ export default defineComponent({
     };
 
     const handleToCreatedPage = () => {
+      if (!props.clusterId) return;
       $router.push({
         name: 'createNamespace',
         params: {
@@ -915,12 +916,17 @@ export default defineComponent({
       });
     });
 
-    getNamespaceData({
-      $clusterId: props.clusterId,
-    });
-
     onBeforeMount(() => {
       searchValue.value = props.namespace;
+      getNamespaceData({
+        $clusterId: props.clusterId,
+      });
+    });
+
+    onActivated(() => {
+      getNamespaceData({
+        $clusterId: props.clusterId,
+      });
     });
 
     return {

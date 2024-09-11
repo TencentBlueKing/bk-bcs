@@ -3081,6 +3081,12 @@ message CopyTemplateSpaceReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "名称"
+	}];
+	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "描述"
+	}];
 }
 
 message ListTemplateSpaceCollectReq {

@@ -9,11 +9,10 @@ import {
   setNodeTaints as handleSetNodeTaints,
   taskDetail as taskDetailAPI,
   uncordonNodes } from '@/api/modules/cluster-manager';
-import store from '@/store';
-
-import { 
-  clusterAllNodeOverview
+import {
+  clusterAllNodeOverview,
 } from '@/api/modules/monitor';
+import store from '@/store';
 
 const { $bkMessage, $bkInfo } = Vue.prototype;
 
@@ -240,7 +239,7 @@ export default function useNode() {
     const data = await clusterAllNodeOverview({
       $projectCode: curProject.value.projectCode,
       $clusterId: clusterId,
-      node: nodes
+      node: nodes,
     }).catch(() => ({}));
     return data;
   };

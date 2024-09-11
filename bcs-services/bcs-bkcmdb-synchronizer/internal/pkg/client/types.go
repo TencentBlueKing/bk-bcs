@@ -15,6 +15,7 @@ package client
 import (
 	"context"
 	"crypto/tls"
+	"math/big"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
@@ -584,8 +585,8 @@ type GetBcsContainerResponse struct {
 
 // GetBcsContainerResponseData 包含实际的响应数据
 type GetBcsContainerResponseData struct {
-	Count int                     `json:"count"` // 返回的容器数量
-	Info  *[]bkcmdbkube.Container `json:"info"`  // 容器的详细信息
+	Count int          `json:"count"` // 返回的容器数量
+	Info  *[]Container `json:"info"`  // 容器的详细信息
 }
 
 // CreateBcsPodRequest defines the structure of the request for creating BCS pods.
@@ -667,6 +668,18 @@ type ListHostsWithoutBizRequest struct {
 	HostPropertyFilter PropertyFilter `json:"host_property_filter"`
 }
 
+// ListHostsByBizRequest 结构体用于请求按业务ID列出主机信息
+type ListHostsByBizRequest struct {
+	// Page 分页信息
+	Page Page `json:"page"`
+	// BkBizID 业务ID
+	BkBizID int64 `json:"bk_biz_id"`
+	// Fields 需要返回的字段列表
+	Fields []string `json:"fields"`
+	// HostPropertyFilter 主机属性过滤条件
+	HostPropertyFilter PropertyFilter `json:"host_property_filter"`
+}
+
 // ListHostsWithoutBizResponse list host without biz response
 type ListHostsWithoutBizResponse struct {
 	Code      int      `json:"code"`
@@ -694,3 +707,394 @@ type DeleteBcsClusterAllRequest struct {
 	BKBizID *int64   `json:"bk_biz_id"`
 	IDs     *[]int64 `json:"ids"`
 }
+
+// Container container details
+type Container struct {
+	// cc的自增主键
+	ID    int64 `json:"id,omitempty" bson:"id"`
+	PodID int64 `json:"bk_pod_id,omitempty" bson:"bk_pod_id"`
+	// ClusterID cluster id in cc
+	ClusterID           int64 `json:"bk_cluster_id,omitempty" bson:"bk_cluster_id"`
+	ContainerBaseFields `json:",inline" bson:",inline"`
+	// Revision record this app's revision information
+	Revision `json:",inline" bson:",inline"`
+}
+
+// Revision resource revision information.
+type Revision struct {
+	Creator    string `json:"creator,omitempty" bson:"creator"`
+	Modifier   string `json:"modifier,omitempty" bson:"modifier"`
+	CreateTime int64  `json:"create_time,omitempty" bson:"create_time"`
+	LastTime   int64  `json:"last_time,omitempty" bson:"last_time"`
+}
+
+// ContainerBaseFields container core details
+type ContainerBaseFields struct {
+	Name            *string          `json:"name,omitempty" bson:"name"`
+	ContainerID     *string          `json:"container_uid,omitempty" bson:"container_uid"`
+	Image           *string          `json:"image,omitempty" bson:"image"`
+	Ports           *[]ContainerPort `json:"ports,omitempty" bson:"ports"`
+	HostPorts       *[]ContainerPort `json:"host_ports,omitempty" bson:"host_ports"`
+	Args            *[]string        `json:"args,omitempty" bson:"args"`
+	Started         *int64           `json:"started,omitempty" bson:"started"`
+	Limits          *ResourceList    `json:"limits,omitempty" bson:"limits"`
+	ReqSysSpecuests *ResourceList    `json:"requests,omitempty" bson:"requests"`
+	Liveness        *Probe           `json:"liveness,omitempty" bson:"liveness"`
+	Environment     *[]EnvVar        `json:"environment,omitempty" bson:"environment"`
+	Mounts          *[]VolumeMount   `json:"mounts,omitempty" bson:"mounts"`
+}
+
+// ContainerPort represents a network port in a single container.
+type ContainerPort struct {
+	// If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
+	// named port in a pod must have a unique name. Name for the port that can be
+	// referred to by services.
+	// +optional
+	Name string `json:"name,omitempty" bson:"name"`
+	// Number of port to expose on the host.
+	// If specified, this must be a valid port number, 0 < x < 65536.
+	// If HostNetwork is specified, this must match ContainerPort.
+	// Most containers do not need this.
+	// +optional
+	HostPort int32 `json:"hostPort,omitempty" bson:"hostPort"`
+	// Number of port to expose on the pod's IP address.
+	// This must be a valid port number, 0 < x < 65536.
+	ContainerPort int32 `json:"containerPort" bson:"containerPort"`
+	// Protocol for port. Must be UDP, TCP, or SCTP.
+	// Defaults to "TCP".
+	// +optional
+	// +default="TCP"
+	Protocol Protocol `json:"protocol,omitempty" bson:"protocol"`
+	// What host IP to bind the external port to.
+	// +optional
+	HostIP string `json:"hostIP,omitempty" bson:"hostIP"`
+}
+
+// Protocol defines network protocols supported for things like container ports.
+// +enum
+type Protocol string
+
+// ResourceList is a set of (resource name, quantity) pairs.
+type ResourceList map[ResourceName]Quantity
+
+// ResourceName is the name identifying various resources in a ResourceList.
+type ResourceName string
+
+// Quantity 结构体表示一个数量，可能用于库存管理、订单处理等场景。
+// 该结构体可以包含如数量值和单位等信息。
+type Quantity struct {
+	// i is the quantity in int64 scaled form, if d.Dec == nil
+	i int64Amount //nolint:unused
+	// d is the quantity in inf.Dec form if d.Dec != nil
+	d infDecAmount //nolint:unused
+	// s is the generated value of this quantity to avoid recalculation
+	s string //nolint:unused
+
+	// Change Format at will. See the comment for Canonicalize for
+	// more details.
+	Format
+}
+
+// int64Amount represents a fixed precision numerator and arbitrary scale exponent. It is faster
+// than operations on inf.Dec for values that can be represented as int64.
+// +k8s:openapi-gen=true
+type int64Amount struct { //nolint:unused
+	value int64
+	scale Scale
+}
+
+// infDecAmount implements common operations over an inf.Dec that are specific to the quantity
+// representation.
+type infDecAmount struct { //nolint:unused
+	*Dec
+}
+
+// Dec 结构体表示一个十进制数，包含未缩放的整数部分和缩放比例。
+type Dec struct {
+	unscaled big.Int //nolint:unused
+	scale    Scale   //nolint:unused
+}
+
+// Scale is used for getting and setting the base-10 scaled value.
+// Base-2 scales are omitted for mathematical simplicity.
+// See Quantity.ScaledValue for more details.
+type Scale int32
+
+// Format lists the three possible formattings of a quantity.
+type Format string
+
+// Probe describes a health check to be performed against a container to determine whether it is
+// alive or ready to receive traffic.
+type Probe struct {
+	// The action taken to determine the health of a container
+	ProbeHandler `json:",inline" bson:",inline"`
+	// Number of seconds after the container has started before liveness probes are initiated.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// +optional
+	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty" bson:"initialDelaySeconds"`
+	// Number of seconds after which the probe times out.
+	// Defaults to 1 second. Minimum value is 1.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// +optional
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty" bson:"timeoutSeconds"`
+	// How often (in seconds) to perform the probe.
+	// Default to 10 seconds. Minimum value is 1.
+	// +optional
+	PeriodSeconds int32 `json:"periodSeconds,omitempty" bson:"periodSeconds"`
+	// Minimum consecutive successes for the probe to be considered successful after having failed.
+	// Defaults to 1. Must be 1 for liveness and startup. Minimum value is 1.
+	// +optional
+	SuccessThreshold int32 `json:"successThreshold,omitempty" bson:"successThreshold"`
+	// Minimum consecutive failures for the probe to be considered failed after having succeeded.
+	// Defaults to 3. Minimum value is 1.
+	// +optional
+	FailureThreshold int32 `json:"failureThreshold,omitempty" bson:"failureThreshold"`
+	// Optional duration in seconds the pod needs to terminate gracefully upon probe failure.
+	// The grace period is the duration in seconds after the processes running in the pod are sent
+	// a termination signal and the time when the processes are forcibly halted with a kill signal.
+	// Set this value longer than the expected cleanup time for your process.
+	// If this value is nil, the pod's terminationGracePeriodSeconds will be used. Otherwise, this
+	// value overrides the value provided by the pod spec.
+	// Value must be non-negative integer. The value zero indicates stop immediately via
+	// the kill signal (no opportunity to shut down).
+	// This is a beta field and requires enabling ProbeTerminationGracePeriod feature gate.
+	// Minimum value is 1. spec.terminationGracePeriodSeconds is used if unset.
+	// +optional
+	// NOCC:tosa/linelength(忽略长度)
+	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty" bson:"terminationGracePeriodSeconds"` // nolint
+}
+
+// ProbeHandler defines a specific action that should be taken in a probe.
+// One and only one of the fields must be specified.
+type ProbeHandler struct {
+	// Exec specifies the action to take.
+	// +optional
+	Exec *ExecAction `json:"exec,omitempty" bson:"exec"`
+	// HTTPGet specifies the http request to perform.
+	// +optional
+	HTTPGet *HTTPGetAction `json:"httpGet,omitempty" bson:"httpGet"`
+	// TCPSocket specifies an action involving a TCP port.
+	// +optional
+	TCPSocket *TCPSocketAction `json:"tcpSocket,omitempty" bson:"tcpSocket"`
+
+	// GRPC specifies an action involving a GRPC port.
+	// This is a beta field and requires enabling GRPCContainerProbe feature gate.
+	// +featureGate=GRPCContainerProbe
+	// +optional
+	GRPC *GRPCAction `json:"grpc,omitempty" bson:"grpc"`
+}
+
+// ExecAction describes a "run in container" action.
+type ExecAction struct {
+	// Command is the command line to execute inside the container, the working directory for the
+	// command  is root ('/') in the container's filesystem. The command is simply exec'd, it is
+	// not run inside a shell, so traditional shell instructions ('|', etc) won't work. To use
+	// a shell, you need to explicitly call out to that shell.
+	// Exit status of 0 is treated as live/healthy and non-zero is unhealthy.
+	// +optional
+	Command []string `json:"command,omitempty" bson:"command"`
+}
+
+// HTTPGetAction describes an action based on HTTP Get requests.
+type HTTPGetAction struct {
+	// Path to access on the HTTP server.
+	// +optional
+	Path string `json:"path,omitempty" bson:"path"`
+	// Name or number of the port to access on the container.
+	// Number must be in the range 1 to 65535.
+	// Name must be an IANA_SVC_NAME.
+	Port IntOrString `json:"port" bson:"port"`
+	// Host name to connect to, defaults to the pod IP. You probably want to set
+	// "Host" in httpHeaders instead.
+	// +optional
+	Host string `json:"host,omitempty" bson:"host"`
+	// Scheme to use for connecting to the host.
+	// Defaults to HTTP.
+	// +optional
+	Scheme URIScheme `json:"scheme,omitempty" bson:"scheme"`
+	// Custom headers to set in the request. HTTP allows repeated headers.
+	// +optional
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,omitempty" bson:"httpHeaders"`
+}
+
+// TCPSocketAction describes an action based on opening a socket
+type TCPSocketAction struct {
+	// Number or name of the port to access on the container.
+	// Number must be in the range 1 to 65535.
+	// Name must be an IANA_SVC_NAME.
+	Port IntOrString `json:"port" bson:"port"`
+	// Optional: Host name to connect to, defaults to the pod IP.
+	// +optional
+	Host string `json:"host,omitempty" bson:"host"`
+}
+
+// GRPCAction grpc service
+type GRPCAction struct {
+	// Port number of the gRPC service. Number must be in the range 1 to 65535.
+	Port int32 `json:"port" bson:"port"`
+
+	// Service is the name of the service to place in the gRPC HealthCheckRequest
+	// (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+	//
+	// If this is not specified, the default behavior is defined by gRPC.
+	// +optional
+	// +default=""
+	Service *string `json:"service" bson:"service"`
+}
+
+// IntOrString is a type that can hold an int32 or a string.
+type IntOrString struct {
+	Type   Type   `json:"type" bson:"type"`
+	IntVal int32  `json:"int_val" bson:"int_val"`
+	StrVal string `json:"str_val" bson:"str_val"`
+}
+
+// Type represents the stored type of IntOrString.
+type Type int64
+
+// URIScheme identifies the scheme used for connection to a host for Get actions
+// +enum
+type URIScheme string
+
+// HTTPHeader describes a custom header to be used in HTTP probes
+type HTTPHeader struct {
+	// The header field name
+	Name string `json:"name" bson:"name"`
+	// The header field value
+	Value string `json:"value" bson:"value"`
+}
+
+// EnvVar represents an environment variable present in a Container.
+type EnvVar struct {
+	// Name of the environment variable. Must be a C_IDENTIFIER.
+	Name string `json:"name" bson:"name"`
+
+	// Optional: no more than one of the following may be specified.
+
+	// Variable references $(VAR_NAME) are expanded
+	// using the previously defined environment variables in the container and
+	// any service environment variables. If a variable cannot be resolved,
+	// the reference in the input string will be unchanged. Double $$ are reduced
+	// to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+	// "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+	// Escaped references will never be expanded, regardless of whether the variable
+	// exists or not.
+	// Defaults to "".
+	// +optional
+	Value string `json:"value,omitempty" bson:"value"`
+	// Source for the environment variable's value. Cannot be used if value is not empty.
+	// +optional
+	ValueFrom *EnvVarSource `json:"valueFrom,omitempty" bson:"valueFrom"`
+}
+
+// EnvVarSource represents a source for the value of an EnvVar.
+type EnvVarSource struct {
+	// Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`,
+	// `metadata.annotations['<KEY>']`, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP,
+	// status.podIPs.
+	// +optional
+	FieldRef *ObjectFieldSelector `json:"fieldRef,omitempty" bson:"fieldRef"`
+	// Selects a resource of the container: only resources limits and requests
+	// (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and
+	// requests.ephemeral-storage) are currently supported.
+	// +optional
+	// NOCC:tosa/linelength(忽略长度)
+	ResourceFieldRef *ResourceFieldSelector `json:"resourceFieldRef,omitempty" bson:"resourceFieldRef"`
+	// Selects a key of a ConfigMap.
+	// +optional
+	ConfigMapKeyRef *ConfigMapKeySelector `json:"configMapKeyRef,omitempty" bson:"configMapKeyRef"`
+	// Selects a key of a secret in the pod's namespace
+	// +optional
+	SecretKeyRef *SecretKeySelector `json:"secretKeyRef,omitempty" bson:"secretKeyRef"`
+}
+
+// ObjectFieldSelector selects an APIVersioned field of an object.
+// +structType=atomic
+type ObjectFieldSelector struct {
+	// Version of the schema the FieldPath is written in terms of, defaults to "v1".
+	// +optional
+	APIVersion string `json:"apiVersion,omitempty" bson:"apiVersion"`
+	// Path of the field to select in the specified API version.
+	FieldPath string `json:"fieldPath" bson:"fieldPath"`
+}
+
+// ResourceFieldSelector represents container resources (cpu, memory) and their output format
+// +structType=atomic
+type ResourceFieldSelector struct {
+	// Container name: required for volumes, optional for env vars
+	// +optional
+	ContainerName string `json:"containerName,omitempty" bson:"containerName"`
+	// Required: resource to select
+	Resource string `json:"resource" bson:"resource"`
+	// Specifies the output format of the exposed resources, defaults to "1"
+	// +optional
+	Divisor Quantity `json:"divisor,omitempty" bson:"divisor"`
+}
+
+// ConfigMapKeySelector selects a key of a ConfigMap.
+// +structType=atomic
+type ConfigMapKeySelector struct {
+	// The ConfigMap to select from.
+	LocalObjectReference `json:",inline" bson:",inline"`
+	// The key to select.
+	Key string `json:"key" bson:"key"`
+	// Specify whether the ConfigMap or its key must be defined
+	// +optional
+	Optional *bool `json:"optional,omitempty" bson:"optional"`
+}
+
+// LocalObjectReference contains enough information to let you locate the
+// referenced object inside the same namespace.
+// +structType=atomic
+type LocalObjectReference struct {
+	// Name of the referent.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+	// TODO: Add other useful fields. apiVersion, kind, uid?
+	// +optional
+	Name string `json:"name,omitempty" bson:"name"`
+}
+
+// SecretKeySelector selects a key of a Secret.
+// +structType=atomic
+type SecretKeySelector struct {
+	// The name of the secret in the pod's namespace to select from.
+	LocalObjectReference `json:",inline" bson:",inline"`
+	// The key of the secret to select from.  Must be a valid secret key.
+	Key string `json:"key" bson:"key"`
+	// Specify whether the Secret or its key must be defined
+	// +optional
+	Optional *bool `json:"optional,omitempty" bson:"optional"`
+}
+
+// VolumeMount describes a mounting of a Volume within a container.
+type VolumeMount struct {
+	// This must match the Name of a Volume.
+	Name string `json:"name" bson:"name"`
+	// Mounted read-only if true, read-write otherwise (false or unspecified).
+	// Defaults to false.
+	// +optional
+	ReadOnly bool `json:"readOnly,omitempty" bson:"readOnly"`
+	// Path within the container at which the volume should be mounted.  Must
+	// not contain ':'.
+	MountPath string `json:"mountPath" bson:"mountPath"`
+	// Path within the volume from which the container's volume should be mounted.
+	// Defaults to "" (volume's root).
+	// +optional
+	SubPath string `json:"subPath,omitempty" bson:"subPath"`
+	// mountPropagation determines how mounts are propagated from the host
+	// to container and the other way around.
+	// When not set, MountPropagationNone is used.
+	// This field is beta in 1.10.
+	// +optional
+	// NOCC:tosa/linelength(忽略长度)
+	MountPropagation *MountPropagationMode `json:"mountPropagation,omitempty" bson:"mountPropagation"`
+	// Expanded path within the volume from which the container's volume should be mounted.
+	// Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the
+	// container's environment. Defaults to "" (volume's root). SubPathExpr and SubPath are mutually exclusive.
+	// +optional
+	SubPathExpr string `json:"subPathExpr,omitempty" bson:"subPathExpr"`
+}
+
+// MountPropagationMode describes mount propagation.
+// +enum
+type MountPropagationMode string

@@ -157,6 +157,29 @@
       vertical-align: middle;
     }
   }
+
+  .bcs-small-form {
+    &-item {
+      margin-top: 0;
+      font-size: 12px;
+      width: 100%;
+    }
+    .bk-label {
+      font-size: 12px;
+      color: #979BA5;
+      min-height: 20px;
+      line-height: 20px;
+    }
+    .bk-form-item {
+      margin: 0 0 12px 0;
+    }
+    .bk-form-content {
+      min-height: 20px;
+      line-height: 20px;
+      font-size: 12px;
+      color: #313238;
+    }
+  }
 }
 
 #app {
@@ -195,6 +218,11 @@
 .tippy-tooltip.light-theme .tippy-arrow {
   background: #fff;
   box-shadow: 0 0 6px 0 #dcdee5;
+}
+
+.tippy-tooltip .tippy-arrow {
+  width: 0;
+  height: 0;
 }
 
 .bcs-select-group {

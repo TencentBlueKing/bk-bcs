@@ -49,9 +49,9 @@
 import { computed, defineComponent, onMounted, ref, watch } from 'vue';
 
 import { NODE_TEMPLATE_ID } from '@/common/constant';
+import SelectExtension from '@/components/select-extension.vue';
 import $router from '@/router';
 import $store from '@/store/index';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 import NodeTemplateDetail from '@/views/cluster-manage/node-template/node-template-detail.vue';
 
 export default defineComponent({

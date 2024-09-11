@@ -329,6 +329,8 @@ export const TemplateSetService = {
   CreateTemplateSpace: (params?: ClusterResource.CreateTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/spaces')(params, config),
   // 更新模板文件文件夹
   UpdateTemplateSpace: (params?: ClusterResource.UpdateTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('put', '/clusterresources/v1/projects/$projectCode/template/spaces/$id')(params, config),
+  // 克隆模板文件文件夹
+  CloneTemplateSpace: (params?: ClusterResource.UpdateTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/spaces/$id/copy')(params, config),
   // 删除模板文件文件夹
   DeleteTemplateSpace: (params?: ClusterResource.DeleteTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('delete', '/clusterresources/v1/projects/$projectCode/template/spaces/$id')(params, config),
   // 获取模板文件元数据详情

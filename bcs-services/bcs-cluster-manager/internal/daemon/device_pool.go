@@ -46,7 +46,7 @@ func (d *Daemon) reportRegionInsTypeUsage(error chan<- error) {
 		return
 	}
 
-	concurency := utils.NewRoutinePool(10)
+	concurency := utils.NewRoutinePool(30)
 	defer concurency.Close()
 
 	for region, insTypes := range regionInstypes {
@@ -64,6 +64,13 @@ func (d *Daemon) reportRegionInsTypeUsage(error chan<- error) {
 
 				// report data
 				for _, pool := range pools {
+
+					err = SetResourceDevicePoolData(pool.PoolId, pool)
+					if err != nil {
+						blog.Errorf("reportRegionInsTypeUsage[%s:%s] SetResourceDevicePoolData[%s]: %v %+v",
+							region, insTypes[i], pool.PoolId, pool, err)
+					}
+
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
 						poolTotal, float64(pool.Total))
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
