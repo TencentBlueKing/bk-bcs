@@ -129,9 +129,21 @@ func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName st
 
 // CreateCluster create cluster
 func (cs *ContainerServiceClient) CreateCluster(ctx context.Context, req *container.CreateClusterRequest) (*container.Operation, error) {
-	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
-	req.Parent = parent
-	o, err := cs.containerServiceClient.Projects.Locations.Clusters.Create(parent, req).Context(ctx).Do()
+	clusterLevel := cs.getClusterLevel()
+
+	var (
+		o   *container.Operation
+		err error
+	)
+
+	switch clusterLevel {
+	case RegionLevel:
+		parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
+		req.Parent = parent
+		o, err = cs.containerServiceClient.Projects.Locations.Clusters.Create(parent, req).Context(ctx).Do()
+	case ZoneLevel:
+		o, err = cs.containerServiceClient.Projects.Zones.Clusters.Create(cs.gkeProjectID, cs.region, req).Do()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("gke client CreateCluster failed: %v", err)
 	}

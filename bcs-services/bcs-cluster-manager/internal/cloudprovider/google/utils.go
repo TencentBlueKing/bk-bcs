@@ -60,19 +60,19 @@ const (
 var (
 	// create cluster task
 	createGKEClusterStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-CreateGKEClusterTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-CreateCloudClusterTask", cloudName),
 		StepName:   "创建集群",
 	}
 	checkGKEClusterStatusStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-CheckGKEClusterStatusTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-CheckCloudClusterStatusTask", cloudName),
 		StepName:   "检测集群状态",
 	}
 	checkGKENodeGroupsStatusStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-CheckGKENodeGroupsStatusTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-GKE-CheckCloudNodeGroupStatusTask", cloudName),
 		StepName:   "检测集群节点池状态",
 	}
 	updateGKENodeGroupsToDBStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-UpdateGKENodesGroupToDBTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-UpdateCreateNodeGroupDBInfoTask", cloudName),
 		StepName:   "更新节点池信息",
 	}
 	checkCreateClusterNodeStatusStep = cloudprovider.StepInfo{
@@ -80,13 +80,14 @@ var (
 		StepName:   "检测集群节点状态",
 	}
 	registerGKEClusterKubeConfigStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-RegisterGKEClusterKubeConfigTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-RegisterManageClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群连接信息",
 	}
 	updateGKENodesToDBStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-UpdateGKENodesToDBTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName),
 		StepName:   "更新任务状态",
 	}
+
 	// import cluster task
 	importClusterNodesStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-ImportClusterNodesTask", cloudName),
@@ -99,7 +100,7 @@ var (
 
 	// delete cluster task
 	deleteGKEClusterStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-DeleteGKEClusterTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-DeleteCloudClusterTask", cloudName),
 		StepName:   "删除集群",
 	}
 	cleanClusterDBInfoStep = cloudprovider.StepInfo{

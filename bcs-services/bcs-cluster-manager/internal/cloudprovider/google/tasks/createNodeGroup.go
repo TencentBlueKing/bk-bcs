@@ -110,7 +110,7 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 	}
 
 	operation, err := gkeCli.CreateClusterNodePool(context.Background(),
-		GenerateCreateNodePoolInput(group, cluster), cluster.SystemID)
+		generateCreateNodePoolInput(group, cluster), cluster.SystemID)
 	if err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool[%s] api in task %s "+
 			"step %s failed, %s", taskID, nodeGroupID, taskID, stepName, err.Error())
@@ -125,6 +125,30 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 	blog.Infof("CreateCloudNodeGroupTask[%s]: call CreateClusterNodePool successful", taskID)
 
 	return nil
+}
+
+// generateCreateNodePoolInput generate create node pool input
+func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
+	if group.NodeTemplate.MaxPodsPerNode == 0 {
+		group.NodeTemplate.MaxPodsPerNode = 110
+	}
+	return &api.CreateNodePoolRequest{
+		NodePool: &api.NodePool{
+			// gke nodePool名称中不允许有大写字母
+			Name:             group.CloudNodeGroupID,
+			Config:           generateNodeConfig(group),
+			InitialNodeCount: int64(group.AutoScaling.DesiredSize),
+			Locations:        group.AutoScaling.Zones,
+			MaxPodsConstraint: &api.MaxPodsConstraint{
+				MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
+			},
+			Autoscaling: &api.NodePoolAutoscaling{
+				// 不开启谷歌云 CA 组件，因为需要部署 BCS 自己的 CA 组件
+				Enabled: false,
+			},
+			Management: generateNodeManagement(group, cluster),
+		},
+	}
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
@@ -500,4 +524,42 @@ func UpdateCreateNodeGroupDBInfoTask(taskID string, stepName string) error {
 	}
 
 	return nil
+}
+
+// generateNodeConfig generate node config
+func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
+	if nodeGroup.LaunchTemplate == nil {
+		return nil
+	}
+	template := nodeGroup.LaunchTemplate
+	diskSize, _ := strconv.Atoi(template.SystemDisk.DiskSize)
+	conf := &api.NodeConfig{
+		MachineType: template.InstanceType,
+		Labels:      nodeGroup.NodeTemplate.Labels,
+		Taints:      api.MapTaints(nodeGroup.NodeTemplate.Taints),
+		DiskSizeGb:  int64(diskSize),
+		DiskType:    template.SystemDisk.DiskType,
+	}
+	if template.ImageInfo != nil {
+		conf.ImageType = template.ImageInfo.ImageName
+	}
+	return conf
+}
+
+// generateNodeManagement generate node management
+func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) *api.NodeManagement {
+	if nodeGroup.AutoScaling == nil {
+		return nil
+	}
+	nm := &api.NodeManagement{}
+	nm.AutoUpgrade = nodeGroup.AutoScaling.AutoUpgrade
+	nm.AutoRepair = nodeGroup.AutoScaling.ReplaceUnhealthy
+	if cluster.ExtraInfo != nil {
+		if cluster.ExtraInfo[api.GKEClusterReleaseChannel] != "" {
+			// when releaseChannel is set, autoUpgrade and autoRepair must be true
+			nm.AutoUpgrade = true
+			nm.AutoRepair = true
+		}
+	}
+	return nm
 }

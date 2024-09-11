@@ -349,13 +349,11 @@ func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, location
 		it  *compute.InstanceTemplate
 	)
 
-	switch c.getLocationType(location) {
-	case locationTypeZones:
-		it, err = c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
-	case locationTypeRegions:
+	if c.getLocationType(location) == locationTypeRegions {
 		it, err = c.computeServiceClient.RegionInstanceTemplates.Get(c.gkeProjectID, location, name).Context(ctx).Do()
+	} else {
+		it, err = c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
 	}
-	// instance template
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate[%s] failed: %v", name, err)
 	}
@@ -377,16 +375,15 @@ func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, locat
 	)
 
 	// create instance template
-	switch c.getLocationType(location) {
-	case locationTypeZones:
-		operation, err = c.computeServiceClient.InstanceTemplates.Insert(c.gkeProjectID, it).Context(ctx).Do()
-	case locationTypeRegions:
+	if c.getLocationType(location) == locationTypeRegions {
 		operation, err = c.computeServiceClient.RegionInstanceTemplates.Insert(c.gkeProjectID, location, it).Context(ctx).Do()
+	} else {
+		operation, err = c.computeServiceClient.InstanceTemplates.Insert(c.gkeProjectID, it).Context(ctx).Do()
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: %v", err)
 	}
+
 	blog.Infof("gce client CreateInstanceTemplate[%s] successful operation ID: %s", it.Name, operation.SelfLink)
 
 	return operation, nil
@@ -405,16 +402,15 @@ func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, locat
 	)
 
 	// delete instance template
-	switch c.getLocationType(location) {
-	case locationTypeZones:
-		operation, err = c.computeServiceClient.InstanceTemplates.Delete(c.gkeProjectID, name).Context(ctx).Do()
-	case locationTypeRegions:
+	if c.getLocationType(location) == locationTypeRegions {
 		operation, err = c.computeServiceClient.RegionInstanceTemplates.Delete(c.gkeProjectID, location, name).Context(ctx).Do()
+	} else {
+		operation, err = c.computeServiceClient.InstanceTemplates.Delete(c.gkeProjectID, name).Context(ctx).Do()
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: %v", err)
 	}
+
 	blog.Infof("gce client DeleteInstanceTemplate[%s] successful operation ID: %s", name, operation.SelfLink)
 
 	return operation, nil

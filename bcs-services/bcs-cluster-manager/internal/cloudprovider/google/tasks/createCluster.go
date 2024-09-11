@@ -14,11 +14,14 @@ package tasks
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
 
 	"google.golang.org/api/container/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -26,7 +29,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -59,8 +64,8 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CreateGKEClusterTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error()) // nolint
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err) // nolint
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -70,8 +75,8 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
 			blog.Errorf("CreateGKEClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s "+
-				"step %s failed, %s", taskID, clusterID, taskID, stepName, errGet.Error())
-			retErr := fmt.Errorf("get nodegroup information failed, %s", errGet.Error())
+				"step %s failed, %s", taskID, clusterID, taskID, stepName, errGet)
+			retErr := fmt.Errorf("get nodegroup information failed, %s", errGet)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
 		}
@@ -85,8 +90,8 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 	clsId, err := createGKECluster(ctx, dependInfo, nodeGroups)
 	if err != nil {
 		blog.Errorf("CreateGKEClusterTask[%s] createGKECluster for cluster[%s] failed, %s",
-			taskID, clusterID, err.Error())
-		retErr := fmt.Errorf("createGKECluster err, %s", err.Error())
+			taskID, clusterID, err)
+		retErr := fmt.Errorf("createGKECluster err, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 
 		_ = cloudprovider.UpdateClusterErrMessage(clusterID, fmt.Sprintf("submit createCluster[%s] failed: %v",
@@ -98,9 +103,9 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 	err = cloudprovider.UpdateCluster(dependInfo.Cluster)
 	if err != nil {
 		blog.Errorf("createGKECluster[%s] update cluster systemID[%s] failed %s",
-			taskID, dependInfo.Cluster.ClusterID, err.Error())
+			taskID, dependInfo.Cluster.ClusterID, err)
 		retErr := fmt.Errorf("call createGKECluster updateClusterSystemID[%s] api err: %s",
-			dependInfo.Cluster.ClusterID, err.Error())
+			dependInfo.Cluster.ClusterID, err)
 		return retErr
 	}
 
@@ -184,23 +189,19 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		},
 	}
 
-	enablePrivateNodes := false
 	for _, template := range info.Cluster.Template {
 		if template.GetNodeRole() == common.NodeRoleMaster {
 			if len(template.Zone) != 0 {
 				req.Cluster.Locations = append(req.Cluster.Locations, template.Zone)
 			}
 		}
-
-		if template.GetNodeRole() == common.NodeRoleWorker {
-			enablePrivateNodes = template.InternetAccess.PublicIPAssigned
-		}
 	}
 
 	req.Cluster.PrivateClusterConfig = &container.PrivateClusterConfig{
-		// 开启此参数后，集群内的节点无法从公网访问，只能通过专线访问
+		// 是否将主服务器的内部 IP 地址用作集群终端节点
 		// EnablePrivateEndpoint: info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet,
-		EnablePrivateNodes: enablePrivateNodes,
+		// 开启此参数后，集群内的节点无法从公网访问，只能通过专线访问 会导致bcs获取不了kubeconfig
+		// EnablePrivateNodes: enablePrivateNodes,
 	}
 
 	if info.Cluster.ManageType == common.ClusterManageTypeManaged {
@@ -210,8 +211,14 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	} else {
 		for _, ng := range groups {
 			ng.CloudNodeGroupID = strings.ToLower(ng.NodeGroupID)
-			nodePool := generateNodePool(GenerateCreateNodePoolInput(ng, info.Cluster))
+			nodePool := api.GenerateNodePool(generateCreateClusterNodePoolInput(ng, info.Cluster))
 			req.Cluster.NodePools = append(req.Cluster.NodePools, nodePool)
+		}
+	}
+
+	if info.Cluster.NetworkSettings != nil && info.Cluster.NetworkSettings.MaxNodePodNum > 0 {
+		req.Cluster.DefaultMaxPodsConstraint = &container.MaxPodsConstraint{
+			MaxPodsPerNode: int64(info.Cluster.NetworkSettings.MaxNodePodNum),
 		}
 	}
 
@@ -225,47 +232,28 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	return req, nil
 }
 
-func generateNodePool(input *api.CreateNodePoolRequest) *container.NodePool {
-	nodePool := &container.NodePool{
-		Name:             input.NodePool.Name,
-		InitialNodeCount: input.NodePool.InitialNodeCount,
-		Locations:        input.NodePool.Locations,
-		MaxPodsConstraint: &container.MaxPodsConstraint{
-			MaxPodsPerNode: input.NodePool.MaxPodsConstraint.MaxPodsPerNode,
+// generateCreateClusterNodePoolInput generate create node pool input
+func generateCreateClusterNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
+	if group.NodeTemplate.MaxPodsPerNode == 0 {
+		group.NodeTemplate.MaxPodsPerNode = 110
+	}
+	return &api.CreateNodePoolRequest{
+		NodePool: &api.NodePool{
+			// gke nodePool名称中不允许有大写字母
+			Name:             group.CloudNodeGroupID,
+			Config:           generateNodeConfig(group),
+			InitialNodeCount: 0,
+			Locations:        group.AutoScaling.Zones,
+			MaxPodsConstraint: &api.MaxPodsConstraint{
+				MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
+			},
+			Autoscaling: &api.NodePoolAutoscaling{
+				// 不开启谷歌云 CA 组件，因为需要部署 BCS 自己的 CA 组件
+				Enabled: false,
+			},
+			Management: generateNodeManagement(group, cluster),
 		},
-		Autoscaling: &container.NodePoolAutoscaling{
-			Enabled: false,
-		},
 	}
-
-	if input.NodePool.Config != nil {
-		nodePool.Config = &container.NodeConfig{
-			MachineType: input.NodePool.Config.MachineType,
-			Labels:      input.NodePool.Config.Labels,
-			Taints: func(t []*api.Taint) []*container.NodeTaint {
-				nt := make([]*container.NodeTaint, 0)
-				for _, v := range t {
-					nt = append(nt, &container.NodeTaint{
-						Key:    v.Key,
-						Value:  v.Value,
-						Effect: v.Effect,
-					})
-				}
-				return nt
-			}(input.NodePool.Config.Taints),
-			DiskType:   input.NodePool.Config.DiskType,
-			DiskSizeGb: input.NodePool.Config.DiskSizeGb,
-			ImageType:  input.NodePool.Config.ImageType,
-		}
-	}
-	if input.NodePool.Management != nil {
-		nodePool.Management = &container.NodeManagement{
-			AutoRepair:  input.NodePool.Management.AutoRepair,
-			AutoUpgrade: input.NodePool.Management.AutoUpgrade,
-		}
-	}
-
-	return nodePool
 }
 
 // CheckGKEClusterStatusTask check cluster create status
@@ -294,8 +282,8 @@ func CheckGKEClusterStatusTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CheckGKEClusterStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -327,8 +315,8 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 
 	client, err := api.NewContainerServiceClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("checkClusterStatus[%s] get gke client failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("get cloud gke client err, %s", err.Error())
+		blog.Errorf("checkClusterStatus[%s] get gke client failed: %s", taskID, err)
+		retErr := fmt.Errorf("get cloud gke client err, %s", err)
 		return retErr
 	}
 
@@ -390,8 +378,8 @@ func CheckGKENodeGroupsStatusTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CheckGKENodeGroupsStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -441,8 +429,8 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 	client, err := api.NewContainerServiceClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("checkClusterStatus[%s] get gke client failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("get cloud gke client err, %s", err.Error())
+		blog.Errorf("checkClusterStatus[%s] get gke client failed: %s", taskID, err)
+		retErr := fmt.Errorf("get cloud gke client err, %s", err)
 		return nil, nil, retErr
 	}
 
@@ -450,7 +438,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
-			return nil, nil, fmt.Errorf("checkNodesGroupStatus GetNodeGroupByGroupID failed, %s", errGet.Error())
+			return nil, nil, fmt.Errorf("checkNodesGroupStatus GetNodeGroupByGroupID failed, %s", errGet)
 		}
 		nodeGroups = append(nodeGroups, nodeGroup)
 
@@ -546,8 +534,8 @@ func UpdateGKENodesGroupToDBTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("UpdateGKENodesGroupToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -589,8 +577,8 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	// get google cloud client
 	client, err := api.NewGCPClientSet(info.CmOption)
 	if err != nil {
-		blog.Errorf("updateNodeGroups[%s]: get gcp client failed, %s", taskID, err.Error())
-		retErr := fmt.Errorf("get cloud as client err, %s", err.Error())
+		blog.Errorf("updateNodeGroups[%s]: get gcp client failed, %s", taskID, err)
+		retErr := fmt.Errorf("get cloud as client err, %s", err)
 		return retErr
 	}
 	containerCli := client.ContainerServiceClient
@@ -599,9 +587,10 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	for _, ngID := range addSuccessNodeGroupIDs {
 		group, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
-			return fmt.Errorf("updateNodeGroups GetNodeGroupByGroupID failed, %s", err.Error())
+			return fmt.Errorf("updateNodeGroups GetNodeGroupByGroupID failed, %s", err)
 		}
 
+		desiredSize := group.AutoScaling.DesiredSize
 		group.CloudNodeGroupID = strings.ToLower(group.NodeGroupID)
 		np, errPool := containerCli.GetClusterNodePool(context.Background(),
 			info.Cluster.SystemID, group.CloudNodeGroupID)
@@ -615,19 +604,35 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		newIt, igm, err := getIgmAndIt(computeCli, np, group, taskID)
 		if err != nil {
 			blog.Errorf("updateNodeGroups[%s]: getIgmAndIt failed: %v", taskID, err)
-			retErr := fmt.Errorf("getIgmAndIt failed, %s", err.Error())
+			retErr := fmt.Errorf("getIgmAndIt failed, %s", err)
 			return retErr
 		}
 
 		group.Status = common.StatusRunning
+		group = generateNodeGroupFromIgmAndIt(group, igm, newIt, info.CmOption)
+		group.AutoScaling.DesiredSize = desiredSize
 		// update node group cloud args id
-		err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(),
-			generateNodeGroupFromIgmAndIt(group, igm, newIt, info.CmOption))
+		err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
 		if err != nil {
-			blog.Errorf("updateNodeGroups[%s]: updateNodeGroupCloudArgsID[%s] failed, %s", taskID, ngID, err.Error())
-			retErr := fmt.Errorf("call updateNodeGroups updateNodeGroupCloudArgsID[%s] api err, %s", ngID,
-				err.Error())
+			blog.Errorf("updateNodeGroups[%s]: updateNodeGroupCloudArgsID[%s] failed, %s", taskID, ngID, err)
+			retErr := fmt.Errorf("call updateNodeGroups updateNodeGroupCloudArgsID[%s] api err, %s", ngID, err)
 			return retErr
+		}
+
+		if desiredSize > 0 {
+			mig, err := api.GetInstanceGroupManager(client.ComputeServiceClient, group.AutoScaling.AutoScalingID)
+			if err != nil {
+				blog.Errorf("applyInstanceMachines[%s] GetInstanceGroupManager[%s] failed: %v",
+					taskID, group.AutoScaling.AutoScalingID, err)
+				return err
+			}
+			instanceNames := generateInstanceName(mig.BaseInstanceName, uint64(desiredSize))
+			_, err = api.CreateInstanceForGroupManager(client.ComputeServiceClient, group.AutoScaling.AutoScalingID, instanceNames)
+			if err != nil {
+				blog.Errorf("applyInstanceMachines[%s] CreateInstanceForGroupManager[%s : %+v] failed: %v",
+					taskID, group.AutoScaling.AutoScalingID, instanceNames, err)
+				return err
+			}
 		}
 	}
 
@@ -662,8 +667,8 @@ func CheckGKEClusterNodesStatusTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("CheckGKEClusterNodesStatusTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -713,7 +718,7 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
-			return nil, nil, fmt.Errorf("get nodegroup information failed, %s", err.Error())
+			return nil, nil, fmt.Errorf("get nodegroup information failed, %s", err)
 		}
 		totalNodesNum += nodeGroup.AutoScaling.DesiredSize
 		asIDs = append(asIDs, nodeGroup.AutoScaling.AutoScalingID)
@@ -721,8 +726,8 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 
 	cli, err := api.NewComputeServiceClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("checkClusterNodesStatus[%s] get gke client failed: %s", taskID, err.Error())
-		return nil, nil, fmt.Errorf("get cloud gke client err, %s", err.Error())
+		blog.Errorf("checkClusterNodesStatus[%s] get gke client failed: %s", taskID, err)
+		return nil, nil, fmt.Errorf("get cloud gke client err, %s", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
@@ -751,10 +756,14 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 				blog.Infof("checkClusterNodesStatus[%s] node[%s] state %s", taskID, instance.Instance, instance.Status)
 				switch instance.Status {
 				case api.InstanceStatusRunning:
+					if !utils.StringInSlice(instance.Instance, running) {
+						running = append(running, instance.Instance)
+					}
 					index++
-					running = append(running, instance.Instance)
 				case api.InstanceStatusTerminated:
-					failure = append(failure, instance.Instance)
+					if !utils.StringInSlice(instance.Instance, failure) {
+						failure = append(failure, instance.Instance)
+					}
 					index++
 				}
 			}
@@ -767,7 +776,7 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 		}
 
 		return nil
-	}, loop.LoopInterval(10*time.Second))
+	}, loop.LoopInterval(1*time.Second))
 	// other error
 	if err != nil {
 		blog.Errorf("checkClusterNodesStatus[%s] ListNodes failed: %v", taskID, err)
@@ -806,8 +815,8 @@ func UpdateGKENodesToDBTask(taskID string, stepName string) error {
 	})
 	if err != nil {
 		blog.Errorf("UpdateNodesToDBTask[%s]: GetClusterDependBasicInfo for cluster %s in task %s "+
-			"step %s failed, %s", taskID, clusterID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+			"step %s failed, %s", taskID, clusterID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -845,12 +854,11 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	cli, err := api.NewComputeServiceClient(info.CmOption)
 	if err != nil {
-		blog.Errorf("updateNodeToDB[%s] get gke client failed: %s", taskID, err.Error())
-		return fmt.Errorf("get cloud gke client err, %s", err.Error())
+		blog.Errorf("updateNodeToDB[%s] get gke client failed: %s", taskID, err)
+		return fmt.Errorf("get cloud gke client err, %s", err)
 	}
 
 	addSuccessNodes := make([]string, 0)
-	blog.Infof("11111111111111111111, %d", len(nodeGroupIDs))
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
@@ -867,7 +875,6 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 			blog.Errorf("updateNodeToDB[%s] failed: %v", taskID, errGet)
 			return fmt.Errorf("updateNodeToDB ListInstanceGroupsInstances failed, %s", errGet)
 		}
-		blog.Infof("22222222222222222222222222222, %s", instances)
 
 		for _, instance := range instances {
 			inInfo, errGet := api.GetGCEResourceInfo(instance.Instance)
@@ -881,13 +888,13 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 			}
 
 			node := api.InstanceToNode(cli, ins)
-			blog.Infof("333333333333333333333333333333, %+v", node)
 
 			if ins.Status == api.InstanceStatusRunning {
 				addSuccessNodes = append(addSuccessNodes, node.InnerIP)
 			}
 
 			node.NodeGroupID = nodeGroup.NodeGroupID
+			node.ClusterID = info.Cluster.ClusterID
 			errGet = cloudprovider.GetStorageModel().CreateNode(context.Background(), node)
 			if errGet != nil {
 				return fmt.Errorf("updateNodeToDB CreateNode[%s] failed, %v", node.NodeName, errGet)
@@ -897,7 +904,7 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
 
-	return fmt.Errorf("test error")
+	return nil
 }
 
 // RegisterGKEClusterKubeConfigTask register cluster kubeconfig
@@ -911,10 +918,10 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error {
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("RegisterAKSClusterKubeConfigTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("RegisterGKEClusterKubeConfigTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("RegisterAKSClusterKubeConfigTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
+	blog.Infof("RegisterGKEClusterKubeConfigTask[%s] task %s run current step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// inject taskID
@@ -929,26 +936,78 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error {
 		CloudID:   cloudID,
 	})
 	if err != nil {
-		blog.Errorf("RegisterAKSClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
-			taskID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("get cloud/project information failed, %s", err.Error())
+		blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] GetClusterDependBasicInfo in task %s step %s failed, %s",
+			taskID, taskID, stepName, err)
+		retErr := fmt.Errorf("get cloud/project information failed, %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
 	err = importClusterCredential(ctx, dependInfo)
 	if err != nil {
-		blog.Errorf("RegisterAKSClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("importClusterCredential failed %s", err.Error())
+		blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err)
+		retErr := fmt.Errorf("importClusterCredential failed %s", err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 
-	blog.Infof("RegisterAKSClusterKubeConfigTask[%s] importClusterCredential success", taskID)
+	config, _ := encrypt.Decrypt(nil, dependInfo.Cluster.KubeConfig)
+	kubeRet := base64.StdEncoding.EncodeToString([]byte(config))
+
+	kubeCli, err := clusterops.NewKubeClient(kubeRet)
+	if err != nil {
+		blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances NewKubeClient failed: %s", taskID, err)
+		retErr := fmt.Errorf("importClusterInstances NewKubeClient failed %s", err)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	addSuccessNodes := state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()]
+	if len(addSuccessNodes) > 0 {
+		var nodes *corev1.NodeList
+		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+		defer cancel()
+		err = loop.LoopDoFunc(ctx, func() error {
+			nodes, err = kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+			if err != nil {
+				return nil
+			}
+
+			if len(nodes.Items) > 0 {
+				return loop.EndLoop
+			}
+
+			return nil
+		}, loop.LoopInterval(2*time.Second))
+		if err != nil {
+			blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances list node failed: %s", taskID, err)
+			retErr := fmt.Errorf("importClusterInstances list node failed %s", err)
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+		// get container runtime info here due to GKE API is not support
+		if len(nodes.Items) > 0 {
+			crv := strings.Split(nodes.Items[0].Status.NodeInfo.ContainerRuntimeVersion, "://")
+			if len(crv) == 2 {
+				dependInfo.Cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+					ContainerRuntime: crv[0],
+					RuntimeVersion:   crv[1],
+				}
+				err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), dependInfo.Cluster)
+				if err != nil {
+					blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances update cluster[%s] failed: %s", taskID, err)
+					retErr := fmt.Errorf("importClusterInstances update cluster[%s] failed: %s", dependInfo.Cluster.ClusterID, err)
+					_ = state.UpdateStepFailure(start, stepName, retErr)
+				}
+			}
+		}
+	}
+
+	blog.Infof("RegisterGKEClusterKubeConfigTask[%s] importClusterCredential success", taskID)
 
 	// update step
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("RegisterAKSClusterKubeConfigTask[%s:%s] update to storage fatal", taskID, stepName)
+		blog.Errorf("RegisterGKEClusterKubeConfigTask[%s:%s] update to storage fatal", taskID, stepName)
 		return err
 	}
 
