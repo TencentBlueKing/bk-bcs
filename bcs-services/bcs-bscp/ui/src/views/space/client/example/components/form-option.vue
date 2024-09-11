@@ -34,7 +34,7 @@
             placement: 'top',
           }"
           class="description-em"
-          @click="handleCopyText(formData.tempDir)">
+          @click="handleCopyText(`${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files`)">
           &nbsp;{{ `${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
         </span>
       </div>
