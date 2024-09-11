@@ -28,6 +28,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/argoproj/argo-cd/v2/applicationset/generators"
+	"github.com/argoproj/argo-cd/v2/applicationset/services"
+	appsetutils "github.com/argoproj/argo-cd/v2/applicationset/utils"
 	argocommon "github.com/argoproj/argo-cd/v2/common"
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -961,6 +964,75 @@ func (cd *argo) AllApplicationSets() []*v1alpha1.ApplicationSet {
 		return true
 	})
 	return result
+}
+
+var (
+	render = appsetutils.Render{}
+)
+
+func (cd *argo) ApplicationSetDryRun(appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, error) {
+	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 300,
+		apiclient.TLSConfiguration{
+			DisableTLS:       false,
+			StrictValidation: false,
+		})
+	argoCDService, _ := services.NewArgoCDService(cd.argoDB, true, repoClientSet, false)
+	// this will render the Applications by ApplicationSet's generators
+	// refer to:
+	// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
+	results := make([]*v1alpha1.Application, 0)
+	for i := range appSet.Spec.Generators {
+		generator := appSet.Spec.Generators[i]
+		if generator.List == nil && generator.Git == nil && generator.Matrix == nil && generator.Merge == nil {
+			continue
+		}
+		listGenerator := generators.NewListGenerator()
+		gitGenerator := generators.NewGitGenerator(argoCDService)
+		terminalGenerators := map[string]generators.Generator{
+			"List": listGenerator,
+			"Git":  gitGenerator,
+		}
+		tsResult, err := generators.Transform(generator, map[string]generators.Generator{
+			"List":   listGenerator,
+			"Git":    gitGenerator,
+			"Matrix": generators.NewMatrixGenerator(terminalGenerators),
+			"Merge":  generators.NewMergeGenerator(terminalGenerators),
+		}, appSet.Spec.Template, appSet, map[string]interface{}{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "transform generator[%d] failed", i)
+		}
+		for j := range tsResult {
+			ts := tsResult[j]
+			tmplApplication := getTempApplication(ts.Template)
+			if tmplApplication.Labels == nil {
+				tmplApplication.Labels = make(map[string]string)
+			}
+			for _, p := range ts.Params {
+				var app *v1alpha1.Application
+				app, err = render.RenderTemplateParams(tmplApplication, appSet.Spec.SyncPolicy,
+					p, appSet.Spec.GoTemplate, nil)
+				if err != nil {
+					return nil, errors.Wrap(err, "error generating application from params")
+				}
+				results = append(results, app)
+			}
+		}
+	}
+	return results, nil
+}
+
+// refer to:
+// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
+func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) *v1alpha1.Application {
+	var tmplApplication v1alpha1.Application
+	tmplApplication.Annotations = applicationSetTemplate.Annotations
+	tmplApplication.Labels = applicationSetTemplate.Labels
+	tmplApplication.Namespace = applicationSetTemplate.Namespace
+	tmplApplication.Name = applicationSetTemplate.Name
+	tmplApplication.Spec = applicationSetTemplate.Spec
+	tmplApplication.Finalizers = applicationSetTemplate.Finalizers
+
+	return &tmplApplication
 }
 
 // RefreshApplicationSet refresh appset trigger it to generate applications

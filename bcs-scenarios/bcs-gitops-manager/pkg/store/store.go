@@ -101,6 +101,7 @@ type Store interface {
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
 	DeleteApplicationSetOrphan(ctx context.Context, name string) error
+	ApplicationSetDryRun(appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, error)
 
 	// authentication token
 	GetToken(ctx context.Context) string
