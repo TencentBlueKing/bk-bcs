@@ -75,7 +75,7 @@
 
   // 代码预览上方提示框
   const kvConfig = computed(() => {
-    const url = 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/python_sdk_dependency.md';
+    const url = (window as any).PYTHON_SDK_DEPENDENCY_DOC;
     switch (props.kvName) {
       case 'python':
         // get
