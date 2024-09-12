@@ -440,7 +440,7 @@ async function downloadTemplateFile(templateSpaceNames: string[]) {
 
   const dispositionList: string[] = res.headers?.['content-disposition']?.split(';') || [];
   const fileName = dispositionList.at(-1)?.split('=')
-    .at(-1) || `template-${new Date().getTime()}`;
+    .at(-1) || `template-${new Date().getTime()}.tgz`;
   download(res.data, fileName);
 };
 // 点击导入按钮
