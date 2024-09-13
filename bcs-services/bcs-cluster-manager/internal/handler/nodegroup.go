@@ -125,6 +125,21 @@ func (cm *ClusterManager) ListNodeGroup(ctx context.Context,
 	return nil
 }
 
+// RecommendNodeGroupConf implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) RecommendNodeGroupConf(ctx context.Context,
+	req *cmproto.RecommendNodeGroupConfReq, resp *cmproto.RecommendNodeGroupConfResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := nodegroup.NewRecommendNodeGroupConfAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("RecommendNodeGroupConf", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: RecommendNodeGroupConf, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // MoveNodesToGroup implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) MoveNodesToGroup(ctx context.Context,
 	req *cmproto.MoveNodesToGroupRequest, resp *cmproto.MoveNodesToGroupResponse) error {

@@ -29,13 +29,17 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/business"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
+
+var defaultAddons = []string{"coredns", "kube-proxy", "vpc-cni", "eks-pod-identity-agent"}
 
 // CreateEKSClusterTask call aws interface to create cluster
 func CreateEKSClusterTask(taskID string, stepName string) error {
@@ -116,7 +120,10 @@ func createEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return "", err
 	}
 
-	input := generateCreateClusterInput(info.Cluster, role.Arn)
+	input, err := generateCreateClusterInput(info, role.Arn)
+	if err != nil {
+		return "", fmt.Errorf("generateCreateClusterInput failed, %v", err)
+	}
 
 	eksCluster, err := client.CreateEksCluster(input)
 	if err != nil {
@@ -139,18 +146,61 @@ func createEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return *eksCluster.Name, nil
 }
 
-func generateCreateClusterInput(cluster *proto.Cluster, roleArn *string) *eks.CreateClusterInput {
-	subnets := strings.Split(cluster.ClusterBasicSettings.SubnetID, ",")
+func generateCreateClusterInput(info *cloudprovider.CloudDependBasicInfo, roleArn *string) (
+	*eks.CreateClusterInput, error) {
+
+	var (
+		cluster   = info.Cluster
+		subnetIds = make([]string, 0)
+		err       error
+	)
+
+	if cluster.GetClusterAdvanceSettings().GetNetworkType() == icommon.VpcCni {
+		subnetIds, err = business.AllocateClusterVpcCniSubnets(context.Background(), cluster.VpcID,
+			cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+		if err != nil {
+			return nil, err
+		}
+		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()) > 0 {
+			subnetIds = append(subnetIds, info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()...)
+		}
+	} else {
+		subnetIds = strings.Split(cluster.ClusterBasicSettings.SubnetID, ",")
+	}
+
 	sgs := strings.Split(cluster.ClusterAdvanceSettings.ClusterConnectSetting.SecurityGroup, ",")
 	input := &eks.CreateClusterInput{
+		// 默认启用集群访问权限,认证模式为
+		AccessConfig: &eks.CreateAccessConfigRequest{
+			AuthenticationMode:                      aws.String(api.ClusterAuthenticationModeAM),
+			BootstrapClusterCreatorAdminPermissions: aws.Bool(true),
+		},
 		Name:    aws.String(cluster.ClusterName),
 		RoleArn: roleArn,
 		ResourcesVpcConfig: &eks.VpcConfigRequest{
-			SubnetIds:             aws.StringSlice(subnets),
+			SubnetIds:             aws.StringSlice(subnetIds),
 			SecurityGroupIds:      aws.StringSlice(sgs),
-			EndpointPrivateAccess: aws.Bool(true),
-			EndpointPublicAccess:  aws.Bool(cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet.PublicIPAssigned),
+			EndpointPrivateAccess: aws.Bool(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
+			EndpointPublicAccess:  aws.Bool(cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
+			PublicAccessCidrs: func() []*string {
+				if cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet == nil ||
+					cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet.PublicAccessCidrs == nil {
+					return nil
+				}
+				return aws.StringSlice(cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet.PublicAccessCidrs)
+			}(),
 		},
+		UpgradePolicy: func(setting *proto.ClusterBasicSetting) *eks.UpgradePolicyRequest {
+			if setting.UpgradePolicy == nil {
+				// 默认使用EXTENDED升级策略, 与aws保持一致
+				return &eks.UpgradePolicyRequest{SupportType: aws.String(api.ClusterUpdatePolicyExtended)}
+			}
+			if setting.UpgradePolicy.SupportType != api.ClusterUpdatePolicyExtended &&
+				setting.UpgradePolicy.SupportType != api.ClusterUpdatePolicyStandard {
+				return &eks.UpgradePolicyRequest{SupportType: aws.String(api.ClusterUpdatePolicyExtended)}
+			}
+			return &eks.UpgradePolicyRequest{SupportType: aws.String(setting.UpgradePolicy.SupportType)}
+		}(cluster.ClusterBasicSettings),
 		Version: aws.String(cluster.ClusterBasicSettings.Version),
 	}
 	input.KubernetesNetworkConfig = generateKubernetesNetworkConfig(cluster)
@@ -158,7 +208,7 @@ func generateCreateClusterInput(cluster *proto.Cluster, roleArn *string) *eks.Cr
 		input.Tags = aws.StringMap(cluster.ClusterBasicSettings.ClusterTags)
 	}
 
-	return input
+	return input, nil
 }
 
 func generateKubernetesNetworkConfig(cluster *proto.Cluster) *eks.KubernetesNetworkConfigRequest {
@@ -174,7 +224,6 @@ func generateKubernetesNetworkConfig(cluster *proto.Cluster) *eks.KubernetesNetw
 			req.IpFamily = aws.String("ipv4")
 			req.ServiceIpv4Cidr = aws.String(cluster.NetworkSettings.ServiceIPv4CIDR)
 		}
-
 	}
 
 	return req
@@ -219,6 +268,15 @@ func CheckEKSClusterStatusTask(taskID string, stepName string) error {
 		blog.Errorf("CheckEKSClusterStatusTask[%s] checkClusterStatus[%s] failed: %v",
 			taskID, clusterID, err)
 		retErr := fmt.Errorf("checkClusterStatus[%s] timeout|abnormal", clusterID)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	err = createAddon(ctx, dependInfo)
+	if err != nil {
+		blog.Errorf("CheckEKSClusterStatusTask[%s] createAddon[%s] failed: %v",
+			taskID, clusterID, err)
+		retErr := fmt.Errorf("createAddon[%s] failed, %s", clusterID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -282,6 +340,30 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		blog.Errorf("checkClusterStatus[%s] GetCluster[%s] failed: abnormal", taskID, info.Cluster.ClusterID)
 		retErr := fmt.Errorf("cluster[%s] status abnormal", info.Cluster.ClusterID)
 		return retErr
+	}
+
+	return nil
+}
+
+func createAddon(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// get awsCloud client
+	cli, err := api.NewEksClient(info.CmOption)
+	if err != nil {
+		blog.Errorf("checkClusterStatus[%s] get aws client failed: %s", taskID, err.Error())
+		retErr := fmt.Errorf("get cloud aws client err, %s", err.Error())
+		return retErr
+	}
+
+	for _, addon := range defaultAddons {
+		_, err = cli.CreateAddon(&eks.CreateAddonInput{
+			ClusterName: aws.String(info.Cluster.ClusterName),
+			AddonName:   aws.String(addon),
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

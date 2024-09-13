@@ -22,6 +22,7 @@ import (
 	"github.com/google/uuid"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -111,6 +112,15 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		return nil, fmt.Errorf("BuildCreateClusterTask TaskOptions is lost")
 	}
 
+	nodeGroups := make([]*proto.NodeGroup, 0)
+	for _, ngID := range opt.NodeGroupIDs {
+		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if errGet != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask GetNodeGroupByGroupID failed, %s", errGet.Error())
+		}
+		nodeGroups = append(nodeGroups, nodeGroup)
+	}
+
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -165,9 +175,9 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		ClusterId:          cls.ClusterID,
 		BusinessId:         cls.BusinessID,
 		CloudArea:          cls.GetClusterBasicSettings().GetArea(),
-		User:               cls.GetNodeSettings().GetWorkerLogin().GetInitLoginUsername(),
-		Passwd:             cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword(),
-		KeyInfo:            cls.GetNodeSettings().GetWorkerLogin().GetKeyPair(),
+		User:               nodeGroups[0].GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:             nodeGroups[0].GetLaunchTemplate().GetInitLoginPassword(),
+		KeyInfo:            nodeGroups[0].GetLaunchTemplate().GetKeyPair(),
 		AllowReviseCloudId: icommon.True,
 	}, cloudprovider.WithStepAllowSkip(true))
 

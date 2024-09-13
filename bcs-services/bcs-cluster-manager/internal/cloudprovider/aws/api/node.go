@@ -105,13 +105,12 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo,
 		blog.Errorf("ListNodeInstanceType DescribeInstanceTypesPages failed, %s", err.Error())
 		return nil, err
 	}
-
-	instanceTypes := convertToInstanceType(cloudInstanceTypes)
-
+	instanceTypes := convertToInstanceType(info, cloudInstanceTypes)
 	return instanceTypes, nil
 }
 
-func convertToInstanceType(cloudInstanceTypes []*ec2.InstanceTypeInfo) []*proto.InstanceType {
+func convertToInstanceType(info cloudprovider.InstanceInfo,
+	cloudInstanceTypes []*ec2.InstanceTypeInfo) []*proto.InstanceType { // nolint
 	instanceTypes := make([]*proto.InstanceType, 0)
 	for _, v := range cloudInstanceTypes {
 		t := &proto.InstanceType{}
@@ -120,14 +119,23 @@ func convertToInstanceType(cloudInstanceTypes []*ec2.InstanceTypeInfo) []*proto.
 			t.NodeType = *v.InstanceType
 			family := strings.Split(*v.InstanceType, ".")
 			t.NodeFamily = family[0]
+			if info.NodeFamily != "" && t.NodeFamily != info.NodeFamily {
+				continue
+			}
 			t.Status = common.InstanceSell
 		}
 		if v.VCpuInfo != nil && v.VCpuInfo.DefaultVCpus != nil {
 			t.Cpu = uint32(*v.VCpuInfo.DefaultVCpus)
+			if info.Cpu != 0 && t.Cpu != info.Cpu {
+				continue
+			}
 		}
 		if v.MemoryInfo != nil && v.MemoryInfo.SizeInMiB != nil {
 			memGb := math.Ceil(float64(*v.MemoryInfo.SizeInMiB / 1024)) // nolint
 			t.Memory = uint32(memGb)
+			if info.Memory != 0 && t.Memory != info.Memory {
+				continue
+			}
 		}
 		if v.GpuInfo != nil && v.GpuInfo.Gpus != nil {
 			var gpuCount uint32
@@ -314,9 +322,16 @@ func (nm *NodeManager) GetCloudRegions(opt *cloudprovider.CommonOption) ([]*prot
 	regions := make([]*proto.RegionInfo, 0)
 	for _, v := range output.Regions {
 		regions = append(regions, &proto.RegionInfo{
-			Region:      aws.StringValue(v.RegionName),
-			RegionName:  aws.StringValue(v.RegionName),
-			RegionState: aws.StringValue(v.OptInStatus),
+			Region:     aws.StringValue(v.RegionName),
+			RegionName: aws.StringValue(v.RegionName),
+			RegionState: func(s string) string {
+				switch s {
+				case RegionStateOptInNR, RegionStateOptedIn:
+					return BCSRegionStateAvailable
+				default:
+					return BCSRegionStateUnavailable
+				}
+			}(aws.StringValue(v.OptInStatus)),
 		})
 	}
 
@@ -340,7 +355,7 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 			ZoneID:    *z.ZoneId,
 			Zone:      *z.ZoneId,
 			ZoneName:  *z.ZoneName,
-			ZoneState: *z.State,
+			ZoneState: BCSRegionStateAvailable,
 		})
 	}
 
