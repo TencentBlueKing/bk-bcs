@@ -76,10 +76,14 @@ func (ga *GetAction) Handle(
 
 func removeSensitiveInfo(group *cmproto.NodeGroup) *cmproto.NodeGroup {
 	if group != nil && group.LaunchTemplate != nil {
-		group.LaunchTemplate.InitLoginPassword = ""
+		if group.LaunchTemplate.InitLoginPassword != "" {
+			group.LaunchTemplate.InitLoginPassword = "<masked>"
+		}
 		if group.LaunchTemplate.KeyPair != nil {
+			if group.LaunchTemplate.KeyPair.KeyPublic != "" {
+				group.LaunchTemplate.KeyPair.KeyPublic = "<masked>"
+			}
 			group.LaunchTemplate.KeyPair.KeySecret = ""
-			group.LaunchTemplate.KeyPair.KeyPublic = ""
 		}
 	}
 	return group

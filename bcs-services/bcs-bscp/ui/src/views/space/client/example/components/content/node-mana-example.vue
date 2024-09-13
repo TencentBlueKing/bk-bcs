@@ -100,7 +100,9 @@
 
   const linkUrl = {
     nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
-    clientNode: 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/client_configuration.md',
+    // @ts-ignore
+    // eslint-disable-next-line
+    clientNode: BSCP_CONFIG.client_configuration_doc,
   };
 
   const keyValidateReg = new RegExp(
