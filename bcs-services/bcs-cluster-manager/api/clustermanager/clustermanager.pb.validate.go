@@ -1189,6 +1189,108 @@ var _ interface {
 	ErrorName() string
 } = NewSubnetValidationError{}
 
+// Validate checks the field values on UpgradePolicy with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *UpgradePolicy) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpgradePolicy with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in UpgradePolicyMultiError, or
+// nil if none found.
+func (m *UpgradePolicy) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpgradePolicy) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for SupportType
+
+	if len(errors) > 0 {
+		return UpgradePolicyMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpgradePolicyMultiError is an error wrapping multiple validation errors
+// returned by UpgradePolicy.ValidateAll() if the designated constraints
+// aren't met.
+type UpgradePolicyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpgradePolicyMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpgradePolicyMultiError) AllErrors() []error { return m }
+
+// UpgradePolicyValidationError is the validation error returned by
+// UpgradePolicy.Validate if the designated constraints aren't met.
+type UpgradePolicyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpgradePolicyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpgradePolicyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpgradePolicyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpgradePolicyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpgradePolicyValidationError) ErrorName() string { return "UpgradePolicyValidationError" }
+
+// Error satisfies the builtin error interface
+func (e UpgradePolicyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpgradePolicy.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpgradePolicyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpgradePolicyValidationError{}
+
 // Validate checks the field values on ClusterBasicSetting with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -1277,6 +1379,35 @@ func (m *ClusterBasicSetting) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return ClusterBasicSettingValidationError{
 				field:  "Module",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetUpgradePolicy()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ClusterBasicSettingValidationError{
+					field:  "UpgradePolicy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ClusterBasicSettingValidationError{
+					field:  "UpgradePolicy",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetUpgradePolicy()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ClusterBasicSettingValidationError{
+				field:  "UpgradePolicy",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -18026,6 +18157,1023 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = CreateVirtualClusterRespValidationError{}
+
+// Validate checks the field values on RecommendNodeGroupConfReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RecommendNodeGroupConfReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RecommendNodeGroupConfReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RecommendNodeGroupConfReqMultiError, or nil if none found.
+func (m *RecommendNodeGroupConfReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RecommendNodeGroupConfReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetCloudID()); l < 1 || l > 1024 {
+		err := RecommendNodeGroupConfReqValidationError{
+			field:  "CloudID",
+			reason: "value length must be between 1 and 1024 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetAccountID()) > 1024 {
+		err := RecommendNodeGroupConfReqValidationError{
+			field:  "AccountID",
+			reason: "value length must be at most 1024 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetRegion()) > 100 {
+		err := RecommendNodeGroupConfReqValidationError{
+			field:  "Region",
+			reason: "value length must be at most 100 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_RecommendNodeGroupConfReq_Region_Pattern.MatchString(m.GetRegion()) {
+		err := RecommendNodeGroupConfReqValidationError{
+			field:  "Region",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ResourceGroupName
+
+	if len(errors) > 0 {
+		return RecommendNodeGroupConfReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// RecommendNodeGroupConfReqMultiError is an error wrapping multiple validation
+// errors returned by RecommendNodeGroupConfReq.ValidateAll() if the
+// designated constraints aren't met.
+type RecommendNodeGroupConfReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RecommendNodeGroupConfReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RecommendNodeGroupConfReqMultiError) AllErrors() []error { return m }
+
+// RecommendNodeGroupConfReqValidationError is the validation error returned by
+// RecommendNodeGroupConfReq.Validate if the designated constraints aren't met.
+type RecommendNodeGroupConfReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RecommendNodeGroupConfReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RecommendNodeGroupConfReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RecommendNodeGroupConfReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RecommendNodeGroupConfReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RecommendNodeGroupConfReqValidationError) ErrorName() string {
+	return "RecommendNodeGroupConfReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RecommendNodeGroupConfReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRecommendNodeGroupConfReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RecommendNodeGroupConfReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RecommendNodeGroupConfReqValidationError{}
+
+var _RecommendNodeGroupConfReq_Region_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on InstanceProfile with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *InstanceProfile) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on InstanceProfile with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// InstanceProfileMultiError, or nil if none found.
+func (m *InstanceProfile) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *InstanceProfile) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for NodeOS
+
+	// no validation rules for InstanceType
+
+	// no validation rules for InstanceChargeType
+
+	if len(errors) > 0 {
+		return InstanceProfileMultiError(errors)
+	}
+
+	return nil
+}
+
+// InstanceProfileMultiError is an error wrapping multiple validation errors
+// returned by InstanceProfile.ValidateAll() if the designated constraints
+// aren't met.
+type InstanceProfileMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m InstanceProfileMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m InstanceProfileMultiError) AllErrors() []error { return m }
+
+// InstanceProfileValidationError is the validation error returned by
+// InstanceProfile.Validate if the designated constraints aren't met.
+type InstanceProfileValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e InstanceProfileValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e InstanceProfileValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e InstanceProfileValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e InstanceProfileValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e InstanceProfileValidationError) ErrorName() string { return "InstanceProfileValidationError" }
+
+// Error satisfies the builtin error interface
+func (e InstanceProfileValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sInstanceProfile.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = InstanceProfileValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = InstanceProfileValidationError{}
+
+// Validate checks the field values on HardwareProfile with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *HardwareProfile) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on HardwareProfile with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// HardwareProfileMultiError, or nil if none found.
+func (m *HardwareProfile) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *HardwareProfile) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for CPU
+
+	// no validation rules for Mem
+
+	// no validation rules for GPU
+
+	if all {
+		switch v := interface{}(m.GetSystemDisk()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, HardwareProfileValidationError{
+					field:  "SystemDisk",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, HardwareProfileValidationError{
+					field:  "SystemDisk",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSystemDisk()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return HardwareProfileValidationError{
+				field:  "SystemDisk",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetDataDisks() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, HardwareProfileValidationError{
+						field:  fmt.Sprintf("DataDisks[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, HardwareProfileValidationError{
+						field:  fmt.Sprintf("DataDisks[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return HardwareProfileValidationError{
+					field:  fmt.Sprintf("DataDisks[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return HardwareProfileMultiError(errors)
+	}
+
+	return nil
+}
+
+// HardwareProfileMultiError is an error wrapping multiple validation errors
+// returned by HardwareProfile.ValidateAll() if the designated constraints
+// aren't met.
+type HardwareProfileMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m HardwareProfileMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m HardwareProfileMultiError) AllErrors() []error { return m }
+
+// HardwareProfileValidationError is the validation error returned by
+// HardwareProfile.Validate if the designated constraints aren't met.
+type HardwareProfileValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e HardwareProfileValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e HardwareProfileValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e HardwareProfileValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e HardwareProfileValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e HardwareProfileValidationError) ErrorName() string { return "HardwareProfileValidationError" }
+
+// Error satisfies the builtin error interface
+func (e HardwareProfileValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sHardwareProfile.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = HardwareProfileValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = HardwareProfileValidationError{}
+
+// Validate checks the field values on NetworkProfile with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *NetworkProfile) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NetworkProfile with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in NetworkProfileMultiError,
+// or nil if none found.
+func (m *NetworkProfile) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NetworkProfile) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for PublicIPAssigned
+
+	if len(errors) > 0 {
+		return NetworkProfileMultiError(errors)
+	}
+
+	return nil
+}
+
+// NetworkProfileMultiError is an error wrapping multiple validation errors
+// returned by NetworkProfile.ValidateAll() if the designated constraints
+// aren't met.
+type NetworkProfileMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NetworkProfileMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NetworkProfileMultiError) AllErrors() []error { return m }
+
+// NetworkProfileValidationError is the validation error returned by
+// NetworkProfile.Validate if the designated constraints aren't met.
+type NetworkProfileValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NetworkProfileValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NetworkProfileValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NetworkProfileValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NetworkProfileValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NetworkProfileValidationError) ErrorName() string { return "NetworkProfileValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NetworkProfileValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNetworkProfile.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NetworkProfileValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NetworkProfileValidationError{}
+
+// Validate checks the field values on ScalingProfile with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *ScalingProfile) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ScalingProfile with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in ScalingProfileMultiError,
+// or nil if none found.
+func (m *ScalingProfile) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ScalingProfile) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if val := m.GetMaxSize(); val < 0 || val > 1000 {
+		err := ScalingProfileValidationError{
+			field:  "MaxSize",
+			reason: "value must be inside range [0, 1000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetDesiredSize(); val < 0 || val > 1000 {
+		err := ScalingProfileValidationError{
+			field:  "DesiredSize",
+			reason: "value must be inside range [0, 1000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ScalingMode
+
+	if len(errors) > 0 {
+		return ScalingProfileMultiError(errors)
+	}
+
+	return nil
+}
+
+// ScalingProfileMultiError is an error wrapping multiple validation errors
+// returned by ScalingProfile.ValidateAll() if the designated constraints
+// aren't met.
+type ScalingProfileMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ScalingProfileMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ScalingProfileMultiError) AllErrors() []error { return m }
+
+// ScalingProfileValidationError is the validation error returned by
+// ScalingProfile.Validate if the designated constraints aren't met.
+type ScalingProfileValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ScalingProfileValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ScalingProfileValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ScalingProfileValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ScalingProfileValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ScalingProfileValidationError) ErrorName() string { return "ScalingProfileValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ScalingProfileValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sScalingProfile.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ScalingProfileValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ScalingProfileValidationError{}
+
+// Validate checks the field values on RecommendNodeGroupConf with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RecommendNodeGroupConf) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RecommendNodeGroupConf with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RecommendNodeGroupConfMultiError, or nil if none found.
+func (m *RecommendNodeGroupConf) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RecommendNodeGroupConf) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for ServiceRoleName
+
+	if all {
+		switch v := interface{}(m.GetInstanceProfile()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "InstanceProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "InstanceProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetInstanceProfile()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RecommendNodeGroupConfValidationError{
+				field:  "InstanceProfile",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetHardwareProfile()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "HardwareProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "HardwareProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetHardwareProfile()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RecommendNodeGroupConfValidationError{
+				field:  "HardwareProfile",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetNetworkProfile()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "NetworkProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "NetworkProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetNetworkProfile()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RecommendNodeGroupConfValidationError{
+				field:  "NetworkProfile",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetScalingProfile()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "ScalingProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RecommendNodeGroupConfValidationError{
+					field:  "ScalingProfile",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetScalingProfile()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RecommendNodeGroupConfValidationError{
+				field:  "ScalingProfile",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Mode
+
+	if len(errors) > 0 {
+		return RecommendNodeGroupConfMultiError(errors)
+	}
+
+	return nil
+}
+
+// RecommendNodeGroupConfMultiError is an error wrapping multiple validation
+// errors returned by RecommendNodeGroupConf.ValidateAll() if the designated
+// constraints aren't met.
+type RecommendNodeGroupConfMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RecommendNodeGroupConfMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RecommendNodeGroupConfMultiError) AllErrors() []error { return m }
+
+// RecommendNodeGroupConfValidationError is the validation error returned by
+// RecommendNodeGroupConf.Validate if the designated constraints aren't met.
+type RecommendNodeGroupConfValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RecommendNodeGroupConfValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RecommendNodeGroupConfValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RecommendNodeGroupConfValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RecommendNodeGroupConfValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RecommendNodeGroupConfValidationError) ErrorName() string {
+	return "RecommendNodeGroupConfValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RecommendNodeGroupConfValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRecommendNodeGroupConf.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RecommendNodeGroupConfValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RecommendNodeGroupConfValidationError{}
+
+// Validate checks the field values on RecommendNodeGroupConfResp with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *RecommendNodeGroupConfResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on RecommendNodeGroupConfResp with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// RecommendNodeGroupConfRespMultiError, or nil if none found.
+func (m *RecommendNodeGroupConfResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *RecommendNodeGroupConfResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, RecommendNodeGroupConfRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, RecommendNodeGroupConfRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RecommendNodeGroupConfRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return RecommendNodeGroupConfRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// RecommendNodeGroupConfRespMultiError is an error wrapping multiple
+// validation errors returned by RecommendNodeGroupConfResp.ValidateAll() if
+// the designated constraints aren't met.
+type RecommendNodeGroupConfRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m RecommendNodeGroupConfRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m RecommendNodeGroupConfRespMultiError) AllErrors() []error { return m }
+
+// RecommendNodeGroupConfRespValidationError is the validation error returned
+// by RecommendNodeGroupConfResp.Validate if the designated constraints aren't met.
+type RecommendNodeGroupConfRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RecommendNodeGroupConfRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RecommendNodeGroupConfRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RecommendNodeGroupConfRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RecommendNodeGroupConfRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RecommendNodeGroupConfRespValidationError) ErrorName() string {
+	return "RecommendNodeGroupConfRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e RecommendNodeGroupConfRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRecommendNodeGroupConfResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RecommendNodeGroupConfRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RecommendNodeGroupConfRespValidationError{}
 
 // Validate checks the field values on KubeConfigReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

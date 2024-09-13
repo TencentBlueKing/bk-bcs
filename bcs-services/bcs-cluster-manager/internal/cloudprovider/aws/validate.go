@@ -261,8 +261,21 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq,
 		return fmt.Errorf("%s CreateClusterValidate lost valid crendential info", cloudName)
 	}
 
-	if len(req.NodeGroups) == 0 {
-		return fmt.Errorf("%s CreateClusterValidate nodeGroup is empty", cloudName)
+	for _, ng := range req.NodeGroups {
+		if ng.AutoScaling != nil {
+			if ng.AutoScaling.DesiredSize > ng.AutoScaling.MaxSize {
+				return fmt.Errorf("%s CreateClusterValidate nodegroup[%s] desiredSize can't larger than maxSize",
+					cloudName, ng.NodeGroupID)
+			}
+			if ng.AutoScaling.DesiredSize < ng.AutoScaling.MinSize {
+				return fmt.Errorf("%s CreateClusterValidate nodegroup[%s] desiredSize can't less than minSize",
+					cloudName, ng.NodeGroupID)
+			}
+			if ng.AutoScaling.MinSize > ng.AutoScaling.MaxSize {
+				return fmt.Errorf("%s CreateClusterValidate nodegroup[%s] minSize can't larger than maxSize",
+					cloudName, ng.NodeGroupID)
+			}
+		}
 	}
 
 	// default not handle systemReinstall

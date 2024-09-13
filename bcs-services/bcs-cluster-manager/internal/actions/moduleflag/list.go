@@ -79,7 +79,7 @@ func (la *ListAction) listCloudModuleFlag() error {
 	cloudModuleFlags = append(cloudModuleFlags, flags...)
 
 	for i := range cloudModuleFlags {
-		cloudModuleFlags[i].FlagDesc = i18n.T(la.ctx, cloudModuleFlags[i].FlagName)
+		cloudModuleFlags[i].FlagDesc = i18n.T(la.ctx, cloudModuleFlags[i].FlagDesc)
 		la.moduleFlagListList = append(la.moduleFlagListList, &cloudModuleFlags[i])
 	}
 

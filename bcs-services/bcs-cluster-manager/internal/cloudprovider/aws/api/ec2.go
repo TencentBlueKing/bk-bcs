@@ -255,7 +255,7 @@ func (c *EC2Client) DescribeKeyPairs(input *ec2.DescribeKeyPairsInput) (
 		blog.Errorf("DescribeKeyPairs failed: %v", err)
 		return nil, err
 	}
-	if output == nil || output.KeyPairs == nil {
+	if output == nil {
 		blog.Errorf("DescribeKeyPairs lose response information")
 		return nil, cloudprovider.ErrCloudLostResponse
 	}

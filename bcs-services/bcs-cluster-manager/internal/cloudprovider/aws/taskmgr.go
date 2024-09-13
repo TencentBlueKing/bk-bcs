@@ -22,6 +22,7 @@ import (
 	"github.com/google/uuid"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -111,6 +112,17 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		return nil, fmt.Errorf("BuildCreateClusterTask TaskOptions is lost")
 	}
 
+	nodeGroups := make([]*proto.NodeGroup, 0)
+	var desireSize uint32
+	for _, ngID := range opt.NodeGroupIDs {
+		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if errGet != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask GetNodeGroupByGroupID failed, %s", errGet.Error())
+		}
+		nodeGroups = append(nodeGroups, nodeGroup)
+		desireSize += nodeGroup.AutoScaling.DesiredSize
+	}
+
 	nowStr := time.Now().Format(time.RFC3339)
 	task := &proto.Task{
 		TaskID:         uuid.New().String(),
@@ -140,36 +152,40 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildCreateClusterStep(task)
 	// step1: check cluster status by clusterID
 	createClusterTask.BuildCheckClusterStatusStep(task)
-	// step2: create node group
-	createClusterTask.BuildCreateCloudNodeGroupStep(task)
-	// step3: check cluster nodegroups status
-	createClusterTask.BuildCheckCloudNodeGroupStatusStep(task)
-	// step4: register managed cluster kubeConfig
+	// step2: register managed cluster kubeConfig
 	createClusterTask.BuildRegisterClsKubeConfigStep(task)
-	// step5: check cluster nodegroups status
-	createClusterTask.BuildCheckClusterNodesStatusStep(task)
-	// step6: update nodes to DB
-	createClusterTask.BuildUpdateNodesToDBStep(task)
-	// step7: install cluster watch component
-	common.BuildWatchComponentTaskStep(task, cls, "")
-	// step8: 若需要则设置节点注解
-	common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
-		if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
-			return opt.NodeTemplate.GetAnnotations()
+	// aws support skipping nodegroups creation
+	if len(nodeGroups) != 0 {
+		// step3: create node group
+		createClusterTask.BuildCreateCloudNodeGroupStep(task)
+		// step4: check cluster nodegroups status
+		createClusterTask.BuildCheckCloudNodeGroupStatusStep(task)
+		if desireSize != 0 {
+			// step5: check cluster nodegroups status
+			createClusterTask.BuildCheckClusterNodesStatusStep(task)
+			// step6: update nodes to DB
+			createClusterTask.BuildUpdateNodesToDBStep(task)
+			// step7: install cluster watch component
+			common.BuildWatchComponentTaskStep(task, cls, "")
+			// step8: 若需要则设置节点注解
+			common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
+				if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
+					return opt.NodeTemplate.GetAnnotations()
+				}
+				return nil
+			}())
+			// step9 install gse agent
+			common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+				ClusterId:          cls.ClusterID,
+				BusinessId:         cls.BusinessID,
+				CloudArea:          cls.GetClusterBasicSettings().GetArea(),
+				User:               nodeGroups[0].GetLaunchTemplate().GetInitLoginUsername(),
+				Passwd:             nodeGroups[0].GetLaunchTemplate().GetInitLoginPassword(),
+				KeyInfo:            nodeGroups[0].GetLaunchTemplate().GetKeyPair(),
+				AllowReviseCloudId: icommon.True,
+			}, cloudprovider.WithStepAllowSkip(true))
 		}
-		return nil
-	}())
-
-	// step9 install gse agent
-	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-		ClusterId:          cls.ClusterID,
-		BusinessId:         cls.BusinessID,
-		CloudArea:          cls.GetClusterBasicSettings().GetArea(),
-		User:               cls.GetNodeSettings().GetWorkerLogin().GetInitLoginUsername(),
-		Passwd:             cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword(),
-		KeyInfo:            cls.GetNodeSettings().GetWorkerLogin().GetKeyPair(),
-		AllowReviseCloudId: icommon.True,
-	}, cloudprovider.WithStepAllowSkip(true))
+	}
 
 	// step10: transfer host module
 	moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()

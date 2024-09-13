@@ -113,6 +113,11 @@ func (ng *NodeGroup) UpdateNodeGroup(
 	return task, nil
 }
 
+// RecommendNodeGroupConf recommends nodegroup configs
+func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // GetNodesInGroup get all nodes belong to NodeGroup
 func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented

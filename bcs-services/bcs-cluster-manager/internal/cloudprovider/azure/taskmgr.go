@@ -24,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
@@ -136,6 +137,15 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	taskName := fmt.Sprintf(createClusterTaskTemplate, cls.ClusterID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
+	nodeGroups := make([]*proto.NodeGroup, 0)
+	for _, ngID := range opt.NodeGroupIDs {
+		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if errGet != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask GetNodeGroupByGroupID failed, %s", errGet.Error())
+		}
+		nodeGroups = append(nodeGroups, nodeGroup)
+	}
+
 	// setting all steps details
 	createClusterTask := &CreateClusterTaskOption{Cluster: cls, NodeGroupIDs: opt.NodeGroupIDs}
 
@@ -168,10 +178,11 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		ClusterId:          cls.ClusterID,
 		BusinessId:         cls.BusinessID,
 		CloudArea:          cls.GetClusterBasicSettings().GetArea(),
-		User:               cls.GetNodeSettings().GetWorkerLogin().GetInitLoginUsername(),
-		Passwd:             cls.GetNodeSettings().GetWorkerLogin().GetInitLoginPassword(),
-		KeyInfo:            cls.GetNodeSettings().GetWorkerLogin().GetKeyPair(),
 		AllowReviseCloudId: icommon.True,
+		// 多个节点池使用共同的用户名和密码和SSH密钥
+		User:    nodeGroups[0].GetLaunchTemplate().GetInitLoginUsername(),
+		Passwd:  nodeGroups[0].GetLaunchTemplate().GetInitLoginPassword(),
+		KeyInfo: nodeGroups[0].GetLaunchTemplate().GetKeyPair(),
 	}, cloudprovider.WithStepAllowSkip(true))
 
 	// step10: transfer host module
