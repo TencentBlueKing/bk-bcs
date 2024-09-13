@@ -100,7 +100,9 @@
 
   const linkUrl = {
     nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
-    clientNode: (window as any).CLIENT_CONFIGURATION_DOC,
+    // @ts-ignore
+    // eslint-disable-next-line
+    clientNode: BSCP_CONFIG.client_configuration_doc,
   };
 
   const keyValidateReg = new RegExp(
