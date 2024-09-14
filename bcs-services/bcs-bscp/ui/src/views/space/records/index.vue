@@ -1,0 +1,41 @@
+<template>
+  <section class="record-management-page">
+    <div class="operate-area">
+      <service-selector />
+      <date-picker class="date-picker" />
+      <search-option class="search-option" />
+    </div>
+    <record-table :space-id="spaceId" />
+  </section>
+</template>
+<script setup lang="ts">
+  import { ref } from 'vue';
+  import { useRoute } from 'vue-router';
+  import serviceSelector from './components/service-selector.vue';
+  import datePicker from './components/date-picker.vue';
+  import searchOption from './components/search-option.vue';
+  import recordTable from './components/record-table.vue';
+
+  const route = useRoute();
+  const spaceId = ref(String(route.params.spaceId));
+</script>
+<style lang="scss" scoped>
+  .record-management-page {
+    height: calc(100% - 33px);
+    padding: 24px;
+    background: #f5f7fa;
+    overflow: hidden;
+    .date-picker {
+      margin-left: 8px;
+    }
+    .search-option {
+      margin-left: auto;
+    }
+  }
+  .operate-area {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 16px;
+  }
+</style>

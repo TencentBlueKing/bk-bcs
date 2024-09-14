@@ -3,7 +3,7 @@
     <bk-button
       v-if="
         !approveData?.status ||
-        ![APPROVE_STATUS.PendPublish, APPROVE_STATUS.AlreadyPublish].includes(approveData.status)
+        ![APPROVE_STATUS.PendPublish, APPROVE_STATUS.AlreadyPublish].includes(approveData.status as APPROVE_STATUS)
       "
       v-cursor="{ active: !props.hasPerm }"
       theme="primary"
@@ -97,6 +97,7 @@
   import useServiceStore from '../../../../../../store/service';
   import useConfigStore from '../../../../../../store/config';
   import { getConfigVersionList, versionStatusCheck } from '../../../../../../api/config';
+  import { approve } from '../../../../../../api/record';
   import { getServiceGroupList } from '../../../../../../api/group';
   import { IConfigVersion, IReleasedGroup } from '../../../../../../../types/config';
   import VersionLayout from '../../config/components/version-layout.vue';
@@ -273,8 +274,10 @@
   };
 
   // 确定上线按钮 待后端更新接口返回密钥状态
-  const handlePublishClick = () => {
-    handleConfirm(true);
+  const handlePublishClick = async () => {
+    const { bkBizId: biz_id, appId: app_id } = props;
+    const resp = await approve(biz_id, app_id, publishedVersionId.value, { publish_status: 'AlreadyPublish' });
+    handleConfirm(resp.haveCredentials);
   };
 
   const handleOpenPublishDialog = () => {

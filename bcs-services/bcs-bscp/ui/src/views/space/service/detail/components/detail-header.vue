@@ -40,7 +40,7 @@
             </div>
           </div>
         </ReleasedGroupViewer>
-        <VersionApproveStatus @send-data="approveData = $event" />
+        <VersionApproveStatus ref="verAppStatus" @send-data="approveData = $event" />
         <CreateVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -64,7 +64,7 @@
           @confirm="refreshVesionList" />
         <!-- 更多选项 -->
         <!-- <HeaderMoreOptions v-show="['partial_released', 'not_released'].includes(publishStatus)" /> -->
-        <HeaderMoreOptions :approve-status="approveData.status" />
+        <HeaderMoreOptions :approve-status="approveData.status" @handle-undo="verAppStatus.loadStatus()" />
       </section>
     </template>
   </div>
@@ -99,6 +99,7 @@
     create: false,
     publish: false,
   });
+  const verAppStatus = ref();
 
   const props = defineProps<{
     bkBizId: string;

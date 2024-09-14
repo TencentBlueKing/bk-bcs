@@ -2,7 +2,8 @@
   <section class="create-version" v-if="versionData.status.publish_status === 'partial_released'">
     <bk-button
       v-if="
-        !approveData?.status || ![APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(approveData.status)
+        !approveData?.status ||
+        ![APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(approveData.status as APPROVE_STATUS)
       "
       v-cursor="{ active: !props.hasPerm }"
       theme="primary"
@@ -98,6 +99,7 @@
   import BkMessage from 'bkui-vue/lib/message';
   import { storeToRefs } from 'pinia';
   import { getConfigVersionList, versionStatusCheck } from '../../../../../api/config';
+  import { approve } from '../../../../../api/record';
   import { getServiceGroupList } from '../../../../../api/group';
   import { IConfigVersion, IReleasedGroup } from '../../../../../../types/config';
   import useGlobalStore from '../../../../../store/global';
@@ -324,8 +326,10 @@
   };
 
   // 确定上线按钮 待后端更新接口返回密钥状态
-  const handlePublishClick = () => {
-    handleConfirm(true);
+  const handlePublishClick = async () => {
+    const { bkBizId: biz_id, appId: app_id } = props;
+    const resp = await approve(biz_id, app_id, publishedVersionId.value, { publish_status: 'AlreadyPublish' });
+    handleConfirm(resp.haveCredentials);
   };
 
   // 打开上线版本确认弹窗

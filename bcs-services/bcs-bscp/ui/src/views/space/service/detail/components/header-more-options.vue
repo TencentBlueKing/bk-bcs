@@ -3,16 +3,26 @@
     <Ellipsis class="ellipsis" />
     <ul class="more-options-ul">
       <li class="more-options-li" @click="handleLinkTo">服务上线记录</li>
-      <li class="more-options-li" v-if="props.approveStatus === APPROVE_STATUS.PendApproval" @click="handleUndo">
-        撤销
-      </li>
+      <bk-loading :loading="loading">
+        <li
+          class="more-options-li"
+          v-if="[APPROVE_STATUS.PendApproval].includes(props.approveStatus as APPROVE_STATUS)"
+          @click="handleUndo">
+          撤销
+        </li>
+      </bk-loading>
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { ref } from 'vue';
+  import { useRoute, useRouter } from 'vue-router';
   import { Ellipsis } from 'bkui-vue/lib/icon';
+  import { approve } from '../../../../../api/record';
+  import BkMessage from 'bkui-vue/lib/message';
   import { APPROVE_STATUS } from '../../../../../constants/config';
+  import { useI18n } from 'vue-i18n';
 
   const props = withDefaults(
     defineProps<{
@@ -23,11 +33,41 @@
     },
   );
 
+  const emits = defineEmits(['handleUndo']);
+
+  const route = useRoute();
+  const router = useRouter();
+  const { t } = useI18n();
+
+  const loading = ref(false);
+
+  // 跳转到服务记录页面
   const handleLinkTo = () => {
-    console.log('跳转服务上线记录'); // 等接口更新
+    const url = router.resolve({
+      name: 'records-appId',
+      params: {
+        appId: route.params.appId,
+      },
+    }).href;
+    window.open(url, '_blank');
   };
-  const handleUndo = () => {
-    console.log('撤销'); // 等接口更新
+
+  // 撤销审批
+  const handleUndo = async () => {
+    loading.value = true;
+    try {
+      const { spaceId: biz_id, appId: app_id, versionId: release_id } = route.params;
+      await approve(String(biz_id), Number(app_id), Number(release_id), { publish_status: 'RevokedPublish' });
+      BkMessage({
+        theme: 'success',
+        message: t('成功'),
+      });
+      emits('handleUndo');
+    } catch (error) {
+      console.log(error);
+    } finally {
+      loading.value = false;
+    }
   };
 </script>
 

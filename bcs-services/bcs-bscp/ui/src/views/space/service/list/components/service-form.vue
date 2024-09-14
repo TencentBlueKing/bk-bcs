@@ -89,7 +89,7 @@
                 class="label-help" />
             </div>
           </template>
-          <bk-radio-group v-model="localData.approve_type">
+          <bk-radio-group v-model="localData.approve_type" @change="handleChange">
             <bk-radio label="OrSign">{{ t('或签') }}</bk-radio>
             <bk-radio label="CountSign">{{ t('会签') }}</bk-radio>
           </bk-radio-group>

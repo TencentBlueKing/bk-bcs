@@ -1,8 +1,9 @@
 <template>
   <div class="version-approve-status" v-if="approverList && route.params.versionId">
     <Spinner v-show="approveStatus === 0" class="spinner" />
-    <div v-show="approveStatus === 1" class="dot online"></div>
-    <div v-show="approveStatus === 2" class="dot offline"></div>
+    <div
+      v-show="approveStatus !== 0"
+      :class="['dot', { online: approveStatus === 1, offline: approveStatus === 2 }]"></div>
     <span class="approve-status-text">{{ approveText }}</span>
     <text-file
       v-show="approveStatus > -1"
@@ -66,7 +67,7 @@
         return t('待审批');
       case 'RejectedApproval':
         approveStatus.value = APPROVE_TYPE.Rejected;
-        return t('上线驳回');
+        return t('审批驳回');
       case 'RevokedPublish':
         approveStatus.value = APPROVE_TYPE.Rejected;
         return t('撤销上线');
@@ -88,6 +89,10 @@
     };
     emits('sendData', approveData);
   };
+
+  defineExpose({
+    loadStatus,
+  });
 </script>
 
 <style lang="scss" scoped>
@@ -115,12 +120,12 @@
     height: 13px;
     border-radius: 50%;
     &.online {
-      background: #3fc06d;
       border: 3px solid #e0f5e7;
+      background-color: #3fc06d;
     }
     &.offline {
-      background: #979ba5;
       border: 3px solid #eeeef0;
+      background-color: #979ba5;
     }
   }
 </style>

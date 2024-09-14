@@ -166,6 +166,27 @@ const routes = [
         },
         component: () => import('./views/space/client/example/index.vue'),
       },
+      {
+        path: 'records',
+        children: [
+          {
+            path: 'all/:queryTime?',
+            name: 'records-all',
+            component: () => import('./views/space/records/index.vue'),
+            meta: {
+              navModule: 'records',
+            },
+          },
+          {
+            path: ':appId(\\d+)/:queryTime?',
+            name: 'records-appId',
+            component: () => import('./views/space/records/index.vue'),
+            meta: {
+              navModule: 'records',
+            },
+          },
+        ],
+      },
     ],
   },
   {
