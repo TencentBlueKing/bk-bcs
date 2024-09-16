@@ -5,7 +5,7 @@
     ext-cls="confirm-dialog"
     footer-align="center"
     cancel-text="取消"
-    :confirm-text="dialogType === 'publish' ? '上线' : '撤销'"
+    confirm-text="驳回"
     dialog-type="operation"
     :close-icon="true"
     :show-mask="true"
@@ -14,26 +14,19 @@
     @confirm="handleConfirm"
     @closed="handleClose">
     <template #header>
-      <div class="headline">
-        {{ dialogType === 'publish' ? '确认上线该版本？' : '确认撤销该上线任务？' }}
+      <div class="tip-icon__wrap">
+        <exclamation-circle-shape class="tip-icon" />
       </div>
+      <div class="headline">{{ t('确认驳回该上线任务') }}?</div>
     </template>
     <ul class="content-info">
       <li class="content-info__li">
-        <span class="content-info__hd"> 服务： </span>
-        <span class="content-info__bd"> {{ data.service || '--' }} </span>
-      </li>
-      <li class="content-info__li">
         <span class="content-info__hd"> 待上线版本： </span>
-        <span class="content-info__bd"> {{ data.version || '--' }} </span>
-      </li>
-      <li class="content-info__li">
-        <span class="content-info__hd"> 上线范围： </span>
-        <span class="content-info__bd"> {{ data.group || '--' }} </span>
+        <span class="content-info__bd"> {{ releaseName || '--' }} </span>
       </li>
     </ul>
-    <div v-if="dialogType !== 'publish'">
-      <div class="textarea-title">说明</div>
+    <div>
+      <div class="textarea-title is-required">驳回理由</div>
       <bk-input
         v-model="reason"
         class="textarea-content"
@@ -46,14 +39,13 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue';
+  import { ref } from 'vue';
   import { approve } from '../../../../api/record';
-  import { IDialogData } from '../../../../../types/record';
-  import { APPROVE_STATUS } from '../../../../constants/record';
   import BkMessage from 'bkui-vue/lib/message';
+  import { ExclamationCircleShape } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
-
-  const { t } = useI18n();
+  import { APPROVE_STATUS } from '../../../../constants/record';
+  import { debounce } from 'lodash';
 
   const props = withDefaults(
     defineProps<{
@@ -61,35 +53,43 @@
       spaceId: string;
       appId: number;
       releaseId: number;
-      dialogType: string;
-      data: IDialogData;
+      releaseName: string;
     }>(),
     {},
   );
 
-  const emits = defineEmits(['update:show', 'refreshList']);
+  const emits = defineEmits(['update:show', 'reject']);
+
+  const { t } = useI18n();
 
   const reason = ref('');
 
-  const submitType = computed(() => {
-    return props.dialogType === 'publish' ? APPROVE_STATUS.AlreadyPublish : APPROVE_STATUS.RevokedPublish;
-  });
-
   const handleClose = () => {
+    console.log(props.spaceId, props.appId, props.releaseId, '+++++');
     emits('update:show', false);
   };
-  const handleConfirm = async () => {
-    await approve(props.spaceId, props.appId, props.releaseId, {
-      publish_status: submitType.value,
-      reason: reason.value,
-    });
-    emits('update:show', false);
-    emits('refreshList');
-    BkMessage({
-      theme: 'success',
-      message: t('操作成功'),
-    });
-  };
+  const handleConfirm = debounce(async () => {
+    if (!reason.value) {
+      BkMessage({
+        theme: 'error',
+        message: t('请输入驳回理由'),
+      });
+      return;
+    }
+    try {
+      await approve(props.spaceId, props.appId, props.releaseId, {
+        publish_status: APPROVE_STATUS.RejectedApproval,
+        reason: reason.value,
+      });
+      BkMessage({
+        theme: 'success',
+        message: t('操作成功'),
+      });
+      emits('reject');
+    } catch (e) {
+      console.log(e);
+    }
+  }, 300);
 </script>
 
 <style lang="scss" scoped>
@@ -118,9 +118,33 @@
     margin-top: 16px;
     text-align: center;
   }
+  .tip-icon__wrap {
+    margin: 0 auto;
+    width: 42px;
+    height: 42px;
+    position: relative;
+    &::after {
+      content: '';
+      position: absolute;
+      z-index: -1;
+      top: 50%;
+      left: 50%;
+      transform: translate3d(-50%, -50%, 0);
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background-color: #ff9c01;
+    }
+    .tip-icon {
+      font-size: 42px;
+      line-height: 42px;
+      vertical-align: middle;
+      color: #ffe8c3;
+    }
+  }
   .content-info {
     margin-top: 4px;
-    padding: 21px 12px;
+    padding: 13px 21px;
     font-size: 14px;
     line-height: 22px;
     background-color: #f5f6fa;
@@ -133,12 +157,10 @@
       }
     }
     &__hd {
-      width: 96px;
-      text-align: right;
+      text-align: left;
       color: #63656e;
     }
     &__bd {
-      padding-left: 8px;
       flex: 1;
       word-wrap: break-word;
       word-break: break-all;
@@ -146,9 +168,24 @@
     }
   }
   .textarea-title {
+    position: relative;
     margin-top: 24px;
+    display: inline-block;
+    vertical-align: middle;
     font-size: 14px;
     color: #333;
+    &.is-required {
+      padding-right: 14px;
+      &::after {
+        content: '*';
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        color: #ea3636;
+      }
+    }
   }
   .textarea-content {
     margin-top: 7px;

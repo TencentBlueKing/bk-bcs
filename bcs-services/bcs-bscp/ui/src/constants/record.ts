@@ -11,7 +11,7 @@ export const ACTION = {
   Publish: localT('上线服务'),
   Update: localT('更新服务'),
   Delete: localT('删除服务'),
-  PublishVersionConfig: localT('上线版本配置'), // 2024.9 第一版只有这个字段
+  PublishVersionConfig: localT('上线版本配置'),
 };
 
 // 资源实例
@@ -27,8 +27,8 @@ export const STATUS = {
   RevokedPublish: localT('撤销上线'),
   RejectedApproval: localT('审批驳回'),
   AlreadyPublish: localT('已上线'),
-  Failure: localT('失败'), // 脚本相关的才会有
-  Success: localT('成功'), // 脚本相关的才会有
+  Failure: localT('失败'),
+  Success: localT('成功'),
 };
 
 // 版本状态

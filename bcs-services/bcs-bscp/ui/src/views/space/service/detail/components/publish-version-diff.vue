@@ -6,6 +6,7 @@
     :base-version-id="baseVersionId"
     :show-publish-btn="true"
     :version-diff-list="props.versionList"
+    :is-approval-mode="props.isApprovalMode"
     @publish="emits('publish')"
     @update:show="emits('close')">
     <template #baseHead>
@@ -63,6 +64,7 @@
     baseVersionId: number; // 对比目标版本id
     versionList: IConfigVersion[]; // 对比版本列表
     currentVersionGroups: IReleasedGroup[]; // 当前版本上线分组实例
+    isApprovalMode?: boolean; // 是否审批模式(操作记录-去审批-拒绝)
   }>();
 
   const emits = defineEmits(['publish', 'close']);

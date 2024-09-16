@@ -2,8 +2,15 @@
   <section>
     <div class="record-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="loading">
-        <bk-table class="record-table" show-overflow-tooltip :row-height="0" :border="['outer']" :data="tableData">
-          <bk-table-column :label="t('操作时间')" width="105">
+        <bk-table
+          class="record-table"
+          show-overflow-tooltip
+          :row-height="0"
+          :border="['outer']"
+          :data="tableData"
+          @column-sort="handleSort"
+          @column-filter="handleFilter">
+          <bk-table-column :label="t('操作时间')" width="105" :sort="true">
             <template #default="{ row }">
               {{ row.audit?.revision.created_at }}
             </template>
@@ -11,12 +18,26 @@
           <bk-table-column :label="t('所属服务')" min-width="180">
             <template #default="{ row }"> {{ row.app?.name || '--' }} </template>
           </bk-table-column>
-          <bk-table-column :label="t('资源类型')" width="96">
+          <bk-table-column
+            :label="t('资源类型')"
+            width="96"
+            :filter="{
+              filterFn: () => true,
+              list: resTypeFilterList,
+              checked: resTypeFilterChecked,
+            }">
             <template #default="{ row }">
               {{ RECORD_RES_TYPE[row.audit?.spec.res_type as keyof typeof RECORD_RES_TYPE] || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作行为')" width="114">
+          <bk-table-column
+            :label="t('操作行为')"
+            width="114"
+            :filter="{
+              filterFn: () => true,
+              list: actionFilterList,
+              checked: actionFilterChecked,
+            }">
             <template #default="{ row }">
               {{ ACTION[row.audit?.spec.action as keyof typeof ACTION] || '--' }}
             </template>
@@ -42,7 +63,12 @@
           <bk-table-column
             :label="t('状态')"
             :show-overflow-tooltip="false"
-            :width="locale === 'zh-cn' ? '130' : '160'">
+            :width="locale === 'zh-cn' ? '130' : '160'"
+            :filter="{
+              filterFn: () => true,
+              list: approveStatusFilterList,
+              checked: approveStatusFilterChecked,
+            }">
             <template #default="{ row }">
               <template v-if="row.audit?.spec.status">
                 <div
@@ -104,21 +130,21 @@
                 </bk-button>
                 <!-- 1.待审批状态 且 对应审批人才可显示 -->
                 <!-- 2.版本首次在分组上线的情况，显示审批，点击审批直接通过 -->
+
                 <template
                   v-if="
                     row.audit.spec.status === APPROVE_STATUS.PendApproval &&
                     row.strategy.approver_progress.includes(userInfo.username)
                   ">
-                  <!-- 当前记录在目标分组首次上线，直接审批通过 -->
-                  <bk-button v-if="groupStatus(row)" class="action-btn" text theme="primary" @click="handlePass(row)">
+                  <!-- 当前的记录在目标分组首次上线，直接审批通过 -->
+                  <bk-button v-if="false" class="action-btn" text theme="primary" @click="handlePass(row)">
                     {{ t('审批') }}
                   </bk-button>
-                  <!-- 非首次上线，需要打开审批抽屉 -->
+                  <!-- 非首次上线，需要打开对比抽屉 -->
                   <bk-button v-else class="action-btn" text theme="primary" @click="handleApproval(row)">
                     {{ t('去审批') }}
                   </bk-button>
                 </template>
-
                 <!-- 审批驳回/已撤销才可显示 -->
                 <bk-button
                   v-if="
@@ -137,7 +163,7 @@
                     row.app.creator === userInfo.username
                   "
                   @handle-undo="handleConfirm(row, $event)" />
-                <!-- 当前登录用户在审批人和创建者名单都没有时，表示无权操作此条item -->
+                <!-- 当前登录用户在审批人和创建者名单都没有时，表示无权操作此条记录 -->
                 <template
                   v-if="
                     row.audit.spec.status === APPROVE_STATUS.AlreadyPublish ||
@@ -171,19 +197,21 @@
       :app-id="rowAppId"
       :release-id="rowReleaseId"
       :dialog-type="confirmType"
-      :data="confirmData" />
+      :data="confirmData"
+      @refresh-list="loadRecordList" />
     <!-- 审批对比弹窗 -->
     <VersionDiff
       v-model:show="approvalShow"
       :space-id="spaceId"
       :app-id="rowAppId"
-      :releases-id="rowReleaseId"
-      :released-groups="rowReleaseGroups" />
+      :release-id="rowReleaseId"
+      :released-groups="rowReleaseGroups"
+      @refresh-list="loadRecordList" />
   </section>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue';
+  import { ref, watch } from 'vue';
   import { useRouter } from 'vue-router';
   import { debounce } from 'lodash';
   import { useI18n } from 'vue-i18n';
@@ -202,24 +230,25 @@
   const props = withDefaults(
     defineProps<{
       spaceId: string;
-      searchParams?: IRecordQuery;
+      searchParams: IRecordQuery;
     }>(),
     {
       spaceId: '',
-      searchParams: () => ({
-        all: true,
-      }),
     },
   );
+
+  // const emits = defineEmits(['updateSearchParams']);
 
   const router = useRouter();
   const { t, locale } = useI18n();
   const { userInfo } = storeToRefs(useUserStore());
   const { pagination, updatePagination } = useTablePagination('recordList');
 
-  const loading = ref(false);
+  const loading = ref(true);
   const isSearchEmpty = ref(false);
-  const tableData = ref([]);
+  const searchParams = ref<IRecordQuery>({});
+  const actionTimeSrotMode = ref('');
+  const tableData = ref<IRowData[]>([]);
   const approvalShow = ref(false);
   const rowAppId = ref(-1);
   const rowReleaseId = ref(-1);
@@ -232,6 +261,27 @@
     group: '',
   });
 
+  // 数据过滤 S
+  // 1. 资源类型
+  const resTypeFilterChecked = ref<string[]>([]);
+  const resTypeFilterList = Object.entries(RECORD_RES_TYPE).map(([key, value]) => ({
+    text: value,
+    value: key,
+  }));
+  // 2. 操作行为
+  const actionFilterChecked = ref<string[]>([]);
+  const actionFilterList = Object.entries(ACTION).map(([key, value]) => ({
+    text: value,
+    value: key,
+  }));
+  // 3. 状态
+  const approveStatusFilterChecked = ref<string[]>([]);
+  const approveStatusFilterList = Object.entries(STATUS).map(([key, value]) => ({
+    text: value,
+    value: key,
+  }));
+  // 数据过滤 E
+
   // watch(
   //   () => spaceId.value,
   //   async () => {
@@ -240,29 +290,18 @@
   //   },
   // );
 
-  // watch(confirmShow, (newV) => {
-  //   if (!newV) {
-  //     confirmData.value = {
-  //       biz_id: '',
-  //       app_id: -1,
-  //       release_id: -1,
-  //       service: '',
-  //       version: '',
-  //       group: '',
-  //     };
-  //   }
-  // });
-
-  // watch(confirmShow, (newV) => {
-  //   if (!newV) {
-  //     rowAppId.value = -1;
-  //     rowReleaseId.value = -1;
-  //   }
-  // });
-
-  onMounted(async () => {
-    await loadRecordList();
-  });
+  watch(
+    () => props.searchParams,
+    (newV) => {
+      console.log('传入数据变化');
+      Object.assign(searchParams.value, newV);
+      if (props.searchParams?.all) {
+        delete searchParams.value.app_id;
+      }
+      loadRecordList();
+    },
+    { deep: true },
+  );
 
   // 加载操作记录列表数据
   const loadRecordList = async () => {
@@ -271,11 +310,11 @@
       const params: IRecordQuery = {
         start: pagination.value.limit * (pagination.value.current - 1),
         limit: pagination.value.limit,
-        ...props.searchParams,
+        ...searchParams.value,
       };
       const res = await getRecordList(props.spaceId, params);
-      console.log(res, 'res');
-      tableData.value = res.details;
+      // actionTimeSrotMode.value ? tableDataSort(res.details) : (tableData.value = res.details);
+      tableDataSort(res.details);
       pagination.value.count = res.count;
     } catch (e) {
       console.error(e);
@@ -361,12 +400,6 @@
     window.open(url, '_blank');
   };
 
-  // 是否首次在目标分组上线
-  const groupStatus = (row: IRowData) => {
-    console.log(row.audit.id, '---------');
-    return true;
-  };
-
   // 审批通过
   const handlePass = (row: IRowData) => {
     console.log(row);
@@ -374,7 +407,6 @@
   // 去审批
   const handleApproval = debounce(
     (row: IRowData) => {
-      console.log('哇哈哈哈');
       rowAppId.value = row.audit?.attachment.app_id;
       rowReleaseId.value = row.strategy?.release_id;
       // 当前row已上线版本的分组id,为空表示全部分组上线
@@ -384,6 +416,56 @@
     300,
     { leading: true, trailing: false },
   );
+
+  // 数据过滤
+  const handleFilter = ({ checked, index }: any) => {
+    // index: 2.资源类型 3.操作行为 7.状态
+    console.log(checked, index);
+    switch (index) {
+      case 2:
+        console.log('资源类型');
+        searchParams.value.resource_type = checked.join(',');
+        break;
+      case 3:
+        console.log('操作行为');
+        searchParams.value.action = checked.join(',');
+        break;
+      case 7:
+        console.log('状态');
+        searchParams.value.status = checked.join(',');
+        break;
+
+      default:
+        break;
+    }
+    loadRecordList();
+  };
+
+  // 触发的排序模式
+  const handleSort = ({ type }: any) => {
+    console.log(type);
+    actionTimeSrotMode.value = type === 'null' ? '' : type;
+    tableDataSort(tableData.value);
+  };
+
+  // 列表排序
+  const tableDataSort = (data: IRowData[]) => {
+    console.log(data);
+    if (actionTimeSrotMode.value === 'desc') {
+      console.log('降序排列');
+      tableData.value = data.sort(
+        (a, b) => new Date(b.audit.revision.created_at).getTime() - new Date(a.audit.revision.created_at).getTime(),
+      );
+    } else if (actionTimeSrotMode.value === 'asc') {
+      console.log('升序排列');
+      tableData.value = data.sort(
+        (a, b) => new Date(a.audit.revision.created_at).getTime() - new Date(b.audit.revision.created_at).getTime(),
+      );
+    } else {
+      console.log('默认排列');
+      tableData.value = data;
+    }
+  };
 
   //  翻页
   const handlePageChange = (val: number) => {
@@ -397,6 +479,10 @@
       loadRecordList();
     }
   };
+
+  defineExpose({
+    loadRecordList,
+  });
 </script>
 
 <style lang="scss" scoped>

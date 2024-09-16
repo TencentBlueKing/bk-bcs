@@ -2,6 +2,7 @@
   <div v-if="!loading">
     <!-- 去审批抽屉 -->
     <PublishVersionDiff
+      :is-approval-mode="true"
       :bk-biz-id="spaceId"
       :app-id="appId"
       :show="show"
@@ -9,36 +10,50 @@
       :base-version-id="baseVersionId"
       :version-list="diffableVersionList()"
       :current-version-groups="groupsPendingtoPublish()"
-      @publish="emits('update:show', false)"
+      @publish="handleConfirm"
+      @reject="RejectDialogShow = true"
       @close="emits('update:show', false)" />
   </div>
+  <DialogReject
+    v-model:show="RejectDialogShow"
+    :space-id="spaceId"
+    :app-id="appId"
+    :release-id="versionData.id"
+    :release-name="versionData.spec.name"
+    @reject="handleReject" />
 </template>
 
 <script setup lang="ts">
-  // import { storeToRefs } from 'pinia';
   import { ref, watch, computed } from 'vue';
   import PublishVersionDiff from '../../service/detail/components/publish-version-diff.vue';
   import { getServiceGroupList } from '../../../../api/group';
   import { getConfigVersionList } from '../../../../api/config';
   import { getAppDetail } from '../../../../api';
-  // import { IGroupToPublish, IGroupItemInService } from '../../../../../types/group';
+  import { approve } from '../../../../api/record';
   import { IGroupItemInService } from '../../../../../types/group';
   import { IConfigVersion, IReleasedGroup } from '../../../../../types/config';
   import { GET_UNNAMED_VERSION_DATA } from '../../../../constants/config';
+  import { APPROVE_STATUS } from '../../../../constants/record';
   import useServiceStore from '../../../../store/service';
+  import DialogReject from './dialog-reject.vue';
+  import BkMessage from 'bkui-vue/lib/message';
+  import { useI18n } from 'vue-i18n';
+  import { debounce } from 'lodash';
 
   const props = withDefaults(
     defineProps<{
       show: boolean;
       spaceId: string;
       appId: number;
-      releasesId: number;
+      releaseId: number;
       releasedGroups: number[];
     }>(),
     {},
   );
 
-  const emits = defineEmits(['update:show']);
+  const emits = defineEmits(['update:show', 'refreshList']);
+
+  const { t } = useI18n();
 
   const serviceStore = useServiceStore();
 
@@ -49,6 +64,19 @@
   const baseVersionId = ref(0);
   const groupList = ref<IGroupItemInService[]>([]);
   // --
+  const RejectDialogShow = ref(false);
+
+  // 需要对比的分组id集合
+  const releasedGroups = computed(() => {
+    if (!props.releasedGroups.length) {
+      // 全部分组上线
+      return groupList.value
+        .filter((group) => versionList.value.some((version) => group.release_id === version.id))
+        .map((group) => group.group_id);
+    }
+    // 指定分组上线
+    return props.releasedGroups;
+  });
 
   watch(
     () => props.show,
@@ -58,27 +86,27 @@
   );
 
   const init = async () => {
-    console.log('init 111');
+    const { spaceId, appId, releaseId } = props;
     try {
       loading.value = true;
       const [versionRes, groupRes, appDetailRes] = await Promise.all([
-        getConfigVersionList(props.spaceId, props.appId, { start: 0, all: true }), // 所有版本
-        getServiceGroupList(props.spaceId, props.appId), // 所有分组
-        getAppDetail(props.spaceId, props.appId), // 服务详情数据
+        getConfigVersionList(spaceId, appId, { start: 0, all: true }), // 所有版本
+        getServiceGroupList(spaceId, appId), // 所有分组
+        getAppDetail(spaceId, appId), // 服务详情数据
       ]);
       // 已上线版本列表
       versionList.value = versionRes.data.details.filter((item: IConfigVersion) => {
         const { id, status } = item;
-        return id !== props.releasesId && status.publish_status !== 'not_released';
+        return id !== releaseId && status.publish_status !== 'not_released';
       });
       // 存放当前版本数据
-      const currVersion = versionRes.data.details.find((item: IConfigVersion) => item.id === props.releasesId);
+      const currVersion = versionRes.data.details.find((item: IConfigVersion) => item.id === props.releaseId);
       if (currVersion !== undefined) {
         versionData.value = currVersion;
       }
       // 处理全部分组
       groupList.value = groupRes.details;
-      // console.log(props.releasesId, versionList.value[0].id, '是否找到版本');
+      // console.log(props.releaseId, versionList.value[0].id, '是否找到版本');
       // 当前的服务数据
       serviceStore.$patch((state) => {
         state.appData = appDetailRes;
@@ -94,49 +122,36 @@
   };
 
   // 审批 S
-  // 需要对比的分组id集合
-  const releasedGroups = computed(() => {
-    console.log('releasedGroups 222');
-    if (!props.releasedGroups.length) {
-      // 全部分组上线
-      return groupList.value
-        .filter((group) => versionList.value.some((version) => group.release_id === version.id))
-        .map((group) => group.group_id);
-    }
-    // 指定分组上线
-    return props.releasedGroups;
-  });
 
   // 需要对比的线上版本集合
   const diffableVersionList = () => {
-    console.log('diffableVersionList 333');
     const list = [] as IConfigVersion[];
     versionList.value.forEach((version) => {
-      version.status.released_groups.some((item) => {
-        console.log(item.id, 'item-id');
-        if (releasedGroups.value.includes(item.id)) {
+      version.status.released_groups.some((group) => {
+        if (releasedGroups.value.includes(group.id)) {
           list.push(version);
+        }
+        // 全量分组上线的版本中 含有 待上线版本的的分组, 也需要对比
+        if (version.status.fully_released) {
+          releasedGroups.value.some((group) => {
+            // console.log('待上线分组列表', group);
+            return groupList.value.some((item) => {
+              // console.log('查找分组列表', item.group_id, group, item.release_id);
+              if (item.group_id === group && item.release_id === 0) {
+                // console.log('添加成功');
+                list.push(version);
+                return true;
+              }
+              return false;
+            });
+          });
         }
         return false;
       });
-      if (version.status.fully_released && props.releasedGroups.length) {
-        list.push(version);
-      }
     });
     return list;
   };
 
-  /**
-   * @description 直接上线或先对比再上线
-   * 所有分组都为首次上线，则直接上线，反之先对比再上线
-   */
-  //   const handlePublishOrOpenDiff = () => {
-  //     if (diffableVersionList.value.length) {
-  //       baseVersionId.value = diffableVersionList.value[0].id;
-  //       isDiffSliderShow.value = true;
-  //       return;
-  //     }
-  //   };
   // 待上线分组实例和数据组装
   const groupsPendingtoPublish = () => {
     console.log('groupsPendingtoPublish 444');
@@ -172,6 +187,30 @@
     return list;
   };
   // 审批 E
+
+  // 审批通过
+  const handleConfirm = debounce(async () => {
+    try {
+      await approve(props.spaceId, props.appId, props.releaseId, {
+        publish_status: APPROVE_STATUS.PendPublish,
+      });
+      BkMessage({
+        theme: 'success',
+        message: t('操作成功'),
+      });
+      emits('update:show', false);
+      emits('refreshList');
+    } catch (e) {
+      console.log(e);
+    }
+  }, 300);
+
+  // 审批拒绝
+  const handleReject = () => {
+    RejectDialogShow.value = false;
+    emits('update:show', false);
+    emits('refreshList');
+  };
 </script>
 
 <style lang="scss" scoped></style>

@@ -281,6 +281,7 @@ export const publishVersion = (
  * @param data 参数
  * @param publish_type 上线方式
  * @param publish_time 定时上线时间
+ * @param allFirstPublish 所有待上线的分组是否为首次上线
  * @returns
  */
 export const publishVerSubmit = (
@@ -293,15 +294,9 @@ export const publishVerSubmit = (
     memo: string;
     publishType: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
     publishTime: Date | string;
+    allFirstPublish: boolean;
   },
-) =>
-  http.post(`/config/biz_id/${bizId}/app_id/${appId}/release_id/${releaseId}/submit`, {
-    groups: data.groups,
-    all: data.all,
-    memo: data.memo,
-    publish_type: data.publishType,
-    publish_time: data.publishTime,
-  });
+) => http.post(`/config/biz_id/${bizId}/app_id/${appId}/release_id/${releaseId}/submit`, data);
 
 /**
  * 获取服务下初始化脚本引用配置

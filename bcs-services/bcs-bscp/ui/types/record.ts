@@ -1,13 +1,19 @@
 // 操作记录列表参数
 export interface IRecordQuery {
-  start?: number;
-  limit?: number;
   app_id?: number;
-  all?: boolean;
   start_time?: string;
   end_time?: string;
-  search_value?: string;
   operate?: string;
+  start?: number;
+  limit?: number;
+  all?: boolean;
+  name?: string;
+  resource_type?: string;
+  action?: string;
+  res_instance?: string;
+  status?: string;
+  operator?: string;
+  operate_way?: string;
 }
 
 // 审批操作：撤销/驳回/通过/手动上线

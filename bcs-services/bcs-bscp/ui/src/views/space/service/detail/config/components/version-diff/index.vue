@@ -55,9 +55,10 @@
       <div class="actions-btns">
         <slot name="footerActions">
           <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">
-            {{ t('上线版本') }}
+            {{ isApprovalMode ? t('通过') : t('上线版本') }}
           </bk-button>
-          <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
+          <bk-button v-if="isApprovalMode" @click="emits('reject')">{{ t('驳回') }}</bk-button>
+          <bk-button v-else @click="handleClose">{{ t('关闭') }}</bk-button>
         </slot>
       </div>
     </template>
@@ -98,9 +99,10 @@
     selectedConfig?: IConfigDiffSelected; // 默认选中的配置文件
     versionDiffList?: IConfigVersion[];
     selectedKvConfigId?: number; // 选中的kv类型配置id
+    isApprovalMode?: boolean; // 是否审批模式(操作记录-去审批-拒绝)
   }>();
 
-  const emits = defineEmits(['update:show', 'publish']);
+  const emits = defineEmits(['update:show', 'publish', 'reject']);
 
   const route = useRoute();
   const bkBizId = ref(String(route.params.spaceId));

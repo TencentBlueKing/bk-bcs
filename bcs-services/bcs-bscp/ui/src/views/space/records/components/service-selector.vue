@@ -16,8 +16,8 @@
         <bk-overflow-title v-if="localApp?.name" class="app-name" type="tips">
           {{ localApp.name }}
         </bk-overflow-title>
-        <span v-else class="no-app">{{ $t('暂无服务') }}</span>
-        <AngleUpFill class="arrow-icon arrow-fill" />
+        <span v-else class="app-name no-app">{{ $t('暂无服务') }}</span>
+        <DownSmall class="arrow-icon arrow-fill" />
       </div>
     </template>
     <bk-option value="-1" label="全部服务">
@@ -45,10 +45,10 @@
   import { useRoute, useRouter } from 'vue-router';
   import { IAppItem } from '../../../../../types/app';
   import { getAppList } from '../../../../api';
-  import { AngleUpFill } from 'bkui-vue/lib/icon';
+  import { DownSmall } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
 
-  // const emits = defineEmits(['select-service']);
+  const emits = defineEmits(['select-service']);
 
   const { locale } = useI18n();
   const route = useRoute();
@@ -56,38 +56,25 @@
 
   const loading = ref(false);
   const localApp = ref({
-    name: '全部服务',
+    name: '',
     id: -1,
     serviceType: '',
   });
   const bizId = ref(String(route.params.spaceId));
   const serviceList = ref<IAppItem[]>([]);
-  const isAllService = ref(true);
-
-  // watch(isAllService, (newV) => {
-  //   if (newV) {
-  //     localApp.value = {
-  //       name: '全部服务',
-  //       id: -1,
-  //       serviceType: '',
-  //     };
-  //   }
-  // });
 
   onMounted(async () => {
     await loadServiceList();
     const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
     if (service) {
-      isAllService.value = false;
       localApp.value = {
         name: service.spec.name,
         id: service.id!,
         serviceType: service.spec.config_type!,
       };
       setLastAccessedServiceDetail(service.id!);
-      // emits('select-service', localApp.value.serviceType, localApp.value.name);
+      emits('select-service', localApp.value.id);
     } else {
-      isAllService.value = true;
       handleAppChange(-1);
       // emits('select-service');
     }
@@ -130,7 +117,7 @@
       };
       await router.push({ name: 'records-all', params: { spaceId: bizId.value } });
     }
-    // emits('select-service', localApp.value.serviceType, localApp.value.name);
+    emits('select-service', localApp.value.id);
   };
 
   const setLastAccessedServiceDetail = (appId: number) => {
@@ -140,6 +127,7 @@
 
 <style scoped lang="scss">
   .service-selector {
+    width: 200px;
     &.popover-show {
       .selector-trigger .arrow-icon {
         transform: rotate(-180deg);
@@ -156,21 +144,25 @@
       cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: space-between;
       border-radius: 2px;
       transition: all 0.3s;
-      background: #f0f1f5;
+      background: #fff;
       font-size: 14px;
+      border: 1px solid #c4c6cc;
+
       .app-name {
-        max-width: 220px;
+        flex: 1;
         color: #313238;
+        overflow: hidden;
       }
       .no-app {
-        font-size: 16px;
         color: #c4c6cc;
       }
       .arrow-icon {
-        margin-left: 13.5px;
+        margin-left: 13px;
+        flex-shrink: 0;
+        font-size: 18px;
+        font-weight: 700;
         color: #979ba5;
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }

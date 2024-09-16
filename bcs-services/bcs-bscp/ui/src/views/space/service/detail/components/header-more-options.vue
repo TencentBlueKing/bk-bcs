@@ -6,7 +6,9 @@
       <bk-loading :loading="loading">
         <li
           class="more-options-li"
-          v-if="[APPROVE_STATUS.PendApproval].includes(props.approveStatus as APPROVE_STATUS)"
+          v-if="
+            [APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(props.approveStatus as APPROVE_STATUS)
+          "
           @click="handleUndo">
           撤销
         </li>
