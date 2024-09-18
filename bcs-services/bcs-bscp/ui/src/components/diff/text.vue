@@ -62,15 +62,17 @@
       currentLanguage?: string;
       currentVariables?: IVariableEditParams[];
       currentPermission?: string;
-      isSecret: boolean;
-      secretVisible: boolean;
-      isCipherShow: boolean;
+      isSecret?: boolean;
+      secretVisible?: boolean;
+      isCipherShow?: boolean;
     }>(),
     {
       baseLanguage: '',
       currentVariables: () => [],
       currentLanguage: '',
       baseVariables: () => [],
+      isSecret: false,
+      secretVisible: true,
     },
   );
 
