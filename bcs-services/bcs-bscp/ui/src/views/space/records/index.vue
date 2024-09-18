@@ -3,7 +3,7 @@
     <div class="operate-area">
       <service-selector @select-service="selectService" />
       <date-picker class="date-picker" @change-time="splitTime" />
-      <search-option class="search-option" />
+      <search-option />
     </div>
     <record-table
       ref="recordTableRef"
@@ -46,9 +46,6 @@
     overflow: hidden;
     .date-picker {
       margin-left: 8px;
-    }
-    .search-option {
-      margin-left: auto;
     }
   }
   .operate-area {

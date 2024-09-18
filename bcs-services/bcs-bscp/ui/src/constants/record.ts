@@ -41,3 +41,9 @@ export enum APPROVE_STATUS {
   Failure = 'Failure',
   Success = 'Success',
 }
+
+// 过滤的Key
+export enum FILTER_KEY {
+  PublishVersionConfig = 'PublishVersionConfig', // 上线版本配置
+  Failure = 'Failure', // 失败
+}
