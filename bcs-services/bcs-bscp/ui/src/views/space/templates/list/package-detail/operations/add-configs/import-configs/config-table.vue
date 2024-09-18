@@ -171,7 +171,9 @@
       <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="fileAP" v-slot="{ item, index }">
         <div class="table-row">
           <div class="not-editable td-cell name">
-            {{ item.fileAP }}
+            <span class="text-ov">
+              {{ item.fileAP }}
+            </span>
           </div>
           <div class="not-editable td-cell type">
             {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
