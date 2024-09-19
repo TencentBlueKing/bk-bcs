@@ -2551,3 +2551,8 @@ div.jsoneditor {
 .mw88 {
     min-width: 88px;
 }
+.bcs-table-empty-dynamic-width {
+    width: var(--dynamic-width) !important;
+    position: sticky;
+    left: 0;
+}
