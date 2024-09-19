@@ -174,21 +174,6 @@
           @click="confirmUpdate">{{ $t('logCollector.action.reInstall') }}</bcs-button>
       </bcs-exception>
       <template v-else>
-        <bcs-alert type="info" closable>
-          <template #title>
-            <div class="flex items-center">
-              <span class="flex-1">
-                {{ $t('logCollector.msg.logCollector') }}
-              </span>
-              <span
-                text
-                class="text-[12px] text-[#3a84ff] cursor-pointer"
-                @click="openLink(PROJECT_CONFIG.rule)">
-                {{ $t('generic.button.learnMore') }}
-              </span>
-            </div>
-          </template>
-        </bcs-alert>
         <Row class="mt-[16px] px-[24px]">
           <template #left>
             <bcs-button
