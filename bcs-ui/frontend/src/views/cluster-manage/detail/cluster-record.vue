@@ -237,6 +237,7 @@ async function getOperationLogs() {
     limit: pagination.value.limit,
     page: pagination.value.current,
     v2: true,
+    taskIDNull: true,
     ...searchParams.value,
   }).catch(() => []);
   isLoading.value = false;
