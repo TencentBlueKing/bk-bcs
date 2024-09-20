@@ -170,7 +170,7 @@ const routes = [
         path: 'records',
         children: [
           {
-            path: 'all/:queryTime?',
+            path: 'all',
             name: 'records-all',
             component: () => import('./views/space/records/index.vue'),
             meta: {
@@ -178,7 +178,7 @@ const routes = [
             },
           },
           {
-            path: ':appId(\\d+)/:queryTime?',
+            path: ':appId(\\d+)',
             name: 'records-appId',
             component: () => import('./views/space/records/index.vue'),
             meta: {

@@ -47,3 +47,13 @@ export enum FILTER_KEY {
   PublishVersionConfig = 'PublishVersionConfig', // 上线版本配置
   Failure = 'Failure', // 失败
 }
+
+export enum SEARCH_ID {
+  resource_type = 'resource_type', // 资源类型
+  action = 'action', // 操作行为
+  status = 'status', // 状态
+  service = 'service', // 所属服务
+  res_instance = 'res_instance', // 资源实例
+  operator = 'operator', // 操作人
+  operate_way = 'operate_way', // 操作途径
+}

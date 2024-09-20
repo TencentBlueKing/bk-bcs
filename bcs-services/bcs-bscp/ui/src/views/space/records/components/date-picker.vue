@@ -24,9 +24,13 @@
 
 <script setup lang="ts">
   import { onBeforeMount, ref } from 'vue';
+  import { useRoute, useRouter } from 'vue-router';
   import { datetimeFormat } from '../../../../utils';
 
   const emits = defineEmits(['changeTime']);
+
+  const route = useRoute();
+  const router = useRouter();
 
   const shortcutsRange = ref([
     {
@@ -59,25 +63,60 @@
   ]);
   const open = ref(false);
   const datePickerRef = ref(null);
-  const defaultValue = ref([
-    datetimeFormat(String(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))),
-    datetimeFormat(String(new Date())),
-  ]);
+  const defaultValue = ref<string[]>([]);
 
   onBeforeMount(() => {
+    const hasQueryTime = ['start_time', 'end_time'].every((key) => key in route.query);
+    const defaultTimeRange = [
+      datetimeFormat(String(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))),
+      datetimeFormat(String(new Date())),
+    ];
+
+    if (hasQueryTime) {
+      let startTime = String(route.query.start_time);
+      let endTime = String(route.query.end_time);
+      const isValidTime =
+        !isNaN(new Date(startTime).getTime()) &&
+        !isNaN(new Date(endTime).getTime()) &&
+        new Date(startTime).getTime() < Date.now() &&
+        new Date(endTime).getTime() < Date.now() &&
+        startTime.length === 19 &&
+        endTime.length === 19;
+
+      if (isValidTime) {
+        if (startTime > endTime) [startTime, endTime] = [endTime, startTime];
+        defaultValue.value = [startTime, endTime];
+      } else {
+        defaultValue.value = defaultTimeRange;
+      }
+    } else {
+      defaultValue.value = defaultTimeRange;
+    }
+    setUrlParams();
     emits('changeTime', defaultValue.value);
   });
 
   const change = (date: []) => {
     defaultValue.value = date;
+    setUrlParams();
   };
+
+  const setUrlParams = () => {
+    router.replace({
+      query: {
+        ...route.query,
+        start_time: defaultValue.value[0],
+        end_time: defaultValue.value[1],
+      },
+    });
+  };
+
+  const disabledDate = (date: Date) => date && date.valueOf() > Date.now() - 86400;
 
   const handleChange = () => {
     emits('changeTime', defaultValue.value);
     open.value = false;
   };
-
-  const disabledDate = (date: Date) => date && date.valueOf() > Date.now() - 86400;
 </script>
 
 <style scoped></style>

@@ -1,19 +1,15 @@
 <template>
   <section class="record-management-page">
     <div class="operate-area">
-      <service-selector @select-service="selectService" />
-      <date-picker class="date-picker" @change-time="splitTime" />
-      <search-option />
+      <service-selector />
+      <date-picker class="date-picker" @change-time="dateTime" />
+      <search-option @send-search-data="optionsData" />
     </div>
-    <record-table
-      ref="recordTableRef"
-      :space-id="spaceId"
-      :search-params="searchParams"
-      @update-search-params="searchParams = $event" />
+    <record-table ref="recordTableRef" :space-id="spaceId" :search-params="searchParams" />
   </section>
 </template>
 <script setup lang="ts">
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
   import { useRoute } from 'vue-router';
   import serviceSelector from './components/service-selector.vue';
   import datePicker from './components/date-picker.vue';
@@ -25,17 +21,35 @@
 
   const recordTableRef = ref(null);
   const spaceId = ref(String(route.params.spaceId));
-  const searchParams = ref<IRecordQuery>({});
+  const searchParams = ref<IRecordQuery>({}); // 外部搜索数据参数汇总
+  const dateTimeParams = ref<{ start_time?: string; end_time?: string }>({}); // 日期组件参数
+  const optionParams = ref<IRecordQuery>({}); // 搜索组件参数
+  const init = ref(true);
 
-  const selectService = (serviceId: number) => {
-    searchParams.value.all = !(serviceId > -1); // 不正确的服务id，则全部搜索
-    if (serviceId > -1) {
-      searchParams.value.app_id = serviceId;
+  onMounted(() => {
+    mergeData();
+    init.value = false;
+  });
+
+  const dateTime = (time: string[]) => {
+    dateTimeParams.value.start_time = time[0];
+    dateTimeParams.value.end_time = time[1];
+    if (!init.value) {
+      mergeData();
     }
   };
-  const splitTime = (time: string[]) => {
-    searchParams.value.start_time = time[0];
-    searchParams.value.end_time = time[1];
+  const optionsData = (data: {}) => {
+    optionParams.value = data;
+    if (!init.value) {
+      mergeData();
+    }
+  };
+
+  const mergeData = () => {
+    searchParams.value = {
+      ...dateTimeParams.value,
+      ...optionParams.value,
+    };
   };
 </script>
 <style lang="scss" scoped>

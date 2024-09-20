@@ -212,7 +212,7 @@
 
 <script setup lang="ts">
   import { ref, watch } from 'vue';
-  import { useRouter } from 'vue-router';
+  import { useRouter, useRoute } from 'vue-router';
   import { debounce } from 'lodash';
   import { useI18n } from 'vue-i18n';
   import { IRecordQuery, IDialogData, IRowData } from '../../../../../types/record';
@@ -237,9 +237,8 @@
     },
   );
 
-  // const emits = defineEmits(['updateSearchParams']);
-
   const router = useRouter();
+  const route = useRoute();
   const { t, locale } = useI18n();
   const { userInfo } = storeToRefs(useUserStore());
   const { pagination, updatePagination } = useTablePagination('recordList');
@@ -293,14 +292,31 @@
   watch(
     () => props.searchParams,
     (newV) => {
-      console.log('传入数据变化');
-      Object.assign(searchParams.value, newV);
-      if (props.searchParams?.all) {
+      searchParams.value = {
+        ...newV,
+      };
+      searchParams.value.all = !(route.params.appId && Number(route.params.appId) > -1);
+      if (searchParams.value.all) {
         delete searchParams.value.app_id;
+      } else {
+        searchParams.value.app_id = Number(route.params.appId);
       }
       loadRecordList();
     },
     { deep: true },
+  );
+
+  watch(
+    () => route.params,
+    (newV) => {
+      searchParams.value.all = !(newV.appId && Number(newV.appId) > -1);
+      if (searchParams.value.all) {
+        delete searchParams.value.app_id;
+      } else {
+        searchParams.value.app_id = Number(route.params.appId);
+      }
+      loadRecordList();
+    },
   );
 
   // 加载操作记录列表数据
@@ -450,19 +466,15 @@
 
   // 列表排序
   const tableDataSort = (data: IRowData[]) => {
-    console.log(data);
     if (actionTimeSrotMode.value === 'desc') {
-      console.log('降序排列');
       tableData.value = data.sort(
         (a, b) => new Date(b.audit.revision.created_at).getTime() - new Date(a.audit.revision.created_at).getTime(),
       );
     } else if (actionTimeSrotMode.value === 'asc') {
-      console.log('升序排列');
       tableData.value = data.sort(
         (a, b) => new Date(a.audit.revision.created_at).getTime() - new Date(b.audit.revision.created_at).getTime(),
       );
     } else {
-      console.log('默认排列');
       tableData.value = data;
     }
   };

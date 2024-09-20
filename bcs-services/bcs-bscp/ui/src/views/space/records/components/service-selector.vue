@@ -41,7 +41,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onBeforeMount } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
   import { IAppItem } from '../../../../../types/app';
   import { getAppList } from '../../../../api';
@@ -63,7 +63,7 @@
   const bizId = ref(String(route.params.spaceId));
   const serviceList = ref<IAppItem[]>([]);
 
-  onMounted(async () => {
+  onBeforeMount(async () => {
     await loadServiceList();
     const service = serviceList.value.find((service) => service.id === Number(route.params.appId));
     if (service) {
@@ -108,14 +108,14 @@
         serviceType: service.spec.config_type!,
       };
       setLastAccessedServiceDetail(appId);
-      await router.push({ name: 'records-appId', params: { spaceId: bizId.value, appId } });
+      await router.push({ name: 'records-appId', params: { spaceId: bizId.value, appId }, query: route.query });
     } else {
       localApp.value = {
         name: '全部服务',
         id: -1,
         serviceType: '',
       };
-      await router.push({ name: 'records-all', params: { spaceId: bizId.value } });
+      await router.push({ name: 'records-all', params: { spaceId: bizId.value }, query: route.query });
     }
     emits('select-service', localApp.value.id);
   };
