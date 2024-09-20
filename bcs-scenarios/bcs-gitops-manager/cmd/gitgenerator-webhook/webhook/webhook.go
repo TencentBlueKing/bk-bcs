@@ -37,6 +37,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -160,6 +161,12 @@ func (s *AdmissionWebhookServer) check(ctx *gin.Context) {
 			return
 		}
 	case v1.Update:
+		if err := s.interceptAppSyncWithForbid(ctx, req); err != nil {
+			blog.Errorf("UID: %s, intercept application sync with forbidden flag failed: %s",
+				req.UID, err.Error())
+			s.webhookAllow(ctx, false, req.UID, err.Error())
+			return
+		}
 		if err := s.interceptApplicationSync(ctx, req); err != nil {
 			blog.Errorf("UID: %s, intercept application sync failed: %s", req.UID, err.Error())
 			s.webhookAllow(ctx, false, req.UID, err.Error())
@@ -207,31 +214,8 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	if argoProj == nil {
 		return errors.Errorf("project '%s' not exist", proj)
 	}
-
-	// check app whether belong to appset
-	var repoBelong bool
-	var repoProj string
-	if app.Spec.HasMultipleSources() {
-		for i := range app.Spec.Sources {
-			appSource := app.Spec.Sources[i]
-			repoUrl := appSource.RepoURL
-			repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
-			if err != nil {
-				return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
-			}
-			if !repoBelong {
-				return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
-			}
-		}
-	} else {
-		repoUrl := app.Spec.Source.RepoURL
-		repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
-		if err != nil {
-			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
-		}
-		if !repoBelong {
-			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
-		}
+	if err = s.checkAppRepoBelongProject(ctx, proj, app); err != nil {
+		return err
 	}
 
 	// check dest server is legal
@@ -266,6 +250,32 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	return nil
 }
 
+func (s *AdmissionWebhookServer) checkAppRepoBelongProject(ctx context.Context, proj string,
+	app *v1alpha1.Application) error {
+	if !app.Spec.HasMultipleSources() {
+		repoUrl := app.Spec.Source.RepoURL
+		repoProj, repoBelong, err := s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+		if err != nil {
+			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+		}
+		if !repoBelong {
+			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+		}
+	}
+	for i := range app.Spec.Sources {
+		appSource := app.Spec.Sources[i]
+		repoUrl := appSource.RepoURL
+		repoProj, repoBelong, err := s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+		if err != nil {
+			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+		}
+		if !repoBelong {
+			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+		}
+	}
+	return nil
+}
+
 func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Context, repoUrl,
 	project string) (string, bool, error) {
 	repo, err := s.argoStore.GetRepository(ctx, repoUrl)
@@ -282,10 +292,18 @@ func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Contex
 	return repo.Project, belong, nil
 }
 
-func (s *AdmissionWebhookServer) needInterceptAppSync(req *v1.AdmissionRequest) *v1alpha1.Application {
+func (s *AdmissionWebhookServer) unmarshalAppFromReq(req *v1.AdmissionRequest) (*v1alpha1.Application, error) {
 	app := new(v1alpha1.Application)
 	if err := json.Unmarshal(req.Object.Raw, app); err != nil {
-		blog.Errorf("unmarshal application failed: %s", err.Error())
+		return nil, errors.Wrap(err, "unmarshal application failed")
+	}
+	return app, nil
+}
+
+func (s *AdmissionWebhookServer) needInterceptAppSync(req *v1.AdmissionRequest) *v1alpha1.Application {
+	app, err := s.unmarshalAppFromReq(req)
+	if err != nil {
+		blog.Errorf("not need intercept because unmarshal app error")
 		return nil
 	}
 	if len(s.cfg.InterceptSyncProjects) == 0 {
@@ -331,6 +349,38 @@ func (s *AdmissionWebhookServer) checkApplicationBelongAppSet(ctx context.Contex
 	return appSet
 }
 
+func (s *AdmissionWebhookServer) interceptAppSyncWithForbid(ctx context.Context,
+	req *v1.AdmissionRequest) error {
+	// 如果设置了禁止同步标记，就直接拒绝同步
+	reqApp, err := s.unmarshalAppFromReq(req)
+	if err != nil {
+		blog.Errorf("not need intercept with forbidden flag because unmarshal application request error")
+		return nil
+	}
+	state := reqApp.Status.OperationState
+	if state == nil || state.Phase != synccommon.OperationRunning {
+		return nil
+	}
+	app, err := s.argoStore.GetApplication(ctx, req.Name)
+	if err != nil {
+		blog.Errorf("not need intercept with forbidden flag because get application error")
+		return nil
+	}
+	// 如果要更新common.ApplicationSyncForbidden就不拒绝
+	if _, reqExistForbidden := reqApp.Annotations[common.ApplicationSyncForbidden]; !reqExistForbidden {
+		return nil
+	}
+	_, existForbidden := app.Annotations[common.ApplicationSyncForbidden]
+	if existForbidden {
+		return errors.Errorf(
+			`reject the app_sync, because current application.metadata.annotations has %s,
+			 req annotations is '%v'`,
+			common.ApplicationSyncForbidden, reqApp.Annotations)
+	}
+	return nil
+}
+
+// interceptApplicationSync 用于处理appset中使用动态targetrevision引起产生两次同步的缺陷
 func (s *AdmissionWebhookServer) interceptApplicationSync(ctx context.Context, req *v1.AdmissionRequest) error {
 	app := s.needInterceptAppSync(req)
 	if app == nil {

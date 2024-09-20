@@ -51,6 +51,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/db"
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
 	gitopsdiff "github.com/argoproj/gitops-engine/pkg/diff"
+	"github.com/argoproj/gitops-engine/pkg/health"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -635,6 +636,25 @@ func (cd *argo) PatchApplicationResource(ctx context.Context, appName string, re
 	return nil
 }
 
+// PatchApplicationAnnotation will update application annotations
+func (cd *argo) PatchApplicationAnnotation(ctx context.Context, appName, namespace string,
+	annotations map[string]interface{}) error {
+	patch, err := json.Marshal(map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": annotations,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "marshal annotation error")
+	}
+	if _, err := cd.argoK8SClient.Applications(namespace).
+		Patch(ctx, appName, types.MergePatchType, patch,
+			metav1.PatchOptions{}); err != nil {
+		return errors.Wrapf(err, "patch application '%s' annotations '%v' error", appName, annotations)
+	}
+	return nil
+}
+
 // GetApplicationManifestsFromRepoServerWithMultiSources returns the manifests result of application which not
 // created. This function will direct call reposerver of argocd
 // nolint
@@ -850,23 +870,40 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 
 func (cd *argo) deleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
 	resource *v1alpha1.ResourceStatus) error {
+	retryNum := 5
+	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
+	var err error
+	for i := 0; i < retryNum; i++ {
+		if err = cd.handleDeleteAppResource(ctx, application, resource); err == nil {
+			return nil
+		}
+		blog.Errorf("RequestID[%s] %s (retry: %d)", requestID, err.Error(), i)
+	}
+	return err
+}
+
+func (cd *argo) handleDeleteAppResource(ctx context.Context, application *v1alpha1.Application,
+	resource *v1alpha1.ResourceStatus) error {
 	server := application.Spec.Destination.Server
 	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
-	_, err := cd.appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
+	newCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	needForce := true
+	_, err := cd.appClient.DeleteResource(newCtx, &appclient.ApplicationResourceDeleteRequest{
 		Name:         &application.Name,
 		Kind:         &resource.Kind,
 		Namespace:    &resource.Namespace,
 		Group:        &resource.Group,
 		Version:      &resource.Version,
 		ResourceName: &resource.Name,
+		Force:        &needForce,
 	})
 	if err != nil {
-		if resource.Status != v1alpha1.SyncStatusCodeSynced {
+		if resource.Health.Status == health.HealthStatusMissing {
 			// nolint goconst
-			blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
-				"with status '%s', noneed care: %s",
-				requestID, resource.Group, resource.Kind, resource.Name,
-				server, application.Name, resource.Status, err.Error())
+			blog.Warnf("RequestID[%s], resource '%s/%s/%s' for cluster '%s' with application '%s' is missing, "+
+				"noneed care: %s", requestID, resource.Group, resource.Kind, resource.Name,
+				server, application.Name, err.Error())
 			return nil
 		}
 		if utils.IsArgoResourceNotFound(err) {

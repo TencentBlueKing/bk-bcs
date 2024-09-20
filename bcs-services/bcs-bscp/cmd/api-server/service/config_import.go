@@ -594,6 +594,7 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 		return resp, fmt.Errorf("calculate SHA256 fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
 
+	// NOCC:ineffassign/assign(设计如此)
 	fileType := ""
 	// Check if the file size is greater than 5MB (5 * 1024 * 1024 bytes)
 	if fileInfo.Size() > constant.MaxUploadTextFileSize {
@@ -861,6 +862,7 @@ func getUploadConfig(bizID uint32) (maxUploadContentLength, maxFileSize int64) {
 		}
 	}
 
+	// NOCC:nakedret/ret(设计如此)
 	return
 }
 

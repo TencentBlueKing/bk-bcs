@@ -94,7 +94,7 @@ type Store interface {
 		*v1alpha1.ApplicationSpec, error)
 	PatchApplicationResource(ctx context.Context, appName string, resource *v1alpha1.ResourceStatus, patch,
 		patchType string) error
-
+	PatchApplicationAnnotation(ctx context.Context, appName, namespace string, annotations map[string]interface{}) error
 	AllApplicationSets() []*v1alpha1.ApplicationSet
 	RefreshApplicationSet(namespace, name string) error
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
