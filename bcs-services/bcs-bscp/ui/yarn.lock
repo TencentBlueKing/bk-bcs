@@ -869,7 +869,6 @@
   dependencies:
     "@volar/language-core" "2.3.0"
     path-browserify "^1.0.1"
-    vscode-uri "^3.0.8"
 
 "@vue/compiler-core@3.4.29":
   version "3.4.29"
