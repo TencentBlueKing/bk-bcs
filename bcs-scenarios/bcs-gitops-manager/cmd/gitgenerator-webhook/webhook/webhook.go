@@ -312,13 +312,13 @@ func (s *AdmissionWebhookServer) needInterceptAppSync(req *v1.AdmissionRequest) 
 	if !slices.Contains(s.cfg.InterceptSyncProjects, app.Spec.Project) {
 		return nil
 	}
-	blog.Infof("Received request. UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
-		req.Operation, req.Kind)
 	state := app.Status.OperationState
 	// 如果应用状态非 Running, 则表示不在 Sync 进程中，直接返回
 	if state == nil || state.Phase != synccommon.OperationRunning {
 		return nil
 	}
+	blog.Infof("Received request(intercept sync). UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
+		req.Operation, req.Kind)
 	return app
 }
 
@@ -404,13 +404,14 @@ func (s *AdmissionWebhookServer) interceptApplicationSync(ctx context.Context, r
 		hasDynamicRevision = true
 	}
 	if !hasDynamicRevision {
-		blog.Infof("intercept application '%s' sync, it's appset '%s' not have dynamic revision",
+		blog.Infof("skip intercept application '%s' sync, it's appset '%s' not have dynamic revision",
 			app.Name, appSet.Name)
 		return nil
 	}
+	blog.Infof("intercept application '%s' sync, it's appset '%s' has dynamic revision", app.Name, appSet.Name)
 	apps, err := s.argoStore.ApplicationSetDryRun(appSet)
 	if err != nil {
-		blog.Errorf("intercept application '%s' sync, it's appset '%s' dry-run failed: %s",
+		blog.Errorf("skip intercept application '%s' sync, it's appset '%s' dry-run failed: %s",
 			app.Name, appSet.Name, err.Error())
 		return nil
 	}
@@ -423,9 +424,11 @@ func (s *AdmissionWebhookServer) interceptApplicationSync(ctx context.Context, r
 		break
 	}
 	if foundApp == nil {
-		blog.Warnf("intercept application '%s' sync, it's appset '%s' dry-run not have app", app.Name, appSet.Name)
+		blog.Warnf("skip intercept application '%s' sync, it's appset '%s' dry-run not have app",
+			app.Name, appSet.Name)
 		return nil
 	}
+	blog.Infof("intercept application '%s' sync, found the application after appset dry-run", app.Name)
 
 	// 对比 AppSet dry-run 出来的应用和当前应用的 revision 是否一致
 	if foundApp.Spec.HasMultipleSources() {
@@ -447,7 +450,7 @@ func (s *AdmissionWebhookServer) interceptApplicationSync(ctx context.Context, r
 				foundApp.Spec.Source.TargetRevision)
 		}
 	}
-	blog.Infof("intercept application '%s' sync, the revision generate by appset is same", app.Name)
+	blog.Infof("skip intercept application '%s' sync, the revision generate by appset is same", app.Name)
 	return nil
 }
 
