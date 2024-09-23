@@ -425,7 +425,7 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 		ResourceType: common.Cluster.String(),
 		ResourceID:   "",
 		TaskID:       "",
-		Message:      fmt.Sprintf("更新node信息"),
+		Message:      "更新node信息",
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
