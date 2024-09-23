@@ -424,3 +424,16 @@ func (s *Service) validateBizExist(kt *kit.Kit, bizID uint32) error {
 
 	return nil
 }
+
+// BatchUpdateLastConsumedTime 批量更新最后一次拉取时间
+func (s *Service) BatchUpdateLastConsumedTime(ctx context.Context, req *pbds.BatchUpdateLastConsumedTimeReq) (
+	*pbds.BatchUpdateLastConsumedTimeResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	err := s.dao.App().BatchUpdateLastConsumedTime(kit, req.GetBizId(), req.GetAppIds())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbds.BatchUpdateLastConsumedTimeResp{}, nil
+}
