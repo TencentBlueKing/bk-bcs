@@ -28,7 +28,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/gorilla/mux"
-	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -311,7 +310,7 @@ func packTemplateSpace(fileName string, templateContents map[string][]TemplateCo
 
 	file, err := os.Create(fileName)
 	if err != nil {
-		return fmt.Errorf("failed to create destination file: %w", err)
+		return fmt.Errorf("failed to create destination file: %s", err.Error())
 	}
 	defer file.Close() // nolint
 
@@ -333,7 +332,7 @@ func packTemplateSpace(fileName string, templateContents map[string][]TemplateCo
 		// 写入 header
 		err = tarWriter.WriteHeader(header)
 		if err != nil {
-			return fmt.Errorf("failed to write tar header: %w", err)
+			return fmt.Errorf("failed to write tar header: %s", err.Error())
 		}
 
 		for _, v := range contents {
@@ -342,7 +341,7 @@ func packTemplateSpace(fileName string, templateContents map[string][]TemplateCo
 			header.Size = int64(len(v.Content))
 			err = tarWriter.WriteHeader(header)
 			if err != nil {
-				return fmt.Errorf("failed to write tar header: %w", err)
+				return fmt.Errorf("failed to write tar header: %s", err.Error())
 			}
 
 			tarWriter.Write([]byte(v.Content)) // nolint
@@ -445,12 +444,6 @@ func parseTarContent(r *http.Request) ([]string, map[string][]TemplateContent, e
 			// 文件没有内容,不创建模板文件
 			if n == 0 {
 				continue
-			}
-			// yaml格式校验
-			var v interface{}
-			err = yaml.Unmarshal(buf, &v)
-			if err != nil {
-				return templateSpaceNames, tarContent, fmt.Errorf("invalid yaml content: %s", header.Name)
 			}
 			tarContent[templateSpaceName] = append(tarContent[templateSpaceName], TemplateContent{
 				TemplateName: templateName,
