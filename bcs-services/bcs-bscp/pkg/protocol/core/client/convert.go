@@ -54,6 +54,7 @@ func (c *ClientSpec) ClientSpec() *table.ClientSpec {
 		ReleaseChangeFailedReason: c.ReleaseChangeFailedReason,
 		FailedDetailReason:        c.FailedDetailReason,
 		SpecificFailedReason:      c.SpecificFailedReason,
+		TotalSeconds:              c.TotalSeconds,
 	}
 }
 
@@ -88,6 +89,7 @@ func PbClientSpec(spec *table.ClientSpec) *ClientSpec { //nolint:revive
 		FailedDetailReason:        spec.FailedDetailReason,
 		ClientType:                string(spec.ClientType),
 		SpecificFailedReason:      spec.SpecificFailedReason,
+		TotalSeconds:              spec.TotalSeconds,
 	}
 }
 

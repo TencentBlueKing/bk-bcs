@@ -237,3 +237,15 @@ func (s *Service) SetClientMetric(ctx context.Context, req *pbcs.SetClientMetric
 	}
 	return &pbcs.SetClientMetricResp{}, nil
 }
+
+// BatchUpdateLastConsumedTime 批量更新服务拉取时间
+func (s *Service) BatchUpdateLastConsumedTime(ctx context.Context, req *pbcs.BatchUpdateLastConsumedTimeReq) (
+	*pbcs.BatchUpdateLastConsumedTimeResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+	err := s.op.BatchUpdateLastConsumedTime(kit, req.GetBizId(), req.GetAppIds())
+	if err != nil {
+		return nil, err
+	}
+	return &pbcs.BatchUpdateLastConsumedTimeResp{}, nil
+}

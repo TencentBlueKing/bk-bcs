@@ -101,6 +101,8 @@ service Cache {
       body: "*"
     };
   }
+
+  rpc BatchUpdateLastConsumedTime(BatchUpdateLastConsumedTimeReq) returns (BatchUpdateLastConsumedTimeResp) {}
 }
 
 message JsonRawResp {
@@ -231,3 +233,10 @@ message SetClientMetricReq {
 }
 
 message SetClientMetricResp {}
+
+message BatchUpdateLastConsumedTimeReq {
+  uint32 biz_id = 1;
+  repeated uint32 app_ids = 2;
+}
+
+message BatchUpdateLastConsumedTimeResp {}

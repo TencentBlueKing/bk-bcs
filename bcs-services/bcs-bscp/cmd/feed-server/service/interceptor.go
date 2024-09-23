@@ -24,6 +24,10 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/constant"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/feed-server"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/jsoni"
+	sfs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/sf-share"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
 
@@ -115,6 +119,87 @@ func FeedUnaryAuthInterceptor(
 	ctx, err := svr.authorize(ctx, bizID)
 	if err != nil {
 		return nil, err
+	}
+
+	return handler(ctx, req)
+}
+
+// FeedUnaryUpdateLastConsumedTimeInterceptor feed 更新拉取时间中间件
+func FeedUnaryUpdateLastConsumedTimeInterceptor(ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+
+	type lastConsumedTime struct {
+		BizID    uint32
+		AppNames []string
+		AppIDs   []uint32
+	}
+
+	param := lastConsumedTime{}
+
+	switch info.FullMethod {
+	case pbfs.Upstream_GetKvValue_FullMethodName:
+		request := req.(*pbfs.GetKvValueReq)
+		param.BizID = request.BizId
+		param.AppNames = append(param.AppNames, request.GetAppMeta().App)
+	case pbfs.Upstream_PullKvMeta_FullMethodName:
+		request := req.(*pbfs.PullKvMetaReq)
+		param.BizID = request.BizId
+		param.AppNames = append(param.AppNames, request.GetAppMeta().App)
+	case pbfs.Upstream_Messaging_FullMethodName:
+		request := req.(*pbfs.MessagingMeta)
+		if sfs.MessagingType(request.Type) == sfs.VersionChangeMessage {
+			vc := new(sfs.VersionChangePayload)
+			if err := vc.Decode(request.Payload); err != nil {
+				logs.Errorf("version change message decoding failed, %s", err.Error())
+				return handler(ctx, req)
+			}
+			param.BizID = vc.BasicData.BizID
+			param.AppNames = append(param.AppNames, vc.Application.App)
+		}
+	case pbfs.Upstream_Watch_FullMethodName:
+		request := req.(*pbfs.SideWatchMeta)
+		payload := new(sfs.SideWatchPayload)
+		if err := jsoni.Unmarshal(request.Payload, payload); err != nil {
+			logs.Errorf("parse request payload failed, %s", err.Error())
+			return handler(ctx, req)
+		}
+		param.BizID = payload.BizID
+		for _, v := range payload.Applications {
+			param.AppNames = append(param.AppNames, v.App)
+		}
+	case pbfs.Upstream_PullAppFileMeta_FullMethodName:
+		request := req.(*pbfs.PullAppFileMetaReq)
+		param.BizID = request.BizId
+		param.AppNames = append(param.AppNames, request.GetAppMeta().App)
+	case pbfs.Upstream_GetDownloadURL_FullMethodName:
+		request := req.(*pbfs.GetDownloadURLReq)
+		param.BizID = request.BizId
+		param.AppIDs = append(param.AppIDs, request.GetFileMeta().GetConfigItemAttachment().AppId)
+	default:
+		return handler(ctx, req)
+	}
+
+	if param.BizID != 0 {
+		ctx = context.WithValue(ctx, constant.BizIDKey, param.BizID) //nolint:staticcheck
+		svr := info.Server.(*Service)
+
+		if len(param.AppIDs) == 0 {
+			for _, appName := range param.AppNames {
+				appID, err := svr.bll.AppCache().GetAppID(kit.FromGrpcContext(ctx), param.BizID, appName)
+				if err != nil {
+					logs.Errorf("get app id failed, err: %v", err)
+					return handler(ctx, req)
+				}
+				param.AppIDs = append(param.AppIDs, appID)
+			}
+		}
+
+		if err := svr.bll.AppCache().BatchUpdateLastConsumedTime(kit.FromGrpcContext(ctx),
+			param.BizID, param.AppIDs); err != nil {
+			logs.Errorf("batch update app last consumed failed, err: %v", err)
+			return handler(ctx, req)
+		}
+		logs.Infof("batch update app last consumed time success")
 	}
 
 	return handler(ctx, req)

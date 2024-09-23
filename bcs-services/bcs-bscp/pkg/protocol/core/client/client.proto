@@ -34,6 +34,7 @@ message ClientSpec {
   string current_release_name = 15;
   string specific_failed_reason = 16;
   string target_release_name = 17;
+  double total_seconds = 18;
 }
 
 // ClientAttachment source resource reference: pkg/dal/table/client.go

@@ -24,17 +24,22 @@
           <RightShape class="arrow-icon" />
           <span class="name">{{ group.name === 'singleLine' ? t('单行配置') : t('多行配置') }}</span>
         </div>
-        <div v-if="group.expand" class="config-list">
+        <RecycleScroller
+          v-if="group.expand"
+          class="config-list"
+          :items="group.configs"
+          key-field="id"
+          :item-size="40"
+          v-slot="{ item }">
           <div
-            v-for="config in group.configs"
             v-overflow-title
-            :key="config.id"
-            :class="['config-item', { actived: props.actived && config.id === selected }]"
-            @click="handleSelectItem(config.id)">
-            <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
-            {{ config.key }}
+            :key="item.id"
+            :class="['config-item', { actived: props.actived && item.id === selected }]"
+            @click="handleSelectItem(item.id)">
+            <i v-if="item.diffType" :class="['status-icon', item.diffType]"></i>
+            {{ item.key }}
           </div>
-        </div>
+        </RecycleScroller>
       </div>
       <tableEmpty
         v-if="groupedConfigListOnShow.length === 0"
@@ -47,7 +52,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted } from 'vue';
+  import { ref, computed, watch, onMounted, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import { Search, RightShape } from 'bkui-vue/lib/icon';
@@ -89,7 +94,7 @@
   const { t } = useI18n();
   const route = useRoute();
 
-  const emits = defineEmits(['selected']);
+  const emits = defineEmits(['selected', 'render']);
 
   const SINGLE_LINE_TYPE = ['string', 'number', 'password', 'secret_key', 'token'];
 
@@ -132,8 +137,9 @@
     },
   );
 
-  onMounted(() => {
-    initData(true);
+  onMounted(async () => {
+    await initData(true);
+    nextTick(() => emits('render', false));
   });
 
   // 初始化对比配置项以及设置默认选中的配置项
@@ -459,5 +465,9 @@
     margin-top: 40px;
     font-size: 12px;
     color: #63656e;
+  }
+
+  .config-list {
+    max-height: 700px;
   }
 </style>
