@@ -133,8 +133,6 @@
 
   // 搜索框值变化时 两个“仅看”选项联动
   const change = (data: ISearchValueItem[]) => {
-    console.log('123123');
-
     const optionIdArr = data.map((item) => item.values.map((i) => i.id));
     const statusMap: { [key: string]: Ref<boolean> } = {
       [FILTER_KEY.PublishVersionConfig]: publishVersionConfig,
