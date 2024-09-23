@@ -299,7 +299,6 @@
       } else {
         searchParams.value.app_id = Number(route.params.appId);
       }
-      console.log('搜搜参数');
       loadRecordList();
     },
     { deep: true },
@@ -314,14 +313,13 @@
       } else {
         searchParams.value.app_id = Number(route.params.appId);
       }
-      console.log('路由变化');
+      delete searchParams.value.id;
       loadRecordList();
     },
   );
 
   // 加载操作记录列表数据
   const loadRecordList = async () => {
-    console.log('载入列表');
     try {
       loading.value = true;
       const params: IRecordQuery = {
