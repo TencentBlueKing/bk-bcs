@@ -12,7 +12,7 @@
       :current-version-groups="groupsPendingtoPublish()"
       @publish="handleConfirm"
       @reject="RejectDialogShow = true"
-      @close="emits('update:show', false)" />
+      @close="emits('close')" />
   </div>
   <DialogReject
     v-model:show="RejectDialogShow"
@@ -51,7 +51,7 @@
     {},
   );
 
-  const emits = defineEmits(['update:show', 'refreshList']);
+  const emits = defineEmits(['update:show', 'close']);
 
   const { t } = useI18n();
 
@@ -106,7 +106,6 @@
       }
       // 处理全部分组
       groupList.value = groupRes.details;
-      // console.log(props.releaseId, versionList.value[0].id, '是否找到版本');
       // 当前的服务数据
       serviceStore.$patch((state) => {
         state.appData = appDetailRes;
@@ -115,10 +114,6 @@
     } catch (e) {
       console.log(e);
     }
-    // console.log(versionList.value, '所有已在线版本列表');
-    // console.log(versionData.value, 'curr版本列表');
-    // console.log(props.releasedGroups, '待上线版本的分组集合');
-    // console.log(groupList.value, '所有分组');
   };
 
   // 审批 S
@@ -134,11 +129,8 @@
         // 全量分组上线的版本中 含有 待上线版本的的分组, 也需要对比
         if (version.status.fully_released) {
           releasedGroups.value.some((group) => {
-            // console.log('待上线分组列表', group);
             return groupList.value.some((item) => {
-              // console.log('查找分组列表', item.group_id, group, item.release_id);
               if (item.group_id === group && item.release_id === 0) {
-                // console.log('添加成功');
                 list.push(version);
                 return true;
               }
@@ -154,9 +146,7 @@
 
   // 待上线分组实例和数据组装
   const groupsPendingtoPublish = () => {
-    console.log('groupsPendingtoPublish 444');
     const list: IReleasedGroup[] = [];
-    // console.log(diffableVersionList.value, '待上线版本++++++++++++++++++++++++++++++++++++');
     releasedGroups.value.forEach((groupId) => {
       const group = groupList.value.find((g) => g.group_id === groupId);
       if (group) {
@@ -198,8 +188,7 @@
         theme: 'success',
         message: t('操作成功'),
       });
-      emits('update:show', false);
-      emits('refreshList');
+      emits('close', 'refresh');
     } catch (e) {
       console.log(e);
     }
@@ -208,8 +197,7 @@
   // 审批拒绝
   const handleReject = () => {
     RejectDialogShow.value = false;
-    emits('update:show', false);
-    emits('refreshList');
+    emits('close', 'refresh');
   };
 </script>
 

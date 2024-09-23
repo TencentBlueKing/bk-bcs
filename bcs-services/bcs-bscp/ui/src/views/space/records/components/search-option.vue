@@ -9,7 +9,7 @@
     <div class="search-input__wrap">
       <bk-search-select
         v-model="searchValue"
-        :placeholder="$t('所属服务/资源类型/操作行为/资源实例/状态/操作人/操作途径')"
+        :placeholder="$t('资源类型/操作行为/资源实例/状态/操作人/操作途径')"
         :data="searchData"
         unique-select
         :max-height="32"
@@ -62,12 +62,12 @@
     }));
   });
   const searchData = [
-    {
-      name: '所属服务',
-      id: SEARCH_ID.service,
-      multiple: false,
-      async: false,
-    },
+    // {
+    //   name: '所属服务',
+    //   id: SEARCH_ID.service,
+    //   multiple: false,
+    //   async: false,
+    // },
     {
       name: '资源类型',
       id: SEARCH_ID.resource_type,
@@ -133,6 +133,8 @@
 
   // 搜索框值变化时 两个“仅看”选项联动
   const change = (data: ISearchValueItem[]) => {
+    console.log('123123');
+
     const optionIdArr = data.map((item) => item.values.map((i) => i.id));
     const statusMap: { [key: string]: Ref<boolean> } = {
       [FILTER_KEY.PublishVersionConfig]: publishVersionConfig,
@@ -189,7 +191,6 @@
   };
   // 获取地址栏参数并放入搜搜选项
   const formatUrlParams = () => {
-    // console.log('searchOption获取地址栏参数');
     const searchId = Object.keys(SEARCH_ID); // 搜索id名
     Object.keys(route.query).forEach((routeKey) => {
       // 遍历路由参数的id
@@ -197,8 +198,6 @@
         // 过滤当前组件选项的id
         const index = searchData.findIndex((item) => item.id === routeKey);
         const name = searchData[index].name;
-        // console.log(index, name, routeKey, route.query[routeKey]);
-
         let values = null;
         // 设置子元素
         values = String(route.query[routeKey])
@@ -223,6 +222,8 @@
         });
       }
     });
+    // 关联复选框选中
+    change(searchValue.value);
   };
 
   // 发送数据

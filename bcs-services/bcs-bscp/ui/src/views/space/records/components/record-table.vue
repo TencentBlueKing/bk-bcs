@@ -137,12 +137,17 @@
                     row.strategy.approver_progress.includes(userInfo.username)
                   ">
                   <!-- 当前的记录在目标分组首次上线，直接审批通过 -->
-                  <bk-button v-if="false" class="action-btn" text theme="primary" @click="handlePass(row)">
-                    {{ t('审批') }}
+                  <bk-button
+                    v-if="row.audit.spec.is_compare"
+                    class="action-btn"
+                    text
+                    theme="primary"
+                    @click="handleApproval(row)">
+                    {{ t('去审批') }}
                   </bk-button>
                   <!-- 非首次上线，需要打开对比抽屉 -->
-                  <bk-button v-else class="action-btn" text theme="primary" @click="handleApproval(row)">
-                    {{ t('去审批') }}
+                  <bk-button v-else class="action-btn" text theme="primary" @click="handleApproved(row)">
+                    {{ t('审批') }}
                   </bk-button>
                 </template>
                 <!-- 审批驳回/已撤销才可显示 -->
@@ -176,7 +181,7 @@
             </template>
           </bk-table-column>
           <template #empty>
-            <TableEmpty :is-search-empty="isSearchEmpty" @clear="clearSearchInfo" />
+            <TableEmpty :is-search-empty="isSearchEmpty" />
           </template>
         </bk-table>
         <bk-pagination
@@ -201,12 +206,12 @@
       @refresh-list="loadRecordList" />
     <!-- 审批对比弹窗 -->
     <VersionDiff
-      v-model:show="approvalShow"
+      :show="approvalShow"
       :space-id="spaceId"
       :app-id="rowAppId"
       :release-id="rowReleaseId"
       :released-groups="rowReleaseGroups"
-      @refresh-list="loadRecordList" />
+      @close="closeApprovalDialog" />
   </section>
 </template>
 
@@ -219,13 +224,14 @@
   import { RECORD_RES_TYPE, ACTION, STATUS, INSTANCE, APPROVE_STATUS } from '../../../../constants/record';
   import { storeToRefs } from 'pinia';
   import useUserStore from '../../../../store/user';
-  import { getRecordList } from '../../../../api/record';
+  import { getRecordList, approve } from '../../../../api/record';
   import useTablePagination from '../../../../utils/hooks/use-table-pagination';
   import TableEmpty from '../../../../components/table/table-empty.vue';
   import MoreActions from './more-actions.vue';
   import DialogConfirm from './dialog-confirm.vue';
   import { InfoLine } from 'bkui-vue/lib/icon';
   import VersionDiff from './version-diff.vue';
+  import BkMessage from 'bkui-vue/lib/message';
 
   const props = withDefaults(
     defineProps<{
@@ -281,14 +287,6 @@
   }));
   // 数据过滤 E
 
-  // watch(
-  //   () => spaceId.value,
-  //   async () => {
-  //     pagination.value.current = 1;
-  //     await loadRecordList();
-  //   },
-  // );
-
   watch(
     () => props.searchParams,
     (newV) => {
@@ -301,26 +299,29 @@
       } else {
         searchParams.value.app_id = Number(route.params.appId);
       }
+      console.log('搜搜参数');
       loadRecordList();
     },
     { deep: true },
   );
 
   watch(
-    () => route.params,
+    () => route.params.appId,
     (newV) => {
-      searchParams.value.all = !(newV.appId && Number(newV.appId) > -1);
+      searchParams.value.all = !(newV && Number(newV) > -1);
       if (searchParams.value.all) {
         delete searchParams.value.app_id;
       } else {
         searchParams.value.app_id = Number(route.params.appId);
       }
+      console.log('路由变化');
       loadRecordList();
     },
   );
 
   // 加载操作记录列表数据
   const loadRecordList = async () => {
+    console.log('载入列表');
     try {
       loading.value = true;
       const params: IRecordQuery = {
@@ -332,6 +333,11 @@
       // actionTimeSrotMode.value ? tableDataSort(res.details) : (tableData.value = res.details);
       tableDataSort(res.details);
       pagination.value.count = res.count;
+      // 是否打开审批抽屉
+      // if (route.query.id) {
+      if (route.query.id) {
+        openApprovalSideBar();
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -339,9 +345,23 @@
     }
   };
 
-  // 清空搜索框
-  const clearSearchInfo = () => {
-    // 清空搜索框
+  // 关闭审批对比弹窗
+  const closeApprovalDialog = (refresh: string) => {
+    approvalShow.value = false;
+    // 去除url操作记录id
+    if (route.query.id) {
+      const newQuery = { ...route.query };
+      delete newQuery.id;
+      router.replace({
+        query: {
+          ...newQuery,
+        },
+      });
+    }
+    // 审批通过/驳回：刷新
+    if (refresh) {
+      loadRecordList();
+    }
   };
 
   // 资源示例映射
@@ -393,8 +413,6 @@
     confirmShow.value = true;
     const matchVersion = row.audit.spec.res_instance.match(/releases_name:([^\n]*)/);
     const matchGroup = row.audit.spec.res_instance.match(/group:([^\n]*)/);
-    // biz_id: String(row.audit.attachment.biz_id),
-    // release_id: row.strategy.release_id,
     rowAppId.value = row.audit.attachment.app_id;
     rowReleaseId.value = row.strategy.release_id;
     confirmData.value = {
@@ -417,9 +435,23 @@
   };
 
   // 审批通过
-  const handlePass = (row: IRowData) => {
-    console.log(row);
-  };
+  const handleApproved = debounce(async (row: IRowData) => {
+    try {
+      const { biz_id, app_id } = row.audit.attachment;
+      const { release_id } = row.strategy;
+      await approve(String(biz_id), app_id, release_id, {
+        publish_status: APPROVE_STATUS.PendPublish,
+      });
+      BkMessage({
+        theme: 'success',
+        message: t('操作成功'),
+      });
+      loadRecordList();
+    } catch (e) {
+      console.log(e);
+    }
+  }, 300);
+
   // 去审批
   const handleApproval = debounce(
     (row: IRowData) => {
@@ -428,26 +460,33 @@
       // 当前row已上线版本的分组id,为空表示全部分组上线
       rowReleaseGroups.value = row.strategy.scope.groups.map((group) => group.id);
       approvalShow.value = true;
+      router.replace({
+        query: {
+          ...route.query,
+          id: row.audit.id,
+        },
+      });
     },
     300,
     { leading: true, trailing: false },
   );
 
+  // 是否打开审批抽屉
+  const openApprovalSideBar = () => {
+    handleApproval(tableData.value[0]);
+  };
+
   // 数据过滤
   const handleFilter = ({ checked, index }: any) => {
     // index: 2.资源类型 3.操作行为 7.状态
-    console.log(checked, index);
     switch (index) {
       case 2:
-        console.log('资源类型');
         searchParams.value.resource_type = checked.join(',');
         break;
       case 3:
-        console.log('操作行为');
         searchParams.value.action = checked.join(',');
         break;
       case 7:
-        console.log('状态');
         searchParams.value.status = checked.join(',');
         break;
 
@@ -459,7 +498,6 @@
 
   // 触发的排序模式
   const handleSort = ({ type }: any) => {
-    console.log(type);
     actionTimeSrotMode.value = type === 'null' ? '' : type;
     tableDataSort(tableData.value);
   };
@@ -491,10 +529,6 @@
       loadRecordList();
     }
   };
-
-  defineExpose({
-    loadRecordList,
-  });
 </script>
 
 <style lang="scss" scoped>

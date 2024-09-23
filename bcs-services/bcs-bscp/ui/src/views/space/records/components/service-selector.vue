@@ -48,15 +48,13 @@
   import { DownSmall } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
 
-  const emits = defineEmits(['select-service']);
-
   const { locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
 
   const loading = ref(false);
   const localApp = ref({
-    name: '',
+    name: '全部服务',
     id: -1,
     serviceType: '',
   });
@@ -73,10 +71,6 @@
         serviceType: service.spec.config_type!,
       };
       setLastAccessedServiceDetail(service.id!);
-      emits('select-service', localApp.value.id);
-    } else {
-      handleAppChange(-1);
-      // emits('select-service');
     }
   });
 
@@ -91,7 +85,6 @@
       const resp = await getAppList(bizId.value, query);
       serviceList.value = resp.details;
     } catch (e) {
-      // emits('select-service');
       console.error(e);
     } finally {
       loading.value = false;
@@ -117,7 +110,6 @@
       };
       await router.push({ name: 'records-all', params: { spaceId: bizId.value }, query: route.query });
     }
-    emits('select-service', localApp.value.id);
   };
 
   const setLastAccessedServiceDetail = (appId: number) => {

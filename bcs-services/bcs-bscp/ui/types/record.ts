@@ -1,5 +1,6 @@
 // 操作记录列表参数
 export interface IRecordQuery {
+  id?: number; // 记录id
   app_id?: number;
   start_time?: string;
   end_time?: string;

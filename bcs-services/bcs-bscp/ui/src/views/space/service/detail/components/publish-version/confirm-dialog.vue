@@ -148,7 +148,6 @@
     memo: string;
     publishType: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
     publishTime: Date | string;
-    allFirstPublish: boolean;
   }
 
   interface IModifyReleasePreviewItem extends IGroupPreviewItem {
@@ -185,7 +184,6 @@
     memo: '',
     publishType: '',
     publishTime: new Date(new Date().getTime() + 7200000), // 默认当前时间的后两小时
-    allFirstPublish: false, // 分组是否都是首次上线：操作记录列表待审批状态需要此字段决定是否打开对比抽屉
   });
   const previewData = ref<IModifyReleasePreviewItem[]>([]);
   const excludeGroups = ref<IGroupToPublish[]>([]);
@@ -212,7 +210,7 @@
     return isApprove.value ? t('审批开启的文案') : t('审批关闭的文案');
   });
 
-  const allFirstPublish = computed(() => previewData.value.every((item) => item.type === 'plain'));
+  const isCompare = computed(() => previewData.value.some((item) => item.type !== 'plain'));
 
   watch(
     () => props.show,
@@ -262,7 +260,6 @@
       memo: '',
       publishType: '',
       publishTime: new Date(new Date().getTime() + 7200000),
-      allFirstPublish: false,
     };
   };
 
@@ -270,7 +267,7 @@
     try {
       pending.value = true;
       await formRef.value.validate();
-      const params = { ...localVal.value, allFirstPublish: allFirstPublish.value };
+      const params = { ...localVal.value, is_compare: isCompare.value };
       // 全部实例上线，只需要将all置为true
       if (props.releaseType === 'all') {
         if (excludeGroups.value.length > 0) {

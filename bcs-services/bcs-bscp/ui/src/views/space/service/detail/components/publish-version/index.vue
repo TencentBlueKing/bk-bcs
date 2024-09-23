@@ -273,10 +273,13 @@
     }
   };
 
-  // 确定上线按钮 待后端更新接口返回密钥状态
+  // 确定上线按钮
   const handlePublishClick = async () => {
     const { bkBizId: biz_id, appId: app_id } = props;
-    const resp = await approve(biz_id, app_id, publishedVersionId.value, { publish_status: 'AlreadyPublish' });
+    // 上线后查询当前版本状态
+    const resp = await approve(biz_id, app_id, versionData.value.id, {
+      publish_status: APPROVE_STATUS.AlreadyPublish,
+    });
     handleConfirm(resp.haveCredentials);
   };
 

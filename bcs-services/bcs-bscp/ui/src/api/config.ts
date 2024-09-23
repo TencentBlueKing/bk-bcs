@@ -294,7 +294,7 @@ export const publishVerSubmit = (
     memo: string;
     publishType: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
     publishTime: Date | string;
-    allFirstPublish: boolean;
+    is_compare: boolean;
   },
 ) => http.post(`/config/biz_id/${bizId}/app_id/${appId}/release_id/${releaseId}/submit`, data);
 

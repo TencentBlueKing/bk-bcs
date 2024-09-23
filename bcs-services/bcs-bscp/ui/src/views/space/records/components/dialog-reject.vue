@@ -65,7 +65,6 @@
   const reason = ref('');
 
   const handleClose = () => {
-    console.log(props.spaceId, props.appId, props.releaseId, '+++++');
     emits('update:show', false);
   };
   const handleConfirm = debounce(async () => {
