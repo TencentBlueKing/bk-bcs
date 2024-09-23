@@ -15,6 +15,8 @@ package service
 import (
 	"context"
 
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/meta"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
@@ -85,6 +87,16 @@ func (s *Service) ListReleasedKvs(ctx context.Context, req *pbcs.ListReleasedKvs
 	if err != nil {
 		logs.Errorf("list kv failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
+	}
+
+	// 敏感信息类型需要判断是否隐藏密码
+	for _, v := range rkv.GetDetails() {
+		if v.Spec.KvType != string(table.KvSecret) {
+			continue
+		}
+		if v.Spec.SecretHidden {
+			v.Spec.Value = i18n.T(grpcKit, "sensitive data is not visible, unable to view actual content")
+		}
 	}
 
 	resp := &pbcs.ListReleasedKvsResp{

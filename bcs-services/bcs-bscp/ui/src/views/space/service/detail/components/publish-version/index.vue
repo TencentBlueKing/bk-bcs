@@ -309,12 +309,12 @@
   };
 
   // 版本上线成功
-  const handleConfirm = (haveCredentials: boolean, publishType = '', publishTime = '') => {
+  const handleConfirm = (havePull: boolean, publishType = '', publishTime = '') => {
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
     handlePanelClose();
     emit('confirm');
-    if (haveCredentials) {
+    if (havePull) {
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
@@ -326,10 +326,14 @@
         infoType: 'success',
         title: publishTitle(publishType, publishTime),
         'ext-cls': 'info-box-style',
-        confirmText: t('新增服务密钥'),
+        confirmText: t('配置客户端'),
         cancelText: t('稍后再说'),
         onConfirm: () => {
-          router.push({ name: 'credentials-management' });
+          const routeData = router.resolve({
+            name: 'configuration-example',
+            params: { spaceId: props.bkBizId, appId: props.appId },
+          });
+          window.open(routeData.href, '_blank');
         },
       });
     }

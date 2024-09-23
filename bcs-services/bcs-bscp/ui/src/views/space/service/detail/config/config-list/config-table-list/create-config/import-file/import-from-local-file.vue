@@ -2,7 +2,7 @@
   <div class="wrap">
     <div class="label">{{ $t('上传配置项') }}</div>
     <div>
-      <bk-checkbox v-model="isDecompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
+      <bk-checkbox v-model="isDecompression" class="decompression"> {{ $t('压缩包自动解压') }} </bk-checkbox>
       <div class="tips">{{ uploadTips }}</div>
     </div>
   </div>
@@ -15,7 +15,7 @@
       :custom-request="handleFileUpload">
       <template #trigger>
         <bk-button class="upload-button">
-          <Upload fill="#979BA5" />
+          <Upload class="icon" />
           <span class="text">{{ $t('上传文件') }}</span>
         </bk-button>
       </template>
@@ -344,5 +344,20 @@
         }
       }
     }
+  }
+
+  .upload-button {
+    .icon {
+      font-size: 16px;
+      color: #63656e;
+    }
+    .text {
+      font-size: 12px;
+      margin-left: 7px;
+    }
+  }
+
+  .decompression {
+    font-size: 12px !important;
   }
 </style>

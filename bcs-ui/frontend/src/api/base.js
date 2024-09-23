@@ -183,6 +183,7 @@ export const deleteNodeGroupNode = request('delete', `${prefix}/clustermanager/v
 export const addNodeGroupNode = request('post', `${prefix}/clustermanager/v1/nodegroup/$nodeGroupID/node`);
 export const resourceSchema = request('get', `${prefix}/clustermanager/v1/resourceschema/$cloudID/$name`);
 export const cloudOsImage = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/osimage`);
+export const cloudNoderoles = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/serviceroles`);
 export const cloudInstanceTypes = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/instancetypes`);
 export const cloudSecurityGroups = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/securitygroups`);
 export const cloudSubnets = request('get', `${prefix}/clustermanager/v1/clouds/$cloudID/subnets`);

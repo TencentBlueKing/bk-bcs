@@ -180,6 +180,10 @@
   };
 
   const handleSelectVersion = (version: IConfigVersion) => {
+    configStore.$patch((state) => {
+      state.allExistConfigCount = 0;
+      state.conflictFileCount = 0;
+    });
     versionData.value = version;
     const params: { spaceId: string; appId: number; versionId?: number } = {
       spaceId: props.bkBizId,

@@ -235,14 +235,14 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 }
 
 // getPreferredApiResources 获取指定api资源当前集群 Preferred 版本列表
-func (d *RedisCacheClient) getPreferredApiResources(kind string) (map[string]GroupKindVersionResource, error) {
+func (d *RedisCacheClient) getPreferredApiResources(kind, crdName string) (map[string]GroupKindVersionResource, error) {
 	all, err := d.ServerPreferredResources()
 	if err != nil {
-		return map[string]GroupKindVersionResource{}, err
+		return nil, err
 	}
 
 	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
-	return filterApiResByKind(kind, all), nil
+	return filterApiResByKind(kind, crdName, all), nil
 }
 
 // readCache 读缓存逻辑
@@ -340,17 +340,17 @@ func GetGroupVersionResource(
 // 直接获取 preferred api version
 // 包含刷新缓存逻辑，若首次从缓存中找不到对应资源，会刷新缓存再次查询，若还是找不到，则返回错误
 func GetApiResources(
-	ctx context.Context, conf *ClusterConf, kind string) (map[string]GroupKindVersionResource, error) {
+	ctx context.Context, conf *ClusterConf, kind, crdName string) (map[string]GroupKindVersionResource, error) {
 	cli, err := NewRedisCacheClient4Conf(ctx, conf)
 	if err != nil {
-		return map[string]GroupKindVersionResource{}, err
+		return nil, err
 	}
 	// 查询 preferred version（含刷新缓存重试）
 	var res map[string]GroupKindVersionResource
-	res, err = cli.getPreferredApiResources(kind)
-	if err != nil {
-		cli.Invalidate()
-		return cli.getPreferredApiResources(kind)
+	res, err = cli.getPreferredApiResources(kind, crdName)
+	if err != nil || len(res) == 0 {
+		_ = cli.ClearCache()
+		return cli.getPreferredApiResources(kind, crdName)
 	}
 	return res, nil
 }
@@ -378,7 +378,7 @@ func NewRedisCacheClient4Conf(ctx context.Context, conf *ClusterConf) (*RedisCac
 }
 
 // filterApiResByKind 获取对应的api资源信息
-func filterApiResByKind(kind string, allRes []*metav1.APIResourceList) map[string]GroupKindVersionResource {
+func filterApiResByKind(kind, crdName string, allRes []*metav1.APIResourceList) map[string]GroupKindVersionResource {
 	resources := make(map[string]GroupKindVersionResource, 0)
 	for _, apiResList := range allRes {
 		for _, res := range apiResList.APIResources {
@@ -387,18 +387,7 @@ func filterApiResByKind(kind string, allRes []*metav1.APIResourceList) map[strin
 			if strings.Contains(apiResList.GroupVersion, "/") {
 				group, ver = stringx.Partition(apiResList.GroupVersion, "/")
 			}
-			// 列出所有api-resources
-			if kind == "" {
-				resources[apiResList.GroupVersion] = append(resources[apiResList.GroupVersion],
-					map[string]interface{}{
-						"group":      group,
-						"kind":       res.Kind,
-						"version":    ver,
-						"resource":   res.Name,
-						"namespaced": res.Namespaced,
-					})
-			} else if res.Kind == kind {
-				// 仅列出crd
+			if (kind != "" && res.Kind == kind) || (crdName != "" && res.Name == crdName) {
 				resources[apiResList.GroupVersion] = append(resources[apiResList.GroupVersion],
 					map[string]interface{}{
 						"group":      group,

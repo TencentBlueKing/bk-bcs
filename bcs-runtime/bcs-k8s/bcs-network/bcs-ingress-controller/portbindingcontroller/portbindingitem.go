@@ -61,15 +61,17 @@ func (pbih *portBindingItemHandler) ensureItem(
 	for _, lbObj := range item.PoolItemLoadBalancers {
 		listenerName := common.GetListenerNameWithProtocol(
 			lbObj.LoadbalancerID, item.Protocol, item.StartPort, item.EndPort)
-		listener := &networkextensionv1.Listener{}
+		rawListener := &networkextensionv1.Listener{}
 		if err := pbih.k8sClient.Get(context.Background(), k8sapitypes.NamespacedName{
 			Name:      listenerName,
 			Namespace: item.PoolNamespace,
-		}, listener); err != nil {
+		}, rawListener); err != nil {
 			blog.Warnf("failed to get listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
 		}
 
+		// do not update informer cache directly
+		listener := rawListener.DeepCopy()
 		// listener has targetGroup
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
 			// listener has not synced
@@ -139,11 +141,11 @@ func (pbih *portBindingItemHandler) deleteItem(
 	for _, lbObj := range item.PoolItemLoadBalancers {
 		listenerName := common.GetListenerNameWithProtocol(
 			lbObj.LoadbalancerID, item.Protocol, item.StartPort, item.EndPort)
-		listener := &networkextensionv1.Listener{}
+		rawListener := &networkextensionv1.Listener{}
 		if err := pbih.k8sClient.Get(context.Background(), k8sapitypes.NamespacedName{
 			Name:      listenerName,
 			Namespace: item.PoolNamespace,
-		}, listener); err != nil {
+		}, rawListener); err != nil {
 			if k8serrors.IsNotFound(err) {
 				blog.Warnf("listener %s/%s not found, no need to clean", listenerName, item.PoolNamespace)
 				continue
@@ -151,6 +153,8 @@ func (pbih *portBindingItemHandler) deleteItem(
 			blog.Warnf("get listener %s/%s failed, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)
 		}
+		// do not update informer cache directly
+		listener := rawListener.DeepCopy()
 		if listener.Spec.TargetGroup == nil || len(listener.Spec.TargetGroup.Backends) == 0 {
 			if listener.Status.Status == networkextensionv1.ListenerStatusSynced {
 				blog.Infof("listener %s/%s backend cleaned and synced", listenerName, item.PoolNamespace)

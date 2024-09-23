@@ -37,19 +37,16 @@
         <bk-radio label="kv">{{ t('键值型') }}</bk-radio>
       </bk-radio-group>
     </bk-form-item>
-    <!-- @todo 补充编辑场景下，类型切换时的校验逻辑 -->
     <bk-form-item
       v-if="localData.config_type === 'kv'"
       :label="t('数据类型')"
-      property="kv_type"
-      :description="t('tips.type')">
-      <bk-radio-group
-        v-model="localData.data_type"
-        :class="{ 'en-type-group': locale === 'en' }"
-        @change="handleChange">
-        <bk-radio label="any">{{ t('任意类型') }}</bk-radio>
-        <bk-radio v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :label="kvType.id">{{ kvType.name }}</bk-radio>
-      </bk-radio-group>
+      property="data_type"
+      :description="t('tips.type')"
+      required>
+      <bk-select v-model="localData.data_type" class="type-select" :clearable="false" @select="handleChange">
+        <bk-option id="any" :name="t('任意类型')" />
+        <bk-option v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :id="kvType.id" :name="kvType.name" />
+      </bk-select>
     </bk-form-item>
     <!-- 上线审批 -->
     <bk-form-item>
@@ -242,8 +239,12 @@
     selValidationError.value = !localData.value.approver.length;
   };
 
-  const handleConfigTypeChange = (val: string) => {
-    localData.value.data_type = val === 'file' ? '' : 'any';
+  const handleConfigTypeChange = () => {
+    if (localData.value.config_type === 'kv') {
+      localData.value.data_type = 'any';
+    } else {
+      localData.value.data_type = '';
+    }
     handleChange();
   };
 
@@ -260,10 +261,8 @@
 </script>
 
 <style lang="scss" scoped>
-  .en-type-group {
-    :deep(.bk-radio ~ .bk-radio) {
-      margin-left: 20px;
-    }
+  .type-select {
+    width: 240px;
   }
   .label-key {
     display: flex;

@@ -122,7 +122,7 @@
     },
   );
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = computed(() => (config: ITemplateConfigItem) => {
     const { path, name } = config.spec;
     if (path.endsWith('/')) {

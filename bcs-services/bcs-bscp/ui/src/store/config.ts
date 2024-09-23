@@ -26,6 +26,9 @@ export default defineStore('config', () => {
   // 非配置模板中存在的冲突文件个数
   const conflictFileCount = ref(0);
 
+  // 是否只查看冲突配置项
+  const onlyViewConflict = ref(false);
+
   return {
     allConfigCount,
     versionData,
@@ -34,5 +37,6 @@ export default defineStore('config', () => {
     publishedVersionId,
     conflictFileCount,
     allExistConfigCount,
+    onlyViewConflict,
   };
 });

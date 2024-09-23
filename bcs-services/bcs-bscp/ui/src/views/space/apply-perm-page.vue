@@ -27,8 +27,7 @@
 
   const permTitle = computed(() => {
     if (applyPermResource.value.length > 0) {
-      // 暂时只展示最上层权限名称
-      const resource = applyPermResource.value[0];
+      const resource = applyPermResource.value[applyPermResource.value.length - 1];
       // 权限名称未做国际化，用action字段代替
       const permissionName = locale.value === 'en' ? ` ${resource.action} ` : resource.action_name;
       return `${t('无')}${permissionName}${t('权限')}`;

@@ -168,7 +168,7 @@ type CanaryStrategy struct {
 
 // CanaryStep xxx
 type CanaryStep struct {
-	Partition *int32                 `json:"partition,omitempty"`
+	Partition *intstr.IntOrString    `json:"partition,omitempty"`
 	Pause     *CanaryPause           `json:"pause,omitempty"`
 	Hook      *hookv1alpha1.HookStep `json:"hook,omitempty"`
 }

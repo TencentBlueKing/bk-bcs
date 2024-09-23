@@ -24,13 +24,20 @@ import (
 字段规范:
 1. 字段名使用驼峰命名法，表字段使用 _ 分隔
 2. bool/int/float/datetime 等类型使用默认字段类型
-3. string 类型必须指定类型和长度，字段是索引的，设置为 varchar(191)
+3. string 类型必须指定类型和长度
+4. index 固定varchar(191), (mysql 5.6索引长度限制767byte, utf8mb4下最长191)
 **/
 
-// TaskRecords 任务记录
-type TaskRecords struct {
+var (
+	// UnixZeroTime mysql 8.0 版本以上不能写入, 使用unix 0时作为zero time
+	// https://dev.mysql.com/doc/refman/8.0/en/datetime.html
+	UnixZeroTime = time.Unix(0, 0)
+)
+
+// TaskRecord 任务记录
+type TaskRecord struct {
 	gorm.Model
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255);uniqueIndex:idx_task_id"` // 唯一索引
+	TaskID              string            `json:"taskID" gorm:"type:varchar(191);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
 	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(255)"`
 	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(255)"`
@@ -39,10 +46,9 @@ type TaskRecords struct {
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
 	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
-	CommonPayload       []byte            `json:"commonPayload" gorm:"type:text"`
+	CommonPayload       string            `json:"commonPayload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:text"`
-	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Start               time.Time         `json:"start"`
@@ -52,19 +58,41 @@ type TaskRecords struct {
 }
 
 // TableName ..
-func (t *TaskRecords) TableName() string {
+func (t *TaskRecord) TableName() string {
 	return "task_records"
 }
 
-// StepRecords 步骤记录
-type StepRecords struct {
+// BeforeCreate ..
+func (t *TaskRecord) BeforeCreate(tx *gorm.DB) error {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
+}
+
+// BeforeUpdate ..
+func (t *TaskRecord) BeforeUpdate(tx *gorm.DB) error {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
+}
+
+// StepRecord 步骤记录
+type StepRecord struct {
 	gorm.Model
-	TaskID              string            `json:"taskID" gorm:"type:varchar(255);index:idx_task_id"` // 索引
-	Name                string            `json:"name" gorm:"type:varchar(255)"`
+	TaskID              string            `json:"taskID" gorm:"type:varchar(191);uniqueIndex:idx_task_id_step_name"`
+	Name                string            `json:"name" gorm:"type:varchar(191);uniqueIndex:idx_task_id_step_name"`
 	Alias               string            `json:"alias" gorm:"type:varchar(255)"`
 	Executor            string            `json:"executor" gorm:"type:varchar(255)"`
 	Params              map[string]string `json:"input" gorm:"type:text;serializer:json"`
-	Payload             []byte            `json:"payload" gorm:"type:text"`
+	Payload             string            `json:"payload" gorm:"type:text"`
 	Status              string            `json:"status" gorm:"type:varchar(255)"`
 	Message             string            `json:"message" gorm:"type:varchar(255)"`
 	ETA                 *time.Time        `json:"eta"`
@@ -78,12 +106,34 @@ type StepRecords struct {
 }
 
 // TableName ..
-func (t *StepRecords) TableName() string {
+func (t *StepRecord) TableName() string {
 	return "task_step_records"
 }
 
+// BeforeCreate ..
+func (t *StepRecord) BeforeCreate(tx *gorm.DB) error {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
+}
+
+// BeforeUpdate ..
+func (t *StepRecord) BeforeUpdate(tx *gorm.DB) error {
+	if t.Start.IsZero() {
+		t.Start = UnixZeroTime
+	}
+	if t.End.IsZero() {
+		t.End = UnixZeroTime
+	}
+	return nil
+}
+
 // ToStep 类型转换
-func (t *StepRecords) ToStep() *types.Step {
+func (t *StepRecord) ToStep() *types.Step {
 	return &types.Step{
 		Name:                t.Name,
 		Alias:               t.Alias,

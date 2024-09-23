@@ -37,9 +37,9 @@
 import { isEqual } from 'lodash';
 import { computed, ref, watch } from 'vue';
 
+import SelectExtension from '@/components/select-extension.vue';
 import { useCluster } from '@/composables/use-app';
 import $router from '@/router';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 const props = defineProps({
   clusters: {

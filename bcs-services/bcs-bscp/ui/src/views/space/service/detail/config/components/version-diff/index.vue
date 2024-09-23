@@ -14,7 +14,8 @@
           :selected-config="props.selectedConfig"
           :selected-kv-config-id="selectedKV"
           :is-publish="props.showPublishBtn"
-          @selected="handleSelectDiffItem" />
+          @selected="handleSelectDiffItem"
+          @render="publishBtnLoading = $event" />
         <div class="diff-content-area">
           <diff :diff="diffDetailData" :id="appId" :selected-kv-config-id="selectedKV" :loading="false">
             <template #leftHead>
@@ -54,7 +55,13 @@
     <template #footer>
       <div class="actions-btns">
         <slot name="footerActions">
-          <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">
+          <bk-button
+            v-if="showPublishBtn"
+            :loading="publishBtnLoading"
+            :disabled="publishBtnLoading"
+            class="publish-btn"
+            theme="primary"
+            @click="emits('publish')">
             {{ isApprovalMode ? t('通过') : t('上线版本') }}
           </bk-button>
           <bk-button v-if="isApprovalMode" @click="emits('reject')">{{ t('驳回') }}</bk-button>
@@ -79,6 +86,8 @@
     // 差异详情数据
     id: 0,
     contentType: 'text',
+    is_secret: false,
+    secret_hidden: false,
     current: {
       language: '',
       content: '',
@@ -114,10 +123,12 @@
   const diffDetailData = ref<IDiffDetail>(getDefaultDiffData());
 
   const loading = computed(() => versionListLoading.value);
+  const publishBtnLoading = ref(true);
 
   watch(
     () => props.show,
     async (val) => {
+      publishBtnLoading.value = true;
       if (val) {
         await getVersionList();
         if (props.baseVersionId) {

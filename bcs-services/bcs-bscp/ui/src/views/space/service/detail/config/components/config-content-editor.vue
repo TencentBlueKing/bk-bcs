@@ -147,6 +147,7 @@
       .btns {
         display: flex;
         align-items: center;
+        gap: 10px;
         & > span {
           cursor: pointer;
           &:hover {

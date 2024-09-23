@@ -40,10 +40,6 @@ type GitOpsProxy interface {
 	Init() error
 }
 
-var (
-	tencentUserRegexp = regexp.MustCompile("^(v_|p_|[a-z])[a-z]+$")
-)
-
 // UserInfo for token validate
 type UserInfo struct {
 	*jwt.UserClaimsInfo
@@ -61,6 +57,10 @@ func (user *UserInfo) GetUser() string {
 	return ""
 }
 
+const (
+	poTencentUserPrefix = "potencent_"
+)
+
 // GetJWTInfo from request
 func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 	raw := req.Header.Get("Authorization")
@@ -72,7 +72,11 @@ func GetJWTInfo(req *http.Request, client *jwt.JWTClient) (*UserInfo, error) {
 		userName := req.Header.Get(common.HeaderBKUserName)
 		user.UserName = userName
 	}
-	user.IsTencent = tencentUserRegexp.MatchString(user.GetUser())
+	user.IsTencent = true
+	if strings.HasPrefix(user.GetUser(), poTencentUserPrefix) {
+		user.UserName = strings.TrimPrefix(user.UserName, poTencentUserPrefix)
+		user.IsTencent = false
+	}
 	return user, nil
 }
 

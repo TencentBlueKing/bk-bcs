@@ -10,7 +10,7 @@
     </div>
     <div class="table-container" v-show="expand">
       <div class="table-head">
-        <div class="th-cell name">{{ t('配置文件绝对路径') }}</div>
+        <div class="th-cell name">{{ t('配置文件名') }}</div>
         <div class="th-cell type">{{ t('配置文件格式') }}</div>
         <div class="th-cell memo">
           <div class="th-cell-edit">
@@ -168,17 +168,13 @@
         </div>
         <div class="th-cell delete"></div>
       </div>
-      <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="name" v-slot="{ item, index }">
+      <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="fileAP" v-slot="{ item, index }">
         <div class="table-row">
           <div class="not-editable td-cell name">
-            <bk-overflow-title type="tips">
-              {{ item.path + item.name }}
-            </bk-overflow-title>
+            {{ item.fileAP }}
           </div>
           <div class="not-editable td-cell type">
-            <bk-overflow-title type="tips">
-              {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
-            </bk-overflow-title>
+            {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
           </div>
           <div class="td-cell-editable td-cell memo" :class="{ change: isContentChange(item.id, 'memo') }">
             <bk-input v-model="item.memo" :placeholder="t('请输入')"></bk-input>
@@ -274,8 +270,21 @@
   watch(
     () => props.tableData,
     () => {
-      data.value = cloneDeep(props.tableData);
-      initData.value = cloneDeep(props.tableData);
+      const configList = props.tableData.map((item) => {
+        const { path, name } = item;
+        let fileAP;
+        if (path.endsWith('/')) {
+          fileAP = `${path}${name}`;
+        } else {
+          fileAP = `${path}/${name}`;
+        }
+        return {
+          ...item,
+          fileAP,
+        };
+      });
+      data.value = cloneDeep(configList);
+      initData.value = cloneDeep(configList);
     },
     { deep: true, immediate: true },
   );

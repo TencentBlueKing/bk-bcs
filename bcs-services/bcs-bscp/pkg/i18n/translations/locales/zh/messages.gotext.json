@@ -7,6 +7,11 @@
             "translation": "id不能为空"
         },
         {
+            "id": "invalid file name",
+            "message": "invalid file name",
+            "translation": "无效的文件名"
+        },
+        {
             "id": "read file failed, err: {ErrR}",
             "message": "read file failed, err: {ErrR}",
             "translation": "读取文件失败, err: {ErrR}",
@@ -140,24 +145,24 @@
             ]
         },
         {
-            "id": "list config item failed, err: {Err}",
-            "message": "list config item failed, err: {Err}",
-            "translation": "获取配置项失败, err: {Err}",
+            "id": "list config item failed, err: {ErrC}",
+            "message": "list config item failed, err: {ErrC}",
+            "translation": "获取配置项失败, err: {ErrC}",
             "placeholders": [
                 {
-                    "id": "Err",
+                    "id": "ErrC",
                     "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
-                    "expr": "err"
+                    "expr": "errC"
                 }
             ]
         },
         {
             "id": "get the current number of service config items failed, err: {Err}",
             "message": "get the current number of service config items failed, err: {Err}",
-            "translation": "",
+            "translation": "获取当前服务配置项总数失败, err: {Err}",
             "placeholders": [
                 {
                     "id": "Err",
@@ -215,6 +220,11 @@
             ]
         },
         {
+            "id": "sensitive information cannot be exported",
+            "message": "sensitive information cannot be exported",
+            "translation": "敏感信息无法导出"
+        },
+        {
             "id": "client ids is empty",
             "message": "client ids is empty",
             "translation": "客户端 id 为空"
@@ -256,6 +266,219 @@
             "id": "batch delete failed",
             "message": "batch delete failed",
             "translation": "批量删除失败"
+        },
+        {
+            "id": "sensitive data is not visible, unable to view actual content",
+            "message": "sensitive data is not visible, unable to view actual content",
+            "translation": "敏感数据不可见，无法查看实际内容"
+        },
+        {
+            "id": "not legal JSON data",
+            "message": "not legal JSON data",
+            "translation": "JSON数据不合法"
+        },
+        {
+            "id": "json format error, err: {Err}",
+            "message": "json format error, err: {Err}",
+            "translation": "json 格式化错误, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "yaml format error, err: {Err}",
+            "message": "yaml format error, err: {Err}",
+            "translation": "yaml 格式化错误, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "{Format} type not supported",
+            "message": "{Format} type not supported",
+            "translation": "{Format} 类型不支持",
+            "placeholders": [
+                {
+                    "id": "Format",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "req.Format"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} kv type error",
+            "message": "config item {Key} kv type error",
+            "translation": "配置项 {Key} 类型错误",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "format error, please check the key: {Key}",
+            "message": "format error, please check the key: {Key}",
+            "translation": "格式错误, 请检查键：{Key}",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} format error",
+            "message": "config item {Key} format error",
+            "translation": "配置项 {Key} 格式错误",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} json format error",
+            "message": "config item {Key} json format error",
+            "translation": "配置项 {Key} json格式错误",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} yaml format error",
+            "message": "config item {Key} yaml format error",
+            "translation": "配置项 {Key} yaml格式错误",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} secret hidden error",
+            "message": "config item {Key} secret hidden error",
+            "translation": "配置项 {Key} 密钥是否显示设置错误",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "the key type for config item {Key} cannot be empty",
+            "message": "the key type for config item {Key} cannot be empty",
+            "translation": "配置项 {Key} 的密钥类型不能为空",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} secret type error, err: {Err}",
+            "message": "config item {Key} secret type error, err: {Err}",
+            "translation": "配置项 {Key} 密钥类型错误, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                },
+                {
+                    "id": "Err",
+                    "string": "%[2]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 2,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "config item {Key} value error",
+            "message": "config item {Key} value error",
+            "translation": "配置项 {Key} 值错误",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "key"
+                }
+            ]
+        },
+        {
+            "id": "please set a password",
+            "message": "please set a password",
+            "translation": "请设置密码"
+        },
+        {
+            "id": "the certificate format is incorrect, only X.509 format is supported",
+            "message": "the certificate format is incorrect, only X.509 format is supported",
+            "translation": "证书格式不正确, 仅支持X.509格式"
+        },
+        {
+            "id": "delete template from template sets failed",
+            "message": "delete template from template sets failed",
+            "translation": ""
         },
         {
             "id": "template variable name must start with {TemplateVariablePrefix}",
@@ -423,7 +646,7 @@
         {
             "id": "the config file {Joindir_name} already exists in this space and cannot be created again",
             "message": "the config file {Joindir_name} already exists in this space and cannot be created again",
-            "translation": "此空间下配置文件 {Joindir_name} 已存在，无法重复创建",
+            "translation": "此空间下配置文件 {Joindir_name} 已存在, 无法重复创建",
             "placeholders": [
                 {
                     "id": "Joindir_name",
@@ -663,21 +886,6 @@
             ]
         },
         {
-            "id": "the config file {Name} under this service already exists and cannot be created again",
-            "message": "the config file {Name} under this service already exists and cannot be created again",
-            "translation": "此服务下的配置文件 {Name} 已存在, 无法重复创建",
-            "placeholders": [
-                {
-                    "id": "Name",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)"
-                }
-            ]
-        },
-        {
             "id": "delete one app template binding instance by app id failed, err: {Err}",
             "message": "delete one app template binding instance by app id failed, err: {Err}",
             "translation": "移除服务模板套餐失败, err: {Err}",
@@ -719,6 +927,106 @@
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
                     "expr": "e"
+                }
+            ]
+        },
+        {
+            "id": "get config item failed, err: {Err}",
+            "message": "get config item failed, err: {Err}",
+            "translation": "获取配置项失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the data has not been deleted",
+            "message": "the data has not been deleted",
+            "translation": "配置项没有被删除"
+        },
+        {
+            "id": "get the latest released version failed, err: {Err}",
+            "message": "get the latest released version failed, err: {Err}",
+            "translation": "获取最新发布版本失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get the published config failed, err: {Err}",
+            "message": "get the published config failed, err: {Err}",
+            "translation": "获取已发布的配置失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "recovery failed. A file with the same path exists and is not in a new state",
+            "message": "recovery failed. A file with the same path exists and is not in a new state",
+            "translation": "恢复失败。具有相同路径的文件已存在，但未处于新状态"
+        },
+        {
+            "id": "recover config item failed, err: {Err}",
+            "message": "recover config item failed, err: {Err}",
+            "translation": "恢复配置项失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "get records greater than the latest released version failed, err: {Err}",
+            "message": "get records greater than the latest released version failed, err: {Err}",
+            "translation": "获取大于最新发布版本的记录失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "message": "the total number of config items(including template and non-template) \n\t\t\texceeded the limit {AppConfigCnt}",
+            "translation": "该服务配置项的总数（包括模板和非模板）超出限制 {AppConfigCnt}",
+            "placeholders": [
+                {
+                    "id": "AppConfigCnt",
+                    "string": "%[1]d",
+                    "type": "int",
+                    "underlyingType": "int",
+                    "argNum": 1,
+                    "expr": "appConfigCnt"
                 }
             ]
         },
@@ -912,6 +1220,76 @@
                     "expr": "err"
                 }
             ]
+        },
+        {
+            "id": "not a KV type service",
+            "message": "not a KV type service",
+            "translation": "不是kv类型的服务"
+        },
+        {
+            "id": "list kv failed, err: {Err}",
+            "message": "list kv failed, err: {Err}",
+            "translation": "获取kv列表失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "batch import of KV config failed, err: {Err}",
+            "message": "batch import of KV config failed, err: {Err}",
+            "translation": "批量导入KV配置失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "the type of config item {Key} is incorrect",
+            "message": "the type of config item {Key} is incorrect",
+            "translation": "配置项 {Key} 的类型不正确",
+            "placeholders": [
+                {
+                    "id": "Key",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "v.KvSpec.Key"
+                }
+            ]
+        },
+        {
+            "id": "clearing draft area failed, err: {Err}",
+            "message": "clearing draft area failed, err: {Err}",
+            "translation": "清除草稿区失败, err: {Err}",
+            "placeholders": [
+                {
+                    "id": "Err",
+                    "string": "%[1]v",
+                    "type": "error",
+                    "underlyingType": "interface{Error() string}",
+                    "argNum": 1,
+                    "expr": "err"
+                }
+            ]
+        },
+        {
+            "id": "save kv failed",
+            "message": "save kv failed",
+            "translation": "kv保持失败"
         },
         {
             "id": "get excluded kv failed, err: {Err}",
@@ -1192,34 +1570,69 @@
             "translation": "revision没有被设置"
         },
         {
-            "id": "invalid path, length should \u003e= 1",
-            "message": "invalid path, length should \u003e= 1",
-            "translation": "路径无效, 长度应为 \u003e= 1"
-        },
-        {
-            "id": "invalid path, length should \u003c= 1024",
-            "message": "invalid path, length should \u003c= 1024",
-            "translation": "路径无效, 长度应为 \u003c= 1024"
-        },
-        {
-            "id": "invalid path, should start with '/'",
-            "message": "invalid path, should start with '/'",
-            "translation": "路径无效, 应以“/”开头"
-        },
-        {
-            "id": "invalid path {Part}, path cannot all be '.'",
-            "message": "invalid path {Part}, path cannot all be '.'",
-            "translation": "路径 {Part} 无效, 路径不能全部为“.”",
+            "id": "invalid path {Path}, length should \u003e= 1",
+            "message": "invalid path {Path}, length should \u003e= 1",
+            "translation": "路径 {Path} 无效，长度应为 \u003e= 1",
             "placeholders": [
                 {
-                    "id": "Part",
+                    "id": "Path",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "part"
+                    "expr": "path"
                 }
             ]
+        },
+        {
+            "id": "invalid path {Path}, length should \u003c= 1024",
+            "message": "invalid path {Path}, length should \u003c= 1024",
+            "translation": "路径 {Path} 无效，长度应为 \u003c= 1024",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path {Path}, the path must start with '/'",
+            "message": "invalid path {Path}, the path must start with '/'",
+            "translation": "路径 {Path} 无效，路径必须以“/”开头",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translation": "路径 {Path} 无效，路径不能包含连续的“/”",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "路径无效, 长度应为 \u003e= 1"
         },
         {
             "id": "invalid path, length should \u003c= 256",
@@ -1363,6 +1776,21 @@
             "id": "invalid name {Name}, name cannot all be '.'",
             "message": "invalid name {Name}, name cannot all be '.'",
             "translation": "名称 {Name} 无效, 名称不能全部为“.”",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid name {Name}, there can't be any /",
+            "message": "invalid name {Name}, there can't be any /",
+            "translation": "名称 {Name} 无效，不能有 /",
             "placeholders": [
                 {
                     "id": "Name",
@@ -1527,6 +1955,11 @@
             "id": "appID can not be 0",
             "message": "appID can not be 0",
             "translation": "appID不能为0"
+        },
+        {
+            "id": "bizID can not be 0",
+            "message": "bizID can not be 0",
+            "translation": ""
         },
         {
             "id": "the total number of template set {TmplSetID}'s templates exceeded the limit {TmplSetTmplCnt}",

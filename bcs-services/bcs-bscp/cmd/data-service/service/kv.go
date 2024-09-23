@@ -15,12 +15,12 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/i18n"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
@@ -67,6 +67,7 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 		Value:  req.Spec.Value,
 		KvType: table.DataType(req.Spec.KvType),
 	}
+
 	// UpsertKv 创建｜更新kv
 	version, err := s.vault.UpsertKv(kt, opt)
 	if err != nil {
@@ -151,6 +152,7 @@ func (s *Service) UpdateKv(ctx context.Context, req *pbds.UpdateKvReq) (*pbbase.
 		Md5:       tools.MD5(req.Spec.Value),
 		ByteSize:  uint64(len(req.Spec.Value)),
 	}
+	kv.Spec.SecretHidden = req.Spec.SecretHidden
 	if e := s.dao.Kv().Update(kt, kv); e != nil {
 		logs.Errorf("update kv failed, err: %v, rid: %s", e, kt.Rid)
 		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "update kv failed, err: %v", err))
@@ -175,8 +177,6 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		Sort:  req.Sort,
 		Order: types.Order(req.Order),
 	}
-	// StrToUint32Slice the comma separated string goes to uint32 slice
-	topIds, _ := tools.StrToUint32Slice(req.TopIds)
 	opt := &types.ListKvOption{
 		BizID:     req.BizId,
 		AppID:     req.AppId,
@@ -185,7 +185,7 @@ func (s *Service) ListKvs(ctx context.Context, req *pbds.ListKvsReq) (*pbds.List
 		All:       req.All,
 		Page:      page,
 		KvType:    req.KvType,
-		TopIDs:    topIds,
+		TopIDs:    req.TopIds,
 		Status:    req.Status,
 	}
 	po := &types.PageOption{
@@ -265,10 +265,9 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 }
 
 // BatchUpsertKvs is used to insert or update key-value data in bulk.
-// 1.键存在则更新，但保证是类型一致
+// 1.键存在则更新, 类型不一致直接提示错误
 // 2.键不存在则新增
 // replace_all为true时，清空表中的数据，但保证前面两条逻辑
-// nolint:funlen
 func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) {
 
 	// FromGrpcContext used only to obtain Kit through grpc context.
@@ -276,95 +275,62 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 
 	app, err := s.dao.App().Get(kt, req.BizId, req.AppId)
 	if err != nil {
-		return nil, fmt.Errorf("get app fail,err : %v", err)
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "get app failed, err: %v", err))
 	}
-
-	var editingKeyArr []string
+	if app.Spec.ConfigType != table.KV {
+		return nil, errors.New(i18n.T(kt, "not a KV type service"))
+	}
 	for _, kv := range req.Kvs {
 		if !checkKVTypeMatch(table.DataType(kv.KvSpec.KvType), app.Spec.DataType) {
-			return nil, fmt.Errorf("kv type does not match the data type defined in the application")
+			return nil, errors.New(i18n.T(kt, "kv type does not match the data type defined in the application"))
 		}
-		editingKeyArr = append(editingKeyArr, kv.KvSpec.Key)
 	}
+
 	kvStateArr := []string{
 		string(table.KvStateUnchange),
 		string(table.KvStateAdd),
 		string(table.KvStateRevise),
 	}
-	editingKv, err := s.dao.Kv().ListAllKvByKey(kt, req.AppId, req.BizId, editingKeyArr, kvStateArr)
+
+	// 1. 查询过滤删除后的kv
+	kvs, err := s.dao.Kv().ListAllByAppID(kt, req.GetAppId(), req.GetBizId(), kvStateArr)
 	if err != nil {
-		logs.Errorf("list editing kv failed, err: %v, rid: %s", err, kt.Rid)
-		return nil, err
-	}
-
-	newKvMap := make(map[string]*pbds.BatchUpsertKvsReq_Kv)
-	for _, kv := range req.Kvs {
-		newKvMap[kv.KvSpec.Key] = kv
-	}
-
-	editingKvMap := make(map[string]*table.Kv)
-	for _, kv := range editingKv {
-		editingKvMap[kv.Spec.Key] = kv
-	}
-
-	// 在vault中执行更新
-	versionMap, err := s.doBatchUpsertVault(kt, req, editingKvMap)
-	if err != nil {
-		return nil, err
-	}
-
-	toUpdate, toCreate, err := s.checkKvs(kt, req, editingKvMap, versionMap)
-	if err != nil {
-		return nil, err
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "list kv failed, err: %v", err))
 	}
 
 	tx := s.dao.GenQuery().Begin()
-
-	// 清空草稿区
-	// 区分真删除和假删除
-	if req.ReplaceAll {
-		reallyDelete := []uint32{}
-		fakeDelete := make([]*table.Kv, 0)
-		kvs, lErr := s.dao.Kv().ListAllByAppID(kt, req.GetAppId(), req.GetBizId(), []string{table.KvStateAdd.String(),
-			table.KvStateDelete.String(), table.KvStateRevise.String(), table.KvStateUnchange.String()})
-		if lErr != nil {
-			return nil, lErr
-		}
-
-		for _, v := range kvs {
-			if newKvMap[v.Spec.Key] == nil {
-				if v.KvState == table.KvStateAdd {
-					reallyDelete = append(reallyDelete, v.ID)
-				} else {
-					v.Revision.Reviser = kt.User
-					v.Revision.UpdatedAt = time.Now().UTC()
-					v.KvState = table.KvStateDelete
-					fakeDelete = append(fakeDelete, v)
-				}
-			}
-		}
-
-		if err = s.dao.Kv().BatchDeleteWithTx(kt, tx, req.GetBizId(), req.GetAppId(), reallyDelete); err != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-			}
-			return nil, err
-		}
-
-		if err = s.dao.Kv().BatchUpdateWithTx(kt, tx, fakeDelete); err != nil {
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
-			}
-			return nil, err
-		}
+	// 2. 检测服务配置项类型（相同的key类型是否一致）
+	if err = s.checkKVConfigItemTypes(kt, req, kvs); err != nil {
+		return nil, err
 	}
 
+	// 3. 清空草稿区域
+	if err = s.clearDraftKVStore(kt, tx, req, kvs); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	// 4. 在vault中执行更新
+	versionMap, err := s.doBatchUpsertVault(kt, req)
+	if err != nil {
+		return nil, errors.New(i18n.T(kt, "batch import of KV config failed, err: %v", err))
+	}
+
+	// 5. 处理需要编辑和创建的数据
+	toUpdate, toCreate, err := s.checkKvs(kt, tx, req, versionMap, kvStateArr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 5. 创建或更新kv等操作
 	if len(toCreate) > 0 {
 		if err = s.dao.Kv().BatchCreateWithTx(kt, tx, toCreate); err != nil {
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
-			return nil, err
+			return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "batch import of KV config failed, err: %v", err))
 		}
 	}
 
@@ -373,26 +339,83 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 			if rErr := tx.Rollback(); rErr != nil {
 				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 			}
-			return nil, err
+			return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "batch import of KV config failed, err: %v", err))
 		}
 	}
 
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, kt.Rid)
-		return nil, e
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "batch import of KV config failed, err: %v", e))
 	}
-	createId := []uint32{}
-	updateId := []uint32{}
+
+	createIds, updateIds := []uint32{}, []uint32{}
 	for _, item := range toCreate {
-		createId = append(createId, item.ID)
+		createIds = append(createIds, item.ID)
 	}
 	for _, item := range toUpdate {
-		updateId = append(updateId, item.ID)
+		updateIds = append(updateIds, item.ID)
 	}
-	mergedID := append(createId, updateId...) // nolint
+
 	return &pbds.BatchUpsertKvsResp{
-		Ids: mergedID,
+		Ids: tools.MergeAndDeduplicate(createIds, updateIds),
 	}, nil
+}
+
+// 检测键值对配置项类型
+func (s *Service) checkKVConfigItemTypes(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, kvs []*table.Kv) error {
+
+	existsKvs := map[string]string{}
+	for _, v := range kvs {
+		existsKvs[v.Spec.Key] = string(v.Spec.KvType)
+	}
+
+	for _, v := range req.GetKvs() {
+		kvType, exist := existsKvs[v.KvSpec.Key]
+		if exist && v.KvSpec.KvType != kvType {
+			return errors.New(i18n.T(kt, "the type of config item %s is incorrect", v.KvSpec.Key))
+		}
+	}
+
+	return nil
+}
+
+// 清空键值对草稿区域
+func (s *Service) clearDraftKVStore(kt *kit.Kit, tx *gen.QueryTx, req *pbds.BatchUpsertKvsReq,
+	kvs []*table.Kv) error {
+
+	if !req.ReplaceAll {
+		return nil
+	}
+
+	reallyDelete := []uint32{}
+	fakeDelete := make([]*table.Kv, 0)
+	for _, v := range kvs {
+		// 如果是新增类型需要真删除, 否则假删除
+		if v.KvState == table.KvStateAdd {
+			reallyDelete = append(reallyDelete, v.ID)
+		} else {
+			v.Revision.Reviser = kt.User
+			v.Revision.UpdatedAt = time.Now().UTC()
+			v.KvState = table.KvStateDelete
+			fakeDelete = append(fakeDelete, v)
+		}
+	}
+
+	if err := s.dao.Kv().BatchDeleteWithTx(kt, tx, req.GetBizId(), req.GetAppId(), reallyDelete); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kt, "clearing draft area failed, err: %v", err))
+	}
+
+	if err := s.dao.Kv().BatchUpdateWithTx(kt, tx, fakeDelete); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return errf.Errorf(errf.DBOpFailed, i18n.T(kt, "clearing draft area failed, err: %v", err))
+	}
+
+	return nil
 }
 
 func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (table.DataType, string, error) {
@@ -407,30 +430,17 @@ func (s *Service) getKv(kt *kit.Kit, bizID, appID, version uint32, key string) (
 }
 
 // doBatchUpsertVault is used to perform bulk insertion or update of key-value data in Vault.
-func (s *Service) doBatchUpsertVault(kt *kit.Kit, req *pbds.BatchUpsertKvsReq,
-	editingKvMap map[string]*table.Kv) (map[string]int, error) {
+func (s *Service) doBatchUpsertVault(kt *kit.Kit, req *pbds.BatchUpsertKvsReq) (map[string]int, error) {
 
 	versionMap := make(map[string]int)
-
 	for _, kv := range req.Kvs {
-
 		opt := &types.UpsertKvOption{
-			BizID: req.BizId,
-			AppID: req.AppId,
-			Key:   kv.KvSpec.Key,
-			Value: kv.KvSpec.Value,
+			BizID:  req.BizId,
+			AppID:  req.AppId,
+			Key:    kv.KvSpec.Key,
+			Value:  kv.KvSpec.Value,
+			KvType: table.DataType(kv.KvSpec.KvType),
 		}
-
-		if editing, exists := editingKvMap[kv.KvSpec.Key]; exists {
-			kvType, _, err := s.getKv(kt, req.BizId, req.AppId, editing.Spec.Version, kv.KvSpec.Key)
-			if err != nil {
-				return nil, err
-			}
-			opt.KvType = kvType
-		} else {
-			opt.KvType = table.DataType(kv.KvSpec.KvType)
-		}
-
 		version, err := s.vault.UpsertKv(kt, opt)
 		if err != nil {
 			return nil, err
@@ -442,8 +452,19 @@ func (s *Service) doBatchUpsertVault(kt *kit.Kit, req *pbds.BatchUpsertKvsReq,
 
 }
 
-func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMap map[string]*table.Kv,
-	versionMap map[string]int) (toUpdate, toCreate []*table.Kv, err error) {
+func (s *Service) checkKvs(kt *kit.Kit, tx *gen.QueryTx, req *pbds.BatchUpsertKvsReq, versionMap map[string]int,
+	kvStates []string) (toUpdate, toCreate []*table.Kv, err error) {
+
+	// 通过事务获取指定状态的kv
+	editingKvs, err := s.dao.Kv().ListAllByAppIDWithTx(kt, tx, req.GetAppId(), req.GetBizId(), kvStates)
+	if err != nil {
+		return nil, nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "list kv failed, err: %v", err))
+	}
+
+	editingKvMap := make(map[string]*table.Kv)
+	for _, kv := range editingKvs {
+		editingKvMap[kv.Spec.Key] = kv
+	}
 
 	for _, kv := range req.Kvs {
 
@@ -452,64 +473,54 @@ func (s *Service) checkKvs(kt *kit.Kit, req *pbds.BatchUpsertKvsReq, editingKvMa
 		var editing *table.Kv
 
 		if version, exists = versionMap[kv.KvSpec.Key]; !exists {
-			return nil, nil, errors.New("save kv fail")
+			return nil, nil, errors.New(i18n.T(kt, "save kv failed"))
 		}
 
 		now := time.Now().UTC()
+		kvSpec := &table.KvSpec{
+			Key:          kv.KvSpec.Key,
+			KvType:       table.DataType(kv.KvSpec.KvType),
+			Version:      uint32(version),
+			Memo:         kv.KvSpec.Memo,
+			SecretType:   table.SecretType(kv.KvSpec.SecretType),
+			SecretHidden: kv.KvSpec.SecretHidden,
+		}
+		kvAttachment := &table.KvAttachment{
+			BizID: req.BizId,
+			AppID: req.AppId,
+		}
+		contentSpec := &table.ContentSpec{
+			Signature: tools.SHA256(kv.KvSpec.Value),
+			Md5:       tools.MD5(kv.KvSpec.Value),
+			ByteSize:  uint64(len(kv.KvSpec.Value)),
+		}
 
 		if editing, exists = editingKvMap[kv.KvSpec.Key]; exists {
 			if editing.KvState == table.KvStateUnchange {
 				editing.KvState = table.KvStateRevise
 			}
 			toUpdate = append(toUpdate, &table.Kv{
-				ID:      editing.ID,
-				KvState: editing.KvState,
-				Spec: &table.KvSpec{
-					Key:     kv.KvSpec.Key,
-					Version: uint32(version),
-					KvType:  editing.Spec.KvType,
-					Memo:    kv.KvSpec.Memo,
-				},
-				Attachment: &table.KvAttachment{
-					BizID: req.BizId,
-					AppID: req.AppId,
-				},
-				Revision: editing.Revision,
-				ContentSpec: &table.ContentSpec{
-					Signature: tools.SHA256(kv.KvSpec.Value),
-					Md5:       tools.MD5(kv.KvSpec.Value),
-					ByteSize:  uint64(len(kv.KvSpec.Value)),
-				},
+				ID:          editing.ID,
+				KvState:     editing.KvState,
+				Spec:        kvSpec,
+				Attachment:  kvAttachment,
+				Revision:    editing.Revision,
+				ContentSpec: contentSpec,
 			})
-
 		} else {
 			toCreate = append(toCreate, &table.Kv{
-				KvState: table.KvStateAdd,
-				Spec: &table.KvSpec{
-					Key:     kv.KvSpec.Key,
-					Version: uint32(version),
-					KvType:  table.DataType(kv.KvSpec.KvType),
-					Memo:    kv.KvSpec.Memo,
-				},
-				Attachment: &table.KvAttachment{
-					BizID: req.BizId,
-					AppID: req.AppId,
-				},
+				KvState:    table.KvStateAdd,
+				Spec:       kvSpec,
+				Attachment: kvAttachment,
 				Revision: &table.Revision{
 					Creator:   kt.User,
 					Reviser:   kt.User,
 					CreatedAt: now,
 					UpdatedAt: now,
 				},
-				ContentSpec: &table.ContentSpec{
-					Signature: tools.SHA256(kv.KvSpec.Value),
-					Md5:       tools.MD5(kv.KvSpec.Value),
-					ByteSize:  uint64(len(kv.KvSpec.Value)),
-				},
+				ContentSpec: contentSpec,
 			})
-
 		}
-
 	}
 
 	return toUpdate, toCreate, nil

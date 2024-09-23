@@ -16,12 +16,14 @@ package moduleflag
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -123,6 +125,18 @@ func (ca *CreateAction) Handle(ctx context.Context,
 	if err := ca.importCloudModuleFlagList(); err != nil {
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cloud.String(),
+		ResourceID:   ca.req.CloudID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("录入云组件参数[%s]", ca.req.CloudID),
+		OpUser:       auth.GetUserFromCtx(ca.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		blog.Errorf("CreateCloudModuleFlag[%s] CreateOperationLog failed: %v", ca.req.CloudID, err)
 	}
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

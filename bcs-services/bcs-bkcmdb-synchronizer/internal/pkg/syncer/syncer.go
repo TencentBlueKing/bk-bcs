@@ -19,7 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
+	"strings"
+	"time"
 
 	bkcmdbkube "configcenter/src/kube/types" // nolint
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -28,6 +31,10 @@ import (
 	pmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	cmp "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage"
+	gdv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamedeployment/v1alpha1"
+	gsv1alpha1 "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/storage/tkex/gamestatefulset/v1alpha1"
+	"gorm.io/gorm"
+	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
@@ -36,6 +43,8 @@ import (
 	pm "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client/projectmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/db/sqlite"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/model"
 )
 
 // Syncer the syncer
@@ -125,14 +134,18 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 		clusterNetwork = append(clusterNetwork, cluster.NetworkSettings.ServiceIPv4CIDR)
 		clusterNetwork = append(clusterNetwork, cluster.NetworkSettings.MultiClusterCIDR...)
 	}
-
-	// GetBkCluster get bkcluster
-	bkCluster, err := s.GetBkCluster(cluster)
+	bkCluster, err := s.GetBkCluster(cluster, nil, false)
 	clusterType := "INDEPENDENT_CLUSTER"
 	if cluster.IsShared {
 		clusterType = "SHARE_CLUSTER"
 	}
-
+	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + cluster.ClusterID + ".db"
+	db := sqlite.Open(path)
+	if db == nil {
+		blog.Errorf("open db failed, path: %s", path)
+		return fmt.Errorf("open db failed, path: %s", path)
+	}
+	s.SyncStoreMigrate(db)
 	if err != nil { // nolint
 		if err.Error() == "cluster not found" { // nolint
 			var clusterBkBizID int64
@@ -141,7 +154,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 				if err != nil {
 					blog.Errorf("An error occurred: %s\n", err)
 				} else {
-					blog.Infof("Successfully converted string to int64: %d\n", bkBizID)
+					blog.Infof("Successfully converted string to int64: %d\n", clusterBkBizID)
 				}
 			} else {
 				clusterBkBizID = bkBizID
@@ -160,7 +173,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 				Network:          &clusterNetwork,
 				Type:             &clusterType,
 				Environment:      &cluster.Environment,
-			})
+			}, db)
 			if err != nil {
 				blog.Errorf("create bcs cluster failed, err: %s", err.Error())
 			}
@@ -169,9 +182,7 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 			return err
 		}
 	}
-
 	blog.Infof("get bcs cluster success, cluster: %v", bkCluster)
-
 	if bkCluster != nil {
 		// UpdateBcsCluster updates the BCS cluster with the given request.
 		err = s.CMDBClient.UpdateBcsCluster(&client.UpdateBcsClusterRequest{
@@ -185,30 +196,27 @@ func (s *Syncer) SyncCluster(cluster *cmp.Cluster) error {
 				Network:     &clusterNetwork,
 				Environment: &cluster.Environment,
 			},
-		})
+		}, db)
 		if err != nil {
 			blog.Errorf("update bcs cluster failed, err: %s", err.Error())
 		}
-
 		if *bkCluster.Type != clusterType {
 			// UpdateBcsClusterType updates the BCS cluster type with the given request.
 			err = s.CMDBClient.UpdateBcsClusterType(&client.UpdateBcsClusterTypeRequest{
 				BKBizID: &bkCluster.BizID,
 				ID:      &bkCluster.ID,
 				Type:    &clusterType,
-			})
+			}, db)
 			if err != nil {
 				blog.Errorf("update bcs cluster type failed, err: %s", err.Error())
 			}
 		}
-
 	}
-
 	return nil
 }
 
 // SyncNodes sync nodes
-func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -232,7 +240,7 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) 
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 
 	if err != nil {
 		blog.Errorf("get bk node failed, err: %s", err.Error())
@@ -254,6 +262,7 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) 
 
 		if _, ok := nodeMap[*v.Name]; !ok {
 			nodeToDelete = append(nodeToDelete, v.ID)
+			blog.Infof("nodeToDelete: %s+%s", bkCluster.Uid, *v.Name)
 		}
 	}
 
@@ -264,23 +273,29 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) 
 
 			if needToUpdate {
 				nodeToUpdate[bkNodeMap[k].ID] = updateData
+				blog.Infof("nodeToUpdate: %s+%s", bkCluster.Uid, v.Data.Name)
 			}
 		} else {
 			// GenerateBkNodeData generate bknode data from k8snode
-			nodeToAdd = append(nodeToAdd, s.GenerateBkNodeData(bkCluster, v))
+			nodeData, errN := s.GenerateBkNodeData(bkCluster, v)
+			if errN == nil {
+				nodeToAdd = append(nodeToAdd, nodeData)
+				blog.Infof("nodeToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
+			}
+
 		}
 	}
 
-	s.CreateBkNodes(bkCluster, &nodeToAdd)
-	s.DeleteBkNodes(bkCluster, &nodeToDelete) // nolint  not checked
-	s.UpdateBkNodes(bkCluster, &nodeToUpdate)
+	s.CreateBkNodes(bkCluster, &nodeToAdd, db)
+	s.DeleteBkNodes(bkCluster, &nodeToDelete, db) // nolint  not checked
+	s.UpdateBkNodes(bkCluster, &nodeToUpdate, db)
 
 	return err
 }
 
 // SyncNamespaces sync namespaces
 // nolint funlen
-func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -305,13 +320,13 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
 	}
 
-	blog.Infof("get bcs namespace success, namespaces: %v", bkNamespaceList)
+	blog.Infof("get bcs namespace success, namespaces: %d", len(*bkNamespaceList))
 
 	nsToAdd := make(map[int64][]bkcmdbkube.Namespace, 0)
 	nsToUpdate := make(map[int64]*client.UpdateBcsNamespaceRequestData, 0)
@@ -328,6 +343,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 
 		if _, ok := nsMap[v.Name]; !ok {
 			nsToDelete = append(nsToDelete, v.ID)
+			blog.Infof("nsToDelete: %s+%s", bkCluster.Uid, v.Name)
 		}
 	}
 
@@ -344,6 +360,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 			needToUpdate, updateData := s.CompareNamespace(bkNsMap[k], v)
 			if needToUpdate {
 				nsToUpdate[bkNsMap[k].ID] = updateData
+				blog.Infof("nsToUpdate: %s+%s", bkCluster.Uid, v.Data.Name)
 			}
 		} else {
 			bizid := bkCluster.BizID
@@ -356,63 +373,71 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 					if project != nil && project.Data != nil && project.Data.BusinessID != "" {
 						bizid, err = strconv.ParseInt(project.Data.BusinessID, 10, 64)
 						if err != nil {
-							blog.Errorf("parse string err: %v", err)
+							blog.Errorf("projectcode parse string err: %v", err)
 						}
 					}
 				} else {
-					blog.Errorf("get project error : %v", err)
+					blog.Errorf("projectcode get project error : %v", err)
 				}
+
+				blog.Infof("projectcode: %s, bizid: %d", projectCode, bizid)
 			}
+
+			//if bizid != bkCluster.BizID {
+			//	bizid = int64(71)
+			//}
 
 			if _, ok = nsToAdd[bizid]; ok {
 				nsToAdd[bizid] = append(nsToAdd[bizid], s.GenerateBkNsData(bkCluster, v))
+				blog.Infof("nsToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
 			} else {
 				nsToAdd[bizid] = []bkcmdbkube.Namespace{s.GenerateBkNsData(bkCluster, v)}
+				blog.Infof("nsToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
 			}
 		}
 	}
 
-	s.DeleteBkNamespaces(bkCluster, &nsToDelete) // nolint  not checked
-	s.CreateBkNamespaces(bkCluster, nsToAdd)
-	s.UpdateBkNamespaces(bkCluster, &nsToUpdate)
+	s.DeleteBkNamespaces(bkCluster, &nsToDelete, db) // nolint  not checked
+	s.CreateBkNamespaces(bkCluster, nsToAdd, db)
+	s.UpdateBkNamespaces(bkCluster, &nsToUpdate, db)
 
 	return nil
 }
 
 // SyncWorkloads sync workloads
-func (s *Syncer) SyncWorkloads(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) SyncWorkloads(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	// syncDeployments sync deployments
-	err := s.syncDeployments(cluster, bkCluster)
+	err := s.syncDeployments(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync deployment failed, err: %s", err.Error())
 	}
 
 	// syncStatefulSets sync statefulsets
-	err = s.syncStatefulSets(cluster, bkCluster)
+	err = s.syncStatefulSets(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync statefulset failed, err: %s", err.Error())
 	}
 
 	// syncDaemonSets sync daemonsets
-	err = s.syncDaemonSets(cluster, bkCluster)
+	err = s.syncDaemonSets(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync daemonset failed, err: %s", err.Error())
 	}
 
 	// syncGameDeployments sync gamedeployments
-	err = s.syncGameDeployments(cluster, bkCluster)
+	err = s.syncGameDeployments(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync gamedeployment failed, err: %s", err.Error())
 	}
 
 	// syncGameStatefulSets sync gamestatefulsets
-	err = s.syncGameStatefulSets(cluster, bkCluster)
+	err = s.syncGameStatefulSets(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync gamestatefulset failed, err: %s", err.Error())
 	}
 
 	// syncWorkloadPods sync workloadPods
-	err = s.syncWorkloadPods(cluster, bkCluster)
+	err = s.syncWorkloadPods(cluster, bkCluster, db)
 	if err != nil {
 		blog.Errorf("sync workload pods failed, err: %s", err.Error())
 	}
@@ -422,7 +447,7 @@ func (s *Syncer) SyncWorkloads(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clust
 
 // syncDeployments sync deployments
 // nolint funlen
-func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "deployment"
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
@@ -440,7 +465,7 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
@@ -476,7 +501,7 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk deployment failed, err: %s", err.Error())
 		return err
@@ -508,6 +533,7 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 
 		if _, ok := deploymentMap[v.Namespace+v.Name]; !ok {
 			deploymentToDelete = append(deploymentToDelete, v.ID)
+			blog.Infof("deploymentToDelete: %s+%s+%s", bkCluster.Uid, v.Namespace, v.Name)
 		}
 	}
 
@@ -519,8 +545,10 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 			if toAddData != nil {
 				if _, ok = deploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID]; ok {
 					deploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = append(deploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					blog.Infof("deploymentToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				} else {
 					deploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
+					blog.Infof("deploymentToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				}
 			}
 		} else {
@@ -529,20 +557,21 @@ func (s *Syncer) syncDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clu
 
 			if needToUpdate {
 				deploymentToUpdate[bkDeploymentMap[k].ID] = updateData
+				blog.Infof("deploymentToUpdate: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			}
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &deploymentToDelete) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, deploymentToAdd)
-	s.UpdateBkWorkloads(bkCluster, kind, &deploymentToUpdate)
+	s.DeleteBkWorkloads(bkCluster, kind, &deploymentToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(bkCluster, kind, deploymentToAdd, db)
+	s.UpdateBkWorkloads(bkCluster, kind, &deploymentToUpdate, db)
 
 	return nil
 }
 
 // syncStatefulSets sync statefulsets
 // nolint funlen
-func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "statefulSet"
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
@@ -560,7 +589,7 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
@@ -595,7 +624,7 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk statefulset failed, err: %s", err.Error())
 		return err
@@ -627,6 +656,7 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 
 		if _, ok := statefulSetMap[v.Namespace+v.Name]; !ok {
 			statefulSetToDelete = append(statefulSetToDelete, v.ID)
+			blog.Infof("statefulSetToDelete: %s+%s+%s", bkCluster.Uid, v.Namespace, v.Name)
 		}
 	}
 
@@ -637,8 +667,10 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 			if toAddData != nil {
 				if _, ok = statefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID]; ok {
 					statefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = append(statefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					blog.Infof("statefulSetToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				} else {
 					statefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
+					blog.Infof("statefulSetToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				}
 			}
 		} else {
@@ -646,20 +678,21 @@ func (s *Syncer) syncStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 
 			if needToUpdate {
 				statefulSetToUpdate[bkStatefulSetMap[k].ID] = updateData
+				blog.Infof("statefulSetToUpdate: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			}
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &statefulSetToDelete) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, statefulSetToAdd)
-	s.UpdateBkWorkloads(bkCluster, kind, &statefulSetToUpdate)
+	s.DeleteBkWorkloads(bkCluster, kind, &statefulSetToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(bkCluster, kind, statefulSetToAdd, db)
+	s.UpdateBkWorkloads(bkCluster, kind, &statefulSetToUpdate, db)
 
 	return nil
 }
 
 // syncDaemonSets sync daemonsets
 // nolint funlen
-func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "daemonSet"
 	// GetBcsStorageClient is a function that returns a BCS storage client.
 	storageCli, err := s.GetBcsStorageClient()
@@ -677,7 +710,7 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
@@ -711,7 +744,7 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk daemonset failed, err: %s", err.Error())
 		return err
@@ -743,6 +776,7 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 
 		if _, ok := daemonSetMap[v.Namespace+v.Name]; !ok {
 			daemonSetToDelete = append(daemonSetToDelete, v.ID)
+			blog.Infof("daemonSetToDelete: %s+%s+%s", bkCluster.Uid, v.Namespace, v.Name)
 		}
 	}
 
@@ -752,9 +786,13 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 
 			if toAddData != nil {
 				if _, ok = daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID]; ok {
-					daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = append(daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] =
+						append(daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					blog.Infof("daemonSetToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				} else {
-					daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
+					daemonSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] =
+						[]client.CreateBcsWorkloadRequestData{*toAddData}
+					blog.Infof("daemonSetToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				}
 			}
 		} else {
@@ -762,20 +800,21 @@ func (s *Syncer) syncDaemonSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 
 			if needToUpdate {
 				daemonSetToUpdate[bkDaemonSetMap[k].ID] = updateData
+				blog.Infof("daemonSetToUpdate: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			}
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &daemonSetToDelete) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, daemonSetToAdd)
-	s.UpdateBkWorkloads(bkCluster, kind, &daemonSetToUpdate)
+	s.DeleteBkWorkloads(bkCluster, kind, &daemonSetToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(bkCluster, kind, daemonSetToAdd, db)
+	s.UpdateBkWorkloads(bkCluster, kind, &daemonSetToUpdate, db)
 
 	return nil
 }
 
 // syncGameDeployments sync gamedeployments
 // nolint funlen
-func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "gameDeployment"
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -791,7 +830,7 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
@@ -825,7 +864,7 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk gamedeployment failed, err: %s", err.Error())
 		return err
@@ -857,6 +896,7 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 
 		if _, ok := gameDeploymentMap[v.Namespace+v.Name]; !ok {
 			gameDeploymentToDelete = append(gameDeploymentToDelete, v.ID)
+			blog.Infof("gameDeploymentToDelete: %s+%s+%s", bkCluster.Uid, v.Namespace, v.Name)
 		}
 	}
 
@@ -867,29 +907,32 @@ func (s *Syncer) syncGameDeployments(cluster *cmp.Cluster, bkCluster *bkcmdbkube
 				if _, ok = gameDeploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID]; ok {
 					gameDeploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID] =
 						append(gameDeploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					blog.Infof("gameDeploymentToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				} else {
 					gameDeploymentToAdd[bkNamespaceMap[v.Data.Namespace].BizID] =
 						[]client.CreateBcsWorkloadRequestData{*toAddData}
+					blog.Infof("gameDeploymentToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				}
 			}
 		} else {
 			needToUpdate, updateData := s.CompareGameDeployment(bkGameDeploymentMap[k], v)
 			if needToUpdate {
 				gameDeploymentToUpdate[bkGameDeploymentMap[k].ID] = updateData
+				blog.Infof("gameDeploymentToUpdate: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			}
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &gameDeploymentToDelete) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, gameDeploymentToAdd)
-	s.UpdateBkWorkloads(bkCluster, kind, &gameDeploymentToUpdate)
+	s.DeleteBkWorkloads(bkCluster, kind, &gameDeploymentToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(bkCluster, kind, gameDeploymentToAdd, db)
+	s.UpdateBkWorkloads(bkCluster, kind, &gameDeploymentToUpdate, db)
 
 	return nil
 }
 
 // syncGameStatefulSets sync gamestatefulsets
 // nolint funlen
-func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "gameStatefulSet"
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
@@ -905,7 +948,7 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
@@ -930,16 +973,17 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 	}
 	blog.Infof("gamestatefulset list: %v", gameStatefulSetList)
 
-	bkGameStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
-		Condition: "AND",
-		Rules: []client.Rule{
-			{
-				Field:    "cluster_uid",
-				Operator: "in",
-				Value:    []string{bkCluster.Uid},
+	bkGameStatefulSets, err :=
+		s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+			Condition: "AND",
+			Rules: []client.Rule{
+				{
+					Field:    "cluster_uid",
+					Operator: "in",
+					Value:    []string{bkCluster.Uid},
+				},
 			},
-		},
-	})
+		}, true, db)
 	if err != nil {
 		blog.Errorf("get bk gamestatefulset failed, err: %s", err.Error())
 		return err
@@ -971,6 +1015,7 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 
 		if _, ok := gameStatefulSetMap[v.Namespace+v.Name]; !ok {
 			gameStatefulSetToDelete = append(gameStatefulSetToDelete, v.ID)
+			blog.Infof("gameStatefulSetToDelete: %s+%s+%s", bkCluster.Uid, v.Namespace, v.Name)
 		}
 	}
 
@@ -980,29 +1025,34 @@ func (s *Syncer) syncGameStatefulSets(cluster *cmp.Cluster, bkCluster *bkcmdbkub
 
 			if toAddData != nil {
 				if _, ok = gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID]; ok {
-					gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = append(gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] =
+						append(gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID], *toAddData)
+					blog.Infof("gameStatefulSetToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				} else {
-					gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
+					gameStatefulSetToAdd[bkNamespaceMap[v.Data.Namespace].BizID] =
+						[]client.CreateBcsWorkloadRequestData{*toAddData}
+					blog.Infof("gameStatefulSetToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 				}
 			}
 		} else {
 			needToUpdate, updateData := s.CompareGameStatefulSet(bkGameStatefulSetMap[k], v)
 			if needToUpdate {
 				gameStatefulSetToUpdate[bkGameStatefulSetMap[k].ID] = updateData
+				blog.Infof("gameStatefulSetToUpdate: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			}
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &gameStatefulSetToDelete) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, gameStatefulSetToAdd)
-	s.UpdateBkWorkloads(bkCluster, kind, &gameStatefulSetToUpdate)
+	s.DeleteBkWorkloads(bkCluster, kind, &gameStatefulSetToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(bkCluster, kind, gameStatefulSetToAdd, db)
+	s.UpdateBkWorkloads(bkCluster, kind, &gameStatefulSetToUpdate, db)
 
 	return nil
 }
 
 // syncWorkloadPods sync workloadPods
 // nolint
-func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	kind := "pods" // nolint
 	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
@@ -1013,7 +1063,7 @@ func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return err
@@ -1036,7 +1086,7 @@ func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk workload pods failed, err: %s", err.Error())
 		return err
@@ -1068,6 +1118,7 @@ func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 			if toAddData != nil {
 				if _, ok = workloadPodsToAdd[v.BizID]; ok {
 					workloadPodsToAdd[v.BizID] = append(workloadPodsToAdd[v.BizID], *toAddData)
+					blog.Infof("workloadPodsToAdd: %s+%s+%s", bkCluster.Uid, v.Name, "Pods")
 				} else {
 					workloadPodsToAdd[v.BizID] = []client.CreateBcsWorkloadRequestData{*toAddData}
 				}
@@ -1076,20 +1127,21 @@ func (s *Syncer) syncWorkloadPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cl
 			needToUpdate, updateData := s.CompareBkWorkloadPods(bkWorkloadPodsMap[k+"pods"])
 			if needToUpdate {
 				workloadPodsToUpdate[bkWorkloadPodsMap[k+"pods"].ID] = updateData
+				blog.Infof("workloadPodsToUpdate: %s+%s+%s", bkCluster.Uid, v.Name, "Pods")
 			}
 		}
 	}
 
-	s.DeleteBkWorkloads(bkCluster, kind, &workloadPodsToDelete) // nolint  not checked
-	s.CreateBkWorkloads(bkCluster, kind, workloadPodsToAdd)
-	s.UpdateBkWorkloads(bkCluster, kind, &workloadPodsToUpdate)
+	s.DeleteBkWorkloads(bkCluster, kind, &workloadPodsToDelete, db) // nolint  not checked
+	s.CreateBkWorkloads(bkCluster, kind, workloadPodsToAdd, db)
+	s.UpdateBkWorkloads(bkCluster, kind, &workloadPodsToUpdate, db)
 
 	return nil
 }
 
 // nolint
 func (s *Syncer) getBkNsMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.Namespace, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.Namespace, error) {
 	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1099,7 +1151,7 @@ func (s *Syncer) getBkNsMap(
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk namespace failed, err: %s", err.Error())
 		return nil, err
@@ -1115,7 +1167,7 @@ func (s *Syncer) getBkNsMap(
 
 // nolint
 func (s *Syncer) getBkDeploymentMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.Deployment, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.Deployment, error) {
 	bkDeploymentList := make([]bkcmdbkube.Deployment, 0)
 
 	bkDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
@@ -1127,7 +1179,7 @@ func (s *Syncer) getBkDeploymentMap(
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk deployment failed, err: %s", err.Error())
 		return nil, err
@@ -1154,7 +1206,7 @@ func (s *Syncer) getBkDeploymentMap(
 
 // nolint
 func (s *Syncer) getBkStatefulSetMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.StatefulSet, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.StatefulSet, error) {
 	bkStatefulSetList := make([]bkcmdbkube.StatefulSet, 0)
 
 	bkStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
@@ -1166,7 +1218,7 @@ func (s *Syncer) getBkStatefulSetMap(
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk statefulset failed, err: %s", err.Error())
 		return nil, err
@@ -1192,7 +1244,7 @@ func (s *Syncer) getBkStatefulSetMap(
 
 // nolint
 func (s *Syncer) getBkDaemonSetMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.DaemonSet, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.DaemonSet, error) {
 	bkDaemonSetList := make([]bkcmdbkube.DaemonSet, 0)
 
 	bkDaemonSets, err := s.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
@@ -1204,7 +1256,7 @@ func (s *Syncer) getBkDaemonSetMap(
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk daemonset failed, err: %s", err.Error())
 		return nil, err
@@ -1230,7 +1282,7 @@ func (s *Syncer) getBkDaemonSetMap(
 
 // nolint
 func (s *Syncer) getBkGameDeploymentMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.GameDeployment, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.GameDeployment, error) {
 	bkGameDeploymentList := make([]bkcmdbkube.GameDeployment, 0)
 
 	bkGameDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
@@ -1242,7 +1294,7 @@ func (s *Syncer) getBkGameDeploymentMap(
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk gamedeployment failed, err: %s", err.Error())
 		return nil, err
@@ -1268,19 +1320,20 @@ func (s *Syncer) getBkGameDeploymentMap(
 
 // nolint
 func (s *Syncer) getBkGameStatefulSetMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.GameStatefulSet, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.GameStatefulSet, error) {
 	bkGameStatefulSetList := make([]bkcmdbkube.GameStatefulSet, 0)
 
-	bkGameStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
-		Condition: "AND",
-		Rules: []client.Rule{
-			{
-				Field:    "cluster_uid",
-				Operator: "in",
-				Value:    []string{bkCluster.Uid},
+	bkGameStatefulSets, err :=
+		s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+			Condition: "AND",
+			Rules: []client.Rule{
+				{
+					Field:    "cluster_uid",
+					Operator: "in",
+					Value:    []string{bkCluster.Uid},
+				},
 			},
-		},
-	})
+		}, true, db)
 	if err != nil {
 		blog.Errorf("get bk gamestatefulset failed, err: %s", err.Error())
 		return nil, err
@@ -1306,7 +1359,7 @@ func (s *Syncer) getBkGameStatefulSetMap(
 
 // nolint
 func (s *Syncer) getBkNodeMap(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) (map[string]*bkcmdbkube.Node, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) (map[string]*bkcmdbkube.Node, error) {
 	bkNodeList, err := s.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1316,7 +1369,7 @@ func (s *Syncer) getBkNodeMap(
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk node failed, err: %s", err.Error())
 		return nil, err
@@ -1331,7 +1384,8 @@ func (s *Syncer) getBkNodeMap(
 
 // nolint
 func (s *Syncer) getBkWorkloadPods(
-	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, pod *storage.Pod) (*bkcmdbkube.PodsWorkload, error) {
+	cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster,
+	pod *storage.Pod, db *gorm.DB) (*bkcmdbkube.PodsWorkload, error) {
 	bkWorkloadPods, err := s.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -1346,7 +1400,7 @@ func (s *Syncer) getBkWorkloadPods(
 				Value:    []string{pod.ClusterID},
 			},
 		},
-	})
+	}, true, db)
 	if err != nil {
 		blog.Errorf("get bk workload pods failed, err: %s", err.Error())
 		return nil, err
@@ -1422,7 +1476,9 @@ func (s *Syncer) getPodWordloadInfo(
 
 	workloadKind = "pods" // nolint
 	workloadName = "pods" // nolint
-	workloadID = bkWorkloadPods.ID
+	if bkWorkloadPods != nil {
+		workloadID = bkWorkloadPods.ID
+	}
 
 	if len(pod.Data.OwnerReferences) == 1 {
 		ownerRef := pod.Data.OwnerReferences[0]
@@ -1490,13 +1546,13 @@ func (s *Syncer) getPodWordloadInfo(
 
 // SyncPods sync pods
 // nolint funlen
-func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) error {
+func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
 		blog.Errorf("get bcs storage client failed, err: %s", err.Error())
 	}
 
-	bkNsMap, err := s.getBkNsMap(cluster, bkCluster)
+	bkNsMap, err := s.getBkNsMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
@@ -1512,32 +1568,32 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 		podList = append(podList, pods...)
 	}
 
-	bkDeploymentMap, err := s.getBkDeploymentMap(cluster, bkCluster)
+	bkDeploymentMap, err := s.getBkDeploymentMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkStatefulSetMap, err := s.getBkStatefulSetMap(cluster, bkCluster)
+	bkStatefulSetMap, err := s.getBkStatefulSetMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkDaemonSetMap, err := s.getBkDaemonSetMap(cluster, bkCluster)
+	bkDaemonSetMap, err := s.getBkDaemonSetMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkGameDeploymentMap, err := s.getBkGameDeploymentMap(cluster, bkCluster)
+	bkGameDeploymentMap, err := s.getBkGameDeploymentMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkGameStatefulSetMap, err := s.getBkGameStatefulSetMap(cluster, bkCluster)
+	bkGameStatefulSetMap, err := s.getBkGameStatefulSetMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
 
-	bkNodeMap, err := s.getBkNodeMap(cluster, bkCluster)
+	bkNodeMap, err := s.getBkNodeMap(cluster, bkCluster, db)
 	if err != nil {
 		return err
 	}
@@ -1553,7 +1609,8 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 				Value:    []string{bkCluster.Uid},
 			},
 		},
-	})
+	}, true, db)
+	//blog.Infof("bkPodList: %v, len: %d", *bkPodList, len(*bkPodList))
 	if err != nil {
 		blog.Errorf("get bk pod failed, err: %s", err.Error())
 		return err
@@ -1566,6 +1623,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 	for _, v := range podList {
 		podMap[v.Data.Namespace+v.Data.Name] = v
 	}
+	//blog.Infof("podMap: %v", podMap)
 
 	bkPodMap := make(map[string]*bkcmdbkube.Pod)
 	for k, v := range *bkPodList {
@@ -1573,6 +1631,13 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 
 		if _, ok := podMap[v.NameSpace+*v.Name]; !ok {
 			podToDelete = append(podToDelete, v.ID)
+			blog.Infof("podToDelete: %s+%s", v.NameSpace, *v.Name)
+		} else {
+			if s.ComparePod(&v, podMap[v.NameSpace+*v.Name], db) {
+				podToDelete = append(podToDelete, v.ID)
+				blog.Infof("podToDelete: %s+%s", v.NameSpace, *v.Name)
+				delete(bkPodMap, v.NameSpace+*v.Name)
+			}
 		}
 	}
 
@@ -1582,7 +1647,7 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 			if v.Data.Status.Phase != corev1.PodRunning {
 				continue
 			}
-			bkWorkloadPods, podsErr := s.getBkWorkloadPods(cluster, bkCluster, v)
+			bkWorkloadPods, podsErr := s.getBkWorkloadPods(cluster, bkCluster, v, db)
 			if podsErr != nil {
 				continue
 			}
@@ -1674,29 +1739,31 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 			}
 
 			if _, ok = podToAdd[bkNsMap[v.Data.Namespace].BizID]; ok {
-				podToAdd[bkNsMap[v.Data.Namespace].BizID] = append(podToAdd[bkNsMap[v.Data.Namespace].BizID], client.CreateBcsPodRequestDataPod{
-					Spec: &client.CreateBcsPodRequestPodSpec{
-						ClusterID:    &bkCluster.ID,
-						NameSpaceID:  &bkNsMap[v.Data.Namespace].ID,
-						WorkloadKind: &workloadKind,
-						WorkloadID:   &workloadID,
-						NodeID:       &tnodeID,
-						Ref: &bkcmdbkube.Reference{
-							Kind: bkcmdbkube.WorkloadType(workloadKind),
-							Name: workloadName,
-							ID:   workloadID,
+				podToAdd[bkNsMap[v.Data.Namespace].BizID] =
+					append(podToAdd[bkNsMap[v.Data.Namespace].BizID], client.CreateBcsPodRequestDataPod{
+						Spec: &client.CreateBcsPodRequestPodSpec{
+							ClusterID:    &bkCluster.ID,
+							NameSpaceID:  &bkNsMap[v.Data.Namespace].ID,
+							WorkloadKind: &workloadKind,
+							WorkloadID:   &workloadID,
+							NodeID:       &tnodeID,
+							Ref: &bkcmdbkube.Reference{
+								Kind: bkcmdbkube.WorkloadType(workloadKind),
+								Name: workloadName,
+								ID:   workloadID,
+							},
 						},
-					},
 
-					Name:       &v.Data.Name,
-					HostID:     &thostID,
-					Priority:   v.Data.Spec.Priority,
-					Labels:     &v.Data.Labels,
-					IP:         &v.Data.Status.PodIP,
-					IPs:        &podIPs,
-					Containers: &containers,
-					Operator:   &operator,
-				})
+						Name:       &v.Data.Name,
+						HostID:     &thostID,
+						Priority:   v.Data.Spec.Priority,
+						Labels:     &v.Data.Labels,
+						IP:         &v.Data.Status.PodIP,
+						IPs:        &podIPs,
+						Containers: &containers,
+						Operator:   &operator,
+					})
+				blog.Infof("podToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			} else {
 				podToAdd[bkNsMap[v.Data.Namespace].BizID] = []client.CreateBcsPodRequestDataPod{
 					client.CreateBcsPodRequestDataPod{
@@ -1723,18 +1790,792 @@ func (s *Syncer) SyncPods(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) e
 						Operator:   &operator,
 					},
 				}
+				blog.Infof("podToAdd: %s+%s+%s", bkCluster.Uid, v.Data.Namespace, v.Data.Name)
 			}
+
 		} else {
 			if v.Data.Status.Phase != corev1.PodRunning {
 				podToDelete = append(podToDelete, bkPodMap[k].ID)
+				blog.Infof("podToDelete: %s+%s", bkPodMap[k].NameSpace, *bkPodMap[k].Name)
 			}
-
 		}
 	}
-	s.DeleteBkPods(bkCluster, &podToDelete) // nolint  not checked
-	s.CreateBkPods(bkCluster, podToAdd)
+	//blog.Infof("podToDelete: %v", podToDelete)
+	s.DeleteBkPods(bkCluster, &podToDelete, db) // nolint  not checked
+	s.CreateBkPods(bkCluster, podToAdd, db)
 
 	return err
+}
+
+// SyncStore sync store
+func (s *Syncer) SyncStore(bkCluster *bkcmdbkube.Cluster, force bool) error {
+	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + bkCluster.Uid + ".db"
+
+	db := sqlite.Open(path)
+	if db == nil {
+		blog.Errorf("open db failed, path: %s", path)
+		return fmt.Errorf("open db failed, path: %s", path)
+	}
+	s.SyncStoreMigrate(db)
+
+	if !force {
+		if s.SyncStoreSynced(db) {
+			blog.Infof("SyncStore synced skip.")
+			return nil
+		}
+	}
+
+	err := s.SyncStoreCluster(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync store cluster failed, err: %s", err.Error())
+	}
+
+	err = s.SyncStoreNamespace(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync store namespace failed, err: %s", err.Error())
+	}
+
+	err = s.SyncStorePod(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync store pod failed, err: %s", err.Error())
+	}
+
+	err = s.SyncStoreContainer(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync store container failed, err: %s", err.Error())
+	}
+
+	err = s.SyncStoreNode(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync store node failed, err: %s", err.Error())
+	}
+
+	err = s.SyncStoreWorkload(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync store workload failed, err: %s", err.Error())
+	}
+
+	err = s.SyncDone(bkCluster, db)
+	if err != nil {
+		blog.Errorf("sync done failed, err: %s", err.Error())
+	}
+
+	return nil
+}
+
+// SyncDone sync done
+func (s *Syncer) SyncDone(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.SyncMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate sync failed, err: %s", err.Error())
+		return fmt.Errorf("migrate sync failed, err: %s", err.Error())
+	}
+	err = db.Create(&model.Sync{
+		FullSyncTime: time.Now().Unix(),
+	}).Error
+	if err != nil {
+		blog.Errorf("create sync failed, err: %s", err.Error())
+		return fmt.Errorf("create sync failed, err: %s", err.Error())
+	}
+	return nil
+}
+
+// SyncStoreSynced sync store synced
+func (s *Syncer) SyncStoreSynced(db *gorm.DB) bool {
+	if err := db.Where("full_sync_time > 0").First(&model.Sync{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false
+		}
+		blog.Errorf("get sync failed, err: %s", err.Error())
+		return false
+	}
+	return true
+}
+
+// SyncStoreMigrate sync store migrate
+func (s *Syncer) SyncStoreMigrate(db *gorm.DB) {
+	_ = model.ClusterMigrate(db)
+	_ = model.SyncMigrate(db)
+	_ = model.NodeMigrate(db)
+	_ = model.NamespaceMigrate(db)
+	_ = model.DeploymentMigrate(db)
+	_ = model.StatefulSetMigrate(db)
+	_ = model.DaemonSetMigrate(db)
+	_ = model.GameDeploymentMigrate(db)
+	_ = model.GameStatefulSetMigrate(db)
+	_ = model.PodsWorkloadMigrate(db)
+	_ = model.PodMigrate(db)
+	_ = model.ContainerMigrate(db)
+}
+
+// SyncStoreCluster sync store cluster
+func (s *Syncer) SyncStoreCluster(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.ClusterMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate cluster failed, err: %s", err.Error())
+		return fmt.Errorf("migrate cluster failed, err: %s", err.Error())
+	}
+	clusterMarshal, err := json.Marshal(bkCluster)
+	if err != nil {
+		blog.Errorf("marshal cluster failed, err: %s", err.Error())
+		return fmt.Errorf("marshal cluster failed, err: %s", err.Error())
+	}
+	var cluster model.Cluster
+	err = json.Unmarshal(clusterMarshal, &cluster)
+	if err != nil {
+		blog.Errorf("unmarshal cluster failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal cluster failed, err: %s", err.Error())
+	}
+
+	var existingCluster model.Cluster
+	err = db.Where("id = ?", bkCluster.ID).First(&existingCluster).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = db.Create(&cluster).Error
+			if err != nil {
+				blog.Errorf("create cluster failed, err: %s", err.Error())
+				return fmt.Errorf("create cluster failed, err: %s", err.Error())
+			}
+		} else {
+			blog.Errorf("get cluster failed, err: %s", err.Error())
+		}
+	} else {
+		err = db.Save(&cluster).Error
+		if err != nil {
+			blog.Errorf("update cluster failed, err: %s", err.Error())
+			return fmt.Errorf("update cluster failed, err: %s", err.Error())
+		}
+		blog.Infof("update cluster success")
+	}
+	return nil
+}
+
+// SyncStoreNamespace sync store namespace
+func (s *Syncer) SyncStoreNamespace(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.NamespaceMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate namespace failed, err: %s", err.Error())
+		return fmt.Errorf("migrate namespace failed, err: %s", err.Error())
+	}
+
+	bkNamespaceList, err := s.GetBkNamespaces(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+
+	if err != nil {
+		blog.Errorf("get bk namespaces failed, err: %s", err.Error())
+		return fmt.Errorf("get bk namespaces failed, err: %s", err.Error())
+	}
+
+	namespaceMarshal, err := json.Marshal(bkNamespaceList)
+	if err != nil {
+		blog.Errorf("marshal namespace failed, err: %s", err.Error())
+		return fmt.Errorf("marshal namespace failed, err: %s", err.Error())
+	}
+	var ns []model.Namespace
+	err = json.Unmarshal(namespaceMarshal, &ns)
+	if err != nil {
+		blog.Errorf("unmarshal namespace failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal namespace failed, err: %s", err.Error())
+	}
+	for _, n := range ns {
+		var existingNamespace model.Namespace
+		err = db.Where("id = ?", n.ID).First(&existingNamespace).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				err = db.Create(&n).Error
+				if err != nil {
+					blog.Errorf("syncStore create namespace failed, err: %s", err.Error())
+				}
+			} else {
+				blog.Errorf("syncStore get namespace failed, err: %s", err.Error())
+			}
+		} else {
+			err = db.Save(&n).Error
+			if err != nil {
+				blog.Errorf("syncStore update namespace failed, err: %s", err.Error())
+			} else {
+				blog.Infof("syncStore update namespace success")
+			}
+		}
+	}
+
+	return nil
+}
+
+// SyncStorePod 同步 Pod 信息到数据库
+func (s *Syncer) SyncStorePod(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.PodMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate pod failed, err: %s", err.Error())
+		return fmt.Errorf("migrate pod failed, err: %s", err.Error())
+	}
+	// err = model.ContainerMigrate(db)
+	// if err != nil {
+	//	 blog.Errorf("migrate container failed, err: %s", err.Error())
+	//	 return fmt.Errorf("migrate container failed, err: %s", err.Error())
+	// }
+
+	bkPodList, err := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	// blog.Infof("bkPodList: %v, len: %d", *bkPodList, len(*bkPodList))
+	if err != nil {
+		blog.Errorf("get bk pod failed, err: %s", err.Error())
+	}
+
+	podMarshal, err := json.Marshal(bkPodList)
+	if err != nil {
+		blog.Errorf("marshal bk pod failed, err: %s", err.Error())
+		return fmt.Errorf("marshal bk pod failed, err: %s", err.Error())
+	}
+	var pods []model.Pod
+
+	err = json.Unmarshal(podMarshal, &pods)
+	if err != nil {
+		blog.Errorf("unmarshal bk pod failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk pod failed, err: %s", err.Error())
+	}
+
+	for _, pod := range pods {
+		var existingPod model.Pod
+		if errP := db.Where("id = ?", pod.ID).First(&existingPod).Error; errP != nil {
+			if errors.Is(errP, gorm.ErrRecordNotFound) {
+				if errPC := db.Create(&pod).Error; errPC != nil {
+					blog.Errorf("syncStore create pod failed, err: %s", errPC.Error())
+				}
+			} else {
+				blog.Errorf("syncStore get pod failed, err: %s", errP.Error())
+			}
+		} else {
+			if errPS := db.Save(&pod).Error; errPS != nil {
+				blog.Errorf("syncStore update pod failed, err: %s", errPS.Error())
+			} else {
+				blog.Infof("syncStore update pod success, pod: %d", pod.ID)
+			}
+		}
+		// bkContainers, err := s.Syncer.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
+		//	CommonRequest: client.CommonRequest{
+		//		BKBizID: pod.BizID,
+		//		Page: client.Page{
+		//			Limit: 200,
+		//			Start: 0,
+		//		},
+		//	},
+		//	BkPodID: pod.ID,
+		// })
+		//
+		// if err != nil {
+		//	blog.Errorf("syncStore GetBcsContainer err: %v", err)
+		// } else {
+		//	cs, err := json.Marshal(bkContainers)
+		//	if err != nil {
+		//		blog.Errorf("syncStore json marshal err: %v", err)
+		//		continue
+		//	}
+		//	var containers []model.Container
+		//	err = json.Unmarshal(cs, &containers)
+		//	if err != nil {
+		//		blog.Errorf("syncStore json unmarshal err: %v", err)
+		//		continue
+		//	}
+		//	for _, container := range containers {
+		//		db.Create(&container)
+		//	}
+		// }
+	}
+	return nil
+}
+
+// SyncStoreContainer 同步容器信息到数据库
+func (s *Syncer) SyncStoreContainer(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.ContainerMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate container failed, err: %s", err.Error())
+		return fmt.Errorf("migrate container failed, err: %s", err.Error())
+	}
+
+	bkContainerList, err := s.GetBkContainers(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "bk_cluster_id",
+				Operator: "in",
+				Value:    []int64{bkCluster.ID},
+			},
+		},
+	}, false, nil)
+	blog.Infof("bkContainerList: %v, len: %d", *bkContainerList, len(*bkContainerList))
+	if err != nil {
+		blog.Errorf("get bk container failed, err: %s", err.Error())
+	}
+
+	containerMarshal, err := json.Marshal(bkContainerList)
+	if err != nil {
+		blog.Errorf("marshal bk container failed, err: %s", err.Error())
+		return fmt.Errorf("marshal bk container failed, err: %s", err.Error())
+	}
+	var containers []model.Container
+
+	err = json.Unmarshal(containerMarshal, &containers)
+	if err != nil {
+		blog.Errorf("unmarshal bk container failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk container failed, err: %s", err.Error())
+	}
+
+	for _, c := range containers {
+		var existingContainer model.Container
+		if errC := db.Where("id = ?", c.ID).First(&existingContainer).Error; errC != nil {
+			if errors.Is(errC, gorm.ErrRecordNotFound) {
+				if errCC := db.Create(&c).Error; errCC != nil {
+					blog.Errorf("syncStore create container failed, err: %s", errCC.Error())
+				}
+			} else {
+				blog.Errorf("syncStore get container failed, err: %s", errC.Error())
+			}
+		} else {
+			if errCS := db.Save(&c).Error; errCS != nil {
+				blog.Errorf("syncStore update container failed, err: %s", errCS.Error())
+			} else {
+				blog.Infof("syncStore update container success, pod: %d", c.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStoreNode 同步节点信息到数据库
+func (s *Syncer) SyncStoreNode(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.NodeMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate node failed, err: %s", err.Error())
+		return fmt.Errorf("migrate node failed, err: %s", err.Error())
+	}
+
+	// GetBkNodes get bknodes
+	bkNodeList, err := s.GetBkNodes(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+
+	if err != nil {
+		blog.Errorf("get bk node failed, err: %s", err.Error())
+		return fmt.Errorf("get bk node failed, err: %s", err.Error())
+	}
+
+	nodeMarshal, err := json.Marshal(bkNodeList)
+	if err != nil {
+		blog.Errorf("marshal bk node failed, err: %s", err.Error())
+		return fmt.Errorf("marshal bk node failed, err: %s", err.Error())
+	}
+
+	var nodes []model.Node
+
+	err = json.Unmarshal(nodeMarshal, &nodes)
+	if err != nil {
+		blog.Errorf("unmarshal bk node failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk node failed, err: %s", err.Error())
+	}
+
+	for _, node := range nodes {
+		var existNode model.Node
+		if errN := db.Where("id = ?", node.ID).First(&existNode).Error; errN != nil {
+			if errors.Is(errN, gorm.ErrRecordNotFound) {
+				if errNC := db.Create(&node).Error; errNC != nil {
+					blog.Errorf("syncStore create node err: %v", errNC)
+				}
+			} else {
+				blog.Errorf("syncStore get node err: %v", errN)
+			}
+		} else {
+			if errNS := db.Save(&node).Error; errNS != nil {
+				blog.Errorf("syncStore update node err: %v", errNS)
+			} else {
+				blog.Infof("syncStore update node success, node: %d", node.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStoreWorkload 同步工作负载信息到数据库
+func (s *Syncer) SyncStoreWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := s.SyncStoreDeployment(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore Deployment err: %v", err)
+	}
+	err = s.SyncStoreStatefulSet(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore StatefulSet err: %v", err)
+	}
+	err = s.SyncStoreDaemonSet(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore DaemonSet err: %v", err)
+	}
+	err = s.SyncStoreGameDeployment(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore GameDeployment err: %v", err)
+	}
+	err = s.SyncStoreGameStatefulSet(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore GameStatefulSet err: %v", err)
+	}
+	err = s.SyncStorePodsWorkload(bkCluster, db)
+	if err != nil {
+		blog.Errorf("syncStore PodsWordload err: %v", err)
+	}
+	return nil
+}
+
+// SyncStoreDeployment 同步 Deployment 信息到数据库
+func (s *Syncer) SyncStoreDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.DeploymentMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate deployment failed, err: %s", err.Error())
+		return fmt.Errorf("migrate deployment failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk deployment failed, err: %s", err.Error())
+		return fmt.Errorf("get bk deployment failed, err: %s", err.Error())
+	}
+	deploymentMarshal, err := json.Marshal(bkDeployments)
+	if err != nil {
+		blog.Errorf("marshal bk deployment failed, err: %s", err.Error())
+	}
+	var deployments []model.Deployment
+	err = json.Unmarshal(deploymentMarshal, &deployments)
+	if err != nil {
+		blog.Errorf("unmarshal bk deployment failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk deployment failed, err: %s", err.Error())
+	}
+	for _, deployment := range deployments {
+		var existDeployment model.Deployment
+		if errD := db.Where("id = ?", deployment.ID).First(&existDeployment).Error; errD != nil {
+			if errors.Is(errD, gorm.ErrRecordNotFound) {
+				if errDC := db.Create(&deployment).Error; errDC != nil {
+					blog.Errorf("syncStore create deployment err: %v", errDC)
+				}
+			} else {
+				blog.Errorf("syncStore get deployment err: %v", errD)
+			}
+		} else {
+			if errDS := db.Save(&deployment).Error; errDS != nil {
+				blog.Errorf("syncStore update deployment err: %v", errDS)
+			} else {
+				blog.Infof("syncStore update deployment success, deployment: %d", deployment.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStoreStatefulSet 同步 StatefulSet 信息到数据库
+func (s *Syncer) SyncStoreStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.StatefulSetMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate statefulset failed, err: %s", err.Error())
+		return fmt.Errorf("migrate statefulset failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "statefulSet", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk statefulSet failed, err: %s", err.Error())
+		return fmt.Errorf("get bk statefulSet failed, err: %s", err.Error())
+	}
+
+	statefulSetMarshal, err := json.Marshal(bkStatefulSets)
+	if err != nil {
+		blog.Errorf("marshal bk statefulSet failed, err: %s", err.Error())
+	}
+	var statefulSets []model.StatefulSet
+	err = json.Unmarshal(statefulSetMarshal, &statefulSets)
+	if err != nil {
+		blog.Errorf("unmarshal bk statefulSet failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk statefulSet failed, err: %s", err.Error())
+	}
+	for _, statefulSet := range statefulSets {
+		var existStatefulSet model.StatefulSet
+		if errS := db.Where("id = ?", statefulSet.ID).First(&existStatefulSet).Error; errS != nil {
+			if errors.Is(errS, gorm.ErrRecordNotFound) {
+				if errSC := db.Create(&statefulSet).Error; errSC != nil {
+					blog.Errorf("syncStore create statefulSet err: %v", errSC)
+				}
+			} else {
+				blog.Errorf("syncStore get statefulSet err: %v", errS)
+			}
+		} else {
+			if errSS := db.Save(&statefulSet).Error; errSS != nil {
+				blog.Errorf("syncStore update statefulSet err: %v", errSS)
+			} else {
+				blog.Infof("syncStore update statefulSet success, statefulSet: %d", statefulSet.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStoreDaemonSet 同步 DaemonSet 信息到数据库
+func (s *Syncer) SyncStoreDaemonSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.DaemonSetMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate daemonset failed, err: %s", err.Error())
+		return fmt.Errorf("migrate daemonset failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkDaemonSets, err := s.GetBkWorkloads(bkCluster.BizID, "daemonSet", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk daemonSet failed, err: %s", err.Error())
+		return fmt.Errorf("get bk daemonSet failed, err: %s", err.Error())
+	}
+
+	daemonSetMarshal, err := json.Marshal(bkDaemonSets)
+	if err != nil {
+		blog.Errorf("marshal bk daemonSet failed, err: %s", err.Error())
+	}
+	var daemonSets []model.DaemonSet
+	err = json.Unmarshal(daemonSetMarshal, &daemonSets)
+	if err != nil {
+		blog.Errorf("unmarshal bk daemonSet failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk daemonSet failed, err: %s", err.Error())
+	}
+	for _, daemonSet := range daemonSets {
+		var existDaemonSet model.DaemonSet
+		if errD := db.Where("id = ?", daemonSet.ID).First(&existDaemonSet).Error; errD != nil {
+			if errors.Is(errD, gorm.ErrRecordNotFound) {
+				if errDC := db.Create(&daemonSet).Error; errDC != nil {
+					blog.Errorf("syncStore create daemonSet err: %v", errDC)
+				}
+			} else {
+				blog.Errorf("syncStore get daemonSet err: %v", errD)
+			}
+		} else {
+			if errDS := db.Save(&daemonSet).Error; errDS != nil {
+				blog.Errorf("syncStore update daemonSet err: %v", errDS)
+			} else {
+				blog.Infof("syncStore update daemonSet success, daemonSet: %d", daemonSet.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStoreGameDeployment 同步 GameDeployment 信息到数据库
+func (s *Syncer) SyncStoreGameDeployment(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.GameDeploymentMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate gamedeployment failed, err: %s", err.Error())
+		return fmt.Errorf("migrate gamedeployment failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkGameDeployments, err := s.GetBkWorkloads(bkCluster.BizID, "gameDeployment", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk gameDeployment failed, err: %s", err.Error())
+		return fmt.Errorf("get bk gameDeployment failed, err: %s", err.Error())
+	}
+
+	gameDeploymentMarshal, err := json.Marshal(bkGameDeployments)
+	if err != nil {
+		blog.Errorf("marshal bk gameDeployment failed, err: %s", err.Error())
+		return fmt.Errorf("marshal bk gameDeployment failed, err: %s", err.Error())
+	}
+	var gameDeployments []model.GameDeployment
+	err = json.Unmarshal(gameDeploymentMarshal, &gameDeployments)
+	if err != nil {
+		blog.Errorf("unmarshal bk gameDeployment failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk gameDeployment failed, err: %s", err.Error())
+	}
+	for _, gameDeployment := range gameDeployments {
+		var existGameDeployment model.GameDeployment
+		if errG := db.Where("id = ?", gameDeployment.ID).First(&existGameDeployment).Error; errG != nil {
+			if errors.Is(errG, gorm.ErrRecordNotFound) {
+				if errGC := db.Create(&gameDeployment).Error; errGC != nil {
+					blog.Errorf("syncStore create gameDeployment err: %v", errGC)
+				}
+			} else {
+				blog.Errorf("syncStore get gameDeployment err: %v", errG)
+			}
+		} else {
+			if errGS := db.Save(&gameDeployment).Error; errGS != nil {
+				blog.Errorf("syncStore update gameDeployment err: %v", errGS)
+			} else {
+				blog.Infof("syncStore update gameDeployment success, gameDeployment: %d", gameDeployment.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStoreGameStatefulSet 同步 GameStatefulSet 信息到数据库
+func (s *Syncer) SyncStoreGameStatefulSet(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.GameStatefulSetMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate gameStatefulSet failed, err: %s", err.Error())
+		return fmt.Errorf("migrate gameStatefulSet failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkGameStatefulSets, err := s.GetBkWorkloads(bkCluster.BizID, "gameStatefulSet", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk gameStatefulSet failed, err: %s", err.Error())
+		return fmt.Errorf("get bk gameStatefulSet failed, err: %s", err.Error())
+	}
+
+	gameStatefulSetMarshal, err := json.Marshal(bkGameStatefulSets)
+	if err != nil {
+		blog.Errorf("marshal bk gameStatefulSet failed, err: %s", err.Error())
+		return fmt.Errorf("marshal bk gameStatefulSet failed, err: %s", err.Error())
+	}
+	var gameStatefulSets []model.GameStatefulSet
+	err = json.Unmarshal(gameStatefulSetMarshal, &gameStatefulSets)
+	if err != nil {
+		blog.Errorf("unmarshal bk gameStatefulSet failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk gameStatefulSet failed, err: %s", err.Error())
+	}
+	for _, gameStatefulSet := range gameStatefulSets {
+		var existGameStatefulSet model.GameStatefulSet
+		if errG := db.Where("id = ?", gameStatefulSet.ID).First(&existGameStatefulSet).Error; errG != nil {
+			if errors.Is(errG, gorm.ErrRecordNotFound) {
+				if errGC := db.Create(&gameStatefulSet).Error; errGC != nil {
+					blog.Errorf("syncStore create gameStatefulSet err: %v", errGC)
+				}
+			} else {
+				blog.Errorf("syncStore get gameStatefulSet err: %v", errG)
+			}
+		} else {
+			if errGS := db.Save(&gameStatefulSet).Error; errGS != nil {
+				blog.Errorf("syncStore update gameStatefulSet err: %v", errGS)
+			} else {
+				blog.Infof("syncStore update gameStatefulSet success, gameStatefulSet: %d", gameStatefulSet.ID)
+			}
+		}
+	}
+	return nil
+}
+
+// SyncStorePodsWorkload 同步 PodsWorkload 信息到数据库
+func (s *Syncer) SyncStorePodsWorkload(bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	err := model.PodsWorkloadMigrate(db)
+	if err != nil {
+		blog.Errorf("migrate podsworkload failed, err: %s", err.Error())
+		return fmt.Errorf("migrate podsworkload failed, err: %s", err.Error())
+	}
+
+	// GetBkWorkloads get bkworkloads
+	bkPodsWorkloads, err := s.GetBkWorkloads(bkCluster.BizID, "pods", &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "cluster_uid",
+				Operator: "in",
+				Value:    []string{bkCluster.Uid},
+			},
+		},
+	}, false, nil)
+	if err != nil {
+		blog.Errorf("get bk podsworkload failed, err: %s", err.Error())
+		return fmt.Errorf("get bk podsworkload failed, err: %s", err.Error())
+	}
+
+	podsWorkloadMarshal, err := json.Marshal(bkPodsWorkloads)
+	if err != nil {
+		blog.Errorf("marshal bk podsworkload failed, err: %s", err.Error())
+	}
+	var podsWorkloads []model.PodsWorkload
+	err = json.Unmarshal(podsWorkloadMarshal, &podsWorkloads)
+	if err != nil {
+		blog.Errorf("unmarshal bk podsworkload failed, err: %s", err.Error())
+		return fmt.Errorf("unmarshal bk podsworkload failed, err: %s", err.Error())
+	}
+	for _, podsWorkload := range podsWorkloads {
+		var existPodsWorkload model.PodsWorkload
+		if errP := db.Where("id = ?", podsWorkload.ID).First(&existPodsWorkload).Error; errP != nil {
+			if errors.Is(errP, gorm.ErrRecordNotFound) {
+				if errPC := db.Create(&podsWorkload).Error; errPC != nil {
+					blog.Errorf("syncStore create podsworkload err: %v", errPC)
+				}
+			} else {
+				blog.Errorf("syncStore get podsworkload err: %v", errP)
+			}
+		} else {
+			if errPS := db.Save(&podsWorkload).Error; errPS != nil {
+				blog.Errorf("syncStore update podsworkload err: %v", errPS)
+			} else {
+				blog.Infof("syncStore update podsworkload success, podsworkload: %d", podsWorkload.ID)
+			}
+		}
+	}
+	return nil
 }
 
 // GetBcsStorageClient is a function that returns a BCS storage client.
@@ -1776,14 +2617,14 @@ func (s *Syncer) GetProjectManagerGrpcGwClient() (pmCli *client.ProjectManagerCl
 }
 
 // GetBkCluster get bkcluster
-func (s *Syncer) GetBkCluster(cluster *cmp.Cluster) (*bkcmdbkube.Cluster, error) {
+func (s *Syncer) GetBkCluster(cluster *cmp.Cluster, db *gorm.DB, withDB bool) (*bkcmdbkube.Cluster, error) {
 	var clusterBkBizID int64
 	if bkBizID == 0 {
 		bizid, err := strconv.ParseInt(cluster.BusinessID, 10, 64)
 		if err != nil {
 			blog.Errorf("An error occurred: %s\n", err)
 		} else {
-			blog.Infof("Successfully converted string to int64: %d\n", clusterBkBizID)
+			blog.Infof("Successfully converted string to int64: %d\n", bizid)
 		}
 		clusterBkBizID = bizid
 	} else {
@@ -1809,7 +2650,7 @@ func (s *Syncer) GetBkCluster(cluster *cmp.Cluster) (*bkcmdbkube.Cluster, error)
 				},
 			},
 		},
-	})
+	}, db, withDB)
 
 	if err != nil {
 		blog.Errorf("get bcs cluster failed, err: %s", err.Error())
@@ -1824,7 +2665,8 @@ func (s *Syncer) GetBkCluster(cluster *cmp.Cluster) (*bkcmdbkube.Cluster, error)
 }
 
 // GetBkNodes get bknodes
-func (s *Syncer) GetBkNodes(bkBizID int64, filter *client.PropertyFilter) (*[]bkcmdbkube.Node, error) {
+func (s *Syncer) GetBkNodes(
+	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]bkcmdbkube.Node, error) {
 	bkNodeList := make([]bkcmdbkube.Node, 0)
 
 	pageStart := 0
@@ -1839,7 +2681,7 @@ func (s *Syncer) GetBkNodes(bkBizID int64, filter *client.PropertyFilter) (*[]bk
 				Fields: []string{},
 				Filter: filter,
 			},
-		})
+		}, db, withDB)
 
 		if err != nil {
 			blog.Errorf("get bcs node failed, err: %s", err.Error())
@@ -1850,6 +2692,11 @@ func (s *Syncer) GetBkNodes(bkBizID int64, filter *client.PropertyFilter) (*[]bk
 		if len(*bkNodes) < 100 {
 			break
 		}
+
+		if withDB {
+			break
+		}
+
 		pageStart++
 	}
 
@@ -1857,12 +2704,13 @@ func (s *Syncer) GetBkNodes(bkBizID int64, filter *client.PropertyFilter) (*[]bk
 }
 
 // CreateBkNodes create bknodes
-func (s *Syncer) CreateBkNodes(bkCluster *bkcmdbkube.Cluster, toCreate *[]client.CreateBcsNodeRequestData) {
+func (s *Syncer) CreateBkNodes(
+	bkCluster *bkcmdbkube.Cluster, toCreate *[]client.CreateBcsNodeRequestData, db *gorm.DB) {
 	if len(*toCreate) > 0 {
 		_, err := s.CMDBClient.CreateBcsNode(&client.CreateBcsNodeRequest{
 			BKBizID: &bkCluster.BizID,
 			Data:    toCreate,
-		})
+		}, db)
 		if err != nil {
 			for i := 0; i < len(*toCreate); i++ {
 				var section []client.CreateBcsNodeRequestData
@@ -1875,7 +2723,7 @@ func (s *Syncer) CreateBkNodes(bkCluster *bkcmdbkube.Cluster, toCreate *[]client
 				_, err = s.CMDBClient.CreateBcsNode(&client.CreateBcsNodeRequest{
 					BKBizID: &bkCluster.BizID,
 					Data:    &section,
-				})
+				}, db)
 
 				if err != nil {
 					blog.Errorf("create node failed, err: %s", err.Error())
@@ -1889,7 +2737,125 @@ func (s *Syncer) CreateBkNodes(bkCluster *bkcmdbkube.Cluster, toCreate *[]client
 	}
 }
 
+// ComparePod compare pod
+func (s *Syncer) ComparePod(bkPod *bkcmdbkube.Pod, k8sPod *storage.Pod, db *gorm.DB) (needToRecreate bool) {
+	needToRecreate = false
+	// bkContainers, err := s.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
+	//	CommonRequest: client.CommonRequest{
+	//		BKBizID: bkPod.BizID,
+	//		Page: client.Page{
+	//			Limit: 200,
+	//			Start: 0,
+	//		},
+	//	},
+	//	BkPodID: bkPod.ID,
+	// }, nil, false)
+
+	bkContainers, err := s.GetBkContainers(bkPod.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "bk_pod_id",
+				Operator: "in",
+				Value:    []int64{bkPod.ID},
+			},
+		},
+	}, true, db)
+
+	if err != nil {
+		blog.Errorf("ComparePod GetBcsContainer err: %v", err)
+		return needToRecreate
+	}
+
+	bkContainerMap := make(map[string]client.Container)
+
+	for k, v := range *bkContainers {
+		bkContainerMap[*v.ContainerID] = (*bkContainers)[k]
+	}
+
+	k8sContainerMap := make(map[string]corev1.Container)
+
+	for k, v := range k8sPod.Data.Status.ContainerStatuses {
+		k8sContainerMap[v.ContainerID] = k8sPod.Data.Spec.Containers[k]
+	}
+
+	if len(k8sContainerMap) != len(bkContainerMap) {
+		needToRecreate = true
+	}
+
+	for k := range bkContainerMap {
+		if _, ok := k8sContainerMap[k]; !ok {
+			blog.Infof("Compare Pod: %v, %v", *bkPod, *k8sPod)
+			needToRecreate = true
+		}
+		// else {
+		//	if *v.Name != k8sContainerMap[k].Name || *v.Image != k8sContainerMap[k].Image {
+		//		blog.Infof("Compare Pod: name %s vs %s, image %s vs %s",
+		//		*v.Name,k8sContainerMap[k].Name,*v.Image , k8sContainerMap[k].Image)
+		//		needToRecreate = true
+		//	}
+		// }
+	}
+
+	return needToRecreate
+}
+
+func sortedMapString(m map[string]string) string { // nolint
+	// 获取所有的键
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	// 对键进行排序
+	sort.Strings(keys)
+
+	// 按键的顺序构建字符串
+	s := "{"
+	for i, k := range keys {
+		if i > 0 {
+			s += " "
+		}
+		s += fmt.Sprintf("%q:%v", k, m[k])
+	}
+	s += "}"
+	return s
+}
+
+func mapToString(m map[string]string) string {
+	b := new(strings.Builder)
+	for k, v := range m {
+		fmt.Fprintf(b, "%s:%s,", k, v)
+	}
+	result := b.String()
+	return strings.TrimRight(result, ",")
+}
+
+func stringToMap(s string) map[string]string {
+	resultMap := make(map[string]string)
+	pairs := strings.Split(s, ",")
+	for _, pair := range pairs {
+		kv := strings.Split(pair, ":")
+		if len(kv) == 2 {
+			resultMap[kv[0]] = kv[1]
+		}
+	}
+	return resultMap
+}
+
+func mapsEqual(m1, m2 map[string]string) bool {
+	if len(m1) != len(m2) {
+		return false
+	}
+	for k, v := range m1 {
+		if v2, ok := m2[k]; !ok || v != v2 {
+			return false
+		}
+	}
+	return true
+}
+
 // CompareNode compare bknode and k8snode
+// nolint funlen
 func (s *Syncer) CompareNode(bkNode *bkcmdbkube.Node, k8sNode *storage.K8sNode) (
 	needToUpdate bool, updateData *client.UpdateBcsNodeRequestData) {
 	updateData = &client.UpdateBcsNodeRequestData{}
@@ -1906,14 +2872,30 @@ func (s *Syncer) CompareNode(bkNode *bkcmdbkube.Node, k8sNode *storage.K8sNode) 
 		taints[taint.Key] = taint.Value
 	}
 
+	blog.Infof("bkNode.Taints: %v, k8sNode.Taints: %v", bkNode.Taints, k8sNode.Data.Spec.Taints)
+
 	if taints == nil { // nolint this nil check is never true
 		if bkNode.Taints != nil {
 			updateData.Taints = &taints
 			needToUpdate = true
 		}
-	} else if bkNode.Taints == nil || fmt.Sprint(*bkNode.Taints) != fmt.Sprint(taints) {
-		updateData.Taints = &taints
-		needToUpdate = true
+	} else if bkNode.Taints == nil ||
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkNode.Taints), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(taints), "．", "."))) {
+		if len(taints) != 0 {
+			updateData.Taints = &taints
+			needToUpdate = true
+		}
+
+		if bkNode.Taints == nil {
+			blog.Infof("CompareNode Taints: bknode: nil, k8snode: %v",
+				stringToMap(strings.ReplaceAll(mapToString(taints), "．", ".")))
+		} else {
+			blog.Infof("CompareNode Taints: bknode: %v\n, k8snode: %v",
+				stringToMap(strings.ReplaceAll(mapToString(*bkNode.Taints), "．", ".")),
+				stringToMap(strings.ReplaceAll(mapToString(taints), "．", ".")))
+		}
+
 	}
 
 	if k8sNode.Data.Labels == nil {
@@ -1921,30 +2903,62 @@ func (s *Syncer) CompareNode(bkNode *bkcmdbkube.Node, k8sNode *storage.K8sNode) 
 			updateData.Labels = &labelsEmpty
 			needToUpdate = true
 		}
-	} else if bkNode.Labels == nil || fmt.Sprint(*bkNode.Labels) != fmt.Sprint(k8sNode.Data.Labels) {
-		updateData.Labels = &k8sNode.Data.Labels
-		needToUpdate = true
+	} else if bkNode.Labels == nil ||
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkNode.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sNode.Data.Labels), "．", "."))) {
+		if len(k8sNode.Data.Labels) != 0 {
+			updateData.Labels = &k8sNode.Data.Labels
+			needToUpdate = true
+		}
+
+		if bkNode.Labels == nil {
+			blog.Infof("CompareNode Labels: bknode: nil, k8snode: %v",
+				strings.ReplaceAll(mapToString(k8sNode.Data.Labels), "．", "."))
+		} else {
+			blog.Infof("CompareNode Labels: bknode: %v\n k8snode: %v",
+				strings.ReplaceAll(mapToString(*bkNode.Labels), "．", "."),
+				strings.ReplaceAll(mapToString(k8sNode.Data.Labels), "．", "."))
+		}
 	}
 
 	if bkNode.Unschedulable == nil {
-		updateData.Unschedulable = &k8sNode.Data.Spec.Unschedulable
-		needToUpdate = true
+		if k8sNode.Data.Spec.Unschedulable {
+			updateData.Unschedulable = &k8sNode.Data.Spec.Unschedulable
+			needToUpdate = true
+			blog.Infof("CompareNode Unschedulable nil")
+			blog.Infof("bkNode: %v", *bkNode)
+		}
 	} else if *bkNode.Unschedulable != k8sNode.Data.Spec.Unschedulable {
 		updateData.Unschedulable = &k8sNode.Data.Spec.Unschedulable
+		blog.Infof("CompareNode Unschedulable: %v, %v", *bkNode.Unschedulable, k8sNode.Data.Spec.Unschedulable)
 		needToUpdate = true
 	}
 
 	if bkNode.PodCidr == nil {
-		updateData.PodCidr = &k8sNode.Data.Spec.PodCIDR
-		needToUpdate = true
+		if k8sNode.Data.Spec.PodCIDR != "" {
+			updateData.PodCidr = &k8sNode.Data.Spec.PodCIDR
+			blog.Infof("CompareNode PodCIDR nil")
+			blog.Infof("bkNode: %v", *bkNode)
+			needToUpdate = true
+		}
 	} else if *bkNode.PodCidr != k8sNode.Data.Spec.PodCIDR {
 		updateData.PodCidr = &k8sNode.Data.Spec.PodCIDR
+		blog.Infof("CompareNode PodCIDR: %v, %v", *bkNode.PodCidr, k8sNode.Data.Spec.PodCIDR)
 		needToUpdate = true
 	}
 
-	if *bkNode.RuntimeComponent != k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion {
-		updateData.RuntimeComponent = &k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion
-		needToUpdate = true
+	if bkNode.RuntimeComponent != nil {
+		if *bkNode.RuntimeComponent != k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion {
+			updateData.RuntimeComponent = &k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion
+			blog.Infof("CompareNode RuntimeComponent")
+			needToUpdate = true
+		}
+	} else {
+		if k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion != "" {
+			updateData.RuntimeComponent = &k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion
+			blog.Infof("CompareNode RuntimeComponent")
+			needToUpdate = true
+		}
 	}
 
 	if !needToUpdate {
@@ -1956,7 +2970,7 @@ func (s *Syncer) CompareNode(bkNode *bkcmdbkube.Node, k8sNode *storage.K8sNode) 
 
 // GenerateBkNodeData generate bknode data from k8snode
 func (s *Syncer) GenerateBkNodeData(
-	bkCluster *bkcmdbkube.Cluster, k8sNode *storage.K8sNode) client.CreateBcsNodeRequestData {
+	bkCluster *bkcmdbkube.Cluster, k8sNode *storage.K8sNode) (data client.CreateBcsNodeRequestData, err error) {
 	taints := make(map[string]string)
 	for _, taint := range k8sNode.Data.Spec.Taints {
 		taints[taint.Key] = taint.Value
@@ -1978,12 +2992,18 @@ func (s *Syncer) GenerateBkNodeData(
 	}
 	var theHostID int64
 	if hostID == 0 {
-		hosts, err := s.CMDBClient.GetHostInfo(internalIP)
+		hosts, err := s.CMDBClient.GetHostsByBiz(bkCluster.BizID, internalIP)
 		if err != nil {
-			return client.CreateBcsNodeRequestData{}
+			blog.Errorf("GetHostsByBiz error: %v", err)
+			return client.CreateBcsNodeRequestData{}, err
 		}
 		if len(*hosts) > 0 {
 			theHostID = (*hosts)[0].BkHostId
+		}
+		if len(*hosts) == 0 {
+			blog.Errorf("GetHostsByBiz can not find host: %s in biz %d", internalIP, bkCluster.BizID)
+			return client.CreateBcsNodeRequestData{},
+				fmt.Errorf("GetHostsByBiz can not find host: %s in biz %d", internalIP, bkCluster.BizID)
 		}
 	} else {
 		theHostID = hostID
@@ -2002,12 +3022,13 @@ func (s *Syncer) GenerateBkNodeData(
 		RuntimeComponent: &k8sNode.Data.Status.NodeInfo.ContainerRuntimeVersion,
 		KubeProxyMode:    nil,
 		PodCidr:          &k8sNode.Data.Spec.PodCIDR,
-	}
+	}, nil
 }
 
 // UpdateBkNodes update bknodes
 // nolint
-func (s *Syncer) UpdateBkNodes(bkCluster *bkcmdbkube.Cluster, toUpdate *map[int64]*client.UpdateBcsNodeRequestData) {
+func (s *Syncer) UpdateBkNodes(
+	bkCluster *bkcmdbkube.Cluster, toUpdate *map[int64]*client.UpdateBcsNodeRequestData, db *gorm.DB) {
 	if toUpdate == nil {
 		return
 	}
@@ -2017,7 +3038,7 @@ func (s *Syncer) UpdateBkNodes(bkCluster *bkcmdbkube.Cluster, toUpdate *map[int6
 			BKBizID: &bkCluster.BizID,
 			IDs:     &[]int64{k},
 			Data:    v,
-		})
+		}, db)
 
 		if err != nil {
 			blog.Errorf("update node failed, err: %s", err.Error())
@@ -2026,39 +3047,63 @@ func (s *Syncer) UpdateBkNodes(bkCluster *bkcmdbkube.Cluster, toUpdate *map[int6
 }
 
 // DeleteBkNodes delete bknodes
-func (s *Syncer) DeleteBkNodes(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64) error {
-	if len(*toDelete) > 0 {
-		err := s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
-			BKBizID: &bkCluster.BizID,
-			IDs:     toDelete,
-		})
-		if err != nil {
-			for i := 0; i < len(*toDelete); i++ {
-				var section []int64
-				if i+1 > len(*toDelete) {
-					section = (*toDelete)[i:]
-				} else {
-					section = (*toDelete)[i : i+1]
-				}
+func (s *Syncer) DeleteBkNodes(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
+	if len(*toDelete) == 0 {
+		return nil
+	}
 
-				err = s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
-					BKBizID: &bkCluster.BizID,
-					IDs:     &section,
-				})
+	bkPodList, err := s.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
+		Condition: "AND",
+		Rules: []client.Rule{
+			{
+				Field:    "bk_node_id",
+				Operator: "in",
+				Value:    *toDelete,
+			},
+		},
+	}, true, db)
+	// blog.Infof("bkPodList: %v, len: %d", *bkPodList, len(*bkPodList))
+	if err != nil {
+		blog.Errorf("get bk pod failed, err: %s", err.Error())
+	} else if len(*bkPodList) > 0 {
+		podToDelete := make([]int64, 0)
+		for _, pod := range *bkPodList {
+			podToDelete = append(podToDelete, pod.ID)
+			blog.Infof("podToDelete: %s+%s", pod.NameSpace, *pod.Name)
+		}
+		_ = s.DeleteBkPods(bkCluster, &podToDelete, db)
+	}
 
-				if err != nil {
-					blog.Errorf("delete node failed, err: %s", err.Error())
-					return err
-				}
+	err = s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+		BKBizID: &bkCluster.BizID,
+		IDs:     toDelete,
+	}, nil)
+	if err != nil {
+		for i := 0; i < len(*toDelete); i++ {
+			var section []int64
+			if i+1 > len(*toDelete) {
+				section = (*toDelete)[i:]
+			} else {
+				section = (*toDelete)[i : i+1]
+			}
+
+			err = s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+				BKBizID: &bkCluster.BizID,
+				IDs:     &section,
+			}, nil)
+
+			if err != nil {
+				blog.Errorf("delete node failed, err: %s", err.Error())
 			}
 		}
-		blog.Infof("delete node from cmdb success, ids: %v", toDelete)
 	}
+	blog.Infof("delete node from cmdb success, ids: %v", toDelete)
 	return nil
 }
 
 // GetBkNamespaces get bknamespaces
-func (s *Syncer) GetBkNamespaces(bkBizID int64, filter *client.PropertyFilter) (*[]bkcmdbkube.Namespace, error) {
+func (s *Syncer) GetBkNamespaces(
+	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]bkcmdbkube.Namespace, error) {
 	bkNamespaceList := make([]bkcmdbkube.Namespace, 0)
 
 	pageStart := 0
@@ -2073,7 +3118,7 @@ func (s *Syncer) GetBkNamespaces(bkBizID int64, filter *client.PropertyFilter) (
 				Fields: []string{},
 				Filter: filter,
 			},
-		})
+		}, db, withDB)
 
 		if err != nil {
 			blog.Errorf("get bcs namespace failed, err: %s", err.Error())
@@ -2082,6 +3127,10 @@ func (s *Syncer) GetBkNamespaces(bkBizID int64, filter *client.PropertyFilter) (
 		bkNamespaceList = append(bkNamespaceList, *bkNamespaces...)
 
 		if len(*bkNamespaces) < 100 {
+			break
+		}
+
+		if withDB {
 			break
 		}
 		pageStart++
@@ -2107,9 +3156,14 @@ func (s *Syncer) CompareNamespace(bkNs *bkcmdbkube.Namespace, k8sNs *storage.Nam
 			updateData.Labels = &labelsEmpty
 			needToUpdate = true
 		}
-	} else if bkNs.Labels == nil || fmt.Sprint(*bkNs.Labels) != fmt.Sprint(k8sNs.Data.Labels) {
-		updateData.Labels = &k8sNs.Data.Labels
-		needToUpdate = true
+	} else if bkNs.Labels == nil ||
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkNs.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sNs.Data.Labels), "．", "."))) {
+		if len(k8sNs.Data.Labels) != 0 {
+			updateData.Labels = &k8sNs.Data.Labels
+			blog.Infof("CompareNamespace labels: %v, %v", bkNs.Labels, fmt.Sprint(k8sNs.Data.Labels))
+			needToUpdate = true
+		}
 	}
 
 	if !needToUpdate {
@@ -2139,7 +3193,8 @@ func (s *Syncer) GenerateBkNsData(bkCluster *bkcmdbkube.Cluster, k8sNs *storage.
 }
 
 // CreateBkNamespaces create bknamespaces
-func (s *Syncer) CreateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toCreate map[int64][]bkcmdbkube.Namespace) {
+func (s *Syncer) CreateBkNamespaces(
+	bkCluster *bkcmdbkube.Cluster, toCreate map[int64][]bkcmdbkube.Namespace, db *gorm.DB) {
 	if len(toCreate) > 0 {
 		for bizid, bkNsList := range toCreate {
 			if len(bkNsList) > 0 {
@@ -2154,7 +3209,7 @@ func (s *Syncer) CreateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toCreate map[
 					bkNsIDs, err := s.CMDBClient.CreateBcsNamespace(&client.CreateBcsNamespaceRequest{
 						BKBizID: &bizid,
 						Data:    &section,
-					})
+					}, db)
 
 					if err != nil {
 						blog.Errorf("create namespace failed, err: %s", err.Error())
@@ -2172,7 +3227,7 @@ func (s *Syncer) CreateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toCreate map[
 								Name:        &podsName,
 							},
 						},
-					})
+					}, db)
 
 					if err != nil {
 						blog.Errorf("create workload pods failed, err: %s", err.Error())
@@ -2185,7 +3240,8 @@ func (s *Syncer) CreateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toCreate map[
 
 // UpdateBkNamespaces update bknamespaces
 // nolint
-func (s *Syncer) UpdateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toUpdate *map[int64]*client.UpdateBcsNamespaceRequestData) {
+func (s *Syncer) UpdateBkNamespaces(
+	bkCluster *bkcmdbkube.Cluster, toUpdate *map[int64]*client.UpdateBcsNamespaceRequestData, db *gorm.DB) {
 	if toUpdate == nil {
 		return
 	}
@@ -2195,7 +3251,7 @@ func (s *Syncer) UpdateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toUpdate *map
 			BKBizID: &bkCluster.BizID,
 			IDs:     &[]int64{k},
 			Data:    v,
-		})
+		}, db)
 
 		if err != nil {
 			blog.Errorf("update namespace failed, err: %s", err.Error())
@@ -2204,7 +3260,7 @@ func (s *Syncer) UpdateBkNamespaces(bkCluster *bkcmdbkube.Cluster, toUpdate *map
 }
 
 // DeleteBkNamespaces delete bknamespaces
-func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64) error {
+func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		for i := 0; i < len(*toDelete); i++ {
 			var section []int64
@@ -2223,7 +3279,7 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 						Value:    section,
 					},
 				},
-			})
+			}, false, nil)
 			if err != nil {
 				blog.Errorf("get bk workload pods failed, err: %s", err.Error())
 				return errors.New("get bk workload pods failed")
@@ -2247,7 +3303,7 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 				BKBizID: &bkCluster.BizID,
 				Kind:    &podsKind,
 				IDs:     &[]int64{p.ID},
-			})
+			}, db)
 
 			if err != nil {
 				blog.Errorf("delete bk workload pods failed, err: %s", err.Error())
@@ -2257,7 +3313,7 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 			err = s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
 				BKBizID: &bkCluster.BizID,
 				IDs:     &section,
-			})
+			}, db)
 
 			if err != nil {
 				blog.Errorf("delete namespace failed, err: %s", err.Error())
@@ -2269,7 +3325,8 @@ func (s *Syncer) DeleteBkNamespaces(bkCluster *bkcmdbkube.Cluster, toDelete *[]i
 
 // GetBkWorkloads get bkworkloads
 func (s *Syncer) GetBkWorkloads(
-	bkBizID int64, workloadType string, filter *client.PropertyFilter) (*[]interface{}, error) {
+	bkBizID int64, workloadType string,
+	filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]interface{}, error) {
 	bkWorkloadList := make([]interface{}, 0)
 
 	pageStart := 0
@@ -2295,7 +3352,7 @@ func (s *Syncer) GetBkWorkloads(
 			},
 			// ClusterUID: bkCluster.Uid,
 			Kind: workloadType,
-		})
+		}, db, withDB)
 
 		if err != nil {
 			blog.Errorf("get bcs workload failed, err: %s", err.Error())
@@ -2306,6 +3363,9 @@ func (s *Syncer) GetBkWorkloads(
 		if len(*bkWorkloads) < 100 {
 			break
 		}
+		if withDB {
+			break
+		}
 		pageStart++
 	}
 
@@ -2314,7 +3374,7 @@ func (s *Syncer) GetBkWorkloads(
 
 // CreateBkWorkloads create bkworkloads
 func (s *Syncer) CreateBkWorkloads(
-	bkCluster *bkcmdbkube.Cluster, kind string, toCreate map[int64][]client.CreateBcsWorkloadRequestData) {
+	bkCluster *bkcmdbkube.Cluster, kind string, toCreate map[int64][]client.CreateBcsWorkloadRequestData, db *gorm.DB) {
 	if len(toCreate) > 0 {
 		for bizid, workloads := range toCreate {
 			if len(workloads) > 0 {
@@ -2322,7 +3382,7 @@ func (s *Syncer) CreateBkWorkloads(
 					BKBizID: &bizid,
 					Kind:    &kind,
 					Data:    &workloads,
-				})
+				}, db)
 				if err != nil {
 					for i := 0; i < len(workloads); i++ {
 						var section []client.CreateBcsWorkloadRequestData
@@ -2335,7 +3395,7 @@ func (s *Syncer) CreateBkWorkloads(
 							BKBizID: &bkCluster.BizID,
 							Kind:    &kind,
 							Data:    &section,
-						})
+						}, db)
 
 						if err != nil {
 							blog.Errorf("create workload %s failed, err: %s", kind, err.Error())
@@ -2349,6 +3409,53 @@ func (s *Syncer) CreateBkWorkloads(
 			}
 		}
 	}
+}
+
+func rollingUpdateDeploymentEqual(rud *appv1.RollingUpdateDeployment, bkRud *bkcmdbkube.RollingUpdateDeployment) bool {
+	if rud == nil && bkRud == nil {
+		return true
+	}
+
+	if rud != nil && bkRud == nil {
+		return false
+	}
+
+	if bkRud != nil && rud == nil {
+		if bkRud.MaxUnavailable == nil && bkRud.MaxSurge == nil {
+			return true
+		}
+		return false
+	}
+
+	if rud.MaxSurge != nil && bkRud.MaxSurge == nil {
+		return false
+	}
+
+	if rud.MaxSurge == nil && bkRud.MaxSurge != nil {
+		return false
+	}
+
+	if rud.MaxSurge != nil && bkRud.MaxSurge != nil {
+		if rud.MaxSurge.StrVal != bkRud.MaxSurge.StrVal {
+			return false
+		}
+	}
+
+	if rud.MaxUnavailable != nil && bkRud.MaxUnavailable == nil {
+		return false
+	}
+
+	if rud.MaxUnavailable == nil && bkRud.MaxUnavailable != nil {
+		return false
+	}
+
+	if rud.MaxUnavailable != nil && bkRud.MaxUnavailable != nil {
+		if rud.MaxUnavailable.StrVal != bkRud.MaxUnavailable.StrVal {
+			return false
+		}
+	}
+
+	return true
 }
 
 // CompareDeployment compare bkdeployment and k8sdeployment
@@ -2368,19 +3475,29 @@ func (s *Syncer) CompareDeployment(
 	if k8sDeployment.Data.Labels == nil {
 		if bkDeployment.Labels != nil {
 			updateData.Labels = &labelsEmpty
+			blog.Infof("CompareDeployment labels: %v, %v", k8sDeployment.Data.Labels, bkDeployment.Labels)
 			needToUpdate = true
 		}
-	} else if bkDeployment.Labels == nil || fmt.Sprint(k8sDeployment.Data.Labels) != fmt.Sprint(*bkDeployment.Labels) {
-		updateData.Labels = &k8sDeployment.Data.Labels
-		needToUpdate = true
+	} else if bkDeployment.Labels == nil ||
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkDeployment.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sDeployment.Data.Labels), "．", "."))) {
+		if len(k8sDeployment.Data.Labels) > 0 {
+			updateData.Labels = &k8sDeployment.Data.Labels
+			blog.Infof("CompareDeployment labels: %v, %v", k8sDeployment.Data.Labels, bkDeployment.Labels)
+			needToUpdate = true
+		}
 	}
 
 	if k8sDeployment.Data.Spec.Selector == nil {
 		if bkDeployment.Selector != nil {
 			updateData.Selector = nil
+			blog.Infof("CompareDeployment Selector: %v, %v",
+				k8sDeployment.Data.Spec.Selector, k8sDeployment.Data.Spec.Selector)
 			needToUpdate = true
 		}
-	} else if bkDeployment.Selector == nil || fmt.Sprint(k8sDeployment.Data.Spec.Selector) != fmt.Sprint(*bkDeployment.Selector) {
+	} else if bkDeployment.Selector == nil ||
+		strings.ReplaceAll(fmt.Sprint(*k8sDeployment.Data.Spec.Selector), "．", ".") !=
+			strings.ReplaceAll(fmt.Sprint(*bkDeployment.Selector), "．", ".") {
 		me := make([]bkcmdbkube.LabelSelectorRequirement, 0)
 		for _, m := range k8sDeployment.Data.Spec.Selector.MatchExpressions {
 			me = append(me, bkcmdbkube.LabelSelectorRequirement{
@@ -2394,39 +3511,76 @@ func (s *Syncer) CompareDeployment(
 			MatchLabels:      k8sDeployment.Data.Spec.Selector.MatchLabels,
 			MatchExpressions: me,
 		}
+		blog.Infof("CompareDeployment Selector: %v, %v",
+			fmt.Sprint(*k8sDeployment.Data.Spec.Selector), fmt.Sprint(*bkDeployment.Selector))
 
 		needToUpdate = true
 	}
 
-	if *bkDeployment.Replicas != int64(*k8sDeployment.Data.Spec.Replicas) {
-		replicas := int64(*k8sDeployment.Data.Spec.Replicas)
-		updateData.Replicas = &replicas
-		needToUpdate = true
-	}
-
-	if *bkDeployment.MinReadySeconds != int64(k8sDeployment.Data.Spec.MinReadySeconds) {
-		minReadySeconds := int64(k8sDeployment.Data.Spec.MinReadySeconds)
-		updateData.MinReadySeconds = &minReadySeconds
-		needToUpdate = true
-	}
-
-	if *bkDeployment.StrategyType != bkcmdbkube.DeploymentStrategyType(k8sDeployment.Data.Spec.Strategy.Type) {
-		strategyType := string(k8sDeployment.Data.Spec.Strategy.Type)
-		updateData.StrategyType = &strategyType
-		needToUpdate = true
-	}
-
-	rusEmpty := map[string]interface{}{}
-
-	if k8sDeployment.Data.Spec.Strategy.RollingUpdate == nil {
-		if bkDeployment.RollingUpdateStrategy != nil {
-			updateData.RollingUpdateStrategy = &rusEmpty
+	if bkDeployment.Replicas != nil {
+		if *bkDeployment.Replicas != int64(*k8sDeployment.Data.Spec.Replicas) {
+			replicas := int64(*k8sDeployment.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
+			blog.Infof("CompareDeployment Replicas: %v, %v",
+				*bkDeployment.Replicas, *k8sDeployment.Data.Spec.Replicas)
 			needToUpdate = true
 		}
-	} else if fmt.Sprint(k8sDeployment.Data.Spec.Strategy.RollingUpdate) != fmt.Sprint(*bkDeployment.RollingUpdateStrategy) {
-		rud := bkcmdbkube.RollingUpdateDeployment{}
+	} else {
+		if int64(*k8sDeployment.Data.Spec.Replicas) != 0 {
+			replicas := int64(*k8sDeployment.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
+			blog.Infof("CompareDeployment Replicas: %v, %v",
+				bkDeployment.Replicas, *k8sDeployment.Data.Spec.Replicas)
+			needToUpdate = true
+		}
+	}
+	if bkDeployment.MinReadySeconds != nil {
+		if *bkDeployment.MinReadySeconds != int64(k8sDeployment.Data.Spec.MinReadySeconds) {
+			minReadySeconds := int64(k8sDeployment.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			blog.Infof("CompareDeployment MinReadySeconds: %v, %v",
+				*bkDeployment.MinReadySeconds, k8sDeployment.Data.Spec.MinReadySeconds)
+			needToUpdate = true
+		}
+	} else {
+		if int64(k8sDeployment.Data.Spec.MinReadySeconds) != 0 {
+			minReadySeconds := int64(k8sDeployment.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			blog.Infof("CompareDeployment MinReadySeconds: %v, %v",
+				bkDeployment.MinReadySeconds, k8sDeployment.Data.Spec.MinReadySeconds)
+			needToUpdate = true
+		}
+	}
 
-		if k8sDeployment.Data.Spec.Strategy.RollingUpdate != nil {
+	if bkDeployment.StrategyType != nil {
+		if *bkDeployment.StrategyType != bkcmdbkube.DeploymentStrategyType(k8sDeployment.Data.Spec.Strategy.Type) {
+			strategyType := string(k8sDeployment.Data.Spec.Strategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareDeployment StrategyType: %v, %v",
+				*bkDeployment.StrategyType, k8sDeployment.Data.Spec.Strategy.Type)
+			needToUpdate = true
+		}
+	} else {
+		if bkcmdbkube.DeploymentStrategyType(k8sDeployment.Data.Spec.Strategy.Type) != "" {
+			strategyType := string(k8sDeployment.Data.Spec.Strategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareDeployment StrategyType: %v, %v",
+				bkDeployment.StrategyType, k8sDeployment.Data.Spec.Strategy.Type)
+			needToUpdate = true
+		}
+	}
+
+	rudEmpty := map[string]interface{}{}
+
+	if !rollingUpdateDeploymentEqual(k8sDeployment.Data.Spec.Strategy.RollingUpdate,
+		bkDeployment.RollingUpdateStrategy) {
+		if k8sDeployment.Data.Spec.Strategy.RollingUpdate == nil {
+			updateData.RollingUpdateStrategy = &rudEmpty
+			blog.Infof("CompareDeployment RollingUpdate: %v, %v",
+				k8sDeployment.Data.Spec.Strategy.RollingUpdate, bkDeployment.RollingUpdateStrategy)
+			needToUpdate = true
+		} else {
+			rud := bkcmdbkube.RollingUpdateDeployment{}
 			if k8sDeployment.Data.Spec.Strategy.RollingUpdate.MaxUnavailable != nil {
 				rud.MaxUnavailable = &bkcmdbkube.IntOrString{
 					Type:   bkcmdbkube.Type(k8sDeployment.Data.Spec.Strategy.RollingUpdate.MaxUnavailable.Type),
@@ -2442,19 +3596,22 @@ func (s *Syncer) CompareDeployment(
 					StrVal: k8sDeployment.Data.Spec.Strategy.RollingUpdate.MaxSurge.StrVal,
 				}
 			}
+
+			jsonBytes, err := json.Marshal(rud)
+			if err != nil {
+				blog.Errorf("marshal rolling update deployment failed, err: %s", err.Error())
+				return false, nil
+			}
+
+			rudMap := make(map[string]interface{})
+			err = json.Unmarshal(jsonBytes, &rudMap)
+
+			updateData.RollingUpdateStrategy = &rudMap
+			blog.Infof("CompareDeployment RollingUpdate: %v, %v",
+				fmt.Sprint(*k8sDeployment.Data.Spec.Strategy.RollingUpdate),
+				fmt.Sprint(*bkDeployment.RollingUpdateStrategy))
+			needToUpdate = true
 		}
-
-		jsonBytes, err := json.Marshal(rud)
-		if err != nil {
-			blog.Errorf("marshal rolling update deployment failed, err: %s", err.Error())
-			return false, nil
-		}
-
-		rudMap := make(map[string]interface{})
-		err = json.Unmarshal(jsonBytes, &rudMap)
-
-		updateData.RollingUpdateStrategy = &rudMap
-		needToUpdate = true
 	}
 
 	if !needToUpdate {
@@ -2525,6 +3682,54 @@ func (s *Syncer) GenerateBkDeployment(
 	}
 }
 
+func rollingUpdateStatefulSetStrategyEqual(
+	russ *appv1.RollingUpdateStatefulSetStrategy, bkRuss *bkcmdbkube.RollingUpdateStatefulSetStrategy) bool {
+	if russ == nil && bkRuss == nil {
+		return true
+	}
+
+	if russ != nil && bkRuss == nil {
+		return false
+	}
+
+	if bkRuss != nil && russ == nil {
+		if bkRuss.MaxUnavailable == nil && bkRuss.Partition == nil {
+			return true
+		}
+		return false
+	}
+
+	if russ.MaxUnavailable != nil && bkRuss.MaxUnavailable == nil {
+		return false
+	}
+
+	if russ.MaxUnavailable == nil && bkRuss.MaxUnavailable != nil {
+		return false
+	}
+
+	if russ.MaxUnavailable != nil && bkRuss.MaxUnavailable != nil {
+		if russ.MaxUnavailable.StrVal != bkRuss.MaxUnavailable.StrVal {
+			return false
+		}
+	}
+
+	if russ.Partition != nil && bkRuss.Partition == nil {
+		return false
+	}
+
+	if russ.Partition == nil && bkRuss.Partition != nil {
+		return false
+	}
+
+	if russ.Partition != nil && bkRuss.Partition != nil {
+		if *russ.Partition != *bkRuss.Partition {
+			return false
+		}
+	}
+
+	return true
+}
+
 // CompareStatefulSet compare bkstatefulset and k8sstatefulset
 // nolint funlen
 func (s *Syncer) CompareStatefulSet(
@@ -2532,7 +3737,7 @@ func (s *Syncer) CompareStatefulSet(
 	needToUpdate bool, updateData *client.UpdateBcsWorkloadRequestData) {
 	needToUpdate = false
 	updateData = &client.UpdateBcsWorkloadRequestData{}
-	labelsEmpty := map[string]string{}
+	//labelsEmpty := map[string]string{}
 
 	//var updateDataIDs []int64
 	//updateData.IDs = &updateDataIDs
@@ -2541,22 +3746,30 @@ func (s *Syncer) CompareStatefulSet(
 
 	if k8sStatefulSet.Data.Labels == nil {
 		if bkStatefulSet.Labels != nil {
-			updateData.Labels = &labelsEmpty
+			updateData.Labels = nil
+			blog.Infof("CompareStatefulSet labels: %v, %v", k8sStatefulSet.Data.Labels, bkStatefulSet.Labels)
 			needToUpdate = true
 		}
 	} else if bkStatefulSet.Labels == nil ||
-		fmt.Sprint(k8sStatefulSet.Data.Labels) != fmt.Sprint(*bkStatefulSet.Labels) {
-		updateData.Labels = &k8sStatefulSet.Data.Labels
-		needToUpdate = true
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkStatefulSet.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sStatefulSet.Data.Labels), "．", "."))) {
+		if len(k8sStatefulSet.Data.Labels) > 0 {
+			updateData.Labels = &k8sStatefulSet.Data.Labels
+			blog.Infof("CompareStatefulSet labels: %v, %v", k8sStatefulSet.Data.Labels, bkStatefulSet.Labels)
+			needToUpdate = true
+		}
 	}
 
 	if k8sStatefulSet.Data.Spec.Selector == nil {
 		if bkStatefulSet.Selector != nil {
 			updateData.Selector = nil
+			blog.Infof("CompareStatefulSet Selector: %v, %v",
+				k8sStatefulSet.Data.Spec.Selector, bkStatefulSet.Selector)
 			needToUpdate = true
 		}
 	} else if bkStatefulSet.Selector == nil ||
-		fmt.Sprint(k8sStatefulSet.Data.Spec.Selector) != fmt.Sprint(*bkStatefulSet.Selector) {
+		strings.ReplaceAll(fmt.Sprint(*k8sStatefulSet.Data.Spec.Selector), "．", ".") !=
+			strings.ReplaceAll(fmt.Sprint(*bkStatefulSet.Selector), "．", ".") {
 		me := make([]bkcmdbkube.LabelSelectorRequirement, 0)
 		for _, m := range k8sStatefulSet.Data.Spec.Selector.MatchExpressions {
 			me = append(me, bkcmdbkube.LabelSelectorRequirement{
@@ -2571,59 +3784,90 @@ func (s *Syncer) CompareStatefulSet(
 			MatchExpressions: me,
 		}
 
+		blog.Infof("CompareStatefulSet Selector: %v, %v",
+			fmt.Sprint(k8sStatefulSet.Data.Spec.Selector), fmt.Sprint(*bkStatefulSet.Selector))
 		needToUpdate = true
 	}
 
-	if *bkStatefulSet.Replicas != int64(*k8sStatefulSet.Data.Spec.Replicas) {
-		replicas := int64(*k8sStatefulSet.Data.Spec.Replicas)
-		updateData.Replicas = &replicas
-		needToUpdate = true
-	}
-
-	if *bkStatefulSet.MinReadySeconds != int64(k8sStatefulSet.Data.Spec.MinReadySeconds) {
-		minReadySeconds := int64(k8sStatefulSet.Data.Spec.MinReadySeconds)
-		updateData.MinReadySeconds = &minReadySeconds
-		needToUpdate = true
-	}
-
-	if *bkStatefulSet.StrategyType !=
-		bkcmdbkube.StatefulSetUpdateStrategyType(k8sStatefulSet.Data.Spec.UpdateStrategy.Type) {
-		strategyType := string(k8sStatefulSet.Data.Spec.UpdateStrategy.Type)
-		updateData.StrategyType = &strategyType
-		needToUpdate = true
-	}
-
-	if k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate == nil {
-		if bkStatefulSet.RollingUpdateStrategy != nil {
-			updateData.RollingUpdateStrategy = nil
+	if bkStatefulSet.Replicas != nil {
+		if *bkStatefulSet.Replicas != int64(*k8sStatefulSet.Data.Spec.Replicas) {
+			replicas := int64(*k8sStatefulSet.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
 			needToUpdate = true
 		}
-	} else if fmt.Sprint(k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate) !=
-		fmt.Sprint(*bkStatefulSet.RollingUpdateStrategy) {
-		rus := bkcmdbkube.RollingUpdateStatefulSetStrategy{}
+	} else {
+		if int64(*k8sStatefulSet.Data.Spec.Replicas) != 0 {
+			replicas := int64(*k8sStatefulSet.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
+			needToUpdate = true
+		}
+	}
 
-		if k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate != nil {
+	if bkStatefulSet.MinReadySeconds != nil {
+		if *bkStatefulSet.MinReadySeconds != int64(k8sStatefulSet.Data.Spec.MinReadySeconds) {
+			minReadySeconds := int64(k8sStatefulSet.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			needToUpdate = true
+		}
+	} else {
+		if int64(k8sStatefulSet.Data.Spec.MinReadySeconds) != 0 {
+			minReadySeconds := int64(k8sStatefulSet.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			needToUpdate = true
+		}
+	}
+
+	if bkStatefulSet.StrategyType != nil {
+		if *bkStatefulSet.StrategyType !=
+			bkcmdbkube.StatefulSetUpdateStrategyType(k8sStatefulSet.Data.Spec.UpdateStrategy.Type) {
+			strategyType := string(k8sStatefulSet.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			needToUpdate = true
+		}
+	} else {
+		if bkcmdbkube.StatefulSetUpdateStrategyType(k8sStatefulSet.Data.Spec.UpdateStrategy.Type) != "" {
+			strategyType := string(k8sStatefulSet.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			needToUpdate = true
+		}
+	}
+
+	russEmpty := map[string]interface{}{}
+
+	if !rollingUpdateStatefulSetStrategyEqual(k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate,
+		bkStatefulSet.RollingUpdateStrategy) {
+		if k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate == nil {
+			updateData.RollingUpdateStrategy = &russEmpty
+			blog.Infof("CompareStatefulSet RollingUpdate: %v, %v",
+				k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate, bkStatefulSet.RollingUpdateStrategy)
+			needToUpdate = true
+		} else {
+			russ := bkcmdbkube.RollingUpdateStatefulSetStrategy{}
+
 			if k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable != nil {
-				rus.MaxUnavailable = &bkcmdbkube.IntOrString{
+				russ.MaxUnavailable = &bkcmdbkube.IntOrString{
 					Type:   bkcmdbkube.Type(k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.Type),
 					IntVal: k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal,
 					StrVal: k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.StrVal,
 				}
 			}
-			rus.Partition = k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.Partition
+			russ.Partition = k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.Partition
+
+			jsonBytes, err := json.Marshal(russ)
+			if err != nil {
+				blog.Errorf("marshal rolling update statefulset failed, err: %s", err.Error())
+				return false, nil
+			}
+
+			rusMap := make(map[string]interface{})
+			_ = json.Unmarshal(jsonBytes, &rusMap)
+
+			updateData.RollingUpdateStrategy = &rusMap
+			blog.Infof("CompareStatefulSet RollingUpdate: %v, %v",
+				*k8sStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate, *bkStatefulSet.RollingUpdateStrategy)
+
+			needToUpdate = true
 		}
-
-		jsonBytes, err := json.Marshal(rus)
-		if err != nil {
-			blog.Errorf("marshal rolling update statefulset failed, err: %s", err.Error())
-			return false, nil
-		}
-
-		rusMap := make(map[string]interface{})
-		_ = json.Unmarshal(jsonBytes, &rusMap)
-
-		updateData.RollingUpdateStrategy = &rusMap
-		needToUpdate = true
 	}
 
 	if !needToUpdate {
@@ -2687,6 +3931,53 @@ func (s *Syncer) GenerateBkStatefulSet(
 	}
 }
 
+func rollingUpdateDaemonSetEqual(rud *appv1.RollingUpdateDaemonSet, bkRud *bkcmdbkube.RollingUpdateDaemonSet) bool {
+	if rud == nil && bkRud == nil {
+		return true
+	}
+
+	if rud != nil && bkRud == nil {
+		return false
+	}
+
+	if bkRud != nil && rud == nil {
+		if bkRud.MaxUnavailable == nil && bkRud.MaxSurge == nil {
+			return true
+		}
+		return false
+	}
+
+	if rud.MaxSurge != nil && bkRud.MaxSurge == nil {
+		return false
+	}
+
+	if rud.MaxSurge == nil && bkRud.MaxSurge != nil {
+		return false
+	}
+
+	if rud.MaxSurge != nil && bkRud.MaxSurge != nil {
+		if rud.MaxSurge.StrVal != bkRud.MaxSurge.StrVal {
+			return false
+		}
+	}
+
+	if rud.MaxUnavailable != nil && bkRud.MaxUnavailable == nil {
+		return false
+	}
+
+	if rud.MaxUnavailable == nil && bkRud.MaxUnavailable != nil {
+		return false
+	}
+
+	if rud.MaxUnavailable != nil && bkRud.MaxUnavailable != nil {
+		if rud.MaxUnavailable.StrVal != bkRud.MaxUnavailable.StrVal {
+			return false
+		}
+	}
+
+	return true
+}
+
 // CompareDaemonSet compare bkdaemonset and k8sdaemonset
 // nolint funlen
 func (s *Syncer) CompareDaemonSet(
@@ -2704,21 +3995,29 @@ func (s *Syncer) CompareDaemonSet(
 	if k8sDaemonSet.Data.Labels == nil {
 		if bkDaemonSet.Labels != nil {
 			updateData.Labels = &labelsEmpty
+			blog.Infof("CompareDaemonSet labels: %v, %v", k8sDaemonSet.Data.Labels, bkDaemonSet.Labels)
 			needToUpdate = true
 		}
 	} else if bkDaemonSet.Labels == nil ||
-		fmt.Sprint(k8sDaemonSet.Data.Labels) != fmt.Sprint(*bkDaemonSet.Labels) {
-		updateData.Labels = &k8sDaemonSet.Data.Labels
-		needToUpdate = true
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkDaemonSet.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sDaemonSet.Data.Labels), "．", "."))) {
+		if len(k8sDaemonSet.Data.Labels) != 0 {
+			updateData.Labels = &k8sDaemonSet.Data.Labels
+			blog.Infof("CompareDaemonSet labels: %v, %v", k8sDaemonSet.Data.Labels, bkDaemonSet.Labels)
+			needToUpdate = true
+		}
 	}
 
 	if k8sDaemonSet.Data.Spec.Selector == nil {
 		if bkDaemonSet.Selector != nil {
 			updateData.Selector = nil
+			blog.Infof("CompareDaemonSet Selector: %v, %v",
+				k8sDaemonSet.Data.Spec.Selector, bkDaemonSet.Selector)
 			needToUpdate = true
 		}
 	} else if bkDaemonSet.Selector == nil ||
-		fmt.Sprint(k8sDaemonSet.Data.Spec.Selector) != fmt.Sprint(*bkDaemonSet.Selector) {
+		strings.ReplaceAll(fmt.Sprint(*k8sDaemonSet.Data.Spec.Selector), "．", ".") !=
+			strings.ReplaceAll(fmt.Sprint(*bkDaemonSet.Selector), "．", ".") {
 		me := make([]bkcmdbkube.LabelSelectorRequirement, 0)
 		for _, m := range k8sDaemonSet.Data.Spec.Selector.MatchExpressions {
 			me = append(me, bkcmdbkube.LabelSelectorRequirement{
@@ -2733,30 +4032,59 @@ func (s *Syncer) CompareDaemonSet(
 			MatchExpressions: me,
 		}
 
+		blog.Infof("CompareDaemonSet Selector: %v, %v", k8sDaemonSet.Data.Spec.Selector, bkDaemonSet.Selector)
+
 		needToUpdate = true
 	}
 
-	if *bkDaemonSet.MinReadySeconds != int64(k8sDaemonSet.Data.Spec.MinReadySeconds) {
-		minReadySeconds := int64(k8sDaemonSet.Data.Spec.MinReadySeconds)
-		updateData.MinReadySeconds = &minReadySeconds
-		needToUpdate = true
-	}
-
-	if *bkDaemonSet.StrategyType != bkcmdbkube.DaemonSetUpdateStrategyType(k8sDaemonSet.Data.Spec.UpdateStrategy.Type) {
-		strategyType := string(k8sDaemonSet.Data.Spec.UpdateStrategy.Type)
-		updateData.StrategyType = &strategyType
-		needToUpdate = true
-	}
-
-	if k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate == nil {
-		if bkDaemonSet.RollingUpdateStrategy != nil {
-			updateData.RollingUpdateStrategy = nil
+	if bkDaemonSet.MinReadySeconds != nil {
+		if *bkDaemonSet.MinReadySeconds != int64(k8sDaemonSet.Data.Spec.MinReadySeconds) {
+			minReadySeconds := int64(k8sDaemonSet.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			blog.Infof("CompareDaemonSet MinReadySeconds: %v, %v",
+				bkDaemonSet.MinReadySeconds, k8sDaemonSet.Data.Spec.MinReadySeconds)
 			needToUpdate = true
 		}
-	} else if bkDaemonSet.RollingUpdateStrategy == nil || fmt.Sprint(k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate) != fmt.Sprint(*bkDaemonSet.RollingUpdateStrategy) {
-		rud := bkcmdbkube.RollingUpdateDaemonSet{}
+	} else {
+		if int64(k8sDaemonSet.Data.Spec.MinReadySeconds) != 0 {
+			minReadySeconds := int64(k8sDaemonSet.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			blog.Infof("CompareDaemonSet MinReadySeconds: %v, %v",
+				bkDaemonSet.MinReadySeconds, k8sDaemonSet.Data.Spec.MinReadySeconds)
+			needToUpdate = true
+		}
+	}
 
-		if k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate != nil {
+	if bkDaemonSet.StrategyType != nil {
+		if *bkDaemonSet.StrategyType !=
+			bkcmdbkube.DaemonSetUpdateStrategyType(k8sDaemonSet.Data.Spec.UpdateStrategy.Type) {
+			strategyType := string(k8sDaemonSet.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareDaemonSet StrategyType: %v, %v",
+				bkDaemonSet.StrategyType, k8sDaemonSet.Data.Spec.UpdateStrategy.Type)
+			needToUpdate = true
+		}
+	} else {
+		if bkcmdbkube.DaemonSetUpdateStrategyType(k8sDaemonSet.Data.Spec.UpdateStrategy.Type) != "" {
+			strategyType := string(k8sDaemonSet.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareDaemonSet StrategyType: %v, %v",
+				bkDaemonSet.StrategyType, k8sDaemonSet.Data.Spec.UpdateStrategy.Type)
+			needToUpdate = true
+		}
+	}
+
+	rudsEmpty := map[string]interface{}{}
+
+	if !rollingUpdateDaemonSetEqual(k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate,
+		bkDaemonSet.RollingUpdateStrategy) {
+		if k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate == nil {
+			updateData.RollingUpdateStrategy = &rudsEmpty
+			blog.Infof("CompareDaemonSet RollingUpdate: %v, %v",
+				k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate, bkDaemonSet.RollingUpdateStrategy)
+			needToUpdate = true
+		} else {
+			rud := bkcmdbkube.RollingUpdateDaemonSet{}
 			if k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable != nil {
 				rud.MaxUnavailable = &bkcmdbkube.IntOrString{
 					Type:   bkcmdbkube.Type(k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.Type),
@@ -2772,19 +4100,21 @@ func (s *Syncer) CompareDaemonSet(
 					StrVal: k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.StrVal,
 				}
 			}
+
+			jsonBytes, err := json.Marshal(rud)
+			if err != nil {
+				blog.Errorf("marshal rolling update daemonSet failed, err: %s", err.Error())
+				return false, nil
+			}
+
+			rudMap := make(map[string]interface{})
+			_ = json.Unmarshal(jsonBytes, &rudMap)
+
+			updateData.RollingUpdateStrategy = &rudMap
+			blog.Infof("CompareDaemonSet RollingUpdate: %v, %v",
+				k8sDaemonSet.Data.Spec.UpdateStrategy.RollingUpdate, bkDaemonSet.RollingUpdateStrategy)
+			needToUpdate = true
 		}
-
-		jsonBytes, err := json.Marshal(rud)
-		if err != nil {
-			blog.Errorf("marshal rolling update daemonSet failed, err: %s", err.Error())
-			return false, nil
-		}
-
-		rudMap := make(map[string]interface{})
-		_ = json.Unmarshal(jsonBytes, &rudMap)
-
-		updateData.RollingUpdateStrategy = &rudMap
-		needToUpdate = true
 	}
 
 	if !needToUpdate {
@@ -2852,6 +4182,54 @@ func (s *Syncer) GenerateBkDaemonSet(
 	}
 }
 
+func rollingUpdateGameDeploymentEqual(
+	rug *gdv1alpha1.GameDeploymentUpdateStrategy, bkRug *bkcmdbkube.RollingUpdateGameDeployment) bool {
+	if rug == nil && bkRug == nil {
+		return true
+	}
+
+	if rug != nil && bkRug == nil {
+		return false
+	}
+
+	if bkRug != nil && rug == nil {
+		if bkRug.MaxUnavailable == nil && bkRug.MaxSurge == nil {
+			return true
+		}
+		return false
+	}
+
+	if rug.MaxSurge != nil && bkRug.MaxSurge == nil {
+		return false
+	}
+
+	if rug.MaxSurge == nil && bkRug.MaxSurge != nil {
+		return false
+	}
+
+	if rug.MaxSurge != nil && bkRug.MaxSurge != nil {
+		if rug.MaxSurge.StrVal != bkRug.MaxSurge.StrVal {
+			return false
+		}
+	}
+
+	if rug.MaxUnavailable != nil && bkRug.MaxUnavailable == nil {
+		return false
+	}
+
+	if rug.MaxUnavailable == nil && bkRug.MaxUnavailable != nil {
+		return false
+	}
+
+	if rug.MaxUnavailable != nil && bkRug.MaxUnavailable != nil {
+		if rug.MaxUnavailable.StrVal != bkRug.MaxUnavailable.StrVal {
+			return false
+		}
+	}
+
+	return true
+}
+
 // CompareGameDeployment compare bkgamedeployment and k8sgamedeployment
 // nolint funlen
 func (s *Syncer) CompareGameDeployment(
@@ -2869,21 +4247,32 @@ func (s *Syncer) CompareGameDeployment(
 	if k8sGameDeployment.Data.Labels == nil {
 		if bkGameDeployment.Labels != nil {
 			updateData.Labels = &labelsEmpty
+			blog.Infof("CompareGameDeployment labels: %v, %v",
+				k8sGameDeployment.Data.Labels, bkGameDeployment.Labels)
 			needToUpdate = true
 		}
 	} else if bkGameDeployment.Labels == nil ||
-		fmt.Sprint(k8sGameDeployment.Data.Labels) != fmt.Sprint(*bkGameDeployment.Labels) {
-		updateData.Labels = &k8sGameDeployment.Data.Labels
-		needToUpdate = true
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkGameDeployment.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sGameDeployment.Data.Labels), "．", "."))) {
+
+		if len(k8sGameDeployment.Data.Labels) > 0 {
+			updateData.Labels = &k8sGameDeployment.Data.Labels
+			blog.Infof("CompareGameDeployment labels: %v, %v",
+				k8sGameDeployment.Data.Labels, bkGameDeployment.Labels)
+			needToUpdate = true
+		}
 	}
 
 	if k8sGameDeployment.Data.Spec.Selector == nil {
 		if bkGameDeployment.Selector != nil {
 			updateData.Selector = nil
+			blog.Infof("CompareGameDeployment Selector: %v, %v",
+				k8sGameDeployment.Data.Spec.Selector, bkGameDeployment.Selector)
 			needToUpdate = true
 		}
 	} else if bkGameDeployment.Selector == nil ||
-		fmt.Sprint(k8sGameDeployment.Data.Spec.Selector) != fmt.Sprint(*bkGameDeployment.Selector) {
+		strings.ReplaceAll(fmt.Sprint(*k8sGameDeployment.Data.Spec.Selector), "．", ".") !=
+			strings.ReplaceAll(fmt.Sprint(*bkGameDeployment.Selector), "．", ".") {
 		me := make([]bkcmdbkube.LabelSelectorRequirement, 0)
 		for _, m := range k8sGameDeployment.Data.Spec.Selector.MatchExpressions {
 			me = append(me, bkcmdbkube.LabelSelectorRequirement{
@@ -2898,57 +4287,100 @@ func (s *Syncer) CompareGameDeployment(
 			MatchExpressions: me,
 		}
 
+		blog.Infof("CompareGameDeployment Selector: %v, %v",
+			k8sGameDeployment.Data.Spec.Selector, bkGameDeployment.Selector)
+
 		needToUpdate = true
 	}
 
-	if *bkGameDeployment.Replicas != int64(*k8sGameDeployment.Data.Spec.Replicas) {
-		replicas := int64(*k8sGameDeployment.Data.Spec.Replicas)
-		updateData.Replicas = &replicas
-		needToUpdate = true
-	}
-
-	if *bkGameDeployment.MinReadySeconds != int64(k8sGameDeployment.Data.Spec.MinReadySeconds) {
-		minReadySeconds := int64(k8sGameDeployment.Data.Spec.MinReadySeconds)
-		updateData.MinReadySeconds = &minReadySeconds
-		needToUpdate = true
-	}
-
-	if *bkGameDeployment.StrategyType !=
-		bkcmdbkube.GameDeploymentUpdateStrategyType(k8sGameDeployment.Data.Spec.UpdateStrategy.Type) {
-		strategyType := string(k8sGameDeployment.Data.Spec.UpdateStrategy.Type)
-		updateData.StrategyType = &strategyType
-		needToUpdate = true
-	}
-
-	// NOCC:ineffassign/assign(ignore)
-	var rud bkcmdbkube.RollingUpdateGameDeployment
-
-	if k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable != nil && k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge != nil {
-		rud = bkcmdbkube.RollingUpdateGameDeployment{
-			MaxUnavailable: &bkcmdbkube.IntOrString{
-				Type:   bkcmdbkube.Type(k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.Type),
-				IntVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.IntVal,
-				StrVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.StrVal,
-			},
-			MaxSurge: &bkcmdbkube.IntOrString{
-				Type:   bkcmdbkube.Type(k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge.Type),
-				IntVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge.IntVal,
-				StrVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge.StrVal,
-			},
+	if bkGameDeployment.Replicas != nil {
+		if *bkGameDeployment.Replicas != int64(*k8sGameDeployment.Data.Spec.Replicas) {
+			replicas := int64(*k8sGameDeployment.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
+			blog.Infof("CompareGameDeployment Replicas: %v, %v",
+				*bkGameDeployment.Replicas, *k8sGameDeployment.Data.Spec.Replicas)
+			needToUpdate = true
 		}
-
-		jsonBytes, err := json.Marshal(rud)
-		if err != nil {
-			blog.Errorf("marshal rolling update gamedeployment failed, err: %s", err.Error())
-			return false, nil
+	} else {
+		if int64(*k8sGameDeployment.Data.Spec.Replicas) != 0 {
+			replicas := int64(*k8sGameDeployment.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
+			blog.Infof("CompareGameDeployment Replicas: %v, %v",
+				bkGameDeployment.Replicas, *k8sGameDeployment.Data.Spec.Replicas)
+			needToUpdate = true
 		}
+	}
 
-		rudMap := make(map[string]interface{})
-		_ = json.Unmarshal(jsonBytes, &rudMap)
+	if bkGameDeployment.MinReadySeconds != nil {
+		if *bkGameDeployment.MinReadySeconds != int64(k8sGameDeployment.Data.Spec.MinReadySeconds) {
+			minReadySeconds := int64(k8sGameDeployment.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			blog.Infof("CompareGameDeployment MinReadySeconds: %v, %v",
+				*bkGameDeployment.MinReadySeconds, k8sGameDeployment.Data.Spec.MinReadySeconds)
+			needToUpdate = true
+		}
+	} else {
+		if int64(k8sGameDeployment.Data.Spec.MinReadySeconds) != 0 {
+			minReadySeconds := int64(k8sGameDeployment.Data.Spec.MinReadySeconds)
+			updateData.MinReadySeconds = &minReadySeconds
+			blog.Infof("CompareGameDeployment MinReadySeconds: %v, %v",
+				bkGameDeployment.MinReadySeconds, k8sGameDeployment.Data.Spec.MinReadySeconds)
+			needToUpdate = true
+		}
+	}
 
-		updateData.RollingUpdateStrategy = &rudMap
-		needToUpdate = true
+	if bkGameDeployment.StrategyType != nil {
+		if *bkGameDeployment.StrategyType !=
+			bkcmdbkube.GameDeploymentUpdateStrategyType(k8sGameDeployment.Data.Spec.UpdateStrategy.Type) {
+			strategyType := string(k8sGameDeployment.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareGameDeployment StrategyType: %v, %v",
+				*bkGameDeployment.StrategyType, k8sGameDeployment.Data.Spec.UpdateStrategy.Type)
+			needToUpdate = true
+		}
+	} else {
+		if bkcmdbkube.GameDeploymentUpdateStrategyType(k8sGameDeployment.Data.Spec.UpdateStrategy.Type) != "" {
+			strategyType := string(k8sGameDeployment.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareGameDeployment StrategyType: %v, %v",
+				bkGameDeployment.StrategyType, k8sGameDeployment.Data.Spec.UpdateStrategy.Type)
+			needToUpdate = true
+		}
+	}
 
+	if !rollingUpdateGameDeploymentEqual(&k8sGameDeployment.Data.Spec.UpdateStrategy,
+		bkGameDeployment.RollingUpdateStrategy) {
+		rud := bkcmdbkube.RollingUpdateGameDeployment{}
+		if k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable != nil &&
+			k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge != nil {
+			rud = bkcmdbkube.RollingUpdateGameDeployment{
+				MaxUnavailable: &bkcmdbkube.IntOrString{
+					Type:   bkcmdbkube.Type(k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.Type),
+					IntVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.IntVal,
+					StrVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxUnavailable.StrVal,
+				},
+				MaxSurge: &bkcmdbkube.IntOrString{
+					Type:   bkcmdbkube.Type(k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge.Type),
+					IntVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge.IntVal,
+					StrVal: k8sGameDeployment.Data.Spec.UpdateStrategy.MaxSurge.StrVal,
+				},
+			}
+
+			jsonBytes, err := json.Marshal(rud)
+			if err != nil {
+				blog.Errorf("marshal rolling update gamedeployment failed, err: %s", err.Error())
+				return false, nil
+			}
+
+			rudMap := make(map[string]interface{})
+			_ = json.Unmarshal(jsonBytes, &rudMap)
+
+			updateData.RollingUpdateStrategy = &rudMap
+			blog.Infof("CompareGameDeployment RollingUpdate: %v, %v",
+				k8sGameDeployment.Data.Spec.UpdateStrategy, *bkGameDeployment.RollingUpdateStrategy)
+			needToUpdate = true
+
+		}
 	}
 
 	if !needToUpdate {
@@ -3018,6 +4450,69 @@ func (s *Syncer) GenerateBkGameDeployment(
 
 }
 
+// nolint gocycle
+func rollingUpdateGameStatefulSetStrategyEqual(
+	russ *gsv1alpha1.RollingUpdateStatefulSetStrategy, bkRuss *bkcmdbkube.RollingUpdateGameStatefulSetStrategy) bool {
+	if russ == nil && bkRuss == nil {
+		return true
+	}
+
+	if russ != nil && bkRuss == nil {
+		return false
+	}
+
+	if bkRuss != nil && russ == nil {
+		if bkRuss.MaxUnavailable == nil && bkRuss.Partition == nil && bkRuss.MaxSurge == nil {
+			return true
+		}
+		return false
+	}
+
+	if russ.MaxUnavailable != nil && bkRuss.MaxUnavailable == nil {
+		return false
+	}
+
+	if russ.MaxUnavailable == nil && bkRuss.MaxUnavailable != nil {
+		return false
+	}
+
+	if russ.MaxUnavailable != nil && bkRuss.MaxUnavailable != nil {
+		if russ.MaxUnavailable.StrVal != bkRuss.MaxUnavailable.StrVal {
+			return false
+		}
+	}
+
+	if russ.Partition != nil && bkRuss.Partition == nil {
+		return false
+	}
+
+	if russ.Partition == nil && bkRuss.Partition != nil {
+		return false
+	}
+
+	if russ.Partition != nil && bkRuss.Partition != nil {
+		if russ.Partition.IntVal != *bkRuss.Partition {
+			return false
+		}
+	}
+
+	if russ.MaxSurge != nil && bkRuss.MaxSurge == nil {
+		return false
+	}
+
+	if russ.MaxSurge == nil && bkRuss.MaxSurge != nil {
+		return false
+	}
+
+	if russ.MaxSurge != nil && bkRuss.MaxSurge != nil {
+		if russ.MaxSurge.StrVal != bkRuss.MaxSurge.StrVal {
+			return false
+		}
+	}
+
+	return true
+}
+
 // CompareGameStatefulSet compare bkgamestatefulset and k8sgamestatefulset
 // nolint funlen
 func (s *Syncer) CompareGameStatefulSet(
@@ -3025,7 +4520,7 @@ func (s *Syncer) CompareGameStatefulSet(
 	needToUpdate bool, updateData *client.UpdateBcsWorkloadRequestData) {
 	needToUpdate = false
 	updateData = &client.UpdateBcsWorkloadRequestData{}
-	labelsEmpty := map[string]string{}
+	//labelsEmpty := map[string]string{}
 
 	//var updateDataIDs []int64
 	//updateData.IDs = &updateDataIDs
@@ -3034,22 +4529,32 @@ func (s *Syncer) CompareGameStatefulSet(
 
 	if k8sGameStatefulSet.Data.Labels == nil {
 		if bkGameStatefulSet.Labels != nil {
-			updateData.Labels = &labelsEmpty
+			updateData.Labels = nil
+			blog.Infof("CompareGameStatefulSet labels: %v, %v",
+				k8sGameStatefulSet.Data.Labels, bkGameStatefulSet.Labels)
 			needToUpdate = true
 		}
 	} else if bkGameStatefulSet.Labels == nil ||
-		fmt.Sprint(k8sGameStatefulSet.Data.Labels) != fmt.Sprint(*bkGameStatefulSet.Labels) {
-		updateData.Labels = &k8sGameStatefulSet.Data.Labels
-		needToUpdate = true
+		!mapsEqual(stringToMap(strings.ReplaceAll(mapToString(*bkGameStatefulSet.Labels), "．", ".")),
+			stringToMap(strings.ReplaceAll(mapToString(k8sGameStatefulSet.Data.Labels), "．", "."))) {
+		if len(k8sGameStatefulSet.Data.Labels) > 0 {
+			updateData.Labels = &k8sGameStatefulSet.Data.Labels
+			blog.Infof("CompareGameStatefulSet labels: %v, %v",
+				k8sGameStatefulSet.Data.Labels, bkGameStatefulSet.Labels)
+			needToUpdate = true
+		}
 	}
 
 	if k8sGameStatefulSet.Data.Spec.Selector == nil {
 		if bkGameStatefulSet.Selector != nil {
 			updateData.Selector = nil
+			blog.Infof("CompareGameStatefulSet Selector: %v, %v",
+				k8sGameStatefulSet.Data.Spec.Selector, bkGameStatefulSet.Selector)
 			needToUpdate = true
 		}
 	} else if bkGameStatefulSet.Selector == nil ||
-		fmt.Sprint(k8sGameStatefulSet.Data.Spec.Selector) != fmt.Sprint(*bkGameStatefulSet.Selector) {
+		strings.ReplaceAll(fmt.Sprint(*k8sGameStatefulSet.Data.Spec.Selector), "．", ".") !=
+			strings.ReplaceAll(fmt.Sprint(*bkGameStatefulSet.Selector), "．", ".") {
 		me := make([]bkcmdbkube.LabelSelectorRequirement, 0)
 		for _, m := range k8sGameStatefulSet.Data.Spec.Selector.MatchExpressions {
 			me = append(me, bkcmdbkube.LabelSelectorRequirement{
@@ -3064,55 +4569,88 @@ func (s *Syncer) CompareGameStatefulSet(
 			MatchExpressions: me,
 		}
 
+		blog.Infof("CompareGameStatefulSet Selector: %v, %v",
+			k8sGameStatefulSet.Data.Spec.Selector, bkGameStatefulSet.Selector)
+
 		needToUpdate = true
 	}
 
-	if bkGameStatefulSet.Replicas != nil && k8sGameStatefulSet.Data.Spec.Replicas != nil {
+	if bkGameStatefulSet.Replicas != nil {
 		if *bkGameStatefulSet.Replicas != int64(*k8sGameStatefulSet.Data.Spec.Replicas) {
 			replicas := int64(*k8sGameStatefulSet.Data.Spec.Replicas)
 			updateData.Replicas = &replicas
+			blog.Infof("CompareGameStatefulSet Replicas: %v, %v",
+				*k8sGameStatefulSet.Data.Spec.Replicas, bkGameStatefulSet.Replicas)
+			needToUpdate = true
+		}
+	} else {
+		if k8sGameStatefulSet.Data.Spec.Replicas != nil && int64(*k8sGameStatefulSet.Data.Spec.Replicas) != 0 {
+			replicas := int64(*k8sGameStatefulSet.Data.Spec.Replicas)
+			updateData.Replicas = &replicas
+			blog.Infof("CompareGameStatefulSet Replicas: %v, %v",
+				k8sGameStatefulSet.Data.Spec.Replicas, bkGameStatefulSet.Replicas)
 			needToUpdate = true
 		}
 	}
 
-	if *bkGameStatefulSet.StrategyType !=
-		bkcmdbkube.GameStatefulSetUpdateStrategyType(k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type) {
-		strategyType := string(k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type)
-		updateData.StrategyType = &strategyType
-		needToUpdate = true
+	if bkGameStatefulSet.StrategyType != nil {
+		if *bkGameStatefulSet.StrategyType !=
+			bkcmdbkube.GameStatefulSetUpdateStrategyType(k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type) {
+			strategyType := string(k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareGameStatefulSet StrategyType: %v, %v",
+				k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type, bkGameStatefulSet.StrategyType)
+			needToUpdate = true
+		}
+	} else {
+		if bkcmdbkube.GameStatefulSetUpdateStrategyType(k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type) != "" {
+			strategyType := string(k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type)
+			updateData.StrategyType = &strategyType
+			blog.Infof("CompareGameStatefulSet StrategyType: %v, %v",
+				k8sGameStatefulSet.Data.Spec.UpdateStrategy.Type, bkGameStatefulSet.StrategyType)
+			needToUpdate = true
+		}
 	}
 
-	// NOCC:ineffassign/assign(ignore)
-	var rus bkcmdbkube.RollingUpdateGameStatefulSetStrategy
+	if !rollingUpdateGameStatefulSetStrategyEqual(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate,
+		bkGameStatefulSet.RollingUpdateStrategy) {
+		rus := bkcmdbkube.RollingUpdateGameStatefulSetStrategy{}
+		if k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate != nil {
+			if k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable != nil &&
+				k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge != nil &&
+				k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.Partition != nil {
+				blog.Infof("rolling update: %+v", k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate)
+				rus = bkcmdbkube.RollingUpdateGameStatefulSetStrategy{
+					MaxUnavailable: &bkcmdbkube.IntOrString{
+						Type:   bkcmdbkube.Type(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.Type), // nolint
+						IntVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal,
+						StrVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.StrVal,
+					},
+					MaxSurge: &bkcmdbkube.IntOrString{
+						Type:   bkcmdbkube.Type(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.Type),
+						IntVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.IntVal,
+						StrVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.StrVal,
+					},
+					Partition: &k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.Partition.IntVal,
+				}
 
-	if k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate != nil {
-		if k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable != nil &&
-			k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge != nil {
-			blog.Infof("rolling update: %+v", k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate)
-			rus = bkcmdbkube.RollingUpdateGameStatefulSetStrategy{
-				MaxUnavailable: &bkcmdbkube.IntOrString{
-					Type:   bkcmdbkube.Type(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.Type), // nolint
-					IntVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal,
-					StrVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.StrVal,
-				},
-				MaxSurge: &bkcmdbkube.IntOrString{
-					Type:   bkcmdbkube.Type(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.Type),
-					IntVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.IntVal,
-					StrVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxSurge.StrVal,
-				},
+				jsonBytes, err := json.Marshal(rus)
+				if err != nil {
+					blog.Errorf("marshal rolling update gameStatefulSets failed, err: %s", err.Error())
+					return false, nil
+				}
+
+				rudMap := make(map[string]interface{})
+				_ = json.Unmarshal(jsonBytes, &rudMap)
+
+				updateData.RollingUpdateStrategy = &rudMap
+				blog.Infof("CompareGameStatefulSet RollingUpdate: %v, %v %v %v",
+					k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate,
+					bkGameStatefulSet.RollingUpdateStrategy.Partition,
+					bkGameStatefulSet.RollingUpdateStrategy.MaxUnavailable,
+					bkGameStatefulSet.RollingUpdateStrategy.MaxSurge)
+				needToUpdate = true
 			}
-
-			jsonBytes, err := json.Marshal(rus)
-			if err != nil {
-				blog.Errorf("marshal rolling update gameStatefulSets failed, err: %s", err.Error())
-				return false, nil
-			}
-
-			rudMap := make(map[string]interface{})
-			_ = json.Unmarshal(jsonBytes, &rudMap)
-
-			updateData.RollingUpdateStrategy = &rudMap
-			needToUpdate = true
 		}
 	}
 
@@ -3143,7 +4681,7 @@ func (s *Syncer) GenerateBkGameStatefulSet(
 			blog.Infof("rolling update: %+v", k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate)
 			rus = bkcmdbkube.RollingUpdateGameStatefulSetStrategy{
 				MaxUnavailable: &bkcmdbkube.IntOrString{
-					Type:   bkcmdbkube.Type(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.Type),
+					Type:   bkcmdbkube.Type(k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.Type), // nolint
 					IntVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal,
 					StrVal: k8sGameStatefulSet.Data.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.StrVal,
 				},
@@ -3189,7 +4727,8 @@ func (s *Syncer) GenerateBkGameStatefulSet(
 
 // UpdateBkWorkloads update bkworkloads
 // nolint
-func (s *Syncer) UpdateBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, toUpdate *map[int64]*client.UpdateBcsWorkloadRequestData) {
+func (s *Syncer) UpdateBkWorkloads(
+	bkCluster *bkcmdbkube.Cluster, kind string, toUpdate *map[int64]*client.UpdateBcsWorkloadRequestData, db *gorm.DB) {
 	if toUpdate == nil {
 		return
 	}
@@ -3201,7 +4740,7 @@ func (s *Syncer) UpdateBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 			Kind:    &kind,
 			IDs:     &[]int64{k},
 			Data:    v,
-		})
+		}, db)
 
 		if err != nil {
 			blog.Errorf("update workload %s failed, err: %s", kind, err.Error())
@@ -3210,14 +4749,14 @@ func (s *Syncer) UpdateBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 }
 
 // DeleteBkWorkloads delete bkworkloads
-func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, toDelete *[]int64) error {
+func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		// DeleteBcsWorkload deletes the BCS workload with the given request.
 		err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
 			BKBizID: &bkCluster.BizID,
 			Kind:    &kind,
 			IDs:     toDelete,
-		})
+		}, db)
 		if err != nil {
 			for i := 0; i < len(*toDelete); i++ {
 				var section []int64
@@ -3230,11 +4769,10 @@ func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 					BKBizID: &bkCluster.BizID,
 					Kind:    &kind,
 					IDs:     &section,
-				})
+				}, db)
 
 				if err != nil {
 					blog.Errorf("delete workload %s failed, err: %s", kind, err.Error())
-					return err
 				}
 			}
 		}
@@ -3244,7 +4782,8 @@ func (s *Syncer) DeleteBkWorkloads(bkCluster *bkcmdbkube.Cluster, kind string, t
 }
 
 // GetBkPods get bkpods
-func (s *Syncer) GetBkPods(bkBizID int64, filter *client.PropertyFilter) (*[]bkcmdbkube.Pod, error) {
+func (s *Syncer) GetBkPods(
+	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]bkcmdbkube.Pod, error) {
 	bkPodList := make([]bkcmdbkube.Pod, 0)
 
 	pageStart := 0
@@ -3259,7 +4798,7 @@ func (s *Syncer) GetBkPods(bkBizID int64, filter *client.PropertyFilter) (*[]bkc
 				},
 				Filter: filter,
 			},
-		})
+		}, db, withDB)
 
 		if err != nil {
 			blog.Errorf("get bcs pod failed, err: %s", err.Error())
@@ -3270,14 +4809,55 @@ func (s *Syncer) GetBkPods(bkBizID int64, filter *client.PropertyFilter) (*[]bkc
 		if len(*bkPods) < 100 {
 			break
 		}
+		if withDB {
+			break
+		}
 		pageStart++
 	}
 
 	return &bkPodList, nil
 }
 
+// GetBkContainers get bkcontainers
+func (s *Syncer) GetBkContainers(
+	bkBizID int64, filter *client.PropertyFilter, withDB bool, db *gorm.DB) (*[]client.Container, error) {
+	bkContainerList := make([]client.Container, 0)
+
+	pageStart := 0
+	for {
+		// GetBcsPod returns the BCS pod information for the given request.
+		bkContainers, err := s.CMDBClient.GetBcsContainer(&client.GetBcsContainerRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100,
+					Start: 100 * pageStart,
+				},
+				Filter: filter,
+			},
+		}, db, withDB)
+
+		if err != nil {
+			blog.Errorf("get bcs container failed, err: %s", err.Error())
+			return nil, err
+		}
+		bkContainerList = append(bkContainerList, *bkContainers...)
+
+		if len(*bkContainers) < 100 {
+			break
+		}
+		if withDB {
+			break
+		}
+		pageStart++
+	}
+
+	return &bkContainerList, nil
+}
+
 // CreateBkPods create bkpods
-func (s *Syncer) CreateBkPods(bkCluster *bkcmdbkube.Cluster, toCreate map[int64][]client.CreateBcsPodRequestDataPod) {
+func (s *Syncer) CreateBkPods(
+	bkCluster *bkcmdbkube.Cluster, toCreate map[int64][]client.CreateBcsPodRequestDataPod, db *gorm.DB) {
 	if len(toCreate) > 0 {
 		for bizid, pods := range toCreate {
 			if len(pods) > 0 {
@@ -3297,7 +4877,7 @@ func (s *Syncer) CreateBkPods(bkCluster *bkcmdbkube.Cluster, toCreate map[int64]
 								Pods:  &section,
 							},
 						},
-					})
+					}, db)
 
 					if err != nil {
 						for j := 0; j < len(section); j++ {
@@ -3309,7 +4889,7 @@ func (s *Syncer) CreateBkPods(bkCluster *bkcmdbkube.Cluster, toCreate map[int64]
 										Pods:  &sec,
 									},
 								},
-							})
+							}, db)
 						}
 
 						if err != nil {
@@ -3326,7 +4906,7 @@ func (s *Syncer) CreateBkPods(bkCluster *bkcmdbkube.Cluster, toCreate map[int64]
 }
 
 // DeleteBkPods delete bkpods
-func (s *Syncer) DeleteBkPods(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64) error {
+func (s *Syncer) DeleteBkPods(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64, db *gorm.DB) error {
 	if len(*toDelete) > 0 {
 		for i := 0; i < len(*toDelete); i += 100 {
 			var ids []int64
@@ -3343,10 +4923,9 @@ func (s *Syncer) DeleteBkPods(bkCluster *bkcmdbkube.Cluster, toDelete *[]int64) 
 						IDs:     &ids,
 					},
 				},
-			})
+			}, db)
 			if err != nil {
 				blog.Errorf("delete pod failed, err: %s", err.Error())
-				return err
 			}
 			blog.Infof("delete pod success, ids: %v", toDelete)
 		}
@@ -3395,7 +4974,7 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 					},
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			blog.Errorf("GetBcsPod() error = %v", err)
 			return fmt.Errorf("GetBcsPod() error = %v", err)
@@ -3412,11 +4991,11 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
 				Data: &[]client.DeleteBcsPodRequestData{
 					{
-						BKBizID: &bkBizID,
+						BKBizID: &bkCluster.BizID,
 						IDs:     &podToDelete,
 					},
 				},
-			})
+			}, nil)
 			if err != nil {
 				blog.Errorf("DeleteBcsPod() error = %v", err)
 				return fmt.Errorf("DeleteBcsPod() error = %v", err)
@@ -3432,7 +5011,7 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 		for {
 			got, err := s.CMDBClient.GetBcsWorkload(&client.GetBcsWorkloadRequest{
 				CommonRequest: client.CommonRequest{
-					BKBizID: bkBizID,
+					BKBizID: bkCluster.BizID,
 					Fields:  []string{"id"},
 					Page: client.Page{
 						Limit: 200,
@@ -3440,7 +5019,7 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 					},
 				},
 				Kind: workloadType,
-			})
+			}, nil, false)
 			if err != nil {
 				blog.Errorf("GetBcsWorkload() error = %v", err)
 				return fmt.Errorf("GetBcsWorkload() error = %v", err)
@@ -3455,10 +5034,10 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 			} else {
 				blog.Infof("delete workload: %v", workloadToDelete)
 				err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
-					BKBizID: &bkBizID,
+					BKBizID: &bkCluster.BizID,
 					Kind:    &workloadType,
 					IDs:     &workloadToDelete,
-				})
+				}, nil)
 				if err != nil {
 					blog.Errorf("DeleteBcsWorkload() error = %v", err)
 					return fmt.Errorf("DeleteBcsWorkload() error = %v", err)
@@ -3472,14 +5051,14 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 	for {
 		got, err := s.CMDBClient.GetBcsNamespace(&client.GetBcsNamespaceRequest{
 			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
+				BKBizID: bkCluster.BizID,
 				Fields:  []string{"id"},
 				Page: client.Page{
 					Limit: 200,
 					Start: 0,
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			blog.Errorf("GetBcsNamespace() error = %v", err)
 			return fmt.Errorf("GetBcsNamespace() error = %v", err)
@@ -3494,9 +5073,9 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 		} else {
 			blog.Infof("delete namespace: %v", namespaceToDelete)
 			err := s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
-				BKBizID: &bkBizID,
+				BKBizID: &bkCluster.BizID,
 				IDs:     &namespaceToDelete,
-			})
+			}, nil)
 			if err != nil {
 				blog.Errorf("DeleteBcsNamespace() error = %v", err)
 				return fmt.Errorf("DeleteBcsNamespace() error = %v", err)
@@ -3509,13 +5088,13 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 	for {
 		got, err := s.CMDBClient.GetBcsNode(&client.GetBcsNodeRequest{
 			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
+				BKBizID: bkCluster.BizID,
 				Page: client.Page{
 					Limit: 100,
 					Start: 0,
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			blog.Errorf("GetBcsNode() error = %v", err)
 			return fmt.Errorf("GetBcsNode() error = %v", err)
@@ -3530,9 +5109,9 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 		} else {
 			blog.Infof("delete node: %v", nodeToDelete)
 			err := s.CMDBClient.DeleteBcsNode(&client.DeleteBcsNodeRequest{
-				BKBizID: &bkBizID,
+				BKBizID: &bkCluster.BizID,
 				IDs:     &nodeToDelete,
-			})
+			}, nil)
 			if err != nil {
 				blog.Errorf("DeleteBcsNode() error = %v", err)
 				return fmt.Errorf("DeleteBcsNode() error = %v", err)
@@ -3545,14 +5124,14 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 	for {
 		got, err := s.CMDBClient.GetBcsCluster(&client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
+				BKBizID: bkCluster.BizID,
 				Fields:  []string{"id"},
 				Page: client.Page{
 					Limit: 10,
 					Start: 0,
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			blog.Errorf("GetBcsCluster() error = %v", err)
 			return fmt.Errorf("GetBcsCluster() error = %v", err)
@@ -3567,9 +5146,9 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 		} else {
 			blog.Infof("delete cluster: %v", clusterToDelete)
 			err := s.CMDBClient.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
-				BKBizID: &bkBizID,
+				BKBizID: &bkCluster.BizID,
 				IDs:     &clusterToDelete,
-			})
+			}, nil)
 			if err != nil {
 				blog.Errorf("DeleteBcsCluster() error = %v", err)
 				return fmt.Errorf("DeleteBcsCluster() error = %v", err)

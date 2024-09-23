@@ -27,9 +27,11 @@ import (
 )
 
 const (
-	poolTotal     = "pool_total"
-	poolAvailable = "pool_available"
-	poolUsed      = "pool_used"
+	poolTotal             = "pool_total"
+	poolAvailable         = "pool_available"
+	poolOversoldTotal     = "pool_oversold_total"
+	poolOversoldAvailable = "pool_oversold_available"
+	poolUsed              = "pool_used"
 
 	groupUsed  = "group_used"
 	groupQuota = "group_quota"
@@ -44,7 +46,7 @@ func (d *Daemon) reportRegionInsTypeUsage(error chan<- error) {
 		return
 	}
 
-	concurency := utils.NewRoutinePool(10)
+	concurency := utils.NewRoutinePool(30)
 	defer concurency.Close()
 
 	for region, insTypes := range regionInstypes {
@@ -62,16 +64,28 @@ func (d *Daemon) reportRegionInsTypeUsage(error chan<- error) {
 
 				// report data
 				for _, pool := range pools {
+
+					err = SetResourceDevicePoolData(pool.PoolId, pool)
+					if err != nil {
+						blog.Errorf("reportRegionInsTypeUsage[%s:%s] SetResourceDevicePoolData[%s]: %v %+v",
+							region, insTypes[i], pool.PoolId, pool, err)
+					}
+
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
 						poolTotal, float64(pool.Total))
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
 						poolAvailable, float64(pool.Available))
+					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
+						poolOversoldTotal, float64(pool.OversoldTotal))
+					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
+						poolOversoldAvailable, float64(pool.OversoldAvailable))
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
 						poolUsed, float64(pool.Used))
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
 						groupQuota, float64(pool.GroupQuota))
 					metrics.ReportRegionInsTypeNum(region, pool.Zone, insTypes[i], pool.PoolId,
 						groupUsed, float64(pool.GroupUsed))
+
 				}
 
 			}
@@ -138,9 +152,10 @@ func GetRegionDevicePoolDetail(model store.ClusterManagerModel, region string, i
 
 	for i := range zonePools {
 		blog.Infof("GetRegionDevicePoolDetail region[%s] zone[%s] instanceType[%s] pool[%s] "+
-			"poolTotal[%v] poolAvailable[%v] poolUsed[%v] groupQuota[%v] groupUsed[%v]", region, zonePools[i].Zone,
-			instanceType, zonePools[i].PoolId, zonePools[i].Total, zonePools[i].Available, zonePools[i].Used,
-			zonePools[i].GroupQuota, zonePools[i].GroupUsed)
+			"poolTotal[%v] poolAvailable[%v] poolOversoldTotal[%v] poolOversoldAvailable[%v] poolUsed[%v] "+
+			"groupQuota[%v] groupUsed[%v]", region, zonePools[i].Zone, instanceType, zonePools[i].PoolId,
+			zonePools[i].Total, zonePools[i].Available, zonePools[i].OversoldTotal, zonePools[i].OversoldAvailable,
+			zonePools[i].Used, zonePools[i].GroupQuota, zonePools[i].GroupUsed)
 		pools = append(pools, zonePools[i])
 	}
 

@@ -25,9 +25,9 @@
 <script lang="ts">
 import { computed, defineComponent, PropType, toRefs, watch } from 'vue';
 
+import SelectExtension from '@/components/select-extension.vue';
 import $router from '@/router';
 import $store from '@/store';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({

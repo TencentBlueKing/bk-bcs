@@ -4,11 +4,15 @@
       <div class="left-header">{{ t('文件属性') }}</div>
       <section ref="permissionDiffRef" class="fill-diff-wrapper"></section>
     </div>
-    <div class="text-diff">
+    <div v-show="props.isSecret && !props.secretVisible" class="un-view-diff-content">
+      <div class="diff">{{ t('敏感数据不可见，无法查看实际内容') }}</div>
+      <div class="diff">{{ t('敏感数据不可见，无法查看实际内容') }}</div>
+    </div>
+    <div v-show="props.secretVisible" class="text-diff">
       <div class="left-header" v-show="isShowPermissionDiff">{{ t('文件内容') }}</div>
       <section ref="textDiffRef" class="text-diff-wrapper"></section>
     </div>
-    <div class="footer">
+    <div v-show="props.secretVisible" class="footer">
       <TextDiffLegend
         :permission-diff-number="permissionDiffNumber"
         :diff-editor="diffEditor"
@@ -58,23 +62,43 @@
       currentLanguage?: string;
       currentVariables?: IVariableEditParams[];
       currentPermission?: string;
+      isSecret?: boolean;
+      secretVisible?: boolean;
+      isCipherShow?: boolean;
     }>(),
     {
       baseLanguage: '',
       currentVariables: () => [],
       currentLanguage: '',
       baseVariables: () => [],
+      isSecret: false,
+      secretVisible: true,
     },
   );
 
   const textDiffRef = ref();
   const permissionDiffRef = ref();
   const permissionDiffNumber = ref(0);
+  const cipherText = '********';
   let diffEditor: monaco.editor.IStandaloneDiffEditor;
   let diffEditorHoverProvider: monaco.IDisposable;
   let permissionEditor: monaco.editor.IStandaloneDiffEditor;
 
   const isShowPermissionDiff = computed(() => props.basePermission !== props.currentPermission);
+
+  const baseShowContent = computed(() => {
+    if (props.isSecret && props.isCipherShow) {
+      return cipherText;
+    }
+    return props.base;
+  });
+
+  const currentShowContent = computed(() => {
+    if (props.isSecret && props.isCipherShow) {
+      return cipherText;
+    }
+    return props.current;
+  });
 
   watch(
     () => [props.base, props.current],
@@ -101,6 +125,13 @@
     },
   );
 
+  watch(
+    () => props.isCipherShow,
+    () => {
+      updateModel();
+    },
+  );
+
   onMounted(() => {
     createDiffEditor();
     replaceDiffVariables();
@@ -119,8 +150,8 @@
       diffEditor.dispose();
       permissionEditor.dispose();
     }
-    const originalModel = monaco.editor.createModel(props.base, props.baseLanguage);
-    const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage);
+    const originalModel = monaco.editor.createModel(baseShowContent.value, props.baseLanguage);
+    const modifiedModel = monaco.editor.createModel(currentShowContent.value, props.currentLanguage);
     const originaPermissionModel = monaco.editor.createModel(props.basePermission as string, props.baseLanguage);
     const modifieFilldModel = monaco.editor.createModel(props.currentPermission as string, props.currentLanguage);
 
@@ -167,8 +198,8 @@
   };
 
   const updateModel = () => {
-    const originalModel = monaco.editor.createModel(props.base, props.baseLanguage);
-    const modifiedModel = monaco.editor.createModel(props.current, props.currentLanguage);
+    const originalModel = monaco.editor.createModel(baseShowContent.value, props.baseLanguage);
+    const modifiedModel = monaco.editor.createModel(currentShowContent.value, props.currentLanguage);
     const originaPermissionModel = monaco.editor.createModel(props.basePermission as string, props.baseLanguage);
     const modifiedPermissionModel = monaco.editor.createModel(props.currentPermission as string, props.currentLanguage);
     diffEditor.setModel({
@@ -269,5 +300,16 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+  }
+  .un-view-diff-content {
+    display: flex;
+    height: 100%;
+    background: #1d1d1d;
+    color: #979ba5;
+    .diff {
+      margin-top: 120px;
+      text-align: center;
+      flex: 1;
+    }
   }
 </style>

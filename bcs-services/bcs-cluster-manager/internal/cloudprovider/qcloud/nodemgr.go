@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
@@ -227,7 +228,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 }
 
 // getInnerInstanceTypes get inner instance types info
-func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
+func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( // nolint
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 
@@ -279,10 +280,51 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) (
 				}
 				return disks
 			}(),
+			AvailableQuota: uint32(t.OversoldAvailable),
 		})
 	}
 
 	blog.Infof("getInnerInstanceTypes successful[%+v]", instanceTypes)
+
+	if info.Provider == resource.SelfPool || info.Provider == resource.CrPool {
+		return instanceTypes, nil
+	}
+
+	// 获取当前资源池的使用情况 & 超卖情况
+	var (
+		barrier = utils.NewRoutinePool(50)
+		lock    = sync.Mutex{}
+	)
+	defer barrier.Close()
+
+	for i := range instanceTypes {
+		barrier.Add(1)
+		// query available vpc
+		go func(i int) {
+			defer func() {
+				barrier.Done()
+			}()
+
+			poolQuota, exist := daemon.GetResourceDevicePoolData(instanceTypes[i].ResourcePoolID)
+			if exist {
+				lock.Lock()
+				instanceTypes[i].AvailableQuota = func() uint32 {
+					if uint32(poolQuota.OversoldTotal) <= uint32(poolQuota.GroupQuota) {
+						return 0
+					}
+					return uint32(poolQuota.OversoldTotal) - uint32(poolQuota.GroupQuota)
+				}()
+				lock.Unlock()
+
+				return
+			}
+
+			blog.Infof("getInnerInstanceTypes region[%s] insType[%s] devicePoolId[%s] not exist",
+				info.Region, instanceTypes[i].NodeType, instanceTypes[i].ResourcePoolID)
+		}(i)
+	}
+	barrier.Wait()
+
 	return instanceTypes, nil
 }
 

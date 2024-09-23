@@ -144,7 +144,7 @@ type GameDeploymentScaleStrategy struct {
 type GameDeploymentUpdateStrategy struct {
 	// Type indicates the type of the GameDeploymentUpdateStrategy.
 	// Default is RollingUpdate.
-	// +kubebuilder:validation:Enum=RollingUpdate;InplaceUpdate;HotPatchUpdate
+	// +kubebuilder:validation:Enum=OnDelete;RollingUpdate;InplaceUpdate;HotPatchUpdate
 	// +kubebuilder:default=RollingUpdate
 	Type           GameDeploymentUpdateStrategyType `json:"type,omitempty"`
 	CanaryStrategy *CanaryStrategy                  `json:"canary,omitempty"`
@@ -177,6 +177,12 @@ type GameDeploymentUpdateStrategy struct {
 type GameDeploymentUpdateStrategyType string
 
 const (
+	// OnDeleteGameDeploymentUpdateStrategyType triggers the legacy behavior. Version
+	// tracking and ordered rolling restarts are disabled. Pods are recreated
+	// from the GameDeploymentSpec when they are manually deleted. When a scale
+	// operation is performed with this strategy,specification version indicated
+	// by the GameDeploymentSpec's currentRevision.
+	OnDeleteGameDeploymentUpdateStrategyType = "OnDelete"
 	// RollingGameDeploymentUpdateStrategyType indicates that we always delete Pod and create new Pod
 	// during Pod update, which is the default behavior.
 	RollingGameDeploymentUpdateStrategyType GameDeploymentUpdateStrategyType = "RollingUpdate"

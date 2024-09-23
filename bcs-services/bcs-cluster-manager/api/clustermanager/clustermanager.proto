@@ -3712,6 +3712,10 @@ message InternetAccessible {
     title: "bandwidthPackageId",
     description: "共享带宽包ID"
   }];
+  string publicIP = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "publicIP",
+    description: "公网ip地址"
+  }];
 }
 
 // InstanceTemplateConfig instance config info
@@ -5068,7 +5072,7 @@ message CreateClusterReq {
       title : "vpcID",
       description : "集群私有网络id，云上集群填写"
     },
-    (validate.rules).string.max_len = 32
+    (validate.rules).string.max_len = 40
   ];
   string projectID = 6 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -5106,7 +5110,7 @@ message CreateClusterReq {
       title : "clusterType",
       description : "集群类型, 例如[federation, single], "
                   "federation表示为联邦集群，single表示独立集群，默认为single"
-  },(validate.rules).string = { in: ["federation", "single"]}];
+  }];
   string federationClusterID = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "federationClusterID", 
     description: "如果该集群为联邦集群的一部分，用该ID记录联邦Host信息"
@@ -11332,6 +11336,10 @@ message InstanceType {
     title : "dataDisks",
     description : "机型数据盘, 主要用于自建资源池. 仅仅provider为self时, 需要关注"
   }];
+  uint32 availableQuota = 14 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "availableQuota",
+    description : "该机型可用的quota容量"
+  }];
 }
 
 message GetMasterSuggestedMachinesRequest {
@@ -12031,6 +12039,10 @@ message Subnet {
     title : "cluster",
     description : "子网是否被集群使用"
   }];
+  string hwNeutronSubnetID = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "hwNeutronSubnetID",
+    description : "华为对应子网(OpenStack Neutron)接口ID"
+  }];
 }
 
 message CheckCidrConflictFromVpcRequest {
@@ -12297,6 +12309,10 @@ message ListOperationLogsRequest {
   string resourceName = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "resourceName",
     description: "默认为空, 过滤资源名称维度的操作审计"
+  }];
+  string opUser = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "opUser",
+    description: "默认为空, 发起者筛选"
   }];
 }
 

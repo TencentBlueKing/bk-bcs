@@ -66,7 +66,7 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 				// specific label
 				ImageLoaderNameKey: loader.Name,
 			},
-			Annotations: loader.Annotations,
+			Annotations: make(map[string]string),
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: tkexv1alpha1.GroupVersion.String(),
@@ -111,6 +111,26 @@ func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
 		job.Spec.Template.Annotations = loader.Annotations
 	}
 	return job
+}
+
+func (r *ImageLoaderReconciler) handleSelector(ctx context.Context, imageLoader *tkexv1alpha1.ImageLoader,
+	job *batchv1.Job) error {
+	var err error
+	if imageLoader.Spec.PodSelector != nil {
+		err = r.handlePodSelector(ctx, imageLoader, job)
+		if err == nil && (job.Spec.Completions == nil || *job.Spec.Completions == 0) &&
+			imageLoader.Spec.NodeSelector != nil {
+			logger.Info("failed to find node with specific pod, try to find node with specific node selector",
+				"podSelector", imageLoader.Spec.PodSelector)
+			job.Spec.Template.Spec.Affinity = nil
+			err = r.handleNodeSelector(ctx, imageLoader, job)
+		}
+	} else if imageLoader.Spec.NodeSelector != nil {
+		err = r.handleNodeSelector(ctx, imageLoader, job)
+	} else {
+		err = r.handleAllNode(ctx, job)
+	}
+	return err
 }
 
 func (r *ImageLoaderReconciler) handlePodSelector(ctx context.Context, loader *tkexv1alpha1.ImageLoader,

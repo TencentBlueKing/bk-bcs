@@ -126,10 +126,6 @@
             <span v-else>{{ securityGroupNames.join(',') || '--'}}</span>
           </bk-form-item>
         </bk-form>
-        <!-- <div class="mt20 mb10 panel-header">
-          <span class="title">{{$t('cluster.nodeTemplate.kubelet.title.argsConfig')}}</span>
-        </div>
-        <kubeletParams readonly v-model="nodePoolData.nodeTemplate.extraArgs.kubelet" /> -->
         <bcs-tab class="mt20">
           <bcs-tab-panel :label="$t('cluster.ca.nodePool.create.scaleInitConfig.preStartUserScript')" name="scaleOutPreAction">
             <UserAction
@@ -241,7 +237,7 @@
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
 // import kubeletParams from '../kubelet-params.vue';
-import UserAction from '../user-action.vue';
+import UserAction from '../components/user-action.vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import BcsContent from '@/components/layout/Content.vue';

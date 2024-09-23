@@ -1,0 +1,475 @@
+syntax = "proto3";
+
+package precheck;
+
+option go_package = "./proto;precheck";
+
+import "google/api/annotations.proto";
+import "protoc-gen-swagger/options/annotations.proto";
+
+service GitOpsPreCheck {
+  rpc GetMrInfo(GetMrInfoReq) returns (GetMrInfoRsp) {
+    option (google.api.http) = {
+      get : "/api/v1/precheck/mr/info"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取mr信息"
+      summary : "获取mr信息"
+    };
+  }
+  rpc RecordTaskByPlugin(PreCheckTask) returns (PreCheckTaskRsp) {
+    option (google.api.http) = {
+      post : "/api/v1/precheck/record"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "补录preCheck任务"
+      summary : "补录preCheck任务"
+    };
+  }
+  rpc GetTaskByID(GetTaskByIDReq) returns (PreCheckTaskRsp) {
+    option (google.api.http) = {
+      get : "/api/v1/precheck/task"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询单个preCheck任务"
+      summary : "查询单个preCheck任务"
+    };
+  }
+  rpc UpdateTask(PreCheckTask) returns (PreCheckTaskRsp) {
+    option (google.api.http) = {
+      put : "/api/v1/precheck/task"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新单个preCheck任务"
+      summary : "更新单个preCheck任务"
+    };
+  }
+  rpc ListTask(ListTaskByIDReq) returns (ListPreCheckTaskRsp) {
+    option (google.api.http) = {
+      get : "/api/v1/precheck/tasks"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询单个preCheck任务"
+      summary : "查询单个preCheck任务"
+    };
+  }
+}
+
+message GetMrInfoReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetMrInfoReq"
+      description : "获取mr信息req"
+    }
+  };
+  string repository = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "repository",
+      description : "仓库地址"
+    }];
+  string mrIID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "mrIID",
+      description : "mrIID"
+    }];
+}
+
+message GetMrInfoRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetMrInfoRsp"
+      description : "获取mrInfo响应"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  string requestID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "requestID",
+    description : "请求ID"
+  }];
+  MRInfoData data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回的设备列表"
+  }];
+}
+
+message MRInfoData {
+  string sourceBranch = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sourceBranch",
+    description: "Source branch"
+  }];
+
+  string targetBranch = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "targetBranch",
+    description: "Target branch"
+  }];
+
+  string creator = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "creator",
+    description: "Creator"
+  }];
+
+  string createTime = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createTime",
+    description: "Create time"
+  }];
+
+  string updateTime = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTime",
+    description: "Update time"
+  }];
+
+  string title = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "title",
+    description: "Title"
+  }];
+
+  string mrMessage = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mrMessage",
+    description: "MR message"
+  }];
+
+  string repository = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "repository",
+    description: "Repository"
+  }];
+
+  string sourceCommit = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sourceCommit",
+    description: "Source commit"
+  }];
+
+  string targetCommit = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "targetCommit",
+    description: "Target commit"
+  }];
+  uint32 id = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "id",
+    description: "id"
+  }];
+  uint32 iid = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "iid",
+    description: "iid"
+  }];
+}
+
+message ApplicationDetail {
+  optional bool finish = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "finish",
+    description: "Finish"
+  }];
+  repeated ResourceCheckDetail detail = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "detail",
+    description: "detail"
+  }];
+  string message = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "message"
+  }];
+}
+
+message ResourceCheckDetail {
+  optional bool finish = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "finish",
+    description: "Finish"
+  }];
+
+  string resourceType = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceType",
+    description: "Resource type"
+  }];
+
+  string resourceName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceName",
+    description: "Resource name"
+  }];
+
+  string apiVersion = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "apiVersion",
+    description: "api version"
+  }];
+
+
+  string detail = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "detail",
+    description: "Detail"
+  }];
+  optional bool pass = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "pass",
+    description: "pass"
+  }];
+  string cluster = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cluster",
+    description: "cluster"
+  }];
+  string namespace = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "namespace",
+    description: "namespace"
+  }];
+}
+
+message ApplicationCheckDetail {
+  map<string, ApplicationDetail> checkDetail = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "checkDetail",
+    description: "Check detail"
+  }];
+}
+
+
+message PreCheckTask {
+  string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "id",
+    description: "task ID"
+  }];
+
+  string project = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "project",
+    description: "Project"
+  }];
+
+  string repositoryAddr = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "repositoryAddr",
+    description: "Repository address"
+  }];
+
+  string mrIid = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mrIID",
+    description: "MR IID"
+  }];
+
+  optional bool checkCallbackGit = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "checkCallbackGit",
+    description: "Check callback Git"
+  }];
+
+  string checkRevision = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "checkRevision",
+    description: "Check revision"
+  }];
+
+  string applicationName = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "applicationName",
+    description: "Application name"
+  }];
+
+  string triggerType = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "triggerType",
+    description: "Trigger type"
+  }];
+
+  string branchValue = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "branchValue",
+    description: "branchValue"
+  }];
+
+  map<string, ApplicationCheckDetail> checkDetail = 10 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "checkDetail",
+    description: "Check detail"
+  }];
+
+  string createTime = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createTime",
+    description: "Create time"
+  }];
+
+  string updateTime = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTime",
+    description: "Update time"
+  }];
+
+  string triggerByUser = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "triggerByUser",
+    description: "Trigger by user"
+  }];
+
+  string createBy = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createBy",
+    description: "Create by"
+  }];
+  optional bool finish = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "finish",
+    description: "Finish"
+  }];
+  string flowID = 16 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "flowID",
+    description: "flow ID"
+  }];
+  repeated string involvedApplications = 17 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "involvedApplications",
+    description: "involvedApplications"
+  }];
+  string replaceRepo = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "replaceRepo",
+    description: "replaceRepo"
+  }];
+  optional bool needReplaceRepo = 19 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "needReplaceRepo",
+    description: "needReplaceRepo"
+  }];
+  string replaceProject = 20 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "replaceProject",
+    description: "replaceProject"
+  }];
+  string flowLink = 21 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "flowLink",
+    description: "flowLink"
+  }];
+  MRInfoData mrInfo = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mrInfo",
+    description: "mrInfo"
+  }];
+  optional bool pass = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "pass",
+    description: "pass"
+  }];
+  string message = 24 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "message"
+  }];
+  optional bool chooseApplication = 25 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "chooseApplication",
+    description: "chooseApplication"
+  }];
+  string appFilter = 26 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "appFilter",
+    description: "appFilter"
+  }];
+  string labelSelector = 27 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "appFilter",
+    description: "appFilter"
+  }];
+}
+
+message PreCheckTaskRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "PreCheckTaskRsp"
+      description : "部署前检查响应"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  string requestID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "requestID",
+    description : "请求ID"
+  }];
+  PreCheckTask data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回的设备列表"
+  }];
+}
+
+message ListPreCheckTaskRsp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListPreCheckTaskRsp"
+      description : "部署前检查task列表响应"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  string requestID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "requestID",
+    description : "请求ID"
+  }];
+  repeated PreCheckTask data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回的设备列表"
+  }];
+}
+
+message GetTaskByIDReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetTaskByIDReq"
+      description : "获取task"
+    }
+  };
+  string id = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "id",
+      description : "id"
+    }];
+  string project = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "project",
+      description : "project"
+    }];
+  bool diffDetail = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "diffDetail",
+      description : "diffDetail"
+    }];
+}
+
+message ListTaskByIDReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListTaskByIDReq"
+      description : "获取task列表"
+    }
+  };
+  repeated string projects = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projects",
+      description : "项目"
+    }];
+  repeated string repos = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "repos",
+      description : "仓库"
+    }];
+  string startTime = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "startTime",
+      description : "开始时间"
+    }];
+  string endTime = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "endTime",
+      description : "结束时间"
+    }];
+  uint32 limit = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "limit",
+      description : "单页数量"
+    }];
+  uint32 offset = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "offset",
+      description : "偏移量"
+    }];
+  bool withDetail = 7 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "withDetail",
+      description : "是否返回详情"
+    }];
+  bool diffDetail = 8 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "diffDetail",
+      description : "diffDetail"
+    }];
+}

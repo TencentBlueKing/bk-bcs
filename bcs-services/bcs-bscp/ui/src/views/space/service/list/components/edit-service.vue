@@ -185,10 +185,12 @@
         InfoBox({
           infoType: 'danger',
           'ext-cls': 'info-box-style',
-          title: `调整服务数据类型${dataType}失败`,
-          subTitle: `该服务下存在非${dataType}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为${dataType}`,
+          title: t('调整服务数据类型{n}失败', { n: dataType }),
+          subTitle: t('该服务下存在非{n}类型的配置项，如需修改，请先调整该服务下的所有配置项数据类型为{n}', {
+            n: dataType,
+          }),
           dialogType: 'confirm',
-          confirmText: '我知道了',
+          confirmText: t('我知道了'),
         });
         return;
       }
@@ -206,7 +208,7 @@
     serviceData.value = res;
     Message({
       theme: 'success',
-      message: '服务属性编辑成功',
+      message: t('服务属性编辑成功'),
     });
     emits('reload');
     isViewMode.value = true;

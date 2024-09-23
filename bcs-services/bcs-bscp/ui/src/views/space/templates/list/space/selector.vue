@@ -139,7 +139,7 @@
       // 默认空间放到首位
       spaceList.value = res.details.splice(index, 1).concat(res.details);
       spaceList.value[0].spec.memo = t(
-        '空间可将业务下不同使用场景的配置模板文件隔离，每个空间内的配置文件路径+配置文件名称是唯一的，每个业务下会自动创建一个默认空间',
+        '空间可将业务下不同使用场景的配置模板文件隔离，每个空间内的配置文件路径+配置文件名是唯一的，每个业务下会自动创建一个默认空间',
       );
     } else {
       spaceList.value = res.details;

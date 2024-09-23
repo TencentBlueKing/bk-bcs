@@ -94,7 +94,7 @@ const props = defineProps({
   validateVpc: {
     type: Boolean,
     default: false,
-  }
+  },
 });
 
 const selectorKey = ref('');

@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -122,12 +124,15 @@ func (rm *ResManClient) ApplyInstances(ctx context.Context, instanceCount int,
 			}
 		}()
 
+		start := time.Now()
 		// consume devices
 		resp, errCon := cli.ConsumeDevice(ctx, desireDevices)
 		if errCon != nil {
+			metrics.ReportLibRequestMetric("resource", "ConsumeDevice", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("ApplyInstances[%s] ConsumeDevice failed: %v", traceID, errCon)
 			return errCon
 		}
+		metrics.ReportLibRequestMetric("resource", "ConsumeDevice", "grpc", metrics.LibCallStatusOK, start)
 
 		if !*resp.Result {
 			retErr := fmt.Errorf("ApplyInstances[%s] ConsumeDevice failed: %v", traceID, *resp.Message)
@@ -177,6 +182,7 @@ func (rm *ResManClient) DestroyInstances(ctx context.Context, paras *resource.De
 		blog.Infof("DestroyInstances[%s] returnDevices[%s:%s:%s] devices[%+v]", traceID, paras.PoolID,
 			paras.SystemID, paras.Operator, paras.InstanceIDs)
 
+		start := time.Now()
 		resp, err = cli.ReturnDevice(context.Background(), &ReturnDeviceReq{
 			DeviceConsumerID: &paras.PoolID,
 			Devices:          paras.InstanceIDs,
@@ -184,9 +190,11 @@ func (rm *ResManClient) DestroyInstances(ctx context.Context, paras *resource.De
 			ExtraSystemID:    &paras.SystemID,
 		})
 		if err != nil {
+			metrics.ReportLibRequestMetric("resource", "ReturnDevice", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("DestroyInstances[%s] ReturnDevice failed: %v", traceID, err)
 			return err
 		}
+		metrics.ReportLibRequestMetric("resource", "ReturnDevice", "grpc", metrics.LibCallStatusOK, start)
 		if !*resp.Result {
 			return fmt.Errorf("DestroyInstances[%s] call resourceManager interface ReturnDevice failed: %v",
 				traceID, *resp.Message)
@@ -234,15 +242,18 @@ func (rm *ResManClient) CheckOrderStatus(ctx context.Context, orderID string) (*
 			}
 		}()
 
+		start := time.Now()
 		// get device record
 		resp, err := cli.GetDeviceRecord(context.Background(), &GetDeviceRecordReq{
 			DeviceRecordID: &orderID,
 		})
 		if err != nil {
+			metrics.ReportLibRequestMetric("resource", "GetDeviceRecord", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("CheckInstanceOrderStatus[%s] call resource interface GetDeviceRecord[%s] failed: %v",
 				traceID, orderID, err)
 			return nil
 		}
+		metrics.ReportLibRequestMetric("resource", "GetDeviceRecord", "grpc", metrics.LibCallStatusOK, start)
 		if resp == nil || !*resp.Result {
 			blog.Errorf("CheckInstanceOrderStatus[%s] GetDeviceRecord[%s] failed: %v", traceID, orderID, err)
 			return nil
@@ -314,47 +325,8 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 		pools []*DevicePool
 		err   error
 	)
-	err = retry.Do(func() error {
-		cli, closeCon, errGet := rm.getResourceManagerClient()
-		if errGet != nil {
-			blog.Errorf("GetInstanceTypesV2[%s] GetResourceManagerClient failed: %v", traceID, errGet)
-			return errGet
-		}
-		defer func() {
-			if closeCon != nil {
-				closeCon()
-			}
-		}()
 
-		var (
-			// limit for all devicePool
-			limit  int64 = 10000
-			onSale       = true
-		)
-
-		req := &ListDevicePoolReq{
-			Limit:  &limit,
-			Onsale: &onSale,
-			Region: &region,
-		}
-		if len(spec.Provider) > 0 {
-			req.Provider = append(req.Provider, spec.Provider)
-		}
-
-		// list device pool
-		resp, errList := cli.ListDevicePool(ctx, req)
-		if errList != nil {
-			blog.Errorf("GetInstanceTypesV2[%s] ListDevicePool failed: %v", traceID, errList)
-			return errList
-		}
-		if *resp.Code != 0 || !*resp.Result {
-			blog.Errorf("GetInstanceTypesV2[%s] ListDevicePool failed: %v", traceID, resp.Message)
-			return errors.New(*resp.Message)
-		}
-		pools = resp.Data
-
-		return nil
-	}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second*3))
+	pools, err = rm.listDevicePools(ctx, spec.Provider, region, "")
 	if err != nil {
 		blog.Errorf("GetInstanceTypesV2[%s] failed: %v", traceID, err)
 		return nil, err
@@ -391,14 +363,11 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 		}
 
 		// available quota
-		var quota uint64
-		availableQuota, ok := labels[AvailableQuota.String()]
-		if ok {
-			quota, _ = strconv.ParseUint(availableQuota, 10, 64)
-		}
+		poolUsage := getDevicePoolUsage(pool)
+
 		// instanceType sell status
 		status := common.InstanceSell
-		if quota == 0 {
+		if poolUsage.OversoldAvailable <= 0 {
 			status = common.InstanceSoldOut
 		}
 
@@ -439,6 +408,7 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 
 				return nil
 			}(),
+			OversoldAvailable: poolUsage.OversoldAvailable,
 		})
 	}
 
@@ -486,6 +456,7 @@ func (rm *ResManClient) CreateResourcePool(ctx context.Context, info resource.Re
 			}
 		}()
 
+		start := time.Now()
 		// CreateDeviceConsumer device consumer
 		resp, errCreate := cli.CreateDeviceConsumer(ctx, &CreateDeviceConsumerReq{
 			Name:                 &info.Name,
@@ -501,9 +472,11 @@ func (rm *ResManClient) CreateResourcePool(ctx context.Context, info resource.Re
 			Operator: &info.Operator,
 		})
 		if errCreate != nil {
+			metrics.ReportLibRequestMetric("resource", "CreateDeviceConsumer", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("CreateResourcePool[%s] CreateDeviceConsumer failed: %v", traceID, errCreate)
 			return errCreate
 		}
+		metrics.ReportLibRequestMetric("resource", "CreateDeviceConsumer", "grpc", metrics.LibCallStatusOK, start)
 		if *resp.Code != 0 || !*resp.Result {
 			blog.Errorf("CreateResourcePool[%s] CreateDeviceConsumer failed: %v", traceID, *resp.Message)
 			return errors.New(*resp.Message)
@@ -543,14 +516,17 @@ func (rm *ResManClient) DeleteResourcePool(ctx context.Context, poolID string) e
 			}
 		}()
 
+		start := time.Now()
 		// DeleteDeviceConsumer delete consumer
 		resp, errDelete := cli.DeleteDeviceConsumer(ctx, &DeleteDeviceConsumerReq{
 			DeviceConsumerID: &poolID,
 		})
 		if errDelete != nil {
+			metrics.ReportLibRequestMetric("resource", "DeleteDeviceConsumer", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("DeleteResourcePool[%s] DeleteDeviceConsumer failed: %v", traceID, errDelete)
 			return errDelete
 		}
+		metrics.ReportLibRequestMetric("resource", "DeleteDeviceConsumer", "grpc", metrics.LibCallStatusOK, start)
 		if *resp.Code != 0 || !*resp.Result {
 			blog.Errorf("DeleteResourcePool[%s] DeleteDeviceConsumer failed: %v", traceID, *resp.Message)
 			return errors.New(*resp.Message)
@@ -606,12 +582,15 @@ func (rm *ResManClient) listDevices(ctx context.Context, provider string) ([]*De
 			req.Provider = append(req.Provider, provider)
 		}
 
+		start := time.Now()
 		// list devices
 		resp, errList := cli.ListDevices(ctx, req)
 		if errList != nil {
+			metrics.ReportLibRequestMetric("resource", "ListDevices", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("listDevices[%s] ListDevices failed: %v", traceID, errList)
 			return errList
 		}
+		metrics.ReportLibRequestMetric("resource", "ListDevices", "grpc", metrics.LibCallStatusOK, start)
 		if *resp.Code != 0 || !*resp.Result {
 			blog.Errorf("listDevices[%s] ListDevices failed: %v", traceID, resp.Message)
 			return errors.New(*resp.Message)
@@ -751,12 +730,15 @@ func (rm *ResManClient) listDevicePools(ctx context.Context, provider, region, i
 			req.Region = &region
 		}
 
+		start := time.Now()
 		// list device pool
 		resp, errList := cli.ListDevicePool(ctx, req)
 		if errList != nil {
+			metrics.ReportLibRequestMetric("resource", "ListDevicePool", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("listDevicePools[%s] ListDevicePool failed: %v", traceID, errList)
 			return errList
 		}
+		metrics.ReportLibRequestMetric("resource", "ListDevicePool", "grpc", metrics.LibCallStatusOK, start)
 		if *resp.Code != 0 || !*resp.Result {
 			blog.Errorf("listDevicePools[%s] ListDevicePool failed: %v", traceID, resp.Message)
 			return errors.New(*resp.Message)
@@ -832,6 +814,44 @@ func (rm *ResManClient) GetRegionInstanceTypesFromPools(ctx context.Context, pro
 	return regionInsTypes, nil
 }
 
+func getDevicePoolUsage(pool *DevicePool) resource.PoolUsage {
+	var (
+		err error
+
+		poolUsage resource.PoolUsage
+		oversold  float64 = 1
+	)
+	v, ok := pool.GetLabels()[userQuota]
+	if ok {
+		total, _ := utils.StringToInt(v)
+		poolUsage.Total = int32(total)
+	}
+	v, ok = pool.GetLabels()[usedQuota]
+	if ok {
+		used, _ := utils.StringToInt(v)
+		poolUsage.Used = int32(used)
+	}
+	v, ok = pool.GetLabels()[availableQuota]
+	if ok {
+		available, _ := utils.StringToInt(v)
+		poolUsage.Available = int32(available)
+	}
+
+	// oversold ratio
+	v, ok = pool.GetLabels()[OverSold]
+	if ok {
+		oversold, err = strconv.ParseFloat(v, 64)
+		if err != nil || oversold <= 1 {
+			oversold = 1
+		}
+	}
+
+	poolUsage.OversoldTotal = int32(math.Floor(float64(poolUsage.Total) * oversold))
+	poolUsage.OversoldAvailable = int32(math.Floor(float64(poolUsage.Total)*oversold)) - int32(poolUsage.Used)
+
+	return poolUsage
+}
+
 // ListRegionZonePools 获取可用区维度的资源池信息 & 可用区列表
 func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string, region, insType string) (
 	map[string]*resource.DevicePoolInfo, []string, error) {
@@ -850,19 +870,7 @@ func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string
 	)
 
 	for _, pool := range pools {
-		var total, used, available int
-		v, ok := pool.GetLabels()[userQuota]
-		if ok {
-			total, _ = utils.StringToInt(v)
-		}
-		v, ok = pool.GetLabels()[usedQuota]
-		if ok {
-			used, _ = utils.StringToInt(v)
-		}
-		v, ok = pool.GetLabels()[availableQuota]
-		if ok {
-			available, _ = utils.StringToInt(v)
-		}
+		poolUsage := getDevicePoolUsage(pool)
 
 		if len(pool.GetBaseConfig().Zone.GetZone()) == 0 {
 			continue
@@ -874,10 +882,13 @@ func (rm *ResManClient) ListRegionZonePools(ctx context.Context, provider string
 			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
 			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
 			InstanceType: pool.GetBaseConfig().GetInstanceType(),
-			Total:        int32(total),
-			Used:         int32(used),
-			Available:    int32(available),
+			Total:        poolUsage.Total,
+			Used:         poolUsage.Used,
+			Available:    poolUsage.Available,
 			Status:       pool.GetStatus(),
+
+			OversoldTotal:     poolUsage.OversoldTotal,
+			OversoldAvailable: poolUsage.OversoldAvailable,
 		}
 
 		zones = append(zones, pool.GetBaseConfig().Zone.GetZone())
@@ -905,37 +916,32 @@ func (rm *ResManClient) ListAvailableInsufficientPools(ctx context.Context, prov
 	)
 
 	for _, pool := range pools {
-		var total, available int
-		v, ok := pool.GetLabels()[userQuota]
-		if ok {
-			total, _ = utils.StringToInt(v)
-		}
-		v, ok = pool.GetLabels()[availableQuota]
-		if ok {
-			available, _ = utils.StringToInt(v)
-		}
+		poolUsage := getDevicePoolUsage(pool)
 
 		if len(pool.GetBaseConfig().Zone.GetZone()) == 0 {
 			continue
 		}
 
-		if ratio.QuotaRatio != nil && ((float64(available)/float64(total))*100 > float64(*ratio.QuotaRatio)) {
+		if ratio.QuotaRatio != nil && ((float64(poolUsage.Available)/float64(poolUsage.Total))*100 >
+			float64(*ratio.QuotaRatio)) {
 			continue
 		}
 
-		if ratio.QuotaCount != nil && (available > *ratio.QuotaCount) {
+		if ratio.QuotaCount != nil && (poolUsage.Available > int32(*ratio.QuotaCount)) {
 			continue
 		}
 
 		filterPools = append(filterPools, &resource.DevicePoolInfo{
-			PoolId:       *pool.Id,
-			PoolName:     *pool.Name,
-			Region:       pool.GetBaseConfig().GetZone().GetRegion(),
-			Zone:         pool.GetBaseConfig().GetZone().GetZone(),
-			InstanceType: pool.GetBaseConfig().GetInstanceType(),
-			Total:        int32(total),
-			Available:    int32(available),
-			Status:       pool.GetStatus(),
+			PoolId:            *pool.Id,
+			PoolName:          *pool.Name,
+			Region:            pool.GetBaseConfig().GetZone().GetRegion(),
+			Zone:              pool.GetBaseConfig().GetZone().GetZone(),
+			InstanceType:      pool.GetBaseConfig().GetInstanceType(),
+			Total:             poolUsage.Total,
+			Available:         poolUsage.Available,
+			Status:            pool.GetStatus(),
+			OversoldTotal:     poolUsage.OversoldTotal,
+			OversoldAvailable: poolUsage.OversoldAvailable,
 		})
 	}
 
@@ -963,12 +969,15 @@ func (rm *ResManClient) GetDeviceConsumer(ctx context.Context, consumerId string
 		}
 	}()
 
+	start := time.Now()
 	// GetDeviceConsumer get consumer info
 	resp, err := cli.GetDeviceConsumer(ctx, &GetDeviceConsumerReq{DeviceConsumerID: &consumerId})
 	if err != nil {
+		metrics.ReportLibRequestMetric("resource", "GetDeviceConsumer", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetDeviceConsumer[%s][%s] GetDeviceConsumer failed: %v", traceID, consumerId, err)
 		return nil, err
 	}
+	metrics.ReportLibRequestMetric("resource", "GetDeviceConsumer", "grpc", metrics.LibCallStatusOK, start)
 	if *resp.Code != 0 || !*resp.Result {
 		blog.Errorf("GetDeviceConsumer[%s][%s] GetDeviceConsumer failed: %v", traceID, consumerId, *resp.Message)
 		return nil, errors.New(*resp.Message)
@@ -999,14 +1008,17 @@ func (rm *ResManClient) GetDeviceInfoByDeviceID(ctx context.Context, deviceID st
 		}
 	}()
 
+	start := time.Now()
 	// GetDevice get device detailed info
 	resp, err := cli.GetDevice(ctx, &GetDeviceReq{
 		DeviceID: &deviceID,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("resource", "GetDevice", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetDeviceInfoByDeviceID[%s][%s] GetDevice failed: %v", traceID, deviceID, err)
 		return nil, err
 	}
+	metrics.ReportLibRequestMetric("resource", "GetDevice", "grpc", metrics.LibCallStatusOK, start)
 	if *resp.Code != 0 || !*resp.Result {
 		blog.Errorf("GetDeviceInfoByDeviceID[%s][%s] GetDevice failed: %v", traceID, deviceID, *resp.Message)
 		return nil, errors.New(*resp.Message)

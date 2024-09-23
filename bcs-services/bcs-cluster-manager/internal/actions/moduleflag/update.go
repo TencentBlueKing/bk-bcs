@@ -14,11 +14,13 @@ package moduleflag
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -136,6 +138,18 @@ func (ua *UpdateAction) Handle(
 	if err := ua.updateModuleFlagList(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cloud.String(),
+		ResourceID:   ua.req.CloudID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新云组件参数[%s]", ua.req.CloudID),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		blog.Errorf("UpdateCloudModuleFlag[%s] CreateOperationLog failed: %v", ua.req.CloudID, err)
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

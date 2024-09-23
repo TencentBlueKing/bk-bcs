@@ -15,10 +15,12 @@ package node
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -34,6 +36,8 @@ type DrainNodeAction struct {
 	k8sOp *clusterops.K8SOperator
 
 	failed []string
+
+	cluster *cmproto.Cluster
 }
 
 // NewDrainNodeAction create update action
@@ -52,6 +56,11 @@ func (ua *DrainNodeAction) validate() error {
 	// set default GracePeriodSeconds
 	if ua.req.GracePeriodSeconds == 0 {
 		ua.req.GracePeriodSeconds = -1
+	}
+
+	cluster, err := ua.model.GetCluster(ua.ctx, ua.req.ClusterID)
+	if err == nil {
+		ua.cluster = cluster
 	}
 
 	return nil
@@ -156,6 +165,21 @@ func (ua *DrainNodeAction) Handle(ctx context.Context, req *cmproto.DrainNodeReq
 	if err := ua.drainClusterNodes(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ua.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群[%s]节点pod迁移", ua.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("DrainNode[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

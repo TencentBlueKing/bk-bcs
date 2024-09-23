@@ -21,9 +21,12 @@ export function useNamespace() {
   const webAnnotations = ref({ perms: {} });
 
   async function getNamespaceData(params, loading = true) {
-    if (!params || !params.$clusterId) return;
+    if (!params?.$clusterId) return;
     namespaceLoading.value = loading;
-    const { data, web_annotations: _webAnnotations } = await getNamespaceList(params, { needRes: true })
+    const { data, web_annotations: _webAnnotations } = await getNamespaceList(
+      params,
+      { needRes: true, cancelWhenRouteChange: false },
+    )
       .catch(() => ({ data: [], web_annotations: [] }));
     namespaceData.value = data;
     webAnnotations.value = _webAnnotations;

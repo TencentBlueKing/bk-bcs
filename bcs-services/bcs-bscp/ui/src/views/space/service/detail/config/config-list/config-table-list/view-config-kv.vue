@@ -15,9 +15,27 @@
             <bk-form-item :label="t('配置项描述')">
               <div class="memo">{{ props.config.spec.memo || '--' }}</div>
             </bk-form-item>
-            <bk-form-item :label="t('配置项类型')">{{ props.config.spec.kv_type }}</bk-form-item>
+            <bk-form-item :label="t('配置项类型')">
+              {{ props.config.spec.kv_type === 'secret' ? t('敏感信息') : props.config.spec.kv_type }}
+            </bk-form-item>
             <bk-form-item :label="t('配置项值')">
-              <span v-if="props.config.spec.kv_type === 'string' || props.config.spec.kv_type === 'number'">
+              <div v-if="props.config.spec.kv_type === 'secret'" class="secret-value">
+                <span v-if="props.config.spec.secret_hidden" class="un-view-value">
+                  {{ t('敏感数据不可见，无法查看实际内容') }}
+                </span>
+                <template v-else>
+                  <SecretEditor
+                    v-if="props.config.spec.secret_type === 'custom' || props.config.spec.secret_type === 'certificate'"
+                    :is-edit="false"
+                    :content="props.config.spec.value" />
+                  <span v-else class="secret-single-line-value">
+                    <span>{{ isCipherShowSecret ? '******' : props.config.spec.value }}</span>
+                    <Unvisible v-if="isCipherShowSecret" class="view-icon" @click="isCipherShowSecret = false" />
+                    <Eye v-else class="view-icon" @click="isCipherShowSecret = true" />
+                  </span>
+                </template>
+              </div>
+              <span v-else-if="props.config.spec.kv_type === 'string' || props.config.spec.kv_type === 'number'">
                 {{ props.config.spec.value }}
               </span>
               <div v-else class="editor-wrap">
@@ -42,7 +60,7 @@
       </bk-tab>
     </div>
     <section class="action-btns">
-      <bk-button v-if="config.kv_state !== 'DELETE'" theme="primary" @click="emits('openEdit')">
+      <bk-button v-if="showEditBtn" theme="primary" @click="emits('openEdit')">
         {{ t('编辑') }}
       </bk-button>
       <bk-button @click="close">{{ t('关闭') }}</bk-button>
@@ -56,6 +74,8 @@
   import kvConfigContentEditor from '../../components/kv-config-content-editor.vue';
   import ConfigContentEditor from '../../components/config-content-editor.vue';
   import { sortObjectKeysByAscii, datetimeFormat } from '../../../../../../../utils';
+  import { Unvisible, Eye } from 'bkui-vue/lib/icon';
+  import SecretEditor from './config-form-kv/secret-form/secret-content-editor.vue';
 
   const { t } = useI18n();
   const props = defineProps<{
@@ -70,6 +90,7 @@
   const isFormChange = ref(false);
   const sideSliderRef = ref();
   const editorHeight = ref(0);
+  const isCipherShowSecret = ref(true);
 
   const metaData = computed(() => {
     const { content_spec, revision, spec } = props.config;
@@ -171,6 +192,24 @@
     .bk-button {
       margin-right: 8px;
       min-width: 88px;
+    }
+  }
+  .secret-value {
+    .secret-single-line-value {
+      display: flex;
+      align-items: center;
+      .view-icon {
+        cursor: pointer;
+        margin: 0 8px;
+        font-size: 14px;
+        color: #979ba5;
+        &:hover {
+          color: #3a84ff;
+        }
+      }
+    }
+    .un-view-value {
+      color: #c4c6cc;
     }
   }
 </style>

@@ -183,6 +183,10 @@ func (c *SuanLiClient) QueryInfo(ctx context.Context, metricName string, tagFilt
 		return nil, err
 	}
 
+	if result.Code != 0 || result.Data == nil {
+		return nil, errors.Errorf("query suanli info error, errorCode: %d, message: %s", result.Code, result.Msg)
+	}
+
 	return result, nil
 }
 
@@ -224,6 +228,10 @@ func (c *SuanLiClient) QuerySecondInfo(ctx context.Context, metricName string, t
 	err = json.Unmarshal(resp.Body(), result)
 	if err != nil {
 		return nil, err
+	}
+
+	if result.Code != 0 || result.Data == nil {
+		return nil, errors.Errorf("query suanli second info error, errorCode: %d, message: %s", result.Code, result.Msg)
 	}
 
 	return result, nil

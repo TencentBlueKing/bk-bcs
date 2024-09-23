@@ -294,7 +294,10 @@ func getGroupVersionKindResource(config *rest.Config) (map[string]metav1.APIReso
 	}
 	_, resources, err := discoveryClient.ServerGroupsAndResources()
 	if err != nil {
-		return nil, errors.Wrapf(err, "get server groups and resources failed")
+		blog.Warnf("get server groups and resources failed:%s", err.Error())
+	}
+	if len(resources) == 0 {
+		return nil, fmt.Errorf("get server groups and resources failed, resources empty")
 	}
 	result := make(map[string]metav1.APIResource)
 	for _, resourceList := range resources {

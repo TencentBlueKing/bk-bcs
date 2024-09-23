@@ -20,7 +20,7 @@
   </bcs-popover>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, onUnmounted, ref } from 'vue';
 
 export default defineComponent({
   name: 'PopoverSelector',
@@ -59,11 +59,14 @@ export default defineComponent({
   setup() {
     const popoverRef = ref<any>(null);
     const show = () => {
-      popoverRef.value.showHandler();
+      popoverRef.value?.showHandler();
     };
     const hide = () => {
-      popoverRef.value.hideHandler();
+      popoverRef.value?.hideHandler();
     };
+    onUnmounted(() => {
+      hide();
+    });
     return {
       popoverRef,
       show,

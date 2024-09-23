@@ -22,6 +22,7 @@ bcs:
     kubeConfig: kubeConfig导入
     cloud: 云凭证导入
     platform: 平台创建
+    machine: 控制面服务器导入
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
     notDevOps: 您不是当前项目绑定业务的运维人员，请联系业务运维人员
@@ -231,6 +232,7 @@ generic:
       network: 网络错误
       system: 系统异常
       data: 获取数据失败
+      import: 导入失败
     warning:
       '403': 无权限操作
       '404': 页面不存在
@@ -598,6 +600,7 @@ cluster:
     importCategory: 添加方式
     maxPodNum: Pod IP数量上限
     clusterLabel: 集群标签
+    provider: 提供商
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -630,6 +633,11 @@ cluster:
         title: 公有云集群
         subTitle: 实现多云集群统一管理，降低业务管理成本
         desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群创建
+        importDesc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群导入
+      bkSops:
+        title: 控制面服务器导入
+        subTitle: 在控制面主机上执行标准运维流程导入任意外部集群
+        desc: 通过在控制面主机上执行标准运维流程，在集群中安装Agent以实现外部集群的纳管
     label:
       system: 操作系统
       containerRuntime: 运行时组件
@@ -699,9 +707,9 @@ cluster:
         maxNodePodNum:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
-        article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
         article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
         article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
+        article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
       networkMode:
         text: 网络模式
         cni:
@@ -893,6 +901,7 @@ cluster:
         status: 节点池状态
         name: 节点池名称
         detail: 查看节点池详情
+        serviceRole: IAM角色
       title:
         nodeConfig: 节点配置
         initConfig: 初始化配置
@@ -964,6 +973,12 @@ cluster:
             SSD: 超高IO云硬盘
             GPSSD: 通用性SSD云硬盘
             ESSD: 极速IO云硬盘
+            gp3: 通用型SSD(gp3)
+            gp2: 通用型SSD(gp2)
+            io2: 预调配IOPS SSD(io2)
+            io1: 预调配IOPS SSD(io1)
+            st1: 高吞吐量HDD(st1)
+            sc1: 吞吐量优化型Cold HDD(sc1)
           disk:
             system: 系统盘
             data: 数据盘
@@ -994,9 +1009,11 @@ cluster:
           title: 支持子网
           desc: 内部上云环境根据集群所在VPC由产品自动分配可用子网，尽可能的把集群内的节点分配在不同的可用区，避免集群节点集中在同一可用区
           placeholder: 系统自动分配
+          validate: 请选择至少两个不同可用区的子网
           label:
             subnetID: 子网ID
             subnetName: 子网名称
+            zone: 可用区
             remainIp: 剩余IP数
             unUsedReason:
               text: 不可用原因
@@ -1283,6 +1300,9 @@ cluster:
         selectAllNs: 全部命名空间
         kernel: 内核
         runtime: 运行时
+  operateRecord:
+    placeholder:
+      searchRecord: 搜索资源名称、资源ID、状态、发起者
 deploy:
   helm:
     title:
@@ -2505,6 +2525,19 @@ importGoogleCloud:
   clusterRegion:
     zones: 可用区级集群
     regions: 区域级集群
+importBkSopsCloud:
+  title: 导入集群－控制面服务器
+  label:
+    clusterName: 集群名称
+    controlPanel: 控制面
+    addServer: 添加服务器
+    advancedParameters: 高级参数
+    desc: 集群描述
+  button:
+    import: 导入
+  message:
+    nodeTips: 通过集群master节点导入，并可以执行kubectl命令
+    errorAgent: 导入节点Agent异常
 azureCloud:
   button:
     create: 新建凭证
@@ -2619,6 +2652,10 @@ azureCA:
       （默认）”有诸多限制，蓝鲸组件依赖这些被限制的功能，目前只支持操作系统“包含 Containerd 的 Ubuntu
       (ubuntu_containerd)”
     dataDisk: 购买数据盘后添加节点后需要手工格式化与挂载磁盘
+  password:
+    set: 设置密码
+    confirm: 确认密码
+awsCA:
   password:
     set: 设置密码
     confirm: 确认密码
@@ -2867,7 +2904,13 @@ tkeCa:
       yunti: 云梯资源池(平台提供)
       self: 自建资源池
 provider:
-  tencentPublicCloud: 腾讯云公有云
+  tencentyun: 腾讯自研云
+  huaweiyun: 华为云
+  yamaxunyun: 亚马逊云
+  gugeyun: 谷歌云
+  weiruanyun: 微软云
+  blueKingyun: K8S原生
+  tencentPublicCloud: 腾讯公有云
 container:
   label:
     restartCnt: 重启次数
@@ -2889,10 +2932,12 @@ templateFile:
     deploySetting: 部署设置
     deployReview: 部署预览
     disableYamlToForm: 无法切换模式
+    fileList: 文件列表
+    import: 导入文件包
+    clone: 克隆
   button:
     formMode: 表单模式
     yamlMode: YAML模式
-    createSpace: 新建文件夹
     rename: 重命名
     createFile: 新建模板文件
     delete: 删除
@@ -2900,9 +2945,15 @@ templateFile:
     previewAndDeploy: 预览并部署
     versionManage: 版本管理
     confirmDeploy: 确认部署
+    AddToFavorites: 收藏文件夹
+    RemoveFromFavorites: 取消收藏
+    import: 导入文件包
+    export: 导出全部
+    exportFolder: 导出文件夹
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
+    searchSpace: 搜索文件夹
   label:
     name: 名称
     templateName: 模板名称
@@ -2933,6 +2984,10 @@ templateFile:
     disableYamlToFormReason: '源码文件中，{0}，请继续使用源码模式编辑模板或修改再尝试'
     preKind: 上一个类型
     nextKind: 下一个类型
+    bookmark: 收藏文件夹
+    unbookmark: 取消收藏
+    uploadTips: 支持.tgz, .tar.gz类型压缩包，文件小于{0}M
+    createSpace: 新建文件夹
   tag:
     draft: 草稿
     baseOn: 基于

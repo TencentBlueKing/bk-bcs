@@ -24,7 +24,7 @@
           <span
             :class="[
               'rounded-full w-2.5 h-2.5 bg-[red] border-2 border-white flex-shrink-0',
-              validArray[index].isValidationFailed ? 'visible' : 'invisible'
+              validArray[index] ? 'visible' : 'invisible'
             ]"></span>
           <span
             :class="[
@@ -98,6 +98,13 @@
                   :value="form.formData.metadata.name"
                   required
                   v-if="form.formData.metadata"
+                  :rules="[
+                    {
+                      validator: () => handleValidatorName(index),
+                      message: $t('generic.validate.fieldRepeat', [$t('generic.label.resourceName')])
+                    }
+                  ]"
+                  trigger="blur"
                   ref="validateRefs">
                   <bcs-input
                     class="flex-1"
@@ -215,15 +222,29 @@ const initFormData = {
   apiVersion: '',
 };
 const schemaFormData = ref<ClusterResource.FormData[]>([]);
-const validArray = ref<Array<{isValidationFailed: boolean}>>([]);
+const validArray = computed(() => schemaFormData.value.reduce<Array<boolean>>((pre, cur) => {
+  const name = cur?.formData?.metadata?.name || '';
+  pre.push(!name);
+  return pre;
+}, []));
 const formToJson = computed(() => schemaFormData.value.reduce<Array<string>>((pre, cur) => {
   const name = cur?.formData?.metadata?.name || '';
   pre.push(name);
-  validArray.value.push({
-    isValidationFailed: false,
-  });
   return pre;
 }, []));
+
+// 资源名称唯一校验
+function handleValidatorName(index: number) {
+  const item = schemaFormData.value[index];
+  if (!item) return false;
+
+  const name = item?.formData?.metadata?.name || '';
+  const kind = item?.kind;
+
+  return !schemaFormData.value
+    .filter((_, i) => i !== index) // 排除当前index
+    .some(form => form.formData?.metadata?.name === name && form.kind === kind);// 同种kind的name不能重复
+}
 
 const curResourceType = computed(() => schemaFormData.value.reduce<ClusterResource.FormResourceType[]>((pre, item) => {
   const exist = pre.find(d => d.apiVersion === item.apiVersion && d.kind === item.kind);
@@ -359,12 +380,14 @@ const bkuiFormRef = ref<Array<any>>();
 const validateRefs = ref();
 const validate = async () => {
   // 校验名称必填
-  const emptyNameIndex = schemaFormData.value.findIndex(item => !item.formData?.metadata?.name);
-  if (emptyNameIndex > -1) {
-    document.getElementById(`template-file-form-${emptyNameIndex}`)?.scrollIntoView();
-    validateRefs.value[emptyNameIndex]?.handleBlur();
-    validArray.value[emptyNameIndex].isValidationFailed = true;
-    return false;
+  for (let i = 0; i < validateRefs.value.length; i++) {
+    const res = await validateRefs.value[i].validate('blur');
+    if (!res) {
+      document.getElementById(`template-file-form-${i}`)?.scrollIntoView();
+      handleAnchor(i);
+      // 出现一个没填直接返回
+      return false;
+    }
   }
 
   // 校验表单

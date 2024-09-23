@@ -329,6 +329,8 @@ export const TemplateSetService = {
   CreateTemplateSpace: (params?: ClusterResource.CreateTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/spaces')(params, config),
   // 更新模板文件文件夹
   UpdateTemplateSpace: (params?: ClusterResource.UpdateTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('put', '/clusterresources/v1/projects/$projectCode/template/spaces/$id')(params, config),
+  // 克隆模板文件文件夹
+  CloneTemplateSpace: (params?: ClusterResource.UpdateTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/spaces/$id/copy')(params, config),
   // 删除模板文件文件夹
   DeleteTemplateSpace: (params?: ClusterResource.DeleteTemplateSpaceReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('delete', '/clusterresources/v1/projects/$projectCode/template/spaces/$id')(params, config),
   // 获取模板文件元数据详情
@@ -371,6 +373,10 @@ export const TemplateSetService = {
   RenameEnvManage: (params?: ClusterResource.RenameEnvManageReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('put', '/clusterresources/v1/projects/$projectCode/envs/$id/rename')(params, config),
   // 删除环境管理
   DeleteEnvManage: (params?: ClusterResource.DeleteEnvManageReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('delete', '/clusterresources/v1/projects/$projectCode/envs/$id')(params, config),
+  // 收藏文件夹
+  CollectFolder: (params?: ClusterResource.ListTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/space/$templateSpaceID/collects')(params, config),
+  // 取消收藏文件夹
+  UnCollectFolder: (params?: ClusterResource.ListTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('delete', '/clusterresources/v1/projects/$projectCode/template/space/$templateSpaceID/collects')(params, config),
 };
 export const MultiClusterService = {
 // 获取多集群原生资源列表

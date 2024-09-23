@@ -14,8 +14,6 @@ package cmdbv3
 
 import (
 	"fmt"
-
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/esb/common"
 )
 
 // ESBSearchBusiness search business
@@ -26,13 +24,12 @@ func (c *Client) ESBSearchBusiness(username string, condition map[string]interfa
 		"condition":   condition,
 		"bk_username": username,
 	}
-	common.MergeMap(request, c.baseReq)
 	result := new(ESBSearchBusinessResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("search_business").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -53,13 +50,12 @@ func (c *Client) ESBTransferHostInBizModule(username string, bizID int64, hostID
 		"bk_module_id": moduleIDs,
 		"is_increment": false,
 	}
-	common.MergeMap(request, c.baseReq)
 	result := new(ESBTransferHostModuleResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("transfer_host_module").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -75,13 +71,12 @@ func (c *Client) ESBSearchBizInstTopo(username string, bizID int64) (*ESBSearchB
 		"bk_biz_id":   bizID,
 		"bk_username": username,
 	}
-	common.MergeMap(request, c.baseReq)
 	result := new(ESBSearchBizInstTopoResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("search_biz_inst_topo").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -111,12 +106,11 @@ func (c *Client) ESBListHostsWithoutBiz(username string, req *ESBListHostsWitout
 		request["page"] = req.Page
 	}
 	result := new(ESBListHostsWitoutBizResult)
-	common.MergeMap(request, c.baseReq)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("list_hosts_without_biz").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -135,13 +129,12 @@ func (c *Client) ESBGetBizLocation(username string, bizIDs []int64) (*ESBGetBizL
 		"bk_username": username,
 		"bk_biz_ids":  bizIDs,
 	}
-	common.MergeMap(request, c.baseReq)
 	result := new(ESBGetBizLocationResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("get_biz_location").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -159,13 +152,12 @@ func (c *Client) ESBGetBizInternalModule(username string, bizID int64, bkSupplie
 		"bk_username":         username,
 		"bk_supplier_account": bkSupplierAccount,
 	}
-	common.MergeMap(request, c.baseReq)
 	result := new(ESBGetBizInternalModuleResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("get_biz_internal_module").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -207,12 +199,11 @@ func (c *Client) ESBListBizHosts(username string, req *ESBListBizHostsRequest) (
 	request["fields"] = req.Fields
 
 	result := new(ESBListBizHostsResult)
-	common.MergeMap(request, c.baseReq)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("list_biz_hosts").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -251,12 +242,11 @@ func (c *Client) ESBListBizHostsTopo(
 	}
 
 	result := new(ESBListBizHostsTopoResult)
-	common.MergeMap(request, c.baseReq)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("list_biz_hosts_topo").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)
@@ -292,13 +282,12 @@ func (c *Client) ESBSearchModule(username string, req *ESBSearchModuleRequest) (
 		request["page"] = req.Page
 	}
 
-	common.MergeMap(request, c.baseReq)
 	result := new(ESBSearchModuleResult)
 	err := c.client.Post().
 		WithEndpoints([]string{c.host}).
 		WithBasePath("/api/c/compapi/v2/cc/").
 		SubPathf("search_module").
-		WithHeaders(c.defaultHeader).
+		WithHeaders(c.GetHeader()).
 		Body(request).
 		Do().
 		Into(result)

@@ -14,6 +14,7 @@ package bkdevops
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -206,8 +207,25 @@ func (t *workflowTransfer) buildElementLinuxScript(pluginVersion string, step *g
 	return result
 }
 
+func checkStringType(str string) interface{} {
+	bs := []byte(str)
+	resultSlice := make([]string, 0)
+	if err := json.Unmarshal(bs, &resultSlice); err == nil {
+		return resultSlice
+	}
+	var resultBool bool
+	if err := json.Unmarshal([]byte(str), &resultBool); err == nil {
+		return resultBool
+	}
+	return str
+}
+
 func (t *workflowTransfer) buildElementMarketBuild(pluginType, pluginName, pluginVersion string,
 	step *gitopsv1.Step) *elementMarketBuild {
+	nweData := make(map[string]interface{})
+	for k, v := range step.With {
+		nweData[k] = checkStringType(v)
+	}
 	result := &elementMarketBuild{
 		Type:          elementType(pluginType),
 		Name:          step.Name,
@@ -217,9 +235,9 @@ func (t *workflowTransfer) buildElementMarketBuild(pluginType, pluginName, plugi
 		ClassType:     pluginType,
 		ExecuteCount:  1,
 		Data: struct {
-			Input map[string]string `json:"input,omitempty"`
+			Input map[string]interface{} `json:"input,omitempty"`
 		}{
-			Input: step.With,
+			Input: nweData,
 		},
 	}
 	result.AdditionalOptions = t.buildControlOption(preTaskSuccess, step.Condition, step.Timeout)

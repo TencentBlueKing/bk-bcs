@@ -14,6 +14,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,6 +43,7 @@ type httpWrapper struct {
 	terraformSession  *session.TerraformSession
 	analysisSession   *session.AnalysisSession
 	monitorSession    *session.MonitorSession
+	preCheckSession   *session.PreCheckSession
 }
 
 // HttpResponse 定义了返回信息，根据返回信息 httpWrapper 做对应处理
@@ -111,6 +113,8 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		p.analysisSession.ServeHTTP(rwWrapper, req)
 	case reverseMonitor:
 		p.monitorSession.ServeHTTP(rwWrapper, req)
+	case reversePreCheck:
+		p.preCheckSession.ServeHTTP(rwWrapper, req)
 	case returnError:
 		if resp.statusCode >= 500 {
 			if utils.IsContextCanceled(resp.err) {
@@ -133,6 +137,9 @@ func (p *httpWrapper) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		proxy.DirectlyResponse(rwWrapper, resp.obj)
 	case jsonResponse:
 		proxy.JSONResponse(rwWrapper, resp.obj)
+	default:
+		blog.Warnf("unsupported res type:%s", resp.respType)
+		http.Error(rwWrapper, fmt.Sprintf("unknown response type: %v", resp.respType), http.StatusBadRequest)
 	}
 	p.handleAudit(rwWrapper, req, resp, start)
 }
@@ -194,6 +201,8 @@ const (
 	reverseAnalysis
 	// reverseWorkflow proxy to workflow
 	reverseWorkflow
+	// reversePreCheck 请求反向代理给preCheck服务
+	reversePreCheck
 )
 
 // ReturnArgoStreamReverse will reverse stream to argocd
@@ -242,6 +251,13 @@ func ReturnSecretReverse() *HttpResponse {
 func ReturnMonitorReverse() *HttpResponse {
 	return &HttpResponse{
 		respType: reverseMonitor,
+	}
+}
+
+// ReturnPreCheckReverse will reverse to argocd
+func ReturnPreCheckReverse() *HttpResponse {
+	return &HttpResponse{
+		respType: reversePreCheck,
 	}
 }
 

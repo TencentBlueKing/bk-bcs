@@ -8,7 +8,7 @@
     <div class="slider-content-container">
       <div class="package-configs-pick">
         <div class="search-wrapper">
-          <SearchInput v-model="searchStr" :placeholder="t('配置文件绝对路径/描述')" @search="handleSearch" />
+          <SearchInput v-model="searchStr" :placeholder="t('配置文件名/描述')" @search="handleSearch" />
         </div>
         <div class="package-tables">
           <PackageTable
@@ -29,10 +29,17 @@
           {{ t('已选') }} <span class="num">{{ selectedConfigs.length }}</span> {{ t('个配置文件') }}
         </h5>
         <div class="selected-list">
-          <div v-for="config in selectedConfigs" class="config-item" :key="config.id">
-            <div class="name" :title="config.name">{{ config.name }}</div>
-            <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(config.id)" />
-          </div>
+          <RecycleScroller
+            class="list-content"
+            :items="selectedConfigs"
+            :item-size="36"
+            key-field="id"
+            v-slot="{ item }">
+            <div class="config-item">
+              <div class="name">{{ item.name }}</div>
+              <i class="bk-bscp-icon icon-reduce delete-icon" @click="handleDeleteConfig(item.id)" />
+            </div>
+          </RecycleScroller>
           <p v-if="selectedConfigs.length === 0" class="empty-tips">{{ t('请先从左侧选择配置文件') }}</p>
         </div>
       </div>
@@ -247,6 +254,9 @@
       padding-top: 16px;
       height: calc(100% - 16px);
       overflow: auto;
+      .list-content {
+        max-height: 100%;
+      }
       .config-item {
         display: flex;
         align-items: center;

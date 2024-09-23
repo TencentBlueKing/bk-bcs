@@ -352,6 +352,7 @@ declare namespace ClusterResource {
   }
   export interface ListTemplateSpaceReq {
     $projectCode?: string // 项目编码
+    name?: string // 文件夹名称
   }
   export interface CreateTemplateSpaceReq {
     $projectCode?: string // 项目编码
@@ -528,5 +529,8 @@ declare namespace ClusterResource {
     creator: string[] // creator
     labelSelector: LabelSelector[] // 标签选择器
     name: string // name
+  }
+  export interface ExportTemplateReq {
+    templateSpaceNames: string[] // 模板空间名称
   }
 }

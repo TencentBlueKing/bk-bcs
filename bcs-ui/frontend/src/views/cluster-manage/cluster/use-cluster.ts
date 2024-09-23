@@ -349,6 +349,9 @@ export function getClusterImportCategory(clusterData: ICluster) {
   // kubeconfig
   if (clusterData?.importCategory === 'kubeConfig') return $i18n.t('bcs.cluster.kubeConfig');
 
+  // machine
+  if (clusterData?.importCategory === 'machine') return $i18n.t('bcs.cluster.machine');
+
   // 云凭证
   if (clusterData?.importCategory === 'cloud') return $i18n.t('bcs.cluster.cloud');
 

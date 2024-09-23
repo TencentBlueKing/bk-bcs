@@ -257,6 +257,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 			TemplateName:  req.GetName(),
 			TemplateSpace: templateSpace.Name,
 			Version:       req.GetVersion(),
+			EditFormat:    req.GetEditFormat(),
 			Content:       req.GetContent(),
 			Creator:       userName,
 		}

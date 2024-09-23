@@ -134,10 +134,10 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	}
 
 	// note:Azure不支持更换镜像
-	//// update imageName
+	// update imageName
 	// if err = ng.updateImageInfo(group); err != nil {
 	//	return err
-	//}
+	// }
 
 	return nil, nil
 }
@@ -444,7 +444,8 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	// update agent pool
 	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	if _, err = client.UpdatePoolAndReturn(ctx, pool, "", cluster.SystemID, *pool.Name); err != nil {
+	if _, err = client.UpdatePoolAndReturn(ctx, pool, cloudprovider.GetClusterResourceGroup(cluster),
+		cluster.SystemID, *pool.Name); err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call UpdateAgentPool api failed")
 	}
 

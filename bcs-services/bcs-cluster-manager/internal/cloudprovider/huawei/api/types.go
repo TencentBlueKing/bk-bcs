@@ -15,6 +15,7 @@ package api
 
 import (
 	"fmt"
+	"math"
 	"sort"
 
 	"github.com/huaweicloud/huaweicloud-sdk-go-v3/services/cce/v3/model"
@@ -887,4 +888,176 @@ func GetAddNodesReinstallVolumeConfig(serverId string, opt *cloudprovider.Common
 	fmt.Println(*volumeConfig)
 
 	return volumeConfig, nil
+}
+
+// CreateClusterRequest create cluster request
+type CreateClusterRequest struct {
+	// Name 集群名称
+	Name string
+	// Spec 集群配置
+	Spec CreateClusterSpec
+}
+
+func (c *CreateClusterRequest) Trans2CreateClusterRequest() *model.CreateClusterRequest {
+	category := model.GetClusterSpecCategoryEnum().TURBO
+	clusterType := model.GetClusterSpecTypeEnum().VIRTUAL_MACHINE
+
+	billingMode, periodType, periodNum, isAutoRenew, isAutoPay := GetChargeConfig(c.Spec.Charge)
+	// 根据 单节点 Pod 数量上限 算出 容器网络固定IP池掩码位数
+	alphaCceFixPoolMask := fmt.Sprintf("%d", 32-int(math.Log2(float64(c.Spec.AlphaCceFixPoolMask))))
+
+	clusterTags := make([]model.ResourceTag, 0)
+	for k, v := range c.Spec.ClusterTag {
+		tmpK := k
+		tmpV := v
+		clusterTags = append(clusterTags, model.ResourceTag{Key: &tmpK, Value: &tmpV})
+	}
+
+	confOverName := "kube-apiserver"
+	confName := "support-overload"
+	var confValue interface{} = true
+
+	req := &model.CreateClusterRequest{
+		Body: &model.Cluster{
+			Kind:       "Cluster",
+			ApiVersion: "v3",
+			Metadata: &model.ClusterMetadata{
+				Name: c.Name,
+				Annotations: map[string]string{
+					ClusterInstallAddonsExternalInstall: ClusterInstallAddonsExternalInstallValue,
+					ClusterInstallAddonsInstall:         ClusterInstallAddonsInstallValue,
+				},
+			},
+			Spec: &model.ClusterSpec{
+				Category:    &category,
+				Type:        &clusterType,
+				Flavor:      c.Spec.Flavor,
+				Version:     &c.Spec.Version,
+				Description: &c.Spec.Description,
+				Ipv6enable:  &c.Spec.Ipv6Enable,
+				HostNetwork: &model.HostNetwork{
+					Vpc:           c.Spec.VpcID,
+					Subnet:        c.Spec.SubnetID,
+					SecurityGroup: &c.Spec.SecurityGroupID,
+				},
+				ServiceNetwork: &model.ServiceNetwork{IPv4CIDR: &c.Spec.ServiceCidr},
+				BillingMode:    &billingMode,
+				ClusterTags:    &clusterTags,
+				KubeProxyMode: func() *model.ClusterSpecKubeProxyMode {
+					proxyMode := model.GetClusterSpecKubeProxyModeEnum().IPTABLES
+					if c.Spec.KubeProxyMode == model.GetClusterSpecKubeProxyModeEnum().IPVS.Value() {
+						proxyMode = model.GetClusterSpecKubeProxyModeEnum().IPVS
+					}
+					return &proxyMode
+
+				}(),
+				ExtendParam: &model.ClusterExtendParam{
+					PeriodType:  &periodType,
+					PeriodNum:   &periodNum,
+					IsAutoRenew: &isAutoRenew,
+					IsAutoPay:   &isAutoPay,
+				},
+				ConfigurationsOverride: &[]model.PackageConfiguration{
+					{
+						Name: &confOverName,
+						Configurations: &[]model.ConfigurationItem{
+							{Name: &confName, Value: &confValue},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if len(c.Spec.Az) == 1 {
+		req.Body.Spec.ExtendParam.ClusterAZ = &c.Spec.Az[0]
+	} else if len(c.Spec.Az) == 3 {
+		clusterAz := "multi_az"
+		req.Body.Spec.ExtendParam.ClusterAZ = &clusterAz
+		masters := make([]model.MasterSpec, 0)
+		for _, az := range c.Spec.Az {
+			tmp := az
+			masters = append(masters, model.MasterSpec{AvailabilityZone: &tmp})
+		}
+		req.Body.Spec.Masters = &masters
+	}
+
+	if len(c.Spec.PublicIP) > 0 {
+		req.Body.Spec.ExtendParam.ClusterExternalIP = &c.Spec.PublicIP
+	}
+
+	if c.Spec.Category == model.GetClusterSpecCategoryEnum().CCE.Value() {
+		category = model.GetClusterSpecCategoryEnum().CCE
+		containerCidr := make([]model.ContainerCidr, 0)
+		for _, cidr := range c.Spec.ContainerCidr {
+			containerCidr = append(containerCidr, model.ContainerCidr{Cidr: cidr})
+		}
+		req.Body.Spec.Category = &category
+		req.Body.Spec.ContainerNetwork = &model.ContainerNetwork{
+			Mode: func() model.ContainerNetworkMode {
+				mode := model.GetContainerNetworkModeEnum().OVERLAY_L2
+				if c.Spec.ContainerMode == model.GetContainerNetworkModeEnum().VPC_ROUTER.Value() {
+					mode = model.GetContainerNetworkModeEnum().VPC_ROUTER
+				}
+				return mode
+			}(),
+			Cidrs: &containerCidr,
+		}
+		req.Body.Spec.ExtendParam.AlphaCceFixPoolMask = &alphaCceFixPoolMask
+	} else {
+		networkSubnet := make([]model.NetworkSubnet, 0)
+		for _, subnetId := range c.Spec.EniNetworkSubnet {
+			networkSubnet = append(networkSubnet, model.NetworkSubnet{
+				SubnetID: subnetId,
+			})
+		}
+		req.Body.Spec.ContainerNetwork = &model.ContainerNetwork{
+			Mode: model.GetContainerNetworkModeEnum().ENI,
+		}
+		req.Body.Spec.EniNetwork = &model.EniNetwork{
+			Subnets: networkSubnet,
+		}
+	}
+
+	return req
+}
+
+// CreateClusterSpec create cluster spec
+type CreateClusterSpec struct {
+	// Category 集群类别
+	Category string
+	// Az 可用区
+	Az []string
+	// Flavor 节点规格
+	Flavor string
+	// Version 集群版本
+	Version string
+	// Description 集群描述
+	Description string
+	// VpcID vpc ID
+	VpcID string
+	// SubnetID 子网ID
+	SubnetID string
+	// SecurityGroupID 安全组ID
+	SecurityGroupID string
+	// ContainerMode 容器网络类型
+	ContainerMode string
+	// ContainerCidr 容器网段
+	ContainerCidr []string
+	// ServiceCidr 服务网段
+	ServiceCidr string
+	// Charge 节点计费模式
+	Charge ChargePrepaid
+	// Ipv6Enable 是否开启ipv6
+	Ipv6Enable bool
+	// AlphaCceFixPoolMask 容器网络固定IP池掩码位数
+	AlphaCceFixPoolMask uint32
+	// KubeProxyMode 服务转发模式
+	KubeProxyMode string
+	// ClusterTag 集群标签
+	ClusterTag map[string]string
+	// EniNetworkSubnet IPv4子网ID列表
+	EniNetworkSubnet []string
+	// PublicIP 公网ip地址
+	PublicIP string
 }

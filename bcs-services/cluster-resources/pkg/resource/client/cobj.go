@@ -349,7 +349,7 @@ func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string
 				return err
 			}
 			ctx = context.WithValue(ctx, ctxkey.ClusterKey, cluterInfo)
-			manifest, err := getApiReSourcesManifest(ctx, crdName, clusterID)
+			manifest, err := NewCRDCliByClusterID(ctx, clusterID).Get(ctx, crdName, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -363,7 +363,7 @@ func GetClustersCRDInfo(ctx context.Context, clusterIDs []string, crdName string
 		return nil, err
 	}
 
-	return result, nil
+	return formatter.FormatCRD(result), nil
 }
 
 // GetCObjManifest 获取自定义资源信息
@@ -619,7 +619,8 @@ func printTemplate(template *corev1.PodTemplateSpec) (string, error) {
 }
 
 // 简单的返回特殊的字段
-func getApiReSourcesManifest(ctx context.Context, crdName, clusterID string) (map[string]interface{}, error) {
+// nolint
+func getApiResourcesManifest(ctx context.Context, crdName, clusterID string) (map[string]interface{}, error) {
 	manifest := make(map[string]interface{}, 0)
 	// 分离资源名称
 	s := strings.SplitN(crdName, ".", 2)
@@ -632,9 +633,9 @@ func getApiReSourcesManifest(ctx context.Context, crdName, clusterID string) (ma
 	if len(s) > 1 {
 		group = s[1]
 	}
-	apiResources, err := res.GetApiResources(ctx, res.NewClusterConf(clusterID), "")
+	apiResources, err := res.GetApiResources(ctx, res.NewClusterConf(clusterID), "", crdName)
 	if err != nil {
-		return manifest, err
+		return nil, err
 	}
 	// 避免不了存在resources,group一样，版本不一样的GroupVersionResource
 	for _, v := range apiResources {

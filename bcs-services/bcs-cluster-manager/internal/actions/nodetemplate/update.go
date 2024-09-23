@@ -15,12 +15,16 @@ package nodetemplate
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
@@ -30,6 +34,8 @@ type UpdateAction struct {
 	model store.ClusterManagerModel
 	req   *cmproto.UpdateNodeTemplateRequest
 	resp  *cmproto.UpdateNodeTemplateResponse
+
+	project *bcsproject.Project
 }
 
 // NewUpdateAction create update action for nodeTemplate
@@ -151,6 +157,10 @@ func (ua *UpdateAction) validate() error {
 		return err
 	}
 
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ua.req.ProjectID, true)
+	if errLocal == nil {
+		ua.project = proInfo
+	}
 	return nil
 }
 
@@ -179,6 +189,20 @@ func (ua *UpdateAction) Handle(
 	if err := ua.updateNodeTemplate(destNodeTemplate); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Project.String(),
+		ResourceID:   req.ProjectID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("项目[%s]更新节点模版信息[%s]", ua.project.GetName(), req.NodeTemplateID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ProjectID:    req.ProjectID,
+		ResourceName: ua.project.GetName(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateNodeTemplate[%s] CreateOperationLog failed: %v", req.ProjectID, err)
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

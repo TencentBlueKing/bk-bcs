@@ -22,6 +22,8 @@ type TemplateSpace struct {
 	Name        string             `json:"name" bson:"name"`
 	ProjectCode string             `json:"projectCode" bson:"projectCode"`
 	Description string             `json:"description" bson:"description"`
+	Fav         bool               `json:"fav" bson:"-"` // 是否收藏
+	Tags        []string           `json:"tags" bson:"tags"`
 }
 
 // ToMap trans templatespace to map
@@ -34,5 +36,7 @@ func (t *TemplateSpace) ToMap() map[string]interface{} {
 	m["name"] = t.Name
 	m["projectCode"] = t.ProjectCode
 	m["description"] = t.Description
+	m["fav"] = t.Fav
+	m["tags"] = t.Tags
 	return m
 }

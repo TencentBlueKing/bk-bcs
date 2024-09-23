@@ -146,14 +146,19 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 			}
 		} else {
 			// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，分页和模糊查询都无效
+			var cond *operator.Condition
 			condKind := make(operator.M)
-			condID := make(operator.M)
 			if req.Kind != "" {
 				condKind["kind"] = req.Kind
 			}
-			condID["projectID"] = ids
-			cond := operator.NewBranchCondition(operator.And,
-				operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
+			if any {
+				cond = operator.NewBranchCondition(operator.And, operator.NewLeafCondition(operator.Eq, condKind))
+			} else {
+				condID := make(operator.M)
+				condID["projectID"] = ids
+				cond = operator.NewBranchCondition(operator.And,
+					operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
+			}
 			projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
 		}
 		if err != nil {

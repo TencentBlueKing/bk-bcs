@@ -15,7 +15,9 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -27,6 +29,7 @@ import (
 	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
 
+	irevoker "github.com/Tencent/bk-bcs/bcs-common/common/task/revokers/iface"
 	istep "github.com/Tencent/bk-bcs/bcs-common/common/task/steps/iface"
 	istore "github.com/Tencent/bk-bcs/bcs-common/common/task/stores/iface"
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
@@ -59,8 +62,10 @@ type TaskManager struct { // nolint
 // ManagerConfig options for manager
 type ManagerConfig struct {
 	ModuleName   string
+	WorkerName   string
 	WorkerNum    int
 	Broker       ibroker.Broker
+	Revoker      irevoker.Revoker
 	Backend      ibackend.Backend
 	Lock         ilock.Lock
 	Store        istore.Store
@@ -117,7 +122,7 @@ func (m *TaskManager) Init(cfg *ManagerConfig) error {
 		return err
 	}
 
-	if err := m.initWorker(cfg.WorkerNum); err != nil {
+	if err := m.initWorker(cfg.WorkerName, cfg.WorkerNum); err != nil {
 		return err
 	}
 
@@ -145,13 +150,13 @@ func (m *TaskManager) initServer() error {
 }
 
 // register step workers and init workers
-func (m *TaskManager) initWorker(workerNum int) error {
+func (m *TaskManager) initWorker(workerName string, workerNum int) error {
 	// register all workers
 	if err := m.registerStepWorkers(); err != nil {
 		return fmt.Errorf("register workers failed, err: %s", err.Error())
 	}
 
-	m.worker = m.server.NewWorker("", workerNum)
+	m.worker = m.server.NewWorker(workerName, workerNum)
 
 	preTaskHandler := func(signature *tasks.Signature) {
 		log.INFO.Printf("start task[%s] handler for: %s", signature.UUID, signature.Name)
@@ -206,6 +211,22 @@ func (m *TaskManager) RetryAt(task *types.Task, stepName string) error {
 		return err
 	}
 	return m.dispatchAt(task, stepName)
+}
+
+// Revoke revoke the task
+func (m *TaskManager) Revoke(task *types.Task) error {
+	// task revoke
+	if m.cfg == nil || m.cfg.Revoker == nil {
+		return fmt.Errorf("task revoker is required")
+	}
+
+	task.SetStatus(types.TaskStatusRevoked)
+	task.SetMessage("task has been revoked")
+
+	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
+		return err
+	}
+	return m.cfg.Revoker.Revoke(context.Background(), task.TaskID)
 }
 
 // Dispatch dispatch task
@@ -310,8 +331,7 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	// step executed success
 	if state.step == nil {
-		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip",
-			taskID, stepName, err)
+		log.INFO.Printf("task[%s] stepName[%s] already exec successful && skip", taskID, stepName)
 		return nil
 	}
 
@@ -324,68 +344,102 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	start := time.Now()
 	// step timeout
-	stepCtx, stepCancel := GetTimeOutCtx(m.ctx, step.MaxExecutionSeconds)
+	stepCtx, stepCancel := GetTimeOutCtx(context.Background(), step.MaxExecutionSeconds)
 	defer stepCancel()
+
+	// task revoke
+	revokeCtx := context.TODO()
+	if m.cfg != nil && m.cfg.Revoker != nil {
+		revokeCtx = m.cfg.Revoker.RevokeCtx(taskID)
+	}
 
 	// task timeout
 	t := state.task.GetStartTime()
-	taskCtx, taskCancel := GetDeadlineCtx(m.ctx, &t, state.task.MaxExecutionSeconds)
+	taskCtx, taskCancel := GetDeadlineCtx(context.Background(), &t, state.task.MaxExecutionSeconds)
 	defer taskCancel()
 
 	tmpCh := make(chan error, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.ERROR.Printf("[%s-%s][recover] panic: %v, stack %s", taskID, stepName, r, debug.Stack())
+				tmpCh <- fmt.Errorf("%w by a panic: %v", istep.ErrRevoked, r)
+			}
+		}()
+
 		// call step worker
 		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 		tmpCh <- stepExecutor.Execute(execCtx)
 	}()
 
 	select {
-	case retErr := <-tmpCh:
-		log.INFO.Printf("task %s step %s errLocal: %v", taskID, stepName, retErr)
+	case stepErr := <-tmpCh:
+		log.INFO.Printf("task %s step %s exec done, duration=%s, err=%v",
+			taskID, stepName, time.Since(start), stepErr)
 
 		// update task & step status
-		if retErr == nil {
+		if stepErr == nil {
 			state.updateStepSuccess(start)
 			return nil
 		}
-		state.updateStepFailure(start, retErr, false)
+		state.updateStepFailure(start, stepErr, nil)
+
+		// 单步骤主动revoke或者没有重试次数时, 不再重试
+		if !errors.Is(stepErr, istep.ErrRevoked) && step.GetRetryCount() < step.MaxRetries {
+			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
+			log.INFO.Printf("retry task %s step %s, err=%s, retried=%d, maxRetries=%d, retryIn=%s",
+				taskID, stepName, stepErr, step.GetRetryCount(), step.MaxRetries, retryIn)
+			return tasks.NewErrRetryTaskLater(stepErr.Error(), retryIn)
+		}
 
 		if step.GetSkipOnFailed() {
 			return nil
 		}
 
-		if step.GetRetryCount() < step.MaxRetries {
-			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
-			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
-				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
-			return tasks.NewErrRetryTaskLater(retErr.Error(), retryIn)
-		}
-
+		retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 		return retErr
 
 	case <-stepCtx.Done():
-		retErr := fmt.Errorf("task %s step %s timeout", taskID, step.GetName())
-		state.updateStepFailure(start, retErr, false)
+		// step timeout
+		stepErr := fmt.Errorf("step exec timeout")
+		state.updateStepFailure(start, stepErr, nil)
+
+		if step.GetRetryCount() < step.MaxRetries {
+			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
+			log.INFO.Printf("retry task %s step %s, err=%s, retried=%d, maxRetries=%d, retryIn=%s",
+				taskID, stepName, stepErr, step.GetRetryCount(), step.MaxRetries, retryIn)
+			return tasks.NewErrRetryTaskLater(stepErr.Error(), retryIn)
+		}
 
 		if step.GetSkipOnFailed() {
 			return nil
 		}
 
-		if step.GetRetryCount() < step.MaxRetries {
-			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
-			log.INFO.Printf("retry task %s step %s, retried=%d, maxRetries=%d, retryIn=%s",
-				taskID, step.GetName(), step.GetRetryCount(), step.MaxRetries, retryIn)
-			return tasks.NewErrRetryTaskLater("some error", retryIn)
-		}
+		retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
+		return retErr
 
+	case <-revokeCtx.Done():
+		// task revoke
+		stepErr := fmt.Errorf("task has been revoked")
+		state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusRevoked})
+
+		// 取消指令, 不再重试
+		retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 		return retErr
 
 	case <-taskCtx.Done():
-		// task timeOut
-		retErr := fmt.Errorf("task %s exec timeout", taskID)
-		state.updateStepFailure(start, retErr, true)
+		// task timeout
+		stepErr := fmt.Errorf("task exec timeout")
+		state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusTimeout})
+
 		// 整个任务结束
+		retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
 		return retErr
+
+	case <-m.ctx.Done():
+		// task manager stop, try later
+		log.INFO.Printf("task manager stop, task %s step %s will retry later", taskID, stepName)
+		return tasks.NewErrRetryTaskLater("task manager stop", time.Second*10)
 	}
 }
 

@@ -240,7 +240,7 @@ import { computed, defineComponent, onMounted, ref } from 'vue';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import BcsContent from '@/components/layout/Content.vue';
-import { useConfig } from '@/composables/use-app';
+import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -310,7 +310,7 @@ export default defineComponent({
 
     const loading = ref(false);
     const user = computed(() => $store.state.user);
-    const { _INTERNAL_ } = useConfig();
+    const { _INTERNAL_ } = useAppData();
     const handleSaveConfig = async () => {
       const validate = await formRef.value?.validate();
       if (!validate) return;

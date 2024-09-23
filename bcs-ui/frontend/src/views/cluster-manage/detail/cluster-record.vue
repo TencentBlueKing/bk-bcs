@@ -11,13 +11,21 @@
           v-model="timeRange">
         </bcs-date-picker>
       </template>
-      <!-- <template #right>
-        <bcs-input
-          class="min-w-[360px]"
-          right-icon="bk-icon icon-search"
+      <template #right>
+        <bcs-search-select
           clearable
-          v-model.trim="searchValue" />
-      </template> -->
+          class="bg-[#fff] min-w-[360px] ml-[10px]"
+          :data="searchSelectData"
+          :show-condition="false"
+          :show-popover-tag-change="false"
+          :placeholder="$t('cluster.operateRecord.placeholder.searchRecord')"
+          default-focus
+          ref="searchSelect"
+          v-model="searchSelectValue"
+          @change="searchSelectChange"
+          @clear="handleClear">
+        </bcs-search-select>
+      </template>
     </Row>
     <bcs-table
       v-bkloading="{ isLoading }"
@@ -60,7 +68,9 @@
         </template>
       </bcs-table-column>
       <template #empty>
-        <BcsEmptyTableStatus :type="searchValue ? 'search-empty' : 'empty'" @clear="searchValue = ''" />
+        <BcsEmptyTableStatus
+          :type="searchSelectValue?.length ? 'search-empty' : 'empty'"
+          @clear="handleClear" />
       </template>
     </bcs-table>
     <bcs-sideslider
@@ -98,7 +108,6 @@ import { clusterOperationLogs, clusterTaskRecords, taskLogsDownloadURL, taskRetr
 import { parseUrl } from '@/api/request';
 import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
-import useDebouncedRef from '@/composables/use-debounce';
 import useInterval from '@/composables/use-interval';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
@@ -109,7 +118,6 @@ interface Props {
 const props = defineProps<Props>();
 
 const timeRange = ref<Date[]>([]);
-const searchValue = useDebouncedRef('');
 // 快捷时间配置
 const shortcuts = ref([
   {
@@ -150,7 +158,7 @@ const shortcuts = ref([
 ]);
 
 const isLoading = ref(false);
-const list = ref([]);
+const list = ref<any[]>([]);
 const pagination = ref({
   current: 1,
   limit: 10,
@@ -169,6 +177,54 @@ const statusTextMap = {
   RUNNING: $i18n.t('generic.status.running'),
 };
 
+// 状态
+const status = Object.keys(statusTextMap).map(item => ({
+  id: item,
+  name: statusTextMap[item],
+  text: statusTextMap[item],
+  value: item,
+}));
+// searchSelect数据源配置
+const searchSelectDataSource = [
+  {
+    name: $i18n.t('generic.label.resourceName'),
+    id: 'resourceName',
+    placeholder: $i18n.t('generic.placeholder.input'),
+  },
+  {
+    name: $i18n.t('generic.label.resourceID'),
+    id: 'resourceID',
+    placeholder: $i18n.t('generic.placeholder.input'),
+  },
+  {
+    name: $i18n.t('generic.label.status'),
+    id: 'status',
+    children: status,
+  },
+  {
+    name: $i18n.t('projects.operateAudit.operator'),
+    id: 'opUser',
+    placeholder: $i18n.t('generic.placeholder.input'),
+  },
+];
+// 检索参数
+const searchParams = ref({});
+function searchSelectChange(inputList) {
+  const params = {};
+  inputList.forEach((item) => {
+    params[item.id] = item.values && item.values.length > 0 ? item?.values[0]?.id ?? '' : '';
+  });
+  searchParams.value = params;
+}
+function handleClear() {
+  searchSelectValue.value = [];
+  searchParams.value = {};
+}
+const searchSelectValue = ref<any[]>([]);
+// 搜索项有值后就不展示了
+const searchSelectData = ref<any[]>([]);
+const searchSelect = ref();
+
 // 获取集群操作日志
 async function getOperationLogs() {
   if (!props.clusterId) return;
@@ -181,6 +237,7 @@ async function getOperationLogs() {
     limit: pagination.value.limit,
     page: pagination.value.current,
     v2: true,
+    ...searchParams.value,
   }).catch(() => []);
   isLoading.value = false;
   list.value = results;
@@ -259,13 +316,19 @@ function handleAutoRefresh(v: boolean) {
 watch(
   () => [
     timeRange.value,
-    searchValue.value,
+    searchParams.value,
   ],
   () => {
     pagination.value.current = 1;
     getOperationLogs();
+    searchSelect.value?.hidePopper();
   },
 );
+
+watch(searchSelectValue, () => {
+  const ids = searchSelectValue.value.map(item => item.id);
+  searchSelectData.value = searchSelectDataSource.filter(item => !ids.includes(item.id));
+}, { immediate: true, deep: true });
 
 onBeforeMount(() => {
   // 初始化默认时间

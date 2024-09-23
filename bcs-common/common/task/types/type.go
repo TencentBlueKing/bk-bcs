@@ -26,6 +26,8 @@ const (
 	DefaultMaxExecuteTimeSeconds = 3600
 	// DefaultTaskMessage default message
 	DefaultTaskMessage = "task initializing"
+	// DefaultPayloadContent default json extras content
+	DefaultPayloadContent = "{}"
 )
 
 const (
@@ -39,15 +41,13 @@ const (
 	TaskStatusFailure = "FAILURE"
 	// TaskStatusTimeout task run timeout
 	TaskStatusTimeout = "TIMEOUT"
-	// TaskStatusForceTerminate force task terminate
-	TaskStatusForceTerminate = "FORCETERMINATE"
+	// TaskStatusRevoked task has been revoked
+	TaskStatusRevoked = "REVOKED"
 	// TaskStatusNotStarted force task terminate
 	TaskStatusNotStarted = "NOTSTARTED"
 )
 
 var (
-	// DefaultPayloadContent default json extras content
-	DefaultPayloadContent = []byte("{}")
 	// ErrNotImplemented not implemented error
 	ErrNotImplemented = errors.New("not implemented")
 )
@@ -56,17 +56,16 @@ var (
 type Task struct {
 	TaskIndex           string            `json:"taskIndex"`
 	TaskIndexType       string            `json:"taskIndexType"`
-	TaskID              string            `json:"taskId"`
+	TaskID              string            `json:"taskID"`
 	TaskType            string            `json:"taskType"`
 	TaskName            string            `json:"taskName"`
 	CurrentStep         string            `json:"currentStep"`
 	Steps               []*Step           `json:"steps"`
 	CallbackName        string            `json:"callbackName"`
 	CommonParams        map[string]string `json:"commonParams"`
-	CommonPayload       []byte            `json:"commonPayload"`
+	CommonPayload       string            `json:"commonPayload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
-	ForceTerminate      bool              `json:"forceTerminate"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
 	Creator             string            `json:"creator"`
@@ -82,7 +81,7 @@ type Step struct {
 	Alias               string            `json:"alias"`
 	Executor            string            `json:"executor"`
 	Params              map[string]string `json:"params"`
-	Payload             []byte            `json:"payload"`
+	Payload             string            `json:"payload"`
 	Status              string            `json:"status"`
 	Message             string            `json:"message"`
 	ETA                 *time.Time        `json:"eta"` // 延迟执行时间(Estimated Time of Arrival)

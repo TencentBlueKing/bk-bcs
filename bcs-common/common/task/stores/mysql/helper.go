@@ -16,10 +16,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
-func getStepRecords(t *types.Task) []*StepRecords {
-	records := make([]*StepRecords, 0, len(t.Steps))
+func getStepRecord(t *types.Task) []*StepRecord {
+	records := make([]*StepRecord, 0, len(t.Steps))
 	for _, step := range t.Steps {
-		record := &StepRecords{
+		record := &StepRecord{
 			TaskID:              t.TaskID,
 			Name:                step.Name,
 			Alias:               step.Alias,
@@ -42,13 +42,13 @@ func getStepRecords(t *types.Task) []*StepRecords {
 
 	return records
 }
-func getTaskRecord(t *types.Task) *TaskRecords {
+func getTaskRecord(t *types.Task) *TaskRecord {
 	stepSequence := make([]string, 0, len(t.Steps))
 	for i := range t.Steps {
 		stepSequence = append(stepSequence, t.Steps[i].Name)
 	}
 
-	record := &TaskRecords{
+	record := &TaskRecord{
 		TaskID:              t.TaskID,
 		TaskType:            t.TaskType,
 		TaskIndex:           t.TaskIndex,
@@ -61,7 +61,6 @@ func getTaskRecord(t *types.Task) *TaskRecords {
 		CommonPayload:       t.CommonPayload,
 		Status:              t.Status,
 		Message:             t.Message,
-		ForceTerminate:      t.ForceTerminate,
 		Start:               t.Start,
 		End:                 t.End,
 		ExecutionTime:       t.ExecutionTime,
@@ -72,7 +71,7 @@ func getTaskRecord(t *types.Task) *TaskRecords {
 	return record
 }
 
-func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
+func toTask(task *TaskRecord, steps []*StepRecord) *types.Task {
 	t := &types.Task{
 		TaskID:              task.TaskID,
 		TaskType:            task.TaskType,
@@ -85,7 +84,6 @@ func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
 		CommonPayload:       task.CommonPayload,
 		Status:              task.Status,
 		Message:             task.Message,
-		ForceTerminate:      task.ForceTerminate,
 		Start:               task.Start,
 		End:                 task.End,
 		ExecutionTime:       task.ExecutionTime,
@@ -95,15 +93,51 @@ func toTask(task *TaskRecords, steps []*StepRecords) *types.Task {
 		Updater:             task.Updater,
 	}
 
-	t.Steps = make([]*types.Step, 0, len(steps))
+	stepMap := map[string]*StepRecord{}
 	for _, step := range steps {
+		stepMap[step.Name] = step
+	}
+
+	t.Steps = make([]*types.Step, 0, len(task.StepSequence))
+	for _, step := range task.StepSequence {
+		step, ok := stepMap[step]
+		if !ok {
+			continue
+		}
 		t.Steps = append(t.Steps, step.ToStep())
 	}
 	return t
 }
 
-func getUpdateTaskRecord(t *types.Task) *TaskRecords {
-	record := &TaskRecords{
+var (
+	// updateTaskField task 支持更新的字段
+	updateTaskField = []string{
+		"CurrentStep",
+		"CommonParams",
+		"CommonPayload",
+		"Status",
+		"Message",
+		"Start",
+		"End",
+		"ExecutionTime",
+		"Updater",
+	}
+
+	// updateStepField step 支持更新的字段
+	updateStepField = []string{
+		"Params",
+		"Payload",
+		"Status",
+		"Message",
+		"Start",
+		"End",
+		"ExecutionTime",
+		"RetryCount",
+	}
+)
+
+func getUpdateTaskRecord(t *types.Task) *TaskRecord {
+	record := &TaskRecord{
 		CurrentStep:   t.CurrentStep,
 		CommonParams:  t.CommonParams,
 		CommonPayload: t.CommonPayload,
@@ -117,8 +151,8 @@ func getUpdateTaskRecord(t *types.Task) *TaskRecords {
 	return record
 }
 
-func getUpdateStepRecord(t *types.Step) *StepRecords {
-	record := &StepRecords{
+func getUpdateStepRecord(t *types.Step) *StepRecord {
+	record := &StepRecord{
 		Params:        t.Params,
 		Payload:       t.Payload,
 		Status:        t.Status,

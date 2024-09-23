@@ -68,7 +68,7 @@
     name: '',
     alias: '',
     config_type: 'file',
-    data_type: 'any',
+    data_type: '',
     memo: '', // @todo 包含换行符后接口会报错
     is_approve: true,
     approver: '',
@@ -91,7 +91,7 @@
           name: '',
           alias: '',
           config_type: 'file',
-          data_type: 'any',
+          data_type: '',
           memo: '',
           is_approve: true,
           approver: '',

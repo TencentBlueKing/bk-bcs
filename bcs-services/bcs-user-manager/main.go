@@ -31,7 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"

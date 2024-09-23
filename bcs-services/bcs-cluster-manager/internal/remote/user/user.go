@@ -26,6 +26,7 @@ import (
 	"go-micro.dev/v4/registry"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
 
 const (
@@ -171,6 +172,7 @@ func (um *UserManagerClient) CreateUserToken(user CreateTokenReq) (string, error
 		return "", err
 	}
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(url).
@@ -183,9 +185,11 @@ func (um *UserManagerClient) CreateUserToken(user CreateTokenReq) (string, error
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "CreateUserToken", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api CreateUserToken failed: %v", errs[0])
 		return "", errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "CreateUserToken", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call CreateUserToken API error: code[%v], body[%v], err[%s]",
@@ -213,6 +217,7 @@ func (um *UserManagerClient) CreateClientToken(client CreateClientTokenReq) (str
 		return "", err
 	}
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(url).
@@ -225,9 +230,11 @@ func (um *UserManagerClient) CreateClientToken(client CreateClientTokenReq) (str
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "CreateClientToken", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api CreateClientToken failed: %v", errs[0])
 		return "", errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "CreateClientToken", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call CreateClientToken API error: code[%v], body[%v], err[%s]",
@@ -255,6 +262,7 @@ func (um *UserManagerClient) DeleteUserToken(token string) error {
 		return err
 	}
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Delete(url).
@@ -266,9 +274,11 @@ func (um *UserManagerClient) DeleteUserToken(token string) error {
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "DeleteUserToken", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetUserToken failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "DeleteUserToken", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call GetUserToken API error: code[%v], body[%v], err[%s]",
@@ -296,6 +306,7 @@ func (um *UserManagerClient) GetUserToken(user string) (string, error) {
 		return "", err
 	}
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Get(url).
@@ -307,9 +318,11 @@ func (um *UserManagerClient) GetUserToken(user string) (string, error) {
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "GetUserToken", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetUserToken failed: %v", errs[0])
 		return "", errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "GetUserToken", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call GetUserToken API error: code[%v], body[%v], err[%s]",
@@ -342,6 +355,7 @@ func (um *UserManagerClient) GrantUserPermission(permissions []types.Permission)
 		return err
 	}
 
+	start := time.Now()
 	perm := buildUserPermission(permissions)
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
@@ -355,9 +369,11 @@ func (um *UserManagerClient) GrantUserPermission(permissions []types.Permission)
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "GrantUserPermission", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GrantUserPermission failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "GrantUserPermission", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call GrantUserPermission API error: code[%v], body[%v], err[%s]",
@@ -385,6 +401,7 @@ func (um *UserManagerClient) RevokeUserPermission(permissions []types.Permission
 		return err
 	}
 
+	start := time.Now()
 	perm := buildUserPermission(permissions)
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
@@ -398,9 +415,11 @@ func (um *UserManagerClient) RevokeUserPermission(permissions []types.Permission
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "RevokeUserPermission", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GrantUserPermission failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "RevokeUserPermission", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call GrantUserPermission API error: code[%v], body[%v], err[%s]",
@@ -428,6 +447,7 @@ func (um *UserManagerClient) VerifyUserPermission(permReq VerifyPermissionReq) (
 		return false, err
 	}
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Get(url).
@@ -440,9 +460,11 @@ func (um *UserManagerClient) VerifyUserPermission(permReq VerifyPermissionReq) (
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("user", "VerifyUserPermission", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api VerifyUserPermission failed: %v", errs[0])
 		return false, errs[0]
 	}
+	metrics.ReportLibRequestMetric("user", "VerifyUserPermission", "http", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		errMsg := fmt.Errorf("call VerifyUserPermission API error: code[%v], body[%v], err[%s]",

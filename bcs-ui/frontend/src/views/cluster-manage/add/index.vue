@@ -73,7 +73,7 @@
 import { computed, defineComponent, ref } from 'vue';
 
 import BcsContent from '@/components/layout/Content.vue';
-import { useAppData, useConfig } from '@/composables/use-app';
+import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
 import azureLogo from '@/images/azure.png';
@@ -94,8 +94,7 @@ export default defineComponent({
   name: 'ClusterType',
   components: { BcsContent },
   setup() {
-    const { _INTERNAL_ } = useConfig();
-    const { flagsMap } = useAppData();
+    const { flagsMap, _INTERNAL_ } = useAppData();
     const createList = ref<ICard[]>([
       {
         icon: 'bcs-icon-color-tencentcloud',
@@ -145,7 +144,7 @@ export default defineComponent({
             icon: huaweiLogo,
             title: $i18n.t('publicCloud.huawei.title'),
             desc: $i18n.t('publicCloud.huawei.desc'),
-            type: 'azureCloud',
+            type: 'huaweiCloud',
             disabled: true,
           },
         ],
@@ -172,7 +171,7 @@ export default defineComponent({
         icon: 'bcs-icon-color-publiccloud',
         title: $i18n.t('cluster.create.type.cloudProvider.title'),
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
-        desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
+        desc: $i18n.t('cluster.create.type.cloudProvider.importDesc'),
         type: 'import-cloud',
         disabled: _INTERNAL_.value,
         children: [
@@ -214,12 +213,19 @@ export default defineComponent({
         ],
       },
       {
-        icon: 'bcs-icon-color-kubeconfig',
+        icon: 'bcs-icon-color-k8s',
         title: $i18n.t('cluster.create.type.kubeconfig.title'),
         subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
         desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
         type: 'kubeconfig',
-        // disabled: _INTERNAL_.value,
+      },
+      {
+        icon: 'bcs-icon-operations',
+        title: $i18n.t('cluster.create.type.bkSops.title'),
+        subTitle: $i18n.t('cluster.create.type.bkSops.subTitle'),
+        desc: $i18n.t('cluster.create.type.bkSops.desc'),
+        type: 'bk-sops',
+        disabled: !flagsMap.value.IMPORTSOPSCLUSTER,
       },
     ]);
     const cardGroupList = computed(() => [
@@ -300,6 +306,11 @@ export default defineComponent({
         case 'amazonCloud':
           $router.push({
             name: 'importAwsCluster',
+          });
+          break;
+        case 'bk-sops':
+          $router.push({
+            name: 'importBkSopsCluster',
           });
           break;
       }

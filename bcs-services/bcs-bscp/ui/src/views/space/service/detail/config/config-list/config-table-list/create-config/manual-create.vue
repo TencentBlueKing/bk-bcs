@@ -104,6 +104,9 @@
         size = new Blob([stringContent]).size;
         await updateConfigContent(props.bkBizId, props.appId, stringContent, sign, () => {});
       }
+      if (configForm.value.path?.endsWith('/') && configForm.value.path !== '/') {
+        configForm.value.path = configForm.value.path.slice(0, -1);
+      }
       const params = { ...configForm.value, ...{ sign, byte_size: size } };
       const res = await createServiceConfigItem(props.appId, props.bkBizId, params);
       serviceStore.$patch((state) => {

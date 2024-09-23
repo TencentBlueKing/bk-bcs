@@ -53,7 +53,8 @@ func (s *memStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]types
 }
 
 func (s *memStore) UpdateTask(ctx context.Context, task *types.Task) error {
-	return types.ErrNotImplemented
+	s.tasks[task.GetTaskID()] = task
+	return nil
 }
 
 func (s *memStore) DeleteTask(ctx context.Context, taskID string) error {

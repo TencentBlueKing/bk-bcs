@@ -25,49 +25,25 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 )
 
-// validUnixFileSubPathRegexp sub path support character:
-// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '.'
-var validUnixFileSubPathRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]{}]+$")
-
 // ValidateUnixFilePath validate unix os file path.
 func ValidateUnixFilePath(kit *kit.Kit, path string) error {
 	if len(path) < 1 {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, length should >= 1"))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, length should >= 1", path))
 	}
 
 	if len(path) > 1024 {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, length should <= 1024"))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, length should <= 1024", path))
 	}
 
-	// 1. should start with '/'
+	// 1. 检查是否以 '/' 开头
 	if !strings.HasPrefix(path, "/") {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path, should start with '/'"))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path must start with '/'", path))
 	}
 
-	// Split the path into parts
-	parts := strings.Split(path, "/")[1:] // Ignore the first empty part due to the leading '/'
-
-	if strings.HasSuffix(path, "/") {
-		parts = parts[:len(parts)-1] // Ignore the last empty part due to the trailing '/'
-	}
-
-	// Iterate over each part to validate
-	for _, part := range parts {
-
-		// 2. the verification path cannot all be '{'. '}'
-		if dotsRegexp.MatchString(part) {
-			return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, path cannot all be '.' ", part))
-		}
-
-		// 3. each sub path support character:
-		// chinese, english, number, '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}'
-		if !validUnixFileSubPathRegexp.MatchString(part) {
-			return errf.Errorf(errf.InvalidArgument, i18n.T(kit, fmt.Sprintf(`invalid path, each sub path should only
-			 contain chinese, english, number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '{'. '}`)))
-		}
-
-		// 4. each sub path should be separated by '/'
-		// (handled by strings.Split above)
+	// 2. 检查是否包含连续的 '/'
+	if strings.Contains(path, "//") {
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid path %s, the path"+
+			"cannot contain consecutive '/'", path))
 	}
 
 	return nil

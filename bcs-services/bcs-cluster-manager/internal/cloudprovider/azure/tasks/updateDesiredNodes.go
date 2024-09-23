@@ -156,10 +156,10 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 
 	// update agent pool desired size
 	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
-		blog.Errorf("applyInstanceMachines[%s] scaleUpNodePool[%s] failed: %v", taskId, *agentPool.Name, err)
+		blog.Errorf("applyInstanceMachines[%s] failed: %v", taskId, err)
 		return err
 	}
-	blog.Infof("applyInstanceMachines[%s] scaleUpNodePool[%s] success", taskId, *agentPool.Name)
+	blog.Infof("applyInstanceMachines[%s] success", taskId)
 
 	// check agent
 	err = checkScaleUp(ctx, client, info)
@@ -374,19 +374,20 @@ func differentInstance(rootCtx context.Context, client api.AksService, info *clo
 	// 获取 vmScaleSet node list
 	vmList, err := client.ListInstanceAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID)
 	if err != nil {
-		return nil, errors.Wrapf(err, "scaleUpNodePool[%s] ListInstanceAndReturn failed", taskID)
+		return nil, errors.Wrapf(err, "differentInstance[%s] ListInstanceAndReturn failed", taskID)
 	}
 
 	// 获取 node map
 	nodeMap, err := getNodeMap(rootCtx, taskID, info)
 	if err != nil {
-		return nil, errors.Wrapf(err, "scaleUpNodePool[%s] getNodeMap failed", taskID)
+		return nil, errors.Wrapf(err, "differentInstance[%s] getNodeMap failed", taskID)
 	}
 
 	// 比对
 	for i, vm := range vmList {
 		nodeID := fmt.Sprintf("%s/%s/%s", *vm.Name, *vm.InstanceID, asg.AutoScalingName)
 		if _, ok := nodeMap[nodeID]; !ok {
+			blog.Infof("differentInstance[%s] got new instance %s", taskID, nodeID)
 			// 如果当前vm不存在于nodeMap中，则为扩容出来的机器
 			res = append(res, vmList[i])
 		}
@@ -405,7 +406,7 @@ func getNodeMap(ctx context.Context, taskID string, info *cloudprovider.CloudDep
 	nodes, err := cloudprovider.GetStorageModel().ListNode(ctx, cond, &storeopt.ListOption{All: true})
 	if err != nil {
 		return nil, errors.Wrapf(err,
-			"scaleUpNodePool[%s] list group nodes in nodegroup %s for Cluster %s failed", taskID,
+			"getNodeMap[%s] list group nodes in nodegroup %s for Cluster %s failed", taskID,
 			group.NodeGroupID, info.Cluster.ClusterID)
 	}
 	// list to map
@@ -420,24 +421,14 @@ func getNodeMap(ctx context.Context, taskID string, info *cloudprovider.CloudDep
 func transInstancesToNode(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo, client api.AksService,
 	vmList []*armcompute.VirtualMachineScaleSetVM) ([]string, error) {
 	var (
-		err           error
-		nodeIPs       = make([]string, 0)
-		nodes         []*proto.Node
-		asg           = info.NodeGroup.AutoScaling
-		interfaceList = make([]*armnetwork.Interface, 0)
-		taskID        = cloudprovider.GetTaskIDFromContext(rootCtx)
-		ctx, cancel   = context.WithTimeout(rootCtx, 30*time.Second)
+		err     error
+		nodeIPs = make([]string, 0)
+		nodes   []*proto.Node
+		taskID  = cloudprovider.GetTaskIDFromContext(rootCtx)
 	)
-	defer cancel()
 
-	// 获取 interface list
-	err = retry.Do(func() error {
-		interfaceList, err = client.ListSetInterfaceAndReturn(ctx, asg.AutoScalingName, asg.AutoScalingID)
-		if err != nil {
-			return errors.Wrapf(err, "transInstancesToNode[%s] ListSetInterfaceAndReturn failed", taskID)
-		}
-		return nil
-	}, retry.Context(ctx), retry.Attempts(3))
+	// ensure instance ip is attached
+	interfaceList, err := checkInstance(client, info, vmList)
 	if err != nil {
 		return nil, errors.Wrapf(err, "transInstancesToNode[%s] get vm network interface failed", taskID)
 	}
@@ -460,6 +451,42 @@ func transInstancesToNode(rootCtx context.Context, info *cloudprovider.CloudDepe
 		}
 	}
 	return nodeIPs, nil
+}
+
+func checkInstance(client api.AksService, info *cloudprovider.CloudDependBasicInfo,
+	vmList []*armcompute.VirtualMachineScaleSetVM) ([]*armnetwork.Interface, error) {
+	var (
+		asg           = info.NodeGroup.AutoScaling
+		interfaceList = make([]*armnetwork.Interface, 0)
+		err           error
+	)
+
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
+	defer cancel()
+	errLoop := loop.LoopDoFunc(timeCtx, func() error {
+		var success int
+		interfaceList, err = client.ListSetInterfaceAndReturn(context.TODO(), asg.AutoScalingName, asg.AutoScalingID)
+		if err != nil {
+			return err
+		}
+		ipMap := api.VmMatchInterface(vmList, interfaceList)
+
+		for _, vm := range vmList { // 字段对齐
+			if ip, ok := ipMap[*vm.Name]; ok && len(ip) != 0 {
+				success++
+			}
+		}
+		blog.Infof("checkInstance ip count, current %d, desired %d", success, len(vmList))
+		if success == len(vmList) {
+			return loop.EndLoop
+		}
+		return nil
+	})
+	if errLoop != nil {
+		return nil, errLoop
+	}
+
+	return interfaceList, nil
 }
 
 // vmToNode vm to node

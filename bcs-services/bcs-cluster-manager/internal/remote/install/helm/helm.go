@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	"github.com/avast/retry-go"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
@@ -91,6 +92,7 @@ func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
 		return true, nil
 	}
 
+	start := time.Now()
 	resp, err := h.client.GetReleaseDetailV1(context.Background(), &helmmanager.GetReleaseDetailV1Req{
 		ProjectCode: h.projectID,
 		ClusterID:   clusterID,
@@ -98,9 +100,11 @@ func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
 		Name:        h.releaseName,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("helm", "GetReleaseDetailV1", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[HelmInstaller] GetReleaseDetail failed, err: %s", err.Error())
 		return false, err
 	}
+	metrics.ReportLibRequestMetric("helm", "GetReleaseDetailV1", "grpc", metrics.LibCallStatusOK, start)
 	if resp == nil {
 		blog.Errorf("[HelmInstaller] GetReleaseDetail failed, resp is empty")
 		return false, fmt.Errorf("GetReleaseDetail failed, resp is empty")
@@ -118,15 +122,18 @@ func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
 }
 
 func (h *HelmInstaller) getChartLatestVersion(project string, repo, chart string) (string, error) {
+	start := time.Now()
 	resp, err := h.client.GetChartDetailV1(context.Background(), &helmmanager.GetChartDetailV1Req{
 		ProjectCode: project,
 		RepoName:    repo,
 		Name:        chart,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("helm", "GetChartDetailV1", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[HelmInstaller] getChartLatestVersion failed: %v", err)
 		return "", err
 	}
+	metrics.ReportLibRequestMetric("helm", "GetChartDetailV1", "grpc", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 || !resp.Result {
 		blog.Errorf("[HelmInstaller] getChartLatestVersion[%s] failed: %v", resp.RequestID, resp.Message)
@@ -172,11 +179,15 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 
 	resp := &helmmanager.InstallReleaseV1Resp{}
 	err = retry.Do(func() error {
+		start := time.Now()
 		resp, err = h.client.InstallReleaseV1(context.Background(), req)
 		if err != nil {
+			metrics.ReportLibRequestMetric("helm", "InstallReleaseV1", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("[HelmInstaller] InstallRelease failed, err: %s", err.Error())
 			return err
 		}
+		metrics.ReportLibRequestMetric("helm", "InstallReleaseV1", "grpc", metrics.LibCallStatusOK, start)
+
 		if resp == nil {
 			blog.Errorf("[HelmInstaller] InstallRelease failed, resp is empty")
 			return fmt.Errorf("InstallRelease failed, resp is empty")
@@ -235,11 +246,14 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 		Args:   install.DefaultArgsFlag,
 	}
 
+	start := time.Now()
 	resp, err := h.client.UpgradeReleaseV1(context.Background(), req)
 	if err != nil {
+		metrics.ReportLibRequestMetric("helm", "UpgradeReleaseV1", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[HelmInstaller] UpgradeRelease failed, err: %s", err.Error())
 		return err
 	}
+	metrics.ReportLibRequestMetric("helm", "UpgradeReleaseV1", "grpc", metrics.LibCallStatusOK, start)
 	if resp == nil {
 		blog.Errorf("[HelmInstaller] UpgradeRelease failed, resp is empty")
 		return fmt.Errorf("UpgradeRelease failed, resp is empty")
@@ -270,6 +284,7 @@ func (h *HelmInstaller) Uninstall(clusterID string) error {
 		return nil
 	}
 
+	start := time.Now()
 	// delete app
 	resp, err := h.client.UninstallReleaseV1(context.Background(), &helmmanager.UninstallReleaseV1Req{
 		ProjectCode: h.projectID,
@@ -278,9 +293,11 @@ func (h *HelmInstaller) Uninstall(clusterID string) error {
 		ClusterID:   clusterID,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("helm", "UninstallReleaseV1", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[HelmInstaller] delete app failed, err: %s", err.Error())
 		return err
 	}
+	metrics.ReportLibRequestMetric("helm", "UninstallReleaseV1", "grpc", metrics.LibCallStatusOK, start)
 	if resp.Code != 0 {
 		blog.Errorf("[HelmInstaller] UninstallRelease failed, code: %d, message: %s", resp.Code, resp.Message)
 		return fmt.Errorf("UninstallRelease failed, code: %d, message: %s, requestID: %s", resp.Code, resp.Message,
@@ -312,6 +329,7 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
+		start := time.Now()
 		// get app
 		resp, err := h.client.GetReleaseDetailV1(ctx, &helmmanager.GetReleaseDetailV1Req{ // nolint
 			ProjectCode: h.projectID,
@@ -320,9 +338,11 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 			Name:        h.releaseName,
 		})
 		if err != nil {
+			metrics.ReportLibRequestMetric("helm", "GetReleaseDetailV1", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("[HelmInstaller] GetReleaseDetail failed, err: %s", err.Error())
 			return err
 		}
+		metrics.ReportLibRequestMetric("helm", "GetReleaseDetailV1", "grpc", metrics.LibCallStatusOK, start)
 		if resp == nil {
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, resp is empty")
 		}

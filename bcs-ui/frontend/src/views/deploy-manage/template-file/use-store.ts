@@ -1,9 +1,10 @@
-import { reactive, set } from 'vue';
+import { reactive, Ref, set } from 'vue';
 
 import useVariable from '../variable/use-variable';
 
 import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
+import useDebouncedRef from '@/composables/use-debounce';
 
 export const store = reactive<{
   spaceList: ITemplateSpaceData[]
@@ -25,10 +26,14 @@ export const store = reactive<{
   showDeployBtn: true, // 是否显示部署按钮
 });
 
+export const searchKey: Ref<string> = useDebouncedRef('', 600);
+
 // 更新空间列表
 export async function updateListTemplateSpaceList() {
   store.spaceLoading = true;
-  store.spaceList = await TemplateSetService.ListTemplateSpace().catch(() => []);
+  store.spaceList = await TemplateSetService.ListTemplateSpace({
+    name: searchKey.value,
+  }).catch(() => []);
   store.spaceLoading = false;
 }
 

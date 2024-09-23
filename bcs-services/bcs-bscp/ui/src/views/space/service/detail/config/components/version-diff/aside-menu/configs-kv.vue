@@ -24,17 +24,22 @@
           <RightShape class="arrow-icon" />
           <span class="name">{{ group.name === 'singleLine' ? t('单行配置') : t('多行配置') }}</span>
         </div>
-        <div v-if="group.expand" class="config-list">
+        <RecycleScroller
+          v-if="group.expand"
+          class="config-list"
+          :items="group.configs"
+          key-field="id"
+          :item-size="40"
+          v-slot="{ item }">
           <div
-            v-for="config in group.configs"
             v-overflow-title
-            :key="config.id"
-            :class="['config-item', { actived: props.actived && config.id === selected }]"
-            @click="handleSelectItem(config.id)">
-            <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
-            {{ config.key }}
+            :key="item.id"
+            :class="['config-item', { actived: props.actived && item.id === selected }]"
+            @click="handleSelectItem(item.id)">
+            <i v-if="item.diffType" :class="['status-icon', item.diffType]"></i>
+            {{ item.key }}
           </div>
-        </div>
+        </RecycleScroller>
       </div>
       <tableEmpty
         v-if="groupedConfigListOnShow.length === 0"
@@ -47,7 +52,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted } from 'vue';
+  import { ref, computed, watch, onMounted, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import { Search, RightShape } from 'bkui-vue/lib/icon';
@@ -64,6 +69,8 @@
     key: string;
     baseContent: string;
     currentContent: string;
+    secretType: string;
+    secret_hidden: boolean;
   }
 
   interface IDiffGroupData {
@@ -87,9 +94,9 @@
   const { t } = useI18n();
   const route = useRoute();
 
-  const emits = defineEmits(['selected']);
+  const emits = defineEmits(['selected', 'render']);
 
-  const SINGLE_LINE_TYPE = ['string', 'number'];
+  const SINGLE_LINE_TYPE = ['string', 'number', 'password', 'secret_key', 'token'];
 
   const bkBizId = ref(String(route.params.spaceId));
   const appId = ref(Number(route.params.appId));
@@ -130,8 +137,9 @@
     },
   );
 
-  onMounted(() => {
-    initData(true);
+  onMounted(async () => {
+    await initData(true);
+    nextTick(() => emits('render', false));
   });
 
   // 初始化对比配置项以及设置默认选中的配置项
@@ -181,10 +189,12 @@
       list.push({
         diffType,
         kvType: currentItem.spec.kv_type,
+        secretType: currentItem.spec.secret_type,
         key: currentItem.spec.key,
         id: currentItem.id,
         baseContent,
         currentContent: currentItem.spec.value,
+        secret_hidden: currentItem.spec.secret_hidden,
       });
     });
     // 计算当前版本删除项
@@ -195,10 +205,12 @@
         list.push({
           diffType: isBaseVersionExist.value ? 'delete' : '',
           kvType: baseItem.spec.kv_type,
+          secretType: baseItem.spec.secret_type,
           key: baseItem.spec.key,
           id: baseItem.id,
           baseContent: baseItem.spec.value,
           currentContent: '',
+          secret_hidden: baseItem.spec.secret_hidden,
         });
       }
     });
@@ -219,7 +231,7 @@
       );
     }
     resultList.forEach((item) => {
-      if (SINGLE_LINE_TYPE.includes(item.kvType)) {
+      if (SINGLE_LINE_TYPE.includes(item.kvType) || SINGLE_LINE_TYPE.includes(item.secretType)) {
         if (groupedList[0]?.name === 'singleLine') {
           groupedList[0].configs.push(item);
         } else {
@@ -287,13 +299,15 @@
   // 差异对比详情数据
   const getConfigDiffDetail = (config: IConfigDiffItem, list: IConfigDiffItem[]) => {
     // 单行配置
-    if (SINGLE_LINE_TYPE.includes(config.kvType)) {
+    if (SINGLE_LINE_TYPE.includes(config.kvType) || SINGLE_LINE_TYPE.includes(config.secretType)) {
       const configs: ISingleLineKVDIffItem[] = list.map((item) => {
-        const { diffType, id, key, baseContent, currentContent } = item;
+        const { diffType, id, key, baseContent, currentContent, secretType, secret_hidden } = item;
         return {
           id,
           name: key,
           diffType,
+          is_secret: !!secretType,
+          secret_hidden,
           base: {
             content: baseContent,
           },
@@ -312,6 +326,8 @@
     return {
       contentType: 'text',
       id: config.id,
+      is_secret: !!config.secretType,
+      secret_hidden: config.secret_hidden,
       base: {
         content: config.baseContent,
         variables: [],
@@ -449,5 +465,9 @@
     margin-top: 40px;
     font-size: 12px;
     color: #63656e;
+  }
+
+  .config-list {
+    max-height: 700px;
   }
 </style>

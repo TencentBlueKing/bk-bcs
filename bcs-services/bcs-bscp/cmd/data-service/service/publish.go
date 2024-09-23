@@ -386,7 +386,7 @@ func (s *Service) getOrCreateGroupByLabels(grpcKit *kit.Kit, tx *gen.QueryTx, bi
 		Spec: &table.GroupSpec{
 			Name:     groupName,
 			Public:   false,
-			Mode:     table.Custom,
+			Mode:     table.GroupModeCustom,
 			Selector: sel,
 		},
 		Attachment: &table.GroupAttachment{

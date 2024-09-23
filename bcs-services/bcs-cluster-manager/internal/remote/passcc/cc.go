@@ -25,6 +25,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 	iutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -113,8 +114,9 @@ func (cc *ClientConfig) CreatePassCCClusterSnapshoot(cluster *proto.Cluster) err
 		resp = &CommonResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Post(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -122,9 +124,11 @@ func (cc *ClientConfig) CreatePassCCClusterSnapshoot(cluster *proto.Cluster) err
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("passcc", "CreatePassCCClusterSnapshoot", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api CreatePassCCClusterSnapshoot failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("passcc", "CreatePassCCClusterSnapshoot", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("call CreatePassCCClusterSnapshoot API error: code[%v], body[%v], err[%s]",
@@ -158,17 +162,20 @@ func (cc *ClientConfig) DeletePassCCCluster(projectID, clusterID string) error {
 		resp = &CommonResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Delete(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("passcc", "DeletePassCCCluster", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api DeletePassCCCluster failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("passcc", "DeletePassCCCluster", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("call DeletePassCCCluster API error: code[%v], body[%v], err[%s]",
@@ -204,8 +211,9 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(
 		resp = &GetProjectsNamespacesResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Get(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -213,9 +221,11 @@ func (cc *ClientConfig) GetProjectSharedNamespaces(
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("passcc", "GetProjectSharedNamespaces", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetProjectSharedNamespaces failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("passcc", "GetProjectSharedNamespaces", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("call GetProjectSharedNamespaces API error: code[%v], body[%v], err[%s]",
@@ -251,8 +261,9 @@ func (cc *ClientConfig) CreatePassCCCluster(cluster *proto.Cluster) error {
 		resp = &CommonResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().Timeout(defaultTimeOut).Post(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -260,9 +271,11 @@ func (cc *ClientConfig) CreatePassCCCluster(cluster *proto.Cluster) error {
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("passcc", "CreatePassCCCluster", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api CreatePassCCCluster failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("passcc", "CreatePassCCCluster", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("call CreatePassCCCluster API error: code[%v], body[%v], err[%s]",
@@ -298,10 +311,11 @@ func (cc *ClientConfig) UpdatePassCCCluster(cluster *proto.Cluster) error {
 		resp = &CommonResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Put(url).
-		Query(fmt.Sprintf("access_token=%s", token)).
+		Set("X-Bkapi-Authorization", token).
 		Set("Content-Type", "application/json").
 		Set("Connection", "close").
 		SetDebug(true).
@@ -309,9 +323,11 @@ func (cc *ClientConfig) UpdatePassCCCluster(cluster *proto.Cluster) error {
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("passcc", "UpdatePassCCCluster", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api UpdatePassCCCluster failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("passcc", "UpdatePassCCCluster", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("call UpdatePassCCCluster API error: code[%v], body[%v], err[%s]",
@@ -328,17 +344,29 @@ func (cc *ClientConfig) getAccessToken(clientAuth *auth.ClientAuth) (string, err
 		return "", errServerNotInit
 	}
 
+	var (
+		appToken string
+		err      error
+	)
+
 	if clientAuth != nil {
-		return clientAuth.GetAccessToken(utils.BkAppUser{
+		appToken, err = clientAuth.GetAccessToken(utils.BkAppUser{
+			BkAppCode:   cc.appCode,
+			BkAppSecret: cc.appSecret,
+		})
+	} else {
+		appToken, err = auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
 			BkAppCode:   cc.appCode,
 			BkAppSecret: cc.appSecret,
 		})
 	}
+	if err != nil {
+		return "", err
+	}
+	token := utils.BkAccessToken{AccessToken: appToken}
 
-	return auth.GetAccessClient().GetAccessToken(utils.BkAppUser{
-		BkAppCode:   cc.appCode,
-		BkAppSecret: cc.appSecret,
-	})
+	tokenStr, _ := json.Marshal(token)
+	return string(tokenStr), nil
 }
 
 func (cc *ClientConfig) transClusterToClusterSnap(cls *proto.Cluster) *CreateClusterConfParams {

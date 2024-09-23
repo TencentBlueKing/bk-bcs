@@ -991,11 +991,10 @@ message AddTmplsToTmplSetsReq {
 message DeleteTmplsFromTmplSetsReq {
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
-  repeated uint32 template_ids = 3;
-  repeated uint32 template_set_ids = 4;
+  uint32 template_set_id = 3;
+  repeated uint32 template_ids = 4;
   bool exclusion_operation = 5;
-  uint32 template_set_id = 6;  // 套餐ID, 具体操作的哪个套餐
-  bool no_set_specified = 7;   // 是否未指定套餐, 区分全部套餐和未指定套餐
+  bool no_set_specified = 6;  // 是否未指定套餐, 区分全部套餐和未指定套餐
 }
 
 message ListTemplatesByIDsReq {
@@ -1832,7 +1831,7 @@ message ListKvsReq {
   repeated string kv_type = 11;
   string sort = 12;
   string order = 13;
-  string top_ids = 14;
+  repeated uint32 top_ids = 14;  // 置顶的ID
   // ADD、REVISE、DELETE、UNCHANGE
   repeated string status = 15;
 }

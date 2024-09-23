@@ -9733,6 +9733,10 @@ func (m *CopyTemplateSpaceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for Name
+
+	// no validation rules for Description
+
 	if len(errors) > 0 {
 		return CopyTemplateSpaceReqMultiError(errors)
 	}
@@ -10074,22 +10078,21 @@ func (m *DeleteTemplateSpaceCollectReq) validate(all bool) error {
 
 	var errors []error
 
-	if utf8.RuneCountInString(m.GetId()) != 24 {
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := DeleteTemplateSpaceCollectReqValidationError{
-			field:  "Id",
-			reason: "value length must be 24 runes",
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
 		}
 		if !all {
 			return err
 		}
 		errors = append(errors, err)
-
 	}
 
-	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+	if l := utf8.RuneCountInString(m.GetTemplateSpaceID()); l < 1 || l > 64 {
 		err := DeleteTemplateSpaceCollectReqValidationError{
-			field:  "ProjectCode",
-			reason: "value length must be between 1 and 32 runes, inclusive",
+			field:  "TemplateSpaceID",
+			reason: "value length must be between 1 and 64 runes, inclusive",
 		}
 		if !all {
 			return err
@@ -10489,6 +10492,8 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 	// no validation rules for Version
 
 	// no validation rules for Content
+
+	// no validation rules for EditFormat
 
 	// no validation rules for IsDraft
 

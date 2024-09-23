@@ -15,10 +15,12 @@ package bkmonitor
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
@@ -130,6 +132,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		return err
 	}
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(alarm.DefaultTimeOut).
 		Post(c.server+reqURL).
@@ -140,9 +143,11 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		Send(req).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("monitor", "ShieldHostAlarmConfig", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api ShieldHostAlarmConfig failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("monitor", "ShieldHostAlarmConfig", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api ShieldHostAlarmConfig failed: %v", respData.Message)
