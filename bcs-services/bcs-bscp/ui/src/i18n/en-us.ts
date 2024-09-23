@@ -1064,6 +1064,7 @@ export default {
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
   总和: 'Total',
+  最后一次拉取配置耗时: 'Last pull time-consuming',
 
   // 跨页全选
   跨页全选: 'AcrossChecked',
