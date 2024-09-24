@@ -24,13 +24,14 @@ interface ILink {
   token: string // token配置文档
   uiPrefix: string // UI前缀，用于特性环境
   webConsole: string // web console文档
+  backToLegacyButtonUrl: string // 回退到旧版link
 }
 
 interface Window {
   _project_code_: string
   _project_id_: string
-  readonly bus: any
-  readonly mainComponent: any
+  bus: any
+  mainComponent: any
   readonly BCS_API_HOST: string
   readonly DEVOPS_BCS_API_URL: string
   readonly i18n: {
@@ -47,7 +48,7 @@ interface Window {
   readonly BK_USER_HOST: string
   readonly PREFERRED_DOMAINS: string
   readonly $loginModal: any
-  readonly BkTrace: any
+  BkTrace: any
   readonly BK_STATIC_URL: string
   readonly BCS_NAMESPACE_PREFIX: string
   readonly BK_LOG_HOST: string

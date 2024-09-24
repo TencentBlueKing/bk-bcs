@@ -42,6 +42,7 @@ type Interface interface {
 	GetReleasedKvValue(kt *kit.Kit, bizID, appID, releaseID uint32, key string) (string, error)
 	SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error
 	BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Client, clientEventData []*pbce.ClientEvent) error
+	BatchUpdateLastConsumedTime(kt *kit.Kit, bizID uint32, appIDs []uint32) error
 }
 
 // New initialize a cache client.
@@ -128,5 +129,18 @@ func (c *client) BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Cl
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+// BatchUpdateLastConsumedTime 批量更新服务拉取时间
+func (c *client) BatchUpdateLastConsumedTime(kit *kit.Kit, bizID uint32, appIDs []uint32) error {
+
+	if _, err := c.db.BatchUpdateLastConsumedTime(kit.Ctx, &pbds.BatchUpdateLastConsumedTimeReq{
+		BizId:  bizID,
+		AppIds: appIDs,
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }

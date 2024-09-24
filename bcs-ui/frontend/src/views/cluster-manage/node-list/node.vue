@@ -223,6 +223,8 @@
         :size="tableSetting.size"
         :data="curPageData"
         ref="tableRef"
+        ext-cls="empty-center"
+        empty-block-class-name="bcs-table-empty-dynamic-width"
         :key="tableKey"
         :pagination="pagination"
         :row-key="(row) => row.nodeName"
@@ -1914,9 +1916,9 @@ export default defineComponent({
         clusterId: localClusterId.value,
         nodes,
       }).catch(() => {});
-      for (const key in result) {
+      Object.keys(result).forEach((key) => {
         set(nodeMetric.value, key, formatMetricData(result[key]));
-      }
+      });
     };
     watch(curPageData, async () => {
       await handleGetNodeOverview();

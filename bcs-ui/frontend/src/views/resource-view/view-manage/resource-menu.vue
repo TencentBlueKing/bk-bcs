@@ -283,6 +283,9 @@ const handleChangeMenu = (item: IMenu) => {
       projectCode: $store.getters.curProjectCode,
       clusterId: route.value.params?.clusterId,
     },
+    query: {
+      viewID: dashboardViewID.value,
+    },
   });
 };
 
@@ -332,7 +335,7 @@ const expandMenu = () => {
 
 // 更多资源
 const { getMultiClusterCustomResourceDefinition, getMultiClusterResourcesCount } = useTableData();
-const { curViewData } = useViewConfig();
+const { curViewData, dashboardViewID } = useViewConfig();
 const isLoading = ref(false);
 const crdData = ref<Record<string, any[]>>({});
 const searchCRData = computed(() => {
