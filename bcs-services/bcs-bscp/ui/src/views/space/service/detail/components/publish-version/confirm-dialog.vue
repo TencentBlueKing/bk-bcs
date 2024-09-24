@@ -89,7 +89,7 @@
             class="mode-tip" />
         </template>
         <bk-loading :loading="pending">
-          <bk-radio-group v-model="localVal.publishType">
+          <bk-radio-group v-model="localVal.publishType" :class="{ 'publish-type-wrap': locale !== 'zh-cn' }">
             <!-- 未开启审批 -->
             <template v-if="!isApprove">
               <bk-radio label="Immediately">{{ t('立即上线') }}</bk-radio>
@@ -140,7 +140,7 @@
   const versionStore = useConfigStore();
   const { versionData } = storeToRefs(versionStore);
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   interface IFormData {
     groups: number[];
@@ -424,6 +424,12 @@
     font-size: 14px;
     color: #979ba5;
     cursor: pointer;
+  }
+  .publish-type-wrap {
+    flex-wrap: wrap;
+    .bk-radio:nth-child(3) {
+      margin-left: 0;
+    }
   }
 </style>
 <style lang="scss">

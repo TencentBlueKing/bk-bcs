@@ -4,8 +4,8 @@
     ref="dialog"
     ext-cls="confirm-dialog"
     footer-align="center"
-    cancel-text="取消"
-    :confirm-text="dialogType === 'publish' ? '上线' : '撤销'"
+    :cancel-text="t('取消')"
+    :confirm-text="dialogType === 'publish' ? t('上线') : t('撤销')"
     dialog-type="operation"
     :close-icon="true"
     :show-mask="true"
@@ -15,25 +15,25 @@
     @closed="handleClose">
     <template #header>
       <div class="headline">
-        {{ dialogType === 'publish' ? '确认上线该版本？' : '确认撤销该上线任务？' }}
+        {{ dialogType === 'publish' ? `${t('确认上线该版本')}?` : `${t('确认撤销该上线任务')}？` }}
       </div>
     </template>
-    <ul class="content-info">
+    <ul :class="['content-info', { 'li-en': locale !== 'zh-cn' }]">
       <li class="content-info__li">
-        <span class="content-info__hd"> 服务： </span>
+        <span class="content-info__hd"> {{ $t('服务') }}： </span>
         <span class="content-info__bd"> {{ data.service || '--' }} </span>
       </li>
       <li class="content-info__li">
-        <span class="content-info__hd"> 待上线版本： </span>
+        <span class="content-info__hd"> {{ t('待上线版本') }}： </span>
         <span class="content-info__bd"> {{ data.version || '--' }} </span>
       </li>
       <li class="content-info__li">
-        <span class="content-info__hd"> 上线范围： </span>
+        <span class="content-info__hd"> {{ t('上线范围') }}： </span>
         <span class="content-info__bd"> {{ data.group || '--' }} </span>
       </li>
     </ul>
     <div v-if="dialogType !== 'publish'">
-      <div class="textarea-title">说明</div>
+      <div class="textarea-title">{{ t('说明') }}</div>
       <bk-input
         v-model="reason"
         class="textarea-content"
@@ -53,7 +53,7 @@
   import BkMessage from 'bkui-vue/lib/message';
   import { useI18n } from 'vue-i18n';
 
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const props = withDefaults(
     defineProps<{
@@ -124,6 +124,9 @@
     font-size: 14px;
     line-height: 22px;
     background-color: #f5f6fa;
+    &.li-en .content-info__hd {
+      width: 130px;
+    }
     &__li {
       display: flex;
       justify-content: flex-start;

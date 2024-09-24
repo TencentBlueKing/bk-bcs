@@ -2,7 +2,7 @@
   <div>
     <bk-date-picker
       ref="datePickerRef"
-      style="width: 300"
+      style="width: 300px"
       :disabled-date="disabledDate"
       :model-value="defaultValue"
       :shortcuts="shortcutsRange"

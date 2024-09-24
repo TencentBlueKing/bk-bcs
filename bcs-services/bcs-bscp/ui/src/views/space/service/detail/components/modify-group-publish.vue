@@ -353,13 +353,11 @@
   const publishTitle = (type: string, time: string) => {
     switch (type) {
       case 'Manually':
-        // return t('待审批通过后，调整分组需手动进行上线操作');
-        return t('手动上线文案', { text: '调整分组' });
+        return t('手动上线文案-调整分组');
       case 'Automatically':
-        // return t('待审批通过后，调整分组将自动上线');
-        return t('审批通过后上线文案', { text: '调整分组' });
+        return t('审批通过后上线文案-调整分组');
       case 'Periodically':
-        return t('调整分组定时上线文案', { time });
+        return t('定时上线文案-调整分组', { time });
       default:
         return t('版本已上线');
     }

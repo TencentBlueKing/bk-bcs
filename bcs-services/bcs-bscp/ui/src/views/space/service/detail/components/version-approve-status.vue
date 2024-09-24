@@ -8,7 +8,7 @@
     <text-file
       v-show="approveStatus > -1"
       v-bk-tooltips="{
-        content: `审批人：${approverList}`,
+        content: `${t('审批人')}：${approverList}`,
         placement: 'bottom',
       }"
       class="text-file" />

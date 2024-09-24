@@ -297,10 +297,10 @@
   const publishTitle = (type: string, time: string) => {
     switch (type) {
       case 'Manually':
-        return t('手动上线文案', { text: '版本' });
+        return t('手动上线文案');
       case 'Automatically':
         // return t('待审批通过后，调整分组将自动上线');
-        return t('审批通过后上线文案', { text: '版本' });
+        return t('审批通过后上线文案');
       case 'Periodically':
         return t('定时上线文案', { time });
       default:

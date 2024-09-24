@@ -4,9 +4,9 @@
     ref="dialog"
     ext-cls="confirm-dialog"
     footer-align="center"
-    cancel-text="取消"
-    confirm-text="驳回"
     dialog-type="operation"
+    :cancel-text="t('取消')"
+    :confirm-text="t('驳回')"
     :close-icon="true"
     :show-mask="true"
     :quick-close="false"
@@ -21,12 +21,12 @@
     </template>
     <ul class="content-info">
       <li class="content-info__li">
-        <span class="content-info__hd"> 待上线版本： </span>
+        <span class="content-info__hd"> {{ t('待上线版本') }}： </span>
         <span class="content-info__bd"> {{ releaseName || '--' }} </span>
       </li>
     </ul>
     <div>
-      <div class="textarea-title is-required">驳回理由</div>
+      <div class="textarea-title is-required">{{ t('驳回理由') }}</div>
       <bk-input
         v-model="reason"
         class="textarea-content"

@@ -2,7 +2,7 @@
   <div class="more-actions">
     <Ellipsis class="ellipsis" />
     <ul class="more-actions-ul">
-      <li class="more-actions-li" @click="handleUndo">撤销</li>
+      <li class="more-actions-li" @click="handleUndo">{{ $t('撤销') }}</li>
     </ul>
   </div>
 </template>

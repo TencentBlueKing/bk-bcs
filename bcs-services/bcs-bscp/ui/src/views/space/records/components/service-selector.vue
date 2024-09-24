@@ -20,9 +20,9 @@
         <DownSmall class="arrow-icon arrow-fill" />
       </div>
     </template>
-    <bk-option value="-1" label="全部服务">
+    <bk-option value="-1" :label="t('全部服务')">
       <div :class="['service-option-item']">
-        <div class="name-text">全部服务</div>
+        <div class="name-text">{{ t('全部服务') }}</div>
       </div>
     </bk-option>
     <bk-option v-for="item in serviceList" :key="item.id ? item.id : 'all'" :value="item.id" :label="item.spec.name">
@@ -48,13 +48,13 @@
   import { DownSmall } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
 
-  const { locale } = useI18n();
+  const { t, locale } = useI18n();
   const route = useRoute();
   const router = useRouter();
 
   const loading = ref(false);
   const localApp = ref({
-    name: '全部服务',
+    name: t('全部服务'),
     id: -1,
     serviceType: '',
   });
@@ -104,7 +104,7 @@
       await router.push({ name: 'records-appId', params: { spaceId: bizId.value, appId }, query: route.query });
     } else {
       localApp.value = {
-        name: '全部服务',
+        name: t('全部服务'),
         id: -1,
         serviceType: '',
       };

@@ -33,6 +33,7 @@ export interface IRowData {
       action: string;
       rid?: string;
       app_code?: string;
+      is_compare: boolean;
       detail?: string;
       operator: string;
       res_instance: string;

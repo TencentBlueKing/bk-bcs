@@ -2,7 +2,7 @@
   <div class="more-options">
     <Ellipsis class="ellipsis" />
     <ul class="more-options-ul">
-      <li class="more-options-li" @click="handleLinkTo">服务上线记录</li>
+      <li class="more-options-li" @click="handleLinkTo">{{ $t('服务上线记录') }}</li>
       <bk-loading :loading="loading">
         <li
           class="more-options-li"
@@ -10,7 +10,7 @@
             [APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(props.approveStatus as APPROVE_STATUS)
           "
           @click="handleUndo">
-          撤销
+          {{ $t('撤销') }}
         </li>
       </bk-loading>
     </ul>
@@ -128,6 +128,7 @@
     min-width: 96px;
     line-height: 32px;
     font-size: 12px;
+    white-space: nowrap;
     color: #63656e;
     background-color: #fff;
     &:hover {

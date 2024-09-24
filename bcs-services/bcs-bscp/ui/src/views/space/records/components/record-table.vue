@@ -10,17 +10,17 @@
           :data="tableData"
           @column-sort="handleSort"
           @column-filter="handleFilter">
-          <bk-table-column :label="t('操作时间')" width="105" :sort="true">
+          <bk-table-column :label="t('操作时间')" width="155" :sort="true">
             <template #default="{ row }">
               {{ row.audit?.revision.created_at }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('所属服务')" min-width="180">
+          <bk-table-column :label="t('所属服务')" width="190">
             <template #default="{ row }"> {{ row.app?.name || '--' }} </template>
           </bk-table-column>
           <bk-table-column
             :label="t('资源类型')"
-            width="96"
+            :width="locale === 'zh-cn' ? '96' : '160'"
             :filter="{
               filterFn: () => true,
               list: resTypeFilterList,
@@ -32,7 +32,7 @@
           </bk-table-column>
           <bk-table-column
             :label="t('操作行为')"
-            width="114"
+            :width="locale === 'zh-cn' ? '114' : '240'"
             :filter="{
               filterFn: () => true,
               list: actionFilterList,
@@ -52,18 +52,18 @@
               <!-- <div>{{ row.audit?.spec.res_instance || '--' }}</div> -->
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作人')" min-width="110">
+          <bk-table-column :label="t('操作人')" width="140">
             <template #default="{ row }">
               {{ row.audit?.spec.operator || '--' }}
             </template>
           </bk-table-column>
-          <bk-table-column :label="t('操作途径')" width="90">
+          <bk-table-column :label="t('操作途径')" :width="locale === 'zh-cn' ? '90' : '150'">
             <template #default="{ row }"> {{ row.audit?.spec.operate_way || '--' }} </template>
           </bk-table-column>
           <bk-table-column
             :label="t('状态')"
             :show-overflow-tooltip="false"
-            :width="locale === 'zh-cn' ? '130' : '160'"
+            :width="locale === 'zh-cn' ? '130' : '190'"
             :filter="{
               filterFn: () => true,
               list: approveStatusFilterList,
@@ -94,7 +94,7 @@
                   "
                   v-bk-tooltips="{
                     content: `${t('定时上线')}: ${row.strategy.publish_time}${
-                      isTimeout(row.strategy.publish_time) ? '（已过时）' : ''
+                      isTimeout(row.strategy.publish_time) ? `(${t('已过时')})` : ''
                     }`,
                     placement: 'top',
                   }"
@@ -114,7 +114,7 @@
           <bk-table-column
             :label="t('操作')"
             :show-overflow-tooltip="false"
-            :width="locale === 'zh-cn' ? '110' : '120'">
+            :width="locale === 'zh-cn' ? '110' : '150'">
             <template #default="{ row }">
               <!-- 仅上线配置版本存在待审批或待上线等状态和相关操作 -->
               <div v-if="row.audit && row.audit.spec.action === 'PublishVersionConfig'" class="action-btns">
@@ -332,7 +332,6 @@
       tableDataSort(res.details);
       pagination.value.count = res.count;
       // 是否打开审批抽屉
-      // if (route.query.id) {
       if (route.query.id) {
         openApprovalSideBar();
       }
@@ -471,7 +470,13 @@
 
   // 是否打开审批抽屉
   const openApprovalSideBar = () => {
-    handleApproval(tableData.value[0]);
+    // 如果url的操作记录id为待审批状态，且为可对比状态并且当前登录用户有权限审批时，允许打开审批抽屉
+    const isCompare = tableData.value[0]?.audit.spec.is_compare; // 是否可以对比版本不同
+    const pendApproval = tableData.value[0]?.strategy.publish_status === APPROVE_STATUS.PendApproval; // 是否待审批状态
+    const isAuthorized = tableData.value[0]?.strategy.approver_progress.includes(userInfo.value.username); // 当前用户是否有权限审批
+    if (isCompare && pendApproval && isAuthorized) {
+      handleApproval(tableData.value[0]);
+    }
   };
 
   // 数据过滤

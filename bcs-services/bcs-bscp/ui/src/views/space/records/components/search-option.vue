@@ -1,11 +1,7 @@
 <template>
   <section class="search-option">
-    <bk-checkbox v-model="publishVersionConfig" @change="changePublishStatus"> 仅看上线操作 </bk-checkbox>
-    <bk-checkbox v-model="failure" @change="changeFailedStatus"> 仅看失败操作 </bk-checkbox>
-    <!-- <bk-checkbox-group v-model="checkboxGroupValue" @change="changeOption">
-      <bk-checkbox label="publishAction"> 仅看上线操作 </bk-checkbox>
-      <bk-checkbox label="failedStatus"> 仅看失败操作 </bk-checkbox>
-    </bk-checkbox-group> -->
+    <bk-checkbox v-model="publishVersionConfig" @change="changePublishStatus"> {{ $t('仅看上线操作') }} </bk-checkbox>
+    <bk-checkbox v-model="failure" @change="changeFailedStatus"> {{ $t('仅看失败操作') }} </bk-checkbox>
     <div class="search-input__wrap">
       <bk-search-select
         v-model="searchValue"
@@ -22,6 +18,7 @@
   import { computed, onBeforeMount, ref, Ref, watch } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
   import { debounce } from 'lodash';
+  import { useI18n } from 'vue-i18n';
   import { RECORD_RES_TYPE, ACTION, STATUS, FILTER_KEY, SEARCH_ID } from '../../../../constants/record';
 
   interface ISearchValueItem {
@@ -32,6 +29,7 @@
 
   const emits = defineEmits(['sendSearchData']);
 
+  const { t } = useI18n();
   const router = useRouter();
   const route = useRoute();
 
@@ -69,40 +67,40 @@
     //   async: false,
     // },
     {
-      name: '资源类型',
+      name: t('资源类型'),
       id: SEARCH_ID.resource_type,
       multiple: false,
       children: [...resourceType.value],
       async: false,
     },
     {
-      name: '操作行为',
+      name: t('操作行为'),
       id: SEARCH_ID.action,
       multiple: false,
       children: [...action.value],
       async: false,
     },
     {
-      name: '资源实例',
+      name: t('资源实例'),
       id: SEARCH_ID.res_instance,
       multiple: false,
       async: false,
     },
     {
-      name: '状态',
+      name: t('状态'),
       id: SEARCH_ID.status,
       multiple: false,
       children: [...status.value],
       async: false,
     },
     {
-      name: '操作人',
+      name: t('操作人'),
       id: SEARCH_ID.operator,
       multiple: false,
       async: false,
     },
     {
-      name: '操作途径',
+      name: t('操作途径'),
       id: SEARCH_ID.operate_way,
       multiple: false,
       async: false,
@@ -163,11 +161,11 @@
 
   // 仅看上线操作
   const changePublishStatus = (status: boolean) => {
-    changeStatus(SEARCH_ID.action, '操作行为', [{ id: 'PublishVersionConfig', name: '上线版本配置' }], status);
+    changeStatus(SEARCH_ID.action, t('操作行为'), [{ id: 'PublishVersionConfig', name: t('上线版本配置') }], status);
   };
   // 仅看失败操作
   const changeFailedStatus = (status: boolean) => {
-    changeStatus(SEARCH_ID.status, '状态', [{ id: 'Failure', name: '失败' }], status);
+    changeStatus(SEARCH_ID.status, t('状态'), [{ id: 'Failure', name: t('失败') }], status);
   };
 
   // 设置地址栏参数 http://dev.bscp.sit.bktencent.com:5174/space/2/records/all?action=PublishVersionConfig&status=Failure&service=abc
