@@ -31,7 +31,7 @@
     {
       cnName: t('配置根目录'),
       shellVar: '${bk_bscp_temp_dir}',
-      pythonVar: "os.environ.get( 'bk_bscp_temp_dir' )",
+      pythonVar: 'os.environ.get( \'bk_bscp_temp_dir\' )',
       batVar: '%bk_bscp_temp_dir%',
       PSVar: '$env:bk_bscp_temp_dir',
       tips: t('客户端配置的配置存放临时目录，默认值为 {n}', { n: ' /data/bscp' }),
@@ -40,7 +40,7 @@
     {
       cnName: t('业务ID'),
       shellVar: '${bk_bscp_biz}',
-      pythonVar: "os.environ.get( 'bk_bscp_biz' )",
+      pythonVar: 'os.environ.get( \'bk_bscp_biz\' )',
       batVar: '%bk_bscp_biz%',
       PSVar: '$env:bk_bscp_biz',
       tips: t('蓝鲸配置平台上的业务ID，例如：2'),
@@ -49,7 +49,7 @@
     {
       cnName: t('服务名称'),
       shellVar: '${bk_bscp_app}',
-      pythonVar: "os.environ.get( 'bk_bscp_app' )",
+      pythonVar: 'os.environ.get( \'bk_bscp_app\' )',
       batVar: '%bk_bscp_app%',
       PSVar: '$env:bk_bscp_app',
       tips: t('服务配置中心上的服务名称，例如：demo_service'),
@@ -58,7 +58,7 @@
     {
       cnName: t('服务配置目录'),
       shellVar: '${bk_bscp_app_temp_dir}',
-      pythonVar: "os.environ.get( 'bk_bscp_app_temp_dir' )",
+      pythonVar: 'os.environ.get( \'bk_bscp_app_temp_dir\' )',
       batVar: '%bk_bscp_app_temp_dir%',
       PSVar: '$env:bk_bscp_app_temp_dir',
       tips: t(
@@ -71,7 +71,7 @@
     {
       cnName: t('当前配置版本名称'),
       shellVar: '${bk_bscp_current_version_name}',
-      pythonVar: "os.environ.get( 'bk_bscp_current_version_name' )",
+      pythonVar: 'os.environ.get( \'bk_bscp_current_version_name\' )',
       batVar: '%bk_bscp_current_version_name%',
       PSVar: '$env:bk_bscp_current_version_name',
       tips: t(

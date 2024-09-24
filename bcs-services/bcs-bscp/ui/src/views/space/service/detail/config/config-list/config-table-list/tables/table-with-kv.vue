@@ -151,7 +151,7 @@
     @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteConfigDialogShow"
+    v-model:is-show="isDeleteConfigDialogShow"
     :title="t('确认删除该配置项？')"
     @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
@@ -160,7 +160,7 @@
     <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
-    v-model:isShow="isRecoverConfigDialogShow"
+    v-model:is-show="isRecoverConfigDialogShow"
     :title="t('确认恢复该配置项?')"
     :confirm-text="t('恢复')"
     @confirm="handleRecoverConfigConfirm">

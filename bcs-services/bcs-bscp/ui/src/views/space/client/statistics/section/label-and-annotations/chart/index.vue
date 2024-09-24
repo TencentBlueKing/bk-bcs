@@ -33,7 +33,7 @@
                   content: `${$t('支持点击数据下钻')}\n${$t('下钻维度')}\: ${selectedDownDimension}`,
                 }" />
             </div>
-            <TriggerBtn v-model:currentType="currentType" />
+            <TriggerBtn v-model:current-type="currentType" />
           </div>
         </template>
         <bk-loading class="loading-wrap" :loading="loading">

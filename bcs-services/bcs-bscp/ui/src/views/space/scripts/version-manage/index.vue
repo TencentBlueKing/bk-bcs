@@ -113,7 +113,7 @@
     :space-id="spaceId"
     :script-id="scriptId" />
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteScriptVersionDialogShow"
+    v-model:is-show="isDeleteScriptVersionDialogShow"
     :title="t('确认删除该脚本版本？')"
     @confirm="handleDeleteScriptVersionConfirm">
     <div style="margin-bottom: 8px">

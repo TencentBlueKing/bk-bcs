@@ -38,7 +38,7 @@
   <Create v-model:show="isShowCreateDialog" @created="handleCreated" />
   <Edit v-model:show="editingData.open" :data="editingData.data" @edited="loadList" />
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteTemplateSpaceDialogShow"
+    v-model:is-show="isDeleteTemplateSpaceDialogShow"
     :title="t('确认删除该配置模板空间？')"
     @confirm="handleDeleteTemplateSpaceConfirm">
     <div style="margin-bottom: 8px">
