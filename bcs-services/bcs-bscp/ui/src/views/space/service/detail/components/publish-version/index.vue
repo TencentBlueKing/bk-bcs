@@ -255,7 +255,7 @@
         infoType: 'success',
         title: t('版本已上线'),
         'ext-cls': 'info-box-style',
-        confirmText: t('新增服务密钥'),
+        confirmText: t('配置客户端'),
         cancelText: t('稍后再说'),
         onConfirm: () => {
           router.push({ name: 'credentials-management' });
