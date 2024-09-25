@@ -706,7 +706,6 @@ export default {
   '当前已有「未上线」版本': 'There is currently a "not online" version',
   前往编辑: 'Go to edit',
   创建版本: 'Create version',
-  选择载入脚本: 'Select load script',
   '无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾': 'Invalid name, only allowed to contain Chinese, English, numbers, underscores (), hyphens (-), spaces, and must start and end with Chinese, English, numbers',
   编辑版本: 'Edited version',
   脚本内容不能为空: 'Script content cannot be empty',

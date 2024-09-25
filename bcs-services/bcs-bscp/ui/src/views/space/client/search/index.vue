@@ -29,7 +29,12 @@
           <template #prepend>
             <render-table-tip />
           </template>
-          <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
+          <bk-table-column
+            :min-width="80"
+            fixed="left"
+            :width="80"
+            :label="renderSelection"
+            :show-overflow-tooltip="false">
             <template #default="{ row }">
               <across-check-box
                 :checked="isChecked(row)"
@@ -108,7 +113,7 @@
             </template>
           </bk-table-column>
           <bk-table-column
-            v-if="selectedShowColumn.includes('online-status')"
+            v-if="selectedShowColumn.includes('pull-time')"
             :label="t('最后一次拉取配置耗时')"
             :width="200"
             :sort="true">
@@ -428,7 +433,8 @@
     settings.value.size = 'medium';
     if (tableSet) {
       const { checked, size } = JSON.parse(tableSet);
-      selectedShowColumn.value = checked;
+      const requiredChecked = settings.value.fields.filter((item) => item.disabled).map((item) => item.id);
+      selectedShowColumn.value = [...requiredChecked, ...checked];
       settings.value.checked = checked;
       settings.value.size = size;
     }
@@ -480,6 +486,11 @@
         disabled: true,
       },
       {
+        name: t('最后一次拉取配置耗时'),
+        id: 'pull-time',
+        disabled: true,
+      },
+      {
         name: t('在线状态'),
         id: 'online-status',
         disabled: true,
@@ -515,6 +526,7 @@
       'label',
       'current-version',
       'pull-status',
+      'pull-time',
       'online-status',
       'first-connect-time',
       'last-heartbeat-time',
@@ -532,6 +544,7 @@
     'label',
     'current-version',
     'pull-status',
+    'pull-time',
     'online-status',
     'first-connect-time',
     'last-heartbeat-time',
