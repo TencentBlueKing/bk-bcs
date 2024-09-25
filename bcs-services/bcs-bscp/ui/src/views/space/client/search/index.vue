@@ -29,7 +29,12 @@
           <template #prepend>
             <render-table-tip />
           </template>
-          <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
+          <bk-table-column
+            :min-width="80"
+            fixed="left"
+            :width="80"
+            :label="renderSelection"
+            :show-overflow-tooltip="false">
             <template #default="{ row }">
               <across-check-box
                 :checked="isChecked(row)"
