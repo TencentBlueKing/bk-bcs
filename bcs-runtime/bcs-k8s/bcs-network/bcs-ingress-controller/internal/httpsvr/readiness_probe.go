@@ -13,32 +13,32 @@
 package httpsvr
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/emicklei/go-restful"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
-func (h *HttpServerClient) listIngress(request *restful.Request, response *restful.Response) {
+func (h *HttpServerClient) readinessProbe(request *restful.Request, response *restful.Response) {
 	startTime := time.Now()
 	mf := func(status string) {
-		metrics.ReportAPIRequestMetric("list_ingress", "GET", status, startTime)
+		metrics.ReportAPIRequestMetric("readiness_probe", "GET", status, startTime)
 	}
 
-	ingressList := &networkextensionv1.IngressList{}
-	if err := h.Mgr.GetClient().List(context.Background(), ingressList); err != nil {
-		blog.Errorf("list ext ingresses failed when collect metrics, err %s", err.Error())
+	if err := h.NodePortBindCache.Init(); err != nil {
+		blog.Warnf("init nodeportbinding cache failed, err: %s", err.Error())
+		_ = response.WriteError(http.StatusInternalServerError, fmt.Errorf("list port pool failed, err: %s",
+			err.Error()))
 		mf(strconv.Itoa(http.StatusInternalServerError))
 		return
 	}
+
 	mf(strconv.Itoa(http.StatusOK))
-	data := CreateResponseData(nil, "success", ingressList)
+	data := CreateResponseData(nil, "success", nil)
 	_, _ = response.Write(data)
 }
