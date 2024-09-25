@@ -15,7 +15,7 @@
               @toggle-full-screen="isOpenFullScreen = !isOpenFullScreen" />
           </template>
           <template #head-suffix>
-            <TriggerBtn v-model:currentType="currentType" style="margin-left: 16px" />
+            <TriggerBtn v-model:current-type="currentType" style="margin-left: 16px" />
           </template>
           <bk-loading class="loading-wrap" :loading="loading">
             <component

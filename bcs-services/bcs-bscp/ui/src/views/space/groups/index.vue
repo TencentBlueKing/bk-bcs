@@ -150,7 +150,7 @@
       :name="editingGroup.name"></services-to-published>
   </section>
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteGroupDialogShow"
+    v-model:is-show="isDeleteGroupDialogShow"
     :title="t('确认删除该分组？')"
     @confirm="handleDeleteGroupConfirm">
     <div style="margin-bottom: 8px">

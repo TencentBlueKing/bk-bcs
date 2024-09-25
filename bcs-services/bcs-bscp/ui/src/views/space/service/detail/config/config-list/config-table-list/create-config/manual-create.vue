@@ -8,7 +8,7 @@
     <ConfigForm
       ref="formRef"
       class="config-form-wrapper"
-      v-model:fileUploading="fileUploading"
+      v-model:file-uploading="fileUploading"
       :config="configForm"
       :content="content"
       :is-edit="false"

@@ -1,7 +1,7 @@
 <template>
   <CommonConfigTable
     ref="configTable"
-    v-model:selectedConfigs="selectedConfigs"
+    v-model:selected-configs="selectedConfigs"
     :current-template-space="currentTemplateSpace"
     current-pkg="no_specified"
     :space-id="spaceId"

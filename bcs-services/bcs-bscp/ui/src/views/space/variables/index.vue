@@ -83,7 +83,7 @@
     <VariableImport v-model:show="isImportVariableShow" @edited="refreshList" />
   </section>
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteVariableDialogShow"
+    v-model:is-show="isDeleteVariableDialogShow"
     :title="t('确认删除该全局变量？')"
     @confirm="handleDeleteVarConfirm">
     <div style="margin-bottom: 8px">
