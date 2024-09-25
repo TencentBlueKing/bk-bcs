@@ -433,7 +433,8 @@
     settings.value.size = 'medium';
     if (tableSet) {
       const { checked, size } = JSON.parse(tableSet);
-      selectedShowColumn.value = checked;
+      const requiredChecked = settings.value.fields.filter((item) => item.disabled).map((item) => item.id);
+      selectedShowColumn.value = [...requiredChecked, ...checked];
       settings.value.checked = checked;
       settings.value.size = size;
     }
@@ -485,8 +486,9 @@
         disabled: true,
       },
       {
-        name: t('最后一次拉取时间'),
+        name: t('最后一次拉取配置耗时'),
         id: 'pull-time',
+        disabled: true,
       },
       {
         name: t('在线状态'),
