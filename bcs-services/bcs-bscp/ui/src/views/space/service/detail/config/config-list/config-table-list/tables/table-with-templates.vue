@@ -937,6 +937,14 @@
     if (oldConfigIndex.value !== -1) {
       tableGroupsData.value.find((group) => group.id === 0)!.configs.splice(oldConfigIndex.value, 1);
     }
+
+    // 更新配置项数量
+    const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
+    configStore.$patch((state) => {
+      state.conflictFileCount = conflictCount.value;
+      state.allConfigCount = configsCount.value + templatesCount.value;
+      state.allExistConfigCount = existConfigCount + templatesCount.value;
+    });
   };
 
   // 批量操作配置项后刷新配置项列表
