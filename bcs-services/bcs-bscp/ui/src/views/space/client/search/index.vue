@@ -108,7 +108,7 @@
             </template>
           </bk-table-column>
           <bk-table-column
-            v-if="selectedShowColumn.includes('online-status')"
+            v-if="selectedShowColumn.includes('pull-time')"
             :label="t('最后一次拉取配置耗时')"
             :width="200"
             :sort="true">
@@ -480,6 +480,10 @@
         disabled: true,
       },
       {
+        name: t('最后一次拉取时间'),
+        id: 'pull-time',
+      },
+      {
         name: t('在线状态'),
         id: 'online-status',
         disabled: true,
@@ -515,6 +519,7 @@
       'label',
       'current-version',
       'pull-status',
+      'pull-time',
       'online-status',
       'first-connect-time',
       'last-heartbeat-time',
@@ -532,6 +537,7 @@
     'label',
     'current-version',
     'pull-status',
+    'pull-time',
     'online-status',
     'first-connect-time',
     'last-heartbeat-time',
