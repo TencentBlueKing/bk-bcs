@@ -12,7 +12,9 @@
       theme="button"
       :size="100000"
       :multiple="true"
-      :custom-request="handleFileUpload">
+      :limit="10"
+      :custom-request="handleFileUpload"
+      @exceed="handleExceed">
       <template #trigger>
         <bk-button class="upload-button">
           <Upload class="icon" />
@@ -20,37 +22,38 @@
         </bk-button>
       </template>
     </bk-upload>
+
     <div v-if="fileList.length > 0">
       <div :class="['open-btn', { 'is-open': isOpenFileList }]" @click="isOpenFileList = !isOpenFileList">
         <angle-double-up-line class="icon" />
         {{ isOpenFileList ? $t('收起上传列表') : $t('展开上传列表') }}
       </div>
-      <div v-show="isOpenFileList" class="file-list">
-        <div v-for="fileItem in fileList" :key="fileItem.file.name" class="file-item">
+      <RecycleScroller v-show="isOpenFileList" class="file-list" :items="fileList" :item-size="40" v-slot="{ item }">
+        <div class="file-item">
           <div class="file-wrapper">
             <div class="status-icon-area">
-              <Done v-if="fileItem.status === 'success'" class="success-icon" />
-              <Error v-if="fileItem.status === 'fail'" class="error-icon" />
+              <Done v-if="item.status === 'success'" class="success-icon" />
+              <Error v-if="item.status === 'fail'" class="error-icon" />
             </div>
             <TextFill class="file-icon" />
             <div class="file-content">
-              <bk-overflow-title type="tips" class="name">
-                <div>{{ fileItem.file.name }}</div>
-              </bk-overflow-title>
-              <div v-if="fileItem.status !== 'success' && fileItem.status !== 'fail'" class="progress">
+              <div v-overflow-title type="tips" class="name">
+                <div>{{ item.file.name }}</div>
+              </div>
+              <div v-if="item.status !== 'success' && item.status !== 'fail'" class="progress">
                 <bk-progress
-                  :percent="fileItem.progress"
-                  :theme="fileItem.status === 'fail' ? 'danger' : 'primary'"
+                  :percent="item.progress"
+                  :theme="item.status === 'fail' ? 'danger' : 'primary'"
                   size="small" />
               </div>
-              <bk-overflow-title v-else-if="fileItem.status === 'fail'" type="tips" class="error-message">
-                <div>{{ fileItem.errorMessage }}</div>
-              </bk-overflow-title>
+              <div v-else-if="item.status === 'fail'" v-overflow-title type="tips" class="error-message">
+                <div>{{ item.errorMessage }}</div>
+              </div>
             </div>
-            <Del class="del-icon" @click="handleDeleteFile(fileItem.file.name)" />
+            <Del class="del-icon" @click="handleDeleteFile(item.file.name)" />
           </div>
         </div>
-      </div>
+      </RecycleScroller>
     </div>
   </div>
 </template>
@@ -71,6 +74,7 @@
     status: string;
     progress: number;
     errorMessage?: string;
+    id: string;
   }
 
   const { t } = useI18n();
@@ -90,6 +94,7 @@
   const isDecompression = ref(true);
   const isOpenFileList = ref(true);
   const fileList = ref<IUploadFileList[]>([]);
+  const multipleUploading = ref(false); // 是否是多个文件上传
 
   const uploadTips = computed(() => {
     if (isDecompression.value) {
@@ -103,7 +108,7 @@
   watch(
     () => fileList.value,
     () => {
-      if (fileList.value.some((fileItem) => fileItem.status === 'uploading')) {
+      if (fileList.value.some((fileItem) => fileItem.status === 'uploading') || multipleUploading.value) {
         emits('uploading', true);
       } else {
         emits('uploading', false);
@@ -161,11 +166,15 @@
       if (fileList.value.find((fileItem) => fileItem.file.name === option.file.name)) {
         handleDeleteFile(option.file.name);
       }
-      fileList.value?.push({
-        file: option.file,
-        status: 'uploading',
-        progress: 0,
-      });
+      fileList.value = [
+        ...fileList.value,
+        {
+          file: option.file,
+          status: 'uploading',
+          progress: 0,
+          id: `${option.file.name}-${Date.now()}`,
+        },
+      ];
       let res;
       if (props.isTemplate) {
         res = await importTemplateFile(
@@ -223,6 +232,25 @@
     const ext = filename.split('.').pop()!.toLowerCase();
     return ['zip', 'rar', 'tar', 'gz', 'tgz'].includes(ext);
   };
+
+  const handleExceed = async (files: any) => {
+    multipleUploading.value = true;
+    let index = 0;
+    const uploadNext = async () => {
+      if (index < files.length) {
+        index += 1;
+        const file = files[index];
+        await handleFileUpload({ file });
+        await uploadNext();
+      }
+    };
+    const uploadPromises = [];
+    for (let i = 0; i < 5; i++) {
+      uploadPromises.push(uploadNext());
+    }
+    await Promise.allSettled(uploadPromises);
+    multipleUploading.value = false;
+  };
 </script>
 
 <style scoped lang="scss">
@@ -264,6 +292,7 @@
     }
     .file-list {
       margin-top: 10px;
+      max-height: 300px;
     }
     .file-wrapper {
       display: flex;
@@ -324,6 +353,9 @@
           right: 10px;
           top: 0;
           max-width: 200px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
         }
         :deep(.bk-progress) {
           position: absolute;
