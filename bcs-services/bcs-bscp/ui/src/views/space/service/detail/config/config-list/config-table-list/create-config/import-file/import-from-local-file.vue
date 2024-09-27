@@ -37,8 +37,8 @@
             </div>
             <TextFill class="file-icon" />
             <div class="file-content">
-              <div v-overflow-title type="tips" class="name">
-                <div>{{ item.file.name }}</div>
+              <div class="name">
+                <div v-overflow-title>{{ item.file.name }}</div>
               </div>
               <div v-if="item.status !== 'success' && item.status !== 'fail'" class="progress">
                 <bk-progress
@@ -46,8 +46,8 @@
                   :theme="item.status === 'fail' ? 'danger' : 'primary'"
                   size="small" />
               </div>
-              <div v-else-if="item.status === 'fail'" v-overflow-title type="tips" class="error-message">
-                <div>{{ item.errorMessage }}</div>
+              <div v-else-if="item.status === 'fail'" class="error-message">
+                <div v-overflow-title>{{ item.errorMessage }}</div>
               </div>
             </div>
             <Del class="del-icon" @click="handleDeleteFile(item.file.name)" />
@@ -356,6 +356,7 @@
           text-overflow: ellipsis;
           white-space: nowrap;
           overflow: hidden;
+          cursor: pointer;
         }
         :deep(.bk-progress) {
           position: absolute;
