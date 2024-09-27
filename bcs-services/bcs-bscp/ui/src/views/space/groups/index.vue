@@ -38,7 +38,7 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <bk-table class="group-table" :border="['outer']" :data="tableData">
+        <bk-table class="group-table" show-overflow-tooltip :border="['outer']" :data="tableData">
           <template #prepend>
             <render-table-tip />
           </template>
