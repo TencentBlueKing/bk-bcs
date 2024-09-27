@@ -76,6 +76,11 @@
       :required="formData.clusterSwitch">
       <bk-input v-model.trim="formData.clusterInfo" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
+    <!-- 启用配置文件筛选 -->
+    <bk-form-item v-if="associateConfigShow">
+      <!-- <p2p-label @send-switcher="formData.clusterSwitch = $event" /> -->
+      <associate-config />
+    </bk-form-item>
   </bk-form>
 </template>
 
@@ -92,6 +97,7 @@
   import { cloneDeep } from 'lodash';
   import { copyToClipBoard } from '../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
+  import associateConfig from './associate-config.vue';
 
   const props = withDefaults(
     defineProps<{
@@ -99,12 +105,14 @@
       labelName?: string;
       p2pShow?: boolean;
       httpConfigShow?: boolean;
+      associateConfigShow?: boolean;
     }>(),
     {
       directoryShow: true,
       labelName: '标签',
       p2pShow: false,
       httpConfigShow: false,
+      associateConfigShow: true,
     },
   );
 

@@ -102,7 +102,7 @@
     nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
     // @ts-ignore
     // eslint-disable-next-line
-    clientNode: BSCP_CONFIG.client_configuration_doc,
+    clientNode: (typeof BSCP_CONFIG !== 'undefined' && BSCP_CONFIG.client_configuration_doc) || '',
   };
 
   const keyValidateReg = new RegExp(

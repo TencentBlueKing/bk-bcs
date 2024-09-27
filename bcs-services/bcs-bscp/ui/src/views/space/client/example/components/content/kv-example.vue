@@ -77,7 +77,7 @@
   const kvConfig = computed(() => {
     // @ts-ignore
     // eslint-disable-next-line
-    const url = BSCP_CONFIG.python_sdk_dependency_doc;
+    const url = (typeof BSCP_CONFIG !== 'undefined' && BSCP_CONFIG.python_sdk_dependency_doc) || '';
     switch (props.kvName) {
       case 'python':
         // get
