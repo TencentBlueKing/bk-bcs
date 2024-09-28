@@ -77,7 +77,7 @@ func (s *mysqlStore) initDsn(raw string) {
 	s.dsn = u.String()
 }
 
-// EnsureTable 创建db表
+// EnsureTable implement istore EnsureTable interface
 func (s *mysqlStore) EnsureTable(ctx context.Context, dst ...any) error {
 	// 没有自定义数据, 使用默认表结构
 	if len(dst) == 0 {
@@ -86,6 +86,7 @@ func (s *mysqlStore) EnsureTable(ctx context.Context, dst ...any) error {
 	return s.db.WithContext(ctx).AutoMigrate(dst...)
 }
 
+// CreateTask implement istore CreateTask interface
 func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		record := getTaskRecord(task)
@@ -102,10 +103,39 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 	})
 }
 
-func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
-	return nil, types.ErrNotImplemented
+// ListTask implement istore ListTask interface
+func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
+	tx := s.db.WithContext(ctx)
+
+	// 0值gorm自动忽略查询
+	tx = tx.Where(&TaskRecord{
+		TaskID:        opt.TaskID,
+		TaskType:      opt.TaskType,
+		TaskName:      opt.TaskName,
+		TaskIndex:     opt.TaskIndex,
+		TaskIndexType: opt.TaskIndexType,
+		Status:        opt.Status,
+		CurrentStep:   opt.CurrentStep,
+		Creator:       opt.Creator,
+	}).Order("id desc")
+
+	result, count, err := FindByPage[TaskRecord](tx, int(opt.Offset), int(opt.Limit))
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*types.Task, 0, len(result))
+	for _, record := range result {
+		items = append(items, toTask(record, []*StepRecord{}))
+	}
+
+	return &iface.Pagination[types.Task]{
+		Count: count,
+		Items: items,
+	}, nil
 }
 
+// UpdateTask implement istore UpdateTask interface
 func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		updateTask := getUpdateTaskRecord(task)
@@ -132,6 +162,7 @@ func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 	})
 }
 
+// DeleteTask implement istore DeleteTask interface
 func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where("task_id = ?", taskID).Delete(&TaskRecord{}).Error; err != nil {
@@ -145,6 +176,7 @@ func (s *mysqlStore) DeleteTask(ctx context.Context, taskID string) error {
 	})
 }
 
+// GetTask implement istore GetTask interface
 func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, error) {
 	tx := s.db.WithContext(ctx)
 	taskRecord := TaskRecord{}
@@ -159,6 +191,7 @@ func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, e
 	return toTask(&taskRecord, stepRecord), nil
 }
 
+// PatchTask implement istore PatchTask interface
 func (s *mysqlStore) PatchTask(ctx context.Context, opt *iface.PatchOption) error {
 	return types.ErrNotImplemented
 }

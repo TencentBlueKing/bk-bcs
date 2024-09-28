@@ -185,6 +185,11 @@ func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.
 	return GetGlobalStorage().GetTask(ctx, taskId)
 }
 
+// ListTask list tasks with options, returns a paginated list of tasks
+func (m *TaskManager) ListTask(ctx context.Context, opt *istore.ListOption) (*istore.Pagination[types.Task], error) {
+	return GetGlobalStorage().ListTask(ctx, opt)
+}
+
 // UpdateTask update task
 // ! warning: modify task status will cause task status not consistent
 func (m *TaskManager) UpdateTask(ctx context.Context, task *types.Task) error {
