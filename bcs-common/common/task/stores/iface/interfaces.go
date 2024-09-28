@@ -15,6 +15,7 @@ package iface
 
 import (
 	"context"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
@@ -29,6 +30,8 @@ type ListOption struct {
 	CurrentStep   string
 	Status        string
 	Creator       string
+	StartGte      *time.Time     // StartGte start time greater or equal to
+	StartLte      *time.Time     // StartLte start time less or equal to
 	Sort          map[string]int // Sort map for sort list results
 	Offset        int64          // Offset offset for list results
 	Limit         int64          // Limit limit for list results

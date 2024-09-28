@@ -107,7 +107,7 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
 	tx := s.db.WithContext(ctx)
 
-	// 0值gorm自动忽略查询
+	// 条件过滤 0值gorm自动忽略查询
 	tx = tx.Where(&TaskRecord{
 		TaskID:        opt.TaskID,
 		TaskType:      opt.TaskType,
@@ -117,7 +117,18 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*ifac
 		Status:        opt.Status,
 		CurrentStep:   opt.CurrentStep,
 		Creator:       opt.Creator,
-	}).Order("id desc")
+	})
+
+	// mysql store 使用创建时间过滤
+	if opt.StartGte != nil {
+		tx = tx.Where("created_at >= ?", opt.StartGte)
+	}
+	if opt.StartLte != nil {
+		tx = tx.Where("created_at <= ?", opt.StartLte)
+	}
+
+	// 只使用id排序
+	tx = tx.Order("id DESC")
 
 	result, count, err := FindByPage[TaskRecord](tx, int(opt.Offset), int(opt.Limit))
 	if err != nil {
