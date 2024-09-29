@@ -13,6 +13,8 @@
 package mysql
 
 import (
+	"gorm.io/gorm"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
 )
 
@@ -163,4 +165,20 @@ func getUpdateStepRecord(t *types.Step) *StepRecord {
 		RetryCount:    t.RetryCount,
 	}
 	return record
+}
+
+// FindByPage 分页查询
+func FindByPage[T any](db *gorm.DB, offset int, limit int) (result []*T, count int64, err error) {
+	err = db.Offset(offset).Limit(limit).Find(&result).Error
+	if err != nil {
+		return
+	}
+
+	if size := len(result); 0 < limit && 0 < size && size < limit {
+		count = int64(size + offset)
+		return
+	}
+
+	err = db.Offset(-1).Limit(-1).Count(&count).Error
+	return
 }
