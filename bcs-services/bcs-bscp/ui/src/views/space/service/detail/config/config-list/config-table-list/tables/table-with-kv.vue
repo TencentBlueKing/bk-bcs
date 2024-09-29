@@ -10,6 +10,7 @@
       selection-key="id"
       row-key="id"
       :row-class="getRowCls"
+      show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh($event, true)"
       @column-sort="handleSort"
@@ -27,14 +28,14 @@
       </bk-table-column>
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
-          <bk-button
+          <bk-overflow-title
             v-if="row.spec"
-            text
-            theme="primary"
             :disabled="row.kv_state === 'DELETE'"
+            type="tips"
+            class="key-name"
             @click="handleView(row)">
             {{ row.spec.key }}
-          </bk-button>
+          </bk-overflow-title>
         </template>
       </bk-table-column>
       <bk-table-column :label="t('配置项值预览')" prop="spec.value">
@@ -566,6 +567,9 @@
     }
   }
   .config-table {
+    .key-name {
+      color: #3a84ff;
+    }
     :deep(.bk-table-body) {
       max-height: calc(100vh - 280px);
       overflow: auto;
