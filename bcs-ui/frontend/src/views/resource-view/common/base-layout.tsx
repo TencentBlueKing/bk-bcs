@@ -2,7 +2,7 @@
 import yamljs from 'js-yaml';
 import jp from 'jsonpath';
 import { isEqual } from 'lodash';
-import { computed, defineComponent, onBeforeMount, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
 
 import NSSelect from '../view-manage/ns-select.vue';
 import useViewConfig from '../view-manage/use-view-config';
@@ -601,15 +601,13 @@ export default defineComponent({
     };
 
     const { start, stop } = useInterval(() => handleGetTableData(false), 5000);
-    onBeforeMount(() => {
-      // 轮询资源
-      start();
-    });
 
     onMounted(async () => {
       isLoading.value = true;
       await handleGetTableData();
       isLoading.value = false;
+      // 轮询资源
+      start();
     });
 
     onBeforeUnmount(() => {
