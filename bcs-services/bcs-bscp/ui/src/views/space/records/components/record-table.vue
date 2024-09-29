@@ -132,7 +132,7 @@
                 <!-- 2.版本首次在分组上线的情况，显示审批，点击审批直接通过 -->
 
                 <template
-                  v-if="
+                  v-else-if="
                     row.audit.spec.status === APPROVE_STATUS.PendApproval &&
                     row.strategy.approver_progress.includes(userInfo.username)
                   ">
@@ -152,8 +152,9 @@
                 </template>
                 <!-- 审批驳回/已撤销才可显示 -->
                 <bk-button
-                  v-if="
-                    [APPROVE_STATUS.RejectedApproval, APPROVE_STATUS.RevokedPublish].includes(row.audit.spec.status)
+                  v-else-if="
+                    [APPROVE_STATUS.RejectedApproval, APPROVE_STATUS.RevokedPublish].includes(row.audit.spec.status) &&
+                    row.app.creator === userInfo.username
                   "
                   class="action-btn"
                   text
@@ -161,6 +162,7 @@
                   @click="retrySubmission(row)">
                   {{ t('再次提交') }}
                 </bk-button>
+                <template v-else>--</template>
                 <!-- 待上线/去审批状态 才显示更多操作；目前仅创建者有撤销权限 -->
                 <MoreActions
                   v-if="
@@ -168,14 +170,6 @@
                     row.app.creator === userInfo.username
                   "
                   @handle-undo="handleConfirm(row, $event)" />
-                <!-- 当前登录用户在审批人和创建者名单都没有时，表示无权操作此条记录 -->
-                <template
-                  v-if="
-                    row.audit.spec.status === APPROVE_STATUS.AlreadyPublish ||
-                    !`${row.strategy.approver_progress},${row.app.creator}`.includes(userInfo.username)
-                  ">
-                  --
-                </template>
               </div>
               <template v-else>--</template>
             </template>
