@@ -1,12 +1,13 @@
 <template>
   <div class="rule-edit">
     <div class="head">
-      <p class="title">{{ t('配置关联规则') }}</p>
+      <p class="title">{{ editTitle }}</p>
     </div>
     <div class="rules-edit-area">
       <div v-for="(rule, index) in localRules" class="rule-list" :key="index">
         <div :class="['rule-item', { 'rule-error': !rule.isRight }, { 'service-error': !rule.isSelectService }]">
           <bk-select
+            v-show="!isExampleMode"
             v-model="rule.app"
             class="service-select"
             :filterable="true"
@@ -17,7 +18,7 @@
             @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
-          <div style="width: 10px">/</div>
+          <div v-show="!isExampleMode" style="width: 10px">/</div>
           <bk-input
             v-model="rule.content"
             class="rule-input"
@@ -51,12 +52,15 @@
           <div
             :class="['preview', { 'preview-mode': previewRule?.index === index }, { 'need-preview': rule.needPreview }]"
             @click="handlePreviewRule(rule, index)">
-            <span>{{ t('预览') }}</span><Arrows-Right class="arrow-icon" />
+            <span>{{ t('预览') }}</span>
+            <Arrows-Right class="arrow-icon" />
           </div>
         </div>
         <div class="error-info" v-if="!rule.isRight || !rule.isSelectService">
           <span v-if="!rule.isSelectService">{{ t('请选择服务') }}</span>
-          <span v-else-if="!rule.isRight" class="rule-error">{{ t('输入的规则有误，请重新确认') }}</span>
+          <span v-else-if="!rule.isRight" :class="['rule-error', { 'example-style': props.isExampleMode }]">
+            {{ t('输入的规则有误，请重新确认') }}
+          </span>
         </div>
       </div>
     </div>
@@ -66,18 +70,28 @@
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
+  import { useRoute } from 'vue-router';
   import { ICredentialRule, IRuleEditing, IRuleUpdateParams, IPreviewRule } from '../../../../../types/credential';
   import { IAppItem } from '../../../../../types/app';
   import { ArrowsRight } from 'bkui-vue/lib/icon';
 
   const { t } = useI18n();
-  const props = defineProps<{
-    rules: ICredentialRule[];
-    appList: IAppItem[];
-    previewRule: IPreviewRule | null;
-  }>();
+
+  const props = withDefaults(
+    defineProps<{
+      rules: ICredentialRule[];
+      appList: IAppItem[];
+      previewRule: IPreviewRule | null;
+      isExampleMode?: boolean;
+    }>(),
+    {
+      isExampleMode: false, // 配置示例模式(无密钥id)
+    },
+  );
 
   const emits = defineEmits(['change', 'formChange', 'update:previewRule', 'trigger-save-btn-disabled']);
+
+  const route = useRoute();
 
   const RULE_TYPE_MAP: { [key: string]: string } = {
     new: t('新增'),
@@ -86,6 +100,20 @@
   };
 
   const localRules = ref<IRuleEditing[]>([]);
+
+  // 配置示例会传当前选择的服务，不提供选择服务
+  const localApp = computed(() => {
+    if (props.isExampleMode) {
+      return (
+        props.appList.find((appItem) => {
+          return appItem.id === Number(route.params.appId);
+        }) || null
+      );
+    }
+    return null;
+  });
+
+  const editTitle = computed(() => (props.isExampleMode ? t('配置筛选规则') : t('配置关联规则')));
 
   const inputPlaceholder = computed(() => (rule: IRuleEditing) => {
     if (!rule.app) return ' ';
@@ -129,7 +157,7 @@
             content: '',
             original: '',
             isRight: true,
-            app: null,
+            app: props.isExampleMode ? localApp.value : null,
             originalApp: '',
             isSelectService: true,
             needPreview: false,
@@ -156,7 +184,7 @@
       content: '',
       original: '',
       isRight: true,
-      app: null,
+      app: props.isExampleMode ? localApp.value : null,
       originalApp: '',
       isSelectService: true,
       needPreview: false,
@@ -395,6 +423,9 @@
     .rule-error {
       position: absolute;
       left: 200px;
+      &.example-style {
+        left: 0;
+      }
     }
   }
   .preview-btn {
