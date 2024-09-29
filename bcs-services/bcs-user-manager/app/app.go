@@ -131,6 +131,19 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	}
 	userMgrConfig.RedisDSN = string(redisDSN)
 
+	// RedisDSN 没有配置，检查 RedisConfig
+	if userMgrConfig.RedisDSN == "" {
+		userMgrConfig.RedisConfig.RedisMode = op.RedisConfig.RedisMode
+		userMgrConfig.RedisConfig.Addr = op.RedisConfig.Addr
+		userMgrConfig.RedisConfig.Password = op.RedisConfig.Password
+		userMgrConfig.RedisConfig.DialTimeout = op.RedisConfig.DialTimeout
+		userMgrConfig.RedisConfig.ReadTimeout = op.RedisConfig.ReadTimeout
+		userMgrConfig.RedisConfig.WriteTimeout = op.RedisConfig.WriteTimeout
+		userMgrConfig.RedisConfig.PoolSize = op.RedisConfig.PoolSize
+		userMgrConfig.RedisConfig.MinIdleConns = op.RedisConfig.MinIdleConns
+		userMgrConfig.RedisConfig.IdleTimeout = op.RedisConfig.IdleTimeout
+	}
+
 	userMgrConfig.VerifyClientTLS = op.VerifyClientTLS
 
 	// server cert directory

@@ -34,6 +34,7 @@ type UserManagerOptions struct {
 	VerifyClientTLS bool            `json:"verify_client_tls" value:"false" usage:"verify client when brings up a tls server" mapstructure:"verify_client_tls"`
 	EnableTokenSync bool            `json:"enable_token_sync" value:"" usage:"enable sync token to redis periodically"`
 	RedisDSN        string          `json:"redis_dsn" value:"" usage:"dsn for connect to redis"`
+	RedisConfig     RedisConfig     `json:"redis_config" value:"" usage:"redis config for connect to redis"`
 	DSN             string          `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
 	TKE             TKEOptions      `json:"tke"`
@@ -156,4 +157,19 @@ type Activity struct {
 	Duration     string   `json:"duration" yaml:"duration" usage:"cleaning time"`
 	Interval     string   `json:"interval" yaml:"interval" usage:"timed tasks"`
 	ResourceType []string `json:"resource_type" yaml:"resource_type"`
+}
+
+// RedisConfig redis 配置
+type RedisConfig struct {
+	RedisMode    string `json:"redis_mode" usage:"Redis mode" mapstructure:"redis_mode" yaml:"redis_mode"`
+	Addr         string `json:"addr" usage:"Redis server address" mapstructure:"addr" yaml:"addr"`
+	Password     string `json:"password" usage:"Redis password" mapstructure:"password" yaml:"password"`
+	DB           int    `json:"db" usage:"Redis db" mapstructure:"db" yaml:"db"`
+	MasterName   string `json:"master_name" usage:"Redis master name" mapstructure:"master_name" yaml:"master_name"`
+	DialTimeout  int    `json:"dial_timeout" usage:"Redis dial timeout" mapstructure:"dial_timeout" yaml:"dial_timeout"`
+	ReadTimeout  int    `json:"read_timeout" usage:"Redis read timeout" mapstructure:"read_timeout" yaml:"read_timeout"`
+	WriteTimeout int    `json:"write_timeout" usage:"Redis write timeout" mapstructure:"write_timeout" yaml:"write_timeout"`
+	PoolSize     int    `json:"pool_size" usage:"Redis pool size" mapstructure:"pool_size" yaml:"pool_size"`
+	MinIdleConns int    `json:"min_idle_conns" usage:"Redis min connect" mapstructure:"min_idle_conns" yaml:"min_idle_conns"`
+	IdleTimeout  int    `json:"idle_timeout" usage:"Redis idle timeout" mapstructure:"idle_timeout" yaml:"idle_timeout"`
 }
