@@ -78,8 +78,7 @@
     </bk-form-item>
     <!-- 启用配置文件筛选 -->
     <bk-form-item v-if="associateConfigShow">
-      <!-- <p2p-label @send-switcher="formData.clusterSwitch = $event" /> -->
-      <associate-config />
+      <associate-config @update-rules="formData.rules = $event" />
     </bk-form-item>
   </bk-form>
 </template>
@@ -112,7 +111,7 @@
       labelName: '标签',
       p2pShow: false,
       httpConfigShow: false,
-      associateConfigShow: true,
+      associateConfigShow: false,
     },
   );
 
@@ -135,6 +134,7 @@
     labelArr: [], // 添加的标签
     clusterSwitch: false, // 集群开关
     clusterInfo: 'BCS-K8S-', // 集群ID
+    rules: [], // 文件筛选规则
     // clusterInfo: {
     //   name: '', // 集群名称
     //   value: '', // 集群id

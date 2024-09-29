@@ -15,9 +15,9 @@
     </div>
     <div class="associate-config-content" v-if="configSwitch">
       <div class="associate-info-wrap">
-        <div class="associate-info-count">已设置 {{ ruleList.length }} 个筛选规则</div>
+        <div class="associate-info-count">{{ $t('已设置的筛选规则', { count: ruleList.length }) }}</div>
         <bk-button class="associate-info-btn" theme="primary" size="small" text @click="openRuleConfig">
-          <cog-shape class="btn-icon" />规则设置
+          <cog-shape class="btn-icon" />{{ $t('规则设置') }}
         </bk-button>
       </div>
       <associate-side-bar
@@ -27,7 +27,8 @@
         :has-manage-perm="hasManagePerm"
         :example-rules="rules"
         :is-example-mode="true"
-        @send-example-rules="updateRule" />
+        @send-example-rules="updateRule"
+        @close="handleClose" />
     </div>
   </div>
 </template>
@@ -39,7 +40,7 @@
   import { permissionCheck } from '../../../../../api/index';
   import { ICredentialRule, IRuleUpdateParams } from '../../../../../../types/credential';
 
-  const emits = defineEmits(['send-switcher']);
+  const emits = defineEmits(['updateRules']);
 
   const route = useRoute();
 
@@ -96,6 +97,7 @@
       const filteredVal = ruleList.value.filter((item) => !del_id.includes(item.id));
       ruleList.value = filteredVal;
     }
+    sendRules();
     sideBarShow.value = false;
   };
 
@@ -123,13 +125,21 @@
     sideBarShow.value = true;
   };
 
-  const handleSwitcher = (val: boolean) => {
-    configSwitch.value = val;
-    sendVal(configSwitch.value);
+  const handleClose = () => {
+    sideBarShow.value = false;
   };
 
-  const sendVal = (configSwitch: boolean) => {
-    emits('send-switcher', configSwitch);
+  const handleSwitcher = (val: boolean) => {
+    configSwitch.value = val;
+    if (!val) {
+      ruleList.value = [];
+      sendRules();
+    }
+  };
+
+  const sendRules = () => {
+    const ruleString = ruleList.value.map((item) => item.scope);
+    emits('updateRules', ruleString);
   };
 </script>
 
