@@ -163,6 +163,7 @@ export default {
   文件own必须有读取权限: 'The file owner must have read permission',
   最大长度1024个字符: 'Maximum length of 1024 characters',
   '无效的路径,路径不符合Unix文件路径格式规范': 'Invalid path, the path does not comply with the Unix file path format specification',
+  '无效的路径,路径不符合Unix或Windows文件路径格式规范': 'Invalid path, the path does not conform to Unix or Windows file path format specifications',
   最大长度200个字符: 'Maximum length of 200 characters',
   请上传文件: 'Please upload the file',
   '配置内容不能超过{size}M': 'Configuration content cannot exceed {size}M',

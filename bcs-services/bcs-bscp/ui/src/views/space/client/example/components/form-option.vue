@@ -19,7 +19,7 @@
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: $t('临时目录提示文案'),
+            content: tempDirToolTips,
             placement: 'top',
           }" />
       </template>
@@ -34,8 +34,8 @@
             placement: 'top',
           }"
           class="description-em"
-          @click="handleCopyText(`${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files`)">
-          &nbsp;{{ `${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
+          @click="handleCopyText(realPath)">
+          &nbsp;{{ realPath }}&nbsp;
         </span>
       </div>
     </bk-form-item>
@@ -100,11 +100,12 @@
 
   const props = withDefaults(
     defineProps<{
-      directoryShow?: boolean;
+      directoryShow?: boolean; // 临时目录
       labelName?: string;
-      p2pShow?: boolean;
-      httpConfigShow?: boolean;
-      associateConfigShow?: boolean;
+      p2pShow?: boolean; // p2p网络加速（Sidecar容器）
+      httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
+      dualSystemSupport?: boolean; // Unix与windows双系统支持（节点管理插件与文件型命令行工具）
     }>(),
     {
       directoryShow: true,
@@ -112,6 +113,7 @@
       p2pShow: false,
       httpConfigShow: false,
       associateConfigShow: false,
+      dualSystemSupport: false,
     },
   );
 
@@ -167,6 +169,13 @@
       {
         required: true,
         validator: (value: string) => {
+          // Unix与Windows双路径判断
+          if (props.dualSystemSupport) {
+            if (isWindowsPath.value) {
+              return true;
+            }
+          }
+          // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
           if (!value.startsWith('/') || value.endsWith('/')) {
             return false;
@@ -184,7 +193,7 @@
           return isValid;
         },
         trigger: 'change',
-        message: t('无效的路径,路径不符合Unix文件路径格式规范'),
+        message: t(`无效的路径,路径不符合Unix${props.dualSystemSupport ? '或Windows' : ''}文件路径格式规范`),
       },
     ],
     httpConfigName: [
@@ -223,8 +232,29 @@
     return rules.tempDir.every((ruleItem) => ruleItem.validator(formData.value.tempDir));
   });
 
+  // 验证是否windows路径
+  const isWindowsPath = computed(() => {
+    return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
+  });
+
+  // 真实路径
+  const realPath = computed(() => {
+    if (isWindowsPath.value) {
+      return `${formData.value.tempDir}\\${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
+    }
+    return `${formData.value.tempDir}/${spaceId.value}/${basicInfo?.serviceName.value}/files`;
+  });
+
+  const tempDirToolTips = computed(() => {
+    if (isWindowsPath.value) {
+      return t('临时目录提示文案').replaceAll('/', '\\');
+    }
+    return t('临时目录提示文案');
+  });
+
   watch(formData.value, () => {
     sendAll();
+    // tempDirPathType(formData.value.tempDir);
   });
 
   onMounted(() => {

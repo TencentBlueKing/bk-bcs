@@ -4,6 +4,7 @@
       ref="fileOptionRef"
       label-name="服务标签"
       :associate-config-show="true"
+      :dual-system-support="true"
       @update-option-data="getOptionData" />
     <div class="node-content">
       <span class="node-label">{{ $t('示例预览') }}</span>
