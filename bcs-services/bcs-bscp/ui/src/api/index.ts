@@ -120,5 +120,5 @@ export const loginOut = () =>
  * @returns
  */
 export const approverListApi = () =>
-  `${(window as any).User_Man_Host}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=1000&page=1`;
+  `${(window as any).USER_MAN_HOST}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=1000&page=1`;
 // /api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=1000&page=1"
