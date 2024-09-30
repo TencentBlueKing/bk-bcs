@@ -73,7 +73,8 @@ export const GET_UNNAMED_VERSION_DATA = (): IConfigVersion => ({
 export enum APPROVE_TYPE {
   PendApproval, // 0 待审批
   PendPublish, // 1 审批通过
-  Rejected, // 2 驳回/撤销
+  Rejected, // 2 驳回
+  Revoke, // 3 撤销
 }
 
 // 版本上线方式

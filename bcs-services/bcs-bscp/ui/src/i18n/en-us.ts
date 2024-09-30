@@ -524,6 +524,7 @@ export default {
   去审批: 'Go to approval',
   审批: 'Approval',
   审批人: 'Approver',
+  撤销人: 'Revoker',
   再次提交: 'Submit again',
   确认驳回该上线任务: 'Confirm rejection of this publish task',
   '资源类型/操作行为/资源实例/状态/操作人/操作途径': 'Resource type/Operation behavior/Resource instance/Status/Operator/Operation method',

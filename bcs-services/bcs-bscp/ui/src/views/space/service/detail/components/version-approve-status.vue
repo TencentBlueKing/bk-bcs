@@ -8,7 +8,7 @@
     <text-file
       v-show="approveStatus > -1"
       v-bk-tooltips="{
-        content: `${t('审批人')}：${approverList}`,
+        content: `${approveStatus === 3 ? t('撤销人') : t('审批人')}：${approverList}`,
         placement: 'bottom',
       }"
       class="text-file" />
@@ -69,7 +69,7 @@
         approveStatus.value = APPROVE_TYPE.Rejected;
         return t('审批驳回');
       case 'RevokedPublish':
-        approveStatus.value = APPROVE_TYPE.Rejected;
+        approveStatus.value = APPROVE_TYPE.Revoke;
         return t('撤销上线');
       case 'PendPublish':
         approveStatus.value = APPROVE_TYPE.PendPublish;

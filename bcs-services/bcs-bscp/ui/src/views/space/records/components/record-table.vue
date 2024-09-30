@@ -162,7 +162,7 @@
                   @click="retrySubmission(row)">
                   {{ t('再次提交') }}
                 </bk-button>
-                <template v-else>--</template>
+                <span v-else class="empty-action">--</span>
                 <!-- 待上线/去审批状态 才显示更多操作；目前仅创建者有撤销权限 -->
                 <MoreActions
                   v-if="
@@ -171,7 +171,7 @@
                   "
                   @handle-undo="handleConfirm(row, $event)" />
               </div>
-              <template v-else>--</template>
+              <template v-else>--2</template>
             </template>
           </bk-table-column>
           <template #empty>
@@ -591,15 +591,14 @@
       transform: scale(1.1);
     }
   }
-  // .action-btns {
-  //   display: flex;
-  //   align-items: center;
-  // }
+  .action-btns {
+    position: relative;
+  }
   .action-btn {
     vertical-align: sub;
-    & + .more-actions {
-      margin-left: 8px;
-    }
+    // & + .more-actions {
+    //   margin-left: 8px;
+    // }
   }
   .table-list-pagination {
     padding: 12px;
@@ -643,5 +642,9 @@
     word-wrap: break-word;
     word-break: break-all;
     line-height: 21px;
+  }
+  .empty-action {
+    margin-right: 50px;
+    vertical-align: sub;
   }
 </style>

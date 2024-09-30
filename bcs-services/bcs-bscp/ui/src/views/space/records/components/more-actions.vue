@@ -19,9 +19,9 @@
 <style lang="scss" scoped>
   .more-actions {
     box-sizing: content-box;
-    position: relative;
-    top: 2px;
-    margin-left: -12px;
+    position: absolute;
+    right: 0;
+    top: -5px;
     display: inline-block;
     vertical-align: middle;
     width: 32px;
