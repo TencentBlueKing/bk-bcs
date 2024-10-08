@@ -16,6 +16,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/business"
 	"net"
 	"strconv"
 	"strings"
@@ -34,6 +35,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
@@ -167,7 +169,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	var adminUserName, publicKey string
 	agentPools := make([]*armcontainerservice.ManagedClusterAgentPoolProfile, 0)
 	for _, ng := range groups {
-		agentPool, err := genAgentPoolReq(ng, info.CmOption.Account.SubscriptionID,
+		agentPool, err := genAgentPoolReq(ng, info,
 			cluster.ExtraInfo[common.ClusterResourceGroup], cluster.NetworkSettings.MaxNodePodNum)
 		if err != nil {
 			return nil, fmt.Errorf("generateCreateClusterRequest genAgentPoolReq failed, %v", err)
@@ -207,7 +209,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 					PublicKeys: keys,
 				},
 			},
-			DNSPrefix: to.Ptr("111-dns"),
+			DNSPrefix: to.Ptr(fmt.Sprintf("%s-dns", cluster.ClusterName)),
 			NetworkProfile: &armcontainerservice.NetworkProfile{
 				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
 				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
@@ -223,17 +225,32 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	return req, nil
 }
 
-func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) (
+func genAgentPoolReq(ng *proto.NodeGroup, info *cloudprovider.CloudDependBasicInfo, rgName string, podNum uint32) (
 	*armcontainerservice.ManagedClusterAgentPoolProfile, error) {
 	if ng.LaunchTemplate == nil {
 		return nil, fmt.Errorf("generateCreateClusterRequest empty LaunchTemplate for nodegroup %s", ng.Name)
 	}
 
-	subnets := ng.AutoScaling.SubnetIDs
-	if len(ng.AutoScaling.VpcID) == 0 || len(subnets) == 0 {
-		return nil, fmt.Errorf("generateCreateClusterRequest nodegroup[%s] vpcID or subnetID"+
-			" can not be empty", ng.Name)
+	subnetIds := make([]string, 0)
+	if info.Cluster.GetClusterAdvanceSettings().GetNetworkType() == icommon.AzureCniNodeSubnet {
+		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
+			// 各个可用区自动分配指定数量的子网
+			ids, err := business.AllocateClusterVpcCniSubnets(context.Background(), info.Cluster.ClusterID,
+				info.Cluster.VpcID, info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+			if err != nil {
+				return nil, err
+			}
+
+			subnetIds = append(subnetIds, ids...)
+		}
+	} else {
+		subnetIds = append(subnetIds, ng.AutoScaling.SubnetIDs...)
 	}
+
+	if len(ng.AutoScaling.VpcID) == 0 || len(subnetIds) == 0 {
+		return nil, fmt.Errorf("genAgentPoolReq nodegroup[%s] vpcID or subnetID can not be empty", ng.Name)
+	}
+
 	sysDiskSize, _ := strconv.Atoi(ng.LaunchTemplate.SystemDisk.DiskSize)
 	agentPool := &armcontainerservice.ManagedClusterAgentPoolProfile{
 		AvailabilityZones: func(zones []string) []*string {
@@ -266,7 +283,7 @@ func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum 
 		VMSize:        to.Ptr(ng.LaunchTemplate.InstanceType),
 		VnetSubnetID: to.Ptr(fmt.Sprintf(
 			"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s",
-			subscriptionID, rgName, ng.AutoScaling.VpcID, subnets[0])),
+			info.CmOption.Account.SubscriptionID, rgName, ng.AutoScaling.VpcID, subnetIds[0])),
 	}
 
 	return agentPool, nil
