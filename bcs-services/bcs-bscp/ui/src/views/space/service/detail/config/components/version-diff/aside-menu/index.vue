@@ -9,7 +9,8 @@
         :selected-config="props.selectedConfig"
         :actived="selectedType === 'config'"
         :is-publish="props.isPublish"
-        @selected="handleSelect($event, 'config')" />
+        @selected="handleSelect($event, 'config')"
+        @render="emits('render', $event)" />
       <ConfigsKv
         v-else
         :base-version-id="props.baseVersionId"
@@ -17,7 +18,8 @@
         :selected-id="props.selectedKvConfigId"
         :actived="selectedType === 'config'"
         :is-publish="props.isPublish"
-        @selected="handleSelect($event, 'config')" />
+        @selected="handleSelect($event, 'config')"
+        @render="emits('render', $event)" />
     </div>
     <Scripts
       v-if="isFileType"
@@ -51,7 +53,7 @@
     isPublish: boolean;
   }>();
 
-  const emits = defineEmits(['selected']);
+  const emits = defineEmits(['selected', 'render']);
 
   const selectedType = ref('config');
 

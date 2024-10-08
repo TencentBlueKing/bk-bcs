@@ -25,6 +25,7 @@
         :row-class="getRowCls"
         :remote-pagination="true"
         :pagination="pagination"
+        show-overflow-tooltip
         @page-limit-change="handlePageLimitChange"
         @page-value-change="handlePageChange($event)">
         <template #prepend>
@@ -37,9 +38,13 @@
         </bk-table-column>
         <bk-table-column :label="t('配置文件名')">
           <template #default="{ row }">
-            <div v-if="row.spec" v-overflow-title class="config-name" @click="handleViewConfig(row)">
+            <bk-overflow-title
+              v-if="row.spec"
+              type="tips"
+              class="config-name"
+              @click="handleViewConfig(row)">
               {{ fileAP(row) }}
-            </div>
+            </bk-overflow-title>
           </template>
         </bk-table-column>
         <bk-table-column :label="t('配置文件描述')" prop="spec.memo">

@@ -54,6 +54,7 @@ func (v *VersionChangePayload) PbClientMetric() (*pbclient.Client, error) {
 			ReleaseChangeFailedReason: v.Application.FailedReason.String(),
 			FailedDetailReason:        v.Application.FailedDetailReason,
 			SpecificFailedReason:      v.Application.SpecificFailedReason.String(),
+			TotalSeconds:              v.Application.TotalSeconds,
 		},
 		Attachment: &pbclient.ClientAttachment{
 			Uid:   v.Application.Uid,

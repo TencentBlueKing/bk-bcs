@@ -40,10 +40,9 @@ import {
   clusterOverview,
   clusterPodMetric,
 } from '@/api/base';
-import { 
-  clusterNodeMetric,
-  clusterAllNodeOverview
-} from '@/api/modules/monitor';
+import {
+  clusterAllNodeOverview,
+  clusterNodeMetric } from '@/api/modules/monitor';
 
 export default {
   namespaced: true,

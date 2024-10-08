@@ -70,7 +70,7 @@ blueking:
   community: Forum
   website: Official
   docs: Documentation
-  releaseNotes: Release note
+  releaseNotes: Release Notes
   features: Features
   features1: Product features
   apiToken: API token
@@ -255,6 +255,7 @@ generic:
       network: Network Error
       system: System Error
       data: Data acquisition failure
+      import: Import failure
     warning:
       '403': No permission operation
       '404': Page does not exist
@@ -1593,6 +1594,9 @@ cluster:
         selectAllNs: All namespaces
         kernel: Core
         runtime: Runtime
+  operateRecord:
+    placeholder:
+      searchRecord: 'Search for resource name, resource ID, status, or initiator'
 deploy:
   helm:
     title:
@@ -3120,7 +3124,9 @@ importBkSopsCloud:
   button:
     import: Import
   message:
-    nodeTips: You can import through the cluster master node and execute kubectl commands.
+    nodeTips: >-
+      You can import through the cluster master node and execute kubectl
+      commands.
     errorAgent: The import of the node agent is abnormal.
 azureCloud:
   button:
@@ -3650,10 +3656,11 @@ templateFile:
     deployReview: Deployment Preview
     disableYamlToForm: Unable to switch mode
     fileList: File List
+    import: Import file package
+    clone: Clone
   button:
     formMode: Form Mode
     yamlMode: YAML Mode
-    createSpace: Create Folder
     rename: Rename
     createFile: Create Template File
     delete: Delete
@@ -3661,10 +3668,10 @@ templateFile:
     previewAndDeploy: Preview and deploy
     versionManage: Version Management
     confirmDeploy: Confirm Deployment
-    import: Import
-    export: Export
     AddToFavorites: Add to Favorites
     RemoveFromFavorites: Remove from Favorites
+    import: Import
+    export: Export all folders
     exportFolder: Export Folder
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
@@ -3704,6 +3711,10 @@ templateFile:
     nextKind: Next kind
     bookmark: Bookmark folder
     unbookmark: Unbookmark
+    uploadTips: >-
+      Supports .tgz and .tar.gz compressed file formats, with a maximum size of
+      {0}MB
+    createSpace: Create Folder
   tag:
     draft: draft
     baseOn: base on

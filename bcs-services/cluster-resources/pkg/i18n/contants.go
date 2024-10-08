@@ -42,3 +42,6 @@ var langMap = map[string]string{
 
 // MetadataCookiesKey 在 GoMicro Metadata 中，Cookie 的键名
 const MetadataCookiesKey = "Grpcgateway-Cookie"
+
+// LangCookieName 语言版本 Cookie 名称
+const LangCookieName = "blueking_language"

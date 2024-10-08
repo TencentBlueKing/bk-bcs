@@ -44,4 +44,6 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 
 	ws.Route(ws.GET("/api/v1/node").To(httpServerClient.listNode))
 	ws.Route(ws.GET("/api/v1/aga_entrance").To(httpServerClient.getPodRelatedAgaEntrance))
+
+	ws.Route(ws.GET("/readiness_probe").To(httpServerClient.readinessProbe))
 }

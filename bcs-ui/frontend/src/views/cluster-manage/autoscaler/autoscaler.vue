@@ -759,7 +759,7 @@ import { computed, defineComponent, getCurrentInstance, onActivated, onBeforeUnm
 
 import useNode from '../node-list/use-node';
 
-import AutoScalerFormItem from './form-item.vue';
+import AutoScalerFormItem from './components/form-item.vue';
 
 import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';

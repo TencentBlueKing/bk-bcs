@@ -48,7 +48,7 @@ func (s *memStore) CreateTask(ctx context.Context, task *types.Task) error {
 	return nil
 }
 
-func (s *memStore) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
+func (s *memStore) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
 	return nil, types.ErrNotImplemented
 }
 

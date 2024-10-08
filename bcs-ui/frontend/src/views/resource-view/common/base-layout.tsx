@@ -92,7 +92,7 @@ export default defineComponent({
     } = toRefs(props);
     const { clusterNameMap } = useCluster();
     const isViewConfigShow = computed(() => $store.state.isViewConfigShow);
-    const { curViewData, isViewEditable, isClusterMode } = useViewConfig();
+    const { curViewData, isViewEditable, isClusterMode, dashboardViewID } = useViewConfig();
     const {
       searchSelectData,
       searchSelectChange,
@@ -274,6 +274,7 @@ export default defineComponent({
         query: {
           kind: kind.value,
           crd: crd.value,
+          viewID: dashboardViewID.value,
         },
       });
     };

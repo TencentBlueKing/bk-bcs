@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -214,5 +215,22 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	// create operationLog
+	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
+		ResourceType: common.AutoScalingOption.String(),
+		ResourceID:   ca.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("创建集群[%s]扩缩容配置", ca.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ca.req.ClusterID,
+		ProjectID:    ca.cluster.ProjectID,
+		ResourceName: ca.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("CreateAutoScalingOption[%s] CreateOperationLog failed: %v", ca.req.ClusterID, err)
+	}
+
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

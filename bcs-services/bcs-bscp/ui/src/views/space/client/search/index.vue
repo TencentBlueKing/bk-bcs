@@ -24,11 +24,17 @@
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadList(true)"
           @column-filter="handleFilter"
+          @column-sort="handleSort"
           @setting-change="handleSettingsChange">
           <template #prepend>
             <render-table-tip />
           </template>
-          <bk-table-column :min-width="80" :width="80" :label="renderSelection" :show-overflow-tooltip="false">
+          <bk-table-column
+            :min-width="80"
+            fixed="left"
+            :width="80"
+            :label="renderSelection"
+            :show-overflow-tooltip="false">
             <template #default="{ row }">
               <across-check-box
                 :checked="isChecked(row)"
@@ -104,6 +110,21 @@
                   fill="#979BA5"
                   v-bk-tooltips="{ content: getErrorDetails(row.client.spec) }" />
               </div>
+            </template>
+          </bk-table-column>
+          <bk-table-column
+            v-if="selectedShowColumn.includes('pull-time')"
+            :label="t('最后一次拉取配置耗时')"
+            :width="200"
+            :sort="true">
+            <template #default="{ row }">
+              <span v-if="row.client">
+                {{
+                  row.client.spec.total_seconds > 1
+                    ? `${Math.round(row.client.spec.total_seconds)}s`
+                    : `${Math.round(row.client.spec.total_seconds * 1000)}ms`
+                }}
+              </span>
             </template>
           </bk-table-column>
           <!-- <bk-table-column label="附加信息" :width="244"></bk-table-column> -->
@@ -321,6 +342,7 @@
   ];
   const onlineStatusFilterChecked = ref<string[]>([]);
   const pollTimer = ref(0);
+  const updateSortType = ref('null');
 
   // 当前页数据，不含禁用
   const selecTableData = computed(() => {
@@ -411,7 +433,8 @@
     settings.value.size = 'medium';
     if (tableSet) {
       const { checked, size } = JSON.parse(tableSet);
-      selectedShowColumn.value = checked;
+      const requiredChecked = settings.value.fields.filter((item) => item.disabled).map((item) => item.id);
+      selectedShowColumn.value = [...requiredChecked, ...checked];
       settings.value.checked = checked;
       settings.value.size = size;
     }
@@ -463,6 +486,11 @@
         disabled: true,
       },
       {
+        name: t('最后一次拉取配置耗时'),
+        id: 'pull-time',
+        disabled: true,
+      },
+      {
         name: t('在线状态'),
         id: 'online-status',
         disabled: true,
@@ -498,6 +526,7 @@
       'label',
       'current-version',
       'pull-status',
+      'pull-time',
       'online-status',
       'first-connect-time',
       'last-heartbeat-time',
@@ -515,6 +544,7 @@
     'label',
     'current-version',
     'pull-status',
+    'pull-time',
     'online-status',
     'first-connect-time',
     'last-heartbeat-time',
@@ -545,6 +575,11 @@
         desc: 'online_status',
       },
     };
+    if (updateSortType.value === 'desc') {
+      params.order!.desc = 'online_status,total_seconds';
+    } else if (updateSortType.value === 'asc') {
+      params.order!.asc = 'total_seconds';
+    }
     try {
       listLoading.value = true;
       const res = await getClientQueryList(bkBizId.value, appId.value, params);
@@ -606,6 +641,11 @@
         state.searchQuery.search.online_status = [...checked];
       });
     }
+  };
+
+  const handleSort = ({ type }: any) => {
+    updateSortType.value = type;
+    loadList();
   };
 
   const handleSettingsChange = ({ checked, size }: any) => {

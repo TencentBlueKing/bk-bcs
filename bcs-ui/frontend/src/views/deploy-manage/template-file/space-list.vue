@@ -4,9 +4,28 @@
       <span class="text-[13px] font-bold">{{ $t('templateFile.title.fileList') }}</span>
       <div class="flex items-center">
         <i
+          v-bk-tooltips="$t('templateFile.tips.createSpace')"
           class="text-[16px] mr-[5px] bcs-icon bcs-icon-xinjianwenjianjia
             cursor-pointer hover:text-[#3a84ff] transition"
           @click="showCreateFileDialog"></i>
+        <!-- 更多操作 -->
+        <span @click.stop>
+          <PopoverSelector placement="bottom-end">
+            <span class="bcs-icon-more-btn w-[16px] h-[16px]">
+              <i class="bcs-icon bcs-icon-more"></i>
+            </span>
+            <template #content>
+              <ul class="bg-[#fff]">
+                <li class="bcs-dropdown-item" @click="showImportDialog = true">
+                  {{ $t('templateFile.button.import') }}
+                </li>
+                <li class="bcs-dropdown-item" @click="exportTemplateSpaceAll">
+                  {{ $t('templateFile.button.export') }}
+                </li>
+              </ul>
+            </template>
+          </PopoverSelector>
+        </span>
       </div>
     </div>
     <div class="flex-[0_0_auto] flex items-center justify-center p-[8px] pt-0">
@@ -52,6 +71,9 @@
                     <li class="bcs-dropdown-item" @click="showRenameSpaceDialog(space)">
                       {{ $t('templateFile.button.rename') }}
                     </li>
+                    <li class="bcs-dropdown-item" @click="showCloneSpaceDialog(space)">
+                      {{ $t('generic.button.clone') }}
+                    </li>
                     <li class="bcs-dropdown-item" @click="addTemplateFile(space)">
                       {{ $t('templateFile.button.createFile') }}
                     </li>
@@ -60,6 +82,9 @@
                         $t('templateFile.button.RemoveFromFavorites') :
                         $t('templateFile.button.AddToFavorites')
                       }}
+                    </li>
+                    <li class="bcs-dropdown-item" @click="exportTemplateSpace(space)">
+                      {{ $t('templateFile.button.exportFolder') }}
                     </li>
                     <li class="bcs-dropdown-item" @click="deleteSpace(space)">
                       {{ $t('templateFile.button.delete') }}
@@ -117,7 +142,7 @@
     <!-- 新增 & 修改文件夹 -->
     <bcs-dialog
       v-model="showNameDialog"
-      :title="isRename ? $t('templateFile.title.rename') : $t('templateFile.title.createSpace')"
+      :title="typeText.title[curType]"
       width="480"
       header-position="left">
       <bcs-form :label-width="110">
@@ -141,7 +166,7 @@
             :loading="saving"
             :disabled="!curEditSpace.name"
             @click="fileNameConfirm">
-            {{ isRename ? $t('generic.button.save') : $t('generic.button.create') }}
+            {{ typeText.button[curType] }}
           </bcs-button>
           <bcs-button @click="showNameDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
         </div>
@@ -161,6 +186,33 @@
           @deleteFile="refresh" />
       </template>
     </bcs-sideslider>
+    <!-- 导入文件夹 -->
+    <bcs-dialog
+      v-model="showImportDialog"
+      :title="$t('templateFile.title.import')"
+      width="580"
+      header-position="left">
+      <bcs-upload
+        :tip="$t('templateFile.tips.uploadTips', [50])"
+        with-credentials
+        accept=".tgz,.tar.gz"
+        :custom-request="customRequest"
+        :limit="1"
+        :size="50"
+        ref="uploadRef"
+        @on-delete="handleDelete"
+      />
+      <template #footer>
+        <bcs-button
+          theme="primary"
+          :loading="importing"
+          :disabled="disabledImport"
+          @click="importConfirm">
+          {{ $t('generic.button.import') }}
+        </bcs-button>
+        <bcs-button @click="showImportDialog = false">{{ $t('generic.button.cancel') }}</bcs-button>
+      </template>
+    </bcs-dialog>
   </div>
 </template>
 <script setup lang="ts">
@@ -171,8 +223,10 @@ import { searchKey, store as fileStore, updateListTemplateSpaceList, updateTempl
 import VersionList from './version-list.vue';
 
 import { IListTemplateMetadataItem, ITemplateSpaceData } from '@/@types/cluster-resource-patch';
+import { exportTemplate, importTemplate } from '@/api/modules/cluster-resource';
 import { TemplateSetService } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
+import { download } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import CollapseItem from '@/components/collapse-item.vue';
 import PopoverSelector from '@/components/popover-selector.vue';
@@ -275,48 +329,77 @@ async function getTemplateMetadata(spaceID: string) {
 
 // 创建 & 修改工作空间
 const showNameDialog = ref(false);
+const showImportDialog = ref(false);
 const fileNameRef = ref();
 const curEditSpace = ref<Pick<ITemplateSpaceData, 'name'|'id'>>({
   name: '',
   id: '',
 });
-const isRename = ref(false);
+const curType = ref<'create' | 'rename' | 'clone'>('create');
+const typeText = ref({
+  title: {
+    create: $i18n.t('templateFile.title.createSpace'),
+    rename: $i18n.t('templateFile.title.rename'),
+    clone: $i18n.t('templateFile.title.clone'),
+  },
+  button: {
+    create: $i18n.t('generic.button.create'),
+    rename: $i18n.t('generic.button.save'),
+    clone: $i18n.t('generic.button.clone'),
+  },
+  message: {
+    create: $i18n.t('generic.msg.success.create'),
+    rename: $i18n.t('generic.msg.success.save'),
+    clone: $i18n.t('generic.msg.success.ok'),
+  },
+});
 const saving = ref(false);
 function showCreateFileDialog() {
   curEditSpace.value = { name: '', id: '' };
-  isRename.value = false;
+  curType.value = 'create';
   showNameDialog.value = true;
 };
 function showRenameSpaceDialog(space: ITemplateSpaceData) {
   curEditSpace.value = cloneDeep(space);
-  isRename.value = true;
+  curType.value = 'rename';
+  showNameDialog.value = true;
+}
+function showCloneSpaceDialog(space: ITemplateSpaceData) {
+  curEditSpace.value = cloneDeep(space);
+  curType.value = 'clone';
   showNameDialog.value = true;
 }
 // 创建 & 编辑工作空间的对话框确认事件
 async function fileNameConfirm() {
-  if (!curEditSpace.value?.name || (isRename.value && !curEditSpace.value?.id)) return;
+  if (!curEditSpace.value?.name || (curType.value !== 'create' && !curEditSpace.value?.id)) return;
 
   saving.value = true;
   let res;
-  if (isRename.value) {
+  if (curType.value === 'rename') {
     res = await TemplateSetService.UpdateTemplateSpace({
       name: curEditSpace.value.name,
       description: '',
       $id: curEditSpace.value.id,
     }, { globalError: false, needRes: true }).catch(() => false);
-  } else {
+  } else if (curType.value === 'create') {
     res = await TemplateSetService.CreateTemplateSpace({
       name: curEditSpace.value.name,
       description: '',
+    }, { globalError: false, needRes: true }).catch(() => false);
+  } else {
+    res = await TemplateSetService.CloneTemplateSpace({
+      name: curEditSpace.value.name,
+      description: '',
+      $id: curEditSpace.value.id,
     }, { globalError: false, needRes: true }).catch(() => false);
   }
   if (res && res?.code === 0) {
     $bkMessage({
       theme: 'success',
-      message: isRename.value ? $i18n.t('generic.msg.success.save') : $i18n.t('generic.msg.success.create'),
+      message: typeText.value.message[curType.value],
     });
     await listTemplateSpace();
-    if (!isRename.value) {
+    if (curType.value !== 'rename') {
       // 跳转到新增的空间下
       handleChangeSpace(res?.data?.id);
     } else {
@@ -329,6 +412,72 @@ async function fileNameConfirm() {
   }
   saving.value = false;
 }
+
+// 导入文件夹
+let options: any;// todo types
+const importing = ref(false);
+const uploadRef = ref();
+const disabledImport = ref(true);
+async function customRequest(importOptions) {
+  options = importOptions;
+  disabledImport.value = false;
+};
+// 导出文件夹
+function exportTemplateSpaceAll() {
+  if (fileStore.spaceList.length === 0) return;
+  const templateSpaceNames = fileStore.spaceList.map(space => space.name);
+  downloadTemplateFile(templateSpaceNames);
+};
+// 导出单个文件夹
+function exportTemplateSpace(space: ITemplateSpaceData) {
+  const templateSpaceNames = [space.name];
+  downloadTemplateFile(templateSpaceNames);
+};
+// 下载模板文件
+async function downloadTemplateFile(templateSpaceNames: string[]) {
+  const res = await exportTemplate({ templateSpaceNames }, { responseType: 'blob', needRes: true });
+  if (!res) return;
+
+  const dispositionList: string[] = res.headers?.['content-disposition']?.split(';') || [];
+  const fileName = dispositionList.at(-1)?.split('=')
+    .at(-1) || `template-${new Date().getTime()}.tgz`;
+  download(res.data, fileName);
+};
+// 点击导入按钮
+async function importConfirm() {
+  if (!options) return;
+  importing.value = true;
+  const formData = new FormData();
+  formData.append('templateFile', options.fileObj?.origin, options.fileObj?.origin?.name);
+  const result = await importTemplate(formData).then(() => true)
+    .catch(() => false);
+  if (result) {
+    $bkMessage({
+      theme: 'success',
+      message: $i18n.t('generic.msg.success.import'),
+    });
+    showImportDialog.value = false;
+    listTemplateSpace();
+  } else {
+    $bkMessage({
+      theme: 'error',
+      message: $i18n.t('generic.msg.error.import'),
+    });
+  }
+  importing.value = false;
+}
+// 点击导入取消按钮
+function clearFiles() {
+  if (options?.fileObj?.origin) {
+    uploadRef.value.deleteFile(0, options?.fileObj?.origin);
+    handleDelete();
+  }
+}
+// 删除操作
+function handleDelete() {
+  options = null;
+  disabledImport.value = true;
+};
 
 // 添加模板文件
 function addTemplateFile(space: ITemplateSpaceData) {
@@ -508,6 +657,10 @@ watch(() => props.templateSpace, () => {
 
 watch(searchKey, () => {
   updateListTemplateSpaceList();
+});
+
+watch(showImportDialog, () => {
+  if (!showImportDialog.value) clearFiles();
 });
 
 onBeforeMount(() => {

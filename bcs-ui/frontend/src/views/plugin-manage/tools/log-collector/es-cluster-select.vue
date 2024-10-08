@@ -61,9 +61,9 @@ import $bkMessage from '@/common/bkmagic';
 import { formatBytes } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import CollapseTitle from '@/components/cluster-selector/collapse-title.vue';
+import SelectExtension from '@/components/select-extension.vue';
 import { useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 type ClusterType = 'platform' | 'user';
 

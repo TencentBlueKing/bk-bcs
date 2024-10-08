@@ -62,7 +62,7 @@
       </div>
     </div>
     <bk-loading
-      v-if="importType !== 'configTemplate' && allConfigList.length + allTemplateConfigList.length > 0"
+      v-if="importType !== 'configTemplate'"
       :loading="decompressing || fileProcessing || tableLoading"
       :title="loadingText"
       class="config-table-loading"
@@ -70,7 +70,7 @@
       theme="primary"
       size="small"
       :opacity="0.7">
-      <div class="content">
+      <div v-if="allConfigList.length + allTemplateConfigList.length > 0" class="content">
         <bk-alert
           v-if="isExceedMaxFileCount"
           style="margin-top: 4px"
@@ -467,6 +467,7 @@
   const handleDeleteFile = (fileName: string) => {
     existConfigList.value = existConfigList.value.filter((item) => item.file_name !== fileName);
     nonExistConfigList.value = nonExistConfigList.value.filter((item) => item.file_name !== fileName);
+    allConfigList.value = [...existConfigList.value, ...nonExistConfigList.value];
   };
 
   const handleClearTable = () => {

@@ -132,10 +132,11 @@ type AppSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// ConfigType defines which type is this configuration, different type has the
 	// different ways to be consumed.
-	ConfigType ConfigType `json:"config_type" gorm:"column:config_type"`
-	Memo       string     `json:"memo" gorm:"column:memo"`
-	Alias      string     `json:"alias" gorm:"alias"`
-	DataType   DataType   `json:"data_type" gorm:"data_type"`
+	ConfigType       ConfigType `json:"config_type" gorm:"column:config_type"`
+	Memo             string     `json:"memo" gorm:"column:memo"`
+	Alias            string     `json:"alias" gorm:"alias"`
+	DataType         DataType   `json:"data_type" gorm:"data_type"`
+	LastConsumedTime time.Time  `db:"last_consumed_time" json:"last_consumed_time" gorm:"column:last_consumed_time"`
 }
 
 // ValidateCreate validate spec when created.

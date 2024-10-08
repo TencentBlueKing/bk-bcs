@@ -94,13 +94,14 @@ type Store interface {
 		*v1alpha1.ApplicationSpec, error)
 	PatchApplicationResource(ctx context.Context, appName string, resource *v1alpha1.ResourceStatus, patch,
 		patchType string) error
-
+	PatchApplicationAnnotation(ctx context.Context, appName, namespace string, annotations map[string]interface{}) error
 	AllApplicationSets() []*v1alpha1.ApplicationSet
 	RefreshApplicationSet(namespace, name string) error
 	GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error)
 	ListApplicationSets(ctx context.Context, query *appsetpkg.ApplicationSetListQuery) (
 		*v1alpha1.ApplicationSetList, error)
 	DeleteApplicationSetOrphan(ctx context.Context, name string) error
+	ApplicationSetDryRun(appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, error)
 
 	// authentication token
 	GetToken(ctx context.Context) string

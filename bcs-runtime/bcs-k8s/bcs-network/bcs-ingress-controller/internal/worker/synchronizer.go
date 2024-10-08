@@ -399,8 +399,9 @@ func (h *EventHandler) deleteMultiListeners(listeners []*networkextensionv1.List
 				}
 				return err
 			}
-			listener.Finalizers = common.RemoveString(listener.Finalizers, constant.FinalizerNameBcsIngressController)
-			return h.k8sCli.Update(context.Background(), listener)
+			cpListener := listener.DeepCopy()
+			cpListener.Finalizers = common.RemoveString(cpListener.Finalizers, constant.FinalizerNameBcsIngressController)
+			return h.k8sCli.Update(context.Background(), cpListener)
 		}); err != nil {
 			blog.Warnf("failed to remove finalizer from listener %s/%s, err %s",
 				li.GetNamespace(), li.GetName(), err.Error())
@@ -536,8 +537,9 @@ func (h *EventHandler) deleteListener(li *networkextensionv1.Listener) error {
 			}
 			return err
 		}
-		listener.Finalizers = common.RemoveString(listener.Finalizers, constant.FinalizerNameBcsIngressController)
-		return h.k8sCli.Update(context.Background(), listener)
+		cpListener := listener.DeepCopy()
+		cpListener.Finalizers = common.RemoveString(cpListener.Finalizers, constant.FinalizerNameBcsIngressController)
+		return h.k8sCli.Update(context.Background(), cpListener)
 	}); err != nil {
 		blog.Errorf("failed to remove finalizer from listener %s/%s, err %s",
 			li.GetNamespace(), li.GetName(), err.Error())

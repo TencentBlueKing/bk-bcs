@@ -59,6 +59,7 @@ func (s *Service) Publish(ctx context.Context, req *pbcs.PublishReq) (
 	resp := &pbcs.PublishResp{
 		Id:              rp.PublishedStrategyHistoryId,
 		HaveCredentials: rp.HaveCredentials,
+		HavePull:        rp.HavePull,
 	}
 	return resp, nil
 }

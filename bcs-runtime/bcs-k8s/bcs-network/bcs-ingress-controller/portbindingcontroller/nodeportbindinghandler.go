@@ -27,6 +27,7 @@ import (
 	k8slabels "k8s.io/apimachinery/pkg/labels"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
@@ -35,20 +36,78 @@ import (
 
 // NodePortBindingCache cache node portbinding info
 type NodePortBindingCache struct {
+	isInit    bool
+	k8sClient client.Client
+
 	Cache map[string]string
-	sync.Mutex
+	sync.RWMutex
 }
 
 // NewNodePortBindingCache return new node port binding cache
-func NewNodePortBindingCache() *NodePortBindingCache {
-	return &NodePortBindingCache{Cache: make(map[string]string)}
+func NewNodePortBindingCache(k8sClient client.Client) *NodePortBindingCache {
+	return &NodePortBindingCache{
+		isInit:    false,
+		k8sClient: k8sClient,
+		Cache:     make(map[string]string),
+	}
+}
+
+// Init return err if init failed
+func (nc *NodePortBindingCache) Init() error {
+	if !nc.isInit {
+		nc.Lock()
+		defer nc.Unlock()
+		if !nc.isInit {
+			if err := nc.initCache(); err != nil {
+				return err
+			}
+			nc.isInit = true
+		}
+	}
+	return nil
+}
+
+// initCache use node list to build cache
+func (nc *NodePortBindingCache) initCache() error {
+	portBindingList := &networkextensionv1.PortBindingList{}
+	if err := retry.OnError(retry.DefaultRetry, func(err error) bool {
+		return true
+	}, func() error {
+		selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
+			networkextensionv1.PortBindingTypeLabelKey: networkextensionv1.PortBindingTypeNode,
+		})))
+		if err != nil {
+			return err
+		}
+		return nc.k8sClient.List(context.TODO(), portBindingList, &client.ListOptions{LabelSelector: selector})
+	}); err != nil {
+		blog.Errorf("get node list failed, err: %s", err.Error())
+		return err
+	}
+
+	for _, portBinding := range portBindingList.Items {
+		if err := nc.setCache(&portBinding); err != nil {
+			return fmt.Errorf("update cache for portBinding[%s/%s]failed, err: %s", portBinding.GetNamespace(),
+				portBinding.GetName(), err.Error())
+		}
+	}
+
+	return nil
 }
 
 // UpdateCache update cache by portbinding
 func (nc *NodePortBindingCache) UpdateCache(portBinding *networkextensionv1.PortBinding) error {
 	nc.Lock()
 	defer nc.Unlock()
-	if portBinding == nil || portBinding.Status.Status != constant.PortBindingStatusReady {
+	return nc.setCache(portBinding)
+}
+
+// set cache without lock
+func (nc *NodePortBindingCache) setCache(portBinding *networkextensionv1.PortBinding) error {
+	if portBinding == nil {
+		return nil
+	}
+	if portBinding.Status.Status != constant.PortBindingStatusReady {
 		delete(nc.Cache, portBinding.GetName())
 		return nil
 	}
@@ -66,9 +125,14 @@ func (nc *NodePortBindingCache) UpdateCache(portBinding *networkextensionv1.Port
 
 // GetCache return copy of cache
 func (nc *NodePortBindingCache) GetCache() map[string]string {
-	nc.Lock()
-	defer nc.Unlock()
 	newMap := make(map[string]string)
+	if err := nc.Init(); err != nil {
+		return newMap
+	}
+
+	nc.RLock()
+	defer nc.RUnlock()
+
 	for k, v := range nc.Cache {
 		newMap[k] = v
 	}

@@ -1,7 +1,7 @@
 import $store from '@/store';
 // 资源视图
 const DashboardView = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/dashboard-view.vue');
-const ResourceView = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/resource-view.vue');
+// const ResourceView = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/resource-view.vue');
 const DashboardWorkloadDeployments = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/deployments.vue');
 const DashboardWorkloadDaemonSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/daemonsets.vue');
 const DashboardWorkloadStatefulSets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/statefulsets.vue');
@@ -235,7 +235,7 @@ export default [
   },
   {
     path: 'clusters/:clusterId',
-    component: ResourceView,
+    component: DashboardView,
     children: [
       // dashboard workload detail
       {

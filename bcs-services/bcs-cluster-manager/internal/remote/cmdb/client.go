@@ -27,6 +27,7 @@ import (
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -289,6 +290,7 @@ func (c *Client) QueryHostInfoWithoutBiz(field string, values []string, page Pag
 		respData = &ListHostsWithoutBizResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -299,9 +301,11 @@ func (c *Client) QueryHostInfoWithoutBiz(field string, values []string, page Pag
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "QueryHostInfoWithoutBiz", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "QueryHostInfoWithoutBiz", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", respData.Message)
@@ -356,6 +360,7 @@ func (c *Client) FindHostTopoRelation(bizID int, page Page) (int, []HostTopoRela
 		respData = &HostTopoRelationResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -366,9 +371,11 @@ func (c *Client) FindHostTopoRelation(bizID int, page Page) (int, []HostTopoRela
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "FindHostTopoRelation", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api FindHostTopoRelation failed: %v", errs[0])
 		return 0, nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "FindHostTopoRelation", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api FindHostTopoRelation failed: %v", respData.Message)
@@ -405,6 +412,7 @@ func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, er
 		respData = &SearchCloudAreaResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -415,9 +423,11 @@ func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, er
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "SearchCloudAreaByCloudID", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "SearchCloudAreaByCloudID", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", respData.Message)
@@ -455,6 +465,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		respData = &ListBizHostsResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -465,9 +476,11 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "QueryHostByBizID", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api QueryHostNumByBizID failed: %v", errs[0])
 		return 0, nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "QueryHostByBizID", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
@@ -497,6 +510,7 @@ func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) 
 		respData = &FindHostBizRelationsResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -507,9 +521,11 @@ func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) 
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "FindHostBizRelations", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api FindHostBizRelations failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "FindHostBizRelations", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api FindHostBizRelations failed: %v", respData.Message)
@@ -536,6 +552,7 @@ func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
 		respData = &TransHostToERecycleModuleResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -546,9 +563,11 @@ func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransHostToRecycleModule", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api TransHostToRecycleModule failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "TransHostToRecycleModule", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api TransHostToRecycleModule failed: %v", respData.Message)
@@ -577,6 +596,7 @@ func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInter
 		respData = &QueryBizInternalModuleResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -588,8 +608,10 @@ func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInter
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusErr, start)
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		return nil, fmt.Errorf(respData.Message)
@@ -615,6 +637,7 @@ func (c *Client) TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error {
 		respData = &TransferHostAcrossBizResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -625,8 +648,10 @@ func (c *Client) TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusErr, start)
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		return fmt.Errorf(respData.Message)
@@ -652,6 +677,7 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 		respData = &SearchBusinessResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -662,9 +688,11 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBusinessMaintainer", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBusinessMaintainer", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
@@ -697,6 +725,7 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 		respData = &SearchBusinessResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -707,9 +736,11 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBS2IDByBizID", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", errs[0])
 		return 0, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBS2IDByBizID", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
@@ -748,6 +779,7 @@ func (c *Client) GetAssetIdsByIps(ips []string) ([]Server, error) {
 		respData = &GetAssetIdsByIpsResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -758,9 +790,11 @@ func (c *Client) GetAssetIdsByIps(ips []string) ([]Server, error) {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetAssetIdsByIps", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetAssetIdsByIps failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "GetAssetIdsByIps", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api GetAssetIdsByIps failed: %v", respData.Message)
@@ -790,6 +824,7 @@ func (c *Client) GetBizInfo(bizID int64) (*Business, error) {
 		respData = &QueryBusinessInfoResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -800,9 +835,11 @@ func (c *Client) GetBizInfo(bizID int64) (*Business, error) {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "GetBizInfo", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetBizInfo failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "GetBizInfo", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api GetBizInfo failed: %v", respData.Message)
@@ -860,6 +897,7 @@ func (c *Client) TransferHostToIdleModule(bizID int, hostID []int) error {
 		respData = &TransferHostToIdleModuleResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -870,9 +908,11 @@ func (c *Client) TransferHostToIdleModule(bizID int, hostID []int) error {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransferHostToIdleModule", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api TransferHostToIdleModule failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "TransferHostToIdleModule", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result || respData.Code != 0 {
 		blog.Errorf("call api TransferHostToIdleModule failed: %v", respData)
@@ -894,6 +934,7 @@ func (c *Client) TransferHostToResourceModule(bizID int, hostID []int) error {
 		respData = &TransferHostToResourceModuleResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -904,9 +945,11 @@ func (c *Client) TransferHostToResourceModule(bizID int, hostID []int) error {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransferHostToResourceModule", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api TransferHostToResourceModule failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "TransferHostToResourceModule", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result || respData.Code != 0 {
 		blog.Errorf("call api TransferHostToResourceModule failed: %v", respData)
@@ -931,6 +974,7 @@ func (c *Client) DeleteHost(hostID []int) error {
 		respData = &DeleteHostResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -941,9 +985,11 @@ func (c *Client) DeleteHost(hostID []int) error {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "DeleteHost", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api DeleteHost failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "DeleteHost", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result || respData.Code != 0 {
 		blog.Errorf("call api DeleteHost failed: %v", respData)
@@ -961,6 +1007,7 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 		respData = &SearchBizInstTopoResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Get(reqURL).
@@ -970,9 +1017,11 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 		SetDebug(c.serverDebug).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "SearchBizInstTopo", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api SearchBizInstTopo failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "SearchBizInstTopo", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result || respData.Code != 0 {
 		blog.Errorf("call api SearchBizInstTopo failed: %v", respData)
@@ -1062,6 +1111,7 @@ func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isI
 		respData = &BaseResponse{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -1072,9 +1122,11 @@ func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isI
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "TransferHostModule", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api TransferHostModule failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "TransferHostModule", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result || respData.Code != 0 {
 		blog.Errorf("call api TransferHostModule failed: %v", respData)
@@ -1101,6 +1153,7 @@ func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []strin
 		respData = &AddHostFromCmpyResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -1111,9 +1164,11 @@ func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []strin
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "AddHostFromCmpy", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api AddHostFromCmpy failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "AddHostFromCmpy", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api AddHostFromCmpy failed: %v", respData.Message)
@@ -1141,6 +1196,7 @@ func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
 		respData = &SyncHostInfoFromCmpyResp{}
 	)
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -1151,9 +1207,11 @@ func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
 		Send(request).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("cmdb", "SyncHostInfoFromCmpy", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api SyncHostInfoFromCmpy failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("cmdb", "SyncHostInfoFromCmpy", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api SyncHostInfoFromCmpy failed: %v", respData.Message)

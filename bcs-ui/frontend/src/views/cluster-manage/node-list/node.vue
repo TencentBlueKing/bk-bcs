@@ -223,6 +223,8 @@
         :size="tableSetting.size"
         :data="curPageData"
         ref="tableRef"
+        ext-cls="empty-center"
+        empty-block-class-name="bcs-table-empty-dynamic-width"
         :key="tableKey"
         :pagination="pagination"
         :row-key="(row) => row.nodeName"
@@ -374,7 +376,7 @@
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingCell v-if="!nodeMetric[row.nodeName]" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end" />
               <span v-else>
                 {{nodeMetric[row.nodeName].container_count || '--'}}
               </span>
@@ -392,7 +394,7 @@
           v-if="isColumnRender('pod_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingCell v-if="!nodeMetric[row.nodeName]" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end" />
               <span v-else>
                 {{nodeMetric[row.nodeName].pod_count || '--'}}
               </span>
@@ -476,7 +478,7 @@
           min-width="120">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingCell v-if="!nodeMetric[row.nodeName]" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-center" />
               <template v-else>
                 <RingCell
                   :percent="nodeMetric[row.nodeName][item.prop]"
@@ -734,9 +736,8 @@ import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import TopoSelector from '@/views/cluster-manage/autoscaler/topo-select-tree.vue';
+import TopoSelector from '@/views/cluster-manage/autoscaler/components/topo-select-tree.vue';
 import ApplyHost from '@/views/cluster-manage/components/apply-host.vue';
-import LoadingCell from '@/views/cluster-manage/components/loading-cell.vue';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 
 interface IMetricData {
@@ -768,7 +769,6 @@ export default defineComponent({
     LoadingIcon,
     ClusterSelect,
     RingCell,
-    LoadingCell,
     KeyValue,
     TaintContent,
     ApplyHost,
@@ -1914,9 +1914,9 @@ export default defineComponent({
         clusterId: localClusterId.value,
         nodes,
       }).catch(() => {});
-      for (const key in result) {
+      Object.keys(result).forEach((key) => {
         set(nodeMetric.value, key, formatMetricData(result[key]));
-      }
+      });
     };
     watch(curPageData, async () => {
       await handleGetNodeOverview();

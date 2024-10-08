@@ -210,8 +210,6 @@
 import { merge } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
-import NodemanArea from '../add/form/nodeman-area.vue';
-import { INodeManCloud } from '../add/tencent/types';
 import { getClusterImportCategory, getClusterTypeName, useClusterInfo, useClusterList } from '../cluster/use-cluster';
 import EditFormItem from '../components/edit-form-item.vue';
 
@@ -224,7 +222,9 @@ import useSideslider from '@/composables/use-sideslider';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import NodemanArea from '@/views/cluster-manage/add/components/nodeman-area.vue';
 import KeyValue2 from '@/views/cluster-manage/components/key-value.vue';
+import { INodeManCloud } from '@/views/cluster-manage/types/types';
 import useCloud from '@/views/cluster-manage/use-cloud';
 import useVariable from '@/views/deploy-manage/variable/use-variable';
 

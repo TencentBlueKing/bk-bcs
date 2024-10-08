@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager
 go 1.20
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 	github.com/TencentBlueKing/iam-go-sdk => github.com/TencentBlueKing/iam-go-sdk v0.1.5
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace => go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.17.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc => go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.17.0
@@ -11,7 +10,7 @@ replace (
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240823171918-a270e7cb2bfe
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240903022401-40d487829477
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230921064043-a8ed550f5a77
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230921034852-f07df6e705c2
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6

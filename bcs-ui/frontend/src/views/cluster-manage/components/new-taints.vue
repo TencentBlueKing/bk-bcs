@@ -107,12 +107,12 @@ export default defineComponent({
     },
     keyPlaceholder: {
       type: String,
-      default:  $i18n.t('generic.label.key'),
+      default: $i18n.t('generic.label.key'),
     },
     valuePlaceholder: {
       type: String,
-      default:  $i18n.t('generic.label.value'),
-    }
+      default: $i18n.t('generic.label.value'),
+    },
   },
   setup(props, ctx) {
     const taints = ref<ITaint[]>([]);

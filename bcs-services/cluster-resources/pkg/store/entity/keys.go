@@ -24,6 +24,7 @@ const (
 	FieldKeyVersion         = "version"
 	FieldKeyTemplateName    = "templateName"
 	FieldKeyEnv             = "env"
+	FieldKeyTags            = "tags"
 
 	FieldKeyCreateBy = "createBy"
 	FieldKeyCreator  = "creator"

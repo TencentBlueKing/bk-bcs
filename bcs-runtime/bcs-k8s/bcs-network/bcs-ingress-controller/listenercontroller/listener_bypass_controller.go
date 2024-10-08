@@ -88,10 +88,10 @@ func (lc *ListenerBypassReconciler) Reconcile(req ctrl.Request) (ctrl.Result, er
 			if err := lc.Client.Get(context.TODO(), req.NamespacedName, li); err != nil {
 				return err
 			}
+			cpListener := li.DeepCopy()
+			cpListener.Finalizers = common.RemoveString(cpListener.Finalizers, constant.FinalizerNameUptimeCheck)
 
-			li.Finalizers = common.RemoveString(li.Finalizers, constant.FinalizerNameUptimeCheck)
-
-			return lc.Client.Update(context.TODO(), li)
+			return lc.Client.Update(context.TODO(), cpListener)
 		}); err != nil {
 			blog.Errorf("remove finalizer for listeners '%s/%s' failed, err: %s", listener.GetNamespace(),
 				listener.GetNamespace(), err.Error())
@@ -153,9 +153,10 @@ func (lc *ListenerBypassReconciler) ensureFinalizer(listener *networkextensionv1
 			return err
 		}
 
-		li.Finalizers = append(li.Finalizers, constant.FinalizerNameUptimeCheck)
+		cpListener := li.DeepCopy()
+		cpListener.Finalizers = append(cpListener.Finalizers, constant.FinalizerNameUptimeCheck)
 
-		return lc.Client.Update(context.TODO(), li)
+		return lc.Client.Update(context.TODO(), cpListener)
 	}); err != nil {
 		return err
 	}
@@ -181,12 +182,13 @@ func (lc *ListenerBypassReconciler) updateListenerStatus(namespacedName k8stypes
 			}
 			return err
 		}
-		li.Status.UptimeCheckStatus = &networkextensionv1.UptimeCheckTaskStatus{
+		cpListener := li.DeepCopy()
+		cpListener.Status.UptimeCheckStatus = &networkextensionv1.UptimeCheckTaskStatus{
 			ID:     taskID,
 			Status: status,
 			Msg:    msg,
 		}
-		if err := lc.Client.Update(context.TODO(), li, &client.UpdateOptions{}); err != nil {
+		if err := lc.Client.Update(context.TODO(), cpListener, &client.UpdateOptions{}); err != nil {
 			blog.Errorf("update uptime_check status failed, err: %s", err.Error())
 			return err
 		}
@@ -198,8 +200,10 @@ func (lc *ListenerBypassReconciler) updateListenerStatus(namespacedName k8stypes
 func getListenerByPassPredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			newListener, okNew := e.ObjectNew.(*networkextensionv1.Listener)
-			oldListener, okOld := e.ObjectOld.(*networkextensionv1.Listener)
+			objNew := e.ObjectNew.DeepCopyObject()
+			objOld := e.ObjectOld.DeepCopyObject()
+			newListener, okNew := objNew.(*networkextensionv1.Listener)
+			oldListener, okOld := objOld.(*networkextensionv1.Listener)
 			if !okNew || !okOld {
 				return false
 			}

@@ -294,12 +294,12 @@
   };
 
   // 上线确认
-  const handleConfirm = (haveCredentials: boolean) => {
+  const handleConfirm = (havePull: boolean) => {
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
     handlePanelClose();
     emit('confirm');
-    if (haveCredentials) {
+    if (havePull) {
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
@@ -314,7 +314,11 @@
         confirmText: t('配置客户端'),
         cancelText: t('稍后再说'),
         onConfirm: () => {
-          router.push({ name: 'configuration-example' });
+          const routeData = router.resolve({
+            name: 'configuration-example',
+            params: { spaceId: props.bkBizId, appId: props.appId },
+          });
+          window.open(routeData.href, '_blank');
         },
       });
     }

@@ -14,6 +14,9 @@ package httpsvr
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/emicklei/go-restful"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -23,11 +26,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 func (h *HttpServerClient) listListener(request *restful.Request, response *restful.Response) {
-
+	startTime := time.Now()
+	mf := func(status string) {
+		metrics.ReportAPIRequestMetric("list_listeners", "GET", status, startTime)
+	}
 	var data []byte
 	switch request.PathParameter("condition") {
 	case "ingress":
@@ -39,6 +47,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			if k8serrors.IsNotFound(err) {
 				blog.Infof("ingress %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
 				// NOCC:ineffassign/assign(误报)
+				mf(strconv.Itoa(http.StatusInternalServerError))
 				data = CreateResponseData(err, "failed", nil)
 				break
 			}
@@ -54,11 +63,13 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		if err != nil {
 			blog.Errorf("list listeners filter by ingress %s failed, err %s",
 				request.PathParameter("name"), err.Error())
+			mf(strconv.Itoa(http.StatusInternalServerError))
 			// NOCC:ineffassign/assign(误报)
 			data = CreateResponseData(err, "failed", nil)
 			break
 		}
 		data = CreateResponseData(nil, "success", existedListenerList)
+		mf(strconv.Itoa(http.StatusOK))
 	case "portpool":
 		portPool := &networkextensionv1.PortPool{}
 		if err := h.Mgr.GetClient().Get(context.Background(), k8sapitypes.NamespacedName{
@@ -67,6 +78,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 		}, portPool); err != nil {
 			if k8serrors.IsNotFound(err) {
 				blog.Infof("portpool %s/%s not found", request.PathParameter("namespace"), request.PathParameter("name"))
+				mf(strconv.Itoa(http.StatusInternalServerError))
 				// NOCC:ineffassign/assign(误报)
 				data = CreateResponseData(err, "failed", nil)
 				break
@@ -85,6 +97,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			if err != nil {
 				blog.Errorf("list listeners filter by port pool item %s failed, err %s",
 					portPool.Spec.PoolItems[i].ItemName, err.Error())
+				mf(strconv.Itoa(http.StatusInternalServerError))
 				// NOCC:ineffassign/assign(误报)
 				data = CreateResponseData(err, "failed", nil)
 				break
@@ -92,6 +105,7 @@ func (h *HttpServerClient) listListener(request *restful.Request, response *rest
 			result[portPool.Spec.PoolItems[i].ItemName] = existedListenerList
 		}
 		data = CreateResponseData(nil, "success", result)
+		mf(strconv.Itoa(http.StatusOK))
 	}
 
 	_, _ = response.Write(data)

@@ -158,8 +158,21 @@ const unknownClusterID = computed(() => curViewData.value?.clusterNamespaces?.so
   return !clusterNameMap.value[clusterID];
 }));
 
+// 集群列表页
+const isDashboardHome = computed(() => $router.currentRoute?.matched?.some(item => item.name === 'dashboardHome'));
+
 // 切换自定义视图
-const changeCustomView = (id: string) => {
+const changeCustomView = async (id: string) => {
+  if (!isDashboardHome.value) {
+    // 非列表页切换时跳转到列表页
+    await $router.push({
+      name: 'dashboardWorkloadDeployments',
+      params: $router.currentRoute.params,
+      query: {
+        viewID: id,
+      },
+    });
+  }
   updateViewIDStore(id);
   popoverSelectRef.value?.hide();
 };
@@ -172,14 +185,23 @@ const editCustomView = (id: string) => {
 
 // 切换集群视图
 const changeClusterView = async (clusterID: string) => {
-  if (clusterID === $router.currentRoute?.params.clusterId) {
+  if (clusterID === $router.currentRoute?.params.clusterId && isDashboardHome.value) {
     popoverSelectRef.value?.hide();
     return;
   };
   // 集群视图设置集群ID参数
-  await $router.replace({
+  let name;
+  if ($router.currentRoute?.name === 'dashboardCustomObjects' || !isDashboardHome.value) {
     // 切换集群时如果在自定义视图菜单就跳到首页(deploy)
-    name: $router.currentRoute?.name === 'dashboardCustomObjects' ? 'dashboardWorkloadDeployments' : $router.currentRoute?.name,
+    name = 'dashboardWorkloadDeployments';
+  } else if ($router.currentRoute?.name) {
+    name = $router.currentRoute?.name;
+  } else {
+    name = '404';
+  }
+
+  await $router.replace({
+    name,
     params: {
       clusterId: clusterID,
     },

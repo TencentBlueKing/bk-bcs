@@ -22,6 +22,7 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/notify"
 )
 
@@ -145,6 +146,7 @@ func pushCustomDataToServer(server serverConfig, customData []*eventMetricsBody)
 
 	var respData ReportStatus
 
+	start := time.Now()
 	resp, _, errs := gorequest.New().
 		Timeout(server.timeout).
 		Post(server.server+path).
@@ -154,8 +156,10 @@ func pushCustomDataToServer(server serverConfig, customData []*eventMetricsBody)
 		Send(reportItem).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("notify", "pushCustomDataToServer", "http", metrics.LibCallStatusErr, start)
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("notify", "pushCustomDataToServer", "http", metrics.LibCallStatusOK, start)
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("http request err: %v:%v", resp.StatusCode, resp.Status)

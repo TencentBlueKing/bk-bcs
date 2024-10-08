@@ -32,7 +32,7 @@
         @input="handleChange" />
     </bk-form-item>
     <bk-form-item :label="t('数据格式')" :description="t('tips.config')">
-      <bk-radio-group v-model="localData.config_type" :disabled="editable">
+      <bk-radio-group v-model="localData.config_type" :disabled="editable" @change="handleConfigTypeChange">
         <bk-radio label="file">{{ t('文件型') }}</bk-radio>
         <bk-radio label="kv">{{ t('键值型') }}</bk-radio>
       </bk-radio-group>
@@ -43,7 +43,7 @@
       property="data_type"
       :description="t('tips.type')"
       required>
-      <bk-select v-model="localData.data_type" class="type-select" @select="handleChange">
+      <bk-select v-model="localData.data_type" class="type-select" :clearable="false" @select="handleChange">
         <bk-option id="any" :name="t('任意类型')" />
         <bk-option v-for="kvType in CONFIG_KV_TYPE" :key="kvType.id" :id="kvType.id" :name="kvType.name" />
       </bk-select>
@@ -106,6 +106,15 @@
       localData.value = { ...val };
     },
   );
+
+  const handleConfigTypeChange = () => {
+    if (localData.value.config_type === 'kv') {
+      localData.value.data_type = 'any';
+    } else {
+      localData.value.data_type = '';
+    }
+    handleChange();
+  };
 
   const handleChange = () => {
     emits('change', localData.value);
