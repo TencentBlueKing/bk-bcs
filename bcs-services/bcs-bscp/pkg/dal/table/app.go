@@ -136,7 +136,7 @@ type AppSpec struct {
 	Memo             string     `json:"memo" gorm:"column:memo"`
 	Alias            string     `json:"alias" gorm:"alias"`
 	DataType         DataType   `json:"data_type" gorm:"data_type"`
-	LastConsumedTime time.Time  `db:"last_consumed_time" json:"last_consumed_time" gorm:"column:last_consumed_time"`
+	LastConsumedTime *time.Time `json:"last_consumed_time" gorm:"column:last_consumed_time"`
 }
 
 // ValidateCreate validate spec when created.

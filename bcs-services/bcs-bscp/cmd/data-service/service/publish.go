@@ -120,8 +120,9 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 		return nil, err
 	}
 
+	// 不是空值表示被客户端拉取过
 	var havePull bool
-	if !app.Spec.LastConsumedTime.IsZero() {
+	if app.Spec.LastConsumedTime != nil {
 		havePull = true
 	}
 
