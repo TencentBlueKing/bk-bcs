@@ -7,18 +7,17 @@
       <div v-for="(rule, index) in localRules" class="rule-list" :key="index">
         <div :class="['rule-item', { 'rule-error': !rule.isRight }, { 'service-error': !rule.isSelectService }]">
           <bk-select
-            v-show="!isExampleMode"
             v-model="rule.app"
             class="service-select"
             :filterable="true"
             :input-search="false"
-            :disabled="rule.type === 'del'"
+            :disabled="rule.type === 'del' || isExampleMode"
             :placeholder="t('请选择服务')"
             :search-placeholder="$t('请输入')"
             @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
-          <div v-show="!isExampleMode" style="width: 10px">/</div>
+          <div style="width: 14px">/</div>
           <bk-input
             v-model="rule.content"
             class="rule-input"
