@@ -12,7 +12,10 @@
       <div
         class="search-wrap"
         :data-placeholder="inputPlacehoder"
-        v-bk-tooltips="{ content: inputPlacehoder, disabled: locale === 'zh-cn' || !inputPlacehoder }"
+        v-bk-tooltips="{
+          content: inputPlacehoder,
+          disabled: (locale === 'zh-cn' && !isClientSearch) || !inputPlacehoder,
+        }"
         @click="handleClickSearch">
         <bk-date-picker
           ref="datePickerRef"
