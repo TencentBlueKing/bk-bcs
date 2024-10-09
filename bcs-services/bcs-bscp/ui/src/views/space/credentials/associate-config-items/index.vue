@@ -1,7 +1,7 @@
 <template>
   <bk-sideslider
     :title="sideSliderTitle"
-    :width="props.isExampleMode ? 772 : 960"
+    :width="960"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="handleClose">
