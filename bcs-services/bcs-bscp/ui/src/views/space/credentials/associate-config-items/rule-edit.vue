@@ -17,8 +17,7 @@
             @change="handleSelectApp(index)">
             <bk-option v-for="app in appList" :id="app" :key="app.id" :name="app.spec.name" />
           </bk-select>
-          <div style="width: 14px">/</div>
-          <bk-input
+          /<bk-input
             v-model="rule.content"
             class="rule-input"
             :placeholder="inputPlaceholder(rule)"
@@ -334,6 +333,7 @@
     }
     .rule-input {
       position: relative;
+      margin-left: 8px;
       width: 248px;
       .status-tag {
         position: absolute;
