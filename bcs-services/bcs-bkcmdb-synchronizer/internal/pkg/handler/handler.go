@@ -242,42 +242,51 @@ func (b *BcsBkcmdbSynchronizerHandler) HandleMsg(
 
 // handle cluster
 // nolint funlen
+// handleCluster 处理集群信息，根据白名单和黑名单过滤集群，并尝试获取指定的集群信息
 func (b *BcsBkcmdbSynchronizerHandler) handleCluster(
 	clusterId string, db *gorm.DB) (bkCluster *bkcmdbkube.Cluster, err error) {
 
+	// 创建列出集群请求对象
 	lcReq := cmp.ListClusterReq{
 		ClusterID: clusterId,
 	}
 
-	// list cluster
+	// 调用API列出集群
 	resp, err := b.CmCli.Cli.ListCluster(b.CmCli.Ctx, &lcReq)
 	if err != nil {
 		blog.Errorf("list cluster failed, err: %s", err.Error())
 		return nil, err
 	}
 
+	// 获取集群列表数据
 	clusters := resp.Data
+	// 创建集群映射表
 	clusterMap := make(map[string]*cmp.Cluster)
+	// 创建集群ID列表
 	var clusterList ClusterList
 
+	// 初始化白名单和黑名单
 	whiteList := make([]string, 0)
 	blackList := make([]string, 0)
 
+	// 如果配置了白名单，则分割字符串为列表
 	if b.Syncer.BkcmdbSynchronizerOption.Synchronizer.WhiteList != "" {
 		whiteList = strings.Split(b.Syncer.BkcmdbSynchronizerOption.Synchronizer.WhiteList, ",")
 	}
 
+	// 如果配置了黑名单，则分割字符串为列表
 	if b.Syncer.BkcmdbSynchronizerOption.Synchronizer.BlackList != "" {
 		blackList = strings.Split(b.Syncer.BkcmdbSynchronizerOption.Synchronizer.BlackList, ",")
 	}
 
-	// white list
+	// 打印白名单和黑名单信息
 	blog.Infof("whiteList: %v, len: %d", whiteList, len(whiteList))
 	blog.Infof("blackList: %v, len: %d", blackList, len(blackList))
 
-	// loop clusters
+	// 遍历所有集群
 	for _, cluster := range clusters {
 		blog.Infof("1cluster: %s", cluster.ClusterID)
+		// 如果存在白名单且当前集群不在白名单中，则跳过
 		if len(whiteList) > 0 {
 			if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
 				continue
@@ -285,6 +294,7 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(
 			blog.Infof("2cluster: %s", cluster.ClusterID)
 		}
 
+		// 如果存在黑名单且当前集群在黑名单中，则跳过
 		if len(blackList) > 0 {
 			if exit, _ := common.InArray(cluster.ClusterID, blackList); exit {
 				continue
@@ -293,16 +303,18 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(
 
 		blog.Infof("3cluster: %s", cluster.ClusterID)
 
-		// virtual cluster
+		// 如果集群类型为虚拟，则跳过
 		if cluster.ClusterType == "virtual" {
 			continue
 		}
 		blog.Infof("4cluster: %s", cluster.ClusterID)
+		// 如果集群已存在于映射表中，且当前集群是共享的，则更新映射表中的集群信息
 		if _, ok := clusterMap[cluster.ClusterID]; ok {
 			if cluster.IsShared {
 				clusterMap[cluster.ClusterID] = cluster
 			}
 		} else {
+			// 否则，将集群添加到映射表和列表中
 			clusterMap[cluster.ClusterID] = cluster
 			clusterList = append(clusterList, cluster.ClusterID)
 			blog.Infof("5cluster: %s", cluster.ClusterID)
@@ -310,49 +322,68 @@ func (b *BcsBkcmdbSynchronizerHandler) handleCluster(
 
 	}
 
-	// get bk cluster
+	// 尝试获取指定的集群信息
 	bkCluster, err = b.Syncer.GetBkCluster(clusterMap[clusterId], db, true)
 	if err != nil {
 		blog.Errorf("handleCluster: Unable to get bkcluster, err: %s", err.Error())
 		return nil, err
 	}
 
+	// 返回获取到的集群信息和可能的错误
 	return bkCluster, err
 }
 
 // handle pod
+// handlePod 处理来自AMQP的消息，根据消息头中的事件类型调用相应的处理函数
 func (b *BcsBkcmdbSynchronizerHandler) handlePod(msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster) error { // nolint
+	// 记录接收到的消息头信息
 	blog.Infof("handlePod Message: %v", msg.Headers)
+
+	// 解析消息头，获取必要的信息
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
+		// 如果解析消息头失败，记录错误并返回
 		blog.Errorf("handlePod unable to get headers, err: %s", err.Error())
 		return fmt.Errorf("handlePod unable to get headers, err: %s", err.Error())
 	}
 
+	// 记录解析后的消息头中的集群ID
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
+
+	// 初始化Pod对象，用于存储解码后的消息体
 	pod := &corev1.Pod{}
+
+	// 将消息体解码为Pod对象
 	err = json.Unmarshal(msg.Body, pod)
 	if err != nil {
+		// 如果解码失败，记录错误并返回
 		blog.Errorf("handlePod: Unable to unmarshal")
 		return fmt.Errorf("handlePod: Unable to unmarshal")
 	}
 
+	// 根据消息头中的事件类型调用相应的处理函数
 	switch msgHeader.Event {
 	case "update": // nolint
+		// 处理Pod更新事件
 		err = b.handlePodUpdate(pod, bkCluster)
 		if err != nil {
+			// 如果处理更新事件失败，记录错误并返回
 			blog.Errorf("handlePodUpdate err: %s", err.Error())
 			return fmt.Errorf("handlePodUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
+		// 处理Pod删除事件
 		err = b.handlePodDelete(pod, bkCluster)
 		if err != nil {
+			// 如果处理删除事件失败，记录错误并返回
 			blog.Errorf("handlePodDelete err: %s", err.Error())
 			return fmt.Errorf("handlePodDelete err: %s", err.Error())
 		}
 	default:
+		// 如果事件类型未知，记录错误
 		blog.Errorf("handlePod: Unknown event: %s", msgHeader.Event)
 	}
+	// 如果所有操作成功，返回nil
 	return nil
 }
 
@@ -409,16 +440,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePods(podMsg *msgBuffer, bkCluster *
 		}
 	}
 
-	err := b.handlePodsUpdate(podsUpdate, bkCluster, db)
-	if err != nil {
-		blog.Errorf("handlePodsUpdate err: %s", err.Error())
-		// return fmt.Errorf("handlePodsUpdate err: %s", err.Error())
-	}
-
-	err = b.handlePodsDelete(podsDelete, bkCluster, db)
+	err := b.handlePodsDelete(podsDelete, bkCluster, db)
 	if err != nil {
 		blog.Errorf("handlePodsDelete err: %s", err.Error())
 		// return fmt.Errorf("handlePodsDelete err: %s", err.Error())
+	}
+
+	err = b.handlePodsUpdate(podsUpdate, bkCluster, db)
+	if err != nil {
+		blog.Errorf("handlePodsUpdate err: %s", err.Error())
+		// return fmt.Errorf("handlePodsUpdate err: %s", err.Error())
 	}
 
 	podMsg.M = make([]amqp.Delivery, 0)
@@ -706,7 +737,9 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsUpdate(
 }
 
 // handle pod delete
+// handlePodDelete 处理Pod删除事件
 func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod, bkCluster *bkcmdbkube.Cluster) error { // nolint
+	// 根据Pod信息和集群信息查询对应的BkPods
 	bkPods, err := b.Syncer.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
@@ -728,78 +761,77 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodDelete(pod *corev1.Pod, bkCluste
 		},
 	}, false, nil)
 	if err != nil {
-		return err
+		return err // 如果查询出错，直接返回错误
 	}
 
 	if len(*bkPods) > 1 {
-		return fmt.Errorf("len(bkPods) = %d", len(*bkPods))
+		return fmt.Errorf("len(bkPods) = %d", len(*bkPods)) // 如果查询到的BkPods数量大于1，返回错误
 	}
 
 	if len(*bkPods) == 0 {
-		return fmt.Errorf("pod %s not found", pod.Name)
+		return fmt.Errorf("pod %s not found", pod.Name) // 如果没有查询到BkPods，返回错误
 	}
 
-	bkPod := (*bkPods)[0]
+	bkPod := (*bkPods)[0] // 获取查询到的第一个BkPod
 
 	// b.Syncer.DeleteBkPods(b.BkCluster.BizID, &[]int64{bkPod.ID})
 	err = retry.Do(
 		func() error {
 			return b.Syncer.DeleteBkPods(bkCluster, &[]int64{bkPod.ID}, nil)
 		},
-		retry.Delay(time.Second*2),
-		retry.Attempts(3),
-		retry.DelayType(retry.FixedDelay),
+		retry.Delay(time.Second*2),        // 每次重试间隔2秒
+		retry.Attempts(3),                 // 最多重试3次
+		retry.DelayType(retry.FixedDelay), // 使用固定延迟重试策略
 	)
 
-	return err
+	return err // 返回删除操作的错误（如果有的话）
 }
 
+// handlePodsDelete 处理删除Pods的逻辑
 func (b *BcsBkcmdbSynchronizerHandler) handlePodsDelete(
 	podsDelete map[string]*corev1.Pod, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 如果没有要删除的Pods，则直接返回nil
 	if len(podsDelete) == 0 {
 		return nil
 	}
 
+	// 创建一个映射，用于存储每个命名空间下的Pod名称列表
 	nsPod := make(map[string][]string)
+	// 遍历要删除的Pods，将它们按命名空间分组
 	for _, v := range podsDelete {
 		nsPods := nsPod[v.Namespace]
 		nsPods = append(nsPods, v.Name)
 		nsPod[v.Namespace] = nsPods
 	}
 
+	// 打印日志，显示将要处理的Pod名称
 	blog.Infof("handlePodsDelete podNames: %v", nsPod)
 
+	// 创建一个切片，用于存储要删除的BkPod的ID
 	bkPodIDs := make([]int64, 0)
 
+	// 遍历每个命名空间及其对应的Pod名称列表
 	for ns, pNames := range nsPod {
+		// 根据命名空间和Pod名称从数据库中获取对应的BkPods
 		bkPods, err := b.Syncer.GetBkPods(bkCluster.BizID, &client.PropertyFilter{
 			Condition: "AND",
 			Rules: []client.Rule{
-				{
-					Field:    "name",
-					Operator: "in",
-					Value:    pNames,
-				},
-				{
-					Field:    "cluster_uid",
-					Operator: "in",
-					Value:    []string{bkCluster.Uid},
-				},
-				{
-					Field:    "namespace",
-					Operator: "in",
-					Value:    []string{ns},
-				},
+				{Field: "name", Operator: "in", Value: pNames},
+				{Field: "cluster_uid", Operator: "in", Value: []string{bkCluster.Uid}},
+				{Field: "namespace", Operator: "in", Value: []string{ns}},
 			},
 		}, true, db)
+		// 如果获取BkPods时出错，则记录错误并继续处理下一个命名空间
 		if err != nil {
 			blog.Errorf("GetBkPods error: %v", err)
 			continue
 		}
+		// 如果没有找到对应的BkPods，则记录错误并继续处理下一个命名空间
 		if len(*bkPods) == 0 {
 			blog.Errorf("pods %s not found", pNames)
 			continue
 		}
+		// 将找到的BkPods的ID添加到切片中
 		for _, bkPod := range *bkPods {
 			bkPodIDs = append(bkPodIDs, bkPod.ID)
 		}
@@ -810,11 +842,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsDelete(
 		func() error {
 			return b.Syncer.DeleteBkPods(bkCluster, &bkPodIDs, db)
 		},
-		retry.Delay(time.Second*2),
-		retry.Attempts(3),
-		retry.DelayType(retry.FixedDelay),
+		retry.Delay(time.Second*2),        // 设置重试间隔为2秒
+		retry.Attempts(3),                 // 设置重试次数为3次
+		retry.DelayType(retry.FixedDelay), // 设置重试延迟类型为固定延迟
 	)
 
+	// 返回删除操作的错误（如果有）
 	return err
 }
 
@@ -1594,57 +1627,79 @@ func (b *BcsBkcmdbSynchronizerHandler) handlePodsCreate(podsCreate map[string]*c
 	return nil
 }
 
+// handleDeployment 处理部署消息的函数
 func (b *BcsBkcmdbSynchronizerHandler) handleDeployment(
 	msg amqp.Delivery, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 记录接收到的消息头信息
 	blog.Infof("handleDeployment Message: %v", msg.Headers)
+
+	// 尝试获取消息头信息
 	msgHeader, err := getMsgHeader(&msg.Headers)
 	if err != nil {
+		// 如果获取消息头失败，记录错误并返回
 		blog.Errorf("handleDeployment unable to get headers, err: %s", err.Error())
 		return fmt.Errorf("handleDeployment unable to get headers, err: %s", err.Error())
 	}
 
+	// 记录解析出的集群ID
 	blog.Infof("Headers: %s", msgHeader.ClusterId)
+
+	// 初始化一个Deployment对象用于存储解码后的消息体
 	deployment := &appv1.Deployment{}
+	// 将消息体解码为Deployment对象
 	err = json.Unmarshal(msg.Body, deployment)
 	if err != nil {
+		// 如果解码失败，记录错误并返回
 		blog.Errorf("handleDeployment: Unable to unmarshal")
 		return fmt.Errorf("handleDeployment: Unable to unmarshal")
 	}
 
+	// 根据消息头中的事件类型进行不同的处理
 	switch msgHeader.Event {
 	case "update": // nolint
+		// 处理部署更新事件
 		err = b.handleDeploymentUpdate(deployment, bkCluster, db)
 		if err != nil {
+			// 如果处理更新失败，记录错误并返回
 			blog.Errorf("handleDeploymentUpdate err: %s", err.Error())
 			return fmt.Errorf("handleDeploymentUpdate err: %s", err.Error())
 		}
 	case "delete": // nolint
+		// 处理部署删除事件
 		err = b.handleDeploymentDelete(deployment, bkCluster, db)
 		if err != nil {
+			// 如果处理删除失败，记录错误并返回
 			blog.Errorf("handleDeploymentDelete err: %s", err.Error())
 			return fmt.Errorf("handleDeploymentDelete err: %s", err.Error())
 		}
 	default:
+		// 如果事件类型未知，记录错误
 		blog.Errorf("handleDeployment: Unknown event: %s", msgHeader.Event)
 	}
+	// 返回nil表示处理成功
 	return nil
 }
 
+// handleDeploymentUpdate 处理部署更新的函数
 func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(
 	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 获取与当前部署相关的bk工作负载
 	bkDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
+			// 规则1：名称匹配当前部署的名称
 			{
 				Field:    "name",
 				Operator: "in",
 				Value:    []string{deployment.Name},
 			},
+			// 规则2：集群UID匹配当前集群的UID
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
 				Value:    []string{bkCluster.Uid},
 			},
+			// 规则3：命名空间匹配当前部署的命名空间
 			{
 				Field:    "namespace",
 				Operator: "in",
@@ -1653,10 +1708,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(
 		},
 	}, true, db)
 
+	// 如果获取bk工作负载时出错，则返回错误
 	if err != nil {
 		return err
 	}
 
+	// 如果没有找到对应的bk部署，则创建新的部署
 	if len(*bkDeployments) == 0 {
 		err := b.handleDeploymentCreate(deployment, bkCluster, db)
 		if err != nil {
@@ -1665,47 +1722,60 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentUpdate(
 		}
 	}
 
+	// 如果找到一个对应的bk部署，则更新该部署
 	if len(*bkDeployments) == 1 {
 		bd := (*bkDeployments)[0]
 		bkDeployment := bkcmdbkube.Deployment{}
+		// 将获取到的bk部署转换为结构体
 		err := common.InterfaceToStruct(bd, &bkDeployment)
 		if err != nil {
 			blog.Errorf("convert bk deployment failed, err: %s", err.Error())
 			return err
 		}
 
+		// 准备更新的数据
 		deploymentToUpdate := make(map[int64]*client.UpdateBcsWorkloadRequestData, 0)
+		// 比较本地部署与bk部署，确定是否需要更新以及更新的内容
 		needToUpdate, updateData := b.Syncer.CompareDeployment(&bkDeployment, &storage.Deployment{Data: deployment})
 		if needToUpdate {
+			// 如果需要更新，则添加到更新列表中
 			deploymentToUpdate[bkDeployment.ID] = updateData
 			blog.Infof("deploymentToUpdate: %s+%s+%s", bkCluster.Uid, bkDeployment.Namespace, bkDeployment.Name)
+			// 执行更新操作
 			b.Syncer.UpdateBkWorkloads(bkCluster, "deployment", &deploymentToUpdate, db)
 		}
 	}
 
+	// 如果找到多于一个的bk部署，则记录错误并返回
 	if len(*bkDeployments) > 1 {
 		blog.Errorf("handleDeploymentUpdate: More than one deployment found")
 		return fmt.Errorf("handleDeploymentUpdate: More than one deployment found")
 	}
 
+	// 如果一切正常，则返回nil表示没有错误
 	return nil
 }
 
+// handleDeploymentDelete 处理部署删除的逻辑
 func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(
 	deployment *appv1.Deployment, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
+	// 查询与当前部署相关的bk工作负载
 	bkDeployments, err := b.Syncer.GetBkWorkloads(bkCluster.BizID, "deployment", &client.PropertyFilter{
 		Condition: "AND",
 		Rules: []client.Rule{
+			// 匹配部署名称
 			{
 				Field:    "name",
 				Operator: "in",
 				Value:    []string{deployment.Name},
 			},
+			// 匹配集群UID
 			{
 				Field:    "cluster_uid",
 				Operator: "in",
 				Value:    []string{bkCluster.Uid},
 			},
+			// 匹配命名空间
 			{
 				Field:    "namespace",
 				Operator: "in",
@@ -1714,26 +1784,32 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(
 		},
 	}, true, db)
 
+	// 如果查询出错，返回错误
 	if err != nil {
 		return err
 	}
 
+	// 如果查询到的bk部署数量大于1，返回错误
 	if len(*bkDeployments) > 1 {
 		return fmt.Errorf("len(bkDeployments) = %d", len(*bkDeployments))
 	}
 
+	// 如果没有查询到bk部署，返回错误
 	if len(*bkDeployments) == 0 {
 		return fmt.Errorf("deployment %s not found", deployment.Name)
 	}
 
+	// 获取查询到的第一个bk部署
 	bd := (*bkDeployments)[0]
 	bkDeployment := bkcmdbkube.Deployment{}
+	// 将查询到的bk部署转换为结构体
 	err = common.InterfaceToStruct(bd, &bkDeployment)
 	if err != nil {
 		blog.Errorf("convert bk deployment failed, err: %s", err.Error())
 		return err
 	}
 
+	// 打印要删除的部署信息
 	blog.Infof("deploymentToDelete: %s+%s+%s", bkCluster.Uid, bkDeployment.Namespace, bkDeployment.Name)
 
 	// err = b.Syncer.DeleteBkWorkloads(b.BkCluster.BizID, "deployment", &[]int64{bkDeployment.ID})
@@ -1741,11 +1817,12 @@ func (b *BcsBkcmdbSynchronizerHandler) handleDeploymentDelete(
 		func() error {
 			return b.Syncer.DeleteBkWorkloads(bkCluster, "deployment", &[]int64{bkDeployment.ID}, db)
 		},
-		retry.Delay(time.Second*1),
-		retry.Attempts(2),
-		retry.DelayType(retry.FixedDelay),
+		retry.Delay(time.Second*1),        // 延迟1秒执行
+		retry.Attempts(2),                 // 最多重试2次
+		retry.DelayType(retry.FixedDelay), // 延迟类型为固定延迟
 	)
 
+	// 返回删除操作的错误（如果有）
 	return err
 }
 
@@ -2851,16 +2928,16 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNodes(
 		}
 	}
 
-	err := b.handleNodesUpdate(nodesUpdate, bkCluster, db)
-	if err != nil {
-		blog.Errorf("handleNodesUpdate err: %s", err.Error())
-		// return fmt.Errorf("handleNodesUpdate err: %s", err.Error())
-	}
-
-	err = b.handleNodesDelete(nodesDelete, bkCluster, db)
+	err := b.handleNodesDelete(nodesDelete, bkCluster, db)
 	if err != nil {
 		blog.Errorf("handleNodesDelete err: %s", err.Error())
 		// return fmt.Errorf("handlePodsDelete err: %s", err.Error())
+	}
+
+	err = b.handleNodesUpdate(nodesUpdate, bkCluster, db)
+	if err != nil {
+		blog.Errorf("handleNodesUpdate err: %s", err.Error())
+		// return fmt.Errorf("handleNodesUpdate err: %s", err.Error())
 	}
 
 	nodeMsg.M = make([]amqp.Delivery, 0)

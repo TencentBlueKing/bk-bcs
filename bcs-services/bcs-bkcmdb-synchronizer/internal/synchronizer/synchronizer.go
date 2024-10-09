@@ -250,33 +250,7 @@ func (s *Synchronizer) Run() {
 	clusterMap := make(map[string]*cmp.Cluster)
 	var clusterList ClusterList
 
-	for _, cluster := range clusters {
-		if len(whiteList) > 0 {
-			if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
-				continue
-			}
-		}
-
-		if len(blackList) > 0 {
-			if exit, _ := common.InArray(cluster.ClusterID, blackList); exit {
-				continue
-			}
-		}
-
-		if cluster.ClusterType == "virtual" {
-			continue
-		}
-
-		if _, ok := clusterMap[cluster.ClusterID]; ok {
-			if cluster.IsShared {
-				clusterMap[cluster.ClusterID] = cluster
-			}
-		} else {
-			clusterMap[cluster.ClusterID] = cluster
-			clusterList = append(clusterList, cluster.ClusterID)
-		}
-
-	}
+	s.runCluster(clusters, whiteList, blackList, clusterMap, &clusterList)
 
 	blog.Infof("clusterList: %v", clusterList)
 
@@ -413,6 +387,37 @@ func (s *Synchronizer) Run() {
 				blog.Infof("%s restarted", w)
 			}
 		}
+	}
+}
+
+func (s *Synchronizer) runCluster(clusters []*cmp.Cluster, whiteList, blackList []string,
+	clusterMap map[string]*cmp.Cluster, clusterList *ClusterList) {
+	for _, cluster := range clusters {
+		if len(whiteList) > 0 {
+			if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
+				continue
+			}
+		}
+
+		if len(blackList) > 0 {
+			if exit, _ := common.InArray(cluster.ClusterID, blackList); exit {
+				continue
+			}
+		}
+
+		if cluster.ClusterType == "virtual" {
+			continue
+		}
+
+		if _, ok := clusterMap[cluster.ClusterID]; ok {
+			if cluster.IsShared {
+				clusterMap[cluster.ClusterID] = cluster
+			}
+		} else {
+			clusterMap[cluster.ClusterID] = cluster
+			*clusterList = append(*clusterList, cluster.ClusterID)
+		}
+
 	}
 }
 
@@ -607,7 +612,7 @@ func (s *Synchronizer) sync(done <-chan bool, cluster *cmp.Cluster) {
 		hostname = "unknown"
 	}
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 1; i++ {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
