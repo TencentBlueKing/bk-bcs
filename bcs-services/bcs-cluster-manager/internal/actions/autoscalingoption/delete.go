@@ -86,7 +86,7 @@ func (da *DeleteAction) Handle(
 		return
 	}
 	da.resp.Data = deleteOption
-	if err := da.model.DeleteAutoScalingOption(da.ctx, da.req.ClusterID); err != nil {
+	if err = da.model.DeleteAutoScalingOption(da.ctx, da.req.ClusterID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

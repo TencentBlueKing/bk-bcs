@@ -94,9 +94,9 @@ func (la *GetCustomSettingAction) Handle(ctx context.Context, req *cmproto.GetBa
 
 // GetBizInstanceTopoAction action for get biz topo
 type GetBizInstanceTopoAction struct {
-	ctx  context.Context
-	req  *cmproto.GetBizTopologyHostRequest
-	resp *cmproto.GetBizTopologyHostResponse
+	ctx   context.Context
+	req   *cmproto.GetBizTopologyHostRequest
+	resp  *cmproto.GetBizTopologyHostResponse
 }
 
 // NewGetBizInstanceTopoAction create action
@@ -178,10 +178,10 @@ func (ga *GetBizInstanceTopoAction) Handle(ctx context.Context, req *cmproto.Get
 
 // GetTopologyNodesAction action for get biz topology nodes
 type GetTopologyNodesAction struct {
-	ctx  context.Context
+	ctx   context.Context
 	model store.ClusterManagerModel
-	req  *cmproto.GetTopologyNodesRequest
-	resp *cmproto.GetTopologyNodesResponse
+	req   *cmproto.GetTopologyNodesRequest
+	resp  *cmproto.GetTopologyNodesResponse
 }
 
 // NewGetTopoNodesAction create action
@@ -260,14 +260,14 @@ func nodeExistClusterManager(model store.ClusterManagerModel, nodeIP string,
 	return true
 }
 
-func (gt *GetTopologyNodesAction) filterAvailableNodes(bizNodes []cmdb.HostDetailInfo) []cmdb.HostDetailInfo {
+func filterAvailableNodes(model store.ClusterManagerModel, bizNodes []cmdb.HostDetailInfo) []cmdb.HostDetailInfo {
 	// get all masterIPs
-	masterIPs := cluster.GetAllMasterIPs(gt.model)
+	masterIPs := cluster.GetAllMasterIPs(model)
 
 	availableNodes := make([]cmdb.HostDetailInfo, 0)
 
 	for i := range bizNodes {
-		exist := nodeExistClusterManager(gt.model, bizNodes[i].Ip, masterIPs)
+		exist := nodeExistClusterManager(model, bizNodes[i].Ip, masterIPs)
 		if !exist {
 			availableNodes = append(availableNodes, bizNodes[i])
 		}
@@ -285,7 +285,7 @@ func (gt *GetTopologyNodesAction) listBizTopologyNodes() error {
 
 	var (
 		topoNodes []cmdb.HostDetailInfo
-		err error
+		err       error
 	)
 
 	topoNodes, err = ipSelector.GetBizTopoHostData(bizID, modules, filter)
@@ -296,7 +296,7 @@ func (gt *GetTopologyNodesAction) listBizTopologyNodes() error {
 
 	// 过滤集群可用节点
 	if gt.req.ShowAvailableNode {
-		topoNodes = gt.filterAvailableNodes(topoNodes)
+		topoNodes = filterAvailableNodes(gt.model, topoNodes)
 	}
 
 	gt.resp.Data = &cmproto.GetTopologyNodesData{
@@ -358,14 +358,15 @@ func (gt *GetTopologyNodesAction) Handle(ctx context.Context, req *cmproto.GetTo
 
 // GetScopeHostCheckAction action for get scope host check
 type GetScopeHostCheckAction struct {
-	ctx  context.Context
-	req  *cmproto.GetScopeHostCheckRequest
-	resp *cmproto.GetScopeHostCheckResponse
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.GetScopeHostCheckRequest
+	resp  *cmproto.GetScopeHostCheckResponse
 }
 
 // NewGetScopeHostCheckAction create action
-func NewGetScopeHostCheckAction() *GetScopeHostCheckAction {
-	return &GetScopeHostCheckAction{}
+func NewGetScopeHostCheckAction(model store.ClusterManagerModel) *GetScopeHostCheckAction {
+	return &GetScopeHostCheckAction{model: model}
 }
 
 func (gt *GetScopeHostCheckAction) validate() error {
@@ -417,10 +418,20 @@ func (gt *GetScopeHostCheckAction) listScopeHostInfo() error {
 	modules := gt.buildModuleInfo()
 	filter := gt.buildFilterCondition()
 
-	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	var (
+		topoNodes []cmdb.HostDetailInfo
+		err       error
+	)
+
+	topoNodes, err = ipSelector.GetBizTopoHostData(bizID, modules, filter)
 	if err != nil {
 		blog.Errorf("GetTopologyNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err
+	}
+
+	// 过滤集群可用节点
+	if gt.req.ShowAvailableNode {
+		topoNodes = filterAvailableNodes(gt.model, topoNodes)
 	}
 
 	// get topology nodes

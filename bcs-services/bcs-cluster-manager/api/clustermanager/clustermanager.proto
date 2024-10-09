@@ -14015,6 +14015,10 @@ message GetScopeHostCheckRequest {
     title: "keyList",
     description: "关键字数组, 解析出的主机名/hostId等关键字信息"
   }];
+  bool showAvailableNode = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "showAvailableNode",
+    description: "展示可用节点，未在clustermanager中被占用节点"
+  }];
 }
 
 message GetScopeHostCheckResponse {

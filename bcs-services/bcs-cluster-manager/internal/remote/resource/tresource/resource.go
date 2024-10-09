@@ -10,6 +10,9 @@
  * limitations under the License.
  */
 
+// NOCC:tosa/comment_ratio(none)
+
+// Package tresource xxx
 package tresource
 
 import (
@@ -183,6 +186,7 @@ func (rm *ResManClient) DestroyInstances(ctx context.Context, paras *resource.De
 			paras.SystemID, paras.Operator, paras.InstanceIDs)
 
 		start := time.Now()
+		// return devices
 		resp, err = cli.ReturnDevice(context.Background(), &ReturnDeviceReq{
 			DeviceConsumerID: &paras.PoolID,
 			Devices:          paras.InstanceIDs,
@@ -259,6 +263,7 @@ func (rm *ResManClient) CheckOrderStatus(ctx context.Context, orderID string) (*
 			return nil
 		}
 
+		// order status check
 		switch *resp.Data.Status {
 		case OrderFinished.String():
 			blog.Infof("CheckInstanceOrderStatus[%s] orderID[%s] orderState[%s] successful",
@@ -297,6 +302,7 @@ func (rm *ResManClient) CheckOrderStatus(ctx context.Context, orderID string) (*
 		deviceIDs = append(deviceIDs, *device.Id)
 	}
 
+	// return order instance list
 	return &resource.OrderInstanceList{
 		InstanceIDs: instanceIDs,
 		InstanceIPs: instanceIPs,
@@ -1058,6 +1064,7 @@ func getResourceAvailableZones(req *resource.ApplyInstanceReq) ([]resource.Subne
 		})
 	}
 
+	// availableZones empty
 	if len(availableZones) == 0 {
 		availableZones = append(availableZones, resource.SubnetZone{
 			Subnet: "",
@@ -1070,6 +1077,7 @@ func getResourceAvailableZones(req *resource.ApplyInstanceReq) ([]resource.Subne
 
 // buildIDCConsumeDeviceDesireReq build resource request
 func buildIDCConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInstanceReq) (*ConsumeDeviceReq, error) {
+	// get available zones
 	availableZones, err := getResourceAvailableZones(req)
 	if err != nil {
 		return nil, err
@@ -1093,6 +1101,7 @@ func buildIDCConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 		})
 	}
 
+	// build consume device request
 	return &ConsumeDeviceReq{
 		DeviceConsumerID: &req.PoolID,
 		Num:              &desiredNodes,
@@ -1103,6 +1112,7 @@ func buildIDCConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 
 // buildCVMConsumeDeviceDesireReq build resource request for qcloud instance
 func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInstanceReq) (*ConsumeDeviceReq, error) {
+	// get available zones
 	availableZones, err := getResourceAvailableZones(req)
 	if err != nil {
 		return nil, err
@@ -1156,6 +1166,7 @@ func buildCVMConsumeDeviceDesireReq(desiredNodes uint32, req *resource.ApplyInst
 		},
 	})
 
+	// build consume device request
 	return &ConsumeDeviceReq{
 		DeviceConsumerID: &req.PoolID,
 		Num:              &desiredNodes,

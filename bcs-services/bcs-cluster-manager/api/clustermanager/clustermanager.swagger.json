@@ -12734,6 +12734,12 @@
           },
           "description": "关键字数组, 解析出的主机名/hostId等关键字信息",
           "title": "keyList"
+        },
+        "showAvailableNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "展示可用节点，未在clustermanager中被占用节点",
+          "title": "showAvailableNode"
         }
       },
       "description": "过滤拓扑的主机列表",

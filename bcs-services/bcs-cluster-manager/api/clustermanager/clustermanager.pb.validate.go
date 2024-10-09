@@ -38450,6 +38450,8 @@ func (m *GetScopeHostCheckRequest) Validate() error {
 
 	// no validation rules for ScopeId
 
+	// no validation rules for ShowAvailableNode
+
 	return nil
 }
 
