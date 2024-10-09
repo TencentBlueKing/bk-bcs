@@ -62,6 +62,8 @@ type ClusterResourcesModel interface {
 	UpdateTemplate(ctx context.Context, id string, template entity.M) error
 	UpdateTemplateBySpecial(
 		ctx context.Context, projectCode, templateSpace string, template entity.M) error
+	UpdateTemplateBySpaceAndName(
+		ctx context.Context, projectCode, templateSpace, templateName string, template entity.M) error
 	DeleteTemplate(ctx context.Context, id string) error
 	DeleteTemplateBySpecial(ctx context.Context, projectCode, templateSpace string) error
 

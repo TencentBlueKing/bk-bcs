@@ -49,6 +49,7 @@ func (da *DeleteAction) setResp(code uint32, msg string) {
 	da.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
+// nolint result error is always nil
 func (da *DeleteAction) getRelativeResource() error {
 	cluster, err := da.model.GetCluster(da.ctx, da.req.ClusterID)
 	if err == nil {
@@ -86,7 +87,7 @@ func (da *DeleteAction) Handle(
 		return
 	}
 	da.resp.Data = deleteOption
-	if err := da.model.DeleteAutoScalingOption(da.ctx, da.req.ClusterID); err != nil {
+	if err = da.model.DeleteAutoScalingOption(da.ctx, da.req.ClusterID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
