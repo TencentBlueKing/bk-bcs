@@ -15,7 +15,6 @@ package operationlog
 
 import (
 	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -81,6 +80,16 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 		Step:   []*cmproto.TaskRecordStep{},
 	}
 
+	allowRetry := true
+	// attention: 开启CA节点自动扩缩容不允许手动重试
+	if utils.StringContainInSlice(task.TaskType, []string{cloudprovider.UpdateNodeGroupDesiredNode.String(),
+		cloudprovider.CleanNodeGroupNodes.String()}) &&
+		task.GetCommonParams()[cloudprovider.ManualKey.String()] == common.False {
+		allowRetry = false
+	}
+
+	// 默认 所有的失败任务都允许重试, 自动化任务不允许重试
+	// 仅仅只有设置失败跳过标志的步骤才允许失败跳过
 	for _, step := range task.StepSequence {
 		for k, v := range task.Steps {
 			if step == k {
@@ -91,11 +100,13 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 				}
 
 				ua.resp.Data.Step = append(ua.resp.Data.Step, &cmproto.TaskRecordStep{
-					Name:      v.Name,
-					Status:    v.Status,
-					StartTime: utils.TransStrToTs(v.Start),
-					EndTime:   utils.TransStrToTs(v.End),
-					Data:      []*cmproto.TaskRecordStepData{},
+					Name:       v.Name,
+					Status:     v.Status,
+					StartTime:  utils.TransStrToTs(v.Start),
+					EndTime:    utils.TransStrToTs(v.End),
+					Data:       []*cmproto.TaskRecordStepData{},
+					AllowSkip:  v.AllowSkip,
+					AllowRetry: allowRetry,
 				})
 			}
 		}

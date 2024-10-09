@@ -23,7 +23,9 @@
           :class="['version-item', { active: versionData.id === version.id }]"
           @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
-          <div class="version-name">{{ version.spec.name }}</div>
+          <bk-overflow-title class="version-name" type="tips">
+            {{ version.spec.name }}
+          </bk-overflow-title>
           <div
             v-if="version.status.fully_released"
             :class="['all-tag', { 'full-release': version.status.fully_release }]"

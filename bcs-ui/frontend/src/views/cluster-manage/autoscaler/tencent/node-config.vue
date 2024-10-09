@@ -719,7 +719,8 @@ export default defineComponent({
         {
           message: $i18n.t('cluster.ca.nodePool.create.validate.passwordNotSame'),
           trigger: 'blur',
-          validator: () => confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
+          validator: () => isEdit.value
+            || confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
         },
       ],
       // 密钥校验

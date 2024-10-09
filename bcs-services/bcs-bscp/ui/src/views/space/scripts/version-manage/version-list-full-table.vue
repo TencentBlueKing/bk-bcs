@@ -4,6 +4,7 @@
     :data="props.list"
     :remote-pagination="true"
     :pagination="pagination"
+    show-overflow-tooltip
     @page-limit-change="emits('pageLimitChange', $event)"
     @page-value-change="emits('pageChange', $event)">
     <bk-table-column :label="t('版本号')" prop="spec.name" show-overflow-tooltip>

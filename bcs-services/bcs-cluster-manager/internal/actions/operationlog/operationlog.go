@@ -61,7 +61,7 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
+func (ua *ListOperationLogsAction) filterOperationLogs() ([]cmproto.TaskOperationLog, int, error) {
 	var (
 		conds   = make([]bson.E, 0)
 		condDst = make([]bson.E, 0)
@@ -85,7 +85,7 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 		conds = append(conds, util.Condition(operator.Eq, "taskname", []string{ua.req.TaskName}))
 	}
 	if ua.req.ResourceName != "" {
-		conds = append(conds, util.Condition(operator.Eq, "resourcename", []string{ua.req.ResourceName}))
+		conds = append(conds, util.Condition(util.Regex, "resourcename", []string{ua.req.ResourceName}))
 	}
 	if ua.req.OpUser != "" {
 		conds = append(conds, util.Condition(operator.Eq, "opuser", []string{ua.req.OpUser}))
@@ -118,15 +118,24 @@ func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
 		Count: true,
 	})
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
-	count := len(sumLogs)
 
+	count := len(sumLogs)
 	offset := (ua.req.Page - 1) * ua.req.Limit
 	sort := map[string]int{"createtime": -1}
 
 	opLogs, err := ua.model.ListAggreOperationLog(ua.ctx, conds, condDst, &options.ListOption{
 		Limit: int64(ua.req.Limit), Offset: int64(offset), Sort: sort})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return opLogs, count, nil
+}
+
+func (ua *ListOperationLogsAction) fetchV2OperationLogs() error { // nolint
+	opLogs, count, err := ua.filterOperationLogs()
 	if err != nil {
 		return err
 	}

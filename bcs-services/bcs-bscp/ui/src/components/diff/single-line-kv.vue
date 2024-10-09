@@ -6,7 +6,9 @@
         :class="['config-diff-item', { selected: props.selectedId === diffItem.id }]"
         :key="diffItem.id">
         <div :class="['diff-header', diffItem.diffType]">
-          <span class="config-name">{{ diffItem.name }}</span>
+          <bk-overflow-title class="config-name" type="tips">
+            {{ diffItem.name }}
+          </bk-overflow-title>
         </div>
         <div class="diff-content">
           <div class="left-version-content">
@@ -154,6 +156,7 @@
       line-height: 20px;
       font-size: 12px;
       color: #63656e;
+      max-width: 48%;
     }
   }
   .diff-content {

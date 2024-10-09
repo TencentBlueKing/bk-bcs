@@ -291,15 +291,17 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 						}, li); inErr != nil {
 							return inErr
 						}
+
+						cpListener := li.DeepCopy()
 						// 部分旧版本监听器labels不全需要补齐
 						poolNameLabel := common.GetPortPoolListenerLabelKey(ppih.PortPoolName, item.ItemName)
-						li.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
-						li.Labels[netextv1.LabelKeyForOwnerKind] = constant.KindPortPool
-						li.Labels[netextv1.LabelKeyForOwnerName] = ppih.PortPoolName
+						cpListener.Labels[poolNameLabel] = netextv1.LabelValueForPortPoolItemName
+						cpListener.Labels[netextv1.LabelKeyForOwnerKind] = constant.KindPortPool
+						cpListener.Labels[netextv1.LabelKeyForOwnerName] = ppih.PortPoolName
 
-						li.Spec.Certificate = item.Certificate
-						li.Spec.ListenerAttribute = ppih.ListenerAttr
-						if inErr := ppih.K8sClient.Update(context.Background(), li); inErr != nil {
+						cpListener.Spec.Certificate = item.Certificate
+						cpListener.Spec.ListenerAttribute = ppih.ListenerAttr
+						if inErr := ppih.K8sClient.Update(context.Background(), cpListener); inErr != nil {
 							return inErr
 						}
 						return nil

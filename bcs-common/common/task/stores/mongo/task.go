@@ -165,8 +165,8 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 }
 
 // ListTask list clusters
-func (m *ModelTask) ListTask(ctx context.Context, opt *iface.ListOption) ([]types.Task, error) {
-	taskList := make([]types.Task, 0)
+func (m *ModelTask) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
+	taskList := make([]*types.Task, 0)
 	finder := m.db.Table(m.tableName).Find(operator.EmptyCondition)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(MapInt2MapIf(opt.Sort))
@@ -182,5 +182,9 @@ func (m *ModelTask) ListTask(ctx context.Context, opt *iface.ListOption) ([]type
 	if err := finder.All(ctx, &taskList); err != nil {
 		return nil, err
 	}
-	return taskList, nil
+	result := &iface.Pagination[types.Task]{
+		Count: int64(len(taskList)),
+		Items: taskList,
+	}
+	return result, nil
 }

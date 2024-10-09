@@ -102,23 +102,35 @@ const reload = () => {
 
 const { dashboardViewID, updateViewIDStore } = useViewConfig();
 
+// 集群列表页
+const isDashboardHome = computed(() => $router.currentRoute?.matched?.some(item => item.name === 'dashboardHome'));
+
 watch(
   dashboardViewID,
-  () => {
-    if ($router.currentRoute?.name === 'dashboardCustomObjects') {
-      // 切换视图时如果在自定义视图菜单上就跳到首页(deploy)
+  (newVal, oldVal) => {
+    if (!newVal && !oldVal) return;
+
+    if ($router.currentRoute?.name === 'dashboardCustomObjects'
+      || (!isDashboardHome.value && newVal && oldVal && newVal !== oldVal)) {
+      // 切换视图时如果在customObject菜单或在二级详情界面切换视图时就跳到首页(deploy)，
       $router.replace({
         name: 'dashboardWorkloadDeployments',
         params: $router.currentRoute.params,
+        query: {
+          viewID: dashboardViewID.value,
+        },
       });
       return;
     }
-    // 处理路径上的集群参数
+
     if (dashboardViewID.value && $router.currentRoute?.params?.clusterId) {
-      // 自定义视图清空集群ID参数
+      // 自定义视图时清空集群ID参数
       $router.replace({
         name: $router.currentRoute?.name,
         params: {},
+        query: {
+          viewID: dashboardViewID.value,
+        },
       });
     } else if (!dashboardViewID.value && !$router.currentRoute?.params?.clusterId) {
       // 没有集群ID, 也没有视图ID, 就默认回显一个集群
@@ -128,21 +140,41 @@ watch(
         params: {
           clusterId: cluster?.clusterID,
         },
+        query: {
+          viewID: dashboardViewID.value,
+        },
+      });
+    } else if (dashboardViewID.value && dashboardViewID.value !== $router.currentRoute?.query?.viewID) {
+      // 替换query上的试图ID
+      $router.replace({
+        name: $router.currentRoute?.name,
+        params: $router.currentRoute.params,
+        query: {
+          viewID: dashboardViewID.value,
+        },
       });
     }
   },
 );
 
 const { clusterList, curClusterId } = useCluster();
-const initRoutePath = () => {
-  const pathClusterID = $router.currentRoute?.params?.clusterId;
+// 初始化当前集群和试图ID信息
+const initClusterAndViewID = () => {
   let cluster;
+  let viewID = $router.currentRoute?.query?.viewID || dashboardViewID.value || '';
+  const pathClusterID = $router.currentRoute?.params?.clusterId;
   if (pathClusterID) {
-    // 路径上带有集群ID，则更新全局集群缓存
+    // 路径上带有集群ID, 以路径集群ID为主
     cluster = clusterList.value.find(item => item.clusterID === pathClusterID);
-    updateViewIDStore('');// 删除视图缓存
-  } else if (!dashboardViewID.value) {
-    // 没有集群ID, 也没有视图ID, 就默认回显全局缓存的集群
+    if (isDashboardHome.value) {
+      // 在列表页时如果有集群ID，则要清空视图ID（集群模式和视图模式只能二选一）
+      viewID = '';
+    } else {
+      // 详情页视图ID根据query参数确定
+      viewID = $router.currentRoute?.query?.viewID || '';
+    }
+  } else if (!viewID) {
+    // 路径上没有集群ID, 也没有视图ID, 就默认跳转到一个集群中
     cluster = clusterList.value.find(item => item.clusterID === curClusterId.value)
       || clusterList.value.find(item => item.status === 'RUNNING');
     $router.replace({
@@ -152,6 +184,7 @@ const initRoutePath = () => {
       },
     });
   }
+  updateViewIDStore(viewID);// 更新视图ID
   $store.commit('updateCurCluster', cluster ?? clusterList.value.find(item => item.status === 'RUNNING'));
 };
 onBeforeMount(() => {
@@ -159,7 +192,7 @@ onBeforeMount(() => {
     if (isViewEditable.value) return;
     showViewConfig.value = !showViewConfig.value;
   });
-  initRoutePath();
+  initClusterAndViewID();
 });
 
 onBeforeUnmount(() => {

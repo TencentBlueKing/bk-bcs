@@ -2780,6 +2780,7 @@ message GenerateReleaseAndPublishResp {
 message PublishResp {
   uint32 id = 1;
   bool have_credentials = 2;
+  bool have_pull = 3;
 }
 
 message CreateKvReq {

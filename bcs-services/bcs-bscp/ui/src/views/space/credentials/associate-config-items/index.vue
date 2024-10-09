@@ -1,14 +1,19 @@
 <template>
   <bk-sideslider
-    :title="t('关联服务配置')"
-    width="960"
+    :title="sideSliderTitle"
+    :width="960"
     :is-show="props.show"
     :before-close="handleBeforeClose"
     @closed="handleClose">
     <template #header>
       <div class="header-wrapper">
-        <span>{{ t('关联服务配置') }}</span>
-        <bk-popover placement="bottom-start" theme="light" trigger="click" ext-cls="view-rule-wrap">
+        <span>{{ sideSliderTitle }}</span>
+        <bk-popover
+          v-if="!props.isExampleMode"
+          placement="bottom-start"
+          theme="light"
+          trigger="click"
+          ext-cls="view-rule-wrap">
           <span class="view-rule">{{ t('查看规则示例') }}</span>
           <template #content>
             <ViewRuleExample />
@@ -25,6 +30,7 @@
           :id="props.id"
           :rules="rules"
           :app-list="appList"
+          :is-example-mode="props.isExampleMode"
           @change="handleRuleChange"
           @form-change="isFormChange = true"
           @trigger-save-btn-disabled="saveBtnDisabled = $event" />
@@ -57,7 +63,7 @@
   </bk-sideslider>
 </template>
 <script setup lang="ts">
-  import { ref, watch, onMounted } from 'vue';
+  import { ref, watch, onMounted, computed } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../store/global';
@@ -75,14 +81,22 @@
   const { spaceId } = storeToRefs(useGlobalStore());
   const { t } = useI18n();
 
-  const props = defineProps<{
-    show: boolean;
-    id: number;
-    permCheckLoading: boolean;
-    hasManagePerm: boolean;
-  }>();
+  const props = withDefaults(
+    defineProps<{
+      show: boolean;
+      id: number;
+      permCheckLoading: boolean;
+      hasManagePerm: boolean;
+      isExampleMode?: boolean;
+      exampleRules?: ICredentialRule[];
+    }>(),
+    {
+      isExampleMode: false, // 配置示例模式(无密钥id)
+      exampleRules: () => [],
+    },
+  );
 
-  const emits = defineEmits(['close', 'refresh', 'applyPerm']);
+  const emits = defineEmits(['close', 'refresh', 'applyPerm', 'sendExampleRules']);
 
   const loading = ref(true);
   const rules = ref<ICredentialRule[]>([]);
@@ -103,11 +117,19 @@
     const resp = await getAppList(spaceId.value, { start: 0, all: true });
     appList.value = resp.details;
   });
+
+  const sideSliderTitle = computed(() => (props.isExampleMode ? t('配置文件筛选规则') : t('关联服务配置')));
+
   watch(
     () => props.show,
     (val) => {
       if (val) {
-        loadRules();
+        // 配置示例无需载入密钥关联的规则
+        if (props.isExampleMode) {
+          rules.value = props.exampleRules.length ? props.exampleRules : [];
+        } else {
+          loadRules();
+        }
         ruleChangeParams.value = {
           add_scope: [],
           del_id: [],
@@ -138,25 +160,36 @@
 
   const handleSave = async () => {
     if (ruleEdit.value.handleRuleValidate()) return;
-    pending.value = true;
-    try {
-      await updateCredentialScopes(spaceId.value, props.id, ruleChangeParams.value);
+    if (props.isExampleMode) {
+      // 配置示例不需要调用接口
+      emits('sendExampleRules', ruleChangeParams.value);
       ruleChangeParams.value = {
         add_scope: [],
         del_id: [],
         alter_scope: [],
       };
       isRuleEdit.value = false;
-      loadRules();
-      emits('refresh');
-      Message({
-        theme: 'success',
-        message: t('编辑规则成功'),
-      });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      pending.value = false;
+    } else {
+      try {
+        pending.value = true;
+        await updateCredentialScopes(spaceId.value, props.id, ruleChangeParams.value);
+        ruleChangeParams.value = {
+          add_scope: [],
+          del_id: [],
+          alter_scope: [],
+        };
+        isRuleEdit.value = false;
+        loadRules();
+        emits('refresh');
+        Message({
+          theme: 'success',
+          message: t('编辑规则成功'),
+        });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        pending.value = false;
+      }
     }
   };
 

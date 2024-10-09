@@ -83,8 +83,8 @@ func (ua *UpdateAction) getCluster() error {
 	return nil
 }
 
-// validateBaseInfo 检查基本信息
-func (ua *UpdateAction) validateBaseInfo() {
+// setBaseInfo 检查基本信息
+func (ua *UpdateAction) setBaseInfo() {
 	if len(ua.req.ClusterName) != 0 {
 		ua.cluster.ClusterName = ua.req.ClusterName
 	}
@@ -138,8 +138,29 @@ func (ua *UpdateAction) validateBaseInfo() {
 	}
 }
 
-// validateAdditionalInfo 检查附加信息
-func (ua *UpdateAction) validateAdditionalInfo() {
+func (ua *UpdateAction) setSettingInfo() {
+	if ua.req.NetworkSettings != nil {
+		ua.cluster.NetworkSettings = ua.req.NetworkSettings
+	}
+	if ua.req.ClusterBasicSettings != nil {
+		ua.cluster.ClusterBasicSettings = ua.req.ClusterBasicSettings
+	}
+	if ua.req.ClusterAdvanceSettings != nil {
+		ua.cluster.ClusterAdvanceSettings = ua.req.ClusterAdvanceSettings
+	}
+	if ua.req.NodeSettings != nil {
+		ua.cluster.NodeSettings = ua.req.NodeSettings
+	}
+	if ua.req.IsMixed != nil {
+		ua.cluster.IsMixed = ua.req.IsMixed.GetValue()
+	}
+	if ua.req.SharedRanges != nil {
+		ua.cluster.SharedRanges = ua.req.SharedRanges
+	}
+}
+
+// setAdditionalInfo 检查附加信息
+func (ua *UpdateAction) setAdditionalInfo() {
 	if len(ua.req.EngineType) != 0 {
 		ua.cluster.EngineType = ua.req.EngineType
 	}
@@ -170,15 +191,6 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if ua.req.IsShared != nil {
 		ua.cluster.IsShared = ua.req.IsShared.GetValue()
 	}
-	if ua.req.NetworkSettings != nil {
-		ua.cluster.NetworkSettings = ua.req.NetworkSettings
-	}
-	if ua.req.ClusterBasicSettings != nil {
-		ua.cluster.ClusterBasicSettings = ua.req.ClusterBasicSettings
-	}
-	if ua.req.ClusterAdvanceSettings != nil {
-		ua.cluster.ClusterAdvanceSettings = ua.req.ClusterAdvanceSettings
-	}
 	if len(ua.req.ClusterCategory) > 0 {
 		ua.cluster.ClusterCategory = ua.req.ClusterCategory
 	}
@@ -188,20 +200,15 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if len(ua.req.ExtraClusterID) > 0 {
 		ua.cluster.ExtraClusterID = ua.req.ExtraClusterID
 	}
-	if ua.req.NodeSettings != nil {
-		ua.cluster.NodeSettings = ua.req.NodeSettings
-	}
-	if ua.req.IsMixed != nil {
-		ua.cluster.IsMixed = ua.req.IsMixed.GetValue()
-	}
 }
 
 // updateCluster update cluster info
 func (ua *UpdateAction) updateCluster() error {
 	// basic info
-	ua.validateBaseInfo()
+	ua.setBaseInfo()
+	ua.setSettingInfo()
 	// additional info
-	ua.validateAdditionalInfo()
+	ua.setAdditionalInfo()
 	// update cluster cloud info
 	err := utils.UpdateClusterCloudInfo(ua.cluster, ua.cloud)
 	if err != nil {
@@ -425,7 +432,7 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 		ResourceType: common.Cluster.String(),
 		ResourceID:   "",
 		TaskID:       "",
-		Message:      fmt.Sprintf("更新node信息"),
+		Message:      "更新node信息",
 		OpUser:       auth.GetUserFromCtx(ua.ctx),
 		CreateTime:   time.Now().Format(time.RFC3339),
 		ClusterID:    ua.req.ClusterID,
@@ -673,7 +680,7 @@ func (ua *AddNodesAction) checkManagedClusterNodeNum() error {
 // checkNodeInCluster check node id in cluster
 func (ua *AddNodesAction) checkNodeInCluster() error {
 	// get all masterIPs
-	masterIPs := getAllMasterIPs(ua.model)
+	masterIPs := GetAllMasterIPs(ua.model)
 
 	// check if nodes are already in cluster
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization,
@@ -692,7 +699,7 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 		if cls, ok := masterIPs[ip]; ok {
 			blog.Errorf("add nodes %v to Cluster %s failed, Node %s is duplicated",
 				ua.req.Nodes, ua.req.ClusterID, ip)
-			return fmt.Errorf("node %s is already in Cluster[%s]", ip, cls.clusterID)
+			return fmt.Errorf("node %s is already in Cluster[%s]", ip, cls.ClusterID)
 		}
 		newNodeIP[ip] = ip
 	}

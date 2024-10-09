@@ -58,6 +58,9 @@ const (
 	// ApplicationCollectAnnotation defines the application whether collected
 	ApplicationCollectAnnotation = "bkbcs.tencent.com/application_collect"
 
+	// ApplicationSyncForbidden if this annotation exists, then the app should be disabled from synchronizing
+	ApplicationSyncForbidden = "bkbcs.tencent.com/application_sync_forbidden"
+
 	// ClusterAliaName defines the alia's name for project
 	ClusterAliaName = "bkbcs.tencent.com/clusterAliaName"
 	// ClusterEnv defines the cluster env

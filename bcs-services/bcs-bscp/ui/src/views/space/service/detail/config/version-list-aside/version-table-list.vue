@@ -28,6 +28,7 @@
           :row-class="getRowCls"
           :remote-pagination="true"
           :pagination="pagination"
+          show-overflow-tooltip
           @row-click="handleSelectVersion"
           @page-limit-change="handlePageLimitChange"
           @page-value-change="refreshVersionList($event)">

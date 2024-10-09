@@ -2859,11 +2859,6 @@ logCollector:
       characters
     logPath: Only absolute paths are supported
   msg:
-    logCollector: >-
-      Supports the collection settings of container standard output logs and
-      file path logs. The log collection service has been upgraded. It is
-      recommended to "generate new rules" for old version rules and clean them
-      up in time.
     oldRuleToNewRule: >-
       After generating a new rule, the log data collected by the old and new
       version rules will be completely synchronized after {0}, and the system
@@ -3711,7 +3706,9 @@ templateFile:
     nextKind: Next kind
     bookmark: Bookmark folder
     unbookmark: Unbookmark
-    uploadTips: Supports .tgz and .tar.gz compressed file formats, with a maximum size of {0}MB
+    uploadTips: >-
+      Supports .tgz and .tar.gz compressed file formats, with a maximum size of
+      {0}MB
     createSpace: Create Folder
   tag:
     draft: draft

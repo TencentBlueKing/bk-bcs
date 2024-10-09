@@ -261,7 +261,7 @@
     :app-id="props.appId"
     @updated="getAllConfigList" />
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteConfigDialogShow"
+    v-model:is-show="isDeleteConfigDialogShow"
     :title="t('确认删除该配置文件？')"
     @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
@@ -270,7 +270,7 @@
     <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
-    v-model:isShow="isDeletePkgDialogShow"
+    v-model:is-show="isDeletePkgDialogShow"
     :title="t('确认移除该配置模板套餐？')"
     :confirm-text="t('移除')"
     :pending="removePkgLoading"
@@ -281,7 +281,7 @@
     <div>{{ t('移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入') }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
-    v-model:isShow="isRecoverConfigDialogShow"
+    v-model:is-show="isRecoverConfigDialogShow"
     :title="t('确认恢复该配置文件?')"
     :confirm-text="t('恢复')"
     @confirm="handleRecoverConfigConfirm">
@@ -937,6 +937,14 @@
     if (oldConfigIndex.value !== -1) {
       tableGroupsData.value.find((group) => group.id === 0)!.configs.splice(oldConfigIndex.value, 1);
     }
+
+    // 更新配置项数量
+    const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
+    configStore.$patch((state) => {
+      state.conflictFileCount = conflictCount.value;
+      state.allConfigCount = configsCount.value + templatesCount.value;
+      state.allExistConfigCount = existConfigCount + templatesCount.value;
+    });
   };
 
   // 批量操作配置项后刷新配置项列表

@@ -29,6 +29,7 @@ import (
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/emicklei/go-restful"
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -212,7 +213,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	nodeBindCache := portbindingctrl.NewNodePortBindingCache()
+	nodeBindCache := portbindingctrl.NewNodePortBindingCache(mgr.GetClient())
 	portBindingReconciler := portbindingctrl.NewPortBindingReconciler(
 		ctx, opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache,
 		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts.NodePortBindingNs, nodeBindCache)
@@ -329,7 +330,7 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 
 	// server.SetInsecureServer(op.Conf.InsecureAddress, op.Conf.InsecurePort)
 	server.SetInsecureServer(op.Address, op.HttpServerPort)
-	ws := server.NewWebService("/ingresscontroller", nil)
+	ws := server.NewWebService("/ingresscontroller", []restful.FilterFunction{globalLoggingFilter})
 	httpServerClient := &httpsvr.HttpServerClient{
 		Mgr:               mgr,
 		NodeCache:         nodeCache,
@@ -439,4 +440,14 @@ func StartSignalHandler(stop context.CancelFunc, gracefulExit int) {
 		// timeout
 		return
 	}
+}
+
+// 全局日志过滤器
+func globalLoggingFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain) {
+	// 打印请求信息
+	blog.Infof("Received request: %s %s from %s, contentLength:%d", req.Request.Method, req.Request.URL,
+		req.Request.RemoteAddr, req.Request.ContentLength)
+
+	// 继续处理请求
+	chain.ProcessFilter(req, resp)
 }
