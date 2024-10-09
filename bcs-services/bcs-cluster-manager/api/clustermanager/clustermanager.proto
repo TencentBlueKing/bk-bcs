@@ -5753,6 +5753,12 @@ message RecommendNodeGroupConf {
   ScalingProfile scalingProfile = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "scalingProfile", description: "扩缩容配置"
   }];
+  string mode = 7[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mode", description: "azureCloud节点池模式,System|User"
+  }];
+  repeated string zones = 8[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zones", description: "节点池所属区域"
+  }];
 }
 
 message RecommendNodeGroupConfResp {

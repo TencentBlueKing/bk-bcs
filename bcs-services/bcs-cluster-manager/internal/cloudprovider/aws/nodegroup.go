@@ -179,6 +179,9 @@ func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]
 		Cpu:    8,
 		Memory: 16,
 	}, opt)
+	if err != nil {
+		return nil, fmt.Errorf("list node instance type failed, %s", err.Error())
+	}
 	if len(insTypes) == 0 {
 		return nil, fmt.Errorf("RecommendNodeGroupConf no valid instanceType for 8c16g")
 	}

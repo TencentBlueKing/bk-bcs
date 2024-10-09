@@ -18940,6 +18940,8 @@ func (m *RecommendNodeGroupConf) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Mode
+
 	if len(errors) > 0 {
 		return RecommendNodeGroupConfMultiError(errors)
 	}

@@ -16912,6 +16912,19 @@
           "$ref": "#/definitions/clustermanagerScalingProfile",
           "description": "扩缩容配置",
           "title": "scalingProfile"
+        },
+        "mode": {
+          "type": "string",
+          "description": "azureCloud节点池模式,System|User",
+          "title": "mode"
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点池所属区域",
+          "title": "zones"
         }
       },
       "description": "创建集群时推荐的节点池配置",
