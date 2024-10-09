@@ -186,7 +186,7 @@ func (ua *UpdateAction) Handle(
 		blog.Errorf("find nodeTemplate %s failed when pre-update checking, err %s", req.NodeTemplateID, err.Error())
 		return
 	}
-	if err := ua.updateNodeTemplate(destNodeTemplate); err != nil {
+	if err = ua.updateNodeTemplate(destNodeTemplate); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}

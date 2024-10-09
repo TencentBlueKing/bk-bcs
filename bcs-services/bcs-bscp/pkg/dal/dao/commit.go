@@ -168,7 +168,7 @@ func (dao *commitDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, commits [
 		}
 		commit.ID = ids[i]
 	}
-	return tx.Query.Commit.WithContext(kit.Ctx).Save(commits...)
+	return tx.Query.Commit.WithContext(kit.Ctx).CreateInBatches(commits, 500)
 }
 
 // BatchListLatestCommits batch list config items' latest commit.

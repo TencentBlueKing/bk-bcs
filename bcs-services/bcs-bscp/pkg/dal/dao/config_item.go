@@ -264,7 +264,7 @@ func (dao *configItemDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		}
 		configItem.ID = ids[i]
 	}
-	if err := tx.ConfigItem.WithContext(kit.Ctx).Save(configItems...); err != nil {
+	if err := tx.ConfigItem.WithContext(kit.Ctx).CreateInBatches(configItems, 500); err != nil {
 		return err
 	}
 	return nil

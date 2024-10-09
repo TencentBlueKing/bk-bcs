@@ -35,7 +35,7 @@ func init() {
 func mig20240909174526Up(tx *gorm.DB) error {
 	// Applications  : applications
 	type Applications struct {
-		LastConsumedTime time.Time `gorm:"column:last_consumed_time;type:datetime(6)"`
+		LastConsumedTime time.Time `gorm:"column:last_consumed_time;type:datetime(6);default:NULL"`
 	}
 
 	// Applications add new column
@@ -53,7 +53,7 @@ func mig20240909174526Down(tx *gorm.DB) error {
 
 	// Applications  : applications
 	type Applications struct {
-		LastConsumedTime time.Time `gorm:"column:last_consumed_time;type:datetime(6)"`
+		LastConsumedTime time.Time `gorm:"column:last_consumed_time;type:datetime(6);default:NULL"`
 	}
 
 	// Applications drop column

@@ -19,18 +19,20 @@ import (
 
 // TemplateVersion 定义了模板文件版本的模型
 type TemplateVersion struct {
-	ID            primitive.ObjectID `json:"id" bson:"_id"`
-	ProjectCode   string             `json:"projectCode" bson:"projectCode"`
-	Description   string             `json:"description" bson:"description"`
-	TemplateName  string             `json:"templateName" bson:"templateName"`
-	TemplateSpace string             `json:"templateSpace" bson:"templateSpace"`
-	Version       string             `json:"version" bson:"version"`
-	EditFormat    string             `json:"editFormat" bson:"editFormat"`
-	Content       string             `json:"content" bson:"content"`
-	Creator       string             `json:"creator" bson:"creator"`
-	CreateAt      int64              `json:"createAt" bson:"createAt"`
-	Latest        bool               `json:"latest" bson:"-"` // 是否是最新版本，不存储在数据库
-	Draft         bool               `json:"draft" bson:"-"`
+	ID                  primitive.ObjectID `json:"id" bson:"_id"`
+	ProjectCode         string             `json:"projectCode" bson:"projectCode"`
+	Description         string             `json:"description" bson:"description"`
+	TemplateName        string             `json:"templateName" bson:"templateName"`
+	TemplateSpace       string             `json:"templateSpace" bson:"templateSpace"`
+	Version             string             `json:"version" bson:"version"`
+	EditFormat          string             `json:"editFormat" bson:"editFormat"`
+	Content             string             `json:"content" bson:"content"`
+	Creator             string             `json:"creator" bson:"creator"`
+	CreateAt            int64              `json:"createAt" bson:"createAt"`
+	Latest              bool               `json:"latest" bson:"-"` // 是否是最新版本，不存储在数据库
+	Draft               bool               `json:"draft" bson:"-"`
+	LatestDeployVersion string             `json:"latestDeployVersion" bson:"-"`
+	LatestDeployer      string             `json:"latestDeployer" bson:"-"`
 }
 
 // ToMap trans TemplateVersion to map
@@ -55,6 +57,8 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["createAt"] = t.CreateAt
 	m["latest"] = t.Latest
 	m["draft"] = t.Draft
+	m["latestDeployVersion"] = t.LatestDeployVersion
+	m["latestDeployer"] = t.LatestDeployer
 	return m
 }
 
@@ -86,6 +90,20 @@ func (r VersionsSortByVersion) Less(i, j int) bool {
 
 // Swap xxx
 func (r VersionsSortByVersion) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
+
+// VersionsSortByCreateAt sort template version by createAt
+type VersionsSortByCreateAt []*TemplateVersion
+
+// Len xxx
+func (r VersionsSortByCreateAt) Len() int { return len(r) }
+
+// Less xxx
+func (r VersionsSortByCreateAt) Less(i, j int) bool {
+	return r[i].CreateAt > r[j].CreateAt
+}
+
+// Swap xxx
+func (r VersionsSortByCreateAt) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 
 // TemplateDeploy 定义了模板部署的一些标识
 type TemplateDeploy struct {

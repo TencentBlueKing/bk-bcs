@@ -145,7 +145,7 @@ func (b *etcdRevoker) cleanupRevokeSign() {
 	defer b.mtx.Unlock()
 
 	for taskID, sign := range b.revokeSignMap {
-		if time.Since(sign.registerTime) > time.Hour*24 {
+		if time.Since(sign.registerTime) > time.Hour*24*3 {
 			sign.cancel()
 			delete(b.revokeSignMap, taskID)
 		}

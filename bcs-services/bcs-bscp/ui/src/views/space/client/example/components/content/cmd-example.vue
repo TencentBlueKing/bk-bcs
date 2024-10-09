@@ -3,6 +3,7 @@
     <form-option
       ref="fileOptionRef"
       :directory-show="basicInfo!.serviceType.value === 'file'"
+      :associate-config-show="basicInfo!.serviceType.value === 'file'"
       @update-option-data="getOptionData" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
@@ -142,6 +143,7 @@
     privacyCredential: '',
     labelArr: [],
     tempDir: '',
+    rules: [],
   });
 
   const cmdContent = computed(() => {
@@ -173,7 +175,19 @@
     let updateString = replaceVal.value;
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_BkBizId }}', bkBizId.value);
     updateString = updateString.replace('{{ .Bk_Bscp_Variable_ServiceName }}', basicInfo!.serviceName.value);
-    replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).GRPC_ADDR);
+    updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_FEED_ADDR }}', (window as any).GRPC_ADDR);
+    // 文件配置筛选规则动态增/删
+    if (optionData.value.rules?.length) {
+      const rulesPart = `
+      # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
+config_matches
+${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart.trim());
+    } else {
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', '');
+    }
+    // 去除 动态插入的值为空的情况下产生的空白行
+    replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
   };
   const updateVariables = () => {
     variables.value = [
