@@ -269,7 +269,7 @@ func (ca *CheckNodeAction) checkNodesInCluster() error { // nolint
 		ca.nodeResult = make(map[string]*cmproto.NodeResult)
 	}
 	// get all masterIPs
-	masterIPs := getAllMasterIPs(ca.model)
+	masterIPs := GetAllMasterIPs(ca.model)
 
 	var (
 		barrier = utils.NewRoutinePool(10)
@@ -301,7 +301,7 @@ func (ca *CheckNodeAction) checkNodesInCluster() error { // nolint
 	return nil
 }
 
-func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map[string]clusterInfo) (
+func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map[string]ClusterInfo) (
 	*cmproto.NodeResult, error) {
 	nodeResult := &cmproto.NodeResult{
 		IsExist:     false,
@@ -312,8 +312,8 @@ func (ca *CheckNodeAction) getNodeResultByNodeIP(nodeIP string, masterMapIPs map
 	// check if exist masterIPs
 	if cls, ok := masterMapIPs[nodeIP]; ok {
 		nodeResult.IsExist = true
-		nodeResult.ClusterID = cls.clusterID
-		nodeResult.ClusterName = cls.clusterName
+		nodeResult.ClusterID = cls.ClusterID
+		nodeResult.ClusterName = cls.ClusterName
 
 		return nodeResult, nil
 	}

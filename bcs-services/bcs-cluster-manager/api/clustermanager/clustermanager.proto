@@ -1675,6 +1675,15 @@ message Cluster {
     title: "clusterIamRole",
     description: "aws的iam role, 用于创建eks集群"
   }];
+  SharedClusterRanges sharedRanges = 44 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sharedRanges",
+    description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
+  }];
+}
+
+message SharedClusterRanges {
+  repeated string bizs = 1;
+  repeated string projectIdOrCodes = 2;
 }
 
 message Node {
@@ -5244,6 +5253,10 @@ message CreateClusterReq {
     title: "clusterIamRole",
     description: "aws的iam role, 用于创建eks集群"
   }];
+  SharedClusterRanges sharedRanges = 44 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sharedRanges",
+    description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
+  }];
 }
 
 message CreateClusterResp {
@@ -6261,6 +6274,10 @@ message UpdateClusterReq {
     title: "isMixed",
     description: "标记该集群是否是混部集群"
   }];
+  SharedClusterRanges sharedRanges = 39 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sharedRanges",
+    description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
+  }];
 }
 
 message UpdateClusterResp {
@@ -6972,6 +6989,10 @@ message ListProjectClusterReq {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者(传参时获取该用户对应集群的权限信息,不传时仅获取集群列表信息)"
+  }];
+  string bizId = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bizId",
+    description : "项目关联的业务ID，主要是为了获取共享给该业务的共享集群"
   }];
 }
 
@@ -12427,6 +12448,14 @@ message TaskRecordStep {
     title : "endTime",
     description : "任务结束时间戳"
   }];
+  bool allowSkip = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "allowSkip",
+    description : "当前步骤失败是否允许跳过,系统内置"
+  }];
+  bool allowRetry = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "allowRetry",
+    description : "当前步骤失败是否允许重试(默认都可以重试),系统内置"
+  }];
 }
 
 message TaskRecordStepData {
@@ -13772,6 +13801,10 @@ message GetTopologyNodesRequest {
     title: "pageSize",
     description: "拉取数据数量，最大500，不传默认为20"
   }];
+  bool showAvailableNode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "showAvailableNode",
+    description: "展示可用节点，未在clustermanager中被占用节点"
+  }];
 }
 
 message GetTopologyNodesResponse {
@@ -13981,6 +14014,10 @@ message GetScopeHostCheckRequest {
   repeated string keyList = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "keyList",
     description: "关键字数组, 解析出的主机名/hostId等关键字信息"
+  }];
+  bool showAvailableNode = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "showAvailableNode",
+    description: "展示可用节点，未在clustermanager中被占用节点"
   }];
 }
 

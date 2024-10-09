@@ -361,3 +361,41 @@ type ESBSearchModuleInfo struct {
 	BkSetID      int64  `json:"bk_set_id"`
 	Default      int64  `json:"default"`
 }
+
+// ESBCreateModuleRequest request for create module
+type ESBCreateModuleRequest struct {
+	BkSupplierAccount string               `json:"bk_supplier_account"`
+	BkBizID           int64                `json:"bk_biz_id"`
+	BkSetID           int64                `json:"bk_set_id"`
+	Data              *ESBCreateModuleData `json:"data"`
+}
+
+// ESBCreateModuleData request create module data
+type ESBCreateModuleData struct {
+	BkParentId   int64  `json:"bk_parent_id"`
+	BkModuleName string `json:"bk_module_name"`
+}
+
+// ESBCreateModuleResult response for create module
+type ESBCreateModuleResult struct {
+	ESBBaseResp `json:",inline"`
+	Data        *ESBCreateModuleDataResult `json:"data"`
+}
+
+// ESBCreateModuleDataResult response for create module data
+type ESBCreateModuleDataResult struct {
+	BkBizId           int64  `json:"bk_biz_id"`
+	BkModuleId        int64  `json:"bk_module_id"`
+	BkModuleName      string `json:"bk_module_name"`
+	BkModuleType      string `json:"bk_module_type"`
+	BkParentId        int64  `json:"bk_parent_id"`
+	BkSetId           int64  `json:"bk_set_id"`
+	BkSupplierAccount string `json:"bk_supplier_account"`
+	CreateTime        string `json:"create_time"`
+	Default           int64  `json:"default"`
+	HostApplyEnabled  bool   `json:"host_apply_enabled"`
+	LastTime          string `json:"last_time"`
+	ServiceCategoryId int64  `json:"service_category_id"`
+	ServiceTemplateId int64  `json:"service_template_id"`
+	SetTemplateId     int64  `json:"set_template_id"`
+}

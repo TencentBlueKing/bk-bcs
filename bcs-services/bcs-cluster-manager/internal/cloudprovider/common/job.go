@@ -56,7 +56,7 @@ type JobExecParas struct {
 	Operator string
 	// StepName 自定义step名称
 	StepName string
-	// AllowSkipJobTask 任务失败时候是否允许跳过
+	// AllowSkipJobTask 任务失败时候是否允许自动跳过
 	AllowSkipJobTask bool
 	Translate        string
 }
