@@ -18,7 +18,12 @@
       <template #prepend v-if="versionData.id === 0">
         <render-table-tip />
       </template>
-      <bk-table-column v-if="versionData.id === 0" :width="74" :min-width="74" :label="renderSelection">
+      <bk-table-column
+        v-if="versionData.id === 0"
+        :width="74"
+        :min-width="74"
+        :label="renderSelection"
+        :show-overflow-tooltip="false">
         <template #default="{ row }">
           <across-check-box
             :checked="isChecked(row)"

@@ -44,7 +44,9 @@
               <slot name="currentHead">
                 <div class="diff-panel-head">
                   <div class="version-tag">{{ showPublishBtn ? t('待上线版本') : t('当前版本') }}</div>
-                  <div class="version-name">{{ props.currentVersion.spec.name }}</div>
+                  <bk-overflow-title class="version-name" type="tips">
+                    {{ props.currentVersion.spec.name }}
+                  </bk-overflow-title>
                 </div>
               </slot>
             </template>
@@ -269,6 +271,9 @@
         color: #3a84ff;
         background: #edf4ff;
       }
+    }
+    .version-name {
+      max-width: 300px;
     }
   }
   .actions-btns {

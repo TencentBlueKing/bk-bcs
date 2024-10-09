@@ -44,7 +44,7 @@
           </template>
         </bk-table-column>
         <!-- <bk-table-column type="selection" :width="60"></bk-table-column> -->
-        <bk-table-column :label="t('变量名称')" width="300">
+        <bk-table-column :label="t('变量名称')" width="300" min-width="300">
           <template #default="{ row }">
             <div v-if="row.spec" class="var-name-wrapper">
               <bk-overflow-title class="name-text" type="tips" :key="row.id" @click="handleEditVar(row)">
