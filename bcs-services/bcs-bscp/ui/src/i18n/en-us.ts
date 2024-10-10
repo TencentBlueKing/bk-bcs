@@ -553,6 +553,7 @@ export default {
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
   '分组最多支持 5 个标签选择器': 'The group supports a maximum of 5 tag selectors',
+  请输入或选择key: 'Please enter or select key',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
