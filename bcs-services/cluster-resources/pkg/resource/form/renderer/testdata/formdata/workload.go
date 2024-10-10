@@ -40,7 +40,7 @@ var DeployComplex = model.Deploy{
 	},
 	Spec: model.DeploySpec{
 		Replicas: model.DeployReplicas{
-			Cnt:                  2,
+			Cnt:                  "2",
 			UpdateStrategy:       resCsts.DefaultUpdateStrategy,
 			MaxSurge:             0,
 			MSUnit:               util.UnitCnt,
@@ -76,7 +76,7 @@ var DeploySimple = model.Deploy{
 	},
 	Spec: model.DeploySpec{
 		Replicas: model.DeployReplicas{
-			Cnt:            2,
+			Cnt:            "2",
 			UpdateStrategy: resCsts.DefaultUpdateStrategy,
 			MaxSurge:       1,
 			MSUnit:         util.UnitCnt,
@@ -114,7 +114,7 @@ var STSComplex = model.STS{
 	Spec: model.STSSpec{
 		Replicas: model.STSReplicas{
 			SVCName:        "svc-complex-y3xk1r9vg9",
-			Cnt:            2,
+			Cnt:            "2",
 			UpdateStrategy: resCsts.DefaultUpdateStrategy,
 			PodManPolicy:   "OrderedReady",
 			Partition:      3,
