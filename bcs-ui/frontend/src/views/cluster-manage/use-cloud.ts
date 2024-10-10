@@ -1,7 +1,5 @@
 import { computed, ref } from 'vue';
 
-import { ICloudRegion, INodeManCloud, ISecurityGroup, IVpcItem } from './add/tencent/types';
-
 import {
   cloudAccounts as cloudAccountsAPI,
   cloudRegionByAccount,
@@ -16,6 +14,7 @@ import {
 } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
+import { ICloudRegion, INodeManCloud, ISecurityGroup, IVpcItem } from '@/views/cluster-manage/types/types';
 
 export interface IGoogleAccount {
   gkeProjectID?: string
@@ -91,7 +90,7 @@ export default function () {
     },
     tencentPublicCloud: {
       label: $i18n.t('provider.tencentPublicCloud'),
-      className: '#bcs-icon-color-publiccloud',
+      className: '#bcs-icon-color-tencentcloud',
     },
   };
 

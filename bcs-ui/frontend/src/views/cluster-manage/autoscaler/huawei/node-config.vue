@@ -454,12 +454,12 @@ import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsRuntimeInfo, cloudsZones } from '@/api/modules/cluster-manager';
+import FormGroup from '@/components/form-group.vue';
 import TextTips from '@/components/layout/TextTips.vue';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
@@ -609,7 +609,8 @@ export default defineComponent({
         {
           message: $i18n.t('cluster.ca.nodePool.create.validate.passwordNotSame'),
           trigger: 'blur',
-          validator: () => confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
+          validator: () => isEdit.value
+          || confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
         },
       ],
       // 密钥校验

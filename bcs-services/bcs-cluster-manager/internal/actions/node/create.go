@@ -15,10 +15,12 @@ package node
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -51,10 +53,33 @@ func (ua *RecordNodeDataAction) validate() error {
 }
 
 func (ua *RecordNodeDataAction) recordNodes() error { // nolint
+	clusterIDMap := make(map[string]struct{})
 	for _, node := range ua.req.Nodes {
 		err := ua.model.CreateNode(context.Background(), node)
 		if err != nil {
 			blog.Errorf("RecordNodeDataAction recordNodes %s failed: %v", node.InnerIP, err)
+		}
+		clusterIDMap[node.ClusterID] = struct{}{}
+	}
+
+	for clusterID := range clusterIDMap {
+		cluster, err := ua.model.GetCluster(ua.ctx, clusterID)
+		if err != nil {
+			continue
+		}
+		err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+			ResourceType: common.Cluster.String(),
+			ResourceID:   clusterID,
+			TaskID:       "",
+			Message:      "录入节点详情信息",
+			OpUser:       auth.GetUserFromCtx(ua.ctx),
+			CreateTime:   time.Now().Format(time.RFC3339),
+			ClusterID:    cluster.ClusterID,
+			ProjectID:    cluster.ProjectID,
+			ResourceName: cluster.ClusterName,
+		})
+		if err != nil {
+			blog.Errorf("RecordNodeInfo CreateOperationLog failed: %v", err)
 		}
 	}
 

@@ -54,7 +54,7 @@ func (h *Handler) GetTemplateSpace(
 func (h *Handler) ListTemplateSpace(
 	ctx context.Context, in *clusterRes.ListTemplateSpaceReq, out *clusterRes.CommonListResp) error {
 	action := templatespace.NewTemplateSpaceAction(h.model)
-	data, err := action.List(ctx, in.Name)
+	data, err := action.List(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (h *Handler) DeleteTemplateSpace(
 func (h *Handler) CopyTemplateSpace(
 	ctx context.Context, in *clusterRes.CopyTemplateSpaceReq, out *clusterRes.CommonResp) error {
 	action := templatespace.NewTemplateSpaceAction(h.model)
-	id, err := action.Copy(ctx, in.GetId())
+	id, err := action.Copy(ctx, in.GetId(), in.GetName(), in.GetDescription())
 	if err != nil {
 		return err
 	}

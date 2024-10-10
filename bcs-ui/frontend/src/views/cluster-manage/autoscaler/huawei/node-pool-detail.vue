@@ -237,7 +237,7 @@
 import { computed, defineComponent, onMounted, ref } from 'vue';
 
 // import kubeletParams from '../kubelet-params.vue';
-import UserAction from '../user-action.vue';
+import UserAction from '../components/user-action.vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import BcsContent from '@/components/layout/Content.vue';

@@ -10,7 +10,7 @@
       <ConfigForm
         v-if="!configDetailLoading"
         ref="formRef"
-        v-model:fileUploading="fileUploading"
+        v-model:file-uploading="fileUploading"
         class="config-form-wrapper"
         :config="configForm"
         :content="content"

@@ -111,6 +111,21 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 		}
 		return nil, err
 	}
+
+	app, err := s.dao.App().GetByID(grpcKit, req.AppId)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	// 不是空值表示被客户端拉取过
+	var havePull bool
+	if app.Spec.LastConsumedTime != nil {
+		havePull = true
+	}
+
 	haveCredentials, err := s.checkAppHaveCredentials(grpcKit, req.BizId, req.AppId)
 	if err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
@@ -126,6 +141,7 @@ func (s *Service) Publish(ctx context.Context, req *pbds.PublishReq) (*pbds.Publ
 	resp := &pbds.PublishResp{
 		PublishedStrategyHistoryId: pshID,
 		HaveCredentials:            haveCredentials,
+		HavePull:                   havePull,
 	}
 	return resp, nil
 }

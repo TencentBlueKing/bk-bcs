@@ -94,11 +94,11 @@ import { useClusterInfo } from '../cluster/use-cluster';
 import { desirednode, nodeGroups } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import SelectExtension from '@/components/select-extension.vue';
 import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 export default defineComponent({
   components: {  SelectExtension },

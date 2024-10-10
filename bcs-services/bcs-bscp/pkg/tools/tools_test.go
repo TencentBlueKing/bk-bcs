@@ -118,3 +118,26 @@ func TestRemoveDuplicates(t *testing.T) {
 		}
 	}
 }
+
+func TestSplitPathAndName(t *testing.T) {
+	tests := []struct {
+		input        string
+		expectedPath string
+		expectedName string
+	}{
+		{"/folder/file.txt", "/folder/", "file.txt"},
+		{"folder/file.txt", "/folder/", "file.txt"},
+		{"/file.txt", "/", "file.txt"},
+		{"/folder/", "/folder/", ""},
+		{"folder/", "/folder/", ""},
+		{"/", "/", ""},
+	}
+
+	for _, test := range tests {
+		path, name := SplitPathAndName(test.input)
+		if path != test.expectedPath || name != test.expectedName {
+			t.Errorf("splitPathAndName(%s) = %s, %s; want %s, %s",
+				test.input, path, name, test.expectedPath, test.expectedName)
+		}
+	}
+}

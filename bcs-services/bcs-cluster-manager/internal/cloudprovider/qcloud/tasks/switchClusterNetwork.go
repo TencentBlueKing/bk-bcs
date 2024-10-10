@@ -101,6 +101,13 @@ func AllocateClusterSubnetTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	if len(subnetIDs) == 0 {
+		blog.Errorf("AllocateClusterSubnetTask[%s] failed: subnetIDs empty", taskID)
+		retErr := fmt.Errorf("AllocateClusterSubnetTask[%s] subnetIds empty", clusterID)
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	state.Task.CommonParams[cloudprovider.SubnetIDKey.String()] = strings.Join(subnetIDs, ",")
 
 	// update cluster subnets

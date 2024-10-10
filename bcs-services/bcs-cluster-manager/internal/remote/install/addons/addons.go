@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
 )
 
@@ -97,15 +98,18 @@ func (a *AddonsInstaller) IsInstalled(clusterID string) (bool, error) {
 }
 
 func (a *AddonsInstaller) getAddonDetail(clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
+	start := time.Now()
 	resp, err := a.client.GetAddonsDetail(context.Background(), &helmmanager.GetAddonsDetailReq{
 		ProjectCode: a.projectID,
 		ClusterID:   clusterId,
 		Name:        a.addonName,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("addons", "GetAddonsDetail", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetAddonsDetail failed, err: %s", err.Error())
 		return nil, err
 	}
+	metrics.ReportLibRequestMetric("addons", "GetAddonsDetail", "grpc", metrics.LibCallStatusOK, start)
 
 	if resp == nil {
 		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, resp is empty")
@@ -126,6 +130,7 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 		return fmt.Errorf("[AddonsInstaller] InstallAddons failed: %v", err)
 	}
 
+	start := time.Now()
 	resp, err := a.client.UpgradeAddons(context.Background(), &helmmanager.UpgradeAddonsReq{
 		ProjectCode: a.projectID,
 		ClusterID:   clusterID,
@@ -133,9 +138,12 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 		Version:     addonResp.Data.Version,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("addons", "UpgradeAddons", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[AddonsInstaller] InstallAddons failed, err: %s", err.Error())
 		return err
 	}
+	metrics.ReportLibRequestMetric("addons", "UpgradeAddons", "grpc", metrics.LibCallStatusOK, start)
+
 	if resp == nil {
 		blog.Errorf("[AddonsInstaller] InstallAddons failed, resp is empty")
 		return fmt.Errorf("InstallAddons failed, resp is empty")
@@ -162,6 +170,7 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 		return nil
 	}
 
+	start := time.Now()
 	// delete addon
 	resp, err := a.client.UninstallAddons(context.Background(), &helmmanager.UninstallAddonsReq{
 		ProjectCode: a.projectID,
@@ -169,9 +178,12 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 		Name:        a.addonName,
 	})
 	if err != nil {
+		metrics.ReportLibRequestMetric("addons", "UninstallAddons", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[AddonsInstaller] delete addon failed, err: %s", err.Error())
 		return err
 	}
+	metrics.ReportLibRequestMetric("addons", "UninstallAddons", "grpc", metrics.LibCallStatusOK, start)
+
 	if resp.Code != 0 {
 		blog.Errorf("[AddonsInstaller] UninstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
 		return fmt.Errorf("UninstallAddons failed, code: %d, message: %s, requestID: %s", resp.Code,

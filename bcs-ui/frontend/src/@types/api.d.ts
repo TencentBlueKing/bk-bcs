@@ -73,4 +73,5 @@ interface IFetchConfig {
   cancelPrevious?: boolean// 是否需要上一次重复的请求
   cancelWhenRouteChange?: boolean// 当前路由切换时当前请求可以被取消
   globalError?: boolean // 捕获全局异常
+  headers?: Record<string, string>
 }

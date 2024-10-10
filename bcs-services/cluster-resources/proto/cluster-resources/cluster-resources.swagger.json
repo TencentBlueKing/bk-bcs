@@ -1067,6 +1067,17 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "tags",
+            "description": "文件夹标签.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           }
         ],
         "tags": [
@@ -10031,6 +10042,14 @@
         "projectCode": {
           "type": "string",
           "title": "项目编码"
+        },
+        "name": {
+          "type": "string",
+          "title": "名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "描述"
         }
       },
       "description": "复制模板文件文件夹",
@@ -10202,6 +10221,13 @@
         "description": {
           "type": "string",
           "title": "文件夹描述"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "文件夹标签"
         }
       },
       "description": "创建模板文件文件夹",
@@ -11151,6 +11177,13 @@
         "description": {
           "type": "string",
           "title": "文件夹描述"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "文件夹标签"
         }
       },
       "description": "更新模板文件文件夹",

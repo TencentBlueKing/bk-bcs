@@ -314,3 +314,20 @@ func BytesToHumanReadable(bytes uint64) string {
 		return fmt.Sprintf("%d bytes", bytes)
 	}
 }
+
+// SplitPathAndName 检查并拆分路径和文件名
+func SplitPathAndName(remainingPath string) (string, string) {
+	// 如果路径不以 "/" 开头，加上 "/"
+	if !strings.HasPrefix(remainingPath, "/") {
+		remainingPath = "/" + remainingPath
+	}
+
+	// 查找最后一个 "/" 的位置，并拆分路径和文件名
+	lastSlashIndex := strings.LastIndex(remainingPath, "/")
+	if lastSlashIndex != -1 && lastSlashIndex < len(remainingPath)-1 {
+		path := remainingPath[:lastSlashIndex+1]
+		name := remainingPath[lastSlashIndex+1:]
+		return path, name
+	}
+	return remainingPath, ""
+}

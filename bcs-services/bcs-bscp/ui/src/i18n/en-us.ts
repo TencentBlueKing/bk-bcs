@@ -522,6 +522,7 @@ export default {
   是否可见: 'visibility',
   密钥类型: 'secret_type',
   '请输入配置文件的完整路径和文件名，例如：/etc/nginx/nginx.conf': 'Please enter the complete path and file name of the configuration file, for example: /etc/nginx/nginx.conf',
+  '对于Windows客户端，以上文件权限、用户及用户组设置不生效，可在后置脚本中处理文件权限': 'For Windows clients, the above file permission, user and user group settings do not take effect, and file permissions can be handled in the post-script',
 
   // 分组管理
   新增分组: 'New group',
@@ -705,7 +706,6 @@ export default {
   '当前已有「未上线」版本': 'There is currently a "not online" version',
   前往编辑: 'Go to edit',
   创建版本: 'Create version',
-  选择载入脚本: 'Select load script',
   '无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾': 'Invalid name, only allowed to contain Chinese, English, numbers, underscores (), hyphens (-), spaces, and must start and end with Chinese, English, numbers',
   编辑版本: 'Edited version',
   脚本内容不能为空: 'Script content cannot be empty',
@@ -849,7 +849,7 @@ export default {
   复制命令: 'Command Copy',
   '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': 'Only supports letters, numbers, \'-\', \'_\', \'.\' and \'/\' characters, and must start and end with a letter or number',
   '需以字母、数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字及负数': 'Must start and end with a letter or number, can include \'-\', \'_\', \'.\', and alphanumeric characters, as well as negative numbers',
-  服务标签: 'service label',
+  服务标签: 'Service label',
   '启用 P2P 网络加速': 'Enable P2P network acceleration',
   查看说明: 'View instructions',
   '启用 P2P 网络加速主要适用于业务但配置文件较大及大量节点拉取配置的场景，以实现更优的文件传输速度。': 'Enabling P2P network acceleration is primarily suitable for scenarios where business configuration files are large and many nodes are pulling configurations, to achieve better file transfer speeds',
@@ -866,6 +866,16 @@ export default {
   'HTTP(S)接口调用': 'HTTP(S) interface invocation',
   '请输入BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please enter the BCS cluster ID, replace the example code below, and then try copying the example',
   'BCS集群ID须符合以下格式：BCS-K8S-xxxxx，其中xxxxx为5位数字': 'The BCS cluster ID must follow the format: BCS-K8S-xxxxx, where xxxxx is a five-digit numbe',
+  一键复制: 'Copy',
+  启用配置文件筛选: 'Enable configuration file filtering',
+  '当客户端无需拉取配置服务中的全量配置文件时，可以启用此功能，指定相应的通配符，可仅拉取客户端所需的文件': 'When the client does not need to pull the full configuration files from the configuration service, this feature can be enabled. By specifying the appropriate wildcard, the client can pull only the required files',
+  已设置的筛选规则: '{count} filtering rules have been set',
+  规则设置: 'Rule configuration',
+  配置文件筛选规则: 'Configuration file filter rules',
+  配置文件筛选: 'Configuration file filter',
+  '全局配置文件筛选：': 'Global Configuration File Filter：',
+  '(全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用)': '(The filtering of the global configuration file is the same as that of the service configuration file; the difference is that the global configuration file can be shared among multiple services)',
+  配置筛选规则: 'Configuration filtering rules',
 
   // 公共组件
   页面不存在: 'Page does not exist',
@@ -1062,6 +1072,7 @@ export default {
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
   总和: 'Total',
+  最后一次拉取配置耗时: 'Last pull time-consuming',
 
   // 跨页全选
   跨页全选: 'AcrossChecked',

@@ -128,7 +128,6 @@ func (fs *feedServer) listenAndServe() error {
 	// generate standard grpc server grpcMetrics.
 	grpcMetrics := grpc_prometheus.NewServerMetrics()
 	grpcMetrics.EnableHandlingTimeHistogram(metrics.GrpcBuckets)
-
 	recoveryOpt := grpc_recovery.WithRecoveryHandlerContext(brpc.RecoveryHandlerFuncContext)
 
 	opts := []grpc.ServerOption{grpc.MaxRecvMsgSize(1 * 1024 * 1024),
@@ -137,6 +136,7 @@ func (fs *feedServer) listenAndServe() error {
 			brpc.LogUnaryServerInterceptor(),
 			grpcMetrics.UnaryServerInterceptor(),
 			service.FeedUnaryAuthInterceptor,
+			service.FeedUnaryUpdateLastConsumedTimeInterceptor,
 			grpc_recovery.UnaryServerInterceptor(recoveryOpt),
 		),
 		grpc.ChainStreamInterceptor(

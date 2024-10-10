@@ -53,7 +53,7 @@
         />
       </div>
       <!-- 磁盘容量(虚拟集群不展示磁盘信息) -->
-      <div class="flex-1 w-0" v-if="curCluster.clusterType !== 'virtual'">
+      <div class="flex-1 w-0" v-if="curCluster?.clusterType !== 'virtual'">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('metrics.diskUsage') }}</span>
           <div>
@@ -171,7 +171,7 @@
         />
       </div>
       <!-- 磁盘IO(虚拟集群不展示磁盘信息) -->
-      <div class="flex-1 w-0" v-if="curCluster.clusterType !== 'virtual'">
+      <div class="flex-1 w-0" v-if="curCluster?.clusterType !== 'virtual'">
         <div class="flex justify-between">
           <span class="text-[14px] font-bold">{{ $t('metrics.diskIOUsage') }}</span>
           <div>
@@ -197,7 +197,7 @@
         />
       </div>
     </div>
-    <div class="flex overflow-hidden pb-[20px] h-[360px]" v-if="curCluster.clusterType !== 'virtual'">
+    <div class="flex overflow-hidden pb-[20px] h-[360px]" v-if="curCluster?.clusterType !== 'virtual'">
       <!--POD使用率-->
       <div class="flex-1 w-0 mr-[24px]">
         <div class="flex justify-between">
@@ -233,7 +233,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
-import ClusterOverviewChart from './cluster-overview-chart.vue';
+import ClusterOverviewChart from './components/cluster-overview-chart.vue';
 
 import { formatBytes } from '@/common/util';
 import { useCluster, useProject } from '@/composables/use-app';
@@ -264,7 +264,7 @@ export default defineComponent({
   setup(props) {
     const { clusterId } = toRefs(props);
     const { clusterList } = useCluster();
-    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value) || {});
+    const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterId.value));
     const { projectCode } = useProject();
     const overviewData = ref<{
       cpu_usage: IUsageData

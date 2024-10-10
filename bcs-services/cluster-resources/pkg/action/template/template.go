@@ -607,6 +607,17 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 		}
 	}
 
+	// 更新最新部署版本及最新部署人
+	for _, v := range templates {
+		err := t.model.UpdateTemplateBySpaceAndName(ctx, p.Code, v.TemplateSpace, v.TemplateName, entity.M{
+			"latestDeployVersion": v.TemplateVersion,
+			"latestDeployer":      ctxkey.GetUsernameFromCtx(ctx),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return nil, nil
 }
 

@@ -149,7 +149,7 @@ func (dao *contentDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents
 		}
 		content.ID = ids[i]
 	}
-	if err := tx.Content.WithContext(kit.Ctx).Save(contents...); err != nil {
+	if err := tx.Content.WithContext(kit.Ctx).CreateInBatches(contents, 500); err != nil {
 		return err
 	}
 	return nil

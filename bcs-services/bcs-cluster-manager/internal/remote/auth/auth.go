@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
@@ -101,6 +102,7 @@ func (auth *ClientAuth) GetAccessTokenBySsm(app utils.BkAppUser) (string, error)
 		resp = &AccessTokenSsmResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(url).
@@ -113,9 +115,11 @@ func (auth *ClientAuth) GetAccessTokenBySsm(app utils.BkAppUser) (string, error)
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("auth", "GetAccessTokenBySsm", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetAccessTokenBySsm failed: %v", errs[0])
 		return "", errs[0]
 	}
+	metrics.ReportLibRequestMetric("auth", "GetAccessTokenBySsm", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != 0 {
 		errMsg := fmt.Errorf("call GetAccessTokenBySsm API error: code[%v], body[%v], err[%s]",
@@ -149,6 +153,7 @@ func (auth *ClientAuth) GetAccessTokenByGateWay(app utils.BkAppUser) (string, er
 		resp = &AccessTokenGateWayResp{}
 	)
 
+	start := time.Now()
 	result, body, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(url).
@@ -159,9 +164,11 @@ func (auth *ClientAuth) GetAccessTokenByGateWay(app utils.BkAppUser) (string, er
 		EndStruct(resp)
 
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("auth", "GetAccessTokenByGateWay", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api GetAccessTokenByGateWay failed: %v", errs[0])
 		return "", errs[0]
 	}
+	metrics.ReportLibRequestMetric("auth", "GetAccessTokenByGateWay", "http", metrics.LibCallStatusOK, start)
 
 	if result.StatusCode != http.StatusOK || resp.Code != "0" {
 		errMsg := fmt.Errorf("call GetAccessTokenByGateWay API error: code[%v], body[%v], err[%s]",

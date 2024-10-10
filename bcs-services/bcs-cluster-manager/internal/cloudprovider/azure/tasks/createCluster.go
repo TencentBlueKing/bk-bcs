@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package tasks xxx
 package tasks
 
 import (
@@ -55,6 +56,7 @@ func CreateAKSClusterTask(taskID string, stepName string) error {
 	blog.Infof("CreateAKSClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
+	// get step paras
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	nodeGroupIDs := step.Params[cloudprovider.NodeGroupIDKey.String()]
@@ -72,8 +74,10 @@ func CreateAKSClusterTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// get nodeGroup info
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
+		// get nodeGroup by groupId
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
 			blog.Errorf("CreateAKSClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s "+
@@ -115,35 +119,42 @@ func CreateAKSClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
+// createAKSCluster create cloud aks cluster
 func createAKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
 	string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// aks client
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
 		return "", fmt.Errorf("create AksService failed")
 	}
 
+	// get cluster resource group
 	rgName, ok := info.Cluster.ExtraInfo[common.ClusterResourceGroup]
 	if !ok {
 		return "", fmt.Errorf("createAKSCluster[%s] %s failed, empty clusterResourceGroup",
 			taskID, info.Cluster.ClusterID)
 	}
 
+	// build create cluster request
 	req, err := generateCreateClusterRequest(info, groups)
 	if err != nil {
 		return "", fmt.Errorf("createAKSCluster[%s] generateCreateClusterRequest failed, %v", taskID, err)
 	}
 
+	// aks create cluster
 	aksCluster, err := client.CreateCluster(ctx, rgName, info.Cluster.ClusterName, *req)
 	if err != nil {
 		return "", fmt.Errorf("createAKSCluster[%s] CreateCluster failed, %v", taskID, err)
 	}
 
+	// update cluster extraInfo
 	info.Cluster.SystemID = *aksCluster.Name
 	info.Cluster.ExtraInfo[common.NodeResourceGroup] = *aksCluster.Properties.NodeResourceGroup
 	info.Cluster.ExtraInfo[common.NetworkResourceGroup] = rgName
 
+	// update cluster
 	err = cloudprovider.UpdateCluster(info.Cluster)
 	if err != nil {
 		blog.Errorf("createAKSCluster[%s] updateClusterSystemID[%s] failed %s",
@@ -157,6 +168,7 @@ func createAKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return *aksCluster.Name, nil
 }
 
+// generateCreateClusterRequest generate create cluster request
 func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
 	*armcontainerservice.ManagedCluster, error) {
 	cluster := info.Cluster
@@ -166,7 +178,10 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 
 	var adminUserName, publicKey string
 	agentPools := make([]*armcontainerservice.ManagedClusterAgentPoolProfile, 0)
+
+	// handle agent pools
 	for _, ng := range groups {
+		// build agent pool request
 		agentPool, err := genAgentPoolReq(ng, info.CmOption.Account.SubscriptionID,
 			cluster.ExtraInfo[common.ClusterResourceGroup], cluster.NetworkSettings.MaxNodePodNum)
 		if err != nil {
@@ -188,34 +203,35 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	keys := make([]*armcontainerservice.SSHPublicKey, 0)
 	keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
 
+	// managed cluster request
 	req := &armcontainerservice.ManagedCluster{
-		Location: to.Ptr(cluster.Region),
-		Name:     to.Ptr(cluster.ClusterName),
+		Location: to.Ptr(cluster.Region),      // nolint
+		Name:     to.Ptr(cluster.ClusterName), // nolint
 		Tags: func() map[string]*string {
 			tags := make(map[string]*string)
 			for k, v := range cluster.ClusterBasicSettings.ClusterTags {
-				tags[k] = to.Ptr(v)
+				tags[k] = to.Ptr(v) // nolint
 			}
 			return tags
 		}(),
 		Properties: &armcontainerservice.ManagedClusterProperties{
 			AgentPoolProfiles: agentPools,
-			KubernetesVersion: to.Ptr(cluster.ClusterBasicSettings.Version),
+			KubernetesVersion: to.Ptr(cluster.ClusterBasicSettings.Version), // nolint
 			LinuxProfile: &armcontainerservice.LinuxProfile{
-				AdminUsername: to.Ptr(adminUserName),
+				AdminUsername: to.Ptr(adminUserName), // nolint
 				SSH: &armcontainerservice.SSHConfiguration{
 					PublicKeys: keys,
 				},
 			},
 			DNSPrefix: to.Ptr("111-dns"),
 			NetworkProfile: &armcontainerservice.NetworkProfile{
-				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),
-				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)),
-				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},
+				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
+				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
+				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
 			},
 			ServicePrincipalProfile: &armcontainerservice.ManagedClusterServicePrincipalProfile{
-				ClientID: to.Ptr(info.CmOption.Account.ClientID),
-				Secret:   to.Ptr(info.CmOption.Account.ClientSecret),
+				ClientID: to.Ptr(info.CmOption.Account.ClientID),     // nolint
+				Secret:   to.Ptr(info.CmOption.Account.ClientSecret), // nolint
 			},
 		},
 	}
@@ -223,17 +239,20 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	return req, nil
 }
 
+// genAgentPoolReq build agent pool request
 func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) (
 	*armcontainerservice.ManagedClusterAgentPoolProfile, error) {
 	if ng.LaunchTemplate == nil {
 		return nil, fmt.Errorf("generateCreateClusterRequest empty LaunchTemplate for nodegroup %s", ng.Name)
 	}
 
+	// subnets info
 	subnets := ng.AutoScaling.SubnetIDs
 	if len(ng.AutoScaling.VpcID) == 0 || len(subnets) == 0 {
 		return nil, fmt.Errorf("generateCreateClusterRequest nodegroup[%s] vpcID or subnetID"+
 			" can not be empty", ng.Name)
 	}
+	// system disk
 	sysDiskSize, _ := strconv.Atoi(ng.LaunchTemplate.SystemDisk.DiskSize)
 	agentPool := &armcontainerservice.ManagedClusterAgentPoolProfile{
 		AvailabilityZones: func(zones []string) []*string {
@@ -279,6 +298,7 @@ func genDNSServiceIP(cidr string) string {
 	return ip.String()
 }
 
+// incrementIP xxx
 func incrementIP(ip net.IP, index int) net.IP {
 	for i := 0; i < index; i++ {
 		incremented := false
@@ -317,6 +337,7 @@ func CheckAKSClusterStatusTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -366,6 +387,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		failed = false
 	)
 
+	// conetxt timeout
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
 
@@ -380,6 +402,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		blog.Infof("checkClusterStatus[%s] cluster[%s] current status[%s]", taskID,
 			info.Cluster.ClusterID, *cluster.Properties.ProvisioningState)
 
+		// check cluster status
 		switch *cluster.Properties.ProvisioningState {
 		case api.ManagedClusterPodIdentityProvisioningStateSucceeded:
 			return loop.EndLoop
@@ -395,6 +418,7 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 		return err
 	}
 
+	// failed status
 	if failed {
 		blog.Errorf("checkClusterStatus[%s] GetCluster[%s] failed: abnormal", taskID, info.Cluster.ClusterID)
 		retErr := fmt.Errorf("cluster[%s] status abnormal", info.Cluster.ClusterID)
@@ -426,6 +450,8 @@ func CheckAKSNodeGroupsStatusTask(taskID string, stepName string) error {
 	nodeGroupIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params,
 		cloudprovider.NodeGroupIDKey.String(), ",")
 	systemID := state.Task.CommonParams[cloudprovider.CloudSystemID.String()]
+
+	// get depend cloud info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -438,8 +464,10 @@ func CheckAKSNodeGroupsStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// check cluster status
+	// check cluster nodes status
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	// get nodeGroups status
 	addSuccessNodeGroups, addFailureNodeGroups, err := checkNodesGroupStatus(ctx, dependInfo, systemID, nodeGroupIDs)
 	if err != nil {
 		blog.Errorf("CheckAKSNodeGroupsStatusTask[%s] checkNodesGroupStatus[%s] failed: %v",
@@ -453,10 +481,13 @@ func CheckAKSNodeGroupsStatusTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+
+	// failed groups
 	if len(addFailureNodeGroups) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedNodeGroupIDsKey.String()] =
 			strings.Join(addFailureNodeGroups, ",")
 	}
+	// success groups
 	if len(addSuccessNodeGroups) == 0 {
 		blog.Errorf("CheckAKSNodeGroupsStatusTask[%s] nodegroups init failed", taskID)
 		retErr := fmt.Errorf("节点池初始化失败, 请联系管理员")
@@ -475,6 +506,7 @@ func CheckAKSNodeGroupsStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkNodesGroupStatus check node group status
 func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	systemID string, nodeGroupIDs []string) ([]string, []string, error) {
 
@@ -482,6 +514,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 		addSuccessNodeGroups = make([]string, 0)
 		addFailureNodeGroups = make([]string, 0)
 	)
+	// get taskId from context
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// get azureCloud client
@@ -491,6 +524,8 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 		retErr := fmt.Errorf("get cloud aks client err, %s", err.Error())
 		return nil, nil, retErr
 	}
+
+	// handle groups
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
@@ -501,14 +536,16 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 
 	}
 
+	// context timeout
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	// loop cluster status
+	// loop cluster nodePool status
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
 		running, failure := make([]string, 0), make([]string, 0)
 		for _, ng := range nodeGroups {
+			// get agent pool
 			aksAgentPool, errQuery := cli.GetPoolAndReturn(ctx, info.Cluster.ExtraInfo[common.ClusterResourceGroup],
 				systemID, getCloudNodeGroupID(ng))
 			if errQuery != nil {
@@ -523,6 +560,7 @@ func checkNodesGroupStatus(ctx context.Context, info *cloudprovider.CloudDependB
 			blog.Infof("checkNodesGroupStatus[%s] nodeGroup[%s] status %s",
 				taskID, ng.NodeGroupID, *aksAgentPool.Properties.ProvisioningState)
 
+			// agent pool status check
 			switch *aksAgentPool.Properties.ProvisioningState {
 			case api.AgentPoolPodIdentityProvisioningStateSucceeded:
 				running = append(running, ng.NodeGroupID)
@@ -575,6 +613,7 @@ func UpdateAKSNodesGroupToDBTask(taskID string, stepName string) error {
 	addFailedNodeGroupIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.FailedNodeGroupIDsKey.String(), ",")
 
+	// get depend cloud basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -587,7 +626,7 @@ func UpdateAKSNodesGroupToDBTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// check cluster status
+	// update node groups
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	err = updateNodeGroups(ctx, dependInfo, addFailedNodeGroupIDs, addSuccessNodeGroupIDs)
 	if err != nil {
@@ -608,12 +647,16 @@ func UpdateAKSNodesGroupToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
+// updateNodeGroups update node groups
 func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	addFailedNodeGroupIDs, addSuccessNodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// get cluster/nodeGroup resourceGroup
 	nodeResourceGroup := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 	clusterResourceGroup := info.Cluster.ExtraInfo[common.ClusterResourceGroup]
 
+	// failed groups
 	if len(addFailedNodeGroupIDs) > 0 {
 		for _, ngID := range addFailedNodeGroupIDs {
 			err := cloudprovider.UpdateNodeGroupStatus(ngID, common.StatusCreateNodeGroupFailed)
@@ -623,7 +666,9 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 	}
 
+	// success groups
 	for _, ngID := range addSuccessNodeGroupIDs {
+		// get group by Id
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
 			return fmt.Errorf("updateNodeGroups GetNodeGroupByGroupID failed, %s", err.Error())
@@ -636,6 +681,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			return fmt.Errorf("get cloud aks client err, %s", err.Error())
 		}
 
+		// get aks agent pool
 		aksAgentPool, err := cli.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 			info.Cluster.SystemID, getCloudNodeGroupID(nodeGroup))
 		if err != nil {
@@ -644,6 +690,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 				nodeGroup.NodeGroupID, err.Error())
 		}
 
+		// process vmss
 		err = processVmss(ctx, cli, aksAgentPool, nodeGroup, nodeResourceGroup, clusterResourceGroup)
 		if err != nil {
 			return fmt.Errorf("updateNodeGroups processVmss[%s] failed, %s", nodeGroup.NodeGroupID, err.Error())
@@ -662,6 +709,7 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return nil
 }
 
+// processVmss process vmss
 func processVmss(ctx context.Context, cli api.AksService, pool *armcontainerservice.AgentPool,
 	nodeGroup *proto.NodeGroup, rg, crg string) error {
 	set, err := cli.MatchNodeGroup(ctx, rg, *pool.Name)
@@ -669,6 +717,7 @@ func processVmss(ctx context.Context, cli api.AksService, pool *armcontainerserv
 		return fmt.Errorf("processVmss call MatchNodeGroup[%s] falied, %v", nodeGroup.NodeGroupID, err)
 	}
 
+	// scaleSystemVmss
 	vmSet, err := scaleSystemVmss(ctx, cli, set, nodeGroup, rg)
 	if err != nil {
 		return fmt.Errorf("processVmss scaleSystemVmss[%s] failed, %s", nodeGroup.NodeGroupID, err.Error())
@@ -679,11 +728,13 @@ func processVmss(ctx context.Context, cli api.AksService, pool *armcontainerserv
 	// 字段对齐
 	_ = cli.AgentPoolToNodeGroup(pool, nodeGroup)
 
+	// updateVmss
 	finalVmss, err := updateVmss(ctx, cli, nodeGroup, vmSet, rg, crg)
 	if err != nil {
 		return fmt.Errorf("processVmss updateVmss[%s] failed, %s", nodeGroup.NodeGroupID, err.Error())
 	}
 
+	// update node group
 	_ = cli.SetToNodeGroup(finalVmss, nodeGroup)
 
 	nodeGroup.AutoScaling.DesiredSize = uint32(*finalVmss.SKU.Capacity)
@@ -733,6 +784,7 @@ func CheckAKSClusterNodesStatusTask(taskID string, stepName string) error {
 	nodeGroupIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessNodeGroupIDsKey.String(), ",")
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -760,9 +812,11 @@ func CheckAKSClusterNodesStatusTask(taskID string, stepName string) error {
 	if state.Task.CommonParams == nil {
 		state.Task.CommonParams = make(map[string]string)
 	}
+	// failed nodes
 	if len(addFailureNodes) > 0 {
 		state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()] = strings.Join(addFailureNodes, ",")
 	}
+	// success nodes
 	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckCreateClusterNodeStatusTask[%s] nodes init failed", taskID)
 		retErr := fmt.Errorf("节点初始化失败, 请联系管理员")
@@ -780,13 +834,18 @@ func CheckAKSClusterNodesStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
+// checkClusterNodesStatus check cluster node status
 func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	nodeGroupIDs []string) ([]string, []string, error) {
 	var totalNodesNum uint32
 	var addSuccessNodes, addFailureNodes = make([]string, 0), make([]string, 0)
 	nodePoolList := make([]string, 0)
 	poolVmss := make(map[string]string)
+
+	// get taskId from context
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// loop nodeGroups
 	for _, ngID := range nodeGroupIDs {
 		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if err != nil {
@@ -804,14 +863,16 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 		return nil, nil, fmt.Errorf("get cloud aks client err, %s", err.Error())
 	}
 
+	// context timeout
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	// loop cluster status
+	// loop cluster nodes status
 	err = loop.LoopDoFunc(ctx, func() error {
 		index := 0
 		running, failure := make([]string, 0), make([]string, 0)
 		for _, pool := range nodePoolList {
+			// listInstanceAndReturn
 			instances, errGet := cli.ListInstanceAndReturn(ctx, info.Cluster.ExtraInfo[common.NodeResourceGroup],
 				poolVmss[pool])
 			if errGet != nil {
@@ -904,6 +965,7 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 	nodeGroupIDs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
 		cloudprovider.SuccessNodeGroupIDsKey.String(), ",")
 
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID: clusterID,
 		CloudID:   cloudID,
@@ -916,7 +978,7 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// check cluster status
+	// save node info to db
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 	err = updateNodeToDB(ctx, state, dependInfo, nodeGroupIDs)
 	if err != nil {
@@ -944,6 +1006,7 @@ func UpdateAKSNodesToDBTask(taskID string, stepName string) error {
 	return nil
 }
 
+// updateNodeToDB update node info to db
 func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *cloudprovider.CloudDependBasicInfo,
 	nodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
@@ -956,14 +1019,17 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 	}
 
 	addSuccessNodes := make([]string, 0)
+	// loop nodeGroups
 	for _, ngID := range nodeGroupIDs {
-		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
-		if err != nil {
+		// GetNodeGroupByGroupID get group by Id
+		nodeGroup, errLocal := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if errLocal != nil {
 			return fmt.Errorf("updateNodeToDB GetNodeGroupByGroupID information failed, %s", err.Error())
 		}
 
-		vmssList, err := cli.ListInstanceAndReturn(ctx, nodeResourceGroup, nodeGroup.AutoScaling.AutoScalingID)
-		if err != nil {
+		// ListInstanceAndReturn
+		vmssList, errLocal := cli.ListInstanceAndReturn(ctx, nodeResourceGroup, nodeGroup.AutoScaling.AutoScalingID)
+		if errLocal != nil {
 			return fmt.Errorf("updateNodeToDB ListInstanceAndReturn failed, %s", err.Error())
 		}
 		interfaceList := make([]*armnetwork.Interface, 0)
@@ -980,8 +1046,8 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		}
 
 		info.NodeGroup = nodeGroup
-		nodes, err := vmToNode(cli, info, vmssList, interfaceList)
-		if err != nil {
+		nodes, errLocal := vmToNode(cli, info, vmssList, interfaceList)
+		if errLocal != nil {
 			return fmt.Errorf("updateNodeToDB vmToNode failed, %v", err)
 		}
 		for _, n := range nodes {
@@ -1039,6 +1105,7 @@ func RegisterAKSClusterKubeConfigTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// import cluster credential
 	err = importClusterCredential(ctx, dependInfo)
 	if err != nil {
 		blog.Errorf("RegisterAKSClusterKubeConfigTask[%s] importClusterCredential failed: %s", taskID, err.Error())

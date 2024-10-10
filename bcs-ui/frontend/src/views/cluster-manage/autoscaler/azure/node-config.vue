@@ -126,14 +126,14 @@
               <div class="prefix-select">
                 <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
               </div>
-              <bcs-select
-                class="w-[88px] bg-[#fff] ml10"
+              <bk-input
+                class="w-[88px] ml10"
+                type="number"
                 :disabled="isEdit"
-                :clearable="false"
+                :min="50"
+                :max="2048"
                 v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-                <bcs-option id="50" name="50"></bcs-option>
-                <bcs-option id="100" name="100"></bcs-option>
-              </bcs-select>
+              </bk-input>
               <span :class="['company', { disabled: isEdit }]">GB</span>
             </div>
             <div class="mt20">
@@ -345,11 +345,11 @@ import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
+import FormGroup from '@/components/form-group.vue';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 

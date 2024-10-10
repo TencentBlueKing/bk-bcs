@@ -29,7 +29,7 @@ import { copyText } from '@/common/util';
 export default {
   inserted(el, bind) {
     const tools = bind.value?.tools || ['fullscreen'];
-    if (!tools || !tools.length) return;
+    if (!tools?.length) return;
 
     el.handleExitFullScreen = (event) => {
       if (event.code === 'Escape' && el.fullscreen) {

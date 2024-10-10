@@ -21,6 +21,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -424,6 +425,21 @@ func (ua *SyncAction) Handle(
 		return
 	}
 
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.AutoScalingOption.String(),
+		ResourceID:   ua.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("CA集群[%s]实际参数同步至管控端", ua.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("SyncAutoScalingOption[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)
+	}
+
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
@@ -514,6 +530,21 @@ func (ua *UpdateAsOptionDpAction) Handle(ctx context.Context,
 	if err := ua.updateClusterAsOptionDeviceProvider(ua.asOption); err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
+	}
+
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.AutoScalingOption.String(),
+		ResourceID:   ua.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("更新集群[%s]扩缩容配置使用的资源池", ua.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("UpdateAsOptionDeviceProvider[%s] CreateOperationLog failed: %v", ua.req.ClusterID, err)
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

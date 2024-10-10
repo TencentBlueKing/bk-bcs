@@ -21,6 +21,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -76,7 +77,24 @@ func (ta *TransNgToNtAction) transNgToNt() error {
 	nt.Desc = fmt.Sprintf("copy from %s", ng.NodeGroupID)
 
 	ta.nt = nt
-	return ta.model.CreateNodeTemplate(ta.ctx, nt)
+	err = ta.model.CreateNodeTemplate(ta.ctx, nt)
+	if err != nil {
+		return err
+	}
+
+	err = ta.model.CreateOperationLog(ta.ctx, &cmproto.OperationLog{
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   ta.req.GetNodeGroupID(),
+		TaskID:       "",
+		Message:      fmt.Sprintf("节点池[%s]转换为节点模板", ta.req.GetNodeGroupID()),
+		OpUser:       auth.GetUserFromCtx(ta.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: ng.GetName(),
+	})
+	if err != nil {
+		blog.Errorf("TransNodeGroupToNodeTemplate[%s] CreateOperationLog failed: %v", ta.req.GetNodeGroupID(), err)
+	}
+	return nil
 }
 
 // Handle handle update cluster credential

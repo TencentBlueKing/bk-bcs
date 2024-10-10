@@ -15,11 +15,13 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -132,6 +134,21 @@ func (ga *AddSubnetToClusterAction) Handle(ctx context.Context,
 	if err := ga.addSubnetToCluster(); err != nil {
 		ga.setResp(common.BcsErrClusterManagerClsMgrCloudErr, err.Error())
 		return
+	}
+
+	err := ga.model.CreateOperationLog(ga.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ga.req.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群[%s]添加子网资源", ga.req.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ga.req.ClusterID,
+		ProjectID:    ga.cluster.ProjectID,
+		ResourceName: ga.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("AddSubnetToCluster[%s] CreateOperationLog failed: %v", ga.req.ClusterID, err)
 	}
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

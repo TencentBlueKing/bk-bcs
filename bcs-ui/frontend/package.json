@@ -20,7 +20,7 @@
     "@blueking/platform-config": "^1.0.5",
     "@blueking/task-log": "^0.0.1",
     "@blueking/user-selector": "^1.0.9",
-    "axios": "^1.6.2",
+    "axios": "^1.7.7",
     "base-64": "^0.1.0",
     "bk-magic-vue": "2.5.9-beta.27",
     "brace": "~0.11.1",

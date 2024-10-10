@@ -14,10 +14,13 @@ package moduleflag
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -102,6 +105,18 @@ func (da *DeleteAction) Handle(
 	if err := da.deleteCloudModuleFlag(); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err := da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cloud.String(),
+		ResourceID:   da.req.CloudID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("删除云组件参数[%s]", da.req.CloudID),
+		OpUser:       auth.GetUserFromCtx(da.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		blog.Errorf("DeleteCloudModuleFlag[%s] CreateOperationLog failed: %v", da.req.CloudID, err)
 	}
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

@@ -530,4 +530,7 @@ declare namespace ClusterResource {
     labelSelector: LabelSelector[] // 标签选择器
     name: string // name
   }
+  export interface ExportTemplateReq {
+    templateSpaceNames: string[] // 模板空间名称
+  }
 }

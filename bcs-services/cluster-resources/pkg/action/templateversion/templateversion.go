@@ -18,6 +18,7 @@ import (
 	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/coreos/go-semver/semver"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -156,7 +157,23 @@ func (t *TemplateVersionAction) List(
 	if err != nil {
 		return nil, err
 	}
-	sort.Sort(entity.VersionsSortByVersion(templateVersion))
+
+	// 区分语义化版本及非语义话版本
+	var semVersion []*entity.TemplateVersion
+	var nonSemVersion []*entity.TemplateVersion
+	for i, v := range templateVersion {
+		_, err = semver.NewVersion(v.Version)
+		if err != nil {
+			nonSemVersion = append(nonSemVersion, templateVersion[i])
+			continue
+		}
+		semVersion = append(semVersion, templateVersion[i])
+	}
+	sort.Sort(entity.VersionsSortByVersion(semVersion))
+	// 非语义化版本按时间倒序排序
+	sort.Sort(entity.VersionsSortByCreateAt(nonSemVersion))
+	semVersion = append(semVersion, nonSemVersion...)
+	templateVersion = semVersion
 
 	m := make([]map[string]interface{}, 0)
 	// append draft version
@@ -178,6 +195,8 @@ func (t *TemplateVersionAction) List(
 		if value.Version == tmp.Version {
 			value.Latest = true
 		}
+		value.LatestDeployVersion = tmp.LatestDeployVersion
+		value.LatestDeployer = tmp.LatestDeployer
 		m = append(m, value.ToMap())
 	}
 	return m, nil

@@ -6,7 +6,7 @@
     {{ t('批量删除') }}
   </bk-button>
   <DeleteConfirmDialog
-    v-model:isShow="isBatchDeleteDialogShow"
+    v-model:is-show="isBatchDeleteDialogShow"
     :title="t('确认删除所选的 {n} 项分组？', { n: props.selectedIds.length })"
     :pending="batchDeletePending"
     @confirm="handleBatchDeleteConfirm">

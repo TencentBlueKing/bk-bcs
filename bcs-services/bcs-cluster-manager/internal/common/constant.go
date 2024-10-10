@@ -46,6 +46,8 @@ var (
 	Project ResourceType = "project"
 	// Task type
 	Task ResourceType = "task"
+	// Account type
+	Account ResourceType = "account"
 )
 
 // NodeType node type
