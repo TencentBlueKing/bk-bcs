@@ -146,8 +146,8 @@ func (res *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// UnauthorizedErr rest 未登入返回
-func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
+// NotLoggedInErr rest 未登入返回
+func NotLoggedInErr(err error, loginAuthHost, loginAuthPlainHost string) render.Renderer {
 	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error(), Details: []interface{}{}}
 	if e, ok := err.(*multierror.Error); ok {
 		for _, v := range e.Errors {
@@ -164,6 +164,12 @@ func UnauthorizedErr(err error, loginAuthHost, loginAuthPlainHost string) render
 func PermissionDenied(err error, data interface{}) render.Renderer {
 	payload := &ErrorPayload{Code: "PERMISSION_DENIED", Message: err.Error(), Data: data}
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusForbidden}
+}
+
+// Unauthorized 授权错误返回
+func Unauthorized(err error) render.Renderer {
+	payload := &ErrorPayload{Code: "UNAUTHENTICATED", Message: err.Error()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusUnauthorized}
 }
 
 // BadRequest rest 通用错误请求

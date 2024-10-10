@@ -25,7 +25,6 @@
         :row-class="getRowCls"
         :remote-pagination="true"
         :pagination="pagination"
-        show-overflow-tooltip
         @page-limit-change="handlePageLimitChange"
         @page-value-change="handlePageChange($event)">
         <template #prepend>
@@ -36,18 +35,14 @@
             <across-check-box :checked="isChecked(row)" :handle-change="() => handleSelectionChange(row)" />
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('配置文件名')">
+        <bk-table-column :label="t('配置文件名')" :show-overflow-tooltip="true">
           <template #default="{ row }">
-            <bk-overflow-title
-              v-if="row.spec"
-              type="tips"
-              class="config-name"
-              @click="handleViewConfig(row)">
+            <span v-if="row.spec" class="config-name" @click="handleViewConfig(row)">
               {{ fileAP(row) }}
-            </bk-overflow-title>
+            </span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('配置文件描述')" prop="spec.memo">
+        <bk-table-column :label="t('配置文件描述')" prop="spec.memo" :show-overflow-tooltip="true">
           <template #default="{ row }">
             <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>
           </template>

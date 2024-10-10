@@ -33,7 +33,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, onMounted, nextTick } from 'vue';
   import { useRoute } from 'vue-router';
   import { Info, CogShape } from 'bkui-vue/lib/icon';
   import associateSideBar from '../../../credentials/associate-config-items/index.vue';
@@ -134,6 +134,11 @@
     if (!val) {
       ruleList.value = [];
       sendRules();
+    } else {
+      // 打开文件筛选开关自动打开规则设置抽屉
+      nextTick(() => {
+        sideBarShow.value = true;
+      });
     }
   };
 

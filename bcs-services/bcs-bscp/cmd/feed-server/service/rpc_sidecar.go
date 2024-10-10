@@ -171,7 +171,8 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 }
 
 // Messaging received messages delivered from sidecar.
-func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs.MessagingResp, error) { // nolint
+// nolint:funlen
+func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs.MessagingResp, error) {
 	im, err := sfs.ParseFeedIncomingContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -298,7 +299,8 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 }
 
 // PullAppFileMeta pull an app's latest release metadata only when the app's configures is file type.
-func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) ( // nolint
+// nolint:funlen
+func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) (
 	*pbfs.PullAppFileMetaResp, error) {
 
 	// check if the sidecar's version can be accepted.

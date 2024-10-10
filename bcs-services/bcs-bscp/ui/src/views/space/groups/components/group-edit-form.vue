@@ -40,12 +40,16 @@
       </template>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
         <div style="max-width: 174px; min-width: 174px">
-          <bk-input
+          <bk-select
             v-model="rule.key"
             placeholder="key"
             :class="{ 'is-error': showErrorKeyValidation[index] }"
+            allow-create
+            :filterable="false"
             @change="ruleChange"
-            @blur="validateKey(index)"></bk-input>
+            @blur="validateKey(index)">
+            <bk-option v-for="item in BuiltInTag" :id="item" :key="item" :name="item" />
+          </bk-select>
           <div v-show="showErrorKeyValidation[index]" class="error-msg is--key">
             {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
           </div>
@@ -138,6 +142,9 @@
   // const rulesValid = ref(true);
   const showErrorKeyValidation = ref<boolean[]>([]);
   const showErrorValueValidation = ref<boolean[]>([]);
+
+  // 内置标签
+  const BuiltInTag = ['ip', 'podname'];
 
   const rules = {
     name: [
@@ -384,6 +391,7 @@
     word-wrap: break-word;
     color: #ea3636;
     animation: form-error-appear-animation 0.15s;
+    margin-top: 8px;
     &.is--key {
       white-space: nowrap;
     }
