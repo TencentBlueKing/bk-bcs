@@ -1277,7 +1277,7 @@ func Test_cmdbClient_CreateBcsPod(t *testing.T) {
 	name := "event-exporter-dddc48bf9-9mns4sss2"
 	hostID := int64(2000058691)
 	priority := int32(0)
-	ip := "10.0.0.1"
+	ip := "xxxx"
 	operator := []string{""}
 
 	type fields struct {
@@ -1488,79 +1488,20 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 	t.Logf("delete all workload success")
 
 	t.Logf("start delete all namespace")
-	for {
-		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
-			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
-				Fields:  []string{"id"},
-				Page: client.Page{
-					Limit: 200,
-					Start: 0,
-				},
-			},
-		}, nil, false)
-		if err != nil {
-			t.Errorf("GetBcsNamespace() error = %v", err)
-			return
-		}
-		namespaceToDelete := make([]int64, 0)
-		for _, namespace := range *got {
-			namespaceToDelete = append(namespaceToDelete, namespace.ID)
-		}
-
-		if len(namespaceToDelete) == 0 {
-			break
-		} else {
-			t.Logf("delete namespace: %v", namespaceToDelete)
-			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
-				BKBizID: &bkBizID,
-				IDs:     &namespaceToDelete,
-			}, nil)
-			if err != nil {
-				t.Errorf("DeleteBcsNamespace() error = %v", err)
-				return
-			}
-		}
-	}
+	deleteAllIDNamespace(bkBizID, c, t)
 	t.Logf("delete all namespace success")
 
 	t.Logf("start delete all node")
-	for {
-		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
-			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
-				Page: client.Page{
-					Limit: 100,
-					Start: 0,
-				},
-			},
-		}, nil, false)
-		if err != nil {
-			t.Errorf("GetBcsNode() error = %v", err)
-			return
-		}
-		nodeToDelete := make([]int64, 0)
-		for _, node := range *got {
-			nodeToDelete = append(nodeToDelete, node.ID)
-		}
-
-		if len(nodeToDelete) == 0 {
-			break
-		} else {
-			t.Logf("delete node: %v", nodeToDelete)
-			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
-				BKBizID: &bkBizID,
-				IDs:     &nodeToDelete,
-			}, nil)
-			if err != nil {
-				t.Errorf("DeleteBcsNode() error = %v", err)
-				return
-			}
-		}
-	}
+	deleteAllIDNode(bkBizID, c, t)
 	t.Logf("delete all node success")
 
 	t.Logf("start delete all cluster")
+	deleteAllIDCluster(bkBizID, c, t)
+	t.Logf("delete all cluster success")
+	t.Logf("delete all success")
+}
+
+func deleteAllIDCluster(bkBizID int64, c *cmdbClient, t *testing.T) {
 	for {
 		got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
@@ -1595,11 +1536,83 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 			}
 		}
 	}
-	t.Logf("delete all cluster success")
-	t.Logf("delete all success")
 }
 
-// Test_deleteAllByBkBizID tests delete all bcs resources by bizid
+func deleteAllIDNode(bkBizID int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100,
+					Start: 0,
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNode() error = %v", err)
+			return
+		}
+		nodeToDelete := make([]int64, 0)
+		for _, node := range *got {
+			nodeToDelete = append(nodeToDelete, node.ID)
+		}
+
+		if len(nodeToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete node: %v", nodeToDelete)
+			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+				BKBizID: &bkBizID,
+				IDs:     &nodeToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNode() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func deleteAllIDNamespace(bkBizID int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNamespace() error = %v", err)
+			return
+		}
+		namespaceToDelete := make([]int64, 0)
+		for _, namespace := range *got {
+			namespaceToDelete = append(namespaceToDelete, namespace.ID)
+		}
+
+		if len(namespaceToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete namespace: %v", namespaceToDelete)
+			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+				BKBizID: &bkBizID,
+				IDs:     &namespaceToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNamespace() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+// Test_deleteAllByBkBizIDAndBkClusterID tests delete all bcs resources by bizid
+// nolint:golint
 func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 	bkBizID = int64(110)
 	bkClusterID := []int64{76}
@@ -1710,99 +1723,20 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 	t.Logf("delete all workload success")
 
 	t.Logf("start delete all namespace")
-	for {
-		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
-			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
-				Fields:  []string{"id"},
-				Page: client.Page{
-					Limit: 200,
-					Start: 0,
-				},
-				Filter: &client.PropertyFilter{
-					Condition: "AND",
-					Rules: []client.Rule{
-						{
-							Field:    "bk_cluster_id",
-							Operator: "in",
-							Value:    bkClusterID,
-						},
-					},
-				},
-			},
-		}, nil, false)
-		if err != nil {
-			t.Errorf("GetBcsNamespace() error = %v", err)
-			return
-		}
-		namespaceToDelete := make([]int64, 0)
-		for _, namespace := range *got {
-			namespaceToDelete = append(namespaceToDelete, namespace.ID)
-		}
-
-		if len(namespaceToDelete) == 0 {
-			break
-		} else {
-			t.Logf("delete namespace: %v", namespaceToDelete)
-			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
-				BKBizID: &bkBizID,
-				IDs:     &namespaceToDelete,
-			}, nil)
-			if err != nil {
-				t.Errorf("DeleteBcsNamespace() error = %v", err)
-				return
-			}
-		}
-	}
+	deleteAll2IDNamespace(bkBizID, bkClusterID, c, t)
 	t.Logf("delete all namespace success")
 
 	t.Logf("start delete all node")
-	for {
-		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
-			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
-				Page: client.Page{
-					Limit: 100,
-					Start: 0,
-				},
-				Filter: &client.PropertyFilter{
-					Condition: "AND",
-					Rules: []client.Rule{
-						{
-							Field:    "bk_cluster_id",
-							Operator: "in",
-							Value:    bkClusterID,
-						},
-					},
-				},
-			},
-		}, nil, false)
-		if err != nil {
-			t.Errorf("GetBcsNode() error = %v", err)
-			return
-		}
-		nodeToDelete := make([]int64, 0)
-		for _, node := range *got {
-			nodeToDelete = append(nodeToDelete, node.ID)
-		}
-
-		if len(nodeToDelete) == 0 {
-			break
-		} else {
-			t.Logf("delete node: %v", nodeToDelete)
-			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
-				BKBizID: &bkBizID,
-				IDs:     &nodeToDelete,
-			}, nil)
-			if err != nil {
-				t.Errorf("DeleteBcsNode() error = %v", err)
-				return
-			}
-		}
-	}
+	deleteAll2IDIDNode(bkBizID, bkClusterID, c, t)
 	t.Logf("delete all node success")
 
 	t.Logf("start delete all cluster")
+	deleteAll2IDCluster(bkBizID, bkClusterID, c, t)
+	t.Logf("delete all cluster success")
+	t.Logf("delete all success")
+}
+
+func deleteAll2IDCluster(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
 	for {
 		got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
@@ -1847,18 +1781,102 @@ func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
 			}
 		}
 	}
-	t.Logf("delete all cluster success")
-	t.Logf("delete all success")
 }
 
-// Test_getAllByBkBizID tests get all bcs resources by bizid
-// nolint
-func Test_getAllByBkBizID(t *testing.T) {
-	bkBizID = 110
-	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet"}
-	c := getCli()
-	t.Logf("start get all cluster")
-	clusters := make(map[int64]string, 0)
+func deleteAll2IDIDNode(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    bkClusterID,
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNode() error = %v", err)
+			return
+		}
+		nodeToDelete := make([]int64, 0)
+		for _, node := range *got {
+			nodeToDelete = append(nodeToDelete, node.ID)
+		}
+
+		if len(nodeToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete node: %v", nodeToDelete)
+			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+				BKBizID: &bkBizID,
+				IDs:     &nodeToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNode() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func deleteAll2IDNamespace(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    bkClusterID,
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNamespace() error = %v", err)
+			return
+		}
+		namespaceToDelete := make([]int64, 0)
+		for _, namespace := range *got {
+			namespaceToDelete = append(namespaceToDelete, namespace.ID)
+		}
+
+		if len(namespaceToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete namespace: %v", namespaceToDelete)
+			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+				BKBizID: &bkBizID,
+				IDs:     &namespaceToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNamespace() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func getAllByBkBizIDClusters(clusters map[int64]string, c *cmdbClient, t *testing.T) {
 	clusterPage := 0
 	for {
 		clusterGot, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
@@ -1884,6 +1902,94 @@ func Test_getAllByBkBizID(t *testing.T) {
 		}
 		clusterPage++
 	}
+}
+
+func getAllByBkBizIDNodes(nodes map[int64]string, clusterID int64, c *cmdbClient, t *testing.T) {
+	nodePage := 0
+	for {
+		nodeGot, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100 * (nodePage + 1),
+					Start: 100 * nodePage,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "OR",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    []int64{clusterID},
+						},
+					},
+				},
+			},
+			//BKClusterID: clusterID,
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNode() error = %v", err)
+			return
+		}
+
+		for _, node := range *nodeGot {
+			nodes[node.ID] = *node.Name
+		}
+
+		if len(*nodeGot) < 100 {
+			break
+		}
+		nodePage++
+	}
+}
+
+func getAllByBkBizIDNamespaces(namespaces map[int64]string, clusterUID string, c *cmdbClient, t *testing.T) {
+	namespacePage := 0
+	for {
+		namespaceGot, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100 * (namespacePage + 1),
+					Start: 100 * namespacePage,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "OR",
+					Rules: []client.Rule{
+						{
+							Field:    "cluster_uid",
+							Operator: "in",
+							Value:    []string{clusterUID},
+						},
+					},
+				},
+			},
+			//ClusterUID: clusterUID,
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNamespace() error = %v", err)
+			return
+		}
+
+		for _, namespace := range *namespaceGot {
+			namespaces[namespace.ID] = namespace.Name
+		}
+
+		if len(*namespaceGot) < 100 {
+			break
+		}
+		namespacePage++
+	}
+}
+
+// Test_getAllByBkBizID tests get all bcs resources by bizid
+func Test_getAllByBkBizID(t *testing.T) { // nolint: cyclop
+	bkBizID = 110
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet"}
+	c := getCli()
+	t.Logf("start get all cluster")
+	clusters := make(map[int64]string, 0)
+	getAllByBkBizIDClusters(clusters, c, t)
 
 	if len(clusters) == 0 {
 		t.Logf("no cluster found")
@@ -1896,42 +2002,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 		t.Logf("=======================================")
 		t.Logf("clusterID: %d, clusterUID: %s", clusterID, clusterUID)
 		nodes := make(map[int64]string, 0)
-		nodePage := 0
-		for {
-			nodeGot, err := c.GetBcsNode(&client.GetBcsNodeRequest{
-				CommonRequest: client.CommonRequest{
-					BKBizID: bkBizID,
-					Page: client.Page{
-						Limit: 100 * (nodePage + 1),
-						Start: 100 * nodePage,
-					},
-					Filter: &client.PropertyFilter{
-						Condition: "OR",
-						Rules: []client.Rule{
-							{
-								Field:    "bk_cluster_id",
-								Operator: "in",
-								Value:    []int64{clusterID},
-							},
-						},
-					},
-				},
-				//BKClusterID: clusterID,
-			}, nil, false)
-			if err != nil {
-				t.Errorf("GetBcsNode() error = %v", err)
-				return
-			}
-
-			for _, node := range *nodeGot {
-				nodes[node.ID] = *node.Name
-			}
-
-			if len(*nodeGot) < 100 {
-				break
-			}
-			nodePage++
-		}
+		getAllByBkBizIDNodes(nodes, clusterID, c, t)
 
 		if len(nodes) == 0 {
 			t.Logf("clusterID: %d, clusterUID: %s, nodes: no node found", clusterID, clusterUID)
@@ -1940,42 +2011,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 		}
 
 		namespaces := make(map[int64]string, 0)
-		namespacePage := 0
-		for {
-			namespaceGot, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
-				CommonRequest: client.CommonRequest{
-					BKBizID: bkBizID,
-					Page: client.Page{
-						Limit: 100 * (namespacePage + 1),
-						Start: 100 * namespacePage,
-					},
-					Filter: &client.PropertyFilter{
-						Condition: "OR",
-						Rules: []client.Rule{
-							{
-								Field:    "cluster_uid",
-								Operator: "in",
-								Value:    []string{clusterUID},
-							},
-						},
-					},
-				},
-				//ClusterUID: clusterUID,
-			}, nil, false)
-			if err != nil {
-				t.Errorf("GetBcsNamespace() error = %v", err)
-				return
-			}
-
-			for _, namespace := range *namespaceGot {
-				namespaces[namespace.ID] = namespace.Name
-			}
-
-			if len(*namespaceGot) < 100 {
-				break
-			}
-			namespacePage++
-		}
+		getAllByBkBizIDNamespaces(namespaces, clusterUID, c, t)
 
 		if len(namespaces) == 0 {
 			t.Logf("clusterID: %d, clusterUID: %s, namespaces: no namespace found", clusterID, clusterUID)
@@ -2647,6 +2683,7 @@ func Test_gorm_cluster(t *testing.T) {
 	}
 }
 
+// nolint:golint
 func Test_cmdbClient_GetBcsCluster_withDB(t *testing.T) {
 	sq := mySqlite.New("./test1.db")
 	if sq == nil {

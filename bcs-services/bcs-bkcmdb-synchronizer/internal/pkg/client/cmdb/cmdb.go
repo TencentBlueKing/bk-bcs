@@ -288,24 +288,32 @@ func (c *cmdbClient) GetBizInfo(bizID int64) (*client.Business, error) {
 	return nil, fmt.Errorf("call api GetBizInfo failed")
 }
 
-// GetHostInfo get host Info
+// GetHostInfo 根据提供的IP地址列表获取主机信息
+// nolint
 func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
+	// 检查客户端是否已初始化
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
 
+	// 初始化主机数据切片
 	var hostData []client.HostData
+	// 初始化分页起始位置
 	pageStart := 0
 
+	// 循环处理所有IP地址
 	for {
 
+		// 计算当前分页的起始和结束索引
 		from := pageStart * 100
 		to := (pageStart + 1) * 100
 
+		// 如果剩余IP地址不足100个，则调整结束索引
 		if len(hostIP) < to {
 			to = len(hostIP)
 		}
 
+		// 构建请求URL和请求体
 		var (
 			reqURL  = fmt.Sprintf("%s/api/v3/hosts/list_hosts_without_app", c.config.Server)
 			request = &client.ListHostsWithoutBizRequest{
@@ -338,6 +346,7 @@ func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
 			respData = &client.ListHostsWithoutBizResponse{}
 		)
 
+		// 发送HTTP请求并处理响应
 		resp, _, errs := gorequest.New().
 			Timeout(defaultTimeOut).
 			Post(reqURL).
@@ -348,55 +357,67 @@ func (c *cmdbClient) GetHostInfo(hostIP []string) (*[]client.HostData, error) {
 			Send(request).
 			Retry(3, 3*time.Second, 429).
 			EndStruct(&respData)
+		// 检查是否有错误发生
 		if len(errs) > 0 {
 			blog.Errorf("call api QueryHost failed: %v", errs[0])
 			return nil, errs[0]
 		}
 
+		// 检查API响应是否成功
 		if !respData.Result {
 			blog.Errorf("call api QueryHost failed: %v, rid: %s", respData.Message, resp.Header.Get("X-Request-Id"))
 			return nil, fmt.Errorf(respData.Message)
 		}
-		// successfully request
+		// 请求成功，记录日志
 		blog.Infof("call api QueryHost with url(%s) successfully, X-Request-Id: %s", reqURL, resp.Header.Get("X-Request-Id"))
 
+		// 将响应数据添加到主机数据切片中
 		hostData = append(hostData, respData.Data.Info...)
 
+		// 如果所有IP地址都已处理完毕，则退出循环
 		if len(hostIP) == to {
 			break
 		}
+		// 更新分页起始位置
 		pageStart++
 	}
 
+	// 返回收集到的主机数据
 	return &hostData, nil
 }
 
-// GetHostInfo get host Info
+// GetHostsByBiz 根据业务ID和主机IP列表获取主机数据
+// nolint
 func (c *cmdbClient) GetHostsByBiz(bkBizID int64, hostIP []string) (*[]client.HostData, error) {
+	// 检查客户端是否初始化
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
 
-	var hostData []client.HostData
-	pageStart := 0
+	var hostData []client.HostData // 存储获取到的主机数据
+	pageStart := 0                 // 分页起始位置
 
+	// 循环获取所有分页数据
 	for {
 
-		from := pageStart * 100
-		to := (pageStart + 1) * 100
+		from := pageStart * 100     // 当前分页的起始索引
+		to := (pageStart + 1) * 100 // 当前分页的结束索引
 
+		// 如果剩余IP数量小于当前分页大小，则调整结束索引
 		if len(hostIP) < to {
 			to = len(hostIP)
 		}
 
+		// 构建请求URL和请求体
 		var (
 			reqURL  = fmt.Sprintf("%s/api/v3/hosts/app/%d/list_hosts", c.config.Server, bkBizID)
 			request = &client.ListHostsByBizRequest{
 				Page: client.Page{
-					Limit: 100,
-					Start: pageStart,
+					Limit: 100,       // 每页限制100条记录
+					Start: pageStart, // 分页起始位置
 				},
 				Fields: []string{
+					// 请求返回的字段列表
 					"bk_host_innerip",
 					"svr_type_name",
 					"bk_svr_device_cls_name",
@@ -407,20 +428,21 @@ func (c *cmdbClient) GetHostsByBiz(bkBizID int64, hostIP []string) (*[]client.Ho
 					"bk_host_id",
 				},
 				HostPropertyFilter: client.PropertyFilter{
-					Condition: And,
+					Condition: And, // 条件为AND
 					Rules: []client.Rule{
 						{
-							Field:    "bk_host_innerip",
-							Operator: "in",
-							Value:    hostIP[from:to],
+							Field:    "bk_host_innerip", // 过滤字段为主机内网IP
+							Operator: "in",              // 操作符为IN
+							Value:    hostIP[from:to],   // 过滤值为当前分页的IP列表
 						},
 					},
 				},
 			}
 
-			respData = &client.ListHostsWithoutBizResponse{}
+			respData = &client.ListHostsWithoutBizResponse{} // 响应数据结构体
 		)
 
+		// 发送HTTP请求并解析响应
 		resp, _, errs := gorequest.New().
 			Timeout(defaultTimeOut).
 			Post(reqURL).
@@ -431,42 +453,52 @@ func (c *cmdbClient) GetHostsByBiz(bkBizID int64, hostIP []string) (*[]client.Ho
 			Send(request).
 			Retry(3, 3*time.Second, 429).
 			EndStruct(&respData)
+
+		// 检查请求是否有错误
 		if len(errs) > 0 {
 			blog.Errorf("call api QueryHost failed: %v", errs[0])
 			return nil, errs[0]
 		}
 
+		// 检查响应结果是否成功
 		if !respData.Result {
 			blog.Errorf("call api QueryHost failed: %v, rid: %s",
 				respData.Message, resp.Header.Get("X-Request-Id"))
 			return nil, fmt.Errorf(respData.Message)
 		}
-		// successfully request
+		// 成功获取数据，记录日志
 		blog.Infof("call api QueryHost with url(%s) successfully, X-Request-Id: %s",
 			reqURL, resp.Header.Get("X-Request-Id"))
 
+		// 将当前分页的数据添加到总数据列表中
 		hostData = append(hostData, respData.Data.Info...)
 
+		// 如果所有IP都已处理完毕，则退出循环
 		if len(hostIP) == to {
 			break
 		}
-		pageStart++
+		pageStart++ // 更新分页起始位置
 	}
 
-	return &hostData, nil
+	return &hostData, nil // 返回获取到的主机数据列表
 }
 
-// GetBcsCluster get bcs cluster
+// GetBcsCluster 根据请求获取BCS集群信息，可以选择是否通过数据库进行查询和处理
 // /api/v3/kube/findmany/cluster/bk_biz_id/{bk_biz_id}
 // /v2/cc/list_kube_cluster/
+// nolint
 func (c *cmdbClient) GetBcsCluster(
 	request *client.GetBcsClusterRequest, db *gorm.DB, withDB bool) (*[]bkcmdbkube.Cluster, error) {
+	// 检查客户端是否初始化
 	if c == nil {
 		return nil, ErrServerNotInit
 	}
 
+	// 如果指定了使用数据库并且db对象不为空，则通过数据库查询集群信息
 	if withDB && db != nil {
+		// 创建一个新的数据库会话
 		query := db.Session(&gorm.Session{NewDB: true})
+		// 遍历请求中的过滤规则，并根据条件拼接查询语句
 		for _, rule := range request.Filter.Rules {
 			if request.Filter.Condition == And {
 				query = query.Where(fmt.Sprintf("%s %s ?", rule.Field, rule.Operator), rule.Value)
@@ -476,13 +508,16 @@ func (c *cmdbClient) GetBcsCluster(
 			}
 		}
 
+		// 执行查询并将结果存储在cluster变量中
 		var cluster []model.Cluster
 		if err := query.Find(&cluster).Error; err != nil {
 			blog.Errorf("query cluster withDB failed: %v", err)
 		} else {
+			// 将查询结果序列化为JSON
 			if clusterMarshal, err := json.Marshal(cluster); err != nil {
 				blog.Errorf("marshal cluster failed: %v", err)
 			} else {
+				// 将JSON反序列化为bkcmdbkube.Cluster类型的切片
 				var bkCluster []bkcmdbkube.Cluster
 				errM := json.Unmarshal(clusterMarshal, &bkCluster)
 				if errM == nil {
@@ -493,8 +528,11 @@ func (c *cmdbClient) GetBcsCluster(
 			}
 		}
 	}
+
+	// 如果没有通过数据库查询，则通过API调用获取集群信息
 	reqURL := fmt.Sprintf("%s/api/v3/findmany/kube/cluster", c.config.Server)
 	respData := &client.GetBcsClusterResponse{}
+	// 使用gorequest库发送POST请求，并处理响应
 	resp, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Post(reqURL).
@@ -505,10 +543,12 @@ func (c *cmdbClient) GetBcsCluster(
 		Send(request).
 		Retry(3, 3*time.Second, 429).
 		EndStruct(&respData)
+	// 检查是否有错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api list_kube_cluster failed: %v", errs[0])
 		return nil, errs[0]
 	}
+	// 检查API响应是否成功
 	if !respData.Result {
 		blog.Errorf("call api list_kube_cluster failed: %v, rid: %s",
 			respData.Message, resp.Header.Get("X-Request-Id"))
@@ -517,6 +557,7 @@ func (c *cmdbClient) GetBcsCluster(
 	blog.Infof("call api list_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
+	// 如果db不为空，则将API获取的集群信息同步到数据库
 	if db != nil {
 		if clusterMarshal, err := json.Marshal(respData.Data.Info); err != nil {
 			blog.Errorf("marshal cluster failed: %v", err)
@@ -525,6 +566,7 @@ func (c *cmdbClient) GetBcsCluster(
 			if err := json.Unmarshal(clusterMarshal, &cluster); err != nil {
 				blog.Errorf("unmarshal cluster failed: %v", err)
 			} else {
+				// 遍历集群信息，检查数据库中是否存在，不存在则创建，存在则更新
 				for _, cl := range cluster {
 					var existingCl model.Cluster
 					query := db.Session(&gorm.Session{NewDB: true})
@@ -548,47 +590,65 @@ func (c *cmdbClient) GetBcsCluster(
 			}
 		}
 	}
+	// 返回获取到的集群信息
 	return &respData.Data.Info, nil
 }
 
 // CreateBcsCluster create bcs cluster
 // /api/v3/kube/create/cluster/bk_biz_id/{bk_biz_id}
 // /v2/cc/create_kube_cluster/
+// CreateBcsCluster 创建BCS集群
 func (c *cmdbClient) CreateBcsCluster(
 	request *client.CreateBcsClusterRequest, db *gorm.DB) (bkClusterID int64, err error) {
+	// 检查客户端是否初始化，未初始化则返回错误
 	if c == nil {
 		return bkClusterID, ErrServerNotInit
 	}
 
+	// 构造请求URL
 	reqURL := fmt.Sprintf("%s/api/v3/create/kube/cluster", c.config.Server)
+	// 初始化响应数据结构
 	respData := &client.CreateBcsClusterResponse{}
 
+	// 使用gorequest库发送POST请求
 	resp, _, errs := gorequest.New().
+		// 设置请求超时时间
 		Timeout(defaultTimeOut).
+		// 指定请求方法和URL
 		Post(reqURL).
+		// 设置请求头，包括Content-Type, Accept和X-Bkapi-Authorization
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", c.userAuth).
+		// 根据配置决定是否开启调试模式
 		SetDebug(c.config.Debug).
+		// 发送请求体
 		Send(request).
+		// 设置重试策略
 		Retry(3, 3*time.Second, 429).
+		// 解析响应到respData结构体
 		EndStruct(&respData)
+	// 检查是否有错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api create_kube_cluster failed: %v", errs[0])
 		return bkClusterID, errs[0]
 	}
 
+	// 检查响应结果是否成功
 	if !respData.Result {
 		blog.Errorf("call api create_kube_cluster failed: %v, rid: %s",
 			respData.Message, resp.Header.Get("X-Request-Id"))
 		return bkClusterID, fmt.Errorf(respData.Message)
 	}
 
+	// 记录成功的日志信息
 	blog.Infof("call api create_kube_cluster with url(%s) (%v)  successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
+	// 获取创建的集群ID
 	bkClusterID = respData.Data.ID
 
+	// 根据集群ID查询集群信息，验证创建是否成功
 	_, err = c.GetBcsCluster(&client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: *request.BKBizID,
@@ -608,48 +668,66 @@ func (c *cmdbClient) CreateBcsCluster(
 			},
 		},
 	}, db, false)
+	// 如果查询失败，记录错误日志
 	if err != nil {
 		blog.Errorf("get cluster failed: %v", err)
 	}
 
+	// 返回创建的集群ID和可能的错误
 	return bkClusterID, nil
 }
 
 // UpdateBcsCluster update bcs cluster
 // /api/v3/kube/updatemany/cluster/bk_biz_id/{bk_biz_id}
 // /v2/cc/batch_update_kube_cluster/
+// UpdateBcsCluster 更新BCS集群信息
 func (c *cmdbClient) UpdateBcsCluster(request *client.UpdateBcsClusterRequest, db *gorm.DB) error {
+	// 检查客户端是否初始化，未初始化则返回错误
 	if c == nil {
 		return ErrServerNotInit
 	}
 
+	// 构造请求URL
 	reqURL := fmt.Sprintf("%s/api/v3/updatemany/kube/cluster", c.config.Server)
+	// 初始化响应数据结构
 	respData := &client.UpdateBcsClusterResponse{}
 
+	// 使用gorequest库发送PUT请求
 	resp, _, errs := gorequest.New().
+		// 设置请求超时时间
 		Timeout(defaultTimeOut).
+		// 指定HTTP方法和请求URL
 		Put(reqURL).
+		// 设置请求头部信息
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", c.userAuth).
+		// 开启调试模式（如果配置中开启）
 		SetDebug(c.config.Debug).
+		// 发送请求体数据
 		Send(request).
+		// 设置重试机制
 		Retry(3, 3*time.Second, 429).
+		// 解析响应到respData结构体
 		EndStruct(&respData)
+	// 检查是否有请求错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_update_kube_cluster failed: %v", errs[0])
 		return errs[0]
 	}
 
+	// 如果响应结果为false，记录错误日志并返回错误信息
 	if !respData.Result {
 		blog.Errorf("call api batch_update_kube_cluster failed: %v, rid: %s",
 			respData.Message, resp.Header.Get("X-Request-Id"))
 		return fmt.Errorf(respData.Message)
 	}
 
+	// 记录成功调用API的日志信息
 	blog.Infof("call api batch_update_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
+	// 调用GetBcsCluster方法获取更新后的集群信息
 	_, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: *request.BKBizID,
@@ -669,48 +747,68 @@ func (c *cmdbClient) UpdateBcsCluster(request *client.UpdateBcsClusterRequest, d
 			},
 		},
 	}, db, false)
+	// 如果获取集群信息失败，记录错误日志
 	if err != nil {
 		blog.Errorf("get cluster failed: %v", err)
 	}
 
+	// 返回nil表示函数执行成功
 	return nil
 }
 
 // UpdateBcsClusterType update bcs cluster type
 // /api/v3/update/kube/cluster/type
 // /v2/cc/update_kube_cluster_type/
+// UpdateBcsClusterType 更新BCS集群类型的函数
 func (c *cmdbClient) UpdateBcsClusterType(request *client.UpdateBcsClusterTypeRequest, db *gorm.DB) error {
+	// 检查cmdbClient是否已初始化
 	if c == nil {
 		return ErrServerNotInit
 	}
 
+	// 构造请求URL
 	reqURL := fmt.Sprintf("%s/api/v3/update/kube/cluster/type", c.config.Server)
+	// 初始化响应数据结构
 	respData := &client.UpdateBcsClusterTypeResponse{}
 
+	// 使用gorequest库发送PUT请求
 	resp, _, errs := gorequest.New().
+		// 设置请求超时时间
 		Timeout(defaultTimeOut).
+		// 指定HTTP方法为PUT
 		Put(reqURL).
+		// 设置请求头Content-Type为application/json
 		Set("Content-Type", "application/json").
+		// 设置请求头Accept为application/json
 		Set("Accept", "application/json").
+		// 设置自定义认证头
 		Set("X-Bkapi-Authorization", c.userAuth).
+		// 根据配置决定是否开启调试模式
 		SetDebug(c.config.Debug).
+		// 发送请求体
 		Send(request).
+		// 设置重试策略：最多重试3次，每次间隔3秒，遇到429状态码也重试
 		Retry(3, 3*time.Second, 429).
+		// 将响应体解析到respData结构体中
 		EndStruct(&respData)
+	// 检查是否有错误发生
 	if len(errs) > 0 {
 		blog.Errorf("call api update_kube_cluster_type failed: %v", errs[0])
 		return errs[0]
 	}
 
+	// 检查响应数据中的Result字段，如果不为true则表示API调用失败
 	if !respData.Result {
 		blog.Errorf("call api update_kube_cluster_type failed: %v, rid: %s",
 			respData.Message, resp.Header.Get("X-Request-Id"))
 		return fmt.Errorf(respData.Message)
 	}
 
+	// 记录API调用成功的日志，包括请求URL、请求体和请求ID
 	blog.Infof("call api update_kube_cluster_type with url(%s) (%v) successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
+	// 调用GetBcsCluster函数获取更新后的集群信息
 	_, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
 		CommonRequest: client.CommonRequest{
 			BKBizID: *request.BKBizID,
@@ -730,24 +828,35 @@ func (c *cmdbClient) UpdateBcsClusterType(request *client.UpdateBcsClusterTypeRe
 			},
 		},
 	}, db, false)
+	// 如果获取集群信息失败，则记录错误日志
 	if err != nil {
 		blog.Errorf("get cluster failed: %v", err)
 	}
 
+	// 返回nil表示函数执行成功
 	return nil
 }
 
 // DeleteBcsCluster delete bcs cluster
 // /api/v3/kube/delete/cluster/bk_biz_id/{bk_biz_id}
 // /v2/cc/batch_delete_kube_cluster/
+// DeleteBcsCluster 方法用于删除指定的 Kubernetes 集群。
+// 它首先检查客户端是否已初始化，然后构造请求 URL 并发送 HTTP DELETE 请求到该 URL。
+// 如果请求成功，它还会尝试从数据库中删除对应的集群记录。
 func (c *cmdbClient) DeleteBcsCluster(request *client.DeleteBcsClusterRequest, db *gorm.DB) error {
+	// 检查客户端是否已初始化，如果未初始化则返回错误
 	if c == nil {
 		return ErrServerNotInit
 	}
 
+	// 构造请求的 URL
 	reqURL := fmt.Sprintf("%s/api/v3/delete/kube/cluster", c.config.Server)
+	// 初始化响应数据结构
 	respData := &client.DeleteBcsClusterResponse{}
 
+	// 使用 gorequest 库发送 HTTP DELETE 请求
+	// 设置请求超时时间、内容类型、接受类型、授权头等信息
+	// 发送请求体并尝试重试，最多重试3次，每次间隔3秒，如果遇到429状态码也会重试
 	resp, _, errs := gorequest.New().
 		Timeout(defaultTimeOut).
 		Delete(reqURL).
@@ -758,28 +867,37 @@ func (c *cmdbClient) DeleteBcsCluster(request *client.DeleteBcsClusterRequest, d
 		Send(request).
 		Retry(3, 3*time.Second, 429).
 		EndStruct(&respData)
+
+	// 如果请求过程中出现错误，则记录错误并返回
 	if len(errs) > 0 {
 		blog.Errorf("call api batch_delete_kube_cluster failed: %v", errs[0])
 		return errs[0]
 	}
 
+	// 如果响应结果指示操作失败，则记录错误信息并返回错误
 	if !respData.Result {
 		blog.Errorf("call api batch_delete_kube_cluster failed: %v, rid: %s",
 			respData.Message, resp.Header.Get("X-Request-Id"))
 		return fmt.Errorf(respData.Message)
 	}
 
+	// 如果操作成功，则记录成功的日志信息
 	blog.Infof("call api batch_delete_kube_cluster with url(%s) (%v) successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
+	// 如果提供了数据库连接，则尝试从数据库中删除对应的集群记录
 	if db != nil {
+		// 使用 GORM 删除数据库中的集群记录
 		if err := db.Where("id in (?)", request.IDs).Delete(&model.Cluster{}).Error; err != nil {
+			// 如果删除操作失败，则记录错误信息
 			blog.Errorf("delete cluster failed: %v", err)
 		} else {
+			// 如果删除成功，则记录成功的日志信息
 			blog.Infof("DeleteBcsCluster clusterWithDB delete")
 		}
 	}
 
+	// 返回 nil 表示操作成功
 	return nil
 }
 
@@ -1561,7 +1679,7 @@ func (c *cmdbClient) UpdateBcsWorkload(request *client.UpdateBcsWorkloadRequest,
 // DeleteBcsWorkload delete bcs workload
 // /api/v3/kube/deletemany/workload/{kind}/{bk_biz_id}
 // /v2/cc/batch_delete_workload/
-func (c *cmdbClient) DeleteBcsWorkload(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) error {
+func (c *cmdbClient) DeleteBcsWorkload(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) error { // nolint: cyclop
 	if c == nil {
 		return ErrServerNotInit
 	}
@@ -1594,6 +1712,12 @@ func (c *cmdbClient) DeleteBcsWorkload(request *client.DeleteBcsWorkloadRequest,
 	blog.Infof("call api batch_delete_workload with url(%s) (%v) successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
+	deleteBcsWorkloadDB(request, db)
+
+	return nil
+}
+
+func deleteBcsWorkloadDB(request *client.DeleteBcsWorkloadRequest, db *gorm.DB) {
 	switch *request.Kind {
 	case Deployment:
 		if db != nil {
@@ -1650,8 +1774,6 @@ func (c *cmdbClient) DeleteBcsWorkload(request *client.DeleteBcsWorkloadRequest,
 			}
 		}
 	}
-
-	return nil
 }
 
 // GetBcsNode get bcs node
@@ -1909,6 +2031,15 @@ func (c *cmdbClient) DeleteBcsNode(request *client.DeleteBcsNodeRequest, db *gor
 		return ErrServerNotInit
 	}
 
+	if db != nil {
+		query := db.Session(&gorm.Session{NewDB: true})
+		if err := query.Where("id in (?)", *request.IDs).Delete(&model.Node{}).Error; err != nil {
+			blog.Errorf("delete bcs node failed: %v", err)
+		} else {
+			blog.Infof("DeleteBcsNode nodeWithDB delete: %v", *request.IDs)
+		}
+	}
+
 	reqURL := fmt.Sprintf("%s/api/v3/deletemany/kube/node", c.config.Server)
 	respData := &client.DeleteBcsNodeResponse{}
 
@@ -1936,14 +2067,6 @@ func (c *cmdbClient) DeleteBcsNode(request *client.DeleteBcsNodeRequest, db *gor
 	blog.Infof("call api batch_delete_kube_node with url(%s) (%v) successfully, X-Request-Id: %s",
 		reqURL, request, resp.Header.Get("X-Request-Id"))
 
-	if db != nil {
-		query := db.Session(&gorm.Session{NewDB: true})
-		if err := query.Where("id in (?)", *request.IDs).Delete(&model.Node{}).Error; err != nil {
-			blog.Errorf("delete bcs node failed: %v", err)
-		} else {
-			blog.Infof("DeleteBcsNode nodeWithDB delete: %v", *request.IDs)
-		}
-	}
 	return nil
 }
 
