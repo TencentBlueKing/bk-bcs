@@ -46,6 +46,7 @@ import (
 )
 
 // ClusterInfo info
+// nolint revive
 type ClusterInfo struct {
 	ClusterName string
 	ClusterID   string

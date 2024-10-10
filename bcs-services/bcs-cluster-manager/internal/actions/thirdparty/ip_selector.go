@@ -94,9 +94,9 @@ func (la *GetCustomSettingAction) Handle(ctx context.Context, req *cmproto.GetBa
 
 // GetBizInstanceTopoAction action for get biz topo
 type GetBizInstanceTopoAction struct {
-	ctx   context.Context
-	req   *cmproto.GetBizTopologyHostRequest
-	resp  *cmproto.GetBizTopologyHostResponse
+	ctx  context.Context
+	req  *cmproto.GetBizTopologyHostRequest
+	resp *cmproto.GetBizTopologyHostResponse
 }
 
 // NewGetBizInstanceTopoAction create action

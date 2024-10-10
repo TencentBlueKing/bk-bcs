@@ -154,6 +154,7 @@ func (r *SchemaRenderer) renderSubTypeTmpl2Map(dir string, ret interface{}) erro
 }
 
 // genSchemaRules 生成 JsonSchema 校验规则
+// nolint lll
 func genSchemaRules(ctx context.Context) map[string]interface{} {
 	return map[string]interface{}{
 		"required": map[string]interface{}{
