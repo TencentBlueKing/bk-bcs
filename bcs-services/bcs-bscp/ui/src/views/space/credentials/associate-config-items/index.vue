@@ -34,7 +34,12 @@
           @change="handleRuleChange"
           @form-change="isFormChange = true"
           @trigger-save-btn-disabled="saveBtnDisabled = $event" />
-        <RuleView v-else v-model:preview-rule="previewRule" :rules="rules" @edit="isRuleEdit = true" />
+        <RuleView
+          v-else
+          v-model:preview-rule="previewRule"
+          :rules="rules"
+          :has-manage-perm="!props.hasManagePerm"
+          @edit="isRuleEdit = true" />
       </div>
       <div v-if="rules.length || isRuleEdit" class="results-wrapper">
         <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" />
@@ -150,8 +155,9 @@
   const handleOpenEdit = () => {
     if (props.permCheckLoading || !props.hasManagePerm) {
       emits('applyPerm');
+    } else {
+      isRuleEdit.value = true;
     }
-    isRuleEdit.value = true;
   };
 
   const handleRuleChange = (val: IRuleUpdateParams) => {
