@@ -257,6 +257,7 @@ func (s *Service) handlerGw() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Route("/api/v1/feed", func(r chi.Router) {
 		r.Get("/biz/{biz_id}/app/{app}/*", s.DownloadFile)
+		r.Get("/biz/{biz_id}/app/{app}/files/download/{path}", s.DownloadFile)
 		r.Mount("/", s.gwMux)
 	})
 	return r
