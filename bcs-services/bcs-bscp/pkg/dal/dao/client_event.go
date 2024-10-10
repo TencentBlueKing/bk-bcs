@@ -117,9 +117,11 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 	searchValue string, order *pbds.ListClientEventsReq_Order, opt *types.BasePage) (
 	[]*table.ClientEvent, int64, error) {
 
+	// 过滤当前ID和目标ID相等且状态不是成功的数据(跳过的数据)
 	m := dao.genQ.ClientEvent
 	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.ClientID.Eq(clientID))
+		m.ClientID.Eq(clientID)).Where(m.OriginalReleaseID.NeqCol(m.TargetReleaseID)).
+		Or(m.OriginalReleaseID.EqCol(m.TargetReleaseID).AddCol(m.ReleaseChangeStatus.Neq(string(table.Success))))
 
 	var err error
 	var conds []rawgen.Condition
