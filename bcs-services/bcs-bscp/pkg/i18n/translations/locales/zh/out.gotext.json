@@ -258,6 +258,11 @@
             "translation": "批量删除失败"
         },
         {
+            "id": "delete template from template sets failed",
+            "message": "delete template from template sets failed",
+            "translation": ""
+        },
+        {
             "id": "template variable name must start with {TemplateVariablePrefix}",
             "message": "template variable name must start with {TemplateVariablePrefix}",
             "translation": "模版变量名必须以{TemplateVariablePrefix}前缀开头",
@@ -659,21 +664,6 @@
                     "underlyingType": "int",
                     "argNum": 2,
                     "expr": "appConfigCnt"
-                }
-            ]
-        },
-        {
-            "id": "the config file {Name} under this service already exists and cannot be created again",
-            "message": "the config file {Name} under this service already exists and cannot be created again",
-            "translation": "此服务下的配置文件 {Name} 已存在, 无法重复创建",
-            "placeholders": [
-                {
-                    "id": "Name",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)"
                 }
             ]
         },
@@ -1292,34 +1282,69 @@
             "translation": "revision没有被设置"
         },
         {
-            "id": "invalid path, length should \u003e= 1",
-            "message": "invalid path, length should \u003e= 1",
-            "translation": "路径无效, 长度应为 \u003e= 1"
-        },
-        {
-            "id": "invalid path, length should \u003c= 1024",
-            "message": "invalid path, length should \u003c= 1024",
-            "translation": "路径无效, 长度应为 \u003c= 1024"
-        },
-        {
-            "id": "invalid path, should start with '/'",
-            "message": "invalid path, should start with '/'",
-            "translation": "路径无效, 应以“/”开头"
-        },
-        {
-            "id": "invalid path {Part}, path cannot all be '.'",
-            "message": "invalid path {Part}, path cannot all be '.'",
-            "translation": "路径 {Part} 无效, 路径不能全部为“.”",
+            "id": "invalid path {Path}, length should \u003e= 1",
+            "message": "invalid path {Path}, length should \u003e= 1",
+            "translation": "路径 {Path} 无效，长度应为 \u003e= 1",
             "placeholders": [
                 {
-                    "id": "Part",
+                    "id": "Path",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "part"
+                    "expr": "path"
                 }
             ]
+        },
+        {
+            "id": "invalid path {Path}, length should \u003c= 1024",
+            "message": "invalid path {Path}, length should \u003c= 1024",
+            "translation": "路径 {Path} 无效，长度应为 \u003c= 1024",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path {Path}, the path must start with '/'",
+            "message": "invalid path {Path}, the path must start with '/'",
+            "translation": "路径 {Path} 无效，路径必须以“/”开头",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translation": "路径 {Path} 无效，路径不能包含连续的“/”",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "路径无效, 长度应为 \u003e= 1"
         },
         {
             "id": "invalid path, length should \u003c= 256",
@@ -1463,6 +1488,21 @@
             "id": "invalid name {Name}, name cannot all be '.'",
             "message": "invalid name {Name}, name cannot all be '.'",
             "translation": "名称 {Name} 无效, 名称不能全部为“.”",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid name {Name}, there can't be any /",
+            "message": "invalid name {Name}, there can't be any /",
+            "translation": "",
             "placeholders": [
                 {
                     "id": "Name",
