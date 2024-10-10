@@ -10,19 +10,23 @@
  * limitations under the License.
  */
 
-package api
+package aws
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"net"
 	"strings"
 	"sync"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/business"
 )
 
 var vpcMgr sync.Once
@@ -30,7 +34,7 @@ var vpcMgr sync.Once
 func init() {
 	vpcMgr.Do(func() {
 		// init VPC manager
-		cloudprovider.InitVPCManager("aws", &VPCManager{})
+		cloudprovider.InitVPCManager(cloudName, &VPCManager{})
 	})
 }
 
@@ -40,12 +44,12 @@ type VPCManager struct{}
 // CheckConflictInVpcCidr check cidr conflict
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string, opt *cloudprovider.CommonOption) (
 	[]string, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return business.CheckConflictFromVpc(opt, vpcID, cidr)
 }
 
 // ListVpcs list vpcs
 func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOption) ([]*proto.CloudVpc, error) {
-	client, err := GetEc2Client(&opt.CommonOption)
+	client, err := api.GetEc2Client(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("ListVpcs GetEc2Client failed, err %s", err.Error())
 	}
@@ -67,7 +71,8 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 
 	results := make([]*proto.CloudVpc, 0)
 	for _, v := range vpcs {
-		results = append(results, &proto.CloudVpc{
+
+		cloudVpc := &proto.CloudVpc{
 			Name:  *v.VpcId,
 			VpcId: *v.VpcId,
 			Ipv4Cidr: func(v *ec2.Vpc) string {
@@ -82,7 +87,25 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 				}
 				return ""
 			}(),
-		})
+		}
+		results = append(results, cloudVpc)
+
+		// get free ipNet list
+		freeIPNets, err := business.GetFreeIPNets(&opt.CommonOption, vpcID)
+		if err != nil {
+			blog.Errorf("vpc GetFreeIPNets failed: %v", err)
+			continue
+		}
+		var ipCnt uint32
+		for i := range freeIPNets {
+			ipNum, err := cidrtree.GetIPNum(freeIPNets[i])
+			if err != nil {
+				blog.Errorf("vpc GetIPNum failed: %v", err)
+				continue
+			}
+			ipCnt += ipNum
+		}
+		cloudVpc.AllocateIpNum = ipCnt
 	}
 
 	return results, nil
@@ -91,7 +114,7 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 // ListSubnets list vpc subnets
 func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.ListNetworksOption) (
 	[]*proto.Subnet, error) {
-	client, err := GetEc2Client(&opt.CommonOption)
+	client, err := api.GetEc2Client(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("ListSubnets GetEc2Client failed, err %s", err.Error())
 	}
@@ -144,7 +167,7 @@ func (vm *VPCManager) ListSubnets(vpcID string, zone string, opt *cloudprovider.
 
 // ListSecurityGroups list security groups
 func (vm *VPCManager) ListSecurityGroups(opt *cloudprovider.ListNetworksOption) ([]*proto.SecurityGroup, error) {
-	client, err := GetEc2Client(&opt.CommonOption)
+	client, err := api.GetEc2Client(&opt.CommonOption)
 	if err != nil {
 		return nil, fmt.Errorf("ListSecurityGroups GetEc2Client failed, err %s", err.Error())
 	}

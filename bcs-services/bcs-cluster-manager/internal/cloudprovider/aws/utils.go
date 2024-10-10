@@ -78,7 +78,7 @@ var (
 	}
 	updateEKSNodesToDBStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-UpdateEKSNodesToDBTask", cloudName),
-		StepName:   "更新任务状态",
+		StepName:   "更新节点信息",
 	}
 
 	// import cluster task
