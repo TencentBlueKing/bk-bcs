@@ -29,6 +29,7 @@ type TemplateVersion struct {
 	Content             string             `json:"content" bson:"content"`
 	Creator             string             `json:"creator" bson:"creator"`
 	CreateAt            int64              `json:"createAt" bson:"createAt"`
+	RenderMode          string             `json:"renderMode" bson:"renderMode"`
 	Latest              bool               `json:"latest" bson:"-"` // 是否是最新版本，不存储在数据库
 	Draft               bool               `json:"draft" bson:"-"`
 	LatestDeployVersion string             `json:"latestDeployVersion" bson:"-"`
@@ -55,6 +56,7 @@ func (t *TemplateVersion) ToMap() map[string]interface{} {
 	m["content"] = t.Content
 	m["creator"] = t.Creator
 	m["createAt"] = t.CreateAt
+	m["renderMode"] = t.RenderMode
 	m["latest"] = t.Latest
 	m["draft"] = t.Draft
 	m["latestDeployVersion"] = t.LatestDeployVersion
@@ -111,4 +113,5 @@ type TemplateDeploy struct {
 	TemplateName    string `json:"templateName"`
 	TemplateVersion string `json:"templateVersion"`
 	Content         string `json:"content"`
+	RenderMode      string `json:"renderMode"`
 }

@@ -16,17 +16,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/engine"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -237,4 +240,46 @@ func pruneResource(m map[string]interface{}) map[string]interface{} {
 	}
 
 	return m
+}
+
+// 校验chart helm语法是否正确，并自动填充Helm模板内容
+func validAndFillChart(cht *chart.Chart, value string) (map[string]string, error) {
+	var m map[string]interface{}
+	err := yaml.Unmarshal([]byte(value), &m)
+	if err != nil {
+		return nil, err
+	}
+
+	var options chartutil.ReleaseOptions
+	valuesToRender, err := chartutil.ToRenderValues(cht, m, options, nil)
+	if err != nil {
+		return nil, err
+	}
+	var e engine.Engine
+	e.LintMode = true
+	result, err := e.Render(cht, valuesToRender)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
+func renderTemplateForHelmMode(td []entity.TemplateDeploy, value string) (map[string]string, error) {
+	cht := chart.Chart{
+		Raw:       []*chart.File{},
+		Metadata:  &chart.Metadata{},
+		Templates: []*chart.File{},
+	}
+
+	for _, v := range td {
+		// helm 模式才转
+		if v.RenderMode == string(constants.HelmRenderMode) {
+			cht.Templates = append(cht.Templates, &chart.File{
+				Name: path.Join(v.TemplateSpace, v.TemplateName),
+				Data: []byte(v.Content),
+			})
+		}
+	}
+	return validAndFillChart(&cht, value)
 }
