@@ -256,8 +256,7 @@ func (s *Service) handlerGw() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Route("/api/v1/feed", func(r chi.Router) {
-		r.Get("/biz/{biz_id}/app/{app}/*", s.DownloadFile)
-		r.Get("/biz/{biz_id}/app/{app}/files/download/{path}", s.DownloadFile)
+		r.Get("/biz/{biz_id}/app/{app}/files/*", s.DownloadFile)
 		r.Mount("/", s.gwMux)
 	})
 	return r
@@ -349,7 +348,7 @@ func (s *Service) DownloadFile(w http.ResponseWriter, r *http.Request) {
 
 	data := findMatchingConfigItem(filePath, fileName, metas.ConfigItems)
 	if data == nil {
-		render.Render(w, r, rest.BadRequest(fmt.Errorf("file does not exist")))
+		render.Render(w, r, rest.NotFound(fmt.Errorf("file does not exist")))
 		return
 	}
 

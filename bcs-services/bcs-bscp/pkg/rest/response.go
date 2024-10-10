@@ -178,6 +178,12 @@ func BadRequest(err error) render.Renderer {
 	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusBadRequest}
 }
 
+// NotFound rest 资源不存在
+func NotFound(err error) render.Renderer {
+	payload := &ErrorPayload{Code: "NOT_FOUND", Message: err.Error()}
+	return &ErrorResponse{Error: payload, HTTPStatusCode: http.StatusNotFound}
+}
+
 // GRPCErr GRPC-Gateway 错误
 func GRPCErr(err error) *ErrorResponse {
 	s := status.Convert(err)
