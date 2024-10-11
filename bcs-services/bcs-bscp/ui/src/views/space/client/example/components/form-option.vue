@@ -53,7 +53,7 @@
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
-      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="formData.labelArr = $event" />
+      <AddLabel ref="addLabelRef" @send-label="formData.labelArr = $event" />
     </bk-form-item>
     <!-- <bk-form-item v-if="p2pShow">
       由于集群列表接口暂不支持，产品将下拉框改为输入框，待后续接口支持后改回下拉框
@@ -101,14 +101,12 @@
   const props = withDefaults(
     defineProps<{
       directoryShow?: boolean;
-      labelName?: string;
       p2pShow?: boolean;
       httpConfigShow?: boolean;
       associateConfigShow?: boolean;
     }>(),
     {
       directoryShow: true,
-      labelName: '标签',
       p2pShow: false,
       httpConfigShow: false,
       associateConfigShow: false,

@@ -8,15 +8,10 @@
     <template #header>
       <div class="header-wrapper">
         <span>{{ sideSliderTitle }}</span>
-        <bk-popover
-          v-if="!props.isExampleMode"
-          placement="bottom-start"
-          theme="light"
-          trigger="click"
-          ext-cls="view-rule-wrap">
+        <bk-popover placement="bottom-start" theme="light" trigger="click" ext-cls="view-rule-wrap">
           <span class="view-rule">{{ t('查看规则示例') }}</span>
           <template #content>
-            <ViewRuleExample />
+            <ViewRuleExample :is-example-mode="props.isExampleMode" />
           </template>
         </bk-popover>
       </div>
@@ -42,7 +37,7 @@
           @edit="isRuleEdit = true" />
       </div>
       <div v-if="rules.length || isRuleEdit" class="results-wrapper">
-        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" />
+        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" :is-example-mode="props.isExampleMode" />
       </div>
     </section>
     <div class="action-btns">
@@ -53,7 +48,7 @@
         :disabled="saveBtnDisabled"
         v-bk-tooltips="{ content: '请先预览所有关联规则修改结果后，才能保存', disabled: !saveBtnDisabled }"
         @click="handleSave">
-        {{ t('保存') }}
+        {{ props.isExampleMode ? t('确定') : t('保存') }}
       </bk-button>
       <bk-button
         v-else
@@ -132,6 +127,7 @@
         // 配置示例无需载入密钥关联的规则
         if (props.isExampleMode) {
           rules.value = props.exampleRules.length ? props.exampleRules : [];
+          handleOpenEdit(); // 配置示例-配置文件筛选时默认打开编辑
         } else {
           loadRules();
         }
