@@ -86,6 +86,8 @@
   en: "must start and end with alphanumeric, can contain '-', '_', '.' and alphanumeric"
 - msgID: "不应少于 1 个项"
   en: "Should not be less than 1 item."
+- msgID: "格式无效，请参考 Cron 格式"
+  en: "Invalid format, please refer to Cron format."
 - msgID: "资源类型 %s APIVersion %s 不在受支持的版本列表 %v 中，请改用 Yaml 模式而非表单化"
   en: "resource kind %s apiVersion %s not in the list of supported versions %v, please use yaml rather than form edit mode"
 - msgID: 标签有重复的键，请检查

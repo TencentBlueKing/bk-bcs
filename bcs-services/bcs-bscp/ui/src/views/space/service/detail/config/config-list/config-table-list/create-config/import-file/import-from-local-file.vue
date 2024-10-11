@@ -94,7 +94,6 @@
   const isDecompression = ref(true);
   const isOpenFileList = ref(true);
   const fileList = ref<IUploadFileList[]>([]);
-  const multipleUploading = ref(false); // 是否是多个文件上传
 
   const uploadTips = computed(() => {
     if (isDecompression.value) {
@@ -108,7 +107,7 @@
   watch(
     () => fileList.value,
     () => {
-      if (fileList.value.some((fileItem) => fileItem.status === 'uploading') || multipleUploading.value) {
+      if (fileList.value.some((fileItem) => fileItem.status === 'uploading')) {
         emits('uploading', true);
       } else {
         emits('uploading', false);
@@ -234,7 +233,6 @@
   };
 
   const handleExceed = async (files: any) => {
-    multipleUploading.value = true;
     let index = 0;
     const uploadNext = async () => {
       if (index < files.length) {
@@ -249,7 +247,6 @@
       uploadPromises.push(uploadNext());
     }
     await Promise.allSettled(uploadPromises);
-    multipleUploading.value = false;
   };
 </script>
 

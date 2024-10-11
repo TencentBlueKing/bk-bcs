@@ -175,6 +175,10 @@ func FeedUnaryUpdateLastConsumedTimeInterceptor(ctx context.Context, req interfa
 		request := req.(*pbfs.GetDownloadURLReq)
 		param.BizID = request.BizId
 		param.AppIDs = append(param.AppIDs, request.GetFileMeta().GetConfigItemAttachment().AppId)
+	case pbfs.Upstream_GetSingleKvValue_FullMethodName, pbfs.Upstream_GetSingleKvMeta_FullMethodName:
+		request := req.(*pbfs.GetSingleKvValueReq)
+		param.BizID = request.BizId
+		param.AppNames = append(param.AppNames, request.GetAppMeta().App)
 	default:
 		return handler(ctx, req)
 	}

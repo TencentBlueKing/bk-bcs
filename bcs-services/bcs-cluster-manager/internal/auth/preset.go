@@ -33,6 +33,7 @@ var NoAuthMethod = []string{
 
 	// nodeGroup resource
 	"ClusterManager.GetExternalNodeScriptByGroupID",
+	"ClusterManager.RecommendNodeGroupConf",
 
 	// cloud template
 	"ClusterManager.GetCloud",
@@ -179,6 +180,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.ListNodesInGroup":       cluster.CanViewClusterOperation,
 	"ClusterManager.ListNodesInGroupV2":     cluster.CanViewClusterOperation,
 	"ClusterManager.UpdateGroupAsTimeRange": cluster.CanManageClusterOperation,
+	"ClusterManager.RecommendNodeGroupConf": "",
 
 	"ClusterManager.UpdateGroupDesiredNode":         cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateGroupDesiredSize":         cluster.CanManageClusterOperation,

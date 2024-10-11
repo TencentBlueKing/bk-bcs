@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package cmdb xxx
 package cmdb
 
 import (
@@ -32,37 +33,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-// CmdbInterface for cloud Tags
-type CmdbInterface interface { // nolint
-	// GetCloudTags get cloud tags by BizInfo
-	GetCloudTags(bizInfo BizInfo, operator string) (map[string]string, error)
-	// GetBusinessMaintainer get biz maintainer
-	GetBusinessMaintainer(bizID int) (*BusinessData, error)
-	// FetchAllHostsByBizID fetch all hosts by bizID
-	FetchAllHostsByBizID(bizID int) ([]HostData, error)
-	// QueryHostInfoWithoutBiz get host detailed info by ips
-	QueryHostInfoWithoutBiz(ips []string, page Page) ([]HostDetailData, error)
-	// QueryHostByBizID get limited count biz host by page
-	QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
-	// FindHostBizRelations get biz relations by hostID
-	FindHostBizRelations(hostID []int) ([]HostBizRelations, error)
-	// TransHostToRecycleModule transfer host to idle pool on the same biz
-	TransHostToRecycleModule(bizID int, hostID []int) error
-	// GetBizInternalModule get biz idle pool module info
-	GetBizInternalModule(bizID int) (*BizInternalModuleData, error)
-	// TransHostAcrossBiz transfer host on the different biz
-	TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error
-	// GetBS2IDByBizID get BS2ID by bizID
-	GetBS2IDByBizID(bizID int64) (int, error)
-	// GetBizInfo get biz info
-	GetBizInfo(bizID int64) (*Business, error)
-}
-
 // CmdbClient global cmdb client
 var CmdbClient *Client
 
 // SetCmdbClient set cmdb client
 func SetCmdbClient(options Options) error {
+	// init client
 	cli, err := NewCmdbClient(options)
 	if err != nil {
 		return err
@@ -90,10 +66,12 @@ func NewCmdbClient(options Options) (*Client, error) {
 		cache: cache.New(3*time.Minute, 60*time.Minute),
 	}
 
+	// disable cmdb
 	if !options.Enable {
 		return nil, nil
 	}
 
+	// gateway auth
 	auth, err := c.generateGateWayAuth()
 	if err != nil {
 		return nil, err
@@ -103,6 +81,7 @@ func NewCmdbClient(options Options) (*Client, error) {
 }
 
 var (
+	// defaultTimeOut default timeout
 	defaultTimeOut = time.Second * 60
 	// ErrServerNotInit server not init
 	ErrServerNotInit = errors.New("server not inited")
@@ -110,19 +89,28 @@ var (
 
 // Options for cmdb client
 type Options struct {
-	Enable     bool
-	AppCode    string
-	AppSecret  string
+	// Enable enable client
+	Enable bool
+	// AppCode app code
+	AppCode string
+	// AppSecret app secret
+	AppSecret string
+	// BKUserName bk username
 	BKUserName string
-	Server     string
-	Debug      bool
+	// Server server
+	Server string
+	// Debug debug
+	Debug bool
 }
 
 // AuthInfo auth user
 type AuthInfo struct {
-	BkAppCode   string `json:"bk_app_code"`
+	// BkAppCode bk app code
+	BkAppCode string `json:"bk_app_code"`
+	// BkAppSecret bk app secret
 	BkAppSecret string `json:"bk_app_secret"`
-	BkUserName  string `json:"bk_username"`
+	// BkUserName bk username
+	BkUserName string `json:"bk_username"`
 }
 
 // Client for cc
@@ -136,11 +124,13 @@ type Client struct {
 	cache       *cache.Cache
 }
 
+// generateGateWayAuth generate gateway auth
 func (c *Client) generateGateWayAuth() (string, error) {
 	if c == nil {
 		return "", ErrServerNotInit
 	}
 
+	// auth info
 	auth := &AuthInfo{
 		BkAppCode:   c.appCode,
 		BkAppSecret: c.appSecret,
@@ -161,6 +151,7 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 		return nil, ErrServerNotInit
 	}
 
+	// get hostTopo from cache
 	hostTopo, ok := GetBizHostTopoData(c.cache, bizID)
 	if ok {
 		blog.Infof("FetchAllHostTopoRelationsByBizID hit cache by bizID[%s]", bizID)
@@ -177,6 +168,8 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 		return nil, err
 	}
 	blog.Infof("FetchAllHostTopoRelationsByBizID count %d by bizID %d", counts, bizID)
+
+	// split count to pages
 	pages := splitCountToPage(counts, MaxLimits)
 	var (
 		hostTopoList = make([]HostTopoRelation, 0)
@@ -186,12 +179,14 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 	con := utils.NewRoutinePool(20)
 	defer con.Close()
 
+	// routine pool handle
 	for i := range pages {
 		con.Add(1)
 		go func(page Page) {
 			defer con.Done()
-			_, hostTopos, err := c.FindHostTopoRelation(bizID, page) // nolint
-			if err != nil {
+			// find host topos
+			_, hostTopos, errLocal := c.FindHostTopoRelation(bizID, page) // nolint
+			if errLocal != nil {
 				blog.Errorf("cmdb client FindHostTopoRelation %v failed, %s", bizID, err.Error())
 				return
 			}
@@ -204,6 +199,7 @@ func (c *Client) FetchAllHostTopoRelationsByBizID(bizID int) ([]HostTopoRelation
 
 	blog.Infof("FetchAllHostsByBizID successful %v", bizID)
 
+	// set biz topo cache
 	err = SetBizHostTopoData(c.cache, bizID, hostTopoList)
 	if err != nil {
 		blog.Errorf("FetchAllHostTopoRelationsByBizID[%v] SetBizHostTopoData failed: %v", bizID, err)
@@ -217,6 +213,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 		return nil, ErrServerNotInit
 	}
 
+	// get bizHostData from cache
 	if cache {
 		hostData, ok := GetBizHostData(c.cache, bizID)
 		if ok {
@@ -245,10 +242,12 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 	con := utils.NewRoutinePool(20)
 	defer con.Close()
 
+	// routine pool handle
 	for i := range pages {
 		con.Add(1)
 		go func(page Page) {
 			defer con.Done()
+			// query hosts by biz
 			_, hosts, err := c.QueryHostByBizID(bizID, page) // nolint
 			if err != nil {
 				blog.Errorf("cmdb client QueryHostByBizID %v failed, %s", bizID, err.Error())
@@ -266,6 +265,7 @@ func (c *Client) FetchAllHostsByBizID(bizID int, cache bool) ([]HostData, error)
 		return nil, fmt.Errorf("FetchAllHostsByBizID[%d] failed: imageIDList empty", bizID)
 	}
 
+	// set biz hosts cache
 	err = SetBizHostData(c.cache, bizID, hostList)
 	if err != nil {
 		blog.Errorf("FetchAllHostsByBizID[%v] SetBizHostData failed: %v", bizID, err)
@@ -280,6 +280,7 @@ func (c *Client) QueryHostInfoWithoutBiz(field string, values []string, page Pag
 		return nil, ErrServerNotInit
 	}
 
+	// list_hosts_without_biz
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/list_hosts_without_biz/", c.server)
 		request = &ListHostsWithoutBizRequest{
@@ -321,7 +322,9 @@ func (c *Client) QueryHostInfoWithoutBiz(field string, values []string, page Pag
 func (c *Client) QueryAllHostInfoWithoutBiz(ips []string) ([]HostDetailData, error) {
 	chunk := utils.SplitStringsChunks(ips, MaxLimits)
 	list := make([]HostDetailData, 0)
+
 	for _, v := range chunk {
+		// query hostInfoIp without biz
 		data, err := c.QueryHostInfoWithoutBiz(FieldHostIP, v, Page{Start: 0, Limit: MaxLimits})
 		if err != nil {
 			return nil, err
@@ -336,6 +339,7 @@ func (c *Client) QueryAllHostInfoByAssetIdWithoutBiz(assetIds []string) ([]HostD
 	chunk := utils.SplitStringsChunks(assetIds, MaxLimits)
 	list := make([]HostDetailData, 0)
 	for _, v := range chunk {
+		// // query hostInfoAssertId without biz
 		data, err := c.QueryHostInfoWithoutBiz(FieldAssetId, v, Page{Start: 0, Limit: MaxLimits})
 		if err != nil {
 			return nil, err
@@ -351,6 +355,7 @@ func (c *Client) FindHostTopoRelation(bizID int, page Page) (int, []HostTopoRela
 		return 0, nil, ErrServerNotInit
 	}
 
+	// find_host_topo_relation
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/find_host_topo_relation/", c.server)
 		request = &HostTopoRelationReq{
@@ -400,6 +405,7 @@ func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, er
 	}
 	blog.V(3).Infof("SearchCloudAreaByCloudID miss cache by cloudID[%v]", cloudID)
 
+	// search_cloud_area
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_cloud_area/", c.server)
 		request = &SearchCloudAreaRequest{
@@ -455,6 +461,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 		return 0, nil, ErrServerNotInit
 	}
 
+	// list_biz_hosts
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/list_biz_hosts/", c.server)
 		request = &ListBizHostRequest{
@@ -502,6 +509,7 @@ func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) 
 		return nil, ErrServerNotInit
 	}
 
+	// find_host_biz_relations
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/find_host_biz_relations/", c.server)
 		request = &FindHostBizRelationsRequest{
@@ -543,6 +551,7 @@ func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
 		return ErrServerNotInit
 	}
 
+	// transfer_host_to_recyclemodule
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_recyclemodule/", c.server)
 		request = &TransHostToERecycleModuleRequest{
@@ -588,6 +597,7 @@ func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInter
 	language := i18n.LanguageFromCtx(ctx)
 	blog.Infof("cmdb client GetBizInternalModule language %s", language)
 
+	// get_biz_internal_module
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/get_biz_internal_module/", c.server)
 		request = &QueryBizInternalModuleRequest{
@@ -626,6 +636,7 @@ func (c *Client) TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error {
 		return ErrServerNotInit
 	}
 
+	// transfer_host_across_biz
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_across_biz/", c.server)
 		request = &TransferHostAcrossBizRequest{
@@ -666,6 +677,7 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 		return nil, ErrServerNotInit
 	}
 
+	// search_business
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_business/", c.server)
 		request = &SearchBusinessRequest{
@@ -714,6 +726,7 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 		return 0, ErrServerNotInit
 	}
 
+	// search_business
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_business/", c.server)
 		request = &SearchBusinessRequest{
@@ -762,6 +775,7 @@ func (c *Client) GetAssetIdsByIps(ips []string) ([]Server, error) {
 		return nil, ErrServerNotInit
 	}
 
+	// get_query_info
 	var (
 		reqURL  = fmt.Sprintf("%s/component/compapi/cmdb/get_query_info/", c.server)
 		request = &GetAssetIdsByIpsReq{
@@ -812,6 +826,7 @@ func (c *Client) GetBizInfo(bizID int64) (*Business, error) {
 		return nil, ErrServerNotInit
 	}
 
+	// get_query_info
 	var (
 		reqURL  = fmt.Sprintf("%s/component/compapi/cmdb/get_query_info/", c.server)
 		request = &QueryBusinessInfoReq{
@@ -861,6 +876,7 @@ func (c *Client) GetCloudTags(bizInfo BizInfo, operator string) (map[string]stri
 		return nil, ErrServerNotInit
 	}
 
+	// 通过bkcc业务ID获取二级业务
 	bizID, err := c.GetBS2IDByBizID(bizInfo.BizID)
 	if err != nil {
 		return nil, err
@@ -877,6 +893,7 @@ func (c *Client) GetCloudTags(bizInfo BizInfo, operator string) (map[string]stri
 		return nil, err
 	}
 
+	// 获取业务标签
 	return map[string]string{
 		KeyPart:      options.GetGlobalCMOptions().TagDepart,
 		KeyProduct:   business2.BsiProductName + fmt.Sprintf("_%v", business2.BsiProductId),
@@ -888,6 +905,7 @@ func (c *Client) GetCloudTags(bizInfo BizInfo, operator string) (map[string]stri
 
 // TransferHostToIdleModule transfer host to idle module
 func (c *Client) TransferHostToIdleModule(bizID int, hostID []int) error {
+	// transfer_host_to_idlemodule
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_idlemodule/", c.server)
 		request = &TransferHostToIdleModuleRequest{
@@ -925,6 +943,7 @@ func (c *Client) TransferHostToIdleModule(bizID int, hostID []int) error {
 
 // TransferHostToResourceModule transfer host to resource module
 func (c *Client) TransferHostToResourceModule(bizID int, hostID []int) error {
+	// transfer_host_to_resourcemodule
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_to_resourcemodule/", c.server)
 		request = &TransferHostToResourceModuleRequest{
@@ -966,6 +985,8 @@ func (c *Client) DeleteHost(hostID []int) error {
 	for _, v := range hostID {
 		hostIDs = append(hostIDs, strconv.Itoa(v))
 	}
+
+	// delete_host
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/delete_host/", c.server)
 		request = &DeleteHostRequest{
@@ -1002,6 +1023,7 @@ func (c *Client) DeleteHost(hostID []int) error {
 
 // SearchBizInstTopo search biz inst topo
 func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
+	// search_biz_inst_topo
 	var (
 		reqURL   = fmt.Sprintf("%s/api/c/compapi/v2/cc/search_biz_inst_topo?bk_biz_id=%d", c.server, bizID)
 		respData = &SearchBizInstTopoResponse{}
@@ -1035,6 +1057,7 @@ func (c *Client) SearchBizInstTopo(bizID int) ([]SearchBizInstTopoData, error) {
 // ListTopology list topology
 func (c *Client) ListTopology(ctx context.Context, bizID int, filterInter bool, cache bool) (
 	*SearchBizInstTopoData, error) {
+	// get bizTopoData from cache
 	if cache {
 		bizTopo, ok := GetBizTopoData(c.cache, bizID)
 		if ok {
@@ -1044,12 +1067,14 @@ func (c *Client) ListTopology(ctx context.Context, bizID int, filterInter bool, 
 		blog.V(3).Infof("ListTopology miss cache by bizID[%v]", bizID)
 	}
 
+	// get biz internal module
 	internalModules, err := c.GetBizInternalModule(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}
 	// internalModules.ReplaceName()
 
+	// search biz inst topo
 	topos, err := c.SearchBizInstTopo(bizID)
 	if err != nil {
 		return nil, err
@@ -1100,6 +1125,7 @@ func (c *Client) ListTopology(ctx context.Context, bizID int, filterInter bool, 
 
 // TransferHostModule transfer host to module
 func (c *Client) TransferHostModule(bizID int, hostID []int, moduleID []int, isIncrement bool) error {
+	// transfer_host_module
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/transfer_host_module/", c.server)
 		request = &TransferHostModuleRequest{
@@ -1143,6 +1169,7 @@ func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []strin
 		return ErrServerNotInit
 	}
 
+	// add_host_from_cmpy
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/add_host_from_cmpy/", c.server)
 		request = &AddHostFromCmpyReq{
@@ -1186,6 +1213,7 @@ func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
 		return ErrServerNotInit
 	}
 
+	// sync_host_info_from_cmpy
 	var (
 		reqURL  = fmt.Sprintf("%s/api/c/compapi/v2/cc/sync_host_info_from_cmpy/", c.server)
 		request = &SyncHostInfoFromCmpyReq{

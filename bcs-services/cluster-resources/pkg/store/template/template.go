@@ -248,6 +248,29 @@ func (m *ModelTemplate) UpdateTemplateBySpecial(
 	return nil
 }
 
+// UpdateTemplateBySpaceAndName update a template byu space and template name
+func (m *ModelTemplate) UpdateTemplateBySpaceAndName(
+	ctx context.Context, projectCode, templateSpace, templateName string, template entity.M) error {
+
+	operatorM := operator.M{
+		entity.FieldKeyProjectCode:   projectCode,
+		entity.FieldKeyTemplateSpace: templateSpace,
+		entity.FieldKeyName:          templateName,
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operatorM)
+
+	if template[entity.FieldKeyUpdateAt] == nil {
+		template.Update(entity.FieldKeyUpdateAt, time.Now().UTC().Unix())
+	}
+
+	if _, err := m.db.Table(m.tableName).UpdateMany(ctx, cond, operator.M{"$set": template}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DeleteTemplate delete a specific entity.Template from database
 func (m *ModelTemplate) DeleteTemplate(ctx context.Context, id string) error {
 	if id == "" {

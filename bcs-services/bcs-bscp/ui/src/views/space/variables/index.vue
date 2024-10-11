@@ -44,7 +44,7 @@
           </template>
         </bk-table-column>
         <!-- <bk-table-column type="selection" :width="60"></bk-table-column> -->
-        <bk-table-column :label="t('变量名称')" width="300">
+        <bk-table-column :label="t('变量名称')" width="300" min-width="300">
           <template #default="{ row }">
             <div v-if="row.spec" class="var-name-wrapper">
               <bk-overflow-title class="name-text" type="tips" :key="row.id" @click="handleEditVar(row)">
@@ -55,7 +55,11 @@
           </template>
         </bk-table-column>
         <bk-table-column :label="t('类型')" prop="spec.type" width="180"></bk-table-column>
-        <bk-table-column :label="t('默认值')" prop="spec.default_val"></bk-table-column>
+        <bk-table-column :label="t('默认值')" prop="spec.default_val">
+          <template #default="{ row }">
+            <span v-if="row.spec">{{ row.spec.default_val || '--' }}</span>
+          </template>
+        </bk-table-column>
         <bk-table-column :label="t('描述')">
           <template #default="{ row }">
             <span v-if="row.spec">{{ row.spec.memo || '--' }}</span>

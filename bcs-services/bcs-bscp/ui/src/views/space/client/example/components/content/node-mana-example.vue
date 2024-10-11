@@ -2,7 +2,6 @@
   <section class="node-mana-container">
     <form-option
       ref="fileOptionRef"
-      label-name="服务标签"
       :associate-config-show="true"
       :dual-system-support="true"
       @update-option-data="getOptionData" />
@@ -38,14 +37,15 @@
                 <ul v-if="optionData.labelArr.length" class="bk-form-content">
                   <li v-for="(item, index) in optionData.labelArr" :key="index" class="label-li">
                     <div class="label-content">
-                      <!-- <span class="label-key">key</span> -->
-                      <div class="input-wrap">{{ item.key || 'key' }}</div>
+                      <div class="input-wrap">
+                        {{ item.key || 'key' }}
+                        <copy-shape class="icon-shape" v-show="item.key" @click="copyText(item.key as string)" />
+                      </div>
                       &nbsp;=&nbsp;
-                      <div class="input-wrap">{{ item.value || 'value' }}</div>
-                      <copy-shape
-                        class="icon-shape"
-                        v-show="item.key && item.value"
-                        @click="copyText(`${item.key}=${item.value}`)" />
+                      <div class="input-wrap">
+                        {{ item.value || 'value' }}
+                        <copy-shape class="icon-shape" v-show="item.value" @click="copyText(item.value as string)" />
+                      </div>
                     </div>
                   </li>
                 </ul>
@@ -57,8 +57,10 @@
                 <ul v-if="optionData.rules.length" class="bk-form-content">
                   <li v-for="(rule, index) in optionData.rules" :key="index" class="label-li">
                     <div class="label-content">
-                      <div class="input-wrap full">{{ rule }}</div>
-                      <copy-shape class="icon-shape" v-show="rule" @click="copyText(rule)" />
+                      <div class="input-wrap full">
+                        {{ rule }}
+                        <copy-shape class="icon-shape" v-show="rule" @click="copyText(rule)" />
+                      </div>
                     </div>
                   </li>
                 </ul>
@@ -66,7 +68,7 @@
               </div>
             </div>
           </bk-form-item>
-          <bk-form-item label="feedAddr：">
+          <bk-form-item :label="$t('服务feed-server地址：')">
             <span class="content-em" @click="copyText(feedAddr!)">
               {{ feedAddr }} <copy-shape class="icon-shape" />
             </span>
@@ -272,28 +274,35 @@
       & + .label-content {
         margin-top: 8px;
       }
-      &:hover {
-        .icon-shape {
-          visibility: visible;
-          vertical-align: middle;
-        }
-      }
       .icon-shape {
         margin-left: 10px;
         cursor: pointer;
       }
     }
     .input-wrap {
+      position: relative;
       padding: 0 8px;
-      width: 212px;
+      width: 220px;
       height: 30px;
       line-height: 30px;
       border: 1px solid #dcdee5;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      .icon-shape {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        padding: 0 8px 0 0;
+      }
+      &:hover {
+        .icon-shape {
+          visibility: visible;
+        }
+      }
       &.full {
-        width: 440px;
+        width: 456px;
       }
     }
   }

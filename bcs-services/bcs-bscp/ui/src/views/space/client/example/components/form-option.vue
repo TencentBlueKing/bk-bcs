@@ -53,7 +53,7 @@
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
-      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="formData.labelArr = $event" />
+      <AddLabel ref="addLabelRef" @send-label="formData.labelArr = $event" />
     </bk-form-item>
     <!-- <bk-form-item v-if="p2pShow">
       由于集群列表接口暂不支持，产品将下拉框改为输入框，待后续接口支持后改回下拉框
@@ -101,15 +101,17 @@
   const props = withDefaults(
     defineProps<{
       directoryShow?: boolean; // 临时目录
-      labelName?: string;
       p2pShow?: boolean; // p2p网络加速（Sidecar容器）
       httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
       dualSystemSupport?: boolean; // Unix与windows双系统支持（节点管理插件与文件型命令行工具）
+      directoryShow?: boolean;
+      p2pShow?: boolean;
+      httpConfigShow?: boolean;
+      associateConfigShow?: boolean;
     }>(),
     {
       directoryShow: true,
-      labelName: '标签',
       p2pShow: false,
       httpConfigShow: false,
       associateConfigShow: false,

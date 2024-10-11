@@ -15,6 +15,7 @@ package template
 
 import (
 	"context"
+	"path"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"gopkg.in/yaml.v2"
@@ -32,6 +33,7 @@ import (
 	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/perm"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
@@ -250,6 +252,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 	// 非草稿状态下：创建模板文件版本
 	versionID := ""
 	if !req.GetIsDraft() {
+		renderMode := constants.RenderMode(req.GetRenderMode())
 		// 创建顺序：templateVersion -> template
 		templateVersion := &entity.TemplateVersion{
 			ProjectCode:   p.Code,
@@ -260,6 +263,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 			EditFormat:    req.GetEditFormat(),
 			Content:       req.GetContent(),
 			Creator:       userName,
+			RenderMode:    renderMode.GetRenderMode(),
 		}
 		versionID, err = t.model.CreateTemplateVersion(ctx, templateVersion)
 		if err != nil {
@@ -418,6 +422,12 @@ func (t *TemplateAction) CreateTemplateSet(ctx context.Context, req *clusterRes.
 	// 组装 chart
 	cht := buildChart(tmps, req, ctxkey.GetUsernameFromCtx(ctx))
 
+	// 校验chart helm语法是否正确
+	_, err = validAndFillChart(cht, req.GetValues())
+	if err != nil {
+		return err
+	}
+
 	// 上传 chart
 	err = helm.UploadChart(ctx, cht, p.Code, req.GetVersion(), req.GetForce())
 	if err != nil {
@@ -442,6 +452,7 @@ func getTemplateContents(ctx context.Context, model store.ClusterResourcesModel,
 			TemplateName:    vv.TemplateName,
 			TemplateVersion: vv.Version,
 			Content:         vv.Content,
+			RenderMode:      vv.RenderMode,
 		})
 	}
 	return templates, nil
@@ -517,6 +528,18 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 		return nil, err
 	}
 
+	// helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
+	content, errRender := renderTemplateForHelmMode(templates, req.GetValues())
+	if errRender != nil {
+		return map[string]interface{}{"items": []string{}, "error": errRender.Error()}, nil
+	}
+	for k, v := range templates {
+		helmPath := path.Join(v.TemplateSpace, v.TemplateName)
+		if _, ok := content[helmPath]; ok {
+			templates[k].Content = content[helmPath]
+		}
+	}
+
 	// render templates
 	manifests, err := t.renderTemplates(ctx, templates, req.GetVariables(), req.GetNamespace())
 	if err != nil {
@@ -575,6 +598,18 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 		return nil, err
 	}
 
+	// helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
+	content, errRender := renderTemplateForHelmMode(templates, req.GetValues())
+	if errRender != nil {
+		return map[string]interface{}{"items": []string{}, "error": errRender.Error()}, nil
+	}
+	for k, v := range templates {
+		helmPath := path.Join(v.TemplateSpace, v.TemplateName)
+		if _, ok := content[helmPath]; ok {
+			templates[k].Content = content[helmPath]
+		}
+	}
+
 	// render templates
 	manifests, err := t.renderTemplates(ctx, templates, req.GetVariables(), req.GetNamespace())
 	if err != nil {
@@ -602,6 +637,17 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 			return nil, err
 		}
 		_, err = cli.NewResClient(clusterConf, k8sRes).ApplyWithoutPerm(ctx, v, metav1.CreateOptions{})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 更新最新部署版本及最新部署人
+	for _, v := range templates {
+		err := t.model.UpdateTemplateBySpaceAndName(ctx, p.Code, v.TemplateSpace, v.TemplateName, entity.M{
+			"latestDeployVersion": v.TemplateVersion,
+			"latestDeployer":      ctxkey.GetUsernameFromCtx(ctx),
+		})
 		if err != nil {
 			return nil, err
 		}

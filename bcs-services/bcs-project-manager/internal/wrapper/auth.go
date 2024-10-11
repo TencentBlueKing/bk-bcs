@@ -41,7 +41,6 @@ var NoAuthEndpoints = []string{
 	"Healthz.Ping",
 	"Healthz.Healthz",
 	"BCSProject.ListAuthorizedProjects",
-	"BCSProject.ListProjects",
 	"Business.ListBusiness",
 	"Namespace.ListNamespaces",
 	"Namespace.WithdrawNamespace",
@@ -194,7 +193,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 
 	action, ok := auth.ActionPermissions[req.Method()]
 	if !ok {
-		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
+		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败, 该操作不支持用户态权限")
 	}
 
 	allow, url, resources, err := callIAM(username, action, *resourceID)

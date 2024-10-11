@@ -70,10 +70,12 @@ export default {
   请输入服务名: 'Please enter the service name',
   同时会删除服务密钥对服务的关联规则: 'The association rule of the service key pair is deleted',
   匹配结果: 'Matching result',
+  筛选结果: 'Filtering results',
   项: 'item',
   请输入配置文件名: 'Please enter the absolute path of the configuration file',
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
+  请先在左侧表单设置筛选规则并预览: 'Please set the filtering rules in the form on the left and preview',
   删除服务成功: 'Service deleted successfully',
   敏感信息: 'Sensitive info',
   请选择数据类型: 'Please select data type',
@@ -554,6 +556,7 @@ export default {
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
   '分组最多支持 5 个标签选择器': 'The group supports a maximum of 5 tag selectors',
+  请输入或选择key: 'Please enter or select key',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
@@ -775,6 +778,9 @@ export default {
   '关联myservice服务下所有的配置(包含子目录)': 'Associate all configurations under the myservice service (including subdirectories)',
   '关联myservice服务/etc目录下所有的配置(不含子目录)': 'Associate all configurations in the myservice/etc directory (excluding subdirectories)',
   '关联myservice服务/etc/nginx/nginx.conf文件': 'Associated myservice service/etc/nginx/nginx.conf file',
+  '筛选myservice服务下所有的配置(包含子目录)': 'Filter all configurations under the myservice service (including subdirectories)',
+  '筛选myservice服务/etc目录下所有的配置(不含子目录)': 'Filter all configurations in the /etc directory of the myservice service (excluding subdirectories)',
+  '筛选myservice服务/etc/nginx/nginx.conf文件': 'Filter the /etc/nginx/nginx.conf file of the myservice service',
   关联myservice服务下所有配置项: 'Associate all configuration items under the myservice service',
   关联myservice服务下所有以demo_开头的配置项: 'Associate all configuration items starting with demo_ under the myservice service',
   共有: 'There is',
@@ -786,6 +792,7 @@ export default {
   '输入的规则有误，请重新确认': 'The entered rules are incorrect, please reconfirm',
   请输入文件路径: 'Please enter file path',
   请输入配置项名称: 'Please enter the configuration item name',
+  请输入配置文件名称: 'Please enter the configuration file name',
   密钥名称已存在: 'The credentials name already exists',
 
   // 配置示例

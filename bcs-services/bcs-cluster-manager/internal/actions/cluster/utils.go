@@ -45,9 +45,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
-type clusterInfo struct {
-	clusterName string
-	clusterID   string
+// ClusterInfo info
+// nolint revive
+type ClusterInfo struct {
+	ClusterName string
+	ClusterID   string
 }
 
 func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (string, int, error) {
@@ -158,8 +160,8 @@ func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterH
 	return filterHostClusters[rand.Intn(len(filterHostClusters))].ClusterID, nil // nolint
 }
 
-// getAllMasterIPs get cluster masterIPs
-func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
+// GetAllMasterIPs get cluster masterIPs
+func GetAllMasterIPs(model store.ClusterManagerModel) map[string]ClusterInfo {
 	clusterStatus := []string{common.StatusInitialization, common.StatusRunning,
 		common.StatusDeleting, common.StatusDeleteClusterFailed, common.StatusCreateClusterFailed}
 	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
@@ -170,12 +172,12 @@ func getAllMasterIPs(model store.ClusterManagerModel) map[string]clusterInfo {
 		return nil
 	}
 
-	ipListInfo := make(map[string]clusterInfo)
+	ipListInfo := make(map[string]ClusterInfo)
 	for i := range clusterList {
 		for ip := range clusterList[i].Master {
-			ipListInfo[ip] = clusterInfo{
-				clusterName: clusterList[i].ClusterName,
-				clusterID:   clusterList[i].ClusterID,
+			ipListInfo[ip] = ClusterInfo{
+				ClusterName: clusterList[i].ClusterName,
+				ClusterID:   clusterList[i].ClusterID,
 			}
 		}
 	}

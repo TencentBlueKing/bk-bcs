@@ -17,19 +17,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"k8s.io/klog/v2"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/feed-server/bll/types"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/iam/auth"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/ratelimiter"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/rest"
@@ -248,9 +256,130 @@ func (s *Service) handlerGw() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Route("/api/v1/feed", func(r chi.Router) {
+		r.Get("/biz/{biz_id}/app/{app}/files/*", s.DownloadFile)
 		r.Mount("/", s.gwMux)
 	})
 	return r
+}
+
+// DownloadFile download file from provider repo
+// nolint:funlen
+func (s *Service) DownloadFile(w http.ResponseWriter, r *http.Request) {
+	kt := kit.FromGrpcContext(r.Context())
+
+	// 获取token
+	authorizationHeader := r.Header.Get("Authorization")
+	if len(authorizationHeader) < 1 {
+		render.Render(w, r, rest.Unauthorized(errors.New("missing authorization header")))
+		return
+	}
+
+	authHeaderParts := strings.Split(authorizationHeader, " ")
+	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+		render.Render(w, r, rest.Unauthorized(errors.New("invalid authorization header format")))
+		return
+	}
+
+	bizIdStr := chi.URLParam(r, "biz_id")
+	bizID, _ := strconv.Atoi(bizIdStr)
+	if bizID == 0 {
+		render.Render(w, r, rest.BadRequest(errors.New("biz id is required")))
+		return
+	}
+	kt.BizID = uint32(bizID)
+
+	appName := chi.URLParam(r, "app")
+	if appName == "" {
+		render.Render(w, r, rest.BadRequest(errors.New("app is required")))
+		return
+	}
+
+	remainingPath := chi.URLParam(r, "*")
+	if remainingPath == "" {
+		render.Render(w, r, rest.BadRequest(errors.New("file path is required")))
+		return
+	}
+
+	filePath, fileName := tools.SplitPathAndName(remainingPath)
+	if fileName == "" {
+		render.Render(w, r, rest.BadRequest(errors.New("file name is required")))
+		return
+	}
+
+	appID, err := s.bll.AppCache().GetAppID(kt, uint32(bizID), appName)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(fmt.Errorf("get app id failed, err: %v", err)))
+		return
+	}
+
+	app, err := s.bll.AppCache().GetMeta(kt, kt.BizID, appID)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(fmt.Errorf("get app meta failed, err: %v", err)))
+		return
+	}
+
+	// validate can file be downloaded by credential.
+	match, err := s.bll.Auth().CanMatchCI(
+		kt, uint32(bizID), app.Name, authHeaderParts[1], filePath, fileName)
+	if err != nil {
+		render.Render(w, r, rest.Unauthorized(fmt.Errorf("do authorization failed, err: %v", err)))
+		return
+	}
+
+	if !match {
+		render.Render(w, r, rest.PermissionDenied(errors.New("no permission to download file"), nil))
+		return
+	}
+
+	meta := &types.AppInstanceMeta{
+		BizID: kt.BizID,
+		App:   appName,
+		AppID: appID,
+	}
+
+	cancel := kt.CtxWithTimeoutMS(1500)
+	defer cancel()
+
+	metas, err := s.bll.Release().ListAppLatestReleaseMeta(kt, meta)
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+
+	data := findMatchingConfigItem(filePath, fileName, metas.ConfigItems)
+	if data == nil {
+		render.Render(w, r, rest.NotFound(fmt.Errorf("file does not exist")))
+		return
+	}
+
+	body, contentLength, err := s.provider.Download(kt, data.CommitSpec.GetContent().GetSignature())
+	if err != nil {
+		render.Render(w, r, rest.BadRequest(err))
+		return
+	}
+	defer body.Close()
+
+	w.Header().Set("Content-Length", strconv.FormatInt(contentLength, 10))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	_, err = io.Copy(w, body)
+	if err != nil {
+		klog.ErrorS(err, "download file", "sign", data.CommitSpec.GetContent().GetSignature())
+		render.Render(w, r, rest.BadRequest(fmt.Errorf("download file failed, err: %v", err)))
+		return
+	}
+}
+
+// 查找匹配的 ConfigItem
+func findMatchingConfigItem(filePath, fileName string,
+	configItems []*types.ReleasedCIMeta) *types.ReleasedCIMeta {
+	for _, v := range configItems {
+		path1 := path.Join(filePath, fileName)
+		path2 := path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)
+		if path1 == path2 {
+			return v
+		}
+	}
+	return nil
 }
 
 // HealthyHandler livenessProbe 健康检查

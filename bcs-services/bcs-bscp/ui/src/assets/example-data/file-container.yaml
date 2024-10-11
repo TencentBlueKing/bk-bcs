@@ -38,7 +38,7 @@ spec:
             - name: temp_dir
               value: {{ .Bk_Bscp_Variable_TempDir }}
             {{ .Bk_Bscp_Variable_p2p_part1 }}
-            {{ .Bk_Bscp_Variable_Rules }}
+            {{ .Bk_Bscp_Variable_Rules1 }}
           # 需要同时挂载文件临时目录到 Init 容器，sidecar 容器，业务容器
           volumeMounts:
             - mountPath: {{ .Bk_Bscp_Variable_TempDir }}
@@ -71,6 +71,7 @@ spec:
             - name: temp_dir
               value: {{ .Bk_Bscp_Variable_TempDir }}
             {{ .Bk_Bscp_Variable_p2p_part2 }}
+            {{ .Bk_Bscp_Variable_Rules2 }}
           volumeMounts:
             - mountPath: {{ .Bk_Bscp_Variable_TempDir }}
               name: bscp-temp-dir

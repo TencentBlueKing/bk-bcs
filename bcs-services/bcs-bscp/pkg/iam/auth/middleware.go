@@ -126,7 +126,7 @@ func (a authorizer) UnifiedAuthentication(next http.Handler) http.Handler {
 		default:
 			// API类返回规范的JSON错误信息
 			loginURL, loginPlainURL := a.authLoginClient.BuildLoginURL(r)
-			render.Render(w, r, rest.UnauthorizedErr(multiErr, loginURL, loginPlainURL))
+			render.Render(w, r, rest.NotLoggedInErr(multiErr, loginURL, loginPlainURL))
 			return
 		}
 

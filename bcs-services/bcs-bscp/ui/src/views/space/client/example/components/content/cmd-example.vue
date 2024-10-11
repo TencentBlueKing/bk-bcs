@@ -17,7 +17,11 @@
           <template v-else>
             <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制命令') }}</bk-button>
             <code-preview
-              :class="['preview-component', { 'preview-component--kvcmd': basicInfo!.serviceType.value === 'kv' }]"
+              :class="[
+                'preview-component',
+                { 'preview-component--kvcmd': basicInfo!.serviceType.value === 'kv' },
+                { 'rules-height': optionData.rules.length },
+              ]"
               :code-val="replaceVal"
               :variables="variables"
               :language="kvName"
@@ -180,8 +184,7 @@
     if (optionData.value.rules?.length) {
       const rulesPart = `
       # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
-config_matches
-${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
+config_matches: {{ .Bk_Bscp_Variable_Rules_Value }}`;
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart.trim());
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', '');
@@ -207,6 +210,12 @@ ${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
         name: 'Bk_Bscp_VariableTempDir',
         type: '',
         default_val: `'${optionData.value.tempDir}'`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Rules_Value',
+        type: '',
+        default_val: `[${optionData.value.rules.map((rule) => `"${rule}"`).join(',')}]`,
         memo: '',
       },
     ];
@@ -317,6 +326,9 @@ ${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
     background-color: #f5f7fa;
     &--kvcmd {
       height: 279px;
+    }
+    &.rules-height {
+      height: 394px;
     }
   }
 </style>
