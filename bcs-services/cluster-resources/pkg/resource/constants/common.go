@@ -232,3 +232,21 @@ func GetResourceAttr(resource string) string {
 	}
 	return resource
 }
+
+// RenderMode 模板文件语法模式
+type RenderMode string
+
+const (
+	// HelmRenderMode helm 语法模式
+	HelmRenderMode RenderMode = "Helm"
+	// SimpleRenderMode 简单语法模式，使用字符串替换渲染
+	SimpleRenderMode RenderMode = "Simple"
+)
+
+// GetRenderMode 获取模板文件语法模式
+func (r RenderMode) GetRenderMode() string {
+	if r == HelmRenderMode {
+		return string(HelmRenderMode)
+	}
+	return string(SimpleRenderMode)
+}

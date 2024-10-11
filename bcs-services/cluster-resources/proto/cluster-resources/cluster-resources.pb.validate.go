@@ -10503,6 +10503,8 @@ func (m *CreateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for DraftEditFormat
 
+	// no validation rules for RenderMode
+
 	if len(errors) > 0 {
 		return CreateTemplateMetadataReqMultiError(errors)
 	}
@@ -11316,6 +11318,8 @@ func (m *CreateTemplateVersionReq) validate(all bool) error {
 
 	// no validation rules for Force
 
+	// no validation rules for RenderMode
+
 	if len(errors) > 0 {
 		return CreateTemplateVersionReqMultiError(errors)
 	}
@@ -12033,6 +12037,8 @@ func (m *DeployTemplateFileReq) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for Values
 
 	if len(errors) > 0 {
 		return DeployTemplateFileReqMultiError(errors)
