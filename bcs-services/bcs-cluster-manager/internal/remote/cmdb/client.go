@@ -90,27 +90,27 @@ var (
 // Options for cmdb client
 type Options struct {
 	// Enable enable client
-	Enable     bool
+	Enable bool
 	// AppCode app code
-	AppCode    string
+	AppCode string
 	// AppSecret app secret
-	AppSecret  string
+	AppSecret string
 	// BKUserName bk username
 	BKUserName string
 	// Server server
-	Server     string
+	Server string
 	// Debug debug
-	Debug      bool
+	Debug bool
 }
 
 // AuthInfo auth user
 type AuthInfo struct {
 	// BkAppCode bk app code
-	BkAppCode   string `json:"bk_app_code"`
+	BkAppCode string `json:"bk_app_code"`
 	// BkAppSecret bk app secret
 	BkAppSecret string `json:"bk_app_secret"`
 	// BkUserName bk username
-	BkUserName  string `json:"bk_username"`
+	BkUserName string `json:"bk_username"`
 }
 
 // Client for cc
