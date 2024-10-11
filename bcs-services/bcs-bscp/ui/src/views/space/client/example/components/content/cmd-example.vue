@@ -184,7 +184,7 @@
     if (optionData.value.rules?.length) {
       const rulesPart = `
       # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
-config_matches:{{ .Bk_Bscp_Variable_Rules_Value }}`;
+config_matches: {{ .Bk_Bscp_Variable_Rules_Value }}`;
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart.trim());
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', '');
