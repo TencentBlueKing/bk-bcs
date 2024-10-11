@@ -1,10 +1,6 @@
 <template>
   <section class="node-mana-container">
-    <form-option
-      ref="fileOptionRef"
-      label-name="服务标签"
-      :associate-config-show="true"
-      @update-option-data="getOptionData" />
+    <form-option ref="fileOptionRef" :associate-config-show="true" @update-option-data="getOptionData" />
     <div class="node-content">
       <span class="node-label">{{ $t('示例预览') }}</span>
       <div class="top-tip">
@@ -58,11 +54,8 @@
                   <li v-for="(rule, index) in optionData.rules" :key="index" class="label-li">
                     <div class="label-content">
                       <div class="input-wrap full">
-                        {{ basicInfo!.serviceName.value + rule }}
-                        <copy-shape
-                          class="icon-shape"
-                          v-show="rule"
-                          @click="copyText(basicInfo!.serviceName.value + rule)" />
+                        {{ rule }}
+                        <copy-shape class="icon-shape" v-show="rule" @click="copyText(rule)" />
                       </div>
                     </div>
                   </li>
@@ -71,7 +64,7 @@
               </div>
             </div>
           </bk-form-item>
-          <bk-form-item label="feedAddr：">
+          <bk-form-item :label="$t('服务feed-server地址：')">
             <span class="content-em" @click="copyText(feedAddr!)">
               {{ feedAddr }} <copy-shape class="icon-shape" />
             </span>
