@@ -116,6 +116,9 @@
   onMounted(async () => {
     const resp = await getAppList(spaceId.value, { start: 0, all: true });
     appList.value = resp.details;
+    if (props.isExampleMode) {
+      handleOpenEdit();
+    }
   });
 
   const sideSliderTitle = computed(() => (props.isExampleMode ? t('配置文件筛选规则') : t('关联服务配置')));
@@ -127,7 +130,6 @@
         // 配置示例无需载入密钥关联的规则
         if (props.isExampleMode) {
           rules.value = props.exampleRules.length ? props.exampleRules : [];
-          handleOpenEdit(); // 配置示例-配置文件筛选时默认打开编辑
         } else {
           loadRules();
         }
@@ -208,6 +210,10 @@
     pending.value = false;
     emits('close');
   };
+
+  defineExpose({
+    handleOpenEdit,
+  });
 </script>
 <style lang="scss" scoped>
   .associate-config-items {

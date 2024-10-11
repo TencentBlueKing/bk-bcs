@@ -111,13 +111,18 @@
 
     // 文件配置筛选规则动态增/删
     if (optionData.value.rules?.length) {
-      const rulesPart = `
+      const rulesPart1 = `
       # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
             - name: config_matches
               value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart.trim());
+      const rulesPart2 = `
+            - name: config_matches
+              value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', rulesPart1.trim());
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', rulesPart2.trim());
     } else {
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', '');
     }
     // 去除 动态插入的值为空的情况下产生的空白行
     replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
