@@ -376,7 +376,9 @@
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end">
+                {{ `${$t('generic.status.loading')}...` }}
+              </LoadingIcon>
               <span v-else>
                 {{nodeMetric[row.nodeName].container_count || '--'}}
               </span>
@@ -394,7 +396,9 @@
           v-if="isColumnRender('pod_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end">
+                {{ `${$t('generic.status.loading')}...` }}
+              </LoadingIcon>
               <span v-else>
                 {{nodeMetric[row.nodeName].pod_count || '--'}}
               </span>
@@ -478,7 +482,9 @@
           min-width="120">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-center" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-center">
+                {{ `${$t('generic.status.loading')}...` }}
+              </LoadingIcon>
               <template v-else>
                 <RingCell
                   :percent="nodeMetric[row.nodeName][item.prop]"
