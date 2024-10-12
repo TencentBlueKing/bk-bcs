@@ -38,10 +38,15 @@ func (m *TemplateVariableSpec) TemplateVariableSpec() *table.TemplateVariableSpe
 	}
 
 	return &table.TemplateVariableSpec{
-		Name:       m.Name,
-		Type:       table.VariableType(m.Type),
-		DefaultVal: m.DefaultVal,
-		Memo:       m.Memo,
+		Name: m.Name,
+		Type: table.VariableType(m.Type),
+		DefaultVal: func() string {
+			if m.DefaultVal == `""` {
+				return ""
+			}
+			return m.DefaultVal
+		}(),
+		Memo: m.Memo,
 	}
 }
 

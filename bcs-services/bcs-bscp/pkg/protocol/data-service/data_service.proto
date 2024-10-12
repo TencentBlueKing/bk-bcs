@@ -283,6 +283,8 @@ service Data {
   // 获取模板和非模板配置项数量
   rpc GetTemplateAndNonTemplateCICount(GetTemplateAndNonTemplateCICountReq)
       returns (GetTemplateAndNonTemplateCICountResp) {}
+
+  rpc BatchUpdateLastConsumedTime(BatchUpdateLastConsumedTimeReq) returns (BatchUpdateLastConsumedTimeResp) {}
 }
 message UpdateCredentialScopesReq {
   uint32 biz_id = 1;
@@ -1767,6 +1769,7 @@ message GenerateReleaseAndPublishReq {
 message PublishResp {
   uint32 published_strategy_history_id = 1;
   bool have_credentials = 2;
+  bool have_pull = 3;
 }
 
 message ListInstancesReq {
@@ -2053,3 +2056,10 @@ message GetTemplateAndNonTemplateCICountResp {
   uint64 config_item_count = 1;
   uint64 template_config_item_count = 2;
 }
+
+message BatchUpdateLastConsumedTimeReq {
+  uint32 biz_id = 1;
+  repeated uint32 app_ids = 2;
+}
+
+message BatchUpdateLastConsumedTimeResp {}

@@ -24,7 +24,7 @@
           <span
             :class="[
               'rounded-full w-2.5 h-2.5 bg-[red] border-2 border-white flex-shrink-0',
-              validArray[index].isValidationFailed ? 'visible' : 'invisible'
+              validArray[index] ? 'visible' : 'invisible'
             ]"></span>
           <span
             :class="[
@@ -222,13 +222,14 @@ const initFormData = {
   apiVersion: '',
 };
 const schemaFormData = ref<ClusterResource.FormData[]>([]);
-const validArray = ref<Array<{isValidationFailed: boolean}>>([]);
+const validArray = computed(() => schemaFormData.value.reduce<Array<boolean>>((pre, cur) => {
+  const name = cur?.formData?.metadata?.name || '';
+  pre.push(!name);
+  return pre;
+}, []));
 const formToJson = computed(() => schemaFormData.value.reduce<Array<string>>((pre, cur) => {
   const name = cur?.formData?.metadata?.name || '';
   pre.push(name);
-  validArray.value.push({
-    isValidationFailed: false,
-  });
   return pre;
 }, []));
 
@@ -379,12 +380,14 @@ const bkuiFormRef = ref<Array<any>>();
 const validateRefs = ref();
 const validate = async () => {
   // 校验名称必填
-  const emptyNameIndex = schemaFormData.value.findIndex(item => !item.formData?.metadata?.name);
-  if (emptyNameIndex > -1) {
-    document.getElementById(`template-file-form-${emptyNameIndex}`)?.scrollIntoView();
-    validateRefs.value[emptyNameIndex]?.handleBlur();
-    validArray.value[emptyNameIndex].isValidationFailed = true;
-    return false;
+  for (let i = 0; i < validateRefs.value.length; i++) {
+    const res = await validateRefs.value[i].validate('blur');
+    if (!res) {
+      document.getElementById(`template-file-form-${i}`)?.scrollIntoView();
+      handleAnchor(i);
+      // 出现一个没填直接返回
+      return false;
+    }
   }
 
   // 校验表单

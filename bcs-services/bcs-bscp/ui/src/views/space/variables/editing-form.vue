@@ -21,7 +21,7 @@
         <bk-option id="number" label="number"></bk-option>
       </bk-select>
     </bk-form-item>
-    <bk-form-item :label="t('默认值')" property="default_val" required>
+    <bk-form-item :label="t('默认值')" property="default_val" :required="localVal.type === 'number'">
       <bk-input v-model="localVal.default_val" :placeholder="t('请输入')" @input="change" />
     </bk-form-item>
     <bk-form-item :label="t('描述')" property="memo">

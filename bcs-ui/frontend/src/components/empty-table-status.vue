@@ -15,7 +15,7 @@
   </bcs-exception>
 </template>
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
 
 import $i18n from '@/i18n/i18n-setup';
 
@@ -39,6 +39,27 @@ export default defineComponent({
     const handleClear = () => {
       ctx.emit('clear');
     };
+
+    onMounted(() => {
+      const tableHeaderWrapperEl: HTMLDivElement | null = document.querySelector('.empty-center .bk-table-header-wrapper');
+      let resizeObserver;
+      if (tableHeaderWrapperEl) {
+        // 监听table的宽度变化
+        resizeObserver = new ResizeObserver(() => {
+          document.documentElement.style.setProperty('--dynamic-width', `${tableHeaderWrapperEl.offsetWidth}px`);
+        });
+        if (tableHeaderWrapperEl) {
+          resizeObserver.observe(tableHeaderWrapperEl);
+        }
+      }
+
+      // 清理观察器
+      return () => {
+        if (tableHeaderWrapperEl) {
+          resizeObserver.unobserve(tableHeaderWrapperEl);
+        }
+      };
+    });
 
     return {
       typeMap,

@@ -113,6 +113,11 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 	return nil, nil
 }
 
+// RecommendNodeGroupConf recommends nodegroup configs
+func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // GetNodesInGroup 从云上拉取该节点池的所有节点 - get all nodes belong to NodeGroup
 func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node,
 	error) {

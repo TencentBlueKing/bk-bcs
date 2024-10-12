@@ -17,7 +17,7 @@
     "@blueking/platform-config": "^1.0.3",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash.clonedeep": "^4.5.7",
-    "axios": "^1.6.0",
+    "axios": "^1.7.7",
     "bkui-vue": "1.0.3-beta.32",
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.9",
@@ -59,6 +59,6 @@
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-eslint": "^1.8.1",
     "vue-eslint-parser": "^9.3.1",
-    "vue-tsc": "^2.0.7"
+    "vue-tsc": "2.0.7"
   }
 }

@@ -16,10 +16,12 @@ package job
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 )
@@ -91,6 +93,7 @@ func (c *Client) ExecuteScript(ctx context.Context, paras ExecuteScriptParas) (u
 	req := transToBkJobExecuteScriptReq(paras)
 	resp := &FastExecuteScriptRsp{}
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(utils.DefaultTimeOut).
 		Post(path).
@@ -101,9 +104,11 @@ func (c *Client) ExecuteScript(ctx context.Context, paras ExecuteScriptParas) (u
 		Send(req).
 		EndStruct(&resp)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("job", "ExecuteScript", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api blueking Job ExecuteScript failed: %v", errs[0])
 		return 0, errs[0]
 	}
+	metrics.ReportLibRequestMetric("job", "ExecuteScript", "http", metrics.LibCallStatusOK, start)
 
 	if !resp.Result || resp.Code != 0 {
 		blog.Errorf("call api blueking Job ExecuteScript failed: %v", resp)
@@ -128,6 +133,7 @@ func (c *Client) GetJobStatus(ctx context.Context, job JobInfo) (int, error) {
 
 	resp := &GetJobInstanceStatusRsp{}
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(utils.DefaultTimeOut).
 		Get(path).
@@ -140,9 +146,11 @@ func (c *Client) GetJobStatus(ctx context.Context, job JobInfo) (int, error) {
 		SetDebug(c.Debug).
 		EndStruct(&resp)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("job", "GetJobStatus", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api Job GetJobStatus failed: %v", errs[0])
 		return UnKnownStatus, errs[0]
 	}
+	metrics.ReportLibRequestMetric("job", "GetJobStatus", "http", metrics.LibCallStatusOK, start)
 
 	if !resp.Result || resp.Code != 0 {
 		blog.Errorf("call api Job GetJobStatus failed: %v", resp)

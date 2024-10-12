@@ -143,6 +143,31 @@ func (m *ModelTemplateSpace) CreateTemplateSpace(
 	return templateSpace.ID.Hex(), nil
 }
 
+// CreateTemplateSpaceBatch create many new entity.TemplateSpace into database
+func (m *ModelTemplateSpace) CreateTemplateSpaceBatch(
+	ctx context.Context, templateSpaces []*entity.TemplateSpace) error {
+	if len(templateSpaces) == 0 {
+		return nil
+	}
+
+	if err := m.ensureTable(ctx); err != nil {
+		return err
+	}
+
+	insertValues := make([]interface{}, 0)
+	now := time.Now()
+	for _, templateSpace := range templateSpaces {
+		// id 覆盖
+		templateSpace.ID = primitive.NewObjectIDFromTimestamp(now)
+		insertValues = append(insertValues, templateSpace)
+	}
+
+	if _, err := m.db.Table(m.tableName).Insert(ctx, insertValues); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateTemplateSpace update an entity.TemplateSpace into database
 func (m *ModelTemplateSpace) UpdateTemplateSpace(ctx context.Context, id string, templateSpace entity.M) error {
 	if id == "" {

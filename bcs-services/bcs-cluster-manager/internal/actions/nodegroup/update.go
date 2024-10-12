@@ -23,6 +23,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
@@ -1232,6 +1233,22 @@ func (ua *UpdateGroupMinMaxAction) Handle(
 		return
 	}
 
+	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   req.NodeGroupID,
+		TaskID:       "",
+		Message: fmt.Sprintf("集群[%s]修改NodeGroup[%s]最小最大的扩容限额[min%d][max%d]", destGroup.ClusterID,
+			req.NodeGroupID, req.MinSize, req.MaxSize),
+		OpUser:       req.Operator,
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    destGroup.ClusterID,
+		ProjectID:    destGroup.ProjectID,
+		ResourceName: destGroup.GetName(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateGroupMinMaxSize[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
+	}
+
 	blog.Infof("update nodegroup min/maxSize %s successfully", destGroup.NodeGroupID)
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
@@ -1328,6 +1345,21 @@ func (ua *UpdateGroupAsTimeRangeAction) Handle(
 			destGroup.NodeGroupID, err.Error())
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err = ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.NodeGroup.String(),
+		ResourceID:   req.NodeGroupID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群[%s]更新节点池[%s]定时扩缩容策略", destGroup.ClusterID, req.NodeGroupID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    destGroup.ClusterID,
+		ProjectID:    destGroup.ProjectID,
+		ResourceName: destGroup.GetName(),
+	})
+	if err != nil {
+		blog.Errorf("UpdateGroupAsTimeRange[%s] CreateOperationLog failed: %v", req.NodeGroupID, err)
 	}
 
 	blog.Infof("update nodegroup autoscaling time ranges %s successfully", destGroup.NodeGroupID)

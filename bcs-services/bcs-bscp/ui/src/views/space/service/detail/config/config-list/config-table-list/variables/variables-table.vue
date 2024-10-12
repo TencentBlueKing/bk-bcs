@@ -120,7 +120,7 @@
 
   const isCellEditable = (prop: string) => props.editable && ['type', 'default_val', 'memo'].includes(prop);
 
-  const isCellValRequired = (prop: string) => props.editable && ['type', 'default_val'].includes(prop);
+  const isCellValRequired = (prop: string) => props.editable && ['type'].includes(prop);
 
   const getCellVal = (variable: IVariableEditParams, prop: string) => {
     if (prop === 'cited') {
@@ -147,33 +147,24 @@
 
   const validate = () => {
     const errors: IErrorDetail = {};
+
     variables.value.forEach((variable) => {
-      ['type', 'default_val'].forEach((key) => {
-        if (variable[key as keyof typeof variable] === '') {
-          if (errors[variable.name]) {
-            errors[variable.name].push(key);
-          } else {
-            errors[variable.name] = [key];
-          }
-        }
-        if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
-          if (errors[variable.name]) {
-            errors[variable.name].push(key);
-          } else {
-            errors[variable.name] = [key];
-          }
-        }
-      });
-      if (variable.type === 'number' && !/^\d*(\.\d+)?$/.test(variable.default_val)) {
-        if (errors[variable.name]) {
-          errors[variable.name].push('default_val');
-        } else {
-          errors[variable.name] = ['default_val'];
-        }
+      const { name, type, default_val } = variable;
+      if (!type) {
+        errors[name] = errors[name] || [];
+        errors[name].push('type');
+      }
+      if (default_val === '' && type === 'number') {
+        errors[name] = errors[name] || [];
+        errors[name].push('default_val');
+      } else if (type === 'number' && !/^\d*(\.\d+)?$/.test(default_val)) {
+        errors[name] = errors[name] || [];
+        errors[name].push('default_val');
       }
     });
+
     errorDetails.value = errors;
-    return Object.keys(errorDetails.value).length === 0;
+    return Object.keys(errors).length === 0;
   };
 
   const change = () => {
@@ -200,6 +191,7 @@
     border: 1px solid #dcdee5;
     table-layout: fixed;
     border-collapse: collapse;
+    overflow: hidden;
     &.edit-mode {
       .td-cell {
         background: #f5f7fa;

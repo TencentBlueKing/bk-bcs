@@ -26,25 +26,29 @@
           <RightShape class="arrow-icon" />
           <span v-overflow-title class="name">{{ group.name }}</span>
         </div>
-        <div v-if="group.expand" class="config-list">
+        <RecycleScroller
+          v-if="group.expand"
+          class="config-list"
+          :items="group.configs"
+          key-field="id"
+          :item-size="40"
+          v-slot="{ item }">
           <div
-            v-for="config in group.configs"
-            :key="config.id"
-            :class="['config-item', { actived: getItemSelectedStatus(group.id, config) }]"
+            :class="['config-item', { actived: getItemSelectedStatus(group.id, item) }]"
             @click="
               handleSelectItem({
                 pkgId: group.id,
-                id: config.id,
-                version: config.template_revision_id,
-                permission: config.permission,
+                id: item.id,
+                version: item.template_revision_id,
+                permission: item.permission,
               })
             ">
-            <i v-if="config.diffType" :class="['status-icon', config.diffType]"></i>
-            <bk-overflow-title type="tips">
-              {{ config.name }}
-            </bk-overflow-title>
+            <i v-if="item.diffType" :class="['status-icon', item.diffType]"></i>
+            <span v-overflow-title type="tips">
+              {{ item.name }}
+            </span>
           </div>
-        </div>
+        </RecycleScroller>
       </div>
       <tableEmpty
         v-if="groupedConfigListOnShow.length === 0"
@@ -57,7 +61,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, computed, watch, onMounted } from 'vue';
+  import { ref, computed, watch, onMounted, nextTick } from 'vue';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import { storeToRefs } from 'pinia';
@@ -144,7 +148,7 @@
     },
   );
 
-  const emits = defineEmits(['selected']);
+  const emits = defineEmits(['selected', 'render']);
 
   const route = useRoute();
   const bkBizId = ref(String(route.params.spaceId));
@@ -205,8 +209,9 @@
     },
   );
 
-  onMounted(() => {
-    initData(true);
+  onMounted(async () => {
+    await initData(true);
+    nextTick(() => emits('render', false));
   });
 
   // 判断版本是否为未命名版本
@@ -754,6 +759,7 @@
     }
     .config-list {
       margin-bottom: 8px;
+      max-height: 600px;
       .config-item {
         position: relative;
         padding: 0 12px 0 32px;

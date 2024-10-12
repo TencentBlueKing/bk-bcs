@@ -32,7 +32,7 @@
     @confirm="handleLoadScript"
     @closed="dialogShow = false">
     <bk-form ref="formRef" form-type="vertical" :model="{ selectedScript }">
-      <bk-form-item :label="t('选择载入脚本')" required property="selectedScript">
+      <bk-form-item :label="t('选择载入版本')" required property="selectedScript">
         <bk-select
           v-model="selectedScript"
           :loading="listLoading"

@@ -1,7 +1,7 @@
 <template>
   <!-- 标签 -->
   <div class="add-label-wrap">
-    <span class="label-span">{{ $t(labelName) }}</span>
+    <span class="label-span">{{ $t('标签') }}</span>
     <info
       class="icon-info"
       v-bk-tooltips="{
@@ -39,8 +39,6 @@
 <script lang="ts" setup>
   import { ref, watch } from 'vue';
   import { Info, Plus } from 'bkui-vue/lib/icon';
-
-  defineProps<{ labelName: string }>();
 
   const emits = defineEmits(['send-label']);
 

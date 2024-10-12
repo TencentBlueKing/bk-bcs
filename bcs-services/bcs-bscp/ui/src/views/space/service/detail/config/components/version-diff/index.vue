@@ -14,7 +14,8 @@
           :selected-config="props.selectedConfig"
           :selected-kv-config-id="selectedKV"
           :is-publish="props.showPublishBtn"
-          @selected="handleSelectDiffItem" />
+          @selected="handleSelectDiffItem"
+          @render="publishBtnLoading = $event" />
         <div class="diff-content-area">
           <diff :diff="diffDetailData" :id="appId" :selected-kv-config-id="selectedKV" :loading="false">
             <template #leftHead>
@@ -43,7 +44,9 @@
               <slot name="currentHead">
                 <div class="diff-panel-head">
                   <div class="version-tag">{{ showPublishBtn ? t('待上线版本') : t('当前版本') }}</div>
-                  <div class="version-name">{{ props.currentVersion.spec.name }}</div>
+                  <bk-overflow-title class="version-name" type="tips">
+                    {{ props.currentVersion.spec.name }}
+                  </bk-overflow-title>
                 </div>
               </slot>
             </template>
@@ -54,7 +57,13 @@
     <template #footer>
       <div class="actions-btns">
         <slot name="footerActions">
-          <bk-button v-if="showPublishBtn" class="publish-btn" theme="primary" @click="emits('publish')">
+          <bk-button
+            v-if="showPublishBtn"
+            :loading="publishBtnLoading"
+            :disabled="publishBtnLoading"
+            class="publish-btn"
+            theme="primary"
+            @click="emits('publish')">
             {{ t('上线版本') }}
           </bk-button>
           <bk-button @click="handleClose">{{ t('关闭') }}</bk-button>
@@ -114,10 +123,12 @@
   const diffDetailData = ref<IDiffDetail>(getDefaultDiffData());
 
   const loading = computed(() => versionListLoading.value);
+  const publishBtnLoading = ref(true);
 
   watch(
     () => props.show,
     async (val) => {
+      publishBtnLoading.value = true;
       if (val) {
         await getVersionList();
         if (props.baseVersionId) {
@@ -260,6 +271,9 @@
         color: #3a84ff;
         background: #edf4ff;
       }
+    }
+    .version-name {
+      max-width: 300px;
     }
   }
   .actions-btns {

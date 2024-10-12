@@ -1,5 +1,10 @@
 <template>
-  <bk-table :border="['row']" :data="props.list" :row-class="getRowCls" @row-click="handleSelectVersion">
+  <bk-table
+    :border="['row']"
+    :data="props.list"
+    show-overflow-tooltip
+    :row-class="getRowCls"
+    @row-click="handleSelectVersion">
     <bk-table-column :label="t('版本号')" show-overflow-tooltip>
       <template #default="{ row }">
         <div v-if="row.hook_revision" class="version-name-wrapper">

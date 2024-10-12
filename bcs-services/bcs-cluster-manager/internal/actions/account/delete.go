@@ -15,10 +15,12 @@ package account
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
@@ -81,7 +83,7 @@ func (da *DeleteAction) Handle(
 	}
 
 	// try to get original cloud account for return
-	_, err := da.model.GetCloudAccount(da.ctx, da.req.CloudID, da.req.AccountID, false)
+	account, err := da.model.GetCloudAccount(da.ctx, da.req.CloudID, da.req.AccountID, false)
 	if err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		blog.Errorf("Get CloudAccount %s:%s in pre-delete checking failed, err %s", da.req.CloudID,
@@ -92,6 +94,20 @@ func (da *DeleteAction) Handle(
 	if err = da.model.DeleteCloudAccount(da.ctx, da.req.CloudID, da.req.AccountID); err != nil {
 		da.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	// create operationLog
+	err = da.model.CreateOperationLog(da.ctx, &cmproto.OperationLog{
+		ResourceType: common.Account.String(),
+		ResourceID:   da.req.AccountID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("删除云账号信息[%s]", da.req.AccountID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: account.AccountName,
+	})
+	if err != nil {
+		blog.Errorf("DeleteCloudAccount[%s] CreateOperationLog failed: %v", da.req.AccountID, err)
 	}
 
 	da.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

@@ -70,10 +70,12 @@ export default {
   请输入服务名: 'Please enter the service name',
   同时会删除服务密钥对服务的关联规则: 'The association rule of the service key pair is deleted',
   匹配结果: 'Matching result',
+  筛选结果: 'Filtering results',
   项: 'item',
   请输入配置文件名: 'Please enter the absolute path of the configuration file',
   没有匹配到配置项: 'No configuration item was matched',
   请先在左侧表单设置关联规则并预览: 'Please first set the association rules in the left form and preview',
+  请先在左侧表单设置筛选规则并预览: 'Please set the filtering rules in the form on the left and preview',
   删除服务成功: 'Service deleted successfully',
   敏感信息: 'Sensitive info',
   请选择数据类型: 'Please select data type',
@@ -553,6 +555,7 @@ export default {
   服务版本: 'Service version',
   '未在配置文件中检测到变量，请确保配置文件中包含变量后再尝试设置变量': 'Variable not detected in the configuration file. Please ensure the configuration file includes the variable before attempting to set it.',
   '分组最多支持 5 个标签选择器': 'The group supports a maximum of 5 tag selectors',
+  请输入或选择key: 'Please enter or select key',
 
   // 全局变量
   配置模板与变量: 'Configure templates and variables',
@@ -706,7 +709,6 @@ export default {
   '当前已有「未上线」版本': 'There is currently a "not online" version',
   前往编辑: 'Go to edit',
   创建版本: 'Create version',
-  选择载入脚本: 'Select load script',
   '无效名称，只允许包含中文、英文、数字、下划线()、连字符(-)、空格，且必须以中文、英文、数字开头和结尾': 'Invalid name, only allowed to contain Chinese, English, numbers, underscores (), hyphens (-), spaces, and must start and end with Chinese, English, numbers',
   编辑版本: 'Edited version',
   脚本内容不能为空: 'Script content cannot be empty',
@@ -775,6 +777,9 @@ export default {
   '关联myservice服务下所有的配置(包含子目录)': 'Associate all configurations under the myservice service (including subdirectories)',
   '关联myservice服务/etc目录下所有的配置(不含子目录)': 'Associate all configurations in the myservice/etc directory (excluding subdirectories)',
   '关联myservice服务/etc/nginx/nginx.conf文件': 'Associated myservice service/etc/nginx/nginx.conf file',
+  '筛选myservice服务下所有的配置(包含子目录)': 'Filter all configurations under the myservice service (including subdirectories)',
+  '筛选myservice服务/etc目录下所有的配置(不含子目录)': 'Filter all configurations in the /etc directory of the myservice service (excluding subdirectories)',
+  '筛选myservice服务/etc/nginx/nginx.conf文件': 'Filter the /etc/nginx/nginx.conf file of the myservice service',
   关联myservice服务下所有配置项: 'Associate all configuration items under the myservice service',
   关联myservice服务下所有以demo_开头的配置项: 'Associate all configuration items starting with demo_ under the myservice service',
   共有: 'There is',
@@ -786,6 +791,7 @@ export default {
   '输入的规则有误，请重新确认': 'The entered rules are incorrect, please reconfirm',
   请输入文件路径: 'Please enter file path',
   请输入配置项名称: 'Please enter the configuration item name',
+  请输入配置文件名称: 'Please enter the configuration file name',
   密钥名称已存在: 'The credentials name already exists',
 
   // 配置示例
@@ -850,7 +856,7 @@ export default {
   复制命令: 'Command Copy',
   '仅支持字母，数字，\'-\'，\'_\'，\'.\' 及 \'/\' 且需以字母数字开头和结尾': 'Only supports letters, numbers, \'-\', \'_\', \'.\' and \'/\' characters, and must start and end with a letter or number',
   '需以字母、数字开头和结尾，可包含 \'-\'，\'_\'，\'.\' 和字母数字及负数': 'Must start and end with a letter or number, can include \'-\', \'_\', \'.\', and alphanumeric characters, as well as negative numbers',
-  服务标签: 'service label',
+  服务标签: 'Service label',
   '启用 P2P 网络加速': 'Enable P2P network acceleration',
   查看说明: 'View instructions',
   '启用 P2P 网络加速主要适用于业务但配置文件较大及大量节点拉取配置的场景，以实现更优的文件传输速度。': 'Enabling P2P network acceleration is primarily suitable for scenarios where business configuration files are large and many nodes are pulling configurations, to achieve better file transfer speeds',
@@ -867,6 +873,16 @@ export default {
   'HTTP(S)接口调用': 'HTTP(S) interface invocation',
   '请输入BCS 集群 ID，替换下方示例代码后，再尝试复制示例': 'Please enter the BCS cluster ID, replace the example code below, and then try copying the example',
   'BCS集群ID须符合以下格式：BCS-K8S-xxxxx，其中xxxxx为5位数字': 'The BCS cluster ID must follow the format: BCS-K8S-xxxxx, where xxxxx is a five-digit numbe',
+  一键复制: 'Copy',
+  启用配置文件筛选: 'Enable configuration file filtering',
+  '当客户端无需拉取配置服务中的全量配置文件时，可以启用此功能，指定相应的通配符，可仅拉取客户端所需的文件': 'When the client does not need to pull the full configuration files from the configuration service, this feature can be enabled. By specifying the appropriate wildcard, the client can pull only the required files',
+  已设置的筛选规则: '{count} filtering rules have been set',
+  规则设置: 'Rule configuration',
+  配置文件筛选规则: 'Configuration file filter rules',
+  配置文件筛选: 'Configuration file filter',
+  '全局配置文件筛选：': 'Global Configuration File Filter：',
+  '(全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用)': '(The filtering of the global configuration file is the same as that of the service configuration file; the difference is that the global configuration file can be shared among multiple services)',
+  配置筛选规则: 'Configuration filtering rules',
 
   // 公共组件
   页面不存在: 'Page does not exist',
@@ -1063,6 +1079,7 @@ export default {
   '组件类型 / 版本分布': 'Component type / Version distribution',
   下钻: 'Drill down',
   总和: 'Total',
+  最后一次拉取配置耗时: 'Last pull time-consuming',
 
   // 跨页全选
   跨页全选: 'AcrossChecked',

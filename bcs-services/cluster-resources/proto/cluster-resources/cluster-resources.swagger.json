@@ -1067,6 +1067,17 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "tags",
+            "description": "文件夹标签.",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           }
         ],
         "tags": [
@@ -10123,6 +10134,10 @@
         "draftEditFormat": {
           "type": "string",
           "title": "模板文件草稿编辑模式"
+        },
+        "renderMode": {
+          "type": "string",
+          "title": "模板文件语法模式"
         }
       },
       "description": "创建模板文件元数据",
@@ -10210,6 +10225,13 @@
         "description": {
           "type": "string",
           "title": "文件夹描述"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "文件夹标签"
         }
       },
       "description": "创建模板文件文件夹",
@@ -10245,6 +10267,10 @@
         "force": {
           "type": "boolean",
           "title": "能否被覆盖"
+        },
+        "renderMode": {
+          "type": "string",
+          "title": "模板文件语法模式"
         }
       },
       "description": "创建模板文件版本",
@@ -10308,6 +10334,10 @@
         "namespace": {
           "type": "string",
           "title": "命名空间"
+        },
+        "values": {
+          "type": "string",
+          "title": "模板集value值"
         }
       },
       "description": "部署模板文件",
@@ -11159,6 +11189,13 @@
         "description": {
           "type": "string",
           "title": "文件夹描述"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "文件夹标签"
         }
       },
       "description": "更新模板文件文件夹",

@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -80,6 +81,13 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 
 	fileName := chi.URLParam(r, "filename")
 
+	// 对获取到的URL参数进行解码
+	fileName, err := url.PathUnescape(fileName)
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "invalid file name"))))
+		return
+	}
+
 	// Validation size
 	totleContentLength, singleContentLength := getUploadConfig(kt.BizID)
 
@@ -90,7 +98,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 		maxSize = singleContentLength
 	}
 
-	if err := checkUploadSize(kt, r, maxSize); err != nil {
+	if err = checkUploadSize(kt, r, maxSize); err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
@@ -118,7 +126,7 @@ func (c *configImport) TemplateConfigFileImport(w http.ResponseWriter, r *http.R
 
 	// 创建目录
 	dirPath := path.Join(os.TempDir(), constant.UploadTemporaryDirectory)
-	if err := createTemporaryDirectory(dirPath); err != nil {
+	if err = createTemporaryDirectory(dirPath); err != nil {
 		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "create directory failed, err: %v", err))))
 		return
 	}
@@ -276,6 +284,13 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 
 	fileName := chi.URLParam(r, "filename")
 
+	// 对获取到的URL参数进行解码
+	fileName, err := url.PathUnescape(fileName)
+	if err != nil {
+		_ = render.Render(w, r, rest.BadRequest(errors.New(i18n.T(kt, "invalid file name"))))
+		return
+	}
+
 	// Validation size
 	totleContentLength, singleContentLength := getUploadConfig(kt.BizID)
 	var maxSize int64
@@ -284,7 +299,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 	} else {
 		maxSize = singleContentLength
 	}
-	if err := checkUploadSize(kt, r, maxSize); err != nil {
+	if err = checkUploadSize(kt, r, maxSize); err != nil {
 		_ = render.Render(w, r, rest.BadRequest(err))
 		return
 	}
@@ -309,7 +324,7 @@ func (c *configImport) ConfigFileImport(w http.ResponseWriter, r *http.Request) 
 
 	// 创建目录
 	dirPath := path.Join(os.TempDir(), constant.UploadTemporaryDirectory)
-	if err := createTemporaryDirectory(dirPath); err != nil {
+	if err = createTemporaryDirectory(dirPath); err != nil {
 		_ = render.Render(w, r,
 			rest.BadRequest(errors.New(i18n.T(kt, "create directory failed, err: %v", err))))
 		return
@@ -579,6 +594,7 @@ func (c *configImport) fileScannerHasherUploader(kt *kit.Kit, path, rootDir stri
 		return resp, fmt.Errorf("calculate SHA256 fail filename: %s; err: %s", fileInfo.Name(), err.Error())
 	}
 
+	// NOCC:ineffassign/assign(设计如此)
 	fileType := ""
 	// Check if the file size is greater than 5MB (5 * 1024 * 1024 bytes)
 	if fileInfo.Size() > constant.MaxUploadTextFileSize {
@@ -846,6 +862,7 @@ func getUploadConfig(bizID uint32) (maxUploadContentLength, maxFileSize int64) {
 		}
 	}
 
+	// NOCC:nakedret/ret(设计如此)
 	return
 }
 

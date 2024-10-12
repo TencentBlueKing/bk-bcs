@@ -14,15 +14,19 @@ package thirdparty
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -174,14 +178,15 @@ func (ga *GetBizInstanceTopoAction) Handle(ctx context.Context, req *cmproto.Get
 
 // GetTopologyNodesAction action for get biz topology nodes
 type GetTopologyNodesAction struct {
-	ctx  context.Context
-	req  *cmproto.GetTopologyNodesRequest
-	resp *cmproto.GetTopologyNodesResponse
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.GetTopologyNodesRequest
+	resp  *cmproto.GetTopologyNodesResponse
 }
 
 // NewGetTopoNodesAction create action
-func NewGetTopoNodesAction() *GetTopologyNodesAction {
-	return &GetTopologyNodesAction{}
+func NewGetTopoNodesAction(model store.ClusterManagerModel) *GetTopologyNodesAction {
+	return &GetTopologyNodesAction{model: model}
 }
 
 func (gt *GetTopologyNodesAction) validate() error {
@@ -235,6 +240,42 @@ func (gt *GetTopologyNodesAction) buildFilterCondition() cmdb.HostFilter {
 	return filter
 }
 
+func nodeExistClusterManager(model store.ClusterManagerModel, nodeIP string,
+	masterIps map[string]cluster.ClusterInfo) bool {
+	// check if exist masterIPs
+	if _, ok := masterIps[nodeIP]; ok {
+		return true
+	}
+
+	// check if exist nodeIPs
+	_, err := model.GetNodeByIP(context.Background(), nodeIP)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return false
+	}
+
+	if errors.Is(err, drivers.ErrTableRecordNotFound) {
+		return false
+	}
+
+	return true
+}
+
+func filterAvailableNodes(model store.ClusterManagerModel, bizNodes []cmdb.HostDetailInfo) []cmdb.HostDetailInfo {
+	// get all masterIPs
+	masterIPs := cluster.GetAllMasterIPs(model)
+
+	availableNodes := make([]cmdb.HostDetailInfo, 0)
+
+	for i := range bizNodes {
+		exist := nodeExistClusterManager(model, bizNodes[i].Ip, masterIPs)
+		if !exist {
+			availableNodes = append(availableNodes, bizNodes[i])
+		}
+	}
+
+	return availableNodes
+}
+
 func (gt *GetTopologyNodesAction) listBizTopologyNodes() error {
 	ipSelector := cmdb.NewIpSelector(cmdb.GetCmdbClient(), gse.GetGseClient())
 
@@ -242,10 +283,20 @@ func (gt *GetTopologyNodesAction) listBizTopologyNodes() error {
 	modules := gt.buildModuleInfo()
 	filter := gt.buildFilterCondition()
 
-	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	var (
+		topoNodes []cmdb.HostDetailInfo
+		err       error
+	)
+
+	topoNodes, err = ipSelector.GetBizTopoHostData(bizID, modules, filter)
 	if err != nil {
 		blog.Errorf("GetTopologyNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err
+	}
+
+	// 过滤集群可用节点
+	if gt.req.ShowAvailableNode {
+		topoNodes = filterAvailableNodes(gt.model, topoNodes)
 	}
 
 	gt.resp.Data = &cmproto.GetTopologyNodesData{
@@ -307,14 +358,15 @@ func (gt *GetTopologyNodesAction) Handle(ctx context.Context, req *cmproto.GetTo
 
 // GetScopeHostCheckAction action for get scope host check
 type GetScopeHostCheckAction struct {
-	ctx  context.Context
-	req  *cmproto.GetScopeHostCheckRequest
-	resp *cmproto.GetScopeHostCheckResponse
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.GetScopeHostCheckRequest
+	resp  *cmproto.GetScopeHostCheckResponse
 }
 
 // NewGetScopeHostCheckAction create action
-func NewGetScopeHostCheckAction() *GetScopeHostCheckAction {
-	return &GetScopeHostCheckAction{}
+func NewGetScopeHostCheckAction(model store.ClusterManagerModel) *GetScopeHostCheckAction {
+	return &GetScopeHostCheckAction{model: model}
 }
 
 func (gt *GetScopeHostCheckAction) validate() error {
@@ -366,10 +418,20 @@ func (gt *GetScopeHostCheckAction) listScopeHostInfo() error {
 	modules := gt.buildModuleInfo()
 	filter := gt.buildFilterCondition()
 
-	topoNodes, err := ipSelector.GetBizTopoHostData(bizID, modules, filter)
+	var (
+		topoNodes []cmdb.HostDetailInfo
+		err       error
+	)
+
+	topoNodes, err = ipSelector.GetBizTopoHostData(bizID, modules, filter)
 	if err != nil {
 		blog.Errorf("GetTopologyNodesAction GetBizTopoHostData[%v] failed: %v", bizID, err)
 		return err
+	}
+
+	// 过滤集群可用节点
+	if gt.req.ShowAvailableNode {
+		topoNodes = filterAvailableNodes(gt.model, topoNodes)
 	}
 
 	// get topology nodes

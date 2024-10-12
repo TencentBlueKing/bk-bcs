@@ -27,6 +27,7 @@ import (
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -118,6 +119,20 @@ func (ca *CreateAction) Handle(ctx context.Context,
 		}
 		ca.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	// create operationLog
+	err := ca.model.CreateOperationLog(ca.ctx, &cmproto.OperationLog{
+		ResourceType: common.Account.String(),
+		ResourceID:   ca.resp.Data.AccountID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("创建云账号信息[%s]", ca.resp.Data.AccountID),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ResourceName: ca.req.AccountName,
+	})
+	if err != nil {
+		blog.Errorf("CreateCloudAccount[%s] CreateOperationLog failed: %v", ca.resp.Data.AccountID, err)
 	}
 
 	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

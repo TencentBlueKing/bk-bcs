@@ -232,6 +232,7 @@ generic:
       network: 网络错误
       system: 系统异常
       data: 获取数据失败
+      import: 导入失败
     warning:
       '403': 无权限操作
       '404': 页面不存在
@@ -1299,6 +1300,9 @@ cluster:
         selectAllNs: 全部命名空间
         kernel: 内核
         runtime: 运行时
+  operateRecord:
+    placeholder:
+      searchRecord: 搜索资源名称、资源ID、状态、发起者
 deploy:
   helm:
     title:
@@ -2296,7 +2300,6 @@ logCollector:
     name: '仅支持英文, 数字和下划线, 且长度5~30字符'
     logPath: 仅支持绝对路径
   msg:
-    logCollector: 支持容器标准输出日志和文件路径日志的采集设置。日志采集服务已升级，旧版本规则建议「生成新规则」并及时清理。
     oldRuleToNewRule: '生成新规则后，新旧版本规则采集到的日志数据将在 {0} 后完全同步，届时系统将自动为您清理旧规则。'
     oldRuleFlag: 旧
     notEnable: 当前集群日志采集组件未启用
@@ -2929,6 +2932,7 @@ templateFile:
     deployReview: 部署预览
     disableYamlToForm: 无法切换模式
     fileList: 文件列表
+    import: 导入文件包
     clone: 克隆
   button:
     formMode: 表单模式
@@ -2942,6 +2946,9 @@ templateFile:
     confirmDeploy: 确认部署
     AddToFavorites: 收藏文件夹
     RemoveFromFavorites: 取消收藏
+    import: 导入文件包
+    export: 导出全部
+    exportFolder: 导出文件夹
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
@@ -2978,6 +2985,8 @@ templateFile:
     nextKind: 下一个类型
     bookmark: 收藏文件夹
     unbookmark: 取消收藏
+    uploadTips: '支持.tgz, .tar.gz类型压缩包，文件小于{0}M'
+    createSpace: 新建文件夹
   tag:
     draft: 草稿
     baseOn: 基于

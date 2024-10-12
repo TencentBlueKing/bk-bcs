@@ -7,6 +7,11 @@
             "translation": "id不能为空"
         },
         {
+            "id": "invalid file name",
+            "message": "invalid file name",
+            "translation": "无效的文件名"
+        },
+        {
             "id": "read file failed, err: {ErrR}",
             "message": "read file failed, err: {ErrR}",
             "translation": "读取文件失败, err: {ErrR}",
@@ -1613,21 +1618,6 @@
             "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
             "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
             "translation": "路径 {Path} 无效，路径不能包含连续的“/”",
-            "placeholders": [
-                {
-                    "id": "Path",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path"
-                }
-            ]
-        },
-        {
-            "id": "invalid path {Path}, the path cannot end with '/'",
-            "message": "invalid path {Path}, the path cannot end with '/'",
-            "translation": "路径 {Path} 无效，路径不能以“/”结尾",
             "placeholders": [
                 {
                     "id": "Path",

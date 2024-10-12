@@ -1,6 +1,6 @@
 <template>
   <section class="node-mana-container">
-    <form-option ref="fileOptionRef" label-name="服务标签" @update-option-data="getOptionData" />
+    <form-option ref="fileOptionRef" :associate-config-show="true" @update-option-data="getOptionData" />
     <div class="node-content">
       <span class="node-label">{{ $t('示例预览') }}</span>
       <div class="top-tip">
@@ -14,41 +14,57 @@
         </span>
       </div>
       <div class="preview-content">
-        <bk-form label-width="145">
+        <bk-form :label-width="locale === 'en' ? '206' : '145'">
           <bk-form-item :label="$t('服务：')">
             <div class="service-content">
+              <!-- 服务名称 -->
+              <div class="service-item">
+                <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('服务名称') }}： </span>
+                <span v-if="basicInfo!.serviceName.value" class="bk-form-content">
+                  <span class="content-em" @click="copyText(basicInfo!.serviceName.value)">
+                    {{ basicInfo!.serviceName.value }} <copy-shape class="icon-shape" />
+                  </span>
+                </span>
+                <div v-else class="bk-form-content">--</div>
+              </div>
+              <!-- 标签 -->
               <div class="service-item">
                 <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('标签') }}： </span>
-                <ul class="bk-form-content" v-if="optionData.labelArr.length">
-                  <li class="label-li" v-for="(item, index) in optionData.labelArr" :key="index">
+                <ul v-if="optionData.labelArr.length" class="bk-form-content">
+                  <li v-for="(item, index) in optionData.labelArr" :key="index" class="label-li">
                     <div class="label-content">
-                      <span class="label-key">key</span>
-                      <div class="label-value">{{ item.key }}</div>
-                      <copy-shape class="icon-shape" v-show="item.key" @click="copyText(item.key as string)" />
-                    </div>
-                    <div class="label-content">
-                      <span class="label-key">value</span>
-                      <div class="label-value">{{ item.value }}</div>
-                      <copy-shape class="icon-shape" v-show="item.value" @click="copyText(item.value as string)" />
+                      <div class="input-wrap">
+                        {{ item.key || 'key' }}
+                        <copy-shape class="icon-shape" v-show="item.key" @click="copyText(item.key as string)" />
+                      </div>
+                      &nbsp;=&nbsp;
+                      <div class="input-wrap">
+                        {{ item.value || 'value' }}
+                        <copy-shape class="icon-shape" v-show="item.value" @click="copyText(item.value as string)" />
+                      </div>
                     </div>
                   </li>
                 </ul>
                 <div v-else class="bk-form-content">--</div>
               </div>
+              <!-- 配置文件筛选 -->
               <div class="service-item">
-                <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('服务名称') }}： </span>
-                <span class="bk-form-content">
-                  <span
-                    class="content-em"
-                    v-if="basicInfo!.serviceName.value"
-                    @click="copyText(basicInfo!.serviceName.value)">
-                    {{ basicInfo!.serviceName.value }} <copy-shape class="icon-shape" />
-                  </span>
-                </span>
+                <span :class="['item-label', { 'item-label--en': locale === 'en' }]"> {{ $t('配置文件筛选') }}： </span>
+                <ul v-if="optionData.rules.length" class="bk-form-content">
+                  <li v-for="(rule, index) in optionData.rules" :key="index" class="label-li">
+                    <div class="label-content">
+                      <div class="input-wrap full">
+                        {{ rule }}
+                        <copy-shape class="icon-shape" v-show="rule" @click="copyText(rule)" />
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+                <div v-else class="bk-form-content">--</div>
               </div>
             </div>
           </bk-form-item>
-          <bk-form-item label="feedAddr：">
+          <bk-form-item :label="$t('服务feed-server地址：')">
             <span class="content-em" @click="copyText(feedAddr!)">
               {{ feedAddr }} <copy-shape class="icon-shape" />
             </span>
@@ -66,6 +82,11 @@
           <bk-form-item :label="$t('全局标签：')">
             <span class="">
               {{ $t('(全局标签与服务标签参数一样，常用于按标签进行灰度发布；不同的是全局标签可供多个服务共用)') }}
+            </span>
+          </bk-form-item>
+          <bk-form-item :label="$t('全局配置文件筛选：')">
+            <span class="">
+              {{ $t('(全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用)') }}
             </span>
           </bk-form-item>
           <bk-form-item :label="`${$t('客户端密钥')}:`">
@@ -87,7 +108,6 @@
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import { useI18n } from 'vue-i18n';
-  // import { cloneDeep } from 'lodash';
 
   interface labelItem {
     key: String;
@@ -100,7 +120,9 @@
 
   const linkUrl = {
     nodeManaUrl: `${(window as any).BK_NODE_HOST}/#/plugin-manager/rule`,
-    clientNode: 'https://bk.tencent.com/docs/markdown/ZH/BSCP/1.29/UserGuide/Function/client_configuration.md',
+    // @ts-ignore
+    // eslint-disable-next-line
+    clientNode: (typeof BSCP_CONFIG !== 'undefined' && BSCP_CONFIG.client_configuration_doc) || '',
   };
 
   const keyValidateReg = new RegExp(
@@ -118,6 +140,7 @@
     privacyCredential: '',
     labelArr: [] as labelItem[],
     tempDir: '',
+    rules: [],
   });
 
   const getOptionData = async (data: any) => {
@@ -200,8 +223,7 @@
   }
   .preview-content {
     margin-top: 13px;
-    padding: 24px 0;
-    // height: 500px;
+    padding: 24px 10px 24px 0;
     background-color: #f5f7fa;
     .icon-shape {
       font-size: 12px;
@@ -238,7 +260,7 @@
   }
   .label-li {
     & + .label-li {
-      margin-top: 24px;
+      margin-top: 8px;
     }
     .label-content {
       display: flex;
@@ -248,32 +270,36 @@
       & + .label-content {
         margin-top: 8px;
       }
-      &:hover {
-        .icon-shape {
-          visibility: visible;
-          vertical-align: middle;
-        }
-      }
       .icon-shape {
         margin-left: 10px;
         cursor: pointer;
       }
     }
-    .label-key {
-      margin-right: 16px;
-      width: 31px;
-      height: 30px;
-      text-align: right;
-    }
-    .label-value {
+    .input-wrap {
+      position: relative;
       padding: 0 8px;
-      width: 240px;
+      width: 220px;
       height: 30px;
       line-height: 30px;
       border: 1px solid #dcdee5;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      .icon-shape {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        padding: 0 8px 0 0;
+      }
+      &:hover {
+        .icon-shape {
+          visibility: visible;
+        }
+      }
+      &.full {
+        width: 456px;
+      }
     }
   }
   .service-content {
@@ -291,14 +317,14 @@
     }
     .item-label {
       flex-shrink: 0;
-      width: 60px;
+      width: 90px;
       font-size: 12px;
       white-space: nowrap;
       text-align: right;
       color: #63656e;
       line-height: 32px;
       &--en {
-        width: 91px;
+        width: 162px;
       }
     }
     .item-content {

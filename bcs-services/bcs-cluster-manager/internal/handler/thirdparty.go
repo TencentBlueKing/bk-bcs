@@ -176,7 +176,7 @@ func (cm *ClusterManager) GetTopologyNodes(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	la := thirdparty.NewGetTopoNodesAction()
+	la := thirdparty.NewGetTopoNodesAction(cm.model)
 	la.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("GetTopologyNodes", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.V(3).Infof("reqID: %s, action: GetTopologyNodes, req %v", reqID, req)
@@ -221,7 +221,7 @@ func (cm *ClusterManager) GetScopeHostCheck(ctx context.Context,
 		return err
 	}
 	start := time.Now()
-	la := thirdparty.NewGetScopeHostCheckAction()
+	la := thirdparty.NewGetScopeHostCheckAction(cm.model)
 	la.Handle(ctx, req, resp)
 	metrics.ReportAPIRequestMetric("GetScopeHostCheck", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.V(3).Infof("reqID: %s, action: GetScopeHostCheck, req %v", reqID, req)

@@ -49,6 +49,8 @@ type ClientInterface interface {
 	ESBListBizHostsTopo(username string, req *ESBListBizHostsTopoRequest) (*ESBListBizHostsTopoResult, error)
 	// ESBSearchModule 查询模块
 	ESBSearchModule(username string, req *ESBSearchModuleRequest) (*ESBSearchModuleResult, error)
+	// ESBCreateModule 创建模块
+	ESBCreateModule(username string, req *ESBCreateModuleRequest) (*ESBCreateModuleResult, error)
 }
 
 // NewClientInterface create client interface

@@ -171,14 +171,12 @@
       <RecycleScroller class="table-body" :items="data" :item-size="44" key-field="fileAP" v-slot="{ item, index }">
         <div class="table-row">
           <div class="not-editable td-cell name">
-            <bk-overflow-title type="tips">
+            <span class="text-ov">
               {{ item.fileAP }}
-            </bk-overflow-title>
+            </span>
           </div>
           <div class="not-editable td-cell type">
-            <bk-overflow-title type="tips">
-              {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
-            </bk-overflow-title>
+            {{ item.file_type === 'text' ? t('文本') : t('二进制') }}
           </div>
           <div class="td-cell-editable td-cell memo" :class="{ change: isContentChange(item.id, 'memo') }">
             <bk-input v-model="item.memo" :placeholder="t('请输入')"></bk-input>
