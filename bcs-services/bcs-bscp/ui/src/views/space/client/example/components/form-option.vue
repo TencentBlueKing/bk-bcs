@@ -23,7 +23,11 @@
             placement: 'top',
           }" />
       </template>
-      <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
+      <bk-input
+        v-model="formData.tempDir"
+        :placeholder="$t('请输入')"
+        clearable
+        @input="emits('is-windows-path', isWindowsPath)" />
     </bk-form-item>
     <bk-form-item v-if="props.directoryShow">
       <div class="directory-description" :class="{ 'offset-margin': tempDirValidateStatus }">
@@ -105,10 +109,6 @@
       httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
       dualSystemSupport?: boolean; // Unix与windows双系统支持（节点管理插件与文件型命令行工具）
-      directoryShow?: boolean;
-      p2pShow?: boolean;
-      httpConfigShow?: boolean;
-      associateConfigShow?: boolean;
     }>(),
     {
       directoryShow: true,
@@ -119,7 +119,7 @@
     },
   );
 
-  const emits = defineEmits(['update-option-data']);
+  const emits = defineEmits(['update-option-data', 'is-windows-path']);
 
   const { t } = useI18n();
   const route = useRoute();
@@ -303,6 +303,10 @@
 
   const sendAll = () => {
     const filterFormData = cloneDeep(formData.value);
+    // 临时目录不合法的路径不发送
+    if (!tempDirValidateStatus.value) {
+      filterFormData.tempDir = '';
+    }
     emits('update-option-data', filterFormData);
   };
 

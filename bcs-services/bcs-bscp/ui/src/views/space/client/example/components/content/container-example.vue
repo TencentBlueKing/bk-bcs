@@ -102,8 +102,8 @@
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.uid`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1.trim());
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2.trim());
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2);
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', '');
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', '');
@@ -118,14 +118,14 @@
       const rulesPart2 = `
             - name: config_matches
               value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', rulesPart1.trim());
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', rulesPart2.trim());
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', rulesPart1);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', rulesPart2);
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', '');
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', '');
     }
     // 去除 动态插入的值为空的情况下产生的空白行
-    replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
+    replaceVal.value = updateString.replaceAll(/\r?\n\s+\r?\n/g, '\n');
   };
   // 高亮配置
   const updateVariables = () => {
