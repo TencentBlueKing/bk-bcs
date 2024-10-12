@@ -288,6 +288,7 @@ import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import FormGroup from '@/components/form-group.vue';
 import usePage from '@/composables/use-page';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -690,24 +691,14 @@ export default defineComponent({
       return true;
     };
     
-    const focusOnErrorField = async () => {
+    const { focusOnErrorField } = useFocusOnErrorField();
+    const handleNext = async () => {
       // 校验错误滚动到第一个错误的位置
       const result = await validate();
       if (!result) {
-        // 自动滚动到第一个错误的位置
-        const errDom = document.getElementsByClassName('form-error-tip');
-        const bcsErrDom = document.getElementsByClassName('error-tips');
-        const innerErrDom = document.getElementsByClassName('is-error');
-        const firstErrDom = innerErrDom[0] || errDom[0] || bcsErrDom[0];
-        firstErrDom?.scrollIntoView({
-          block: 'center',
-          behavior: 'smooth',
-        });
+        focusOnErrorField();
         return;
-      }
-    };
-    const handleNext = async () => {
-      await focusOnErrorField();
+      };
       ctx.emit('next', getNodePoolData());
     };
 
