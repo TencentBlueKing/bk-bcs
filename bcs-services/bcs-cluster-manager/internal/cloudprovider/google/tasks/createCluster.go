@@ -19,11 +19,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"google.golang.org/api/container/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -145,12 +145,7 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return clusterName, nil
 	}
 
-	req, err := generateCreateClusterRequest(info, groups)
-	if err != nil {
-		return "", fmt.Errorf("createGKECluster[%s] generateCreateClusterRequest failed, %v", taskID, err)
-	}
-
-	_, err = client.CreateCluster(context.Background(), req)
+	_, err = client.CreateCluster(context.Background(), generateCreateClusterRequest(info, groups))
 	if err != nil {
 		return "", fmt.Errorf("createGKECluster[%s] create cluster failed, %v", taskID, err)
 	}
@@ -160,8 +155,8 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return clusterName, nil
 }
 
-func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
-	*container.CreateClusterRequest, error) {
+func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo,
+	groups []*proto.NodeGroup) *container.CreateClusterRequest {
 	req := &container.CreateClusterRequest{
 		Cluster: &container.Cluster{
 			Name:                  strings.ToLower(info.Cluster.ClusterID),
@@ -271,7 +266,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		req.Cluster.Subnetwork = info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.SubnetId
 	}
 
-	return req, nil
+	return req
 }
 
 // generateCreateClusterNodePoolInput generate create node pool input
@@ -669,7 +664,8 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 				return err
 			}
 			instanceNames := generateInstanceName(mig.BaseInstanceName, uint64(desiredSize))
-			_, err = api.CreateInstanceForGroupManager(client.ComputeServiceClient, group.AutoScaling.AutoScalingID, instanceNames)
+			_, err = api.CreateInstanceForGroupManager(client.ComputeServiceClient,
+				group.AutoScaling.AutoScalingID, instanceNames)
 			if err != nil {
 				blog.Errorf("applyInstanceMachines[%s] CreateInstanceForGroupManager[%s : %+v] failed: %v",
 					taskID, group.AutoScaling.AutoScalingID, instanceNames, err)
@@ -780,9 +776,9 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 		index := 0
 		running, failure := make([]string, 0), make([]string, 0)
 		for _, id := range asIDs {
-			igmInfo, err := api.GetGCEResourceInfo(id)
-			if err != nil {
-				return fmt.Errorf("checkClusterNodesStatus[%s] get igm info failed: %v", taskID, err)
+			igmInfo, errGet := api.GetGCEResourceInfo(id)
+			if errGet != nil {
+				return fmt.Errorf("checkClusterNodesStatus[%s] get igm info failed: %v", taskID, errGet)
 			}
 
 			instances, errGet := cli.ListInstanceGroupsInstances(ctx, igmInfo[3], igmInfo[(len(igmInfo)-1)])
@@ -950,7 +946,7 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 }
 
 // RegisterGKEClusterKubeConfigTask register cluster kubeconfig
-func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error {
+func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -1007,9 +1003,9 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error {
 	addSuccessNodes := state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()]
 	if len(addSuccessNodes) > 0 {
 		var nodes *corev1.NodeList
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+		toCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 		defer cancel()
-		err = loop.LoopDoFunc(ctx, func() error {
+		err = loop.LoopDoFunc(toCtx, func() error {
 			nodes, err = kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 			if err != nil {
 				return nil
@@ -1022,7 +1018,8 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error {
 			return nil
 		}, loop.LoopInterval(2*time.Second))
 		if err != nil {
-			blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances list node failed: %s", taskID, err)
+			blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances list node failed: %s",
+				taskID, err)
 			retErr := fmt.Errorf("importClusterInstances list node failed %s", err)
 			_ = state.UpdateStepFailure(start, stepName, retErr)
 			return retErr
@@ -1037,8 +1034,10 @@ func RegisterGKEClusterKubeConfigTask(taskID string, stepName string) error {
 				}
 				err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), dependInfo.Cluster)
 				if err != nil {
-					blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances update cluster[%s] failed: %s", taskID, err)
-					retErr := fmt.Errorf("importClusterInstances update cluster[%s] failed: %s", dependInfo.Cluster.ClusterID, err)
+					blog.Errorf("RegisterGKEClusterKubeConfigTask[%s] importClusterInstances update cluster[%s]"+
+						"failed: %s", taskID, err)
+					retErr := fmt.Errorf("importClusterInstances update cluster[%s] failed: %s",
+						dependInfo.Cluster.ClusterID, err)
 					_ = state.UpdateStepFailure(start, stepName, retErr)
 				}
 			}
