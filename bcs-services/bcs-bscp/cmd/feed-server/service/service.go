@@ -15,6 +15,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -294,6 +295,8 @@ func (s *Service) DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	labels := r.URL.Query().Get("labels")
+
 	remainingPath := chi.URLParam(r, "*")
 	if remainingPath == "" {
 		render.Render(w, r, rest.BadRequest(errors.New("file path is required")))
@@ -331,10 +334,19 @@ func (s *Service) DownloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	labelsMap := make(map[string]string)
+	if labels != "" {
+		if err = json.Unmarshal([]byte(labels), &labelsMap); err != nil {
+			render.Render(w, r, rest.BadRequest(errors.New("invalid labels format, not in the correct json format")))
+			return
+		}
+	}
+
 	meta := &types.AppInstanceMeta{
-		BizID: kt.BizID,
-		App:   appName,
-		AppID: appID,
+		BizID:  kt.BizID,
+		App:    appName,
+		AppID:  appID,
+		Labels: labelsMap,
 	}
 
 	cancel := kt.CtxWithTimeoutMS(1500)
