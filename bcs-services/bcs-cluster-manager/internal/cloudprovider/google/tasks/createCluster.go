@@ -202,7 +202,6 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 					Enabled: true,
 				},
 			},
-			// 如果EnablePrivateNodes为true,不传此参数会默认开启白名单模式导致无法获取kubeconfig
 			MasterAuthorizedNetworksConfig: &container.MasterAuthorizedNetworksConfig{
 				Enabled: false,
 			},
@@ -210,6 +209,24 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			Locations:         []string{},
 			MaintenancePolicy: &container.MaintenancePolicy{},
 		},
+	}
+
+	internet := info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet
+	if internet != nil && len(internet.PublicAccessCidrs) > 0 {
+		// 开启白名单
+		req.Cluster.MasterAuthorizedNetworksConfig.Enabled = true
+		cidrBlock := make([]*container.CidrBlock, 0)
+		for _, cidr := range internet.PublicAccessCidrs {
+			cidrBlock = append(cidrBlock, &container.CidrBlock{
+				CidrBlock: cidr,
+			})
+		}
+
+		req.Cluster.MasterAuthorizedNetworksConfig.CidrBlocks = cidrBlock
+
+		if info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
+			req.Cluster.MasterAuthorizedNetworksConfig.GcpPublicCidrsAccessEnabled = true
+		}
 	}
 
 	for _, template := range info.Cluster.Template {
