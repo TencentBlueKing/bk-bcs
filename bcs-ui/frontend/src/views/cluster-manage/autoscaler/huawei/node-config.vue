@@ -1062,21 +1062,24 @@ export default defineComponent({
 
       return true;
     };
-    const handleNext = async () => {
+    const focusOnErrorField = async () => {
+      // 校验错误滚动到第一个错误的位置
       const result = await validate();
       if (!result) {
         // 自动滚动到第一个错误的位置
         const errDom = document.getElementsByClassName('form-error-tip');
         const bcsErrDom = document.getElementsByClassName('error-tips');
-        const isErrDom = document.getElementsByClassName('is-error');
-        const firstErrDom = isErrDom[0] || errDom[0] || bcsErrDom[0];
+        const innerErrDom = document.getElementsByClassName('is-error');
+        const firstErrDom = innerErrDom[0] || errDom[0] || bcsErrDom[0];
         firstErrDom?.scrollIntoView({
           block: 'center',
           behavior: 'smooth',
         });
         return;
       }
-
+    };
+    const handleNext = async () => {
+      await focusOnErrorField();
       ctx.emit('next', getNodePoolData());
     };
 
@@ -1153,6 +1156,7 @@ export default defineComponent({
       getSchemaByProp,
       showRepeatMountTarget,
       validate,
+      focusOnErrorField,
       handleGetRuntimeinfo,
       getNodePoolData,
       CPU,

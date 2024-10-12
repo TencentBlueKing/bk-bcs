@@ -137,6 +137,7 @@ export default defineComponent({
     const handleEditNodePool = async () => {
       const nodePoolInfoValidate = await nodePoolInfoRef.value?.validate();
       const nodePoolConfigValidate = await nodePoolConfigRef.value?.validate();
+      await nodePoolConfigRef.value.focusOnErrorField();
       if (!nodePoolInfoValidate || !nodePoolConfigValidate) return;
 
       saveLoading.value = true;

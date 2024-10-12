@@ -867,26 +867,25 @@ export default defineComponent({
     const validate = async () => {
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
       if (!basicFormValidate && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = 0;
+        // nodeConfigRef.value.scrollTop = 0;
         return false;
       }
       // 校验机型
       if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodeConfigRef.value.scrollTop = 20;
+        // nodeConfigRef.value.scrollTop = 20;
         return false;
       }
       const result = await formRef.value?.validate().catch(() => false);
-      if (!result && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
-      }
+      // if (!result && nodeConfigRef.value) {
+      //   nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
+      // }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       if (!basicFormValidate || !result || !validateDataDiskSize) return false;
 
       return true;
     };
-    const handleNext = async () => {
-      isShowTip.value = false;
+    const focusOnErrorField = async () => {
       // 校验错误滚动到第一个错误的位置
       const result = await validate();
       if (!result) {
@@ -901,6 +900,10 @@ export default defineComponent({
         });
         return;
       }
+    };
+    const handleNext = async () => {
+      isShowTip.value = false;
+      await focusOnErrorField();
       ctx.emit('next', getNodePoolData());
     };
 
@@ -977,6 +980,7 @@ export default defineComponent({
       handleCancel,
       getSchemaByProp,
       validate,
+      focusOnErrorField,
       getNodePoolData,
       CPU,
       Mem,

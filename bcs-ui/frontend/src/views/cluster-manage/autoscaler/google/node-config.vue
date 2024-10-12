@@ -667,31 +667,47 @@ export default defineComponent({
     const validate = async () => {
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
       if (!basicFormValidate && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = 0;
+        // nodeConfigRef.value.scrollTop = 0;
         return false;
       }
       // 校验机型
       if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodeConfigRef.value.scrollTop = 20;
+        // nodeConfigRef.value.scrollTop = 20;
         return false;
       }
       const result = await formRef.value?.validate().catch(() => false);
-      if (!result && nodeConfigRef.value) {
-        if (!nodePoolConfig.value.autoScaling?.zones?.length) {
-          nodeConfigRef.value.scrollTop = 0;
-        } else {
-          nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
-        }
-      }
+      // if (!result && nodeConfigRef.value) {
+      //   if (!nodePoolConfig.value.autoScaling?.zones?.length) {
+      //     nodeConfigRef.value.scrollTop = 0;
+      //   } else {
+      //     nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
+      //   }
+      // }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       if (!basicFormValidate || !result || !validateDataDiskSize) return false;
 
       return true;
     };
+    
+    const focusOnErrorField = async () => {
+      // 校验错误滚动到第一个错误的位置
+      const result = await validate();
+      if (!result) {
+        // 自动滚动到第一个错误的位置
+        const errDom = document.getElementsByClassName('form-error-tip');
+        const bcsErrDom = document.getElementsByClassName('error-tips');
+        const innerErrDom = document.getElementsByClassName('is-error');
+        const firstErrDom = innerErrDom[0] || errDom[0] || bcsErrDom[0];
+        firstErrDom?.scrollIntoView({
+          block: 'center',
+          behavior: 'smooth',
+        });
+        return;
+      }
+    };
     const handleNext = async () => {
-      if (!await validate()) return;
-
+      await focusOnErrorField();
       ctx.emit('next', getNodePoolData());
     };
 
@@ -746,6 +762,7 @@ export default defineComponent({
       handleCancel,
       getSchemaByProp,
       validate,
+      focusOnErrorField,
       getNodePoolData,
       CPU,
       Mem,
