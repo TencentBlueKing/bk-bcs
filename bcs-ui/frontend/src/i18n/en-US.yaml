@@ -818,6 +818,7 @@ cluster:
       importType: Import Type
       cloudToken: Cloud Token
       kubeConfig: Cluster KubeConfig
+      title: Import a public cloud cluster - Cluster KubeConfig
       network:
         text: Network
         intranet: Intranet

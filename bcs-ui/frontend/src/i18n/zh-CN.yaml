@@ -726,6 +726,7 @@ cluster:
       cpuQuota: CPU配额(核)
       memQuota: 内存配额(GiB)
       importType: 导入方式
+      title: 导入集群 - kubeconfig 集群
       cloudToken: 云凭证
       kubeConfig: 集群kubeconfig
       network:
