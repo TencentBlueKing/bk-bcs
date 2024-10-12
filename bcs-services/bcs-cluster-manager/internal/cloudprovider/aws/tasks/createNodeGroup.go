@@ -191,13 +191,13 @@ func generateCreateNodegroupInput(group *proto.NodeGroup, cluster *proto.Cluster
 		nodeGroup.CapacityType != aws.String(eks.CapacityTypesSpot) {
 		nodeGroup.CapacityType = aws.String(eks.CapacityTypesOnDemand)
 	}
-	if len(group.Labels) != 0 {
-		nodeGroup.Labels = aws.StringMap(group.Labels)
+	if group.NodeTemplate != nil && len(group.NodeTemplate.Labels) > 0 {
+		nodeGroup.Labels = aws.StringMap(group.NodeTemplate.Labels)
 	}
 	if len(group.Tags) != 0 {
 		nodeGroup.Tags = aws.StringMap(group.Tags)
 	}
-	if group.NodeTemplate != nil {
+	if group.NodeTemplate != nil && len(group.NodeTemplate.Taints) > 0 {
 		nodeGroup.Taints = api.MapToTaints(group.NodeTemplate.Taints)
 	}
 

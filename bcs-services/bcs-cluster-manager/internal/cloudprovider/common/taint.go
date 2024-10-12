@@ -48,12 +48,11 @@ var (
 // BuildRemoveInnerTaintTaskStep 删除预置的污点
 // NOCC:tosa/fn_length(忽略)
 // nolint function name should not exceed 35 characters
-func BuildRemoveInnerTaintTaskStep(task *proto.Task, group *proto.NodeGroup) {
+func BuildRemoveInnerTaintTaskStep(task *proto.Task, clusterId, provider string) {
 	removeTaintStep := cloudprovider.InitTaskStep(RemoveClusterNodesInnerTaintStep)
 
-	removeTaintStep.Params[cloudprovider.ClusterIDKey.String()] = group.ClusterID
-	removeTaintStep.Params[cloudprovider.NodeGroupIDKey.String()] = group.NodeGroupID
-	removeTaintStep.Params[cloudprovider.CloudIDKey.String()] = group.Provider
+	removeTaintStep.Params[cloudprovider.ClusterIDKey.String()] = clusterId
+	removeTaintStep.Params[cloudprovider.CloudIDKey.String()] = provider
 
 	task.Steps[RemoveClusterNodesInnerTaintStep.StepMethod] = removeTaintStep
 	task.StepSequence = append(task.StepSequence, RemoveClusterNodesInnerTaintStep.StepMethod)
@@ -80,22 +79,21 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	// step login started here
 	// extract parameter && check validate
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
-	nodeGroupID := step.Params[cloudprovider.NodeGroupIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	// inject success nodesNames
 	nodeNames := strings.Split(state.Task.CommonParams[cloudprovider.NodeNamesKey.String()], ",")
-	removeTaints := strings.Split(state.Task.CommonParams[cloudprovider.RemoveTaintsKey.String()], ",")
+	removeTaints := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
+		cloudprovider.RemoveTaintsKey.String(), ",")
 
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(nodeNames) == 0 {
+	if len(clusterID) == 0 || len(cloudID) == 0 || len(nodeNames) == 0 {
 		blog.Errorf("RemoveClusterNodesTaintTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("RemoveClusterNodesTaintTask check parameters failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
-		ClusterID:   clusterID,
-		CloudID:     cloudID,
-		NodeGroupID: nodeGroupID,
+		ClusterID: clusterID,
+		CloudID:   cloudID,
 	})
 	if err != nil {
 		blog.Errorf("RemoveClusterNodesTaintTask[%s]: GetClusterDependBasicInfo failed: %s", taskID, err.Error())

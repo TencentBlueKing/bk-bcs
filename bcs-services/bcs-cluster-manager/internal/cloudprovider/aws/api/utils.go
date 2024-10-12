@@ -241,8 +241,8 @@ func MapToAwsTaints(taints []*proto.Taint) []*eks.Taint {
 	for _, v := range taints {
 		key := v.Key
 		value := v.Value
-		effect := v.Effect
-		result = append(result, &eks.Taint{Key: &key, Value: &value, Effect: &effect})
+		result = append(result, &eks.Taint{Key: &key, Value: &value, Effect: aws.String(taintTransEffect(v.Effect))})
+
 	}
 	return result
 }
@@ -308,8 +308,8 @@ func CreateTagSpecs(instanceTags map[string]*string) []*ec2.LaunchTemplateTagSpe
 	}
 }
 
-// generateAwsCreateLaunchTemplateInput generate Aws CreateLaunchTemplateInput
-func generateAwsCreateLaunchTemplateInput(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
+// generateAwsLaunchTemplateInput generate Aws CreateLaunchTemplateInput
+func generateAwsLaunchTemplateInput(input *CreateLaunchTemplateInput) *ec2.CreateLaunchTemplateInput {
 	awsInput := &ec2.CreateLaunchTemplateInput{
 		LaunchTemplateName: input.LaunchTemplateName,
 		TagSpecifications:  generateAwsTagSpecs(input.TagSpecifications),

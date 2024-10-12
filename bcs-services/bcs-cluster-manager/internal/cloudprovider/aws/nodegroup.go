@@ -107,10 +107,14 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 	input := &eks.UpdateNodegroupConfigInput{
 		ClusterName:   &cluster,
 		NodegroupName: &group.CloudNodeGroupID,
-		Labels: &eks.UpdateLabelsPayload{
-			AddOrUpdateLabels: aws.StringMap(group.Labels),
-		},
 	}
+
+	if len(group.GetNodeTemplate().GetLabels()) > 0 {
+		input.Labels =  &eks.UpdateLabelsPayload{
+			AddOrUpdateLabels: aws.StringMap(group.GetNodeTemplate().GetLabels()),
+		}
+	}
+	
 	if group.AutoScaling != nil {
 		input.ScalingConfig = &eks.NodegroupScalingConfig{
 			MaxSize: aws.Int64(int64(group.AutoScaling.MaxSize)),
