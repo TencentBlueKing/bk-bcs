@@ -170,19 +170,42 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			InitialClusterVersion: info.Cluster.ClusterBasicSettings.Version,
 			EnableKubernetesAlpha: false,
 			ClusterIpv4Cidr:       info.Cluster.NetworkSettings.ClusterIPv4CIDR,
-			//LoggingService:        "logging.googleapis.com/kubernetes",
-			MonitoringService: "",
+			LoggingConfig: &container.LoggingConfig{
+				ComponentConfig: &container.LoggingComponentConfig{
+					EnableComponents: []string{
+						"SYSTEM_COMPONENTS",
+						"WORKLOADS",
+						"APISERVER",
+						"SCHEDULER",
+						"CONTROLLER_MANAGER",
+					},
+				},
+			},
 			IpAllocationPolicy: &container.IPAllocationPolicy{
-				ClusterIpv4CidrBlock: info.Cluster.NetworkSettings.ClusterIPv4CIDR,
-				//ClusterSecondaryRangeName:  "",
+				ClusterIpv4CidrBlock:  info.Cluster.NetworkSettings.ClusterIPv4CIDR,
 				CreateSubnetwork:      false,
 				NodeIpv4CidrBlock:     "",
 				ServicesIpv4CidrBlock: info.Cluster.NetworkSettings.ServiceIPv4CIDR,
-				//ServicesSecondaryRangeName: "",
-				//SubnetworkName: "",
-				UseIpAliases: true,
+				UseIpAliases:          true,
 			},
-			AddonsConfig:      &container.AddonsConfig{},
+			NetworkConfig: &container.NetworkConfig{
+				DnsConfig: &container.DNSConfig{
+					ClusterDns: "KUBE_DNS",
+				},
+			},
+			NetworkPolicy: &container.NetworkPolicy{
+				Enabled:  true,
+				Provider: "CALICO",
+			},
+			AddonsConfig: &container.AddonsConfig{
+				DnsCacheConfig: &container.DnsCacheConfig{
+					Enabled: true,
+				},
+			},
+			// 如果EnablePrivateNodes为true,不传此参数会默认开启白名单模式导致无法获取kubeconfig
+			MasterAuthorizedNetworksConfig: &container.MasterAuthorizedNetworksConfig{
+				Enabled: false,
+			},
 			NodePools:         []*container.NodePool{},
 			Locations:         []string{},
 			MaintenancePolicy: &container.MaintenancePolicy{},
@@ -198,10 +221,12 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	}
 
 	req.Cluster.PrivateClusterConfig = &container.PrivateClusterConfig{
-		// 是否将主服务器的内部 IP 地址用作集群终端节点
-		// EnablePrivateEndpoint: info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet,
-		// 开启此参数后，集群内的节点无法从公网访问，只能通过专线访问 会导致bcs获取不了kubeconfig
-		// EnablePrivateNodes: enablePrivateNodes,
+		// 是否将主服务器的内部 IP 地址用作集群终端节点 就是在控制台中选择了专用集群
+		EnablePrivateEndpoint: info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet,
+		EnablePrivateNodes:    true,
+		MasterGlobalAccessConfig: &container.PrivateClusterMasterGlobalAccessConfig{
+			Enabled: true,
+		},
 	}
 
 	if info.Cluster.ManageType == common.ClusterManageTypeManaged {
