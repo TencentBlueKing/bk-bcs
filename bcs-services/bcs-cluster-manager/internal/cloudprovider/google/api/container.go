@@ -127,6 +127,31 @@ func (cs *ContainerServiceClient) GetCluster(ctx context.Context, clusterName st
 	return gkeCluster, nil
 }
 
+// CreateCluster create cluster
+func (cs *ContainerServiceClient) CreateCluster(ctx context.Context, req *container.CreateClusterRequest) (*container.Operation, error) {
+	clusterLevel := cs.getClusterLevel()
+
+	var (
+		o   *container.Operation
+		err error
+	)
+
+	switch clusterLevel {
+	case RegionLevel:
+		parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region
+		req.Parent = parent
+		o, err = cs.containerServiceClient.Projects.Locations.Clusters.Create(parent, req).Context(ctx).Do()
+	case ZoneLevel:
+		o, err = cs.containerServiceClient.Projects.Zones.Clusters.Create(cs.gkeProjectID, cs.region, req).Do()
+	}
+	if err != nil {
+		return nil, fmt.Errorf("gke client CreateCluster failed: %v", err)
+	}
+	blog.Infof("gke client CreateCluster successful, operation ID: %s", o.SelfLink)
+
+	return o, nil
+}
+
 // DeleteCluster delete cluster
 func (cs *ContainerServiceClient) DeleteCluster(ctx context.Context, clusterName string) error {
 	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
@@ -152,6 +177,18 @@ func (cs *ContainerServiceClient) CreateClusterNodePool(ctx context.Context, req
 	blog.Infof("gke client CreateClusterNodePool[%s] successful, operation ID: %s", req.NodePool.Name, o.SelfLink)
 
 	return o, nil
+}
+
+// ListClusterNodePool list a node pool
+func (cs *ContainerServiceClient) ListClusterNodePool(ctx context.Context,
+	clusterName string) ([]*container.NodePool, error) {
+	parent := "projects/" + cs.gkeProjectID + "/locations/" + cs.region + "/clusters/" + clusterName
+	nodegroups, err := cs.containerServiceClient.Projects.Locations.Clusters.NodePools.List(parent).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gke client ListClusterNodePool failed: %v", err)
+	}
+
+	return nodegroups.NodePools, nil
 }
 
 // GetClusterNodePool get the node pool

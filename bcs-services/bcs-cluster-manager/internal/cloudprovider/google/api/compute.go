@@ -338,14 +338,22 @@ func (c *ComputeServiceClient) GetMigInstances(ctx context.Context, location, na
 }
 
 // GetInstanceTemplate get the instanceTemplate
-func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, name string) (
+func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, location, name string) (
 	*compute.InstanceTemplate, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate failed: gkeProjectId is required")
 	}
 
-	// instance template
-	it, err := c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
+	var (
+		err error
+		it  *compute.InstanceTemplate
+	)
+
+	if c.getLocationType(location) == locationTypeRegions {
+		it, err = c.computeServiceClient.RegionInstanceTemplates.Get(c.gkeProjectID, location, name).Context(ctx).Do()
+	} else {
+		it, err = c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate[%s] failed: %v", name, err)
 	}
@@ -355,34 +363,54 @@ func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, name str
 }
 
 // CreateInstanceTemplate create a instanceTemplate
-func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, it *compute.InstanceTemplate) (
+func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, location string, it *compute.InstanceTemplate) (
 	*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: gkeProjectId is required")
 	}
 
+	var (
+		err       error
+		operation *compute.Operation
+	)
+
 	// create instance template
-	operation, err := c.computeServiceClient.InstanceTemplates.Insert(c.gkeProjectID, it).Context(ctx).Do()
+	if c.getLocationType(location) == locationTypeRegions {
+		operation, err = c.computeServiceClient.RegionInstanceTemplates.Insert(c.gkeProjectID, location, it).Context(ctx).Do()
+	} else {
+		operation, err = c.computeServiceClient.InstanceTemplates.Insert(c.gkeProjectID, it).Context(ctx).Do()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: %v", err)
 	}
+
 	blog.Infof("gce client CreateInstanceTemplate[%s] successful operation ID: %s", it.Name, operation.SelfLink)
 
 	return operation, nil
 }
 
 // DeleteInstanceTemplate delete a instanceTemplate
-func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, name string) (
+func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, location string, name string) (
 	*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: gkeProjectId is required")
 	}
 
+	var (
+		err       error
+		operation *compute.Operation
+	)
+
 	// delete instance template
-	operation, err := c.computeServiceClient.InstanceTemplates.Delete(c.gkeProjectID, name).Context(ctx).Do()
+	if c.getLocationType(location) == locationTypeRegions {
+		operation, err = c.computeServiceClient.RegionInstanceTemplates.Delete(c.gkeProjectID, location, name).Context(ctx).Do()
+	} else {
+		operation, err = c.computeServiceClient.InstanceTemplates.Delete(c.gkeProjectID, name).Context(ctx).Do()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: %v", err)
 	}
+
 	blog.Infof("gce client DeleteInstanceTemplate[%s] successful operation ID: %s", name, operation.SelfLink)
 
 	return operation, nil
@@ -521,14 +549,16 @@ func (c *ComputeServiceClient) ListZoneInstanceWithFilter(ctx context.Context, f
 }
 
 // ListZoneInstances list zonal instances
-func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context) (*compute.InstanceList, error) {
+func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context, zone string) (*compute.InstanceList, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client ListZoneInstances failed: gkeProjectId is required")
 	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client ListZoneInstances failed: location is required")
+
+	if zone == "" {
+		return nil, fmt.Errorf("gce client ListZoneInstances failed: zone is required")
 	}
-	instanceList, err := c.computeServiceClient.Instances.List(c.gkeProjectID, c.location).Context(ctx).Do()
+
+	instanceList, err := c.computeServiceClient.Instances.List(c.gkeProjectID, zone).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client ListZoneInstances failed: %v", err)
 	}
@@ -543,7 +573,7 @@ func (c *ComputeServiceClient) GetInstance(ctx context.Context, location, name s
 		return nil, fmt.Errorf("gce client GetInstance failed: gkeProjectId is required")
 	}
 
-	if location != "" {
+	if location == "" {
 		location = c.location
 	}
 
@@ -633,6 +663,21 @@ func (c *ComputeServiceClient) GetMachineType(ctx context.Context, location, mt 
 	blog.Infof("gce client GetMachineType successful")
 
 	return t, nil
+}
+
+// ListNetworks lists networks
+func (c *ComputeServiceClient) ListNetworks(ctx context.Context) (*compute.NetworkList, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client ListNetworks failed: gkeProjectId is required")
+	}
+
+	netsList, err := c.computeServiceClient.Networks.List(c.gkeProjectID).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client ListNetworks failed: %v", err)
+	}
+	blog.Infof("gce client ListNetworks successful")
+
+	return netsList, nil
 }
 
 // ListSubnetworks lists subnetworks

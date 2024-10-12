@@ -277,13 +277,13 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 	// get instanceTemplate info
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
 	if err != nil {
-		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] GetInstanceTemplate failed: %v", taskID, err)
 		return nil, nil, err
 	}
 
 	oldItName := it.Name
 	newIt := it
-	err = newItFromBaseIt(newIt, group, computeCli, taskID)
+	err = newItFromBaseIt(newIt, group, computeCli, igm.InstanceTemplate, taskID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -295,7 +295,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 	if newIt.Name != oldItName {
 		// 如果使用了新模版,则删除旧模版
-		o, err2 := computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
+		o, err2 := api.DeleteInstanceTemplate(computeCli, igm.InstanceTemplate)
 		if err2 != nil {
 			return nil, nil, err2
 		}
@@ -340,7 +340,7 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 
 // newItFromBaseIt new instanceTemplate from base instanceTemplate
 func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, // nolint
-	computeCli *api.ComputeServiceClient, taskID string) error {
+	computeCli *api.ComputeServiceClient, url, taskID string) error {
 	oldItNameInfo := strings.Split(newIt.Name, "-")
 	randStr := utils.RandomHexString(8)
 	oldItNameInfo[len(oldItNameInfo)-1] = randStr
@@ -429,7 +429,7 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, //
 		}
 	}
 
-	o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
+	o, err := api.CreateInstanceTemplate(computeCli, url, newIt)
 	if err != nil {
 		blog.Errorf("taskID[%s] newItFromBaseIt CreateInstanceTemplate failed: %v", taskID, err)
 		return err

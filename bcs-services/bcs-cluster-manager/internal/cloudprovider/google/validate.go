@@ -43,7 +43,23 @@ type CloudValidate struct {
 
 // CreateClusterValidate create cluster validate
 func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq, opt *cloudprovider.CommonOption) error {
-	return cloudprovider.ErrCloudNotImplemented
+	if c == nil || req == nil {
+		return fmt.Errorf("%s CreateClusterValidate request is empty", cloudName)
+	}
+
+	if opt == nil || opt.Account == nil {
+		return fmt.Errorf("%s CreateClusterValidate options is empty", cloudName)
+	}
+
+	if len(opt.Account.ServiceAccountSecret) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate request lost valid crendential info", cloudName)
+	}
+
+	if len(opt.Account.GkeProjectID) == 0 {
+		return fmt.Errorf("%s CreateClusterValidate request lost valid gkeProjectID info", cloudName)
+	}
+
+	return nil
 }
 
 // ImportClusterValidate check importCluster operation
