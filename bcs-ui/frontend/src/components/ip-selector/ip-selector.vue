@@ -130,6 +130,9 @@ const getRegionName = (region) => {
 const $biz = computed(() => $store.state.curProject.businessID);
 const $scope = 'biz';
 
+// 是否显示不可用主机
+const isHostOnlyValid = ref(false);
+
 // 获取主机云和占有信息
 const handleGetHostAvailableAndCloudInfo = async (hostData: IHostData[]) => {
   const ipList = hostData.filter(item => !!item.ip).map(item => item.ip);
@@ -159,11 +162,13 @@ const handleGetHostAvailableAndCloudInfo = async (hostData: IHostData[]) => {
   }
 };
 // 获取topo树当前页的主机列表
-const fetchTopologyHostsNodes = async (params) => {
+const fetchTopologyHostsNodes = async (params, hostOnlyValid) => {
+  isHostOnlyValid.value = hostOnlyValid;
   const data: {data: IHostData[]} = await topologyHostsNodes({
     ...params,
     $biz: $biz.value,
     $scope,
+    showAvailableNode: hostOnlyValid,
   }).catch(() => []);
   await handleGetHostAvailableAndCloudInfo(data.data);
   return topologyHostsNodesAdapter(data);
@@ -174,6 +179,7 @@ const fetchHostCheck = async (params) => {
     ...params,
     $biz: $biz.value,
     $scope,
+    showAvailableNode: isHostOnlyValid.value, // todo 手动输入IP场景切换 "仅显示可用" 不会触发fetchHostCheck函数
   }).catch(() => []);
   await handleGetHostAvailableAndCloudInfo(data);
   return hostCheckAdapter(data);

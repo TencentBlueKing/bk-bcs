@@ -89,6 +89,7 @@ const IpSelector = createFactory({
   nameStyle: 'camelCase',
   // 主机列表全选模式，false: 本页全选；true: 跨页全选
   hostTableDefaultSelectAllMode: false,
+  hostOnlyValid: true,
   // 自定义主机列表列
   hostTableCustomColumnList: [
     // {
