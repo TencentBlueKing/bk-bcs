@@ -5,7 +5,6 @@
       :directory-show="basicInfo!.serviceType.value === 'file'"
       :associate-config-show="basicInfo!.serviceType.value === 'file'"
       :dual-system-support="true"
-      @is-windows-path="isWindowsPath = $event"
       @update-option-data="getOptionData" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
@@ -18,14 +17,14 @@
           </p>
           <template v-else>
             <bk-button theme="primary" class="copy-btn" @click="copyExample">
-              {{ $t(isWindowsPath ? '复制配置' : '复制命令') }}
+              {{ $t(optionData.systemType === 'Windows' ? '复制配置' : '复制命令') }}
             </bk-button>
             <code-preview
               :class="[
                 'preview-component',
                 { 'preview-component--kvcmd': basicInfo!.serviceType.value === 'kv' },
                 { 'rules-height': optionData.rules.length },
-                { 'windows-path-height': isWindowsPath },
+                { 'windows-path-height': optionData.systemType === 'Windows' },
               ]"
               :code-val="replaceVal"
               :variables="variables"
@@ -130,13 +129,13 @@
     },
     {
       title: t(
-        '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 \\etc\\nginx.conf 文件下载到当前目录时，文件保存在 .\\etc\\nginx.conf',
+        '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到当前目录时，文件保存在 .\\etc\\nginx.conf',
       ),
       value: `.\\bscp.exe get file /etc/nginx.conf -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml -d .\\`,
     },
     {
       title: t(
-        '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 \\etc\\nginx.conf 文件下载到当前目录时，文件保存在 .\\nginx.conf',
+        '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到当前目录时，文件保存在 .\\nginx.conf',
       ),
       value: `.\\bscp.exe get file /etc/nginx.conf -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml -d .\\ --ignore-dir`,
     },
@@ -180,13 +179,50 @@
     },
   ];
 
+  const windowsKvText = [
+    {
+      title: t('下载二进制命令行'),
+      value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
+      tips: {
+        title: t('如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本'),
+        value: t('下载地址：'),
+        url: 'https://github.com/TencentBlueKing/bscp-go/releases/',
+      },
+    },
+    {
+      title: t('为命令行工具创建所需的配置文件bscp.yaml'),
+      value: '',
+    },
+    {
+      title: t('获取业务下的服务列表'),
+      value: '.\\bscp.exe get app -c .\\bscp.yaml',
+    },
+    {
+      title: t('获取指定服务下所有配置项列表'),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml`,
+    },
+    {
+      title: t('获取指定服务下指定配置项列表，多个配置项'),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} key1 key2 -c .\\bscp.yaml`,
+    },
+    {
+      title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} key1  -c .\\bscp.yaml -o value`,
+    },
+    {
+      title: t(
+        '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
+      ),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} key1 key2  -c .\\bscp.yaml -o json`,
+    },
+  ];
+
   const fileOptionRef = ref();
   const bkBizId = ref(String(route.params.spaceId));
   const codeVal = ref(''); // 存储yaml字符原始值
   const replaceVal = ref('');
   const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
   const variables = ref<IVariableEditParams[]>();
-  const isWindowsPath = ref(false);
   // fileOption组件传递过来的数据汇总
   const optionData = ref({
     clientKey: '',
@@ -194,14 +230,18 @@
     labelArr: [],
     tempDir: '',
     rules: [],
+    systemType: 'Unix',
   });
 
   const cmdContent = computed(() => {
     if (basicInfo!.serviceType.value === 'file') {
-      if (isWindowsPath.value) {
+      if (optionData.value.systemType === 'Windows') {
         return windowsFileText; // 文件型-windows路径提示文案
       }
       return fileText; // 文件型-unix路径提示文案
+    }
+    if (optionData.value.systemType === 'Windows') {
+      return windowsKvText; // 键值型-windows路径提示文案
     }
     return kvText;
   });
@@ -240,11 +280,9 @@ config_matches: {{ .Bk_Bscp_Variable_Rules_Value }}`;
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart);
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', 'delete');
-      // updateString = updateString.replaceAll('\r\n{{ .Bk_Bscp_Variable_Rules }}', '');
     }
     // 临时目录为windows路径时去除首尾两行
-    if (isWindowsPath.value) {
-      // updateString = updateString.replaceAll('cat << EOF > ./bscp.yaml\r\n', '').replaceAll('\r\nEOF', '');
+    if (optionData.value.systemType === 'Windows') {
       updateString = updateString.replaceAll('cat << EOF > ./bscp.yaml', 'delete').replaceAll('EOF', 'delete');
     }
     // 去除 动态插入的值为空的情况下产生的空白行
@@ -382,9 +420,6 @@ config_matches: {{ .Bk_Bscp_Variable_Rules_Value }}`;
     height: 336px;
     padding: 16px 10px;
     background-color: #f5f7fa;
-    &--kvcmd {
-      height: 279px;
-    }
     &.rules-height {
       height: 394px;
     }
@@ -393,6 +428,13 @@ config_matches: {{ .Bk_Bscp_Variable_Rules_Value }}`;
     }
     &.rules-height.windows-path-height {
       height: 356px;
+    }
+    &--kvcmd {
+      height: 279px;
+      // 键值型cmd没有规则筛选
+      &.windows-path-height {
+        height: 242px;
+      }
     }
   }
 </style>

@@ -169,4 +169,5 @@ export interface IExampleFormData {
   clusterSwitch?: boolean;
   clusterInfo?: string;
   rules?: string[];
+  systemType: 'Unix' | 'Windows';
 }
