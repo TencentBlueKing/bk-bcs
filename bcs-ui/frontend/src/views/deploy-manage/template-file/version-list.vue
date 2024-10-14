@@ -29,7 +29,11 @@
           {{ row.description || '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.updator')" prop="creator"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updator')" prop="creator">
+        <template #default="{ row }">
+          {{ row.creator || '--' }}
+        </template>
+      </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="createAt">
         <template #default="{ row }">
           {{ formatTime(row.createAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}

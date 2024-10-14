@@ -46,6 +46,9 @@ export interface ITemplateVersionItem {
   'version': string
   'draft': boolean
   'editFormat': 'form' | 'yaml'
+  'latest': boolean
+  'latestDeployVersion': string
+  'latestDeployer': string
 }
 
 export interface IVarItem {
