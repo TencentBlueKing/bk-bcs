@@ -75,7 +75,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from 'vue';
+import { computed, onActivated, onBeforeMount, ref, watch } from 'vue';
 
 import FileMetadataDialog from './file-metadata.vue';
 import FormMode from './form-mode.vue';
@@ -230,6 +230,10 @@ watch(() => props.versionID, () => {
 onBeforeMount(() => {
   getTemplateSpace();
   getTemplateMetadata();
+  listTemplateVersion();
+});
+
+onActivated(() => {
   listTemplateVersion();
 });
 </script>
