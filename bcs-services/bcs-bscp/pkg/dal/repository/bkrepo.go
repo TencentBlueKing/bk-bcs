@@ -87,6 +87,11 @@ func (r *RepoCreated) Exist(name string) bool {
 	return ok
 }
 
+// SyncManager implements HAEnhancer interface
+func (c *bkrepoClient) SyncManager() *SyncManager {
+	return nil
+}
+
 func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	repoName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
@@ -113,7 +118,7 @@ func (c *bkrepoClient) ensureRepo(kt *kit.Kit) error {
 	return nil
 }
 
-// Upload file to bkrepo
+// Upload uploads file to bkrepo
 func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
 	if err := c.ensureRepo(kt); err != nil {
 		return nil, errors.Wrap(err, "ensure repo failed")
@@ -164,7 +169,7 @@ func (c *bkrepoClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*Object
 	return metadata, nil
 }
 
-// Download download file from bkrepo
+// Download downloads file from bkrepo
 func (c *bkrepoClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
 	node, err := repo.GenNodePath(&repo.NodeOption{Project: c.project, BizID: kt.BizID, Sign: sign})
 	if err != nil {
@@ -377,15 +382,15 @@ func (c *bkrepoClient) URIDecorator(bizID uint32) DecoratorInter {
 }
 
 // DownloadLink bkrepo file download link
-func (c *bkrepoClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error) {
+func (c *bkrepoClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) ([]string, error) {
 	repoName, err := repo.GenRepoName(kt.BizID)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	objPath, err := repo.GenNodeFullPath(sign)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// get file download url.
@@ -399,10 +404,10 @@ func (c *bkrepoClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32)
 	})
 
 	if err != nil {
-		return "", errors.Wrap(err, "generate temp download url failed")
+		return nil, errors.Wrap(err, "generate temp download url failed")
 	}
 
-	return url, nil
+	return []string{url}, nil
 }
 
 // AsyncDownload bkrepo
@@ -416,7 +421,7 @@ func (c *bkrepoClient) AsyncDownloadStatus(kt *kit.Kit, sign string, taskID stri
 }
 
 // newBKRepoClient new bkrepo client
-func newBKRepoClient(settings cc.Repository) (BaseProvider, error) {
+func newBKRepoClient(settings cc.BaseRepo) (BaseProvider, error) {
 	cli, err := repo.NewClient(settings, metrics.Register())
 	if err != nil {
 		return nil, err
@@ -445,20 +450,21 @@ func newBKRepoClient(settings cc.Repository) (BaseProvider, error) {
 }
 
 // newBKRepoProvider new bkrepo provider
-func newBKRepoProvider(settings cc.Repository) (Provider, error) {
-	p, err := newBKRepoClient(settings)
+func newBKRepoProvider(repo cc.BaseRepo, redis cc.RedisCluster) (Provider, error) {
+	p, err := newBKRepoClient(repo)
 	if err != nil {
 		return nil, err
 	}
 
 	var c VariableCacher
-	c, err = newVariableCacher(settings.RedisCluster, p)
+	c, err = newVariableCacher(redis, p)
 	if err != nil {
 		return nil, err
 	}
 
 	return &repoProvider{
 		BaseProvider:   p,
+		HAEnhancer:     p.(*bkrepoClient),
 		VariableCacher: c,
 	}, nil
 }

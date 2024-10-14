@@ -14,7 +14,6 @@
 package repository
 
 import (
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -79,7 +78,7 @@ type DecoratorInter interface {
 
 // ObjectDownloader 文件下载
 type ObjectDownloader interface {
-	DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error)
+	DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) ([]string, error)
 	AsyncDownload(kt *kit.Kit, sign string) (string, error)
 	AsyncDownloadStatus(kt *kit.Kit, sign string, taskID string) (bool, error)
 	URIDecorator(bizID uint32) DecoratorInter
@@ -96,9 +95,15 @@ type BaseProvider interface {
 	Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error)
 }
 
+// HAEnhancer high availability enhancer interface
+type HAEnhancer interface {
+	SyncManager() *SyncManager
+}
+
 // Provider repo provider interface
 type Provider interface {
 	BaseProvider
+	HAEnhancer
 	VariableCacher
 }
 
@@ -208,16 +213,15 @@ func newUriDecoratorInter(bizID uint32) DecoratorInter {
 // repoProvider implements interface Provider
 type repoProvider struct {
 	BaseProvider
+	HAEnhancer
 	VariableCacher
 }
 
 // NewProvider init provider factory by storage type
 func NewProvider(conf cc.Repository) (Provider, error) {
-	switch strings.ToUpper(string(conf.StorageType)) {
-	case string(cc.S3):
-		return newCosProvider(conf)
-	case string(cc.BkRepo):
-		return newBKRepoProvider(conf)
+	if conf.EnableHA {
+		return newHAProvider(conf)
 	}
-	return nil, fmt.Errorf("store with type %s is not supported", conf.StorageType)
+
+	return newMasterProvider(conf)
 }
