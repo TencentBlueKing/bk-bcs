@@ -14,6 +14,7 @@ package aws
 
 import (
 	"fmt"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,7 +28,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
-	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var taskMgr sync.Once
@@ -160,68 +160,75 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		createClusterTask.BuildCreateCloudNodeGroupStep(task)
 		// step4: check cluster nodegroups status
 		createClusterTask.BuildCheckCloudNodeGroupStatusStep(task)
-		if desireSize != 0 {
-			// step5: check cluster nodegroups status
-			createClusterTask.BuildCheckClusterNodesStatusStep(task)
-			// step6: update nodes to DB
-			createClusterTask.BuildUpdateNodesToDBStep(task)
-			// step7: install cluster watch component
-			common.BuildWatchComponentTaskStep(task, cls, "")
-			// step8: 若需要则设置节点注解
-			common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
-				if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
-					return opt.NodeTemplate.GetAnnotations()
-				}
-				return nil
-			}())
-			// step9 install gse agent
-			common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
-				ClusterId:          cls.ClusterID,
-				BusinessId:         cls.BusinessID,
-				CloudArea:          cls.GetClusterBasicSettings().GetArea(),
-				User:               nodeGroups[0].GetLaunchTemplate().GetInitLoginUsername(),
-				Passwd:             nodeGroups[0].GetLaunchTemplate().GetInitLoginPassword(),
-				KeyInfo:            nodeGroups[0].GetLaunchTemplate().GetKeyPair(),
-				AllowReviseCloudId: icommon.True,
-			}, cloudprovider.WithStepAllowSkip(true))
+	}
+
+	if desireSize != 0 {
+		// step5: check cluster nodegroups status
+		createClusterTask.BuildCheckClusterNodesStatusStep(task)
+		// step6: update nodes to DB
+		createClusterTask.BuildUpdateNodesToDBStep(task)
+		// step7: install gse agent
+		common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+			ClusterId:          cls.ClusterID,
+			BusinessId:         cls.BusinessID,
+			CloudArea:          cls.GetClusterBasicSettings().GetArea(),
+			User:               nodeGroups[0].GetLaunchTemplate().GetInitLoginUsername(),
+			Passwd:             nodeGroups[0].GetLaunchTemplate().GetInitLoginPassword(),
+			KeyInfo:            nodeGroups[0].GetLaunchTemplate().GetKeyPair(),
+			AllowReviseCloudId: icommon.True,
+		}, cloudprovider.WithStepAllowSkip(true))
+
+		// step8: transfer host module
+		moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+		if moduleID != "" {
+			common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
+				GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
 		}
-	}
 
-	// step10: transfer host module
-	moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
-	if moduleID != "" {
-		common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
-			GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
-	}
-
-	// step11: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
-	if opt.NodeTemplate != nil && len(opt.NodeTemplate.UserScript) > 0 {
-		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
-			ClusterID: cls.ClusterID,
-			Content:   opt.NodeTemplate.UserScript,
-			// dynamic node ips
-			NodeIps:   "",
-			Operator:  opt.Operator,
-			StepName:  common.PostInitStepJob,
-			Translate: common.PostInitJob,
-		})
-	}
-	// business post define sops task or script
-	if opt.NodeTemplate != nil && opt.NodeTemplate.ScaleOutExtraAddons != nil {
-		err := template.BuildSopsFactory{
-			StepName: template.UserAfterInit,
-			Cluster:  cls,
-			Extra: template.ExtraInfo{
+		// step9: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+		if len(nodeGroups) > 0 && nodeGroups[0].GetNodeTemplate() != nil &&
+			len(nodeGroups[0].GetNodeTemplate().UserScript) > 0 {
+			common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+				ClusterID: cls.ClusterID,
+				Content:   nodeGroups[0].GetNodeTemplate().UserScript,
 				// dynamic node ips
-				NodeIPList:      "",
-				NodeOperator:    opt.Operator,
-				ShowSopsUrl:     true,
-				TranslateMethod: template.UserPostInit,
-			}}.BuildSopsStep(task, opt.NodeTemplate.ScaleOutExtraAddons, false)
-		if err != nil {
-			return nil, fmt.Errorf("BuildCreateClusterTask business BuildBkSopsStepAction failed: %v", err)
+				NodeIps:   "",
+				Operator:  opt.Operator,
+				StepName:  common.PostInitStepJob,
+				Translate: common.PostInitJob,
+			})
 		}
+		// business post define sops task or script
+		if len(nodeGroups) > 0 && nodeGroups[0].GetNodeTemplate() != nil && nodeGroups[0].GetNodeTemplate().ScaleOutExtraAddons != nil {
+			err := template.BuildSopsFactory{
+				StepName: template.UserAfterInit,
+				Cluster:  cls,
+				Extra: template.ExtraInfo{
+					// dynamic node ips
+					NodeIPList:      "",
+					NodeOperator:    opt.Operator,
+					ShowSopsUrl:     true,
+					TranslateMethod: template.UserPostInit,
+				}}.BuildSopsStep(task, nodeGroups[0].GetNodeTemplate().ScaleOutExtraAddons, false)
+			if err != nil {
+				return nil, fmt.Errorf("BuildCreateClusterTask business BuildBkSopsStepAction failed: %v", err)
+			}
+		}
+
+		// step10: 若需要则设置节点注解
+		common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
+			if len(nodeGroups) > 0 && len(nodeGroups[0].GetNodeTemplate().GetAnnotations()) > 0 {
+				return nodeGroups[0].GetNodeTemplate().GetAnnotations()
+			}
+			return nil
+		}())
+
+		// step11: remove inner nodes taints
+		common.BuildRemoveInnerTaintTaskStep(task, cls.ClusterID, cls.Provider)
 	}
+
+	// step12: install cluster watch component
+	common.BuildWatchComponentTaskStep(task, cls, "")
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -698,7 +705,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	common.BuildNodeAnnotationsTaskStep(task, opt.Cluster.ClusterID, nil,
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 	// step8: remove inner nodes taints
-	common.BuildRemoveInnerTaintTaskStep(task, group)
+	common.BuildRemoveInnerTaintTaskStep(task, group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

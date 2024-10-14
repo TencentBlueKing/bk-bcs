@@ -161,8 +161,9 @@ message GetDownloadURLReq {
 }
 
 message GetDownloadURLResp {
-  string url = 1;
-  int64 wait_time_mil = 2;  // the time(milliseconds) that the client should wait before downloading file
+  string url = 1;            // compatible with old versions
+  int64 wait_time_mil = 2;   // the time(milliseconds) that the client should wait before downloading file
+  repeated string urls = 3;  // used for high availability
 }
 
 // App 对外简单版本

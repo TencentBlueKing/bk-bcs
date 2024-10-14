@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="bk-button-group">
+    <div class="bk-button-group" v-if="showHead">
       <bk-button
         :class="[{ 'is-selected': loginType === 'password' }]"
         @click="loginType = 'password'">
@@ -46,7 +46,7 @@
             <bcs-option
               v-for="item in keyPairs"
               :key="item.KeyID"
-              :id="item.KeyID"
+              :id="item[valueKey]"
               :name="`${item.KeyName}(${item.KeyID})`">
             </bcs-option>
             <template #extension>
@@ -105,6 +105,14 @@ const props = defineProps({
   initData: {
     type: Boolean,
     default: false,
+  },
+  showHead: {
+    type: Boolean,
+    default: true,
+  },
+  valueKey: {
+    type: String,
+    default: 'KeyID',
   },
 });
 

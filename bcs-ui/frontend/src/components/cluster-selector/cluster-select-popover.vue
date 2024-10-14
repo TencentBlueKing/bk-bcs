@@ -31,6 +31,8 @@
           <li
             v-for="cluster in item.list"
             :key="cluster.clusterID"
+            :id="cluster.clusterID"
+            ref="clusterIdRef"
             :class="[
               'flex items-center justify-between px-[40px]',
               normalStatusList.includes(cluster.status || '')
@@ -73,7 +75,7 @@
 </template>
 <script lang="ts" setup>
 // popover场景的集群选择器
-import { PropType, ref } from 'vue';
+import { PropType, ref, watch } from 'vue';
 
 import CollapseTitle from './collapse-title.vue';
 import useClusterSelector, { ClusterType } from './use-cluster-selector';
@@ -100,6 +102,11 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  // 是否展示选中的样式
+  isShow: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emits = defineEmits(['change', 'click']);
@@ -107,6 +114,7 @@ const emits = defineEmits(['change', 'click']);
 const normalStatusList = ['RUNNING'];
 
 const hoverClusterID = ref<string>();
+const clusterIdRef = ref<any>([]);
 const {
   keyword,
   localValue,
@@ -124,4 +132,14 @@ const handleClick = (cluster) => {
 
   emits('click', cluster.clusterID);
 };
+watch(() => props.isShow, (val) => {
+  if(val) {
+    // 如果已选择集群，滚动到活动项目
+    const selectedClusterId = localValue.value;
+    if (selectedClusterId) {
+      clusterIdRef.value?.find(item => item.id === selectedClusterId).scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+  
+});
 </script>

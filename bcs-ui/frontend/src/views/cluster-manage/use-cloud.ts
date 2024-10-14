@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import {
   cloudAccounts as cloudAccountsAPI,
   cloudRegionByAccount,
+  cloudRoles,
   cloudSecurityGroups,
   cloudVPC,
   clusterConnect as clusterConnectAPI,
@@ -10,8 +11,7 @@ import {
   deleteCloudAccounts as deleteCloudAccountsAPI,
   nodemanCloud,
   updateCloudAccounts as updateCloudAccountsAPI,
-  validateCloudAccounts as validateCloudAccountsAPI,
-} from '@/api/modules/cluster-manager';
+  validateCloudAccounts as validateCloudAccountsAPI } from '@/api/modules/cluster-manager';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
 import { ICloudRegion, INodeManCloud, ISecurityGroup, IVpcItem } from '@/views/cluster-manage/types/types';
@@ -56,6 +56,13 @@ export interface IAccount {
 export interface ICloudAccount {
   account: IAccount
   clusters: string
+}
+
+export interface ICloudRole {
+  roleName: string;
+  roleID: string;
+  arn: string;
+  description: string;
 }
 
 export default function () {
@@ -114,6 +121,18 @@ export default function () {
       }
     };
   };
+  // 角色列表
+  async function getCloudRolesList($cloudId: CloudID|undefined, accountID, roleType) {
+    if (!$cloudId) return { data: [] };
+    const res = await cloudRoles({
+      $cloudId,
+      accountID,
+      roleType,
+    }, { needRes: true }).catch(() => []);
+    return res as {
+      data: ICloudRole[]
+    };
+  }
   // 创建云账号
   const createCloudAccounts = async <T = IGoogleAccount>(params: ICreateAccountParams<T>) => {
     const result = await createCloudAccountsAPI({
@@ -250,5 +269,6 @@ export default function () {
     securityGroups,
     handleGetSecurityGroups,
     providerNameMap,
+    getCloudRolesList,
   };
 }

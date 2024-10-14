@@ -4,6 +4,7 @@
 <script lang="ts">
 import { Component, computed, defineComponent } from 'vue';
 
+import awsNet from './aws.vue';
 import azureNet from './azure.vue';
 import bluekingNet from './blueking.vue';
 import gcpNet from './gcp.vue';
@@ -33,7 +34,7 @@ export default defineComponent({
       bluekingCloud: bluekingNet,
       azureCloud: azureNet,
       huaweiCloud: bluekingNet,
-      awsCloud: bluekingNet,
+      awsCloud: awsNet,
     };
     return {
       provider,

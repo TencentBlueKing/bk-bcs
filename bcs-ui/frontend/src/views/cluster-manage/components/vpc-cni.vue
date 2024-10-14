@@ -4,20 +4,22 @@
       class="flex flex-1 items-center mb-[10px]"
       v-for="subnet, index in subnetSourceNew"
       :key="index">
-      <span
-        class="prefix"
-        v-bk-tooltips="$t('tke.tips.subnetZone')">
-        <span class="bcs-border-tips">{{ $t('tke.label.zone') }}</span>
-      </span>
-      <Zone
-        class="flex-1 ml-[-1px] mr-[8px]"
-        :region="region"
-        :cloud-account-i-d="cloudAccountID"
-        :cloud-i-d="cloudID"
-        :disabled-zone-list="getDisableZoneList(subnet.zone)"
-        :disabled-tips="$t('tke.tips.hasSelected')"
-        :init-data="index === 0"
-        v-model="subnet.zone" />
+      <template v-if="showZone">
+        <span
+          class="prefix"
+          v-bk-tooltips="$t('tke.tips.subnetZone')">
+          <span class="bcs-border-tips">{{ $t('tke.label.zone') }}</span>
+        </span>
+        <Zone
+          class="flex-1 ml-[-1px] mr-[8px]"
+          :region="region"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          :disabled-zone-list="getDisableZoneList(subnet.zone)"
+          :disabled-tips="$t('tke.tips.hasSelected')"
+          :init-data="index === 0"
+          v-model="subnet.zone" />
+      </template>
       <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
       <bcs-select
         class="flex-1 ml-[-1px]"
@@ -66,6 +68,10 @@ const props = defineProps({
   region: {
     type: String,
     default: '',
+  },
+  showZone: {
+    type: Boolean,
+    default: true,
   },
 });
 

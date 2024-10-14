@@ -104,35 +104,45 @@ func CreateEKSClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
+// createEKSCluster 创建一个Amazon EKS集群，并更新集群信息。
 func createEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (
 	string, error) {
+	// 从上下文中获取任务ID
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	cluster := info.Cluster
 
+	// 创建一个新的AWS客户端集
 	client, err := api.NewAWSClientSet(info.CmOption)
 	if err != nil {
 		return "", fmt.Errorf("create eksService failed")
 	}
 
+	// 获取IAM角色信息
 	role, err := client.GetRole(&iam.GetRoleInput{RoleName: aws.String(cluster.GetClusterIamRole())})
 	if err != nil {
+		// 如果获取角色失败，记录错误日志并返回错误
 		blog.Errorf("GetRole[%s] failed, %v", taskID, err)
 		return "", err
 	}
 
+	// generateCreateClusterInput 生成创建集群的输入参数
 	input, err := generateCreateClusterInput(info, role.Arn)
 	if err != nil {
+		// 如果生成输入参数失败，返回错误
 		return "", fmt.Errorf("generateCreateClusterInput failed, %v", err)
 	}
 
+	// CreateEksCluster 调用API创建EKS集群
 	eksCluster, err := client.CreateEksCluster(input)
 	if err != nil {
+		// 如果创建集群失败，返回错误
 		return "", fmt.Errorf("call CreateEksCluster failed, %v", err)
 	}
 
 	info.Cluster.SystemID = *eksCluster.Name
 	info.Cluster.VpcID = *eksCluster.ResourcesVpcConfig.VpcId
 
+	// 更新集群信息
 	err = cloudprovider.UpdateCluster(info.Cluster)
 	if err != nil {
 		blog.Errorf("createEKSCluster[%s] UpdateCluster[%s] failed %s",
@@ -146,12 +156,13 @@ func createEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return *eksCluster.Name, nil
 }
 
+// generateCreateClusterInput 根据提供的云提供商基本信息和角色ARN生成创建EKS集群的输入参数
 func generateCreateClusterInput(info *cloudprovider.CloudDependBasicInfo, roleArn *string) (
 	*eks.CreateClusterInput, error) {
 
 	var (
-		cluster   = info.Cluster
-		subnetIds = make([]string, 0)
+		cluster   = info.Cluster      // 获取集群信息
+		subnetIds = make([]string, 0) // 初始化子网ID切片
 		err       error
 	)
 
@@ -164,25 +175,28 @@ func generateCreateClusterInput(info *cloudprovider.CloudDependBasicInfo, roleAr
 		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()) > 0 {
 			subnetIds = append(subnetIds, info.Cluster.GetNetworkSettings().GetSubnetSource().GetExisted().GetIds()...)
 		}
-	} else {
-		subnetIds = strings.Split(cluster.ClusterBasicSettings.SubnetID, ",")
 	}
+	// 如果subnetIds为空，则返回错误
+	if len(subnetIds) == 0 {
+		return nil, errors.New("generateCreateClusterInput subnetIds is empty")
+	}
+	info.Cluster.NetworkSettings.EniSubnetIDs = subnetIds
 
 	sgs := strings.Split(cluster.ClusterAdvanceSettings.ClusterConnectSetting.SecurityGroup, ",")
 	input := &eks.CreateClusterInput{
-		// 默认启用集群访问权限,认证模式为
 		AccessConfig: &eks.CreateAccessConfigRequest{
-			AuthenticationMode:                      aws.String(api.ClusterAuthenticationModeAM),
-			BootstrapClusterCreatorAdminPermissions: aws.Bool(true),
+			AuthenticationMode:                      aws.String(api.ClusterAuthenticationModeAM), // 设置认证模式
+			BootstrapClusterCreatorAdminPermissions: aws.Bool(true),                              // 默认启用集群创建者管理员权限
 		},
-		Name:    aws.String(cluster.ClusterName),
-		RoleArn: roleArn,
+		Name:    aws.String(cluster.ClusterName), // 设置集群名称
+		RoleArn: roleArn,                         // 设置角色ARN
 		ResourcesVpcConfig: &eks.VpcConfigRequest{
-			SubnetIds:             aws.StringSlice(subnetIds),
-			SecurityGroupIds:      aws.StringSlice(sgs),
-			EndpointPrivateAccess: aws.Bool(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
-			EndpointPublicAccess:  aws.Bool(cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
+			SubnetIds:             aws.StringSlice(subnetIds),                                                 // 设置子网ID
+			SecurityGroupIds:      aws.StringSlice(sgs),                                                       // 设置安全组ID
+			EndpointPrivateAccess: aws.Bool(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet), // 设置私有访问端点
+			EndpointPublicAccess:  aws.Bool(cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),  // 设置公共访问端点
 			PublicAccessCidrs: func() []*string {
+				// 如果集群的网络设置中的公共访问CIDR存在，则返回对应的切片，否则返回nil
 				if cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet == nil ||
 					cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet.PublicAccessCidrs == nil {
 					return nil
@@ -191,17 +205,19 @@ func generateCreateClusterInput(info *cloudprovider.CloudDependBasicInfo, roleAr
 			}(),
 		},
 		UpgradePolicy: func(setting *proto.ClusterBasicSetting) *eks.UpgradePolicyRequest {
+			// 如果升级策略未设置，则默认使用EXTENDED策略
 			if setting.UpgradePolicy == nil {
-				// 默认使用EXTENDED升级策略, 与aws保持一致
 				return &eks.UpgradePolicyRequest{SupportType: aws.String(api.ClusterUpdatePolicyExtended)}
 			}
+			// 如果升级策略不是EXTENDED或STANDARD，则使用EXTENDED策略
 			if setting.UpgradePolicy.SupportType != api.ClusterUpdatePolicyExtended &&
 				setting.UpgradePolicy.SupportType != api.ClusterUpdatePolicyStandard {
 				return &eks.UpgradePolicyRequest{SupportType: aws.String(api.ClusterUpdatePolicyExtended)}
 			}
+			// 否则使用设置的升级策略
 			return &eks.UpgradePolicyRequest{SupportType: aws.String(setting.UpgradePolicy.SupportType)}
 		}(cluster.ClusterBasicSettings),
-		Version: aws.String(cluster.ClusterBasicSettings.Version),
+		Version: aws.String(cluster.ClusterBasicSettings.Version), // 设置Kubernetes版本
 	}
 	input.KubernetesNetworkConfig = generateKubernetesNetworkConfig(cluster)
 	if len(cluster.ClusterBasicSettings.ClusterTags) > 0 {
@@ -211,6 +227,7 @@ func generateCreateClusterInput(info *cloudprovider.CloudDependBasicInfo, roleAr
 	return input, nil
 }
 
+// generateKubernetesNetworkConfig network config
 func generateKubernetesNetworkConfig(cluster *proto.Cluster) *eks.KubernetesNetworkConfigRequest {
 	req := &eks.KubernetesNetworkConfigRequest{}
 	if cluster != nil && cluster.NetworkSettings != nil {
@@ -345,10 +362,12 @@ func checkClusterStatus(ctx context.Context, info *cloudprovider.CloudDependBasi
 	return nil
 }
 
+// createAddon 函数用于在AWS EKS集群上创建默认的addons。
 func createAddon(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
+	// 从上下文中获取任务ID，用于日志记录
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	// get awsCloud client
+	// 初始化AWS EKS客户端
 	cli, err := api.NewEksClient(info.CmOption)
 	if err != nil {
 		blog.Errorf("checkClusterStatus[%s] get aws client failed: %s", taskID, err.Error())
@@ -356,11 +375,14 @@ func createAddon(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) 
 		return retErr
 	}
 
+	// 遍历默认的addons列表
 	for _, addon := range defaultAddons {
+		// 调用CreateAddon方法创建addon
 		_, err = cli.CreateAddon(&eks.CreateAddonInput{
-			ClusterName: aws.String(info.Cluster.ClusterName),
-			AddonName:   aws.String(addon),
+			ClusterName: aws.String(info.Cluster.ClusterName), // 设置集群名称
+			AddonName:   aws.String(addon),                    // 设置要创建的addon名称
 		})
+		// 如果创建addon失败，则直接返回错误
 		if err != nil {
 			return err
 		}
@@ -551,10 +573,10 @@ func checkClusterNodesStatus(ctx context.Context, info *cloudprovider.CloudDepen
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure := make([]string, 0), make([]string, 0)
 
-		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
-		if err != nil {
+		nodes, errLocal := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
+		if errLocal != nil {
 			blog.Errorf("checkClusterNodesStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
-			return nil, nil, err
+			return nil, nil, errLocal
 		}
 
 		for _, ins := range nodes {
@@ -620,9 +642,6 @@ func UpdateEKSNodesToDBTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// sync clusterData to pass-cc
-	providerutils.SyncClusterInfoToPassCC(taskID, dependInfo.Cluster)
-
 	// sync cluster perms
 	providerutils.AuthClusterResourceCreatorPerm(ctx, dependInfo.Cluster.ClusterID,
 		dependInfo.Cluster.ClusterName, dependInfo.Cluster.Creator)
@@ -643,7 +662,7 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 	addSuccessNodes := state.Task.CommonParams[cloudprovider.SuccessClusterNodeIDsKey.String()]
 	addFailureNodes := state.Task.CommonParams[cloudprovider.FailedClusterNodeIDsKey.String()]
 
-	nodeIPs, instanceIDs := make([]string, 0), make([]string, 0)
+	nodeIPs, instanceIDs, nodeNames := make([]string, 0), make([]string, 0), make([]string, 0)
 	nmClient := api.NodeManager{}
 	nodes := make([]*proto.Node, 0)
 
@@ -685,6 +704,7 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 			if utils.StringInSlice(n.NodeID, successInstanceID) {
 				n.Status = common.StatusRunning
 				nodeIPs = append(nodeIPs, n.InnerIP)
+				nodeNames = append(nodeNames, n.GetNodeName())
 			} else {
 				n.Status = common.StatusAddNodesFailed
 			}
@@ -696,6 +716,9 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		}
 	}
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
+	state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(nodeNames, ",")
+	// dynamic inject paras
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(nodeIPs, ",")
 
 	return nil
 }

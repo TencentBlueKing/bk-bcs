@@ -7,7 +7,7 @@
     <bcs-option
       v-for="zone in zoneList"
       :key="zone.zoneID"
-      :id="zone.zone"
+      :id="zone[valueId]"
       :name="zone.zoneName"
       :disabled="disabledList.includes(zone.zone)"
       v-bk-tooltips="{
@@ -66,6 +66,10 @@ const props = defineProps({
   vpcId: {
     type: String,
     default: '',
+  },
+  valueId: {
+    type: String,
+    default: 'zone',
   },
 });
 
