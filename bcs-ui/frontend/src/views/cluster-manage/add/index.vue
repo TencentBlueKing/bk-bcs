@@ -123,8 +123,8 @@ export default defineComponent({
             icon: amazonLogo,
             title: $i18n.t('publicCloud.amazon.title'),
             desc: $i18n.t('publicCloud.amazon.desc'),
-            type: 'amazonCloud',
-            disabled: true,
+            type: 'aws',
+            disabled: false,
           },
           {
             icon: googleLogo,
@@ -272,6 +272,14 @@ export default defineComponent({
         case 'tke':
           // 创建腾讯云公有云集群
           $router.push({ name: 'createTKECluster' });
+          break;
+        case 'aws':
+          // 创建aws云集群
+          $router.push({ name: 'CreateAWSCloudCluster' });
+          break;
+        case 'azureCloud':
+          // 创建azure云集群
+          $router.push({ name: 'CreateAzureCloudCluster' });
           break;
         case 'k8s':
           $router.push({ name: 'createK8SCluster' });

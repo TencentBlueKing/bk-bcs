@@ -5,11 +5,7 @@
       v-for="subnet, index in subnetSourceNew"
       :key="index">
       <template v-if="showZone">
-        <span
-          class="prefix"
-          v-bk-tooltips="$t('tke.tips.subnetZone')">
-          <span class="bcs-border-tips">{{ $t('tke.label.zone') }}</span>
-        </span>
+        <span class="prefix">{{ $t('tke.label.zone') }}</span>
         <Zone
           class="flex-1 ml-[-1px] mr-[8px]"
           :region="region"
@@ -18,6 +14,7 @@
           :disabled-zone-list="getDisableZoneList(subnet.zone)"
           :disabled-tips="$t('tke.tips.hasSelected')"
           :init-data="index === 0"
+          :value-id="valueId"
           v-model="subnet.zone" />
       </template>
       <span class="prefix">{{ $t('tke.label.ipNum') }}</span>
@@ -25,7 +22,7 @@
         class="flex-1 ml-[-1px]"
         searchable
         :clearable="false"
-        v-model="subnet.ipCnt">
+        v-model="subnet.mask">
         <bcs-option v-for="item in nodePodNumList" :id="item" :key="item" :name="item"></bcs-option>
       </bcs-select>
       <span class="flex items-center text-[#979BA5] ml-[8px] text-[14px]">
@@ -46,15 +43,16 @@
 <script setup lang="ts">
 import { PropType, ref, watch } from 'vue';
 
-import { ISubnetItem } from './types';
-
 import Zone from '@/views/cluster-manage/add/components/zone.vue';
 
-const nodePodNumList = ref([128, 256, 512, 1024, 2048, 4096]);
+const nodePodNumList = ref([12, 24, 32]);
 
 const props = defineProps({
   subnets: {
-    type: Array as PropType<Array<ISubnetItem>>,
+    type: Array as PropType<Array<{
+      zone: string
+      mask: number
+    }>>,
     default: () => [],
   },
   cloudAccountID: {
@@ -73,19 +71,23 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  valueId: {
+    type: String,
+    default: 'zone',
+  },
 });
 
 const emits = defineEmits(['change']);
 
 const subnetSourceNew = ref<Array<{
   zone: string
-  ipCnt: number
+  mask: number
 }>>([]);
 
 watch(() => props.subnets, () => {
   if (!props.subnets.length) {
     subnetSourceNew.value = [{
-      ipCnt: 256,
+      mask: 24,
       zone: '',
     }];
     return;
@@ -110,7 +112,7 @@ const getDisableZoneList = (excludeZone: string) => subnetSourceNew.value
 const addSubnetSource = () => {
   subnetSourceNew.value.push({
     zone: '',
-    ipCnt: 256,
+    mask: 24,
   });
 };
 const removeSubnetSource = (index) => {

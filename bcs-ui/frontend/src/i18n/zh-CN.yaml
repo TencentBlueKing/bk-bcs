@@ -460,6 +460,7 @@ generic:
     cidrConflict: 'CIDR与 {cidr} 冲突，请重新输入'
     fieldRequired: '{0} 必填'
     fieldRepeat: '{0} 重复'
+    clusterName: 集群名称只能包含数字、字母、中划线(-)、下划线(_)，且开头必须是数字或字母
   title:
     createPublicCluster: 新建公有云集群
     diffVersion: 线上版本
@@ -740,6 +741,7 @@ cluster:
           bcs-apiserver-proxy 以 daemonset 形式部署在 Kubernetes 集群中，利用 IPVS 通过虚拟
           IP（VIP）实现集群内组件到 APIserver 的反向代理，并自动发现控制面节点 IP 以维护 IPVS
           规则，确保部分控制面节点故障时集群正常运行。
+      role: 集群服务角色
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:
@@ -770,6 +772,39 @@ cluster:
       createCloudToken: 新增凭证
       fileImport: 文件导入
       textKubeConfig: 可用性测试
+    aws:
+      securityGroup:
+        text: 安全组
+        desc: 选择将应用到在您的控制平面子网中创建的 EKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 VPC 控制台  中的相应页面。
+        vpcLink: '选择将应用到在您的控制平面子网中创建的 EKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 {0}  中的相应页面。'
+        vpcMaster: VPC 控制台
+      cidrTips:
+        tips1: 不允许0.0.0.0/0
+        tips2: cidr不合法
+      nodePool: 添加节点池
+      editNodePool: 编辑节点池
+      cidrWhitelist: CIDR白名单
+      label:
+        defaultNodePool: 默认节点池
+        skipOrNot: 是否跳过
+      validate:
+        subnet: 节点池子网不能为空
+      runtime:
+        extended:
+          label: 已扩展
+          text: >-
+            此选项在发布之日起 26 个月内支持 Kubernetes 版本。扩展支持期需要额外支付每小时的费用，该费用在标准支持期结束后开始。
+            扩展支持结束后，您的集群将自动升级到下一个版本。
+        standard:
+          label: 标准
+          text: >-
+            此选项在发布之日起 14 个月内支持 Kubernetes 版本。没有额外费用。标准支持结束后，您的集群将自动升级到下一个版本。
+      tips:
+        subnetEmpty: 子网为空，请先选择子网
+        awsDesc: Amazon VPC CNI ：AWS 的网络插件，可以在集群内启用 Pod 联网。
+        awsLink: Amazon VPC CNI功能概述
+    azure:
+      chargingModel: 收费模式
   detail:
     title:
       overview: 集群总览
@@ -894,6 +929,8 @@ cluster:
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
         nodeQuotaMaxSize: '节点配额上限为{maximum}'
+        nodeCountsMaxSize: '节点数量不能大于节点配额'
+        minNodes: 节点数要大于0
       label:
         nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额
@@ -2751,6 +2788,7 @@ tke:
         用于蓝鲸容器管理平台连接集群APIServer，根据实际网络情况选择公网访问与内网访问，蓝鲸平台所在网络与被添加集群所在网络内网可连通优先选择内网访问，否则需要选择外网访问，选择不正确会导致添加集群失败
       internet: 公网访问
       intranet: 内网访问
+      internetAndIntranet: 公网和内网访问
     securityGroup:
       text: 安全组
       defaultSecurityGroupTips: 云梯默认安全组已对自研云网段配置好安全规则，无需用户再额外配置；业务如有特殊安全规则配置可创建自定义安全组，结合云梯默认安全组使用
@@ -2847,6 +2885,7 @@ tke:
     supportCidrList: '仅支持 {0} 之间网段'
     minIpNum2: '容器网段不能少于 {0} 个 IP, 请重新输入'
     formErr: 表单填写有误，请修改
+    leastTwoDifferentAZs: 指定的子网必须至少位于两个不同的可用区中
   configRec:
     l100:
       text: 节点数1~100
