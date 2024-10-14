@@ -5,7 +5,7 @@
         <bk-overflow-title v-if="rule" class="rule" type="tips">
           {{ rule.appName + rule.scopeContent }}
         </bk-overflow-title>
-        <span class="result">{{ t('匹配结果') }}</span>
+        <span class="result">{{ props.isExampleMode ? t('筛选结果') : t('匹配结果') }}</span>
       </div>
       <div class="totle">{{ t('共') }} {{ pagination.count }} {{ t('项') }}</div>
     </div>
@@ -19,7 +19,7 @@
         :pagination="pagination"
         :key="isFileType"
         @page-value-change="loadCredentialRulePreviewList">
-        <bk-table-column :label="isFileType ? t('配置文件名') : t('配置项')">
+        <bk-table-column :label="props.isExampleMode ? t('配置文件') : isFileType ? t('配置文件名') : t('配置项')">
           <template #default="{ row }">
             <div v-if="row.name">
               {{ isFileType ? fileAP(row) : row.name }}
@@ -54,6 +54,7 @@
   const props = defineProps<{
     rule: IPreviewRule | null;
     bkBizId: string;
+    isExampleMode: boolean;
   }>();
 
   const isFileType = ref(false);
@@ -78,9 +79,17 @@
     return `${path}/${name}`;
   });
 
-  const inputPlaceholder = computed(() => (isFileType.value ? t('请输入配置文件名') : t('请输入配置项名称')));
+  const inputPlaceholder = computed(() => {
+    if (props.isExampleMode) {
+      return t('请输入配置文件名称');
+    }
+    return isFileType.value ? t('请输入配置文件名') : t('请输入配置项名称');
+  });
 
   const tableEmptyText = computed(() => {
+    if (props.isExampleMode) {
+      return t('请先在左侧表单设置筛选规则并预览');
+    }
     return props.rule?.appName ? t('没有匹配到配置项') : t('请先在左侧表单设置关联规则并预览');
   });
 

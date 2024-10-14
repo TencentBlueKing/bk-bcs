@@ -6,8 +6,8 @@
       <div class="info">{{ file.info }}</div>
     </div>
   </div>
-  <div class="rule-title">{{ t('键值（KV）型配置，以选择服务myservice为例:') }}</div>
-  <div v-for="kv in rule.kv" class="rule-wrap" :key="kv.info">
+  <div v-if="!props.isExampleMode" class="rule-title">{{ t('键值（KV）型配置，以选择服务myservice为例:') }}</div>
+  <div v-if="!props.isExampleMode" v-for="kv in rule.kv" class="rule-wrap" :key="kv.info">
     <div class="example">{{ kv.example }}</div>
     <div class="info">{{ kv.info }}</div>
   </div>
@@ -18,19 +18,24 @@
   import { useI18n } from 'vue-i18n';
 
   const { t } = useI18n();
+
+  const props = defineProps<{
+    isExampleMode: boolean;
+  }>();
+
   const rule = computed(() => ({
     file: [
       {
         example: '**',
-        info: t('关联myservice服务下所有的配置(包含子目录)'),
+        info: t(`${props.isExampleMode ? '筛选' : '关联'}myservice服务下所有的配置(包含子目录)`),
       },
       {
         example: 'etc/*',
-        info: t('关联myservice服务/etc目录下所有的配置(不含子目录)'),
+        info: t(`${props.isExampleMode ? '筛选' : '关联'}myservice服务/etc目录下所有的配置(不含子目录)`),
       },
       {
         example: 'etc/nginx/nginx.conf',
-        info: t('关联myservice服务/etc/nginx/nginx.conf文件'),
+        info: t(`${props.isExampleMode ? '筛选' : '关联'}myservice服务/etc/nginx/nginx.conf文件`),
       },
     ],
     kv: [

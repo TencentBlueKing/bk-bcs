@@ -21,6 +21,7 @@
         </bk-button>
       </div>
       <associate-side-bar
+        ref="sideBarRef"
         :show="sideBarShow"
         :id="-1"
         :perm-check-loading="permCheckLoading"
@@ -43,6 +44,7 @@
 
   const route = useRoute();
 
+  const sideBarRef = ref();
   const spaceId = ref(Number(route.params.spaceId));
   const configSwitch = ref(false);
   const sideBarShow = ref(false);
@@ -101,22 +103,22 @@
       };
     });
     sideBarShow.value = true;
+    sideBarRef.value.handleOpenEdit(); // 直接打开编辑规则页面
   };
 
   const handleClose = () => {
     sideBarShow.value = false;
   };
 
-  const handleSwitcher = (val: boolean) => {
+  const handleSwitcher = async (val: boolean) => {
+    rules.value = [];
+    ruleList.value = [];
+    sendRules();
     configSwitch.value = val;
-    if (!val) {
-      ruleList.value = [];
-      sendRules();
-    } else {
+    if (val) {
       // 打开文件筛选开关自动打开规则设置抽屉
-      nextTick(() => {
-        sideBarShow.value = true;
-      });
+      await nextTick();
+      sideBarShow.value = true;
     }
   };
 

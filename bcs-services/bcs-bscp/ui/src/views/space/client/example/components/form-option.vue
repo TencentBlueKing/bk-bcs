@@ -19,11 +19,15 @@
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: $t('临时目录提示文案'),
+            content: tempDirToolTips,
             placement: 'top',
           }" />
       </template>
-      <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
+      <bk-input
+        v-model="formData.tempDir"
+        :placeholder="$t('请输入')"
+        clearable
+        @input="emits('is-windows-path', isWindowsPath)" />
     </bk-form-item>
     <bk-form-item v-if="props.directoryShow">
       <div class="directory-description" :class="{ 'offset-margin': tempDirValidateStatus }">
@@ -34,8 +38,8 @@
             placement: 'top',
           }"
           class="description-em"
-          @click="handleCopyText(`${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files`)">
-          &nbsp;{{ `${formData.tempDir}/${spaceId}/${basicInfo?.serviceName.value}/files` }}&nbsp;
+          @click="handleCopyText(realPath)">
+          &nbsp;{{ realPath }}&nbsp;
         </span>
       </div>
     </bk-form-item>
@@ -53,7 +57,7 @@
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
-      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="formData.labelArr = $event" />
+      <AddLabel ref="addLabelRef" @send-label="formData.labelArr = $event" />
     </bk-form-item>
     <!-- <bk-form-item v-if="p2pShow">
       由于集群列表接口暂不支持，产品将下拉框改为输入框，待后续接口支持后改回下拉框
@@ -100,22 +104,22 @@
 
   const props = withDefaults(
     defineProps<{
-      directoryShow?: boolean;
-      labelName?: string;
-      p2pShow?: boolean;
-      httpConfigShow?: boolean;
-      associateConfigShow?: boolean;
+      directoryShow?: boolean; // 临时目录
+      p2pShow?: boolean; // p2p网络加速（Sidecar容器）
+      httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
+      dualSystemSupport?: boolean; // Unix与windows双系统支持（节点管理插件与文件型命令行工具）
     }>(),
     {
       directoryShow: true,
-      labelName: '标签',
       p2pShow: false,
       httpConfigShow: false,
       associateConfigShow: false,
+      dualSystemSupport: false,
     },
   );
 
-  const emits = defineEmits(['update-option-data']);
+  const emits = defineEmits(['update-option-data', 'is-windows-path']);
 
   const { t } = useI18n();
   const route = useRoute();
@@ -167,6 +171,13 @@
       {
         required: true,
         validator: (value: string) => {
+          // Unix与Windows双路径判断
+          if (props.dualSystemSupport) {
+            if (isWindowsPath.value) {
+              return true;
+            }
+          }
+          // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
           if (!value.startsWith('/') || value.endsWith('/')) {
             return false;
@@ -184,7 +195,7 @@
           return isValid;
         },
         trigger: 'change',
-        message: t('无效的路径,路径不符合Unix文件路径格式规范'),
+        message: t(`无效的路径,路径不符合Unix${props.dualSystemSupport ? '或Windows' : ''}文件路径格式规范`),
       },
     ],
     httpConfigName: [
@@ -223,8 +234,29 @@
     return rules.tempDir.every((ruleItem) => ruleItem.validator(formData.value.tempDir));
   });
 
+  // 验证是否windows路径
+  const isWindowsPath = computed(() => {
+    return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
+  });
+
+  // 真实路径
+  const realPath = computed(() => {
+    if (isWindowsPath.value) {
+      return `${formData.value.tempDir}\\${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
+    }
+    return `${formData.value.tempDir}/${spaceId.value}/${basicInfo?.serviceName.value}/files`;
+  });
+
+  const tempDirToolTips = computed(() => {
+    if (isWindowsPath.value) {
+      return t('临时目录提示文案').replaceAll('/', '\\');
+    }
+    return t('临时目录提示文案');
+  });
+
   watch(formData.value, () => {
     sendAll();
+    // tempDirPathType(formData.value.tempDir);
   });
 
   onMounted(() => {
@@ -271,6 +303,10 @@
 
   const sendAll = () => {
     const filterFormData = cloneDeep(formData.value);
+    // 临时目录不合法的路径不发送
+    if (!tempDirValidateStatus.value) {
+      filterFormData.tempDir = '';
+    }
     emits('update-option-data', filterFormData);
   };
 
