@@ -7,10 +7,12 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// ClusterClient Redis client for cluster mode
 type ClusterClient struct {
 	cli *redis.ClusterClient
 }
 
+// NewClusterClient init ClusterClient from config
 func NewClusterClient(config Config) (*ClusterClient, error) {
 	cli := redis.NewClusterClient(&redis.ClusterOptions{
 		Addrs:        config.Addrs,

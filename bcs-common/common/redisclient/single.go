@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// SingleClient Redis client for single mode
 type SingleClient struct {
 	cli *redis.Client
 }

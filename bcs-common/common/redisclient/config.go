@@ -2,13 +2,13 @@ package redisclient
 
 import "time"
 
-// Config 初始化 Redis 客户端需要使用的
+// Config contains the configuration required to initialize a Redis client
 type Config struct {
-	Addrs      []string  // 节点列表
-	MasterName string    // 哨兵模式下的主节点名
-	Password   string    // 密码
-	DB         int       // 单节点模式下的数据库
-	Mode       RedisMode // single, sentinel, cluster
+	Addrs      []string  // List of nodes (addresses)
+	MasterName string    // Master node name in Sentinel mode
+	Password   string    // Password
+	DB         int       // Database index in single node mode
+	Mode       RedisMode // Redis mode: single, sentinel, or cluster
 
 	// Options configs
 	DialTimeout  time.Duration

@@ -8,10 +8,12 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// SentinelClient Redis client for sentinel mode
 type SentinelClient struct {
 	cli *redis.Client
 }
 
+// NewSentinelClient init SentinelClient from config
 func NewSentinelClient(config Config) (*SentinelClient, error) {
 	if config.Mode != SentinelMode {
 		return nil, errors.New("redis mode not supported")

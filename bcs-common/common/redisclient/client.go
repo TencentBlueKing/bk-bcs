@@ -12,13 +12,15 @@ import (
 type RedisMode string
 
 const (
-	SingleMode   RedisMode = "single"   // 单机模式
-	SentinelMode RedisMode = "sentinel" // 哨兵模式
-	ClusterMode  RedisMode = "cluster"  // 集群模式
+	SingleMode   RedisMode = "single"   // Single mode
+	SentinelMode RedisMode = "sentinel" // Sentinel mode
+	ClusterMode  RedisMode = "cluster"  // Cluster mode
 )
 
 type Client interface {
+	// GetCli return the underlying Redis client
 	GetCli() redis.UniversalClient
+	// Ping checks the Redis server connection
 	Ping(ctx context.Context) (string, error)
 	Get(ctx context.Context, key string) (string, error)
 	Exists(ctx context.Context, key ...string) (int64, error)
@@ -29,7 +31,7 @@ type Client interface {
 	Expire(ctx context.Context, key string, duration time.Duration) (bool, error)
 }
 
-// NewClient 根据配置文件创建不同部署模式的 redis 客户端
+// NewClient creates a Redis client based on the configuration for different deployment modes
 func NewClient(config Config) (Client, error) {
 	switch config.Mode {
 	case SingleMode:
@@ -42,7 +44,7 @@ func NewClient(config Config) (Client, error) {
 	return nil, fmt.Errorf("invalid config mode: %s", config.Mode)
 }
 
-// NewTestClient 创建用于单元测试的 redis 客户端
+// NewTestClient creates a Redis client for unit testing
 func NewTestClient() (Client, error) {
 	mr, err := miniredis.Run()
 	if err != nil {
