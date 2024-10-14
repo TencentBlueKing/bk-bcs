@@ -13,6 +13,5 @@ labels: {{ .Bk_Bscp_Variable_Leabels }}
 
 # 临时目录，在拉取配置文件时，用于存储配置文件的目录，默认为：/data/bscp，可根据实际情况调整
 temp_dir: {{ .Bk_Bscp_VariableTempDir }}
-
 {{ .Bk_Bscp_Variable_Rules }}
 EOF
