@@ -44,7 +44,12 @@ type cosClient struct {
 	innerClient *cos.Client
 }
 
-// Upload upload file to cos
+// SyncManager implements HAEnhancer interface
+func (c *cosClient) SyncManager() *SyncManager {
+	return nil
+}
+
+// Upload uploads file to cos
 func (c *cosClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMetadata, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
@@ -77,7 +82,7 @@ func (c *cosClient) Upload(kt *kit.Kit, sign string, body io.Reader) (*ObjectMet
 	return metadata, nil
 }
 
-// Download download file from cos
+// Download downloads file from cos
 func (c *cosClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
@@ -170,10 +175,10 @@ func (c *cosClient) URIDecorator(bizID uint32) DecoratorInter {
 }
 
 // DownloadLink cos file download link
-func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (string, error) {
+func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) ([]string, error) {
 	node, err := repo.GenS3NodeFullPath(kt.BizID, sign)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	opt := &cos.PresignedURLOptions{
@@ -186,10 +191,10 @@ func (c *cosClient) DownloadLink(kt *kit.Kit, sign string, fetchLimit uint32) (s
 	u, err := c.innerClient.Object.GetPresignedURL(kt.Ctx, http.MethodGet, node, c.conf.AccessKeyID,
 		c.conf.SecretAccessKey, time.Hour, opt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return u.String(), nil
+	return []string{u.String()}, nil
 }
 
 // AsyncDownload cos
@@ -229,20 +234,21 @@ func newCosClient(conf cc.S3Storage) (BaseProvider, error) {
 }
 
 // newCosProvider new cos provider
-func newCosProvider(settings cc.Repository) (Provider, error) {
-	p, err := newCosClient(settings.S3)
+func newCosProvider(repo cc.BaseRepo, redis cc.RedisCluster) (Provider, error) {
+	p, err := newCosClient(repo.S3)
 	if err != nil {
 		return nil, err
 	}
 
 	var c VariableCacher
-	c, err = newVariableCacher(settings.RedisCluster, p)
+	c, err = newVariableCacher(redis, p)
 	if err != nil {
 		return nil, err
 	}
 
 	return &repoProvider{
 		BaseProvider:   p,
+		HAEnhancer:     p.(*cosClient),
 		VariableCacher: c,
 	}, nil
 }

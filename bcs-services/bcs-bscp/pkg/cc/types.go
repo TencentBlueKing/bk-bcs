@@ -344,10 +344,18 @@ const (
 
 // Repository defines all the repo related runtime.
 type Repository struct {
-	StorageType  StorageMode   `yaml:"storageType"`
-	S3           S3Storage     `yaml:"s3"`
-	BkRepo       BkRepoStorage `yaml:"bkRepo"`
-	RedisCluster RedisCluster  `yaml:"redisCluster"`
+	BaseRepo          `yaml:",inline"`
+	RedisCluster      RedisCluster `yaml:"redisCluster"`
+	EnableHA          bool         `yaml:"enableHA"`
+	SyncPeriodSeconds uint         `yaml:"syncPeriodSeconds"`
+	Slave             BaseRepo     `yaml:"slave"`
+}
+
+// BaseRepo 文件存储的基础部分
+type BaseRepo struct {
+	StorageType StorageMode   `yaml:"storageType"`
+	S3          S3Storage     `yaml:"s3"`
+	BkRepo      BkRepoStorage `yaml:"bkRepo"`
 }
 
 // BkRepoStorage BKRepo 存储类型
@@ -395,52 +403,83 @@ func (s Repository) OneEndpoint() (string, error) {
 	return addr, nil
 }
 
+const defaultSyncPeriodSeconds = 24 * 3600 // default is 1 day
+const minSyncPeriodSeconds = 3600          // min is 1 hour
+
 func (s *Repository) trySetDefault() {
 	if len(s.StorageType) == 0 {
 		s.StorageType = BkRepo
 	}
 	s.RedisCluster.trySetDefault()
+	if s.EnableHA {
+		if len(s.Slave.StorageType) == 0 {
+			s.Slave.StorageType = S3
+		}
+	}
+	if s.SyncPeriodSeconds == 0 || s.SyncPeriodSeconds < minSyncPeriodSeconds {
+		s.SyncPeriodSeconds = defaultSyncPeriodSeconds
+	}
 }
 
 // validate repo runtime.
 func (s Repository) validate() error {
-	switch strings.ToUpper(string(s.StorageType)) {
+	if err := s.BaseRepo.validate(); err != nil {
+		return fmt.Errorf("repository master config err: %v", err)
+	}
+
+	if err := s.RedisCluster.validate(); err != nil {
+		return fmt.Errorf("repository redis cluster config err: %v", err)
+	}
+
+	if s.EnableHA {
+		if err := s.Slave.validate(); err != nil {
+			return fmt.Errorf("repository slave config err: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// validate repo base part.
+func (b BaseRepo) validate() error {
+	switch strings.ToUpper(string(b.StorageType)) {
 	case string(S3):
-		if len(s.S3.Endpoint) == 0 {
+		if len(b.S3.Endpoint) == 0 {
 			return errors.New("s3 endpoint is not set")
 		}
 
-		if len(s.S3.AccessKeyID) == 0 {
+		if len(b.S3.AccessKeyID) == 0 {
 			return errors.New("s3 accessKeyID is not set")
 		}
 
-		if len(s.S3.SecretAccessKey) == 0 {
+		if len(b.S3.SecretAccessKey) == 0 {
 			return errors.New("s3 secretAccessKey is not set")
 		}
-		if len(s.S3.BucketName) == 0 {
+		if len(b.S3.BucketName) == 0 {
 			return errors.New("s3 bucketName is not set")
 		}
 	case string(BkRepo):
-		if len(s.BkRepo.Endpoints) == 0 {
+		if len(b.BkRepo.Endpoints) == 0 {
 			return errors.New("bk_repo endpoints is not set")
 		}
 
-		if len(s.BkRepo.Username) == 0 {
+		if len(b.BkRepo.Username) == 0 {
 			return errors.New("repo basic auth username is not set")
 		}
 
-		if len(s.BkRepo.Password) == 0 {
+		if len(b.BkRepo.Password) == 0 {
 			return errors.New("repo basic auth password is not set")
 		}
 
-		if len(s.BkRepo.Project) == 0 {
+		if len(b.BkRepo.Project) == 0 {
 			return errors.New("repo project is not set")
 		}
 
-		if err := s.BkRepo.TLS.validate(); err != nil {
+		if err := b.BkRepo.TLS.validate(); err != nil {
 			return fmt.Errorf("repo tls, %v", err)
 		}
-
+	default:
+		return fmt.Errorf("unsupported storage type: %s", string(b.StorageType))
 	}
 
 	return nil

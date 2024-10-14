@@ -19,11 +19,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
-	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
@@ -42,7 +40,8 @@ type Service struct {
 }
 
 // NewService create a service instance.
-func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set) (*Service, error) {
+func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set, esb client.Client, repo repository.Provider) (
+	*Service, error) {
 	state, ok := sd.(serviced.State)
 	if !ok {
 		return nil, errors.New("discover convert state failed")
@@ -52,24 +51,11 @@ func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set) (*Servi
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)
 	}
 
-	// initialize esb client
-	settings := cc.DataService().Esb
-	esbCli, err := client.NewClient(&settings, metrics.Register())
-	if err != nil {
-		return nil, err
-	}
-
-	// initialize repo provider
-	repo, err := repository.NewProvider(cc.DataService().Repo)
-	if err != nil {
-		return nil, err
-	}
-
 	svc := &Service{
 		dao:      daoSet,
 		vault:    vaultSet,
 		gateway:  gateway,
-		esb:      esbCli,
+		esb:      esb,
 		repo:     repo,
 		tmplProc: tmplprocess.NewTmplProcessor(),
 	}
