@@ -20,12 +20,13 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/redisclient"
+	redisotel2 "github.com/go-redis/redis/extra/redisotel/v8"
+
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	crRuntime "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
-	redisotel2 "github.com/go-redis/redis/extra/redisotel/v8"
 )
 
 var rds redisclient.Client
@@ -97,8 +98,7 @@ func NewRedisClient(conf *config.RedisConf) (redisclient.Client, error) {
 
 	log.Info(context.TODO(),
 		"start connect redis: %v [mode=%s db=%d, dialTimeout=%s, readTimeout=%s, writeTimeout=%s, poolSize=%d, minIdleConns=%d, idleTimeout=%s]", //nolint:lll
-		clientConf.Addrs, clientConf.DB, clientConf.Mode, clientConf.DialTimeout, clientConf.ReadTimeout, clientConf.WriteTimeout, clientConf.PoolSize, clientConf.MinIdleConns, clientConf.IdleTimeout)
-
+		clientConf.Addrs, clientConf.Mode, clientConf.DB, clientConf.DialTimeout, clientConf.ReadTimeout, clientConf.WriteTimeout, clientConf.PoolSize, clientConf.MinIdleConns, clientConf.IdleTimeout) //nolint:lll
 	return redisclient.NewClient(clientConf)
 }
 

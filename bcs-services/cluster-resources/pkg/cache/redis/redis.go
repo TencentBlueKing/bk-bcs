@@ -19,8 +19,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/redisclient"
-	crCache "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
 	"github.com/go-redis/cache/v8"
+
+	crCache "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
 )
 
 const (
