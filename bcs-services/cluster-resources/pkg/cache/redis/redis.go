@@ -18,10 +18,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/cache/v8"
-	"github.com/go-redis/redis/v8"
-
+	"github.com/Tencent/bk-bcs/bcs-common/common/redisclient"
 	crCache "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cache"
+	"github.com/go-redis/cache/v8"
 )
 
 const (
@@ -31,11 +30,11 @@ const (
 
 // Cache 缓存实例
 type Cache struct {
-	name      string        // 缓存键名
-	keyPrefix string        // 缓存键前缀
-	codec     *cache.Cache  // go-redis cache
-	cli       *redis.Client // redis client
-	exp       time.Duration // 默认过期时间
+	name      string             // 缓存键名
+	keyPrefix string             // 缓存键前缀
+	codec     *cache.Cache       // go-redis cache
+	cli       redisclient.Client // redis client
+	exp       time.Duration      // 默认过期时间
 }
 
 // NewCache 新建 cache 实例
@@ -46,7 +45,7 @@ func NewCache(name string, expiration time.Duration) *Cache {
 	keyPrefix := fmt.Sprintf("%s:%s", CacheKeyPrefix, name)
 
 	codec := cache.New(&cache.Options{
-		Redis: cli,
+		Redis: cli.GetCli(),
 	})
 
 	return &Cache{
@@ -80,7 +79,7 @@ func (c *Cache) Set(ctx context.Context, key crCache.Key, value interface{}, dur
 // Exists 检查 key 在 redis 中是否存在
 func (c *Cache) Exists(ctx context.Context, key crCache.Key) bool {
 	k := c.genKey(key.Key())
-	count, err := c.cli.Exists(ctx, k).Result()
+	count, err := c.cli.Exists(ctx, k)
 	return err == nil && count == 1
 }
 
@@ -93,15 +92,15 @@ func (c *Cache) Get(ctx context.Context, key crCache.Key, value interface{}) err
 // Delete 从 redis 中删除指定的键
 func (c *Cache) Delete(ctx context.Context, key crCache.Key) error {
 	k := c.genKey(key.Key())
-	_, err := c.cli.Del(ctx, k).Result()
+	_, err := c.cli.Del(ctx, k)
 	return err
 }
 
 // DeleteByPrefix 根据键前缀删除缓存，慎用！
 func (c *Cache) DeleteByPrefix(ctx context.Context, prefix string) error {
-	iter := c.cli.Scan(ctx, 0, c.genKey(prefix)+"*", 0).Iterator()
+	iter := c.cli.GetCli().Scan(ctx, 0, c.genKey(prefix)+"*", 0).Iterator()
 	for iter.Next(ctx) {
-		if err := c.cli.Del(ctx, iter.Val()).Err(); err != nil {
+		if _, err := c.cli.Del(ctx, iter.Val()); err != nil {
 			return err
 		}
 	}
