@@ -176,7 +176,8 @@
         validator: (value: string) => {
           // Unix与Windows双路径判断
           if (formData.value.systemType === 'Windows') {
-            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
+            // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
+            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*([^\\/:*?"<>|\r\n]+|)$/.test(formData.value.tempDir);
           }
           // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
