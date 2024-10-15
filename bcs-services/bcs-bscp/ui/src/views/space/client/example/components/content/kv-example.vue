@@ -2,7 +2,7 @@
   <section class="kv-example-template">
     <form-option
       ref="fileOptionRef"
-      :directory-show="false"
+      :directory-show="props.kvName === 'http' && basicInfo?.serviceType.value === 'file'"
       :http-config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
       @update-option-data="(data) => getOptionData(data)" />
     <div class="preview-container">

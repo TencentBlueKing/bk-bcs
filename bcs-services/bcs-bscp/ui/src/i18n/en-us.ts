@@ -803,7 +803,8 @@ export default {
   节点管理插件: 'Node management plugin',
   '节点管理插件客户端用于非容器化应用程序 (传统主机) 拉取文件型配置场景。': 'The node management plug-in client is used in the non-containerized application (traditional host) pull-file configuration scenario',
   '命令行工具通常用于在脚本 (如 Bash、Python 等) 中手动拉取应用程序配置，同时支持文件型和键值型配置的获取。': 'Command line tools are commonly used to manually pull application configuration in scripts (such as Bash, Python, etc.), and support both file - and key-value configuration acquisition',
-  '请先选择客户端密钥，替换下方示例代码后，再尝试复制示例': 'Please select the client key and replace the sample code below before trying to copy the sample',
+  '请先选择客户端密钥，替换下方示例代码后，再尝试复制示例': 'Please select the client key first. After replacing the example code below, try to copy the example',
+  '请先选择配置项名称，替换下方示例代码后，再尝试复制示例': 'Please select the configuration item name first. After replacing the example code below, try to copy the example',
   '请输入路径地址，替换下方示例代码后，再尝试复制示例': 'Please enter the path address, replace the sample code below, and then try to copy the sample',
   临时目录: 'Temp directory',
   请输入临时目录: 'Please enter a temp directory',
@@ -893,6 +894,7 @@ export default {
   '服务feed-server地址：': 'The address of the feed-server service：',
   '无效的路径,路径不符合systemType文件路径格式规范': 'Invalid path, the path does not comply with the {systemType} file path format specification',
   客户端操作系统: 'Client operating system',
+  暂无可用配置: 'No available configurations',
 
   // 公共组件
   页面不存在: 'Page does not exist',

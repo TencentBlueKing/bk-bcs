@@ -55,7 +55,8 @@
             placement: 'top',
           }" />
       </template>
-      <bk-input v-model="formData.httpConfigName" :placeholder="$t('请输入')" clearable />
+      <!-- <bk-input v-model="formData.httpConfigName" :placeholder="$t('请输入')" clearable /> -->
+      <config-selector ref="configSelectRef" @select-config="formData.httpConfigName = $event" />
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
@@ -103,10 +104,11 @@
   import { copyToClipBoard } from '../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
   import associateConfig from './associate-config.vue';
+  import configSelector from './config-selector.vue';
 
   const props = withDefaults(
     defineProps<{
-      directoryShow?: boolean; // 临时目录
+      directoryShow?: boolean; // 临时目录(所有文件型)
       p2pShow?: boolean; // p2p网络加速（Sidecar容器）
       httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
@@ -130,6 +132,7 @@
   const basicInfo = inject<{ serviceName: Ref<string> }>('basicInfo');
   const addLabelRef = ref();
   const keySelectorRef = ref();
+  const configSelectRef = ref();
   // const p2pAccelerationRef = ref();
   const formRef = ref();
   const formData = ref<IExampleFormData>({
@@ -213,11 +216,17 @@
       },
       {
         required: true,
-        validator: (value: string) =>
-          /^[\p{Script=Han}\p{L}\p{N}]([\p{Script=Han}\p{L}\p{N}_-]*[\p{Script=Han}\p{L}\p{N}])?$/u.test(value),
-        message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
+        validator: (value: string) => value.length,
+        message: t('请先选择配置项名称，替换下方示例代码后，再尝试复制示例'),
         trigger: 'change',
       },
+      // {
+      //   required: true,
+      //   validator: (value: string) =>
+      //     /^[\p{Script=Han}\p{L}\p{N}]([\p{Script=Han}\p{L}\p{N}_-]*[\p{Script=Han}\p{L}\p{N}])?$/u.test(value),
+      //   message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
+      //   trigger: 'change',
+      // },
     ],
     clusterInfo: [
       {
@@ -276,8 +285,9 @@
     // const p2pValid = props.p2pShow ? p2pAccelerationRef.value.isValid() : true;
     // 密钥验证
     const keyValid = keySelectorRef.value.validateCredential();
+    const configValid = props.httpConfigShow ? configSelectRef.value.validateConfig() : true;
     // const isAllValid = [labelValid, p2pValid, keyValid].includes(false);
-    const isAllValid = [labelValid, keyValid].includes(false);
+    const isAllValid = [labelValid, keyValid, configValid].includes(false);
     if (isAllValid) {
       formRef.value.validate();
       return Promise.reject();
