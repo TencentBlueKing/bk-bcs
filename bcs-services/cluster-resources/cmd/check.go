@@ -118,6 +118,9 @@ func (c *DependencyServiceChecker) DoAndExit() {
 func (c *DependencyServiceChecker) doOnce() error {
 	// 检查 Redis 服务，若服务异常，则返回错误
 	rds, err := redis.NewRedisClient(&c.conf.Redis)
+	if err != nil {
+		return err
+	}
 	if _, err = rds.Ping(context.TODO()); err != nil {
 		return err
 	}
