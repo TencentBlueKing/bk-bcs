@@ -133,15 +133,11 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 
 	// RedisDSN 没有配置，检查 RedisConfig
 	if userMgrConfig.RedisDSN == "" {
-		userMgrConfig.RedisConfig.RedisMode = op.RedisConfig.RedisMode
-		userMgrConfig.RedisConfig.Addr = op.RedisConfig.Addr
-		userMgrConfig.RedisConfig.Password = op.RedisConfig.Password
-		userMgrConfig.RedisConfig.DialTimeout = op.RedisConfig.DialTimeout
-		userMgrConfig.RedisConfig.ReadTimeout = op.RedisConfig.ReadTimeout
-		userMgrConfig.RedisConfig.WriteTimeout = op.RedisConfig.WriteTimeout
-		userMgrConfig.RedisConfig.PoolSize = op.RedisConfig.PoolSize
-		userMgrConfig.RedisConfig.MinIdleConns = op.RedisConfig.MinIdleConns
-		userMgrConfig.RedisConfig.IdleTimeout = op.RedisConfig.IdleTimeout
+		redisConfig, err := parseRedisConfig(op.RedisConfig)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing redis config and exit: %s", err.Error())
+		}
+		userMgrConfig.RedisConfig = redisConfig
 	}
 
 	userMgrConfig.VerifyClientTLS = op.VerifyClientTLS
@@ -180,4 +176,23 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.IAMConfig = op.IAMConfig
 
 	return userMgrConfig, nil
+}
+
+// parseRedisConfig parse redis option when redisDsn is empty
+func parseRedisConfig(redisOp options.RedisConfig) (config.RedisConfig, error) {
+	conf := config.RedisConfig{}
+	redisPassword, err := encrypt.DesDecryptFromBase([]byte(redisOp.Password))
+	if err != nil {
+		return conf, fmt.Errorf("error decrypting redis config and exit: %s", err.Error())
+	}
+	conf.RedisMode = redisOp.RedisMode
+	conf.Addr = redisOp.Addr
+	conf.Password = string(redisPassword)
+	conf.DialTimeout = redisOp.DialTimeout
+	conf.ReadTimeout = redisOp.ReadTimeout
+	conf.WriteTimeout = redisOp.WriteTimeout
+	conf.PoolSize = redisOp.PoolSize
+	conf.MinIdleConns = redisOp.MinIdleConns
+	conf.IdleTimeout = redisOp.IdleTimeout
+	return conf, nil
 }

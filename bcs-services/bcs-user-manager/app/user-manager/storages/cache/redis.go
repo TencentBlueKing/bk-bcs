@@ -19,8 +19,9 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/redisclient"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/go-redis/redis/extra/redisotel/v8"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 // RDB is the global redis cache

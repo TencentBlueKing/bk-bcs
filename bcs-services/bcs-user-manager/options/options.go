@@ -160,6 +160,8 @@ type Activity struct {
 }
 
 // RedisConfig redis 配置
+// NOCC:golint/lll(设计如此:)
+// nolint
 type RedisConfig struct {
 	RedisMode    string `json:"redis_mode" usage:"Redis mode" mapstructure:"redis_mode" yaml:"redis_mode"`
 	Addr         string `json:"addr" usage:"Redis server address" mapstructure:"addr" yaml:"addr"`
