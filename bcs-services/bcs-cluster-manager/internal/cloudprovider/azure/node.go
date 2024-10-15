@@ -112,6 +112,16 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 				continue
 			}
 
+			if info.NodeFamily != "" && info.NodeFamily != *v.Family {
+				continue
+			}
+			if info.Cpu != 0 && info.Cpu != uint32(cpu) {
+				continue
+			}
+			if info.Memory != 0 && info.Memory != uint32(mem) {
+				continue
+			}
+
 			zones := make([]string, 0)
 			if len(v.LocationInfo) != 0 {
 				for _, z := range v.LocationInfo[0].Zones {
