@@ -525,6 +525,9 @@ export default {
   密钥类型: 'secret_type',
   '请输入配置文件的完整路径和文件名，例如：/etc/nginx/nginx.conf': 'Please enter the complete path and file name of the configuration file, for example: /etc/nginx/nginx.conf',
   '对于Windows客户端，以上文件权限、用户及用户组设置不生效，可在后置脚本中处理文件权限': 'For Windows clients, the above file permission, user and user group settings do not take effect, and file permissions can be handled in the post-script',
+  '为确保最佳用户体验，此服务的配置文件数量限制为 {n} 个。当前已有 {m} 个，还可添加 {p} 个': 'In order to ensure the best user experience, the number of config files for this service is limited to {n}. There are currently {m} and you can add {p} more',
+  '为确保最佳用户体验，此服务的配置项数量限制为 {n} 个。当前已有 {m} 个，还可添加 {p} 个': 'In order to ensure the best user experience, the number of config items for this service is limited to {n}. There are currently {m} and you can add {p} more',
+  '为确保最佳用户体验，此服务的模板文件数量限制为 {n} 个。当前已有 {m} 个，还可添加 {p} 个': 'In order to ensure the best user experience, the number of template files for this service is limited to {n}. There are currently {m} and you can add {p} more',
 
   // 分组管理
   新增分组: 'New group',
