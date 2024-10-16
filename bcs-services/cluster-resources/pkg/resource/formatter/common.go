@@ -21,7 +21,7 @@ import (
 // CommonFormatRes 通用资源格式化
 func CommonFormatRes(manifest map[string]interface{}) map[string]interface{} {
 	rawCreateTime := mapx.GetStr(manifest, "metadata.creationTimestamp")
-	createSource, immutable := parseCreateSource(manifest)
+	createSource, immutable := ParseCreateSource(manifest)
 	ret := map[string]interface{}{
 		"namespace":  mapx.GetStr(manifest, []string{"metadata", "namespace"}),
 		"age":        timex.CalcAge(rawCreateTime),
@@ -63,8 +63,8 @@ func GetPruneFunc(kind string) func(manifest map[string]interface{}) map[string]
 	return pruneFunc
 }
 
-// 解析创建来源，主要有：Template/Helm/Client/Web
-func parseCreateSource(manifest map[string]interface{}) (string, bool) {
+// ParseCreateSource 解析创建来源，主要有：Template/Helm/Client/Web
+func ParseCreateSource(manifest map[string]interface{}) (string, bool) {
 	labels := mapx.GetMap(manifest, "metadata.labels")
 	// Helm创建来源：app.kubernetes.io/managed-by: Helm
 	if mapx.GetStr(labels, []string{resCsts.HelmSourceType}) == resCsts.HelmCreateSource {
