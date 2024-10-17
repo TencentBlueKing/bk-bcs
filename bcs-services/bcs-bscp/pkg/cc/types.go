@@ -1421,7 +1421,7 @@ func (g Gorm) GetLogLevel() logger.LogLevel {
 	case string(GormLogInfo):
 		return logger.Info
 	default:
-		return logger.Warn
+		return logger.Info
 	}
 }
 
@@ -1440,8 +1440,7 @@ func (g Gorm) validate() error {
 
 // trySetDefault try set the default value of gorm
 func (g *Gorm) trySetDefault() {
-	// be consistent with the default configuration of Gorm library
 	if g.LogLevel == "" {
-		g.LogLevel = GormLogWarn
+		g.LogLevel = GormLogInfo
 	}
 }
