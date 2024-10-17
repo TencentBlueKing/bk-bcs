@@ -71,6 +71,9 @@ const (
 
 	// RestfulSubSys defines rest server's sub system
 	RestfulSubSys = "restful"
+
+	// RepoSyncSubSys defines repo syncer sub system
+	RepoSyncSubSys = "repo_syncer"
 )
 
 // labels

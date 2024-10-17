@@ -30,7 +30,7 @@ import (
 
 // Client is repo client.
 type Client struct {
-	config cc.Repository
+	config cc.BaseRepo
 	// http client instance
 	client rest.ClientInterface
 	// http header info
@@ -38,7 +38,7 @@ type Client struct {
 }
 
 // NewClient new repo client.
-func NewClient(repoSetting cc.Repository, reg prometheus.Registerer) (*Client, error) {
+func NewClient(repoSetting cc.BaseRepo, reg prometheus.Registerer) (*Client, error) {
 	tls := &tools.TLSConfig{
 		InsecureSkipVerify: repoSetting.BkRepo.TLS.InsecureSkipVerify,
 		CertFile:           repoSetting.BkRepo.TLS.CertFile,

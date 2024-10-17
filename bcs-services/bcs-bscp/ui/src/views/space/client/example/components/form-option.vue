@@ -13,6 +13,12 @@
       </template>
       <KeySelect ref="keySelectorRef" @current-key="setCredential" />
     </bk-form-item>
+    <bk-form-item v-if="props.dualSystemSupport" :label="$t('客户端操作系统')" property="systemType">
+      <bk-radio v-model="formData.systemType" label="Unix" @change="handleChangeSys(formData.systemType)">
+        Linux
+      </bk-radio>
+      <bk-radio v-model="formData.systemType" label="Windows" @change="handleChangeSys(formData.systemType)" />
+    </bk-form-item>
     <bk-form-item v-if="props.directoryShow" property="tempDir" :required="props.directoryShow">
       <template #label>
         {{ $t('临时目录') }}
@@ -23,11 +29,7 @@
             placement: 'top',
           }" />
       </template>
-      <bk-input
-        v-model="formData.tempDir"
-        :placeholder="$t('请输入')"
-        clearable
-        @input="emits('is-windows-path', isWindowsPath)" />
+      <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
     <bk-form-item v-if="props.directoryShow">
       <div class="directory-description" :class="{ 'offset-margin': tempDirValidateStatus }">
@@ -108,7 +110,7 @@
       p2pShow?: boolean; // p2p网络加速（Sidecar容器）
       httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
-      dualSystemSupport?: boolean; // Unix与windows双系统支持（节点管理插件与文件型命令行工具）
+      dualSystemSupport?: boolean; // Linux与Windows双系统支持（节点管理插件与两种类型的cmd命令行工具）
     }>(),
     {
       directoryShow: true,
@@ -119,7 +121,7 @@
     },
   );
 
-  const emits = defineEmits(['update-option-data', 'is-windows-path']);
+  const emits = defineEmits(['update-option-data']);
 
   const { t } = useI18n();
   const route = useRoute();
@@ -139,6 +141,7 @@
     clusterSwitch: false, // 集群开关
     clusterInfo: 'BCS-K8S-', // 集群ID
     rules: [], // 文件筛选规则
+    systemType: 'Unix', // 系统类型
     // clusterInfo: {
     //   name: '', // 集群名称
     //   value: '', // 集群id
@@ -172,10 +175,9 @@
         required: true,
         validator: (value: string) => {
           // Unix与Windows双路径判断
-          if (props.dualSystemSupport) {
-            if (isWindowsPath.value) {
-              return true;
-            }
+          if (formData.value.systemType === 'Windows') {
+            // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
+            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*([^\\/:*?"<>|\r\n]+|)$/.test(formData.value.tempDir);
           }
           // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
@@ -195,7 +197,11 @@
           return isValid;
         },
         trigger: 'change',
-        message: t(`无效的路径,路径不符合Unix${props.dualSystemSupport ? '或Windows' : ''}文件路径格式规范`),
+        message: () => {
+          return t('无效的路径,路径不符合systemType文件路径格式规范', {
+            systemType: formData.value.systemType,
+          });
+        },
       },
     ],
     httpConfigName: [
@@ -234,21 +240,16 @@
     return rules.tempDir.every((ruleItem) => ruleItem.validator(formData.value.tempDir));
   });
 
-  // 验证是否windows路径
-  const isWindowsPath = computed(() => {
-    return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
-  });
-
   // 真实路径
   const realPath = computed(() => {
-    if (isWindowsPath.value) {
+    if (formData.value.systemType === 'Windows') {
       return `${formData.value.tempDir}\\${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
     }
     return `${formData.value.tempDir}/${spaceId.value}/${basicInfo?.serviceName.value}/files`;
   });
 
   const tempDirToolTips = computed(() => {
-    if (isWindowsPath.value) {
+    if (formData.value.systemType === 'Windows') {
       return t('临时目录提示文案').replaceAll('/', '\\');
     }
     return t('临时目录提示文案');
@@ -262,6 +263,11 @@
   onMounted(() => {
     sendAll();
   });
+
+  // 选择操作系统改变默认路径
+  const handleChangeSys = (type: string) => {
+    formData.value.tempDir = type === 'Windows' ? 'D:\\bscp' : '/data/bscp';
+  };
 
   const handleValidate = () => {
     // label验证，数组长度为空时返回true

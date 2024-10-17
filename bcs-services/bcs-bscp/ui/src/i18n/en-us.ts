@@ -165,7 +165,6 @@ export default {
   文件own必须有读取权限: 'The file owner must have read permission',
   最大长度1024个字符: 'Maximum length of 1024 characters',
   '无效的路径,路径不符合Unix文件路径格式规范': 'Invalid path, the path does not comply with the Unix file path format specification',
-  '无效的路径,路径不符合Unix或Windows文件路径格式规范': 'Invalid path, the path does not conform to Unix or Windows file path format specifications',
   最大长度200个字符: 'Maximum length of 200 characters',
   请上传文件: 'Please upload the file',
   '配置内容不能超过{size}M': 'Configuration content cannot exceed {size}M',
@@ -526,6 +525,9 @@ export default {
   密钥类型: 'secret_type',
   '请输入配置文件的完整路径和文件名，例如：/etc/nginx/nginx.conf': 'Please enter the complete path and file name of the configuration file, for example: /etc/nginx/nginx.conf',
   '对于Windows客户端，以上文件权限、用户及用户组设置不生效，可在后置脚本中处理文件权限': 'For Windows clients, the above file permission, user and user group settings do not take effect, and file permissions can be handled in the post-script',
+  '为确保最佳用户体验，此服务的配置文件数量限制为 {n} 个。当前已有 {m} 个，还可添加 {p} 个': 'In order to ensure the best user experience, the number of config files for this service is limited to {n}. There are currently {m} and you can add {p} more',
+  '为确保最佳用户体验，此服务的配置项数量限制为 {n} 个。当前已有 {m} 个，还可添加 {p} 个': 'In order to ensure the best user experience, the number of config items for this service is limited to {n}. There are currently {m} and you can add {p} more',
+  '为确保最佳用户体验，此服务的模板文件数量限制为 {n} 个。当前已有 {m} 个，还可添加 {p} 个': 'In order to ensure the best user experience, the number of template files for this service is limited to {n}. There are currently {m} and you can add {p} more',
 
   // 分组管理
   新增分组: 'New group',
@@ -849,8 +851,8 @@ export default {
   复制成功: 'Copy Successful',
   '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf': 'When downloading configuration files, preserve directory structure and save them to a specified directory. For example, downloading the file /etc/nginx.conf to the /tmp directory would save it as /tmp/etc/nginx.conf',
   '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf': 'When downloading configuration files, do not preserve directory structure and save them directly to a specified directory. For example, downloading the file /etc/nginx.conf to the /tmp directory would save it as /tmp/nginx.conf',
-  '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 \\etc\\nginx.conf 文件下载到当前目录时，文件保存在 .\\etc\\nginx.conf': 'When downloading the configuration file, retain the directory structure and save it to a specified directory. For example, when downloading the \\etc\\nginx.conf file to the current directory, it should be saved as .\\etc\\nginx.conf',
-  '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 \\etc\\nginx.conf 文件下载到当前目录时，文件保存在 .\\nginx.conf': 'When downloading the configuration file, do not retain the directory structure and save it to a specified directory. For example, when downloading the \\etc\\nginx.conf file to the current directory, it should be saved as .\\nginx.conf',
+  '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到当前目录时，文件保存在 .\\etc\\nginx.conf': 'When downloading the configuration file, retain the directory structure and save it to a specified directory. For example, when downloading the /etc/nginx.conf file to the current directory, it should be saved as .\\etc\\nginx.conf',
+  '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到当前目录时，文件保存在 .\\nginx.conf': 'When downloading the configuration file, do not retain the directory structure and save it to a specified directory. For example, when downloading the /etc/nginx.conf file to the current directory, it should be saved as .\\nginx.conf',
   'BSCP Python SDK依赖说明': 'dependency instructions in the BSCP Python SDK',
   '用于主动获取配置项值的场景，此方法不会监听服务器端的配置更改，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的': 'For scenarios where configuration values are actively retrieved, this method does not monitor server-side configuration changes. For information on the deployment environment and dependent components of the Python SDK, please refer to the',
   '通过建立长连接，实时监听配置版本的变更，当新版本的配置发布时，将自动调用回调方法处理新的配置信息，适用于需要实时响应配置变更的场景，有关Python SDK的部署环境和依赖组件，请参阅白皮书中的': 'By establishing a persistent connection, real-time changes to configuration versions are monitored. When a new version of configuration is released, the callback method is automatically invoked to handle the new configuration information. This method is suitable for scenarios requiring real-time response to configuration changes. For information on the deployment environment and dependent components of the Python SDK, please refer to the',
@@ -889,6 +891,8 @@ export default {
   '(全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用)': '(The filtering of the global configuration file is the same as that of the service configuration file; the difference is that the global configuration file can be shared among multiple services)',
   配置筛选规则: 'Configuration filtering rules',
   '服务feed-server地址：': 'The address of the feed-server service：',
+  '无效的路径,路径不符合systemType文件路径格式规范': 'Invalid path, the path does not comply with the {systemType} file path format specification',
+  客户端操作系统: 'Client operating system',
 
   // 公共组件
   页面不存在: 'Page does not exist',

@@ -305,6 +305,9 @@
     const res = await props.getConfigList(params);
     list.value = res.details;
     pagination.value.count = res.count;
+    templateStore.$patch((state) => {
+      state.countOfTemplatesForCurrentPackage = res.count;
+    });
     listLoading.value = false;
     const ids = list.value.map((item) => item.id);
     citeByPkgsList.value = [];
