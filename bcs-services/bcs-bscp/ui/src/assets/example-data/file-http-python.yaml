@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-#python
 import requests
 import json
 import os
@@ -8,10 +7,10 @@ import os
 feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
 biz_id={{ .Bk_Bscp_Variable_BkBizId }}
 service_name="{{ .Bk_Bscp_Variable_ServiceName }}"
-file_path={{ .Bk_Bscp_VariableTempDir }}
+file_path={{ .Bk_Bscp_Variable_KeyName }}
 token={{ .Bk_Bscp_Variable_ClientKey }}
 labels={{ .Bk_Bscp_Variable_Leabels }}
-save_path={{ .Bk_Bscp_Variable_KeyName }}
+save_path='./'
 
 # 使用参数构建URL
 url = f"{feed_addr}/api/v1/feed/biz/{biz_id}/app/{service_name}/files/{file_path}"

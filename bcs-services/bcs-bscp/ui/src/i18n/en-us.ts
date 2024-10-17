@@ -896,6 +896,9 @@ export default {
   客户端操作系统: 'Client operating system',
   暂无可用配置: 'No available configurations',
   '文本文件换行符：': 'Line breaks in text files',
+  'LF（Linux换行符 \\n）': 'LF (Linux line break \\n)',
+  'CRLF（Windows换行符 \\r\\n）': 'CRLF（Linux line break \\r\\n）',
+  '客户端下载文件时可以选择将文件保存为Linux格式（使用LF换行符）或Windows格式（使用CRLF换行符）\n服务端默认使用Linux换行符进行保存，如果选择将文件保存为Windows格式，可能导致客户端文件的MD5值与服务端的MD5值不一致': 'When downloading files, you can choose to save them in Linux format (using LF line breaks) or Windows format (using CRLF line breaks). \nThe server defaults to saving in Linux line breaks. Choosing to save files in Windows format may result in a mismatch between the MD5 values of the client file and the server file',
 
   // 公共组件
   页面不存在: 'Page does not exist',

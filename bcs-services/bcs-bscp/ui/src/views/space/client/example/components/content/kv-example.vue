@@ -2,7 +2,7 @@
   <section class="kv-example-template">
     <form-option
       ref="fileOptionRef"
-      :directory-show="props.kvName === 'http' && basicInfo?.serviceType.value === 'file'"
+      :directory-show="false"
       :http-config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
       @update-option-data="(data) => getOptionData(data)" />
     <div class="preview-container">
@@ -136,12 +136,12 @@
         if (!activeTab.value) {
           return {
             topTip: '',
-            codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 488 : 604,
+            codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 470 : 604,
           };
         }
         return {
           topTip: '',
-          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 812 : 754,
+          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 792 : 754,
         };
       default:
         return {
@@ -243,12 +243,6 @@
         name: 'Bk_Bscp_Variable_KeyName',
         type: '',
         default_val: `"${optionData.value.httpConfigName}"`,
-        memo: '',
-      },
-      {
-        name: 'Bk_Bscp_VariableTempDir',
-        type: '',
-        default_val: `"${optionData.value.tempDir}"`,
         memo: '',
       },
     ];

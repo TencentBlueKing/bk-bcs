@@ -103,7 +103,13 @@
         v-model="formData.selectedLineBreak"
         :filterable="false"
         :clearable="false">
-        <bk-option v-for="item in lineBreakData" :key="item" :name="item" :id="item" />
+        <bk-option
+          v-for="item in lineBreakData"
+          :key="item"
+          :name="item === 'CRLF' ? $t('CRLF（Windows换行符 \\r\\n）') : $t('LF（Linux换行符 \\n）')"
+          :id="item">
+          {{ item === 'CRLF' ? $t('CRLF（Windows换行符 \\r\\n）') : $t('LF（Linux换行符 \\n）') }}
+        </bk-option>
       </bk-select>
     </bk-form-item>
   </bk-form>
@@ -203,7 +209,10 @@
           // Unix与Windows双路径判断
           if (formData.value.systemType === 'Windows') {
             // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
-            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$|^[a-zA-Z]:$/.test(formData.value.tempDir);
+            // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$|^[a-zA-Z]:$/.test(formData.value.tempDir);/^[A-Za-z]:\$/
+            return /^(?:[A-Za-z]:\\$|[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$|^[a-zA-Z]:$)/.test(
+              formData.value.tempDir,
+            );
           }
           // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
@@ -275,7 +284,7 @@
   // 真实路径
   const realPath = computed(() => {
     if (formData.value.systemType === 'Windows') {
-      return `${formData.value.tempDir}\\${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
+      return `${formData.value.tempDir}${/^[A-Za-z]:\\$/.test(formData.value.tempDir) ? '' : '\\'}${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
     }
     return `${formData.value.tempDir}/${spaceId.value}/${basicInfo?.serviceName.value}/files`;
   });
@@ -299,6 +308,7 @@
   // 选择操作系统改变默认路径
   const handleChangeSys = (type: string) => {
     formData.value.tempDir = type === 'Windows' ? 'D:\\bscp' : '/data/bscp';
+    formData.value.selectedLineBreak = type === 'Windows' ? 'CRLF' : 'LF';
   };
 
   const handleValidate = () => {

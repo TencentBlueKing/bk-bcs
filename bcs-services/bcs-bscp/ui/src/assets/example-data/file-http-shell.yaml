@@ -1,14 +1,13 @@
 #!/bin/bash
-#shell
 
 # 设置参数
 feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
 biz_id=3
 service_name="frodomei-file-test-01"
-file_path={{ .Bk_Bscp_VariableTempDir }}
+file_path={{ .Bk_Bscp_Variable_KeyName }}
 token={{ .Bk_Bscp_Variable_ClientKey }}
 labels={{ .Bk_Bscp_Variable_Leabels }}
-save_path={{ .Bk_Bscp_Variable_KeyName }}
+save_path='./'
 
 # 使用参数构建URL
 url="${feed_addr}/api/v1/feed/biz/${biz_id}/app/${service_name}/files/${file_path}?labels=${labels}"
