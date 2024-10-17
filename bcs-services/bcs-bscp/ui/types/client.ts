@@ -170,4 +170,5 @@ export interface IExampleFormData {
   clusterInfo?: string;
   rules?: string[];
   systemType: 'Unix' | 'Windows';
+  selectedLineBreak?: 'LF' | 'CRLF';
 }

@@ -1,0 +1,24 @@
+#!/bin/bash
+#shell
+
+# 设置参数
+feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+biz_id=3
+service_name="frodomei-file-test-01"
+file_path={{ .Bk_Bscp_VariableTempDir }}
+token={{ .Bk_Bscp_Variable_ClientKey }}
+labels={{ .Bk_Bscp_Variable_Leabels }}
+save_path={{ .Bk_Bscp_Variable_KeyName }}
+
+# 使用参数构建URL
+url="${feed_addr}/api/v1/feed/biz/${biz_id}/app/${service_name}/files/${file_path}?labels=${labels}"
+
+# 设置请求头，包括Authorization token
+auth_header="Authorization: Bearer ${token}"
+
+# 发送 GET 请求下载文件(以标准输出在终端打印显示）
+curl -s -X GET -H "${auth_header}" "${url}"
+
+# 把下载的文件保存在指定位置
+# curl -s -X GET -H "${auth_header}" "${url}" -o ${save_path}/${file_path##*/}
+# echo "The file has been saved to ${save_path}/${file_path##*/}"

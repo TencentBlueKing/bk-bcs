@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+#python
+import requests
+import json
+import os
+
+# 设置参数
+feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+biz_id={{ .Bk_Bscp_Variable_BkBizId }}
+service_name="{{ .Bk_Bscp_Variable_ServiceName }}"
+file_path={{ .Bk_Bscp_VariableTempDir }}
+token={{ .Bk_Bscp_Variable_ClientKey }}
+labels={{ .Bk_Bscp_Variable_Leabels }}
+save_path={{ .Bk_Bscp_Variable_KeyName }}
+
+# 使用参数构建URL
+url = f"{feed_addr}/api/v1/feed/biz/{biz_id}/app/{service_name}/files/{file_path}"
+
+# 设置请求头，包括Authorization token
+headers = {
+    "Authorization": f"Bearer {token}",
+}
+
+# 设置请求参数
+params = {
+    "labels": json.dumps(labels)
+} 
+
+# 发送 GET 请求下载文件(以标准输出在终端打印显示）
+response = requests.get(url, params=params, headers=headers)
+print("Response content:", response.content)
+
+"""
+# 把下载的文件保存在指定位置
+if response.status_code == 200:
+    with open(os.path.join(save_path, os.path.basename(file_path)), 'wb') as file:
+        file.write(response.content)
+    print("The file has been saved to " + os.path.join(save_path, os.path.basename(file_path)))
+else:
+    print(f'Request failed, status code:{response.status_code}')
+"""

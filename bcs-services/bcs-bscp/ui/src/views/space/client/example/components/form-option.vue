@@ -51,11 +51,10 @@
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: $t('请输入配置项名称（key）用以获取对应值（value）'),
+            content: $t('请选择一个配置文件名，用于测试下载相应文件'),
             placement: 'top',
           }" />
       </template>
-      <!-- <bk-input v-model="formData.httpConfigName" :placeholder="$t('请输入')" clearable /> -->
       <config-selector ref="configSelectRef" @select-config="formData.httpConfigName = $event" />
     </bk-form-item>
     <bk-form-item>
@@ -87,6 +86,26 @@
     <bk-form-item v-if="associateConfigShow">
       <associate-config @update-rules="formData.rules = $event" />
     </bk-form-item>
+    <!-- 节点管理插件换行符选择 -->
+    <bk-form-item v-if="lineBreakShow" class="line-break-item">
+      <template #label>
+        {{ $t('文本文件换行符：') }}
+        <info
+          class="icon-info"
+          v-bk-tooltips="{
+            content: $t(`客户端下载文件时可以选择将文件保存为Linux格式（使用LF换行符）或Windows格式（使用CRLF换行符）
+服务端默认使用Linux换行符进行保存，如果选择将文件保存为Windows格式，可能导致客户端文件的MD5值与服务端的MD5值不一致`),
+            placement: 'top',
+          }" />
+      </template>
+      <bk-select
+        class="line-break-selector"
+        v-model="formData.selectedLineBreak"
+        :filterable="false"
+        :clearable="false">
+        <bk-option v-for="item in lineBreakData" :key="item" :name="item" :id="item" />
+      </bk-select>
+    </bk-form-item>
   </bk-form>
 </template>
 
@@ -113,6 +132,7 @@
       httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
       dualSystemSupport?: boolean; // Linux与Windows双系统支持（节点管理插件与两种类型的cmd命令行工具）
+      lineBreakShow?: boolean; // 换行符选项(节点管理插件)
     }>(),
     {
       directoryShow: true,
@@ -120,6 +140,7 @@
       httpConfigShow: false,
       associateConfigShow: false,
       dualSystemSupport: false,
+      lineBreakShow: false,
     },
   );
 
@@ -128,6 +149,7 @@
   const { t } = useI18n();
   const route = useRoute();
   const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
+  const lineBreakData = ['LF', 'CRLF'];
 
   const basicInfo = inject<{ serviceName: Ref<string> }>('basicInfo');
   const addLabelRef = ref();
@@ -145,6 +167,7 @@
     clusterInfo: 'BCS-K8S-', // 集群ID
     rules: [], // 文件筛选规则
     systemType: 'Unix', // 系统类型
+    selectedLineBreak: 'LF', // 换行符
     // clusterInfo: {
     //   name: '', // 集群名称
     //   value: '', // 集群id
@@ -180,7 +203,7 @@
           // Unix与Windows双路径判断
           if (formData.value.systemType === 'Windows') {
             // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
-            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*([^\\/:*?"<>|\r\n]+|)$/.test(formData.value.tempDir);
+            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$|^[a-zA-Z]:$/.test(formData.value.tempDir);
           }
           // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾

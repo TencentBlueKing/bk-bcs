@@ -71,6 +71,7 @@
     labelArr: [],
     labelArrType: '', // 展示格式
     httpConfigName: '', // http配置项名称
+    tempDir: '', // http临时目录路径(file)
   });
 
   // 代码预览上方提示框
@@ -135,12 +136,12 @@
         if (!activeTab.value) {
           return {
             topTip: '',
-            codePreviewHeight: 604,
+            codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 488 : 604,
           };
         }
         return {
           topTip: '',
-          codePreviewHeight: 754,
+          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 812 : 754,
         };
       default:
         return {
@@ -244,6 +245,12 @@
         default_val: `"${optionData.value.httpConfigName}"`,
         memo: '',
       },
+      {
+        name: 'Bk_Bscp_VariableTempDir',
+        type: '',
+        default_val: `"${optionData.value.tempDir}"`,
+        memo: '',
+      },
     ];
   };
 
@@ -315,6 +322,12 @@
           ? import('/src/assets/example-data/kv-c++-get.yaml?raw')
           : import('/src/assets/example-data/kv-c++-watch.yaml?raw');
       case 'http':
+        // http独有的file型
+        if (basicInfo?.serviceType.value === 'file') {
+          return !methods
+            ? import('/src/assets/example-data/file-http-shell.yaml?raw')
+            : import('/src/assets/example-data/file-http-python.yaml?raw');
+        }
         return !methods
           ? import('/src/assets/example-data/kv-http-shell.yaml?raw')
           : import('/src/assets/example-data/kv-http-python.yaml?raw');
