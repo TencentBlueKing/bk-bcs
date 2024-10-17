@@ -967,7 +967,7 @@ func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGr
 		return err
 	}
 	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
-		NetworkSecurityGroup.ID = sg.ID
+		NetworkSecurityGroup = &armcompute.SubResource{ID: sg.ID}
 
 	return nil
 }

@@ -270,14 +270,14 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 	// get instanceGroupManager
 	igm, err := api.GetInstanceGroupManager(computeCli, cloudNodeGroup.InstanceGroupUrls[0])
 	if err != nil {
-		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] getIgmAndIt GetInstanceGroupManager failed: %v", taskID, err)
 		return nil, nil, err
 	}
 
 	// get instanceTemplate info
 	it, err := api.GetInstanceTemplate(computeCli, igm.InstanceTemplate)
 	if err != nil {
-		blog.Errorf("taskID[%s] GetInstanceGroupManager failed: %v", taskID, err)
+		blog.Errorf("taskID[%s] getIgmAndIt GetInstanceGroupManager failed: %v", taskID, err)
 		return nil, nil, err
 	}
 
@@ -294,8 +294,13 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 	}
 
 	if newIt.Name != oldItName {
+		location, errLocal := api.GetInstanceTemplateLocation(it.SelfLink)
+		if errLocal != nil {
+			blog.Errorf("taskID[%s] GetInstanceTemplateLocation failed: %v", taskID, err)
+			return newIt, igm, nil
+		}
 		// 如果使用了新模版,则删除旧模版
-		o, err2 := computeCli.DeleteInstanceTemplate(context.Background(), oldItName)
+		o, err2 := computeCli.DeleteInstanceTemplate(context.Background(), *location, oldItName)
 		if err2 != nil {
 			return nil, nil, err2
 		}
@@ -429,7 +434,11 @@ func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, //
 		}
 	}
 
-	o, err := computeCli.CreateInstanceTemplate(context.Background(), newIt)
+	location, err := api.GetInstanceTemplateLocation(newIt.SelfLink)
+	if err != nil {
+		return fmt.Errorf("newItFromBaseIt[%s] GetInstanceTemplateLocation failed: %v", taskID, err)
+	}
+	o, err := computeCli.CreateInstanceTemplate(context.Background(), *location, newIt)
 	if err != nil {
 		blog.Errorf("taskID[%s] newItFromBaseIt CreateInstanceTemplate failed: %v", taskID, err)
 		return err
