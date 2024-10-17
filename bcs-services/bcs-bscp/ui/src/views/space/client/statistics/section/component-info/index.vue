@@ -24,7 +24,7 @@
                       class="action-icon bk-bscp-icon icon-download"
                       v-bk-tooltips="{ content: $t('可下钻图表') }" />
                   </div>
-                  <TriggerBtn v-model:currentType="currentType" />
+                  <TriggerBtn v-model:current-type="currentType" />
                 </div>
               </template>
               <bk-loading class="loading-wrap" :loading="loading">

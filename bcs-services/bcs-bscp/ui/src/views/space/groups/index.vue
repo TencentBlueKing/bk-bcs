@@ -38,7 +38,7 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <bk-table class="group-table" :border="['outer']" :data="tableData">
+        <bk-table class="group-table" show-overflow-tooltip :border="['outer']" :data="tableData">
           <template #prepend>
             <render-table-tip />
           </template>
@@ -150,7 +150,7 @@
       :name="editingGroup.name"></services-to-published>
   </section>
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteGroupDialogShow"
+    v-model:is-show="isDeleteGroupDialogShow"
     :title="t('确认删除该分组？')"
     @confirm="handleDeleteGroupConfirm">
     <div style="margin-bottom: 8px">

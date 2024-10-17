@@ -24,6 +24,7 @@ export const TAINT_VALUE = '^([A-Za-z0-9]([-A-Za-z0-9_.]{0,61}[A-Za-z0-9])?)?$';
 export const NAME_REGEX = '^[0-9a-zA-Z-]+$';
 export const SECRET_REGEX = '^[0-9a-zA-Z-~]+$';
 export const SECRETKEY_REGEX = '^[0-9a-zA-Z/-]+$';
+export const CLUSTER_NAME_REGEX = '^[0-9A-Za-z][A-Za-z0-9-_]*';
 
 // 集群环境
 export const CLUSTER_ENV = {

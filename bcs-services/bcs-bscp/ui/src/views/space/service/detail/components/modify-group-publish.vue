@@ -294,13 +294,12 @@
   };
 
   // 上线确认
-  const handleConfirm = (haveCredentials: boolean) => {
-    console.log(haveCredentials);
+  const handleConfirm = (havePull: boolean) => {
     isDiffSliderShow.value = false;
     publishedVersionId.value = versionData.value.id;
     handlePanelClose();
     emit('confirm');
-    if (haveCredentials) {
+    if (havePull) {
       InfoBox({
         infoType: 'success',
         'ext-cls': 'info-box-style',
@@ -312,10 +311,14 @@
         infoType: 'success',
         'ext-cls': 'info-box-style',
         title: t('调整分组上线成功'),
-        confirmText: t('新增服务密钥'),
+        confirmText: t('配置客户端'),
         cancelText: t('稍后再说'),
         onConfirm: () => {
-          router.push({ name: 'credentials-management' });
+          const routeData = router.resolve({
+            name: 'configuration-example',
+            params: { spaceId: props.bkBizId, appId: props.appId },
+          });
+          window.open(routeData.href, '_blank');
         },
       });
     }

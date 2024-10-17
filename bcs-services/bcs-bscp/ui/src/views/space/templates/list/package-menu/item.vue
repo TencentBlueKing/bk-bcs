@@ -7,7 +7,9 @@
         </slot>
       </div>
       <div class="text">
-        <span class="name">{{ props.pkg.name }}</span>
+        <bk-overflow-title class="name" type="tips">
+          {{ props.pkg.name }}
+        </bk-overflow-title>
         <span class="num">{{ props.pkg.count }}</span>
       </div>
       <bk-popover

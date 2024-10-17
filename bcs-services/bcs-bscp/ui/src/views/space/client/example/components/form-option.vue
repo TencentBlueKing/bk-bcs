@@ -13,17 +13,37 @@
       </template>
       <KeySelect ref="keySelectorRef" @current-key="setCredential" />
     </bk-form-item>
+    <bk-form-item v-if="props.dualSystemSupport" :label="$t('客户端操作系统')" property="systemType">
+      <bk-radio v-model="formData.systemType" label="Unix" @change="handleChangeSys(formData.systemType)">
+        Linux
+      </bk-radio>
+      <bk-radio v-model="formData.systemType" label="Windows" @change="handleChangeSys(formData.systemType)" />
+    </bk-form-item>
     <bk-form-item v-if="props.directoryShow" property="tempDir" :required="props.directoryShow">
       <template #label>
         {{ $t('临时目录') }}
         <info
           class="icon-info"
           v-bk-tooltips="{
-            content: $t('用于客户端拉取文件型配置后的临时存储目录'),
+            content: tempDirToolTips,
             placement: 'top',
           }" />
       </template>
       <bk-input v-model="formData.tempDir" :placeholder="$t('请输入')" clearable />
+    </bk-form-item>
+    <bk-form-item v-if="props.directoryShow">
+      <div class="directory-description" :class="{ 'offset-margin': tempDirValidateStatus }">
+        {{ t('客户端下载配置文件后，会将其保存在') }}
+        <span
+          v-bk-tooltips="{
+            content: $t('一键复制'),
+            placement: 'top',
+          }"
+          class="description-em"
+          @click="handleCopyText(realPath)">
+          &nbsp;{{ realPath }}&nbsp;
+        </span>
+      </div>
     </bk-form-item>
     <bk-form-item v-if="props.httpConfigShow" property="httpConfigName" :required="props.httpConfigShow">
       <template #label>
@@ -39,7 +59,7 @@
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
-      <AddLabel ref="addLabelRef" :label-name="labelName" @send-label="formData.labelArr = $event" />
+      <AddLabel ref="addLabelRef" @send-label="formData.labelArr = $event" />
     </bk-form-item>
     <!-- <bk-form-item v-if="p2pShow">
       由于集群列表接口暂不支持，产品将下拉框改为输入框，待后续接口支持后改回下拉框
@@ -62,11 +82,16 @@
       :required="formData.clusterSwitch">
       <bk-input v-model.trim="formData.clusterInfo" :placeholder="$t('请输入')" clearable />
     </bk-form-item>
+    <!-- 启用配置文件筛选 -->
+    <bk-form-item v-if="associateConfigShow">
+      <associate-config @update-rules="formData.rules = $event" />
+    </bk-form-item>
   </bk-form>
 </template>
 
 <script lang="ts" setup>
-  import { onMounted, ref, watch } from 'vue';
+  import { onMounted, ref, Ref, watch, inject, computed } from 'vue';
+  import { useRoute } from 'vue-router';
   import KeySelect from './key-selector.vue';
   import { Info } from 'bkui-vue/lib/icon';
   import AddLabel from './add-label.vue';
@@ -75,27 +100,34 @@
   import { IExampleFormData } from '../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { cloneDeep } from 'lodash';
+  import { copyToClipBoard } from '../../../../../utils/index';
+  import BkMessage from 'bkui-vue/lib/message';
+  import associateConfig from './associate-config.vue';
 
   const props = withDefaults(
     defineProps<{
-      directoryShow?: boolean;
-      labelName?: string;
-      p2pShow?: boolean;
-      httpConfigShow?: boolean;
+      directoryShow?: boolean; // 临时目录
+      p2pShow?: boolean; // p2p网络加速（Sidecar容器）
+      httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
+      dualSystemSupport?: boolean; // Linux与Windows双系统支持（节点管理插件与两种类型的cmd命令行工具）
     }>(),
     {
       directoryShow: true,
-      labelName: '标签',
       p2pShow: false,
       httpConfigShow: false,
+      associateConfigShow: false,
+      dualSystemSupport: false,
     },
   );
 
   const emits = defineEmits(['update-option-data']);
 
   const { t } = useI18n();
+  const route = useRoute();
   const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
 
+  const basicInfo = inject<{ serviceName: Ref<string> }>('basicInfo');
   const addLabelRef = ref();
   const keySelectorRef = ref();
   // const p2pAccelerationRef = ref();
@@ -108,11 +140,14 @@
     labelArr: [], // 添加的标签
     clusterSwitch: false, // 集群开关
     clusterInfo: 'BCS-K8S-', // 集群ID
+    rules: [], // 文件筛选规则
+    systemType: 'Unix', // 系统类型
     // clusterInfo: {
     //   name: '', // 集群名称
     //   value: '', // 集群id
     // },
   });
+  const spaceId = ref(Number(route.params.spaceId));
 
   const rules = {
     clientKey: [
@@ -139,6 +174,12 @@
       {
         required: true,
         validator: (value: string) => {
+          // Unix与Windows双路径判断
+          if (formData.value.systemType === 'Windows') {
+            // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
+            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*([^\\/:*?"<>|\r\n]+|)$/.test(formData.value.tempDir);
+          }
+          // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
           if (!value.startsWith('/') || value.endsWith('/')) {
             return false;
@@ -156,7 +197,11 @@
           return isValid;
         },
         trigger: 'change',
-        message: t('无效的路径,路径不符合Unix文件路径格式规范'),
+        message: () => {
+          return t('无效的路径,路径不符合systemType文件路径格式规范', {
+            systemType: formData.value.systemType,
+          });
+        },
       },
     ],
     httpConfigName: [
@@ -190,13 +235,39 @@
     ],
   };
 
+  // 临时目录校验，用于底部提示文案摆放位置
+  const tempDirValidateStatus = computed(() => {
+    return rules.tempDir.every((ruleItem) => ruleItem.validator(formData.value.tempDir));
+  });
+
+  // 真实路径
+  const realPath = computed(() => {
+    if (formData.value.systemType === 'Windows') {
+      return `${formData.value.tempDir}\\${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
+    }
+    return `${formData.value.tempDir}/${spaceId.value}/${basicInfo?.serviceName.value}/files`;
+  });
+
+  const tempDirToolTips = computed(() => {
+    if (formData.value.systemType === 'Windows') {
+      return t('临时目录提示文案').replaceAll('/', '\\');
+    }
+    return t('临时目录提示文案');
+  });
+
   watch(formData.value, () => {
     sendAll();
+    // tempDirPathType(formData.value.tempDir);
   });
 
   onMounted(() => {
     sendAll();
   });
+
+  // 选择操作系统改变默认路径
+  const handleChangeSys = (type: string) => {
+    formData.value.tempDir = type === 'Windows' ? 'D:\\bscp' : '/data/bscp';
+  };
 
   const handleValidate = () => {
     // label验证，数组长度为空时返回true
@@ -213,12 +284,35 @@
     }
     return formRef.value.validate();
   };
+
   const setCredential = (key: string, privacyKey: string) => {
     formData.value.clientKey = key;
     formData.value.privacyCredential = privacyKey;
   };
+
+  // 复制
+  const handleCopyText = async (text: string) => {
+    try {
+      await formRef.value.validate('tempDir');
+      copyToClipBoard(text);
+      BkMessage({
+        theme: 'success',
+        message: t('目录复制成功'),
+      });
+    } catch (error) {
+      BkMessage({
+        theme: 'error',
+        message: error,
+      });
+    }
+  };
+
   const sendAll = () => {
     const filterFormData = cloneDeep(formData.value);
+    // 临时目录不合法的路径不发送
+    if (!tempDirValidateStatus.value) {
+      filterFormData.tempDir = '';
+    }
     emits('update-option-data', filterFormData);
   };
 
@@ -255,5 +349,41 @@
   }
   .cluster-form-item {
     margin-top: -18px;
+  }
+  .directory-description {
+    margin: -6px 0 4px 0;
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 18px;
+    color: #979ba5;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: margin 0.1s;
+    &.offset-margin {
+      margin-top: -20px;
+    }
+    .copy-icon {
+      margin-left: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      &:hover {
+        color: #3a84ff;
+      }
+    }
+  }
+  .description-em {
+    margin-left: 4px;
+    padding: 0 4px;
+    flex: 0 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    background-color: #f5f7fa;
+    cursor: pointer;
+    &:hover {
+      color: #3a84ff;
+      background-color: #f0f5ff;
+    }
   }
 </style>

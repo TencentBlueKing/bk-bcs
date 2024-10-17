@@ -9,7 +9,7 @@
     <div class="slider-content-container">
       <ConfigForm
         ref="formRef"
-        v-model:fileUploading="fileUploading"
+        v-model:file-uploading="fileUploading"
         :config="configForm"
         :content="content"
         :editable="true"

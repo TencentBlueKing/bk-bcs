@@ -33,7 +33,9 @@ type DaemonInterface interface { // nolint
 // DaemonOptions options
 type DaemonOptions struct { // nolint
 	// EnableDaemon enable
-	EnableDaemon bool
+	EnableDaemon             bool
+	EnableAllocateCidrDaemon bool
+	EnableInsTypeUsage       bool
 }
 
 // DoFunc func() type
@@ -108,13 +110,17 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 		d.reportClusterCaUsageRatio(errChan)
 	}, 300)
 
-	go d.simpleDaemon(ctx, &wg, func() {
-		d.reportRegionInsTypeUsage(errChan)
-	}, 300)
+	if d.options.EnableInsTypeUsage {
+		go d.simpleDaemon(ctx, &wg, func() {
+			d.reportRegionInsTypeUsage(errChan)
+		}, 60)
+	}
 
-	go d.simpleDaemon(ctx, &wg, func() {
-		d.autoAllocateTcClusterCidr(errChan)
-	}, 30)
+	if d.options.EnableAllocateCidrDaemon {
+		go d.simpleDaemon(ctx, &wg, func() {
+			d.autoAllocateTcClusterCidr(errChan)
+		}, 30)
+	}
 
 	wg.Wait()
 }
@@ -127,11 +133,16 @@ func (d *Daemon) simpleDaemon(ctx context.Context, wg *sync.WaitGroup, exec DoFu
 	wg.Add(1)
 	defer wg.Done()
 
+	coldStart := make(chan struct{}, 1)
+	coldStart <- struct{}{}
+
 	ticker := time.NewTicker(time.Second * time.Duration(t))
 	defer ticker.Stop()
 
 	for {
 		select {
+		case <-coldStart:
+			exec()
 		case <-ticker.C:
 			exec()
 		case <-ctx.Done():

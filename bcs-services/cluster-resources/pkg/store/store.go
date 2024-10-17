@@ -43,6 +43,7 @@ type ClusterResourcesModel interface {
 	GetTemplateSpace(ctx context.Context, id string) (*entity.TemplateSpace, error)
 	ListTemplateSpace(ctx context.Context, cond *operator.Condition) ([]*entity.TemplateSpace, error)
 	CreateTemplateSpace(ctx context.Context, templateSpace *entity.TemplateSpace) (string, error)
+	CreateTemplateSpaceBatch(ctx context.Context, templateSpace []*entity.TemplateSpace) error
 	UpdateTemplateSpace(ctx context.Context, id string, templateSpace entity.M) error
 	DeleteTemplateSpace(ctx context.Context, id string) error
 
@@ -61,6 +62,8 @@ type ClusterResourcesModel interface {
 	UpdateTemplate(ctx context.Context, id string, template entity.M) error
 	UpdateTemplateBySpecial(
 		ctx context.Context, projectCode, templateSpace string, template entity.M) error
+	UpdateTemplateBySpaceAndName(
+		ctx context.Context, projectCode, templateSpace, templateName string, template entity.M) error
 	DeleteTemplate(ctx context.Context, id string) error
 	DeleteTemplateBySpecial(ctx context.Context, projectCode, templateSpace string) error
 

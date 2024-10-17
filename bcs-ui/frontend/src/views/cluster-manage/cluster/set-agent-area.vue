@@ -36,7 +36,7 @@ import { PropType, ref, watch } from 'vue';
 
 import { modifyCluster } from '@/api/modules/cluster-manager';
 import { ICluster } from '@/composables/use-app';
-import NodeManArea from '@/views/cluster-manage/add/form/nodeman-area.vue';
+import NodeManArea from '@/views/cluster-manage/add/components/nodeman-area.vue';
 
 const props = defineProps({
   cluster: {

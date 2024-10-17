@@ -11,7 +11,7 @@
     ext-cls="delete-confirm-dialog">
     <div class="tips">{{ t('一旦删除，该操作将无法撤销，请谨慎操作') }}</div>
     <bk-table v-show="!props.isAcrossChecked" :data="props.configs" border="outer" max-height="200">
-      <bk-table-column :label="t('配置文件绝对路径')">
+      <bk-table-column :label="t('配置文件名')">
         <template #default="{ row }">
           <span v-if="row.spec">{{ fileAP(row) }}</span>
         </template>
@@ -69,7 +69,7 @@
 
   const pending = ref(false);
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: ITemplateConfigItem) => {
     const { path, name } = config.spec;
     if (path.endsWith('/')) {

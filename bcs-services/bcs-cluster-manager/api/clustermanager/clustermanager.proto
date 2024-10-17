@@ -628,6 +628,15 @@ service ClusterManager {
       summary : "查询NodeGroup列表"
     };
   }
+  rpc RecommendNodeGroupConf(RecommendNodeGroupConfReq) returns (RecommendNodeGroupConfResp) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/cloud/{cloudID}/recommendNodeGroupConf"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建集群时推荐的节点池配置"
+      summary : "创建集群时推荐的节点池配置"
+    };
+  }
   rpc MoveNodesToGroup(MoveNodesToGroupRequest) returns (MoveNodesToGroupResponse) {
     option (google.api.http) = {
       post : "/clustermanager/v1/nodegroup/{nodeGroupID}/node"
@@ -1675,6 +1684,15 @@ message Cluster {
     title: "clusterIamRole",
     description: "aws的iam role, 用于创建eks集群"
   }];
+  SharedClusterRanges sharedRanges = 44 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sharedRanges",
+    description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
+  }];
+}
+
+message SharedClusterRanges {
+  repeated string bizs = 1;
+  repeated string projectIdOrCodes = 2;
 }
 
 message Node {
@@ -1878,6 +1896,13 @@ message NewSubnet {
   }];
 }
 
+message UpgradePolicy {
+  string supportType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "supportType",
+    description: "aws EKS升级策略类型(EXTENDED|STANDARD)"
+  }];
+}
+
 message ClusterBasicSetting {
   string OS = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "OS", 
@@ -1915,6 +1940,10 @@ message ClusterBasicSetting {
   ClusterModule module = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "module",
     description: "集群转移模块信息"
+  }];
+  UpgradePolicy upgradePolicy = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "upgradePolicy",
+    description: "集群升级策略"
   }];
 }
 
@@ -3716,6 +3745,10 @@ message InternetAccessible {
     title: "publicIP",
     description: "公网ip地址"
   }];
+  repeated string publicAccessCidrs = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "publicAccessCidrs",
+    description: "允许访问Kubernetes API Server的公网Ip cidr"
+  }];
 }
 
 // InstanceTemplateConfig instance config info
@@ -5244,6 +5277,10 @@ message CreateClusterReq {
     title: "clusterIamRole",
     description: "aws的iam role, 用于创建eks集群"
   }];
+  SharedClusterRanges sharedRanges = 44 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sharedRanges",
+    description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
+  }];
 }
 
 message CreateClusterResp {
@@ -5589,6 +5626,178 @@ message CreateVirtualClusterResp {
   WebAnnotationsV2 web_annotations = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "web_annotations",
     description : "用户所属的集群权限"
+  }];
+}
+
+message RecommendNodeGroupConfReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RecommendNodeGroupConfReq"
+      description : "获取创建集群时推荐的节点池配置"
+      required : [
+        "cloudID",
+        "accountID"
+      ]
+    }
+  };
+  string cloudID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "cloudType",
+      description : "云模版ID, 集群所属云进行流程管理"
+    },(validate.rules).string = {min_len : 1, max_len : 1024}
+  ];
+  string accountID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "accountID",
+    description: "导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息"
+  },(validate.rules).string = {max_len : 1024}];
+  string region = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "集群所在地域"
+  },(validate.rules).string = {max_len : 100, pattern : "^[0-9a-zA-Z-]+$"}];
+  string resourceGroupName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "resourceGroupName",
+    description : "AKS集群所属resource group"
+  }];
+}
+
+message InstanceProfile {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstanceProfile"
+      description : "实例配置"
+    }
+  };
+  string nodeOS = 1[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeOS", description: "节点操作系统"
+  }];
+  string instanceType = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceType",
+    description: "机型信息字符串，若配置CPU和内存，该值不强制，默认自行向上就近匹配机型信息"
+  }];
+  string instanceChargeType = 3[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceChargeType", description: "计费模式"
+  }];
+}
+
+message HardwareProfile {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "HardwareProfile"
+      description : "CPU、MEM、DISK等配置"
+    }
+  };
+  uint32 CPU = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CPU",
+    description: "机型CPU信息，与机型instanceType互斥，比instanceType优先级高"
+  }];
+  uint32 Mem = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "Mem",
+    description: "机型Mem信息，与机型instanceType互斥，比instanceType优先级高"
+  }];
+  uint32 GPU = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "GPU",
+    description: "机型GPU信息，与机型instanceType互斥，比instanceType优先级高，可以会为0"
+  }];
+  DataDisk systemDisk = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "systemDisk",
+    description : "机型系统盘, 主要用于自建资源池. 仅仅provider为self时, 需要关注"
+  }];
+  repeated DataDisk dataDisks = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "dataDisks",
+    description : "机型数据盘, 主要用于自建资源池. 仅仅provider为self时, 需要关注"
+  }];
+}
+
+message NetworkProfile {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "NetworkProfile"
+      description : "网络相关配置"
+    }
+  };
+  repeated string subnetIDs = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "subnetIDs", description: "子网ID"
+  }];
+  bool publicIPAssigned = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "publicIPAssigned",
+    description: "是否分配公网IP。默认为false。"
+  }];
+}
+
+message ScalingProfile {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ScalingProfile"
+      description : "节点池扩缩容配置"
+    }
+  };
+  uint32 maxSize = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxSize",
+    description: "弹性伸缩组最大实例数"
+  }, (validate.rules).uint32 = {gte: 0, lte: 1000}];
+  uint32 desiredSize = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "desiredSize",
+    description: "节点数量"
+  }, (validate.rules).uint32 = {gte: 0, lte: 1000}];
+  string scalingMode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scalingMode",
+    description: "扩缩容模式"
+  }];
+}
+
+message RecommendNodeGroupConf {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RecommendNodeGroupConf"
+      description : "创建集群时推荐的节点池配置"
+    }
+  };
+  string name = 1[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name", description: "节点池名称"
+  }];
+  string serviceRoleName = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "serviceRoleName", description: "awsCloud节点池服务角色"
+  }];
+  InstanceProfile instanceProfile = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceProfile", description: "实例相关配置"
+  }];
+  HardwareProfile hardwareProfile = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "hardwareProfile", description: "硬件相关配置"
+  }];
+  NetworkProfile networkProfile = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "networkProfile", description: "网络相关配置"
+  }];
+  ScalingProfile scalingProfile = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "scalingProfile", description: "扩缩容配置"
+  }];
+  string mode = 7[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mode", description: "azureCloud节点池模式,System|User"
+  }];
+  repeated string zones = 8[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zones", description: "节点池所属区域"
+  }];
+}
+
+message RecommendNodeGroupConfResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RecommendNodeGroupConfResp"
+      description : "创建集群时推荐的节点池配置"
+      required : [ "code", "message", "data"]
+    }
+  };
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message", description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+  repeated RecommendNodeGroupConf data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "推荐的节点池配置"
   }];
 }
 
@@ -6260,6 +6469,10 @@ message UpdateClusterReq {
   google.protobuf.BoolValue isMixed = 38[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "isMixed",
     description: "标记该集群是否是混部集群"
+  }];
+  SharedClusterRanges sharedRanges = 39 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "sharedRanges",
+    description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
   }];
 }
 
@@ -6972,6 +7185,10 @@ message ListProjectClusterReq {
   string operator = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "operator",
     description : "操作者(传参时获取该用户对应集群的权限信息,不传时仅获取集群列表信息)"
+  }];
+  string bizId = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "bizId",
+    description : "项目关联的业务ID，主要是为了获取共享给该业务的共享集群"
   }];
 }
 
@@ -12310,6 +12527,10 @@ message ListOperationLogsRequest {
     title: "resourceName",
     description: "默认为空, 过滤资源名称维度的操作审计"
   }];
+  string opUser = 18 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "opUser",
+    description: "默认为空, 发起者筛选"
+  }];
 }
 
 message ListTaskStepLogsRequest {
@@ -12422,6 +12643,14 @@ message TaskRecordStep {
   repeated TaskRecordStepData data = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "endTime",
     description : "任务结束时间戳"
+  }];
+  bool allowSkip = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "allowSkip",
+    description : "当前步骤失败是否允许跳过,系统内置"
+  }];
+  bool allowRetry = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "allowRetry",
+    description : "当前步骤失败是否允许重试(默认都可以重试),系统内置"
   }];
 }
 
@@ -13768,6 +13997,10 @@ message GetTopologyNodesRequest {
     title: "pageSize",
     description: "拉取数据数量，最大500，不传默认为20"
   }];
+  bool showAvailableNode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "showAvailableNode",
+    description: "展示可用节点，未在clustermanager中被占用节点"
+  }];
 }
 
 message GetTopologyNodesResponse {
@@ -13977,6 +14210,10 @@ message GetScopeHostCheckRequest {
   repeated string keyList = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "keyList",
     description: "关键字数组, 解析出的主机名/hostId等关键字信息"
+  }];
+  bool showAvailableNode = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "showAvailableNode",
+    description: "展示可用节点，未在clustermanager中被占用节点"
   }];
 }
 

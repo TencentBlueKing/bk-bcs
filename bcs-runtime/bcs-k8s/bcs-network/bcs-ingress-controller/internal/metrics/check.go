@@ -23,7 +23,7 @@ var (
 		Subsystem: "listener",
 		Name:      "total",
 		Help:      "The total listener managed by controller",
-	}, []string{"status", "target_group_type"})
+	}, []string{"lbID", "protocol", "status", "target_group_type"})
 
 	PortBindingTotal = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "bkbcs_ingressctrl",

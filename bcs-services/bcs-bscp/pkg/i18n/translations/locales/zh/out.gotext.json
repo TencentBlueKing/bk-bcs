@@ -7,6 +7,11 @@
             "translation": "id不能为空"
         },
         {
+            "id": "invalid file name",
+            "message": "invalid file name",
+            "translation": "无效的文件名"
+        },
+        {
             "id": "read file failed, err: {ErrR}",
             "message": "read file failed, err: {ErrR}",
             "translation": "读取文件失败, err: {ErrR}",
@@ -140,17 +145,17 @@
             ]
         },
         {
-            "id": "list config item failed, err: {Err}",
-            "message": "list config item failed, err: {Err}",
-            "translation": "获取配置项失败, err: {Err}",
+            "id": "list config item failed, err: {ErrC}",
+            "message": "list config item failed, err: {ErrC}",
+            "translation": "获取配置项失败, err: {ErrC}",
             "placeholders": [
                 {
-                    "id": "Err",
+                    "id": "ErrC",
                     "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
-                    "expr": "err"
+                    "expr": "errC"
                 }
             ]
         },
@@ -261,6 +266,11 @@
             "id": "batch delete failed",
             "message": "batch delete failed",
             "translation": "批量删除失败"
+        },
+        {
+            "id": "sensitive data is not visible, unable to view actual content",
+            "message": "sensitive data is not visible, unable to view actual content",
+            "translation": "敏感数据不可见，无法查看实际内容"
         },
         {
             "id": "not legal JSON data",
@@ -466,9 +476,9 @@
             "translation": "证书格式不正确, 仅支持X.509格式"
         },
         {
-            "id": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
-            "message": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
-            "translation": "token格式错误, 目前仅支持OAuth2.0和jwt格式, 长度为32-512个字符, 包括大小写字母和数字"
+            "id": "delete template from template sets failed",
+            "message": "delete template from template sets failed",
+            "translation": ""
         },
         {
             "id": "template variable name must start with {TemplateVariablePrefix}",
@@ -876,21 +886,6 @@
             ]
         },
         {
-            "id": "the config file {Name} under this service already exists and cannot be created again",
-            "message": "the config file {Name} under this service already exists and cannot be created again",
-            "translation": "此服务下的配置文件 {Name} 已存在, 无法重复创建",
-            "placeholders": [
-                {
-                    "id": "Name",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)"
-                }
-            ]
-        },
-        {
             "id": "delete one app template binding instance by app id failed, err: {Err}",
             "message": "delete one app template binding instance by app id failed, err: {Err}",
             "translation": "移除服务模板套餐失败, err: {Err}",
@@ -1225,11 +1220,6 @@
                     "expr": "err"
                 }
             ]
-        },
-        {
-            "id": "sensitive data is not visible, unable to view actual content",
-            "message": "sensitive data is not visible, unable to view actual content",
-            "translation": "敏感数据不可见，无法查看实际内容"
         },
         {
             "id": "not a KV type service",
@@ -1580,34 +1570,69 @@
             "translation": "revision没有被设置"
         },
         {
-            "id": "invalid path, length should \u003e= 1",
-            "message": "invalid path, length should \u003e= 1",
-            "translation": "路径无效, 长度应为 \u003e= 1"
-        },
-        {
-            "id": "invalid path, length should \u003c= 1024",
-            "message": "invalid path, length should \u003c= 1024",
-            "translation": "路径无效, 长度应为 \u003c= 1024"
-        },
-        {
-            "id": "invalid path, should start with '/'",
-            "message": "invalid path, should start with '/'",
-            "translation": "路径无效, 应以“/”开头"
-        },
-        {
-            "id": "invalid path {Part}, path cannot all be '.'",
-            "message": "invalid path {Part}, path cannot all be '.'",
-            "translation": "路径 {Part} 无效, 路径不能全部为“.”",
+            "id": "invalid path {Path}, length should \u003e= 1",
+            "message": "invalid path {Path}, length should \u003e= 1",
+            "translation": "路径 {Path} 无效，长度应为 \u003e= 1",
             "placeholders": [
                 {
-                    "id": "Part",
+                    "id": "Path",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "part"
+                    "expr": "path"
                 }
             ]
+        },
+        {
+            "id": "invalid path {Path}, length should \u003c= 1024",
+            "message": "invalid path {Path}, length should \u003c= 1024",
+            "translation": "路径 {Path} 无效，长度应为 \u003c= 1024",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path {Path}, the path must start with '/'",
+            "message": "invalid path {Path}, the path must start with '/'",
+            "translation": "路径 {Path} 无效，路径必须以“/”开头",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translation": "路径 {Path} 无效，路径不能包含连续的“/”",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ]
+        },
+        {
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "路径无效, 长度应为 \u003e= 1"
         },
         {
             "id": "invalid path, length should \u003c= 256",
@@ -1751,6 +1776,21 @@
             "id": "invalid name {Name}, name cannot all be '.'",
             "message": "invalid name {Name}, name cannot all be '.'",
             "translation": "名称 {Name} 无效, 名称不能全部为“.”",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ]
+        },
+        {
+            "id": "invalid name {Name}, there can't be any /",
+            "message": "invalid name {Name}, there can't be any /",
+            "translation": "名称 {Name} 无效，不能有 /",
             "placeholders": [
                 {
                     "id": "Name",

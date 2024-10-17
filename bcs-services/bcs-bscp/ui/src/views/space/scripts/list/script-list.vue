@@ -181,7 +181,7 @@
     <ScriptCited v-model:show="showCiteSlider" :id="currentId" />
   </section>
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteScriptDialogShow"
+    v-model:is-show="isDeleteScriptDialogShow"
     :title="t('确认删除该脚本？')"
     @confirm="handleDeleteScriptConfirm">
     <div style="margin-bottom: 8px">

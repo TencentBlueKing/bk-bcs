@@ -177,9 +177,8 @@ func ValidateReleaseName(kit *kit.Kit, name string) error {
 }
 
 // qualifiedFileNameRegexp file name regexp.
-// support character: chinese, english, number,
-// '-', '_', '#', '%', ',', '@', '^', '+', '=', '[', ']', '{', '}, '.'
-var qualifiedFileNameRegexp = regexp.MustCompile("^[\u4e00-\u9fa5A-Za-z0-9-_#%,.@^+=\\[\\]\\{\\}]+$")
+// 文件名不能包含/
+var qualifiedFileNameRegexp = regexp.MustCompile("^[^/]+$")
 
 var dotsRegexp = regexp.MustCompile(`^\.+$`)
 
@@ -202,8 +201,7 @@ func ValidateFileName(kit *kit.Kit, name string) error {
 	}
 
 	if !qualifiedFileNameRegexp.MatchString(name) {
-		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, fmt.Sprintf(`invalid name %s, should only contains chinese,
-		 english, number, '-', '_', '#', '%%', ',', '@', '^', '+', '=', '[', ']', '{', '}', '.'`, name)))
+		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid name %s, there can't be any /", name))
 	}
 
 	return nil

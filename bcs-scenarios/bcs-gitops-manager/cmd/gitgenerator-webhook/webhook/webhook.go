@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	clusterclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -37,6 +38,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/options"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
 )
 
@@ -65,11 +67,12 @@ func NewAdmissionWebhookServer(cfg *options.Config) *AdmissionWebhookServer {
 // Init will init the argocd client
 func (s *AdmissionWebhookServer) Init() error {
 	s.argoStore = store.NewStore(&store.Options{
-		Service:      s.cfg.ArgoService,
-		User:         s.cfg.ArgoUser,
-		Pass:         s.cfg.ArgoPass,
-		Cache:        false,
-		CacheHistory: false,
+		Service:       s.cfg.ArgoService,
+		User:          s.cfg.ArgoUser,
+		Pass:          s.cfg.ArgoPass,
+		Cache:         false,
+		CacheHistory:  false,
+		RepoServerUrl: s.cfg.ArgoRepoUrl,
 	})
 	var err error
 	s.db, err = dao.NewDriver(&s.cfg.DBConfig)
@@ -78,6 +81,9 @@ func (s *AdmissionWebhookServer) Init() error {
 	}
 	if err = s.argoStore.Init(); err != nil {
 		return errors.Wrapf(err, "init argocd stroe failed")
+	}
+	if err = s.argoStore.InitArgoDB(context.Background()); err != nil {
+		return errors.Wrapf(err, "init argocd db failed")
 	}
 	return nil
 }
@@ -140,17 +146,30 @@ func (s *AdmissionWebhookServer) check(ctx *gin.Context) {
 		s.webhookAllow(ctx, true, "", "")
 		return
 	}
-	blog.Infof("Received request. UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
-		req.Operation, req.Kind)
 
 	if req.Kind.Kind != application.ApplicationKind {
 		s.webhookAllow(ctx, true, req.UID, "")
 		return
 	}
-	if req.Operation == v1.Create {
+	switch req.Operation {
+	case v1.Create:
+		blog.Infof("Received request. UID: %s, Name: %s, Operation: %s, Kind: %v.", req.UID, req.Name,
+			req.Operation, req.Kind)
 		// check application-create which belong to appset
 		if err := s.checkApplication(ctx, req.Object.Raw); err != nil {
 			blog.Errorf("UID: %s, check application failed: %s", req.UID, err.Error())
+			s.webhookAllow(ctx, false, req.UID, err.Error())
+			return
+		}
+	case v1.Update:
+		if err := s.interceptAppSyncWithForbid(ctx, req); err != nil {
+			blog.Errorf("UID: %s, intercept application sync with forbidden flag failed: %s",
+				req.UID, err.Error())
+			s.webhookAllow(ctx, false, req.UID, err.Error())
+			return
+		}
+		if err := s.interceptApplicationSync(ctx, req); err != nil {
+			blog.Errorf("UID: %s, intercept application sync: %s", req.UID, err.Error())
 			s.webhookAllow(ctx, false, req.UID, err.Error())
 			return
 		}
@@ -196,31 +215,8 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	if argoProj == nil {
 		return errors.Errorf("project '%s' not exist", proj)
 	}
-
-	// check app whether belong to appset
-	var repoBelong bool
-	var repoProj string
-	if app.Spec.HasMultipleSources() {
-		for i := range app.Spec.Sources {
-			appSource := app.Spec.Sources[i]
-			repoUrl := appSource.RepoURL
-			repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
-			if err != nil {
-				return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
-			}
-			if !repoBelong {
-				return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
-			}
-		}
-	} else {
-		repoUrl := app.Spec.Source.RepoURL
-		repoProj, repoBelong, err = s.checkRepositoryBelongProject(ctx, repoUrl, proj)
-		if err != nil {
-			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
-		}
-		if !repoBelong {
-			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
-		}
+	if err = s.checkAppRepoBelongProject(ctx, proj, app); err != nil {
+		return err
 	}
 
 	// check dest server is legal
@@ -255,6 +251,32 @@ func (s *AdmissionWebhookServer) checkApplication(ctx context.Context, bs []byte
 	return nil
 }
 
+func (s *AdmissionWebhookServer) checkAppRepoBelongProject(ctx context.Context, proj string,
+	app *v1alpha1.Application) error {
+	if !app.Spec.HasMultipleSources() {
+		repoUrl := app.Spec.Source.RepoURL
+		repoProj, repoBelong, err := s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+		if err != nil {
+			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+		}
+		if !repoBelong {
+			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+		}
+	}
+	for i := range app.Spec.Sources {
+		appSource := app.Spec.Sources[i]
+		repoUrl := appSource.RepoURL
+		repoProj, repoBelong, err := s.checkRepositoryBelongProject(ctx, repoUrl, proj)
+		if err != nil {
+			return errors.Wrapf(err, "check repo '%s' belong to project '%s' failed", repoUrl, repoProj)
+		}
+		if !repoBelong {
+			return errors.Errorf("repo '%s' project is '%s', not same as '%s'", repoUrl, repoProj, proj)
+		}
+	}
+	return nil
+}
+
 func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Context, repoUrl,
 	project string) (string, bool, error) {
 	repo, err := s.argoStore.GetRepository(ctx, repoUrl)
@@ -269,6 +291,264 @@ func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Contex
 		belong = slices.Contains(s.cfg.PublicProjects, repo.Project)
 	}
 	return repo.Project, belong, nil
+}
+
+func (s *AdmissionWebhookServer) unmarshalAppFromReq(req *v1.AdmissionRequest) (*v1alpha1.Application, error) {
+	app := new(v1alpha1.Application)
+	if err := json.Unmarshal(req.Object.Raw, app); err != nil {
+		return nil, errors.Wrap(err, "unmarshal application failed")
+	}
+	return app, nil
+}
+
+func (s *AdmissionWebhookServer) needInterceptAppSync(req *v1.AdmissionRequest) *v1alpha1.Application {
+	app, err := s.unmarshalAppFromReq(req)
+	if err != nil {
+		blog.Errorf("not need intercept because unmarshal app error")
+		return nil
+	}
+	if len(s.cfg.InterceptSyncProjects) == 0 {
+		return nil
+	}
+	if !slices.Contains(s.cfg.InterceptSyncProjects, app.Spec.Project) {
+		return nil
+	}
+	state := app.Status.OperationState
+	// 如果应用状态非 Running, 则表示不在 Sync 进程中，直接返回
+	if state == nil || state.Phase != synccommon.OperationRunning {
+		return nil
+	}
+	if app.Status.Sync.Revision == "" && len(app.Status.Sync.Revisions) == 0 {
+		return nil
+	}
+	if app.Operation == nil {
+		return nil
+	}
+	blog.Infof("Received request(intercept sync). UID: %s, Name: %s, Operation: %s, Kind: %v. Sync revisions: %s, %v",
+		req.UID, req.Name, req.Operation, req.Kind, app.Status.Sync.Revision, app.Status.Sync.Revisions)
+	return app
+}
+
+func (s *AdmissionWebhookServer) checkApplicationBelongAppSet(ctx context.Context,
+	app *v1alpha1.Application) *v1alpha1.ApplicationSet {
+	var belongAppSet bool
+	var appSetName string
+	for i := range app.ObjectMeta.OwnerReferences {
+		owner := app.ObjectMeta.OwnerReferences[i]
+		if owner.Kind == "ApplicationSet" {
+			belongAppSet = true
+			appSetName = owner.Name
+			break
+		}
+	}
+	if !belongAppSet || appSetName == "" {
+		return nil
+	}
+	appSet, err := s.argoStore.GetApplicationSet(ctx, appSetName)
+	if err != nil {
+		blog.Errorf("get application '%s' owner appset '%s' failed: %s", app.Name, appSetName, err.Error())
+		return nil
+	}
+	if appSet == nil {
+		blog.Errorf("get application '%s' owner appset '%s' is empty", app.Name, appSetName)
+		return nil
+	}
+	return appSet
+}
+
+func (s *AdmissionWebhookServer) interceptAppSyncWithForbid(ctx context.Context,
+	req *v1.AdmissionRequest) error {
+	// 如果设置了禁止同步标记，就直接拒绝同步
+	reqApp, err := s.unmarshalAppFromReq(req)
+	if err != nil {
+		blog.Errorf("not need intercept with forbidden flag because unmarshal application request error")
+		return nil
+	}
+	// 如果没有设置app的operation,就忽略
+	if reqApp.Operation == nil {
+		return nil
+	}
+	app, err := s.argoStore.GetApplication(ctx, req.Name)
+	if err != nil {
+		blog.Errorf("not need intercept with forbidden flag because get application error")
+		return nil
+	}
+	// 如果要更新common.ApplicationSyncForbidden就不拒绝
+	if _, reqExistForbidden := reqApp.Annotations[common.ApplicationSyncForbidden]; !reqExistForbidden {
+		return nil
+	}
+	_, existForbidden := app.Annotations[common.ApplicationSyncForbidden]
+	if existForbidden {
+		return errors.Errorf(
+			`reject the app_sync, because current application.metadata.annotations has %s,
+			 req annotations is '%v'`,
+			common.ApplicationSyncForbidden, reqApp.Annotations)
+	}
+	return nil
+}
+
+// interceptApplicationSync 用于处理 appset 使用动态 TargetRevision 引发应用出现 2 次同步的问题
+func (s *AdmissionWebhookServer) interceptApplicationSync(ctx context.Context, req *v1.AdmissionRequest) error {
+	app := s.needInterceptAppSync(req)
+	if app == nil {
+		return nil
+	}
+	appSet := s.checkApplicationBelongAppSet(ctx, app)
+	if appSet == nil {
+		return nil
+	}
+	// 如果 AppSet 的 Template 中 revision 不是动态的，则我们不进行处理
+	if !s.checkAppSetHasDynamicRevision(ctx, appSet, app.Name) {
+		return nil
+	}
+
+	apps, err := s.argoStore.ApplicationSetDryRun(appSet)
+	if err != nil {
+		blog.Errorf("skip intercept application '%s' sync, it's appset '%s' dry-run failed: %s",
+			app.Name, appSet.Name, err.Error())
+		return nil
+	}
+	var generatedApp *v1alpha1.Application
+	for i := range apps {
+		if apps[i].Name != app.Name {
+			continue
+		}
+		generatedApp = apps[i]
+		break
+	}
+	if generatedApp == nil {
+		blog.Warnf("skip intercept application '%s' sync, it's appset '%s' dry-run not have app",
+			app.Name, appSet.Name)
+		return nil
+	}
+	blog.Infof("intercept application '%s' sync, found the application after appset dry-run", app.Name)
+
+	// 对比 AppSet dry-run 出来的应用和当前应用的 revision 是否一致
+	originalSources := app.Spec.GetSources()
+	generatedSources := generatedApp.Spec.GetSources()
+	if len(originalSources) != len(generatedSources) {
+		return nil
+	}
+	if app.Operation == nil {
+		return nil
+	}
+	for i := range generatedSources {
+		appSrc := &generatedSources[i]
+		var originalRevision string
+		var operationRevision string
+		if app.Spec.HasMultipleSources() {
+			originalRevision = app.Status.Sync.Revisions[i]
+			operationRevision = app.Operation.Sync.Revisions[i]
+		} else {
+			originalRevision = app.Status.Sync.Revision
+			operationRevision = app.Operation.Sync.Revision
+		}
+		if err = s.handleCompareApplicationSource(ctx, app.Name, originalRevision, operationRevision,
+			appSrc); err != nil {
+			if terminateErr := s.argoStore.TerminateAppOperation(ctx, &applicationpkg.OperationTerminateRequest{
+				Name:         &app.Name,
+				AppNamespace: &app.Namespace,
+				Project:      &app.Spec.Project,
+			}); terminateErr != nil {
+				blog.Errorf("intercept application '%s' sync, terminate operation failed: %s", app.Name,
+					terminateErr.Error())
+			} else {
+				blog.Infof("intercept application '%s' sync, terminate operation success", app.Name)
+			}
+			if patchErr := s.patchDeleteOperation(app); patchErr != nil {
+				blog.Errorf("intercept application '%s' sync, patch delete operation failed: %s",
+					app.Name, patchErr.Error())
+			} else {
+				blog.Infof("intercept application '%s' sync, patch delete operation success", app.Name)
+			}
+			return errors.Wrapf(err, "reject app-sync for '%s'", app.Name)
+		}
+	}
+	blog.Infof("skip intercept application '%s' sync, the revision generate by appset is same. "+
+		"revisions: %v, %v", app.Name, app.Status.Sync.Revision, app.Status.Sync.Revisions)
+	return nil
+}
+
+func (s *AdmissionWebhookServer) patchDeleteOperation(app *v1alpha1.Application) error {
+	if app.Operation == nil {
+		return nil
+	}
+	argoK8SClient := s.argoStore.ReturnArgoK8SClient()
+	_, err := argoK8SClient.Applications(s.cfg.AdminNamespace).Patch(context.Background(), app.Name,
+		types.JSONPatchType, []byte(`[{"op":"remove","path":"/operation"}]`), metav1.PatchOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "patch remove operation failed")
+	}
+	if _, err = argoK8SClient.Applications(s.cfg.AdminNamespace).Patch(context.Background(), app.Name,
+		types.JSONPatchType, []byte(`[{"op":"replace","path":"/status/operationState/phase","value":"Succeeded"}]`),
+		metav1.PatchOptions{}); err != nil {
+		return errors.Wrapf(err, "patch change status.operationState.phase failed")
+	}
+	return nil
+}
+
+func (s *AdmissionWebhookServer) handleCompareApplicationSource(ctx context.Context, appName, originalRevision,
+	operationRevision string, generateSource *v1alpha1.ApplicationSource) error {
+	// generate-source perhaps not an actual commit-id
+	generateSourceRevision, err := s.argoStore.GetRepoLastCommitID(ctx, generateSource.RepoURL,
+		generateSource.TargetRevision)
+	if err != nil {
+		blog.Errorf("skip intercept application '%s' sync, get git revision failed for '%s, %s'",
+			appName, generateSource.RepoURL, generateSource.TargetRevision)
+		return nil
+	}
+	// sync-revision is an actual commit-id
+	if !strings.HasPrefix(generateSourceRevision, originalRevision) {
+		return errors.Errorf("original revision '%s' not same to generated-by-appset revision '%s'",
+			originalRevision, generateSourceRevision)
+	}
+	if !strings.HasPrefix(generateSourceRevision, operationRevision) {
+		return errors.Errorf("operation revision '%s' not same to generated-by-appset revision '%s'",
+			originalRevision, generateSourceRevision)
+	}
+	return nil
+}
+
+func (s *AdmissionWebhookServer) checkAppSetHasDynamicRevision(ctx context.Context, appSet *v1alpha1.ApplicationSet,
+	appName string) bool {
+	appSetTemplate := appSet.Spec.Template
+	hasDynamicRevision := false
+	// 如果 AppSet 的 Template 中 revision 不是动态的，则我们不进行处理
+	var staticSource *v1alpha1.ApplicationSource
+	var staticIndex int
+	if appSetTemplate.Spec.HasMultipleSources() {
+		for i := range appSetTemplate.Spec.Sources {
+			if strings.Contains(appSetTemplate.Spec.Sources[i].TargetRevision, "{") {
+				hasDynamicRevision = true
+				continue
+			}
+			staticSource = &appSetTemplate.Spec.Sources[i]
+			staticIndex = i
+		}
+	} else if strings.Contains(appSetTemplate.Spec.Source.TargetRevision, "{") {
+		hasDynamicRevision = true
+	}
+	if !hasDynamicRevision {
+		blog.Infof("skip intercept application '%s' sync, it's appset '%s' not have dynamic revision",
+			appName, appSet.Name)
+		return false
+	}
+	blog.Infof("intercept application '%s' sync, it's appset '%s' has dynamic revision", appName, appSet.Name)
+	if staticSource != nil {
+		repo := staticSource.RepoURL
+		revision := staticSource.TargetRevision
+		lastCommitID, err := s.argoStore.GetRepoLastCommitID(ctx, repo, revision)
+		if err != nil {
+			hasDynamicRevision = false
+			blog.Errorf("intercept application '%s' sync, get appset '%s' repo '%s/%s' last-commit failed: %s",
+				appName, appSet.Name, repo, revision, err.Error())
+		} else {
+			blog.Infof("intercept application '%s' sync, get appset '%s' repo '%s/%s' last-commit success: %s",
+				appName, appSet.Name, repo, revision, lastCommitID)
+			appSet.Spec.Template.Spec.Sources[staticIndex].TargetRevision = lastCommitID
+		}
+	}
+	return hasDynamicRevision
 }
 
 // recoverApplicationOperation 补偿 application.operation 被 argocd 未知删除问题

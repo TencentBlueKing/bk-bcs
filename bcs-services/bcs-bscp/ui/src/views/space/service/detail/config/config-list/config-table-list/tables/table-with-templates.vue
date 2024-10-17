@@ -7,7 +7,7 @@
             <th v-if="isUnNamedVersion" class="selection">
               <bk-checkbox :model-value="isIndeterminate" :indeterminate="isIndeterminate" @change="handleSelectAll" />
             </th>
-            <th class="name">{{ t('配置文件绝对路径') }}</th>
+            <th class="name">{{ t('配置文件名') }}</th>
             <th class="version">{{ t('配置模板版本') }}</th>
             <th class="user">{{ t('创建人') }}</th>
             <th class="user">{{ t('修改人') }}</th>
@@ -55,166 +55,175 @@
                 <div class="configs-list-wrapper">
                   <table class="config-list-table">
                     <tbody>
-                      <tr v-for="config in group.configs" :key="config.id" :class="getRowCls(config)">
-                        <td v-if="isUnNamedVersion" class="selection">
-                          <bk-checkbox
-                            :disabled="group.id > 0 || config.file_state === 'DELETE'"
-                            :model-value="selectedConfigItems.some((item) => item.id === config.id)"
-                            @change="handleRowSelectionChange($event, config.id)" />
-                        </td>
-                        <td class="name">
-                          <ContentWidthOverflowTips>
-                            <template v-if="group.id === 0">
-                              <div
-                                v-if="isUnNamedVersion"
-                                v-cursor="{ active: !hasEditServicePerm }"
-                                :class="[
-                                  'file-name-btn',
-                                  {
-                                    'bk-text-with-no-perm': !hasEditServicePerm,
-                                    disabled: !hasEditServicePerm || config.file_state === 'DELETE',
-                                  },
-                                ]"
-                                @click="
-                                  () => {
-                                    hasEditServicePerm && config.file_state !== 'DELETE' && handleViewConfig(config.id);
-                                  }
-                                ">
-                                {{ fileAP(config) }}
-                              </div>
-                              <div
-                                v-else
-                                :class="['file-name-btn', { disabled: config.file_state === 'DELETE' }]"
-                                @click="
-                                  () => {
-                                    config.file_state !== 'DELETE' && handleViewConfig(config.id);
-                                  }
-                                ">
-                                {{ fileAP(config) }}
-                              </div>
-                            </template>
-                            <div
-                              v-else
-                              :class="['file-name-btn', { disabled: config.file_state === 'DELETE' }]"
-                              @click="
-                                () => {
-                                  config.file_state !== 'DELETE' && handleViewTemplateConfig(config, group);
-                                }
-                              ">
-                              {{ fileAP(config) }}
-                            </div>
-                          </ContentWidthOverflowTips>
-                        </td>
-                        <td class="version">{{ config.is_latest ? 'latest' : config.versionName }}</td>
-                        <td class="user">{{ config.creator }}</td>
-                        <td class="user">{{ config.reviser }}</td>
-                        <td class="datetime">{{ config.update_at }}</td>
-                        <td class="status" v-if="versionData.id === 0">
-                          <StatusTag :status="config.file_state" />
-                        </td>
-                        <td class="operation">
-                          <div class="config-actions">
-                            <!-- 非套餐配置文件 -->
-                            <template v-if="group.id === 0">
-                              <template v-if="isUnNamedVersion">
-                                <template v-if="config.file_state !== 'DELETE'">
+                      <RecycleScroller
+                        :key="configList.length"
+                        :items="group.configs"
+                        key-field="id"
+                        :item-size="40"
+                        class="scroller">
+                        <template #default="{ item }">
+                          <div :class="getRowCls(item)">
+                            <td v-if="isUnNamedVersion" class="selection">
+                              <bk-checkbox
+                                :disabled="group.id > 0 || item.file_state === 'DELETE'"
+                                :model-value="selectedConfigItems.some((config) => item.id === config.id)"
+                                @change="handleRowSelectionChange($event, item.id)" />
+                            </td>
+                            <td class="name">
+                              <ContentWidthOverflowTips>
+                                <template v-if="group.id === 0">
+                                  <div
+                                    v-if="isUnNamedVersion"
+                                    v-cursor="{ active: !hasEditServicePerm }"
+                                    :class="[
+                                      'file-name-btn',
+                                      {
+                                        'bk-text-with-no-perm': !hasEditServicePerm,
+                                        disabled: !hasEditServicePerm || item.file_state === 'DELETE',
+                                      },
+                                    ]"
+                                    @click="
+                                      () => {
+                                        hasEditServicePerm && item.file_state !== 'DELETE' && handleViewConfig(item.id);
+                                      }
+                                    ">
+                                    {{ fileAP(item) }}
+                                  </div>
+                                  <div
+                                    v-else
+                                    :class="['file-name-btn', { disabled: item.file_state === 'DELETE' }]"
+                                    @click="
+                                      () => {
+                                        item.file_state !== 'DELETE' && handleViewConfig(item.id);
+                                      }
+                                    ">
+                                    {{ fileAP(item) }}
+                                  </div>
+                                </template>
+                                <div
+                                  v-else
+                                  :class="['file-name-btn', { disabled: item.file_state === 'DELETE' }]"
+                                  @click="
+                                    () => {
+                                      item.file_state !== 'DELETE' && handleViewTemplateConfig(item, group);
+                                    }
+                                  ">
+                                  {{ fileAP(item) }}
+                                </div>
+                              </ContentWidthOverflowTips>
+                            </td>
+                            <td class="version">{{ item.is_latest ? 'latest' : item.versionName }}</td>
+                            <td class="user">{{ item.creator }}</td>
+                            <td class="user">{{ item.reviser }}</td>
+                            <td class="datetime">{{ item.update_at }}</td>
+                            <td class="status" v-if="versionData.id === 0">
+                              <StatusTag :status="item.file_state" />
+                            </td>
+                            <td class="operation">
+                              <div class="config-actions">
+                                <!-- 非套餐配置文件 -->
+                                <template v-if="group.id === 0">
+                                  <template v-if="isUnNamedVersion">
+                                    <template v-if="item.file_state !== 'DELETE'">
+                                      <bk-button
+                                        v-cursor="{ active: !hasEditServicePerm }"
+                                        text
+                                        theme="primary"
+                                        :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                        :disabled="!hasEditServicePerm"
+                                        @click="handleEditOpen(item)">
+                                        {{ t('编辑') }}
+                                      </bk-button>
+                                      <bk-button
+                                        v-if="item.file_state === 'REVISE'"
+                                        v-cursor="{ active: !hasEditServicePerm }"
+                                        text
+                                        theme="primary"
+                                        :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                        :disabled="!hasEditServicePerm"
+                                        @click="handleUnModify(item.id)">
+                                        {{ t('撤销') }}
+                                      </bk-button>
+                                      <DownloadConfigBtn
+                                        type="config"
+                                        :bk-biz-id="props.bkBizId"
+                                        :app-id="props.appId"
+                                        :id="item.id"
+                                        :disabled="item.file_state === 'DELETE'" />
+                                      <bk-button
+                                        v-cursor="{ active: !hasEditServicePerm }"
+                                        text
+                                        theme="primary"
+                                        :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                        :disabled="!hasEditServicePerm"
+                                        @click="handleDel(item)">
+                                        {{ t('删除') }}
+                                      </bk-button>
+                                    </template>
+                                    <bk-button
+                                      v-else
+                                      v-cursor="{ active: !hasEditServicePerm }"
+                                      text
+                                      theme="primary"
+                                      :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
+                                      :disabled="!hasEditServicePerm"
+                                      @click="handleUnDelete(item)">
+                                      {{ t('恢复') }}
+                                    </bk-button>
+                                  </template>
+                                  <template v-else>
+                                    <bk-button text theme="primary" @click="handleViewConfig(item.id)">
+                                      {{ t('查看') }}
+                                    </bk-button>
+                                    <bk-button
+                                      v-if="versionData.status.publish_status !== 'editing'"
+                                      text
+                                      theme="primary"
+                                      @click="handleConfigDiff(group.id, item)">
+                                      {{ t('对比') }}
+                                    </bk-button>
+                                    <DownloadConfigBtn
+                                      type="config"
+                                      :bk-biz-id="props.bkBizId"
+                                      :app-id="props.appId"
+                                      :id="item.id" />
+                                  </template>
+                                </template>
+                                <!-- 套餐模板 -->
+                                <template v-else>
                                   <bk-button
+                                    v-if="isUnNamedVersion"
                                     v-cursor="{ active: !hasEditServicePerm }"
                                     text
                                     theme="primary"
                                     :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                    :disabled="!hasEditServicePerm"
-                                    @click="handleEditOpen(config)">
-                                    {{ t('编辑') }}
+                                    @click="handleOpenReplaceVersionDialog(group.id, item)">
+                                    {{ t('替换版本') }}
                                   </bk-button>
-                                  <bk-button
-                                    v-if="config.file_state === 'REVISE'"
-                                    v-cursor="{ active: !hasEditServicePerm }"
-                                    text
-                                    theme="primary"
-                                    :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                    :disabled="!hasEditServicePerm"
-                                    @click="handleUnModify(config.id)">
-                                    {{ t('撤销') }}
-                                  </bk-button>
+                                  <template v-else>
+                                    <bk-button text theme="primary" @click="handleViewTemplateConfig(item, group)">
+                                      {{ t('查看') }}
+                                    </bk-button>
+                                    <bk-button
+                                      v-if="versionData.status.publish_status !== 'editing'"
+                                      text
+                                      theme="primary"
+                                      @click="handleConfigDiff(group.id, item)">
+                                      {{ t('对比') }}
+                                    </bk-button>
+                                  </template>
                                   <DownloadConfigBtn
-                                    type="config"
+                                    type="template"
                                     :bk-biz-id="props.bkBizId"
                                     :app-id="props.appId"
-                                    :id="config.id"
-                                    :disabled="config.file_state === 'DELETE'" />
-                                  <bk-button
-                                    v-cursor="{ active: !hasEditServicePerm }"
-                                    text
-                                    theme="primary"
-                                    :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                    :disabled="!hasEditServicePerm"
-                                    @click="handleDel(config)">
-                                    {{ t('删除') }}
-                                  </bk-button>
+                                    :id="item.versionId"
+                                    :disabled="item.file_state === 'DELETE'" />
                                 </template>
-                                <bk-button
-                                  v-else
-                                  v-cursor="{ active: !hasEditServicePerm }"
-                                  text
-                                  theme="primary"
-                                  :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                  :disabled="!hasEditServicePerm"
-                                  @click="handleUnDelete(config)">
-                                  {{ t('恢复') }}
-                                </bk-button>
-                              </template>
-                              <template v-else>
-                                <bk-button text theme="primary" @click="handleViewConfig(config.id)">
-                                  {{ t('查看') }}
-                                </bk-button>
-                                <bk-button
-                                  v-if="versionData.status.publish_status !== 'editing'"
-                                  text
-                                  theme="primary"
-                                  @click="handleConfigDiff(group.id, config)">
-                                  {{ t('对比') }}
-                                </bk-button>
-                                <DownloadConfigBtn
-                                  type="config"
-                                  :bk-biz-id="props.bkBizId"
-                                  :app-id="props.appId"
-                                  :id="config.id" />
-                              </template>
-                            </template>
-                            <!-- 套餐模板 -->
-                            <template v-else>
-                              <bk-button
-                                v-if="isUnNamedVersion"
-                                v-cursor="{ active: !hasEditServicePerm }"
-                                text
-                                theme="primary"
-                                :class="{ 'bk-text-with-no-perm': !hasEditServicePerm }"
-                                @click="handleOpenReplaceVersionDialog(group.id, config)">
-                                {{ t('替换版本') }}
-                              </bk-button>
-                              <template v-else>
-                                <bk-button text theme="primary" @click="handleViewTemplateConfig(config, group)">
-                                  {{ t('查看') }}
-                                </bk-button>
-                                <bk-button
-                                  v-if="versionData.status.publish_status !== 'editing'"
-                                  text
-                                  theme="primary"
-                                  @click="handleConfigDiff(group.id, config)">
-                                  {{ t('对比') }}
-                                </bk-button>
-                              </template>
-                              <DownloadConfigBtn
-                                type="template"
-                                :bk-biz-id="props.bkBizId"
-                                :app-id="props.appId"
-                                :id="config.versionId"
-                                :disabled="config.file_state === 'DELETE'" />
-                            </template>
+                              </div>
+                            </td>
                           </div>
-                        </td>
-                      </tr>
+                        </template>
+                      </RecycleScroller>
                     </tbody>
                   </table>
                 </div>
@@ -252,7 +261,7 @@
     :app-id="props.appId"
     @updated="getAllConfigList" />
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteConfigDialogShow"
+    v-model:is-show="isDeleteConfigDialogShow"
     :title="t('确认删除该配置文件？')"
     @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
@@ -261,7 +270,7 @@
     <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
-    v-model:isShow="isDeletePkgDialogShow"
+    v-model:is-show="isDeletePkgDialogShow"
     :title="t('确认移除该配置模板套餐？')"
     :confirm-text="t('移除')"
     :pending="removePkgLoading"
@@ -272,7 +281,7 @@
     <div>{{ t('移除后本服务配置将不再引用该配置模板套餐，以后需要时可以重新从配置模板导入') }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
-    v-model:isShow="isRecoverConfigDialogShow"
+    v-model:is-show="isRecoverConfigDialogShow"
     :title="t('确认恢复该配置文件?')"
     :confirm-text="t('恢复')"
     @confirm="handleRecoverConfigConfirm">
@@ -428,6 +437,7 @@
   const tableRef = ref();
   const collapseHeader = ref();
   const selectedConfigItems = ref<IConfigItem[]>([]);
+  const conflictCount = ref(0);
 
   // 是否为未命名版本
   const isUnNamedVersion = computed(() => versionData.value.id === 0);
@@ -461,7 +471,7 @@
     return '';
   });
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: IConfigTableItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {
@@ -510,18 +520,6 @@
     },
   );
 
-  watch(
-    [() => configList.value, () => templatesCount.value],
-    () => {
-      const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
-      configStore.$patch((state) => {
-        state.allConfigCount = configsCount.value + templatesCount.value;
-        state.allExistConfigCount = existConfigCount + templatesCount.value;
-      });
-    },
-    { immediate: true, deep: true },
-  );
-
   onMounted(async () => {
     tableRef.value.addEventListener('scroll', handleScroll);
     await getBindingId();
@@ -541,6 +539,12 @@
     const currentSearchStr = props.searchStr;
     loading.value = true;
     await Promise.all([getCommonConfigList(createConfig), getBoundTemplateList()]);
+    const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
+    configStore.$patch((state) => {
+      state.conflictFileCount = conflictCount.value;
+      state.allConfigCount = configsCount.value + templatesCount.value;
+      state.allExistConfigCount = existConfigCount + templatesCount.value;
+    });
     loading.value = false;
     // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
     if (currentSearchStr !== props.searchStr) return;
@@ -582,9 +586,12 @@
         return 0;
       });
       configsCount.value = res.count;
-      configStore.$patch((state) => {
-        state.conflictFileCount = res.conflict_number || 0;
-      });
+      conflictCount.value = res.conflict_number || 0;
+      if (conflictCount.value === 0) {
+        configStore.$patch((state) => {
+          state.onlyViewConflict = false;
+        });
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -911,7 +918,8 @@
 
     // 获取冲突的模板套裁数据 直接覆盖
     await getBoundTemplateList();
-    tableGroupsData.value = transListToTableData();
+    const pkgsGroups = groupTplsByPkg(templateGroupList.value);
+    tableGroupsData.value = [tableGroupsData.value[0], ...pkgsGroups];
     tableGroupsData.value
       .find((group) => group.id === 0)!
       .configs.find((config) => config.id === recoverConfig.value!.id)!.file_state = 'UNCHANGE';
@@ -927,9 +935,16 @@
         }
       });
     if (oldConfigIndex.value !== -1) {
-      const configs = tableGroupsData.value.find((group) => group.id === 0)?.configs;
-      configs!.splice(oldConfigIndex.value, 1);
+      tableGroupsData.value.find((group) => group.id === 0)!.configs.splice(oldConfigIndex.value, 1);
     }
+
+    // 更新配置项数量
+    const existConfigCount = configList.value.filter((item) => item.file_state !== 'DELETE').length;
+    configStore.$patch((state) => {
+      state.conflictFileCount = conflictCount.value;
+      state.allConfigCount = configsCount.value + templatesCount.value;
+      state.allExistConfigCount = existConfigCount + templatesCount.value;
+    });
   };
 
   // 批量操作配置项后刷新配置项列表
@@ -1063,6 +1078,7 @@
     }
     .name {
       white-space: nowrap;
+      flex: 1;
     }
     .version {
       width: 200px;
@@ -1090,7 +1106,19 @@
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+    .scroller {
+      max-height: 400px;
+      border-collapse: collapse;
+      tr {
+        width: 100%;
+        display: block;
+      }
+    }
     .config-row {
+      display: flex;
+      .name {
+        flex: 1;
+      }
       &:hover {
         background: #f5f7fa;
       }

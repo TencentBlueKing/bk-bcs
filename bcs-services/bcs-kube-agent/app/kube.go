@@ -151,7 +151,9 @@ func (k *KubeClientContext) GetApiserverAddresses() (string, error) {
 				continue
 			}
 			errLocal = pingEndpoint(net.JoinHostPort(nodeIP, strconv.Itoa(int(apiserverPort))))
-			if errLocal == nil {
+			if errLocal != nil {
+				blog.Warnf("ping endpoint failed, err %s", err.Error())
+			} else {
 				endpoint := "https://" + net.JoinHostPort(nodeIP, strconv.Itoa(int(apiserverPort)))
 				endpointsList = append(endpointsList, endpoint)
 			}
@@ -258,7 +260,7 @@ func isMasterNode(labels map[string]string) bool {
 func pingEndpoint(host string) error {
 	var err error
 	for i := 0; i < 3; i++ {
-		err = dialTLS(host)
+		err = dialTLS2(host, time.Second*30)
 		if err != nil && strings.Contains(err.Error(), "connection refused") {
 			blog.Infof("Error connecting the apiserver %s. Retrying...: %s", host, err.Error())
 			time.Sleep(time.Second)
@@ -272,12 +274,28 @@ func pingEndpoint(host string) error {
 	return err
 }
 
-func dialTLS(host string) error {
+func dialTLS(host string) error { // nolint:unused
 	conf := &tls.Config{
 		// NOCC:gas/tls(设计如此:此处需要跳过验证)
 		InsecureSkipVerify: true, // nolint
 	}
 	conn, err := tls.Dial("tcp", host, conf)
+	if err != nil {
+		return err
+	}
+	defer conn.Close() // nolint
+	return nil
+}
+
+func dialTLS2(host string, timeout time.Duration) error {
+	dialer := &net.Dialer{
+		Timeout: timeout,
+	}
+
+	conn, err := tls.DialWithDialer(dialer, "tcp", host, &tls.Config{
+		// NOCC:gas/tls(设计如此:此处需要跳过验证)
+		InsecureSkipVerify: true, // nolint
+	})
 	if err != nil {
 		return err
 	}

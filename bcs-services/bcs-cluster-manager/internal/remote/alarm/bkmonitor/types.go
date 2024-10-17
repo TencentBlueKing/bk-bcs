@@ -28,6 +28,8 @@ type shieldType string
 const (
 	// scope type
 	scope shieldType = "scope"
+	// dimension type
+	dimension shieldType = "dimension"
 )
 
 const (
@@ -52,30 +54,50 @@ func buildBizHostAlarmConfig(hosts *alarm.ShieldHost) (*ShieldHostAlarmRequest, 
 		blog.Errorf("buildBizHostAlarmConfig ParseUint bizID failed: %v", err)
 		return nil, err
 	}
-	ipInfos := make([]IPInfo, 0)
+
+	var (
+		ipInfos = make([]IPInfo, 0)
+		ips     = make([]string, 0)
+	)
+
 	for i := range hosts.HostList {
 		ipInfos = append(ipInfos, IPInfo{
 			Ip:      hosts.HostList[i].IP,
 			CloudID: hosts.HostList[i].CloudID,
 		})
+		ips = append(ips, hosts.HostList[i].IP)
 	}
-	if len(ipInfos) == 0 {
+	if len(ipInfos) == 0 || len(ips) == 0 {
 		blog.Errorf("buildBizHostAlarmConfig hosts empty")
 		return nil, fmt.Errorf("buildBizHostAlarmConfig ipList empty")
 	}
 
-	return &ShieldHostAlarmRequest{
-		Category:  string(scope),
-		BkBizID:   bizID,
-		BeginTime: time.Now().Format("2006-01-02 15:04:00"),
-		EndTime:   time.Now().Add(time.Minute * 30).Format("2006-01-02 15:04:00"),
-		DimensionConfig: DimensionConfig{
+	// build dimensionConfig
+	var dimensionConfig DimensionConfig
+	switch hosts.ShieldType {
+	case string(scope):
+		dimensionConfig = DimensionConfig{
 			ScopeType: "ip",
 			Target:    ipInfos,
-		},
-		Description:  shieldDesc,
-		ShieldNotice: false,
-		CycleConfig:  CycleConfig{Type: 1},
+		}
+	case string(dimension):
+		dimensionConfig = DimensionConfig{
+			DimensionConditions: []DimensionCondition{
+				buildClusterIdCondition(hosts.ClusterId), buildNodeCondition(ips)},
+		}
+	default:
+		return nil, fmt.Errorf("buildBizHostAlarmConfig shieldType invalid")
+	}
+
+	return &ShieldHostAlarmRequest{
+		Category:        hosts.ShieldType,
+		BkBizID:         bizID,
+		BeginTime:       time.Now().Format("2006-01-02 15:04:00"),
+		EndTime:         time.Now().Add(time.Minute * 30).Format("2006-01-02 15:04:00"),
+		DimensionConfig: dimensionConfig,
+		Description:     shieldDesc,
+		ShieldNotice:    false,
+		CycleConfig:     CycleConfig{Type: 1},
 	}, nil
 }
 
@@ -86,8 +108,38 @@ type CycleConfig struct {
 
 // DimensionConfig 屏蔽维度
 type DimensionConfig struct {
-	ScopeType string   `json:"scope_type"`
-	Target    []IPInfo `json:"target"`
+	ScopeType           string               `json:"scope_type,omitempty"`
+	Target              []IPInfo             `json:"target,omitempty"`
+	DimensionConditions []DimensionCondition `json:"dimension_conditions,omitempty"`
+}
+
+// DimensionCondition 屏蔽维度条件
+type DimensionCondition struct {
+	Condition string   `json:"condition"`
+	Key       string   `json:"key"`
+	Method    string   `json:"method"`
+	Value     []string `json:"value"`
+	Name      string   `json:"name"`
+}
+
+func buildClusterIdCondition(clusterID string) DimensionCondition {
+	return DimensionCondition{
+		Condition: "and",
+		Key:       "tags.bcs_cluster_id",
+		Method:    "eq",
+		Value:     []string{clusterID},
+		Name:      "bcs_cluster_id",
+	}
+}
+
+func buildNodeCondition(nodeIPs []string) DimensionCondition {
+	return DimensionCondition{
+		Condition: "and",
+		Key:       "tags.node",
+		Method:    "eq",
+		Value:     nodeIPs,
+		Name:      "node",
+	}
 }
 
 // IPInfo 主机信息

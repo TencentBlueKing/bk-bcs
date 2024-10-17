@@ -149,6 +149,11 @@ func (ng *NodeGroup) UpdateNodeGroup(
 	return task, nil
 }
 
+// RecommendNodeGroupConf recommends nodegroup configs
+func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // GetNodesInGroup get all nodes belong to NodeGroup
 func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node, error) {
 	// just get from cluster-manager storage no more implementation
@@ -364,7 +369,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error { // nolint
 	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
 	if err == nil && cloud.GetConfInfo().GetDisableCheckGroupResource() {
 		return nil

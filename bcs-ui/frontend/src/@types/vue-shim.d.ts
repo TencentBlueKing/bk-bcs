@@ -5,7 +5,7 @@ import VueI18n from './vue-i18n';
 
 declare module 'vue/types/vue' {
   interface Vue {
-    PROJECT_CONFIG: Record<string, string>;
+    PROJECT_CONFIG: ILink;
     $INTERNAL: boolean;
     $bkInfo: any;
     $bkMessage: any;

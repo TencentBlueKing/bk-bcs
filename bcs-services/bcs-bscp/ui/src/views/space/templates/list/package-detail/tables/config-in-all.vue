@@ -1,6 +1,6 @@
 <template>
   <CommonConfigTable
-    v-model:selectedConfigs="selectedConfigs"
+    v-model:selected-configs="selectedConfigs"
     ref="configTable"
     current-pkg="all"
     :show-cited-by-pkgs-col="true"

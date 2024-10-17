@@ -17,6 +17,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -182,6 +183,11 @@ func (m *TaskManager) Run() error {
 // GetTaskWithID get task by taskid
 func (m *TaskManager) GetTaskWithID(ctx context.Context, taskId string) (*types.Task, error) {
 	return GetGlobalStorage().GetTask(ctx, taskId)
+}
+
+// ListTask list tasks with options, returns a paginated list of tasks
+func (m *TaskManager) ListTask(ctx context.Context, opt *istore.ListOption) (*istore.Pagination[types.Task], error) {
+	return GetGlobalStorage().ListTask(ctx, opt)
 }
 
 // UpdateTask update task
@@ -359,6 +365,13 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 
 	tmpCh := make(chan error, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.ERROR.Printf("[%s-%s][recover] panic: %v, stack %s", taskID, stepName, r, debug.Stack())
+				tmpCh <- fmt.Errorf("%w by a panic: %v", istep.ErrRevoked, r)
+			}
+		}()
+
 		// call step worker
 		execCtx := istep.NewContext(stepCtx, GetGlobalStorage(), state.GetTask(), step)
 		tmpCh <- stepExecutor.Execute(execCtx)

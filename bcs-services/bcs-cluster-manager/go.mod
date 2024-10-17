@@ -25,7 +25,7 @@ require (
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/apparentlymart/go-cidr v1.1.0
 	github.com/avast/retry-go v2.7.0+incompatible
-	github.com/aws/aws-sdk-go v1.49.6
+	github.com/aws/aws-sdk-go v1.55.5
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/ghodss/yaml v1.0.0

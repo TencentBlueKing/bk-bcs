@@ -49,7 +49,7 @@ import { PropType, ref, watch } from 'vue';
 
 import { modifyCluster } from '@/api/modules/cluster-manager';
 import { ICluster } from '@/composables/use-app';
-import ApiServer from '@/views/cluster-manage/add/form/api-server.vue';
+import ApiServer from '@/views/cluster-manage/add/components/api-server.vue';
 
 const props = defineProps({
   cluster: {

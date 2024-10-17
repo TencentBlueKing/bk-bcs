@@ -33,7 +33,7 @@
         :options="{
           roundedSelection: false,
           scrollBeyondLastLine: false,
-          renderLineHighlight: false,
+          renderLineHighlight: 'none',
         }"
         full-screen
         readonly>

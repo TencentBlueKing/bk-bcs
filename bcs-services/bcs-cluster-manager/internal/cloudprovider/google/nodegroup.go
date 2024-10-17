@@ -123,6 +123,11 @@ func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *
 	return igm
 }
 
+// RecommendNodeGroupConf recommends nodegroup configs
+func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
 // GetNodesInGroup get all nodes belong to NodeGroup
 func (ng *NodeGroup) GetNodesInGroup(group *proto.NodeGroup, opt *cloudprovider.CommonOption) ([]*proto.Node,
 	error) {

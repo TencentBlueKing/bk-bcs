@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -224,6 +225,23 @@ func (ma *MigrateAction) Handle(
 	if err := ma.migrateCloudAccount(); err != nil {
 		ma.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	// create operationLog
+	accountIDs := ma.req.AccountIDs
+	if ma.req.GetAll() {
+		accountIDs = "all"
+	}
+	err := ma.model.CreateOperationLog(ma.ctx, &cmproto.OperationLog{
+		ResourceType: common.Account.String(),
+		ResourceID:   "",
+		TaskID:       "",
+		Message:      fmt.Sprintf("迁移云[%s]账号[%s]", ma.req.CloudID, accountIDs),
+		OpUser:       auth.GetUserFromCtx(ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		blog.Errorf("MigrateCloudAccount[%s] CreateOperationLog failed: %v", ma.req.CloudID, err)
 	}
 
 	ma.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

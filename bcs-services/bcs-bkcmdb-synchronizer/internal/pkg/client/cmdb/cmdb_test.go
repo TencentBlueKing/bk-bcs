@@ -22,12 +22,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/client"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/option"
+	mySqlite "github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/db/sqlite"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-bkcmdb-synchronizer/internal/pkg/store/model"
 )
 
 var (
 	// BkcmdbSynchronizerOption is an option for the BkcmdbSynchronizer.
 	BkcmdbSynchronizerOption = &option.BkcmdbSynchronizerOption{}
-	bkBizID                  = int64(41)
+	bkBizID                  = int64(110)
 )
 
 func init() {
@@ -72,7 +74,7 @@ func Test_cmdbClient_GetBcsCluster(t *testing.T) {
 			args: args{
 				request: &client.GetBcsClusterRequest{
 					CommonRequest: client.CommonRequest{
-						BKBizID: 41,
+						BKBizID: 110,
 						Page: client.Page{
 							Limit: 100,
 							Start: 0,
@@ -82,9 +84,9 @@ func Test_cmdbClient_GetBcsCluster(t *testing.T) {
 							Condition: "AND",
 							Rules: []client.Rule{
 								{
-									Field:    "id",
+									Field:    "uid",
 									Operator: "in",
-									Value:    []int64{4583},
+									Value:    []string{"xxx"},
 								},
 							},
 						},
@@ -98,7 +100,7 @@ func Test_cmdbClient_GetBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsCluster(tt.args.request)
+			got, err := c.GetBcsCluster(tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -118,6 +120,7 @@ func Test_cmdbClient_GetBcsCluster(t *testing.T) {
 
 // Test_cmdbClient_CreateBcsCluster tests the CreateBcsCluster method of the cmdbClient.
 func Test_cmdbClient_CreateBcsCluster(t *testing.T) {
+	bkBizID = 110
 	name := "cluster-bcs-99s9556c0"
 	schedulingEngine := "k8s"
 	uid := "BCS-K8S-910215519833"
@@ -169,7 +172,7 @@ func Test_cmdbClient_CreateBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			gotBkClusterID, err := c.CreateBcsCluster(tt.args.request)
+			gotBkClusterID, err := c.CreateBcsCluster(tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -181,7 +184,8 @@ func Test_cmdbClient_CreateBcsCluster(t *testing.T) {
 
 // Test_cmdbClient_UpdateBcsCluster tests the UpdateBcsCluster method of the cmdbClient.
 func Test_cmdbClient_UpdateBcsCluster(t *testing.T) {
-	clusterID := []int64{3603}
+	bkBizID = 1068
+	clusterID := []int64{10}
 	//tmp := "123"
 	environment := "debug"
 
@@ -220,7 +224,7 @@ func Test_cmdbClient_UpdateBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsCluster(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsCluster(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -229,6 +233,7 @@ func Test_cmdbClient_UpdateBcsCluster(t *testing.T) {
 
 // Test_cmdbClient_DeleteBcsCluster tests the DeleteBcsCluster method of the cmdbClient.
 func Test_cmdbClient_DeleteBcsCluster(t *testing.T) {
+	bkBizID = 2
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -248,7 +253,7 @@ func Test_cmdbClient_DeleteBcsCluster(t *testing.T) {
 			args: args{
 				request: &client.DeleteBcsClusterRequest{
 					BKBizID: &bkBizID,
-					IDs:     &[]int64{3602, 3607, 4362, 4374, 4401, 4402, 4403},
+					IDs:     &[]int64{115},
 				},
 			},
 			wantErr: false,
@@ -257,7 +262,7 @@ func Test_cmdbClient_DeleteBcsCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsCluster(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsCluster(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsCluster() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -286,7 +291,7 @@ func Test_cmdbClient_GetBcsNamespace(t *testing.T) {
 			args: args{
 				request: &client.GetBcsNamespaceRequest{
 					CommonRequest: client.CommonRequest{
-						BKBizID: 41,
+						BKBizID: 100148,
 						Page: client.Page{
 							Limit: 100,
 							Start: 0,
@@ -298,7 +303,7 @@ func Test_cmdbClient_GetBcsNamespace(t *testing.T) {
 								{
 									Field:    "cluster_uid",
 									Operator: "in",
-									Value:    []string{"BCS-K8S-15171"},
+									Value:    []string{"xxx"},
 								},
 							},
 						},
@@ -310,12 +315,12 @@ func Test_cmdbClient_GetBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsNamespace(tt.args.request)
+			got, err := c.GetBcsNamespace(tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			//t.Logf("GetBcsNamespace() got = %v", got)
+			t.Logf("GetBcsNamespace() got = %d", len(*got))
 			nsids := make([]int64, 0)
 			for _, ns := range *got {
 				nsids = append(nsids, ns.ID)
@@ -329,7 +334,7 @@ func Test_cmdbClient_GetBcsNamespace(t *testing.T) {
 
 // Test_cmdbClient_CreateBcsNamespace tests the CreateBcsNamespace method of the cmdbClient.
 func Test_cmdbClient_CreateBcsNamespace(t *testing.T) {
-	bkBizID = int64(43)
+	bkBizID = int64(110)
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -353,7 +358,7 @@ func Test_cmdbClient_CreateBcsNamespace(t *testing.T) {
 					Data: &[]bkcmdbkube.Namespace{
 						{
 							ClusterSpec: bkcmdbkube.ClusterSpec{
-								ClusterID: 4583,
+								ClusterID: 76,
 							},
 							Name: "t55est5ssssdd8ss",
 							Labels: &map[string]string{
@@ -376,7 +381,7 @@ func Test_cmdbClient_CreateBcsNamespace(t *testing.T) {
 						},
 						{
 							ClusterSpec: bkcmdbkube.ClusterSpec{
-								ClusterID: 4583,
+								ClusterID: 76,
 							},
 							Name: "test5sd55ssd8ss",
 							Labels: &map[string]string{
@@ -407,7 +412,7 @@ func Test_cmdbClient_CreateBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsNamespace(tt.args.request)
+			got, err := c.CreateBcsNamespace(tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -419,7 +424,7 @@ func Test_cmdbClient_CreateBcsNamespace(t *testing.T) {
 
 // Test_cmdbClient_UpdateBcsNamespace tests the UpdateBcsNamespace method of the cmdbClient.
 func Test_cmdbClient_UpdateBcsNamespace(t *testing.T) {
-	bkBizID = int64(41)
+	bkBizID = int64(110)
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -439,7 +444,7 @@ func Test_cmdbClient_UpdateBcsNamespace(t *testing.T) {
 			args: args{
 				request: &client.UpdateBcsNamespaceRequest{
 					BKBizID: &bkBizID,
-					IDs:     &[]int64{56141},
+					IDs:     &[]int64{205},
 					Data: &client.UpdateBcsNamespaceRequestData{
 						Labels: &map[string]string{
 							"testA": "testA",
@@ -467,7 +472,7 @@ func Test_cmdbClient_UpdateBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsNamespace(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsNamespace(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -476,7 +481,7 @@ func Test_cmdbClient_UpdateBcsNamespace(t *testing.T) {
 
 // Test_cmdbClient_DeleteBcsNamespace tests the DeleteBcsNamespace method of the cmdbClient.
 func Test_cmdbClient_DeleteBcsNamespace(t *testing.T) {
-	bkBizID = int64(41)
+	bkBizID = int64(110)
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -496,7 +501,7 @@ func Test_cmdbClient_DeleteBcsNamespace(t *testing.T) {
 			args: args{
 				request: &client.DeleteBcsNamespaceRequest{
 					BKBizID: &bkBizID,
-					IDs:     &[]int64{4376},
+					IDs:     &[]int64{205},
 				},
 			},
 			wantErr: false,
@@ -505,7 +510,7 @@ func Test_cmdbClient_DeleteBcsNamespace(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsNamespace(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsNamespace(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsNamespace() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -534,7 +539,7 @@ func Test_cmdbClient_GetBcsWorkload(t *testing.T) {
 			args: args{
 				request: &client.GetBcsWorkloadRequest{
 					CommonRequest: client.CommonRequest{
-						BKBizID: 41,
+						BKBizID: 1068,
 						Page: client.Page{
 							Limit: 100,
 							Start: 0,
@@ -545,7 +550,7 @@ func Test_cmdbClient_GetBcsWorkload(t *testing.T) {
 								{
 									Field:    "cluster_uid",
 									Operator: "in",
-									Value:    []string{"BCS-K8S-15276"},
+									Value:    []string{"xxx"},
 								},
 							},
 						},
@@ -718,7 +723,7 @@ func Test_cmdbClient_GetBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsWorkload(tt.args.request)
+			got, err := c.GetBcsWorkload(tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -740,10 +745,10 @@ func Test_cmdbClient_GetBcsWorkload(t *testing.T) {
 
 // Test_cmdbClient_CreateBcsWorkload tests the CreateBcsWorkload method of the cmdbClient.
 func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
-	bkBizID = int64(43)
+	bkBizID = int64(100148)
 	kind := "deployment"
-	nsid := int64(56141)
-	name := "deployment1"
+	nsid := int64(1156)
+	name := "event-exporter"
 	replicas := int64(0)
 	minReadySeconds := int64(0)
 	strategyType := ""
@@ -825,7 +830,7 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsWorkload(tt.args.request)
+			got, err := c.CreateBcsWorkload(tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -837,6 +842,7 @@ func Test_cmdbClient_CreateBcsWorkload(t *testing.T) {
 
 // Test_cmdbClient_UpdateBcsWorkload tests the UpdateBcsWorkload method of the cmdbClient.
 func Test_cmdbClient_UpdateBcsWorkload(t *testing.T) {
+	bkBizID = 110
 	kind := "deployment"
 	replicas := int64(0)
 	minReadySeconds := int64(0)
@@ -862,10 +868,10 @@ func Test_cmdbClient_UpdateBcsWorkload(t *testing.T) {
 				request: &client.UpdateBcsWorkloadRequest{
 					BKBizID: &bkBizID,
 					Kind:    &kind,
-					IDs:     &[]int64{246030},
+					IDs:     &[]int64{319},
 					Data: &client.UpdateBcsWorkloadRequestData{
 						Labels: &map[string]string{
-							"app": "testaaaa",
+							"app": "testaaaab",
 						},
 						Selector: &bkcmdbkube.LabelSelector{
 							MatchLabels: map[string]string{
@@ -875,7 +881,7 @@ func Test_cmdbClient_UpdateBcsWorkload(t *testing.T) {
 						Replicas:              &replicas,
 						MinReadySeconds:       &minReadySeconds,
 						StrategyType:          &strategyType,
-						RollingUpdateStrategy: nil,
+						RollingUpdateStrategy: &map[string]interface{}{},
 					},
 				},
 			},
@@ -885,7 +891,7 @@ func Test_cmdbClient_UpdateBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsWorkload(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsWorkload(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -894,6 +900,7 @@ func Test_cmdbClient_UpdateBcsWorkload(t *testing.T) {
 
 // Test_cmdbClient_DeleteBcsWorkload tests the DeleteBcsWorkload method of the cmdbClient.
 func Test_cmdbClient_DeleteBcsWorkload(t *testing.T) {
+	bkBizID = 2
 	kind := "deployment"
 	type fields struct {
 		config   *Options
@@ -916,7 +923,7 @@ func Test_cmdbClient_DeleteBcsWorkload(t *testing.T) {
 					BKBizID: &bkBizID,
 					Kind:    &kind,
 					IDs: &[]int64{
-						246030,
+						150533,
 					},
 				},
 			},
@@ -926,7 +933,7 @@ func Test_cmdbClient_DeleteBcsWorkload(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsWorkload(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsWorkload(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsWorkload() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -935,6 +942,7 @@ func Test_cmdbClient_DeleteBcsWorkload(t *testing.T) {
 
 // Test_cmdbClient_GetBcsNode tests the GetBcsNode method of the cmdbClient.
 func Test_cmdbClient_GetBcsNode(t *testing.T) {
+	bkBizID = 110
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -955,7 +963,7 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 			args: args{
 				request: &client.GetBcsNodeRequest{
 					CommonRequest: client.CommonRequest{
-						BKBizID: 111,
+						BKBizID: 110,
 						Page: client.Page{
 							Limit: 200,
 							Start: 0,
@@ -966,7 +974,7 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 								{
 									Field:    "bk_cluster_id",
 									Operator: "in",
-									Value:    []int64{0},
+									Value:    []int64{70},
 								},
 							},
 						},
@@ -981,7 +989,7 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsNode(tt.args.request)
+			got, err := c.GetBcsNode(tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1001,9 +1009,10 @@ func Test_cmdbClient_GetBcsNode(t *testing.T) {
 
 // Test_cmdbClient_CreateBcsNode tests the CreateBcsNode method of the cmdbClient.
 func Test_cmdbClient_CreateBcsNode(t *testing.T) {
-	hostID := int64(1250)
-	clusterID := int64(4583)
-	name := "12tesssssss0ssssst"
+	bkBizID = 110
+	hostID := int64(2000058692)
+	clusterID := int64(70)
+	name := "xxxx"
 	unschedulable := false
 	hostName := ""
 	runtimeComponent := ""
@@ -1063,7 +1072,7 @@ func Test_cmdbClient_CreateBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsNode(tt.args.request)
+			got, err := c.CreateBcsNode(tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1075,7 +1084,8 @@ func Test_cmdbClient_CreateBcsNode(t *testing.T) {
 
 // Test_cmdbClient_UpdateBcsNode tests the UpdateBcsNode method of the cmdbClient.
 func Test_cmdbClient_UpdateBcsNode(t *testing.T) {
-	unschedulable := false
+	bkBizID = 100148
+	unschedulable := true
 
 	type fields struct {
 		config   *Options
@@ -1097,7 +1107,7 @@ func Test_cmdbClient_UpdateBcsNode(t *testing.T) {
 				request: &client.UpdateBcsNodeRequest{
 					BKBizID: &bkBizID,
 					IDs: &[]int64{
-						655054,
+						71,
 					},
 					Data: &client.UpdateBcsNodeRequestData{
 						Labels: &map[string]string{
@@ -1116,7 +1126,7 @@ func Test_cmdbClient_UpdateBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsNode(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsNode(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1125,6 +1135,7 @@ func Test_cmdbClient_UpdateBcsNode(t *testing.T) {
 
 // Test_cmdbClient_DeleteBcsNode tests the DeleteBcsNode method of the cmdbClient.
 func Test_cmdbClient_DeleteBcsNode(t *testing.T) {
+	bkBizID = 2
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -1145,7 +1156,7 @@ func Test_cmdbClient_DeleteBcsNode(t *testing.T) {
 				request: &client.DeleteBcsNodeRequest{
 					BKBizID: &bkBizID,
 					IDs: &[]int64{
-						614991,
+						2157904,
 					},
 				},
 			},
@@ -1155,7 +1166,7 @@ func Test_cmdbClient_DeleteBcsNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsNode(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsNode(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsNode() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1164,7 +1175,7 @@ func Test_cmdbClient_DeleteBcsNode(t *testing.T) {
 
 // Test_cmdbClient_GetBcsPod tests the GetBcsPod method of the cmdbClient.
 func Test_cmdbClient_GetBcsPod(t *testing.T) {
-	bkBizID = int64(41)
+	bkBizID = int64(110)
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -1196,7 +1207,34 @@ func Test_cmdbClient_GetBcsPod(t *testing.T) {
 								{
 									Field:    "cluster_uid",
 									Operator: "in",
-									Value:    []string{"BCS-K8S-910215519833"},
+									Value:    []string{"xxx"},
+								},
+							},
+						},
+					},
+				},
+			},
+			want:    nil,
+			wantErr: false,
+		},
+		{
+			name:   "test",
+			fields: fields{},
+			args: args{
+				request: &client.GetBcsPodRequest{
+					CommonRequest: client.CommonRequest{
+						BKBizID: bkBizID,
+						Page: client.Page{
+							Limit: 200,
+							Start: 0,
+						},
+						Filter: &client.PropertyFilter{
+							Condition: "AND",
+							Rules: []client.Rule{
+								{
+									Field:    "bk_host_id",
+									Operator: "in",
+									Value:    []int64{2},
 								},
 							},
 						},
@@ -1210,12 +1248,12 @@ func Test_cmdbClient_GetBcsPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsPod(tt.args.request)
+			got, err := c.GetBcsPod(tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsPod() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			t.Logf("GetBcsPod() got = %v", got)
+			t.Logf("GetBcsPod() got = %v, len: %d", got, len(*got))
 
 			podids := make([]int64, 0)
 			for _, pod := range *got {
@@ -1230,16 +1268,16 @@ func Test_cmdbClient_GetBcsPod(t *testing.T) {
 
 // Test_cmdbClient_CreateBcsPod tests the CreateBcsPod method of the cmdbClient.
 func Test_cmdbClient_CreateBcsPod(t *testing.T) {
-	bkBizID = int64(41)
-	clusterID := int64(4625)
-	namespaceID := int64(56331)
+	bkBizID = int64(110)
+	clusterID := int64(70)
+	namespaceID := int64(749)
 	workloadKind := "deployment"
-	workloadID := int64(246735)
-	nodeID := int64(655262)
+	workloadID := int64(388)
+	nodeID := int64(80)
 	name := "event-exporter-dddc48bf9-9mns4sss2"
-	hostID := int64(1250)
+	hostID := int64(2000058691)
 	priority := int32(0)
-	ip := "10.0.0.1"
+	ip := "xxxx"
 	operator := []string{""}
 
 	type fields struct {
@@ -1274,8 +1312,8 @@ func Test_cmdbClient_CreateBcsPod(t *testing.T) {
 										NodeID:       &nodeID,
 										Ref: &bkcmdbkube.Reference{
 											Kind: "deployment",
-											Name: "test-deploy",
-											ID:   246735,
+											Name: "bcs-cluster-autoscaler",
+											ID:   388,
 										},
 									},
 
@@ -1289,7 +1327,7 @@ func Test_cmdbClient_CreateBcsPod(t *testing.T) {
 									IP: &ip,
 									IPs: &[]bkcmdbkube.PodIP{
 										{
-											IP: "1,1,1,1",
+											IP: "xxx",
 										},
 									},
 									Containers: &[]bkcmdbkube.ContainerBaseFields{},
@@ -1306,7 +1344,7 @@ func Test_cmdbClient_CreateBcsPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.CreateBcsPod(tt.args.request)
+			got, err := c.CreateBcsPod(tt.args.request, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateBcsPod() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1318,6 +1356,7 @@ func Test_cmdbClient_CreateBcsPod(t *testing.T) {
 
 // Test_cmdbClient_DeleteBcsPod tests the DeleteBcsPod method of the cmdbClient.
 func Test_cmdbClient_DeleteBcsPod(t *testing.T) {
+	bkBizID = 110
 	type fields struct {
 		config   *Options
 		userAuth string
@@ -1340,7 +1379,7 @@ func Test_cmdbClient_DeleteBcsPod(t *testing.T) {
 						{
 							BKBizID: &bkBizID,
 							IDs: &[]int64{
-								2560,
+								357135,
 							},
 						},
 					},
@@ -1352,7 +1391,7 @@ func Test_cmdbClient_DeleteBcsPod(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.DeleteBcsPod(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.DeleteBcsPod(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("DeleteBcsPod() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1361,7 +1400,7 @@ func Test_cmdbClient_DeleteBcsPod(t *testing.T) {
 
 // Test_deleteAllByBkBizID tests delete all bcs resources by bizid
 func Test_deleteAllByBkBizID(t *testing.T) {
-	bkBizID = int64(43)
+	bkBizID = int64(110)
 	c := getCli()
 	t.Logf("start delete all")
 	t.Logf("start delete all pod")
@@ -1375,7 +1414,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 					Start: 0,
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			t.Errorf("GetBcsPod() error = %v", err)
 			return
@@ -1396,7 +1435,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 						IDs:     &podToDelete,
 					},
 				},
-			})
+			}, nil)
 			if err != nil {
 				t.Errorf("DeleteBcsPod() error = %v", err)
 				return
@@ -1420,7 +1459,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 					},
 				},
 				Kind: workloadType,
-			})
+			}, nil, false)
 			if err != nil {
 				t.Errorf("GetBcsWorkload() error = %v", err)
 				return
@@ -1438,7 +1477,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 					BKBizID: &bkBizID,
 					Kind:    &workloadType,
 					IDs:     &workloadToDelete,
-				})
+				}, nil)
 				if err != nil {
 					t.Errorf("DeleteBcsWorkload() error = %v", err)
 					return
@@ -1449,79 +1488,20 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 	t.Logf("delete all workload success")
 
 	t.Logf("start delete all namespace")
-	for {
-		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
-			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
-				Fields:  []string{"id"},
-				Page: client.Page{
-					Limit: 200,
-					Start: 0,
-				},
-			},
-		})
-		if err != nil {
-			t.Errorf("GetBcsNamespace() error = %v", err)
-			return
-		}
-		namespaceToDelete := make([]int64, 0)
-		for _, namespace := range *got {
-			namespaceToDelete = append(namespaceToDelete, namespace.ID)
-		}
-
-		if len(namespaceToDelete) == 0 {
-			break
-		} else {
-			t.Logf("delete namespace: %v", namespaceToDelete)
-			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
-				BKBizID: &bkBizID,
-				IDs:     &namespaceToDelete,
-			})
-			if err != nil {
-				t.Errorf("DeleteBcsNamespace() error = %v", err)
-				return
-			}
-		}
-	}
+	deleteAllIDNamespace(bkBizID, c, t)
 	t.Logf("delete all namespace success")
 
 	t.Logf("start delete all node")
-	for {
-		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
-			CommonRequest: client.CommonRequest{
-				BKBizID: bkBizID,
-				Page: client.Page{
-					Limit: 100,
-					Start: 0,
-				},
-			},
-		})
-		if err != nil {
-			t.Errorf("GetBcsNode() error = %v", err)
-			return
-		}
-		nodeToDelete := make([]int64, 0)
-		for _, node := range *got {
-			nodeToDelete = append(nodeToDelete, node.ID)
-		}
-
-		if len(nodeToDelete) == 0 {
-			break
-		} else {
-			t.Logf("delete node: %v", nodeToDelete)
-			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
-				BKBizID: &bkBizID,
-				IDs:     &nodeToDelete,
-			})
-			if err != nil {
-				t.Errorf("DeleteBcsNode() error = %v", err)
-				return
-			}
-		}
-	}
+	deleteAllIDNode(bkBizID, c, t)
 	t.Logf("delete all node success")
 
 	t.Logf("start delete all cluster")
+	deleteAllIDCluster(bkBizID, c, t)
+	t.Logf("delete all cluster success")
+	t.Logf("delete all success")
+}
+
+func deleteAllIDCluster(bkBizID int64, c *cmdbClient, t *testing.T) {
 	for {
 		got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
 			CommonRequest: client.CommonRequest{
@@ -1532,7 +1512,7 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 					Start: 0,
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			t.Errorf("GetBcsCluster() error = %v", err)
 			return
@@ -1549,24 +1529,354 @@ func Test_deleteAllByBkBizID(t *testing.T) {
 			err := c.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
 				BKBizID: &bkBizID,
 				IDs:     &clusterToDelete,
-			})
+			}, nil)
 			if err != nil {
 				t.Errorf("DeleteBcsCluster() error = %v", err)
 				return
 			}
 		}
 	}
+}
+
+func deleteAllIDNode(bkBizID int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100,
+					Start: 0,
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNode() error = %v", err)
+			return
+		}
+		nodeToDelete := make([]int64, 0)
+		for _, node := range *got {
+			nodeToDelete = append(nodeToDelete, node.ID)
+		}
+
+		if len(nodeToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete node: %v", nodeToDelete)
+			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+				BKBizID: &bkBizID,
+				IDs:     &nodeToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNode() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func deleteAllIDNamespace(bkBizID int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNamespace() error = %v", err)
+			return
+		}
+		namespaceToDelete := make([]int64, 0)
+		for _, namespace := range *got {
+			namespaceToDelete = append(namespaceToDelete, namespace.ID)
+		}
+
+		if len(namespaceToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete namespace: %v", namespaceToDelete)
+			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+				BKBizID: &bkBizID,
+				IDs:     &namespaceToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNamespace() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+// Test_deleteAllByBkBizIDAndBkClusterID tests delete all bcs resources by bizid
+// nolint:golint
+func Test_deleteAllByBkBizIDAndBkClusterID(t *testing.T) {
+	bkBizID = int64(110)
+	bkClusterID := []int64{76}
+	c := getCli()
+	t.Logf("start delete all")
+	t.Logf("start delete all pod")
+	for {
+		got, err := c.GetBcsPod(&client.GetBcsPodRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    bkClusterID,
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsPod() error = %v", err)
+			return
+		}
+		podToDelete := make([]int64, 0)
+		for _, pod := range *got {
+			podToDelete = append(podToDelete, pod.ID)
+		}
+
+		if len(podToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete pod: %v", podToDelete)
+			err := c.DeleteBcsPod(&client.DeleteBcsPodRequest{
+				Data: &[]client.DeleteBcsPodRequestData{
+					{
+						BKBizID: &bkBizID,
+						IDs:     &podToDelete,
+					},
+				},
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsPod() error = %v", err)
+				return
+			}
+		}
+	}
+	t.Logf("delete all pod success")
+
+	t.Logf("start delete all workload")
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods"}
+
+	for _, workloadType := range workloadTypes {
+		for {
+			got, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+				CommonRequest: client.CommonRequest{
+					BKBizID: bkBizID,
+					Fields:  []string{"id"},
+					Page: client.Page{
+						Limit: 200,
+						Start: 0,
+					},
+					Filter: &client.PropertyFilter{
+						Condition: "AND",
+						Rules: []client.Rule{
+							{
+								Field:    "bk_cluster_id",
+								Operator: "in",
+								Value:    bkClusterID,
+							},
+						},
+					},
+				},
+				Kind: workloadType,
+			}, nil, false)
+			if err != nil {
+				t.Errorf("GetBcsWorkload() error = %v", err)
+				return
+			}
+			workloadToDelete := make([]int64, 0)
+			for _, workload := range *got {
+				workloadToDelete = append(workloadToDelete, (int64)(workload.(map[string]interface{})["id"].(float64)))
+			}
+
+			if len(workloadToDelete) == 0 {
+				break
+			} else {
+				t.Logf("delete workload: %v", workloadToDelete)
+				err := c.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+					BKBizID: &bkBizID,
+					Kind:    &workloadType,
+					IDs:     &workloadToDelete,
+				}, nil)
+				if err != nil {
+					t.Errorf("DeleteBcsWorkload() error = %v", err)
+					return
+				}
+			}
+		}
+	}
+	t.Logf("delete all workload success")
+
+	t.Logf("start delete all namespace")
+	deleteAll2IDNamespace(bkBizID, bkClusterID, c, t)
+	t.Logf("delete all namespace success")
+
+	t.Logf("start delete all node")
+	deleteAll2IDIDNode(bkBizID, bkClusterID, c, t)
+	t.Logf("delete all node success")
+
+	t.Logf("start delete all cluster")
+	deleteAll2IDCluster(bkBizID, bkClusterID, c, t)
 	t.Logf("delete all cluster success")
 	t.Logf("delete all success")
 }
 
-// Test_getAllByBkBizID tests get all bcs resources by bizid
-// nolint
-func Test_getAllByBkBizID(t *testing.T) {
-	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet"}
-	c := getCli()
-	t.Logf("start get all cluster")
-	clusters := make(map[int64]string, 0)
+func deleteAll2IDCluster(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 10,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "id",
+							Operator: "in",
+							Value:    bkClusterID,
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsCluster() error = %v", err)
+			return
+		}
+		clusterToDelete := make([]int64, 0)
+		for _, cluster := range *got {
+			clusterToDelete = append(clusterToDelete, cluster.ID)
+		}
+
+		if len(clusterToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete cluster: %v", clusterToDelete)
+			err := c.DeleteBcsCluster(&client.DeleteBcsClusterRequest{
+				BKBizID: &bkBizID,
+				IDs:     &clusterToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsCluster() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func deleteAll2IDIDNode(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    bkClusterID,
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNode() error = %v", err)
+			return
+		}
+		nodeToDelete := make([]int64, 0)
+		for _, node := range *got {
+			nodeToDelete = append(nodeToDelete, node.ID)
+		}
+
+		if len(nodeToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete node: %v", nodeToDelete)
+			err := c.DeleteBcsNode(&client.DeleteBcsNodeRequest{
+				BKBizID: &bkBizID,
+				IDs:     &nodeToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNode() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func deleteAll2IDNamespace(bkBizID int64, bkClusterID []int64, c *cmdbClient, t *testing.T) {
+	for {
+		got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    bkClusterID,
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNamespace() error = %v", err)
+			return
+		}
+		namespaceToDelete := make([]int64, 0)
+		for _, namespace := range *got {
+			namespaceToDelete = append(namespaceToDelete, namespace.ID)
+		}
+
+		if len(namespaceToDelete) == 0 {
+			break
+		} else {
+			t.Logf("delete namespace: %v", namespaceToDelete)
+			err := c.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+				BKBizID: &bkBizID,
+				IDs:     &namespaceToDelete,
+			}, nil)
+			if err != nil {
+				t.Errorf("DeleteBcsNamespace() error = %v", err)
+				return
+			}
+		}
+	}
+}
+
+func getAllByBkBizIDClusters(clusters map[int64]string, c *cmdbClient, t *testing.T) {
 	clusterPage := 0
 	for {
 		clusterGot, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
@@ -1577,7 +1887,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 					Start: 100 * clusterPage,
 				},
 			},
-		})
+		}, nil, false)
 		if err != nil {
 			t.Errorf("GetBcsCluster() error = %v", err)
 			return
@@ -1592,6 +1902,94 @@ func Test_getAllByBkBizID(t *testing.T) {
 		}
 		clusterPage++
 	}
+}
+
+func getAllByBkBizIDNodes(nodes map[int64]string, clusterID int64, c *cmdbClient, t *testing.T) {
+	nodePage := 0
+	for {
+		nodeGot, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100 * (nodePage + 1),
+					Start: 100 * nodePage,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "OR",
+					Rules: []client.Rule{
+						{
+							Field:    "bk_cluster_id",
+							Operator: "in",
+							Value:    []int64{clusterID},
+						},
+					},
+				},
+			},
+			//BKClusterID: clusterID,
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNode() error = %v", err)
+			return
+		}
+
+		for _, node := range *nodeGot {
+			nodes[node.ID] = *node.Name
+		}
+
+		if len(*nodeGot) < 100 {
+			break
+		}
+		nodePage++
+	}
+}
+
+func getAllByBkBizIDNamespaces(namespaces map[int64]string, clusterUID string, c *cmdbClient, t *testing.T) {
+	namespacePage := 0
+	for {
+		namespaceGot, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkBizID,
+				Page: client.Page{
+					Limit: 100 * (namespacePage + 1),
+					Start: 100 * namespacePage,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "OR",
+					Rules: []client.Rule{
+						{
+							Field:    "cluster_uid",
+							Operator: "in",
+							Value:    []string{clusterUID},
+						},
+					},
+				},
+			},
+			//ClusterUID: clusterUID,
+		}, nil, false)
+		if err != nil {
+			t.Errorf("GetBcsNamespace() error = %v", err)
+			return
+		}
+
+		for _, namespace := range *namespaceGot {
+			namespaces[namespace.ID] = namespace.Name
+		}
+
+		if len(*namespaceGot) < 100 {
+			break
+		}
+		namespacePage++
+	}
+}
+
+// Test_getAllByBkBizID tests get all bcs resources by bizid
+func Test_getAllByBkBizID(t *testing.T) { // nolint: cyclop
+	bkBizID = 110
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet"}
+	c := getCli()
+	t.Logf("start get all cluster")
+	clusters := make(map[int64]string, 0)
+	getAllByBkBizIDClusters(clusters, c, t)
 
 	if len(clusters) == 0 {
 		t.Logf("no cluster found")
@@ -1604,42 +2002,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 		t.Logf("=======================================")
 		t.Logf("clusterID: %d, clusterUID: %s", clusterID, clusterUID)
 		nodes := make(map[int64]string, 0)
-		nodePage := 0
-		for {
-			nodeGot, err := c.GetBcsNode(&client.GetBcsNodeRequest{
-				CommonRequest: client.CommonRequest{
-					BKBizID: bkBizID,
-					Page: client.Page{
-						Limit: 100 * (nodePage + 1),
-						Start: 100 * nodePage,
-					},
-					Filter: &client.PropertyFilter{
-						Condition: "OR",
-						Rules: []client.Rule{
-							{
-								Field:    "bk_cluster_id",
-								Operator: "in",
-								Value:    []int64{clusterID},
-							},
-						},
-					},
-				},
-				//BKClusterID: clusterID,
-			})
-			if err != nil {
-				t.Errorf("GetBcsNode() error = %v", err)
-				return
-			}
-
-			for _, node := range *nodeGot {
-				nodes[node.ID] = *node.Name
-			}
-
-			if len(*nodeGot) < 100 {
-				break
-			}
-			nodePage++
-		}
+		getAllByBkBizIDNodes(nodes, clusterID, c, t)
 
 		if len(nodes) == 0 {
 			t.Logf("clusterID: %d, clusterUID: %s, nodes: no node found", clusterID, clusterUID)
@@ -1648,42 +2011,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 		}
 
 		namespaces := make(map[int64]string, 0)
-		namespacePage := 0
-		for {
-			namespaceGot, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
-				CommonRequest: client.CommonRequest{
-					BKBizID: bkBizID,
-					Page: client.Page{
-						Limit: 100 * (namespacePage + 1),
-						Start: 100 * namespacePage,
-					},
-					Filter: &client.PropertyFilter{
-						Condition: "OR",
-						Rules: []client.Rule{
-							{
-								Field:    "cluster_uid",
-								Operator: "in",
-								Value:    []string{clusterUID},
-							},
-						},
-					},
-				},
-				//ClusterUID: clusterUID,
-			})
-			if err != nil {
-				t.Errorf("GetBcsNamespace() error = %v", err)
-				return
-			}
-
-			for _, namespace := range *namespaceGot {
-				namespaces[namespace.ID] = namespace.Name
-			}
-
-			if len(*namespaceGot) < 100 {
-				break
-			}
-			namespacePage++
-		}
+		getAllByBkBizIDNamespaces(namespaces, clusterUID, c, t)
 
 		if len(namespaces) == 0 {
 			t.Logf("clusterID: %d, clusterUID: %s, namespaces: no namespace found", clusterID, clusterUID)
@@ -1723,14 +2051,15 @@ func Test_getAllByBkBizID(t *testing.T) {
 						//ClusterUID: clusterUID,
 						//Namespace:  namespaceName,
 						Kind: workloadType,
-					})
+					}, nil, false)
 					if err != nil {
 						t.Errorf("GetBcsWorkload() error = %v", err)
 						return
 					}
 
 					for _, workload := range *workloadGot {
-						workloads[(int64)(workload.(map[string]interface{})["id"].(float64))] = workload.(map[string]interface{})["name"].(string)
+						workloads[(int64)(workload.(map[string]interface{})["id"].(float64))] =
+							workload.(map[string]interface{})["name"].(string)
 					}
 
 					if len(*workloadGot) < 100 {
@@ -1740,9 +2069,11 @@ func Test_getAllByBkBizID(t *testing.T) {
 				}
 
 				if len(workloads) == 0 {
-					t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s, workloads: no workload found", clusterID, clusterUID, namespaceName, workloadType)
+					t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s,"+
+						" workloads: no workload found", clusterID, clusterUID, namespaceName, workloadType)
 				} else {
-					t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s, workloads: %v", clusterID, clusterUID, namespaceName, workloadType, workloads)
+					t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s, workloads: %v",
+						clusterID, clusterUID, namespaceName, workloadType, workloads)
 				}
 
 				for workloadID, workloadName := range workloads {
@@ -1779,7 +2110,7 @@ func Test_getAllByBkBizID(t *testing.T) {
 							},
 							//ClusterUID: clusterUID,
 							//Namespace:  namespaceName,
-						})
+						}, nil, false)
 						if err != nil {
 							t.Errorf("GetBcsPod() error = %v", err)
 							return
@@ -1796,9 +2127,13 @@ func Test_getAllByBkBizID(t *testing.T) {
 					}
 
 					if len(pods) == 0 {
-						t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s, workloadID: %d, workloadName: %s, pods: no pod found", clusterID, clusterUID, namespaceName, workloadType, workloadID, workloadName)
+						t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, "+
+							"workloadType: %s, workloadID: %d, workloadName: %s, pods: no pod found",
+							clusterID, clusterUID, namespaceName, workloadType, workloadID, workloadName)
 					} else {
-						t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s, workloadID: %d, workloadName: %s, pods: %v", clusterID, clusterUID, namespaceName, workloadType, workloadID, workloadName, pods)
+						t.Logf("clusterID: %d, clusterUID: %s, namespace: %s, workloadType: %s, "+
+							"workloadID: %d, workloadName: %s, pods: %v",
+							clusterID, clusterUID, namespaceName, workloadType, workloadID, workloadName, pods)
 					}
 				}
 			}
@@ -1811,7 +2146,8 @@ func Test_getAllByBkBizID(t *testing.T) {
 // Test_cmdbClient_UpdateBcsClusterType tests the UpdateBcsClusterType method of the cmdbClient.
 // nolint
 func Test_cmdbClient_UpdateBcsClusterType(t *testing.T) {
-	id := int64(4583)
+	bkBizID = 110
+	id := int64(10)
 	clusterType := "SHARE_CLUSTER"
 	type fields struct {
 		config   *Options
@@ -1841,7 +2177,7 @@ func Test_cmdbClient_UpdateBcsClusterType(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			if err := c.UpdateBcsClusterType(tt.args.request); (err != nil) != tt.wantErr {
+			if err := c.UpdateBcsClusterType(tt.args.request, nil); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateBcsClusterType() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1888,7 +2224,7 @@ func Test_cmdbClient_GetHostInfo(t *testing.T) {
 // Test_cmdbClient_GetBcsContainer 是一个测试函数，用于测试 cmdbClient 类型的 GetBcsContainer 方法。
 // nolint
 func Test_cmdbClient_GetBcsContainer(t *testing.T) {
-	bizid := int64(2)
+	bizid := int64(110)
 
 	type fields struct {
 		config   *Options
@@ -1915,7 +2251,45 @@ func Test_cmdbClient_GetBcsContainer(t *testing.T) {
 							Start: 0,
 						},
 					},
-					BkPodID: int64(111),
+					BkPodID: int64(275305),
+				},
+			},
+		},
+		{
+			name: "test GetBcsContainer",
+			args: args{
+				request: &client.GetBcsContainerRequest{
+					CommonRequest: client.CommonRequest{
+						BKBizID: bizid,
+						Page: client.Page{
+							Limit: 200,
+							Start: 0,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "test GetBcsContainer",
+			args: args{
+				request: &client.GetBcsContainerRequest{
+					CommonRequest: client.CommonRequest{
+						BKBizID: bizid,
+						Page: client.Page{
+							Limit: 200,
+							Start: 0,
+						},
+						Filter: &client.PropertyFilter{
+							Condition: "AND",
+							Rules: []client.Rule{
+								{
+									Field:    "bk_cluster_id",
+									Operator: "in",
+									Value:    []int64{68},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -1923,12 +2297,489 @@ func Test_cmdbClient_GetBcsContainer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := getCli()
-			got, err := c.GetBcsContainer(tt.args.request)
+			got, err := c.GetBcsContainer(tt.args.request, nil, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetBcsContainer() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			t.Logf("GetBcsContainer() got %v", got)
+			marshal, err := json.Marshal(got)
+			if err != nil {
+				t.Logf("GetBcsContainer() marshal error %v", err)
+			}
+			t.Logf("GetBcsContainer() marshal %v", string(marshal))
 		})
 	}
+}
+
+func Test_cmdbClient_GetHostsByBiz(t *testing.T) {
+	type fields struct {
+		config   *Options
+		userAuth string
+	}
+	type args struct {
+		bkBizID int64
+		hostIP  []string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *[]client.HostData
+		wantErr bool
+	}{
+		{
+			name: "test GetHostsByBiz",
+			args: args{
+				bkBizID: 110,
+				hostIP:  []string{"xxx"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := getCli()
+			got, err := c.GetHostsByBiz(tt.args.bkBizID, tt.args.hostIP)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetHostsByBiz() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			t.Logf("GetHostsByBiz() got %v", got)
+		})
+	}
+}
+
+func Test_gorm_container(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.ContainerMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsContainer(&client.GetBcsContainerRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 110,
+			Page: client.Page{
+				Limit: 200,
+				Start: 0,
+			},
+		},
+		//BkPodID: int64(275305),
+	}, nil, false)
+	if err != nil {
+		t.Fatalf("GetBcsContainer failed: %v", err)
+	}
+	t.Logf("GetBcsContainer() got %v", got)
+	marshal, err := json.Marshal(got)
+	if err != nil {
+		t.Logf("GetBcsContainer() marshal error %v", err)
+	}
+	t.Logf("GetBcsContainer() marshal %v", string(marshal))
+
+	var containers []model.Container
+
+	err = json.Unmarshal(marshal, &containers)
+	if err != nil {
+		t.Logf("GetBcsContainer() unmarshal error %v", err)
+	}
+
+	for _, container := range containers {
+		sq.DB.Create(&container)
+	}
+
+	//// Create a new user
+	//container := Container{}
+	//db.Create(&user)
+	//
+	// Query for all users
+	var cs []model.Container
+	sq.DB.Find(&cs)
+	for _, container := range cs {
+		println(container.ID, container.Name, container.ContainerID)
+	}
+}
+
+func Test_gorm_pod(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.PodMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsPod(&client.GetBcsPodRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 110,
+			Page: client.Page{
+				Limit: 1,
+				Start: 0,
+			},
+			Filter: &client.PropertyFilter{
+				Condition: "AND",
+				Rules: []client.Rule{
+					{
+						Field:    "cluster_uid",
+						Operator: "in",
+						Value:    []string{"xxx"},
+					},
+				},
+			},
+		},
+	}, nil, false)
+	if err != nil {
+		t.Fatalf("GetBcsPod failed: %v", err)
+	}
+	t.Logf("GetBcsPod() got %v", got)
+	marshal, err := json.Marshal(got)
+	if err != nil {
+		t.Logf("GetBcsPod() marshal error %v", err)
+	}
+	t.Logf("GetBcsPod() marshal %v", string(marshal))
+
+	var pod []model.Pod
+
+	err = json.Unmarshal(marshal, &pod)
+	if err != nil {
+		t.Logf("GetBcsContainer() unmarshal error %v", err)
+	}
+
+	for _, p := range pod {
+		sq.DB.Create(&p)
+	}
+
+	//// Create a new user
+	//container := Container{}
+	//db.Create(&user)
+	//
+	//// Query for all users
+	var pods []model.Pod
+	sq.DB.Find(&pods)
+	for _, p := range pods {
+		fmt.Printf("pod: %v", p)
+	}
+}
+
+func Test_gorm_node(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.NodeMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsNode(&client.GetBcsNodeRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 110,
+			Page: client.Page{
+				Limit: 200,
+				Start: 0,
+			},
+			Filter: &client.PropertyFilter{
+				Condition: "OR",
+				Rules: []client.Rule{
+					{
+						Field:    "bk_cluster_id",
+						Operator: "in",
+						Value:    []int64{1},
+					},
+				},
+			},
+		},
+		//BKClusterID: 449,
+	}, nil, false)
+	if err != nil {
+		t.Fatalf("GetBcsNode failed: %v", err)
+	}
+	t.Logf("GetBcsNode() got %v", got)
+	marshal, err := json.Marshal(got)
+	if err != nil {
+		t.Logf("GetBcsNode() marshal error %v", err)
+	}
+	t.Logf("GetBcsNode() marshal %v", string(marshal))
+
+	var node []model.Node
+
+	err = json.Unmarshal(marshal, &node)
+	if err != nil {
+		t.Logf("GetBcsNode() unmarshal error %v", err)
+	}
+
+	for _, n := range node {
+		sq.DB.Create(&n)
+	}
+
+	//// Create a new user
+	//container := Container{}
+	//db.Create(&user)
+	//
+	//// Query for all users
+	var nodes []model.Node
+	sq.DB.Find(&nodes)
+	for _, n := range nodes {
+		fmt.Printf("node: %v", n)
+		marshal, err := json.Marshal(n)
+		if err != nil {
+			t.Logf("GetBcsNode() marshal error %v", err)
+		}
+		t.Logf("GetBcsNode() marshal %v", string(marshal))
+		var bkNode bkcmdbkube.Node
+		err = json.Unmarshal(marshal, &bkNode)
+		if err != nil {
+			t.Logf("GetBcsNode() unmarshal error %v", err)
+		}
+		fmt.Printf("bkNode: %v", bkNode)
+
+	}
+}
+
+func Test_gorm_deployment(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.DeploymentMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 110,
+			Page: client.Page{
+				Limit: 100,
+				Start: 0,
+			},
+			Filter: &client.PropertyFilter{
+				Condition: "OR",
+				Rules: []client.Rule{
+					{
+						Field:    "cluster_uid",
+						Operator: "in",
+						Value:    []string{"xxx"},
+					},
+				},
+			},
+		},
+		//ClusterUID: "cluster-bcs",
+		Kind: "deployment",
+		//BKClusterID: 449,
+		//Namespace:  "test",
+	}, nil, false)
+	if err != nil {
+		t.Fatalf("GetBcsWorkload failed: %v", err)
+	}
+	t.Logf("GetBcsWorkload() got %v", got)
+	marshal, err := json.Marshal(got)
+	if err != nil {
+		t.Logf("GetBcsWorkload() marshal error %v", err)
+	}
+	t.Logf("GetBcsWorkload() marshal %v", string(marshal))
+
+	var deploy []model.Deployment
+
+	err = json.Unmarshal(marshal, &deploy)
+	if err != nil {
+		t.Logf("GetBcsWorkload() unmarshal error %v", err)
+	}
+
+	for _, d := range deploy {
+		sq.DB.Create(&d)
+	}
+
+	//// Create a new user
+	//container := Container{}
+	//db.Create(&user)
+	//
+	//// Query for all users
+	var deploys []model.Deployment
+	sq.DB.Find(&deploys)
+	for _, d := range deploys {
+		fmt.Printf("deploys: %v", d)
+	}
+}
+
+func Test_gorm_cluster(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.ClusterMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 110,
+			Page: client.Page{
+				Limit: 100,
+				Start: 0,
+			},
+			Fields: []string{},
+			Filter: &client.PropertyFilter{
+				Condition: "AND",
+				Rules: []client.Rule{
+					{
+						Field:    "id",
+						Operator: "in",
+						Value:    []int64{68},
+					},
+				},
+			},
+		},
+	}, nil, false)
+	if err != nil {
+		t.Fatalf("GetBcsCluster failed: %v", err)
+	}
+	t.Logf("GetBcsCluster() got %v", got)
+	marshal, err := json.Marshal(got)
+	if err != nil {
+		t.Logf("GetBcsCluster() marshal error %v", err)
+	}
+	t.Logf("GetBcsCluster() marshal %v", string(marshal))
+
+	var cluster []model.Cluster
+
+	err = json.Unmarshal(marshal, &cluster)
+	if err != nil {
+		t.Logf("GetBcsCluster() unmarshal error %v", err)
+	}
+
+	for _, n := range cluster {
+		sq.DB.Create(&n)
+	}
+
+	//// Create a new user
+	//container := Container{}
+	//db.Create(&user)
+	//
+	//// Query for all users
+	var clusters []model.Cluster
+	sq.DB.Find(&clusters)
+	for _, n := range clusters {
+		fmt.Printf("cluster: %v", n)
+	}
+}
+
+// nolint:golint
+func Test_cmdbClient_GetBcsCluster_withDB(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.ClusterMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsCluster(&client.GetBcsClusterRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 100148,
+			Page: client.Page{
+				Limit: 100,
+				Start: 0,
+			},
+			Fields: []string{},
+			Filter: &client.PropertyFilter{
+				Condition: "OR",
+				Rules: []client.Rule{
+					{
+						Field:    "id",
+						Operator: "in",
+						Value:    []int64{68},
+					},
+				},
+			},
+		},
+	}, sq.DB, false)
+	if err != nil {
+		t.Fatalf("GetBcsCluster failed: %v", err)
+	}
+	t.Logf("GetBcsCluster() got %v", got)
+}
+
+func Test_gorm_namespace(t *testing.T) {
+	sq := mySqlite.New("./test1.db")
+	if sq == nil {
+		t.Fatal("failed to open database")
+	}
+
+	// Auto migrate the User struct to the database
+	err := model.NamespaceMigrate(sq.DB)
+	if err != nil {
+		t.Fatal("failed to migrate database")
+	}
+
+	c := getCli()
+	got, err := c.GetBcsNamespace(&client.GetBcsNamespaceRequest{
+		CommonRequest: client.CommonRequest{
+			BKBizID: 100148,
+			Page: client.Page{
+				Limit: 100,
+				Start: 0,
+			},
+			Fields: []string{},
+			Filter: &client.PropertyFilter{
+				Condition: "AND",
+				Rules: []client.Rule{
+					{
+						Field:    "cluster_uid",
+						Operator: "in",
+						Value:    []string{"xxx"},
+					},
+				},
+			},
+		},
+	}, nil, false)
+	if err != nil {
+		t.Fatalf("GetBcsNamespace failed: %v", err)
+	}
+	t.Logf("GetBcsNamespace() got %v", got)
+	marshal, err := json.Marshal(got)
+	if err != nil {
+		t.Fatalf("json marshal failed: %v", err)
+	}
+	t.Logf("GetBcsNamespace() got %v", string(marshal))
+
+	var ns []model.Namespace
+	err = json.Unmarshal(marshal, &ns)
+	if err != nil {
+		t.Fatalf("json unmarshal failed: %v", err)
+	}
+
+	for _, n := range ns {
+		sq.DB.Create(&n)
+	}
+
+	var ns2 []model.Namespace
+	sq.DB.Find(&ns2)
+	for _, n := range ns2 {
+		t.Logf("ns2: %v", n)
+	}
+
 }

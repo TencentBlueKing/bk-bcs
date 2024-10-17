@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
@@ -36,6 +37,7 @@ import (
 type ListenerChecker struct {
 	cli            client.Client
 	listenerHelper *listenercontroller.ListenerHelper
+	lastMetricMap  map[string]int
 }
 
 // NewListenerChecker return listener checker
@@ -43,6 +45,7 @@ func NewListenerChecker(cli client.Client, listenerHelp *listenercontroller.List
 	return &ListenerChecker{
 		cli:            cli,
 		listenerHelper: listenerHelp,
+		lastMetricMap:  map[string]int{},
 	}
 }
 
@@ -62,6 +65,7 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 	cntMap := make(map[string]int)
 	for _, listener := range listenerList.Items {
 		status := listener.Status.Status
+		lbID := listener.Spec.LoadbalancerID
 
 		targetGroupType := networkextensionv1.LabelValueForTargetGroupNormal
 		protocol := listener.Spec.Protocol
@@ -78,7 +82,8 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 			}
 		}
 
-		cntMap[buildKey(status, targetGroupType)] = cntMap[buildKey(status, targetGroupType)] + 1
+		cntMap[buildKey(lbID, protocol, status, targetGroupType)] = cntMap[buildKey(lbID, protocol, status,
+			targetGroupType)] + 1
 
 		label := listener.GetLabels()
 		value, ok := label[networkextensionv1.LabelKetForTargetGroupType]
@@ -109,11 +114,17 @@ func (l *ListenerChecker) setMetric(listenerList *networkextensionv1.ListenerLis
 		}
 	}
 
-	metrics.ListenerTotal.Reset()
 	for key, cnt := range cntMap {
-		status, targetGroupType := transKey(key)
-		metrics.ListenerTotal.WithLabelValues(status, targetGroupType).Set(float64(cnt))
+		lbID, protocol, status, targetGroupType := transKey(key)
+		metrics.ListenerTotal.WithLabelValues(lbID, protocol, status, targetGroupType).Set(float64(cnt))
 	}
+	for key := range l.lastMetricMap {
+		if _, ok := cntMap[key]; !ok {
+			lbID, protocol, status, targetGroupType := transKey(key)
+			metrics.ListenerTotal.DeleteLabelValues(lbID, protocol, status, targetGroupType)
+		}
+	}
+	l.lastMetricMap = cntMap
 }
 
 // deleteUnusedListener 端口池中修改item-lbID后，需要回收不需要的监听器
@@ -200,15 +211,15 @@ func (l *ListenerChecker) deletePortPoolUnusedListener(listenerList *networkexte
 	}
 }
 
-func buildKey(status, targetGroupType string) string {
-	return fmt.Sprintf("%s/%s", status, targetGroupType)
+func buildKey(lbID, protocol, status, targetGroupType string) string {
+	return fmt.Sprintf("%s/%s/%s/%s", lbID, protocol, status, targetGroupType)
 }
 
 // return status, targetGroup
-func transKey(key string) (string, string) {
+func transKey(key string) (string, string, string, string) {
 	splits := strings.Split(key, "/")
-	if len(splits) != 2 {
-		return "", ""
+	if len(splits) != 4 {
+		return "", "", "", ""
 	}
-	return splits[0], splits[1]
+	return splits[0], splits[1], splits[2], splits[3]
 }

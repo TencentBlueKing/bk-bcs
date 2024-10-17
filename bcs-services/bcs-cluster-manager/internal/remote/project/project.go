@@ -25,6 +25,7 @@ import (
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	rutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -128,12 +129,15 @@ func (pm *ProManClient) GetProjectInfo(projectIdOrCode string, isCache bool) (*b
 		}
 	}()
 
+	start := time.Now()
 	resp, err := cli.Project.GetProject(context.Background(),
 		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
 	if err != nil {
+		metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectIdOrCode, err)
 		return nil, err
 	}
+	metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusOK, start)
 
 	if resp.Code != 0 {
 		blog.Errorf("GetProjectInfo[%s] GetProject err: %v", projectIdOrCode, resp.GetMessage())

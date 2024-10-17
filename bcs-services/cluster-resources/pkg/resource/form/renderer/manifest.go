@@ -204,7 +204,7 @@ func (r *ManifestRenderer) initTemplate() (err error) {
 func (r *ManifestRenderer) render2Map() error {
 	// 渲染，转换并写入数据（模板名称格式：{r.kind}.yaml）
 	var buf bytes.Buffer
-	err := r.tmpl.ExecuteTemplate(&buf, r.kind+".yaml", r.formData)
+	err := r.tmpl.ExecuteTemplate(&buf, r.kind+".yaml", r.formData) // nolint goconst
 	if err != nil {
 		log.Warn(r.ctx, "failed to render template：%v", err)
 		return errorx.New(errcode.General, i18n.GetMsg(r.ctx, "渲染模板失败：%v"), err)

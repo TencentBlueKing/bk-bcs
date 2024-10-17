@@ -158,14 +158,14 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref, toRefs } from 'vue';
 
-import BkSops from '../bk-sops.vue';
-import KubeletParams from '../kubelet-params.vue';
+import BkSops from '../components/bk-sops.vue';
+import KubeletParams from '../components/kubelet-params.vue';
 
 import BasicPoolInfo from './basic-pool-info.vue';
 
 import { mergeDeep } from '@/common/util';
+import FormGroup from '@/components/form-group.vue';
 import $router from '@/router';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import ActionDoc from '@/views/cluster-manage/components/action-doc.vue';
 
 export default defineComponent({

@@ -1,10 +1,9 @@
 import { computed, ref } from 'vue';
 
-import { ICloudRegion, INodeManCloud, ISecurityGroup, IVpcItem } from './add/tencent/types';
-
 import {
   cloudAccounts as cloudAccountsAPI,
   cloudRegionByAccount,
+  cloudRoles,
   cloudSecurityGroups,
   cloudVPC,
   clusterConnect as clusterConnectAPI,
@@ -12,9 +11,10 @@ import {
   deleteCloudAccounts as deleteCloudAccountsAPI,
   nodemanCloud,
   updateCloudAccounts as updateCloudAccountsAPI,
-  validateCloudAccounts as validateCloudAccountsAPI,
-} from '@/api/modules/cluster-manager';
+  validateCloudAccounts as validateCloudAccountsAPI } from '@/api/modules/cluster-manager';
+import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
+import { ICloudRegion, INodeManCloud, ISecurityGroup, IVpcItem } from '@/views/cluster-manage/types/types';
 
 export interface IGoogleAccount {
   gkeProjectID?: string
@@ -58,9 +58,48 @@ export interface ICloudAccount {
   clusters: string
 }
 
+export interface ICloudRole {
+  roleName: string;
+  roleID: string;
+  arn: string;
+  description: string;
+}
+
 export default function () {
   const curProject = computed(() => $store.state.curProject);
   const user = computed(() => $store.state.user);
+
+  // 云服务器type列表
+  const providerNameMap = {
+    bluekingCloud: {
+      label: $i18n.t('provider.blueKingyun'),
+      className: '#bcs-icon-color-k8s',
+    },
+    tencentCloud: {
+      label: $i18n.t('provider.tencentyun'),
+      className: '#bcs-icon-color-tencentcloud',
+    },
+    huaweiCloud: {
+      label: $i18n.t('provider.huaweiyun'),
+      className: '#bcs-icon-color-huaweicloud',
+    },
+    awsCloud: {
+      label: $i18n.t('provider.yamaxunyun'),
+      className: '#bcs-icon-color-awscloud',
+    },
+    gcpCloud: {
+      label: $i18n.t('provider.gugeyun'),
+      className: '#bcs-icon-color-gcpcloud',
+    },
+    azureCloud: {
+      label: $i18n.t('provider.weiruanyun'),
+      className: '#bcs-icon-color-weiruanyun',
+    },
+    tencentPublicCloud: {
+      label: $i18n.t('provider.tencentPublicCloud'),
+      className: '#bcs-icon-color-tencentcloud',
+    },
+  };
 
   // 云账号列表
   const cloudAccountList = ref<ICloudAccount[]>([]);
@@ -82,6 +121,18 @@ export default function () {
       }
     };
   };
+  // 角色列表
+  async function getCloudRolesList($cloudId: CloudID|undefined, accountID, roleType) {
+    if (!$cloudId) return { data: [] };
+    const res = await cloudRoles({
+      $cloudId,
+      accountID,
+      roleType,
+    }, { needRes: true }).catch(() => []);
+    return res as {
+      data: ICloudRole[]
+    };
+  }
   // 创建云账号
   const createCloudAccounts = async <T = IGoogleAccount>(params: ICreateAccountParams<T>) => {
     const result = await createCloudAccountsAPI({
@@ -217,5 +268,7 @@ export default function () {
     securityGroupLoading,
     securityGroups,
     handleGetSecurityGroups,
+    providerNameMap,
+    getCloudRolesList,
   };
 }

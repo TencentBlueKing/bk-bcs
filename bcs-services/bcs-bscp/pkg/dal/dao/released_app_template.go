@@ -41,6 +41,8 @@ type ReleasedAppTemplate interface {
 	BatchDeleteByAppIDWithTx(kit *kit.Kit, tx *gen.QueryTx, appID, bizID uint32) error
 	// BatchDeleteByReleaseIDWithTx batch delete by release id with transaction.
 	BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
+	// ListAllCISigns lists all released template ci signatures of one biz, and only belongs to existing apps
+	ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error)
 }
 
 var _ ReleasedAppTemplate = new(releasedAppTemplateDao)
@@ -186,4 +188,27 @@ func (dao *releasedAppTemplateDao) BatchDeleteByReleaseIDWithTx(kit *kit.Kit, tx
 
 	_, err := m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ReleaseID.Eq(releaseID)).Delete()
 	return err
+}
+
+// ListAllCISigns lists all released template ci signatures of one biz, and only belongs to existing apps
+func (dao *releasedAppTemplateDao) ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error) {
+	am := dao.genQ.App
+	aq := dao.genQ.App.WithContext(kit.Ctx)
+	var appIDs []uint32
+	if err := aq.Select(am.ID.Distinct()).
+		Where(am.BizID.Eq(bizID)).
+		Pluck(am.ID, &appIDs); err != nil {
+		return nil, err
+	}
+
+	m := dao.genQ.ReleasedAppTemplate
+	q := dao.genQ.ReleasedAppTemplate.WithContext(kit.Ctx)
+	var signs []string
+	if err := q.Select(m.Signature.Distinct()).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appIDs...)).
+		Pluck(m.Signature, &signs); err != nil {
+		return nil, err
+	}
+
+	return signs, nil
 }

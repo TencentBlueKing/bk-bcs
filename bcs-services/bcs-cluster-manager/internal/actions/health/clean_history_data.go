@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -123,6 +124,26 @@ func (ha *CleanDBDataAction) Handle(
 	if err != nil {
 		ha.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err = ha.model.CreateOperationLog(ha.ctx, &cmproto.OperationLog{
+		ResourceType: common.Task.String(),
+		ResourceID:   "",
+		TaskID:       "",
+		Message: func() string {
+			switch ha.req.DataType {
+			case DataTask:
+				return fmt.Sprintf("清理历史任务[%d ~ %d]", ha.req.StartTime, ha.req.EndTime)
+			case DataOperationLog:
+				return fmt.Sprintf("清理操作记录日志记录[%d ~ %d]", ha.req.StartTime, ha.req.EndTime)
+			}
+			return ""
+		}(),
+		OpUser:     auth.GetUserFromCtx(ha.ctx),
+		CreateTime: time.Now().Format(time.RFC3339),
+	})
+	if err != nil {
+		blog.Errorf("CleanDbHistoryData CreateOperationLog failed: %v", err)
 	}
 
 	ha.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)

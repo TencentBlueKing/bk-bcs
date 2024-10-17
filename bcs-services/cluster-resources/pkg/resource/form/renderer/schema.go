@@ -154,6 +154,7 @@ func (r *SchemaRenderer) renderSubTypeTmpl2Map(dir string, ret interface{}) erro
 }
 
 // genSchemaRules 生成 JsonSchema 校验规则
+// nolint lll
 func genSchemaRules(ctx context.Context) map[string]interface{} {
 	return map[string]interface{}{
 		"required": map[string]interface{}{
@@ -205,6 +206,23 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 		"sliceLength1": map[string]interface{}{
 			"validator": "{{ $self.value.length > 0 }}",
 			"message":   i18n.GetMsg(ctx, "不应少于 1 个项"),
+		},
+		"scheduleValid": map[string]interface{}{
+			"validator": `/^(\*|([0-5]?\d)(,[0-5]?\d)*|([0-5]?\d)-([0-5]?\d))(\/([0-5]?\d)(,[0-5]?\d)*)?\s+` +
+				`(\*|([01]?\d|2[0-3])(,[01]?\d|2[0-3])*|([01]?\d|2[0-3])-` +
+				`([01]?\d|2[0-3]))(\/([01]?\d|2[0-3])(,[01]?\d|2[0-3])*)?\s+` +
+				`(\*|(0?[1-9]|[12][0-9]|3[01])(,(0?[1-9]|[12][0-9]|3[01]))*|` +
+				`(0?[1-9]|[12][0-9]|3[01])-(0?[1-9]|[12][0-9]|3[01])|\?)` +
+				`(\/(0?[1-9]|[12][0-9]|3[01])(,(0?[1-9]|[12][0-9]|3[01]))*)?\s+` +
+				`(\*|(0?[1-9]|1[0-2]|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)` +
+				`(,(0?[1-9]|1[0-2]|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))*|` +
+				`(0?[1-9]|1[0-2]|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-` +
+				`(0?[1-9]|1[0-2]|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))` +
+				`(\/((0?[1-9]|1[0-2])(,((0?[1-9]|1[0-2]|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)))*))?\s+` +
+				`(\*|([0-6]|SUN|MON|TUE|WED|THU|FRI|SAT)(,[0-6]|SUN|MON|TUE|WED|THU|FRI|SAT)*|` +
+				`([0-6]|SUN|MON|TUE|WED|THU|FRI|SAT)-([0-6]|SUN|MON|TUE|WED|THU|FRI|SAT)|\?)` +
+				`(\/([0-6](,([0-6]|SUN|MON|TUE|WED|THU|FRI|SAT))*))?$/`,
+			"message": i18n.GetMsg(ctx, "格式无效，请参考 Cron 格式"),
 		},
 	}
 }

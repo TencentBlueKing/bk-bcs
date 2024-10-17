@@ -25,6 +25,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -82,8 +83,8 @@ func (ua *UpdateAction) getCluster() error {
 	return nil
 }
 
-// validateBaseInfo 检查基本信息
-func (ua *UpdateAction) validateBaseInfo() {
+// setBaseInfo 检查基本信息
+func (ua *UpdateAction) setBaseInfo() {
 	if len(ua.req.ClusterName) != 0 {
 		ua.cluster.ClusterName = ua.req.ClusterName
 	}
@@ -137,8 +138,29 @@ func (ua *UpdateAction) validateBaseInfo() {
 	}
 }
 
-// validateAdditionalInfo 检查附加信息
-func (ua *UpdateAction) validateAdditionalInfo() {
+func (ua *UpdateAction) setSettingInfo() {
+	if ua.req.NetworkSettings != nil {
+		ua.cluster.NetworkSettings = ua.req.NetworkSettings
+	}
+	if ua.req.ClusterBasicSettings != nil {
+		ua.cluster.ClusterBasicSettings = ua.req.ClusterBasicSettings
+	}
+	if ua.req.ClusterAdvanceSettings != nil {
+		ua.cluster.ClusterAdvanceSettings = ua.req.ClusterAdvanceSettings
+	}
+	if ua.req.NodeSettings != nil {
+		ua.cluster.NodeSettings = ua.req.NodeSettings
+	}
+	if ua.req.IsMixed != nil {
+		ua.cluster.IsMixed = ua.req.IsMixed.GetValue()
+	}
+	if ua.req.SharedRanges != nil {
+		ua.cluster.SharedRanges = ua.req.SharedRanges
+	}
+}
+
+// setAdditionalInfo 检查附加信息
+func (ua *UpdateAction) setAdditionalInfo() {
 	if len(ua.req.EngineType) != 0 {
 		ua.cluster.EngineType = ua.req.EngineType
 	}
@@ -169,15 +191,6 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if ua.req.IsShared != nil {
 		ua.cluster.IsShared = ua.req.IsShared.GetValue()
 	}
-	if ua.req.NetworkSettings != nil {
-		ua.cluster.NetworkSettings = ua.req.NetworkSettings
-	}
-	if ua.req.ClusterBasicSettings != nil {
-		ua.cluster.ClusterBasicSettings = ua.req.ClusterBasicSettings
-	}
-	if ua.req.ClusterAdvanceSettings != nil {
-		ua.cluster.ClusterAdvanceSettings = ua.req.ClusterAdvanceSettings
-	}
 	if len(ua.req.ClusterCategory) > 0 {
 		ua.cluster.ClusterCategory = ua.req.ClusterCategory
 	}
@@ -187,20 +200,15 @@ func (ua *UpdateAction) validateAdditionalInfo() {
 	if len(ua.req.ExtraClusterID) > 0 {
 		ua.cluster.ExtraClusterID = ua.req.ExtraClusterID
 	}
-	if ua.req.NodeSettings != nil {
-		ua.cluster.NodeSettings = ua.req.NodeSettings
-	}
-	if ua.req.IsMixed != nil {
-		ua.cluster.IsMixed = ua.req.IsMixed.GetValue()
-	}
 }
 
 // updateCluster update cluster info
 func (ua *UpdateAction) updateCluster() error {
 	// basic info
-	ua.validateBaseInfo()
+	ua.setBaseInfo()
+	ua.setSettingInfo()
 	// additional info
-	ua.validateAdditionalInfo()
+	ua.setAdditionalInfo()
 	// update cluster cloud info
 	err := utils.UpdateClusterCloudInfo(ua.cluster, ua.cloud)
 	if err != nil {
@@ -300,6 +308,23 @@ func (ua *UpdateAction) Handle(ctx context.Context, req *cmproto.UpdateClusterRe
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
 	}
+
+	// create operationLog
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   ua.cluster.ClusterID,
+		TaskID:       "",
+		Message:      fmt.Sprintf("集群%s修改基本信息", ua.cluster.ClusterID),
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.cluster.ClusterID,
+		ProjectID:    ua.cluster.ProjectID,
+		ResourceName: ua.cluster.ClusterName,
+	})
+	if err != nil {
+		blog.Errorf("UpdateCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
+	}
+
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }
 
@@ -401,6 +426,19 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 	if err := ua.updateNodes(); err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
 		return
+	}
+
+	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+		ResourceType: common.Cluster.String(),
+		ResourceID:   "",
+		TaskID:       "",
+		Message:      "更新node信息",
+		OpUser:       auth.GetUserFromCtx(ua.ctx),
+		CreateTime:   time.Now().Format(time.RFC3339),
+		ClusterID:    ua.req.ClusterID,
+	})
+	if err != nil {
+		blog.Errorf("UpdateNode CreateOperationLog failed: %v", err)
 	}
 
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
@@ -642,7 +680,7 @@ func (ua *AddNodesAction) checkManagedClusterNodeNum() error {
 // checkNodeInCluster check node id in cluster
 func (ua *AddNodesAction) checkNodeInCluster() error {
 	// get all masterIPs
-	masterIPs := getAllMasterIPs(ua.model)
+	masterIPs := GetAllMasterIPs(ua.model)
 
 	// check if nodes are already in cluster
 	nodeStatus := []string{common.StatusRunning, common.StatusInitialization,
@@ -661,7 +699,7 @@ func (ua *AddNodesAction) checkNodeInCluster() error {
 		if cls, ok := masterIPs[ip]; ok {
 			blog.Errorf("add nodes %v to Cluster %s failed, Node %s is duplicated",
 				ua.req.Nodes, ua.req.ClusterID, ip)
-			return fmt.Errorf("node %s is already in Cluster[%s]", ip, cls.clusterID)
+			return fmt.Errorf("node %s is already in Cluster[%s]", ip, cls.ClusterID)
 		}
 		newNodeIP[ip] = ip
 	}

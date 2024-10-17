@@ -10,6 +10,7 @@
           :border="['outer']"
           :remote-pagination="true"
           :pagination="pagination"
+          show-overflow-tooltip
           @page-limit-change="handlePageLimitChange"
           @page-value-change="loadServicesList">
           <bk-table-column :label="t('服务名称')" prop="app_name"></bk-table-column>

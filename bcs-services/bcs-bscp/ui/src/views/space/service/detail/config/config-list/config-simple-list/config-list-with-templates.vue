@@ -3,7 +3,7 @@
     <SearchInput
       v-model="searchStr"
       class="config-search-input"
-      :placeholder="t('配置文件绝对路径/创建人/修改人')"
+      :placeholder="t('配置文件名/创建人/修改人')"
       @search="getListData" />
     <bk-loading class="loading-wrapper" :loading="loading">
       <div v-for="group in tableGroupsData" :key="group.id" class="config-group">
@@ -156,7 +156,7 @@
     getListData();
   });
 
-  // 配置文件绝对路径
+  // 配置文件名
   const fileAP = (config: IConfigTableItem) => {
     const { path, name } = config;
     if (path.endsWith('/')) {

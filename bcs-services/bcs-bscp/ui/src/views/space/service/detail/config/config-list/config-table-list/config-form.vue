@@ -1,11 +1,11 @@
 <template>
   <bk-form ref="formRef" form-type="vertical" :model="localVal" :rules="rules">
-    <bk-form-item :label="t('配置文件绝对路径')" property="fileAP" :required="true">
+    <bk-form-item :label="t('配置文件名')" property="fileAP" :required="true">
       <bk-input
         v-model="localVal.fileAP"
-        :placeholder="t('请输入配置文件的绝对路径')"
+        :placeholder="t('请输入配置文件的完整路径和文件名，例如：/etc/nginx/nginx.conf')"
         :disabled="isEdit"
-        @input="change" />
+        @input="handleFileAPInput" />
     </bk-form-item>
     <bk-form-item :label="t('配置文件描述')" property="memo">
       <bk-input
@@ -24,58 +24,66 @@
       </bk-radio-group>
     </bk-form-item>
     <div class="user-settings">
-      <bk-form-item :label="t('文件权限')" property="privilege" required>
-        <div class="perm-input">
-          <bk-popover
-            ext-cls="privilege-tips-wrap"
-            theme="light"
-            trigger="manual"
-            placement="top"
-            :is-show="showPrivilegeErrorTips">
-            <bk-input
-              v-model="privilegeInputVal"
-              type="number"
-              :placeholder="t('请输入三位权限数字')"
-              @blur="handlePrivilegeInputBlur" />
-            <template #content>
-              <div>{{ t('只能输入三位 0~7 数字') }}</div>
-              <div class="privilege-tips-btn-area">
-                <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{ t('我知道了') }}</bk-button>
+      <div class="user-content">
+        <bk-form-item :label="t('文件权限')" property="privilege" required>
+          <div class="perm-input">
+            <bk-popover
+              ext-cls="privilege-tips-wrap"
+              theme="light"
+              trigger="manual"
+              placement="top"
+              :is-show="showPrivilegeErrorTips">
+              <bk-input
+                v-model="privilegeInputVal"
+                type="number"
+                :placeholder="t('请输入三位权限数字')"
+                @blur="handlePrivilegeInputBlur" />
+              <template #content>
+                <div>{{ t('只能输入三位 0~7 数字') }}</div>
+                <div class="privilege-tips-btn-area">
+                  <bk-button text theme="primary" @click="showPrivilegeErrorTips = false">{{
+                    t('我知道了')
+                  }}</bk-button>
+                </div>
+              </template>
+            </bk-popover>
+            <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
+              <div :class="['perm-panel-trigger']">
+                <i class="bk-bscp-icon icon-configuration-line"></i>
               </div>
-            </template>
-          </bk-popover>
-          <bk-popover ext-cls="privilege-select-popover" theme="light" trigger="click" placement="bottom">
-            <div :class="['perm-panel-trigger']">
-              <i class="bk-bscp-icon icon-configuration-line"></i>
-            </div>
-            <template #content>
-              <div class="privilege-select-panel">
-                <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
-                  <div class="header">{{ item }}</div>
-                  <div class="checkbox-area">
-                    <bk-checkbox-group
-                      class="group-checkboxs"
-                      :model-value="privilegeGroupsValue[index]"
-                      @change="handleSelectPrivilege(index, $event)">
-                      <bk-checkbox size="small" :label="4" :disabled="index === 0">
-                        {{ t('读') }}
-                      </bk-checkbox>
-                      <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
-                      <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
-                    </bk-checkbox-group>
+              <template #content>
+                <div class="privilege-select-panel">
+                  <div v-for="(item, index) in PRIVILEGE_GROUPS" class="group-item" :key="index" :label="item">
+                    <div class="header">{{ item }}</div>
+                    <div class="checkbox-area">
+                      <bk-checkbox-group
+                        class="group-checkboxs"
+                        :model-value="privilegeGroupsValue[index]"
+                        @change="handleSelectPrivilege(index, $event)">
+                        <bk-checkbox size="small" :label="4" :disabled="index === 0">
+                          {{ t('读') }}
+                        </bk-checkbox>
+                        <bk-checkbox size="small" :label="2">{{ t('写') }}</bk-checkbox>
+                        <bk-checkbox size="small" :label="1">{{ t('执行') }}</bk-checkbox>
+                      </bk-checkbox-group>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </template>
-          </bk-popover>
-        </div>
-      </bk-form-item>
-      <bk-form-item :label="t('用户')" property="user" :required="true">
-        <bk-input v-model="localVal.user" :placeholder="t('请输入')" @input="change"></bk-input>
-      </bk-form-item>
-      <bk-form-item :label="t('用户组')" :placeholder="t('请输入')" property="user_group" :required="true">
-        <bk-input v-model="localVal.user_group" @input="change"></bk-input>
-      </bk-form-item>
+              </template>
+            </bk-popover>
+          </div>
+        </bk-form-item>
+        <bk-form-item :label="t('用户')" property="user" :required="true">
+          <bk-input v-model="localVal.user" :placeholder="t('请输入')" @input="change"></bk-input>
+        </bk-form-item>
+        <bk-form-item :label="t('用户组')" :placeholder="t('请输入')" property="user_group" :required="true">
+          <bk-input v-model="localVal.user_group" @input="change"></bk-input>
+        </bk-form-item>
+      </div>
+      <div v-if="isWindowsAgent" class="user-tips">
+        <info-line class="icon" />
+        <span>{{ t('对于Windows客户端，以上文件权限、用户及用户组设置不生效，可在后置脚本中处理文件权限') }}</span>
+      </div>
     </div>
     <bk-form-item v-if="localVal.file_type === 'binary'" :label="t('配置内容')" :required="true">
       <bk-upload
@@ -150,7 +158,7 @@
   import SHA256 from 'crypto-js/sha256';
   import WordArray from 'crypto-js/lib-typedarrays';
   import CryptoJS from 'crypto-js';
-  import { TextFill, Done, Info, Error, Spinner } from 'bkui-vue/lib/icon';
+  import { TextFill, Done, Info, Error, Spinner, InfoLine } from 'bkui-vue/lib/icon';
   import BkMessage from 'bkui-vue/lib/message';
   import { cloneDeep } from 'lodash';
   import { IConfigEditParams, IFileConfigContentSummary } from '../../../../../../../../types/config';
@@ -224,37 +232,12 @@
   });
   const fileDownloading = ref(false);
   const uploadFile = ref<IUploadFile>();
+  const isWindowsAgent = ref(false); // 是否为windows用户
   const rules = {
-    // 配置文件绝对路径校验规则，path+filename
+    // 配置文件名校验规则，path+filename
     fileAP: [
       {
-        validator: (val: string) => {
-          // 必须为绝对路径, 且不能以/结尾
-          if (!val.startsWith('/') || val.endsWith('/')) {
-            return false;
-          }
-
-          const parts = val.split('/').slice(1);
-          const fileName = parts.pop() as string;
-
-          // 文件名称校验
-          // 文件名和路径不能全由.组成
-          if (!/^((?!\.{1,}$)[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+)$/.test(fileName)) {
-            return false;
-          }
-
-          let isValid = true;
-          // 文件路径校验
-          parts.some((part) => {
-            if (!/^((?!\.{1,}$)[\u4e00-\u9fa5A-Za-z0-9.\-_#%,:?!@$^+=\\[\]{}]+)$/.test(part)) {
-              isValid = false;
-              return true;
-            }
-            return false;
-          });
-
-          return isValid;
-        },
+        validator: (val: string) => /^\/(?:[^/]+\/)*[^/]+$/.test(val),
         message: t('无效的路径,路径不符合Unix文件路径格式规范'),
         trigger: 'change',
       },
@@ -350,6 +333,7 @@
     } else {
       stringContent.value = props.content as string;
     }
+    isWindowsAgent.value = navigator.userAgent.indexOf('Windows') !== -1;
   });
 
   // 权限输入框失焦后，校验输入是否合法，如不合法回退到上次输入
@@ -569,6 +553,14 @@
     emits('change', localVal.value, content);
   };
 
+  const handleFileAPInput = () => {
+    // 用户输入文件名 补全路径
+    if (localVal.value.fileAP && !localVal.value.fileAP.startsWith('/')) {
+      localVal.value.fileAP = `/${localVal.value.fileAP}`;
+    }
+    change();
+  };
+
   defineExpose({
     getSignature: () => {
       if (localVal.value.file_type === 'binary') {
@@ -581,9 +573,29 @@
 </script>
 <style lang="scss" scoped>
   .user-settings {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
+    margin-bottom: 24px;
+    .user-content {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      :deep(.bk-form-item) {
+        margin-bottom: 0px;
+        .bk-form-error {
+          position: inherit;
+        }
+      }
+    }
+    .user-tips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #63656e;
+      .icon {
+        font-size: 14px;
+      }
+    }
   }
   .perm-input {
     display: flex;

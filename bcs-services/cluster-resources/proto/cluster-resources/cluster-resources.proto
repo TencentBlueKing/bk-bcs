@@ -3024,6 +3024,9 @@ message ListTemplateSpaceReq {
 	string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹名称"
 	}];
+	repeated string tags = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹标签"
+	}];
 }
 
 message CreateTemplateSpaceReq {
@@ -3038,6 +3041,9 @@ message CreateTemplateSpaceReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string description = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹描述"
+	}];
+	repeated string tags = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹标签"
 	}];
 }
 
@@ -3056,6 +3062,9 @@ message UpdateTemplateSpaceReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "文件夹描述"
+	}];
+	repeated string tags = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "文件夹标签"
 	}];
 }
 
@@ -3081,6 +3090,12 @@ message CopyTemplateSpaceReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string name = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "名称"
+	}];
+	string description = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "描述"
+	}];
 }
 
 message ListTemplateSpaceCollectReq {
@@ -3182,6 +3197,9 @@ message CreateTemplateMetadataReq {
 	}];
 	string draftEditFormat = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿编辑模式"
+	}];
+	string renderMode = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件语法模式"
 	}];
 }
 
@@ -3310,6 +3328,9 @@ message CreateTemplateVersionReq {
 	bool force = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "能否被覆盖"
 	}];
+	string renderMode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件语法模式"
+	}];
 }
 
 message DeleteTemplateVersionReq {
@@ -3409,6 +3430,9 @@ message DeployTemplateFileReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string values = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集value值"
+	}];
 }
 
 message GetEnvManageReq {

@@ -238,7 +238,7 @@ func (d *RedisCacheClient) getPreferredResource(kind string) (schema.GroupVersio
 func (d *RedisCacheClient) getPreferredApiResources(kind, crdName string) (map[string]GroupKindVersionResource, error) {
 	all, err := d.ServerPreferredResources()
 	if err != nil {
-		return map[string]GroupKindVersionResource{}, err
+		return nil, err
 	}
 
 	// 逐个检查出第一个同名资源，作为 Preferred 结果返回
@@ -343,7 +343,7 @@ func GetApiResources(
 	ctx context.Context, conf *ClusterConf, kind, crdName string) (map[string]GroupKindVersionResource, error) {
 	cli, err := NewRedisCacheClient4Conf(ctx, conf)
 	if err != nil {
-		return map[string]GroupKindVersionResource{}, err
+		return nil, err
 	}
 	// 查询 preferred version（含刷新缓存重试）
 	var res map[string]GroupKindVersionResource

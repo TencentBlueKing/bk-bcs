@@ -229,3 +229,15 @@ func (ap *App) collectHitRate() {
 		}
 	}()
 }
+
+// BatchUpdateLastConsumedTime 批量更新服务拉取时间
+func (ap *App) BatchUpdateLastConsumedTime(kt *kit.Kit, bizID uint32, appIDs []uint32) error {
+
+	if _, err := ap.cs.CS().BatchUpdateLastConsumedTime(kt.Ctx, &pbcs.BatchUpdateLastConsumedTimeReq{
+		BizId:  bizID,
+		AppIds: appIDs,
+	}); err != nil {
+		return err
+	}
+	return nil
+}

@@ -126,7 +126,9 @@ func WithTaskIDForContext(ctx context.Context, taskID string) context.Context {
 }
 
 // GetTaskIDAndStepNameFromContext get taskID and stepName from context
-func GetTaskIDAndStepNameFromContext(ctx context.Context) (taskID, stepName string) {
+func GetTaskIDAndStepNameFromContext(ctx context.Context) (string, string) {
+	taskID, stepName := "", ""
+
 	if id, ok := ctx.Value(TaskID).(string); ok {
 		taskID = id
 	}
@@ -135,7 +137,7 @@ func GetTaskIDAndStepNameFromContext(ctx context.Context) (taskID, stepName stri
 		stepName = name
 	}
 
-	return
+	return taskID, stepName
 }
 
 // WithTaskIDAndStepNameForContext will return a new context wrapped taskID and stepName flag around the original ctx
@@ -820,14 +822,14 @@ func WithStepRetry(retry uint32) StepOption {
 	}
 }
 
-// WithStepSkipFailed xxx
+// WithStepSkipFailed 任务失败的时候是否允许自动跳过
 func WithStepSkipFailed(skip bool) StepOption {
 	return func(opt *StepOptions) {
 		opt.SkipFailed = skip
 	}
 }
 
-// WithStepAllowSkip xxx
+// WithStepAllowSkip 任务失败的时候是否允许跳过，手动操作
 func WithStepAllowSkip(allow bool) StepOption {
 	return func(opt *StepOptions) {
 		opt.AllowSkip = allow
@@ -1096,7 +1098,7 @@ func UpdateNodeGroupCloudAndModuleInfo(nodeGroupID string, cloudGroupID string,
 }
 
 // ShieldHostAlarm shield host alarm for user
-func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
+func ShieldHostAlarm(ctx context.Context, clusterId, bizID string, ips []string) error {
 	taskID, stepName := GetTaskIDAndStepNameFromContext(ctx)
 	if len(ips) == 0 {
 		return fmt.Errorf("ShieldHostAlarm[%s] ips empty", taskID)
@@ -1132,8 +1134,9 @@ func ShieldHostAlarm(ctx context.Context, bizID string, ips []string) error {
 
 	for i := range alarms {
 		err = alarms[i].ShieldHostAlarmConfig(maintainers[0], &alarm.ShieldHost{
-			BizID:    bizID,
-			HostList: hosts,
+			BizID:     bizID,
+			HostList:  hosts,
+			ClusterId: clusterId,
 		})
 		if err != nil {
 			blog.Errorf("ShieldHostAlarm[%s][%s] ShieldHostAlarmConfig failed: %v", taskID, alarms[i].Name(), err)

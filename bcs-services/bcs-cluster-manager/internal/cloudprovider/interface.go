@@ -362,6 +362,8 @@ type NodeGroupManager interface {
 	DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
 	// UpdateNodeGroup update specified nodegroup configuration
 	UpdateNodeGroup(group *proto.NodeGroup, opt *UpdateNodeGroupOption) (*proto.Task, error)
+	// RecommendNodeGroupConf recommends nodegroup configs
+	RecommendNodeGroupConf(opt *CommonOption) ([]*proto.RecommendNodeGroupConf, error)
 	// GetNodesInGroup get all nodes belong to NodeGroup
 	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
 	// GetNodesInGroupV2 get all nodes belong to NodeGroup

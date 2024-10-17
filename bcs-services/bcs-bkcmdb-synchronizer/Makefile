@@ -20,10 +20,10 @@ LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zookeeper
  -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
 tidy:
-	@go mod tidy -compat=1.17
+	@go mod tidy
 
 synchronizer: tidy
-	@export CGO_ENABLED=0; GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o bin/${BIN} cmd/synchronizer/*.go
+	@export CGO_ENABLED=1; GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o bin/${BIN} cmd/synchronizer/*.go
 
 .PHONY: build
 build: clean synchronizer

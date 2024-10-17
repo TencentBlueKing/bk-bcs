@@ -9,6 +9,13 @@
             "fuzzy": true
         },
         {
+            "id": "invalid file name",
+            "message": "invalid file name",
+            "translation": "invalid file name",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "read file failed, err: {ErrR}",
             "message": "read file failed, err: {ErrR}",
             "translation": "read file failed, err: {ErrR}",
@@ -160,18 +167,18 @@
             "fuzzy": true
         },
         {
-            "id": "list config item failed, err: {Err}",
-            "message": "list config item failed, err: {Err}",
-            "translation": "list config item failed, err: {Err}",
+            "id": "list config item failed, err: {ErrC}",
+            "message": "list config item failed, err: {ErrC}",
+            "translation": "list config item failed, err: {ErrC}",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "Err",
+                    "id": "ErrC",
                     "string": "%[1]v",
                     "type": "error",
                     "underlyingType": "interface{Error() string}",
                     "argNum": 1,
-                    "expr": "err"
+                    "expr": "errC"
                 }
             ],
             "fuzzy": true
@@ -301,6 +308,13 @@
             "id": "batch delete failed",
             "message": "batch delete failed",
             "translation": "batch delete failed",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "sensitive data is not visible, unable to view actual content",
+            "message": "sensitive data is not visible, unable to view actual content",
+            "translation": "sensitive data is not visible, unable to view actual content",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -538,9 +552,9 @@
             "fuzzy": true
         },
         {
-            "id": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
-            "message": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
-            "translation": "the access token format is incorrect. Currently only OAtuh 2.0 and jwt formats \n\t\t\tare supported. The length is 32-512 characters, including uppercase and lowercase letters and numbers",
+            "id": "delete template from template sets failed",
+            "message": "delete template from template sets failed",
+            "translation": "delete template from template sets failed",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -1000,23 +1014,6 @@
             "fuzzy": true
         },
         {
-            "id": "the config file {Name} under this service already exists and cannot be created again",
-            "message": "the config file {Name} under this service already exists and cannot be created again",
-            "translation": "the config file {Name} under this service already exists and cannot be created again",
-            "translatorComment": "Copied from source.",
-            "placeholders": [
-                {
-                    "id": "Name",
-                    "string": "%[1]s",
-                    "type": "string",
-                    "underlyingType": "string",
-                    "argNum": 1,
-                    "expr": "path.Join(req.ConfigItemSpec.Path, req.ConfigItemSpec.Name)"
-                }
-            ],
-            "fuzzy": true
-        },
-        {
             "id": "delete one app template binding instance by app id failed, err: {Err}",
             "message": "delete one app template binding instance by app id failed, err: {Err}",
             "translation": "delete one app template binding instance by app id failed, err: {Err}",
@@ -1398,13 +1395,6 @@
                     "expr": "err"
                 }
             ],
-            "fuzzy": true
-        },
-        {
-            "id": "sensitive data is not visible, unable to view actual content",
-            "message": "sensitive data is not visible, unable to view actual content",
-            "translation": "sensitive data is not visible, unable to view actual content",
-            "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
@@ -1816,41 +1806,78 @@
             "fuzzy": true
         },
         {
-            "id": "invalid path, length should \u003e= 1",
-            "message": "invalid path, length should \u003e= 1",
-            "translation": "invalid path, length should \u003e= 1",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "invalid path, length should \u003c= 1024",
-            "message": "invalid path, length should \u003c= 1024",
-            "translation": "invalid path, length should \u003c= 1024",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "invalid path, should start with '/'",
-            "message": "invalid path, should start with '/'",
-            "translation": "invalid path, should start with '/'",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "invalid path {Part}, path cannot all be '.'",
-            "message": "invalid path {Part}, path cannot all be '.'",
-            "translation": "invalid path {Part}, path cannot all be '.'",
+            "id": "invalid path {Path}, length should \u003e= 1",
+            "message": "invalid path {Path}, length should \u003e= 1",
+            "translation": "invalid path {Path}, length should \u003e= 1",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "Part",
+                    "id": "Path",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "part"
+                    "expr": "path"
                 }
             ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, length should \u003c= 1024",
+            "message": "invalid path {Path}, length should \u003c= 1024",
+            "translation": "invalid path {Path}, length should \u003c= 1024",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, the path must start with '/'",
+            "message": "invalid path {Path}, the path must start with '/'",
+            "translation": "invalid path {Path}, the path must start with '/'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "message": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translation": "invalid path {Path}, the pathcannot contain consecutive '/'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Path",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "path"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid path, length should \u003e= 1",
+            "message": "invalid path, length should \u003e= 1",
+            "translation": "invalid path, length should \u003e= 1",
+            "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
@@ -2027,6 +2054,23 @@
             "id": "invalid name {Name}, name cannot all be '.'",
             "message": "invalid name {Name}, name cannot all be '.'",
             "translation": "invalid name {Name}, name cannot all be '.'",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "Name",
+                    "string": "%[1]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 1,
+                    "expr": "name"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "invalid name {Name}, there can't be any /",
+            "message": "invalid name {Name}, there can't be any /",
+            "translation": "invalid name {Name}, there can't be any /",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {

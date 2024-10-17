@@ -576,12 +576,13 @@ import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
+import FormGroup from '@/components/form-group.vue';
 import TextTips from '@/components/layout/TextTips.vue';
 import usePage from '@/composables/use-page';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useCloud, useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
@@ -719,7 +720,8 @@ export default defineComponent({
         {
           message: $i18n.t('cluster.ca.nodePool.create.validate.passwordNotSame'),
           trigger: 'blur',
-          validator: () => confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
+          validator: () => isEdit.value
+            || confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
         },
       ],
       // 密钥校验
@@ -1191,20 +1193,14 @@ export default defineComponent({
 
       return true;
     };
+    const { focusOnErrorField } = useFocusOnErrorField();
     const handleNext = async () => {
+      // 校验错误滚动到第一个错误的位置
       const result = await validate();
       if (!result) {
-        // 自动滚动到第一个错误的位置
-        const errDom = document.getElementsByClassName('form-error-tip');
-        const bcsErrDom = document.getElementsByClassName('error-tips');
-        const firstErrDom = errDom[0] || bcsErrDom[0];
-        firstErrDom?.scrollIntoView({
-          block: 'center',
-          behavior: 'smooth',
-        });
+        focusOnErrorField();
         return;
       }
-
       ctx.emit('next', getNodePoolData());
     };
 
@@ -1288,6 +1284,7 @@ export default defineComponent({
       getSchemaByProp,
       showRepeatMountTarget,
       validate,
+      focusOnErrorField,
       getNodePoolData,
       CPU,
       Mem,

@@ -10,6 +10,7 @@
       selection-key="id"
       row-key="id"
       :row-class="getRowCls"
+      show-overflow-tooltip
       @page-limit-change="handlePageLimitChange"
       @page-value-change="refresh($event, true)"
       @column-sort="handleSort"
@@ -17,7 +18,12 @@
       <template #prepend v-if="versionData.id === 0">
         <render-table-tip />
       </template>
-      <bk-table-column v-if="versionData.id === 0" :width="74" :min-width="74" :label="renderSelection">
+      <bk-table-column
+        v-if="versionData.id === 0"
+        :width="74"
+        :min-width="74"
+        :label="renderSelection"
+        :show-overflow-tooltip="false">
         <template #default="{ row }">
           <across-check-box
             :checked="isChecked(row)"
@@ -27,14 +33,14 @@
       </bk-table-column>
       <bk-table-column :label="t('配置项名称')" prop="spec.key" :min-width="240">
         <template #default="{ row }">
-          <bk-button
+          <bk-overflow-title
             v-if="row.spec"
-            text
-            theme="primary"
             :disabled="row.kv_state === 'DELETE'"
+            type="tips"
+            class="key-name"
             @click="handleView(row)">
             {{ row.spec.key }}
-          </bk-button>
+          </bk-overflow-title>
         </template>
       </bk-table-column>
       <bk-table-column :label="t('配置项值预览')" prop="spec.value">
@@ -151,7 +157,7 @@
     @open-edit="handleSwitchToEdit" />
   <VersionDiff v-model:show="isDiffPanelShow" :current-version="versionData" :selected-kv-config-id="diffConfig" />
   <DeleteConfirmDialog
-    v-model:isShow="isDeleteConfigDialogShow"
+    v-model:is-show="isDeleteConfigDialogShow"
     :title="t('确认删除该配置项？')"
     @confirm="handleDeleteConfigConfirm">
     <div style="margin-bottom: 8px">
@@ -160,7 +166,7 @@
     <div>{{ deleteConfigTips }}</div>
   </DeleteConfirmDialog>
   <DeleteConfirmDialog
-    v-model:isShow="isRecoverConfigDialogShow"
+    v-model:is-show="isRecoverConfigDialogShow"
     :title="t('确认恢复该配置项?')"
     :confirm-text="t('恢复')"
     @confirm="handleRecoverConfigConfirm">
@@ -303,7 +309,6 @@
     () => {
       configStore.$patch((state) => {
         state.allConfigCount = configsCount.value;
-        state.allExistConfigCount = configList.value.filter((item) => item.kv_state !== 'DELETE').length;
       });
     },
     { immediate: true, deep: true },
@@ -372,6 +377,7 @@
       configsCount.value = res.count;
       configStore.$patch((state) => {
         state.allConfigCount = res.count;
+        state.allExistConfigCount = res.exclusion_count;
       });
       selecTableDataCount.value = Number(res.exclusion_count);
       emits('sendTableDataCount', selecTableDataCount.value);
@@ -566,6 +572,9 @@
     }
   }
   .config-table {
+    .key-name {
+      color: #3a84ff;
+    }
     :deep(.bk-table-body) {
       max-height: calc(100vh - 280px);
       overflow: auto;

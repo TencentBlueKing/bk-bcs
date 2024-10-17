@@ -40,8 +40,10 @@ import (
 func getListenerPredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			newListener, okNew := e.ObjectNew.(*networkextensionv1.Listener)
-			oldListener, okOld := e.ObjectOld.(*networkextensionv1.Listener)
+			objectNew := e.ObjectNew.DeepCopyObject()
+			objectOld := e.ObjectOld.DeepCopyObject()
+			newListener, okNew := objectNew.(*networkextensionv1.Listener)
+			oldListener, okOld := objectOld.(*networkextensionv1.Listener)
 			if !okNew || !okOld {
 				return false
 			}

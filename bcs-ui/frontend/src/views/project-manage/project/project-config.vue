@@ -102,7 +102,7 @@ export default defineComponent({
       ctx.emit('change', value);
     };
 
-    const ccKey = ref(curProject.value.cc_app_id);
+    const ccKey = ref(curProject.value.businessID);
     const kind = ref(curProject.value.kind);
 
     const saveLoading = ref(false);

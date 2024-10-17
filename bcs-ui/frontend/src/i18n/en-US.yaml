@@ -28,6 +28,7 @@ bcs:
     kubeConfig: KubeConfig
     cloud: Cloud credential import
     platform: Platform created
+    machine: Machine
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -69,7 +70,7 @@ blueking:
   community: Forum
   website: Official
   docs: Documentation
-  releaseNotes: Release note
+  releaseNotes: Release Notes
   features: Features
   features1: Product features
   apiToken: API token
@@ -254,6 +255,7 @@ generic:
       network: Network Error
       system: System Error
       data: Data acquisition failure
+      import: Import failure
     warning:
       '403': No permission operation
       '404': Page does not exist
@@ -494,6 +496,9 @@ generic:
     cidrConflict: 'CIDR conflicts with {cidr}, please re-enter.'
     fieldRequired: '{0} required'
     fieldRepeat: '{0} repeat'
+    clusterName: >-
+      The cluster name can only contain numbers, letters, mid-line lines (-),
+      down line (_), The beginning must be numbers or letters
   title:
     curVersion: Current
     diffVersion: Comparison version
@@ -659,6 +664,7 @@ cluster:
     maxPodNum: Max pod number
     clusterLabel: Label
     hideSharedCluster: Hide shared cluster
+    provider: Provider
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -703,6 +709,17 @@ cluster:
         desc: >-
           Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
           Google Cloud, Huawei Cloud
+        importDesc: >-
+          Currently supports four cloud providers: Tencent Cloud, AWS, Azure,
+          Google Cloud, Huawei Cloud
+      bkSops:
+        title: Imported Cluster (via bk-sops)
+        subTitle: >-
+          You can import any external cluster by executing a bk-sops task on
+          control plane hosts
+        desc: >-
+          By executing bk-sops task on the control plane hosts, automatically
+          install the agent in the cluster to manage external clusters.
     label:
       clusterVersion: Version
       desc: Description
@@ -774,10 +791,6 @@ cluster:
           desc: >-
             Node pod CIDR cannot be adjusted after allocation Please fill in
             after careful evaluation
-        article3: >-
-          The number of nodes can be added with clusters (including Master nodes
-          and node nodes) = (Number of IP -quantity of service) / single node
-          POD quantity upper limit.       
         article1: >-
           The container network resources are limited, please allocate it
           reasonably. Under the current container network configuration, the
@@ -786,6 +799,10 @@ cluster:
           When the container network resources are excessive, the container
           network will be automatically scale-up. After the capacity is
           expanded, the cluster can be added at most {count}.
+        article3: >-
+          The number of nodes can be added with clusters (including Master nodes
+          and node nodes) = (Number of IP -quantity of service) / single node
+          POD quantity upper limit.       
       networkMode:
         text: Network Mode
         cni:
@@ -804,6 +821,7 @@ cluster:
       importType: Import Type
       cloudToken: Cloud Token
       kubeConfig: Cluster KubeConfig
+      title: Import a public cloud cluster - Cluster KubeConfig
       network:
         text: Network
         intranet: Intranet
@@ -837,6 +855,7 @@ cluster:
         notSupport: >-
           If the number of controller plane nodes is less than three, high
           availability cannot be supported
+      role: Service role
     msg:
       managedClusterInfo: >-
         Create a custody cluster must add at least one node to run the necessary
@@ -885,6 +904,50 @@ cluster:
       createCloudToken: New voucher
       fileImport: File Import
       textKubeConfig: Usability testing
+    aws:
+      securityGroup:
+        text: Safety group
+        vpcLink: >-
+          'This selection will apply to the Safety group of the EKS-managed
+          elastic network interfaces created in your control plane subnet. To
+          create a new Safety group, please go to the appropriate page in the
+          {0}.'
+        vpcMaster: VPC console
+      cidrTips:
+        tips1: 0.0.0.0/0 is not allowed
+        tips2: Invalid
+      nodePool: Add Node pools
+      editNodePool: Edit Node pools
+      cidrWhitelist: CIDR Whitelist
+      label:
+        defaultNodePool: Default Node Pool
+        skipOrNot: Skip or not
+      validate:
+        subnet: The node pool subnet cannot be empty
+      runtime:
+        extended:
+          label: EXTENDED
+          text: >-
+            This option supports Kubernetes versions for 26 months from the date
+            of release. Extended support requires an additional hourly fee,
+            which begins after the standard support period ends. After the
+            extended support period ends, your cluster will be automatically
+            upgraded to the next version.
+        standard:
+          label: STANDARD
+          text: >-
+            This option supports Kubernetes versions for 14 months from the date
+            of release, at no additional cost. After the standard support period
+            ends, your cluster will be automatically upgraded to the next
+            version.
+      tips:
+        subnetEmpty: 'The subnet is empty, please select a subnet first'
+        awsDesc: >-
+          Amazon VPC CNI ：AWS network plugin that enables Pod networking within
+          the cluster.
+        awsLink: Overview of Amazon VPC CNI functionality.
+    azure:
+      chargingModel: Charging model
   detail:
     title:
       overview: Overview
@@ -1076,6 +1139,8 @@ cluster:
           The name does not exceed 255 characters, only supports Chinese,
           English, numbers, and scratch lines, separators (-) and decimal points
         nodeQuotaMaxSize: 'Maximum node quota is {maximum}'
+        nodeCountsMaxSize: The number of Node count cannot be greater than the Node quota
+        minNodes: The number of Node count must be greater than 0
       label:
         nameAndID: Node pool name (ID)
         nodeQuota: Node quota
@@ -1580,6 +1645,9 @@ cluster:
         selectAllNs: All namespaces
         kernel: Core
         runtime: Runtime
+  operateRecord:
+    placeholder:
+      searchRecord: 'Search for resource name, resource ID, status, or initiator'
 deploy:
   helm:
     title:
@@ -2842,11 +2910,6 @@ logCollector:
       characters
     logPath: Only absolute paths are supported
   msg:
-    logCollector: >-
-      Supports the collection settings of container standard output logs and
-      file path logs. The log collection service has been upgraded. It is
-      recommended to "generate new rules" for old version rules and clean them
-      up in time.
     oldRuleToNewRule: >-
       After generating a new rule, the log data collected by the old and new
       version rules will be completely synchronized after {0}, and the system
@@ -3096,6 +3159,21 @@ importGoogleCloud:
     regions: Regions
   tips:
     disabledTips: Credentials associated with the cluster and cannot be deleted
+importBkSopsCloud:
+  title: Import a public cloud cluster - BK SOPS
+  label:
+    clusterName: Cluster name
+    controlPanel: Control Panel
+    addServer: Add Server
+    advancedParameters: Advanced Parameters
+    desc: Description
+  button:
+    import: Import
+  message:
+    nodeTips: >-
+      You can import through the cluster master node and execute kubectl
+      commands.
+    errorAgent: The import of the node agent is abnormal.
 azureCloud:
   button:
     create: Create
@@ -3469,6 +3547,7 @@ tke:
       re-enter.
     supportCidrList: 'Supports only network segments between {0}.'
     formErr: The form was filled in incorrectly. Please modify it
+    leastTwoDifferentAZs: Subnets specified must be in at least two different AZs
   configRec:
     l100:
       text: Node Count 1~100
@@ -3595,6 +3674,12 @@ tkeCa:
       about the system disk and data disk. At least one data disk of 100GB or
       more is required.
 provider:
+  tencentyun: TencentCloud
+  huaweiyun: HuaweiCloud
+  yamaxunyun: AwsCloud
+  gugeyun: gcpCloud
+  weiruanyun: AzureCloud
+  blueKingyun: BlueKingCloud
   tencentPublicCloud: TencentPublicCloud
 container:
   label:
@@ -3618,10 +3703,11 @@ templateFile:
     deployReview: Deployment Preview
     disableYamlToForm: Unable to switch mode
     fileList: File List
+    import: Import file package
+    clone: Clone
   button:
     formMode: Form Mode
     yamlMode: YAML Mode
-    createSpace: Create Folder
     rename: Rename
     createFile: Create Template File
     delete: Delete
@@ -3629,10 +3715,10 @@ templateFile:
     previewAndDeploy: Preview and deploy
     versionManage: Version Management
     confirmDeploy: Confirm Deployment
-    import: Import
-    export: Export
     AddToFavorites: Add to Favorites
     RemoveFromFavorites: Remove from Favorites
+    import: Import
+    export: Export all folders
     exportFolder: Export Folder
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
@@ -3672,6 +3758,10 @@ templateFile:
     nextKind: Next kind
     bookmark: Bookmark folder
     unbookmark: Unbookmark
+    uploadTips: >-
+      Supports .tgz and .tar.gz compressed file formats, with a maximum size of
+      {0}MB
+    createSpace: Create Folder
   tag:
     draft: draft
     baseOn: base on

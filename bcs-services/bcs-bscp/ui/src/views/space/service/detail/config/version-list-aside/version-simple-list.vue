@@ -23,7 +23,9 @@
           :class="['version-item', { active: versionData.id === version.id }]"
           @click="handleSelectVersion(version)">
           <div :class="['dot', version.status.publish_status]"></div>
-          <div class="version-name">{{ version.spec.name }}</div>
+          <bk-overflow-title class="version-name" type="tips">
+            {{ version.spec.name }}
+          </bk-overflow-title>
           <div
             v-if="version.status.fully_released"
             :class="['all-tag', { 'full-release': version.status.fully_release }]"
@@ -178,6 +180,10 @@
   };
 
   const handleSelectVersion = (version: IConfigVersion) => {
+    configStore.$patch((state) => {
+      state.allExistConfigCount = 0;
+      state.conflictFileCount = 0;
+    });
     versionData.value = version;
     const params: { spaceId: string; appId: number; versionId?: number } = {
       spaceId: props.bkBizId,

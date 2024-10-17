@@ -118,8 +118,11 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 	[]*table.ClientEvent, int64, error) {
 
 	m := dao.genQ.ClientEvent
-	q := dao.genQ.ClientEvent.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID), m.AppID.Eq(appID),
-		m.ClientID.Eq(clientID))
+	q := dao.genQ.ClientEvent.WithContext(kit.Ctx)
+
+	// 过滤当前ID和目标ID相等且状态不是成功的数据(跳过的数据)
+	q = q.Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.ClientID.Eq(clientID),
+		q.Not(q.Where(m.OriginalReleaseID.EqCol(m.TargetReleaseID), m.ReleaseChangeStatus.Eq(string(table.Success)))))
 
 	var err error
 	var conds []rawgen.Condition
@@ -137,11 +140,12 @@ func (dao *clientEventDao) List(kit *kit.Kit, bizID, appID, clientID uint32, sta
 
 	zeroTime := time.Time{}
 	if startTime != zeroTime {
-		conds = append(conds, q.Where(m.StartTime.Gte(startTime)))
+		conds = append(conds, m.StartTime.Gte(startTime))
 	}
 	if endTime != zeroTime {
-		conds = append(conds, q.Where(m.EndTime.Lte(endTime)))
+		conds = append(conds, m.EndTime.Lte(endTime))
 	}
+
 	d := q.Where(conds...).Order(exprs...)
 	if opt.All {
 		result, err := d.Find()

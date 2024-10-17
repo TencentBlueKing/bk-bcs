@@ -70,7 +70,11 @@
           {{ row.version || '--' }}
         </template>
       </bcs-table-column>
-      <bcs-table-column :label="$t('generic.label.updator')" prop="updator"></bcs-table-column>
+      <bcs-table-column :label="$t('generic.label.updator')" prop="updator">
+        <template #default="{ row }">
+          {{ row.updator || '--' }}
+        </template>
+      </bcs-table-column>
       <bcs-table-column :label="$t('generic.label.updatedAt')" prop="updateAt">
         <template #default="{ row }">
           {{ formatTime(row.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss') }}

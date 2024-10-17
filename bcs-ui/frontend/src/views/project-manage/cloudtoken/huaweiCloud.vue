@@ -12,7 +12,10 @@
             operator: user.username
           }
         }"
-        @click="handleShowCreateDialog">{{$t('huaweiCloud.button.create')}}</bk-button>
+        icon="plus"
+        @click="handleShowCreateDialog">
+        {{$t('huaweiCloud.button.create')}}
+      </bk-button>
       <bk-input
         class="w-[400px]"
         :placeholder="$t('huaweiCloud.placeholder.search')"

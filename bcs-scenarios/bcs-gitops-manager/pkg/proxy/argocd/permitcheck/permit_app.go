@@ -74,7 +74,7 @@ func (c *checker) filterApplications(ctx context.Context, project string, apps [
 			return nil, nil, http.StatusInternalServerError, errors.Wrapf(err, "get application failed")
 		}
 		if argoApp == nil {
-			return nil, nil, http.StatusBadRequest, errors.Errorf("application '%s' not found", app)
+			return nil, nil, http.StatusNotFound, errors.Errorf("application '%s' not found", app)
 		}
 		proj := argoApp.Spec.Project
 		_, ok := projApps[proj]

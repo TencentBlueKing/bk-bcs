@@ -21,6 +21,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -28,6 +29,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
+	"github.com/argoproj/argo-cd/v2/applicationset/generators"
+	"github.com/argoproj/argo-cd/v2/applicationset/services"
+	appsetutils "github.com/argoproj/argo-cd/v2/applicationset/utils"
 	argocommon "github.com/argoproj/argo-cd/v2/common"
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -48,6 +52,14 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/db"
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
 	gitopsdiff "github.com/argoproj/gitops-engine/pkg/diff"
+	"github.com/argoproj/gitops-engine/pkg/health"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
@@ -510,6 +522,12 @@ func (cd *argo) AllApplications() []*v1alpha1.Application {
 	return result
 }
 
+// TerminateAppOperation terminate application operation
+func (cd *argo) TerminateAppOperation(ctx context.Context, req *applicationpkg.OperationTerminateRequest) error {
+	_, err := cd.appClient.TerminateOperation(ctx, req)
+	return err
+}
+
 // GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
 	if !cd.cacheSynced.Load() {
@@ -628,6 +646,25 @@ func (cd *argo) PatchApplicationResource(ctx context.Context, appName string, re
 	if err != nil {
 		return errors.Wrapf(err, "patch '%s/%s/%s-%s' failed", resource.Group, resource.Version,
 			resource.Kind, resource.Name)
+	}
+	return nil
+}
+
+// PatchApplicationAnnotation will update application annotations
+func (cd *argo) PatchApplicationAnnotation(ctx context.Context, appName, namespace string,
+	annotations map[string]interface{}) error {
+	patch, err := json.Marshal(map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": annotations,
+		},
+	})
+	if err != nil {
+		return errors.Wrap(err, "marshal annotation error")
+	}
+	if _, err := cd.argoK8SClient.Applications(namespace).
+		Patch(ctx, appName, types.MergePatchType, patch,
+			metav1.PatchOptions{}); err != nil {
+		return errors.Wrapf(err, "patch application '%s' annotations '%v' error", appName, annotations)
 	}
 	return nil
 }
@@ -847,23 +884,40 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 
 func (cd *argo) deleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
 	resource *v1alpha1.ResourceStatus) error {
+	retryNum := 5
+	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
+	var err error
+	for i := 0; i < retryNum; i++ {
+		if err = cd.handleDeleteAppResource(ctx, application, resource); err == nil {
+			return nil
+		}
+		blog.Errorf("RequestID[%s] %s (retry: %d)", requestID, err.Error(), i)
+	}
+	return err
+}
+
+func (cd *argo) handleDeleteAppResource(ctx context.Context, application *v1alpha1.Application,
+	resource *v1alpha1.ResourceStatus) error {
 	server := application.Spec.Destination.Server
 	requestID := ctx.Value(traceconst.RequestIDHeaderKey).(string)
-	_, err := cd.appClient.DeleteResource(ctx, &appclient.ApplicationResourceDeleteRequest{
+	newCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	needForce := true
+	_, err := cd.appClient.DeleteResource(newCtx, &appclient.ApplicationResourceDeleteRequest{
 		Name:         &application.Name,
 		Kind:         &resource.Kind,
 		Namespace:    &resource.Namespace,
 		Group:        &resource.Group,
 		Version:      &resource.Version,
 		ResourceName: &resource.Name,
+		Force:        &needForce,
 	})
 	if err != nil {
-		if resource.Status != v1alpha1.SyncStatusCodeSynced {
+		if resource.Health.Status == health.HealthStatusMissing {
 			// nolint goconst
-			blog.Warnf("RequestID[%s], delete resource '%s/%s/%s' for cluster '%s' with application '%s' "+
-				"with status '%s', noneed care: %s",
-				requestID, resource.Group, resource.Kind, resource.Name,
-				server, application.Name, resource.Status, err.Error())
+			blog.Warnf("RequestID[%s], resource '%s/%s/%s' for cluster '%s' with application '%s' is missing, "+
+				"noneed care: %s", requestID, resource.Group, resource.Kind, resource.Name,
+				server, application.Name, err.Error())
 			return nil
 		}
 		if utils.IsArgoResourceNotFound(err) {
@@ -963,6 +1017,75 @@ func (cd *argo) AllApplicationSets() []*v1alpha1.ApplicationSet {
 	return result
 }
 
+var (
+	render = appsetutils.Render{}
+)
+
+func (cd *argo) ApplicationSetDryRun(appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, error) {
+	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 300,
+		apiclient.TLSConfiguration{
+			DisableTLS:       false,
+			StrictValidation: false,
+		})
+	argoCDService, _ := services.NewArgoCDService(cd.argoDB, true, repoClientSet, false)
+	// this will render the Applications by ApplicationSet's generators
+	// refer to:
+	// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
+	results := make([]*v1alpha1.Application, 0)
+	for i := range appSet.Spec.Generators {
+		generator := appSet.Spec.Generators[i]
+		if generator.List == nil && generator.Git == nil && generator.Matrix == nil && generator.Merge == nil {
+			continue
+		}
+		listGenerator := generators.NewListGenerator()
+		gitGenerator := generators.NewGitGenerator(argoCDService)
+		terminalGenerators := map[string]generators.Generator{
+			"List": listGenerator,
+			"Git":  gitGenerator,
+		}
+		tsResult, err := generators.Transform(generator, map[string]generators.Generator{
+			"List":   listGenerator,
+			"Git":    gitGenerator,
+			"Matrix": generators.NewMatrixGenerator(terminalGenerators),
+			"Merge":  generators.NewMergeGenerator(terminalGenerators),
+		}, appSet.Spec.Template, appSet, map[string]interface{}{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "transform generator[%d] failed", i)
+		}
+		for j := range tsResult {
+			ts := tsResult[j]
+			tmplApplication := getTempApplication(ts.Template)
+			if tmplApplication.Labels == nil {
+				tmplApplication.Labels = make(map[string]string)
+			}
+			for _, p := range ts.Params {
+				var app *v1alpha1.Application
+				app, err = render.RenderTemplateParams(tmplApplication, appSet.Spec.SyncPolicy,
+					p, appSet.Spec.GoTemplate, nil)
+				if err != nil {
+					return nil, errors.Wrap(err, "error generating application from params")
+				}
+				results = append(results, app)
+			}
+		}
+	}
+	return results, nil
+}
+
+// refer to:
+// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
+func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) *v1alpha1.Application {
+	var tmplApplication v1alpha1.Application
+	tmplApplication.Annotations = applicationSetTemplate.Annotations
+	tmplApplication.Labels = applicationSetTemplate.Labels
+	tmplApplication.Namespace = applicationSetTemplate.Namespace
+	tmplApplication.Name = applicationSetTemplate.Name
+	tmplApplication.Spec = applicationSetTemplate.Spec
+	tmplApplication.Finalizers = applicationSetTemplate.Finalizers
+
+	return &tmplApplication
+}
+
 // RefreshApplicationSet refresh appset trigger it to generate applications
 func (cd *argo) RefreshApplicationSet(namespace, name string) error {
 	metadata := map[string]interface{}{
@@ -1000,6 +1123,101 @@ func (cd *argo) DeleteApplicationSetOrphan(ctx context.Context, name string) err
 		return errors.Wrapf(err, "delete application-set failed")
 	}
 	return nil
+}
+
+var (
+	commitSHARegex          = regexp.MustCompile("^[0-9A-Fa-f]{40}$")
+	truncatedCommitSHARegex = regexp.MustCompile("^[0-9A-Fa-f]{7,}$")
+)
+
+// isTruncatedCommitSHA returns whether or not a string is a truncated  SHA-1
+func isTruncatedCommitSHA(sha string) bool {
+	return truncatedCommitSHARegex.MatchString(sha)
+}
+
+// isCommitSHA returns whether or not a string is a 40 character SHA-1
+func isCommitSHA(sha string) bool {
+	return commitSHARegex.MatchString(sha)
+}
+
+// GetRepoLastCommitID get the last commit-id
+func (cd *argo) GetRepoLastCommitID(ctx context.Context, repoUrl, revision string) (string, error) {
+	if isCommitSHA(revision) {
+		return revision, nil
+	}
+	repoAuth, err := cd.buildRepoAuth(ctx, repoUrl)
+	if err != nil {
+		return "", err
+	}
+	memStore := memory.NewStorage()
+	remoteRepo := git.NewRemote(memStore, &config.RemoteConfig{
+		Name: repoUrl,
+		URLs: []string{repoUrl},
+	})
+	refs, err := remoteRepo.List(&git.ListOptions{
+		Auth: repoAuth,
+	})
+	if err != nil {
+		return "", errors.Wrapf(err, "git repo '%s' fetch refs failed", repoUrl)
+	}
+	// refToHash keeps a maps of remote refs to their hash
+	// (e.g. refs/heads/master -> a67038ae2e9cb9b9b16423702f98b41e36601001)
+	refToHash := make(map[string]string)
+	// refToResolve remembers ref name of the supplied revision if we determine the revision is a
+	// symbolic reference (like HEAD), in which case we will resolve it from the refToHash map
+	refToResolve := ""
+	for _, ref := range refs {
+		refName := ref.Name().String()
+		hash := ref.Hash().String()
+		if ref.Type() == plumbing.HashReference {
+			refToHash[refName] = hash
+		}
+		if ref.Name().Short() == revision || refName == revision {
+			if ref.Type() == plumbing.HashReference {
+				return hash, nil
+			}
+			if ref.Type() == plumbing.SymbolicReference {
+				refToResolve = ref.Target().String()
+			}
+		}
+	}
+	if refToResolve != "" {
+		// If refToResolve is non-empty, we are resolving symbolic reference (e.g. HEAD).
+		// It should exist in our refToHash map
+		if hash, ok := refToHash[refToResolve]; ok {
+			return hash, nil
+		}
+	}
+	if isTruncatedCommitSHA(revision) {
+		return revision, nil
+	}
+
+	return "", errors.Errorf("unable to resolve '%s' to a commit SHA", revision)
+}
+
+func (cd *argo) buildRepoAuth(ctx context.Context, repoUrl string) (transport.AuthMethod, error) {
+	argoRepo, err := cd.argoDB.GetRepository(ctx, repoUrl)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get repository '%s' from argo db failed", repoUrl)
+	}
+	if argoRepo == nil {
+		return nil, errors.Errorf("repository '%s' not found", repoUrl)
+	}
+	if argoRepo.Username != "" && argoRepo.Password != "" {
+		return &githttp.BasicAuth{
+			Username: argoRepo.Username,
+			Password: argoRepo.Password,
+		}, nil
+	}
+	if argoRepo.SSHPrivateKey != "" {
+		var publicKeys *ssh.PublicKeys
+		publicKeys, err = ssh.NewPublicKeys("git", []byte(argoRepo.SSHPrivateKey), "")
+		if err != nil {
+			return nil, errors.Wrapf(err, "create public keys failed")
+		}
+		return publicKeys, nil
+	}
+	return nil, errors.Errorf("not https/ssh authentication")
 }
 
 func (cd *argo) initAppHistoryStore() error {

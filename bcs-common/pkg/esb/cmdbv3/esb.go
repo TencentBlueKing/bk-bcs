@@ -297,3 +297,41 @@ func (c *Client) ESBSearchModule(username string, req *ESBSearchModuleRequest) (
 
 	return result, nil
 }
+
+// ESBCreateModule create module
+func (c *Client) ESBCreateModule(username string, req *ESBCreateModuleRequest) (*ESBCreateModuleResult, error) {
+
+	if req == nil || req.BkBizID == 0 || req.BkSetID == 0 || req.Data == nil || req.Data.BkModuleName == "" ||
+		req.Data.BkParentId == 0 {
+		return nil, fmt.Errorf("ESBCreateModule req is empty")
+	}
+
+	request := map[string]interface{}{
+		"bk_username": username,
+		"bk_biz_id":   req.BkBizID,
+		"bk_set_id":   req.BkSetID,
+		"data": map[string]interface{}{
+			"bk_parent_id":   req.Data.BkParentId,
+			"bk_module_name": req.Data.BkModuleName,
+		},
+	}
+
+	if req.BkSupplierAccount != "" {
+		request["bk_supplier_account"] = req.BkSupplierAccount
+	}
+
+	result := new(ESBCreateModuleResult)
+	err := c.client.Post().
+		WithEndpoints([]string{c.host}).
+		WithBasePath("/api/c/compapi/v2/cc/").
+		SubPathf("create_module").
+		WithHeaders(c.GetHeader()).
+		Body(request).
+		Do().
+		Into(result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}

@@ -26,20 +26,24 @@ type Config struct {
 	conf.FileConfig
 	conf.LogConfig
 
-	ListenAddr string `json:"listen_addr" value:"0.0.0.0" usage:"proxy server listen addr"`
-	ListenPort int    `json:"listen_port" value:"8080" usage:"proxy server listen port"`
+	ListenAddr string `json:"listenAddr" value:"0.0.0.0" usage:"proxy server listen addr"`
+	ListenPort int    `json:"listenPort" value:"8080" usage:"proxy server listen port"`
 
-	TlsCert string `json:"tls_cert" value:"/etc/webhook/certs/cert.pem" usage:"webhook server cert"`
-	TlsKey  string `json:"tls_key" value:"/etc/webhook/certs/key.pem" usage:"webhook server key"`
+	TlsCert string `json:"tlsCert" value:"/etc/webhook/certs/cert.pem" usage:"webhook server cert"`
+	TlsKey  string `json:"tlsKey" value:"/etc/webhook/certs/key.pem" usage:"webhook server key"`
 
-	ArgoService string `json:"argo_service" value:"" usage:"the service address of argo"`
-	ArgoUser    string `json:"argo_user" value:"" usage:"the user of argo"`
-	ArgoPass    string `json:"argo_pass" value:"" usage:"the password of argo"`
+	ArgoService string `json:"argoService" value:"" usage:"the service address of argo"`
+	ArgoUser    string `json:"argoUser" value:"" usage:"the user of argo"`
+	ArgoPass    string `json:"argoPass" value:"" usage:"the password of argo"`
+	ArgoRepoUrl string `json:"argoRepoUrl" value:"" usage:"the url of argo repo-server"`
 
 	DBConfig common.DBConfig `json:"dbConfig,omitempty"`
 
 	RecoverProjects string `json:"recoverProjects" value:"" usage:""`
 	AdminNamespace  string `json:"adminNamespace" value:"" usage:""`
+
+	InterceptSyncProjectsStr string   `json:"interceptSyncProjects" value:"" usage:"the projects need intercept sync"`
+	InterceptSyncProjects    []string `json:"-" value:"" usage:""`
 
 	PublicProjectsStr string   `json:"publicProjects,omitempty"`
 	PublicProjects    []string `json:"-"`
@@ -50,5 +54,6 @@ func Parse() *Config {
 	cfg := new(Config)
 	conf.Parse(cfg)
 	cfg.PublicProjects = strings.Split(cfg.PublicProjectsStr, ",")
+	cfg.InterceptSyncProjects = strings.Split(cfg.InterceptSyncProjectsStr, ",")
 	return cfg
 }

@@ -37,6 +37,12 @@ func (h *HttpServerClient) listNode(request *restful.Request, response *restful.
 		return
 	}
 
+	if h.NodeCache == nil {
+		_, _ = response.Write(CreateResponseData(errors.New("node cache is not init"), "", nil))
+		mf(strconv.Itoa(http.StatusInternalServerError))
+		return
+	}
+
 	var nodeIPs []string
 	var err error
 	if nodeName != "" {

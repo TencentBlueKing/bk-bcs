@@ -160,6 +160,7 @@ async function getPromise(method, url, data, userConfig = {}) {
   return promise;
 }
 
+export const streamTypes = ['arraybuffer', 'stream', 'blob'];
 /**
  * 处理 http 请求成功结果
  *
@@ -169,12 +170,19 @@ async function getPromise(method, url, data, userConfig = {}) {
  * @param {Function} promise 拒绝函数
  */
 function handleResponse({ config, response, resolve, reject }) {
-  // 容器服务 -> 配置 -> heml 模板集 helm/getQuestionsMD 请求 response 是一个 string 类型 markdown 文档内容
+  // string类型
   if (typeof response === 'string') {
     resolve(response, config);
     return;
   }
 
+  // 流类型
+  if (streamTypes.includes(config.responseType)) {
+    resolve(response);
+    return;
+  }
+
+  // JSON类型
   if (response.data?.code !== 0 && config.globalError) {
     reject({ response });
     return;

@@ -780,7 +780,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		cloudprovider.GetAnnotationsByNg(opt.NodeGroup))
 
 	// step6: remove inner nodes taints
-	common.BuildRemoveInnerTaintTaskStep(task, group)
+	common.BuildRemoveInnerTaintTaskStep(task, group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

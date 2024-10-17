@@ -15,10 +15,12 @@ package bkmonitor
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/parnurzeal/gorequest"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/alarm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
@@ -102,6 +104,33 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		return alarm.ErrServerNotInit
 	}
 
+	// 基于范围屏蔽告警 和 维度屏蔽告警
+
+	// 创建基于范围的屏蔽告警配置副本
+	scopeConfig := *config
+	scopeConfig.ShieldType = string(scope)
+	err := c.bkmonitorHostAlarmConfig(user, &scopeConfig)
+	if err != nil {
+		return err
+	}
+
+	// 创建基于维度的屏蔽告警配置副本
+	dimensionConfig := *config
+	dimensionConfig.ShieldType = string(dimension)
+	err = c.bkmonitorHostAlarmConfig(user, &dimensionConfig)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// bkmonitorHostAlarmConfig shield host alarm
+func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost) error {
+	if c == nil {
+		return alarm.ErrServerNotInit
+	}
+
 	var (
 		reqURL   = "/add_shield"
 		respData = &utils.BaseResponse{}
@@ -130,6 +159,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		return err
 	}
 
+	start := time.Now()
 	_, _, errs := gorequest.New().
 		Timeout(alarm.DefaultTimeOut).
 		Post(c.server+reqURL).
@@ -140,9 +170,11 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		Send(req).
 		EndStruct(&respData)
 	if len(errs) > 0 {
+		metrics.ReportLibRequestMetric("monitor", "ShieldHostAlarmConfig", "http", metrics.LibCallStatusErr, start)
 		blog.Errorf("call api ShieldHostAlarmConfig failed: %v", errs[0])
 		return errs[0]
 	}
+	metrics.ReportLibRequestMetric("monitor", "ShieldHostAlarmConfig", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
 		blog.Errorf("call api ShieldHostAlarmConfig failed: %v", respData.Message)

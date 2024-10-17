@@ -1,6 +1,10 @@
 <template>
   <section class="example-wrap">
-    <form-option ref="fileOptionRef" :p2p-show="true" @update-option-data="getOptionData" />
+    <form-option
+      ref="fileOptionRef"
+      :p2p-show="true"
+      :associate-config-show="true"
+      @update-option-data="getOptionData" />
     <div class="preview-container">
       <span class="preview-label">{{ $t('示例预览') }}</span>
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
@@ -41,6 +45,7 @@
     tempDir: '',
     clusterSwitch: false,
     clusterInfo: '',
+    rules: [],
   });
   const bkBizId = ref(String(route.params.spaceId));
   const replaceVal = ref('');
@@ -97,14 +102,30 @@
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.uid`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1.trim());
-      replaceVal.value = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2.trim());
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2);
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', '');
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', '');
-      // 去除不含p2p相关内容后，遗留的空白行去除
-      replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
     }
+
+    // 文件配置筛选规则动态增/删
+    if (optionData.value.rules?.length) {
+      const rulesPart1 = `
+      # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
+            - name: config_matches
+              value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
+      const rulesPart2 = `
+            - name: config_matches
+              value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', rulesPart1);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', rulesPart2);
+    } else {
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', '');
+    }
+    // 去除 动态插入的值为空的情况下产生的空白行
+    replaceVal.value = updateString.replaceAll(/\r?\n\s+\r?\n/g, '\n');
   };
   // 高亮配置
   const updateVariables = () => {
@@ -131,6 +152,12 @@
         name: 'Bk_Bscp_Variable_Cluster_Value',
         type: '',
         default_val: `${optionData.value.clusterInfo}`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Rules_Value',
+        type: '',
+        default_val: `'${optionData.value.rules}'`,
         memo: '',
       },
     ];

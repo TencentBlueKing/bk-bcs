@@ -126,14 +126,14 @@
               <div class="prefix-select">
                 <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
               </div>
-              <bcs-select
-                class="w-[88px] bg-[#fff] ml10"
+              <bk-input
+                class="w-[88px] ml10"
+                type="number"
                 :disabled="isEdit"
-                :clearable="false"
+                :min="50"
+                :max="2048"
                 v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
-                <bcs-option id="50" name="50"></bcs-option>
-                <bcs-option id="100" name="100"></bcs-option>
-              </bcs-select>
+              </bk-input>
               <span :class="['company', { disabled: isEdit }]">GB</span>
             </div>
             <div class="mt20">
@@ -306,7 +306,7 @@
             error-display-type="normal"
             required>
             <bcs-table
-              :data="filterSubnetsList"
+              :data="sortSubnetsList"
               row-class-name="table-row-enable"
               v-bkloading="{ isLoading: subnetsLoading }"
               @row-click="handleCheckSubnets">
@@ -345,11 +345,12 @@ import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
+import FormGroup from '@/components/form-group.vue';
 import usePage from '@/composables/use-page';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import Schema from '@/views/cluster-manage/autoscaler/resolve-schema';
 import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
@@ -765,7 +766,7 @@ export default defineComponent({
       zoneName: string
       subnetID: string
     }>>([]);
-    const filterSubnetsList = computed(() => subnetsList.value
+    const sortSubnetsList = computed(() => subnetsList.value
       .sort((pre, current) => {
         const isPreDisabled = curInstanceItem.value.zones?.includes(pre.zone);
         const isCurrentDisabled = curInstanceItem.value.zones?.includes(current.zone);
@@ -775,20 +776,14 @@ export default defineComponent({
 
         return 0;
       }));
-    const subnetsRowClass = ({ row }) => {
-      if (curInstanceItem.value.zones?.includes(row.zone)) {
-        // return 'table-row-enable';
-      }
-      // return 'table-row-disabled';
-      return 'table-row-enable';
-    };
     const handleGetSubnets = async () => {
       subnetsLoading.value = true;
       subnetsList.value = await $store.dispatch('clustermanager/cloudSubnets', {
         $cloudID: cluster.value.provider,
-        resourceGroupName: cluster.value.extraInfo.nodeResourceGroup,
         accountID: cluster.value.cloudAccountID,
         vpcID: cluster.value.vpcID,
+        resourceGroupName: clusterData.value.extraInfo?.networkResourceGroup
+        || clusterData.value.extraInfo?.nodeResourceGroup,
       });
       subnetsLoading.value = false;
     };
@@ -827,43 +822,36 @@ export default defineComponent({
     const validate = async () => {
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
       if (!basicFormValidate && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = 0;
+        // nodeConfigRef.value.scrollTop = 0;
         return false;
       }
       // 校验机型
       if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodeConfigRef.value.scrollTop = 20;
+        // nodeConfigRef.value.scrollTop = 20;
         return false;
       }
       const result = await formRef.value?.validate().catch(() => false);
-      if (!result && nodeConfigRef.value) {
-        if (!nodePoolConfig.value.autoScaling?.zones?.length) {
-          nodeConfigRef.value.scrollTop = 0;
-        } else {
-          nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
-        }
-      }
+      // if (!result && nodeConfigRef.value) {
+      //   if (!nodePoolConfig.value.autoScaling?.zones?.length) {
+      //     nodeConfigRef.value.scrollTop = 0;
+      //   } else {
+      //     nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
+      //   }
+      // }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       if (!basicFormValidate || !result || !validateDataDiskSize) return false;
 
       return true;
     };
+    const { focusOnErrorField } = useFocusOnErrorField();
     const handleNext = async () => {
       // 校验错误滚动到第一个错误的位置
       const result = await validate();
       if (!result) {
-        // 自动滚动到第一个错误的位置
-        const errDom = document.getElementsByClassName('form-error-tip');
-        const bcsErrDom = document.getElementsByClassName('error-tips');
-        const innerErrDom = document.getElementsByClassName('is-error');
-        const firstErrDom = innerErrDom[0] || errDom[0] || bcsErrDom[0];
-        firstErrDom?.scrollIntoView({
-          block: 'center',
-          behavior: 'smooth',
-        });
+        focusOnErrorField();
         return;
-      }
+      };
       ctx.emit('next', getNodePoolData());
     };
 
@@ -902,7 +890,7 @@ export default defineComponent({
       // 子网
       subnetsLoading,
       subnetsList,
-      filterSubnetsList,
+      sortSubnetsList,
       clusterOS,
       zoneListLoading,
       zoneList,
@@ -933,6 +921,7 @@ export default defineComponent({
       handleCancel,
       getSchemaByProp,
       validate,
+      focusOnErrorField,
       getNodePoolData,
       CPU,
       Mem,
@@ -946,8 +935,6 @@ export default defineComponent({
       clusterAdvanceSettings,
       handleSpecifiedZoneChange,
       handleGetCloudSecurityGroups,
-      // 子网
-      subnetsRowClass,
       handleCheckSubnets,
     };
   },

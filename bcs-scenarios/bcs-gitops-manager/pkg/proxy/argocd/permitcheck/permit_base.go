@@ -23,6 +23,7 @@ import (
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
+	"k8s.io/utils/strings/slices"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -54,6 +55,7 @@ func (c *checker) getProjectWithID(ctx context.Context, projectName string) (*v1
 // getBCSMultiProjectPermission get mutli-projects permission
 func (c *checker) getBCSMultiProjectPermission(ctx context.Context, projects map[string]string,
 	actions []RSAction) (map[string]map[RSAction]bool, error) {
+	// set admin-user have all permissions
 	user := ctxutils.User(ctx)
 	if c.isAdminUser(user.GetUser()) {
 		result := make(map[string]map[RSAction]bool)
@@ -64,15 +66,28 @@ func (c *checker) getBCSMultiProjectPermission(ctx context.Context, projects map
 		}
 		return result, nil
 	}
+
+	publicProjIDs := make(map[string]struct{})
+	for projName, projID := range projects {
+		if slices.Contains(c.option.PublicProjects, projName) {
+			publicProjIDs[projID] = struct{}{}
+		}
+	}
+	result := make(map[string]map[RSAction]bool)
+	defer func() {
+		// rewrite project_view for public projects
+		for k := range result {
+			if _, ok := publicProjIDs[k]; !ok {
+				continue
+			}
+			result[k][ProjectViewRSAction] = true
+		}
+	}()
 	// rewrite not tencent user with only-view permission
 	if !user.IsTencent {
-		result := make(map[string]map[RSAction]bool)
 		for projName, projID := range projects {
-			result[projID] = map[RSAction]bool{
-				ProjectViewRSAction:   false,
-				ProjectEditRSAction:   false,
-				ProjectDeleteRSAction: false,
-			}
+			result[projID] = map[RSAction]bool{ProjectViewRSAction: false,
+				ProjectEditRSAction: false, ProjectDeleteRSAction: false}
 			authed, err := dao.GlobalDB().CheckExternalUserPermission(user.GetUser(), projName)
 			if err != nil {
 				blog.Errorf("check external user permission error: %v", err)
@@ -114,22 +129,20 @@ func (c *checker) getBCSMultiProjectPermission(ctx context.Context, projects map
 		return nil, errors.Wrapf(err, "get project permission failed")
 	}
 
-	newResult := make(map[string]map[RSAction]bool)
 	for projID, projPermits := range permits {
-		newResult[projID] = make(map[RSAction]bool)
+		result[projID] = make(map[RSAction]bool)
 		for act, perm := range projPermits {
 			switch act {
 			case string(iam.ProjectView):
-				newResult[projID][ProjectViewRSAction] = perm
+				result[projID][ProjectViewRSAction] = perm
 			case string(iam.ProjectEdit):
-				newResult[projID][ProjectEditRSAction] = perm
+				result[projID][ProjectEditRSAction] = perm
 			case string(iam.ProjectDelete):
-				newResult[projID][ProjectDeleteRSAction] = perm
+				result[projID][ProjectDeleteRSAction] = perm
 			}
 		}
 	}
-
-	return newResult, nil
+	return result, nil
 }
 
 // getBCSClusterCreatePermission get bcs cluster creat permission
@@ -174,9 +187,18 @@ func (c *checker) getBCSNamespaceScopedPermission(ctx context.Context, proj, pro
 		}
 		return result, nil
 	}
+
+	result := make(map[string]map[string]bool)
+	defer func() {
+		// rewrite namespace_scoped_view for public-project
+		if slices.Contains(c.option.PublicProjects, proj) {
+			for k := range result {
+				result[k][string(iamnamespace.NameSpaceScopedView)] = true
+			}
+		}
+	}()
 	// rewrite not tencent user with only-view permission
 	if !user.IsTencent {
-		result := make(map[string]map[string]bool)
 		authed, err := dao.GlobalDB().CheckExternalUserPermission(user.GetUser(), proj)
 		if err != nil {
 			blog.Errorf("check external user permission error: %v", err)
@@ -206,15 +228,14 @@ func (c *checker) getBCSNamespaceScopedPermission(ctx context.Context, proj, pro
 		}
 	}
 
-	var permits map[string]map[string]bool
 	var err error
 	for i := 0; i < 5; i++ {
-		permits, err = c.namespacePermission.GetMultiNamespaceMultiActionPerm(user.GetUser(), projNsData, []string{
+		result, err = c.namespacePermission.GetMultiNamespaceMultiActionPerm(user.GetUser(), projNsData, []string{
 			string(iamnamespace.NameSpaceScopedCreate), string(iamnamespace.NameSpaceScopedDelete),
 			string(iamnamespace.NameSpaceScopedUpdate), string(iamnamespace.NameSpaceScopedView),
 		})
 		if err == nil {
-			return permits, nil
+			return result, nil
 		}
 		if !utils.NeedRetry(err) {
 			break

@@ -454,6 +454,7 @@ jobManage:
       ui:rules:
         - required
         - maxLength64
+        - scheduleValid
     concurrencyPolicy:
       title: {{ i18n "并发策略" .lang }}
       type: string

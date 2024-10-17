@@ -280,7 +280,7 @@ export default defineComponent({
         params: {
           projectCode: $store.getters.curProjectCode,
           // 资源视图集群视图时切换路由不能丢失集群ID，其余菜单默认不给
-          clusterId: item.id === 'CLUSTERRESOURCE' ? $router.currentRoute?.params?.clusterId : '',
+          // clusterId: item.id === 'CLUSTERRESOURCE' ? $router.currentRoute?.params?.clusterId : '',
         },
       }).catch(err => console.warn(err));
     };

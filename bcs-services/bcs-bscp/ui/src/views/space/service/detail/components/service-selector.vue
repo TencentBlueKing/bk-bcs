@@ -130,6 +130,8 @@
     if (service) {
       configStore.$patch((state) => {
         state.conflictFileCount = 0;
+        state.allConfigCount = 0;
+        state.allExistConfigCount = 0;
       });
       let name = route.name as string;
       if (route.name === 'init-script' && service.spec.config_type === 'kv') {

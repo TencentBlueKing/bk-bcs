@@ -35,8 +35,10 @@ var (
 
 // ShieldHost parameters
 type ShieldHost struct {
-	BizID    string
-	HostList []HostInfo
+	BizID      string
+	ShieldType string
+	ClusterId  string
+	HostList   []HostInfo
 }
 
 // HostInfo xxx

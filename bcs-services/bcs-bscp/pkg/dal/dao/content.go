@@ -36,6 +36,8 @@ type Content interface {
 	Get(kit *kit.Kit, id, bizID uint32) (*table.Content, error)
 	// BatchDeleteWithTx batch delete content data instance with transaction.
 	BatchDeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, contentIDs []uint32) error
+	// ListAllCISigns lists all non-template ci signatures of one biz, and only belongs to existing apps
+	ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error)
 }
 
 var _ Content = new(contentDao)
@@ -149,7 +151,7 @@ func (dao *contentDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx, contents
 		}
 		content.ID = ids[i]
 	}
-	if err := tx.Content.WithContext(kit.Ctx).Save(contents...); err != nil {
+	if err := tx.Content.WithContext(kit.Ctx).CreateInBatches(contents, 500); err != nil {
 		return err
 	}
 	return nil
@@ -191,4 +193,27 @@ func (dao *contentDao) validateAttachmentResExist(kit *kit.Kit, am *table.Conten
 	}
 
 	return nil
+}
+
+// ListAllCISigns lists all non-template ci signatures of one biz, and only belongs to existing apps
+func (dao *contentDao) ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error) {
+	am := dao.genQ.App
+	aq := dao.genQ.App.WithContext(kit.Ctx)
+	var appIDs []uint32
+	if err := aq.Select(am.ID.Distinct()).
+		Where(am.BizID.Eq(bizID)).
+		Pluck(am.ID, &appIDs); err != nil {
+		return nil, err
+	}
+
+	m := dao.genQ.Content
+	q := dao.genQ.Content.WithContext(kit.Ctx)
+	var signs []string
+	if err := q.Select(m.Signature.Distinct()).
+		Where(m.BizID.Eq(bizID), m.AppID.In(appIDs...)).
+		Pluck(m.Signature, &signs); err != nil {
+		return nil, err
+	}
+
+	return signs, nil
 }

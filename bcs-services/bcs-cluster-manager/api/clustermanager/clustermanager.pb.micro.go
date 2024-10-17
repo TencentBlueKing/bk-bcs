@@ -379,6 +379,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.RecommendNodeGroupConf",
+			Path:    []string{"/clustermanager/v1/cloud/{cloudID}/recommendNodeGroupConf"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.MoveNodesToGroup",
 			Path:    []string{"/clustermanager/v1/nodegroup/{nodeGroupID}/node"},
 			Method:  []string{"POST"},
@@ -970,6 +976,7 @@ type ClusterManagerService interface {
 	GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...client.CallOption) (*GetNodeGroupResponse, error)
 	ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, opts ...client.CallOption) (*ListClusterNodeGroupResponse, error)
 	ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error)
+	RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, opts ...client.CallOption) (*RecommendNodeGroupConfResp, error)
 	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...client.CallOption) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...client.CallOption) (*RemoveNodesFromGroupResponse, error)
 	CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...client.CallOption) (*CleanNodesInGroupResponse, error)
@@ -1658,6 +1665,16 @@ func (c *clusterManagerService) ListClusterNodeGroup(ctx context.Context, in *Li
 func (c *clusterManagerService) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...client.CallOption) (*ListNodeGroupResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListNodeGroup", in)
 	out := new(ListNodeGroupResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, opts ...client.CallOption) (*RecommendNodeGroupConfResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.RecommendNodeGroupConf", in)
+	out := new(RecommendNodeGroupConfResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2602,6 +2619,7 @@ type ClusterManagerHandler interface {
 	GetNodeGroup(context.Context, *GetNodeGroupRequest, *GetNodeGroupResponse) error
 	ListClusterNodeGroup(context.Context, *ListClusterNodeGroupRequest, *ListClusterNodeGroupResponse) error
 	ListNodeGroup(context.Context, *ListNodeGroupRequest, *ListNodeGroupResponse) error
+	RecommendNodeGroupConf(context.Context, *RecommendNodeGroupConfReq, *RecommendNodeGroupConfResp) error
 	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest, *MoveNodesToGroupResponse) error
 	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest, *RemoveNodesFromGroupResponse) error
 	CleanNodesInGroup(context.Context, *CleanNodesInGroupRequest, *CleanNodesInGroupResponse) error
@@ -2774,6 +2792,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, out *GetNodeGroupResponse) error
 		ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, out *ListClusterNodeGroupResponse) error
 		ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error
+		RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, out *RecommendNodeGroupConfResp) error
 		MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error
 		RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, out *RemoveNodesFromGroupResponse) error
 		CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, out *CleanNodesInGroupResponse) error
@@ -3205,6 +3224,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListNodeGroup",
 		Path:    []string{"/clustermanager/v1/nodegroup"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.RecommendNodeGroupConf",
+		Path:    []string{"/clustermanager/v1/cloud/{cloudID}/recommendNodeGroupConf"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3963,6 +3988,10 @@ func (h *clusterManagerHandler) ListClusterNodeGroup(ctx context.Context, in *Li
 
 func (h *clusterManagerHandler) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, out *ListNodeGroupResponse) error {
 	return h.ClusterManagerHandler.ListNodeGroup(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, out *RecommendNodeGroupConfResp) error {
+	return h.ClusterManagerHandler.RecommendNodeGroupConf(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, out *MoveNodesToGroupResponse) error {

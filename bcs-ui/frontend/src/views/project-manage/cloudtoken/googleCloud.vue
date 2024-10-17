@@ -1,5 +1,5 @@
 <template>
-  <div class="px-[24px]">
+  <div class="px-[20px]">
     <Row class="mt-[20px]">
       <template #left>
         <bcs-button theme="primary" icon="plus" @click="showCreate = true">

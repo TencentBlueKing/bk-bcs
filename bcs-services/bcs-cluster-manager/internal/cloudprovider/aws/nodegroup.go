@@ -107,10 +107,14 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 	input := &eks.UpdateNodegroupConfigInput{
 		ClusterName:   &cluster,
 		NodegroupName: &group.CloudNodeGroupID,
-		Labels: &eks.UpdateLabelsPayload{
-			AddOrUpdateLabels: aws.StringMap(group.Labels),
-		},
 	}
+
+	if len(group.GetNodeTemplate().GetLabels()) > 0 {
+		input.Labels =  &eks.UpdateLabelsPayload{
+			AddOrUpdateLabels: aws.StringMap(group.GetNodeTemplate().GetLabels()),
+		}
+	}
+	
 	if group.AutoScaling != nil {
 		input.ScalingConfig = &eks.NodegroupScalingConfig{
 			MaxSize: aws.Int64(int64(group.AutoScaling.MaxSize)),
@@ -124,6 +128,73 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 	}
 
 	return input
+}
+
+// RecommendNodeGroupConf recommends nodegroup configs
+func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+	if opt == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	configs := make([]*proto.RecommendNodeGroupConf, 0)
+	config := generateNodeGroupConf()
+
+	mgr := api.NodeManager{}
+	serviceRoles, err := mgr.GetServiceRoles(opt, "nodeGroup")
+	if err != nil {
+		blog.Errorf("RecommendNodeGroupConf GetServiceRoles failed, %s", err.Error())
+		return nil, err
+	}
+	if len(serviceRoles) == 0 {
+		return nil, fmt.Errorf("RecommendNodeGroupConf GetServiceRoles failed, no valid EKS-Node-Role")
+	}
+	config.ServiceRoleName = serviceRoles[0].RoleName
+
+	insTypes, err := mgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
+		Region: opt.Region,
+		Cpu:    8,
+		Memory: 16,
+	}, opt)
+	if len(insTypes) == 0 {
+		return nil, fmt.Errorf("RecommendNodeGroupConf no valid instanceType for 8c16g")
+	}
+	config.InstanceProfile.InstanceType = insTypes[0].NodeType
+	configs = append(configs, config)
+
+	return configs, nil
+}
+
+func generateNodeGroupConf() *proto.RecommendNodeGroupConf {
+	return &proto.RecommendNodeGroupConf{
+		Name: "default",
+		InstanceProfile: &proto.InstanceProfile{
+			NodeOS:             "AL_X86_64",
+			InstanceChargeType: "POSTPAID_BY_HOUR",
+		},
+		HardwareProfile: &proto.HardwareProfile{
+			CPU: 8,
+			Mem: 16,
+			SystemDisk: &proto.DataDisk{
+				DiskType: "gp2",
+				DiskSize: "100",
+			},
+			DataDisks: []*proto.DataDisk{
+				{
+					DiskType: "gp2",
+					DiskSize: "100",
+				},
+			},
+		},
+		NetworkProfile: &proto.NetworkProfile{
+			PublicIPAssigned: false,
+		},
+		ScalingProfile: &proto.ScalingProfile{
+			DesiredSize: 2,
+			MaxSize:     10,
+			// 释放模式
+			ScalingMode: "Delete",
+		},
+	}
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup

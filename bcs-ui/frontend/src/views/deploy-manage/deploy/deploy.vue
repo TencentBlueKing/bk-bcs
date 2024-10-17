@@ -25,7 +25,13 @@
               v-for="item in versionList"
               :key="item.id"
               :id="item.id"
-              :name="item.version" />
+              :name="item.version">
+              <div class="flex items-center">
+                <span class="mr-[10px]">{{ item.version }}</span>
+                <bcs-tag class="mr-[10px]" theme="warning" v-if="item.latest">latest</bcs-tag>
+                <bcs-tag v-if="item.latestDeployVersion === item.version">LatestDeployed</bcs-tag>
+              </div>
+            </bcs-option>
           </bcs-select>
         </bk-form-item>
         <bk-form-item
@@ -193,12 +199,12 @@ import Namespace from './namespace-v2.vue';
 import { IListTemplateMetadataItem, IPreviewItem, ITemplateVersionItem, IVarItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
 import AiAssistant from '@/components/ai-assistant.vue';
+import FormGroup from '@/components/form-group.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
 import useFullScreen from '@/composables/use-fullscreen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 import EditorStatus from '@/views/resource-view/resource-update/editor-status.vue';
 

@@ -30,7 +30,7 @@
     {{ t('批量删除') }}
   </bk-button>
   <DeleteConfirmDialog
-    v-model:isShow="isBatchDeleteDialogShow"
+    v-model:is-show="isBatchDeleteDialogShow"
     :title="
       t('确认删除所选的 {n} 项配置项？', {
         n: isAcrossChecked ? dataCount - props.selectedIds.length : props.selectedIds.length,
@@ -150,7 +150,6 @@
   .batch-set-btn {
     min-width: 108px;
     height: 32px;
-    margin-left: 8px;
     &.popover-open {
       .angle-icon {
         transform: rotate(-180deg);

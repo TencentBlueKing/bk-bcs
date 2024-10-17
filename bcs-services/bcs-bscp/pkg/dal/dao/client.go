@@ -826,7 +826,7 @@ func (dao *clientDao) UpsertVersionChange(kit *kit.Kit, tx *gen.QueryTx, data []
 			"current_release_id", "target_release_id", "specific_failed_reason",
 			"release_change_status", "release_change_failed_reason", "failed_detail_reason",
 			"cpu_usage", "cpu_max_usage", "cpu_min_usage", "cpu_avg_usage",
-			"memory_usage", "memory_max_usage", "memory_min_usage", "memory_avg_usage",
+			"memory_usage", "memory_max_usage", "memory_min_usage", "memory_avg_usage", "total_seconds",
 		}),
 	}).CreateInBatches(data, 500)
 }

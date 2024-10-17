@@ -77,3 +77,18 @@ url("@/fonts/svg-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-color-status-unknown:before {
 	content: "\e11f";
 }
+.bcs-icon-color-aliyun:before {
+	content: "\e120";
+}
+.bcs-icon-color-gcpcloud:before {
+	content: "\e121";
+}
+.bcs-icon-color-huaweicloud:before {
+	content: "\e122";
+}
+.bcs-icon-color-weiruanyun:before {
+	content: "\e123";
+}
+.bcs-icon-color-awscloud:before {
+	content: "\e124";
+}

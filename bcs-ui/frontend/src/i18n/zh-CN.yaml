@@ -22,6 +22,7 @@ bcs:
     kubeConfig: kubeConfig导入
     cloud: 云凭证导入
     platform: 平台创建
+    machine: 控制面服务器导入
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
     notDevOps: 您不是当前项目绑定业务的运维人员，请联系业务运维人员
@@ -231,6 +232,7 @@ generic:
       network: 网络错误
       system: 系统异常
       data: 获取数据失败
+      import: 导入失败
     warning:
       '403': 无权限操作
       '404': 页面不存在
@@ -458,6 +460,7 @@ generic:
     cidrConflict: 'CIDR与 {cidr} 冲突，请重新输入'
     fieldRequired: '{0} 必填'
     fieldRepeat: '{0} 重复'
+    clusterName: 集群名称只能包含数字、字母、中划线(-)、下划线(_)，且开头必须是数字或字母
   title:
     createPublicCluster: 新建公有云集群
     diffVersion: 线上版本
@@ -598,6 +601,7 @@ cluster:
     importCategory: 添加方式
     maxPodNum: Pod IP数量上限
     clusterLabel: 集群标签
+    provider: 提供商
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
@@ -630,6 +634,11 @@ cluster:
         title: 公有云集群
         subTitle: 实现多云集群统一管理，降低业务管理成本
         desc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群创建
+        importDesc: 目前支持腾讯云、亚马逊云、谷歌云、微软云、华为云五种云服务商集群导入
+      bkSops:
+        title: 控制面服务器导入
+        subTitle: 在控制面主机上执行标准运维流程导入任意外部集群
+        desc: 通过在控制面主机上执行标准运维流程，在集群中安装Agent以实现外部集群的纳管
     label:
       system: 操作系统
       containerRuntime: 运行时组件
@@ -699,9 +708,9 @@ cluster:
         maxNodePodNum:
           text: 单节点Pod数量上限
           desc: 单节点Pod数量上限一旦分配后将无法调整，请谨慎评估后再填写
-        article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
         article1: '容器网络资源有限，请合理分配，当前容器网络配置下，集群最多可以添加 {count} 个节点'
         article2: '当容器网络资源超额使用时，会触发容器网络自动扩容，扩容后集群最多可以添加 {count} 个节点'
+        article3: 集群可添加节点数（包含Master节点与Node节点）= (IP数量 - Service的数量) / 单节点Pod数量上限
       networkMode:
         text: 网络模式
         cni:
@@ -718,6 +727,7 @@ cluster:
       cpuQuota: CPU配额(核)
       memQuota: 内存配额(GiB)
       importType: 导入方式
+      title: 导入集群 - kubeconfig 集群
       cloudToken: 云凭证
       kubeConfig: 集群kubeconfig
       network:
@@ -731,6 +741,7 @@ cluster:
           bcs-apiserver-proxy 以 daemonset 形式部署在 Kubernetes 集群中，利用 IPVS 通过虚拟
           IP（VIP）实现集群内组件到 APIserver 的反向代理，并自动发现控制面节点 IP 以维护 IPVS
           规则，确保部分控制面节点故障时集群正常运行。
+      role: 集群服务角色
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:
@@ -761,6 +772,37 @@ cluster:
       createCloudToken: 新增凭证
       fileImport: 文件导入
       textKubeConfig: 可用性测试
+    aws:
+      securityGroup:
+        text: 安全组
+        vpcLink: '选择将应用到在您的控制平面子网中创建的 EKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 {0}  中的相应页面。'
+        vpcMaster: VPC 控制台
+      cidrTips:
+        tips1: 不允许0.0.0.0/0
+        tips2: cidr不合法
+      nodePool: 添加节点池
+      editNodePool: 编辑节点池
+      cidrWhitelist: CIDR白名单
+      label:
+        defaultNodePool: 默认节点池
+        skipOrNot: 是否跳过
+      validate:
+        subnet: 节点池子网不能为空
+      runtime:
+        extended:
+          label: 已扩展
+          text: >-
+            此选项在发布之日起 26 个月内支持 Kubernetes 版本。扩展支持期需要额外支付每小时的费用，该费用在标准支持期结束后开始。
+            扩展支持结束后，您的集群将自动升级到下一个版本。
+        standard:
+          label: 标准
+          text: 此选项在发布之日起 14 个月内支持 Kubernetes 版本。没有额外费用。标准支持结束后，您的集群将自动升级到下一个版本。
+      tips:
+        subnetEmpty: 子网为空，请先选择子网
+        awsDesc: Amazon VPC CNI ：AWS 的网络插件，可以在集群内启用 Pod 联网。
+        awsLink: Amazon VPC CNI功能概述
+    azure:
+      chargingModel: 收费模式
   detail:
     title:
       overview: 集群总览
@@ -885,6 +927,8 @@ cluster:
       validate:
         name: 名称不超过255个字符，仅支持中文、英文、数字、下划线，分隔符(-)及小数点
         nodeQuotaMaxSize: '节点配额上限为{maximum}'
+        nodeCountsMaxSize: 节点数量不能大于节点配额
+        minNodes: 节点数要大于0
       label:
         nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额
@@ -1292,6 +1336,9 @@ cluster:
         selectAllNs: 全部命名空间
         kernel: 内核
         runtime: 运行时
+  operateRecord:
+    placeholder:
+      searchRecord: 搜索资源名称、资源ID、状态、发起者
 deploy:
   helm:
     title:
@@ -2289,7 +2336,6 @@ logCollector:
     name: '仅支持英文, 数字和下划线, 且长度5~30字符'
     logPath: 仅支持绝对路径
   msg:
-    logCollector: 支持容器标准输出日志和文件路径日志的采集设置。日志采集服务已升级，旧版本规则建议「生成新规则」并及时清理。
     oldRuleToNewRule: '生成新规则后，新旧版本规则采集到的日志数据将在 {0} 后完全同步，届时系统将自动为您清理旧规则。'
     oldRuleFlag: 旧
     notEnable: 当前集群日志采集组件未启用
@@ -2514,6 +2560,19 @@ importGoogleCloud:
   clusterRegion:
     zones: 可用区级集群
     regions: 区域级集群
+importBkSopsCloud:
+  title: 导入集群－控制面服务器
+  label:
+    clusterName: 集群名称
+    controlPanel: 控制面
+    addServer: 添加服务器
+    advancedParameters: 高级参数
+    desc: 集群描述
+  button:
+    import: 导入
+  message:
+    nodeTips: 通过集群master节点导入，并可以执行kubectl命令
+    errorAgent: 导入节点Agent异常
 azureCloud:
   button:
     create: 新建凭证
@@ -2632,7 +2691,6 @@ azureCA:
     set: 设置密码
     confirm: 确认密码
 awsCA:
-  label: {}
   password:
     set: 设置密码
     confirm: 确认密码
@@ -2824,6 +2882,7 @@ tke:
     supportCidrList: '仅支持 {0} 之间网段'
     minIpNum2: '容器网段不能少于 {0} 个 IP, 请重新输入'
     formErr: 表单填写有误，请修改
+    leastTwoDifferentAZs: 指定的子网必须至少位于两个不同的可用区中
   configRec:
     l100:
       text: 节点数1~100
@@ -2881,7 +2940,13 @@ tkeCa:
       yunti: 云梯资源池(平台提供)
       self: 自建资源池
 provider:
-  tencentPublicCloud: 腾讯云公有云
+  tencentyun: 腾讯自研云
+  huaweiyun: 华为云
+  yamaxunyun: 亚马逊云
+  gugeyun: 谷歌云
+  weiruanyun: 微软云
+  blueKingyun: K8S原生
+  tencentPublicCloud: 腾讯公有云
 container:
   label:
     restartCnt: 重启次数
@@ -2904,10 +2969,11 @@ templateFile:
     deployReview: 部署预览
     disableYamlToForm: 无法切换模式
     fileList: 文件列表
+    import: 导入文件包
+    clone: 克隆
   button:
     formMode: 表单模式
     yamlMode: YAML模式
-    createSpace: 新建文件夹
     rename: 重命名
     createFile: 新建模板文件
     delete: 删除
@@ -2915,10 +2981,10 @@ templateFile:
     previewAndDeploy: 预览并部署
     versionManage: 版本管理
     confirmDeploy: 确认部署
-    import: 导入文件包
-    export: 导出全部
     AddToFavorites: 收藏文件夹
     RemoveFromFavorites: 取消收藏
+    import: 导入文件包
+    export: 导出全部
     exportFolder: 导出文件夹
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
@@ -2956,6 +3022,8 @@ templateFile:
     nextKind: 下一个类型
     bookmark: 收藏文件夹
     unbookmark: 取消收藏
+    uploadTips: '支持.tgz, .tar.gz类型压缩包，文件小于{0}M'
+    createSpace: 新建文件夹
   tag:
     draft: 草稿
     baseOn: 基于

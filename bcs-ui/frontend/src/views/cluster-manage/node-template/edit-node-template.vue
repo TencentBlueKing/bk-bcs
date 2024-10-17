@@ -349,13 +349,13 @@ import { computed, defineComponent, getCurrentInstance, onMounted, ref, watch } 
 import ActionDoc from '../components/action-doc.vue';
 
 import $bkMessage from '@/common/bkmagic';
+import FormGroup from '@/components/form-group.vue';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSearch from '@/composables/use-search';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import FormGroup from '@/views/cluster-manage/add/common/form-group.vue';
 import InputType from '@/views/cluster-manage/components/input-type.vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 import Taints from '@/views/cluster-manage/components/new-taints.vue';

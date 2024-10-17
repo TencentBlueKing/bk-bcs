@@ -39,9 +39,10 @@ type ClientSpec struct {
 	CurrentReleaseID          uint32     `gorm:"column:current_release_id" json:"current_release_id"`
 	TargetReleaseID           uint32     `gorm:"column:target_release_id" json:"target_release_id"`
 	ReleaseChangeStatus       Status     `gorm:"column:release_change_status" json:"release_change_status"`
-	ReleaseChangeFailedReason string     `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"` // nolint
+	ReleaseChangeFailedReason string     `gorm:"column:release_change_failed_reason" json:"release_change_failed_reason"`
 	SpecificFailedReason      string     `gorm:"column:specific_failed_reason" json:"specific_failed_reason"`
 	FailedDetailReason        string     `gorm:"column:failed_detail_reason" json:"failed_detail_reason"`
+	TotalSeconds              float64    `gorm:"column:total_seconds" json:"total_seconds"`
 }
 
 // ClientAttachment is a client attachment

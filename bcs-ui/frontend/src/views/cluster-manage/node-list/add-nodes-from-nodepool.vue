@@ -94,11 +94,11 @@ import { useClusterInfo } from '../cluster/use-cluster';
 import { desirednode, nodeGroups } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import { ICluster, useConfig } from '@/composables/use-app';
+import SelectExtension from '@/components/select-extension.vue';
+import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
-import SelectExtension from '@/views/cluster-manage/add/common/select-extension.vue';
 
 export default defineComponent({
   components: {  SelectExtension },
@@ -179,7 +179,6 @@ export default defineComponent({
       nodeGroupLoading.value = false;
     };
     const user = computed(() => $store.state.user);
-    const { _INTERNAL_ } = useConfig();
     const saving = ref(false);
     // 从节点池添加节点
     const handleAddDesiredSize = async () => {
