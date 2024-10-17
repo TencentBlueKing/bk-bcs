@@ -309,7 +309,6 @@
     () => {
       configStore.$patch((state) => {
         state.allConfigCount = configsCount.value;
-        state.allExistConfigCount = configList.value.filter((item) => item.kv_state !== 'DELETE').length;
       });
     },
     { immediate: true, deep: true },
@@ -378,6 +377,7 @@
       configsCount.value = res.count;
       configStore.$patch((state) => {
         state.allConfigCount = res.count;
+        state.allExistConfigCount = res.exclusion_count;
       });
       selecTableDataCount.value = Number(res.exclusion_count);
       emits('sendTableDataCount', selecTableDataCount.value);
