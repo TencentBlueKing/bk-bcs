@@ -73,7 +73,7 @@ type Set interface {
 }
 
 // NewDaoSet create the DAO set instance.
-func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
+func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential, gormSetting cc.Gorm) (Set, error) {
 
 	// opt cc.Database
 	sd, err := sharding.InitSharding(&opt)
@@ -82,7 +82,7 @@ func NewDaoSet(opt cc.Sharding, credentialSetting cc.Credential) (Set, error) {
 	}
 
 	adminDB, err := gorm.Open(mysql.Open(sharding.URI(opt.AdminDatabase)),
-		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+		&gorm.Config{Logger: logger.Default.LogMode(gormSetting.GetLogLevel())})
 	if err != nil {
 		return nil, err
 	}
