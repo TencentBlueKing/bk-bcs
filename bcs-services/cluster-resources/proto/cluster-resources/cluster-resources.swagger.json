@@ -9948,6 +9948,14 @@
       "description": "更新单个自定义资源请求体",
       "title": "CObjUpdateReq"
     },
+    "clusterresourcesChart": {
+      "type": "object",
+      "properties": {
+        "chartName": {
+          "type": "string"
+        }
+      }
+    },
     "clusterresourcesClusterNamespaces": {
       "type": "object",
       "properties": {
@@ -10076,6 +10084,20 @@
       },
       "description": "创建环境管理",
       "title": "CreateEnvManageReq"
+    },
+    "clusterresourcesCreateSource": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "template": {
+          "$ref": "#/definitions/clusterresourcesTemplate"
+        },
+        "chart": {
+          "$ref": "#/definitions/clusterresourcesChart"
+        }
+      }
     },
     "clusterresourcesCreateTemplateMetadataReq": {
       "type": "object",
@@ -10468,6 +10490,10 @@
           "type": "integer",
           "format": "int64",
           "title": "offset"
+        },
+        "createSource": {
+          "$ref": "#/definitions/clusterresourcesCreateSource",
+          "title": "createSource"
         }
       },
       "description": "获取多集群自定义资源请求体",
@@ -10541,6 +10567,10 @@
           "type": "integer",
           "format": "int64",
           "title": "offset"
+        },
+        "createSource": {
+          "$ref": "#/definitions/clusterresourcesCreateSource",
+          "title": "createSource"
         }
       },
       "description": "获取多集群资源请求体",
@@ -10784,6 +10814,10 @@
         "name": {
           "type": "string",
           "title": "name"
+        },
+        "CreateSource": {
+          "$ref": "#/definitions/clusterresourcesCreateSource",
+          "title": "createSource"
         }
       },
       "description": "获取多集群资源数量请求体",
@@ -11074,6 +11108,17 @@
         }
       }
     },
+    "clusterresourcesTemplate": {
+      "type": "object",
+      "properties": {
+        "templateName": {
+          "type": "string"
+        },
+        "templateVersion": {
+          "type": "string"
+        }
+      }
+    },
     "clusterresourcesTemplateID": {
       "type": "object",
       "properties": {
@@ -11294,6 +11339,9 @@
           "items": {
             "$ref": "#/definitions/clusterresourcesLabelSelector"
           }
+        },
+        "createSource": {
+          "$ref": "#/definitions/clusterresourcesCreateSource"
         }
       }
     },
