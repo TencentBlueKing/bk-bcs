@@ -497,8 +497,8 @@ generic:
     fieldRequired: '{0} required'
     fieldRepeat: '{0} repeat'
     clusterName: >-
-      The cluster name can only contain numbers, letters, mid-line lines (-), down line
-      (_), The beginning must be numbers or letters
+      The cluster name can only contain numbers, letters, mid-line lines (-),
+      down line (_), The beginning must be numbers or letters
   title:
     curVersion: Current
     diffVersion: Comparison version
@@ -907,14 +907,11 @@ cluster:
     aws:
       securityGroup:
         text: Safety group
-        desc: >-
-          This selection will apply to the Safety group of the EKS-managed elastic
-          network interfaces created in your control plane subnet. To create a new
-          Safety group, please go to the appropriate page in the VPC console.
         vpcLink: >-
-          'This selection will apply to the Safety group of the EKS-managed elastic
-          network interfaces created in your control plane subnet. To create a new
-          Safety group, please go to the appropriate page in the {0}.'
+          'This selection will apply to the Safety group of the EKS-managed
+          elastic network interfaces created in your control plane subnet. To
+          create a new Safety group, please go to the appropriate page in the
+          {0}.'
         vpcMaster: VPC console
       cidrTips:
         tips1: 0.0.0.0/0 is not allowed
@@ -931,19 +928,23 @@ cluster:
         extended:
           label: EXTENDED
           text: >-
-            This option supports Kubernetes versions for 26 months from the date of release.
-            Extended support requires an additional hourly fee, which begins after the
-            standard support period ends. After the extended support period ends,
-            your cluster will be automatically upgraded to the next version.
+            This option supports Kubernetes versions for 26 months from the date
+            of release. Extended support requires an additional hourly fee,
+            which begins after the standard support period ends. After the
+            extended support period ends, your cluster will be automatically
+            upgraded to the next version.
         standard:
           label: STANDARD
           text: >-
-            This option supports Kubernetes versions for 14 months from the date of release,
-            at no additional cost. After the standard support period ends, your cluster will
-            be automatically upgraded to the next version.
+            This option supports Kubernetes versions for 14 months from the date
+            of release, at no additional cost. After the standard support period
+            ends, your cluster will be automatically upgraded to the next
+            version.
       tips:
-        subnetEmpty: The subnet is empty, please select a subnet first
-        awsDesc: Amazon VPC CNI ：AWS network plugin that enables Pod networking within the cluster.
+        subnetEmpty: 'The subnet is empty, please select a subnet first'
+        awsDesc: >-
+          Amazon VPC CNI ：AWS network plugin that enables Pod networking within
+          the cluster.
         awsLink: Overview of Amazon VPC CNI functionality.
     azure:
       chargingModel: Charging model
@@ -3399,7 +3400,6 @@ tke:
       text: CLB
       internet: Internet
       intranet: Intranet
-      internetAndIntranet: Internet and Intranet
       desc: >-
         Used to connect the cluster APIServer via the BlueKing container
         management platform. Depending on the actual network situation, choose

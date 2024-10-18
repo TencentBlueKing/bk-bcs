@@ -4,6 +4,7 @@
       ref="fileOptionRef"
       :associate-config-show="true"
       :dual-system-support="true"
+      :line-break-show="true"
       @update-option-data="getOptionData" />
     <div class="node-content">
       <span class="node-label">{{ $t('示例预览') }}</span>
@@ -85,12 +86,17 @@
           </bk-form-item>
           <bk-form-item :label="$t('全局标签：')">
             <span class="">
-              {{ $t('(全局标签与服务标签参数一样，常用于按标签进行灰度发布；不同的是全局标签可供多个服务共用)') }}
+              {{ $t('全局标签与服务标签参数一样，常用于按标签进行灰度发布；不同的是全局标签可供多个服务共用') }}
             </span>
           </bk-form-item>
           <bk-form-item :label="$t('全局配置文件筛选：')">
             <span class="">
-              {{ $t('(全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用)') }}
+              {{ $t('全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用') }}
+            </span>
+          </bk-form-item>
+          <bk-form-item :label="$t('文本文件换行符：')">
+            <span class="content-em" v-show="optionData.tempDir" @click="copyText(optionData.selectedLineBreak)">
+              {{ optionData.selectedLineBreak }} <copy-shape class="icon-shape" />
             </span>
           </bk-form-item>
           <bk-form-item :label="`${$t('客户端密钥')}:`">
@@ -144,6 +150,7 @@
     labelArr: [] as labelItem[],
     tempDir: '',
     rules: [],
+    selectedLineBreak: 'LF',
   });
 
   const getOptionData = async (data: any) => {
