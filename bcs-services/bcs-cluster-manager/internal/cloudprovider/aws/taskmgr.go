@@ -14,7 +14,6 @@ package aws
 
 import (
 	"fmt"
-	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var taskMgr sync.Once
@@ -199,7 +199,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			})
 		}
 		// business post define sops task or script
-		if len(nodeGroups) > 0 && nodeGroups[0].GetNodeTemplate() != nil && nodeGroups[0].GetNodeTemplate().ScaleOutExtraAddons != nil {
+		if len(nodeGroups) > 0 && nodeGroups[0].GetNodeTemplate() != nil &&
+			nodeGroups[0].GetNodeTemplate().ScaleOutExtraAddons != nil {
 			err := template.BuildSopsFactory{
 				StepName: template.UserAfterInit,
 				Cluster:  cls,

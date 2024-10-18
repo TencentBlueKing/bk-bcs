@@ -110,11 +110,11 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 	}
 
 	if len(group.GetNodeTemplate().GetLabels()) > 0 {
-		input.Labels =  &eks.UpdateLabelsPayload{
+		input.Labels = &eks.UpdateLabelsPayload{
 			AddOrUpdateLabels: aws.StringMap(group.GetNodeTemplate().GetLabels()),
 		}
 	}
-	
+
 	if group.AutoScaling != nil {
 		input.ScalingConfig = &eks.NodegroupScalingConfig{
 			MaxSize: aws.Int64(int64(group.AutoScaling.MaxSize)),
@@ -155,6 +155,9 @@ func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]
 		Cpu:    8,
 		Memory: 16,
 	}, opt)
+	if err != nil {
+		return nil, fmt.Errorf("list node instance type failed, %s", err.Error())
+	}
 	if len(insTypes) == 0 {
 		return nil, fmt.Errorf("RecommendNodeGroupConf no valid instanceType for 8c16g")
 	}

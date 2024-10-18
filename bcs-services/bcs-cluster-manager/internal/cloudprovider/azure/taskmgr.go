@@ -153,6 +153,8 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildCreateClusterStep(task)
 	// step1: check cluster status by clusterID
 	createClusterTask.BuildCheckClusterStatusStep(task)
+	// step6: register managed cluster kubeConfig
+	createClusterTask.BuildRegisterClsKubeConfigStep(task)
 	// step2: check cluster nodes status
 	createClusterTask.BuildCheckNodeGroupsStatusStep(task)
 	// step3: update nodegroups to DB
@@ -161,17 +163,6 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	createClusterTask.BuildCheckClusterNodesStatusStep(task)
 	// step5: update nodes to DB
 	createClusterTask.BuildUpdateNodesToDBStep(task)
-	// step6: register managed cluster kubeConfig
-	createClusterTask.BuildRegisterClsKubeConfigStep(task)
-	// step7: install cluster watch component
-	common.BuildWatchComponentTaskStep(task, cls, "")
-	// step8: 若需要则设置节点注解
-	common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
-		if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
-			return opt.NodeTemplate.GetAnnotations()
-		}
-		return nil
-	}())
 
 	// step9: install gse agent
 	common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
@@ -220,6 +211,20 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			return nil, fmt.Errorf("BuildCreateClusterTask business BuildBkSopsStepAction failed: %v", err)
 		}
 	}
+
+	// step8: 若需要则设置节点注解
+	common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
+		if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
+			return opt.NodeTemplate.GetAnnotations()
+		}
+		return nil
+	}())
+
+	// step11: remove inner nodes taints
+	common.BuildRemoveInnerTaintTaskStep(task, cls.ClusterID, cls.Provider)
+
+	// step12: install cluster watch component
+	common.BuildWatchComponentTaskStep(task, cls, "")
 
 	// set current step
 	if len(task.StepSequence) == 0 {

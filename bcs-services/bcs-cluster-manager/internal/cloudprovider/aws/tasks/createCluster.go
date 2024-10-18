@@ -188,8 +188,8 @@ func generateCreateClusterInput(info *cloudprovider.CloudDependBasicInfo, roleAr
 			AuthenticationMode:                      aws.String(api.ClusterAuthenticationModeAM), // 设置认证模式
 			BootstrapClusterCreatorAdminPermissions: aws.Bool(true),                              // 默认启用集群创建者管理员权限
 		},
-		Name:    aws.String(cluster.ClusterName), // 设置集群名称
-		RoleArn: roleArn,                         // 设置角色ARN
+		Name:    aws.String(strings.ToLower(cluster.ClusterID)), // 设置集群名称
+		RoleArn: roleArn,                                        // 设置角色ARN
 		ResourcesVpcConfig: &eks.VpcConfigRequest{
 			SubnetIds:             aws.StringSlice(subnetIds),                                                 // 设置子网ID
 			SecurityGroupIds:      aws.StringSlice(sgs),                                                       // 设置安全组ID

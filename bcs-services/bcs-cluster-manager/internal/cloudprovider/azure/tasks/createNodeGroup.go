@@ -280,7 +280,7 @@ func setVmSets(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo
 			cluster.ClusterID, group.CloudNodeGroupID)
 	}
 
-	_, err = updateVmss(ctx, client, group, set, nodeGroupResource, netGroupResource)
+	_, err = updateVmss(ctx, client, group, set, nodeGroupResource, netGroupResource, true)
 	if err != nil {
 		return errors.Wrapf(err, "setVmSets[%s]: call UpdateVmss[%s][%s] falied", taskID,
 			cluster.ClusterID, group.CloudNodeGroupID)
@@ -302,6 +302,9 @@ func updateCloudNodeGroupIDInNodeGroup(nodeGroupID string, newGroup *proto.NodeG
 	group.CloudNodeGroupID = newGroup.CloudNodeGroupID
 	if group.AutoScaling != nil && group.AutoScaling.VpcID == "" {
 		group.AutoScaling.VpcID = newGroup.AutoScaling.VpcID
+	}
+	if group.AutoScaling != nil && group.AutoScaling.AutoScalingName == "" {
+		group.AutoScaling.AutoScalingName = newGroup.AutoScaling.AutoScalingName
 	}
 	if group.LaunchTemplate != nil {
 		group.LaunchTemplate.InstanceChargeType = newGroup.LaunchTemplate.InstanceChargeType

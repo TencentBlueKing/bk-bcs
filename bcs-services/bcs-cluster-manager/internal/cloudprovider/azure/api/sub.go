@@ -71,8 +71,9 @@ func (sub *SubClient) ListLocations(ctx context.Context) ([]*proto.RegionInfo, e
 	for _, v := range result {
 		if v.Name != nil && v.DisplayName != nil {
 			regions = append(regions, &proto.RegionInfo{
-				Region:     *v.Name,
-				RegionName: *v.DisplayName,
+				Region:      *v.Name,
+				RegionName:  *v.DisplayName,
+				RegionState: BCSRegionStateAvailable,
 			})
 		}
 	}

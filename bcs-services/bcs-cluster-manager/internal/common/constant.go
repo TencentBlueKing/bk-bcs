@@ -273,6 +273,10 @@ const (
 	VpcCni = "VPC-CNI"
 	// CiliumOverlay cilium plugin
 	CiliumOverlay = "CiliumOverlay"
+	// AzureCniOverlay Azure Cni overlay plugin
+	AzureCniOverlay = "AzureCniOverlay"
+	// AzureCniNodeSubnet Azure Cni node subnet plugin
+	AzureCniNodeSubnet = "AzureCniNodeSubnet"
 
 	// KubeletRootDirPath root-dir default path
 	KubeletRootDirPath = "/data/bcs/service/kubelet"
