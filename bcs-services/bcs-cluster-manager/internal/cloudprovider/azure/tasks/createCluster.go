@@ -177,7 +177,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		return nil, fmt.Errorf("generateCreateClusterRequest empty NetworkSettings for cluster %s", cluster.ClusterID)
 	}
 
-	//var adminUserName, publicKey string
+	// var adminUserName, publicKey string
 	agentPools := make([]*armcontainerservice.ManagedClusterAgentPoolProfile, 0)
 
 	// handle agent pools
@@ -201,8 +201,8 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		}
 		info.Cluster.ClusterBasicSettings.SubnetID = ng.AutoScaling.SubnetIDs[0]
 	}
-	//keys := make([]*armcontainerservice.SSHPublicKey, 0)
-	//keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
+	// keys := make([]*armcontainerservice.SSHPublicKey, 0)
+	// keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
 
 	// managed cluster request
 	req := &armcontainerservice.ManagedCluster{

@@ -41,7 +41,7 @@ func NewRecommendNodeGroupConfAction(model store.ClusterManagerModel) *Recommend
 	}
 }
 
-func (ra *RecommendNodeGroupConfAction) validate() error {
+func (ra *RecommendNodeGroupConfAction) validate() error { // nolint
 	return ra.req.Validate()
 }
 
