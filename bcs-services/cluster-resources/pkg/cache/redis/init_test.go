@@ -43,6 +43,6 @@ func TestGetDefaultClient(t *testing.T) {
 	rdsCli := GetDefaultClient()
 	assert.NotNil(t, rdsCli)
 
-	ret, _ := rds.Ping(context.TODO()).Result()
+	ret, _ := rds.Ping(context.TODO())
 	assert.Equal(t, "PONG", ret)
 }

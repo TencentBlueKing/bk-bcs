@@ -270,6 +270,8 @@ type RedisConf struct {
 	Address      string `yaml:"address" usage:"Redis Server Address"`
 	DB           int    `yaml:"db" usage:"Redis DB"`
 	Password     string `yaml:"password" usage:"Redis Password"`
+	RedisMode    string `yaml:"redisMode" usage:"Redis Mode"`
+	MasterName   string `yaml:"masterName" usage:"Redis MasterName for Sentinel Mode"`
 	DialTimeout  int    `yaml:"dialTimeout" usage:"Redis Dial Timeout"`
 	ReadTimeout  int    `yaml:"readTimeout" usage:"Redis Read Timeout(s)"`
 	WriteTimeout int    `yaml:"writeTimeout" usage:"Redis Write Timeout(s)"`
