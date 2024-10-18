@@ -7,6 +7,10 @@ all:
 	@cd cache-service && make
 	@cd vault-server && make
 	@cd feed-proxy && make
+	@cd ui && make
+
+ui:
+	@cd ui && make
 
 feed:
 	@cd feed-server && make
