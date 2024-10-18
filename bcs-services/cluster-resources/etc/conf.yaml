@@ -70,10 +70,14 @@ log:
 
 # Redis 配置信息
 redis:
+  # 地址列表用 , 分隔多个节点
   address: "127.0.0.1:6379"
   db: 0
   password: ""
   # 以下项非必须可不启用
+  # redis 的模式 默认使用
+  # redisMode: single # 可选填参数： single sentinel cluster
+  # masterName: master
   # dialTimeout: 2
   # readTimeout: 1
   # writeTimeout: 1
