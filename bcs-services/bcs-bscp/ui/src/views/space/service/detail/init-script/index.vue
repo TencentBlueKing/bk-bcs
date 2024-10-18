@@ -202,8 +202,12 @@
   };
 
   const getAllConfigList = async () => {
+    configStore.$patch((state) => {
+      state.createVersionBtnLoading = true;
+    });
     const [existConfigCount, tplConfigCount] = await Promise.all([getCommonConfigList(), getBoundTemplateList()]);
     configStore.$patch((state) => {
+      state.createVersionBtnLoading = false;
       state.allExistConfigCount = existConfigCount + tplConfigCount;
     });
   };
