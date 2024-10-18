@@ -95,7 +95,7 @@
             </span>
           </bk-form-item>
           <bk-form-item :label="$t('文本文件换行符：')">
-            <span class="content-em" v-show="optionData.tempDir" @click="copyText(optionData.selectedLineBreak)">
+            <span class="content-em" @click="copyText(optionData.selectedLineBreak)">
               {{ optionData.selectedLineBreak }} <copy-shape class="icon-shape" />
             </span>
           </bk-form-item>
