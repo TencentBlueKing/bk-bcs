@@ -536,6 +536,9 @@
   };
 
   const getAllConfigList = debounce(async (createConfig = false) => {
+    configStore.$patch((state) => {
+      state.createVersionBtnLoading = true;
+    });
     const currentSearchStr = props.searchStr;
     loading.value = true;
     await Promise.all([getCommonConfigList(createConfig), getBoundTemplateList()]);
@@ -544,6 +547,7 @@
       state.conflictFileCount = conflictCount.value;
       state.allConfigCount = configsCount.value + templatesCount.value;
       state.allExistConfigCount = existConfigCount + templatesCount.value;
+      state.createVersionBtnLoading = false;
     });
     loading.value = false;
     // 处理文件数量过多 导致上一次搜索结果返回比这一次慢 导入搜索结果错误 取消数据处理
