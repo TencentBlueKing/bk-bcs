@@ -80,8 +80,11 @@
         <div class="dialog-title">{{ t('确认删除服务？') }}</div>
         <div class="dialog-input">
           <div class="dialog-info">
-            <div>{{ t('删除的服务') }}<span>{{ t('无法找回') }}</span>{{t(',请谨慎操作!')}}</div>
-            <div>{{ t('同时会删除服务密钥对服务的关联规则')}} </div>
+            <div>
+              {{ t('删除的服务') }}<span>{{ t('无法找回') }}</span>
+              {{ t(',请谨慎操作!') }}
+            </div>
+            <div>{{ t('同时会删除服务密钥对服务的关联规则') }}</div>
           </div>
           <div class="tips">
             {{ t('请输入服务名') }} <span>{{ deleteService!.spec.name }}</span> {{ t('以确认删除') }}
@@ -149,6 +152,9 @@
       memo: '',
       alias: '',
       data_type: '',
+      is_approve: true,
+      approver: '',
+      approve_type: 'OrSign',
     },
     revision: {
       creator: '',

@@ -5,6 +5,9 @@ import pinia from '../store/index';
 import useGlobalStore from '../store/global';
 
 const http = axios.create({
+  headers: {
+    'X-Bscp-Operate-Way': 'WebUI',
+  },
   baseURL: `${(window as any).BK_BCS_BSCP_API}/api/v1`,
   withCredentials: true,
 });

@@ -177,6 +177,7 @@
         { id: 'configuration-example', module: 'example', name: t('配置示例') },
       ],
     },
+    { id: 'records-all', module: 'records', name: t('操作记录') },
   ]);
 
   const optionList = ref<ISpaceDetail[]>([]);

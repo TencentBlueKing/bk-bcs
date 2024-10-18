@@ -133,6 +133,8 @@
       if (versionDetail) {
         versionData.value = versionDetail;
         refreshVersionListFlag.value = false;
+        // 默认选中新增的版本时，路由参数versionId需要更新
+        router.push({ name: route.name as string, params: { versionId: versionDetail.id } });
       }
     }
   });

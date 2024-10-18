@@ -7,6 +7,11 @@ export interface IServiceEditForm {
   config_type: string;
   memo: string;
   data_type?: string;
+  is_approve: boolean;
+  approver: string;
+  approve_type: string;
+  // encryptionSwtich: boolean;
+  // encryptionKey: string;
 }
 
 export interface ISingleLineKVDIffItem {
