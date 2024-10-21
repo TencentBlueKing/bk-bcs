@@ -51,6 +51,21 @@ type CertConfig struct {
 	IsSSL      bool
 }
 
+// RedisConfig is configuration of Redis
+type RedisConfig struct {
+	Addr         string
+	Password     string
+	DB           int
+	MasterName   string
+	RedisMode    string
+	DialTimeout  int
+	ReadTimeout  int
+	WriteTimeout int
+	PoolSize     int
+	MinIdleConns int
+	IdleTimeout  int
+}
+
 // Encrypt define encrypt config
 type Encrypt struct {
 	Enable    bool          `json:"enable" yaml:"enable"`
@@ -85,6 +100,7 @@ type UserMgrConfig struct {
 
 	DSN             string
 	RedisDSN        string
+	RedisConfig     RedisConfig
 	EnableTokenSync bool
 	BootStrapUsers  []options.BootStrapUser
 	TKE             options.TKEOptions
