@@ -18,6 +18,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/gen"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/utils"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/kit"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/types"
 )
@@ -35,7 +36,7 @@ type Group interface {
 	// GetByName get group by name.
 	GetByName(kit *kit.Kit, bizID uint32, name string) (*table.Group, error)
 	// ListAll list all the groups in biz.
-	ListAll(kit *kit.Kit, bizID uint32) ([]*table.Group, error)
+	ListAll(kit *kit.Kit, bizID uint32, topIds []uint32) ([]*table.Group, error)
 	// DeleteWithTx delete one group instance with transaction.
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, group *table.Group) error
 	// ListAppGroups list all the groups of the app.
@@ -158,13 +159,21 @@ func (dao *groupDao) GetByName(kit *kit.Kit, bizID uint32, name string) (*table.
 }
 
 // ListAll list all the groups in biz.
-func (dao *groupDao) ListAll(kit *kit.Kit, bizID uint32) ([]*table.Group, error) {
+func (dao *groupDao) ListAll(kit *kit.Kit, bizID uint32, topIds []uint32) ([]*table.Group, error) {
 
 	if bizID == 0 {
 		return nil, errf.New(errf.InvalidParameter, "biz id is 0")
 	}
 	m := dao.genQ.Group
-	return m.WithContext(kit.Ctx).Where(m.BizID.Eq(bizID)).Find()
+	q := dao.genQ.Group.WithContext(kit.Ctx)
+
+	if len(topIds) != 0 {
+		q = q.Order(utils.NewCustomExpr(`CASE WHEN id IN (?) THEN 0 ELSE 1 END,name ASC`, []interface{}{topIds}))
+	} else {
+		q = q.Order(m.Name)
+	}
+
+	return q.Where(m.BizID.Eq(bizID)).Find()
 
 }
 

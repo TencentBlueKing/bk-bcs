@@ -194,6 +194,7 @@ func (s *Service) UpdateGroup(ctx context.Context, req *pbcs.UpdateGroupReq) (*p
 }
 
 // ListAllGroups list all groups in biz
+// nolint:funlen
 func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq) (*pbcs.ListAllGroupsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 	resp := new(pbcs.ListAllGroupsResp)
@@ -206,7 +207,10 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 	}
 
 	// 1. list all groups
-	lgResp, err := s.client.DS.ListAllGroups(grpcKit.RpcCtx(), &pbds.ListAllGroupsReq{BizId: req.BizId})
+	lgResp, err := s.client.DS.ListAllGroups(grpcKit.RpcCtx(), &pbds.ListAllGroupsReq{
+		BizId:  req.BizId,
+		TopIds: req.TopIds,
+	})
 	if err != nil {
 		logs.Errorf("list groups failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
@@ -282,6 +286,7 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbcs.ListAllGroupsReq)
 		}
 		respData = append(respData, data)
 	}
+
 	resp.Details = respData
 
 	return resp, nil

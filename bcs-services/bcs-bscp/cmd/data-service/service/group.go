@@ -99,7 +99,9 @@ func (s *Service) ListAllGroups(ctx context.Context, req *pbds.ListAllGroupsReq)
 
 	resp := new(pbds.ListAllGroupsResp)
 
-	details, err := s.dao.Group().ListAll(kt, req.BizId)
+	// StrToUint32Slice the comma separated string goes to uint32 slice
+	topIds, _ := tools.StrToUint32Slice(req.TopIds)
+	details, err := s.dao.Group().ListAll(kt, req.BizId, topIds)
 	if err != nil {
 		logs.Errorf("list group failed, err: %v, rid: %s", err, kt.Rid)
 		return nil, err
