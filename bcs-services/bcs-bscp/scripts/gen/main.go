@@ -63,6 +63,8 @@ func main() {
 		table.Client{},
 		table.ClientEvent{},
 		table.ClientQuery{},
+		table.UserPrivilege{},
+		table.UserGroupPrivilege{},
 	)
 
 	g.Execute()

@@ -251,6 +251,10 @@ const (
 	ClientTable Name = "clients"
 	// ClientEventTable is client_events table's name
 	ClientEventTable Name = "client_events"
+	// UserPrivilegeTable is user_privileges table's name
+	UserPrivilegeTable Name = "user_privileges"
+	// UserGroupPrivilegeTable is user_group_privileges table's name
+	UserGroupPrivilegeTable Name = "user_group_privileges"
 )
 
 // RevisionColumns defines all the Revision table's columns.

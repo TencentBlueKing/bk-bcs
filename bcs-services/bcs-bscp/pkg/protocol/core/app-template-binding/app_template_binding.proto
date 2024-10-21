@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/config-item/config_item.proto";
 
 package pbatb;
 
@@ -119,16 +120,14 @@ message AppBoundTmplRevision {
   string template_revision_memo = 11;
   string file_type = 12;
   string file_mode = 13;
-  string user = 14;
-  string user_group = 15;
-  string privilege = 16;
-  string signature = 17;
-  uint64 byte_size = 18;
-  string creator = 19;
-  string create_at = 20;
-  string file_state = 21;
-  string md5 = 22;
-  bool is_conflict = 23;
+  string signature = 14;
+  uint64 byte_size = 15;
+  string creator = 16;
+  string create_at = 17;
+  string file_state = 18;
+  string md5 = 19;
+  bool is_conflict = 20;
+  pbci.FilePermission permission = 21;
 }
 
 // ReleasedAppBoundTmplRevision is released app bound template revision
@@ -146,18 +145,16 @@ message ReleasedAppBoundTmplRevision {
   string template_revision_memo = 11;
   string file_type = 12;
   string file_mode = 13;
-  string user = 14;
-  string user_group = 15;
-  string privilege = 16;
-  string signature = 17;
-  uint64 byte_size = 18;
-  string origin_signature = 19;
-  uint64 origin_byte_size = 20;
-  string creator = 21;
-  string reviser = 22;
-  string create_at = 23;
-  string update_at = 24;
-  string md5 = 25;
+  string signature = 14;
+  uint64 byte_size = 15;
+  string origin_signature = 16;
+  uint64 origin_byte_size = 17;
+  string creator = 18;
+  string reviser = 19;
+  string create_at = 20;
+  string update_at = 21;
+  string md5 = 22;
+  pbci.FilePermission permission = 23;
 }
 
 // Conflict is the conflict when app binds templates

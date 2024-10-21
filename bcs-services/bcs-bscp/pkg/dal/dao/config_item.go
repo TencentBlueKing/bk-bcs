@@ -70,6 +70,11 @@ type ConfigItem interface {
 	ListConfigItemCount(kit *kit.Kit, bizID uint32, appID []uint32) ([]types.ListConfigItemCount, error)
 	// GetConfigItemCount 获取配置项数量带有事务
 	GetConfigItemCountWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32, appID uint32) (int64, error)
+	// UpdateUserPrivilegesWithTx 更新指定用户权限的配置项 (只是更新了user这个字段数据)
+	UpdateUserPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32, user, newUser string) error
+	// UpdateUserGroupPrivilegesWithTx 更新指定用户组权限的配置项 (只是更新了user_group这个字段数据)
+	UpdateUserGroupPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID uint32,
+		userGroup, newUserGroup string) error
 }
 
 var _ ConfigItem = new(configItemDao)
@@ -79,6 +84,30 @@ type configItemDao struct {
 	idGen    IDGenInterface
 	auditDao AuditDao
 	lock     LockDao
+}
+
+// UpdateUserGroupPrivilegesWithTx implements ConfigItem.
+func (dao *configItemDao) UpdateUserGroupPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32, userGroup string, newUserGroup string) error {
+	m := tx.ConfigItem
+
+	_, err := tx.ConfigItem.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.UserGroup.Eq(userGroup)).
+		Update(m.UserGroup, newUserGroup)
+
+	return err
+}
+
+// UpdateUserPrivilegesWithTx implements ConfigItem.
+func (dao *configItemDao) UpdateUserPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	appID uint32, user, newUser string) error {
+	m := tx.ConfigItem
+
+	_, err := tx.ConfigItem.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.AppID.Eq(appID), m.User.Eq(user)).
+		Update(m.User, newUser)
+
+	return err
 }
 
 // GetConfigItemCountWithTx 获取配置项数量带有事务
@@ -189,7 +218,8 @@ func (dao *configItemDao) RecoverConfigItem(kit *kit.Kit, tx *gen.QueryTx, ci *t
 
 	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareCreate(ci)
 
-	if err := tx.ConfigItem.WithContext(kit.Ctx).Create(ci); err != nil {
+	m := dao.genQ.ConfigItem
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Omit(m.Uid, m.Gid).Create(ci); err != nil {
 		return err
 	}
 
@@ -234,7 +264,8 @@ func (dao *configItemDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, ci *table.
 	ci.ID = id
 	ad := dao.auditDao.DecoratorV2(kit, ci.Attachment.BizID).PrepareCreate(ci)
 
-	if err := tx.ConfigItem.WithContext(kit.Ctx).Create(ci); err != nil {
+	m := dao.genQ.ConfigItem
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Omit(m.Uid, m.Gid).Create(ci); err != nil {
 		return 0, err
 	}
 
@@ -264,7 +295,8 @@ func (dao *configItemDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		}
 		configItem.ID = ids[i]
 	}
-	if err := tx.ConfigItem.WithContext(kit.Ctx).CreateInBatches(configItems, 500); err != nil {
+	m := dao.genQ.ConfigItem
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Omit(m.Uid, m.Gid).CreateInBatches(configItems, 500); err != nil {
 		return err
 	}
 	return nil
@@ -307,7 +339,7 @@ func (dao *configItemDao) Update(kit *kit.Kit, ci *table.ConfigItem) error {
 
 	updateTx := func(tx *gen.Query) error {
 		q = tx.ConfigItem.WithContext(kit.Ctx)
-		if _, err = q.Omit(m.ID, m.BizID, m.AppID).
+		if _, err = q.Omit(m.ID, m.BizID, m.AppID, m.Uid, m.Gid).
 			Where(m.ID.Eq(ci.ID), m.BizID.Eq(ci.Attachment.BizID)).Updates(ci); err != nil {
 			return err
 		}
@@ -334,7 +366,9 @@ func (dao *configItemDao) BatchUpdateWithTx(kit *kit.Kit, tx *gen.QueryTx, confi
 	if len(configItems) == 0 {
 		return nil
 	}
-	if err := tx.ConfigItem.WithContext(kit.Ctx).Save(configItems...); err != nil {
+
+	m := dao.genQ.ConfigItem
+	if err := tx.ConfigItem.WithContext(kit.Ctx).Omit(m.Uid, m.Gid).Save(configItems...); err != nil {
 		return err
 	}
 	return nil

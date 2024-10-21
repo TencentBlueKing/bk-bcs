@@ -134,6 +134,19 @@ func (s *Service) CreateRelease(ctx context.Context, req *pbds.CreateReleaseReq)
 			return nil, errors.New("app config items is empty")
 		}
 
+		// 检测权限组是否存在冲突
+		var configItem []*table.ConfigItem
+		for _, v := range cis {
+			configItem = append(configItem, &table.ConfigItem{
+				ID:         v.Id,
+				Spec:       v.Spec.ConfigItemSpec(),
+				Attachment: v.GetAttachment().ConfigItemAttachment(),
+			})
+		}
+		if err = checkTplNonTplPerms(grpcKit, configItem, tmplRevisions); err != nil {
+			return nil, err
+		}
+
 		// 3: do template and non-template config item related operations for create release.
 		if err = s.doConfigItemOperations(grpcKit, req.Variables, tx, release.ID, tmplRevisions, cis); err != nil {
 			if rErr := tx.Rollback(); rErr != nil {
@@ -462,6 +475,8 @@ func (s *Service) createReleasedRenderedCIs(kt *kit.Kit, tx *gen.QueryTx, releas
 					User:      ci.Spec.Permission.User,
 					UserGroup: ci.Spec.Permission.UserGroup,
 					Privilege: ci.Spec.Permission.Privilege,
+					Uid:       ci.Spec.Permission.Uid,
+					Gid:       ci.Spec.Permission.Gid,
 				},
 			},
 			Attachment: &table.ConfigItemAttachment{
@@ -536,14 +551,18 @@ func (s *Service) createReleasedAppTemplates(kt *kit.Kit, tx *gen.QueryTx, relea
 				TemplateRevisionMemo: r.TemplateRevisionMemo,
 				FileType:             r.FileType,
 				FileMode:             r.FileMode,
-				User:                 r.User,
-				UserGroup:            r.UserGroup,
-				Privilege:            r.Privilege,
-				Signature:            signatureMap[r.TemplateRevisionId],
-				ByteSize:             byteSizeMap[r.TemplateRevisionId],
-				OriginSignature:      r.Signature,
-				OriginByteSize:       r.ByteSize,
-				Md5:                  md5Map[r.TemplateRevisionId],
+				Permission: &table.FilePermission{
+					User:      r.Permission.User,
+					UserGroup: r.Permission.UserGroup,
+					Privilege: r.Permission.Privilege,
+					Uid:       r.Permission.Uid,
+					Gid:       r.Permission.Gid,
+				},
+				Signature:       signatureMap[r.TemplateRevisionId],
+				ByteSize:        byteSizeMap[r.TemplateRevisionId],
+				OriginSignature: r.Signature,
+				OriginByteSize:  r.ByteSize,
+				Md5:             md5Map[r.TemplateRevisionId],
 			},
 			Attachment: &table.ReleasedAppTemplateAttachment{
 				BizID: kt.BizID,

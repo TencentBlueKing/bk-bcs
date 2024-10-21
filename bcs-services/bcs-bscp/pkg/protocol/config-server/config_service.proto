@@ -1071,6 +1071,30 @@ option (google.api.http) = {
       get: "/api/v1/config/biz_id/{biz_id}/apps/{app_id}/config_items/count"
     };
   }
+
+  // user privileges related interface
+  rpc ListUserPrivileges(ListUserPrivilegesReq) returns (ListUserPrivilegesResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/user_privileges"
+    };
+  };
+  rpc DeleteUserPrivilege(DeleteUserPrivilegesReq) returns (DeleteUserPrivilegesResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/user_privileges/{id}"
+    };
+  };
+
+  // user group privileges related interface
+  rpc ListUserGroupPrivileges(ListUserPrivilegesReq) returns (ListUserPrivilegesResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz/{biz_id}/apps/{app_id}/user_group_privileges"
+    };
+  };
+  rpc DeleteUserGroupPrivilege(DeleteUserPrivilegesReq) returns (DeleteUserPrivilegesResp) {
+    option (google.api.http) = {
+      delete: "/api/v1/config/biz/{biz_id}/apps/{app_id}/user_group_privileges/{id}"
+    };
+  };
 }
 
 message UpdateCredentialScopeReq {
@@ -1248,6 +1272,8 @@ message CreateConfigItemReq {
   string privilege = 10;
   string sign = 11;
   uint64 byte_size = 12;
+  uint32 uid = 13;
+  uint32 gid = 14;
 }
 
 message BatchUpsertConfigItemsReq {
@@ -1265,6 +1291,8 @@ message BatchUpsertConfigItemsReq {
     string sign = 9;
     uint64 byte_size = 10;
     string md5 = 11;
+    uint32 uid = 12;
+    uint32 gid = 13;
   }
   uint32 biz_id = 1;
   uint32 app_id = 2;
@@ -1302,6 +1330,8 @@ message UpdateConfigItemReq {
   string privilege = 11;
   string sign = 12;
   uint64 byte_size = 13;
+  uint32 uid = 14;
+  uint32 gid = 15;
 }
 
 message UpdateConfigItemResp {}
@@ -1823,6 +1853,8 @@ message CreateTemplateReq {
   string sign = 13;
   uint64 byte_size = 14;
   repeated uint32 template_set_ids = 15;
+  uint32 uid = 16;
+  uint32 gid = 17;
 }
 
 message CreateTemplateResp {
@@ -1889,6 +1921,8 @@ message BatchUpsertTemplatesReq {
     string sign = 10;
     uint64 byte_size = 11;
     string md5 = 12;
+    uint32 uid = 13;
+    uint32 gid = 14;
   }
   uint32 biz_id = 1;
   uint32 template_space_id = 2;
@@ -2047,6 +2081,8 @@ message UpdateTemplateRevisionReq {
   string sign = 13;
   uint64 byte_size = 14;
   uint32 template_revision_id = 15;
+  uint32 uid = 16;
+  uint32 gid = 17;
 }
 
 message UpdateTemplateRevisionResp {
@@ -2094,6 +2130,8 @@ message GetTemplateRevisionResp {
     string create_at = 15;
     string md5 = 16;
     bool is_latest = 17;
+    uint32 uid = 18;
+    uint32 gid = 19;
   }
   TemplateRevision detail = 1;
 }
@@ -3048,6 +3086,7 @@ message CompareConfigItemConflictsResp {
       uint32 template_revision_id = 2;
       bool is_latest = 3;
       repeated pbtv.TemplateVariableSpec variables = 5;
+      pbci.FilePermission permission = 6;
     }
     uint32 template_space_id = 1;
     string template_space_name = 2;
@@ -3092,3 +3131,49 @@ message GetTemplateAndNonTemplateCICountResp {
   uint64 config_item_count = 1;
   uint64 template_config_item_count = 2;
 }
+
+message CreateUserPrivilegesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 uid = 3;
+  uint32 gid = 4;
+  string user = 5;
+  string user_group = 6;
+  string privilege_type = 7;  // 权限类型：system、custom
+  bool read_only = 8;         // 只读
+}
+
+message CreateUserPrivilegesResp {
+  uint32 id = 1;
+}
+
+message ListUserPrivilegesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 template_space_id = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+  string name = 7;  // 名称
+}
+
+message ListUserPrivilegesResp {
+  message Detail {
+    uint32 id = 1;
+    string name = 2;
+    string privilege_type = 3;
+    bool read_only = 4;
+    uint32 pid = 5;  // 权限ID
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
+
+message DeleteUserPrivilegesReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  uint32 template_space_id = 4;
+}
+
+message DeleteUserPrivilegesResp {}

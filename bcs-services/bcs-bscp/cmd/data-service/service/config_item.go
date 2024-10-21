@@ -44,6 +44,7 @@ import (
 )
 
 // CreateConfigItem create config item.
+// nolint:funlen
 func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigItemReq) (*pbds.CreateResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
 
@@ -85,7 +86,40 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 		}
 		return nil, e
 	}
-	// 2. create content.
+
+	userPrivilege := &table.UserPrivilege{
+		Spec: &table.UserPrivilegeSpec{
+			User: req.GetConfigItemSpec().Permission.User,
+		},
+		Attachment: &table.UserPrivilegeAttachment{
+			BizID: req.GetConfigItemAttachment().BizId,
+			AppID: req.GetConfigItemAttachment().AppId,
+			Uid:   req.ConfigItemSpec.GetPermission().Uid,
+		},
+	}
+
+	userGroupPrivilege := &table.UserGroupPrivilege{
+		Spec: &table.UserGroupPrivilegeSpec{
+			UserGroup: req.GetConfigItemSpec().Permission.UserGroup,
+		},
+		Attachment: &table.UserGroupPrivilegeAttachment{
+			BizID: req.GetConfigItemAttachment().BizId,
+			AppID: req.GetConfigItemAttachment().AppId,
+			Gid:   req.ConfigItemSpec.GetPermission().Gid,
+		},
+	}
+
+	// 2. 更新权限组
+	err = s.upsertSinglePermissions(grpcKit, tx, req.ConfigItemAttachment.BizId, req.ConfigItemAttachment.AppId, 0,
+		userPrivilege, userGroupPrivilege, false)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	// 4. create content.
 	content := &table.Content{
 		Spec: req.ContentSpec.ContentSpec(),
 		Attachment: &table.ContentAttachment{
@@ -105,7 +139,7 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 		}
 		return nil, err
 	}
-	// 3. create commit.
+	// 5. create commit.
 	commit := &table.Commit{
 		Spec: &table.CommitSpec{
 			ContentID: contentID,
@@ -135,8 +169,242 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbds.CreateConfigIt
 	return &pbds.CreateResp{Id: ciID}, nil
 }
 
+// UpdateConfigItem update config item.
+func (s *Service) UpdateConfigItem(ctx context.Context, req *pbds.UpdateConfigItemReq) (
+	*pbbase.EmptyResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ci := &table.ConfigItem{
+		ID:         req.Id,
+		Spec:       req.Spec.ConfigItemSpec(),
+		Attachment: req.Attachment.ConfigItemAttachment(),
+		Revision: &table.Revision{
+			Reviser: grpcKit.User,
+		},
+	}
+
+	tx := s.dao.GenQuery().Begin()
+
+	// 1. 更新配置项
+	if err := s.dao.ConfigItem().UpdateWithTx(grpcKit, tx, ci); err != nil {
+		logs.Errorf("update config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	userPrivilege := &table.UserPrivilege{
+		Spec: &table.UserPrivilegeSpec{
+			User: req.Spec.Permission.User,
+		},
+		Attachment: &table.UserPrivilegeAttachment{
+			BizID: req.Attachment.BizId,
+			AppID: req.Attachment.AppId,
+			Uid:   req.Spec.Permission.Uid,
+		},
+	}
+
+	userGroupPrivilege := &table.UserGroupPrivilege{
+		Spec: &table.UserGroupPrivilegeSpec{
+			UserGroup: req.Spec.Permission.UserGroup,
+		},
+		Attachment: &table.UserGroupPrivilegeAttachment{
+			BizID: req.Attachment.BizId,
+			AppID: req.Attachment.AppId,
+			Gid:   req.Spec.Permission.Gid,
+		},
+	}
+
+	// 2. 更新权限组
+	err := s.upsertSinglePermissions(grpcKit, tx, req.Attachment.BizId, req.Attachment.AppId, 0,
+		userPrivilege, userGroupPrivilege, false)
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
+		return nil, e
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// DeleteConfigItem delete config item.
+func (s *Service) DeleteConfigItem(ctx context.Context, req *pbds.DeleteConfigItemReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	ci := &table.ConfigItem{
+		ID:         req.Id,
+		Attachment: req.Attachment.ConfigItemAttachment(),
+	}
+	if err := s.dao.ConfigItem().Delete(grpcKit, ci); err != nil {
+		logs.Errorf("delete config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// GetConfigItem get config item detail
+func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq) (*pbci.ConfigItem, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.Id, req.BizId)
+	if err != nil {
+		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	configItem, err = s.handleSingleNonTemplateFilePermissions(grpcKit, req.BizId, req.AppId, configItem)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := pbci.PbConfigItem(configItem, "")
+	return resp, nil
+}
+
+// ListConfigItems list config items by query condition.
+// nolint:funlen,gocyclo
+func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
+	error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// validate the page params
+	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
+	if err := opt.Validate(types.DefaultPageOption); err != nil {
+		return nil, err
+	}
+
+	// search all editing config items
+	details, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
+	if err != nil {
+		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	// 处理配置项文件权限
+	details, err = s.handleNonTemplateFilePermissions(grpcKit, req.BizId, req.AppId, details)
+	if err != nil {
+		return nil, err
+	}
+
+	configItems := make([]*pbci.ConfigItem, 0)
+	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
+	if req.WithStatus {
+		var fileReleased []*table.ReleasedConfigItem
+		fileReleased, err = s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.BizId, req.AppId)
+		if err != nil {
+			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+
+		var commits []*table.Commit
+		commits, err = s.dao.Commit().ListAppLatestCommits(grpcKit, req.BizId, req.AppId)
+		if err != nil {
+			logs.Errorf("get commit, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		configItems = pbrci.PbConfigItemState(details, fileReleased, commits, req.Status)
+	} else {
+		for _, ci := range details {
+			configItems = append(configItems, pbci.PbConfigItem(ci, ""))
+		}
+	}
+
+	if err = s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
+		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	existingPaths := []string{}
+	for _, v := range configItems {
+		if v.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
+		}
+	}
+
+	conflictNums, conflictPaths, err := s.compareTemplateConfConflicts(grpcKit, req.BizId, req.AppId, existingPaths)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range configItems {
+		if v.FileState != constant.FileStateDelete {
+			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
+		}
+	}
+
+	// search by logic
+	if req.SearchValue != "" {
+		var searcher search.Searcher
+		searcher, err = search.NewSearcher(req.SearchFields, req.SearchValue, search.ConfigItem)
+		if err != nil {
+			return nil, err
+		}
+		fields := searcher.SearchFields()
+		fieldsMap := make(map[string]bool)
+		for _, f := range fields {
+			fieldsMap[f] = true
+		}
+		fieldsMap["combinedPathName"] = true
+		cis := make([]*pbci.ConfigItem, 0)
+		for _, ci := range configItems {
+			combinedPathName := path.Join(ci.Spec.Path, ci.Spec.Name)
+			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
+				(fieldsMap["memo"] && strings.Contains(ci.Spec.Memo, req.SearchValue)) ||
+				(fieldsMap["creator"] && strings.Contains(ci.Revision.Creator, req.SearchValue)) ||
+				(fieldsMap["reviser"] && strings.Contains(ci.Revision.Reviser, req.SearchValue)) {
+				cis = append(cis, ci)
+			}
+		}
+		configItems = cis
+	}
+
+	// page by logic
+	var start, end uint32 = 0, uint32(len(configItems))
+	if !req.All {
+		if req.Start < uint32(len(configItems)) {
+			start = req.Start
+		}
+		if req.Start+req.Limit < uint32(len(configItems)) {
+			end = req.Start + req.Limit
+		} else {
+			end = uint32(len(configItems))
+		}
+	}
+
+	// 如果有topID则按照topID排最前面
+	sort.SliceStable(configItems, func(i, j int) bool {
+		iInTopID := tools.Contains(req.Ids, configItems[i].Id)
+		jInTopID := tools.Contains(req.Ids, configItems[j].Id)
+		if iInTopID && jInTopID {
+			return i < j
+		}
+		if iInTopID {
+			return true
+		}
+		if jInTopID {
+			return false
+		}
+		return i < j
+	})
+	resp := &pbds.ListConfigItemsResp{
+		Count:          uint32(len(configItems)),
+		Details:        configItems[start:end],
+		ConflictNumber: conflictNums,
+	}
+	return resp, nil
+}
+
 // BatchUpsertConfigItems batch upsert config items.
-// nolint:funlen
+// nolint:funlen,gocyclo
 func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUpsertConfigItemsReq) (
 	*pbds.BatchUpsertConfigItemsResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
@@ -146,7 +414,7 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
 		return nil, err
 	}
-
+	userPrivileges, userGroupPrivileges := make([]*table.UserPrivilege, 0), make([]*table.UserGroupPrivilege, 0)
 	file1, file2 := make([]tools.CIUniqueKey, 0), make([]tools.CIUniqueKey, 0)
 	editingCIMap := make(map[string]*table.ConfigItem)
 	newCIMap := make(map[string]*pbds.BatchUpsertConfigItemsReq_ConfigItem)
@@ -158,6 +426,28 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		newCIMap[path.Join(item.ConfigItemSpec.Path, item.ConfigItemSpec.Name)] = item
 		file2 = append(file2, tools.CIUniqueKey{
 			Name: item.GetConfigItemSpec().GetName(), Path: item.GetConfigItemSpec().GetPath(),
+		})
+		userPrivileges = append(userPrivileges, &table.UserPrivilege{
+			Spec: &table.UserPrivilegeSpec{
+				User:          item.ConfigItemSpec.Permission.User,
+				PrivilegeType: table.PrivilegeTypeCustom,
+			},
+			Attachment: &table.UserPrivilegeAttachment{
+				BizID: req.BizId,
+				AppID: req.AppId,
+				Uid:   item.GetConfigItemSpec().GetPermission().Uid,
+			},
+		})
+		userGroupPrivileges = append(userGroupPrivileges, &table.UserGroupPrivilege{
+			Spec: &table.UserGroupPrivilegeSpec{
+				UserGroup:     item.ConfigItemSpec.Permission.UserGroup,
+				PrivilegeType: table.PrivilegeTypeCustom,
+			},
+			Attachment: &table.UserGroupPrivilegeAttachment{
+				BizID: req.BizId,
+				AppID: req.AppId,
+				Gid:   item.GetConfigItemSpec().GetPermission().Gid,
+			},
 		})
 	}
 	if err = tools.DetectFilePathConflicts(grpcKit, file2, file1); err != nil {
@@ -258,12 +548,969 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbds.BatchUps
 		return nil, e
 	}
 
+	// 8. 处理非模板配置权限
+	if err = s.batcheUpsertPermissionGroup(grpcKit, tx, req.BizId, req.AppId, 0, userPrivileges,
+		userGroupPrivileges, false); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
 	if e := tx.Commit(); e != nil {
 		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
 		return nil, e
 	}
 
 	return &pbds.BatchUpsertConfigItemsResp{Ids: tools.MergeAndDeduplicate(createIds, updateIds)}, nil
+}
+
+// 检测冲突，非模板配置之间对比、非模板配置对比套餐模板配置、空间套餐之间的对比
+// 1. 先把非配置模板 path+name 添加到 existingPaths 中
+// 2. 把所有关联的空间套餐配置都添加到 existingPaths 中
+func (s *Service) compareTemplateConfConflicts(grpcKit *kit.Kit, bizID, appID uint32, existingPaths []string) (
+	uint32, map[string]bool, error) {
+
+	tmplRevisions, err := s.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListAppBoundTmplRevisionsReq{
+		BizId:      bizID,
+		AppId:      appID,
+		All:        true,
+		WithStatus: true,
+	})
+	if err != nil {
+		return 0, nil, err
+	}
+
+	for _, revision := range tmplRevisions.GetDetails() {
+		if revision.FileState != constant.FileStateDelete {
+			existingPaths = append(existingPaths, path.Join(revision.Path, revision.Name))
+		}
+	}
+
+	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
+
+	return conflictNums, conflictPaths, nil
+}
+
+// setCommitSpecForCIs set commit spec for config items
+func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
+	ids := make([]uint32, len(cis))
+	for i, ci := range cis {
+		ids[i] = ci.Id
+	}
+
+	commits, err := s.dao.Commit().BatchListLatestCommits(kt, kt.BizID, kt.AppID, ids)
+	if err != nil {
+		logs.Errorf("batch list latest commits failed, err: %v, rid: %s", err, kt.Rid)
+		return err
+	}
+	commitMap := make(map[uint32]*table.CommitSpec, len(commits))
+	for _, c := range commits {
+		commitMap[c.Attachment.ConfigItemID] = c.Spec
+	}
+
+	for _, ci := range cis {
+		ci.CommitSpec = pbcommit.PbCommitSpec(commitMap[ci.Id])
+	}
+
+	return nil
+}
+
+// ListConfigItemCount list config items count.
+func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigItemCountReq) (
+	*pbds.ListConfigItemCountResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	appIDMap := make(map[uint32]uint32, len(req.AppId))
+	for _, id := range req.AppId {
+		appIDMap[id] = id
+	}
+
+	count, err := s.dao.ConfigItem().GetCount(grpcKit, req.BizId, req.AppId)
+	if err != nil {
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	var appIds = []uint32{}
+	for _, detail := range count {
+		delete(appIDMap, detail.AppId)
+	}
+	if len(appIDMap) > 0 {
+		for _, appID := range appIDMap {
+			appIds = append(appIds, appID)
+		}
+		kvDetails, err := s.dao.Kv().GetCount(grpcKit, req.BizId, appIds)
+		if err != nil {
+			logs.Errorf("list kv failed, err: %v, rid: %s", err, grpcKit.Rid)
+			return nil, err
+		}
+		count = append(count, kvDetails...)
+	}
+
+	resp := &pbds.ListConfigItemCountResp{
+		Details: pbci.PbConfigItemCounts(count, req.AppId),
+	}
+
+	return resp, nil
+}
+
+// ListConfigItemByTuple 按照多个字段in查询
+func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbds.ListConfigItemByTupleReq) (
+	*pbds.ListConfigItemByTupleResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+	data := [][]interface{}{}
+	for _, item := range req.Items {
+		data = append(data, []interface{}{item.BizId, item.AppId, item.Name, item.Path})
+	}
+	tuple, err := s.dao.ConfigItem().ListConfigItemByTuple(grpcKit, data)
+	if err != nil {
+		logs.Errorf("list config item by tuple failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	configItems := []*pbci.ConfigItem{}
+	for _, item := range tuple {
+		configItems = append(configItems, pbci.PbConfigItem(item, ""))
+	}
+	resp := &pbds.ListConfigItemByTupleResp{ConfigItems: configItems}
+	return resp, nil
+}
+
+// UnDeleteConfigItem 配置项未命名版本恢复
+// nolint:funlen
+func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConfigItemReq) (*pbbase.EmptyResp, error) {
+
+	grpcKit := kit.FromGrpcContext(ctx)
+	// 判断是否需要恢复
+	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
+	}
+	if configItem != nil && configItem.ID != 0 {
+		return nil, errors.New(i18n.T(grpcKit, "the data has not been deleted"))
+	}
+
+	// 获取该服务最新发布的 release_id
+	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "get the latest released version failed, err: %v", err))
+	}
+
+	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
+	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
+		release.Attachment.AppID, release.ID, req.GetId())
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "get the published config failed, err: %v", err))
+	}
+
+	ci, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
+		releaseCi.ConfigItemSpec.Name, releaseCi.ConfigItemSpec.Path)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
+	}
+
+	newFiles := []tools.CIUniqueKey{{
+		Name: releaseCi.ConfigItemSpec.Name,
+		Path: releaseCi.ConfigItemSpec.Path,
+	}}
+
+	// 检测配置项路径冲突以及是否超出服务限制
+	if err = s.checkRestorePrerequisites(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
+		newFiles, ci); err != nil {
+		return nil, err
+	}
+
+	commitID, contentID := []uint32{}, []uint32{}
+	tx := s.dao.GenQuery().Begin()
+	// 判断是不是新增的数据
+	if ci != nil && ci.ID != 0 {
+		rci, errCi := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
+			release.Attachment.AppID, release.ID, ci.ID)
+		if errCi != nil && !errors.Is(errCi, gorm.ErrRecordNotFound) {
+			return nil, errf.Errorf(errf.DBOpFailed,
+				i18n.T(grpcKit, "get the published config failed, err: %v", errCi))
+		}
+		if rci != nil && rci.ID != 0 {
+			return nil, errors.New(i18n.T(grpcKit,
+				`recovery failed. A file with the same path exists and is not in a new state`))
+		}
+		if err = s.dao.ConfigItem().DeleteWithTx(grpcKit, tx, ci); err != nil {
+			logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+			if rErr := tx.Rollback(); rErr != nil {
+				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+			}
+			return nil, errf.Errorf(errf.DBOpFailed,
+				i18n.T(grpcKit, "recover config item failed, err: %v", err))
+		}
+	}
+
+	// 恢复到最新发布的版本，删除修改的数据
+	// 获取大于最新发布版本的记录
+	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
+		req.Attachment.AppId, req.Id)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "get records greater than the latest released version failed, err: %v", err))
+	}
+
+	for _, v := range rc {
+		commitID = append(commitID, v.ID)
+		contentID = append(contentID, v.Spec.ContentID)
+	}
+
+	if err = s.dao.Commit().BatchDeleteWithTx(grpcKit, tx, commitID); err != nil {
+		logs.Errorf("undo commit failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", err))
+	}
+
+	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
+		logs.Errorf("undo content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", err))
+	}
+
+	data := &table.ConfigItem{
+		ID:         releaseCi.ConfigItemID,
+		Spec:       releaseCi.ConfigItemSpec,
+		Attachment: releaseCi.Attachment,
+		Revision:   releaseCi.Revision,
+	}
+	if err = s.dao.ConfigItem().RecoverConfigItem(grpcKit, tx, data); err != nil {
+		logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", err))
+	}
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(grpcKit, "recover config item failed, err: %v", e))
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// 检测恢复配置文件的前置条件
+func (s *Service) checkRestorePrerequisites(kit *kit.Kit, bizID, appID uint32, newFiles []tools.CIUniqueKey,
+	ci *table.ConfigItem) error {
+
+	// 获取指定服务下的配置项
+	configs, err := s.dao.ConfigItem().ListAllByAppID(kit, appID, bizID)
+	if err != nil {
+		return err
+	}
+	existingFiles := []tools.CIUniqueKey{}
+	for _, v := range configs {
+		existingFiles = append(existingFiles, tools.CIUniqueKey{
+			Name: v.Spec.Name,
+			Path: v.Spec.Path,
+		})
+	}
+
+	// 检测文件冲突
+	// /a 和 /a/1.txt这类的冲突
+	if err = tools.DetectFilePathConflicts(kit, newFiles, existingFiles); err != nil {
+		return err
+	}
+
+	// 获取当前服务配置项数+模板数量
+	configItemCount, err := s.GetTemplateAndNonTemplateCICount(kit.RpcCtx(),
+		&pbds.GetTemplateAndNonTemplateCICountReq{
+			BizId: bizID,
+			AppId: appID,
+		})
+	if err != nil {
+		return err
+	}
+
+	totalConfigItemCount := int(configItemCount.GetConfigItemCount()) +
+		int(configItemCount.GetTemplateConfigItemCount()) + 1
+
+	if ci != nil && ci.ID != 0 {
+		totalConfigItemCount--
+	}
+
+	appConfigCnt := getAppConfigCnt(bizID)
+
+	if totalConfigItemCount > appConfigCnt {
+		return errf.New(errf.InvalidParameter,
+			i18n.T(kit, `the total number of config items(including template and non-template) 
+			exceeded the limit %d`, appConfigCnt))
+	}
+
+	return nil
+}
+
+// UndoConfigItem 撤消配置项
+func (s *Service) UndoConfigItem(ctx context.Context, req *pbds.UndoConfigItemReq) (*pbbase.EmptyResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	// 判断是否存在
+	_, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("data does not exist")
+		}
+	}
+
+	// 获取该服务最新发布的 release_id
+	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
+	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
+		release.Attachment.AppID, release.ID, req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
+		req.Attachment.AppId, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	commitID := []uint32{}
+	contentID := []uint32{}
+	for _, v := range rc {
+		commitID = append(commitID, v.ID)
+		contentID = append(contentID, v.Spec.ContentID)
+	}
+
+	tx := s.dao.GenQuery().Begin()
+	if err = s.dao.Commit().BatchDeleteWithTx(grpcKit, tx, commitID); err != nil {
+		logs.Errorf("undo commit failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
+		logs.Errorf("undo content failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+
+	data := &table.ConfigItem{
+		ID:         releaseCi.ConfigItemID,
+		Spec:       releaseCi.ConfigItemSpec,
+		Attachment: releaseCi.Attachment,
+		Revision:   releaseCi.Revision,
+	}
+
+	if err = s.dao.ConfigItem().UpdateWithTx(grpcKit, tx, data); err != nil {
+		logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
+		}
+		return nil, err
+	}
+	if e := tx.Commit(); e != nil {
+		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
+		return nil, e
+	}
+
+	return new(pbbase.EmptyResp), nil
+}
+
+// CompareConfigItemConflicts compare config item version conflicts
+func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbds.CompareConfigItemConflictsReq) (
+	*pbds.CompareConfigItemConflictsResp, error) {
+	grpcKit := kit.FromGrpcContext(ctx)
+
+	nonTemplateConfig, err := s.handleNonTemplateConfig(grpcKit, req.GetBizId(), req.GetAppId(),
+		req.GetOtherAppId(), req.GetReleaseId())
+	if err != nil {
+		return nil, err
+	}
+
+	templateConfig, err := s.handleTemplateConfig(grpcKit, req.GetBizId(), req.GetAppId(),
+		req.GetOtherAppId(), req.GetReleaseId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &pbds.CompareConfigItemConflictsResp{
+		NonTemplateConfigs: nonTemplateConfig,
+		TemplateConfigs:    templateConfig,
+	}, nil
+}
+
+// 处理非模板配置
+func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32) (
+	[]*pbds.CompareConfigItemConflictsResp_NonTemplateConfig, error) {
+
+	nonTemplateConfigs := make([]*pbds.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
+
+	// 获取未命名版本配置文件
+	ci, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, appID, bizID)
+	if err != nil {
+		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	conflicts := make(map[string]bool)
+	for _, v := range ci {
+		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
+	}
+
+	// 获取已发布版本的配置文件
+	rci, count, err := s.dao.ReleasedCI().List(grpcKit, bizID, otherAppId, releaseId, nil, &types.BasePage{
+		All: true,
+	}, "")
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	if count == 0 {
+		return nonTemplateConfigs, nil
+	}
+
+	configItems := make(map[string]bool)
+	for _, v := range rci {
+		configItems[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)] = true
+	}
+
+	vars, err := s.getReleasedNonTemplateConfigVariables(grpcKit, bizID, otherAppId, releaseId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range rci {
+		nonTemplateConfigs = append(nonTemplateConfigs, &pbds.CompareConfigItemConflictsResp_NonTemplateConfig{
+			Id: v.ConfigItemID,
+			ConfigItemSpec: &pbci.ConfigItemSpec{
+				Name:     v.ConfigItemSpec.Name,
+				Path:     v.ConfigItemSpec.Path,
+				FileType: string(v.ConfigItemSpec.FileType),
+				FileMode: string(v.ConfigItemSpec.FileMode),
+				Memo:     v.ConfigItemSpec.Memo,
+				Permission: &pbci.FilePermission{
+					User:      v.ConfigItemSpec.Permission.User,
+					UserGroup: v.ConfigItemSpec.Permission.UserGroup,
+					Privilege: v.ConfigItemSpec.Permission.Privilege,
+					Uid:       v.ConfigItemSpec.Permission.Uid,
+					Gid:       v.ConfigItemSpec.Permission.Gid,
+				},
+			},
+			Variables: vars[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
+			IsExist:   conflicts[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
+			Signature: v.CommitSpec.Content.OriginSignature,
+			ByteSize:  v.CommitSpec.Content.OriginByteSize,
+			Md5:       v.CommitSpec.Content.Md5,
+		})
+	}
+
+	return nonTemplateConfigs, nil
+}
+
+// 处理模板套餐配置
+// nolint:funlen
+func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32) (
+	[]*pbds.CompareConfigItemConflictsResp_TemplateConfig, error) {
+	templateConfigs := make([]*pbds.CompareConfigItemConflictsResp_TemplateConfig, 0)
+
+	// 获取已发布版本的空间、套餐、配置文件
+	rp, count, err := s.dao.ReleasedAppTemplate().List(grpcKit, bizID, otherAppId, releaseId, nil, &types.BasePage{
+		All: true,
+	}, "")
+	if err != nil {
+		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	if count == 0 {
+		return templateConfigs, nil
+	}
+
+	noNamespacePackage, err := s.getConfigTemplateSet(grpcKit, bizID, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds := []uint32{}, []uint32{}, []uint32{}
+	releaseTemplateSpaceIdsExist, releaseTemplateSetIdsExist := make(map[uint32]bool), make(map[uint32]bool)
+	tmplSetMap := make(map[uint32][]*table.ReleasedAppTemplate)
+	for _, v := range rp {
+		tmplSetMap[v.Spec.TemplateSetID] = append(tmplSetMap[v.Spec.TemplateSetID], v)
+		if !releaseTemplateSpaceIdsExist[v.Spec.TemplateSpaceID] {
+			releaseTemplateSpaceIds = append(releaseTemplateSpaceIds, v.Spec.TemplateSpaceID)
+			releaseTemplateSpaceIdsExist[v.Spec.TemplateSpaceID] = true
+		}
+		if !releaseTemplateSetIdsExist[v.Spec.TemplateSetID] {
+			releaseTemplateSetIds = append(releaseTemplateSetIds, v.Spec.TemplateSetID)
+			releaseTemplateSetIdsExist[v.Spec.TemplateSetID] = true
+		}
+		releaseTemplateIds = append(releaseTemplateIds, v.Spec.TemplateID)
+	}
+
+	templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, err :=
+		s.getTemplateSpaceSetfile(grpcKit, releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds)
+	if err != nil {
+		return nil, err
+	}
+
+	nonExistentTemplateIds := make(map[uint32]bool)
+	for _, v := range releaseTemplateIds {
+		if !templateExist[v] {
+			nonExistentTemplateIds[v] = true
+		}
+	}
+
+	vars, err := s.getReleasedTemplateConfigVariables(grpcKit, bizID, otherAppId, releaseId, nonExistentTemplateIds)
+	if err != nil {
+		return nil, err
+	}
+
+	for id, revisions := range tmplSetMap {
+		group := &pbds.CompareConfigItemConflictsResp_TemplateConfig{
+			TemplateSpaceId:    revisions[0].Spec.TemplateSpaceID,
+			TemplateSpaceName:  revisions[0].Spec.TemplateSpaceName,
+			TemplateSetId:      id,
+			TemplateSetName:    revisions[0].Spec.TemplateSetName,
+			TemplateSpaceExist: templateSpaceExist[revisions[0].Spec.TemplateSpaceID],
+			TemplateSetExist:   templateSetExist[id],
+			IsExist:            noNamespacePackage[fmt.Sprintf("%d-%d", revisions[0].Spec.TemplateSpaceID, id)],
+			TemplateSetIsEmpty: templateSetTemplateExist[id],
+		}
+		for _, r := range revisions {
+			// 历史套餐模板文件被删除了
+			if !templateExist[r.Spec.TemplateID] {
+				continue
+			}
+			// 历史套餐模板不在现有套餐模板中, 被移走了
+			if !currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", r.Spec.TemplateSpaceID,
+				r.Spec.TemplateSetID, r.Spec.TemplateID)] {
+				continue
+			}
+			group.TemplateRevisions = append(group.TemplateRevisions,
+				&pbds.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
+					TemplateId:         r.Spec.TemplateID,
+					TemplateRevisionId: r.Spec.TemplateRevisionID,
+					IsLatest:           r.Spec.IsLatest,
+					Variables:          vars[path.Join(r.Spec.Path, r.Spec.Name)],
+				})
+		}
+		templateConfigs = append(templateConfigs, group)
+	}
+
+	// 返回模板版本权限
+	templateConfigs, err = s.handleTplRevPerms(grpcKit, bizID, templateConfigs)
+	if err != nil {
+		return nil, err
+	}
+
+	return templateConfigs, nil
+}
+
+// 获取模板版本权限
+func (s *Service) handleTplRevPerms(kit *kit.Kit, bizID uint32,
+	templateRevisions []*pbds.CompareConfigItemConflictsResp_TemplateConfig) (
+	[]*pbds.CompareConfigItemConflictsResp_TemplateConfig, error) {
+
+	templateRevisionID := []uint32{}
+	// 查询模板版本
+	for _, revision := range templateRevisions {
+		for _, v := range revision.TemplateRevisions {
+			templateRevisionID = append(templateRevisionID, v.TemplateRevisionId)
+		}
+	}
+	templateRevisionID = tools.RemoveDuplicates(templateRevisionID)
+	revisions, err := s.dao.TemplateRevision().ListByIDs(kit, templateRevisionID)
+	if err != nil {
+		return nil, err
+	}
+
+	revisions, err = s.listTplRevPerms(kit, bizID, revisions)
+	if err != nil {
+		return nil, err
+	}
+
+	perms := map[uint32]*pbci.FilePermission{}
+	for _, v := range revisions {
+		perms[v.ID] = &pbci.FilePermission{
+			User:      v.Spec.Permission.User,
+			UserGroup: v.Spec.Permission.UserGroup,
+			Uid:       v.Spec.Permission.Uid,
+			Gid:       v.Spec.Permission.Gid,
+		}
+	}
+
+	for _, revision := range templateRevisions {
+		for _, v := range revision.TemplateRevisions {
+			v.Permission = perms[v.TemplateRevisionId]
+		}
+	}
+
+	return templateRevisions, nil
+}
+
+// 返回空间、套餐、模板配置数据
+func (s *Service) getTemplateSpaceSetfile(grpcKit *kit.Kit, templateSpaceIds, templateSetIds, templateIds []uint32) (
+	map[uint32]bool, map[uint32]bool, map[string]bool, map[uint32]bool, map[uint32]bool, error) {
+	// 获取空间
+	templateSpace, err := s.dao.TemplateSpace().ListByIDs(grpcKit, templateSpaceIds)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	templateSpaceExist := make(map[uint32]bool)
+	for _, v := range templateSpace {
+		templateSpaceExist[v.ID] = true
+	}
+
+	// 获取套餐
+	templateSet, err := s.dao.TemplateSet().ListByIDs(grpcKit, templateSetIds)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	templateSetExist := make(map[uint32]bool)
+	currentSpaceSetTemplateExist := make(map[string]bool)
+	templateSetTemplateExist := make(map[uint32]bool)
+	for _, v := range templateSet {
+		templateSetTemplateExist[v.ID] = false
+		if len(v.Spec.TemplateIDs) == 0 {
+			templateSetTemplateExist[v.ID] = true
+		}
+		templateSetExist[v.ID] = true
+		for _, tid := range v.Spec.TemplateIDs {
+			currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", v.Attachment.TemplateSpaceID, v.ID, tid)] = true
+		}
+	}
+
+	// 获取模板
+	template, err := s.dao.Template().ListByIDs(grpcKit, templateIds)
+	if err != nil {
+		return nil, nil, nil, nil, nil, err
+	}
+	templateExist := make(map[uint32]bool)
+	for _, v := range template {
+		templateExist[v.ID] = true
+	}
+
+	return templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, nil
+}
+
+// 获取未命名版本的模板套餐
+func (s *Service) getConfigTemplateSet(grpcKit *kit.Kit, bizID, appID uint32) (
+	map[string]bool, error) {
+
+	noNamespacePackage := make(map[string]bool)
+
+	tmplSetInfo, count, err := s.dao.AppTemplateBinding().List(grpcKit, bizID, appID, &types.BasePage{All: true})
+	if err != nil {
+		return nil, err
+	}
+
+	if count == 0 {
+		return noNamespacePackage, nil
+	}
+
+	tmplSets, err := s.dao.TemplateSet().ListByIDs(grpcKit, tmplSetInfo[0].Spec.TemplateSetIDs)
+	if err != nil {
+		logs.Errorf("list template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	tmplSetMap := make(map[uint32]*table.TemplateSet)
+	tmplSpaceIDs := make([]uint32, 0)
+	for _, ts := range tmplSets {
+		tmplSetMap[ts.ID] = ts
+		tmplSpaceIDs = append(tmplSpaceIDs, ts.Attachment.TemplateSpaceID)
+	}
+	tmplSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
+
+	// template space details
+	tmplSpaces, err := s.dao.TemplateSpace().ListByIDs(grpcKit, tmplSpaceIDs)
+	if err != nil {
+		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	tmplSpaceMap := make(map[uint32]*table.TemplateSpace)
+	for _, ts := range tmplSpaces {
+		tmplSpaceMap[ts.ID] = ts
+	}
+
+	details := make([]*pbtset.TemplateSetBriefInfo, len(tmplSets))
+	for idx, t := range tmplSets {
+		details[idx] = &pbtset.TemplateSetBriefInfo{
+			TemplateSpaceId:   t.Attachment.TemplateSpaceID,
+			TemplateSpaceName: tmplSpaceMap[t.Attachment.TemplateSpaceID].Spec.Name,
+			TemplateSetId:     t.ID,
+			TemplateSetName:   tmplSetMap[t.ID].Spec.Name,
+		}
+	}
+
+	for _, tmplSet := range details {
+		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
+	}
+
+	return noNamespacePackage, nil
+}
+
+// 获取已发布的模板配置变量
+func (s *Service) getReleasedTemplateConfigVariables(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32,
+	templateIds map[uint32]bool) (map[string][]*pbtv.TemplateVariableSpec, error) {
+	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
+
+	releasedTmpls, count, err := s.dao.ReleasedAppTemplate().List(grpcKit, bizID, otherAppId, releaseId,
+		nil, &types.BasePage{All: true}, "")
+	if err != nil {
+		logs.Errorf("list released app templates failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	if count == 0 {
+		return varsMap, nil
+	}
+
+	tmplRevisions := getTmplRevisionsFromReleased(releasedTmpls)
+	tmplRevisions = filterSizeForTmplRevisions(tmplRevisions)
+
+	newTmplRevisions := make([]*table.TemplateRevision, 0)
+	for _, v := range tmplRevisions {
+		if templateIds[v.Attachment.TemplateID] {
+			continue
+		}
+		newTmplRevisions = append(newTmplRevisions, v)
+	}
+
+	refs, err := s.getVariableReferences(grpcKit, newTmplRevisions, nil)
+	if err != nil {
+		logs.Errorf("get variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resfMap := make(map[string][]string, 0)
+	for _, v := range refs {
+		for _, ref := range v.GetReferences() {
+			filePath := path.Join(ref.Path, ref.Name)
+			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
+		}
+	}
+
+	vars, err := s.dao.ReleasedAppTemplateVariable().ListVariables(grpcKit, bizID, otherAppId, releaseId)
+	if err != nil {
+		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	for _, v := range vars {
+		for key, name := range resfMap {
+			for _, n := range name {
+				if v.Name == n {
+					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
+						Name: n, Type: string(v.Type), DefaultVal: v.DefaultVal, Memo: v.Memo,
+					})
+				}
+			}
+		}
+	}
+
+	return varsMap, nil
+}
+
+// 获取已发布的非配置配置变量
+func (s *Service) getReleasedNonTemplateConfigVariables(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32) (
+	map[string][]*pbtv.TemplateVariableSpec, error) {
+	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
+
+	releasedCIs, _, err := s.dao.ReleasedCI().List(grpcKit, bizID, otherAppId, releaseId, nil,
+		&types.BasePage{All: true}, "")
+	if err != nil {
+		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+	cis := getPbConfigItemsFromReleased(releasedCIs)
+	cis = filterSizeForConfigItems(cis)
+
+	refs, err := s.getVariableReferences(grpcKit, nil, cis)
+	if err != nil {
+		logs.Errorf("get variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	resfMap := make(map[string][]string, 0)
+	for _, v := range refs {
+		for _, ref := range v.GetReferences() {
+			filePath := path.Join(ref.Path, ref.Name)
+			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
+		}
+	}
+
+	vars, err := s.dao.ReleasedAppTemplateVariable().ListVariables(grpcKit, bizID, otherAppId, releaseId)
+	if err != nil {
+		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
+		return nil, err
+	}
+
+	for _, v := range vars {
+		for key, name := range resfMap {
+			for _, n := range name {
+				if v.Name == n {
+					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
+						Name: n, Type: string(v.Type), DefaultVal: v.DefaultVal, Memo: v.Memo,
+					})
+				}
+			}
+		}
+	}
+
+	return varsMap, nil
+}
+
+// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
+func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbds.GetTemplateAndNonTemplateCICountReq) (
+	*pbds.GetTemplateAndNonTemplateCICountResp, error) {
+	kt := kit.FromGrpcContext(ctx)
+
+	count, err := s.dao.ConfigItem().GetConfigItemCount(kt, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "obtain the number of configuration items"))
+	}
+
+	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt,
+			"get template binding relationships through business and service IDs failed, err: %s", err))
+	}
+	templateConfigItemCount := 0
+	if binding != nil {
+		for _, binding := range binding.Spec.Bindings {
+			templateConfigItemCount += len(binding.TemplateRevisions)
+		}
+	}
+
+	return &pbds.GetTemplateAndNonTemplateCICountResp{
+		ConfigItemCount:         uint64(count),
+		TemplateConfigItemCount: uint64(templateConfigItemCount),
+	}, nil
+}
+
+// RemoveAppBoundTmplSet 移除服务绑定的套餐
+func (s *Service) RemoveAppBoundTmplSet(ctx context.Context, req *pbds.RemoveAppBoundTmplSetReq) (
+	*pbbase.EmptyResp, error) {
+
+	kit := kit.FromGrpcContext(ctx)
+
+	// 1. 查询该服务下的引用套餐
+	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kit, req.BizId, req.AppId)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "get reference template set under this app failed, err: %s", err))
+	}
+
+	specBindings := make([]*table.TemplateBinding, 0, len(binding.Spec.Bindings))
+	for _, spec := range binding.Spec.Bindings {
+		revisions := make([]*table.TemplateRevisionBinding, 0)
+		// 只需移除指定的模板套餐
+		if spec.TemplateSetID == req.TemplateSetId {
+			continue
+		}
+		revisions = append(revisions, spec.TemplateRevisions...)
+		specBinding := &table.TemplateBinding{
+			TemplateSetID:     spec.TemplateSetID,
+			TemplateRevisions: revisions,
+		}
+		specBindings = append(specBindings, specBinding)
+	}
+
+	templateIDs, latestTemplateIDs, templateRevisionIDs, templateSetIDs :=
+		[]uint32{}, []uint32{}, []uint32{}, []uint32{}
+	for _, specBinding := range specBindings {
+		for _, v := range specBinding.TemplateRevisions {
+			templateIDs = append(templateIDs, v.TemplateID)
+			if v.IsLatest {
+				latestTemplateIDs = append(latestTemplateIDs, v.TemplateID)
+			}
+			templateRevisionIDs = append(templateRevisionIDs, v.TemplateRevisionID)
+		}
+		templateSetIDs = append(templateSetIDs, specBinding.TemplateSetID)
+	}
+
+	// 根据套餐id获取空间id
+	templateSets, err := s.dao.TemplateSet().ListByIDs(kit, templateSetIDs)
+	if err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "list template sets by template set ids failed, err: %s", err))
+	}
+
+	templateSpaceIDs := []uint32{}
+	for _, v := range templateSets {
+		templateSpaceIDs = append(templateSpaceIDs, v.Attachment.TemplateSpaceID)
+	}
+
+	appTemplateBinding := &table.AppTemplateBinding{
+		ID: binding.ID,
+		Spec: &table.AppTemplateBindingSpec{
+			TemplateSpaceIDs:    templateSpaceIDs,
+			TemplateSetIDs:      templateSetIDs,
+			TemplateIDs:         tools.RemoveDuplicates(templateIDs),
+			TemplateRevisionIDs: tools.RemoveDuplicates(templateRevisionIDs),
+			LatestTemplateIDs:   tools.RemoveDuplicates(latestTemplateIDs),
+			Bindings:            specBindings,
+		},
+		Attachment: binding.Attachment,
+		Revision: &table.Revision{
+			Creator:   binding.Revision.Creator,
+			Reviser:   kit.User,
+			CreatedAt: binding.Revision.CreatedAt,
+			UpdatedAt: time.Now().UTC(),
+		},
+	}
+
+	if err = s.dao.AppTemplateBinding().Update(kit, appTemplateBinding); err != nil {
+		return nil, errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "remove the template set bound to the app failed, err: %s", err))
+	}
+
+	return &pbbase.EmptyResp{}, nil
+}
+
+// checkExistingPathConflict Check existing path collections for conflicts.
+func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
+	conflictPaths := make(map[string]bool, len(existing))
+	var conflictNums uint32
+	conflictMap := make(map[string]bool, 0)
+	// 遍历每一个路径
+	for i := 0; i < len(existing); i++ {
+		// 检查当前路径与后续路径之间是否存在冲突
+		for j := i + 1; j < len(existing); j++ {
+			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
+				// 相等也算冲突
+				if len(existing[j]) == len(existing[i]) {
+					conflictNums++
+				} else if len(existing[j]) < len(existing[i]) {
+					conflictMap[existing[j]] = true
+				} else {
+					conflictMap[existing[i]] = true
+				}
+
+				conflictPaths[existing[i]] = true
+				conflictPaths[existing[j]] = true
+			}
+		}
+	}
+
+	return uint32(len(conflictMap)) + conflictNums, conflictPaths
 }
 
 // 清空草稿区
@@ -933,1077 +2180,4 @@ func (s *Service) compareConfigItem(_ *kit.Kit, new *pbds.BatchUpsertConfigItems
 		contentDiff = true
 	}
 	return //nolint
-}
-
-// UpdateConfigItem update config item.
-func (s *Service) UpdateConfigItem(ctx context.Context, req *pbds.UpdateConfigItemReq) (
-	*pbbase.EmptyResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	ci := &table.ConfigItem{
-		ID:         req.Id,
-		Spec:       req.Spec.ConfigItemSpec(),
-		Attachment: req.Attachment.ConfigItemAttachment(),
-		Revision: &table.Revision{
-			Reviser: grpcKit.User,
-		},
-	}
-	if err := s.dao.ConfigItem().Update(grpcKit, ci); err != nil {
-		logs.Errorf("update config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return new(pbbase.EmptyResp), nil
-}
-
-// DeleteConfigItem delete config item.
-func (s *Service) DeleteConfigItem(ctx context.Context, req *pbds.DeleteConfigItemReq) (*pbbase.EmptyResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	ci := &table.ConfigItem{
-		ID:         req.Id,
-		Attachment: req.Attachment.ConfigItemAttachment(),
-	}
-	if err := s.dao.ConfigItem().Delete(grpcKit, ci); err != nil {
-		logs.Errorf("delete config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	return new(pbbase.EmptyResp), nil
-}
-
-// GetConfigItem get config item detail
-func (s *Service) GetConfigItem(ctx context.Context, req *pbds.GetConfigItemReq) (*pbci.ConfigItem, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.Id, req.BizId)
-	if err != nil {
-		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	resp := pbci.PbConfigItem(configItem, "")
-	return resp, nil
-}
-
-// ListConfigItems list config items by query condition.
-// nolint:funlen,gocyclo
-func (s *Service) ListConfigItems(ctx context.Context, req *pbds.ListConfigItemsReq) (*pbds.ListConfigItemsResp,
-	error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	// validate the page params
-	opt := &types.BasePage{Start: req.Start, Limit: uint(req.Limit), All: req.All}
-	if err := opt.Validate(types.DefaultPageOption); err != nil {
-		return nil, err
-	}
-
-	// search all editing config items
-	details, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, req.AppId, req.BizId)
-	if err != nil {
-		logs.Errorf("list editing config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	configItems := make([]*pbci.ConfigItem, 0)
-	// if WithStatus is true, the config items includes the deleted ones and file state, else  without these data
-	if req.WithStatus {
-		var fileReleased []*table.ReleasedConfigItem
-		fileReleased, err = s.dao.ReleasedCI().GetReleasedLately(grpcKit, req.BizId, req.AppId)
-		if err != nil {
-			logs.Errorf("get released failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-
-		var commits []*table.Commit
-		commits, err = s.dao.Commit().ListAppLatestCommits(grpcKit, req.BizId, req.AppId)
-		if err != nil {
-			logs.Errorf("get commit, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		configItems = pbrci.PbConfigItemState(details, fileReleased, commits, req.Status)
-	} else {
-		for _, ci := range details {
-			configItems = append(configItems, pbci.PbConfigItem(ci, ""))
-		}
-	}
-
-	if err = s.setCommitSpecForCIs(grpcKit, configItems); err != nil {
-		logs.Errorf("set commit spec for config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	existingPaths := []string{}
-	for _, v := range configItems {
-		if v.FileState != constant.FileStateDelete {
-			existingPaths = append(existingPaths, path.Join(v.Spec.Path, v.Spec.Name))
-		}
-	}
-
-	conflictNums, conflictPaths, err := s.compareTemplateConfConflicts(grpcKit, req.BizId, req.AppId, existingPaths)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range configItems {
-		if v.FileState != constant.FileStateDelete {
-			v.IsConflict = conflictPaths[path.Join(v.Spec.Path, v.Spec.Name)]
-		}
-	}
-
-	// search by logic
-	if req.SearchValue != "" {
-		var searcher search.Searcher
-		searcher, err = search.NewSearcher(req.SearchFields, req.SearchValue, search.ConfigItem)
-		if err != nil {
-			return nil, err
-		}
-		fields := searcher.SearchFields()
-		fieldsMap := make(map[string]bool)
-		for _, f := range fields {
-			fieldsMap[f] = true
-		}
-		fieldsMap["combinedPathName"] = true
-		cis := make([]*pbci.ConfigItem, 0)
-		for _, ci := range configItems {
-			combinedPathName := path.Join(ci.Spec.Path, ci.Spec.Name)
-			if (fieldsMap["combinedPathName"] && strings.Contains(combinedPathName, req.SearchValue)) ||
-				(fieldsMap["memo"] && strings.Contains(ci.Spec.Memo, req.SearchValue)) ||
-				(fieldsMap["creator"] && strings.Contains(ci.Revision.Creator, req.SearchValue)) ||
-				(fieldsMap["reviser"] && strings.Contains(ci.Revision.Reviser, req.SearchValue)) {
-				cis = append(cis, ci)
-			}
-		}
-		configItems = cis
-	}
-
-	// page by logic
-	var start, end uint32 = 0, uint32(len(configItems))
-	if !req.All {
-		if req.Start < uint32(len(configItems)) {
-			start = req.Start
-		}
-		if req.Start+req.Limit < uint32(len(configItems)) {
-			end = req.Start + req.Limit
-		} else {
-			end = uint32(len(configItems))
-		}
-	}
-
-	// 如果有topID则按照topID排最前面
-	sort.SliceStable(configItems, func(i, j int) bool {
-		iInTopID := tools.Contains(req.Ids, configItems[i].Id)
-		jInTopID := tools.Contains(req.Ids, configItems[j].Id)
-		if iInTopID && jInTopID {
-			return i < j
-		}
-		if iInTopID {
-			return true
-		}
-		if jInTopID {
-			return false
-		}
-		return i < j
-	})
-	resp := &pbds.ListConfigItemsResp{
-		Count:          uint32(len(configItems)),
-		Details:        configItems[start:end],
-		ConflictNumber: conflictNums,
-	}
-	return resp, nil
-}
-
-// 检测冲突，非模板配置之间对比、非模板配置对比套餐模板配置、空间套餐之间的对比
-// 1. 先把非配置模板 path+name 添加到 existingPaths 中
-// 2. 把所有关联的空间套餐配置都添加到 existingPaths 中
-func (s *Service) compareTemplateConfConflicts(grpcKit *kit.Kit, bizID, appID uint32, existingPaths []string) (
-	uint32, map[string]bool, error) {
-
-	tmplRevisions, err := s.ListAppBoundTmplRevisions(grpcKit.RpcCtx(), &pbds.ListAppBoundTmplRevisionsReq{
-		BizId:      bizID,
-		AppId:      appID,
-		All:        true,
-		WithStatus: true,
-	})
-	if err != nil {
-		return 0, nil, err
-	}
-
-	for _, revision := range tmplRevisions.GetDetails() {
-		if revision.FileState != constant.FileStateDelete {
-			existingPaths = append(existingPaths, path.Join(revision.Path, revision.Name))
-		}
-	}
-
-	conflictNums, conflictPaths := checkExistingPathConflict(existingPaths)
-
-	return conflictNums, conflictPaths, nil
-}
-
-// setCommitSpecForCIs set commit spec for config items
-func (s *Service) setCommitSpecForCIs(kt *kit.Kit, cis []*pbci.ConfigItem) error {
-	ids := make([]uint32, len(cis))
-	for i, ci := range cis {
-		ids[i] = ci.Id
-	}
-
-	commits, err := s.dao.Commit().BatchListLatestCommits(kt, kt.BizID, kt.AppID, ids)
-	if err != nil {
-		logs.Errorf("batch list latest commits failed, err: %v, rid: %s", err, kt.Rid)
-		return err
-	}
-	commitMap := make(map[uint32]*table.CommitSpec, len(commits))
-	for _, c := range commits {
-		commitMap[c.Attachment.ConfigItemID] = c.Spec
-	}
-
-	for _, ci := range cis {
-		ci.CommitSpec = pbcommit.PbCommitSpec(commitMap[ci.Id])
-	}
-
-	return nil
-}
-
-// ListConfigItemCount list config items count.
-func (s *Service) ListConfigItemCount(ctx context.Context, req *pbds.ListConfigItemCountReq) (
-	*pbds.ListConfigItemCountResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	appIDMap := make(map[uint32]uint32, len(req.AppId))
-	for _, id := range req.AppId {
-		appIDMap[id] = id
-	}
-
-	count, err := s.dao.ConfigItem().GetCount(grpcKit, req.BizId, req.AppId)
-	if err != nil {
-		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	var appIds = []uint32{}
-	for _, detail := range count {
-		delete(appIDMap, detail.AppId)
-	}
-	if len(appIDMap) > 0 {
-		for _, appID := range appIDMap {
-			appIds = append(appIds, appID)
-		}
-		kvDetails, err := s.dao.Kv().GetCount(grpcKit, req.BizId, appIds)
-		if err != nil {
-			logs.Errorf("list kv failed, err: %v, rid: %s", err, grpcKit.Rid)
-			return nil, err
-		}
-		count = append(count, kvDetails...)
-	}
-
-	resp := &pbds.ListConfigItemCountResp{
-		Details: pbci.PbConfigItemCounts(count, req.AppId),
-	}
-
-	return resp, nil
-}
-
-// ListConfigItemByTuple 按照多个字段in查询
-func (s *Service) ListConfigItemByTuple(ctx context.Context, req *pbds.ListConfigItemByTupleReq) (
-	*pbds.ListConfigItemByTupleResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-	data := [][]interface{}{}
-	for _, item := range req.Items {
-		data = append(data, []interface{}{item.BizId, item.AppId, item.Name, item.Path})
-	}
-	tuple, err := s.dao.ConfigItem().ListConfigItemByTuple(grpcKit, data)
-	if err != nil {
-		logs.Errorf("list config item by tuple failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	configItems := []*pbci.ConfigItem{}
-	for _, item := range tuple {
-		configItems = append(configItems, pbci.PbConfigItem(item, ""))
-	}
-	resp := &pbds.ListConfigItemByTupleResp{ConfigItems: configItems}
-	return resp, nil
-}
-
-// UnDeleteConfigItem 配置项未命名版本恢复
-// nolint:funlen
-func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbds.UnDeleteConfigItemReq) (*pbbase.EmptyResp, error) {
-
-	grpcKit := kit.FromGrpcContext(ctx)
-	// 判断是否需要恢复
-	configItem, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logs.Errorf("get config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
-	}
-	if configItem != nil && configItem.ID != 0 {
-		return nil, errors.New(i18n.T(grpcKit, "the data has not been deleted"))
-	}
-
-	// 获取该服务最新发布的 release_id
-	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "get the latest released version failed, err: %v", err))
-	}
-
-	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
-	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
-		release.Attachment.AppID, release.ID, req.GetId())
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "get the published config failed, err: %v", err))
-	}
-
-	ci, err := s.dao.ConfigItem().GetByUniqueKey(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
-		releaseCi.ConfigItemSpec.Name, releaseCi.ConfigItemSpec.Path)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(grpcKit, "get config item failed, err: %v", err))
-	}
-
-	newFiles := []tools.CIUniqueKey{{
-		Name: releaseCi.ConfigItemSpec.Name,
-		Path: releaseCi.ConfigItemSpec.Path,
-	}}
-
-	// 检测配置项路径冲突以及是否超出服务限制
-	if err = s.checkRestorePrerequisites(grpcKit, req.Attachment.BizId, req.Attachment.AppId,
-		newFiles, ci); err != nil {
-		return nil, err
-	}
-
-	commitID, contentID := []uint32{}, []uint32{}
-	tx := s.dao.GenQuery().Begin()
-	// 判断是不是新增的数据
-	if ci != nil && ci.ID != 0 {
-		rci, errCi := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
-			release.Attachment.AppID, release.ID, ci.ID)
-		if errCi != nil && !errors.Is(errCi, gorm.ErrRecordNotFound) {
-			return nil, errf.Errorf(errf.DBOpFailed,
-				i18n.T(grpcKit, "get the published config failed, err: %v", errCi))
-		}
-		if rci != nil && rci.ID != 0 {
-			return nil, errors.New(i18n.T(grpcKit,
-				`recovery failed. A file with the same path exists and is not in a new state`))
-		}
-		if err = s.dao.ConfigItem().DeleteWithTx(grpcKit, tx, ci); err != nil {
-			logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-			if rErr := tx.Rollback(); rErr != nil {
-				logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-			}
-			return nil, errf.Errorf(errf.DBOpFailed,
-				i18n.T(grpcKit, "recover config item failed, err: %v", err))
-		}
-	}
-
-	// 恢复到最新发布的版本，删除修改的数据
-	// 获取大于最新发布版本的记录
-	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
-		req.Attachment.AppId, req.Id)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "get records greater than the latest released version failed, err: %v", err))
-	}
-
-	for _, v := range rc {
-		commitID = append(commitID, v.ID)
-		contentID = append(contentID, v.Spec.ContentID)
-	}
-
-	if err = s.dao.Commit().BatchDeleteWithTx(grpcKit, tx, commitID); err != nil {
-		logs.Errorf("undo commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "recover config item failed, err: %v", err))
-	}
-
-	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
-		logs.Errorf("undo content failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "recover config item failed, err: %v", err))
-	}
-
-	data := &table.ConfigItem{
-		ID:         releaseCi.ConfigItemID,
-		Spec:       releaseCi.ConfigItemSpec,
-		Attachment: releaseCi.Attachment,
-		Revision:   releaseCi.Revision,
-	}
-	if err = s.dao.ConfigItem().RecoverConfigItem(grpcKit, tx, data); err != nil {
-		logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "recover config item failed, err: %v", err))
-	}
-	if e := tx.Commit(); e != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(grpcKit, "recover config item failed, err: %v", e))
-	}
-
-	return new(pbbase.EmptyResp), nil
-}
-
-// 检测恢复配置文件的前置条件
-func (s *Service) checkRestorePrerequisites(kit *kit.Kit, bizID, appID uint32, newFiles []tools.CIUniqueKey,
-	ci *table.ConfigItem) error {
-
-	// 获取指定服务下的配置项
-	configs, err := s.dao.ConfigItem().ListAllByAppID(kit, appID, bizID)
-	if err != nil {
-		return err
-	}
-	existingFiles := []tools.CIUniqueKey{}
-	for _, v := range configs {
-		existingFiles = append(existingFiles, tools.CIUniqueKey{
-			Name: v.Spec.Name,
-			Path: v.Spec.Path,
-		})
-	}
-
-	// 检测文件冲突
-	// /a 和 /a/1.txt这类的冲突
-	if err = tools.DetectFilePathConflicts(kit, newFiles, existingFiles); err != nil {
-		return err
-	}
-
-	// 获取当前服务配置项数+模板数量
-	configItemCount, err := s.GetTemplateAndNonTemplateCICount(kit.RpcCtx(),
-		&pbds.GetTemplateAndNonTemplateCICountReq{
-			BizId: bizID,
-			AppId: appID,
-		})
-	if err != nil {
-		return err
-	}
-
-	totalConfigItemCount := int(configItemCount.GetConfigItemCount()) +
-		int(configItemCount.GetTemplateConfigItemCount()) + 1
-
-	if ci != nil && ci.ID != 0 {
-		totalConfigItemCount--
-	}
-
-	appConfigCnt := getAppConfigCnt(bizID)
-
-	if totalConfigItemCount > appConfigCnt {
-		return errf.New(errf.InvalidParameter,
-			i18n.T(kit, `the total number of config items(including template and non-template) 
-			exceeded the limit %d`, appConfigCnt))
-	}
-
-	return nil
-}
-
-// UndoConfigItem 撤消配置项
-func (s *Service) UndoConfigItem(ctx context.Context, req *pbds.UndoConfigItemReq) (*pbbase.EmptyResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	// 判断是否存在
-	_, err := s.dao.ConfigItem().Get(grpcKit, req.GetId(), req.Attachment.BizId)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("data does not exist")
-		}
-	}
-
-	// 获取该服务最新发布的 release_id
-	release, err := s.dao.Release().GetReleaseLately(grpcKit, req.Attachment.BizId, req.Attachment.AppId)
-	if err != nil {
-		return nil, err
-	}
-
-	// 通过最新发布 release_id + config_item_id 获取需要恢复的数据
-	releaseCi, err := s.dao.ReleasedCI().Get(grpcKit, req.Attachment.BizId,
-		release.Attachment.AppID, release.ID, req.GetId())
-	if err != nil {
-		return nil, err
-	}
-
-	rc, err := s.dao.Commit().ListCommitsByGtID(grpcKit, releaseCi.CommitID, req.Attachment.BizId,
-		req.Attachment.AppId, req.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	commitID := []uint32{}
-	contentID := []uint32{}
-	for _, v := range rc {
-		commitID = append(commitID, v.ID)
-		contentID = append(contentID, v.Spec.ContentID)
-	}
-
-	tx := s.dao.GenQuery().Begin()
-	if err = s.dao.Commit().BatchDeleteWithTx(grpcKit, tx, commitID); err != nil {
-		logs.Errorf("undo commit failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, err
-	}
-
-	if err = s.dao.Content().BatchDeleteWithTx(grpcKit, tx, contentID); err != nil {
-		logs.Errorf("undo content failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, err
-	}
-
-	data := &table.ConfigItem{
-		ID:         releaseCi.ConfigItemID,
-		Spec:       releaseCi.ConfigItemSpec,
-		Attachment: releaseCi.Attachment,
-		Revision:   releaseCi.Revision,
-	}
-
-	if err = s.dao.ConfigItem().UpdateWithTx(grpcKit, tx, data); err != nil {
-		logs.Errorf("recover config item failed, err: %v, rid: %s", err, grpcKit.Rid)
-		if rErr := tx.Rollback(); rErr != nil {
-			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, grpcKit.Rid)
-		}
-		return nil, err
-	}
-	if e := tx.Commit(); e != nil {
-		logs.Errorf("commit transaction failed, err: %v, rid: %s", e, grpcKit.Rid)
-		return nil, e
-	}
-
-	return new(pbbase.EmptyResp), nil
-}
-
-// CompareConfigItemConflicts compare config item version conflicts
-func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbds.CompareConfigItemConflictsReq) (
-	*pbds.CompareConfigItemConflictsResp, error) {
-	grpcKit := kit.FromGrpcContext(ctx)
-
-	nonTemplateConfig, err := s.handleNonTemplateConfig(grpcKit, req.GetBizId(), req.GetAppId(),
-		req.GetOtherAppId(), req.GetReleaseId())
-	if err != nil {
-		return nil, err
-	}
-
-	templateConfig, err := s.handleTemplateConfig(grpcKit, req.GetBizId(), req.GetAppId(),
-		req.GetOtherAppId(), req.GetReleaseId())
-	if err != nil {
-		return nil, err
-	}
-
-	return &pbds.CompareConfigItemConflictsResp{
-		NonTemplateConfigs: nonTemplateConfig,
-		TemplateConfigs:    templateConfig,
-	}, nil
-}
-
-// 处理非模板配置
-func (s *Service) handleNonTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32) (
-	[]*pbds.CompareConfigItemConflictsResp_NonTemplateConfig, error) {
-
-	nonTemplateConfigs := make([]*pbds.CompareConfigItemConflictsResp_NonTemplateConfig, 0)
-
-	// 获取未命名版本配置文件
-	ci, err := s.dao.ConfigItem().ListAllByAppID(grpcKit, appID, bizID)
-	if err != nil {
-		logs.Errorf("list config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	conflicts := make(map[string]bool)
-	for _, v := range ci {
-		conflicts[path.Join(v.Spec.Path, v.Spec.Name)] = true
-	}
-
-	// 获取已发布版本的配置文件
-	rci, count, err := s.dao.ReleasedCI().List(grpcKit, bizID, otherAppId, releaseId, nil, &types.BasePage{
-		All: true,
-	}, "")
-	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	if count == 0 {
-		return nonTemplateConfigs, nil
-	}
-
-	configItems := make(map[string]bool)
-	for _, v := range rci {
-		configItems[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)] = true
-	}
-
-	vars, err := s.getReleasedNonTemplateConfigVariables(grpcKit, bizID, otherAppId, releaseId)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, v := range rci {
-		nonTemplateConfigs = append(nonTemplateConfigs, &pbds.CompareConfigItemConflictsResp_NonTemplateConfig{
-			Id: v.ConfigItemID,
-			ConfigItemSpec: &pbci.ConfigItemSpec{
-				Name:     v.ConfigItemSpec.Name,
-				Path:     v.ConfigItemSpec.Path,
-				FileType: string(v.ConfigItemSpec.FileType),
-				FileMode: string(v.ConfigItemSpec.FileMode),
-				Memo:     v.ConfigItemSpec.Memo,
-				Permission: &pbci.FilePermission{
-					User:      v.ConfigItemSpec.Permission.User,
-					UserGroup: v.ConfigItemSpec.Permission.UserGroup,
-					Privilege: v.ConfigItemSpec.Permission.Privilege,
-				},
-			},
-			Variables: vars[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
-			IsExist:   conflicts[path.Join(v.ConfigItemSpec.Path, v.ConfigItemSpec.Name)],
-			Signature: v.CommitSpec.Content.OriginSignature,
-			ByteSize:  v.CommitSpec.Content.OriginByteSize,
-			Md5:       v.CommitSpec.Content.Md5,
-		})
-	}
-
-	return nonTemplateConfigs, nil
-}
-
-// 处理模板套餐配置
-func (s *Service) handleTemplateConfig(grpcKit *kit.Kit, bizID, appID, otherAppId, releaseId uint32) (
-	[]*pbds.CompareConfigItemConflictsResp_TemplateConfig, error) {
-	templateConfigs := make([]*pbds.CompareConfigItemConflictsResp_TemplateConfig, 0)
-
-	// 获取已发布版本的空间、套餐、配置文件
-	rp, count, err := s.dao.ReleasedAppTemplate().List(grpcKit, bizID, otherAppId, releaseId, nil, &types.BasePage{
-		All: true,
-	}, "")
-	if err != nil {
-		logs.Errorf("list released app template revisions failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	if count == 0 {
-		return templateConfigs, nil
-	}
-
-	noNamespacePackage, err := s.getConfigTemplateSet(grpcKit, bizID, appID)
-	if err != nil {
-		return nil, err
-	}
-
-	releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds := []uint32{}, []uint32{}, []uint32{}
-	releaseTemplateSpaceIdsExist, releaseTemplateSetIdsExist := make(map[uint32]bool), make(map[uint32]bool)
-	tmplSetMap := make(map[uint32][]*table.ReleasedAppTemplate)
-	for _, v := range rp {
-		tmplSetMap[v.Spec.TemplateSetID] = append(tmplSetMap[v.Spec.TemplateSetID], v)
-		if !releaseTemplateSpaceIdsExist[v.Spec.TemplateSpaceID] {
-			releaseTemplateSpaceIds = append(releaseTemplateSpaceIds, v.Spec.TemplateSpaceID)
-			releaseTemplateSpaceIdsExist[v.Spec.TemplateSpaceID] = true
-		}
-		if !releaseTemplateSetIdsExist[v.Spec.TemplateSetID] {
-			releaseTemplateSetIds = append(releaseTemplateSetIds, v.Spec.TemplateSetID)
-			releaseTemplateSetIdsExist[v.Spec.TemplateSetID] = true
-		}
-		releaseTemplateIds = append(releaseTemplateIds, v.Spec.TemplateID)
-	}
-
-	templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, err :=
-		s.getTemplateSpaceSetfile(grpcKit, releaseTemplateSpaceIds, releaseTemplateSetIds, releaseTemplateIds)
-	if err != nil {
-		return nil, err
-	}
-
-	nonExistentTemplateIds := make(map[uint32]bool)
-	for _, v := range releaseTemplateIds {
-		if !templateExist[v] {
-			nonExistentTemplateIds[v] = true
-		}
-	}
-
-	vars, err := s.getReleasedTemplateConfigVariables(grpcKit, bizID, otherAppId, releaseId, nonExistentTemplateIds)
-	if err != nil {
-		return nil, err
-	}
-
-	for id, revisions := range tmplSetMap {
-		group := &pbds.CompareConfigItemConflictsResp_TemplateConfig{
-			TemplateSpaceId:    revisions[0].Spec.TemplateSpaceID,
-			TemplateSpaceName:  revisions[0].Spec.TemplateSpaceName,
-			TemplateSetId:      id,
-			TemplateSetName:    revisions[0].Spec.TemplateSetName,
-			TemplateSpaceExist: templateSpaceExist[revisions[0].Spec.TemplateSpaceID],
-			TemplateSetExist:   templateSetExist[id],
-			IsExist:            noNamespacePackage[fmt.Sprintf("%d-%d", revisions[0].Spec.TemplateSpaceID, id)],
-			TemplateSetIsEmpty: templateSetTemplateExist[id],
-		}
-		for _, r := range revisions {
-			// 历史套餐模板文件被删除了
-			if !templateExist[r.Spec.TemplateID] {
-				continue
-			}
-			// 历史套餐模板不在现有套餐模板中, 被移走了
-			if !currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", r.Spec.TemplateSpaceID,
-				r.Spec.TemplateSetID, r.Spec.TemplateID)] {
-				continue
-			}
-			group.TemplateRevisions = append(group.TemplateRevisions,
-				&pbds.CompareConfigItemConflictsResp_TemplateConfig_TemplateRevisionDetail{
-					TemplateId:         r.Spec.TemplateID,
-					TemplateRevisionId: r.Spec.TemplateRevisionID,
-					IsLatest:           r.Spec.IsLatest,
-					Variables:          vars[path.Join(r.Spec.Path, r.Spec.Name)],
-				})
-		}
-		templateConfigs = append(templateConfigs, group)
-	}
-
-	return templateConfigs, nil
-}
-
-// 返回空间、套餐、模板配置数据
-func (s *Service) getTemplateSpaceSetfile(grpcKit *kit.Kit, templateSpaceIds, templateSetIds, templateIds []uint32) (
-	map[uint32]bool, map[uint32]bool, map[string]bool, map[uint32]bool, map[uint32]bool, error) {
-	// 获取空间
-	templateSpace, err := s.dao.TemplateSpace().ListByIDs(grpcKit, templateSpaceIds)
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	templateSpaceExist := make(map[uint32]bool)
-	for _, v := range templateSpace {
-		templateSpaceExist[v.ID] = true
-	}
-
-	// 获取套餐
-	templateSet, err := s.dao.TemplateSet().ListByIDs(grpcKit, templateSetIds)
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	templateSetExist := make(map[uint32]bool)
-	currentSpaceSetTemplateExist := make(map[string]bool)
-	templateSetTemplateExist := make(map[uint32]bool)
-	for _, v := range templateSet {
-		templateSetTemplateExist[v.ID] = false
-		if len(v.Spec.TemplateIDs) == 0 {
-			templateSetTemplateExist[v.ID] = true
-		}
-		templateSetExist[v.ID] = true
-		for _, tid := range v.Spec.TemplateIDs {
-			currentSpaceSetTemplateExist[fmt.Sprintf("%d-%d-%d", v.Attachment.TemplateSpaceID, v.ID, tid)] = true
-		}
-	}
-
-	// 获取模板
-	template, err := s.dao.Template().ListByIDs(grpcKit, templateIds)
-	if err != nil {
-		return nil, nil, nil, nil, nil, err
-	}
-	templateExist := make(map[uint32]bool)
-	for _, v := range template {
-		templateExist[v.ID] = true
-	}
-
-	return templateSpaceExist, templateSetExist, currentSpaceSetTemplateExist, templateExist, templateSetTemplateExist, nil
-}
-
-// 获取未命名版本的模板套餐
-func (s *Service) getConfigTemplateSet(grpcKit *kit.Kit, bizID, appID uint32) (
-	map[string]bool, error) {
-
-	noNamespacePackage := make(map[string]bool)
-
-	tmplSetInfo, count, err := s.dao.AppTemplateBinding().List(grpcKit, bizID, appID, &types.BasePage{All: true})
-	if err != nil {
-		return nil, err
-	}
-
-	if count == 0 {
-		return noNamespacePackage, nil
-	}
-
-	tmplSets, err := s.dao.TemplateSet().ListByIDs(grpcKit, tmplSetInfo[0].Spec.TemplateSetIDs)
-	if err != nil {
-		logs.Errorf("list template sets failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	tmplSetMap := make(map[uint32]*table.TemplateSet)
-	tmplSpaceIDs := make([]uint32, 0)
-	for _, ts := range tmplSets {
-		tmplSetMap[ts.ID] = ts
-		tmplSpaceIDs = append(tmplSpaceIDs, ts.Attachment.TemplateSpaceID)
-	}
-	tmplSpaceIDs = tools.RemoveDuplicates(tmplSpaceIDs)
-
-	// template space details
-	tmplSpaces, err := s.dao.TemplateSpace().ListByIDs(grpcKit, tmplSpaceIDs)
-	if err != nil {
-		logs.Errorf("list template spaces failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	tmplSpaceMap := make(map[uint32]*table.TemplateSpace)
-	for _, ts := range tmplSpaces {
-		tmplSpaceMap[ts.ID] = ts
-	}
-
-	details := make([]*pbtset.TemplateSetBriefInfo, len(tmplSets))
-	for idx, t := range tmplSets {
-		details[idx] = &pbtset.TemplateSetBriefInfo{
-			TemplateSpaceId:   t.Attachment.TemplateSpaceID,
-			TemplateSpaceName: tmplSpaceMap[t.Attachment.TemplateSpaceID].Spec.Name,
-			TemplateSetId:     t.ID,
-			TemplateSetName:   tmplSetMap[t.ID].Spec.Name,
-		}
-	}
-
-	for _, tmplSet := range details {
-		noNamespacePackage[fmt.Sprintf("%d-%d", tmplSet.TemplateSpaceId, tmplSet.TemplateSetId)] = true
-	}
-
-	return noNamespacePackage, nil
-}
-
-// 获取已发布的模板配置变量
-func (s *Service) getReleasedTemplateConfigVariables(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32,
-	templateIds map[uint32]bool) (map[string][]*pbtv.TemplateVariableSpec, error) {
-	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
-
-	releasedTmpls, count, err := s.dao.ReleasedAppTemplate().List(grpcKit, bizID, otherAppId, releaseId,
-		nil, &types.BasePage{All: true}, "")
-	if err != nil {
-		logs.Errorf("list released app templates failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	if count == 0 {
-		return varsMap, nil
-	}
-
-	tmplRevisions := getTmplRevisionsFromReleased(releasedTmpls)
-	tmplRevisions = filterSizeForTmplRevisions(tmplRevisions)
-
-	newTmplRevisions := make([]*table.TemplateRevision, 0)
-	for _, v := range tmplRevisions {
-		if templateIds[v.Attachment.TemplateID] {
-			continue
-		}
-		newTmplRevisions = append(newTmplRevisions, v)
-	}
-
-	refs, err := s.getVariableReferences(grpcKit, newTmplRevisions, nil)
-	if err != nil {
-		logs.Errorf("get variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	resfMap := make(map[string][]string, 0)
-	for _, v := range refs {
-		for _, ref := range v.GetReferences() {
-			filePath := path.Join(ref.Path, ref.Name)
-			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
-		}
-	}
-
-	vars, err := s.dao.ReleasedAppTemplateVariable().ListVariables(grpcKit, bizID, otherAppId, releaseId)
-	if err != nil {
-		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	for _, v := range vars {
-		for key, name := range resfMap {
-			for _, n := range name {
-				if v.Name == n {
-					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
-						Name: n, Type: string(v.Type), DefaultVal: v.DefaultVal, Memo: v.Memo,
-					})
-				}
-			}
-		}
-	}
-
-	return varsMap, nil
-}
-
-// 获取已发布的非配置配置变量
-func (s *Service) getReleasedNonTemplateConfigVariables(grpcKit *kit.Kit, bizID, otherAppId, releaseId uint32) (
-	map[string][]*pbtv.TemplateVariableSpec, error) {
-	varsMap := make(map[string][]*pbtv.TemplateVariableSpec, 0)
-
-	releasedCIs, _, err := s.dao.ReleasedCI().List(grpcKit, bizID, otherAppId, releaseId, nil,
-		&types.BasePage{All: true}, "")
-	if err != nil {
-		logs.Errorf("list released config items failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-	cis := getPbConfigItemsFromReleased(releasedCIs)
-	cis = filterSizeForConfigItems(cis)
-
-	refs, err := s.getVariableReferences(grpcKit, nil, cis)
-	if err != nil {
-		logs.Errorf("get variable references failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	resfMap := make(map[string][]string, 0)
-	for _, v := range refs {
-		for _, ref := range v.GetReferences() {
-			filePath := path.Join(ref.Path, ref.Name)
-			resfMap[filePath] = append(resfMap[filePath], v.GetVariableName())
-		}
-	}
-
-	vars, err := s.dao.ReleasedAppTemplateVariable().ListVariables(grpcKit, bizID, otherAppId, releaseId)
-	if err != nil {
-		logs.Errorf("list released app template variables failed, err: %v, rid: %s", err, grpcKit.Rid)
-		return nil, err
-	}
-
-	for _, v := range vars {
-		for key, name := range resfMap {
-			for _, n := range name {
-				if v.Name == n {
-					varsMap[key] = append(varsMap[key], &pbtv.TemplateVariableSpec{
-						Name: n, Type: string(v.Type), DefaultVal: v.DefaultVal, Memo: v.Memo,
-					})
-				}
-			}
-		}
-	}
-
-	return varsMap, nil
-}
-
-// GetTemplateAndNonTemplateCICount 获取模板和非模板配置项数量
-func (s *Service) GetTemplateAndNonTemplateCICount(ctx context.Context, req *pbds.GetTemplateAndNonTemplateCICountReq) (
-	*pbds.GetTemplateAndNonTemplateCICountResp, error) {
-	kt := kit.FromGrpcContext(ctx)
-
-	count, err := s.dao.ConfigItem().GetConfigItemCount(kt, req.BizId, req.AppId)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "obtain the number of configuration items"))
-	}
-
-	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kt, req.BizId, req.AppId)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt,
-			"get template binding relationships through business and service IDs failed, err: %s", err))
-	}
-	templateConfigItemCount := 0
-	if binding != nil {
-		for _, binding := range binding.Spec.Bindings {
-			templateConfigItemCount += len(binding.TemplateRevisions)
-		}
-	}
-
-	return &pbds.GetTemplateAndNonTemplateCICountResp{
-		ConfigItemCount:         uint64(count),
-		TemplateConfigItemCount: uint64(templateConfigItemCount),
-	}, nil
-}
-
-// RemoveAppBoundTmplSet 移除服务绑定的套餐
-func (s *Service) RemoveAppBoundTmplSet(ctx context.Context, req *pbds.RemoveAppBoundTmplSetReq) (
-	*pbbase.EmptyResp, error) {
-
-	kit := kit.FromGrpcContext(ctx)
-
-	// 1. 查询该服务下的引用套餐
-	binding, err := s.dao.AppTemplateBinding().GetAppTemplateBindingByAppID(kit, req.BizId, req.AppId)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kit, "get reference template set under this app failed, err: %s", err))
-	}
-
-	specBindings := make([]*table.TemplateBinding, 0, len(binding.Spec.Bindings))
-	for _, spec := range binding.Spec.Bindings {
-		revisions := make([]*table.TemplateRevisionBinding, 0)
-		// 只需移除指定的模板套餐
-		if spec.TemplateSetID == req.TemplateSetId {
-			continue
-		}
-		revisions = append(revisions, spec.TemplateRevisions...)
-		specBinding := &table.TemplateBinding{
-			TemplateSetID:     spec.TemplateSetID,
-			TemplateRevisions: revisions,
-		}
-		specBindings = append(specBindings, specBinding)
-	}
-
-	templateIDs, latestTemplateIDs, templateRevisionIDs, templateSetIDs :=
-		[]uint32{}, []uint32{}, []uint32{}, []uint32{}
-	for _, specBinding := range specBindings {
-		for _, v := range specBinding.TemplateRevisions {
-			templateIDs = append(templateIDs, v.TemplateID)
-			if v.IsLatest {
-				latestTemplateIDs = append(latestTemplateIDs, v.TemplateID)
-			}
-			templateRevisionIDs = append(templateRevisionIDs, v.TemplateRevisionID)
-		}
-		templateSetIDs = append(templateSetIDs, specBinding.TemplateSetID)
-	}
-
-	// 根据套餐id获取空间id
-	templateSets, err := s.dao.TemplateSet().ListByIDs(kit, templateSetIDs)
-	if err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kit, "list template sets by template set ids failed, err: %s", err))
-	}
-
-	templateSpaceIDs := []uint32{}
-	for _, v := range templateSets {
-		templateSpaceIDs = append(templateSpaceIDs, v.Attachment.TemplateSpaceID)
-	}
-
-	appTemplateBinding := &table.AppTemplateBinding{
-		ID: binding.ID,
-		Spec: &table.AppTemplateBindingSpec{
-			TemplateSpaceIDs:    templateSpaceIDs,
-			TemplateSetIDs:      templateSetIDs,
-			TemplateIDs:         tools.RemoveDuplicates(templateIDs),
-			TemplateRevisionIDs: tools.RemoveDuplicates(templateRevisionIDs),
-			LatestTemplateIDs:   tools.RemoveDuplicates(latestTemplateIDs),
-			Bindings:            specBindings,
-		},
-		Attachment: binding.Attachment,
-		Revision: &table.Revision{
-			Creator:   binding.Revision.Creator,
-			Reviser:   kit.User,
-			CreatedAt: binding.Revision.CreatedAt,
-			UpdatedAt: time.Now().UTC(),
-		},
-	}
-
-	if err = s.dao.AppTemplateBinding().Update(kit, appTemplateBinding); err != nil {
-		return nil, errf.Errorf(errf.DBOpFailed,
-			i18n.T(kit, "remove the template set bound to the app failed, err: %s", err))
-	}
-
-	return &pbbase.EmptyResp{}, nil
-}
-
-// checkExistingPathConflict Check existing path collections for conflicts.
-func checkExistingPathConflict(existing []string) (uint32, map[string]bool) {
-	conflictPaths := make(map[string]bool, len(existing))
-	var conflictNums uint32
-	conflictMap := make(map[string]bool, 0)
-	// 遍历每一个路径
-	for i := 0; i < len(existing); i++ {
-		// 检查当前路径与后续路径之间是否存在冲突
-		for j := i + 1; j < len(existing); j++ {
-			if strings.HasPrefix(existing[j]+"/", existing[i]+"/") || strings.HasPrefix(existing[i]+"/", existing[j]+"/") {
-				// 相等也算冲突
-				if len(existing[j]) == len(existing[i]) {
-					conflictNums++
-				} else if len(existing[j]) < len(existing[i]) {
-					conflictMap[existing[j]] = true
-				} else {
-					conflictMap[existing[i]] = true
-				}
-
-				conflictPaths[existing[i]] = true
-				conflictPaths[existing[j]] = true
-			}
-		}
-	}
-
-	return uint32(len(conflictMap)) + conflictNums, conflictPaths
 }

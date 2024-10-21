@@ -18,6 +18,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/table"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 )
 
 // AppTemplateBinding convert pb AppTemplateBinding to table AppTemplateBinding
@@ -221,9 +222,6 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		TemplateRevisionMemo: s.Spec.TemplateRevisionMemo,
 		FileType:             s.Spec.FileType,
 		FileMode:             s.Spec.FileMode,
-		User:                 s.Spec.User,
-		UserGroup:            s.Spec.UserGroup,
-		Privilege:            s.Spec.Privilege,
 		Signature:            s.Spec.Signature,
 		ByteSize:             s.Spec.ByteSize,
 		OriginSignature:      s.Spec.OriginSignature,
@@ -233,6 +231,7 @@ func PbReleasedAppBoundTmplRevision(s *table.ReleasedAppTemplate) *ReleasedAppBo
 		CreateAt:             s.Revision.CreatedAt.Format(time.RFC3339),
 		UpdateAt:             s.Revision.UpdatedAt.Format(time.RFC3339),
 		Md5:                  s.Spec.Md5,
+		Permission:           pbci.PbFilePermission(s.Spec.Permission),
 	}
 }
 
@@ -254,13 +253,11 @@ func PbAppBoundTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTempl
 			TemplateRevisionMemo: r.Spec.TemplateRevisionMemo,
 			FileType:             r.Spec.FileType,
 			FileMode:             r.Spec.FileMode,
-			User:                 r.Spec.User,
-			UserGroup:            r.Spec.UserGroup,
-			Privilege:            r.Spec.Privilege,
 			Signature:            r.Spec.Signature,
 			ByteSize:             r.Spec.ByteSize,
 			Creator:              r.Revision.Creator,
 			CreateAt:             r.Revision.CreatedAt.Format(time.RFC3339),
+			Permission:           pbci.PbFilePermission(r.Spec.Permission),
 		}
 	}
 	return tmplRevisions

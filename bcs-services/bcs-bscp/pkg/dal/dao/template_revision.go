@@ -63,6 +63,12 @@ type TemplateRevision interface {
 		templateIDs []uint32) ([]*table.TemplateRevision, error)
 	// ListAllCISigns lists all template ci of one biz, no need care about apps for the unbound template ci
 	ListAllCISigns(kit *kit.Kit, bizID uint32) ([]string, error)
+	// UpdateUserPrivilegesWithTx 更新指定用户权限的配置项 (只是更新了user这个字段数据)
+	UpdateUserPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID uint32,
+		user, newUser string) error
+	// UpdateGroupPrivilegesWithTx 更新指定用户组权限的配置项 (只是更新了user_group这个字段数据)
+	UpdateGroupPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, templateSpaceID uint32,
+		userGroup, newUserGroup string) error
 }
 
 var _ TemplateRevision = new(templateRevisionDao)
@@ -71,6 +77,30 @@ type templateRevisionDao struct {
 	genQ     *gen.Query
 	idGen    IDGenInterface
 	auditDao AuditDao
+}
+
+// UpdateGroupPrivilegesWithTx implements TemplateRevision.
+func (dao *templateRevisionDao) UpdateGroupPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	templateSpaceID uint32, userGroup string, newUserGroup string) error {
+	m := tx.TemplateRevision
+
+	_, err := tx.TemplateRevision.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.UserGroup.Eq(userGroup)).
+		Update(m.UserGroup, newUserGroup)
+
+	return err
+}
+
+// UpdateUserPrivilegesWithTx implements TemplateRevision.
+func (dao *templateRevisionDao) UpdateUserPrivilegesWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID uint32,
+	templateSpaceID uint32, user string, newUser string) error {
+	m := tx.TemplateRevision
+
+	_, err := tx.TemplateRevision.WithContext(kit.Ctx).
+		Where(m.BizID.Eq(bizID), m.TemplateSpaceID.Eq(templateSpaceID), m.User.Eq(user)).
+		Update(m.User, newUser)
+
+	return err
 }
 
 // ListLatestGroupByTemplateIdsWithTx Lists the latest version groups by template ids with transaction.
@@ -133,11 +163,11 @@ func (dao *templateRevisionDao) Create(kit *kit.Kit, g *table.TemplateRevision) 
 	g.ID = id
 
 	ad := dao.auditDao.DecoratorV2(kit, g.Attachment.BizID).PrepareCreate(g)
-
+	m := dao.genQ.TemplateRevision
 	// 多个使用事务处理
 	createTx := func(tx *gen.Query) error {
 		q := tx.TemplateRevision.WithContext(kit.Ctx)
-		if err := q.Create(g); err != nil {
+		if err := q.Omit(m.Uid, m.Gid).Create(g); err != nil {
 			return err
 		}
 
@@ -166,9 +196,9 @@ func (dao *templateRevisionDao) CreateWithTx(kit *kit.Kit, tx *gen.QueryTx, g *t
 		return 0, err
 	}
 	g.ID = id
-
+	m := dao.genQ.TemplateRevision
 	q := tx.TemplateRevision.WithContext(kit.Ctx)
-	if err := q.Create(g); err != nil {
+	if err := q.Omit(m.Uid, m.Gid).Create(g); err != nil {
 		return 0, err
 	}
 
@@ -331,7 +361,8 @@ func (dao *templateRevisionDao) BatchCreateWithTx(kit *kit.Kit, tx *gen.QueryTx,
 		}
 		item.ID = ids[i]
 	}
-	return tx.Query.TemplateRevision.WithContext(kit.Ctx).CreateInBatches(revisions, 200)
+	m := dao.genQ.TemplateRevision
+	return tx.Query.TemplateRevision.WithContext(kit.Ctx).Omit(m.Uid, m.Gid).CreateInBatches(revisions, 200)
 }
 
 // ListLatestRevisionsGroupByTemplateIds Lists the latest version groups by template ids

@@ -126,9 +126,11 @@ func getTmplRevisionsFromReleased(releasedTmpls []*table.ReleasedAppTemplate) []
 				FileType:     table.FileFormat(r.Spec.FileType),
 				FileMode:     table.FileMode(r.Spec.FileMode),
 				Permission: &table.FilePermission{
-					User:      r.Spec.User,
-					UserGroup: r.Spec.UserGroup,
-					Privilege: r.Spec.Privilege,
+					User:      r.Spec.Permission.User,
+					UserGroup: r.Spec.Permission.UserGroup,
+					Privilege: r.Spec.Permission.Privilege,
+					Uid:       r.Spec.Permission.Uid,
+					Gid:       r.Spec.Permission.Gid,
 				},
 				ContentSpec: &table.ContentSpec{
 					Signature: r.Spec.OriginSignature,

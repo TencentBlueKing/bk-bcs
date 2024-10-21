@@ -40,8 +40,7 @@ import (
 )
 
 // CreateTemplate create template.
-//
-//nolint:funlen
+// nolint:funlen
 func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateReq) (*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
 
@@ -114,6 +113,38 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbds.CreateTemplateRe
 	templateID, err := s.dao.Template().CreateWithTx(kt, tx, template)
 	if err != nil {
 		logs.Errorf("create template failed, err: %v, rid: %s", err, kt.Rid)
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	userPrivilege := &table.UserPrivilege{
+		Spec: &table.UserPrivilegeSpec{
+			User: req.GetTrSpec().Permission.User,
+		},
+		Attachment: &table.UserPrivilegeAttachment{
+			BizID:           req.GetAttachment().BizId,
+			TemplateSpaceID: req.GetAttachment().TemplateSpaceId,
+			Uid:             req.GetTrSpec().GetPermission().Uid,
+		},
+	}
+
+	userGroupPrivilege := &table.UserGroupPrivilege{
+		Spec: &table.UserGroupPrivilegeSpec{
+			UserGroup: req.GetTrSpec().Permission.UserGroup,
+		},
+		Attachment: &table.UserGroupPrivilegeAttachment{
+			BizID:           req.GetAttachment().BizId,
+			TemplateSpaceID: req.GetAttachment().TemplateSpaceId,
+			Gid:             req.GetTrSpec().GetPermission().GetGid(),
+		},
+	}
+
+	// 2. 更新权限组
+	err = s.upsertSinglePermissions(kt, tx, req.Attachment.BizId, 0, req.Attachment.TemplateSpaceId,
+		userPrivilege, userGroupPrivilege, true)
+	if err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
@@ -891,6 +922,7 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbds.BatchUpser
 	// 2. 过滤出创建和更新的数据
 	createData, updateData := make([]*pbds.BatchUpsertTemplatesReq_Item, 0), make([]*pbds.BatchUpsertTemplatesReq_Item, 0)
 	updateIds := []uint32{}
+	userPrivileges, userGroupPrivileges := make([]*table.UserPrivilege, 0), make([]*table.UserGroupPrivilege, 0)
 	for _, item := range req.Items {
 		if item.GetTemplate().GetId() != 0 {
 			updateIds = append(updateIds, item.GetTemplate().GetId())
@@ -898,6 +930,28 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbds.BatchUpser
 		} else {
 			createData = append(createData, item)
 		}
+		userPrivileges = append(userPrivileges, &table.UserPrivilege{
+			Spec: &table.UserPrivilegeSpec{
+				User:          item.TemplateRevision.Spec.Permission.User,
+				PrivilegeType: table.PrivilegeTypeCustom,
+			},
+			Attachment: &table.UserPrivilegeAttachment{
+				BizID:           req.BizId,
+				TemplateSpaceID: req.TemplateSpaceId,
+				Uid:             item.GetTemplateRevision().GetSpec().GetPermission().Uid,
+			},
+		})
+		userGroupPrivileges = append(userGroupPrivileges, &table.UserGroupPrivilege{
+			Spec: &table.UserGroupPrivilegeSpec{
+				UserGroup:     item.TemplateRevision.Spec.Permission.UserGroup,
+				PrivilegeType: table.PrivilegeTypeCustom,
+			},
+			Attachment: &table.UserGroupPrivilegeAttachment{
+				BizID:           req.BizId,
+				TemplateSpaceID: req.TemplateSpaceId,
+				Gid:             item.GetTemplateRevision().GetSpec().GetPermission().Gid,
+			},
+		})
 	}
 
 	now := time.Now().UTC()
@@ -990,6 +1044,15 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbds.BatchUpser
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
 		}
 		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, "batch add templates to template sets failed, err: %s", err))
+	}
+
+	// 11. 处理模板权限组
+	if err := s.batcheUpsertPermissionGroup(kt, tx, req.BizId, 0, req.TemplateSpaceId, userPrivileges,
+		userGroupPrivileges, true); err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
 	}
 
 	if err := tx.Commit(); err != nil {

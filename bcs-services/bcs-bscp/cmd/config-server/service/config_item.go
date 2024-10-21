@@ -67,6 +67,8 @@ func (s *Service) CreateConfigItem(ctx context.Context, req *pbcs.CreateConfigIt
 				User:      req.User,
 				UserGroup: req.UserGroup,
 				Privilege: req.Privilege,
+				Uid:       req.Uid,
+				Gid:       req.Gid,
 			},
 		},
 		ContentSpec: &pbcontent.ContentSpec{
@@ -121,6 +123,8 @@ func (s *Service) BatchUpsertConfigItems(ctx context.Context, req *pbcs.BatchUps
 					User:      item.User,
 					UserGroup: item.UserGroup,
 					Privilege: item.Privilege,
+					Uid:       item.Uid,
+					Gid:       item.Gid,
 				},
 			},
 			ContentSpec: &pbcontent.ContentSpec{
@@ -190,6 +194,8 @@ func (s *Service) UpdateConfigItem(ctx context.Context, req *pbcs.UpdateConfigIt
 				User:      req.User,
 				UserGroup: req.UserGroup,
 				Privilege: req.Privilege,
+				Uid:       req.Uid,
+				Gid:       req.Gid,
 			},
 		},
 	}
@@ -696,6 +702,7 @@ func (s *Service) CompareConfigItemConflicts(ctx context.Context, req *pbcs.Comp
 				TemplateRevisionId: revision.TemplateRevisionId,
 				IsLatest:           revision.IsLatest,
 				Variables:          revision.GetVariables(),
+				Permission:         revision.GetPermission(),
 			})
 		}
 		templateConfigs = append(templateConfigs, &pbcs.CompareConfigItemConflictsResp_TemplateConfig{

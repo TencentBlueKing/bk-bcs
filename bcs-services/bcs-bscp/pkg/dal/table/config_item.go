@@ -381,6 +381,8 @@ type FilePermission struct {
 	UserGroup string `db:"user_group" json:"user_group" gorm:"column:user_group"`
 	// config file's privilege
 	Privilege string `db:"privilege" json:"privilege" gorm:"column:privilege"`
+	Uid       uint32 `db:"uid" json:"uid" gorm:"column:uid"`
+	Gid       uint32 `db:"gid" json:"gid" gorm:"column:gid"`
 }
 
 const (

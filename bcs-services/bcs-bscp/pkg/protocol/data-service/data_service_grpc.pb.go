@@ -198,6 +198,10 @@ const (
 	Data_ClientVersionStatistics_FullMethodName           = "/pbds.Data/ClientVersionStatistics"
 	Data_ListClientLabelAndAnnotation_FullMethodName      = "/pbds.Data/ListClientLabelAndAnnotation"
 	Data_ClientSpecificFailedReason_FullMethodName        = "/pbds.Data/ClientSpecificFailedReason"
+	Data_ListUserPrivileges_FullMethodName                = "/pbds.Data/ListUserPrivileges"
+	Data_DeleteUserPrivilege_FullMethodName               = "/pbds.Data/DeleteUserPrivilege"
+	Data_ListUserGroupPrivileges_FullMethodName           = "/pbds.Data/ListUserGroupPrivileges"
+	Data_DeleteUserGroupPrivilege_FullMethodName          = "/pbds.Data/DeleteUserGroupPrivilege"
 	Data_ListInstances_FullMethodName                     = "/pbds.Data/ListInstances"
 	Data_FetchInstanceInfo_FullMethodName                 = "/pbds.Data/FetchInstanceInfo"
 	Data_Ping_FullMethodName                              = "/pbds.Data/Ping"
@@ -406,6 +410,12 @@ type DataClient interface {
 	ClientVersionStatistics(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ListClientLabelAndAnnotation(ctx context.Context, in *ListClientLabelAndAnnotationReq, opts ...grpc.CallOption) (*structpb.Struct, error)
 	ClientSpecificFailedReason(ctx context.Context, in *client.ClientCommonReq, opts ...grpc.CallOption) (*structpb.Struct, error)
+	// user privileges related interface
+	ListUserPrivileges(ctx context.Context, in *ListUserPrivilegesReq, opts ...grpc.CallOption) (*ListUserPrivilegesResp, error)
+	DeleteUserPrivilege(ctx context.Context, in *DeleteUserPrivilegesReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
+	// user group privileges related interface
+	ListUserGroupPrivileges(ctx context.Context, in *ListUserPrivilegesReq, opts ...grpc.CallOption) (*ListUserPrivilegesResp, error)
+	DeleteUserGroupPrivilege(ctx context.Context, in *DeleteUserPrivilegesReq, opts ...grpc.CallOption) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error)
 	FetchInstanceInfo(ctx context.Context, in *FetchInstanceInfoReq, opts ...grpc.CallOption) (*FetchInstanceInfoResp, error)
@@ -1931,6 +1941,42 @@ func (c *dataClient) ClientSpecificFailedReason(ctx context.Context, in *client.
 	return out, nil
 }
 
+func (c *dataClient) ListUserPrivileges(ctx context.Context, in *ListUserPrivilegesReq, opts ...grpc.CallOption) (*ListUserPrivilegesResp, error) {
+	out := new(ListUserPrivilegesResp)
+	err := c.cc.Invoke(ctx, Data_ListUserPrivileges_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteUserPrivilege(ctx context.Context, in *DeleteUserPrivilegesReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteUserPrivilege_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListUserGroupPrivileges(ctx context.Context, in *ListUserPrivilegesReq, opts ...grpc.CallOption) (*ListUserPrivilegesResp, error) {
+	out := new(ListUserPrivilegesResp)
+	err := c.cc.Invoke(ctx, Data_ListUserGroupPrivileges_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) DeleteUserGroupPrivilege(ctx context.Context, in *DeleteUserPrivilegesReq, opts ...grpc.CallOption) (*base.EmptyResp, error) {
+	out := new(base.EmptyResp)
+	err := c.cc.Invoke(ctx, Data_DeleteUserGroupPrivilege_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) ListInstances(ctx context.Context, in *ListInstancesReq, opts ...grpc.CallOption) (*ListInstancesResp, error) {
 	out := new(ListInstancesResp)
 	err := c.cc.Invoke(ctx, Data_ListInstances_FullMethodName, in, out, opts...)
@@ -2193,6 +2239,12 @@ type DataServer interface {
 	ClientVersionStatistics(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
 	ListClientLabelAndAnnotation(context.Context, *ListClientLabelAndAnnotationReq) (*structpb.Struct, error)
 	ClientSpecificFailedReason(context.Context, *client.ClientCommonReq) (*structpb.Struct, error)
+	// user privileges related interface
+	ListUserPrivileges(context.Context, *ListUserPrivilegesReq) (*ListUserPrivilegesResp, error)
+	DeleteUserPrivilege(context.Context, *DeleteUserPrivilegesReq) (*base.EmptyResp, error)
+	// user group privileges related interface
+	ListUserGroupPrivileges(context.Context, *ListUserPrivilegesReq) (*ListUserPrivilegesResp, error)
+	DeleteUserGroupPrivilege(context.Context, *DeleteUserPrivilegesReq) (*base.EmptyResp, error)
 	// used iam pull resource callback.
 	ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error)
 	FetchInstanceInfo(context.Context, *FetchInstanceInfoReq) (*FetchInstanceInfoResp, error)
@@ -2711,6 +2763,18 @@ func (UnimplementedDataServer) ListClientLabelAndAnnotation(context.Context, *Li
 }
 func (UnimplementedDataServer) ClientSpecificFailedReason(context.Context, *client.ClientCommonReq) (*structpb.Struct, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientSpecificFailedReason not implemented")
+}
+func (UnimplementedDataServer) ListUserPrivileges(context.Context, *ListUserPrivilegesReq) (*ListUserPrivilegesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserPrivileges not implemented")
+}
+func (UnimplementedDataServer) DeleteUserPrivilege(context.Context, *DeleteUserPrivilegesReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserPrivilege not implemented")
+}
+func (UnimplementedDataServer) ListUserGroupPrivileges(context.Context, *ListUserPrivilegesReq) (*ListUserPrivilegesResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListUserGroupPrivileges not implemented")
+}
+func (UnimplementedDataServer) DeleteUserGroupPrivilege(context.Context, *DeleteUserPrivilegesReq) (*base.EmptyResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUserGroupPrivilege not implemented")
 }
 func (UnimplementedDataServer) ListInstances(context.Context, *ListInstancesReq) (*ListInstancesResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstances not implemented")
@@ -5751,6 +5815,78 @@ func _Data_ClientSpecificFailedReason_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_ListUserPrivileges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserPrivilegesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListUserPrivileges(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListUserPrivileges_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListUserPrivileges(ctx, req.(*ListUserPrivilegesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteUserPrivilege_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserPrivilegesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteUserPrivilege(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteUserPrivilege_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteUserPrivilege(ctx, req.(*DeleteUserPrivilegesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListUserGroupPrivileges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListUserPrivilegesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListUserGroupPrivileges(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListUserGroupPrivileges_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListUserGroupPrivileges(ctx, req.(*ListUserPrivilegesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_DeleteUserGroupPrivilege_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserPrivilegesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).DeleteUserGroupPrivilege(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_DeleteUserGroupPrivilege_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).DeleteUserGroupPrivilege(ctx, req.(*DeleteUserPrivilegesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_ListInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListInstancesReq)
 	if err := dec(in); err != nil {
@@ -6551,6 +6687,22 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClientSpecificFailedReason",
 			Handler:    _Data_ClientSpecificFailedReason_Handler,
+		},
+		{
+			MethodName: "ListUserPrivileges",
+			Handler:    _Data_ListUserPrivileges_Handler,
+		},
+		{
+			MethodName: "DeleteUserPrivilege",
+			Handler:    _Data_DeleteUserPrivilege_Handler,
+		},
+		{
+			MethodName: "ListUserGroupPrivileges",
+			Handler:    _Data_ListUserGroupPrivileges_Handler,
+		},
+		{
+			MethodName: "DeleteUserGroupPrivilege",
+			Handler:    _Data_DeleteUserGroupPrivilege_Handler,
 		},
 		{
 			MethodName: "ListInstances",

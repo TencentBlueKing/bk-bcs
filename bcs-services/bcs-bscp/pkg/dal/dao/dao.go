@@ -70,6 +70,8 @@ type Set interface {
 	Client() Client
 	ClientEvent() ClientEvent
 	ClientQuery() ClientQuery
+	UserPrivilege() UserPrivilege
+	UserGroupPrivilege() UserGroupPrivilege
 }
 
 // NewDaoSet create the DAO set instance.
@@ -484,6 +486,24 @@ func (s *set) ClientEvent() ClientEvent {
 // ClientQuery returns the ClientQuery scope's DAO
 func (s *set) ClientQuery() ClientQuery {
 	return &clientQueryDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// UserPrivilege implements Set.
+func (s *set) UserPrivilege() UserPrivilege {
+	return &userPrivilegeDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// UserGroupPrivilege implements Set.
+func (s *set) UserGroupPrivilege() UserGroupPrivilege {
+	return &userGroupPrivilegeDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

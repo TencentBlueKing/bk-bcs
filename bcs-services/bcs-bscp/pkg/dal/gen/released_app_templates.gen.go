@@ -42,14 +42,16 @@ func newReleasedAppTemplate(db *gorm.DB, opts ...gen.DOOption) releasedAppTempla
 	_releasedAppTemplate.TemplateRevisionMemo = field.NewString(tableName, "template_revision_memo")
 	_releasedAppTemplate.FileType = field.NewString(tableName, "file_type")
 	_releasedAppTemplate.FileMode = field.NewString(tableName, "file_mode")
-	_releasedAppTemplate.User = field.NewString(tableName, "user")
-	_releasedAppTemplate.UserGroup = field.NewString(tableName, "user_group")
-	_releasedAppTemplate.Privilege = field.NewString(tableName, "privilege")
 	_releasedAppTemplate.Signature = field.NewString(tableName, "signature")
 	_releasedAppTemplate.ByteSize = field.NewUint64(tableName, "byte_size")
 	_releasedAppTemplate.OriginSignature = field.NewString(tableName, "origin_signature")
 	_releasedAppTemplate.OriginByteSize = field.NewUint64(tableName, "origin_byte_size")
 	_releasedAppTemplate.Md5 = field.NewString(tableName, "md5")
+	_releasedAppTemplate.User = field.NewString(tableName, "user")
+	_releasedAppTemplate.UserGroup = field.NewString(tableName, "user_group")
+	_releasedAppTemplate.Privilege = field.NewString(tableName, "privilege")
+	_releasedAppTemplate.Uid = field.NewUint32(tableName, "uid")
+	_releasedAppTemplate.Gid = field.NewUint32(tableName, "gid")
 	_releasedAppTemplate.BizID = field.NewUint32(tableName, "biz_id")
 	_releasedAppTemplate.AppID = field.NewUint32(tableName, "app_id")
 	_releasedAppTemplate.Creator = field.NewString(tableName, "creator")
@@ -81,14 +83,16 @@ type releasedAppTemplate struct {
 	TemplateRevisionMemo field.String
 	FileType             field.String
 	FileMode             field.String
-	User                 field.String
-	UserGroup            field.String
-	Privilege            field.String
 	Signature            field.String
 	ByteSize             field.Uint64
 	OriginSignature      field.String
 	OriginByteSize       field.Uint64
 	Md5                  field.String
+	User                 field.String
+	UserGroup            field.String
+	Privilege            field.String
+	Uid                  field.Uint32
+	Gid                  field.Uint32
 	BizID                field.Uint32
 	AppID                field.Uint32
 	Creator              field.String
@@ -126,14 +130,16 @@ func (r *releasedAppTemplate) updateTableName(table string) *releasedAppTemplate
 	r.TemplateRevisionMemo = field.NewString(table, "template_revision_memo")
 	r.FileType = field.NewString(table, "file_type")
 	r.FileMode = field.NewString(table, "file_mode")
-	r.User = field.NewString(table, "user")
-	r.UserGroup = field.NewString(table, "user_group")
-	r.Privilege = field.NewString(table, "privilege")
 	r.Signature = field.NewString(table, "signature")
 	r.ByteSize = field.NewUint64(table, "byte_size")
 	r.OriginSignature = field.NewString(table, "origin_signature")
 	r.OriginByteSize = field.NewUint64(table, "origin_byte_size")
 	r.Md5 = field.NewString(table, "md5")
+	r.User = field.NewString(table, "user")
+	r.UserGroup = field.NewString(table, "user_group")
+	r.Privilege = field.NewString(table, "privilege")
+	r.Uid = field.NewUint32(table, "uid")
+	r.Gid = field.NewUint32(table, "gid")
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
@@ -168,7 +174,7 @@ func (r *releasedAppTemplate) GetFieldByName(fieldName string) (field.OrderExpr,
 }
 
 func (r *releasedAppTemplate) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 29)
+	r.fieldMap = make(map[string]field.Expr, 31)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["template_space_id"] = r.TemplateSpaceID
@@ -184,14 +190,16 @@ func (r *releasedAppTemplate) fillFieldMap() {
 	r.fieldMap["template_revision_memo"] = r.TemplateRevisionMemo
 	r.fieldMap["file_type"] = r.FileType
 	r.fieldMap["file_mode"] = r.FileMode
-	r.fieldMap["user"] = r.User
-	r.fieldMap["user_group"] = r.UserGroup
-	r.fieldMap["privilege"] = r.Privilege
 	r.fieldMap["signature"] = r.Signature
 	r.fieldMap["byte_size"] = r.ByteSize
 	r.fieldMap["origin_signature"] = r.OriginSignature
 	r.fieldMap["origin_byte_size"] = r.OriginByteSize
 	r.fieldMap["md5"] = r.Md5
+	r.fieldMap["user"] = r.User
+	r.fieldMap["user_group"] = r.UserGroup
+	r.fieldMap["privilege"] = r.Privilege
+	r.fieldMap["uid"] = r.Uid
+	r.fieldMap["gid"] = r.Gid
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator

@@ -29,6 +29,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	pbatb "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/app-template-binding"
 	pbbase "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/base"
+	pbci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/config-item"
 	pbrci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/search"
@@ -168,11 +169,9 @@ func (s *Service) DeleteAppTemplateBinding(ctx context.Context, req *pbds.Delete
 }
 
 // ListAppBoundTmplRevisions list app bound template revisions.
-//
-//nolint:funlen,gocyclo
+// nolint:funlen,gocyclo
 func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 	req *pbds.ListAppBoundTmplRevisionsReq) (*pbds.ListAppBoundTmplRevisionsResp, error) {
-
 	kt := kit.FromGrpcContext(ctx)
 
 	// validate the page params
@@ -238,7 +237,14 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 		logs.Errorf("list app bound template revisions failed err: %v, rid: %s", err, kt.Rid)
 		return nil, err
 	}
-	for _, t := range tmplRevisions {
+
+	// 获取模板文件版本的权限
+	data, err := s.listTplRevPerms(kt, kt.BizID, tmplRevisions)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, t := range data {
 		tmplRevisionMap[t.ID] = t
 	}
 
@@ -261,14 +267,12 @@ func (s *Service) ListAppBoundTmplRevisions(ctx context.Context,
 				TemplateRevisionMemo: d.Spec.RevisionMemo,
 				FileType:             string(d.Spec.FileType),
 				FileMode:             string(d.Spec.FileMode),
-				User:                 d.Spec.Permission.User,
-				UserGroup:            d.Spec.Permission.UserGroup,
-				Privilege:            d.Spec.Permission.Privilege,
 				Signature:            d.Spec.ContentSpec.Signature,
 				Md5:                  d.Spec.ContentSpec.Md5,
 				ByteSize:             d.Spec.ContentSpec.ByteSize,
 				Creator:              d.Revision.Creator,
 				CreateAt:             d.Revision.CreatedAt.Format(time.RFC3339),
+				Permission:           pbci.PbFilePermission(d.Spec.Permission),
 			})
 		}
 	}

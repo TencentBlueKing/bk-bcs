@@ -68,6 +68,12 @@ func (s *Service) getAppTmplRevisions(kt *kit.Kit) ([]*table.TemplateRevision, e
 		return nil, err
 	}
 
+	// 返回模板文件版本的权限
+	tmplRevisions, err = s.listTplRevPerms(kt, kt.BizID, tmplRevisions)
+	if err != nil {
+		return nil, err
+	}
+
 	return tmplRevisions, nil
 }
 

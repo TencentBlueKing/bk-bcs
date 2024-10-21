@@ -83,6 +83,8 @@ func (s *Service) CreateTemplate(ctx context.Context, req *pbcs.CreateTemplateRe
 				User:      req.User,
 				UserGroup: req.UserGroup,
 				Privilege: req.Privilege,
+				Uid:       req.Uid,
+				Gid:       req.Gid,
 			},
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: req.Sign,
@@ -529,6 +531,8 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 						User:      item.User,
 						UserGroup: item.UserGroup,
 						Privilege: item.Privilege,
+						Uid:       item.Uid,
+						Gid:       item.Gid,
 					},
 					ContentSpec: &pbcontent.ContentSpec{
 						Signature: item.Sign,
@@ -544,7 +548,8 @@ func (s *Service) BatchUpsertTemplates(ctx context.Context, req *pbcs.BatchUpser
 		})
 	}
 
-	in := &pbds.BatchUpsertTemplatesReq{Items: items, TemplateSetIds: req.GetTemplateSetIds(), BizId: req.GetBizId()}
+	in := &pbds.BatchUpsertTemplatesReq{Items: items, TemplateSetIds: req.GetTemplateSetIds(), BizId: req.GetBizId(),
+		TemplateSpaceId: req.TemplateSpaceId}
 	data, err := s.client.DS.BatchUpsertTemplates(grpcKit.RpcCtx(), in)
 	if err != nil {
 		return nil, err

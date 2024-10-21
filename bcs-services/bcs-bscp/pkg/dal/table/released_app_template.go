@@ -113,15 +113,14 @@ type ReleasedAppTemplateSpec struct {
 	TemplateRevisionMemo string `json:"template_revision_memo" gorm:"column:template_revision_memo"`
 	FileType             string `json:"file_type" gorm:"column:file_type"`
 	FileMode             string `json:"file_mode" gorm:"column:file_mode"`
-	User                 string `json:"user" gorm:"column:user"`
-	UserGroup            string `json:"user_group" gorm:"column:user_group"`
-	Privilege            string `json:"privilege" gorm:"column:privilege"`
 	Signature            string `json:"signature" gorm:"column:signature"`
 	ByteSize             uint64 `json:"byte_size" gorm:"column:byte_size"`
 	OriginSignature      string `json:"origin_signature" gorm:"column:origin_signature"`
 	OriginByteSize       uint64 `json:"origin_byte_size" gorm:"column:origin_byte_size"`
 	// Md5 hashed by rendered content
 	Md5 string `json:"md5" gorm:"column:md5"`
+	// KV类型，不能有Permission
+	Permission *FilePermission `db:"permission" json:"permission" gorm:"embedded"`
 }
 
 // ValidateCreate validate ReleasedAppTemplate spec when it is created.

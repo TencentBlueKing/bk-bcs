@@ -40,6 +40,8 @@ message FilePermission {
   string user = 1;
   string user_group = 2;
   string privilege = 3;
+  uint32 uid = 4;
+  uint32 gid = 5;
 }
 
 // ListConfigItemCounts source resource reference: pkg/dal/table/config_item.go

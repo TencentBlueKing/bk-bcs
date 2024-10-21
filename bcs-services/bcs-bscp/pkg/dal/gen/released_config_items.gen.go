@@ -45,6 +45,8 @@ func newReleasedConfigItem(db *gorm.DB, opts ...gen.DOOption) releasedConfigItem
 	_releasedConfigItem.User = field.NewString(tableName, "user")
 	_releasedConfigItem.UserGroup = field.NewString(tableName, "user_group")
 	_releasedConfigItem.Privilege = field.NewString(tableName, "privilege")
+	_releasedConfigItem.Uid = field.NewUint32(tableName, "uid")
+	_releasedConfigItem.Gid = field.NewUint32(tableName, "gid")
 	_releasedConfigItem.BizID = field.NewUint32(tableName, "biz_id")
 	_releasedConfigItem.AppID = field.NewUint32(tableName, "app_id")
 	_releasedConfigItem.Creator = field.NewString(tableName, "creator")
@@ -79,6 +81,8 @@ type releasedConfigItem struct {
 	User            field.String
 	UserGroup       field.String
 	Privilege       field.String
+	Uid             field.Uint32
+	Gid             field.Uint32
 	BizID           field.Uint32
 	AppID           field.Uint32
 	Creator         field.String
@@ -119,6 +123,8 @@ func (r *releasedConfigItem) updateTableName(table string) *releasedConfigItem {
 	r.User = field.NewString(table, "user")
 	r.UserGroup = field.NewString(table, "user_group")
 	r.Privilege = field.NewString(table, "privilege")
+	r.Uid = field.NewUint32(table, "uid")
+	r.Gid = field.NewUint32(table, "gid")
 	r.BizID = field.NewUint32(table, "biz_id")
 	r.AppID = field.NewUint32(table, "app_id")
 	r.Creator = field.NewString(table, "creator")
@@ -153,7 +159,7 @@ func (r *releasedConfigItem) GetFieldByName(fieldName string) (field.OrderExpr, 
 }
 
 func (r *releasedConfigItem) fillFieldMap() {
-	r.fieldMap = make(map[string]field.Expr, 24)
+	r.fieldMap = make(map[string]field.Expr, 26)
 	r.fieldMap["id"] = r.ID
 	r.fieldMap["release_id"] = r.ReleaseID
 	r.fieldMap["commit_id"] = r.CommitID
@@ -172,6 +178,8 @@ func (r *releasedConfigItem) fillFieldMap() {
 	r.fieldMap["user"] = r.User
 	r.fieldMap["user_group"] = r.UserGroup
 	r.fieldMap["privilege"] = r.Privilege
+	r.fieldMap["uid"] = r.Uid
+	r.fieldMap["gid"] = r.Gid
 	r.fieldMap["biz_id"] = r.BizID
 	r.fieldMap["app_id"] = r.AppID
 	r.fieldMap["creator"] = r.Creator

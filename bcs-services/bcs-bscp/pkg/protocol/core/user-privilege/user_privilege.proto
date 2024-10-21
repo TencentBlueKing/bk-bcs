@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "pkg/protocol/core/base/base.proto";
+
+package pbup;
+
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/user-privilege;pbup";
+
+// UserPrivilege source resource reference: pkg/dal/table/user-privilege.go
+message UserPrivilege {
+  uint32 id = 1;
+  UserPrivilegeSpec spec = 2;
+  UserPrivilegeAttachment attachment = 3;
+  pbbase.Revision revision = 4;
+}
+
+// UserPrivilegeSpec source resource reference: pkg/dal/table/user-privilege.go
+message UserPrivilegeSpec {
+  string user = 1;
+  string privilege_type = 2;
+  bool read_only = 3;
+}
+
+// UserPrivilegeAttachment source resource reference: pkg/dal/table/user-privilege.go
+message UserPrivilegeAttachment {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 uid = 3;
+  uint32 gid = 4;
+  uint32 template_space_id = 5;
+}

@@ -262,6 +262,14 @@ service Data {
   rpc ListClientLabelAndAnnotation(ListClientLabelAndAnnotationReq) returns (google.protobuf.Struct) {}
   rpc ClientSpecificFailedReason(pbclient.ClientCommonReq) returns (google.protobuf.Struct) {}
 
+  // user privileges related interface
+  rpc ListUserPrivileges(ListUserPrivilegesReq) returns (ListUserPrivilegesResp) {}
+  rpc DeleteUserPrivilege(DeleteUserPrivilegesReq) returns (pbbase.EmptyResp) {}
+
+  // user group privileges related interface
+  rpc ListUserGroupPrivileges(ListUserPrivilegesReq) returns (ListUserPrivilegesResp) {}
+  rpc DeleteUserGroupPrivilege(DeleteUserPrivilegesReq) returns (pbbase.EmptyResp) {}
+
   // used iam pull resource callback.
   rpc ListInstances(ListInstancesReq) returns (ListInstancesResp) {};
   rpc FetchInstanceInfo(FetchInstanceInfoReq) returns (FetchInstanceInfoResp) {};
@@ -1078,6 +1086,7 @@ message BatchUpsertTemplatesReq {
   }
   repeated Item items = 2;
   repeated uint32 template_set_ids = 3;
+  uint32 template_space_id = 4;
 }
 
 message BatchUpsertTemplatesReqResp {
@@ -1153,6 +1162,8 @@ message GetTemplateRevisionResp {
     string create_at = 15;
     string md5 = 16;
     bool is_latest = 17;
+    uint32 uid = 18;
+    uint32 gid = 19;
   }
   TemplateRevision detail = 1;
 }
@@ -1163,7 +1174,8 @@ message DeleteTemplateRevisionReq {
 }
 
 message ListTemplateRevisionsByIDsReq {
-  repeated uint32 ids = 1;
+  uint32 biz_id = 1;
+  repeated uint32 ids = 2;
 }
 
 message ListTemplateRevisionsByIDsResp {
@@ -2032,6 +2044,7 @@ message CompareConfigItemConflictsResp {
       uint32 template_revision_id = 2;
       bool is_latest = 3;
       repeated pbtv.TemplateVariableSpec variables = 5;
+      pbci.FilePermission permission = 6;
     }
     uint32 template_space_id = 1;
     string template_space_name = 2;
@@ -2063,3 +2076,48 @@ message BatchUpdateLastConsumedTimeReq {
 }
 
 message BatchUpdateLastConsumedTimeResp {}
+
+message CreateUserPrivilegesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 uid = 3;
+  uint32 gid = 4;
+  string user = 5;
+  string user_group = 6;
+  string privilege_type = 7;  // 权限类型：system、custom
+  bool read_only = 8;         // 只读
+}
+
+message CreateUserPrivilegesResp {
+  uint32 id = 1;
+}
+
+message ListUserPrivilegesReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 template_space_id = 3;
+  uint32 start = 4;
+  uint32 limit = 5;
+  bool all = 6;
+  string name = 7;            // 名称
+  string privilege_type = 8;  // 权限类型：user、user_group
+}
+
+message ListUserPrivilegesResp {
+  message Detail {
+    uint32 id = 1;
+    string name = 2;
+    string privilege_type = 3;
+    bool read_only = 4;
+    uint32 pid = 5;  // 权限ID
+  }
+  uint32 count = 1;
+  repeated Detail details = 2;
+}
+
+message DeleteUserPrivilegesReq {
+  uint32 id = 1;
+  uint32 biz_id = 2;
+  uint32 app_id = 3;
+  uint32 template_space_id = 4;
+}

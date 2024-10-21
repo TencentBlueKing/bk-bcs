@@ -51,6 +51,8 @@ var (
 	TemplateSet                 *templateSet
 	TemplateSpace               *templateSpace
 	TemplateVariable            *templateVariable
+	UserGroupPrivilege          *userGroupPrivilege
+	UserPrivilege               *userPrivilege
 )
 
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
@@ -89,6 +91,8 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	TemplateSet = &Q.TemplateSet
 	TemplateSpace = &Q.TemplateSpace
 	TemplateVariable = &Q.TemplateVariable
+	UserGroupPrivilege = &Q.UserGroupPrivilege
+	UserPrivilege = &Q.UserPrivilege
 }
 
 func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
@@ -128,6 +132,8 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		TemplateSet:                 newTemplateSet(db, opts...),
 		TemplateSpace:               newTemplateSpace(db, opts...),
 		TemplateVariable:            newTemplateVariable(db, opts...),
+		UserGroupPrivilege:          newUserGroupPrivilege(db, opts...),
+		UserPrivilege:               newUserPrivilege(db, opts...),
 	}
 }
 
@@ -168,6 +174,8 @@ type Query struct {
 	TemplateSet                 templateSet
 	TemplateSpace               templateSpace
 	TemplateVariable            templateVariable
+	UserGroupPrivilege          userGroupPrivilege
+	UserPrivilege               userPrivilege
 }
 
 func (q *Query) Available() bool { return q.db != nil }
@@ -209,6 +217,8 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		TemplateSet:                 q.TemplateSet.clone(db),
 		TemplateSpace:               q.TemplateSpace.clone(db),
 		TemplateVariable:            q.TemplateVariable.clone(db),
+		UserGroupPrivilege:          q.UserGroupPrivilege.clone(db),
+		UserPrivilege:               q.UserPrivilege.clone(db),
 	}
 }
 
@@ -257,6 +267,8 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		TemplateSet:                 q.TemplateSet.replaceDB(db),
 		TemplateSpace:               q.TemplateSpace.replaceDB(db),
 		TemplateVariable:            q.TemplateVariable.replaceDB(db),
+		UserGroupPrivilege:          q.UserGroupPrivilege.replaceDB(db),
+		UserPrivilege:               q.UserPrivilege.replaceDB(db),
 	}
 }
 
@@ -295,6 +307,8 @@ type queryCtx struct {
 	TemplateSet                 ITemplateSetDo
 	TemplateSpace               ITemplateSpaceDo
 	TemplateVariable            ITemplateVariableDo
+	UserGroupPrivilege          IUserGroupPrivilegeDo
+	UserPrivilege               IUserPrivilegeDo
 }
 
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
@@ -333,6 +347,8 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		TemplateSet:                 q.TemplateSet.WithContext(ctx),
 		TemplateSpace:               q.TemplateSpace.WithContext(ctx),
 		TemplateVariable:            q.TemplateVariable.WithContext(ctx),
+		UserGroupPrivilege:          q.UserGroupPrivilege.WithContext(ctx),
+		UserPrivilege:               q.UserPrivilege.WithContext(ctx),
 	}
 }
 

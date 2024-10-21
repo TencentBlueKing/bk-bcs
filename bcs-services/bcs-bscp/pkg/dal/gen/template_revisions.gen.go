@@ -37,6 +37,8 @@ func newTemplateRevision(db *gorm.DB, opts ...gen.DOOption) templateRevision {
 	_templateRevision.User = field.NewString(tableName, "user")
 	_templateRevision.UserGroup = field.NewString(tableName, "user_group")
 	_templateRevision.Privilege = field.NewString(tableName, "privilege")
+	_templateRevision.Uid = field.NewUint32(tableName, "uid")
+	_templateRevision.Gid = field.NewUint32(tableName, "gid")
 	_templateRevision.Signature = field.NewString(tableName, "signature")
 	_templateRevision.ByteSize = field.NewUint64(tableName, "byte_size")
 	_templateRevision.Md5 = field.NewString(tableName, "md5")
@@ -65,6 +67,8 @@ type templateRevision struct {
 	User            field.String
 	UserGroup       field.String
 	Privilege       field.String
+	Uid             field.Uint32
+	Gid             field.Uint32
 	Signature       field.String
 	ByteSize        field.Uint64
 	Md5             field.String
@@ -99,6 +103,8 @@ func (t *templateRevision) updateTableName(table string) *templateRevision {
 	t.User = field.NewString(table, "user")
 	t.UserGroup = field.NewString(table, "user_group")
 	t.Privilege = field.NewString(table, "privilege")
+	t.Uid = field.NewUint32(table, "uid")
+	t.Gid = field.NewUint32(table, "gid")
 	t.Signature = field.NewString(table, "signature")
 	t.ByteSize = field.NewUint64(table, "byte_size")
 	t.Md5 = field.NewString(table, "md5")
@@ -135,7 +141,7 @@ func (t *templateRevision) GetFieldByName(fieldName string) (field.OrderExpr, bo
 }
 
 func (t *templateRevision) fillFieldMap() {
-	t.fieldMap = make(map[string]field.Expr, 18)
+	t.fieldMap = make(map[string]field.Expr, 20)
 	t.fieldMap["id"] = t.ID
 	t.fieldMap["revision_name"] = t.RevisionName
 	t.fieldMap["revision_memo"] = t.RevisionMemo
@@ -146,6 +152,8 @@ func (t *templateRevision) fillFieldMap() {
 	t.fieldMap["user"] = t.User
 	t.fieldMap["user_group"] = t.UserGroup
 	t.fieldMap["privilege"] = t.Privilege
+	t.fieldMap["uid"] = t.Uid
+	t.fieldMap["gid"] = t.Gid
 	t.fieldMap["signature"] = t.Signature
 	t.fieldMap["byte_size"] = t.ByteSize
 	t.fieldMap["md5"] = t.Md5

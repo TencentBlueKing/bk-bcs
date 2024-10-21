@@ -171,7 +171,8 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbcs.List
 	}
 
 	r := &pbds.ListTemplateRevisionsByIDsReq{
-		Ids: req.Ids,
+		Ids:   req.Ids,
+		BizId: req.BizId,
 	}
 
 	rp, err := s.client.DS.ListTemplateRevisionsByIDs(grpcKit.RpcCtx(), r)
@@ -254,6 +255,8 @@ func (s *Service) GetTemplateRevision(ctx context.Context, req *pbcs.GetTemplate
 			CreateAt:             tr.GetDetail().GetCreateAt(),
 			Md5:                  tr.GetDetail().GetMd5(),
 			IsLatest:             tr.GetDetail().GetIsLatest(),
+			Uid:                  tr.Detail.Uid,
+			Gid:                  tr.Detail.Gid,
 		},
 	}, nil
 }
@@ -293,6 +296,8 @@ func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbcs.UpdateTe
 				User:      req.User,
 				UserGroup: req.UserGroup,
 				Privilege: req.Privilege,
+				Uid:       req.Uid,
+				Gid:       req.Gid,
 			},
 			ContentSpec: &pbcontent.ContentSpec{
 				Signature: req.Sign,

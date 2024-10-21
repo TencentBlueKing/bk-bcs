@@ -62,6 +62,8 @@ func (m *FilePermission) FilePermission() *table.FilePermission {
 		User:      m.User,
 		UserGroup: m.UserGroup,
 		Privilege: m.Privilege,
+		Uid:       m.Uid,
+		Gid:       m.Gid,
 	}
 }
 
@@ -75,6 +77,8 @@ func PbFilePermission(fp *table.FilePermission) *FilePermission {
 		User:      fp.User,
 		UserGroup: fp.UserGroup,
 		Privilege: fp.Privilege,
+		Uid:       fp.Uid,
+		Gid:       fp.Gid,
 	}
 }
 

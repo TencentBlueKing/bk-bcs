@@ -119,9 +119,13 @@ func (s *Service) ListTemplateRevisions(ctx context.Context,
 	}
 
 	details, count, err := s.dao.TemplateRevision().List(kt, req.BizId, req.TemplateId, searcher, opt)
-
 	if err != nil {
 		logs.Errorf("list template revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	details, err = s.listTplRevPerms(kt, req.BizId, details)
+	if err != nil {
 		return nil, err
 	}
 
@@ -129,6 +133,7 @@ func (s *Service) ListTemplateRevisions(ctx context.Context,
 		Count:   uint32(count),
 		Details: pbtr.PbTemplateRevisions(details),
 	}
+
 	return resp, nil
 }
 
@@ -161,6 +166,11 @@ func (s *Service) ListTemplateRevisionsByIDs(ctx context.Context, req *pbds.List
 	details, err := s.dao.TemplateRevision().ListByIDs(kt, req.Ids)
 	if err != nil {
 		logs.Errorf("list template revisions failed, err: %v, rid: %s", err, kt.Rid)
+		return nil, err
+	}
+
+	details, err = s.listTplRevPerms(kt, req.BizId, details)
+	if err != nil {
 		return nil, err
 	}
 
@@ -286,6 +296,11 @@ func (s *Service) GetTemplateRevision(ctx context.Context, req *pbds.GetTemplate
 		return nil, errf.Errorf(errf.DBOpFailed, i18n.T(kt, fmt.Sprintf("get template revision failed, err: %v", err)))
 	}
 
+	revision, err = s.getTplRevPerm(kt, req.BizId, revision)
+	if err != nil {
+		return nil, err
+	}
+
 	return &pbds.GetTemplateRevisionResp{
 		Detail: &pbds.GetTemplateRevisionResp_TemplateRevision{
 			TemplateId:           revision.Attachment.TemplateID,
@@ -305,11 +320,14 @@ func (s *Service) GetTemplateRevision(ctx context.Context, req *pbds.GetTemplate
 			CreateAt:             revision.Revision.CreatedAt.Format(time.RFC3339),
 			Md5:                  revision.Spec.ContentSpec.Md5,
 			IsLatest:             isLatest,
+			Uid:                  revision.Spec.Permission.Uid,
+			Gid:                  revision.Spec.Permission.Gid,
 		},
 	}, nil
 }
 
 // UpdateTemplateRevision implements pbds.DataServer.
+// nolint:funlen
 func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbds.UpdateTemplateRevisionReq) (
 	*pbds.CreateResp, error) {
 	kt := kit.FromGrpcContext(ctx)
@@ -378,6 +396,38 @@ func (s *Service) UpdateTemplateRevision(ctx context.Context, req *pbds.UpdateTe
 		Attachment: template.Attachment,
 		Revision:   template.Revision,
 	})
+	if err != nil {
+		if rErr := tx.Rollback(); rErr != nil {
+			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
+		}
+		return nil, err
+	}
+
+	userPrivilege := &table.UserPrivilege{
+		Spec: &table.UserPrivilegeSpec{
+			User: req.GetSpec().Permission.User,
+		},
+		Attachment: &table.UserPrivilegeAttachment{
+			BizID:           req.GetAttachment().BizId,
+			TemplateSpaceID: req.Attachment.TemplateSpaceId,
+			Uid:             req.GetSpec().GetPermission().GetUid(),
+		},
+	}
+
+	userGroupPrivilege := &table.UserGroupPrivilege{
+		Spec: &table.UserGroupPrivilegeSpec{
+			UserGroup: req.GetSpec().Permission.UserGroup,
+		},
+		Attachment: &table.UserGroupPrivilegeAttachment{
+			BizID:           req.GetAttachment().BizId,
+			TemplateSpaceID: req.Attachment.TemplateSpaceId,
+			Gid:             req.GetSpec().GetPermission().GetGid(),
+		},
+	}
+
+	// 2. 更新权限组
+	err = s.upsertSinglePermissions(kt, tx, req.Attachment.BizId, 0, req.Attachment.TemplateSpaceId,
+		userPrivilege, userGroupPrivilege, true)
 	if err != nil {
 		if rErr := tx.Rollback(); rErr != nil {
 			logs.Errorf("transaction rollback failed, err: %v, rid: %s", rErr, kt.Rid)
