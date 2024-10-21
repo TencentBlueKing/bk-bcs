@@ -13,7 +13,7 @@ labels={{ .Bk_Bscp_Variable_Leabels }}
 save_path='./'
 
 # 使用参数构建URL
-url = f"{feed_addr}/api/v1/feed/biz/{biz_id}/app/{service_name}/files/{file_path}"
+url = f"{feed_addr}/api/v1/feed/biz/{biz_id}/app/{service_name}/files{file_path}"
 
 # 设置请求头，包括Authorization token
 headers = {
