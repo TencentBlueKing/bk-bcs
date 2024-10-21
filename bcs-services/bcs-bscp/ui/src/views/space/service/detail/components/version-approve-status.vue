@@ -53,7 +53,8 @@
         const { spec } = resp.data;
         approverList.value = spec.approver_progress; // 审批人
         approveText.value = publishStatusText(spec.publish_status);
-        sendData(spec);
+        // console.log(resp.data, 'dadada');
+        sendData(resp.data);
       } catch (error) {
         console.log(error);
       }
@@ -82,12 +83,13 @@
   };
 
   const sendData = (data: any) => {
+    const { spec, revision } = data;
     const approveData = {
-      status: data.publish_status,
-      time: data.publish_time,
-      type: data.publish_type,
+      status: spec.publish_status,
+      time: spec.publish_time,
+      type: spec.publish_type,
     };
-    emits('sendData', approveData);
+    emits('sendData', approveData, revision.creator);
   };
 
   defineExpose({

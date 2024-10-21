@@ -1,10 +1,11 @@
 <template>
   <bk-dialog
-    :is-show="show"
     ref="dialog"
     ext-cls="confirm-dialog"
     footer-align="center"
     dialog-type="operation"
+    :is-show="show"
+    :is-loading="btnLoading"
     :cancel-text="t('取消')"
     :confirm-text="t('驳回')"
     :close-icon="true"
@@ -45,29 +46,26 @@
   import { ExclamationCircleShape } from 'bkui-vue/lib/icon';
   import { useI18n } from 'vue-i18n';
   import { APPROVE_STATUS } from '../../../../constants/record';
-  import { debounce } from 'lodash';
 
-  const props = withDefaults(
-    defineProps<{
-      show: boolean;
-      spaceId: string;
-      appId: number;
-      releaseId: number;
-      releaseName: string;
-    }>(),
-    {},
-  );
+  const props = defineProps<{
+    show: boolean;
+    spaceId: string;
+    appId: number;
+    releaseId: number;
+    releaseName: string;
+  }>();
 
   const emits = defineEmits(['update:show', 'reject']);
 
   const { t } = useI18n();
 
+  const btnLoading = ref(false);
   const reason = ref('');
 
   const handleClose = () => {
     emits('update:show', false);
   };
-  const handleConfirm = debounce(async () => {
+  const handleConfirm = async () => {
     if (!reason.value) {
       BkMessage({
         theme: 'error',
@@ -75,6 +73,7 @@
       });
       return;
     }
+    btnLoading.value = true;
     try {
       await approve(props.spaceId, props.appId, props.releaseId, {
         publish_status: APPROVE_STATUS.RejectedApproval,
@@ -87,8 +86,10 @@
       emits('reject');
     } catch (e) {
       console.log(e);
+    } finally {
+      btnLoading.value = false;
     }
-  }, 300);
+  };
 </script>
 
 <style lang="scss" scoped>

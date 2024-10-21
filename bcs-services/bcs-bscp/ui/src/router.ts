@@ -179,7 +179,7 @@ const routes = [
           },
           {
             path: ':appId(\\d+)',
-            name: 'records-appId',
+            name: 'records-app',
             component: () => import('./views/space/records/index.vue'),
             meta: {
               navModule: 'records',

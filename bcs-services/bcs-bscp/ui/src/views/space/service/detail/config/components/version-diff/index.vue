@@ -59,14 +59,16 @@
         <slot name="footerActions">
           <bk-button
             v-if="showPublishBtn"
-            :loading="publishBtnLoading"
-            :disabled="publishBtnLoading"
+            :loading="publishBtnLoading || props.btnLoading"
+            :disabled="publishBtnLoading || props.btnLoading"
             class="publish-btn"
             theme="primary"
             @click="emits('publish')">
             {{ isApprovalMode ? t('通过') : t('上线版本') }}
           </bk-button>
-          <bk-button v-if="isApprovalMode" @click="emits('reject')">{{ t('驳回') }}</bk-button>
+          <bk-button v-if="isApprovalMode" :loading="publishBtnLoading || props.btnLoading" @click="emits('reject')">
+            {{ t('驳回') }}
+          </bk-button>
           <bk-button v-else @click="handleClose">{{ t('关闭') }}</bk-button>
         </slot>
       </div>
@@ -111,6 +113,7 @@
     versionDiffList?: IConfigVersion[];
     selectedKvConfigId?: number; // 选中的kv类型配置id
     isApprovalMode?: boolean; // 是否审批模式(操作记录-去审批-拒绝)
+    btnLoading?: boolean;
   }>();
 
   const emits = defineEmits(['update:show', 'publish', 'reject']);

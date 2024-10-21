@@ -1,12 +1,13 @@
 <template>
   <bk-dialog
-    :is-show="show"
     ref="dialog"
     ext-cls="confirm-dialog"
     footer-align="center"
+    dialog-type="operation"
+    :is-loading="btnLoading"
     :cancel-text="t('取消')"
     :confirm-text="dialogType === 'publish' ? t('上线') : t('撤销')"
-    dialog-type="operation"
+    :is-show="show"
     :close-icon="true"
     :show-mask="true"
     :quick-close="false"
@@ -55,20 +56,18 @@
 
   const { t, locale } = useI18n();
 
-  const props = withDefaults(
-    defineProps<{
-      show: boolean;
-      spaceId: string;
-      appId: number;
-      releaseId: number;
-      dialogType: string;
-      data: IDialogData;
-    }>(),
-    {},
-  );
+  const props = defineProps<{
+    show: boolean;
+    spaceId: string;
+    appId: number;
+    releaseId: number;
+    dialogType: string;
+    data: IDialogData;
+  }>();
 
   const emits = defineEmits(['update:show', 'refreshList']);
 
+  const btnLoading = ref(false);
   const reason = ref('');
 
   const submitType = computed(() => {
@@ -79,16 +78,23 @@
     emits('update:show', false);
   };
   const handleConfirm = async () => {
-    await approve(props.spaceId, props.appId, props.releaseId, {
-      publish_status: submitType.value,
-      reason: reason.value,
-    });
-    emits('update:show', false);
-    emits('refreshList');
-    BkMessage({
-      theme: 'success',
-      message: t('操作成功'),
-    });
+    btnLoading.value = true;
+    try {
+      await approve(props.spaceId, props.appId, props.releaseId, {
+        publish_status: submitType.value,
+        reason: reason.value,
+      });
+      emits('update:show', false);
+      emits('refreshList');
+      BkMessage({
+        theme: 'success',
+        message: t('操作成功'),
+      });
+    } catch (e) {
+      console.log(e);
+    } finally {
+      btnLoading.value = false;
+    }
   };
 </script>
 

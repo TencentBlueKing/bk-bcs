@@ -33,7 +33,7 @@
               <div class="approval-bd">
                 <bk-member-selector
                   v-model="selectionsApprover"
-                  :api="approverListApi()"
+                  :api="getApproverListApi()"
                   :is-error="!selectionsApprover.length"
                   type="info" />
               </div>
@@ -62,7 +62,7 @@
         v-else
         ref="formCompRef"
         :form-data="serviceEditForm"
-        :approver-api="approverListApi()"
+        :approver-api="getApproverListApi()"
         @change="handleChange"
         :editable="true" />
     </div>
@@ -84,7 +84,7 @@
   import { useI18n } from 'vue-i18n';
   import { storeToRefs } from 'pinia';
   import useGlobalStore from '../../../../../store/global';
-  import { updateApp, approverListApi } from '../../../../../api/index';
+  import { updateApp, getApproverListApi } from '../../../../../api/index';
   import { getKvList } from '../../../../../api/config';
   import { datetimeFormat } from '../../../../../utils/index';
   import { IAppItem } from '../../../../../../types/app';

@@ -2,6 +2,7 @@
   <div v-if="!loading">
     <!-- 去审批抽屉 -->
     <PublishVersionDiff
+      :btn-loading="btnLoading"
       :is-approval-mode="true"
       :bk-biz-id="spaceId"
       :app-id="appId"
@@ -12,7 +13,7 @@
       :current-version-groups="groupsPendingtoPublish()"
       @publish="handleConfirm"
       @reject="RejectDialogShow = true"
-      @close="emits('close')" />
+      @close="handleClose" />
   </div>
   <DialogReject
     v-model:show="RejectDialogShow"
@@ -38,18 +39,14 @@
   import DialogReject from './dialog-reject.vue';
   import BkMessage from 'bkui-vue/lib/message';
   import { useI18n } from 'vue-i18n';
-  import { debounce } from 'lodash';
 
-  const props = withDefaults(
-    defineProps<{
-      show: boolean;
-      spaceId: string;
-      appId: number;
-      releaseId: number;
-      releasedGroups: number[];
-    }>(),
-    {},
-  );
+  const props = defineProps<{
+    show: boolean;
+    spaceId: string;
+    appId: number;
+    releaseId: number;
+    releasedGroups: number[];
+  }>();
 
   const emits = defineEmits(['update:show', 'close']);
 
@@ -58,12 +55,11 @@
   const serviceStore = useServiceStore();
 
   const loading = ref(true);
-  // --
+  const btnLoading = ref(false);
   const versionData = ref<IConfigVersion>(GET_UNNAMED_VERSION_DATA());
   const versionList = ref<IConfigVersion[]>([]);
   const baseVersionId = ref(0);
   const groupList = ref<IGroupItemInService[]>([]);
-  // --
   const RejectDialogShow = ref(false);
 
   // 需要对比的分组id集合
@@ -179,8 +175,19 @@
   // 审批 E
 
   // 审批通过
-  const handleConfirm = debounce(async () => {
+  const handleConfirm = async () => {
+    btnLoading.value = true;
     try {
+      // await approve(props.spaceId, props.appId, props.releaseId, {
+      //   publish_status: APPROVE_STATUS.PendPublish,
+      // });
+      // BkMessage({
+      //   theme: 'success',
+      //   message: t('操作成功'),
+      // });
+      // emits('close', 'refresh');
+    } catch (e) {
+      console.log(e);
       await approve(props.spaceId, props.appId, props.releaseId, {
         publish_status: APPROVE_STATUS.PendPublish,
       });
@@ -189,15 +196,20 @@
         message: t('操作成功'),
       });
       emits('close', 'refresh');
-    } catch (e) {
-      console.log(e);
+    } finally {
+      btnLoading.value = true;
     }
-  }, 300);
+  };
 
   // 审批拒绝
   const handleReject = () => {
     RejectDialogShow.value = false;
     emits('close', 'refresh');
+  };
+
+  const handleClose = () => {
+    btnLoading.value = false;
+    emits('close');
   };
 </script>
 

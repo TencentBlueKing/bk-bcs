@@ -36,7 +36,9 @@
       </div>
       <div class="record-hd">
         <span>近三次版本上线记录</span>
-        <bk-link theme="primary" target="_blank" href=""> <share class="share" />查看全部上线记录 </bk-link>
+        <bk-link theme="primary" target="_blank" @click="handleLinkTo">
+          <share class="share" />查看全部上线记录
+        </bk-link>
       </div>
       <div class="record-bd">
         <div class="record-bd__table">
@@ -47,10 +49,10 @@
             <div class="table-th">操作人</div>
           </div>
           <div class="table-tr" v-for="(item, index) in dialogData" :key="index">
-            <div class="table-td">{{ item.publish_time }}</div>
-            <div class="table-td">{{ item.name }}</div>
+            <div class="table-td">{{ item.publish_time || '--' }}</div>
+            <div class="table-td">{{ item.name || '--' }}</div>
             <div class="table-td">{{ item.fully_released ? '全部实例' : versionScope(item.scope.groups) }}</div>
-            <div class="table-td">{{ item.creator }}</div>
+            <div class="table-td">{{ item.creator || '--' }}</div>
           </div>
         </div>
       </div>
@@ -60,6 +62,7 @@
 
 <script setup lang="ts">
   import { computed } from 'vue';
+  import { useRoute, useRouter } from 'vue-router';
   import { ExclamationCircleShape, Share } from 'bkui-vue/lib/icon';
 
   const emits = defineEmits(['update:show', 'confirm']);
@@ -72,11 +75,22 @@
     {},
   );
 
+  const route = useRoute();
+  const router = useRouter();
+
   const dialogType = computed(() => (typeof props.dialogData === 'string' ? 'confirm' : 'other'));
 
-  // const handleLinkTo = () => {
-  //   console.log('跳转服务上线记录'); // 待更新
-  // };
+  const handleLinkTo = ($event: MouseEvent) => {
+    $event.preventDefault();
+    const url = router.resolve({
+      name: 'records-app',
+      params: {
+        appId: route.params.appId,
+      },
+    }).href;
+    window.open(url, '_blank');
+  };
+
   const versionScope = <T extends { spec: { name?: string } }>(data: T[]) => {
     return data.map((item: T) => item.spec.name).join(';');
   };

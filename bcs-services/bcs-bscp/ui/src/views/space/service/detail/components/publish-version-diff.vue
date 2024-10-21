@@ -1,6 +1,7 @@
 <template>
   <VersionDiff
     ref="diffRef"
+    :btn-loading="props.btnLoading"
     :show="props.show"
     :current-version="props.currentVersion"
     :base-version-id="baseVersionId"
@@ -65,6 +66,7 @@
     versionList: IConfigVersion[]; // 对比版本列表
     currentVersionGroups: IReleasedGroup[]; // 当前版本上线分组实例
     isApprovalMode?: boolean; // 是否审批模式(操作记录-去审批-拒绝)
+    btnLoading?: boolean;
   }>();
 
   const emits = defineEmits(['publish', 'close']);

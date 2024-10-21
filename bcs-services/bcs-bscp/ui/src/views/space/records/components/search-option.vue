@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onBeforeMount, ref, Ref, watch } from 'vue';
+  import { computed, onBeforeMount, ref, Ref } from 'vue';
   import { useRouter, useRoute } from 'vue-router';
   import { debounce } from 'lodash';
   import { useI18n } from 'vue-i18n';
@@ -36,29 +36,7 @@
   const publishVersionConfig = ref(false);
   const failure = ref(false);
   const searchValue = ref<ISearchValueItem[]>([]);
-  // const routeSearchValue = ref({});
 
-  // 资源类型
-  const resourceType = computed(() => {
-    return Object.entries(RECORD_RES_TYPE).map(([key, value]) => ({
-      name: value,
-      id: key,
-    }));
-  });
-  // 操作行为
-  const action = computed(() => {
-    return Object.entries(ACTION).map(([key, value]) => ({
-      name: value,
-      id: key,
-    }));
-  });
-  // 状态
-  const status = computed(() => {
-    return Object.entries(STATUS).map(([key, value]) => ({
-      name: value,
-      id: key,
-    }));
-  });
   const searchData = [
     // {
     //   name: '所属服务',
@@ -70,14 +48,20 @@
       name: t('资源类型'),
       id: SEARCH_ID.resource_type,
       multiple: false,
-      children: [...resourceType.value],
+      children: Object.entries(RECORD_RES_TYPE).map(([key, value]) => ({
+        name: value,
+        id: key,
+      })),
       async: false,
     },
     {
       name: t('操作行为'),
       id: SEARCH_ID.action,
       multiple: false,
-      children: [...action.value],
+      children: Object.entries(ACTION).map(([key, value]) => ({
+        name: value,
+        id: key,
+      })),
       async: false,
     },
     {
@@ -90,7 +74,10 @@
       name: t('状态'),
       id: SEARCH_ID.status,
       multiple: false,
-      children: [...status.value],
+      children: Object.entries(STATUS).map(([key, value]) => ({
+        name: value,
+        id: key,
+      })),
       async: false,
     },
     {
@@ -115,14 +102,6 @@
       return acc;
     }, {});
   });
-  watch(
-    () => searchValue.value,
-    () => {
-      setUrlParams();
-      sendSearchData();
-    },
-    { deep: true },
-  );
 
   onBeforeMount(() => {
     // 获取地址栏参数
@@ -139,6 +118,8 @@
     Object.keys(statusMap).forEach((id) => {
       statusMap[id].value = !!optionIdArr.length && optionIdArr.some((item) => item.every((itemId) => itemId === id));
     });
+    setUrlParams();
+    sendSearchData();
   };
 
   const changeStatus = debounce(
@@ -154,6 +135,8 @@
       } else {
         searchValue.value = searchValue.value.filter((option) => option.id !== id); // 删除
       }
+      setUrlParams();
+      sendSearchData();
     },
     300,
     { leading: true },

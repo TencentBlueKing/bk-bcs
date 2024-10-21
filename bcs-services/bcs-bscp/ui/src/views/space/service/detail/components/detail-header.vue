@@ -40,7 +40,7 @@
             </div>
           </div>
         </ReleasedGroupViewer>
-        <VersionApproveStatus ref="verAppStatus" @send-data="approveData = $event" />
+        <VersionApproveStatus ref="verAppStatus" @send-data="getVerApproveStatus" />
         <CreateVersion
           :bk-biz-id="props.bkBizId"
           :app-id="props.appId"
@@ -64,7 +64,10 @@
           @confirm="refreshVesionList" />
         <!-- 更多选项 -->
         <!-- <HeaderMoreOptions v-show="['partial_released', 'not_released'].includes(publishStatus)" /> -->
-        <HeaderMoreOptions :approve-status="approveData.status" @handle-undo="verAppStatus.loadStatus()" />
+        <HeaderMoreOptions
+          :approve-status="approveData.status"
+          :creator="creator"
+          @handle-undo="verAppStatus.loadStatus()" />
       </section>
     </template>
   </div>
@@ -121,6 +124,8 @@
     time: '',
     type: '',
   });
+
+  const creator = ref('');
 
   const getDefaultTab = () => {
     const tab = tabs.value.find((item) => item.routeName === route.name);
@@ -183,6 +188,11 @@
   onMounted(() => {
     getVersionPerms();
   });
+
+  const getVerApproveStatus = (approveStatusData: any, creatorData: string) => {
+    approveData.value = approveStatusData;
+    creator.value = creatorData;
+  };
 
   const getVersionPerms = async () => {
     permCheckLoading.value = true;

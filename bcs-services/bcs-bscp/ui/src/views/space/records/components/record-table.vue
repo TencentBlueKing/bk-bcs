@@ -46,8 +46,8 @@
             <template #default="{ row }">
               <div
                 v-if="row.audit && row.audit.spec.res_instance"
-                class="multi-line-styles"
-                v-html="convertInstance(row.audit.spec.res_instance)"></div>
+                v-html="convertInstance(row.audit.spec.res_instance)"
+                class="multi-line-styles"></div>
               <div v-else class="multi-line-styles">--</div>
               <!-- <div>{{ row.audit?.spec.res_instance || '--' }}</div> -->
             </template>
@@ -71,20 +71,7 @@
             }">
             <template #default="{ row }">
               <template v-if="row.audit?.spec.status">
-                <div
-                  :class="[
-                    'dot',
-                    {
-                      green: [APPROVE_STATUS.AlreadyPublish, APPROVE_STATUS.Success].includes(row.audit.spec.status),
-                      gray: row.audit.spec.status === APPROVE_STATUS.PendPublish,
-                      red: [
-                        APPROVE_STATUS.RevokedPublish,
-                        APPROVE_STATUS.RejectedApproval,
-                        APPROVE_STATUS.Failure,
-                      ].includes(row.audit.spec.status),
-                      orange: row.audit.spec.status === APPROVE_STATUS.PendApproval,
-                    },
-                  ]"></div>
+                <div :class="['dot', ...setApprovalClass(row.audit.spec.status)]"></div>
                 {{ STATUS[row.audit.spec.status as keyof typeof STATUS] || '--' }}
                 <!-- 上线时间icon -->
                 <div
@@ -167,11 +154,11 @@
                 <MoreActions
                   v-if="
                     [APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(row.audit.spec.status) &&
-                    row.app.creator === userInfo.username
+                    row.strategy.creator === userInfo.username
                   "
                   @handle-undo="handleConfirm(row, $event)" />
               </div>
-              <template v-else>--2</template>
+              <template v-else>--</template>
             </template>
           </bk-table-column>
           <template #empty>
@@ -226,6 +213,7 @@
   import { InfoLine } from 'bkui-vue/lib/icon';
   import VersionDiff from './version-diff.vue';
   import BkMessage from 'bkui-vue/lib/message';
+  import dayjs from 'dayjs';
 
   const props = withDefaults(
     defineProps<{
@@ -393,9 +381,10 @@
 
   // 上线时间是否超时
   const isTimeout = (time: string) => {
-    const currentTime = Date.now();
-    const publishTime = new Date(time).getTime();
-    return publishTime < currentTime;
+    const currentTime = dayjs();
+    const publishTime = dayjs(time);
+    // 定时的上线时间是否在当前时间之前
+    return publishTime.isBefore(currentTime);
   };
 
   // 上线/撤回提示框
@@ -503,15 +492,27 @@
   const tableDataSort = (data: IRowData[]) => {
     if (actionTimeSrotMode.value === 'desc') {
       tableData.value = data.sort(
-        (a, b) => new Date(b.audit.revision.created_at).getTime() - new Date(a.audit.revision.created_at).getTime(),
+        (a, b) => dayjs(b.audit.revision.created_at).valueOf() - dayjs(a.audit.revision.created_at).valueOf(),
       );
     } else if (actionTimeSrotMode.value === 'asc') {
       tableData.value = data.sort(
-        (a, b) => new Date(a.audit.revision.created_at).getTime() - new Date(b.audit.revision.created_at).getTime(),
+        (a, b) => dayjs(a.audit.revision.created_at).valueOf() - dayjs(b.audit.revision.created_at).valueOf(),
       );
     } else {
       tableData.value = data;
     }
+  };
+
+  // 审批状态颜色
+  const setApprovalClass = (status: APPROVE_STATUS) => {
+    return [
+      [APPROVE_STATUS.AlreadyPublish, APPROVE_STATUS.Success].includes(status) ? 'green' : '',
+      status === APPROVE_STATUS.PendPublish ? 'gray' : '',
+      [APPROVE_STATUS.RevokedPublish, APPROVE_STATUS.RejectedApproval, APPROVE_STATUS.Failure].includes(status)
+        ? 'red'
+        : '',
+      status === APPROVE_STATUS.PendApproval ? 'orange' : '',
+    ];
   };
 
   //  翻页

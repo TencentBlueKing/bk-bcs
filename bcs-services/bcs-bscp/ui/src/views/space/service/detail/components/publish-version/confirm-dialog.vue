@@ -77,7 +77,7 @@
       <bk-form-item :label="t('上线说明')" property="memo">
         <bk-input v-model="localVal.memo" type="textarea" :placeholder="t('请输入')" :maxlength="200" :resize="true" />
       </bk-form-item>
-      <bk-form-item property="publishTime">
+      <bk-form-item property="publish_time">
         <template #label>
           <span>{{ t('上线方式') }}</span>
           <help-fill
@@ -89,7 +89,7 @@
             class="mode-tip" />
         </template>
         <bk-loading :loading="pending">
-          <bk-radio-group v-model="localVal.publishType" :class="{ 'publish-type-wrap': locale !== 'zh-cn' }">
+          <bk-radio-group v-model="localVal.publish_type" :class="{ 'publish-type-wrap': locale !== 'zh-cn' }">
             <!-- 未开启审批 -->
             <template v-if="!isApprove">
               <bk-radio label="Immediately">{{ t('立即上线') }}</bk-radio>
@@ -103,8 +103,8 @@
             </template>
           </bk-radio-group>
           <bk-date-picker
-            v-if="localVal.publishType === 'Periodically'"
-            v-model="localVal.publishTime"
+            v-if="localVal.publish_type === 'Periodically'"
+            v-model="localVal.publish_time"
             :editable="false"
             :clearable="false"
             :disabled-date="disabledDate"
@@ -146,8 +146,8 @@
     groups: number[];
     all: boolean;
     memo: string;
-    publishType: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
-    publishTime: Date | string;
+    publish_type: 'Manually' | 'Automatically' | 'Periodically' | 'Immediately' | '';
+    publish_time: Date | string;
   }
 
   interface IModifyReleasePreviewItem extends IGroupPreviewItem {
@@ -182,8 +182,8 @@
     groups: [],
     all: false,
     memo: '',
-    publishType: '',
-    publishTime: new Date(new Date().getTime() + 7200000), // 默认当前时间的后两小时
+    publish_type: '',
+    publish_time: new Date(new Date().getTime() + 7200000), // 默认当前时间的后两小时
   });
   const previewData = ref<IModifyReleasePreviewItem[]>([]);
   const excludeGroups = ref<IGroupToPublish[]>([]);
@@ -198,7 +198,7 @@
         message: t('最大长度200个字符'),
       },
     ],
-    publishTime: [
+    publish_time: [
       {
         validator: (value: Date) => value.getTime() >= Date.now(),
         message: t('不能选择过去的时间'),
@@ -258,8 +258,8 @@
       groups: [],
       all: false,
       memo: '',
-      publishType: '',
-      publishTime: new Date(new Date().getTime() + 7200000),
+      publish_type: '',
+      publish_time: new Date(new Date().getTime() + 7200000),
     };
   };
 
@@ -278,13 +278,13 @@
         }
       }
       // 非定时上线，publishTime清空
-      params.publishTime =
-        localVal.value.publishType === 'Periodically' ? datetimeFormat(String(params.publishTime)) : '';
+      params.publish_time =
+        localVal.value.publish_type === 'Periodically' ? datetimeFormat(String(params.publish_time)) : '';
       const resp = await publishVerSubmit(props.bkBizId, props.appId, versionData.value.id, params);
       handleClose();
       // 目前组件库dialog关闭自带250ms的延迟，所以这里延时300ms
       setTimeout(() => {
-        emits('confirm', resp.data.have_pull as boolean, params.publishType, params.publishTime);
+        emits('confirm', resp.data.have_pull as boolean, params.publish_type, params.publish_time);
         // emits('confirm', resp.data.have_pull as boolean);
       }, 300);
     } catch (e) {
@@ -312,10 +312,10 @@
       isApprove.value = is_approve;
       // 审批类型
       if (publish_type) {
-        localVal.value.publishType = publish_type;
+        localVal.value.publish_type = publish_type;
       } else {
         // 无审批类型，默认选择选项的第一个
-        localVal.value.publishType = is_approve ? 'Manually' : 'Immediately';
+        localVal.value.publish_type = is_approve ? 'Manually' : 'Immediately';
       }
     } catch (error) {
       console.log(error);

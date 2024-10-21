@@ -3,19 +3,19 @@
     <bk-date-picker
       ref="datePickerRef"
       style="width: 300px"
+      type="datetimerange"
+      append-to-body
       :disabled-date="disabledDate"
       :model-value="defaultValue"
       :shortcuts="shortcutsRange"
       :editable="false"
       :clearable="false"
       :open="open"
-      type="datetimerange"
-      append-to-body
       @change="change"
       @click="open = !open">
       <template #confirm>
         <div>
-          <bk-button theme="primary" @click="handleChange" style="margin-right: 8px; height: 26px"> 确定 </bk-button>
+          <bk-button class="primary-button" theme="primary" @click="handleChange"> 确定 </bk-button>
         </div>
       </template>
     </bk-date-picker>
@@ -25,7 +25,7 @@
 <script setup lang="ts">
   import { onBeforeMount, ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { datetimeFormat } from '../../../../utils';
+  import dayjs from 'dayjs';
 
   const emits = defineEmits(['changeTime']);
 
@@ -36,27 +36,24 @@
     {
       text: '近7天',
       value() {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+        const end = dayjs().toDate();
+        const start = dayjs().subtract(7, 'day').toDate();
         return [start, end];
       },
     },
     {
       text: '近15天',
       value() {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24 * 15);
+        const end = dayjs().toDate();
+        const start = dayjs().subtract(15, 'day').toDate();
         return [start, end];
       },
     },
     {
       text: '近30天',
       value() {
-        const end = new Date();
-        const start = new Date();
-        start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+        const end = dayjs().toDate();
+        const start = dayjs().subtract(30, 'day').toDate();
         return [start, end];
       },
     },
@@ -66,26 +63,21 @@
   const defaultValue = ref<string[]>([]);
 
   onBeforeMount(() => {
-    const hasQueryTime = ['start_time', 'end_time'].every((key) => key in route.query);
+    const hasQueryTime = ['start_time', 'end_time'].every(
+      (key) => key in route.query && route.query[key]?.length === 19,
+    );
     const defaultTimeRange = [
-      datetimeFormat(String(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))),
-      datetimeFormat(String(new Date())),
+      dayjs().subtract(7, 'day').format('YYYY-MM-DD HH:mm:ss'),
+      dayjs().format('YYYY-MM-DD HH:mm:ss'),
     ];
-
     if (hasQueryTime) {
-      let startTime = String(route.query.start_time);
-      let endTime = String(route.query.end_time);
-      const isValidTime =
-        !isNaN(new Date(startTime).getTime()) &&
-        !isNaN(new Date(endTime).getTime()) &&
-        new Date(startTime).getTime() < Date.now() &&
-        new Date(endTime).getTime() < Date.now() &&
-        startTime.length === 19 &&
-        endTime.length === 19;
-
+      let startTime = dayjs(String(route.query.start_time));
+      let endTime = dayjs(String(route.query.end_time));
+      // 验证时间格式且在当前时间以前
+      const isValidTime = startTime.isValid() && endTime.isValid() && startTime.isBefore() && endTime.isBefore();
       if (isValidTime) {
-        if (startTime > endTime) [startTime, endTime] = [endTime, startTime];
-        defaultValue.value = [startTime, endTime];
+        if (startTime.isAfter(endTime)) [startTime, endTime] = [endTime, startTime];
+        defaultValue.value = [startTime.format('YYYY-MM-DD HH:mm:ss'), endTime.format('YYYY-MM-DD HH:mm:ss')];
       } else {
         defaultValue.value = defaultTimeRange;
       }
@@ -119,4 +111,9 @@
   };
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+  .primary-button {
+    margin-right: 4px;
+    height: 26px;
+  }
+</style>

@@ -7,7 +7,8 @@
         <li
           class="more-options-li"
           v-if="
-            [APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(props.approveStatus as APPROVE_STATUS)
+            [APPROVE_STATUS.PendApproval, APPROVE_STATUS.PendPublish].includes(props.approveStatus as APPROVE_STATUS) &&
+            creator === userInfo.username
           "
           @click="handleUndo">
           {{ $t('撤销') }}
@@ -20,18 +21,24 @@
 <script setup lang="ts">
   import { ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
+  import { storeToRefs } from 'pinia';
+  import useUserStore from '../../../../../store/user';
   import { Ellipsis } from 'bkui-vue/lib/icon';
   import { approve } from '../../../../../api/record';
   import BkMessage from 'bkui-vue/lib/message';
   import { APPROVE_STATUS } from '../../../../../constants/config';
   import { useI18n } from 'vue-i18n';
 
+  const { userInfo } = storeToRefs(useUserStore());
+
   const props = withDefaults(
     defineProps<{
       approveStatus: string;
+      creator: string;
     }>(),
     {
       approveStatus: '',
+      creator: '',
     },
   );
 
@@ -46,7 +53,7 @@
   // 跳转到服务记录页面
   const handleLinkTo = () => {
     const url = router.resolve({
-      name: 'records-appId',
+      name: 'records-app',
       params: {
         appId: route.params.appId,
       },

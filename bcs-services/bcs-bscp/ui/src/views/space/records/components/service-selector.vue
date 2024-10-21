@@ -101,7 +101,7 @@
         serviceType: service.spec.config_type!,
       };
       setLastAccessedServiceDetail(appId);
-      await router.push({ name: 'records-appId', params: { spaceId: bizId.value, appId }, query: route.query });
+      await router.push({ name: 'records-app', params: { spaceId: bizId.value, appId }, query: route.query });
     } else {
       localApp.value = {
         name: t('全部服务'),
