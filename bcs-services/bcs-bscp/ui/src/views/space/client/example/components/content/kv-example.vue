@@ -190,7 +190,11 @@
       case 'http':
         labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
         if (!activeTab.value) {
-          labelArrType = `'${labelArrType}'`;
+          // 文件型的shell需要添加转义符
+          labelArrType =
+            basicInfo?.serviceType.value === 'file'
+              ? `'\\${labelArrType.slice(0, labelArrType.length - 1)}\\${labelArrType.slice(labelArrType.length - 1, labelArrType.length)}'`
+              : `'${labelArrType}'`;
         }
         break;
       default:
