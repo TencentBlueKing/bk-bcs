@@ -72,9 +72,10 @@
       }
       configList.value = res.details.map((item: IConfigItem | IConfigKvType) => {
         if ('path' in item.spec) {
+          const { path, name } = item.spec;
           return {
             id: item.id,
-            config: item.spec.path + item.spec.name,
+            config: path.endsWith('/') ? `${path}${name}` : `${path}/${name}`,
           };
         }
         return {
@@ -88,6 +89,7 @@
       loading.value = false;
     }
   };
+
   // 下拉列表操作
   const handleConfigChange = async (name: string) => {
     configName.value = name;
