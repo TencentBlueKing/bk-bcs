@@ -728,7 +728,7 @@ func (c *nodeGroupToSet) convert() {
 		set.Properties.VirtualMachineProfile = new(armcompute.VirtualMachineScaleSetVMProfile)
 	}
 	// 用户数据
-	c.setUserData()
+	//c.setUserData()
 	// 设置区域
 	c.setLocation()
 	// 系统盘

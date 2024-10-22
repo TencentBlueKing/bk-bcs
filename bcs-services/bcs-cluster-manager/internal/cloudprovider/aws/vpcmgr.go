@@ -42,9 +42,10 @@ func init() {
 type VPCManager struct{}
 
 // CheckConflictInVpcCidr check cidr conflict
-func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string, opt *cloudprovider.CommonOption) (
+func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
+	opt *cloudprovider.CheckConflictInVpcCidrOption) (
 	[]string, error) {
-	return business.CheckConflictFromVpc(opt, vpcID, cidr)
+	return business.CheckConflictFromVpc(&opt.CommonOption, vpcID, cidr)
 }
 
 // ListVpcs list vpcs

@@ -24,8 +24,6 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 var cloudInfoMgr sync.Once
@@ -56,10 +54,10 @@ func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster,
 		return fmt.Errorf("initCloudCluster advanced setting empty")
 	}
 
-	if !utils.StringInSlice(cls.ClusterAdvanceSettings.NetworkType,
-		[]string{common.AzureCniOverlay, common.AzureCniNodeSubnet}) {
-		return fmt.Errorf("initCloudCluster not supported networkPlugin[%s]", cls.ClusterAdvanceSettings.NetworkType)
-	}
+	// if !utils.StringInSlice(cls.ClusterAdvanceSettings.NetworkType,
+	// 	[]string{common.AzureCniOverlay, common.AzureCniNodeSubnet}) {
+	// 	return fmt.Errorf("initCloudCluster not supported networkPlugin[%s]", cls.ClusterAdvanceSettings.NetworkType)
+	// }
 
 	return nil
 }

@@ -33,10 +33,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/business"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
@@ -220,7 +218,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
 				AuthorizedIPRanges: func() []*string {
 					ipRanges := make([]*string, 0)
-					if !cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
+					if cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
 						for _, ip := range cluster.ClusterAdvanceSettings.ClusterConnectSetting.
 							Internet.PublicAccessCidrs {
 							ipRanges = append(ipRanges, to.Ptr(ip))
@@ -240,11 +238,13 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			// },
 			DNSPrefix: to.Ptr(fmt.Sprintf("%s-dns", strings.ReplaceAll(cluster.ClusterName, "_", "-"))),
 			NetworkProfile: &armcontainerservice.NetworkProfile{
-				PodCidr:      to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),
-				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
-				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
-				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
-				PodCidrs:     []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
+				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginAzure),
+				NetworkPolicy: to.Ptr(armcontainerservice.NetworkPolicyCalico),
+				PodCidr:       to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),
+				ServiceCidr:   to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
+				DNSServiceIP:  to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
+				ServiceCidrs:  []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
+				PodCidrs:      []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
 			},
 			ServicePrincipalProfile: &armcontainerservice.ManagedClusterServicePrincipalProfile{
 				ClientID: to.Ptr(info.CmOption.Account.ClientID),     // nolint
@@ -264,20 +264,20 @@ func genAgentPoolReq(ng *proto.NodeGroup, info *cloudprovider.CloudDependBasicIn
 	}
 
 	subnetIds := make([]string, 0)
-	if info.Cluster.GetClusterAdvanceSettings().GetNetworkType() == icommon.AzureCniNodeSubnet {
-		if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
-			// 各个可用区自动分配指定数量的子网
-			ids, err := business.AllocateClusterVpcCniSubnets(context.Background(), info.Cluster.ClusterID,
-				info.Cluster.VpcID, info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
-			if err != nil {
-				return nil, err
-			}
+	// if info.Cluster.GetClusterAdvanceSettings().GetNetworkType() == icommon.AzureCniNodeSubnet {
+	// 	if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
+	// 		// 各个可用区自动分配指定数量的子网
+	// 		ids, err := business.AllocateClusterVpcCniSubnets(context.Background(), info.Cluster.ClusterID,
+	// 			info.Cluster.VpcID, info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
 
-			subnetIds = append(subnetIds, ids...)
-		}
-	} else {
-		subnetIds = append(subnetIds, ng.AutoScaling.SubnetIDs...)
-	}
+	// 		subnetIds = append(subnetIds, ids...)
+	// 	}
+	// } else {
+	subnetIds = append(subnetIds, ng.AutoScaling.SubnetIDs...)
+	// }
 
 	if len(ng.AutoScaling.VpcID) == 0 || len(subnetIds) == 0 {
 		return nil, fmt.Errorf("genAgentPoolReq nodegroup[%s] vpcID or subnetID can not be empty", ng.Name)
@@ -285,6 +285,22 @@ func genAgentPoolReq(ng *proto.NodeGroup, info *cloudprovider.CloudDependBasicIn
 
 	sysDiskSize, _ := strconv.Atoi(ng.LaunchTemplate.SystemDisk.DiskSize)
 	agentPool := &armcontainerservice.ManagedClusterAgentPoolProfile{
+		NodeLabels: func(labels map[string]string) map[string]*string {
+			label := make(map[string]*string)
+			for k, v := range labels {
+				label[k] = to.Ptr(v)
+			}
+
+			return label
+		}(ng.NodeTemplate.Labels),
+		NodeTaints: func(taints []*proto.Taint) []*string {
+			t := make([]*string, 0)
+			for _, v := range taints {
+				t = append(t, to.Ptr(fmt.Sprintf("%s=%s:%s", v.Key, v.Value, v.Effect)))
+			}
+
+			return t
+		}(ng.NodeTemplate.Taints),
 		AvailabilityZones: func(zones []string) []*string {
 			az := make([]*string, 0)
 			for _, v := range zones {
@@ -1094,7 +1110,10 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 			}
 		}
 	}
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(addSuccessNodes, ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
+	state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(addSuccessNodes, ",")
+	state.Task.NodeIPList = addSuccessNodes
 
 	return nil
 }

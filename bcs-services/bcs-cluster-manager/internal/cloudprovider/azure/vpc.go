@@ -20,10 +20,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -68,6 +70,14 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 			len(v.Properties.AddressSpace.AddressPrefixes) > 0 {
 			if !strings.Contains(*v.Properties.AddressSpace.AddressPrefixes[0], ":") {
 				vpc.Ipv4Cidr = *v.Properties.AddressSpace.AddressPrefixes[0]
+
+				_, ipNet, err := net.ParseCIDR(vpc.Ipv4Cidr)
+				ipNum, err := cidrtree.GetIPNum(ipNet)
+				if err != nil {
+					blog.Errorf("vpc GetIPNum failed: %v", err)
+					continue
+				}
+				vpc.AllocateIpNum = ipNum
 			} else {
 				vpc.Ipv6Cidr = *v.Properties.AddressSpace.AddressPrefixes[0]
 			}
@@ -161,8 +171,8 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pr
 
 // CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
-	opt *cloudprovider.CommonOption) ([]string, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	opt *cloudprovider.CheckConflictInVpcCidrOption) ([]string, error) {
+	return business.CheckConflictFromVpc(&opt.CommonOption, vpcID, cidr, opt.ResourceGroupName)
 }
 
 // AllocateOverlayCidr allocate overlay cidr

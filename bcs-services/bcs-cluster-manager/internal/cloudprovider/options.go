@@ -518,6 +518,12 @@ type CheckEndpointStatusOption struct {
 	ResourceGroupName string
 }
 
+// CheckEndpointStatusOption check cluster endpoint status option
+type CheckConflictInVpcCidrOption struct {
+	CommonOption
+	ResourceGroupName string
+}
+
 // AddSubnetsToClusterOption add subnet to cluster option
 type AddSubnetsToClusterOption struct {
 	CommonOption

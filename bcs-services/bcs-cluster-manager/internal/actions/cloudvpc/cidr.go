@@ -107,7 +107,11 @@ func (la *CheckCidrConflictAction) checkVpcCidrConflict() error {
 	cmOption.Region = la.req.Region
 
 	// get vpc conflict cidr list
-	cidrs, err := vpcMgr.CheckConflictInVpcCidr(la.req.GetVpcId(), la.req.GetCidr(), cmOption)
+	cidrs, err := vpcMgr.CheckConflictInVpcCidr(la.req.GetVpcId(), la.req.GetCidr(),
+		&cloudprovider.CheckConflictInVpcCidrOption{
+			CommonOption:      *cmOption,
+			ResourceGroupName: la.req.ResourceGroupName,
+		})
 	if err != nil {
 		return err
 	}
