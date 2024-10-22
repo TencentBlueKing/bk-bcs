@@ -21,6 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 
+	resCsts "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
@@ -71,6 +72,7 @@ type Order string
 type QueryFilter struct {
 	Creator       []string // -- 代表无创建者
 	Name          string
+	CreateSource  *clusterRes.CreateSource
 	LabelSelector []*clusterRes.LabelSelector
 	IP            string   // IP 过滤条件，包括IPV4、IPV6、HostIP，目前仅 Pod 支持
 	Status        []string // 状态过滤条件，目前仅 Deployment 支持
@@ -225,6 +227,93 @@ func (f *QueryFilter) NameFilter(resources []*storage.Resource) []*storage.Resou
 	}
 	for _, v := range resources {
 		if strings.Contains(mapx.GetStr(v.Data, "metadata.name"), f.Name) {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+// CreateSourceFilter 创建来源过滤器
+func (f *QueryFilter) CreateSourceFilter(resources []*storage.Resource) []*storage.Resource {
+	if f.CreateSource == nil {
+		return resources
+	}
+
+	resources = f.createSourceSourceFilter(resources)
+	resources = f.createSourceTemplateNameFilter(resources)
+	resources = f.createSourceTemplateVersionFilter(resources)
+	resources = f.createSourceChartNameFilter(resources)
+
+	return resources
+}
+
+// createSourceSourceFilter 来源过滤器
+func (f *QueryFilter) createSourceSourceFilter(resources []*storage.Resource) []*storage.Resource {
+	result := []*storage.Resource{}
+	if f.CreateSource.Source == "" {
+		return resources
+	}
+
+	for _, v := range resources {
+		createSource, _ := formatter.ParseCreateSource(v.Data)
+		if strings.Contains(createSource, f.CreateSource.Source) {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+// createSourceTemplateNameFilter 模板名称来源过滤器
+func (f *QueryFilter) createSourceTemplateNameFilter(resources []*storage.Resource) []*storage.Resource {
+	result := []*storage.Resource{}
+	if f.CreateSource.Template == nil {
+		return resources
+	}
+	if f.CreateSource.Template.TemplateName == "" {
+		return resources
+	}
+
+	for _, v := range resources {
+		templateName := mapx.GetStr(v.Data, []string{"metadata", "annotations", resCsts.TemplateNameAnnoKey})
+		if strings.Contains(templateName, f.CreateSource.Template.TemplateName) {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+// createSourceTemplateNameFilter 模板名称来源过滤器
+func (f *QueryFilter) createSourceTemplateVersionFilter(resources []*storage.Resource) []*storage.Resource {
+	result := []*storage.Resource{}
+	if f.CreateSource.Template == nil {
+		return resources
+	}
+	if f.CreateSource.Template.TemplateVersion == "" {
+		return resources
+	}
+
+	for _, v := range resources {
+		templateVersion := mapx.GetStr(v.Data, []string{"metadata", "annotations", resCsts.TemplateVersionAnnoKey})
+		if strings.Contains(templateVersion, f.CreateSource.Template.TemplateVersion) {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+// createSourceChartNameFilter ChartName来源过滤器
+func (f *QueryFilter) createSourceChartNameFilter(resources []*storage.Resource) []*storage.Resource {
+	result := []*storage.Resource{}
+	if f.CreateSource.Chart == nil {
+		return resources
+	}
+	if f.CreateSource.Chart.ChartName == "" {
+		return resources
+	}
+
+	for _, v := range resources {
+		chartName := mapx.GetStr(v.Data, []string{"metadata", "labels", resCsts.HelmChartAnnoKey})
+		if strings.Contains(chartName, f.CreateSource.Chart.ChartName) {
 			result = append(result, v)
 		}
 	}
