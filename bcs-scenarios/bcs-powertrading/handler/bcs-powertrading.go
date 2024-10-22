@@ -121,7 +121,7 @@ func (p *PowerTradingHandler) ProxyClusterManagerNodeDrain(ctx context.Context,
 }
 
 // ProxyResourceManagerCreateDeviceRecord create device record
-func (p *PowerTradingHandler) ProxyResourceManagerCreateDeviceRecord(ctx context.Context,
+func (p *PowerTradingHandler) ProxyResourceManagerCreateDeviceRecord(ctx context.Context, // nolint
 	req *powertrading.ProxyResourceManagerCreateDeviceRecordReq,
 	rsp *powertrading.ProxyResourceManagerCreateDeviceRecordResp) error {
 	blog.Infof("receive ProxyResourceManagerCreateDeviceRecord request, devices:%s, businessID:%d",
@@ -132,7 +132,7 @@ func (p *PowerTradingHandler) ProxyResourceManagerCreateDeviceRecord(ctx context
 	deviceIds := make([]string, 0)
 	if req.DeviceIDs != nil && len(deviceIds) != 0 {
 		deviceIds = append(deviceIds, req.DeviceIDs...)
-	} else if req.Ips != nil && len(req.Ips) != 0 {
+	} else if len(req.Ips) != 0 {
 		deviceRsp, err := p.rmCli.ListDeviceByIps(ctx, int64(len(req.Ips)), req.Ips)
 		if err != nil {
 			blog.Errorf("list device by ip request failed: %s", err.Error())
