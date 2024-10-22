@@ -18,6 +18,22 @@ PATH     := ${PREFIX}/bin/proto:${PATH}
 export PROTOC_VERSION=25.1
 GOBUILD=CGO_ENABLED=0 go build -trimpath
 
+# support build on mac/darwin 
+# brew install clang-format gsed FiloSottile/musl-cross/musl-cross     
+
+HOST=$(shell go env GOHOSTOS)
+ifeq ("$(HOST)", "darwin")
+    WGET=curl -LO
+	HOSTOS=osx
+	go env -w CC="x86_64-linux-musl-gcc"
+    go env -w CXX="x86_64-linux-musl-g++"
+    go env -w GOOS=linux
+    go env -w GOARCH=amd64
+    go env -w CGO_ENABLED='0'
+else
+    WGET=wget -q
+	HOSTOS=linux
+endif
 
 # output directory for release package and version for command line
 ifeq ("$(VERSION)", "")
@@ -44,8 +60,8 @@ init:
 	@mkdir -p ${PREFIX}/bin/proto
 	@cd ${PREFIX}/bin/proto && \
 		rm -rf protoc-*.zip* && \
-		wget -q https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
-		unzip -o protoc-${PROTOC_VERSION}-linux-x86_64.zip && \
+		$(WGET) https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/protoc-${PROTOC_VERSION}-${HOSTOS}-x86_64.zip && \
+		unzip -o protoc-${PROTOC_VERSION}-${HOSTOS}-x86_64.zip && \
 		mv -f bin/protoc . && \
 		rm -rf protoc-*.zip* readme.txt bin include
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.31.0
