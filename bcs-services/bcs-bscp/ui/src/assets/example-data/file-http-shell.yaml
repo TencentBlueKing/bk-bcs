@@ -19,5 +19,5 @@ auth_header="Authorization: Bearer ${token}"
 curl -s -X GET -H "${auth_header}" "${url}"
 
 # 把下载的文件保存在指定位置
-# curl -s -X GET -H "${auth_header}" "${url}" -o ${save_path}/${file_path##*/}
-# echo "The file has been saved to ${save_path}/${file_path##*/}"
+# curl -s -X GET -H "${auth_header}" "${url}" -o ${save_path}${file_path##*/}
+# echo "The file has been saved to ${save_path}${file_path##*/}"

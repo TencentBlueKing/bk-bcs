@@ -1,23 +1,30 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function  # 使print函数在Python 2中可用
 import requests
 import json
 import os
+import sys
+
+# 检查Python版本
+PY2 = sys.version_info[0] == 2
 
 # 设置参数
-feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
-biz_id={{ .Bk_Bscp_Variable_BkBizId }}
-service_name="{{ .Bk_Bscp_Variable_ServiceName }}"
-file_path={{ .Bk_Bscp_Variable_KeyName }}
-token={{ .Bk_Bscp_Variable_ClientKey }}
-labels={{ .Bk_Bscp_Variable_Leabels }}
-save_path='./'
+feed_addr = "{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+biz_id = {{ .Bk_Bscp_Variable_BkBizId }}
+service_name = "{{ .Bk_Bscp_Variable_ServiceName }}"
+file_path = {{ .Bk_Bscp_Variable_KeyName }}
+token = {{ .Bk_Bscp_Variable_ClientKey }}
+labels = {{ .Bk_Bscp_Variable_Leabels }}
+save_path = './'
 
 # 使用参数构建URL
-url = f"{feed_addr}/api/v1/feed/biz/{biz_id}/app/{service_name}/files{file_path}"
+url = "{}/api/v1/feed/biz/{}/app/{}/files{}".format(feed_addr, biz_id, service_name, file_path)
 
 # 设置请求头，包括Authorization token
 headers = {
-    "Authorization": f"Bearer {token}",
+    "Authorization": "Bearer {}".format(token),
 }
 
 # 设置请求参数
@@ -27,7 +34,10 @@ params = {
 
 # 发送 GET 请求下载文件(以标准输出在终端打印显示）
 response = requests.get(url, params=params, headers=headers)
-print("Response content:", response.content)
+
+# 统一输出内容
+content = response.content.decode('utf-8') if not PY2 else response.content
+print("Response content:", content)
 
 """
 # 把下载的文件保存在指定位置
@@ -36,5 +46,5 @@ if response.status_code == 200:
         file.write(response.content)
     print("The file has been saved to " + os.path.join(save_path, os.path.basename(file_path)))
 else:
-    print(f'Request failed, status code:{response.status_code}')
+    print('Request failed, status code:{}'.format(response.status_code))
 """

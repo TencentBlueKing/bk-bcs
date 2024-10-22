@@ -3,7 +3,8 @@
     <form-option
       ref="fileOptionRef"
       :directory-show="false"
-      :http-config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
+      :config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
+      :config-label="basicInfo?.serviceType.value === 'file' ? '配置文件名' : '配置项名称'"
       @update-option-data="(data) => getOptionData(data)" />
     <div class="preview-container">
       <div class="kv-handle-content">
@@ -70,7 +71,7 @@
     privacyCredential: '',
     labelArr: [],
     labelArrType: '', // 展示格式
-    httpConfigName: '', // http配置项名称
+    configName: '', // 配置项
     tempDir: '', // http临时目录路径(file)
   });
 
@@ -133,15 +134,17 @@
           codePreviewHeight: 1990,
         };
       case 'http':
+        // shell
         if (!activeTab.value) {
           return {
             topTip: '',
             codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 470 : 604,
           };
         }
+        // python
         return {
           topTip: '',
-          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 792 : 754,
+          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 982 : 850,
         };
       default:
         return {
@@ -194,6 +197,7 @@
           labelArrType =
             basicInfo?.serviceType.value === 'file'
               ? `'\\${labelArrType.slice(0, labelArrType.length - 1)}\\${labelArrType.slice(labelArrType.length - 1, labelArrType.length)}'`
+                .replaceAll(' ', '',)
               : `'${labelArrType}'`;
         }
         break;
@@ -237,16 +241,16 @@
         default_val: `"${optionData.value.privacyCredential}"`,
         memo: '',
       },
-      {
-        name: 'Bk_Bscp_Variable_Python_Key',
-        type: '',
-        default_val: '{{ YOUR_KEY }}',
-        memo: '',
-      },
+      // {
+      //   name: 'Bk_Bscp_Variable_Python_Key',
+      //   type: '',
+      //   default_val: '{{ YOUR_KEY }}',
+      //   memo: '',
+      // },
       {
         name: 'Bk_Bscp_Variable_KeyName',
         type: '',
-        default_val: `"${optionData.value.httpConfigName}"`,
+        default_val: `"${optionData.value.configName}"`,
         memo: '',
       },
     ];

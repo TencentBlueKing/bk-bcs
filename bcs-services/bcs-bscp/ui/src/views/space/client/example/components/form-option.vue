@@ -13,6 +13,19 @@
       </template>
       <KeySelect ref="keySelectorRef" @current-key="setCredential" />
     </bk-form-item>
+    <!-- 配置项/配置文件 -->
+    <bk-form-item v-if="props.configShow" property="configName" :required="props.configShow">
+      <template #label>
+        {{ $t(props.configLabel) }}
+        <info
+          class="icon-info"
+          v-bk-tooltips="{
+            content: $t(`请选择一个${props.configLabel}，用于测试下载相应文件`),
+            placement: 'top',
+          }" />
+      </template>
+      <config-selector ref="configSelectRef" @select-config="formData.configName = $event" />
+    </bk-form-item>
     <bk-form-item v-if="props.dualSystemSupport" :label="$t('客户端操作系统')" property="systemType">
       <bk-radio v-model="formData.systemType" label="Unix" @change="handleChangeSys(formData.systemType)">
         Linux
@@ -44,18 +57,6 @@
           &nbsp;{{ realPath }}&nbsp;
         </span>
       </div>
-    </bk-form-item>
-    <bk-form-item v-if="props.httpConfigShow" property="httpConfigName" :required="props.httpConfigShow">
-      <template #label>
-        {{ $t('配置项名称') }}
-        <info
-          class="icon-info"
-          v-bk-tooltips="{
-            content: $t('请选择一个配置文件名，用于测试下载相应文件'),
-            placement: 'top',
-          }" />
-      </template>
-      <config-selector ref="configSelectRef" @select-config="formData.httpConfigName = $event" />
     </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
@@ -135,7 +136,8 @@
     defineProps<{
       directoryShow?: boolean; // 临时目录(所有文件型)
       p2pShow?: boolean; // p2p网络加速（Sidecar容器）
-      httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      configShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      configLabel?: string; // 配置项label
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
       dualSystemSupport?: boolean; // Linux与Windows双系统支持（节点管理插件与两种类型的cmd命令行工具）
       lineBreakShow?: boolean; // 换行符选项(节点管理插件)
@@ -143,7 +145,8 @@
     {
       directoryShow: true,
       p2pShow: false,
-      httpConfigShow: false,
+      configShow: false,
+      configLabel: '配置项名称',
       associateConfigShow: false,
       dualSystemSupport: false,
       lineBreakShow: false,
@@ -167,7 +170,7 @@
     clientKey: '', // 客户端密钥
     privacyCredential: '', // 脱敏的密钥
     tempDir: '/data/bscp', // 临时目录
-    httpConfigName: '', // http配置项名称
+    configName: '', // 配置项
     labelArr: [], // 添加的标签
     clusterSwitch: false, // 集群开关
     clusterInfo: 'BCS-K8S-', // 集群ID
@@ -239,7 +242,7 @@
         },
       },
     ],
-    httpConfigName: [
+    configName: [
       {
         required: true,
         validator: (value: string) => value.length <= 128,
@@ -318,7 +321,7 @@
     // const p2pValid = props.p2pShow ? p2pAccelerationRef.value.isValid() : true;
     // 密钥验证
     const keyValid = keySelectorRef.value.validateCredential();
-    const configValid = props.httpConfigShow ? configSelectRef.value.validateConfig() : true;
+    const configValid = props.configShow ? configSelectRef.value.validateConfig() : true;
     // const isAllValid = [labelValid, p2pValid, keyValid].includes(false);
     const isAllValid = [labelValid, keyValid, configValid].includes(false);
     if (isAllValid) {
