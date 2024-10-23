@@ -331,3 +331,8 @@ func SplitPathAndName(remainingPath string) (string, string) {
 	}
 	return remainingPath, ""
 }
+
+// ConvertBackslashes 用于将字符串中的反斜杠转换为正斜杠
+func ConvertBackslashes(input string) string {
+	return strings.ReplaceAll(input, `\`, "/")
+}
