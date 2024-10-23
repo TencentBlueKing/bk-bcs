@@ -425,7 +425,7 @@ type VPCManager interface {
 	// ListBandwidthPacks list bandWidthPacks
 	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 	// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
-	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CommonOption) ([]string, error)
+	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CheckConflictInVpcCidrOption) ([]string, error)
 	// AllocateOverlayCidr allocate overlay cidr
 	AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
 		reservedBlocks []*net.IPNet, opt *CommonOption) ([]string, error)

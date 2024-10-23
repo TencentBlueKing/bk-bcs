@@ -52,19 +52,19 @@ const (
 var (
 	// create cluster task
 	createAKSClusterStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-CreateAKSClusterTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-CreateCloudClusterTask", cloudName),
 		StepName:   "创建集群",
 	}
 	checkAKSClusterStatusStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-CheckAKSClusterStatusTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-CheckCloudClusterStatusTask", cloudName),
 		StepName:   "检测集群状态",
 	}
 	checkAKSNodeGroupsStatusStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-CheckAKSNodeGroupsStatusTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-AKS-CheckCloudNodeGroupStatusTask", cloudName),
 		StepName:   "检测集群节点池状态",
 	}
 	updateAKSNodeGroupsToDBStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-UpdateAKSNodesGroupToDBTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-UpdateCleanNodeGroupNodesDBInfoTask", cloudName),
 		StepName:   "更新节点池信息",
 	}
 	checkCreateClusterNodeStatusStep = cloudprovider.StepInfo{
@@ -72,11 +72,11 @@ var (
 		StepName:   "检测集群节点状态",
 	}
 	registerAKSClusterKubeConfigStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-RegisterAKSClusterKubeConfigTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-AKS-RegisterClusterKubeConfigTask", cloudName),
 		StepName:   "注册集群连接信息",
 	}
 	updateAKSNodesToDBStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-UpdateAKSNodesToDBTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-UpdateAddNodeDBInfoTask", cloudName),
 		StepName:   "更新任务状态",
 	}
 
@@ -92,7 +92,7 @@ var (
 
 	// delete cluster task
 	deleteAKSClusterStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-DeleteAKSClusterTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-DeleteCloudClusterTask", cloudName),
 		StepName:   "删除集群",
 	}
 	cleanClusterDBInfoStep = cloudprovider.StepInfo{
