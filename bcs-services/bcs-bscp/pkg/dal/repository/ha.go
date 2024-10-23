@@ -81,19 +81,10 @@ func (c *haClient) Download(kt *kit.Kit, sign string) (io.ReadCloser, int64, err
 	return nil, 0, haErr(masterErr, slaveErr)
 }
 
-// Metadata ha repo file metadata
+// Metadata only get metadata from master repo
+// !Note: slave repo only used for download
 func (c *haClient) Metadata(kt *kit.Kit, sign string) (*ObjectMetadata, error) {
-	masterMD, masterErr := c.master.Metadata(kt, sign)
-	if masterErr == nil {
-		return masterMD, nil
-	}
-
-	slaveMD, slaveErr := c.slave.Metadata(kt, sign)
-	if slaveErr == nil {
-		return slaveMD, nil
-	}
-
-	return nil, haErr(masterErr, slaveErr)
+	return c.master.Metadata(kt, sign)
 }
 
 // InitMultipartUpload init multipart upload file for ha repo master

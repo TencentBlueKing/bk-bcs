@@ -13,6 +13,19 @@
       </template>
       <KeySelect ref="keySelectorRef" @current-key="setCredential" />
     </bk-form-item>
+    <!-- 配置项/配置文件 -->
+    <bk-form-item v-if="props.configShow" property="configName" :required="props.configShow">
+      <template #label>
+        {{ $t(props.configLabel) }}
+        <info
+          class="icon-info"
+          v-bk-tooltips="{
+            content: $t(`请选择一个${props.configLabel}，用于测试下载相应文件`),
+            placement: 'top',
+          }" />
+      </template>
+      <config-selector ref="configSelectRef" @select-config="formData.configName = $event" />
+    </bk-form-item>
     <bk-form-item v-if="props.dualSystemSupport" :label="$t('客户端操作系统')" property="systemType">
       <bk-radio v-model="formData.systemType" label="Unix" @change="handleChangeSys(formData.systemType)">
         Linux
@@ -45,18 +58,6 @@
         </span>
       </div>
     </bk-form-item>
-    <bk-form-item v-if="props.httpConfigShow" property="httpConfigName" :required="props.httpConfigShow">
-      <template #label>
-        {{ $t('配置项名称') }}
-        <info
-          class="icon-info"
-          v-bk-tooltips="{
-            content: $t('请输入配置项名称（key）用以获取对应值（value）'),
-            placement: 'top',
-          }" />
-      </template>
-      <bk-input v-model="formData.httpConfigName" :placeholder="$t('请输入')" clearable />
-    </bk-form-item>
     <bk-form-item>
       <!-- 添加标签 -->
       <AddLabel ref="addLabelRef" @send-label="formData.labelArr = $event" />
@@ -86,6 +87,32 @@
     <bk-form-item v-if="associateConfigShow">
       <associate-config @update-rules="formData.rules = $event" />
     </bk-form-item>
+    <!-- 节点管理插件换行符选择 -->
+    <bk-form-item v-if="lineBreakShow" class="line-break-item">
+      <template #label>
+        {{ $t('文本文件换行符：') }}
+        <info
+          class="icon-info"
+          v-bk-tooltips="{
+            content: $t(`客户端下载文件时可以选择将文件保存为Linux格式（使用LF换行符）或Windows格式（使用CRLF换行符）
+服务端默认使用Linux换行符进行保存，如果选择将文件保存为Windows格式，可能导致客户端文件的MD5值与服务端的MD5值不一致`),
+            placement: 'top',
+          }" />
+      </template>
+      <bk-select
+        class="line-break-selector"
+        v-model="formData.selectedLineBreak"
+        :filterable="false"
+        :clearable="false">
+        <bk-option
+          v-for="item in lineBreakData"
+          :key="item"
+          :name="item === 'CRLF' ? $t('CRLF（Windows换行符 \\r\\n）') : $t('LF（Linux换行符 \\n）')"
+          :id="item">
+          {{ item === 'CRLF' ? $t('CRLF（Windows换行符 \\r\\n）') : $t('LF（Linux换行符 \\n）') }}
+        </bk-option>
+      </bk-select>
+    </bk-form-item>
   </bk-form>
 </template>
 
@@ -103,21 +130,26 @@
   import { copyToClipBoard } from '../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
   import associateConfig from './associate-config.vue';
+  import configSelector from './config-selector.vue';
 
   const props = withDefaults(
     defineProps<{
-      directoryShow?: boolean; // 临时目录
+      directoryShow?: boolean; // 临时目录(所有文件型)
       p2pShow?: boolean; // p2p网络加速（Sidecar容器）
-      httpConfigShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      configShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
+      configLabel?: string; // 配置项label
       associateConfigShow?: boolean; // 配置文件筛选功能（所有文件型）
       dualSystemSupport?: boolean; // Linux与Windows双系统支持（节点管理插件与两种类型的cmd命令行工具）
+      lineBreakShow?: boolean; // 换行符选项(节点管理插件)
     }>(),
     {
       directoryShow: true,
       p2pShow: false,
-      httpConfigShow: false,
+      configShow: false,
+      configLabel: '配置项名称',
       associateConfigShow: false,
       dualSystemSupport: false,
+      lineBreakShow: false,
     },
   );
 
@@ -126,22 +158,25 @@
   const { t } = useI18n();
   const route = useRoute();
   const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
+  const lineBreakData = ['LF', 'CRLF'];
 
   const basicInfo = inject<{ serviceName: Ref<string> }>('basicInfo');
   const addLabelRef = ref();
   const keySelectorRef = ref();
+  const configSelectRef = ref();
   // const p2pAccelerationRef = ref();
   const formRef = ref();
   const formData = ref<IExampleFormData>({
     clientKey: '', // 客户端密钥
     privacyCredential: '', // 脱敏的密钥
     tempDir: '/data/bscp', // 临时目录
-    httpConfigName: '', // http配置项名称
+    configName: '', // 配置项
     labelArr: [], // 添加的标签
     clusterSwitch: false, // 集群开关
     clusterInfo: 'BCS-K8S-', // 集群ID
     rules: [], // 文件筛选规则
     systemType: 'Unix', // 系统类型
+    selectedLineBreak: 'LF', // 换行符
     // clusterInfo: {
     //   name: '', // 集群名称
     //   value: '', // 集群id
@@ -177,7 +212,10 @@
           // Unix与Windows双路径判断
           if (formData.value.systemType === 'Windows') {
             // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$/.test(formData.value.tempDir);
-            return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*([^\\/:*?"<>|\r\n]+|)$/.test(formData.value.tempDir);
+            // return /^[a-zA-Z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$|^[a-zA-Z]:$/.test(formData.value.tempDir);/^[A-Za-z]:\$/
+            return /^(?:[A-Za-z]:\\$|[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]+$|^[a-zA-Z]:$)/.test(
+              formData.value.tempDir,
+            );
           }
           // 单Unix路径判断
           // 必须为绝对路径, 且不能以/结尾
@@ -204,7 +242,7 @@
         },
       },
     ],
-    httpConfigName: [
+    configName: [
       {
         required: true,
         validator: (value: string) => value.length <= 128,
@@ -213,11 +251,17 @@
       },
       {
         required: true,
-        validator: (value: string) =>
-          /^[\p{Script=Han}\p{L}\p{N}]([\p{Script=Han}\p{L}\p{N}_-]*[\p{Script=Han}\p{L}\p{N}])?$/u.test(value),
-        message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
+        validator: (value: string) => value.length,
+        message: t('请先选择配置项名称，替换下方示例代码后，再尝试复制示例'),
         trigger: 'change',
       },
+      // {
+      //   required: true,
+      //   validator: (value: string) =>
+      //     /^[\p{Script=Han}\p{L}\p{N}]([\p{Script=Han}\p{L}\p{N}_-]*[\p{Script=Han}\p{L}\p{N}])?$/u.test(value),
+      //   message: t('只允许包含中文、英文、数字、下划线 (_)、连字符 (-)，并且必须以中文、英文、数字开头和结尾'),
+      //   trigger: 'change',
+      // },
     ],
     clusterInfo: [
       {
@@ -243,7 +287,7 @@
   // 真实路径
   const realPath = computed(() => {
     if (formData.value.systemType === 'Windows') {
-      return `${formData.value.tempDir}\\${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
+      return `${formData.value.tempDir}${/^[A-Za-z]:\\$/.test(formData.value.tempDir) ? '' : '\\'}${spaceId.value}\\${basicInfo?.serviceName.value}\\files`;
     }
     return `${formData.value.tempDir}/${spaceId.value}/${basicInfo?.serviceName.value}/files`;
   });
@@ -267,6 +311,7 @@
   // 选择操作系统改变默认路径
   const handleChangeSys = (type: string) => {
     formData.value.tempDir = type === 'Windows' ? 'D:\\bscp' : '/data/bscp';
+    formData.value.selectedLineBreak = type === 'Windows' ? 'CRLF' : 'LF';
   };
 
   const handleValidate = () => {
@@ -276,8 +321,9 @@
     // const p2pValid = props.p2pShow ? p2pAccelerationRef.value.isValid() : true;
     // 密钥验证
     const keyValid = keySelectorRef.value.validateCredential();
+    const configValid = props.configShow ? configSelectRef.value.validateConfig() : true;
     // const isAllValid = [labelValid, p2pValid, keyValid].includes(false);
-    const isAllValid = [labelValid, keyValid].includes(false);
+    const isAllValid = [labelValid, keyValid, configValid].includes(false);
     if (isAllValid) {
       formRef.value.validate();
       return Promise.reject();

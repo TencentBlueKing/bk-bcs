@@ -507,6 +507,12 @@
     }
     recoverConfig.value!.kv_state = 'UNCHANGE';
     isRecoverConfigDialogShow.value = false;
+
+    const res = await getKvList(props.bkBizId, props.appId, { start: 0, all: true });
+    configStore.$patch((state) => {
+      state.allConfigCount = res.count;
+      state.allExistConfigCount = res.exclusion_count;
+    });
   };
 
   // 批量删除配置项后刷新配置项列表

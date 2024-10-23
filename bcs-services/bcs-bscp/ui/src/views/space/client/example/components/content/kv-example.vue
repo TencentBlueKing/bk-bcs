@@ -3,7 +3,8 @@
     <form-option
       ref="fileOptionRef"
       :directory-show="false"
-      :http-config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
+      :config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
+      :config-label="basicInfo?.serviceType.value === 'file' ? '配置文件名' : '配置项名称'"
       @update-option-data="(data) => getOptionData(data)" />
     <div class="preview-container">
       <div class="kv-handle-content">
@@ -70,7 +71,8 @@
     privacyCredential: '',
     labelArr: [],
     labelArrType: '', // 展示格式
-    httpConfigName: '', // http配置项名称
+    configName: '', // 配置项
+    tempDir: '', // http临时目录路径(file)
   });
 
   // 代码预览上方提示框
@@ -132,15 +134,17 @@
           codePreviewHeight: 1990,
         };
       case 'http':
+        // shell
         if (!activeTab.value) {
           return {
             topTip: '',
-            codePreviewHeight: 604,
+            codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 470 : 604,
           };
         }
+        // python
         return {
           topTip: '',
-          codePreviewHeight: 754,
+          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 982 : 850,
         };
       default:
         return {
@@ -189,7 +193,12 @@
       case 'http':
         labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
         if (!activeTab.value) {
-          labelArrType = `'${labelArrType}'`;
+          // 文件型的shell需要添加转义符
+          labelArrType =
+            basicInfo?.serviceType.value === 'file'
+              ? `'\\${labelArrType.slice(0, labelArrType.length - 1)}\\${labelArrType.slice(labelArrType.length - 1, labelArrType.length)}'`
+                .replaceAll(' ', '',)
+              : `'${labelArrType}'`;
         }
         break;
       default:
@@ -232,16 +241,16 @@
         default_val: `"${optionData.value.privacyCredential}"`,
         memo: '',
       },
-      {
-        name: 'Bk_Bscp_Variable_Python_Key',
-        type: '',
-        default_val: '{{ YOUR_KEY }}',
-        memo: '',
-      },
+      // {
+      //   name: 'Bk_Bscp_Variable_Python_Key',
+      //   type: '',
+      //   default_val: '{{ YOUR_KEY }}',
+      //   memo: '',
+      // },
       {
         name: 'Bk_Bscp_Variable_KeyName',
         type: '',
-        default_val: `"${optionData.value.httpConfigName}"`,
+        default_val: `"${optionData.value.configName}"`,
         memo: '',
       },
     ];
@@ -315,6 +324,12 @@
           ? import('/src/assets/example-data/kv-c++-get.yaml?raw')
           : import('/src/assets/example-data/kv-c++-watch.yaml?raw');
       case 'http':
+        // http独有的file型
+        if (basicInfo?.serviceType.value === 'file') {
+          return !methods
+            ? import('/src/assets/example-data/file-http-shell.yaml?raw')
+            : import('/src/assets/example-data/file-http-python.yaml?raw');
+        }
         return !methods
           ? import('/src/assets/example-data/kv-http-shell.yaml?raw')
           : import('/src/assets/example-data/kv-http-python.yaml?raw');
