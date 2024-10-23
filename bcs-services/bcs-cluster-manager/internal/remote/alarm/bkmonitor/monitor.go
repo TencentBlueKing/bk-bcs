@@ -126,7 +126,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 }
 
 // bkmonitorHostAlarmConfig shield host alarm
-func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost) error {
+func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost) error { // nolint
 	if c == nil {
 		return alarm.ErrServerNotInit
 	}

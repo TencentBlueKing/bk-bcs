@@ -12290,6 +12290,10 @@ message CheckCidrConflictFromVpcRequest {
     title : "accountID",
     description : "云凭证ID"
   }];
+  string resourceGroupName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure 资源组名称"
+  }];
 }
 
 message CheckCidrConflictFromVpcResponse {

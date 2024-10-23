@@ -613,7 +613,10 @@ func (c *setToNodeGroup) setAutoScalingID() {
 // setAutoScalingName 设置asg name
 func (c *setToNodeGroup) setAutoScalingName() {
 	asg := c.group.AutoScaling
-	asg.AutoScalingName = RegexpSetNodeGroupResourcesName(c.set)
+	ngr := RegexpSetNodeGroupResourcesName(c.set)
+	if ngr != "" {
+		asg.AutoScalingName = ngr
+	}
 }
 
 // setZones 设置可用性区域
@@ -725,7 +728,7 @@ func (c *nodeGroupToSet) convert() {
 		set.Properties.VirtualMachineProfile = new(armcompute.VirtualMachineScaleSetVMProfile)
 	}
 	// 用户数据
-	c.setUserData()
+	//c.setUserData()
 	// 设置区域
 	c.setLocation()
 	// 系统盘
@@ -939,7 +942,7 @@ func (c *nodeToVm) setLocation() {
 
 // SetVmSetNetWork 设置虚拟规模集网络
 func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGroup, rg, nrg string,
-	set *armcompute.VirtualMachineScaleSet) error {
+	set *armcompute.VirtualMachineScaleSet, isNode bool) error {
 	vpcID := group.AutoScaling.VpcID
 	subnetIDs := group.AutoScaling.SubnetIDs
 	if len(vpcID) == 0 || len(subnetIDs) == 0 || len(group.LaunchTemplate.SecurityGroupIDs) == 0 {
@@ -959,7 +962,11 @@ func SetVmSetNetWork(ctx context.Context, client AksService, group *proto.NodeGr
 	}
 	set.Properties.VirtualMachineProfile.NetworkProfile.NetworkInterfaceConfigurations[0].Properties.
 		IPConfigurations[0].Properties.Subnet.ID = subnetDetail.ID
-	//	仍然使用本集群默认的安全组,
+
+	// 如果是创建集群则使用集群的资源组，如果是创建节点池则使用集群生成的节点资源组
+	if !isNode {
+		rg = nrg
+	}
 	sg, err := client.GetNetworkSecurityGroups(ctx, rg, group.LaunchTemplate.SecurityGroupIDs[0])
 	if err != nil {
 		blog.Errorf("SetVmSetNetWork GetNetworkSecurityGroups %s failed, %v",

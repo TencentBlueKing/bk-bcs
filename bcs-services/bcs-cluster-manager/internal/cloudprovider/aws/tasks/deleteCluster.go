@@ -90,7 +90,7 @@ func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	// check cluster if exist
 	_, err = cli.GetEksCluster(cluster.SystemID)
 	if err != nil {
-		if strings.Contains(err.Error(), eks.ErrCodeResourceNotFoundException){
+		if strings.Contains(err.Error(), eks.ErrCodeResourceNotFoundException) {
 			return nil
 		}
 		return err

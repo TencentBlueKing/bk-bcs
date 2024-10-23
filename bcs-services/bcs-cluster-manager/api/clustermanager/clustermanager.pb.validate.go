@@ -51040,6 +51040,8 @@ func (m *CheckCidrConflictFromVpcRequest) validate(all bool) error {
 
 	// no validation rules for AccountID
 
+	// no validation rules for ResourceGroupName
+
 	if len(errors) > 0 {
 		return CheckCidrConflictFromVpcRequestMultiError(errors)
 	}
