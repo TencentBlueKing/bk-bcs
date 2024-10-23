@@ -296,7 +296,7 @@
               <bk-input
                 type="number"
                 :min="1"
-                :max="1000"
+                :max="5000"
                 class="w-[88px]"
                 v-model="formData.rule.config.multiline.multiline_max_lines">
               </bk-input>
