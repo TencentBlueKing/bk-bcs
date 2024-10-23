@@ -4,7 +4,9 @@
       ref="fileOptionRef"
       :p2p-show="true"
       :associate-config-show="true"
-      @update-option-data="getOptionData" />
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="getOptionData"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="preview-container">
       <span class="preview-label">{{ $t('示例预览') }}</span>
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
@@ -26,12 +28,14 @@
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
-  import { IExampleFormData } from '../../../../../../../types/client';
+  import { IExampleFormData, newICredentialItem } from '../../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import yamlString from '/src/assets/example-data/file-container.yaml?raw';
 
-  const props = defineProps<{ contentScrollTop: Function }>();
+  const props = defineProps<{ contentScrollTop: Function; selectedKeyData: newICredentialItem['spec'] | null }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const { t } = useI18n();
   const route = useRoute();
