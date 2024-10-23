@@ -436,6 +436,8 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 		return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
 	}
 
+	req.FileMeta.ConfigItemSpec.Path = tools.ConvertBackslashes(req.FileMeta.ConfigItemSpec.Path)
+
 	// validate can file be downloaded by credential.
 	match, err := s.bll.Auth().CanMatchCI(
 		im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name)
@@ -697,6 +699,8 @@ func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq)
 	if !credential.MatchApp(app.Name) {
 		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", app.Name)
 	}
+
+	req.FileMeta.ConfigItemSpec.Path = tools.ConvertBackslashes(req.FileMeta.ConfigItemSpec.Path)
 
 	if !credential.MatchConfigItem(app.Name, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name) {
 		return nil, status.Error(codes.PermissionDenied, "no permission download file")
