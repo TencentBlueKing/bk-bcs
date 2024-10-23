@@ -36,6 +36,10 @@ type Publish interface {
 	Publish(kit *kit.Kit, opt *types.PublishOption) (id uint32, err error)
 
 	PublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption) (id uint32, err error)
+
+	SubmitWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption) (id uint32, err error)
+
+	UpsertPublishWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption, stg *table.Strategy) error
 }
 
 var _ Publish = new(pubDao)
@@ -130,6 +134,11 @@ func (dao *pubDao) validatePublishGroups(kt *kit.Kit, tx *gen.QueryTx, opt *type
 
 func genStrategy(kit *kit.Kit, opt *types.PublishOption, stgID uint32, groups []*table.Group) *table.Strategy {
 	now := time.Now()
+	state := table.Publishing
+	if opt.PubState != "" {
+		state = table.PublishState(opt.PubState)
+	}
+
 	return &table.Strategy{
 		ID: stgID,
 		Spec: &table.StrategySpec{
@@ -139,10 +148,16 @@ func genStrategy(kit *kit.Kit, opt *types.PublishOption, stgID uint32, groups []
 			Scope: &table.Scope{
 				Groups: groups,
 			},
-			Memo: opt.Memo,
+			Memo:             opt.Memo,
+			PublishType:      opt.PublishType,
+			PublishTime:      opt.PublishTime,
+			PublishStatus:    opt.PublishStatus,
+			RejectReason:     opt.RejectReason,
+			Approver:         opt.Approver,
+			ApproverProgress: opt.ApproverProgress,
 		},
 		State: &table.StrategyState{
-			PubState: table.Publishing,
+			PubState: state,
 		},
 		Attachment: &table.StrategyAttachment{
 			BizID: opt.BizID,
@@ -369,6 +384,116 @@ func (dao *pubDao) upsertReleasedGroups(kit *kit.Kit, tx *gen.Query, opt *types.
 		if err := q.Create(rg); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+// SubmitWithTx submit with transaction
+func (dao *pubDao) SubmitWithTx(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption) (uint32, error) {
+	if opt == nil {
+		return 0, errors.New("submit strategy option is nil")
+	}
+
+	if err := opt.Validate(); err != nil {
+		return 0, err
+	}
+
+	if err := dao.validatePublishGroups(kit, tx, opt); err != nil {
+		if e := tx.Rollback(); e != nil {
+			logs.Errorf("rollback publish transaction failed, err: %v, rid: %s", e, kit.Rid)
+		}
+		return 0, err
+	}
+
+	groups := make([]*table.Group, 0, len(opt.Groups))
+	var err error
+	if len(opt.Groups) > 0 {
+		m := tx.Group
+		q := tx.Group.WithContext(kit.Ctx)
+		groups, err = q.Where(m.ID.In(opt.Groups...), m.BizID.Eq(opt.BizID)).Find()
+		if err != nil {
+			logs.Errorf("get to be published groups(%s) failed, err: %v, rid: %s",
+				tools.JoinUint32(opt.Groups, ","), err, kit.Rid)
+			return 0, err
+		}
+	}
+
+	return dao.submit(kit, tx, opt, groups)
+}
+
+// create relate table
+func (dao *pubDao) submit(kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption, groups []*table.Group) (
+	uint32, error) {
+	eDecorator := dao.event.Eventf(kit)
+	// create strategy to publish it later
+	stgID, err := dao.idGen.One(kit, table.StrategyTable)
+	if err != nil {
+		logs.Errorf("generate strategy id failed, err: %v, rid: %s", err, kit.Rid)
+		return 0, err
+	}
+	if opt.PublishType == table.Immediately {
+		// publish immediately auto generation time
+		opt.PublishTime = time.Now().Format(time.DateTime)
+	}
+	stg := genStrategy(kit, opt, stgID, groups)
+
+	err = stg.Spec.ValidateSubmitPublishContent()
+	if err != nil {
+		logs.Errorf("validate publish content failed, err: %v", err)
+		return 0, err
+	}
+
+	sq := tx.Strategy.WithContext(kit.Ctx)
+	if err := sq.Create(stg); err != nil {
+		return 0, err
+	}
+
+	// publish immediately and update the table directly
+	if opt.PublishType == table.Immediately {
+
+		// add release publish num
+		if err := dao.updateReleasePublishInfo(kit, tx.Query, opt); err != nil {
+			logs.Errorf("increate release publish num failed, err: %v, rid: %s", err, kit.Rid)
+			return 0, err
+		}
+
+		if err := dao.upsertReleasedGroups(kit, tx.Query, opt, stg); err != nil {
+			logs.Errorf("upsert group current releases failed, err: %v, rid: %s", err, kit.Rid)
+			return 0, err
+		}
+	}
+
+	// fire the event with txn to ensure the if save the event failed then the business logic is failed anyway.
+	one := types.Event{
+		Spec: &table.EventSpec{
+			Resource: table.Publish,
+			// use the published strategy history id, which represent a real publish operation.
+			ResourceID: opt.ReleaseID,
+			OpType:     table.InsertOp,
+		},
+		Attachment: &table.EventAttachment{BizID: opt.BizID, AppID: opt.AppID},
+		Revision:   &table.CreatedRevision{Creator: kit.User},
+	}
+	if err := eDecorator.FireWithTx(tx, one); err != nil {
+		logs.Errorf("fire publish strategy event failed, err: %v, rid: %s", err, kit.Rid)
+		return 0, errors.New("fire event failed, " + err.Error())
+	}
+
+	return stgID, nil
+}
+
+// UpsertPublishWithTx publish with transaction
+func (dao *pubDao) UpsertPublishWithTx(
+	kit *kit.Kit, tx *gen.QueryTx, opt *types.PublishOption, stg *table.Strategy) error {
+	// add release publish num
+	if err := dao.updateReleasePublishInfo(kit, tx.Query, opt); err != nil {
+		logs.Errorf("increate release publish num failed, err: %v, rid: %s", err, kit.Rid)
+		return err
+	}
+
+	if err := dao.upsertReleasedGroups(kit, tx.Query, opt, stg); err != nil {
+		logs.Errorf("upsert group current releases failed, err: %v, rid: %s", err, kit.Rid)
+		return err
 	}
 	return nil
 }

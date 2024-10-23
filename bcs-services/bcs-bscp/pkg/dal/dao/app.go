@@ -94,7 +94,7 @@ func (dao *appDao) List(kit *kit.Kit, bizList []uint32, name, operator string, o
 	}
 	if name != "" {
 		// 按名称模糊搜索
-		conds = append(conds, m.Name.Regexp("(?i)"+name))
+		conds = append(conds, m.Name.Regexp("(?i)"+name)) // nolint: goconst
 	}
 
 	var (
@@ -249,7 +249,8 @@ func (dao *appDao) Update(kit *kit.Kit, g *table.App) error {
 	updateTx := func(tx *gen.Query) error {
 		q = tx.App.WithContext(kit.Ctx)
 		if _, err = q.Where(m.BizID.Eq(g.BizID), m.ID.Eq(g.ID)).
-			Select(m.Memo, m.Alias_, m.DataType, m.Reviser, m.UpdatedAt).Updates(g); err != nil {
+			Select(m.Memo, m.Alias_, m.DataType, m.Reviser, m.UpdatedAt, m.IsApprove, m.ApproveType,
+				m.Approver).Updates(g); err != nil {
 			return err
 		}
 
@@ -328,7 +329,7 @@ func (dao *appDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, g *table.App) err
 	eDecorator := dao.event.Eventf(kit)
 	if err = eDecorator.FireWithTx(tx, one); err != nil {
 		logs.Errorf("fire delete app: %s event failed, err: %v, rid: %s", g.ID, err, kit.Rid)
-		return errors.New("fire event failed, " + err.Error())
+		return errors.New("fire event failed, " + err.Error()) // nolint: goconst
 	}
 
 	return nil

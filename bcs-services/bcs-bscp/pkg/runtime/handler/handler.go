@@ -140,6 +140,7 @@ func CORS(next http.Handler) http.Handler {
 			"X-Bscp-Unzip",
 			"X-Bscp-Upload-Id",
 			"X-Bscp-Part-Num",
+			"X-Bscp-Operate-Way",
 		}
 		w.Header().Set("Access-Control-Allow-Headers", strings.Join(allowHeaders, ","))
 

@@ -43,6 +43,8 @@ type Interface interface {
 	SetClientMetric(kt *kit.Kit, bizID, appID uint32, payload []byte) error
 	BatchUpsertClientMetrics(kt *kit.Kit, clientData []*pbclient.Client, clientEventData []*pbce.ClientEvent) error
 	BatchUpdateLastConsumedTime(kt *kit.Kit, bizID uint32, appIDs []uint32) error
+	GetPublishTime(kt *kit.Kit, publishTime int64) (map[uint32]PublishInfo, error)
+	SetPublishTime(kt *kit.Kit, bizID, appID, strategyID uint32, publishTime int64) (int64, error)
 }
 
 // New initialize a cache client.

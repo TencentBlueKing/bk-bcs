@@ -249,3 +249,17 @@ func (s *Service) BatchUpdateLastConsumedTime(ctx context.Context, req *pbcs.Bat
 	}
 	return &pbcs.BatchUpdateLastConsumedTimeResp{}, nil
 }
+
+// SetPublishTime set publish time
+func (s *Service) SetPublishTime(ctx context.Context, req *pbcs.SetPublishTimeReq) (*pbcs.SetPublishTimeResp,
+	error) {
+	kt := kit.FromGrpcContext(ctx)
+	result, err := s.op.SetPublishTime(kt, req.BizId, req.AppId, req.StrategyId, req.GetPublishTime())
+	if err != nil {
+		return nil, err
+	}
+	resp := pbcs.SetPublishTimeResp{
+		Result: result,
+	}
+	return &resp, nil
+}

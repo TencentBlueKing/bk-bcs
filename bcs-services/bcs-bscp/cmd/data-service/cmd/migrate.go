@@ -15,6 +15,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 	"gorm.io/gorm"
@@ -24,6 +25,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/cmd/data-service/db-migration/migrator"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/scripts/migrations/itsm"
 )
 
 // cmd for migration
@@ -209,6 +211,28 @@ var migrateStatusCmd = &cobra.Command{
 	},
 }
 
+var migrateInitITSMCmd = &cobra.Command{
+	Use:   "init-itsm",
+	Short: "Register bcsp approve services into itsm",
+	Run: func(cmd *cobra.Command, args []string) {
+
+		if err := cc.LoadSettings(SysOpt); err != nil {
+			fmt.Printf("load config failed, err: %s\n", err.Error())
+			os.Exit(1)
+		}
+
+		if !cc.DataService().ITSM.Enable || !cc.DataService().ITSM.AutoRegister {
+			fmt.Println("itsm is disabled or auto register is disabled, skip migration")
+			return
+		}
+
+		if err := itsm.InitServices(); err != nil {
+			fmt.Printf("init itsm services failed, err: %s\n", err.Error())
+			os.Exit(1)
+		}
+	},
+}
+
 func init() {
 	// Add "--debug" flag to all migrate sub commands
 	migrateCmd.PersistentFlags().BoolP("debug", "d", false, "whether debug gorm to print sql, default is false")
@@ -225,6 +249,7 @@ func init() {
 
 	// Add "create", "up" and "down" commands to the "migrate" command
 	migrateCmd.AddCommand(migrateUpCmd, migrateDownCmd, migrateCreateCmd, migrateStatusCmd)
+	migrateCmd.AddCommand(migrateInitITSMCmd)
 
 	// Add "migrate" command to the root command
 	rootCmd.AddCommand(migrateCmd)

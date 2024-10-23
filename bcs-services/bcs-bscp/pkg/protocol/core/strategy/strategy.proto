@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+import "pkg/protocol/core/group/group.proto";
+
+package pbstrategy;
+
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/strategy;pbstrategy";
+
+// strategy source resource reference: pkg/dal/table/strategy.go
+message Strategy {
+  uint32 id = 1;
+  StrategySpec spec = 2;
+  StrategyState status = 3;
+  StrategyAttachment attachment = 4;
+  Revision revision = 5;
+  AppSpec app = 6;
+}
+
+// ReleaseSpec source resource reference: pkg/dal/table/release.go
+message StrategySpec {
+  string name = 1;
+  uint32 release_id = 2;
+  bool as_default = 3;
+  Scope scope = 4;
+  string namespace = 5;
+  string publish_type = 6;
+  string publish_time = 7;
+  string publish_status = 8;
+  string reject_reason = 9;
+  string approver = 10;
+  string approver_progress = 11;
+  string memo = 12;
+}
+
+// Scope defines the scope
+message Scope {
+  repeated pbgroup.Group groups = 1;
+}
+
+// StrategyState defines the strategy's state
+message StrategyState {
+  string pub_state = 1;
+}
+
+// StrategyAttachment defines the strategy's attachment
+message StrategyAttachment {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 strategy_set_id = 3;
+}
+
+// // Revision defines the strategy's revision
+message Revision {
+  string creator = 1;
+  string reviser = 2;
+  string created_at = 3;
+  string updated_at = 4;
+}
+
+// AuditStrategy strategy relate audit
+message AuditStrategy {
+  string publish_type = 1;
+  string publish_time = 2;
+  string publish_status = 3;
+  string reject_reason = 4;
+  string approver = 5;
+  string approver_progress = 6;
+  string updated_at = 7;
+  string reviser = 8;
+  uint32 release_id = 9;
+  Scope scope = 10;
+  string creator = 11;
+}
+
+// AppSpec app relate
+message AppSpec {
+  string creator = 1;
+}

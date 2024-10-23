@@ -35,6 +35,7 @@ const (
 	Cache_GetReleasedKvValue_FullMethodName          = "/pbcs.Cache/GetReleasedKvValue"
 	Cache_SetClientMetric_FullMethodName             = "/pbcs.Cache/SetClientMetric"
 	Cache_BatchUpdateLastConsumedTime_FullMethodName = "/pbcs.Cache/BatchUpdateLastConsumedTime"
+	Cache_SetPublishTime_FullMethodName              = "/pbcs.Cache/SetPublishTime"
 )
 
 // CacheClient is the client API for Cache service.
@@ -57,6 +58,7 @@ type CacheClient interface {
 	GetReleasedKvValue(ctx context.Context, in *GetReleasedKvValueReq, opts ...grpc.CallOption) (*JsonRawResp, error)
 	SetClientMetric(ctx context.Context, in *SetClientMetricReq, opts ...grpc.CallOption) (*SetClientMetricResp, error)
 	BatchUpdateLastConsumedTime(ctx context.Context, in *BatchUpdateLastConsumedTimeReq, opts ...grpc.CallOption) (*BatchUpdateLastConsumedTimeResp, error)
+	SetPublishTime(ctx context.Context, in *SetPublishTimeReq, opts ...grpc.CallOption) (*SetPublishTimeResp, error)
 }
 
 type cacheClient struct {
@@ -202,6 +204,15 @@ func (c *cacheClient) BatchUpdateLastConsumedTime(ctx context.Context, in *Batch
 	return out, nil
 }
 
+func (c *cacheClient) SetPublishTime(ctx context.Context, in *SetPublishTimeReq, opts ...grpc.CallOption) (*SetPublishTimeResp, error) {
+	out := new(SetPublishTimeResp)
+	err := c.cc.Invoke(ctx, Cache_SetPublishTime_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CacheServer is the server API for Cache service.
 // All implementations should embed UnimplementedCacheServer
 // for forward compatibility
@@ -222,6 +233,7 @@ type CacheServer interface {
 	GetReleasedKvValue(context.Context, *GetReleasedKvValueReq) (*JsonRawResp, error)
 	SetClientMetric(context.Context, *SetClientMetricReq) (*SetClientMetricResp, error)
 	BatchUpdateLastConsumedTime(context.Context, *BatchUpdateLastConsumedTimeReq) (*BatchUpdateLastConsumedTimeResp, error)
+	SetPublishTime(context.Context, *SetPublishTimeReq) (*SetPublishTimeResp, error)
 }
 
 // UnimplementedCacheServer should be embedded to have forward compatible implementations.
@@ -272,6 +284,9 @@ func (UnimplementedCacheServer) SetClientMetric(context.Context, *SetClientMetri
 }
 func (UnimplementedCacheServer) BatchUpdateLastConsumedTime(context.Context, *BatchUpdateLastConsumedTimeReq) (*BatchUpdateLastConsumedTimeResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchUpdateLastConsumedTime not implemented")
+}
+func (UnimplementedCacheServer) SetPublishTime(context.Context, *SetPublishTimeReq) (*SetPublishTimeResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetPublishTime not implemented")
 }
 
 // UnsafeCacheServer may be embedded to opt out of forward compatibility for this service.
@@ -555,6 +570,24 @@ func _Cache_BatchUpdateLastConsumedTime_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Cache_SetPublishTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetPublishTimeReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CacheServer).SetPublishTime(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Cache_SetPublishTime_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CacheServer).SetPublishTime(ctx, req.(*SetPublishTimeReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Cache_ServiceDesc is the grpc.ServiceDesc for Cache service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -621,6 +654,10 @@ var Cache_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BatchUpdateLastConsumedTime",
 			Handler:    _Cache_BatchUpdateLastConsumedTime_Handler,
+		},
+		{
+			MethodName: "SetPublishTime",
+			Handler:    _Cache_SetPublishTime_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

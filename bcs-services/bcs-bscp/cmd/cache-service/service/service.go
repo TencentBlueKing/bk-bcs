@@ -43,6 +43,8 @@ func NewService(sd serviced.State, daoSet dao.Set, bs bedis.Client, op client.In
 	}
 	metric := event.NewClientMetric(daoSet, sd, bs, op)
 	metric.Run()
+	publish := event.NewPublish(daoSet, sd, bs, op)
+	publish.Run()
 	gateway, err := newGateway(sd, daoSet, bs)
 	if err != nil {
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)

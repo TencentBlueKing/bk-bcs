@@ -14,6 +14,7 @@ package table
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
@@ -132,11 +133,14 @@ type AppSpec struct {
 	Name string `json:"name" gorm:"column:name"`
 	// ConfigType defines which type is this configuration, different type has the
 	// different ways to be consumed.
-	ConfigType       ConfigType `json:"config_type" gorm:"column:config_type"`
-	Memo             string     `json:"memo" gorm:"column:memo"`
-	Alias            string     `json:"alias" gorm:"alias"`
-	DataType         DataType   `json:"data_type" gorm:"data_type"`
-	LastConsumedTime *time.Time `json:"last_consumed_time" gorm:"column:last_consumed_time"`
+	ConfigType       ConfigType  `json:"config_type" gorm:"column:config_type"`
+	Memo             string      `json:"memo" gorm:"column:memo"`
+	Alias            string      `json:"alias" gorm:"alias"`
+	DataType         DataType    `json:"data_type" gorm:"data_type"`
+	LastConsumedTime *time.Time  `json:"last_consumed_time" gorm:"column:last_consumed_time"`
+	ApproveType      ApproveType `json:"approve_type" gorm:"approve_type"`
+	IsApprove        bool        `json:"is_approve" gorm:"is_approve"`
+	Approver         string      `json:"approver" gorm:"approver"`
 }
 
 // ValidateCreate validate spec when created.
@@ -159,6 +163,14 @@ func (as *AppSpec) ValidateCreate(kit *kit.Kit) error {
 
 	if err := validator.ValidateMemo(kit, as.Memo, false); err != nil {
 		return err
+	}
+
+	if err := as.ApproveType.ValidateApproveType(); err != nil {
+		return err
+	}
+
+	if as.IsApprove && (as.ApproveType == "" || as.Approver == "") {
+		return errors.New("approve_type or approver cannot be empty")
 	}
 
 	switch as.ConfigType {
@@ -304,6 +316,28 @@ func (k DataType) ValidateApp(kit *kit.Kit) error {
 	case KvSecret:
 	default:
 		return errf.Errorf(errf.InvalidArgument, i18n.T(kit, "invalid data-type"))
+	}
+	return nil
+}
+
+// ApproveType is the app's config approval type
+type ApproveType string
+
+const (
+	// CountSign counter sign
+	CountSign ApproveType = "CountSign"
+	// OrSign or sign
+	OrSign ApproveType = "OrSign"
+)
+
+// ValidateApproveType validate approve type
+func (a ApproveType) ValidateApproveType() error {
+	switch a {
+	case CountSign:
+	case OrSign:
+	case "":
+	default:
+		return fmt.Errorf("unsupported approve type: %s", a)
 	}
 	return nil
 }

@@ -56,11 +56,14 @@ func (s *Service) CreateApp(ctx context.Context, req *pbcs.CreateAppReq) (*pbcs.
 	r := &pbds.CreateAppReq{
 		BizId: req.BizId,
 		Spec: &pbapp.AppSpec{
-			Name:       req.Name,
-			ConfigType: req.ConfigType,
-			Memo:       req.Memo,
-			Alias:      req.Alias,
-			DataType:   req.DataType,
+			Name:        req.Name,
+			ConfigType:  req.ConfigType,
+			Memo:        req.Memo,
+			Alias:       req.Alias,
+			DataType:    req.DataType,
+			IsApprove:   req.IsApprove,
+			ApproveType: req.ApproveType,
+			Approver:    req.Approver,
 		},
 	}
 	rp, err := s.client.DS.CreateApp(kt.RpcCtx(), r)
@@ -100,10 +103,13 @@ func (s *Service) UpdateApp(ctx context.Context, req *pbcs.UpdateAppReq) (*pbapp
 		Id:    req.Id,
 		BizId: req.BizId,
 		Spec: &pbapp.AppSpec{
-			Name:     req.Name,
-			Memo:     req.Memo,
-			Alias:    req.Alias,
-			DataType: req.DataType,
+			Name:        req.Name,
+			Memo:        req.Memo,
+			Alias:       req.Alias,
+			DataType:    req.DataType,
+			IsApprove:   req.IsApprove,
+			ApproveType: req.ApproveType,
+			Approver:    req.Approver,
 		},
 	}
 	app, err := s.client.DS.UpdateApp(grpcKit.RpcCtx(), r)

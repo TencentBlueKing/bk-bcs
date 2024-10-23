@@ -1388,3 +1388,16 @@ func (g GSE) validate() error {
 	}
 	return nil
 }
+
+// ITSMConfig itsm操作需要的配置
+type ITSMConfig struct {
+	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
+	AutoRegister             bool   `yaml:"autoRegister" usage:"auto register itsm services"`
+	External                 bool   `yaml:"external" usage:"use itsm as external"`
+	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
+	Host                     string `yaml:"host" usage:"itsm esb host"`
+	CreateOrSignServiceID    int    `yaml:"createOrSignSvcID" usage:"service id for create or sign service"`
+	CreateCountSignServiceID int    `yaml:"createCountSignSvcID" usage:"service id for create count sign service"`
+	Approvers                string `yaml:"approvers" usage:"approvers for itsm"`
+	BscpGateway              string `yaml:"bscpGateway" usage:"bscpGateway for itsm"`
+}

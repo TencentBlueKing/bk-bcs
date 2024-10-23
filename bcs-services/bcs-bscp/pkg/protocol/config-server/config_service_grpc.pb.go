@@ -14,6 +14,7 @@ import (
 	group "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/group"
 	hook_revision "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/hook-revision"
 	release "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
+	strategy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/strategy"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -155,6 +156,12 @@ const (
 	Config_GetGroupByName_FullMethodName                    = "/pbcs.Config/GetGroupByName"
 	Config_Publish_FullMethodName                           = "/pbcs.Config/Publish"
 	Config_GenerateReleaseAndPublish_FullMethodName         = "/pbcs.Config/GenerateReleaseAndPublish"
+	Config_SubmitPublishApprove_FullMethodName              = "/pbcs.Config/SubmitPublishApprove"
+	Config_Approve_FullMethodName                           = "/pbcs.Config/Approve"
+	Config_GetLastSelect_FullMethodName                     = "/pbcs.Config/GetLastSelect"
+	Config_GetLastPublish_FullMethodName                    = "/pbcs.Config/GetLastPublish"
+	Config_GetReleasesStatus_FullMethodName                 = "/pbcs.Config/GetReleasesStatus"
+	Config_ListAudits_FullMethodName                        = "/pbcs.Config/ListAudits"
 	Config_CreateCredentials_FullMethodName                 = "/pbcs.Config/CreateCredentials"
 	Config_ListCredentials_FullMethodName                   = "/pbcs.Config/ListCredentials"
 	Config_DeleteCredential_FullMethodName                  = "/pbcs.Config/DeleteCredential"
@@ -340,6 +347,12 @@ type ConfigClient interface {
 	GetGroupByName(ctx context.Context, in *GetGroupByNameReq, opts ...grpc.CallOption) (*group.Group, error)
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
 	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	SubmitPublishApprove(ctx context.Context, in *SubmitPublishApproveReq, opts ...grpc.CallOption) (*PublishResp, error)
+	Approve(ctx context.Context, in *ApproveReq, opts ...grpc.CallOption) (*ApproveResp, error)
+	GetLastSelect(ctx context.Context, in *GetLastSelectReq, opts ...grpc.CallOption) (*GetLastSelectResp, error)
+	GetLastPublish(ctx context.Context, in *GetLastPublishReq, opts ...grpc.CallOption) (*GetLastPublishResp, error)
+	GetReleasesStatus(ctx context.Context, in *GetReleasesStatusReq, opts ...grpc.CallOption) (*strategy.Strategy, error)
+	ListAudits(ctx context.Context, in *ListAuditsReq, opts ...grpc.CallOption) (*ListAuditsResp, error)
 	CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error)
 	ListCredentials(ctx context.Context, in *ListCredentialsReq, opts ...grpc.CallOption) (*ListCredentialsResp, error)
 	DeleteCredential(ctx context.Context, in *DeleteCredentialsReq, opts ...grpc.CallOption) (*DeleteCredentialsResp, error)
@@ -1551,6 +1564,60 @@ func (c *configClient) GenerateReleaseAndPublish(ctx context.Context, in *Genera
 	return out, nil
 }
 
+func (c *configClient) SubmitPublishApprove(ctx context.Context, in *SubmitPublishApproveReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Config_SubmitPublishApprove_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) Approve(ctx context.Context, in *ApproveReq, opts ...grpc.CallOption) (*ApproveResp, error) {
+	out := new(ApproveResp)
+	err := c.cc.Invoke(ctx, Config_Approve_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetLastSelect(ctx context.Context, in *GetLastSelectReq, opts ...grpc.CallOption) (*GetLastSelectResp, error) {
+	out := new(GetLastSelectResp)
+	err := c.cc.Invoke(ctx, Config_GetLastSelect_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetLastPublish(ctx context.Context, in *GetLastPublishReq, opts ...grpc.CallOption) (*GetLastPublishResp, error) {
+	out := new(GetLastPublishResp)
+	err := c.cc.Invoke(ctx, Config_GetLastPublish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) GetReleasesStatus(ctx context.Context, in *GetReleasesStatusReq, opts ...grpc.CallOption) (*strategy.Strategy, error) {
+	out := new(strategy.Strategy)
+	err := c.cc.Invoke(ctx, Config_GetReleasesStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) ListAudits(ctx context.Context, in *ListAuditsReq, opts ...grpc.CallOption) (*ListAuditsResp, error) {
+	out := new(ListAuditsResp)
+	err := c.cc.Invoke(ctx, Config_ListAudits_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) CreateCredentials(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateCredentialResp, error) {
 	out := new(CreateCredentialResp)
 	err := c.cc.Invoke(ctx, Config_CreateCredentials_FullMethodName, in, out, opts...)
@@ -2022,6 +2089,12 @@ type ConfigServer interface {
 	GetGroupByName(context.Context, *GetGroupByNameReq) (*group.Group, error)
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
 	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
+	SubmitPublishApprove(context.Context, *SubmitPublishApproveReq) (*PublishResp, error)
+	Approve(context.Context, *ApproveReq) (*ApproveResp, error)
+	GetLastSelect(context.Context, *GetLastSelectReq) (*GetLastSelectResp, error)
+	GetLastPublish(context.Context, *GetLastPublishReq) (*GetLastPublishResp, error)
+	GetReleasesStatus(context.Context, *GetReleasesStatusReq) (*strategy.Strategy, error)
+	ListAudits(context.Context, *ListAuditsReq) (*ListAuditsResp, error)
 	CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error)
 	ListCredentials(context.Context, *ListCredentialsReq) (*ListCredentialsResp, error)
 	DeleteCredential(context.Context, *DeleteCredentialsReq) (*DeleteCredentialsResp, error)
@@ -2454,6 +2527,24 @@ func (UnimplementedConfigServer) Publish(context.Context, *PublishReq) (*Publish
 }
 func (UnimplementedConfigServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
+}
+func (UnimplementedConfigServer) SubmitPublishApprove(context.Context, *SubmitPublishApproveReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitPublishApprove not implemented")
+}
+func (UnimplementedConfigServer) Approve(context.Context, *ApproveReq) (*ApproveResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Approve not implemented")
+}
+func (UnimplementedConfigServer) GetLastSelect(context.Context, *GetLastSelectReq) (*GetLastSelectResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastSelect not implemented")
+}
+func (UnimplementedConfigServer) GetLastPublish(context.Context, *GetLastPublishReq) (*GetLastPublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastPublish not implemented")
+}
+func (UnimplementedConfigServer) GetReleasesStatus(context.Context, *GetReleasesStatusReq) (*strategy.Strategy, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasesStatus not implemented")
+}
+func (UnimplementedConfigServer) ListAudits(context.Context, *ListAuditsReq) (*ListAuditsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAudits not implemented")
 }
 func (UnimplementedConfigServer) CreateCredentials(context.Context, *CreateCredentialReq) (*CreateCredentialResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCredentials not implemented")
@@ -4897,6 +4988,114 @@ func _Config_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_SubmitPublishApprove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitPublishApproveReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).SubmitPublishApprove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_SubmitPublishApprove_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).SubmitPublishApprove(ctx, req.(*SubmitPublishApproveReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_Approve_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApproveReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).Approve(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_Approve_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).Approve(ctx, req.(*ApproveReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetLastSelect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastSelectReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetLastSelect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetLastSelect_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetLastSelect(ctx, req.(*GetLastSelectReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetLastPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetLastPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetLastPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetLastPublish(ctx, req.(*GetLastPublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_GetReleasesStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasesStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).GetReleasesStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_GetReleasesStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).GetReleasesStatus(ctx, req.(*GetReleasesStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_ListAudits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuditsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).ListAudits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_ListAudits_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).ListAudits(ctx, req.(*ListAuditsReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_CreateCredentials_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateCredentialReq)
 	if err := dec(in); err != nil {
@@ -6067,6 +6266,30 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateReleaseAndPublish",
 			Handler:    _Config_GenerateReleaseAndPublish_Handler,
+		},
+		{
+			MethodName: "SubmitPublishApprove",
+			Handler:    _Config_SubmitPublishApprove_Handler,
+		},
+		{
+			MethodName: "Approve",
+			Handler:    _Config_Approve_Handler,
+		},
+		{
+			MethodName: "GetLastSelect",
+			Handler:    _Config_GetLastSelect_Handler,
+		},
+		{
+			MethodName: "GetLastPublish",
+			Handler:    _Config_GetLastPublish_Handler,
+		},
+		{
+			MethodName: "GetReleasesStatus",
+			Handler:    _Config_GetReleasesStatus_Handler,
+		},
+		{
+			MethodName: "ListAudits",
+			Handler:    _Config_ListAudits_Handler,
 		},
 		{
 			MethodName: "CreateCredentials",

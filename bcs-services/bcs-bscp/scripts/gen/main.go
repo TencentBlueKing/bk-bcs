@@ -63,6 +63,7 @@ func main() {
 		table.Client{},
 		table.ClientEvent{},
 		table.ClientQuery{},
+		table.ItsmConfig{},
 	)
 
 	g.Execute()

@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package pbaudit;
+
+import "pkg/protocol/core/app/app.proto";
+import "pkg/protocol/core/strategy/strategy.proto";
+
+option go_package = "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/audit;pbaudit";
+
+// Audit audit source resource reference: pkg/dal/table/audit.go
+message Audit {
+  uint32 id = 1;
+  AuditSpec spec = 2;
+  AuditAttachment attachment = 3;
+  Revision revision = 4;
+}
+
+// AuditSpec source resource reference: pkg/dal/table/audit.go
+message AuditSpec {
+  string res_type = 1;
+  string action = 2;
+  string rid = 3;
+  string app_code = 4;
+  string detail = 5;
+  string operator = 6;
+  string res_instance = 7;
+  string operate_way = 8;
+  string status = 9;
+  bool is_compare = 10;
+}
+
+// AuditAttachment defines the audit's attachment
+message AuditAttachment {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 res_id = 3;
+}
+
+// Revision defines the strategy's revision
+message Revision {
+  string created_at = 1;
+}
+
+message ListAuditsAppStrategy {
+  Audit audit = 1;
+  pbstrategy.AuditStrategy strategy = 2;
+  pbapp.AuditApp app = 3;
+}

@@ -60,6 +60,7 @@ type IndexConfig struct {
 	HttpAddr             string // feed-server http 地址
 	BKSharedResBaseJSURL string // 规则是${bkSharedResUrl}/${目录名 aka app_code}/base.js
 	NodeManHost          string
+	UserManHost          string
 }
 
 // EmbedWebServer 前端 web server
@@ -174,6 +175,7 @@ func (e *EmbedWeb) RenderIndexHandler(conf *IndexConfig) http.Handler {
 			"GRPC_ADDR":                 conf.GrpcAddr,
 			"HTTP_ADDR":                 conf.HttpAddr,
 			"BK_NODE_HOST":              conf.NodeManHost,
+			"USER_MAN_HOST":             conf.UserManHost,
 		}
 
 		// 本地开发模式 / 代理请求

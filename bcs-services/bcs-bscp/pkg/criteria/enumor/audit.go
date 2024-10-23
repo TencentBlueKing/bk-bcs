@@ -47,6 +47,23 @@ const (
 	Credential AuditResourceType = "credential"
 	// CredentialScope 凭据规则资源
 	CredentialScope AuditResourceType = "credential_scope" //nolint:gosec
+
+	// 新版操作记录资源类型
+
+	// ResAppConfig 服务配置
+	ResAppConfig AuditResourceType = "app_config"
+	// ResGroup 分组
+	ResGroup AuditResourceType = "group"
+	// ResHook hook脚本资源
+	ResHook AuditResourceType = "hook"
+	// ResTemplate 配置模版
+	ResTemplate AuditResourceType = "template"
+	// ResVariable 变量
+	ResVariable AuditResourceType = "variable"
+	// ResCredential 客户端秘钥
+	ResCredential AuditResourceType = "credential"
+	// ResInstance 客户端实例
+	ResInstance AuditResourceType = "instance"
 )
 
 // AuditResourceTypeEnums resource type map.
@@ -63,6 +80,14 @@ var AuditResourceTypeEnums = map[AuditResourceType]bool{
 	Group:           true,
 	Credential:      true,
 	CredentialScope: true,
+}
+
+// ActionMap enum all action
+var ActionMap = map[AuditAction]AuditResourceType{
+	CreateApp:            ResAppConfig,
+	UpdateApp:            ResAppConfig,
+	DeleteApp:            ResAppConfig,
+	PublishVersionConfig: ResAppConfig, // 上线配置版本
 }
 
 // Exist judge enum value exist.
@@ -89,6 +114,15 @@ const (
 	Rollback AuditAction = "Rollback"
 	// Reload Reload配置版本
 	Reload AuditAction = "Reload"
+
+	// CreateApp 创建服务
+	CreateApp AuditAction = "CreateApp"
+	// UpdateApp 更新服务
+	UpdateApp AuditAction = "UpdateApp"
+	// DeleteApp 删除服务
+	DeleteApp AuditAction = "DeleteApp"
+	// PublishVersionConfig 上线版本配置
+	PublishVersionConfig AuditAction = "PublishVersionConfig"
 )
 
 // AuditActionEnums op type map.
@@ -107,3 +141,33 @@ func (a AuditAction) Exist() bool {
 	_, exist := AuditActionEnums[a]
 	return exist
 }
+
+// AuditStatus audit status.
+type AuditStatus string
+
+const (
+	// Success audit status
+	Success AuditStatus = "Success"
+	// Failure audit status
+	Failure AuditStatus = "Failure"
+	// PendApproval means this strategy audit status is pending.
+	PendApproval AuditStatus = "PendApproval"
+	// PendPublish means this strategy audit status is pending.
+	PendPublish AuditStatus = "PendPublish"
+	// RevokedPublish means this strategy audit status is revoked.
+	RevokedPublish AuditStatus = "RevokedPublish"
+	// RejectedApproval means this strategy audit status is rejected.
+	RejectedApproval AuditStatus = "RejectedApproval"
+	// AlreadyPublish means this strategy audit status is already publish.
+	AlreadyPublish AuditStatus = "AlreadyPublish"
+)
+
+// AuditOperateWay audit operate way.
+type AuditOperateWay string
+
+const (
+	// WebUI audit operate way
+	WebUI AuditOperateWay = "WebUI"
+	// API audit operate way
+	API AuditOperateWay = "API"
+)

@@ -1,6 +1,7 @@
 all:
 	@cd base && make
 	@cd app && make
+	@cd audit && make
 	@cd config-item && make
 	@cd content && make
 	@cd commit && make
@@ -23,6 +24,7 @@ all:
 	@cd app-template-variable && make
 	@cd kv && make
 	@cd released-kv && make
+	@cd strategy && make
 	@cd client && make
 	@cd client-event && make
 	@cd client-query && make
@@ -30,6 +32,7 @@ all:
 clean:
 	@cd base && make clean
 	@cd app && make clean
+	@cd audit && make clean
 	@cd config-item && make clean
 	@cd commit && make clean
 	@cd content && make clean
@@ -52,6 +55,7 @@ clean:
 	@cd app-template-variable && make clean
 	@cd kv && make clean
 	@cd released-kv && make clean
+	@cd strategy && make clean
 	@cd client && make clean
 	@cd client-event && make clean
 	@cd client-query && make clean

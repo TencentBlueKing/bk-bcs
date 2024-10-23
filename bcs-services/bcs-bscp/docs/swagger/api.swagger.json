@@ -383,7 +383,7 @@
       }
     },
     "/api/v1/config/biz/{bizId}/apps/{appId}/config_items": {
-      "get": {
+      "post": {
         "operationId": "Config_ListConfigItems",
         "responses": {
           "200": {
@@ -415,59 +415,12 @@
             "format": "int64"
           },
           {
-            "name": "searchFields",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "searchValue",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "ids",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "all",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "withStatus",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "status",
-            "description": "ADD、REVISE、DELETE、UNCHANGE",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigListConfigItemsBody"
+            }
           }
         ],
         "tags": [
@@ -1559,6 +1512,50 @@
         ]
       }
     },
+    "/api/v1/config/biz_id/{bizId}/app_id/{appId}/release/{name}/check": {
+      "get": {
+        "operationId": "Config_CheckReleaseName",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsCheckReleaseNameResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
     "/api/v1/config/biz/{bizId}/hooks": {
       "get": {
         "operationId": "Config_ListHooks",
@@ -2615,80 +2612,6 @@
       }
     },
     "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/templates": {
-      "get": {
-        "operationId": "Config_ListTemplates",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/pbcsListTemplatesResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "bizId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "templateSpaceId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "searchFields",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "searchValue",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "ids",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "all",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          }
-        ],
-        "tags": [
-          "Config"
-        ]
-      },
       "delete": {
         "operationId": "Config_BatchDeleteTemplate",
         "responses": {
@@ -2728,6 +2651,12 @@
           },
           {
             "name": "force",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "exclusionOperation",
             "in": "query",
             "required": false,
             "type": "boolean"
@@ -2884,6 +2813,52 @@
         ]
       }
     },
+    "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/templates/list": {
+      "post": {
+        "operationId": "Config_ListTemplates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsListTemplatesResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateSpaceId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigListTemplatesBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
     "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/templates/batch_upsert_templates": {
       "post": {
         "operationId": "Config_BatchUpsertTemplates",
@@ -2930,7 +2905,62 @@
         ]
       }
     },
-    "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/templates/add_to_template_sets": {
+    "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/template_set/{templateSetId}/templates/batch_update_templates_permissions": {
+      "post": {
+        "operationId": "Config_BatchUpdateTemplatePermissions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsBatchUpdateTemplatePermissionsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateSpaceId",
+            "description": "模板空间ID",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateSetId",
+            "description": "套餐ID, 具体操作的哪个套餐",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigBatchUpdateTemplatePermissionsBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/template_set/{templateSetId}/templates/add_to_template_sets": {
       "post": {
         "operationId": "Config_AddTmplsToTmplSets",
         "responses": {
@@ -2963,6 +2993,14 @@
             "format": "int64"
           },
           {
+            "name": "templateSetId",
+            "description": "套餐ID, 具体操作的哪个套餐",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
@@ -2983,7 +3021,7 @@
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/pbcsDeleteTmplsFromTmplSetsResp"
+              "$ref": "#/definitions/pbcsBatchDeleteResp"
             }
           },
           "default": {
@@ -3178,7 +3216,7 @@
       }
     },
     "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/template_sets/{templateSetId}/templates": {
-      "get": {
+      "post": {
         "operationId": "Config_ListTmplsOfTmplSet",
         "responses": {
           "200": {
@@ -3217,42 +3255,50 @@
             "format": "int64"
           },
           {
-            "name": "searchFields",
-            "in": "query",
-            "required": false,
-            "type": "string"
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigListTmplsOfTmplSetBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/template_sets/{templateSetId}/template_revisions": {
+      "get": {
+        "operationId": "Config_ListTemplateSetsAndRevisions",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsListTemplateSetsAndRevisionsResp"
+            }
           },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
           {
-            "name": "searchValue",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "start",
-            "in": "query",
-            "required": false,
+            "name": "bizId",
+            "in": "path",
+            "required": true,
             "type": "integer",
             "format": "int64"
           },
           {
-            "name": "limit",
-            "in": "query",
-            "required": false,
+            "name": "templateSetId",
+            "in": "path",
+            "required": true,
             "type": "integer",
             "format": "int64"
-          },
-          {
-            "name": "ids",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "all",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
           }
         ],
         "tags": [
@@ -3386,12 +3432,107 @@
         "tags": [
           "Config"
         ]
+      },
+      "put": {
+        "operationId": "Config_UpdateTemplateRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsUpdateTemplateRevisionResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateSpaceId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigUpdateTemplateRevisionBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/templates/{templateId}/template_revisions": {
+      "get": {
+        "operationId": "Config_GetTemplateRevision",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsGetTemplateRevisionResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "revisionName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
       }
     },
     "/api/v1/config/biz/{bizId}/template_revisions/list_by_ids": {
       "post": {
-        "summary": "暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）\r\nrpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns (DeleteTemplateRevisionResp) {",
-        "description": "option (google.api.http) = {\r\ndelete :\r\n\"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}\"\r\n};\r\n}",
+        "summary": "暂时不对外开发（删除模版后，服务引用的latest版本会回退到上一个老版本）\nrpc DeleteTemplateRevision(DeleteTemplateRevisionReq) returns\n(DeleteTemplateRevisionResp) {",
+        "description": "option (google.api.http) = {\ndelete :\n\"/api/v1/config/biz/{biz_id}/template_spaces/{template_space_id}/templates/{template_id}/template_revisions/{template_revision_id}\"\n};\n}",
         "operationId": "Config_ListTemplateRevisionsByIDs",
         "responses": {
           "200": {
@@ -4257,6 +4398,51 @@
         ]
       }
     },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/template_set/{templateSetId}": {
+      "delete": {
+        "operationId": "Config_RemoveAppBoundTmplSet",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsRemoveAppBoundTmplSetResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateSetId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
     "/api/v1/config/biz/{bizId}/apps/{appId}/template_bindings/conflict_check": {
       "post": {
         "operationId": "Config_CheckAppTemplateBinding",
@@ -4295,6 +4481,52 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/ConfigCheckAppTemplateBindingBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/template_bindings/import_template_set": {
+      "post": {
+        "operationId": "Config_ImportFromTemplateSetToApp",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsImportFromTemplateSetToAppResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigImportFromTemplateSetToAppBody"
             }
           }
         ],
@@ -5021,6 +5253,52 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/template_spaces/{templateSpaceId}/template_sets/check_template_set_references_apps": {
+      "post": {
+        "operationId": "Config_CheckTemplateSetReferencesApps",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsCheckTemplateSetReferencesAppsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "templateSpaceId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigCheckTemplateSetReferencesAppsBody"
+            }
           }
         ],
         "tags": [
@@ -6087,6 +6365,358 @@
         ]
       }
     },
+    "/api/v1/config/biz_id/{bizId}/app_id/{appId}/release_id/{releaseId}/submit": {
+      "post": {
+        "operationId": "Config_SubmitPublishApprove",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsPublishResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "releaseId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigSubmitPublishApproveBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz_id/{bizId}/app_id/{appId}/release_id/{releaseId}/approve": {
+      "post": {
+        "operationId": "Config_Approve",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsApproveResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "releaseId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigApproveBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz_id/{bizId}/app_id/{appId}/last/select": {
+      "get": {
+        "operationId": "Config_GetLastSelect",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsGetLastSelectResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz_id/{bizId}/app_id/{appId}/last/publish": {
+      "get": {
+        "operationId": "Config_GetLastPublish",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsGetLastPublishResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz_id/{bizId}/app_id/{appId}/release_id/{releaseId}/status": {
+      "get": {
+        "operationId": "Config_GetReleasesStatus",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbstrategyStrategy"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "releaseId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz_id/{bizId}/audits": {
+      "get": {
+        "operationId": "Config_ListAudits",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsListAuditsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operate",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operateWay",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceType",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resInstance",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
     "/api/v1/config/biz_id/{bizId}/credentials": {
       "get": {
         "operationId": "Config_ListCredentials",
@@ -6137,6 +6767,18 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "all",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "enable",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -6441,135 +7083,6 @@
       }
     },
     "/api/v1/config/biz/{bizId}/apps/{appId}/kvs": {
-      "get": {
-        "operationId": "Config_ListKvs",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/pbcsListKvsResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "bizId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "appId",
-            "in": "path",
-            "required": true,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "all",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "searchKey",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "key",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "start",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "type": "integer",
-            "format": "int64"
-          },
-          {
-            "name": "withStatus",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "searchFields",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "searchValue",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "kvType",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "order",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "topIds",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "status",
-            "description": "ADD、REVISE、DELETE、UNCHANGE",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          }
-        ],
-        "tags": [
-          "Config"
-        ]
-      },
       "post": {
         "operationId": "Config_CreateKv",
         "responses": {
@@ -6703,6 +7216,52 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/ConfigUpdateKvBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/kvs/list": {
+      "post": {
+        "operationId": "Config_ListKvs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsListKvsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigListKvsBody"
             }
           }
         ],
@@ -6890,6 +7449,58 @@
         ]
       }
     },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/kvs/{format}/import": {
+      "post": {
+        "operationId": "Config_ImportKvs",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsImportKvsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigImportKvsBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
     "/api/v1/config/biz/{bizId}/apps/{appId}/clients": {
       "post": {
         "operationId": "Config_ListClients",
@@ -6981,6 +7592,52 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/ConfigListClientEventsBody"
+            }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/clients/retry": {
+      "post": {
+        "operationId": "Config_RetryClients",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsRetryClientsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ConfigRetryClientsBody"
             }
           }
         ],
@@ -7188,6 +7845,50 @@
             "schema": {
               "$ref": "#/definitions/ConfigUpdateClientQueryBody"
             }
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/client_querys/check_exists": {
+      "get": {
+        "operationId": "Config_CheckClientQueryName",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsCheckClientQueryNameResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7563,6 +8264,150 @@
           "Config"
         ]
       }
+    },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/config_items/compare_conflicts": {
+      "get": {
+        "summary": "config item compare conflicts related interface",
+        "operationId": "Config_CompareConfigItemConflicts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsCompareConfigItemConflictsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "releaseId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "otherAppId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz/{bizId}/apps/{appId}/kvs/compare_conflicts": {
+      "get": {
+        "operationId": "Config_CompareKvConflicts",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsCompareKvConflictsResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "releaseId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "otherAppId",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
+    },
+    "/api/v1/config/biz_id/{bizId}/apps/{appId}/config_items/count": {
+      "get": {
+        "summary": "获取模板和非模板配置项数量",
+        "operationId": "Config_GetTemplateAndNonTemplateCICount",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/pbcsGetTemplateAndNonTemplateCICountResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bizId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "appId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "Config"
+        ]
+      }
     }
   },
   "definitions": {
@@ -7585,6 +8430,76 @@
         }
       }
     },
+    "CompareConfigItemConflictsRespNonTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "configItemSpec": {
+          "$ref": "#/definitions/pbciConfigItemSpec"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbtvTemplateVariableSpec"
+          }
+        },
+        "isExist": {
+          "type": "boolean"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "byteSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "md5": {
+          "type": "string"
+        }
+      }
+    },
+    "CompareConfigItemConflictsRespTemplateConfig": {
+      "type": "object",
+      "properties": {
+        "templateSpaceId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateSpaceName": {
+          "type": "string"
+        },
+        "templateSetId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateSetName": {
+          "type": "string"
+        },
+        "isExist": {
+          "type": "boolean"
+        },
+        "templateRevisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/TemplateConfigTemplateRevisionDetail"
+          }
+        },
+        "templateSpaceExist": {
+          "type": "boolean"
+        },
+        "templateSetExist": {
+          "type": "boolean"
+        },
+        "templateSetIsEmpty": {
+          "type": "boolean"
+        }
+      }
+    },
     "ConfigAddTmplsToTmplSetsBody": {
       "type": "object",
       "properties": {
@@ -7601,6 +8516,24 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        "exclusionOperation": {
+          "type": "boolean"
+        },
+        "noSetSpecified": {
+          "type": "boolean",
+          "title": "是否未指定套餐, 区分全部套餐和未指定套餐"
+        }
+      }
+    },
+    "ConfigApproveBody": {
+      "type": "object",
+      "properties": {
+        "publishStatus": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
         }
       }
     },
@@ -7613,6 +8546,9 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        "exclusionOperation": {
+          "type": "boolean"
         }
       }
     },
@@ -7625,6 +8561,9 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        "exclusionOperation": {
+          "type": "boolean"
         }
       }
     },
@@ -7640,6 +8579,9 @@
         },
         "force": {
           "type": "boolean"
+        },
+        "exclusionOperation": {
+          "type": "boolean"
         }
       }
     },
@@ -7652,6 +8594,9 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        "exclusionOperation": {
+          "type": "boolean"
         }
       }
     },
@@ -7664,6 +8609,46 @@
             "type": "integer",
             "format": "int64"
           }
+        },
+        "exclusionOperation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ConfigBatchUpdateTemplatePermissionsBody": {
+      "type": "object",
+      "properties": {
+        "templateIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "user": {
+          "type": "string"
+        },
+        "userGroup": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "string"
+        },
+        "appIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "服务ID"
+        },
+        "exclusionOperation": {
+          "type": "boolean",
+          "title": "是否排除操作"
+        },
+        "noSetSpecified": {
+          "type": "boolean",
+          "title": "是否未指定套餐, 区分全部套餐和未指定套餐"
         }
       }
     },
@@ -7679,6 +8664,22 @@
         },
         "replaceAll": {
           "type": "boolean"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbtvTemplateVariableSpec"
+          },
+          "title": "非配置模板和模板配置变量"
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbcsBatchUpsertConfigItemsReqTemplateBinding"
+          },
+          "title": "绑定的套餐"
         }
       }
     },
@@ -7706,6 +8707,13 @@
             "type": "object",
             "$ref": "#/definitions/pbcsBatchUpsertTemplatesReqItem"
           }
+        },
+        "templateSetIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
         }
       }
     },
@@ -7717,6 +8725,25 @@
           "items": {
             "type": "object",
             "$ref": "#/definitions/pbatbTemplateBinding"
+          }
+        }
+      }
+    },
+    "ConfigCheckTemplateSetReferencesAppsBody": {
+      "type": "object",
+      "properties": {
+        "templateSetIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbcsCheckTemplateSetReferencesAppsReqItem"
           }
         }
       }
@@ -7740,6 +8767,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7763,6 +8798,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7786,6 +8829,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7809,6 +8860,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7832,6 +8891,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7855,6 +8922,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7878,6 +8953,14 @@
         "isDuplicates": {
           "type": "boolean",
           "title": "拉取趋势是否去重"
+        },
+        "primaryKey": {
+          "type": "string",
+          "title": "区分标签的主维度"
+        },
+        "foreignKeys": {
+          "type": "object",
+          "title": "副维度的数据"
         }
       },
       "title": "ClientCommonReq request param"
@@ -7890,17 +8973,30 @@
         },
         "configType": {
           "type": "string",
-          "title": "config_type is enum type, source resource reference: pkg/dal/table/app.go"
+          "title": "config_type is enum type, source resource"
         },
         "memo": {
-          "type": "string"
+          "type": "string",
+          "title": "reference: pkg/dal/table/app.go"
         },
         "alias": {
           "type": "string"
         },
         "dataType": {
           "type": "string",
-          "title": "data_type is enum type, source resource reference: pkg/dal/table/app.go"
+          "title": "data_type is enum type, source resource reference:"
+        },
+        "isApprove": {
+          "type": "boolean",
+          "title": "pkg/dal/table/app.go"
+        },
+        "approveType": {
+          "type": "string",
+          "title": "approve_type is enum type, source resource reference:"
+        },
+        "approver": {
+          "type": "string",
+          "title": "pkg/dal/table/app.go"
         }
       }
     },
@@ -7941,14 +9037,16 @@
         },
         "fileType": {
           "type": "string",
-          "title": "file_type is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "title": "file_type is enum type, source resource reference:"
         },
         "fileMode": {
           "type": "string",
-          "title": "file_mode is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "description": "file_mode is enum type, source resource reference:",
+          "title": "pkg/dal/table/config_item.go"
         },
         "memo": {
-          "type": "string"
+          "type": "string",
+          "title": "pkg/dal/table/config_item.go"
         },
         "user": {
           "type": "string"
@@ -8066,6 +9164,12 @@
         },
         "memo": {
           "type": "string"
+        },
+        "secretType": {
+          "type": "string"
+        },
+        "secretHidden": {
+          "type": "boolean"
         }
       }
     },
@@ -8238,6 +9342,13 @@
     "ConfigDeleteTmplsFromTmplSetsBody": {
       "type": "object",
       "properties": {
+        "templateSetIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
         "templateIds": {
           "type": "array",
           "items": {
@@ -8245,12 +9356,12 @@
             "format": "int64"
           }
         },
-        "templateSetIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int64"
-          }
+        "exclusionOperation": {
+          "type": "boolean"
+        },
+        "noSetSpecified": {
+          "type": "boolean",
+          "title": "是否未指定套餐, 区分全部套餐和未指定套餐"
         }
       }
     },
@@ -8289,6 +9400,26 @@
           }
         },
         "groupName": {
+          "type": "string"
+        }
+      }
+    },
+    "ConfigImportFromTemplateSetToAppBody": {
+      "type": "object",
+      "properties": {
+        "bindings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ImportFromTemplateSetToAppReqBinding"
+          }
+        }
+      }
+    },
+    "ConfigImportKvsBody": {
+      "type": "object",
+      "properties": {
+        "data": {
           "type": "string"
         }
       }
@@ -8391,6 +9522,106 @@
         }
       }
     },
+    "ConfigListConfigItemsBody": {
+      "type": "object",
+      "properties": {
+        "searchFields": {
+          "type": "string"
+        },
+        "searchValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "all": {
+          "type": "boolean"
+        },
+        "withStatus": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "ADD、REVISE、DELETE、UNCHANGE"
+        }
+      }
+    },
+    "ConfigListKvsBody": {
+      "type": "object",
+      "properties": {
+        "all": {
+          "type": "boolean"
+        },
+        "searchKey": {
+          "type": "string"
+        },
+        "key": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "withStatus": {
+          "type": "boolean"
+        },
+        "searchFields": {
+          "type": "string"
+        },
+        "searchValue": {
+          "type": "string"
+        },
+        "kvType": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sort": {
+          "type": "string"
+        },
+        "order": {
+          "type": "string"
+        },
+        "topIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "置顶的ID"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "ADD、REVISE、DELETE、UNCHANGE"
+        }
+      }
+    },
     "ConfigListTemplateByTupleBody": {
       "type": "object",
       "properties": {
@@ -8424,6 +9655,35 @@
             "type": "integer",
             "format": "int64"
           }
+        }
+      }
+    },
+    "ConfigListTemplatesBody": {
+      "type": "object",
+      "properties": {
+        "searchFields": {
+          "type": "string"
+        },
+        "searchValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "all": {
+          "type": "boolean"
         }
       }
     },
@@ -8499,6 +9759,35 @@
         }
       }
     },
+    "ConfigListTmplsOfTmplSetBody": {
+      "type": "object",
+      "properties": {
+        "searchFields": {
+          "type": "string"
+        },
+        "searchValue": {
+          "type": "string"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "all": {
+          "type": "boolean"
+        }
+      }
+    },
     "ConfigPublishBody": {
       "type": "object",
       "properties": {
@@ -8532,6 +9821,66 @@
         }
       }
     },
+    "ConfigRetryClientsBody": {
+      "type": "object",
+      "properties": {
+        "clientIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "all": {
+          "type": "boolean"
+        },
+        "exclusionOperation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ConfigSubmitPublishApproveBody": {
+      "type": "object",
+      "properties": {
+        "memo": {
+          "type": "string"
+        },
+        "all": {
+          "type": "boolean"
+        },
+        "grayPublishMode": {
+          "type": "string"
+        },
+        "default": {
+          "type": "boolean"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "groupName": {
+          "type": "string"
+        },
+        "publishType": {
+          "type": "string"
+        },
+        "publishTime": {
+          "type": "string"
+        },
+        "isCompare": {
+          "type": "boolean"
+        }
+      }
+    },
     "ConfigUnDeprecateReleaseBody": {
       "type": "object"
     },
@@ -8548,6 +9897,15 @@
           "type": "string"
         },
         "dataType": {
+          "type": "string"
+        },
+        "isApprove": {
+          "type": "boolean"
+        },
+        "approveType": {
+          "type": "string"
+        },
+        "approver": {
           "type": "string"
         }
       }
@@ -8623,14 +9981,16 @@
         },
         "fileType": {
           "type": "string",
-          "title": "file_type is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "title": "file_type is enum type, source resource reference:"
         },
         "fileMode": {
           "type": "string",
-          "title": "file_mode is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "description": "file_mode is enum type, source resource reference:",
+          "title": "pkg/dal/table/config_item.go"
         },
         "memo": {
-          "type": "string"
+          "type": "string",
+          "title": "pkg/dal/table/config_item.go"
         },
         "user": {
           "type": "string"
@@ -8757,6 +10117,12 @@
         },
         "value": {
           "type": "string"
+        },
+        "secretType": {
+          "type": "string"
+        },
+        "secretHidden": {
+          "type": "boolean"
         }
       }
     },
@@ -8765,6 +10131,51 @@
       "properties": {
         "memo": {
           "type": "string"
+        }
+      }
+    },
+    "ConfigUpdateTemplateRevisionBody": {
+      "type": "object",
+      "properties": {
+        "revisionName": {
+          "type": "string"
+        },
+        "revisionMemo": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "fileType": {
+          "type": "string",
+          "title": "file_type is enum type"
+        },
+        "fileMode": {
+          "type": "string",
+          "title": "file_mode is enum type"
+        },
+        "user": {
+          "type": "string"
+        },
+        "userGroup": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "string"
+        },
+        "sign": {
+          "type": "string"
+        },
+        "byteSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "templateRevisionId": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -8824,6 +10235,54 @@
         "notReleaseId": {
           "type": "integer",
           "format": "int64"
+        }
+      }
+    },
+    "ImportFromTemplateSetToAppReqBinding": {
+      "type": "object",
+      "properties": {
+        "templateSetId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateSpaceId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateSpaceName": {
+          "type": "string"
+        },
+        "templateSetName": {
+          "type": "string"
+        },
+        "templateRevisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/ImportFromTemplateSetToAppReqBindingTemplateRevisionBinding"
+          }
+        }
+      }
+    },
+    "ImportFromTemplateSetToAppReqBindingTemplateRevisionBinding": {
+      "type": "object",
+      "properties": {
+        "templateId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateRevisionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isLatest": {
+          "type": "boolean"
+        },
+        "templateName": {
+          "type": "string"
+        },
+        "templateRevisionName": {
+          "type": "string"
         }
       }
     },
@@ -8963,6 +10422,29 @@
         }
       }
     },
+    "TemplateConfigTemplateRevisionDetail": {
+      "type": "object",
+      "properties": {
+        "templateId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateRevisionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isLatest": {
+          "type": "boolean"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbtvTemplateVariableSpec"
+          }
+        }
+      }
+    },
     "TemplateRevisionNamesDetailrevision_names": {
       "type": "object",
       "properties": {
@@ -9049,9 +10531,31 @@
         "dataType": {
           "type": "string",
           "description": "data_type is enum type."
+        },
+        "isApprove": {
+          "type": "boolean"
+        },
+        "approveType": {
+          "type": "string",
+          "title": "approve_type is enum type"
+        },
+        "approver": {
+          "type": "string"
         }
       },
       "title": "AppSpec source resource reference: pkg/dal/table/app.go"
+    },
+    "pbappAuditApp": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "creator": {
+          "type": "string"
+        }
+      },
+      "title": "AuditApp audit and app"
     },
     "pbatbAppBoundTmplRevisionGroupBySet": {
       "type": "object",
@@ -9139,6 +10643,9 @@
         },
         "md5": {
           "type": "string"
+        },
+        "isConflict": {
+          "type": "boolean"
         }
       }
     },
@@ -9478,6 +10985,102 @@
       },
       "title": "AppTemplateVariableReference is app template variable reference"
     },
+    "pbauditAudit": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "spec": {
+          "$ref": "#/definitions/pbauditAuditSpec"
+        },
+        "attachment": {
+          "$ref": "#/definitions/pbauditAuditAttachment"
+        },
+        "revision": {
+          "$ref": "#/definitions/pbauditRevision"
+        }
+      },
+      "title": "Audit audit source resource reference: pkg/dal/table/audit.go"
+    },
+    "pbauditAuditAttachment": {
+      "type": "object",
+      "properties": {
+        "bizId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "appId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "resId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "AuditAttachment defines the audit's attachment"
+    },
+    "pbauditAuditSpec": {
+      "type": "object",
+      "properties": {
+        "resType": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "rid": {
+          "type": "string"
+        },
+        "appCode": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "resInstance": {
+          "type": "string"
+        },
+        "operateWay": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "isCompare": {
+          "type": "boolean"
+        }
+      },
+      "title": "AuditSpec source resource reference: pkg/dal/table/audit.go"
+    },
+    "pbauditListAuditsAppStrategy": {
+      "type": "object",
+      "properties": {
+        "audit": {
+          "$ref": "#/definitions/pbauditAudit"
+        },
+        "strategy": {
+          "$ref": "#/definitions/pbstrategyAuditStrategy"
+        },
+        "app": {
+          "$ref": "#/definitions/pbappAuditApp"
+        }
+      }
+    },
+    "pbauditRevision": {
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "title": "Revision defines the strategy's revision"
+    },
     "pbbaseCreatedRevision": {
       "type": "object",
       "properties": {
@@ -9643,6 +11246,9 @@
         },
         "revision": {
           "$ref": "#/definitions/pbbaseRevision"
+        },
+        "isConflict": {
+          "type": "boolean"
         }
       },
       "title": "ConfigItem source resource reference: pkg/dal/table/config_item.go"
@@ -9765,7 +11371,10 @@
           "type": "string"
         },
         "label": {
-          "type": "object",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "标签"
         },
         "currentReleaseName": {
@@ -9806,9 +11415,21 @@
           "type": "string",
           "title": "客户端失败主类原因"
         },
-        "pullTime": {
+        "startPullTime": {
           "type": "string",
-          "title": "拉取时间"
+          "title": "开始拉取时间"
+        },
+        "endPullTime": {
+          "type": "string",
+          "title": "结束拉取时间"
+        },
+        "clientIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": "client id"
         }
       },
       "title": "ClientQueryCondition 客户端查询条件"
@@ -9913,6 +11534,13 @@
         },
         "specificFailedReason": {
           "type": "string"
+        },
+        "targetReleaseName": {
+          "type": "string"
+        },
+        "totalSeconds": {
+          "type": "number",
+          "format": "double"
         }
       },
       "title": "ClientSpec source resource reference: pkg/dal/table/client.go"
@@ -10162,6 +11790,18 @@
     "pbcsAddTmplsToTmplSetsResp": {
       "type": "object"
     },
+    "pbcsApproveResp": {
+      "type": "object",
+      "properties": {
+        "haveCredentials": {
+          "type": "boolean"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "pbcsBatchDeleteResp": {
       "type": "object",
       "properties": {
@@ -10184,6 +11824,18 @@
     "pbcsBatchDeleteTemplateResp": {
       "type": "object"
     },
+    "pbcsBatchUpdateTemplatePermissionsResp": {
+      "type": "object",
+      "properties": {
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      }
+    },
     "pbcsBatchUpsertConfigItemsReqConfigItem": {
       "type": "object",
       "properties": {
@@ -10195,14 +11847,16 @@
         },
         "fileType": {
           "type": "string",
-          "title": "file_type is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "title": "file_type is enum type, source resource reference:"
         },
         "fileMode": {
           "type": "string",
-          "title": "file_mode is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "description": "file_mode is enum type, source resource reference:",
+          "title": "pkg/dal/table/config_item.go"
         },
         "memo": {
-          "type": "string"
+          "type": "string",
+          "title": "pkg/dal/table/config_item.go"
         },
         "user": {
           "type": "string"
@@ -10219,6 +11873,21 @@
         "byteSize": {
           "type": "string",
           "format": "uint64"
+        },
+        "md5": {
+          "type": "string"
+        }
+      }
+    },
+    "pbcsBatchUpsertConfigItemsReqTemplateBinding": {
+      "type": "object",
+      "properties": {
+        "templateSpaceId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateBinding": {
+          "$ref": "#/definitions/pbatbTemplateBinding"
         }
       }
     },
@@ -10248,6 +11917,12 @@
         },
         "memo": {
           "type": "string"
+        },
+        "secretType": {
+          "type": "string"
+        },
+        "secretHidden": {
+          "type": "boolean"
         }
       }
     },
@@ -10278,14 +11953,16 @@
         },
         "fileType": {
           "type": "string",
-          "title": "file_type is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "title": "file_type is enum type, source resource reference:"
         },
         "fileMode": {
           "type": "string",
-          "title": "file_mode is enum type, source resource reference: pkg/dal/table/config_item.go"
+          "description": "file_mode is enum type, source resource reference:",
+          "title": "pkg/dal/table/config_item.go"
         },
         "memo": {
-          "type": "string"
+          "type": "string",
+          "title": "pkg/dal/table/config_item.go"
         },
         "user": {
           "type": "string"
@@ -10302,6 +11979,9 @@
         "byteSize": {
           "type": "string",
           "format": "uint64"
+        },
+        "md5": {
+          "type": "string"
         }
       }
     },
@@ -10329,10 +12009,144 @@
         }
       }
     },
+    "pbcsCheckClientQueryNameResp": {
+      "type": "object",
+      "properties": {
+        "exist": {
+          "type": "boolean"
+        }
+      }
+    },
     "pbcsCheckCredentialNameResp": {
       "type": "object",
       "properties": {
         "exist": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pbcsCheckReleaseNameResp": {
+      "type": "object",
+      "properties": {
+        "exist": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pbcsCheckTemplateSetReferencesAppsReqItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "pbcsCheckTemplateSetReferencesAppsResp": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbcsCheckTemplateSetReferencesAppsRespItem"
+          }
+        }
+      }
+    },
+    "pbcsCheckTemplateSetReferencesAppsRespItem": {
+      "type": "object",
+      "properties": {
+        "templateSetId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateSetName": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "appName": {
+          "type": "string"
+        },
+        "appExceedsLimit": {
+          "type": "boolean"
+        },
+        "templateSetExceedsLimit": {
+          "type": "boolean"
+        },
+        "appExceedsQuantity": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateSetExceedsQuantity": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "pbcsCompareConfigItemConflictsResp": {
+      "type": "object",
+      "properties": {
+        "nonTemplateConfigs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/CompareConfigItemConflictsRespNonTemplateConfig"
+          }
+        },
+        "templateConfigs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/CompareConfigItemConflictsRespTemplateConfig"
+          }
+        }
+      }
+    },
+    "pbcsCompareKvConflictsResp": {
+      "type": "object",
+      "properties": {
+        "exist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbcsCompareKvConflictsRespKv"
+          }
+        },
+        "nonExist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbcsCompareKvConflictsRespKv"
+          }
+        }
+      }
+    },
+    "pbcsCompareKvConflictsRespKv": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "kvType": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "memo": {
+          "type": "string"
+        },
+        "secretType": {
+          "type": "string"
+        },
+        "secretHidden": {
           "type": "boolean"
         }
       }
@@ -10562,9 +12376,6 @@
     "pbcsDeleteTemplateVariableResp": {
       "type": "object"
     },
-    "pbcsDeleteTmplsFromTmplSetsResp": {
-      "type": "object"
-    },
     "pbcsDeprecateReleaseResp": {
       "type": "object"
     },
@@ -10655,6 +12466,38 @@
         }
       }
     },
+    "pbcsGetLastPublishResp": {
+      "type": "object",
+      "properties": {
+        "isPublishing": {
+          "type": "boolean"
+        },
+        "versionName": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "publishRecord": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbreleasePublishRecord"
+          }
+        }
+      }
+    },
+    "pbcsGetLastSelectResp": {
+      "type": "object",
+      "properties": {
+        "publishType": {
+          "type": "string"
+        },
+        "isApprove": {
+          "type": "boolean"
+        }
+      }
+    },
     "pbcsGetReleaseHookResp": {
       "type": "object",
       "properties": {
@@ -10726,6 +12569,92 @@
           "$ref": "#/definitions/pbrkvReleasedKv"
         }
       }
+    },
+    "pbcsGetTemplateAndNonTemplateCICountResp": {
+      "type": "object",
+      "properties": {
+        "configItemCount": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "templateConfigItemCount": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
+    },
+    "pbcsGetTemplateRevisionResp": {
+      "type": "object",
+      "properties": {
+        "detail": {
+          "$ref": "#/definitions/pbcsGetTemplateRevisionRespTemplateRevision"
+        }
+      }
+    },
+    "pbcsGetTemplateRevisionRespTemplateRevision": {
+      "type": "object",
+      "properties": {
+        "templateId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "templateRevisionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "templateRevisionName": {
+          "type": "string"
+        },
+        "templateRevisionMemo": {
+          "type": "string"
+        },
+        "fileType": {
+          "type": "string"
+        },
+        "fileMode": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        },
+        "userGroup": {
+          "type": "string"
+        },
+        "privilege": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string"
+        },
+        "byteSize": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "createAt": {
+          "type": "string"
+        },
+        "md5": {
+          "type": "string"
+        },
+        "isLatest": {
+          "type": "boolean"
+        }
+      }
+    },
+    "pbcsImportFromTemplateSetToAppResp": {
+      "type": "object"
+    },
+    "pbcsImportKvsResp": {
+      "type": "object"
     },
     "pbcsImportTemplateVariablesResp": {
       "type": "object",
@@ -10828,6 +12757,22 @@
         }
       }
     },
+    "pbcsListAuditsResp": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbauditListAuditsAppStrategy"
+          }
+        }
+      }
+    },
     "pbcsListClientEventsReqOrder": {
       "type": "object",
       "properties": {
@@ -10893,8 +12838,33 @@
           "type": "array",
           "items": {
             "type": "object",
-            "$ref": "#/definitions/pbclientClient"
+            "$ref": "#/definitions/pbcsListClientsRespItem"
           }
+        },
+        "exclusionCount": {
+          "type": "integer",
+          "format": "int64",
+          "title": "排除离线的数量"
+        }
+      }
+    },
+    "pbcsListClientsRespItem": {
+      "type": "object",
+      "properties": {
+        "client": {
+          "$ref": "#/definitions/pbclientClient"
+        },
+        "cpuUsageStr": {
+          "type": "string"
+        },
+        "cpuMaxUsageStr": {
+          "type": "string"
+        },
+        "memoryUsageStr": {
+          "type": "string"
+        },
+        "memoryMaxUsageStr": {
+          "type": "string"
         }
       }
     },
@@ -10946,6 +12916,10 @@
             "type": "object",
             "$ref": "#/definitions/pbciConfigItem"
           }
+        },
+        "conflictNumber": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },
@@ -11134,6 +13108,11 @@
             "type": "object",
             "$ref": "#/definitions/pbcsListHooksRespDetail"
           }
+        },
+        "exclusionCount": {
+          "type": "integer",
+          "format": "int64",
+          "title": "排除禁用的数量"
         }
       }
     },
@@ -11169,6 +13148,11 @@
             "type": "object",
             "$ref": "#/definitions/pbkvKv"
           }
+        },
+        "exclusionCount": {
+          "type": "integer",
+          "format": "int64",
+          "title": "排除删除后的数量"
         }
       }
     },
@@ -11346,6 +13330,33 @@
           "format": "int64"
         },
         "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbtrTemplateRevision"
+          }
+        }
+      }
+    },
+    "pbcsListTemplateSetsAndRevisionsResp": {
+      "type": "object",
+      "properties": {
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbcsListTemplateSetsAndRevisionsRespDetail"
+          }
+        }
+      }
+    },
+    "pbcsListTemplateSetsAndRevisionsRespDetail": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "$ref": "#/definitions/pbtemplateTemplate"
+        },
+        "templateRevision": {
           "type": "array",
           "items": {
             "type": "object",
@@ -11670,8 +13681,17 @@
         },
         "haveCredentials": {
           "type": "boolean"
+        },
+        "havePull": {
+          "type": "boolean"
         }
       }
+    },
+    "pbcsRemoveAppBoundTmplSetResp": {
+      "type": "object"
+    },
+    "pbcsRetryClientsResp": {
+      "type": "object"
     },
     "pbcsUnDeleteConfigItemResp": {
       "type": "object"
@@ -11726,6 +13746,15 @@
     },
     "pbcsUpdateTemplateResp": {
       "type": "object"
+    },
+    "pbcsUpdateTemplateRevisionResp": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
     },
     "pbcsUpdateTemplateSetResp": {
       "type": "object"
@@ -11965,6 +13994,12 @@
         },
         "memo": {
           "type": "string"
+        },
+        "secretType": {
+          "type": "string"
+        },
+        "secretHidden": {
+          "type": "boolean"
         }
       },
       "title": "KvSpec source resource reference: pkg/dal/table/kvs.go"
@@ -12002,6 +14037,30 @@
         }
       },
       "title": "ReleasedConfigItem source resource reference: pkg/dal/table/release_ci.go"
+    },
+    "pbreleasePublishRecord": {
+      "type": "object",
+      "properties": {
+        "publishTime": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/definitions/pbstrategyScope"
+        },
+        "creator": {
+          "type": "string"
+        },
+        "fullyReleased": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      },
+      "title": "PublishRecord list publish relate field"
     },
     "pbreleaseRelease": {
       "type": "object",
@@ -12103,6 +14162,181 @@
         }
       },
       "title": "ReleasedKv source resource reference: pkg/dal/table/released_kv.go"
+    },
+    "pbstrategyAppSpec": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        }
+      },
+      "title": "AppSpec app relate"
+    },
+    "pbstrategyAuditStrategy": {
+      "type": "object",
+      "properties": {
+        "publishType": {
+          "type": "string"
+        },
+        "publishTime": {
+          "type": "string"
+        },
+        "publishStatus": {
+          "type": "string"
+        },
+        "rejectReason": {
+          "type": "string"
+        },
+        "approver": {
+          "type": "string"
+        },
+        "approverProgress": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "reviser": {
+          "type": "string"
+        },
+        "releaseId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "scope": {
+          "$ref": "#/definitions/pbstrategyScope"
+        },
+        "creator": {
+          "type": "string"
+        }
+      },
+      "title": "AuditStrategy strategy relate audit"
+    },
+    "pbstrategyRevision": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "string"
+        },
+        "reviser": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      },
+      "title": "// Revision defines the strategy's revision"
+    },
+    "pbstrategyScope": {
+      "type": "object",
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/pbgroupGroup"
+          }
+        }
+      },
+      "title": "Scope defines the scope"
+    },
+    "pbstrategyStrategy": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "spec": {
+          "$ref": "#/definitions/pbstrategyStrategySpec"
+        },
+        "status": {
+          "$ref": "#/definitions/pbstrategyStrategyState"
+        },
+        "attachment": {
+          "$ref": "#/definitions/pbstrategyStrategyAttachment"
+        },
+        "revision": {
+          "$ref": "#/definitions/pbstrategyRevision"
+        },
+        "app": {
+          "$ref": "#/definitions/pbstrategyAppSpec"
+        }
+      },
+      "title": "strategy source resource reference: pkg/dal/table/strategy.go"
+    },
+    "pbstrategyStrategyAttachment": {
+      "type": "object",
+      "properties": {
+        "bizId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "appId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "strategySetId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "StrategyAttachment defines the strategy's attachment"
+    },
+    "pbstrategyStrategySpec": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "releaseId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "asDefault": {
+          "type": "boolean"
+        },
+        "scope": {
+          "$ref": "#/definitions/pbstrategyScope"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "publishType": {
+          "type": "string"
+        },
+        "publishTime": {
+          "type": "string"
+        },
+        "publishStatus": {
+          "type": "string"
+        },
+        "rejectReason": {
+          "type": "string"
+        },
+        "approver": {
+          "type": "string"
+        },
+        "approverProgress": {
+          "type": "string"
+        },
+        "memo": {
+          "type": "string"
+        }
+      },
+      "title": "ReleaseSpec source resource reference: pkg/dal/table/release.go"
+    },
+    "pbstrategyStrategyState": {
+      "type": "object",
+      "properties": {
+        "pubState": {
+          "type": "string"
+        }
+      },
+      "title": "StrategyState defines the strategy's state"
     },
     "pbtbrLatestTemplateBoundUnnamedAppDetail": {
       "type": "object",

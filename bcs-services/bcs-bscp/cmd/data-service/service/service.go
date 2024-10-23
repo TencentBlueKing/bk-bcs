@@ -19,18 +19,28 @@ import (
 	"fmt"
 	"net/http"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/errf"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
+	pbcs "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/cache-service"
 	pbds "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/data-service"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tmplprocess"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
 // Service do all the data service's work
 type Service struct {
 	dao     dao.Set
+	cs      pbcs.CacheClient
 	vault   vault.Set
 	gateway *gateway
 	// esb esb api client.
@@ -40,8 +50,8 @@ type Service struct {
 }
 
 // NewService create a service instance.
-func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set, esb client.Client, repo repository.Provider) (
-	*Service, error) {
+func NewService(sd serviced.Service, ssd serviced.ServiceDiscover, daoSet dao.Set, vaultSet vault.Set,
+	esb client.Client, repo repository.Provider) (*Service, error) {
 	state, ok := sd.(serviced.State)
 	if !ok {
 		return nil, errors.New("discover convert state failed")
@@ -51,6 +61,35 @@ func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set, esb cli
 		return nil, fmt.Errorf("new gateway failed, err: %v", err)
 	}
 
+	opts := make([]grpc.DialOption, 0)
+
+	// add dial load balancer.
+	opts = append(opts, ssd.LBRoundRobin())
+
+	tls := cc.DataService().Network.TLS
+
+	if !tls.Enable() {
+		// dial without ssl
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		// dial with ssl.
+		// nolint
+		tlsC, err := tools.ClientTLSConfVerify(tls.InsecureSkipVerify, tls.CAFile, tls.CertFile, tls.KeyFile,
+			tls.Password)
+		if err != nil {
+			return nil, fmt.Errorf("init client set tls config failed, err: %v", err)
+		}
+
+		cred := credentials.NewTLS(tlsC)
+		opts = append(opts, grpc.WithTransportCredentials(cred))
+	}
+
+	csConn, err := grpc.Dial(serviced.GrpcServiceDiscoveryName(cc.CacheServiceName), opts...)
+	if err != nil {
+		logs.Errorf("dial cache service failed, err: %v", err)
+		return nil, errf.New(errf.Unknown, fmt.Sprintf("dial cache service failed, err: %v", err))
+	}
+
 	svc := &Service{
 		dao:      daoSet,
 		vault:    vaultSet,
@@ -58,6 +97,7 @@ func NewService(sd serviced.Service, daoSet dao.Set, vaultSet vault.Set, esb cli
 		esb:      esb,
 		repo:     repo,
 		tmplProc: tmplprocess.NewTmplProcessor(),
+		cs:       pbcs.NewCacheClient(csConn),
 	}
 
 	return svc, nil

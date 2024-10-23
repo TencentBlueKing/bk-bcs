@@ -25,4 +25,13 @@ message AppSpec {
   string memo = 3;
   string alias = 4;
   string data_type = 5;  // data_type is enum type.
+  bool is_approve = 6;
+  string approve_type = 7;  // approve_type is enum type
+  string approver = 8;
+}
+
+// AuditApp audit and app
+message AuditApp {
+  string name = 1;
+  string creator = 2;
 }

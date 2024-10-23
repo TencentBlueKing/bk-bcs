@@ -49,6 +49,7 @@ const (
 	appID               namespace = "app-id"
 	releasedKv          namespace = "released-kv"
 	clientMetric        namespace = "client-metric"
+	publish             namespace = "publish"
 )
 
 type keyGenerator struct {
@@ -223,6 +224,22 @@ func (k keyGenerator) AppMeta(bizID uint32, appID uint32) string {
 	}.String()
 }
 
+// PublishString generate the publish cache key.
+func (k keyGenerator) PublishString(bizID, appID uint32) string {
+	return element{
+		biz: bizID,
+		ns:  publish,
+		key: strconv.FormatUint(uint64(appID), 10),
+	}.PublishString()
+}
+
+// PublishPattern generate the publish pattern cache key.
+func (k keyGenerator) PublishPattern() string {
+	return element{
+		ns: publish,
+	}.PublishPattern()
+}
+
 // AppMetaTtlSec generate the app meta's TTL seconds
 func (k keyGenerator) AppMetaTtlSec(withRange bool) int {
 
@@ -267,3 +284,13 @@ const (
 	// TrueVal ..
 	TrueVal = "1"
 )
+
+// PublishString format the element publish to a string
+func (ele element) PublishString() string {
+	return fmt.Sprintf("%s:%s:%d:%s", cacheHead, ele.ns, ele.biz, ele.key)
+}
+
+// PublishPattern format the element publish pattern to a string
+func (ele element) PublishPattern() string {
+	return fmt.Sprintf("%s:%s*", cacheHead, ele.ns)
+}

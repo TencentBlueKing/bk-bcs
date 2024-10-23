@@ -35,6 +35,9 @@ func newApp(db *gorm.DB, opts ...gen.DOOption) app {
 	_app.Alias_ = field.NewString(tableName, "alias")
 	_app.DataType = field.NewString(tableName, "data_type")
 	_app.LastConsumedTime = field.NewTime(tableName, "last_consumed_time")
+	_app.ApproveType = field.NewString(tableName, "approve_type")
+	_app.IsApprove = field.NewBool(tableName, "is_approve")
+	_app.Approver = field.NewString(tableName, "approver")
 	_app.Creator = field.NewString(tableName, "creator")
 	_app.Reviser = field.NewString(tableName, "reviser")
 	_app.CreatedAt = field.NewTime(tableName, "created_at")
@@ -57,6 +60,9 @@ type app struct {
 	Alias_           field.String
 	DataType         field.String
 	LastConsumedTime field.Time
+	ApproveType      field.String
+	IsApprove        field.Bool
+	Approver         field.String
 	Creator          field.String
 	Reviser          field.String
 	CreatedAt        field.Time
@@ -85,6 +91,9 @@ func (a *app) updateTableName(table string) *app {
 	a.Alias_ = field.NewString(table, "alias")
 	a.DataType = field.NewString(table, "data_type")
 	a.LastConsumedTime = field.NewTime(table, "last_consumed_time")
+	a.ApproveType = field.NewString(table, "approve_type")
+	a.IsApprove = field.NewBool(table, "is_approve")
+	a.Approver = field.NewString(table, "approver")
 	a.Creator = field.NewString(table, "creator")
 	a.Reviser = field.NewString(table, "reviser")
 	a.CreatedAt = field.NewTime(table, "created_at")
@@ -113,7 +122,7 @@ func (a *app) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (a *app) fillFieldMap() {
-	a.fieldMap = make(map[string]field.Expr, 12)
+	a.fieldMap = make(map[string]field.Expr, 15)
 	a.fieldMap["id"] = a.ID
 	a.fieldMap["biz_id"] = a.BizID
 	a.fieldMap["name"] = a.Name
@@ -122,6 +131,9 @@ func (a *app) fillFieldMap() {
 	a.fieldMap["alias"] = a.Alias_
 	a.fieldMap["data_type"] = a.DataType
 	a.fieldMap["last_consumed_time"] = a.LastConsumedTime
+	a.fieldMap["approve_type"] = a.ApproveType
+	a.fieldMap["is_approve"] = a.IsApprove
+	a.fieldMap["approver"] = a.Approver
 	a.fieldMap["creator"] = a.Creator
 	a.fieldMap["reviser"] = a.Reviser
 	a.fieldMap["created_at"] = a.CreatedAt

@@ -36,6 +36,7 @@ type Set interface {
 	GenQuery() *gen.Query
 	ID() IDGenInterface
 	App() App
+	AuditDao() AuditDao
 	Commit() Commit
 	ConfigItem() ConfigItem
 	Content() Content
@@ -67,9 +68,11 @@ type Set interface {
 	CredentialScope() CredentialScope
 	Kv() Kv
 	ReleasedKv() ReleasedKv
+	Strategy() Strategy
 	Client() Client
 	ClientEvent() ClientEvent
 	ClientQuery() ClientQuery
+	ItsmConfig() ItsmConfig
 }
 
 // NewDaoSet create the DAO set instance.
@@ -174,6 +177,11 @@ func (s *set) App() App {
 		genQ:     s.genQ,
 		event:    s.event,
 	}
+}
+
+// AuditDao returns the audit's DAO
+func (s *set) AuditDao() AuditDao {
+	return s.auditDao
 }
 
 // Commit returns the commits' DAO
@@ -463,6 +471,15 @@ func (s *set) ReleasedKv() ReleasedKv {
 	}
 }
 
+// Strategy returns the Strategy
+func (s *set) Strategy() Strategy {
+	return &strategyDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
 // Client returns the Client scope's DAO
 func (s *set) Client() Client {
 	return &clientDao{
@@ -484,6 +501,15 @@ func (s *set) ClientEvent() ClientEvent {
 // ClientQuery returns the ClientQuery scope's DAO
 func (s *set) ClientQuery() ClientQuery {
 	return &clientQueryDao{
+		idGen:    s.idGen,
+		auditDao: s.auditDao,
+		genQ:     s.genQ,
+	}
+}
+
+// ItsmConfig returns the ItsmConfig scope's DAO
+func (s *set) ItsmConfig() ItsmConfig {
+	return &itsmConfigDao{
 		idGen:    s.idGen,
 		auditDao: s.auditDao,
 		genQ:     s.genQ,

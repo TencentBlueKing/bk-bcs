@@ -19,6 +19,7 @@ import (
 	release "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/release"
 	released_ci "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-ci"
 	released_kv "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/released-kv"
+	strategy "github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/protocol/core/strategy"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -165,7 +166,13 @@ const (
 	Data_CountGroupsReleasedApps_FullMethodName           = "/pbds.Data/CountGroupsReleasedApps"
 	Data_ListGroupReleasedApps_FullMethodName             = "/pbds.Data/ListGroupReleasedApps"
 	Data_Publish_FullMethodName                           = "/pbds.Data/Publish"
+	Data_SubmitPublishApprove_FullMethodName              = "/pbds.Data/SubmitPublishApprove"
+	Data_Approve_FullMethodName                           = "/pbds.Data/Approve"
+	Data_GetLastSelect_FullMethodName                     = "/pbds.Data/GetLastSelect"
+	Data_GetLastPublish_FullMethodName                    = "/pbds.Data/GetLastPublish"
+	Data_GetReleasesStatus_FullMethodName                 = "/pbds.Data/GetReleasesStatus"
 	Data_GenerateReleaseAndPublish_FullMethodName         = "/pbds.Data/GenerateReleaseAndPublish"
+	Data_ListAudits_FullMethodName                        = "/pbds.Data/ListAudits"
 	Data_CreateCredential_FullMethodName                  = "/pbds.Data/CreateCredential"
 	Data_ListCredentials_FullMethodName                   = "/pbds.Data/ListCredentials"
 	Data_DeleteCredential_FullMethodName                  = "/pbds.Data/DeleteCredential"
@@ -366,7 +373,14 @@ type DataClient interface {
 	ListGroupReleasedApps(ctx context.Context, in *ListGroupReleasedAppsReq, opts ...grpc.CallOption) (*ListGroupReleasedAppsResp, error)
 	// publish related interface.
 	Publish(ctx context.Context, in *PublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	SubmitPublishApprove(ctx context.Context, in *SubmitPublishApproveReq, opts ...grpc.CallOption) (*PublishResp, error)
+	Approve(ctx context.Context, in *ApproveReq, opts ...grpc.CallOption) (*ApproveResp, error)
+	GetLastSelect(ctx context.Context, in *GetLastSelectReq, opts ...grpc.CallOption) (*GetLastSelectResp, error)
+	GetLastPublish(ctx context.Context, in *GetLastPublishReq, opts ...grpc.CallOption) (*GetLastPublishResp, error)
+	GetReleasesStatus(ctx context.Context, in *GetReleasesStatusReq, opts ...grpc.CallOption) (*strategy.Strategy, error)
 	GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error)
+	// audit related interface.
+	ListAudits(ctx context.Context, in *ListAuditsReq, opts ...grpc.CallOption) (*ListAuditsResp, error)
 	// credential related interface
 	CreateCredential(ctx context.Context, in *CreateCredentialReq, opts ...grpc.CallOption) (*CreateResp, error)
 	ListCredentials(ctx context.Context, in *ListCredentialReq, opts ...grpc.CallOption) (*ListCredentialResp, error)
@@ -1634,9 +1648,63 @@ func (c *dataClient) Publish(ctx context.Context, in *PublishReq, opts ...grpc.C
 	return out, nil
 }
 
+func (c *dataClient) SubmitPublishApprove(ctx context.Context, in *SubmitPublishApproveReq, opts ...grpc.CallOption) (*PublishResp, error) {
+	out := new(PublishResp)
+	err := c.cc.Invoke(ctx, Data_SubmitPublishApprove_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) Approve(ctx context.Context, in *ApproveReq, opts ...grpc.CallOption) (*ApproveResp, error) {
+	out := new(ApproveResp)
+	err := c.cc.Invoke(ctx, Data_Approve_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetLastSelect(ctx context.Context, in *GetLastSelectReq, opts ...grpc.CallOption) (*GetLastSelectResp, error) {
+	out := new(GetLastSelectResp)
+	err := c.cc.Invoke(ctx, Data_GetLastSelect_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetLastPublish(ctx context.Context, in *GetLastPublishReq, opts ...grpc.CallOption) (*GetLastPublishResp, error) {
+	out := new(GetLastPublishResp)
+	err := c.cc.Invoke(ctx, Data_GetLastPublish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) GetReleasesStatus(ctx context.Context, in *GetReleasesStatusReq, opts ...grpc.CallOption) (*strategy.Strategy, error) {
+	out := new(strategy.Strategy)
+	err := c.cc.Invoke(ctx, Data_GetReleasesStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataClient) GenerateReleaseAndPublish(ctx context.Context, in *GenerateReleaseAndPublishReq, opts ...grpc.CallOption) (*PublishResp, error) {
 	out := new(PublishResp)
 	err := c.cc.Invoke(ctx, Data_GenerateReleaseAndPublish_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dataClient) ListAudits(ctx context.Context, in *ListAuditsReq, opts ...grpc.CallOption) (*ListAuditsResp, error) {
+	out := new(ListAuditsResp)
+	err := c.cc.Invoke(ctx, Data_ListAudits_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2153,7 +2221,14 @@ type DataServer interface {
 	ListGroupReleasedApps(context.Context, *ListGroupReleasedAppsReq) (*ListGroupReleasedAppsResp, error)
 	// publish related interface.
 	Publish(context.Context, *PublishReq) (*PublishResp, error)
+	SubmitPublishApprove(context.Context, *SubmitPublishApproveReq) (*PublishResp, error)
+	Approve(context.Context, *ApproveReq) (*ApproveResp, error)
+	GetLastSelect(context.Context, *GetLastSelectReq) (*GetLastSelectResp, error)
+	GetLastPublish(context.Context, *GetLastPublishReq) (*GetLastPublishResp, error)
+	GetReleasesStatus(context.Context, *GetReleasesStatusReq) (*strategy.Strategy, error)
 	GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error)
+	// audit related interface.
+	ListAudits(context.Context, *ListAuditsReq) (*ListAuditsResp, error)
 	// credential related interface
 	CreateCredential(context.Context, *CreateCredentialReq) (*CreateResp, error)
 	ListCredentials(context.Context, *ListCredentialReq) (*ListCredentialResp, error)
@@ -2613,8 +2688,26 @@ func (UnimplementedDataServer) ListGroupReleasedApps(context.Context, *ListGroup
 func (UnimplementedDataServer) Publish(context.Context, *PublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Publish not implemented")
 }
+func (UnimplementedDataServer) SubmitPublishApprove(context.Context, *SubmitPublishApproveReq) (*PublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitPublishApprove not implemented")
+}
+func (UnimplementedDataServer) Approve(context.Context, *ApproveReq) (*ApproveResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Approve not implemented")
+}
+func (UnimplementedDataServer) GetLastSelect(context.Context, *GetLastSelectReq) (*GetLastSelectResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastSelect not implemented")
+}
+func (UnimplementedDataServer) GetLastPublish(context.Context, *GetLastPublishReq) (*GetLastPublishResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastPublish not implemented")
+}
+func (UnimplementedDataServer) GetReleasesStatus(context.Context, *GetReleasesStatusReq) (*strategy.Strategy, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReleasesStatus not implemented")
+}
 func (UnimplementedDataServer) GenerateReleaseAndPublish(context.Context, *GenerateReleaseAndPublishReq) (*PublishResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateReleaseAndPublish not implemented")
+}
+func (UnimplementedDataServer) ListAudits(context.Context, *ListAuditsReq) (*ListAuditsResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAudits not implemented")
 }
 func (UnimplementedDataServer) CreateCredential(context.Context, *CreateCredentialReq) (*CreateResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCredential not implemented")
@@ -5157,6 +5250,96 @@ func _Data_Publish_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Data_SubmitPublishApprove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SubmitPublishApproveReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).SubmitPublishApprove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_SubmitPublishApprove_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).SubmitPublishApprove(ctx, req.(*SubmitPublishApproveReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_Approve_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ApproveReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).Approve(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_Approve_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).Approve(ctx, req.(*ApproveReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetLastSelect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastSelectReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetLastSelect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetLastSelect_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetLastSelect(ctx, req.(*GetLastSelectReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetLastPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLastPublishReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetLastPublish(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetLastPublish_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetLastPublish(ctx, req.(*GetLastPublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_GetReleasesStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReleasesStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).GetReleasesStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_GetReleasesStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).GetReleasesStatus(ctx, req.(*GetReleasesStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Data_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GenerateReleaseAndPublishReq)
 	if err := dec(in); err != nil {
@@ -5171,6 +5354,24 @@ func _Data_GenerateReleaseAndPublish_Handler(srv interface{}, ctx context.Contex
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServer).GenerateReleaseAndPublish(ctx, req.(*GenerateReleaseAndPublishReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Data_ListAudits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAuditsReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServer).ListAudits(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Data_ListAudits_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServer).ListAudits(ctx, req.(*ListAuditsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -6421,8 +6622,32 @@ var Data_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Data_Publish_Handler,
 		},
 		{
+			MethodName: "SubmitPublishApprove",
+			Handler:    _Data_SubmitPublishApprove_Handler,
+		},
+		{
+			MethodName: "Approve",
+			Handler:    _Data_Approve_Handler,
+		},
+		{
+			MethodName: "GetLastSelect",
+			Handler:    _Data_GetLastSelect_Handler,
+		},
+		{
+			MethodName: "GetLastPublish",
+			Handler:    _Data_GetLastPublish_Handler,
+		},
+		{
+			MethodName: "GetReleasesStatus",
+			Handler:    _Data_GetReleasesStatus_Handler,
+		},
+		{
 			MethodName: "GenerateReleaseAndPublish",
 			Handler:    _Data_GenerateReleaseAndPublish_Handler,
+		},
+		{
+			MethodName: "ListAudits",
+			Handler:    _Data_ListAudits_Handler,
 		},
 		{
 			MethodName: "CreateCredential",

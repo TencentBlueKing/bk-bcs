@@ -48,6 +48,11 @@ type Audit struct {
 	Operator     string                   `db:"operator" json:"operator" gorm:"column:operator"`
 	CreatedAt    time.Time                `db:"created_at" json:"created_at" gorm:"column:created_at"`
 	Detail       string                   `db:"detail" json:"detail" gorm:"column:detail"` // Detail is a json raw string
+	ResInstance  string                   `db:"res_instance" json:"res_instance" gorm:"column:res_instance"`
+	OperateWay   string                   `db:"operate_way" json:"operate_way" gorm:"column:operate_way"`
+	Status       enumor.AuditStatus       `db:"status" json:"status" gorm:"column:status"`
+	StrategyId   uint32                   `db:"strategy_id" json:"strategy_id" gorm:"column:strategy_id"`
+	IsCompare    bool                     `db:"is_compare" json:"is_compare" gorm:"column:is_compare"`
 }
 
 // TableName is the audit's database table name.
@@ -59,4 +64,15 @@ func (a *Audit) TableName() Name {
 type AuditBasicDetail struct {
 	Prev    interface{} `json:"prev"`
 	Changed interface{} `json:"changed"`
+}
+
+// AuditField defines the audit's basic field
+type AuditField struct {
+	OperateWay       string
+	Action           enumor.AuditAction
+	ResourceInstance string
+	Status           enumor.AuditStatus
+	AppId            uint32
+	StrategyId       uint32
+	IsCompare        bool
 }

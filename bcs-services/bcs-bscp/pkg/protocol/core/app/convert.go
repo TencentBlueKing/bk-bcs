@@ -25,11 +25,14 @@ func (m *AppSpec) AppSpec() *table.AppSpec {
 	}
 
 	return &table.AppSpec{
-		Name:       m.Name,
-		ConfigType: table.ConfigType(m.ConfigType),
-		Memo:       m.Memo,
-		Alias:      m.Alias,
-		DataType:   table.DataType(m.DataType),
+		Name:        m.Name,
+		ConfigType:  table.ConfigType(m.ConfigType),
+		Memo:        m.Memo,
+		Alias:       m.Alias,
+		DataType:    table.DataType(m.DataType),
+		ApproveType: table.ApproveType(m.ApproveType),
+		IsApprove:   m.IsApprove,
+		Approver:    m.Approver,
 	}
 }
 
@@ -40,11 +43,14 @@ func PbAppSpec(spec *table.AppSpec) *AppSpec { //nolint:revive
 	}
 
 	return &AppSpec{
-		Name:       spec.Name,
-		ConfigType: string(spec.ConfigType),
-		Memo:       spec.Memo,
-		Alias:      spec.Alias,
-		DataType:   string(spec.DataType),
+		Name:        spec.Name,
+		ConfigType:  string(spec.ConfigType),
+		Memo:        spec.Memo,
+		Alias:       spec.Alias,
+		DataType:    string(spec.DataType),
+		IsApprove:   spec.IsApprove,
+		ApproveType: string(spec.ApproveType),
+		Approver:    spec.Approver,
 	}
 }
 

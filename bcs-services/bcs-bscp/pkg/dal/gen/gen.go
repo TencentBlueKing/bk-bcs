@@ -36,6 +36,7 @@ var (
 	Hook                        *hook
 	HookRevision                *hookRevision
 	IDGenerator                 *iDGenerator
+	ItsmConfig                  *itsmConfig
 	Kv                          *kv
 	Release                     *release
 	ReleasedAppTemplate         *releasedAppTemplate
@@ -74,6 +75,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Hook = &Q.Hook
 	HookRevision = &Q.HookRevision
 	IDGenerator = &Q.IDGenerator
+	ItsmConfig = &Q.ItsmConfig
 	Kv = &Q.Kv
 	Release = &Q.Release
 	ReleasedAppTemplate = &Q.ReleasedAppTemplate
@@ -113,6 +115,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Hook:                        newHook(db, opts...),
 		HookRevision:                newHookRevision(db, opts...),
 		IDGenerator:                 newIDGenerator(db, opts...),
+		ItsmConfig:                  newItsmConfig(db, opts...),
 		Kv:                          newKv(db, opts...),
 		Release:                     newRelease(db, opts...),
 		ReleasedAppTemplate:         newReleasedAppTemplate(db, opts...),
@@ -153,6 +156,7 @@ type Query struct {
 	Hook                        hook
 	HookRevision                hookRevision
 	IDGenerator                 iDGenerator
+	ItsmConfig                  itsmConfig
 	Kv                          kv
 	Release                     release
 	ReleasedAppTemplate         releasedAppTemplate
@@ -194,6 +198,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Hook:                        q.Hook.clone(db),
 		HookRevision:                q.HookRevision.clone(db),
 		IDGenerator:                 q.IDGenerator.clone(db),
+		ItsmConfig:                  q.ItsmConfig.clone(db),
 		Kv:                          q.Kv.clone(db),
 		Release:                     q.Release.clone(db),
 		ReleasedAppTemplate:         q.ReleasedAppTemplate.clone(db),
@@ -242,6 +247,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Hook:                        q.Hook.replaceDB(db),
 		HookRevision:                q.HookRevision.replaceDB(db),
 		IDGenerator:                 q.IDGenerator.replaceDB(db),
+		ItsmConfig:                  q.ItsmConfig.replaceDB(db),
 		Kv:                          q.Kv.replaceDB(db),
 		Release:                     q.Release.replaceDB(db),
 		ReleasedAppTemplate:         q.ReleasedAppTemplate.replaceDB(db),
@@ -280,6 +286,7 @@ type queryCtx struct {
 	Hook                        IHookDo
 	HookRevision                IHookRevisionDo
 	IDGenerator                 IIDGeneratorDo
+	ItsmConfig                  IItsmConfigDo
 	Kv                          IKvDo
 	Release                     IReleaseDo
 	ReleasedAppTemplate         IReleasedAppTemplateDo
@@ -318,6 +325,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Hook:                        q.Hook.WithContext(ctx),
 		HookRevision:                q.HookRevision.WithContext(ctx),
 		IDGenerator:                 q.IDGenerator.WithContext(ctx),
+		ItsmConfig:                  q.ItsmConfig.WithContext(ctx),
 		Kv:                          q.Kv.WithContext(ctx),
 		Release:                     q.Release.WithContext(ctx),
 		ReleasedAppTemplate:         q.ReleasedAppTemplate.WithContext(ctx),

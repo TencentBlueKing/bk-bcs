@@ -103,6 +103,13 @@ service Cache {
   }
 
   rpc BatchUpdateLastConsumedTime(BatchUpdateLastConsumedTimeReq) returns (BatchUpdateLastConsumedTimeResp) {}
+
+  rpc SetPublishTime(SetPublishTimeReq) returns (SetPublishTimeResp) {
+    option (google.api.http) = {
+      post: "/api/v1/cache/biz/{biz_id}/publish_time"
+      body: "*"
+    };
+  }
 }
 
 message JsonRawResp {
@@ -233,6 +240,17 @@ message SetClientMetricReq {
 }
 
 message SetClientMetricResp {}
+
+message SetPublishTimeReq {
+  uint32 biz_id = 1;
+  uint32 strategy_id = 2;
+  int64 publish_time = 3;
+  uint32 app_id = 4;
+}
+
+message SetPublishTimeResp {
+  int64 result = 1;
+}
 
 message BatchUpdateLastConsumedTimeReq {
   uint32 biz_id = 1;

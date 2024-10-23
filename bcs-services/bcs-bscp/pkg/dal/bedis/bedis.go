@@ -69,6 +69,9 @@ type RedisClient interface {
 	LRem(ctx context.Context, key string, count int64, value interface{}) *redis.IntCmd
 	RPopLPush(ctx context.Context, source, destination string) *redis.StringCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *redis.StringCmd
+	ZAdd(ctx context.Context, key string, members ...*redis.Z) *redis.IntCmd
+	ZRangeByScoreWithScores(ctx context.Context, key string, opt *redis.ZRangeBy) *redis.ZSliceCmd
+	ZRem(ctx context.Context, key string, members ...interface{}) *redis.IntCmd
 }
 
 // Client defines all the bscp used redis command
@@ -100,6 +103,9 @@ type Client interface {
 	LRem(ctx context.Context, key string, count int64, value interface{}) error
 	RPopLPush(ctx context.Context, source, destination string) (string, error)
 	BRPopLPush(ctx context.Context, source, destination string, ttlSeconds int) (string, error)
+	ZAdd(ctx context.Context, key string, score float64, value interface{}) (int64, error)
+	ZRangeByScoreWithScores(ctx context.Context, key string, zRangeBy *redis.ZRangeBy) ([]redis.Z, error)
+	ZRem(ctx context.Context, key string, members ...interface{}) (int64, error)
 }
 
 // NewRedisCache create a redis cluster client.

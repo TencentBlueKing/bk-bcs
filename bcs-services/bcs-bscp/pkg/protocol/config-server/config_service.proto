@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "pkg/protocol/core/app/app.proto";
+import "pkg/protocol/core/audit/audit.proto";
 import "pkg/protocol/core/app-template-binding/app_template_binding.proto";
 import "pkg/protocol/core/base/base.proto";
 import "pkg/protocol/core/config-item/config_item.proto";
@@ -24,6 +25,7 @@ import "pkg/protocol/core/app-template-variable/app_template_variable.proto";
 import "pkg/protocol/core/template-variable/template_variable.proto";
 import "pkg/protocol/core/kv/kvs.proto";
 import "pkg/protocol/core/released-kv/released_kv.proto";
+import "pkg/protocol/core/strategy/strategy.proto";
 import "google/api/annotations.proto";
 import "google/api/visibility.proto";
 import "google/protobuf/struct.proto";
@@ -845,6 +847,46 @@ option (google.api.http) = {
     };
   }
 
+  rpc SubmitPublishApprove(SubmitPublishApproveReq) returns (PublishResp) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
+    option (google.api.http) = {
+      post: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/release_id/{release_id}/submit"
+      body: "*"
+    };
+  }
+
+  rpc Approve(ApproveReq) returns (ApproveResp) {
+    option (google.api.method_visibility).restriction = "BKAPIGW";
+    option (google.api.http) = {
+      post: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/release_id/{release_id}/approve"
+      body: "*"
+    };
+  }
+
+  rpc GetLastSelect(GetLastSelectReq) returns (GetLastSelectResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/last/select"
+    };
+  }
+
+  rpc GetLastPublish(GetLastPublishReq) returns (GetLastPublishResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/last/publish"
+    };
+  }
+
+  rpc GetReleasesStatus(GetReleasesStatusReq) returns (pbstrategy.Strategy) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/app_id/{app_id}/release_id/{release_id}/status"
+    };
+  }
+
+  rpc ListAudits(ListAuditsReq) returns (ListAuditsResp) {
+    option (google.api.http) = {
+      get: "/api/v1/config/biz_id/{biz_id}/audits"
+    };
+  }
+
   rpc CreateCredentials(CreateCredentialReq) returns (CreateCredentialResp) {
     option (google.api.http) = {
       post: "/api/v1/config/biz_id/{biz_id}/credentials"
@@ -1179,6 +1221,10 @@ message CreateAppReq {
   string alias = 5;
   string data_type = 6;  // data_type is enum type, source resource reference:
                          // pkg/dal/table/app.go
+  bool is_approve = 7;
+  string approve_type = 8;  // approve_type is enum type, source resource reference:
+                            // pkg/dal/table/app.go
+  string approver = 9;
 }
 
 message CreateAppResp {
@@ -1192,6 +1238,9 @@ message UpdateAppReq {
   string memo = 4;
   string alias = 5;
   string data_type = 6;
+  bool is_approve = 7;
+  string approve_type = 8;
+  string approver = 9;
 }
 
 message DeleteAppReq {
@@ -2782,6 +2831,87 @@ message PublishResp {
   uint32 id = 1;
   bool have_credentials = 2;
   bool have_pull = 3;
+}
+
+message SubmitPublishApproveReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  string memo = 4;
+  bool all = 5;
+  string gray_publish_mode = 6;
+  bool default = 7;
+  repeated uint32 groups = 8;
+  repeated google.protobuf.Struct labels = 9;
+  string group_name = 10;
+  string publish_type = 11;
+  string publish_time = 12;
+  bool is_compare = 13;
+}
+
+message ApproveReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+  string publish_status = 4;
+  string reason = 5;
+}
+
+message ApproveResp {
+  bool have_credentials = 1;
+  int32 code = 2;
+}
+
+message GetLastSelectReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}
+
+message GetLastSelectResp {
+  string publish_type = 1;
+  bool is_approve = 2;
+}
+
+message GetLastPublishReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+}
+
+message GetLastPublishResp {
+  bool is_publishing = 1;
+  string version_name = 2;
+  string updated_at = 3;
+  repeated pbrelease.PublishRecord publish_record = 4;
+}
+
+message GetReleasesStatusReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  uint32 release_id = 3;
+}
+
+message ListAuditsReq {
+  uint32 biz_id = 1;
+  uint32 app_id = 2;
+  string start_time = 3;
+  string end_time = 4;
+  string operate = 5;
+  string operate_way = 6;
+  uint32 start = 7;
+  uint32 limit = 8;
+  bool all = 9;
+  string name = 10;
+  string resource_type = 11;
+  string action = 12;
+  string res_instance = 13;
+  string status = 14;
+  string operator = 15;
+  uint32 id = 16;
+}
+
+message ListAuditsResp {
+  uint32 count = 1;
+  repeated pbaudit.ListAuditsAppStrategy details = 2;
 }
 
 message CreateKvReq {

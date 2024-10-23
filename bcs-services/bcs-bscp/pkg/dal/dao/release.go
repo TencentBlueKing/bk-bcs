@@ -44,6 +44,8 @@ type Release interface {
 	DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID, releaseID uint32) error
 	// GetReleaseLately get release lately info
 	GetReleaseLately(kit *kit.Kit, bizID uint32, appID uint32) (*table.Release, error)
+	// ListReleaseStrategies list release strategie the latest three pieces of data published
+	ListReleaseStrategies(kit *kit.Kit, bizID uint32, appID uint32) ([]*types.ListReleasesStrategies, error)
 }
 
 var _ Release = new(releaseDao)
@@ -190,4 +192,22 @@ func (dao *releaseDao) DeleteWithTx(kit *kit.Kit, tx *gen.QueryTx, bizID, appID,
 	m := tx.Release
 	_, err := m.WithContext(kit.Ctx).Where(m.ID.Eq(releaseID), m.AppID.Eq(appID), m.BizID.Eq(bizID)).Delete()
 	return err
+}
+
+// ListReleaseStrategies list release strategie the latest three pieces of data published
+func (dao *releaseDao) ListReleaseStrategies(
+	kit *kit.Kit, bizID uint32, appID uint32) ([]*types.ListReleasesStrategies, error) {
+	var publishRecords []*types.ListReleasesStrategies
+	r := dao.genQ.Release
+	s := dao.genQ.Strategy
+	err := r.WithContext(kit.Ctx).Select(s.PublishTime, r.Name, s.Scope, r.Creator, r.FullyReleased).
+		Join(s, s.ReleaseID.EqCol(r.ID), s.AppID.EqCol(r.AppID), s.BizID.EqCol(r.BizID)).
+		Where(s.PublishStatus.Eq(string(table.AlreadyPublish)), s.AppID.Eq(appID), s.BizID.Eq(bizID)).
+		Order(s.PublishTime.Desc()).Limit(3).Offset(0).
+		Scan(&publishRecords)
+
+	if err != nil {
+		return publishRecords, err
+	}
+	return publishRecords, nil
 }

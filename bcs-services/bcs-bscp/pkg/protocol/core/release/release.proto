@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "google/protobuf/struct.proto";
 import "pkg/protocol/core/base/base.proto";
+import "pkg/protocol/core/strategy/strategy.proto";
 
 package pbrelease;
 
@@ -45,4 +46,14 @@ message ReleaseStatus {
 message ReleaseAttachment {
   uint32 biz_id = 1;
   uint32 app_id = 2;
+}
+
+// PublishRecord list publish relate field
+message PublishRecord {
+  string publish_time = 1;
+  string name = 2;
+  pbstrategy.Scope scope = 3;
+  string creator = 4;
+  bool fully_released = 5;
+  string updated_at = 6;
 }

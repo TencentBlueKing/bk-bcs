@@ -188,6 +188,7 @@ func (s *WebServer) subRouter() http.Handler {
 		GrpcAddr:             config.G.Base.GrpcAddr,
 		HttpAddr:             config.G.Base.HttpAddr,
 		NodeManHost:          config.G.Frontend.Host.BKNODEMANHOST,
+		UserManHost:          config.G.Frontend.Host.UserManHost,
 	}
 
 	if shouldProxyAPI {

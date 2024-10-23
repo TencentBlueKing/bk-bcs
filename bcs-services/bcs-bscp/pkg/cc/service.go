@@ -300,6 +300,7 @@ type DataServiceSetting struct {
 	Repo         Repository   `yaml:"repository"`
 	Vault        Vault        `yaml:"vault"`
 	FeatureFlags FeatureFlags `yaml:"featureFlags"`
+	ITSM         ITSMConfig   `yaml:"itsm"`
 }
 
 // trySetFlagBindIP try set flag bind ip.
