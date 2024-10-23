@@ -1864,6 +1864,18 @@ service TemplateSet {
 		};
 	}
 
+	// 普通模板文件转换为 Helm 格式模板文件
+	rpc ConvertTemplateToHelm(ConvertTemplateToHelmReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/template/helm"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "普通模板文件转换为 Helm 格式"
+			summary: "Convert template to helm"
+		};
+	}
+
 	// 获取环境管理详情
 	rpc GetEnvManage(GetEnvManageReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -3432,6 +3444,21 @@ message DeployTemplateFileReq {
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
 	string values = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板集value值"
+	}];
+}
+
+message ConvertTemplateToHelmReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeployTemplateFileReq", description: "部署模板文件"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateVersionID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本 ID"
+	}, (validate.rules).string = {len : 24}];
+	string values = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板内容value值"
 	}];
 }
 

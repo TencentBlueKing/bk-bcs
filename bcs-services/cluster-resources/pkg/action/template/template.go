@@ -656,6 +656,53 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 	return nil, nil
 }
 
+// ConvertTemplateToHelm 普通模板文件转换为 Helm 格式模板文件
+func (t *TemplateAction) ConvertTemplateToHelm(ctx context.Context, req *clusterRes.ConvertTemplateToHelmReq) error {
+	if err := t.checkAccess(ctx); err != nil {
+		return err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	templateVersion, err := t.model.GetTemplateVersion(ctx, req.GetTemplateVersionID())
+	if err != nil {
+		return err
+	}
+
+	// 检验更新 TemplateVersion 的权限
+	if templateVersion.ProjectCode != p.Code {
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
+	// 已经是helm语法模式的直接返回
+	if templateVersion.RenderMode == string(constants.HelmRenderMode) {
+		return nil
+	}
+
+	td := entity.TemplateDeploy{
+		TemplateSpace:   templateVersion.TemplateSpace,
+		TemplateName:    templateVersion.TemplateName,
+		TemplateVersion: templateVersion.Version,
+		Content:         templateVersion.Content,
+		RenderMode:      string(constants.HelmRenderMode),
+	}
+	// 对模板文件内容进行helm template渲染, 校验是否通过
+	_, err = renderTemplateForHelmMode([]entity.TemplateDeploy{td}, req.GetValues())
+	if err != nil {
+		return err
+	}
+
+	if err := t.model.UpdateTemplateVersion(ctx, req.GetTemplateVersionID(), entity.M{
+		"renderMode": constants.HelmRenderMode,
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
 // renderTemplates render templates
 func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity.TemplateDeploy,
 	vars map[string]string, ns string) ([]map[string]interface{}, error) {
