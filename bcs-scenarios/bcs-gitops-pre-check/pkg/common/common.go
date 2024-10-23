@@ -252,11 +252,11 @@ func handleStringType(protoTask *precheck.PreCheckTask, storageTask *storage.Pre
 }
 
 func handleJsonStr(protoTask *precheck.PreCheckTask, storageTask *storage.PreCheckTask) {
-	if protoTask.InvolvedApplications != nil && len(protoTask.InvolvedApplications) != 0 {
+	if len(protoTask.InvolvedApplications) != 0 {
 		involvedApplicationsStr, _ := json.Marshal(protoTask.InvolvedApplications)
 		storageTask.InvolvedApplications = string(involvedApplicationsStr)
 	}
-	if protoTask.CheckDetail != nil && len(protoTask.CheckDetail) != 0 {
+	if len(protoTask.CheckDetail) != 0 {
 		checkDetailStr, _ := json.Marshal(protoTask.CheckDetail)
 		storageTask.CheckDetail = string(checkDetailStr)
 	}

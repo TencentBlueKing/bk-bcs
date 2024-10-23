@@ -42,7 +42,7 @@ func (c *checker) queryUserSingleTypePermission(ctx context.Context, project str
 	rsNames []string) ([]interface{}, *UserResourcePermission, int, error) {
 	start := time.Now()
 	defer blog.Infof("RequestID[%s] query permission for project '%s' with resource '%s/%v' cost time: %v",
-		ctxutils.RequestID(ctx), project, rsType, rsNames, time.Since(start))
+		ctxutils.RequestID(ctx), project, rsType, rsNames, time.Since(start)) // nolint
 	var result *UserResourcePermission
 	var resources []interface{}
 	var statusCode int

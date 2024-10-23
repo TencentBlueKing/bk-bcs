@@ -106,12 +106,12 @@ func getCloudNodeGroupID(group *proto.NodeGroup) string {
 }
 
 func updateVmss(rootCtx context.Context, cli api.AksService, group *proto.NodeGroup,
-	set *armcompute.VirtualMachineScaleSet, rg, nrg string) (*armcompute.VirtualMachineScaleSet, error) {
+	set *armcompute.VirtualMachineScaleSet, rg, nrg string, isNode bool) (*armcompute.VirtualMachineScaleSet, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
 
-	group.AutoScaling.AutoScalingName = api.RegexpSetNodeGroupResourcesName(set)
+	group.AutoScaling.AutoScalingName = rg
 	// 设置虚拟规模集网络
-	err := api.SetVmSetNetWork(rootCtx, cli, group, rg, nrg, set)
+	err := api.SetVmSetNetWork(rootCtx, cli, group, rg, nrg, set, isNode)
 	if err != nil {
 		return nil, fmt.Errorf("updateVmss[%s]: call SetVmSetNetWork[%s] falied, %v", taskID,
 			group.CloudNodeGroupID, err)
@@ -123,7 +123,7 @@ func updateVmss(rootCtx context.Context, cli api.AksService, group *proto.NodeGr
 	// 买数据盘
 	api.BuyDataDisk(group, set)
 	// 用户数据
-	api.SetUserData(group, set)
+	// api.SetUserData(group, set)
 	api.SetImageReferenceNull(set)
 
 	ctx, cancel := context.WithTimeout(rootCtx, 5*time.Minute)

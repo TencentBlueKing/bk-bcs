@@ -51,3 +51,8 @@ const (
 	// NodeGroupLifeStateDeleted node group life state deleted
 	NodeGroupLifeStateDeleted = "deleted"
 )
+
+const (
+	// BCSRegionStateAvailable xxx
+	BCSRegionStateAvailable = "AVAILABLE"
+)

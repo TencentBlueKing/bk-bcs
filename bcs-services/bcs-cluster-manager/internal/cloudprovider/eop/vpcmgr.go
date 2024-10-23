@@ -96,7 +96,7 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*cm
 
 // CheckConflictInVpcCidr check cidr conflict in vpc
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
-	opt *cloudprovider.CommonOption) ([]string, error) {
+	opt *cloudprovider.CheckConflictInVpcCidrOption) ([]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

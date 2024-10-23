@@ -214,8 +214,8 @@ func (c *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pro
 
 // CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 func (c *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
-	opt *cloudprovider.CommonOption) ([]string, error) {
-	return business.CheckConflictFromVpc(opt, vpcID, cidr)
+	opt *cloudprovider.CheckConflictInVpcCidrOption) ([]string, error) {
+	return business.CheckConflictFromVpc(&opt.CommonOption, vpcID, cidr)
 }
 
 // AllocateOverlayCidr allocate overlay cidr

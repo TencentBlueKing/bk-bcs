@@ -1,43 +1,43 @@
 version: v2.0
 
 on:
-  push: [ master ]
-  mr: [ master, v1.* ]
+  push: [master]
+  mr: [master, v1.*]
 
 stages:
-- name: lint
-  jobs:
-    prepare:
-      steps:
-      - checkout: self
-        name: 拉取代码
-      - run: |
-          dir_json="$(find . -type f -name '.golangci.yml' -exec dirname {} \; | sed 's|^\./||' | sort -u | jq -c -R -s 'split("\n") | map(select(. != "")) | {dirs: .}')"
-          echo "::set-output name=parameters::$dir_json"
-        id: set-matrix
-        name: 矩阵参数生成
-      - run: |
-          bcs_image=${{ settings.bcs_docker_image.password }}
-          echo "::set-output name=parameters::$bcs_image"
-        id: set-image
-        name: 镜像参数设置
-    build:
-      depend-on: 
-      - prepare
-      strategy:
+  - name: lint
+    jobs:
+      prepare:
+        steps:
+          - checkout: self
+            name: 拉取代码
+          - run: |
+              dir_json="$(cat scripts/gen-lint/modules_white_list | grep -v "\#" | sed 's|^\./||' | sort -u | jq -c -R -s 'split("\n") | map(select(. != "")) | {dirs: .}')"
+              echo "::set-output name=parameters::$dir_json"
+            id: set-matrix
+            name: 矩阵参数生成
+          - run: |
+              bcs_image=${{ settings.bcs_docker_image.password }}
+              echo "::set-output name=parameters::$bcs_image"
+            id: set-image
+            name: 镜像参数设置
+      build:
+        depend-on:
+          - prepare
+        strategy:
           matrix: ${{ fromJSON(jobs.prepare.steps.set-matrix.outputs.parameters) }}
           max-parallel: 20
-      name: ${{ matrix.dirs }} 代码检查
-      runs-on:
-        pool-name: docker
-        container:
-          image: ${{ jobs.prepare.steps.set-image.outputs.parameters }}
-      steps:
-      - checkout: self
-        name: 拉取代码
-      - run: |
-          wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.54.2
-          mv ./bin/golangci-lint /usr/bin/golangci-lint
-          cd ${{ matrix.dirs }}
-          go mod tidy
-          CGO_ENABLED=0 golangci-lint run
+        name: ${{ matrix.dirs }} 代码检查
+        runs-on:
+          pool-name: docker
+          container:
+            image: ${{ jobs.prepare.steps.set-image.outputs.parameters }}
+        steps:
+          - checkout: self
+            name: 拉取代码
+          - run: |
+              wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.61.0
+              mv ./bin/golangci-lint /usr/bin/golangci-lint
+              cd ${{ matrix.dirs }}
+              go mod tidy
+              CGO_ENABLED=0 golangci-lint run

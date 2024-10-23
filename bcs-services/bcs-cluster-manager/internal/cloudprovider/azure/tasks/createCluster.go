@@ -35,7 +35,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 )
 
@@ -144,7 +143,7 @@ func createAKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	}
 
 	// aks create cluster
-	aksCluster, err := client.CreateCluster(ctx, rgName, info.Cluster.ClusterName, *req)
+	aksCluster, err := client.CreateCluster(ctx, rgName, strings.ToLower(info.Cluster.ClusterID), *req)
 	if err != nil {
 		return "", fmt.Errorf("createAKSCluster[%s] CreateCluster failed, %v", taskID, err)
 	}
@@ -176,23 +175,23 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		return nil, fmt.Errorf("generateCreateClusterRequest empty NetworkSettings for cluster %s", cluster.ClusterID)
 	}
 
-	var adminUserName, publicKey string
+	// var adminUserName, publicKey string
 	agentPools := make([]*armcontainerservice.ManagedClusterAgentPoolProfile, 0)
 
 	// handle agent pools
 	for _, ng := range groups {
 		// build agent pool request
-		agentPool, err := genAgentPoolReq(ng, info.CmOption.Account.SubscriptionID,
+		agentPool, err := genAgentPoolReq(ng, info,
 			cluster.ExtraInfo[common.ClusterResourceGroup], cluster.NetworkSettings.MaxNodePodNum)
 		if err != nil {
 			return nil, fmt.Errorf("generateCreateClusterRequest genAgentPoolReq failed, %v", err)
 		}
 		agentPools = append(agentPools, agentPool)
 
-		adminUserName = ng.LaunchTemplate.InitLoginUsername
-		if ng.LaunchTemplate.KeyPair != nil {
-			publicKey, _ = encrypt.Decrypt(nil, ng.LaunchTemplate.KeyPair.KeyPublic)
-		}
+		// adminUserName = ng.LaunchTemplate.InitLoginUsername
+		// if ng.LaunchTemplate.KeyPair != nil {
+		// 	publicKey, _ = encrypt.Decrypt(nil, ng.LaunchTemplate.KeyPair.KeyPublic)
+		// }
 
 		info.Cluster.VpcID = ng.AutoScaling.VpcID
 		if len(ng.AutoScaling.SubnetIDs) == 0 {
@@ -200,13 +199,13 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		}
 		info.Cluster.ClusterBasicSettings.SubnetID = ng.AutoScaling.SubnetIDs[0]
 	}
-	keys := make([]*armcontainerservice.SSHPublicKey, 0)
-	keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
+	// keys := make([]*armcontainerservice.SSHPublicKey, 0)
+	// keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
 
 	// managed cluster request
 	req := &armcontainerservice.ManagedCluster{
-		Location: to.Ptr(cluster.Region),      // nolint
-		Name:     to.Ptr(cluster.ClusterName), // nolint
+		Location: to.Ptr(cluster.Region),                     // nolint
+		Name:     to.Ptr(strings.ToLower(cluster.ClusterID)), // nolint
 		Tags: func() map[string]*string {
 			tags := make(map[string]*string)
 			for k, v := range cluster.ClusterBasicSettings.ClusterTags {
@@ -215,19 +214,37 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			return tags
 		}(),
 		Properties: &armcontainerservice.ManagedClusterProperties{
+			APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
+				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
+				AuthorizedIPRanges: func() []*string {
+					ipRanges := make([]*string, 0)
+					if cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
+						for _, ip := range cluster.ClusterAdvanceSettings.ClusterConnectSetting.
+							Internet.PublicAccessCidrs {
+							ipRanges = append(ipRanges, to.Ptr(ip))
+						}
+					}
+
+					return ipRanges
+				}(),
+			},
 			AgentPoolProfiles: agentPools,
 			KubernetesVersion: to.Ptr(cluster.ClusterBasicSettings.Version), // nolint
-			LinuxProfile: &armcontainerservice.LinuxProfile{
-				AdminUsername: to.Ptr(adminUserName), // nolint
-				SSH: &armcontainerservice.SSHConfiguration{
-					PublicKeys: keys,
-				},
-			},
-			DNSPrefix: to.Ptr("111-dns"),
+			// LinuxProfile: &armcontainerservice.LinuxProfile{
+			// 	AdminUsername: to.Ptr(adminUserName), // nolint
+			// 	SSH: &armcontainerservice.SSHConfiguration{
+			// 		PublicKeys: keys,
+			// 	},
+			// },
+			DNSPrefix: to.Ptr(fmt.Sprintf("%s-dns", strings.ReplaceAll(cluster.ClusterName, "_", "-"))),
 			NetworkProfile: &armcontainerservice.NetworkProfile{
-				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
-				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
-				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
+				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginAzure),
+				NetworkPolicy: to.Ptr(armcontainerservice.NetworkPolicyCalico),
+				PodCidr:       to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),
+				ServiceCidr:   to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
+				DNSServiceIP:  to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
+				ServiceCidrs:  []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
+				PodCidrs:      []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
 			},
 			ServicePrincipalProfile: &armcontainerservice.ManagedClusterServicePrincipalProfile{
 				ClientID: to.Ptr(info.CmOption.Account.ClientID),     // nolint
@@ -240,21 +257,50 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 }
 
 // genAgentPoolReq build agent pool request
-func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum uint32) (
+func genAgentPoolReq(ng *proto.NodeGroup, info *cloudprovider.CloudDependBasicInfo, rgName string, podNum uint32) (
 	*armcontainerservice.ManagedClusterAgentPoolProfile, error) {
 	if ng.LaunchTemplate == nil {
 		return nil, fmt.Errorf("generateCreateClusterRequest empty LaunchTemplate for nodegroup %s", ng.Name)
 	}
 
-	// subnets info
-	subnets := ng.AutoScaling.SubnetIDs
-	if len(ng.AutoScaling.VpcID) == 0 || len(subnets) == 0 {
-		return nil, fmt.Errorf("generateCreateClusterRequest nodegroup[%s] vpcID or subnetID"+
-			" can not be empty", ng.Name)
+	subnetIds := make([]string, 0)
+	// if info.Cluster.GetClusterAdvanceSettings().GetNetworkType() == icommon.AzureCniNodeSubnet {
+	// 	if len(info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew()) > 0 {
+	// 		// 各个可用区自动分配指定数量的子网
+	// 		ids, err := business.AllocateClusterVpcCniSubnets(context.Background(), info.Cluster.ClusterID,
+	// 			info.Cluster.VpcID, info.Cluster.GetNetworkSettings().GetSubnetSource().GetNew(), info.CmOption)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+
+	// 		subnetIds = append(subnetIds, ids...)
+	// 	}
+	// } else {
+	subnetIds = append(subnetIds, ng.AutoScaling.SubnetIDs...)
+	// }
+
+	if len(ng.AutoScaling.VpcID) == 0 || len(subnetIds) == 0 {
+		return nil, fmt.Errorf("genAgentPoolReq nodegroup[%s] vpcID or subnetID can not be empty", ng.Name)
 	}
-	// system disk
+
 	sysDiskSize, _ := strconv.Atoi(ng.LaunchTemplate.SystemDisk.DiskSize)
 	agentPool := &armcontainerservice.ManagedClusterAgentPoolProfile{
+		NodeLabels: func(labels map[string]string) map[string]*string {
+			label := make(map[string]*string)
+			for k, v := range labels {
+				label[k] = to.Ptr(v)
+			}
+
+			return label
+		}(ng.NodeTemplate.Labels),
+		NodeTaints: func(taints []*proto.Taint) []*string {
+			t := make([]*string, 0)
+			for _, v := range taints {
+				t = append(t, to.Ptr(fmt.Sprintf("%s=%s:%s", v.Key, v.Value, v.Effect)))
+			}
+
+			return t
+		}(ng.NodeTemplate.Taints),
 		AvailabilityZones: func(zones []string) []*string {
 			az := make([]*string, 0)
 			for _, v := range zones {
@@ -285,7 +331,7 @@ func genAgentPoolReq(ng *proto.NodeGroup, subscriptionID, rgName string, podNum 
 		VMSize:        to.Ptr(ng.LaunchTemplate.InstanceType),
 		VnetSubnetID: to.Ptr(fmt.Sprintf(
 			"/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s",
-			subscriptionID, rgName, ng.AutoScaling.VpcID, subnets[0])),
+			info.CmOption.Account.SubscriptionID, rgName, ng.AutoScaling.VpcID, subnetIds[0])),
 	}
 
 	return agentPool, nil
@@ -464,10 +510,8 @@ func CheckAKSNodeGroupsStatusTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// check cluster nodes status
+	// check cluster status
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-
-	// get nodeGroups status
 	addSuccessNodeGroups, addFailureNodeGroups, err := checkNodesGroupStatus(ctx, dependInfo, systemID, nodeGroupIDs)
 	if err != nil {
 		blog.Errorf("CheckAKSNodeGroupsStatusTask[%s] checkNodesGroupStatus[%s] failed: %v",
@@ -632,7 +676,7 @@ func UpdateAKSNodesGroupToDBTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("UpdateAKSNodesGroupToDBTask[%s] updateNodeGroups[%s] failed: %v",
 			taskID, clusterID, err)
-		retErr := fmt.Errorf("UpdateAKSNodesGroupToDBTask[%s] timeout|abnormal", clusterID)
+		retErr := fmt.Errorf("UpdateAKSNodesGroupToDBTask[%s] failed, %s", clusterID, err)
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -652,9 +696,9 @@ func updateNodeGroups(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	addFailedNodeGroupIDs, addSuccessNodeGroupIDs []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
-	// get cluster/nodeGroup resourceGroup
-	nodeResourceGroup := info.Cluster.ExtraInfo[common.NodeResourceGroup]
+	// get cluster resourceGroup
 	clusterResourceGroup := info.Cluster.ExtraInfo[common.ClusterResourceGroup]
+	nodeResourceGroup := info.Cluster.ExtraInfo[common.NodeResourceGroup]
 
 	// failed groups
 	if len(addFailedNodeGroupIDs) > 0 {
@@ -716,6 +760,9 @@ func processVmss(ctx context.Context, cli api.AksService, pool *armcontainerserv
 	if err != nil {
 		return fmt.Errorf("processVmss call MatchNodeGroup[%s] falied, %v", nodeGroup.NodeGroupID, err)
 	}
+	if set == nil {
+		return fmt.Errorf("virtual machine scale set is nil")
+	}
 
 	// scaleSystemVmss
 	vmSet, err := scaleSystemVmss(ctx, cli, set, nodeGroup, rg)
@@ -729,7 +776,7 @@ func processVmss(ctx context.Context, cli api.AksService, pool *armcontainerserv
 	_ = cli.AgentPoolToNodeGroup(pool, nodeGroup)
 
 	// updateVmss
-	finalVmss, err := updateVmss(ctx, cli, nodeGroup, vmSet, rg, crg)
+	finalVmss, err := updateVmss(ctx, cli, nodeGroup, vmSet, rg, crg, false)
 	if err != nil {
 		return fmt.Errorf("processVmss updateVmss[%s] failed, %s", nodeGroup.NodeGroupID, err.Error())
 	}
@@ -747,6 +794,7 @@ func scaleSystemVmss(rootCtx context.Context, cli api.AksService, set *armcomput
 	group *proto.NodeGroup, rg string) (*armcompute.VirtualMachineScaleSet, error) {
 	if group.NodeGroupType == common.CloudClusterNodeGroupTypeSystem {
 		set.SKU.Capacity = to.Ptr(int64(0))
+
 		ctx, cancel := context.WithTimeout(rootCtx, 5*time.Minute)
 		defer cancel()
 
@@ -1021,15 +1069,13 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 	addSuccessNodes := make([]string, 0)
 	// loop nodeGroups
 	for _, ngID := range nodeGroupIDs {
-		// GetNodeGroupByGroupID get group by Id
-		nodeGroup, errLocal := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
-		if errLocal != nil {
+		nodeGroup, err := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if err != nil {
 			return fmt.Errorf("updateNodeToDB GetNodeGroupByGroupID information failed, %s", err.Error())
 		}
 
-		// ListInstanceAndReturn
-		vmssList, errLocal := cli.ListInstanceAndReturn(ctx, nodeResourceGroup, nodeGroup.AutoScaling.AutoScalingID)
-		if errLocal != nil {
+		vmssList, err := cli.ListInstanceAndReturn(ctx, nodeResourceGroup, nodeGroup.AutoScaling.AutoScalingID)
+		if err != nil {
 			return fmt.Errorf("updateNodeToDB ListInstanceAndReturn failed, %s", err.Error())
 		}
 		interfaceList := make([]*armnetwork.Interface, 0)
@@ -1046,8 +1092,8 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		}
 
 		info.NodeGroup = nodeGroup
-		nodes, errLocal := vmToNode(cli, info, vmssList, interfaceList)
-		if errLocal != nil {
+		nodes, err := vmToNode(cli, info, vmssList, interfaceList)
+		if err != nil {
 			return fmt.Errorf("updateNodeToDB vmToNode failed, %v", err)
 		}
 		for _, n := range nodes {
@@ -1064,7 +1110,10 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 			}
 		}
 	}
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(addSuccessNodes, ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
+	state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(addSuccessNodes, ",")
+	state.Task.NodeIPList = addSuccessNodes
 
 	return nil
 }
