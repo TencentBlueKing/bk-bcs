@@ -123,7 +123,7 @@ func updateVmss(rootCtx context.Context, cli api.AksService, group *proto.NodeGr
 	// 买数据盘
 	api.BuyDataDisk(group, set)
 	// 用户数据
-	//api.SetUserData(group, set)
+	// api.SetUserData(group, set)
 	api.SetImageReferenceNull(set)
 
 	ctx, cancel := context.WithTimeout(rootCtx, 5*time.Minute)

@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
@@ -72,8 +73,8 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 				vpc.Ipv4Cidr = *v.Properties.AddressSpace.AddressPrefixes[0]
 
 				_, ipNet, err := net.ParseCIDR(vpc.Ipv4Cidr)
-				ipNum, err := cidrtree.GetIPNum(ipNet)
-				if err != nil {
+				ipNum, getIPErr := cidrtree.GetIPNum(ipNet)
+				if getIPErr != nil {
 					blog.Errorf("vpc GetIPNum failed: %v", err)
 					continue
 				}

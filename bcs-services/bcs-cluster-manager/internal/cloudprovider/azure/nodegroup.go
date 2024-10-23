@@ -171,7 +171,8 @@ func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]
 	configs := make([]*proto.RecommendNodeGroupConf, 0)
 	configs = append(configs,
 		generateNodeGroupConf("agentpool", "System", validInsTypes[0]),
-		generateNodeGroupConf("userpool", "User", validInsTypes[0]))
+		// generateNodeGroupConf("userpool", "User", validInsTypes[0]),
+	)
 
 	return configs, nil
 }

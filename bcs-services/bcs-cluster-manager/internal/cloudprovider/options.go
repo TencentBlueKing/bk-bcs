@@ -518,7 +518,7 @@ type CheckEndpointStatusOption struct {
 	ResourceGroupName string
 }
 
-// CheckEndpointStatusOption check cluster endpoint status option
+// CheckConflictInVpcCidrOption check conflict in vpc cidr Option
 type CheckConflictInVpcCidrOption struct {
 	CommonOption
 	ResourceGroupName string
