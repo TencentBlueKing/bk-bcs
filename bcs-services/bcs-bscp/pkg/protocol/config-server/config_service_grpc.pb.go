@@ -39,6 +39,7 @@ const (
 	Config_DeleteConfigItem_FullMethodName                  = "/pbcs.Config/DeleteConfigItem"
 	Config_BatchDeleteConfigItems_FullMethodName            = "/pbcs.Config/BatchDeleteConfigItems"
 	Config_UnDeleteConfigItem_FullMethodName                = "/pbcs.Config/UnDeleteConfigItem"
+	Config_BatchUnDeleteConfigItem_FullMethodName           = "/pbcs.Config/BatchUnDeleteConfigItem"
 	Config_UndoConfigItem_FullMethodName                    = "/pbcs.Config/UndoConfigItem"
 	Config_GetConfigItem_FullMethodName                     = "/pbcs.Config/GetConfigItem"
 	Config_GetReleasedConfigItem_FullMethodName             = "/pbcs.Config/GetReleasedConfigItem"
@@ -170,6 +171,7 @@ const (
 	Config_BatchDeleteKv_FullMethodName                     = "/pbcs.Config/BatchDeleteKv"
 	Config_BatchUpsertKvs_FullMethodName                    = "/pbcs.Config/BatchUpsertKvs"
 	Config_UnDeleteKv_FullMethodName                        = "/pbcs.Config/UnDeleteKv"
+	Config_BatchUnDeleteKv_FullMethodName                   = "/pbcs.Config/BatchUnDeleteKv"
 	Config_UndoKv_FullMethodName                            = "/pbcs.Config/UndoKv"
 	Config_ImportKvs_FullMethodName                         = "/pbcs.Config/ImportKvs"
 	Config_ListClients_FullMethodName                       = "/pbcs.Config/ListClients"
@@ -212,6 +214,7 @@ type ConfigClient interface {
 	DeleteConfigItem(ctx context.Context, in *DeleteConfigItemReq, opts ...grpc.CallOption) (*DeleteConfigItemResp, error)
 	BatchDeleteConfigItems(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*UnDeleteConfigItemResp, error)
+	BatchUnDeleteConfigItem(ctx context.Context, in *BatchUnDeleteConfigItemReq, opts ...grpc.CallOption) (*BatchUnDeleteConfigItemResp, error)
 	UndoConfigItem(ctx context.Context, in *UndoConfigItemReq, opts ...grpc.CallOption) (*UndoConfigItemResp, error)
 	GetConfigItem(ctx context.Context, in *GetConfigItemReq, opts ...grpc.CallOption) (*GetConfigItemResp, error)
 	GetReleasedConfigItem(ctx context.Context, in *GetReleasedConfigItemReq, opts ...grpc.CallOption) (*GetReleasedConfigItemResp, error)
@@ -355,6 +358,7 @@ type ConfigClient interface {
 	BatchDeleteKv(ctx context.Context, in *BatchDeleteAppResourcesReq, opts ...grpc.CallOption) (*BatchDeleteResp, error)
 	BatchUpsertKvs(ctx context.Context, in *BatchUpsertKvsReq, opts ...grpc.CallOption) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts ...grpc.CallOption) (*UnDeleteKvResp, error)
+	BatchUnDeleteKv(ctx context.Context, in *BatchUnDeleteKvReq, opts ...grpc.CallOption) (*BatchUnDeleteKvResp, error)
 	UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*UndoKvResp, error)
 	ImportKvs(ctx context.Context, in *ImportKvsReq, opts ...grpc.CallOption) (*ImportKvsResp, error)
 	ListClients(ctx context.Context, in *ListClientsReq, opts ...grpc.CallOption) (*ListClientsResp, error)
@@ -501,6 +505,15 @@ func (c *configClient) BatchDeleteConfigItems(ctx context.Context, in *BatchDele
 func (c *configClient) UnDeleteConfigItem(ctx context.Context, in *UnDeleteConfigItemReq, opts ...grpc.CallOption) (*UnDeleteConfigItemResp, error) {
 	out := new(UnDeleteConfigItemResp)
 	err := c.cc.Invoke(ctx, Config_UnDeleteConfigItem_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *configClient) BatchUnDeleteConfigItem(ctx context.Context, in *BatchUnDeleteConfigItemReq, opts ...grpc.CallOption) (*BatchUnDeleteConfigItemResp, error) {
+	out := new(BatchUnDeleteConfigItemResp)
+	err := c.cc.Invoke(ctx, Config_BatchUnDeleteConfigItem_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1686,6 +1699,15 @@ func (c *configClient) UnDeleteKv(ctx context.Context, in *UnDeleteKvReq, opts .
 	return out, nil
 }
 
+func (c *configClient) BatchUnDeleteKv(ctx context.Context, in *BatchUnDeleteKvReq, opts ...grpc.CallOption) (*BatchUnDeleteKvResp, error) {
+	out := new(BatchUnDeleteKvResp)
+	err := c.cc.Invoke(ctx, Config_BatchUnDeleteKv_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *configClient) UndoKv(ctx context.Context, in *UndoKvReq, opts ...grpc.CallOption) (*UndoKvResp, error) {
 	out := new(UndoKvResp)
 	err := c.cc.Invoke(ctx, Config_UndoKv_FullMethodName, in, out, opts...)
@@ -1894,6 +1916,7 @@ type ConfigServer interface {
 	DeleteConfigItem(context.Context, *DeleteConfigItemReq) (*DeleteConfigItemResp, error)
 	BatchDeleteConfigItems(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error)
 	UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error)
+	BatchUnDeleteConfigItem(context.Context, *BatchUnDeleteConfigItemReq) (*BatchUnDeleteConfigItemResp, error)
 	UndoConfigItem(context.Context, *UndoConfigItemReq) (*UndoConfigItemResp, error)
 	GetConfigItem(context.Context, *GetConfigItemReq) (*GetConfigItemResp, error)
 	GetReleasedConfigItem(context.Context, *GetReleasedConfigItemReq) (*GetReleasedConfigItemResp, error)
@@ -2037,6 +2060,7 @@ type ConfigServer interface {
 	BatchDeleteKv(context.Context, *BatchDeleteAppResourcesReq) (*BatchDeleteResp, error)
 	BatchUpsertKvs(context.Context, *BatchUpsertKvsReq) (*BatchUpsertKvsResp, error)
 	UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error)
+	BatchUnDeleteKv(context.Context, *BatchUnDeleteKvReq) (*BatchUnDeleteKvResp, error)
 	UndoKv(context.Context, *UndoKvReq) (*UndoKvResp, error)
 	ImportKvs(context.Context, *ImportKvsReq) (*ImportKvsResp, error)
 	ListClients(context.Context, *ListClientsReq) (*ListClientsResp, error)
@@ -2106,6 +2130,9 @@ func (UnimplementedConfigServer) BatchDeleteConfigItems(context.Context, *BatchD
 }
 func (UnimplementedConfigServer) UnDeleteConfigItem(context.Context, *UnDeleteConfigItemReq) (*UnDeleteConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteConfigItem not implemented")
+}
+func (UnimplementedConfigServer) BatchUnDeleteConfigItem(context.Context, *BatchUnDeleteConfigItemReq) (*BatchUnDeleteConfigItemResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUnDeleteConfigItem not implemented")
 }
 func (UnimplementedConfigServer) UndoConfigItem(context.Context, *UndoConfigItemReq) (*UndoConfigItemResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UndoConfigItem not implemented")
@@ -2500,6 +2527,9 @@ func (UnimplementedConfigServer) BatchUpsertKvs(context.Context, *BatchUpsertKvs
 func (UnimplementedConfigServer) UnDeleteKv(context.Context, *UnDeleteKvReq) (*UnDeleteKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnDeleteKv not implemented")
 }
+func (UnimplementedConfigServer) BatchUnDeleteKv(context.Context, *BatchUnDeleteKvReq) (*BatchUnDeleteKvResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchUnDeleteKv not implemented")
+}
 func (UnimplementedConfigServer) UndoKv(context.Context, *UndoKvReq) (*UndoKvResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UndoKv not implemented")
 }
@@ -2805,6 +2835,24 @@ func _Config_UnDeleteConfigItem_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ConfigServer).UnDeleteConfigItem(ctx, req.(*UnDeleteConfigItemReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Config_BatchUnDeleteConfigItem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUnDeleteConfigItemReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUnDeleteConfigItem(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUnDeleteConfigItem_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUnDeleteConfigItem(ctx, req.(*BatchUnDeleteConfigItemReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -5167,6 +5215,24 @@ func _Config_UnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Config_BatchUnDeleteKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchUnDeleteKvReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConfigServer).BatchUnDeleteKv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Config_BatchUnDeleteKv_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConfigServer).BatchUnDeleteKv(ctx, req.(*BatchUnDeleteKvReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Config_UndoKv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UndoKvReq)
 	if err := dec(in); err != nil {
@@ -5603,6 +5669,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnDeleteConfigItem",
 			Handler:    _Config_UnDeleteConfigItem_Handler,
+		},
+		{
+			MethodName: "BatchUnDeleteConfigItem",
+			Handler:    _Config_BatchUnDeleteConfigItem_Handler,
 		},
 		{
 			MethodName: "UndoConfigItem",
@@ -6127,6 +6197,10 @@ var Config_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnDeleteKv",
 			Handler:    _Config_UnDeleteKv_Handler,
+		},
+		{
+			MethodName: "BatchUnDeleteKv",
+			Handler:    _Config_BatchUnDeleteKv_Handler,
 		},
 		{
 			MethodName: "UndoKv",

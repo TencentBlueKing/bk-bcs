@@ -624,6 +624,76 @@ func (s *Service) UnDeleteConfigItem(ctx context.Context, req *pbcs.UnDeleteConf
 	return &pbcs.UnDeleteConfigItemResp{}, nil
 }
 
+// BatchUnDeleteConfigItem 批量恢复配置项
+func (s *Service) BatchUnDeleteConfigItem(ctx context.Context, req *pbcs.BatchUnDeleteConfigItemReq) (
+	*pbcs.BatchUnDeleteConfigItemResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.GetIds()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(kit, "id is required"))
+	}
+
+	eg, egCtx := errgroup.WithContext(kit.RpcCtx())
+	eg.SetLimit(10)
+
+	successfulIDs := []uint32{}
+	failedIDs := []uint32{}
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetIds() {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.UnDeleteConfigItemReq{
+				Id: v,
+				Attachment: &pbci.ConfigItemAttachment{
+					BizId: req.BizId,
+					AppId: req.AppId,
+				},
+			}
+			if _, err := s.client.DS.UnDeleteConfigItem(egCtx, r); err != nil {
+				logs.Errorf("recovery config item %d failed, err: %v, rid: %s", v, err, kit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedIDs = append(failedIDs, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulIDs = append(successfulIDs, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch recovery config items failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(kit, "batch recovery config items failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedIDs) == len(req.Ids) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(kit, "batch recovery config items failed"))
+	}
+
+	return &pbcs.BatchUnDeleteConfigItemResp{
+		SuccessfulIds: successfulIDs,
+		FailedIds:     failedIDs,
+	}, nil
+}
+
 // UndoConfigItem 撤消配置项
 func (s *Service) UndoConfigItem(ctx context.Context, req *pbcs.UndoConfigItemReq) (*pbcs.UndoConfigItemResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)

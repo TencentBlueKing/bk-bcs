@@ -356,6 +356,74 @@ func (s *Service) UnDeleteKv(ctx context.Context, req *pbcs.UnDeleteKvReq) (*pbc
 	return &pbcs.UnDeleteKvResp{}, nil
 }
 
+// BatchUnDeleteKv 批量恢复删除的kv
+func (s *Service) BatchUnDeleteKv(ctx context.Context, req *pbcs.BatchUnDeleteKvReq) (
+	*pbcs.BatchUnDeleteKvResp, error) {
+	kit := kit.FromGrpcContext(ctx)
+
+	res := []*meta.ResourceAttribute{
+		{Basic: meta.Basic{Type: meta.Biz, Action: meta.FindBusinessResource}, BizID: req.BizId},
+		{Basic: meta.Basic{Type: meta.App, Action: meta.Update, ResourceID: req.AppId}, BizID: req.BizId},
+	}
+	err := s.authorizer.Authorize(kit, res...)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(req.GetKeys()) == 0 {
+		return nil, errf.Errorf(errf.InvalidArgument, i18n.T(kit, "keys is required"))
+	}
+
+	eg, egCtx := errgroup.WithContext(kit.RpcCtx())
+	eg.SetLimit(10)
+
+	successfulKeys := []string{}
+	failedKeys := []string{}
+	var mux sync.Mutex
+
+	// 使用 data-service 原子接口
+	for _, v := range req.GetKeys() {
+		v := v
+		eg.Go(func() error {
+			r := &pbds.UnDeleteKvReq{
+				Key:   v,
+				BizId: req.GetBizId(),
+				AppId: req.GetAppId(),
+			}
+			if _, err := s.client.DS.UnDeleteKv(egCtx, r); err != nil {
+				logs.Errorf("recovery kv %d failed, err: %v, rid: %s", v, err, kit.Rid)
+
+				// 错误不返回异常，记录错误ID
+				mux.Lock()
+				failedKeys = append(failedKeys, v)
+				mux.Unlock()
+				return nil
+			}
+
+			mux.Lock()
+			successfulKeys = append(successfulKeys, v)
+			mux.Unlock()
+
+			return nil
+		})
+	}
+
+	if err := eg.Wait(); err != nil {
+		logs.Errorf("batch recovery kv failed, err: %v, rid: %s", err, kit.Rid)
+		return nil, errf.Errorf(errf.Aborted, i18n.T(kit, "batch recovery kv failed"))
+	}
+
+	// 全部失败, 当前API视为失败
+	if len(failedKeys) == len(req.GetKeys()) {
+		return nil, errf.Errorf(errf.Aborted, i18n.T(kit, "batch recovery kv failed"))
+	}
+
+	return &pbcs.BatchUnDeleteKvResp{
+		SuccessfulKeys: successfulKeys,
+		FailedKeys:     failedKeys,
+	}, nil
+}
+
 // UndoKv Undo edited data and return to the latest published version
 func (s *Service) UndoKv(ctx context.Context, req *pbcs.UndoKvReq) (*pbcs.UndoKvResp, error) {
 	grpcKit := kit.FromGrpcContext(ctx)
