@@ -25,30 +25,30 @@ import (
 )
 
 type mysqlStore struct {
-	dsn       string
-	showDebug bool
-	db        *gorm.DB
+	dsn   string
+	debug bool
+	db    *gorm.DB
 }
 
 type option func(*mysqlStore)
 
-// ShowDebug 是否显示sql语句
-func ShowDebug(showDebug bool) option {
+// WithDebug 是否显示sql语句
+func WithDebug(debug bool) option {
 	return func(s *mysqlStore) {
-		s.showDebug = showDebug
+		s.debug = debug
 	}
 }
 
 // New init mysql iface.Store
 func New(dsn string, opts ...option) (iface.Store, error) {
-	store := &mysqlStore{dsn: dsn, showDebug: false}
+	store := &mysqlStore{dsn: dsn, debug: false}
 	for _, opt := range opts {
 		opt(store)
 	}
 
 	// 是否显示sql语句
 	level := logger.Warn
-	if store.showDebug {
+	if store.debug {
 		level = logger.Info
 	}
 
