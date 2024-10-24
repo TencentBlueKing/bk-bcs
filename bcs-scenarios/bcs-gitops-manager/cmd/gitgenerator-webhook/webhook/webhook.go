@@ -364,8 +364,8 @@ func (s *AdmissionWebhookServer) interceptAppSyncWithForbid(ctx context.Context,
 		blog.Errorf("not need intercept with forbidden flag because unmarshal application request error")
 		return nil
 	}
-	state := reqApp.Status.OperationState
-	if state == nil || state.Phase != synccommon.OperationRunning {
+	// 如果没有设置app的operation,就忽略
+	if reqApp.Operation == nil {
 		return nil
 	}
 	app, err := s.argoStore.GetApplication(ctx, req.Name)

@@ -364,7 +364,7 @@ onBeforeMount(() => {
   color: #3a84ff;
   cursor: pointer;
   position: absolute;
-  right: -20px
+  right: -20px;
 }
 
 >>> .badge-icon {

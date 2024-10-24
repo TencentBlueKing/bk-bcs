@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole
 
-go 1.20
+go 1.23
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240506114534-2223209a5716

@@ -350,15 +350,45 @@ func GetInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute
 		return nil, err
 	}
 	var it *compute.InstanceTemplate
-	if utils.StringInSlice("instanceTemplates", itInfo) {
-		it, err = computeCli.GetInstanceTemplate(context.Background(), itInfo[3], itInfo[(len(itInfo)-1)])
-		if err != nil {
-			blog.Errorf("GetInstanceTemplate failed: %v", err)
-			return nil, err
-		}
-		return it, nil
+
+	// global & regional
+	if !utils.StringInSlice("instanceTemplates", itInfo) {
+		return nil, fmt.Errorf("GetInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
 	}
-	return nil, fmt.Errorf("GetInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
+
+	location := ""
+	if utils.StringInSlice("regions", itInfo) && len(itInfo) >= 3 {
+		location = itInfo[3]
+	}
+
+	it, err = computeCli.GetInstanceTemplate(context.Background(), location, itInfo[(len(itInfo)-1)])
+	if err != nil {
+		blog.Errorf("GetInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+	return it, nil
+}
+
+// GetInstanceTemplateLocation get zonal/regional InstanceTemplate
+func GetInstanceTemplateLocation(url string) (*string, error) {
+	itInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("GetInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+
+	// global & regional
+	if !utils.StringInSlice("instanceTemplates", itInfo) {
+		return nil, fmt.Errorf("GetInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
+	}
+
+	// global & regional: global when location == "", regional when location != ""
+	location := ""
+	if utils.StringInSlice("regions", itInfo) && len(itInfo) >= 3 {
+		location = itInfo[3]
+	}
+
+	return &location, nil
 }
 
 // CreateInstanceTemplate create zonal/regional InstanceTemplate

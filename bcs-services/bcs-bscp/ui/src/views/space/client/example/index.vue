@@ -40,6 +40,7 @@
   const fileTypeArr = [
     { name: t('Sidecar容器'), val: 'sidecar' },
     { name: t('节点管理插件'), val: 'node' },
+    { name: t('HTTP(S)接口调用'), val: 'http' },
     { name: t('命令行工具'), val: 'shell' },
   ];
   const kvTypeArr = [

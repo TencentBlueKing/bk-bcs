@@ -2,7 +2,6 @@
   <bk-button
     v-if="isFileType"
     :key="appData.id"
-    style="margin-left: 8px"
     :disabled="allExistConfigCount === 0 || conflictFileCount > 0"
     @click="handleExportFile">
     {{ $t('打包下载') }}

@@ -83,6 +83,7 @@
           cluster-type="all"
           :value="clusterID"
           :selectable="isDefaultView"
+          :isShow="!isHide"
           v-show="viewMode === 'cluster'"
           @click="changeClusterView" />
         <!-- 自定义视图 -->

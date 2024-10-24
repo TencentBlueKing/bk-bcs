@@ -136,7 +136,7 @@ func GetCustomCondition(req *restful.Request) *operator.Condition {
 	if req.Request.Form == nil {
 		_ = req.Request.ParseMultipartForm(defaultMaxMemory)
 	}
-	if req.Request.Form == nil || len(req.Request.Form) == 0 {
+	if len(req.Request.Form) == 0 {
 		return nil
 	}
 	return GetCustomConditionFromBody(req.Request.Form)

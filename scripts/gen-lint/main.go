@@ -26,8 +26,8 @@ import (
 	"github.com/goccy/go-yaml/parser"
 )
 
-func getBlackList() ([]string, error) {
-	file, err := os.Open("./scripts/gen-lint/modules_black_list")
+func getWhiteList() ([]string, error) {
+	file, err := os.Open("./scripts/gen-lint/modules_white_list")
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +41,10 @@ func getBlackList() ([]string, error) {
 
 	// 逐行扫描
 	for scanner.Scan() {
+		text := scanner.Text()
+		if strings.Contains(text, "#") {
+			continue
+		}
 		// 将扫描到的行添加到切片中
 		lines = append(lines, scanner.Text())
 	}
@@ -52,7 +56,7 @@ func getBlackList() ([]string, error) {
 	return lines, nil
 }
 
-func matchBlackList(line string, blackList []string) bool {
+func matchWhiteList(line string, blackList []string) bool {
 	for _, m := range blackList {
 		if line == m {
 			return true
@@ -106,7 +110,7 @@ func findModuleSkipFilesAndDirs(moduleDir string, files []string) ([]string, []s
 }
 
 func main() {
-	blackList, err := getBlackList()
+	whiteList, err := getWhiteList()
 	if err != nil {
 		panic(err)
 	}
@@ -135,7 +139,7 @@ func main() {
 			continue
 		}
 		dir := path.Dir(line)
-		if matchBlackList(dir, blackList) {
+		if !matchWhiteList(dir, whiteList) {
 			continue
 		}
 
@@ -151,11 +155,11 @@ func main() {
 
 		// get skip files and dirs
 		gotSkipFiles, gotSkipDirs := findModuleSkipFilesAndDirs(dir, skipFiles)
-		skipDirsPath, err := goyaml.PathString("$.run.skip-dirs")
+		skipDirsPath, err := goyaml.PathString("$.issues.exclude-dirs")
 		if err != nil {
 			continue
 		}
-		skipFilesPath, err := goyaml.PathString("$.run.skip-files")
+		skipFilesPath, err := goyaml.PathString("$.issues.exclude-files")
 		if err != nil {
 			continue
 		}

@@ -22,6 +22,7 @@ import (
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/aws/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -41,6 +42,22 @@ type CloudInfoManager struct {
 // InitCloudClusterDefaultInfo init cluster defaultConfig
 func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *cmproto.Cluster,
 	opt *cloudprovider.InitClusterConfigOption) error {
+	// call aws interface to init cluster defaultConfig
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s InitCloudClusterDefaultInfo request is empty", cloudName)
+	}
+
+	if opt == nil || opt.Cloud == nil {
+		return fmt.Errorf("%s InitCloudClusterDefaultInfo option is empty", cloudName)
+	}
+
+	if len(cls.ManageType) == 0 {
+		cls.ManageType = common.ClusterManageTypeIndependent
+	}
+	if len(cls.ClusterCategory) == 0 {
+		cls.ClusterCategory = common.Builder
+	}
+
 	return nil
 }
 

@@ -12,6 +12,10 @@ const CreateTencentCloudCluster = () => import(/* webpackChunkName: 'cluster' */
 const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/vcluster/vcluster.vue');
 // ee版本创建集群流程
 const CreateK8SCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/k8s.vue');
+// 创建aws云集群
+const CreateAWSCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/aws-cloud/index.vue');
+// 创建aws云集群
+const CreateAzureCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/azure-cloud/index.vue');
 
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import/import-cluster.vue');
@@ -113,6 +117,26 @@ export default [
     path: 'clusters/cloud/tencent',
     name: 'createTKECluster',
     component: CreateTKECluster,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // 创建亚马逊云集群
+  {
+    path: 'clusters/cloud/aws',
+    name: 'CreateAWSCloudCluster',
+    component: CreateAWSCloudCluster,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // 创建微软云集群
+  {
+    path: 'clusters/cloud/azure',
+    name: 'CreateAzureCloudCluster',
+    component: CreateAzureCloudCluster,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

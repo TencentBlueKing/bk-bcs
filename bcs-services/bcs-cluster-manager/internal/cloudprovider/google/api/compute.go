@@ -344,41 +344,43 @@ func (c *ComputeServiceClient) GetInstanceTemplate(ctx context.Context, location
 		return nil, fmt.Errorf("gce client GetInstanceTemplate failed: gkeProjectId is required")
 	}
 
+	// instance template
 	var (
-		err error
 		it  *compute.InstanceTemplate
+		err error
 	)
 
-	if c.getLocationType(location) == locationTypeRegions {
-		it, err = c.computeServiceClient.RegionInstanceTemplates.Get(c.gkeProjectID, location, name).Context(ctx).Do()
-	} else {
+	// 全球和区域级
+	if location == "" {
 		it, err = c.computeServiceClient.InstanceTemplates.Get(c.gkeProjectID, name).Context(ctx).Do()
+	} else {
+		it, err = c.computeServiceClient.RegionInstanceTemplates.Get(c.gkeProjectID, location, name).Context(ctx).Do()
 	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client GetInstanceTemplate[%s] failed: %v", name, err)
 	}
-	blog.Infof("gce client GetInstanceTemplate[%s] successful", name)
 
 	return it, nil
 }
 
 // CreateInstanceTemplate create a instanceTemplate
-func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, location string, it *compute.InstanceTemplate) (
-	*compute.Operation, error) {
+func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, location string,
+	it *compute.InstanceTemplate) (*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: gkeProjectId is required")
 	}
 
 	var (
-		err       error
 		operation *compute.Operation
+		err       error
 	)
 
-	// create instance template
-	if c.getLocationType(location) == locationTypeRegions {
-		operation, err = c.computeServiceClient.RegionInstanceTemplates.Insert(c.gkeProjectID, location, it).Context(ctx).Do()
-	} else {
+	// 全球和区域级 create instance template
+	if location == "" {
 		operation, err = c.computeServiceClient.InstanceTemplates.Insert(c.gkeProjectID, it).Context(ctx).Do()
+	} else {
+		operation, err = c.computeServiceClient.RegionInstanceTemplates.Insert(
+			c.gkeProjectID, location, it).Context(ctx).Do()
 	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: %v", err)
@@ -390,22 +392,23 @@ func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, locat
 }
 
 // DeleteInstanceTemplate delete a instanceTemplate
-func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, location string, name string) (
+func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, location, name string) (
 	*compute.Operation, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: gkeProjectId is required")
 	}
 
 	var (
-		err       error
 		operation *compute.Operation
+		err       error
 	)
 
-	// delete instance template
-	if c.getLocationType(location) == locationTypeRegions {
-		operation, err = c.computeServiceClient.RegionInstanceTemplates.Delete(c.gkeProjectID, location, name).Context(ctx).Do()
-	} else {
+	// 全球和区域级 delete instance template
+	if location == "" {
 		operation, err = c.computeServiceClient.InstanceTemplates.Delete(c.gkeProjectID, name).Context(ctx).Do()
+	} else {
+		operation, err = c.computeServiceClient.RegionInstanceTemplates.Delete(
+			c.gkeProjectID, location, name).Context(ctx).Do()
 	}
 	if err != nil {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: %v", err)

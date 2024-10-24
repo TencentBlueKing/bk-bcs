@@ -169,7 +169,7 @@ func handleDiffDetail(task *precheck.PreCheckTask) {
 	}
 	for app := range task.CheckDetail["diff"].CheckDetail {
 		diffApp := task.CheckDetail["diff"].CheckDetail[app]
-		if diffApp.Detail == nil || len(diffApp.Detail) == 0 {
+		if len(diffApp.Detail) == 0 {
 			continue
 		}
 		newDetail := make([]*precheck.ResourceCheckDetail, 0)

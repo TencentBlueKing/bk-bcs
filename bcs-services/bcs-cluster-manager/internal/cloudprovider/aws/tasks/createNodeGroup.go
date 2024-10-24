@@ -191,13 +191,13 @@ func generateCreateNodegroupInput(group *proto.NodeGroup, cluster *proto.Cluster
 		nodeGroup.CapacityType != aws.String(eks.CapacityTypesSpot) {
 		nodeGroup.CapacityType = aws.String(eks.CapacityTypesOnDemand)
 	}
-	if len(group.Labels) != 0 {
-		nodeGroup.Labels = aws.StringMap(group.Labels)
+	if group.NodeTemplate != nil && len(group.NodeTemplate.Labels) > 0 {
+		nodeGroup.Labels = aws.StringMap(group.NodeTemplate.Labels)
 	}
 	if len(group.Tags) != 0 {
 		nodeGroup.Tags = aws.StringMap(group.Tags)
 	}
-	if group.NodeTemplate != nil {
+	if group.NodeTemplate != nil && len(group.NodeTemplate.Taints) > 0 {
 		nodeGroup.Taints = api.MapToTaints(group.NodeTemplate.Taints)
 	}
 
@@ -331,7 +331,7 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 
 	asgInfo, ltvInfo, err := checkNodegroupStatus(ctx, dependInfo)
 	if err != nil {
-		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: checkNodegroupStatus failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -340,9 +340,9 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(),
 		generateNodeGroupFromAsgAndLtv(dependInfo.NodeGroup, asgInfo, ltvInfo))
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: updateNodeGroupCloudArgsID[%s] in task %s step %s failed, %s",
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: UpdateNodeGroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
-		retErr := fmt.Errorf("call CreateCloudNodeGroupTask updateNodeGroupCloudArgsID[%s] api err, %s", nodeGroupID,
+		retErr := fmt.Errorf("call CreateCloudNodeGroupTask UpdateNodeGroup[%s] api err, %s", nodeGroupID,
 			err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr

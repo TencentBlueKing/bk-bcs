@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 
-go 1.20
+go 1.23
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240315030619-2c36b15d2127

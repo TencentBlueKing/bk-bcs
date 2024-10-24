@@ -44,6 +44,10 @@ func (n *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (
 
 // ListNodesByIP list node by IP set
 func (n *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
+	if len(ips) == 0 {
+		return nil, nil
+	}
+
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -109,6 +113,16 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 
 			// filter cpu && mem
 			if cpu == 0 || mem == 0 || cpu < 4 || mem < 4 {
+				continue
+			}
+
+			if info.NodeFamily != "" && info.NodeFamily != *v.Family {
+				continue
+			}
+			if info.Cpu != 0 && info.Cpu != uint32(cpu) {
+				continue
+			}
+			if info.Memory != 0 && info.Memory != uint32(mem) {
 				continue
 			}
 

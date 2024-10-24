@@ -166,7 +166,7 @@ import { computed, nextTick, onBeforeMount, ref, set, watch } from 'vue';
 
 import createForm from '@blueking/bkui-form/dist/bkui-form-umd';
 
-import BcsVarInput from './bcs-var-input.vue';
+import BcsVarDatasourceInput from './bcs-variable-datasource-input.vue';
 import { updateVarList } from './use-store';
 
 import '@blueking/bkui-form/dist/bkui-form.css';
@@ -207,7 +207,7 @@ async function requestAdapter(url, config) {
 const BKSchemaForm = createForm({
   namespace: 'bcs',
   components: {
-    input: BcsVarInput,
+    input: BcsVarDatasourceInput,
   },
   baseWidgets: {
     radio: 'bk-radio',

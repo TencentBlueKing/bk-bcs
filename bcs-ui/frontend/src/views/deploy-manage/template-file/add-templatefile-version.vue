@@ -307,7 +307,7 @@ async function createTemplateVersion(versionData: { version: string; versionDesc
       params: {
         templateSpace: fileMetadata.value.templateSpaceID,
         id: props.id,
-        isChanged: 'false',
+        isChanged: 'false', // 主动保存的不触发离开界面的二次确认逻辑
       },
       query: {
         versionID: result?.id,

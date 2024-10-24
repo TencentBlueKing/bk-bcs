@@ -101,12 +101,12 @@
   });
   const formDataContent = ref({
     shell:
-      '#!/bin/bash\n##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}/files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}/hooks',
+      '#!/bin/bash\n##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}/files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}/hooks\n',
     python:
-      '#!/usr/bin/env python\n# -*- coding: utf8 -*-\n##### 进入配置文件存放目录： config_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/files”;os.chdir(config_dir)\n##### 进入前/后置脚本存放目录： hook_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/hooks”;os.chdir(hook_dir)',
-    bat: '@echo on\nsetlocal enabledelayedexpansion\nREM 进入配置文件存放目录： cd/d %bk_bscp_app_temp_dir%\\files\nREM 进入前/后置脚本存放目录： cd/d %bk_bscp_app_temp_dir%\\hooks',
+      '#!/usr/bin/env python\n# -*- coding: utf8 -*-\n##### 进入配置文件存放目录： config_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/files”;os.chdir(config_dir)\n##### 进入前/后置脚本存放目录： hook_dir = os.environ.get(‘bk_bscp_app_temp_dir’)+”/hooks”;os.chdir(hook_dir)\n',
+    bat: '@echo on\nsetlocal enabledelayedexpansion\nREM 进入配置文件存放目录： cd/d %bk_bscp_app_temp_dir%\\files\nREM 进入前/后置脚本存放目录： cd/d %bk_bscp_app_temp_dir%\\hooks\n',
     powershell:
-      '##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}\\files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}\\hooks',
+      '##### 进入配置文件存放目录： cd ${bk_bscp_app_temp_dir}\\files\n##### 进入前/后置脚本存放目录： cd ${bk_bscp_app_temp_dir}\\hooks\n',
   });
   const showContent = computed({
     get: () => {

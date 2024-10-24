@@ -273,7 +273,7 @@ func (p *Plugin) checkMasterPod(clientSet *kubernetes.Clientset, podList []corev
 
 			// 检查pod label
 			metricLabel.DetectionItem = "pod_label_check"
-			if pod.Labels == nil || len(pod.Labels) == 0 {
+			if len(pod.Labels) == 0 {
 				metricLabel.Status = "notok"
 				result = append(result,
 					&metric_manager.GaugeVecSet{Labels: metricLabel.ToLabelList(), Value: 1})

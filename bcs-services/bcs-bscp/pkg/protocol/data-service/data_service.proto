@@ -1666,6 +1666,7 @@ message CreateGroupReq {
 
 message ListAllGroupsReq {
   uint32 biz_id = 1;
+  string top_ids = 2;
 }
 
 message ListAllGroupsResp {

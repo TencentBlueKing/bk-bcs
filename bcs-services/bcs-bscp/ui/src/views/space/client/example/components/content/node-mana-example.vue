@@ -1,6 +1,11 @@
 <template>
   <section class="node-mana-container">
-    <form-option ref="fileOptionRef" :associate-config-show="true" @update-option-data="getOptionData" />
+    <form-option
+      ref="fileOptionRef"
+      :associate-config-show="true"
+      :dual-system-support="true"
+      :line-break-show="true"
+      @update-option-data="getOptionData" />
     <div class="node-content">
       <span class="node-label">{{ $t('示例预览') }}</span>
       <div class="top-tip">
@@ -81,12 +86,17 @@
           </bk-form-item>
           <bk-form-item :label="$t('全局标签：')">
             <span class="">
-              {{ $t('(全局标签与服务标签参数一样，常用于按标签进行灰度发布；不同的是全局标签可供多个服务共用)') }}
+              {{ $t('全局标签与服务标签参数一样，常用于按标签进行灰度发布；不同的是全局标签可供多个服务共用') }}
             </span>
           </bk-form-item>
           <bk-form-item :label="$t('全局配置文件筛选：')">
             <span class="">
-              {{ $t('(全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用)') }}
+              {{ $t('全局配置文件筛选与服务配置文件筛选一样，不同的是全局配置文件筛选可供多个服务共用') }}
+            </span>
+          </bk-form-item>
+          <bk-form-item :label="$t('文本文件换行符：')">
+            <span class="content-em" @click="copyText(optionData.selectedLineBreak)">
+              {{ optionData.selectedLineBreak }} <copy-shape class="icon-shape" />
             </span>
           </bk-form-item>
           <bk-form-item :label="`${$t('客户端密钥')}:`">
@@ -129,7 +139,6 @@
     '^[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?((\\.|\\/)[a-z0-9A-Z]([-_a-z0-9A-Z]*[a-z0-9A-Z])?)*$',
   );
   const valueValidateReg = new RegExp(/^(?:-?\d+(\.\d+)?|[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?)$/);
-  const sysDirectories: string[] = ['/bin', '/boot', '/dev', '/lib', '/lib64', '/proc', '/run', '/sbin', '/sys'];
 
   const fileOptionRef = ref();
   const bizId = ref(String(route.params.spaceId));
@@ -141,11 +150,11 @@
     labelArr: [] as labelItem[],
     tempDir: '',
     rules: [],
+    selectedLineBreak: 'LF',
   });
 
   const getOptionData = async (data: any) => {
     let labelArr = [];
-    let tempDir = data.tempDir;
     // 标签展示方式加工
     if (data.labelArr.length) {
       labelArr = data.labelArr.map((item: string) => {
@@ -157,26 +166,8 @@
         return { key, value };
       });
     }
-    // 临时目录展示方式加工
-    if (tempDir) {
-      if (sysDirectories.some((dir) => tempDir === dir || tempDir.startsWith(`${dir}/`))) {
-        tempDir = '';
-      }
-      if (!tempDir.startsWith('/') || tempDir.endsWith('/')) {
-        tempDir = '';
-      }
-      const parts = tempDir.split('/').slice(1);
-      parts.some((part: string) => {
-        if (part.startsWith('.') || !/^[\u4e00-\u9fa5A-Za-z0-9.\-_#%,@^+=\\[\]{}]+$/.test(part)) {
-          tempDir = '';
-          return true;
-        }
-        return false;
-      });
-    }
     optionData.value = {
       ...data,
-      tempDir,
       labelArr,
     };
   };

@@ -78,7 +78,7 @@ func AddNodesShieldAlarmTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = cloudprovider.ShieldHostAlarm(ctx, cluster.BusinessID, ipList)
+	err = cloudprovider.ShieldHostAlarm(ctx, cluster.ClusterID, cluster.BusinessID, ipList)
 	if err != nil {
 		blog.Errorf("AddNodesShieldAlarmTask[%s] ShieldHostAlarmConfig failed: %v", taskID, err)
 	} else {

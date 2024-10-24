@@ -12,7 +12,10 @@
             operator: user.username
           }
         }"
-        @click="handleShowCreateDialog">{{$t('projects.cloudToken.add')}}</bk-button>
+        icon="plus"
+        @click="handleShowCreateDialog">
+        {{$t('projects.cloudToken.add')}}
+      </bk-button>
       <bk-input
         class="w400"
         :placeholder="$t('projects.cloudToken.search')"

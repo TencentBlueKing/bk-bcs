@@ -49,6 +49,7 @@
       :data="events"
       :pagination="pagination"
       v-bkloading="{ isLoading: eventLoading }"
+      class="bcs-event-table"
       @page-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
       <bcs-table-column :label="$t('generic.label.time')" prop="eventTime" width="180">
@@ -481,3 +482,8 @@ export default defineComponent({
   },
 });
 </script>
+<style lang="postcss" scoped>
+>>> .bcs-event-table .cell {
+  -webkit-line-clamp: unset !important;
+}
+</style>

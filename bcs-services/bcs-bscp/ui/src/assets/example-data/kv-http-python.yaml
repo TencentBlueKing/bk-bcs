@@ -1,20 +1,24 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from __future__ import print_function  # 在Python 2中使用print函数
 import requests
 
 # 设置参数
-feed_addr="{{ .Bk_Bscp_Variable_FEED_ADDR }}"
+feed_addr = "{{ .Bk_Bscp_Variable_FEED_ADDR }}"
 biz_id = {{ .Bk_Bscp_Variable_BkBizId }}
 service_name = "{{ .Bk_Bscp_Variable_ServiceName }}"
 key_name = {{ .Bk_Bscp_Variable_KeyName }}
 token = {{ .Bk_Bscp_Variable_ClientKey }}
-labels={{ .Bk_Bscp_Variable_Leabels }}
+labels = {{ .Bk_Bscp_Variable_Leabels }}
 
 # 使用参数构建URL
-url = f"{feed_addr}/api/v1/feed/biz/{biz_id}/kvs/value/{key_name}"
+# 在Python 2中使用format来替代f-string
+url = "{}/api/v1/feed/biz/{}/kvs/value/{}".format(feed_addr, biz_id, key_name)
 
 # 设置请求头，包括Authorization token
 headers = {
-    "Authorization": f"Bearer {token}",
+    "Authorization": "Bearer {}".format(token),
 }
 
 # 设置请求数据
@@ -29,10 +33,11 @@ data = {
 response = requests.post(url, headers=headers, json=data)
 
 # 打印响应内容
+# 使用response.text来获取字符串形式的响应内容，这在Python 2和3中都是一致的
+
 # 当调用接口成功并正确获取配置项值时，返回“data”字段
 # 返回格式样例：{"data": "value"}
 
 # 当调用接口失败或获取配置项值出错时，返回“code”与“message”字段
 # 返回格式样例：{"code": "PERMISSION_DENIED", "message": "credential is disabled"}
-
 print("Response content:", response.text)

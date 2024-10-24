@@ -18,6 +18,11 @@
       <div class="operate-btns">
         <template v-if="versionData.status.publish_status === 'editing'">
           <CreateConfig :bk-biz-id="props.bkBizId" :app-id="props.appId" @created="refreshConfigList(true)" />
+          <CountTips
+            :max="spaceFeatureFlags.RESOURCE_LIMIT.AppConfigCnt"
+            :current="allExistConfigCount"
+            :is-temp="false"
+            :is-file-type="isFileType" />
           <EditVariables v-if="isFileType" ref="editVariablesRef" :bk-biz-id="props.bkBizId" :app-id="props.appId" />
         </template>
         <ViewVariables
@@ -82,6 +87,7 @@
   import { useI18n } from 'vue-i18n';
   import useConfigStore from '../../../../../../../store/config';
   import useServiceStore from '../../../../../../../store/service';
+  import useGlobalStore from '../../../../../../../store/global';
   import SearchInput from '../../../../../../../components/search-input.vue';
   import CreateConfig from './create-config/index.vue';
   import EditVariables from './variables/edit-variables.vue';
@@ -90,10 +96,12 @@
   import TableWithKv from './tables/table-with-kv.vue';
   import ConfigExport from './config-export.vue';
   import BatchOperationBtn from './batch-operation-btn.vue';
+  import CountTips from '../../components/count-tips.vue';
 
   const configStore = useConfigStore();
   const serviceStore = useServiceStore();
-  const { versionData, conflictFileCount, onlyViewConflict } = storeToRefs(configStore);
+  const { versionData, conflictFileCount, onlyViewConflict, allExistConfigCount } = storeToRefs(configStore);
+  const { spaceFeatureFlags } = storeToRefs(useGlobalStore());
   const { isFileType } = storeToRefs(serviceStore);
   const { t, locale } = useI18n();
 
@@ -158,12 +166,7 @@
     .operate-btns {
       display: flex;
       align-items: center;
-      :deep(.create-config-btn) {
-        margin-right: 8px;
-      }
-      :deep(.batch-delete-btn) {
-        margin-left: 8px;
-      }
+      gap: 8px;
     }
     .config-search-input {
       margin-left: auto;
