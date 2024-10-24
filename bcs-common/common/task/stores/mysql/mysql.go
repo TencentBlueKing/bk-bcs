@@ -15,8 +15,6 @@ package mysql
 
 import (
 	"context"
-	"net/url"
-	"strconv"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -27,19 +25,30 @@ import (
 )
 
 type mysqlStore struct {
-	dsn       string
-	showDebug bool
-	db        *gorm.DB
+	dsn   string
+	debug bool
+	db    *gorm.DB
+}
+
+type option func(*mysqlStore)
+
+// WithDebug 是否显示sql语句
+func WithDebug(debug bool) option {
+	return func(s *mysqlStore) {
+		s.debug = debug
+	}
 }
 
 // New init mysql iface.Store
-func New(dsn string) (iface.Store, error) {
-	store := &mysqlStore{dsn: dsn, showDebug: false}
-	store.initDsn(dsn)
+func New(dsn string, opts ...option) (iface.Store, error) {
+	store := &mysqlStore{dsn: dsn, debug: false}
+	for _, opt := range opts {
+		opt(store)
+	}
 
 	// 是否显示sql语句
 	level := logger.Warn
-	if store.showDebug {
+	if store.debug {
 		level = logger.Info
 	}
 
@@ -52,29 +61,6 @@ func New(dsn string) (iface.Store, error) {
 	store.db = db
 
 	return store, nil
-}
-
-// initDsn 解析debug参数是否开启sql显示, 任意异常都原样不动
-func (s *mysqlStore) initDsn(raw string) {
-	u, err := url.Parse(raw)
-	if err != nil {
-		return
-	}
-	query := u.Query()
-
-	// 是否开启debug
-	debugStr := query.Get("debug")
-	if debugStr != "" {
-		debug, err := strconv.ParseBool(debugStr)
-		if err != nil {
-			return
-		}
-		s.showDebug = debug
-		query.Del("debug")
-		u.RawQuery = query.Encode()
-	}
-
-	s.dsn = u.String()
 }
 
 // EnsureTable implement istore EnsureTable interface
@@ -120,11 +106,11 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*ifac
 	})
 
 	// mysql store 使用创建时间过滤
-	if opt.StartGte != nil {
-		tx = tx.Where("created_at >= ?", opt.StartGte)
+	if opt.CreatedGte != nil {
+		tx = tx.Where("created_at >= ?", opt.CreatedGte)
 	}
-	if opt.StartLte != nil {
-		tx = tx.Where("created_at <= ?", opt.StartLte)
+	if opt.CreatedLte != nil {
+		tx = tx.Where("created_at <= ?", opt.CreatedLte)
 	}
 
 	// 只使用id排序
