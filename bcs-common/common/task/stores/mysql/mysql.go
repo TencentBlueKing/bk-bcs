@@ -15,8 +15,6 @@ package mysql
 
 import (
 	"context"
-	"net/url"
-	"strconv"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -32,10 +30,21 @@ type mysqlStore struct {
 	db        *gorm.DB
 }
 
+type option func(*mysqlStore)
+
+// ShowDebug 是否显示sql语句
+func ShowDebug(showDebug bool) option {
+	return func(s *mysqlStore) {
+		s.showDebug = showDebug
+	}
+}
+
 // New init mysql iface.Store
-func New(dsn string) (iface.Store, error) {
+func New(dsn string, opts ...option) (iface.Store, error) {
 	store := &mysqlStore{dsn: dsn, showDebug: false}
-	store.initDsn(dsn)
+	for _, opt := range opts {
+		opt(store)
+	}
 
 	// 是否显示sql语句
 	level := logger.Warn
@@ -52,29 +61,6 @@ func New(dsn string) (iface.Store, error) {
 	store.db = db
 
 	return store, nil
-}
-
-// initDsn 解析debug参数是否开启sql显示, 任意异常都原样不动
-func (s *mysqlStore) initDsn(raw string) {
-	u, err := url.Parse(raw)
-	if err != nil {
-		return
-	}
-	query := u.Query()
-
-	// 是否开启debug
-	debugStr := query.Get("debug")
-	if debugStr != "" {
-		debug, err := strconv.ParseBool(debugStr)
-		if err != nil {
-			return
-		}
-		s.showDebug = debug
-		query.Del("debug")
-		u.RawQuery = query.Encode()
-	}
-
-	s.dsn = u.String()
 }
 
 // EnsureTable implement istore EnsureTable interface
