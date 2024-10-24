@@ -385,6 +385,7 @@ func (c *ComputeServiceClient) CreateInstanceTemplate(ctx context.Context, locat
 	if err != nil {
 		return nil, fmt.Errorf("gce client CreateInstanceTemplate failed: %v", err)
 	}
+
 	blog.Infof("gce client CreateInstanceTemplate[%s] successful operation ID: %s", it.Name, operation.SelfLink)
 
 	return operation, nil
@@ -412,6 +413,7 @@ func (c *ComputeServiceClient) DeleteInstanceTemplate(ctx context.Context, locat
 	if err != nil {
 		return nil, fmt.Errorf("gce client DeleteInstanceTemplate failed: %v", err)
 	}
+
 	blog.Infof("gce client DeleteInstanceTemplate[%s] successful operation ID: %s", name, operation.SelfLink)
 
 	return operation, nil
@@ -550,14 +552,16 @@ func (c *ComputeServiceClient) ListZoneInstanceWithFilter(ctx context.Context, f
 }
 
 // ListZoneInstances list zonal instances
-func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context) (*compute.InstanceList, error) {
+func (c *ComputeServiceClient) ListZoneInstances(ctx context.Context, zone string) (*compute.InstanceList, error) {
 	if c.gkeProjectID == "" {
 		return nil, fmt.Errorf("gce client ListZoneInstances failed: gkeProjectId is required")
 	}
-	if c.location == "" {
-		return nil, fmt.Errorf("gce client ListZoneInstances failed: location is required")
+
+	if zone == "" {
+		return nil, fmt.Errorf("gce client ListZoneInstances failed: zone is required")
 	}
-	instanceList, err := c.computeServiceClient.Instances.List(c.gkeProjectID, c.location).Context(ctx).Do()
+
+	instanceList, err := c.computeServiceClient.Instances.List(c.gkeProjectID, zone).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("gce client ListZoneInstances failed: %v", err)
 	}
@@ -572,7 +576,7 @@ func (c *ComputeServiceClient) GetInstance(ctx context.Context, location, name s
 		return nil, fmt.Errorf("gce client GetInstance failed: gkeProjectId is required")
 	}
 
-	if location != "" {
+	if location == "" {
 		location = c.location
 	}
 
@@ -662,6 +666,21 @@ func (c *ComputeServiceClient) GetMachineType(ctx context.Context, location, mt 
 	blog.Infof("gce client GetMachineType successful")
 
 	return t, nil
+}
+
+// ListNetworks lists networks
+func (c *ComputeServiceClient) ListNetworks(ctx context.Context) (*compute.NetworkList, error) {
+	if c.gkeProjectID == "" {
+		return nil, fmt.Errorf("gce client ListNetworks failed: gkeProjectId is required")
+	}
+
+	netsList, err := c.computeServiceClient.Networks.List(c.gkeProjectID).Context(ctx).Do()
+	if err != nil {
+		return nil, fmt.Errorf("gce client ListNetworks failed: %v", err)
+	}
+	blog.Infof("gce client ListNetworks successful")
+
+	return netsList, nil
 }
 
 // ListSubnetworks lists subnetworks

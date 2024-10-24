@@ -127,6 +127,24 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 }
 
 func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDependBasicInfo) error { // nolint
+	if data.Cluster.KubeConfig == "" {
+		// gke集群 region级别 zone级别
+		clusterType := common.Regions
+		if len(strings.Split(data.Cluster.Region, "-")) == 3 {
+			clusterType = common.Zones
+		}
+		kubeConfig, err := api.GetClusterKubeConfig(context.Background(), data.CmOption.Account.ServiceAccountSecret,
+			data.CmOption.Account.GkeProjectID, data.Cluster.Region, clusterType, data.Cluster.SystemID)
+		if err != nil {
+			return fmt.Errorf("SyncClusterCloudInfo GetClusterKubeConfig failed: %v", err)
+		}
+
+		data.Cluster.KubeConfig = kubeConfig
+		err = cloudprovider.UpdateCluster(data.Cluster)
+		if err != nil {
+			return err
+		}
+	}
 	configByte, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
 	if err != nil {
 		return fmt.Errorf("failed to decode kubeconfig, %v", err)
