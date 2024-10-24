@@ -14,12 +14,17 @@ package renderer
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/schema"
@@ -63,4 +68,71 @@ func TestSchemaRenderer(t *testing.T) {
 		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, "", kind, "default", "", false).Render()
 		assert.Nil(t, err)
 	}
+}
+
+func TestGenSchemaRulesScheduleValid(t *testing.T) {
+	// 不打印其他
+	runtime.RunMode = runmode.UnitTest
+	rules := genSchemaRules(context.Background())
+	validator, ok := rules["scheduleValid"].(map[string]interface{})["validator"].(string)
+	if !ok {
+		t.Errorf("schedule validator is null")
+		return
+	}
+	validator = strings.Trim(validator, "/")
+	testSample := []string{
+		// valid schudule cron
+		"* * * * *",
+		"1 * * * *",
+		"1,2 * * * *",
+		"1/1,2 * * * *",
+		"1-2/1,2 * * * *",
+
+		"* 1 * * *",
+		"* 1,2 * * *",
+		"* 1/1,2 * * *",
+		"* 1-2/1,2 * * *",
+
+		"* * 1 * *",
+		"* * 1,2 * *",
+		"* * 1/1,2 * *",
+		"* * 1-2/1,2 * *",
+		"* * ?/1,2 * *",
+
+		"* * * 1 *",
+		"* * * 1,2 *",
+		"* * * 1/1,2 *",
+		"* * * 1-2/1,2 *",
+		"* * * JAN-2/1,2 *",
+		"* * * JAN-2/1,FEB *",
+
+		"* * * * 1",
+		"* * * * 1,2",
+		"* * * * 1/1,2",
+		"* * * * 1-2/1,2",
+		"* * * * SUN-2/1,2",
+		"* * * * SAT-2/1,SUN",
+		
+		"1-2/1,2 23/1,2 ?/1,2 JAN/1,DEC SUN/0,SAT",
+		
+		// invalid schudule cron
+		"1/1-2 * * * *",
+		"* * L * *",
+		"* * W * *",
+		"* * * * L",
+		"* * * * W",
+		"* * * ?/1,2 *",
+		"1-2/1,2 23/1,2 ?/1,2 JAN/JAN,DEC SUN/0,SAT",
+		"1-2/1,2 23/1,2 ?/1,2 JAN/JAN,DEC SUN/SUN,SAT",
+	}
+	scheduleReg := regexp.MustCompile(validator)
+	var invalidSchedule []string
+	for _, v := range testSample {
+		if !scheduleReg.MatchString(v) {
+			invalidSchedule = append(invalidSchedule, v)
+		}
+	}
+
+	fmt.Println(fmt.Sprintf("invalid schedule cron:\n %s", strings.Join(invalidSchedule, "\n")))
+
 }

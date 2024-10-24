@@ -3198,6 +3198,9 @@ message CreateTemplateMetadataReq {
 	string draftEditFormat = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿编辑模式"
 	}];
+	string renderMode = 14 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件语法模式"
+	}];
 }
 
 message UpdateTemplateMetadataReq {
@@ -3325,6 +3328,9 @@ message CreateTemplateVersionReq {
 	bool force = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "能否被覆盖"
 	}];
+	string renderMode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件语法模式"
+	}];
 }
 
 message DeleteTemplateVersionReq {
@@ -3424,6 +3430,9 @@ message DeployTemplateFileReq {
 	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "命名空间"
 	}, (validate.rules).string = {min_len : 1, max_len : 64}];
+	string values = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板集value值"
+	}];
 }
 
 message GetEnvManageReq {

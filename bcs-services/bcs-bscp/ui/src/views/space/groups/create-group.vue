@@ -88,13 +88,13 @@
         mode: ECategoryType.Custom,
         selector: rule_logic === 'AND' ? { labels_and: rules } : { labels_or: rules },
       };
-      await createGroup(route.params.spaceId as string, params);
+      const res = await createGroup(route.params.spaceId as string, params);
       Message({
         message: t('创建分组成功'),
         theme: 'success',
       });
       handleClose();
-      emits('reload');
+      emits('reload', res.id);
     } catch (e) {
       console.error(e);
     } finally {

@@ -13,6 +13,19 @@
 package api
 
 const (
+	// RegionStateOptInNR region state opt-in-not-required
+	RegionStateOptInNR = "opt-in-not-required"
+	// RegionStateOptedIn region state opted-in
+	RegionStateOptedIn = "opted-in"
+	// RegionStateNotOptedIn region state not-opted-in
+	RegionStateNotOptedIn = "not-opted-in"
+	// BCSRegionStateAvailable xxx
+	BCSRegionStateAvailable = "AVAILABLE"
+	// BCSRegionStateUnavailable xxx
+	BCSRegionStateUnavailable = "UNAVAILABLE"
+)
+
+const (
 	// NodeGroupStatusCreating node group status creating
 	NodeGroupStatusCreating = "CREATING"
 	// NodeGroupStatusActive node group status active
@@ -74,4 +87,17 @@ const (
 	EKSRolePolicyCNI = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
 	// EksClusterRole EKS role policy AmazonEKSClusterPolicy
 	EksClusterRole = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+)
+
+const (
+	// ClusterAuthenticationModeAM xxx
+	ClusterAuthenticationModeAM = "API_AND_CONFIG_MAP"
+	// ClusterAuthenticationModeAPI xxx
+	ClusterAuthenticationModeAPI = "API"
+	// ClusterAuthenticationModeCM xxx
+	ClusterAuthenticationModeCM = "CONFIG_MAP"
+	// ClusterUpdatePolicyExtended xxx
+	ClusterUpdatePolicyExtended = "EXTENDED"
+	// ClusterUpdatePolicyStandard xxx
+	ClusterUpdatePolicyStandard = "STANDARD"
 )

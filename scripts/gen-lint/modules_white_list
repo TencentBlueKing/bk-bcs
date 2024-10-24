@@ -1,0 +1,47 @@
+# bcs-common/common/encryptv2
+bcs-common/common/task
+bcs-runtime/bcs-k8s/bcs-component/bcs-apiserver-proxy
+bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.16
+bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/bcs-cluster-autoscaler-1.22
+bcs-runtime/bcs-k8s/bcs-component/bcs-clusternet-controller
+# bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler
+# bcs-runtime/bcs-k8s/bcs-component/bcs-image-loader
+bcs-runtime/bcs-k8s/bcs-component/bcs-k8s-custom-scheduler
+bcs-runtime/bcs-k8s/bcs-component/bcs-multi-ns-proxy
+bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller
+# bcs-runtime/bcs-k8s/bcs-component/bcs-netservice-controller/cni
+bcs-runtime/bcs-k8s/bcs-component/bcs-unified-apiserver
+bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server
+# bcs-runtime/bcs-k8s/bcs-network
+# bcs-runtime/bcs-k8s/kubernetes
+bcs-runtime/bcs-k8s/kubernetes/common
+bcs-scenarios/bcs-gitops-manager
+bcs-scenarios/bcs-gitops-pre-check
+bcs-scenarios/bcs-gitops-vaultplugin-server
+bcs-scenarios/bcs-monitor-controller
+bcs-scenarios/bcs-powertrading
+bcs-scenarios/bcs-terraform-controller
+bcs-services/bcs-bkcmdb-synchronizer
+# bcs-services/bcs-bscp
+bcs-services/bcs-bscp/cmd/vault-server/vault
+bcs-services/bcs-cli/bcs-cluster-manager
+bcs-services/bcs-cli/bcs-data-manager
+bcs-services/bcs-cli/bcs-project-manager
+bcs-services/bcs-cli/bcs-user-manager
+# bcs-services/bcs-cluster-manager
+bcs-services/bcs-cluster-reporter
+# bcs-services/bcs-data-manager
+bcs-services/bcs-gateway-discovery
+# bcs-services/bcs-helm-manager
+bcs-services/bcs-k8s-watch
+bcs-services/bcs-kube-agent
+bcs-services/bcs-monitor
+# bcs-services/bcs-nodegroup-manager
+bcs-services/bcs-project-manager
+bcs-services/bcs-storage
+# bcs-services/bcs-user-manager
+bcs-services/bcs-webconsole
+bcs-services/cluster-resources
+bcs-services/pkg
+bcs-ui
+# install/cryptool

@@ -4,7 +4,9 @@
       ref="fileOptionRef"
       :p2p-show="true"
       :associate-config-show="true"
-      @update-option-data="getOptionData" />
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="getOptionData"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="preview-container">
       <span class="preview-label">{{ $t('示例预览') }}</span>
       <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制示例') }}</bk-button>
@@ -26,12 +28,14 @@
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
-  import { IExampleFormData } from '../../../../../../../types/client';
+  import { IExampleFormData, newICredentialItem } from '../../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
   import yamlString from '/src/assets/example-data/file-container.yaml?raw';
 
-  const props = defineProps<{ contentScrollTop: Function }>();
+  const props = defineProps<{ contentScrollTop: Function; selectedKeyData: newICredentialItem['spec'] | null }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const { t } = useI18n();
   const route = useRoute();
@@ -102,8 +106,8 @@
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.uid`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1.trim());
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2.trim());
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', p2pPart1);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', p2pPart2);
     } else {
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part1 }}', '');
       updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_p2p_part2 }}', '');
@@ -111,16 +115,21 @@
 
     // 文件配置筛选规则动态增/删
     if (optionData.value.rules?.length) {
-      const rulesPart = `
+      const rulesPart1 = `
       # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
             - name: config_matches
-              value: ${optionData.value.rules}`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart.trim());
+              value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
+      const rulesPart2 = `
+            - name: config_matches
+              value: {{ .Bk_Bscp_Variable_Rules_Value }}`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', rulesPart1);
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', rulesPart2);
     } else {
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules1 }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules2 }}', '');
     }
     // 去除 动态插入的值为空的情况下产生的空白行
-    replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
+    replaceVal.value = updateString.replaceAll(/\r?\n\s+\r?\n/g, '\n');
   };
   // 高亮配置
   const updateVariables = () => {
@@ -147,6 +156,12 @@
         name: 'Bk_Bscp_Variable_Cluster_Value',
         type: '',
         default_val: `${optionData.value.clusterInfo}`,
+        memo: '',
+      },
+      {
+        name: 'Bk_Bscp_Variable_Rules_Value',
+        type: '',
+        default_val: `'${optionData.value.rules}'`,
         memo: '',
       },
     ];

@@ -15,6 +15,7 @@ package listenercontroller
 import (
 	"context"
 	"reflect"
+	"runtime/debug"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -48,10 +49,12 @@ type ListenerBypassReconciler struct {
 }
 
 // NewListenerBypassReconciler create ListenerBypassReconciler
-func NewListenerBypassReconciler(client client.Client, lbIDCache *gocache.Cache) *ListenerBypassReconciler {
+func NewListenerBypassReconciler(client client.Client, lbIDCache *gocache.Cache,
+	options *option.ControllerOption) *ListenerBypassReconciler {
 	return &ListenerBypassReconciler{
 		Client:        client,
 		monitorHelper: apiclient.NewMonitorHelper(lbIDCache),
+		Option:        options,
 	}
 }
 
@@ -168,7 +171,7 @@ func (lc *ListenerBypassReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.Listener{}).
 		WithEventFilter(getListenerByPassPredicate()).
-		WithOptions(controller.Options{MaxConcurrentReconciles: 10}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: lc.Option.ListenerBypassMaxConcurrent}).
 		Complete(lc)
 }
 
@@ -199,11 +202,19 @@ func (lc *ListenerBypassReconciler) updateListenerStatus(namespacedName k8stypes
 // getListenerByPassPredicate filter listener events
 func getListenerByPassPredicate() predicate.Predicate {
 	return predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			objNew := e.ObjectNew.DeepCopyObject()
-			objOld := e.ObjectOld.DeepCopyObject()
-			newListener, okNew := objNew.(*networkextensionv1.Listener)
-			oldListener, okOld := objOld.(*networkextensionv1.Listener)
+		UpdateFunc: func(e event.UpdateEvent) (processed bool) {
+			defer func() {
+				if r := recover(); r != nil {
+					blog.Errorf("[panic] Listener predicate panic, info: %v, stack:%s", r,
+						string(debug.Stack()))
+					processed = true
+				}
+			}()
+
+			objectNew := e.ObjectNew.DeepCopyObject()
+			objectOld := e.ObjectOld.DeepCopyObject()
+			newListener, okNew := objectNew.(*networkextensionv1.Listener)
+			oldListener, okOld := objectOld.(*networkextensionv1.Listener)
 			if !okNew || !okOld {
 				return false
 			}

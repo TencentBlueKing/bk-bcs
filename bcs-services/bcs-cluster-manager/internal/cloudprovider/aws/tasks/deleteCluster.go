@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -73,6 +74,11 @@ func DeleteEKSClusterTask(taskID string, stepName string) error {
 func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	cluster := info.Cluster
+
+	if cluster.GetSystemID() == "" {
+		return nil
+	}
+
 	// get aws client
 	cli, err := api.NewEksClient(info.CmOption)
 	if err != nil {
@@ -81,13 +87,21 @@ func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return fmt.Errorf("get aws client failed, %s", err.Error())
 	}
 
+	// check cluster if exist
+	_, err = cli.GetEksCluster(cluster.SystemID)
+	if err != nil {
+		if strings.Contains(err.Error(), eks.ErrCodeResourceNotFoundException) {
+			return nil
+		}
+		return err
+	}
+
+	// check cluster if node group exist, and batch delete nodegroups first, or the cluster can't be deleted
 	ngList, err := cli.ListNodegroups(cluster.SystemID)
 	if err != nil {
 		blog.Errorf("deleteEKSCluster[%s]: call aws ListNodegroups failed: %v", taskID, err)
 		return fmt.Errorf("call aws ListNodegroups failed: %s", err.Error())
 	}
-
-	// delete nodegroups first, or the cluster can't be deleted
 	for _, ng := range ngList {
 		err = retry.Do(func() error {
 			_, err = cli.DeleteNodegroup(&eks.DeleteNodegroupInput{
@@ -126,6 +140,7 @@ func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return err
 	}
 
+	// delete cluster
 	_, err = cli.DeleteEksCluster(cluster.SystemID)
 	if err != nil {
 		blog.Errorf("deleteEKSCluster[%s]: call aws DeleteEKSCluster failed: %v", taskID, err)

@@ -8,15 +8,10 @@
     <template #header>
       <div class="header-wrapper">
         <span>{{ sideSliderTitle }}</span>
-        <bk-popover
-          v-if="!props.isExampleMode"
-          placement="bottom-start"
-          theme="light"
-          trigger="click"
-          ext-cls="view-rule-wrap">
+        <bk-popover placement="bottom-start" theme="light" trigger="click" ext-cls="view-rule-wrap">
           <span class="view-rule">{{ t('查看规则示例') }}</span>
           <template #content>
-            <ViewRuleExample />
+            <ViewRuleExample :is-example-mode="props.isExampleMode" />
           </template>
         </bk-popover>
       </div>
@@ -34,10 +29,15 @@
           @change="handleRuleChange"
           @form-change="isFormChange = true"
           @trigger-save-btn-disabled="saveBtnDisabled = $event" />
-        <RuleView v-else v-model:preview-rule="previewRule" :rules="rules" @edit="isRuleEdit = true" />
+        <RuleView
+          v-else
+          v-model:preview-rule="previewRule"
+          :rules="rules"
+          :has-manage-perm="!props.hasManagePerm"
+          @edit="isRuleEdit = true" />
       </div>
       <div v-if="rules.length || isRuleEdit" class="results-wrapper">
-        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" />
+        <MatchingResult :rule="previewRule" :bk-biz-id="spaceId" :is-example-mode="props.isExampleMode" />
       </div>
     </section>
     <div class="action-btns">
@@ -48,7 +48,7 @@
         :disabled="saveBtnDisabled"
         v-bk-tooltips="{ content: '请先预览所有关联规则修改结果后，才能保存', disabled: !saveBtnDisabled }"
         @click="handleSave">
-        {{ t('保存') }}
+        {{ props.isExampleMode ? t('确定') : t('保存') }}
       </bk-button>
       <bk-button
         v-else
@@ -116,6 +116,9 @@
   onMounted(async () => {
     const resp = await getAppList(spaceId.value, { start: 0, all: true });
     appList.value = resp.details;
+    if (props.isExampleMode) {
+      handleOpenEdit();
+    }
   });
 
   const sideSliderTitle = computed(() => (props.isExampleMode ? t('配置文件筛选规则') : t('关联服务配置')));
@@ -150,8 +153,9 @@
   const handleOpenEdit = () => {
     if (props.permCheckLoading || !props.hasManagePerm) {
       emits('applyPerm');
+    } else {
+      isRuleEdit.value = true;
     }
-    isRuleEdit.value = true;
   };
 
   const handleRuleChange = (val: IRuleUpdateParams) => {
@@ -206,6 +210,10 @@
     pending.value = false;
     emits('close');
   };
+
+  defineExpose({
+    handleOpenEdit,
+  });
 </script>
 <style lang="scss" scoped>
   .associate-config-items {

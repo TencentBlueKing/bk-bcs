@@ -2,7 +2,6 @@ import {
   businessList,
   createProject as handleCreateProject,
   editProject,
-  fetchAllProjectList,
   fetchProjectList,
   getProject,
 } from '@/api/modules/project';
@@ -42,29 +41,6 @@ export default function useProjects() {
       project_code: project.projectCode,
     }));
     return data as IProjectListData;
-  };
-
-  // 获取所有项目列表(项目列表页面)
-  async function getAllProjectList(params: any = {}, config = {}) {
-    const result = await fetchAllProjectList(params,  { needRes: true, ...config })
-      .catch(() => ({
-        data: {},
-        webAnnotations: {
-          perms: {},
-        },
-      }));
-    return {
-      data: result.data.results.map(project => ({
-        ...project,
-        cc_app_id: project.businessID,
-        cc_app_name: project.businessName,
-        project_id: project.projectID,
-        project_name: project.name,
-        project_code: project.projectCode,
-      })),
-      total: result.data.total,
-      web_annotations: result.web_annotations,
-    };
   };
 
   async function updateProject(params: any) {
@@ -115,7 +91,6 @@ export default function useProjects() {
   return {
     fetchProjectInfo,
     getProjectList,
-    getAllProjectList,
     updateProject,
     getBusinessList,
     createProject,

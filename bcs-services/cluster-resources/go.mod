@@ -40,13 +40,13 @@ replace (
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240829030428-e44f1984734f
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241015035856-99f8d8f45458
 	github.com/TencentBlueKing/gopkg v1.1.0
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	// fork 自 https://github.com/signalfx/splunk-otel-go/tree/main/instrumentation/k8s.io/client-go/splunkclient-go
 	// 待升级到 go1.18 后，可直接引用社区的包
 	github.com/adevjoe/opentelemetry-go-contrib/instrumentation/k8s.io/client-go v1.0.2
-	github.com/alicebob/miniredis v2.5.0+incompatible
+	github.com/alicebob/miniredis v2.5.0+incompatible // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/dustin/go-humanize v1.0.0
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
@@ -54,7 +54,7 @@ require (
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/grpc v1.2.0
 	github.com/go-redis/cache/v8 v8.4.3
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/go-resty/resty/v2 v2.12.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/glog v1.2.0
@@ -138,7 +138,7 @@ require (
 	github.com/gobwas/ws v1.0.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gomodule/redigo v1.8.9 // indirect
+	github.com/gomodule/redigo v1.9.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -185,7 +185,7 @@ require (
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
-	github.com/yuin/gopher-lua v1.1.0 // indirect
+	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.2 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.2 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.2 // indirect
@@ -236,6 +236,7 @@ require (
 require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
@@ -247,6 +248,7 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-redis/redis/extra/rediscmd/v8 v8.11.5 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
+	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang-migrate/migrate/v4 v4.17.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/google/btree v1.0.1 // indirect

@@ -129,6 +129,9 @@
   import useModalCloseConfirmation from '../../../../../../../../../utils/hooks/use-modal-close-confirmation';
   import ConfigTable from './kv-config-table.vue';
   import { cloneDeep } from 'lodash';
+  import useServiceStore from '../../../../../../../../../store/service';
+
+  const serviceStore = useServiceStore();
 
   const { t, locale } = useI18n();
   const props = defineProps<{
@@ -246,7 +249,10 @@
       if (importType.value === 'text') {
         await textImport.value.handleImport();
       } else {
-        await importKvFormText(props.bkBizId, props.appId, importConfigList.value, isClearDraft.value);
+        const res = await importKvFormText(props.bkBizId, props.appId, importConfigList.value, isClearDraft.value);
+        serviceStore.$patch((state) => {
+          state.topIds = res.data.ids;
+        });
       }
       emits('update:show', false);
       setTimeout(() => {

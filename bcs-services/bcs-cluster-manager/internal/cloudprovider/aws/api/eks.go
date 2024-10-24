@@ -201,3 +201,18 @@ func (cli *EksClient) DeleteNodegroup(input *eks.DeleteNodegroupInput) (*eks.Nod
 
 	return output.Nodegroup, nil
 }
+
+// CreateAddon creates cluster addon
+func (cli *EksClient) CreateAddon(input *eks.CreateAddonInput) (*eks.Addon, error) {
+	if cli == nil {
+		return nil, cloudprovider.ErrServerIsNil
+	}
+
+	output, err := cli.eksClient.CreateAddon(input)
+	if err != nil {
+		return nil, err
+	}
+
+	blog.Infof("eksClient create eks cluster[%s] addon[%s] success", *input.ClusterName, *input.AddonName)
+	return output.Addon, nil
+}

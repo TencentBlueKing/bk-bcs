@@ -868,6 +868,60 @@
         ]
       }
     },
+    "/clustermanager/v1/cloud/{cloudID}/recommendNodeGroupConf": {
+      "get": {
+        "summary": "创建集群时推荐的节点池配置",
+        "description": "创建集群时推荐的节点池配置",
+        "operationId": "ClusterManager_RecommendNodeGroupConf",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerRecommendNodeGroupConfResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云模版ID, 集群所属云进行流程管理",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 导入集群关联的cloud凭证信息, 可以为空; 当为空时, 可以通过cloud获取cloud凭证信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "region",
+            "description": "region. 集群所在地域",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. AKS集群所属resource group",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/cloudregion/{cloudID}": {
       "get": {
         "summary": "查询Cloud region列表",
@@ -2427,6 +2481,13 @@
           {
             "name": "accountID",
             "description": "accountID. 云凭证ID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure 资源组名称",
             "in": "query",
             "required": false,
             "type": "string"
@@ -7886,7 +7947,7 @@
           "title": "diskPartition"
         }
       },
-      "title": "CloudDataDisk 云磁盘格式化数据, 对应CVM数据盘。应用于节点模版\n主要用于 CA 自动扩容节点并上架节点时重装系统，多块数据盘 mountTarget 不能重复\n上架已存在节点时, 用户需指定diskPartition参数区分设备"
+      "title": "CloudDataDisk 云磁盘格式化数据, 对应CVM数据盘。应用于节点模版\r\n主要用于 CA 自动扩容节点并上架节点时重装系统，多块数据盘 mountTarget 不能重复\r\n上架已存在节点时, 用户需指定diskPartition参数区分设备"
     },
     "clustermanagerCloudModuleFlag": {
       "type": "object",
@@ -8910,6 +8971,11 @@
           "$ref": "#/definitions/clustermanagerClusterModule",
           "description": "集群转移模块信息",
           "title": "module"
+        },
+        "upgradePolicy": {
+          "$ref": "#/definitions/clustermanagerUpgradePolicy",
+          "description": "集群升级策略",
+          "title": "upgradePolicy"
         }
       }
     },
@@ -13108,6 +13174,44 @@
         }
       }
     },
+    "clustermanagerHardwareProfile": {
+      "type": "object",
+      "properties": {
+        "CPU": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型CPU信息，与机型instanceType互斥，比instanceType优先级高",
+          "title": "CPU"
+        },
+        "Mem": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型Mem信息，与机型instanceType互斥，比instanceType优先级高",
+          "title": "Mem"
+        },
+        "GPU": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型GPU信息，与机型instanceType互斥，比instanceType优先级高，可以会为0",
+          "title": "GPU"
+        },
+        "systemDisk": {
+          "$ref": "#/definitions/clustermanagerDataDisk",
+          "description": "机型系统盘, 主要用于自建资源池. 仅仅provider为self时, 需要关注",
+          "title": "systemDisk"
+        },
+        "dataDisks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerDataDisk"
+          },
+          "description": "机型数据盘, 主要用于自建资源池. 仅仅provider为self时, 需要关注",
+          "title": "dataDisks"
+        }
+      },
+      "description": "CPU、MEM、DISK等配置",
+      "title": "HardwareProfile"
+    },
     "clustermanagerHealthResponse": {
       "type": "object",
       "properties": {
@@ -13468,6 +13572,28 @@
         }
       }
     },
+    "clustermanagerInstanceProfile": {
+      "type": "object",
+      "properties": {
+        "nodeOS": {
+          "type": "string",
+          "description": "节点操作系统",
+          "title": "nodeOS"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "机型信息字符串，若配置CPU和内存，该值不强制，默认自行向上就近匹配机型信息",
+          "title": "instanceType"
+        },
+        "instanceChargeType": {
+          "type": "string",
+          "description": "计费模式",
+          "title": "instanceChargeType"
+        }
+      },
+      "description": "实例配置",
+      "title": "InstanceProfile"
+    },
     "clustermanagerInstanceTemplateConfig": {
       "type": "object",
       "properties": {
@@ -13725,6 +13851,14 @@
           "type": "string",
           "description": "公网ip地址",
           "title": "publicIP"
+        },
+        "publicAccessCidrs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "允许访问Kubernetes API Server的公网Ip cidr",
+          "title": "publicAccessCidrs"
         }
       },
       "title": "InternetAccessible 公网带宽设置"
@@ -15473,6 +15607,27 @@
         }
       }
     },
+    "clustermanagerNetworkProfile": {
+      "type": "object",
+      "properties": {
+        "subnetIDs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "子网ID",
+          "title": "subnetIDs"
+        },
+        "publicIPAssigned": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否分配公网IP。默认为false。",
+          "title": "publicIPAssigned"
+        }
+      },
+      "description": "网络相关配置",
+      "title": "NetworkProfile"
+    },
     "clustermanagerNetworkSetting": {
       "type": "object",
       "properties": {
@@ -16871,6 +17026,93 @@
         }
       }
     },
+    "clustermanagerRecommendNodeGroupConf": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "节点池名称",
+          "title": "name"
+        },
+        "serviceRoleName": {
+          "type": "string",
+          "description": "awsCloud节点池服务角色",
+          "title": "serviceRoleName"
+        },
+        "instanceProfile": {
+          "$ref": "#/definitions/clustermanagerInstanceProfile",
+          "description": "实例相关配置",
+          "title": "instanceProfile"
+        },
+        "hardwareProfile": {
+          "$ref": "#/definitions/clustermanagerHardwareProfile",
+          "description": "硬件相关配置",
+          "title": "hardwareProfile"
+        },
+        "networkProfile": {
+          "$ref": "#/definitions/clustermanagerNetworkProfile",
+          "description": "网络相关配置",
+          "title": "networkProfile"
+        },
+        "scalingProfile": {
+          "$ref": "#/definitions/clustermanagerScalingProfile",
+          "description": "扩缩容配置",
+          "title": "scalingProfile"
+        },
+        "mode": {
+          "type": "string",
+          "description": "azureCloud节点池模式,System|User",
+          "title": "mode"
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点池所属区域",
+          "title": "zones"
+        }
+      },
+      "description": "创建集群时推荐的节点池配置",
+      "title": "RecommendNodeGroupConf"
+    },
+    "clustermanagerRecommendNodeGroupConfResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerRecommendNodeGroupConf"
+          },
+          "description": "推荐的节点池配置",
+          "title": "data"
+        }
+      },
+      "description": "创建集群时推荐的节点池配置",
+      "title": "RecommendNodeGroupConfResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerRecordNodeInfoRequest": {
       "type": "object",
       "properties": {
@@ -17129,6 +17371,30 @@
           }
         }
       }
+    },
+    "clustermanagerScalingProfile": {
+      "type": "object",
+      "properties": {
+        "maxSize": {
+          "type": "integer",
+          "format": "int64",
+          "description": "弹性伸缩组最大实例数",
+          "title": "maxSize"
+        },
+        "desiredSize": {
+          "type": "integer",
+          "format": "int64",
+          "description": "节点数量",
+          "title": "desiredSize"
+        },
+        "scalingMode": {
+          "type": "string",
+          "description": "扩缩容模式",
+          "title": "scalingMode"
+        }
+      },
+      "description": "节点池扩缩容配置",
+      "title": "ScalingProfile"
     },
     "clustermanagerScopeInfo": {
       "type": "object",
@@ -20175,6 +20441,16 @@
         "message"
       ]
     },
+    "clustermanagerUpgradePolicy": {
+      "type": "object",
+      "properties": {
+        "supportType": {
+          "type": "string",
+          "description": "aws EKS升级策略类型(EXTENDED|STANDARD)",
+          "title": "supportType"
+        }
+      }
+    },
     "clustermanagerVPCCidr": {
       "type": "object",
       "properties": {
@@ -20251,7 +20527,7 @@
           }
         }
       },
-      "title": "https://github.com/golang/protobuf/issues/1118\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
+      "title": "https://github.com/golang/protobuf/issues/1118\r\nhttps://pkg.go.dev/google.golang.org/protobuf/types/known/structpb#Struct"
     },
     "clustermanagerWebAnnotationsV2": {
       "type": "object",
@@ -20369,7 +20645,7 @@
       "properties": {
         "type_url": {
           "type": "string",
-          "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+          "description": "A URL/resource name that uniquely identifies the type of the serialized\r\nprotocol buffer message. This string must contain at least\r\none \"/\" character. The last segment of the URL's path must represent\r\nthe fully qualified name of the type (as in\r\n`path/google.protobuf.Duration`). The name should be in a canonical form\r\n(e.g., leading \".\" is not accepted).\r\n\r\nIn practice, teams usually precompile into the binary all types that they\r\nexpect it to use in the context of Any. However, for URLs which use the\r\nscheme `http`, `https`, or no scheme, one can optionally set up a type\r\nserver that maps type URLs to message definitions as follows:\r\n\r\n* If no scheme is provided, `https` is assumed.\r\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\r\n  value in binary format, or produce an error.\r\n* Applications are allowed to cache lookup results based on the\r\n  URL, or have them precompiled into a binary to avoid any\r\n  lookup. Therefore, binary compatibility needs to be preserved\r\n  on changes to types. (Use versioned type names to manage\r\n  breaking changes.)\r\n\r\nNote: this functionality is not currently available in the official\r\nprotobuf release, and it is not used for type URLs beginning with\r\ntype.googleapis.com.\r\n\r\nSchemes other than `http`, `https` (or the empty scheme) might be\r\nused with implementation specific semantics."
         },
         "value": {
           "type": "string",
@@ -20377,7 +20653,7 @@
           "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+      "title": "`Any` contains an arbitrary serialized protocol buffer message along with a\r\nURL that describes the type of the serialized message.\r\n\r\nProtobuf library provides support to pack/unpack Any values in the form\r\nof utility functions or additional generated methods of the Any type.\r\n\r\nExample 1: Pack and unpack a message in C++.\r\n\r\n    Foo foo = ...;\r\n    Any any;\r\n    any.PackFrom(foo);\r\n    ...\r\n    if (any.UnpackTo(\u0026foo)) {\r\n      ...\r\n    }\r\n\r\nExample 2: Pack and unpack a message in Java.\r\n\r\n    Foo foo = ...;\r\n    Any any = Any.pack(foo);\r\n    ...\r\n    if (any.is(Foo.class)) {\r\n      foo = any.unpack(Foo.class);\r\n    }\r\n\r\n Example 3: Pack and unpack a message in Python.\r\n\r\n    foo = Foo(...)\r\n    any = Any()\r\n    any.Pack(foo)\r\n    ...\r\n    if any.Is(Foo.DESCRIPTOR):\r\n      any.Unpack(foo)\r\n      ...\r\n\r\n Example 4: Pack and unpack a message in Go\r\n\r\n     foo := \u0026pb.Foo{...}\r\n     any, err := ptypes.MarshalAny(foo)\r\n     ...\r\n     foo := \u0026pb.Foo{}\r\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\r\n       ...\r\n     }\r\n\r\nThe pack methods provided by protobuf library will by default use\r\n'type.googleapis.com/full.type.name' as the type URL and the unpack\r\nmethods only use the fully qualified type name after the last '/'\r\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\r\nname \"y.z\".\r\n\r\n\r\nJSON\r\n====\r\nThe JSON representation of an `Any` value uses the regular\r\nrepresentation of the deserialized, embedded message, with an\r\nadditional field `@type` which contains the type URL. Example:\r\n\r\n    package google.profile;\r\n    message Person {\r\n      string first_name = 1;\r\n      string last_name = 2;\r\n    }\r\n\r\n    {\r\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\r\n      \"firstName\": \u003cstring\u003e,\r\n      \"lastName\": \u003cstring\u003e\r\n    }\r\n\r\nIf the embedded message type is well-known and has a custom JSON\r\nrepresentation, that representation will be embedded adding a field\r\n`value` which holds the custom JSON in addition to the `@type`\r\nfield. Example (for message [google.protobuf.Duration][]):\r\n\r\n    {\r\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\r\n      \"value\": \"1.212s\"\r\n    }"
     },
     "protobufNullValue": {
       "type": "string",
@@ -20385,7 +20661,7 @@
         "NULL_VALUE"
       ],
       "default": "NULL_VALUE",
-      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\r\n`Value` type union.\r\n\r\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
     "runtimeError": {
       "type": "object",

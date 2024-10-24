@@ -40,16 +40,36 @@
       </template>
       <div v-for="(rule, index) in formData.rules" class="rule-config" :key="index">
         <div style="max-width: 174px; min-width: 174px">
-          <bk-select
-            v-model="rule.key"
-            placeholder="key"
-            :class="{ 'is-error': showErrorKeyValidation[index] }"
-            allow-create
-            :filterable="false"
-            @change="ruleChange"
-            @blur="validateKey(index)">
-            <bk-option v-for="item in BuiltInTag" :id="item" :key="item" :name="item" />
-          </bk-select>
+          <bk-popover
+            :is-show="isShowPopover[index]"
+            ref="popoverRef"
+            theme="light"
+            trigger="manual"
+            ext-cls="group-selector-popover"
+            placement="bottom">
+            <bk-input
+              v-model="rule.key"
+              ref="keyInputRef"
+              :class="[{ 'is-error': showErrorKeyValidation[index] }, 'key-input']"
+              :placeholder="t('请输入或选择key')"
+              @click="isShowPopover[index] = true"
+              @enter="handleKeyInputEnter(index)">
+              <template #suffix>
+                <angle-down :class="['suffix-icon', { 'show-popover': isShowPopover[index] }]" />
+              </template>
+            </bk-input>
+            <template #content>
+              <div class="selector-list" v-click-outside="() => (isShowPopover[index] = false)">
+                <div
+                  v-for="item in BuiltInTag"
+                  :key="item"
+                  class="selector-item"
+                  @click="handleSelectBuiltinTag(index, item)">
+                  {{ item }}
+                </div>
+              </div>
+            </template>
+          </bk-popover>
           <div v-show="showErrorKeyValidation[index]" class="error-msg is--key">
             {{ $t("仅支持字母，数字，'-'，'_'，'.' 及 '/' 且需以字母数字开头和结尾") }}
           </div>
@@ -116,7 +136,7 @@
   import GROUP_RULE_OPS from '../../../../constants/group';
   import { getAppList } from '../../../../api/index';
   import { IAppItem } from '../../../../../types/app';
-  import { Info } from 'bkui-vue/lib/icon';
+  import { Info, AngleDown } from 'bkui-vue/lib/icon';
 
   const getDefaultRuleConfig = (): IGroupRuleItem => ({ key: '', op: 'eq', value: '' });
 
@@ -142,6 +162,9 @@
   // const rulesValid = ref(true);
   const showErrorKeyValidation = ref<boolean[]>([]);
   const showErrorValueValidation = ref<boolean[]>([]);
+  const popoverRef = ref();
+  const isShowPopover = ref<boolean[]>([]);
+  const keyInputRef = ref();
 
   // 内置标签
   const BuiltInTag = ['ip', 'podname'];
@@ -211,6 +234,16 @@
       return 'number';
     }
     return 'string';
+  };
+
+  const handleSelectBuiltinTag = (index: number, val: string) => {
+    formData.value.rules[index].key = val;
+    isShowPopover.value[index] = false;
+  };
+
+  const handleKeyInputEnter = (index: number) => {
+    keyInputRef.value[index].blur();
+    isShowPopover.value[index] = false;
   };
 
   // 增加规则
@@ -405,5 +438,37 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  .key-input {
+    .suffix-icon {
+      width: 20px;
+      font-size: 14px;
+      &.show-popover {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .selector-list {
+    width: 174px;
+    padding: 4px 0;
+    .selector-item {
+      height: 32px;
+      line-height: 32px;
+      padding: 0 12px;
+      cursor: pointer;
+      align-items: center;
+      &:hover {
+        background-color: #f5f7fa;
+        color: #63656e;
+      }
+    }
+  }
+</style>
+
+<style>
+  .bk-popover.bk-pop2-content.group-selector-popover {
+    padding: 0;
   }
 </style>

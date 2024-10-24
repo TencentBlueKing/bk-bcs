@@ -8,7 +8,7 @@
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
-        <i18n path="cluster.nodeList.article2">
+        <i18n v-if="clusterData.provider !== 'awsCloud'" path="cluster.nodeList.article2">
           <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
           <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
         </i18n>
@@ -84,7 +84,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              :disabled="isKubeConfigOrAgentImportCluster"
+              :disabled="disableAddNodeBtn"
               @click="handleAddNode">
               {{$t('cluster.nodeList.create.text')}}
             </bcs-button>
@@ -376,7 +376,9 @@
           v-if="isColumnRender('container_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end">
+                {{ `${$t('generic.status.loading')}...` }}
+              </LoadingIcon>
               <span v-else>
                 {{nodeMetric[row.nodeName].container_count || '--'}}
               </span>
@@ -394,7 +396,9 @@
           v-if="isColumnRender('pod_count')">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-end">
+                {{ `${$t('generic.status.loading')}...` }}
+              </LoadingIcon>
               <span v-else>
                 {{nodeMetric[row.nodeName].pod_count || '--'}}
               </span>
@@ -478,7 +482,9 @@
           min-width="120">
           <template #default="{ row }">
             <template v-if="['RUNNING', 'REMOVABLE'].includes(row.status)">
-              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-center" />
+              <LoadingIcon v-if="!nodeMetric[row.nodeName]" class="justify-center">
+                {{ `${$t('generic.status.loading')}...` }}
+              </LoadingIcon>
               <template v-else>
                 <RingCell
                   :percent="nodeMetric[row.nodeName][item.prop]"
@@ -729,7 +735,7 @@ import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import KeyValue, { IData } from '@/components/key-value.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
-import { ICluster } from '@/composables/use-app';
+import { ICluster, useAppData } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
 import useSideslider from '@/composables/use-sideslider';
@@ -794,6 +800,8 @@ export default defineComponent({
   setup(props) {
     const webAnnotations = computed(() => $store.state.cluster.clusterWebAnnotations);
     const curProject = computed(() => $store.state.curProject);
+
+    const { flagsMap } = useAppData();
 
     // 修改节点转移模块设置
     const { clusterData, getClusterDetail } = useClusterInfo();// clusterData和curCluster一样，就是多了云上的数据信息
@@ -1152,6 +1160,9 @@ export default defineComponent({
     // kubeConfig导入集群 或 控制面导入集群
     const isKubeConfigOrAgentImportCluster = computed(() => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.importCategory === 'kubeConfig' || curSelectedCluster.value.importCategory === 'machine'));
+    const disableAddNodeBtn = computed(() =>
+      // kubeConfig导入集群, 控制面导入集群 和未开启原生k8s集群时禁用掉添加节点按钮
+      isKubeConfigOrAgentImportCluster.value || (!flagsMap.value.k8s && clusterData.value.provider === 'bluekingCloud'));
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
@@ -2061,6 +2072,7 @@ export default defineComponent({
       deleteMode,
       deleting,
       isCloudSelfNode,
+      disableAddNodeBtn,
     };
   },
 });

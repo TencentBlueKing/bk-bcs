@@ -38,7 +38,12 @@
     </div>
     <div class="group-table-wrapper">
       <bk-loading style="min-height: 300px" :loading="listLoading">
-        <bk-table class="group-table" show-overflow-tooltip :border="['outer']" :data="tableData">
+        <bk-table
+          class="group-table"
+          :row-class="getRowCls"
+          show-overflow-tooltip
+          :border="['outer']"
+          :data="tableData">
           <template #prepend>
             <render-table-tip />
           </template>
@@ -142,7 +147,7 @@
           @limit-change="handlePageLimitChange" />
       </bk-loading>
     </div>
-    <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList"></create-group>
+    <create-group v-model:show="isCreateGroupShow" @reload="loadGroupList($event)"></create-group>
     <edit-group v-model:show="isEditGroupShow" :group="editingGroup" @reload="loadGroupList"></edit-group>
     <services-to-published
       v-model:show="isPublishedSliderShow"
@@ -209,6 +214,7 @@
   });
   const isPublishedSliderShow = ref(false);
   const isSearchEmpty = ref(false);
+  const topId = ref<number | undefined>(0);
 
   const headInfo = computed(() =>
     t(
@@ -249,10 +255,11 @@
   });
 
   // 加载全量分组数据
-  const loadGroupList = async () => {
+  const loadGroupList = async (id?: number) => {
     try {
       listLoading.value = true;
-      const res = await getSpaceGroupList(spaceId.value);
+      topId.value = id;
+      const res = await getSpaceGroupList(spaceId.value, id);
       groupList.value = res.details;
       searchGroupList.value = res.details;
       categorizedGroupList.value = categorizingData(res.details);
@@ -457,6 +464,12 @@
   // @ts-ignore
   // eslint-disable-next-line
   const goGroupDoc = () => window.open(BSCP_CONFIG.group_doc);
+
+  const getRowCls = (group: IGroupItem) => {
+    if (topId.value === group.id) {
+      return 'new-row-marked';
+    }
+  };
 </script>
 <style lang="scss" scoped>
   .hyperlink {
@@ -506,6 +519,9 @@
     :deep(.bk-table-body) {
       max-height: calc(100vh - 280px);
       overflow: auto;
+      tr.new-row-marked td {
+        background: #f2fff4 !important;
+      }
     }
   }
   .categorized-view-name {
@@ -571,25 +587,4 @@
       margin-left: auto;
     }
   }
-  // .selections-style {
-  //   display: flex;
-  //   align-items: center;
-  //   justify-content: center;
-  //   height: 30px;
-  //   font-size: 12px;
-  //   color: #63656e;
-  //   background: #ebecf0;
-  //   .checked-number {
-  //     padding: 0 5px;
-  //     font-weight: 700;
-  //   }
-  //   .checked-em {
-  //     margin-left: 5px;
-  //     color: #3a84ff;
-  //     cursor: pointer;
-  //     &:hover {
-  //       color: #699df4;
-  //     }
-  //   }
-  // }
 </style>

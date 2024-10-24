@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
 	projectAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/project"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
@@ -231,6 +232,7 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 	}
 
 	userName := ctxkey.GetUsernameFromCtx(ctx)
+	renderMode := constants.RenderMode(req.GetRenderMode())
 	if len(templateVersions) > 0 {
 		// 版本存在且不允许覆盖的情况下直接返回
 		if !req.GetForce() {
@@ -243,6 +245,7 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 			"version":     req.GetVersion(),
 			"content":     req.GetContent(),
 			"creator":     userName,
+			"renderMode":  renderMode.GetRenderMode(),
 		}
 		if err = t.model.UpdateTemplateVersion(ctx, templateVersions[0].ID.Hex(), updateTemplateVersion); err != nil {
 			return "", err
@@ -260,6 +263,7 @@ func (t *TemplateVersionAction) Create(ctx context.Context, req *clusterRes.Crea
 		EditFormat:    req.GetEditFormat(),
 		Content:       req.GetContent(),
 		Creator:       userName,
+		RenderMode:    renderMode.GetRenderMode(),
 	}
 	id, err := t.model.CreateTemplateVersion(ctx, templateVersion)
 	if err != nil {

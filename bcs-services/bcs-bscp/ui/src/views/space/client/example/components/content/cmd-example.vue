@@ -4,20 +4,32 @@
       ref="fileOptionRef"
       :directory-show="basicInfo!.serviceType.value === 'file'"
       :associate-config-show="basicInfo!.serviceType.value === 'file'"
-      @update-option-data="getOptionData" />
+      :dual-system-support="true"
+      :config-show="true"
+      :config-label="basicInfo?.serviceType.value === 'file' ? '配置文件名' : '配置项名称'"
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="getOptionData"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
       <div class="guide-wrap">
-        <div class="guide-content" v-for="(item, index) in cmdContent" :key="item.title">
+        <div class="guide-content" v-for="(item, index) in cmdContent" :key="item.value + index">
           <p class="guide-text">{{ `${index + 1}. ${item.title}` }}</p>
-          <p class="guide-text guide-text--copy" v-if="item.value" @click="copyText(item.value)">
+          <p class="guide-text guide-text--copy" v-if="item.value" @click="copyText(item.value, index)">
             {{ item.value }}
             <copy-shape class="icon-copy" />
           </p>
           <template v-else>
-            <bk-button theme="primary" class="copy-btn" @click="copyExample">{{ $t('复制命令') }}</bk-button>
+            <bk-button theme="primary" class="copy-btn" @click="copyExample">
+              {{ $t(optionData.systemType === 'Windows' ? '复制配置' : '复制命令') }}
+            </bk-button>
             <code-preview
-              :class="['preview-component', { 'preview-component--kvcmd': basicInfo!.serviceType.value === 'kv' }]"
+              :class="[
+                'preview-component',
+                { 'preview-component--kvcmd': basicInfo!.serviceType.value === 'kv' },
+                { 'rules-height': optionData.rules.length },
+                { 'windows-path-height': optionData.systemType === 'Windows' },
+              ]"
               :code-val="replaceVal"
               :variables="variables"
               :language="kvName"
@@ -41,6 +53,7 @@
   import { ref, Ref, computed, inject, onMounted, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
+  import { newICredentialItem } from '../../../../../../../types/client';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
@@ -48,12 +61,36 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
 
-  const props = defineProps<{ contentScrollTop: Function; kvName: string }>();
+  const props = defineProps<{
+    contentScrollTop: Function;
+    kvName: string;
+    selectedKeyData: newICredentialItem['spec'] | null;
+  }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const { t } = useI18n();
   const route = useRoute();
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
-  const fileText = [
+
+  const fileOptionRef = ref();
+  const bkBizId = ref(String(route.params.spaceId));
+  const codeVal = ref(''); // 存储yaml字符原始值
+  const replaceVal = ref('');
+  const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
+  const variables = ref<IVariableEditParams[]>();
+  // fileOption组件传递过来的数据汇总
+  const optionData = ref({
+    clientKey: '',
+    privacyCredential: '',
+    labelArr: [],
+    tempDir: '',
+    rules: [],
+    systemType: 'Unix',
+    configName: '', // 配置项
+  });
+
+  const fileText = computed(() => [
     {
       title: t('下载二进制命令行'),
       value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
@@ -81,19 +118,71 @@
     },
     {
       title: t(
-        '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/etc/nginx.conf',
+        '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 {path} 文件下载到 /tmp 目录时，文件保存在 /tmp{path}',
+        { path: optionData.value.configName },
       ),
-      value: `./bscp get file /etc/nginx.conf -a ${basicInfo!.serviceName.value} -c ./bscp.yaml -d /tmp`,
+      value: `./bscp get file ${optionData.value.configName} -a ${basicInfo!.serviceName.value} -c ./bscp.yaml -d /tmp`,
     },
     {
       title: t(
-        '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 /etc/nginx.conf 文件下载到 /tmp 目录时，文件保存在 /tmp/nginx.conf',
+        '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 {path} 文件下载到 /tmp 目录时，文件保存在 /tmp/{name}',
+        {
+          path: optionData.value.configName,
+          name: optionData.value.configName.substring(optionData.value.configName.lastIndexOf('/') + 1),
+        },
       ),
-      value: `./bscp get file /etc/nginx.conf -a ${basicInfo!.serviceName.value} -c ./bscp.yaml -d /tmp --ignore-dir`,
+      value: `./bscp get file ${optionData.value.configName} -a ${basicInfo!.serviceName.value} -c ./bscp.yaml -d /tmp --ignore-dir`,
     },
-  ];
+  ]);
 
-  const kvText = [
+  const windowsFileText = computed(() => [
+    {
+      title: t('下载二进制命令行'),
+      value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
+      tips: {
+        title: t('如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本'),
+        value: t('下载地址：'),
+        url: 'https://github.com/TencentBlueKing/bscp-go/releases/',
+      },
+    },
+    {
+      title: t('为命令行工具创建所需的配置文件bscp.yaml'),
+      value: '',
+    },
+    {
+      title: t('获取业务下的服务列表'),
+      value: '.\\bscp.exe get app -c .\\bscp.yaml',
+    },
+    {
+      title: t('拉取服务下所有配置文件'),
+      value: `.\\bscp.exe pull -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml`,
+    },
+    {
+      title: t('获取服务下所有配置文件列表'),
+      value: `.\\bscp.exe get file -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml`,
+    },
+    {
+      title: t(
+        '下载配置文件时，保留目录层级，并将其保存到指定目录下，例如：将 {path} 文件下载到当前目录时，文件保存在 .{windowsPath}',
+        { path: optionData.value.configName, windowsPath: optionData.value.configName.replaceAll('/', '\\') },
+      ),
+      value: `.\\bscp.exe get file ${optionData.value.configName} -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml -d .\\`,
+    },
+    {
+      title: t(
+        '下载配置文件时，不保留目录层级，并将其保存到指定目录下，例如：将 {path} 文件下载到当前目录时，文件保存在 .\\{windowsName}',
+        {
+          path: optionData.value.configName,
+          windowsName: optionData.value.configName
+            .substring(optionData.value.configName.lastIndexOf('/') + 1)
+            .replaceAll('/', '\\'),
+        },
+      ),
+      value: `.\\bscp.exe get file ${optionData.value.configName} -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml -d .\\ --ignore-dir`,
+    },
+  ]);
+
+  const kvText = computed(() => [
     {
       title: t('下载二进制命令行'),
       value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
@@ -116,38 +205,70 @@
       value: `./bscp get kv -a ${basicInfo!.serviceName.value} -c ./bscp.yaml`,
     },
     {
-      title: t('获取指定服务下指定配置项列表，多个配置项'),
-      value: `./bscp get kv -a ${basicInfo!.serviceName.value} key1 key2 -c ./bscp.yaml`,
+      title: t('获取指定服务下指定配置项列表，支持多个配置项，配置项之间用空格分隔'),
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} ${optionData.value.configName} -c ./bscp.yaml`,
     },
     {
       title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
-      value: `./bscp get kv -a ${basicInfo!.serviceName.value} key1  -c ./bscp.yaml -o value`,
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} ${optionData.value.configName} -c ./bscp.yaml -o value`,
     },
     {
       title: t(
         '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
       ),
-      value: `./bscp get kv -a ${basicInfo!.serviceName.value} key1 key2  -c ./bscp.yaml -o json`,
+      value: `./bscp get kv -a ${basicInfo!.serviceName.value} ${optionData.value.configName} -c ./bscp.yaml -o json`,
     },
-  ];
+  ]);
 
-  const fileOptionRef = ref();
-  const bkBizId = ref(String(route.params.spaceId));
-  const codeVal = ref(''); // 存储yaml字符原始值
-  const replaceVal = ref('');
-  const copyReplaceVal = ref(''); // 渲染的值，用于复制未脱敏密钥的yaml数据
-  const variables = ref<IVariableEditParams[]>();
-  // fileOption组件传递过来的数据汇总
-  const optionData = ref({
-    clientKey: '',
-    privacyCredential: '',
-    labelArr: [],
-    tempDir: '',
-    rules: [],
-  });
+  const windowsKvText = computed(() => [
+    {
+      title: t('下载二进制命令行'),
+      value: 'go install github.com/TencentBlueKing/bscp-go/cmd/bscp@latest',
+      tips: {
+        title: t('如果没有安装 GO，可以通过浏览器手动下载，建议下载最新版本'),
+        value: t('下载地址：'),
+        url: 'https://github.com/TencentBlueKing/bscp-go/releases/',
+      },
+    },
+    {
+      title: t('为命令行工具创建所需的配置文件bscp.yaml'),
+      value: '',
+    },
+    {
+      title: t('获取业务下的服务列表'),
+      value: '.\\bscp.exe get app -c .\\bscp.yaml',
+    },
+    {
+      title: t('获取指定服务下所有配置项列表'),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} -c .\\bscp.yaml`,
+    },
+    {
+      title: t('获取指定服务下指定配置项列表，支持多个配置项，配置项之间用空格分隔'),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} ${optionData.value.configName} -c .\\bscp.yaml`,
+    },
+    {
+      title: t('获取指定服务下指定配置项值，只支持单个配置项值获取'),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} ${optionData.value.configName} -c .\\bscp.yaml -o value`,
+    },
+    {
+      title: t(
+        '获取指定服务下指定配置项元数据，支持多个配置项元数据获取，没有指定配置项，获取服务下所有配置项的元数据',
+      ),
+      value: `.\\bscp.exe get kv -a ${basicInfo!.serviceName.value} ${optionData.value.configName} -c .\\bscp.yaml -o json`,
+    },
+  ]);
 
   const cmdContent = computed(() => {
-    return basicInfo!.serviceType.value === 'file' ? fileText : kvText;
+    if (basicInfo!.serviceType.value === 'file') {
+      if (optionData.value.systemType === 'Windows') {
+        return windowsFileText.value; // 文件型-windows路径提示文案
+      }
+      return fileText.value; // 文件型-unix路径提示文案
+    }
+    if (optionData.value.systemType === 'Windows') {
+      return windowsKvText.value; // 键值型-windows路径提示文案
+    }
+    return kvText.value;
   });
 
   onMounted(async () => {
@@ -179,15 +300,18 @@
     // 文件配置筛选规则动态增/删
     if (optionData.value.rules?.length) {
       const rulesPart = `
-      # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
-config_matches
-${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart.trim());
+  # 当客户端无需拉取配置服务中的全量配置文件时，指定相应的通配符，可仅拉取客户端所需的文件，支持多个通配符
+  config_matches: {{ .Bk_Bscp_Variable_Rules_Value }}`;
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', rulesPart);
     } else {
-      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', '');
+      updateString = updateString.replaceAll('{{ .Bk_Bscp_Variable_Rules }}', 'delete');
+    }
+    // 临时目录为windows路径时去除首尾两行
+    if (optionData.value.systemType === 'Windows') {
+      updateString = updateString.replaceAll('cat << EOF > ./bscp.yaml', 'delete').replaceAll('EOF', 'delete');
     }
     // 去除 动态插入的值为空的情况下产生的空白行
-    replaceVal.value = updateString.replaceAll(/\r\n\s+\r\n/g, '\n');
+    replaceVal.value = updateString.replaceAll(/(delete\r?\n|\r?\ndelete)/g, '');
   };
   const updateVariables = () => {
     variables.value = [
@@ -209,6 +333,12 @@ ${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
         default_val: `'${optionData.value.tempDir}'`,
         memo: '',
       },
+      {
+        name: 'Bk_Bscp_Variable_Rules_Value',
+        type: '',
+        default_val: `[${optionData.value.rules.map((rule) => `"${rule}"`).join(',')}]`,
+        memo: '',
+      },
     ];
   };
   // 复制示例
@@ -228,7 +358,22 @@ ${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
       console.log(error);
     }
   };
-  const copyText = (copyVal: string) => {
+  const copyText = (copyVal: string, configIndex: number) => {
+    // 未选择配置项时不能复制内容 file：5、6项，kv：4、5、6项涉及配置项复制
+    const serviceType = basicInfo!.serviceType.value || 'file';
+    const validConfigIndices: Record<string, number[]> = {
+      file: [5, 6],
+      kv: [4, 5, 6],
+    };
+    if (validConfigIndices[serviceType].includes(configIndex) && !optionData.value.configName) {
+      BkMessage({
+        theme: 'error',
+        message: t(
+          `请先选择${serviceType === 'file' ? '配置文件名' : '配置项名称'}，替换下方示例代码后，再尝试复制示例`,
+        ),
+      });
+      return;
+    }
     copyToClipBoard(copyVal);
     BkMessage({
       theme: 'success',
@@ -315,8 +460,21 @@ ${optionData.value.rules.map((rule) => `- "${rule}"`).join('\n')}`;
     height: 336px;
     padding: 16px 10px;
     background-color: #f5f7fa;
+    &.rules-height {
+      height: 394px;
+    }
+    &.windows-path-height {
+      height: 298px;
+    }
+    &.rules-height.windows-path-height {
+      height: 356px;
+    }
     &--kvcmd {
       height: 279px;
+      // 键值型cmd没有规则筛选
+      &.windows-path-height {
+        height: 242px;
+      }
     }
   }
 </style>

@@ -115,8 +115,13 @@ func FeedUnaryAuthInterceptor(
 
 	ctx = context.WithValue(ctx, constant.BizIDKey, bizID) //nolint:staticcheck
 
-	svr := info.Server.(*Service)
-	ctx, err := svr.authorize(ctx, bizID)
+	svc, ok := info.Server.(*Service)
+	// 处理非业务 Service 时不鉴权，如 GRPC Reflection
+	if !ok {
+		return handler(ctx, req)
+	}
+
+	ctx, err := svc.authorize(ctx, bizID)
 	if err != nil {
 		return nil, err
 	}
@@ -127,6 +132,12 @@ func FeedUnaryAuthInterceptor(
 // FeedUnaryUpdateLastConsumedTimeInterceptor feed 更新拉取时间中间件
 func FeedUnaryUpdateLastConsumedTimeInterceptor(ctx context.Context, req interface{},
 	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+
+	svc, ok := info.Server.(*Service)
+	// 跳过非业务 Service，如 GRPC Reflection
+	if !ok {
+		return handler(ctx, req)
+	}
 
 	type lastConsumedTime struct {
 		BizID    uint32
@@ -175,17 +186,20 @@ func FeedUnaryUpdateLastConsumedTimeInterceptor(ctx context.Context, req interfa
 		request := req.(*pbfs.GetDownloadURLReq)
 		param.BizID = request.BizId
 		param.AppIDs = append(param.AppIDs, request.GetFileMeta().GetConfigItemAttachment().AppId)
+	case pbfs.Upstream_GetSingleKvValue_FullMethodName, pbfs.Upstream_GetSingleKvMeta_FullMethodName:
+		request := req.(*pbfs.GetSingleKvValueReq)
+		param.BizID = request.BizId
+		param.AppNames = append(param.AppNames, request.GetAppMeta().App)
 	default:
 		return handler(ctx, req)
 	}
 
 	if param.BizID != 0 {
 		ctx = context.WithValue(ctx, constant.BizIDKey, param.BizID) //nolint:staticcheck
-		svr := info.Server.(*Service)
 
 		if len(param.AppIDs) == 0 {
 			for _, appName := range param.AppNames {
-				appID, err := svr.bll.AppCache().GetAppID(kit.FromGrpcContext(ctx), param.BizID, appName)
+				appID, err := svc.bll.AppCache().GetAppID(kit.FromGrpcContext(ctx), param.BizID, appName)
 				if err != nil {
 					logs.Errorf("get app id failed, err: %v", err)
 					return handler(ctx, req)
@@ -194,7 +208,7 @@ func FeedUnaryUpdateLastConsumedTimeInterceptor(ctx context.Context, req interfa
 			}
 		}
 
-		if err := svr.bll.AppCache().BatchUpdateLastConsumedTime(kit.FromGrpcContext(ctx),
+		if err := svc.bll.AppCache().BatchUpdateLastConsumedTime(kit.FromGrpcContext(ctx),
 			param.BizID, param.AppIDs); err != nil {
 			logs.Errorf("batch update app last consumed failed, err: %v", err)
 			return handler(ctx, req)
@@ -225,7 +239,12 @@ func FeedStreamAuthInterceptor(
 	}
 
 	var bizID uint32
-	ctx, err := srv.(*Service).authorize(ss.Context(), bizID)
+	svc, ok := srv.(*Service)
+	// 处理非业务 Service 时不鉴权，如 GRPC Reflection
+	if !ok {
+		return handler(srv, ss)
+	}
+	ctx, err := svc.authorize(ss.Context(), bizID)
 	if err != nil {
 		return err
 	}

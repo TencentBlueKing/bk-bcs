@@ -51,6 +51,7 @@ import $router from '@/router/index';
 import $store from '@/store/index';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 
 export default defineComponent({
   components: {
@@ -130,6 +131,7 @@ export default defineComponent({
       });
       return data;
     };
+    const { focusOnErrorField } = useFocusOnErrorField();
 
     // 保存
     const user = computed(() => $store.state.user);
@@ -137,6 +139,9 @@ export default defineComponent({
     const handleEditNodePool = async () => {
       const nodePoolInfoValidate = await nodePoolInfoRef.value?.validate();
       const nodePoolConfigValidate = await nodePoolConfigRef.value?.validate();
+      if (!nodePoolConfigValidate) {
+        focusOnErrorField()
+      }
       if (!nodePoolInfoValidate || !nodePoolConfigValidate) return;
 
       saveLoading.value = true;

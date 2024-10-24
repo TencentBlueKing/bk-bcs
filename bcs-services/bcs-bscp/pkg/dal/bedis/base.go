@@ -562,3 +562,58 @@ func (bs *bedis) LTrim(ctx context.Context, key string, start, stop int64) (stri
 
 	return value, nil
 }
+
+// LRem removes the first count occurrences of elements equal to element from the list stored at key.
+// count argument influences the operation in the following ways:
+// count > 0: Remove elements equal to element moving from head to tail.
+// count < 0: Remove elements equal to element moving from tail to head.
+// count = 0: Remove all elements equal to element.
+func (bs *bedis) LRem(ctx context.Context, key string, count int64, value interface{}) error {
+	start := time.Now()
+	_, err := bs.client.LRem(ctx, key, count, value).Result()
+	if err != nil {
+		bs.mc.errCounter.With(prm.Labels{"cmd": "lrem"}).Inc()
+		return err
+	}
+	bs.logSlowCmd(ctx, key, time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "lrem"}).Observe(float64(time.Since(start).Milliseconds()))
+	return nil
+}
+
+// RPopLPush atomically returns and removes the last element (tail) of the list stored at source,
+// and pushes the element at the first element (head) of the list stored at destination.
+func (bs *bedis) RPopLPush(ctx context.Context, source, destination string) (string, error) {
+	start := time.Now()
+	value, err := bs.client.RPopLPush(ctx, source, destination).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return "", nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "rpoplpush"}).Inc()
+		return "", err
+	}
+	bs.logSlowCmd(ctx, "", time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "rpoplpush"}).Observe(float64(time.Since(start).Milliseconds()))
+
+	return value, nil
+}
+
+// BRPopLPush is the blocking variant of RPOPLPUSH.
+// When source contains elements, this command behaves exactly like RPOPLPUSH.
+// When source is empty, Redis will block the connection until another client pushes to it or until timeout is reached.
+// A timeout of zero can be used to block indefinitely.
+func (bs *bedis) BRPopLPush(ctx context.Context, source, destination string, ttlSeconds int) (string, error) {
+	start := time.Now()
+	value, err := bs.client.BRPopLPush(ctx, source, destination, time.Duration(ttlSeconds)*time.Second).Result()
+	if err != nil {
+		if IsNilError(err) {
+			return "", nil
+		}
+		bs.mc.errCounter.With(prm.Labels{"cmd": "brpoplpush"}).Inc()
+		return "", err
+	}
+	bs.logSlowCmd(ctx, "", time.Since(start))
+	bs.mc.cmdLagMS.With(prm.Labels{"cmd": "brpoplpush"}).Observe(float64(time.Since(start).Milliseconds()))
+
+	return value, nil
+}

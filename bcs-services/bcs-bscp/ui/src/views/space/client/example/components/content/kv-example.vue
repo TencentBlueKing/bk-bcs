@@ -3,8 +3,11 @@
     <form-option
       ref="fileOptionRef"
       :directory-show="false"
-      :http-config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
-      @update-option-data="(data) => getOptionData(data)" />
+      :config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
+      :config-label="basicInfo?.serviceType.value === 'file' ? '配置文件名' : '配置项名称'"
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="(data) => getOptionData(data)"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="preview-container">
       <div class="kv-handle-content">
         <span class="preview-label">{{ $t('示例预览') }}</span>
@@ -41,6 +44,7 @@
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../../../../../types/variable';
+  import { newICredentialItem } from '../../../../../../../types/client';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import codePreview from '../code-preview.vue';
@@ -49,7 +53,10 @@
 
   const props = defineProps<{
     kvName: string;
+    selectedKeyData: newICredentialItem['spec'] | null;
   }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const { t } = useI18n();
@@ -70,7 +77,7 @@
     privacyCredential: '',
     labelArr: [],
     labelArrType: '', // 展示格式
-    httpConfigName: '', // http配置项名称
+    configName: '', // 配置项
   });
 
   // 代码预览上方提示框
@@ -132,15 +139,17 @@
           codePreviewHeight: 1990,
         };
       case 'http':
+        // shell
         if (!activeTab.value) {
           return {
             topTip: '',
-            codePreviewHeight: 604,
+            codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 470 : 604,
           };
         }
+        // python
         return {
           topTip: '',
-          codePreviewHeight: 754,
+          codePreviewHeight: basicInfo?.serviceType.value === 'file' ? 982 : 850,
         };
       default:
         return {
@@ -189,7 +198,12 @@
       case 'http':
         labelArrType = data.labelArr.length ? `{${data.labelArr.join(', ')}}` : '{}';
         if (!activeTab.value) {
-          labelArrType = `'${labelArrType}'`;
+          // 文件型的shell需要添加转义符
+          labelArrType =
+            basicInfo?.serviceType.value === 'file'
+              ? `'\\${labelArrType.slice(0, labelArrType.length - 1)}\\${labelArrType.slice(labelArrType.length - 1, labelArrType.length)}'`
+                .replaceAll(' ', '',)
+              : `'${labelArrType}'`;
         }
         break;
       default:
@@ -232,16 +246,16 @@
         default_val: `"${optionData.value.privacyCredential}"`,
         memo: '',
       },
-      {
-        name: 'Bk_Bscp_Variable_Python_Key',
-        type: '',
-        default_val: '{{ YOUR_KEY }}',
-        memo: '',
-      },
+      // {
+      //   name: 'Bk_Bscp_Variable_Python_Key',
+      //   type: '',
+      //   default_val: '{{ YOUR_KEY }}',
+      //   memo: '',
+      // },
       {
         name: 'Bk_Bscp_Variable_KeyName',
         type: '',
-        default_val: `"${optionData.value.httpConfigName}"`,
+        default_val: `"${optionData.value.configName}"`,
         memo: '',
       },
     ];
@@ -315,6 +329,12 @@
           ? import('/src/assets/example-data/kv-c++-get.yaml?raw')
           : import('/src/assets/example-data/kv-c++-watch.yaml?raw');
       case 'http':
+        // http独有的file型
+        if (basicInfo?.serviceType.value === 'file') {
+          return !methods
+            ? import('/src/assets/example-data/file-http-shell.yaml?raw')
+            : import('/src/assets/example-data/file-http-python.yaml?raw');
+        }
         return !methods
           ? import('/src/assets/example-data/kv-http-shell.yaml?raw')
           : import('/src/assets/example-data/kv-http-python.yaml?raw');

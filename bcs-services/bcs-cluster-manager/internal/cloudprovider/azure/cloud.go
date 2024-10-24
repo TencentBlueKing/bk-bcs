@@ -42,6 +42,23 @@ type CloudInfoManager struct {
 // InitCloudClusterDefaultInfo init cluster defaultConfig
 func (c *CloudInfoManager) InitCloudClusterDefaultInfo(cls *proto.Cluster,
 	opt *cloudprovider.InitClusterConfigOption) error {
+	if c == nil || cls == nil {
+		return fmt.Errorf("%s InitCloudClusterDefaultInfo request is empty", cloudName)
+	}
+
+	if opt == nil || opt.Cloud == nil {
+		return fmt.Errorf("%s InitCloudClusterDefaultInfo option is empty", cloudName)
+	}
+
+	if cls.GetClusterAdvanceSettings() == nil {
+		return fmt.Errorf("initCloudCluster advanced setting empty")
+	}
+
+	// if !utils.StringInSlice(cls.ClusterAdvanceSettings.NetworkType,
+	// 	[]string{common.AzureCniOverlay, common.AzureCniNodeSubnet}) {
+	// 	return fmt.Errorf("initCloudCluster not supported networkPlugin[%s]", cls.ClusterAdvanceSettings.NetworkType)
+	// }
+
 	return nil
 }
 

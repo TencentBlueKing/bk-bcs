@@ -92,6 +92,7 @@ import ProjectCreate from './project-create.vue';
 import useProjects from './use-project';
 
 import { bus } from '@/common/bus';
+import { IProject } from '@/composables/use-app';
 import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
 
@@ -101,16 +102,16 @@ export default defineComponent({
     ProjectCreate,
   },
   setup: () => {
-    const { getAllProjectList } = useProjects();
+    const { getProjectList } = useProjects();
     const pagination = ref({
       current: 1,
       count: 0,
       limit: 20,
     });
-    const projectList = ref<any[]>([]);
+    const projectList = ref<IProject[]>([]);
     const keyword = useDebouncedRef<string>('', 300);
     const showCreateDialog = ref(false);
-    const curProjectData = ref<any>(null);
+    const curProjectData = ref<IProject>();
     const handleGotoProject = (row) => {
       $router.push({
         name: 'clusterMain',
@@ -130,7 +131,7 @@ export default defineComponent({
       showCreateDialog.value = true;
     };
     const handleCreateProject = () => {
-      curProjectData.value = null;
+      curProjectData.value = undefined;
       showCreateDialog.value = true;
     };
     const handlePageChange = (page) => {
@@ -146,14 +147,14 @@ export default defineComponent({
     const webAnnotations = ref({ perms: {} });
     const handleGetProjectList = async () => {
       isLoading.value = true;
-      const { data = [], web_annotations: webPerms, total } = await getAllProjectList({
-        searchName: keyword.value,
+      const { data, web_annotations: webPerms } = await getProjectList({
+        searchKey: keyword.value,
         offset: pagination.value.current - 1,
         limit: pagination.value.limit,
       });
-      projectList.value = data;
+      projectList.value = data.results;
       webAnnotations.value = webPerms;
-      pagination.value.count = total;
+      pagination.value.count = data.total;
       isLoading.value = false;
     };
 

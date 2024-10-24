@@ -388,6 +388,7 @@ import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import FormGroup from '@/components/form-group.vue';
 import usePage from '@/composables/use-page';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -867,40 +868,33 @@ export default defineComponent({
     const validate = async () => {
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
       if (!basicFormValidate && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = 0;
+        // nodeConfigRef.value.scrollTop = 0;
         return false;
       }
       // 校验机型
       if (!nodePoolConfig.value.launchTemplate.instanceType) {
-        nodeConfigRef.value.scrollTop = 20;
+        // nodeConfigRef.value.scrollTop = 20;
         return false;
       }
       const result = await formRef.value?.validate().catch(() => false);
-      if (!result && nodeConfigRef.value) {
-        nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
-      }
+      // if (!result && nodeConfigRef.value) {
+      //   nodeConfigRef.value.scrollTop = nodeConfigRef.value.scrollHeight;
+      // }
       // eslint-disable-next-line max-len
       const validateDataDiskSize = nodePoolConfig.value.nodeTemplate.dataDisks.every(item => item.diskSize % 10 === 0);
       if (!basicFormValidate || !result || !validateDataDiskSize) return false;
 
       return true;
     };
+    const { focusOnErrorField } = useFocusOnErrorField();
     const handleNext = async () => {
       isShowTip.value = false;
       // 校验错误滚动到第一个错误的位置
       const result = await validate();
       if (!result) {
-        // 自动滚动到第一个错误的位置
-        const errDom = document.getElementsByClassName('form-error-tip');
-        const bcsErrDom = document.getElementsByClassName('error-tips');
-        const innerErrDom = document.getElementsByClassName('is-error');
-        const firstErrDom = innerErrDom[0] || errDom[0] || bcsErrDom[0];
-        firstErrDom?.scrollIntoView({
-          block: 'center',
-          behavior: 'smooth',
-        });
+        focusOnErrorField();
         return;
-      }
+      };
       ctx.emit('next', getNodePoolData());
     };
 

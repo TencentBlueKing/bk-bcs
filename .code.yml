@@ -37,6 +37,7 @@ source:
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createNodeGroup.go
       - /bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks/createClusterTask.go
       - /bcs-services/bcs-cluster-manager/internal/remote/resource/tresource/resource.go
+      - /bcs-scenarios/bcs-gitops-pre-check/pkg/common/common.go
 
       # Security & Sensitive: it's safe to ignore
       - /bcs-common/go.mod

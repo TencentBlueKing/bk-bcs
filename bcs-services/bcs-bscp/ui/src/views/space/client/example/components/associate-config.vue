@@ -21,6 +21,7 @@
         </bk-button>
       </div>
       <associate-side-bar
+        ref="sideBarRef"
         :show="sideBarShow"
         :id="-1"
         :perm-check-loading="permCheckLoading"
@@ -33,45 +34,24 @@
   </div>
 </template>
 <script lang="ts" setup>
-  import { ref, onMounted, nextTick } from 'vue';
+  import { ref, nextTick } from 'vue';
   import { useRoute } from 'vue-router';
   import { Info, CogShape } from 'bkui-vue/lib/icon';
   import associateSideBar from '../../../credentials/associate-config-items/index.vue';
-  import { permissionCheck } from '../../../../../api/index';
   import { ICredentialRule, IRuleUpdateParams } from '../../../../../../types/credential';
 
   const emits = defineEmits(['updateRules']);
 
   const route = useRoute();
 
+  const sideBarRef = ref();
   const spaceId = ref(Number(route.params.spaceId));
   const configSwitch = ref(false);
   const sideBarShow = ref(false);
   const permCheckLoading = ref(false);
-  const hasManagePerm = ref(false);
+  const hasManagePerm = ref(true); // 能访问到配置示例，表示用户已有服务查看权限
   const ruleList = ref<{ app: string; scope: string; id: number }[]>([]);
   const rules = ref<ICredentialRule[]>([]);
-
-  onMounted(() => {
-    getPermData();
-  });
-
-  const getPermData = async () => {
-    permCheckLoading.value = true;
-    const res = await permissionCheck({
-      resources: [
-        {
-          biz_id: spaceId.value,
-          basic: {
-            type: 'credential',
-            action: 'manage',
-          },
-        },
-      ],
-    });
-    hasManagePerm.value = res.is_allowed;
-    permCheckLoading.value = false;
-  };
 
   // 获取筛选的规则
   const updateRule = (data: IRuleUpdateParams) => {
@@ -123,22 +103,22 @@
       };
     });
     sideBarShow.value = true;
+    sideBarRef.value.handleOpenEdit(); // 直接打开编辑规则页面
   };
 
   const handleClose = () => {
     sideBarShow.value = false;
   };
 
-  const handleSwitcher = (val: boolean) => {
+  const handleSwitcher = async (val: boolean) => {
+    rules.value = [];
+    ruleList.value = [];
+    sendRules();
     configSwitch.value = val;
-    if (!val) {
-      ruleList.value = [];
-      sendRules();
-    } else {
+    if (val) {
       // 打开文件筛选开关自动打开规则设置抽屉
-      nextTick(() => {
-        sideBarShow.value = true;
-      });
+      await nextTick();
+      sideBarShow.value = true;
     }
   };
 

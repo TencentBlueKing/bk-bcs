@@ -14,6 +14,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net"
@@ -34,6 +35,7 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/cc"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/criteria/uuid"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/dao"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/repository"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/dal/vault"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/metrics"
@@ -42,6 +44,8 @@ import (
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/ctl"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/runtime/shutdown"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/serviced"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/space"
+	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/thirdparty/esb/client"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
 )
 
@@ -80,12 +84,15 @@ func Run(opt *options.Option) error {
 }
 
 type dataService struct {
-	serve   *grpc.Server
-	gwServe *http.Server
-	service *service.Service
-	sd      serviced.Service
-	daoSet  dao.Set
-	vault   vault.Set
+	serve    *grpc.Server
+	gwServe  *http.Server
+	service  *service.Service
+	sd       serviced.Service
+	daoSet   dao.Set
+	vault    vault.Set
+	esb      client.Client
+	spaceMgr *space.Manager
+	repo     repository.Provider
 }
 
 // prepare do prepare jobs before run data service.
@@ -128,7 +135,7 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	}
 
 	// initial DAO set
-	set, err := dao.NewDaoSet(cc.DataService().Sharding, cc.DataService().Credential)
+	set, err := dao.NewDaoSet(cc.DataService().Sharding, cc.DataService().Credential, cc.DataService().Gorm)
 	if err != nil {
 		return fmt.Errorf("initial dao set failed, err: %v", err)
 	}
@@ -139,28 +146,61 @@ func (ds *dataService) prepare(opt *options.Option) error {
 	state := crontab.NewSyncClientOnlineState(ds.daoSet, ds.sd)
 	state.Run()
 
-	// initial Vault set
+	// initialize vault
+	if ds.vault, err = initVault(); err != nil {
+		return err
+	}
+
+	// initialize esb client
+	settings := cc.DataService().Esb
+	esbCli, err := client.NewClient(&settings, metrics.Register())
+	if err != nil {
+		return fmt.Errorf("new esb client failed, err: %v", err)
+	}
+	ds.esb = esbCli
+
+	// initialize space manager
+	spaceMgr, err := space.NewSpaceMgr(context.Background(), esbCli)
+	if err != nil {
+		return fmt.Errorf("init space manager failed, err: %v", err)
+	}
+	ds.spaceMgr = spaceMgr
+
+	// initialize repo provider
+	repo, err := repository.NewProvider(cc.DataService().Repo)
+	if err != nil {
+		return fmt.Errorf("new repo provider failed, err: %v", err)
+	}
+	ds.repo = repo
+
+	// sync files from master to slave repo
+	if cc.DataService().Repo.EnableHA {
+		repoSyncer := service.NewRepoSyncer(ds.daoSet, ds.repo, ds.spaceMgr, ds.sd)
+		repoSyncer.Run()
+	}
+
+	return nil
+}
+
+func initVault() (vault.Set, error) {
 	vaultSet, err := vault.NewSet(cc.DataService().Vault)
 	if err != nil {
-		return fmt.Errorf("initial vault set failed, err: %v", err)
+		return nil, fmt.Errorf("initial vault set failed, err: %v", err)
 	}
 	// 挂载目录
 	exists, err := vaultSet.IsMountPathExists(vault.MountPath)
 	if err != nil {
-		return fmt.Errorf("error checking mount path: %v", err)
+		return nil, fmt.Errorf("error checking mount path: %v", err)
 	}
 	if !exists {
 		mountConfig := &api.MountInput{
 			Type: "kv-v2",
 		}
 		if err = vaultSet.CreateMountPath(vault.MountPath, mountConfig); err != nil {
-			return fmt.Errorf("initial vault mount path failed, err: %v", err)
+			return nil, fmt.Errorf("initial vault mount path failed, err: %v", err)
 		}
 	}
-
-	ds.vault = vaultSet
-
-	return nil
+	return vaultSet, nil
 }
 
 // listenAndServe listen the grpc serve and set up the shutdown gracefully job.
@@ -197,7 +237,7 @@ func (ds *dataService) listenAndServe() error {
 	}
 
 	serve := grpc.NewServer(opts...)
-	svc, err := service.NewService(ds.sd, ds.daoSet, ds.vault)
+	svc, err := service.NewService(ds.sd, ds.daoSet, ds.vault, ds.esb, ds.repo)
 	if err != nil {
 		return err
 	}

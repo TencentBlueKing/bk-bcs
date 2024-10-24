@@ -171,7 +171,8 @@ func (s *Service) Watch(swm *pbfs.SideWatchMeta, fws pbfs.Upstream_WatchServer) 
 }
 
 // Messaging received messages delivered from sidecar.
-func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs.MessagingResp, error) { // nolint
+// nolint:funlen
+func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs.MessagingResp, error) {
 	im, err := sfs.ParseFeedIncomingContext(ctx)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
@@ -298,7 +299,8 @@ func (s *Service) Messaging(ctx context.Context, msg *pbfs.MessagingMeta) (*pbfs
 }
 
 // PullAppFileMeta pull an app's latest release metadata only when the app's configures is file type.
-func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) ( // nolint
+// nolint:funlen
+func (s *Service) PullAppFileMeta(ctx context.Context, req *pbfs.PullAppFileMetaReq) (
 	*pbfs.PullAppFileMetaResp, error) {
 
 	// check if the sidecar's version can be accepted.
@@ -434,6 +436,8 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 		return nil, status.Errorf(codes.Aborted, "get app meta failed, %s", err.Error())
 	}
 
+	req.FileMeta.ConfigItemSpec.Path = tools.ConvertBackslashes(req.FileMeta.ConfigItemSpec.Path)
+
 	// validate can file be downloaded by credential.
 	match, err := s.bll.Auth().CanMatchCI(
 		im.Kit, req.BizId, app.Name, req.Token, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name)
@@ -457,7 +461,10 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	}
 
 	if !s.rl.Enable() {
-		return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: 0}, nil
+		return &pbfs.GetDownloadURLResp{
+			Url:         downloadLink[0], // 保留Url兼容老版客户端，DownloadLink方法返回无错误则downloadLink长度必大于0，无需判断
+			Urls:        downloadLink,
+			WaitTimeMil: 0}, nil
 	}
 	// 对于单个大文件下载，受限于单个客户端和服务端之间的带宽（比如为10MB/s=80Mb/s），而在存储服务端支持更高带宽的情况下（比如100MB/s），
 	// 哪怕单个文件2GB，在限流器阈值比单个客户端下载带宽高的情况下，还是应该允许其他客户端去存储服务端下载，
@@ -486,7 +493,10 @@ func (s *Service) GetDownloadURL(ctx context.Context, req *pbfs.GetDownloadURLRe
 	if bWaitTimeMil < gWaitTimeMil {
 		wt = gWaitTimeMil
 	}
-	return &pbfs.GetDownloadURLResp{Url: downloadLink, WaitTimeMil: wt}, nil
+	return &pbfs.GetDownloadURLResp{
+		Url:         downloadLink[0], // 保留Url兼容老版客户端，DownloadLink方法返回无错误则downloadLink长度必大于0，无需判断
+		Urls:        downloadLink,
+		WaitTimeMil: wt}, nil
 }
 
 // PullKvMeta pull an app's latest release metadata only when the app's configures is kv type.
@@ -689,6 +699,8 @@ func (s *Service) AsyncDownload(ctx context.Context, req *pbfs.AsyncDownloadReq)
 	if !credential.MatchApp(app.Name) {
 		return nil, status.Errorf(codes.PermissionDenied, "not have app %s permission", app.Name)
 	}
+
+	req.FileMeta.ConfigItemSpec.Path = tools.ConvertBackslashes(req.FileMeta.ConfigItemSpec.Path)
 
 	if !credential.MatchConfigItem(app.Name, req.FileMeta.ConfigItemSpec.Path, req.FileMeta.ConfigItemSpec.Name) {
 		return nil, status.Error(codes.PermissionDenied, "no permission download file")

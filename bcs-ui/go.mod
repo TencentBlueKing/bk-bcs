@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-ui
 
-go 1.20
+go 1.23
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20230808080908-7c46cf1bd956

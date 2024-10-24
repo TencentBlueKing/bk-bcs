@@ -362,6 +362,8 @@ type NodeGroupManager interface {
 	DeleteNodeGroup(group *proto.NodeGroup, nodes []*proto.Node, opt *DeleteNodeGroupOption) (*proto.Task, error)
 	// UpdateNodeGroup update specified nodegroup configuration
 	UpdateNodeGroup(group *proto.NodeGroup, opt *UpdateNodeGroupOption) (*proto.Task, error)
+	// RecommendNodeGroupConf recommends nodegroup configs
+	RecommendNodeGroupConf(opt *CommonOption) ([]*proto.RecommendNodeGroupConf, error)
 	// GetNodesInGroup get all nodes belong to NodeGroup
 	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
 	// GetNodesInGroupV2 get all nodes belong to NodeGroup
@@ -423,7 +425,7 @@ type VPCManager interface {
 	// ListBandwidthPacks list bandWidthPacks
 	ListBandwidthPacks(opt *CommonOption) ([]*proto.BandwidthPackageInfo, error)
 	// CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
-	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CommonOption) ([]string, error)
+	CheckConflictInVpcCidr(vpcID string, cidr string, opt *CheckConflictInVpcCidrOption) ([]string, error)
 	// AllocateOverlayCidr allocate overlay cidr
 	AllocateOverlayCidr(vpcId string, cluster *proto.Cluster, cidrLens []uint32,
 		reservedBlocks []*net.IPNet, opt *CommonOption) ([]string, error)

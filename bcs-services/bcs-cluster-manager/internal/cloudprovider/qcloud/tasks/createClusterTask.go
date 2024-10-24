@@ -480,7 +480,7 @@ func CreateClusterShieldAlarmTask(taskID string, stepName string) error {
 	blog.Infof("CreateClusterShieldAlarmTask[%s] ShieldHostAlarmConfig: %+v", taskID, allIPs)
 
 	if len(allIPs) > 0 {
-		err = cloudprovider.ShieldHostAlarm(ctx, cluster.BusinessID, masterIPs)
+		err = cloudprovider.ShieldHostAlarm(ctx, clusterID, cluster.BusinessID, masterIPs)
 		if err != nil {
 			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 				fmt.Sprintf("shield host alarm config failed [%s]", err))

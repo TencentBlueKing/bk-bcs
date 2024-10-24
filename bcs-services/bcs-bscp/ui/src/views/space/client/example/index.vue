@@ -19,7 +19,13 @@
       </bk-alert>
       <div class="content-wrap">
         <bk-loading style="height: 100%" :loading="loading">
-          <component :is="currentTemplate" :kv-name="renderComponent" :content-scroll-top="contentScrollTop" />
+          <component
+            :is="currentTemplate"
+            :kv-name="renderComponent"
+            :content-scroll-top="contentScrollTop"
+            :selected-key-data="selectedClientKey"
+            :key="renderComponent"
+            @selected-key-data="selectedClientKey = $event" />
         </bk-loading>
       </div>
     </div>
@@ -40,6 +46,7 @@
   const fileTypeArr = [
     { name: t('Sidecar容器'), val: 'sidecar' },
     { name: t('节点管理插件'), val: 'node' },
+    { name: t('HTTP(S)接口调用'), val: 'http' }, // 文件型也有http(s)接口，页面结构和键值型一样，但脚本内容、部分文案不一样
     { name: t('命令行工具'), val: 'shell' },
   ];
   const kvTypeArr = [
@@ -51,6 +58,7 @@
     { name: t('命令行工具'), val: 'shell' },
   ];
 
+  const selectedClientKey = ref(); // 记忆选择的客户端密钥信息,用于切换不同示例时默认选中密钥
   const exampleMainRef = ref();
   const renderComponent = ref(''); // 渲染的示例组件
   const serviceName = ref('');
@@ -86,6 +94,8 @@
 
   // 服务切换
   const selectService = (serviceTypeVal: string, serviceNameVal: string) => {
+    // 重置已选择的密钥信息
+    selectedClientKey.value = null;
     if (!serviceTypeVal || !serviceNameVal) {
       return (loading.value = false);
     }

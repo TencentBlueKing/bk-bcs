@@ -81,21 +81,46 @@ import googleLogo from '@/images/google.png';
 import huaweiLogo from '@/images/huawei.png';
 import $router from '@/router';
 
+type AddClusterType = '_tke'
+| 'createPublicCloud'
+| 'createTencentCloud'
+| 'createAWSCloud'
+| 'createGoogleCloud'
+| 'createAzureCloud'
+| 'createHuaweiCloud'
+| 'createK8S'
+| 'createVCluster'
+| 'importPublicCloud'
+| 'importTencentCloud'
+| 'importAmazonCloud'
+| 'importGoogleCloud'
+| 'importAzureCloud'
+| 'importHuaweiCloud'
+| 'importKubeConfig'
+| 'importBKSops';
+
 interface ICard {
   icon?: any
   title?: string
   subTitle?: string
   desc?: string
-  type?: string
+  type?: AddClusterType
   disabled?: boolean
   children?: ICard[]
 }
+interface IGroup {
+  id: string
+  name: string
+  data: ICard[]
+}
+
 export default defineComponent({
   name: 'ClusterType',
   components: { BcsContent },
   setup() {
     const { flagsMap, _INTERNAL_ } = useAppData();
     const createList = ref<ICard[]>([
+      // tke集群
       {
         icon: 'bcs-icon-color-tencentcloud',
         title: $i18n.t('cluster.create.type.tencentCloud.title'),
@@ -104,137 +129,148 @@ export default defineComponent({
         type: '_tke',
         disabled: !_INTERNAL_.value,
       },
+      // 创建公有云集群
       {
         icon: 'bcs-icon-color-publiccloud',
         title: $i18n.t('cluster.create.type.cloudProvider.title'),
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
         desc: $i18n.t('cluster.create.type.cloudProvider.desc'),
-        type: 'cloud',
+        type: 'createPublicCloud',
         disabled: _INTERNAL_.value,
         children: [
+          // 腾讯云
           {
             icon: 'bcs-icon-color-tencentcloud',
             title: $i18n.t('publicCloud.tencent.title'),
             desc: $i18n.t('publicCloud.tencent.desc'),
-            type: 'tke',
-            disabled: _INTERNAL_.value,
+            type: 'createTencentCloud',
           },
+          // AWS
           {
             icon: amazonLogo,
             title: $i18n.t('publicCloud.amazon.title'),
             desc: $i18n.t('publicCloud.amazon.desc'),
-            type: 'amazonCloud',
-            disabled: true,
+            type: 'createAWSCloud',
           },
+          // google
           {
             icon: googleLogo,
             title: $i18n.t('publicCloud.google.title'),
             desc: $i18n.t('publicCloud.google.desc'),
-            type: 'googleCloud',
+            type: 'createGoogleCloud',
             disabled: true,
           },
+          // Azure
           {
             icon: azureLogo,
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
-            type: 'azureCloud',
+            type: 'createAzureCloud',
             disabled: true,
           },
+          // huawei
           {
             icon: huaweiLogo,
             title: $i18n.t('publicCloud.huawei.title'),
             desc: $i18n.t('publicCloud.huawei.desc'),
-            type: 'huaweiCloud',
+            type: 'createHuaweiCloud',
             disabled: true,
           },
         ],
       },
+      // 创建原生K8S集群
       {
         icon: 'bcs-icon-color-k8s',
         title: $i18n.t('cluster.create.type.k8s.title'),
         subTitle: $i18n.t('cluster.create.type.k8s.subTitle'),
         desc: $i18n.t('cluster.create.type.k8s.desc'),
-        type: 'k8s',
+        type: 'createK8S',
         disabled: !flagsMap.value.k8s,
       },
+      // vCluster集群
       {
         icon: 'bcs-icon-color-vcluster',
         title: 'vCluster',
         subTitle: $i18n.t('cluster.create.type.vCluster.subTitle'),
         desc: $i18n.t('cluster.create.type.vCluster.desc'),
-        type: 'vCluster',
+        type: 'createVCluster',
         disabled: !flagsMap.value.VCLUSTER,
       },
     ]);
+    // 导入集群
     const importList = ref<ICard[]>([
+      // 导入公有云
       {
         icon: 'bcs-icon-color-publiccloud',
         title: $i18n.t('cluster.create.type.cloudProvider.title'),
         subTitle: $i18n.t('cluster.create.type.cloudProvider.subTitle'),
         desc: $i18n.t('cluster.create.type.cloudProvider.importDesc'),
-        type: 'import-cloud',
+        type: 'importPublicCloud',
         disabled: _INTERNAL_.value,
         children: [
           {
             icon: 'bcs-icon-color-tencentcloud',
             title: $i18n.t('publicCloud.tencent.title'),
             desc: $i18n.t('publicCloud.tencent.desc'),
-            type: 'tencentCloud',
+            type: 'importTencentCloud',
             disabled: _INTERNAL_.value,
           },
           {
             icon: amazonLogo,
             title: $i18n.t('publicCloud.amazon.title'),
             desc: $i18n.t('publicCloud.amazon.desc'),
-            type: 'amazonCloud',
+            type: 'importAmazonCloud',
             disabled: _INTERNAL_.value || !flagsMap.value.AZURECLOUD,
           },
           {
             icon: googleLogo,
             title: $i18n.t('publicCloud.google.title'),
             desc: $i18n.t('publicCloud.google.desc'),
-            type: 'googleCloud',
+            type: 'importGoogleCloud',
             disabled: _INTERNAL_.value,
           },
           {
             icon: azureLogo,
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
-            type: 'azureCloud',
+            type: 'importAzureCloud',
             disabled: _INTERNAL_.value,
           },
           {
             icon: huaweiLogo,
             title: $i18n.t('publicCloud.huawei.title'),
             desc: $i18n.t('publicCloud.huawei.desc'),
-            type: 'huaweiCloud',
+            type: 'importHuaweiCloud',
             disabled: _INTERNAL_.value,
           },
         ],
       },
+      // 导入kubeConfig
       {
         icon: 'bcs-icon-color-k8s',
         title: $i18n.t('cluster.create.type.kubeconfig.title'),
         subTitle: $i18n.t('cluster.create.type.kubeconfig.subTitle'),
         desc: $i18n.t('cluster.create.type.kubeconfig.desc'),
-        type: 'kubeconfig',
+        type: 'importKubeConfig',
       },
+      // 导入标准运维
       {
         icon: 'bcs-icon-operations',
         title: $i18n.t('cluster.create.type.bkSops.title'),
         subTitle: $i18n.t('cluster.create.type.bkSops.subTitle'),
         desc: $i18n.t('cluster.create.type.bkSops.desc'),
-        type: 'bk-sops',
+        type: 'importBKSops',
         disabled: !flagsMap.value.IMPORTSOPSCLUSTER,
       },
     ]);
-    const cardGroupList = computed(() => [
+    // 分组列表
+    const cardGroupList = computed<IGroup[]>(() => [
       {
         id: 'create',
         name: $i18n.t('cluster.create.title.newCluster'),
         data: createList.value.filter((item) => {
           if (_INTERNAL_.value) {
-            return item.type !== 'cloud';
+            return item.type !== 'createPublicCloud';
           }
           return item.type !== '_tke';
         }),
@@ -248,70 +284,54 @@ export default defineComponent({
 
     const activeItem = ref<ICard|null>(null);
     const activeGroupID = ref('');
-    const toggleActiveItem = (item, card) => {
-      if (activeItem.value === item || !card) {
+    // 类型 -> 路由名称map
+    const typeRouteNameMap: Partial<Record<AddClusterType, string>> = {
+      _tke: 'createTencentCloudCluster',
+      createTencentCloud: 'createTKECluster',
+      createAWSCloud: 'CreateAWSCloudCluster',
+      createAzureCloud: 'CreateAzureCloudCluster',
+      createK8S: 'createK8SCluster',
+      createVCluster: 'createVCluster',
+      // importKubeConfig: 'importCluster',
+      // importTencentCloud: 'importCluster',
+      importGoogleCloud: 'importGoogleCluster',
+      importAzureCloud: 'importAzureCluster',
+      importHuaweiCloud: 'importHuaweiCluster',
+      importAmazonCloud: 'importAwsCluster',
+      importBKSops: 'importBkSopsCluster',
+    };
+    const toggleActiveItem = (item: ICard, group: IGroup) => {
+      if (activeItem.value === item || !group) {
         activeItem.value = null;
         activeGroupID.value = '';
       } else {
         activeItem.value = item;
-        activeGroupID.value = card.id;
+        activeGroupID.value = group.id;
       }
     };
-    const handleAddCluster = (item, card) => {
-      if (item.disabled) return;
+    const handleAddCluster = (item: ICard, group: IGroup) => {
+      if (item.disabled || !item.type) return;
 
-      toggleActiveItem(item, card);
+      toggleActiveItem(item, group);
       switch (item.type) {
-        case 'vCluster':
-          $router.push({ name: 'createVCluster' });
-          break;
-        case '_tke':
-          // 创建腾讯云集群
-          $router.push({ name: 'createTencentCloudCluster' });
-          break;
-        case 'tke':
-          // 创建腾讯云公有云集群
-          $router.push({ name: 'createTKECluster' });
-          break;
-        case 'k8s':
-          $router.push({ name: 'createK8SCluster' });
-          break;
-        case 'kubeconfig':
+        case 'importKubeConfig':
           $router.push({
             name: 'importCluster',
             params: { importType: 'kubeconfig' },
           });
           break;
-        case 'tencentCloud':
+        case 'importTencentCloud':
           $router.push({
             name: 'importCluster',
             params: { importType: 'provider' },
           });
           break;
-        case 'googleCloud':
-          $router.push({
-            name: 'importGoogleCluster',
-          });
-          break;
-        case 'azureCloud':
-          $router.push({
-            name: 'importAzureCluster',
-          });
-          break;
-        case 'huaweiCloud':
-          $router.push({
-            name: 'importHuaweiCluster',
-          });
-          break;
-        case 'amazonCloud':
-          $router.push({
-            name: 'importAwsCluster',
-          });
-          break;
-        case 'bk-sops':
-          $router.push({
-            name: 'importBkSopsCluster',
-          });
+        default:
+          if (typeRouteNameMap[item.type]) {
+            $router.push({
+              name: typeRouteNameMap[item.type],
+            });
+          }
           break;
       }
     };

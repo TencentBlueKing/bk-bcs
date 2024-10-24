@@ -86,7 +86,7 @@ func (h *Handler) Healthz(
 	allOK := true
 
 	// 检查 redis 状态
-	ret, err := redis.GetDefaultClient().Ping(ctx).Result()
+	ret, err := redis.GetDefaultClient().Ping(ctx)
 	if ret != "PONG" || err != nil {
 		resp.Redis = genHealthzStatus(false, "Redis Ping Failed")
 		allOK = false

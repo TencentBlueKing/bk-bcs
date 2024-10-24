@@ -29,6 +29,9 @@ export default defineStore('config', () => {
   // 是否只查看冲突配置项
   const onlyViewConflict = ref(false);
 
+  // 生成版本按钮loading
+  const createVersionBtnLoading = ref(false);
+
   return {
     allConfigCount,
     versionData,
@@ -38,5 +41,6 @@ export default defineStore('config', () => {
     conflictFileCount,
     allExistConfigCount,
     onlyViewConflict,
+    createVersionBtnLoading,
   };
 });

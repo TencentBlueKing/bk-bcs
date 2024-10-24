@@ -104,6 +104,33 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 		return alarm.ErrServerNotInit
 	}
 
+	// 基于范围屏蔽告警 和 维度屏蔽告警
+
+	// 创建基于范围的屏蔽告警配置副本
+	scopeConfig := *config
+	scopeConfig.ShieldType = string(scope)
+	err := c.bkmonitorHostAlarmConfig(user, &scopeConfig)
+	if err != nil {
+		return err
+	}
+
+	// 创建基于维度的屏蔽告警配置副本
+	dimensionConfig := *config
+	dimensionConfig.ShieldType = string(dimension)
+	err = c.bkmonitorHostAlarmConfig(user, &dimensionConfig)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// bkmonitorHostAlarmConfig shield host alarm
+func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost) error { // nolint
+	if c == nil {
+		return alarm.ErrServerNotInit
+	}
+
 	var (
 		reqURL   = "/add_shield"
 		respData = &utils.BaseResponse{}

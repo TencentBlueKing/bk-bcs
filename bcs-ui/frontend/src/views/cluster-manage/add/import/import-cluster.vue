@@ -1,206 +1,212 @@
 <template>
-  <section class="create-import-cluster !overflow-auto">
-    <BkForm
-      :label-width="labelWidth"
-      :model="importClusterInfo"
-      :rules="formRules"
-      class="import-form"
-      ref="importFormRef">
-      <BkFormItem :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
-        <bk-input :maxlength="64" v-model="importClusterInfo.clusterName"></bk-input>
-      </BkFormItem>
-      <!-- <BkFormItem :label="$t('cluster.create.label.importType')">
-        <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
-          <bk-radio class="btn-group-first" value="kubeconfig">kubeconfig</bk-radio>
-          <bk-radio value="provider">{{$t('cluster.create.label.provider')}}</bk-radio>
-        </bk-radio-group>
-      </BkFormItem> -->
-      <BkFormItem :label="$t('cluster.labels.env')" required v-if="$INTERNAL">
-        <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
-          <bk-radio class="btn-group-first" value="debug">
-            {{ $t('cluster.env.debug') }}
-          </bk-radio>
-          <bk-radio value="prod">
-            {{ $t('cluster.env.prod') }}
-          </bk-radio>
-        </bk-radio-group>
-      </BkFormItem>
-      <BkFormItem :label="$t('cluster.create.label.desc1')">
-        <bcs-input
-          :maxlength="100"
-          class="max-w-[640px]"
-          v-model="importClusterInfo.description"
-          type="textarea">
-        </bcs-input>
-      </BkFormItem>
-      <template v-if="importClusterInfo.importType === 'provider'">
-        <!-- <BkFormItem
-          :label="$t('cluster.create.label.provider')"
-          property="provider"
-          error-display-type="normal"
-          required>
-          <bcs-select
-            :loading="templateLoading"
-            class="w640"
-            v-model="importClusterInfo.provider"
-            :clearable="false">
-            <bcs-option
-              v-for="item in availableTemplateList"
-              :key="item.cloudID"
-              :id="item.cloudID"
-              :name="item.name">
-            </bcs-option>
-          </bcs-select>
-        </BkFormItem> -->
-        <BkFormItem
-          :label="$t('cluster.create.label.cloudToken')"
-          property="accountID"
-          error-display-type="normal"
-          required>
-          <div style="display: flex;">
-            <bcs-select
-              :loading="accountsLoading"
-              class="w640"
-              :clearable="false"
-              searchable
-              v-model="importClusterInfo.accountID">
-              <bcs-option
-                v-for="item in accountsList"
-                :key="item.account.accountID"
-                :id="item.account.accountID"
-                :name="item.account.accountName"
-                v-authority="{
-                  clickable: webAnnotations.perms[item.account.accountID]
-                    && webAnnotations.perms[item.account.accountID].cloud_account_use,
-                  actionId: 'cloud_account_use',
-                  resourceName: item.account.accountName,
-                  disablePerms: true,
-                  permCtx: {
-                    project_id: item.account.projectID,
-                    account_id: item.account.accountID,
-                    operator: user.username
-                  }
-                }">
-              </bcs-option>
-              <template slot="extension">
-                <div class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
-                  <i class="bk-icon icon-plus-circle"></i>
-                  <span>{{ $t('cluster.create.button.createCloudToken') }}</span>
-                </div>
-              </template>
-            </bcs-select>
+   <div class="flex items-start justify-center py-[24px] overflow-auto">
+    <div class="shadow bg-[#fff] px-[24px] py-[16px] pb-[32px] min-w-[800px]">
+      <div class="text-[14px] font-bold mb-[24px]">{{ $t('cluster.create.label.title') }}</div>
+      <section class="create-import-cluster">
+        <BkForm
+          :label-width="150"
+          :model="importClusterInfo"
+          :rules="formRules"
+          class="import-form max-w-[640px]"
+          ref="importFormRef">
+          <BkFormItem :label="$t('cluster.labels.name')" property="clusterName" error-display-type="normal" required>
+            <bk-input class="w640" :maxlength="64" v-model="importClusterInfo.clusterName"></bk-input>
+          </BkFormItem>
+          <!-- <BkFormItem :label="$t('cluster.create.label.importType')">
+            <bk-radio-group class="btn-group" v-model="importClusterInfo.importType">
+              <bk-radio class="btn-group-first" value="kubeconfig">kubeconfig</bk-radio>
+              <bk-radio value="provider">{{$t('cluster.create.label.provider')}}</bk-radio>
+            </bk-radio-group>
+          </BkFormItem> -->
+          <BkFormItem :label="$t('cluster.labels.env')" required v-if="$INTERNAL">
+            <bk-radio-group class="btn-group" v-model="importClusterInfo.environment">
+              <bk-radio class="btn-group-first" value="debug">
+                {{ $t('cluster.env.debug') }}
+              </bk-radio>
+              <bk-radio value="prod">
+                {{ $t('cluster.env.prod') }}
+              </bk-radio>
+            </bk-radio-group>
+          </BkFormItem>
+          <BkFormItem :label="$t('cluster.create.label.desc1')">
+            <bcs-input
+              :maxlength="100"
+              class="w640 max-w-[640px]"
+              v-model="importClusterInfo.description"
+              type="textarea">
+            </bcs-input>
+          </BkFormItem>
+          <template v-if="importClusterInfo.importType === 'provider'">
+            <!-- <BkFormItem
+              :label="$t('cluster.create.label.provider')"
+              property="provider"
+              error-display-type="normal"
+              required>
+              <bcs-select
+                :loading="templateLoading"
+                class="w640"
+                v-model="importClusterInfo.provider"
+                :clearable="false">
+                <bcs-option
+                  v-for="item in availableTemplateList"
+                  :key="item.cloudID"
+                  :id="item.cloudID"
+                  :name="item.name">
+                </bcs-option>
+              </bcs-select>
+            </BkFormItem> -->
+            <BkFormItem
+              :label="$t('cluster.create.label.cloudToken')"
+              property="accountID"
+              error-display-type="normal"
+              required>
+              <div style="display: flex;">
+                <bcs-select
+                  :loading="accountsLoading"
+                  class="w640"
+                  :clearable="false"
+                  searchable
+                  v-model="importClusterInfo.accountID">
+                  <bcs-option
+                    v-for="item in accountsList"
+                    :key="item.account.accountID"
+                    :id="item.account.accountID"
+                    :name="item.account.accountName"
+                    v-authority="{
+                      clickable: webAnnotations.perms[item.account.accountID]
+                        && webAnnotations.perms[item.account.accountID].cloud_account_use,
+                      actionId: 'cloud_account_use',
+                      resourceName: item.account.accountName,
+                      disablePerms: true,
+                      permCtx: {
+                        project_id: item.account.projectID,
+                        account_id: item.account.accountID,
+                        operator: user.username
+                      }
+                    }">
+                  </bcs-option>
+                  <template slot="extension">
+                    <div class="extension-item" style="cursor: pointer" @click="handleGotoCloudToken">
+                      <i class="bk-icon icon-plus-circle"></i>
+                      <span>{{ $t('cluster.create.button.createCloudToken') }}</span>
+                    </div>
+                  </template>
+                </bcs-select>
+                <span
+                  class="refresh ml10"
+                  v-bk-tooltips="$t('generic.button.refresh')"
+                  @click="handleGetCloudAccounts">
+                  <i class="bcs-icon bcs-icon-reset"></i>
+                </span>
+              </div>
+            </BkFormItem>
+            <BkFormItem :label="$t('cluster.create.label.region')" property="region" error-display-type="normal" required>
+              <bcs-select
+                :loading="regionLoading"
+                class="w640"
+                searchable
+                :clearable="false"
+                v-model="importClusterInfo.region">
+                <bcs-option
+                  v-for="item in regionList"
+                  :key="item.region"
+                  :id="item.region"
+                  :name="item.regionName">
+                </bcs-option>
+              </bcs-select>
+            </BkFormItem>
+            <BkFormItem
+              :label="$t('cluster.labels.cloudClusterID')"
+              property="cloudID"
+              error-display-type="normal"
+              required>
+              <bcs-select
+                class="w640" searchable
+                :clearable="false"
+                :loading="clusterLoading"
+                v-model="importClusterInfo.cloudID">
+                <bcs-option
+                  v-for="item in clusterList"
+                  :key="item.clusterID"
+                  :id="item.clusterID"
+                  :name="item.clusterName">
+                </bcs-option>
+              </bcs-select>
+            </BkFormItem>
+            <BkFormItem
+              :label="$t('cluster.create.label.network.text')"
+              property="isExtranet"
+              error-display-type="normal"
+              required>
+              <bcs-select :clearable="false" class="w640" v-model="importClusterInfo.isExtranet">
+                <bcs-option id="false" :name="$t('cluster.create.label.network.intranet')"></bcs-option>
+                <bcs-option id="true" :name="$t('cluster.create.label.network.extranet')"></bcs-option>
+              </bcs-select>
+            </BkFormItem>
+            <bk-form-item
+              :label="$t('importGoogleCloud.label.nodemanArea')"
+              property="area.bkCloudID"
+              error-display-type="normal"
+              required>
+              <NodeManArea class="w640" v-model="importClusterInfo.area.bkCloudID" />
+            </bk-form-item>
+          </template>
+          <BkFormItem
+            :label="$t('cluster.create.label.kubeConfig')"
+            property="yaml"
+            error-display-type="normal"
+            required
+            v-else>
+            <bk-button class="mb10">
+              <input
+                class="file-input"
+                accept="*"
+                type="file"
+                @change="handleFileChange">
+              {{$t('cluster.create.button.fileImport')}}
+            </bk-button>
+            <CodeEditor
+              class="cube-config"
+              lang="yaml"
+              width="100%"
+              :height="480"
+              :options="{ lineNumbers: 'off' }"
+              ref="codeEditorRef"
+              v-model="importClusterInfo.yaml"
+            ></CodeEditor>
+          </BkFormItem>
+          <BkFormItem class="mt32">
+            <bk-button
+              theme="primary"
+              class="mr-[5px]"
+              :loading="testLoading"
+              :disabled="importClusterInfo.importType === 'provider'
+                ? !importClusterInfo.cloudID
+                : !importClusterInfo.yaml"
+              @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
             <span
-              class="refresh ml10"
-              v-bk-tooltips="$t('generic.button.refresh')"
-              @click="handleGetCloudAccounts">
-              <i class="bcs-icon bcs-icon-reset"></i>
+              v-bk-tooltips="{
+                content: $t('cluster.create.validate.emptyKubeConfig'),
+                disabled: isTestSuccess
+              }">
+              <bk-button
+                class="btn"
+                theme="primary"
+                :loading="loading"
+                :disabled="!isTestSuccess"
+                @click="handleImport"
+              >{{$t('generic.button.import')}}</bk-button>
             </span>
-          </div>
-        </BkFormItem>
-        <BkFormItem :label="$t('cluster.create.label.region')" property="region" error-display-type="normal" required>
-          <bcs-select
-            :loading="regionLoading"
-            class="w640"
-            searchable
-            :clearable="false"
-            v-model="importClusterInfo.region">
-            <bcs-option
-              v-for="item in regionList"
-              :key="item.region"
-              :id="item.region"
-              :name="item.regionName">
-            </bcs-option>
-          </bcs-select>
-        </BkFormItem>
-        <BkFormItem
-          :label="$t('cluster.labels.cloudClusterID')"
-          property="cloudID"
-          error-display-type="normal"
-          required>
-          <bcs-select
-            class="w640" searchable
-            :clearable="false"
-            :loading="clusterLoading"
-            v-model="importClusterInfo.cloudID">
-            <bcs-option
-              v-for="item in clusterList"
-              :key="item.clusterID"
-              :id="item.clusterID"
-              :name="item.clusterName">
-            </bcs-option>
-          </bcs-select>
-        </BkFormItem>
-        <BkFormItem
-          :label="$t('cluster.create.label.network.text')"
-          property="isExtranet"
-          error-display-type="normal"
-          required>
-          <bcs-select :clearable="false" class="w640" v-model="importClusterInfo.isExtranet">
-            <bcs-option id="false" :name="$t('cluster.create.label.network.intranet')"></bcs-option>
-            <bcs-option id="true" :name="$t('cluster.create.label.network.extranet')"></bcs-option>
-          </bcs-select>
-        </BkFormItem>
-        <bk-form-item
-          :label="$t('importGoogleCloud.label.nodemanArea')"
-          property="area.bkCloudID"
-          error-display-type="normal"
-          required>
-          <NodeManArea class="w640" v-model="importClusterInfo.area.bkCloudID" />
-        </bk-form-item>
-      </template>
-      <BkFormItem
-        :label="$t('cluster.create.label.kubeConfig')"
-        property="yaml"
-        error-display-type="normal"
-        required
-        v-else>
-        <bk-button class="mb10">
-          <input
-            class="file-input"
-            accept="*"
-            type="file"
-            @change="handleFileChange">
-          {{$t('cluster.create.button.fileImport')}}
-        </bk-button>
-        <CodeEditor
-          class="cube-config"
-          lang="yaml"
-          width="100%"
-          :height="480"
-          :options="{ lineNumbers: 'off' }"
-          ref="codeEditorRef"
-          v-model="importClusterInfo.yaml"
-        ></CodeEditor>
-      </BkFormItem>
-      <BkFormItem class="mt32">
-        <bk-button
-          theme="primary"
-          class="mr-[5px]"
-          :loading="testLoading"
-          :disabled="importClusterInfo.importType === 'provider'
-            ? !importClusterInfo.cloudID
-            : !importClusterInfo.yaml"
-          @click="handleTest">{{$t('cluster.create.button.textKubeConfig')}}</bk-button>
-        <span
-          v-bk-tooltips="{
-            content: $t('cluster.create.validate.emptyKubeConfig'),
-            disabled: isTestSuccess
-          }">
-          <bk-button
-            class="btn"
-            theme="primary"
-            :loading="loading"
-            :disabled="!isTestSuccess"
-            @click="handleImport"
-          >{{$t('generic.button.import')}}</bk-button>
-        </span>
-        <bk-button
-          class="btn ml5"
-          @click="handleCancel"
-        >{{$t('generic.button.cancel')}}</bk-button>
-      </BkFormItem>
-    </BkForm>
-  </section>
+            <bk-button
+              class="btn ml5"
+              @click="handleCancel"
+            >{{$t('generic.button.cancel')}}</bk-button>
+          </BkFormItem>
+        </BkForm>
+      </section>
+    </div>
+  </div>
+  
 </template>
 <script lang="ts">
 import BkForm from 'bk-magic-vue/lib/form';
@@ -529,16 +535,10 @@ export default defineComponent({
   margin-top: 32px;
 }
 .create-import-cluster {
-  padding: 24px;
   /deep/ .w640 {
-      width: 640px;
-      background: #fff;
-  }
-  /deep/ .bk-input-text {
-      width: 640px;
+      width: 490px;
   }
   /deep/ .bk-textarea-wrapper {
-      width: 640px;
       height: 80px;
       background-color: #fff;
   }
@@ -572,5 +572,7 @@ export default defineComponent({
   font-size: 12px;
   color: #3a84ff;
   cursor: pointer;
+  position: absolute;
+  right: -20px;
 }
 </style>

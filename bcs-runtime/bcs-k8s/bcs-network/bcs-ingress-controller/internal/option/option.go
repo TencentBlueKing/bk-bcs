@@ -117,6 +117,9 @@ type ControllerOption struct {
 
 	// HealthCheckIntervalSecs 健康检查指标拉取间隔，单位秒, 为0时不拉取
 	HealthCheckIntervalSecs int
+
+	// ListenerBypassMaxConcurrent listener bypass最大并发数
+	ListenerBypassMaxConcurrent int
 }
 
 // Conf 服务配置
@@ -229,12 +232,13 @@ func (op *ControllerOption) BindFromCommandLine() {
 	flag.UintVar(&op.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
 	flag.IntVar(&op.LBCacheExpiration, "lb_cache_expiration", 60, "lb cache expiration, unit: minute ")
 
-	flag.IntVar(&op.ListenerAutoReconcileSeconds, "listener_auto_reconcile_seconds", 1200,
+	flag.IntVar(&op.ListenerAutoReconcileSeconds, "listener_auto_reconcile_seconds", 0,
 		"seconds to auto reconcile listeners")
 	flag.BoolVar(&op.IsFederationMode, "is_federation_mode", false, "if true, watch multiClusterEndpoints for ingress ")
 
 	flag.IntVar(&op.HealthCheckIntervalSecs, "health_check_interval_secs", 30, "seconds for pull health metrics, "+
 		"turn off if set to 0")
+	flag.IntVar(&op.ListenerBypassMaxConcurrent, "listener_bypass_max_concurrent", 10, "max concurrent for bypass listener")
 
 	flag.Parse()
 

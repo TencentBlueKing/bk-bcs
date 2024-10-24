@@ -50,7 +50,8 @@ export const getServiceGroupList = (biz_id: string, app_id: number) =>
  * @param biz_id 空间ID
  * @returns
  */
-export const getSpaceGroupList = (biz_id: string) => http.get(`/config/biz/${biz_id}/groups`).then((res) => res.data);
+export const getSpaceGroupList = (biz_id: string, topId?: number) =>
+  http.get(`/config/biz/${biz_id}/groups`, { params: { top_ids: topId } }).then((res) => res.data);
 
 /**
  * 新增分组

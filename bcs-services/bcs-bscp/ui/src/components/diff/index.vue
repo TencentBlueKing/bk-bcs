@@ -40,6 +40,8 @@
             :downloadable="false"
             :current="props.diff.current.content as IFileConfigContentSummary"
             :base="props.diff.base.content as IFileConfigContentSummary"
+            :current-permission="props.diff.current.permission as IPermissionType"
+            :base-permission="props.diff.base.permission as IPermissionType"
             :id="props.id" />
           <Text
             v-else-if="props.diff.contentType === 'text'"
@@ -74,6 +76,12 @@
   import File from './file.vue';
   import Text from './text.vue';
   import SingleLineKV from './single-line-kv.vue';
+
+  interface IPermissionType {
+    privilege: string;
+    user: string;
+    user_group: string;
+  }
 
   const { t } = useI18n();
   const props = defineProps<{

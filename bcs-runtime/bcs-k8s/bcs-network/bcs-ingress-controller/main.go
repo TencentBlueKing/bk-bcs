@@ -200,7 +200,7 @@ func main() {
 		blog.Errorf("unable to create listener reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
-	listenerByPassReconciler := listenerctrl.NewListenerBypassReconciler(mgr.GetClient(), lbIDCache)
+	listenerByPassReconciler := listenerctrl.NewListenerBypassReconciler(mgr.GetClient(), lbIDCache, opts)
 	if err = listenerByPassReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create listener-bypass reconciler, err %s", err.Error())
 		os.Exit(1)

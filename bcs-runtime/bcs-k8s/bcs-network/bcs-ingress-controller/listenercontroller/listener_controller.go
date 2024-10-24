@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -39,11 +40,18 @@ import (
 // getListenerPredicate filter listener events
 func getListenerPredicate() predicate.Predicate {
 	return predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			objectNew := e.ObjectNew.DeepCopyObject()
-			objectOld := e.ObjectOld.DeepCopyObject()
-			newListener, okNew := objectNew.(*networkextensionv1.Listener)
-			oldListener, okOld := objectOld.(*networkextensionv1.Listener)
+		UpdateFunc: func(e event.UpdateEvent) (processed bool) {
+			defer func() {
+				if r := recover(); r != nil {
+					blog.Errorf("[panic] Listener predicate panic, info: %v, stack:%s", r,
+						string(debug.Stack()))
+					processed = true
+				}
+			}()
+			objNew := e.ObjectNew.DeepCopyObject()
+			objOld := e.ObjectOld.DeepCopyObject()
+			newListener, okNew := objNew.(*networkextensionv1.Listener)
+			oldListener, okOld := objOld.(*networkextensionv1.Listener)
 			if !okNew || !okOld {
 				return false
 			}
