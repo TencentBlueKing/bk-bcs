@@ -468,6 +468,7 @@ const nodeDefaultValues = ref();
 const loading = ref(false);
 // 获取节点池默认数据
 async function getNodeGroupData() {
+  if (!props.cloudID || !props.region || !props.cloudAccountID) return;
   loading.value = true;
   const result = await recommendNodeGroupConf({
     $cloudId: props.cloudID,

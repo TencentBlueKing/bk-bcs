@@ -423,6 +423,7 @@ export default defineComponent({
     const nodeRoles = ref<any[]>([]);
     const nodeRolesLoading = ref(false);
     const handleGetNodeRoles = async () => {
+      if (!props.cloudID || !props.cloudAccountID || !$store.state.user.username) return;
       nodeRolesLoading.value = true;
       nodeRoles.value = await cloudNoderoles({
         $cloudID: props.cloudID,
