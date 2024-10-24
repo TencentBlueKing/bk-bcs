@@ -106,11 +106,11 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*ifac
 	})
 
 	// mysql store 使用创建时间过滤
-	if opt.StartGte != nil {
-		tx = tx.Where("created_at >= ?", opt.StartGte)
+	if opt.CreatedGte != nil {
+		tx = tx.Where("created_at >= ?", opt.CreatedGte)
 	}
-	if opt.StartLte != nil {
-		tx = tx.Where("created_at <= ?", opt.StartLte)
+	if opt.CreatedLte != nil {
+		tx = tx.Where("created_at <= ?", opt.CreatedLte)
 	}
 
 	// 只使用id排序
