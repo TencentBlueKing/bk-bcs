@@ -89,7 +89,7 @@
       time: spec.publish_time,
       type: spec.publish_type,
     };
-    emits('sendData', approveData, revision.creator);
+    emits('sendData', approveData, revision?.creator || '');
   };
 
   defineExpose({

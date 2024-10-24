@@ -27,7 +27,7 @@
       <span class="content-info__bd">
         {{ dialogData }}
       </span>
-      <share class="share" />
+      <share class="share" @click="handleLinkTo" />
     </div>
     <template v-else>
       <div class="content-info is-special">
