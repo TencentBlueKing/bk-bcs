@@ -2904,7 +2904,9 @@ message ImportKvsReq {
   string data = 4;
 }
 
-message ImportKvsResp {}
+message ImportKvsResp {
+  repeated uint32 ids = 1;
+}
 
 message ListClientsReq {
   message Order {

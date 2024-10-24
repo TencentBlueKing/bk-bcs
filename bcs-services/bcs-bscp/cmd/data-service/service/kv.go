@@ -37,8 +37,14 @@ func (s *Service) CreateKv(ctx context.Context, req *pbds.CreateKvReq) (*pbds.Cr
 
 	kt := kit.FromGrpcContext(ctx)
 
+	// 检测配置项是否超出服务限制
+	err := s.checkKVConfigItemExceedsAppLimit(kt, req.Attachment.BizId, req.Attachment.AppId, 1, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	// GetByKvState get kv by KvState.
-	_, err := s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
+	_, err = s.dao.Kv().GetByKvState(kt, req.Attachment.BizId, req.Attachment.AppId, req.Spec.Key,
 		[]string{string(table.KvStateAdd), string(table.KvStateUnchange), string(table.KvStateRevise)})
 	if err != nil && !errors.Is(gorm.ErrRecordNotFound, err) {
 		logs.Errorf("get kv (%d) failed, err: %v, rid: %s", req.Spec.Key, err, kt.Rid)
@@ -268,6 +274,7 @@ func (s *Service) DeleteKv(ctx context.Context, req *pbds.DeleteKvReq) (*pbbase.
 // 1.键存在则更新, 类型不一致直接提示错误
 // 2.键不存在则新增
 // replace_all为true时，清空表中的数据，但保证前面两条逻辑
+// nolint:funlen
 func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsReq) (*pbds.BatchUpsertKvsResp, error) {
 
 	// FromGrpcContext used only to obtain Kit through grpc context.
@@ -320,6 +327,12 @@ func (s *Service) BatchUpsertKvs(ctx context.Context, req *pbds.BatchUpsertKvsRe
 
 	// 5. 处理需要编辑和创建的数据
 	toUpdate, toCreate, err := s.checkKvs(kt, tx, req, versionMap, kvStateArr)
+	if err != nil {
+		return nil, err
+	}
+
+	// 检测kv配置项是否超出服务限制
+	err = s.checkKVConfigItemExceedsAppLimit(kt, req.BizId, req.AppId, int64(len(toCreate)), int64(len(toUpdate)))
 	if err != nil {
 		return nil, err
 	}
@@ -670,4 +683,28 @@ func (s *Service) KvFetchIDsExcluding(ctx context.Context, req *pbds.KvFetchIDsE
 	return &pbds.KvFetchIDsExcludingResp{
 		Ids: ids,
 	}, nil
+}
+
+// 检测kv服务项是否超出限制
+// addQuantity 新增的数量
+// subQuantity 减少的数量
+func (s *Service) checkKVConfigItemExceedsAppLimit(kit *kit.Kit, bizID, appID uint32,
+	addQuantity, subQuantity int64) error {
+	// 获取未删除的kv数量
+	count, err := s.dao.Kv().CountNumberUnDeleted(kit, bizID, &types.ListKvOption{
+		AppID: appID,
+	})
+	if err != nil {
+		return errf.Errorf(errf.DBOpFailed,
+			i18n.T(kit, "count the number of kV files that have not been deleted failed, err: %v", err))
+	}
+
+	// 判断是否超出服务限制
+	appConfigCnt := getAppConfigCnt(bizID)
+	if count-subQuantity+addQuantity > int64(appConfigCnt) {
+		return errf.New(errf.InvalidParameter,
+			i18n.T(kit, `the total number of config items exceeded the limit %d`, appConfigCnt))
+	}
+
+	return nil
 }

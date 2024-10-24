@@ -507,7 +507,7 @@ func (s *Service) ImportKvs(ctx context.Context, req *pbcs.ImportKvsReq) (*pbcs.
 		return nil, err
 	}
 
-	_, err = s.BatchUpsertKvs(grpcKit.RpcCtx(), &pbcs.BatchUpsertKvsReq{
+	resp, err := s.BatchUpsertKvs(grpcKit.RpcCtx(), &pbcs.BatchUpsertKvsReq{
 		BizId:      req.GetBizId(),
 		AppId:      req.GetAppId(),
 		Kvs:        kvs,
@@ -516,7 +516,7 @@ func (s *Service) ImportKvs(ctx context.Context, req *pbcs.ImportKvsReq) (*pbcs.
 	if err != nil {
 		return nil, err
 	}
-	return &pbcs.ImportKvsResp{}, nil
+	return &pbcs.ImportKvsResp{Ids: resp.Ids}, nil
 }
 
 func handleKv(kit *kit.Kit, result map[string]interface{}) ([]*pbcs.BatchUpsertKvsReq_Kv, error) {
