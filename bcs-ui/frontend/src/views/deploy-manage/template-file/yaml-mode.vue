@@ -1,73 +1,77 @@
 <template>
-  <div class="flex items-center overflow-hidden" ref="contentRef">
-    <div
-      :class="[
-        'w-[260px] h-full py-[8px] bg-[#2E2E2E] border-r-[1px] border-solid border-[#000]',
-        'shadow-[1px_0_0_0_#000000]'
-      ]">
+  <div class="overflow-hidden" ref="contentRef">
+    <bcs-resize-layout
+      collapsible
+      disabled
+      :border="false"
+      ref="yamlLayoutRef"
+      initial-divide="230px"
+      class="h-full">
       <div
-        v-for="item, index in yamlToJson"
-        :key="index"
-        :class="[
-          'flex items-center cursor-pointer leading-[20px]',
-          'h-[32px] text-[12px] px-[24px] text-[#C4C6CC]',
-          activeContentIndex === index ? 'bg-[#253969] text-[#478EFC]' : ''
-        ]"
-        @click="handleAnchor(item)">
-        <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item?.name }}</span>
+        slot="aside"
+        class="bg-[#fff] h-full overflow-y-auto overflow-x-hidden">
+        <left-nav
+          :list="yamlToJson"
+          :active-index="activeContentIndex"
+          @cellClick="({ item }) => handleAnchor(item)">
+          <template #default="{ item }">
+            <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item?.name }}</span>
+          </template>
+        </left-nav>
       </div>
-    </div>
-    <div
-      :class="[
-        'flex flex-col',
-        'shadow-[0_2px_4px_0_rgba(0,0,0,0.16)]',
-        'flex-1 w-0 bg-[#2E2E2E] h-full rounded-t-sm'
-      ]">
-      <!-- 工具栏 -->
       <div
+        slot="main"
         :class="[
-          'flex items-center justify-between pl-[24px] pr-[16px] h-[40px]',
-          'border-b-[1px] border-solid border-[#000]'
+          'flex flex-col',
+          'shadow-[0_2px_4px_0_rgba(0,0,0,0.16)]',
+          'w-full bg-[#2E2E2E] h-full rounded-t-sm',
         ]">
-        <span class="text-[#C4C6CC] text-[14px]"></span>
-        <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
-          <!-- <i class="bk-icon icon-upload-cloud text-[14px] hover:text-[#699df4] cursor-pointer"></i> -->
-          <AiAssistant ref="assistantRef" />
-          <i
-            :class="[
-              'hover:text-[#699df4] cursor-pointer',
-              isFullscreen ? 'bcs-icon bcs-icon-zoom-out' : 'bcs-icon bcs-icon-enlarge'
-            ]"
-            @click="switchFullScreen">
-          </i>
-        </span>
+        <!-- 工具栏 -->
+        <div
+          :class="[
+            'flex items-center justify-between pl-[24px] pr-[16px] h-[40px]',
+            'border-b-[1px] border-solid border-[#000]'
+          ]">
+          <span class="text-[#C4C6CC] text-[14px]"></span>
+          <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
+            <!-- <i class="bk-icon icon-upload-cloud text-[14px] hover:text-[#699df4] cursor-pointer"></i> -->
+            <AiAssistant ref="assistantRef" />
+            <i
+              :class="[
+                'hover:text-[#699df4] cursor-pointer',
+                isFullscreen ? 'bcs-icon bcs-icon-zoom-out' : 'bcs-icon bcs-icon-enlarge'
+              ]"
+              @click="switchFullScreen">
+            </i>
+          </span>
+        </div>
+        <!-- 代码编辑器 -->
+        <bcs-resize-layout
+          placement="bottom"
+          :border="false"
+          :auto-minimize="true"
+          :initial-divide="editorErr.message ? 100 : 0"
+          :max="300"
+          :min="100"
+          :disabled="!editorErr.message"
+          class="!h-0 flex-1 file-editor">
+          <template #aside>
+            <EditorStatus
+              :message="editorErr.message"
+              v-show="!!editorErr.message" />
+          </template>
+          <template #main>
+            <CodeEditor
+              :readonly="isEdit"
+              :options="opt"
+              multi-document
+              ref="codeEditorRef"
+              v-model="content"
+              @error="handleEditorErr" />
+          </template>
+        </bcs-resize-layout>
       </div>
-      <!-- 代码编辑器 -->
-      <bcs-resize-layout
-        placement="bottom"
-        :border="false"
-        :auto-minimize="true"
-        :initial-divide="editorErr.message ? 100 : 0"
-        :max="300"
-        :min="100"
-        :disabled="!editorErr.message"
-        class="!h-0 flex-1 file-editor">
-        <template #aside>
-          <EditorStatus
-            :message="editorErr.message"
-            v-show="!!editorErr.message" />
-        </template>
-        <template #main>
-          <CodeEditor
-            :readonly="isEdit"
-            :options="opt"
-            multi-document
-            ref="codeEditorRef"
-            v-model="content"
-            @error="handleEditorErr" />
-        </template>
-      </bcs-resize-layout>
-    </div>
+    </bcs-resize-layout>
   </div>
 </template>
 <script setup lang="ts">
@@ -75,6 +79,8 @@ import yamljs from 'js-yaml';
 import { throttle } from 'lodash';
 import * as monaco from 'monaco-editor';
 import { computed, ref, watch } from 'vue';
+
+import leftNav from './left-nav.vue';
 
 import AiAssistant from '@/components/ai-assistant.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
@@ -120,6 +126,15 @@ const opt = computed<monaco.editor.IStandaloneEditorConstructionOptions>(() => {
   };
 
   return { minimap: { enabled: true } };
+});
+
+const yamlLayoutRef = ref();
+const watchOnce = watch(yamlToJson, () => {
+  // 只有一项数据时折叠起来
+  if (yamlToJson.value && yamlToJson.value.length < 2) {
+    yamlLayoutRef.value?.setCollapse(true);
+  }
+  watchOnce();
 });
 
 

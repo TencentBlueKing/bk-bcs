@@ -24,9 +24,11 @@
       <FormMode
         :value="formData.content"
         ref="formMode"
+        is-add
         v-if="editMode === 'form'" />
       <YamlMode
         class="h-full"
+        is-add
         v-else-if="editMode === 'yaml'"
         :value="formData.content"
         ref="yamlMode" />

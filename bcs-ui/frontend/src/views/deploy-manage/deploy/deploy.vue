@@ -27,8 +27,8 @@
               :id="item.id"
               :name="item.version">
               <div class="flex items-center">
-                <span class="mr-[10px]">{{ item.version }}</span>
-                <bcs-tag class="mr-[10px]" theme="warning" v-if="item.latest">latest</bcs-tag>
+                <span class="mr-[8px]">{{ item.version }}</span>
+                <bcs-tag class="mr-[8px]" theme="warning" v-if="item.latest">latest</bcs-tag>
                 <bcs-tag v-if="item.latestDeployVersion === item.version">LatestDeployed</bcs-tag>
               </div>
             </bcs-option>
