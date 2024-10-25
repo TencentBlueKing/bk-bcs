@@ -55,5 +55,6 @@ else
   ./config --prefix=$TONGSUO_PATH -fPIC
 fi
 
-make -j
-make install
+# quiet output
+make -j >/dev/null 2>&1
+make install >/dev/null 2>&1
