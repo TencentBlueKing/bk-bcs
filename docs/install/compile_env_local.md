@@ -10,7 +10,7 @@ sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
 sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 
 # 安装必要的工具和开发包
-yum install -y wget git make vim numactl-devel epel-release yum-utils && \
+yum install -y wget git make vim gettext numactl-devel epel-release yum-utils && \
 yum-config-manager --enable PowerTools && \
 yum install -y glibc-static && \
 yum -y groupinstall "Development Tools" && \
@@ -48,7 +48,7 @@ sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
 sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo && \
 
 # 安装必要的工具和开发包
-yum install -y wget git make vim numactl-devel && \
+yum install -y wget git make vim gettext numactl-devel && \
 dnf install -y dnf-plugins-core && \
 dnf config-manager --set-enabled powertools && \
 dnf makecache && \
@@ -85,7 +85,7 @@ NODE_VERSION=v${NODE_VERSION}.18.0
 # 更新软件源并安装依赖
 apt-get update -y && apt-get install -y libnuma-dev && \
 apt-get install -y build-essential && \
-apt-get install -y wget git make vim curl
+apt-get install -y wget git make vim curl gettext
 
 # 定义版本参数
 GOLANG_VERSION=1.20.2

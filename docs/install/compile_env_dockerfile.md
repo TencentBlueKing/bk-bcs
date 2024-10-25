@@ -21,7 +21,7 @@ FROM centos:8
 RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
     sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
     sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo && \
-    yum install -y wget git make vim numactl-devel && \
+    yum install -y wget git make vim gettext numactl-devel && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled powertools && \
     dnf makecache && \
@@ -72,7 +72,7 @@ FROM centos:7
 RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && \
     sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && \
     sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo && \
-    yum install -y wget git make vim numactl-devel epel-release yum-utils && \
+    yum install -y wget git make vim gettext numactl-devel epel-release yum-utils && \
     yum-config-manager --enable PowerTools && \
     yum install -y glibc-static && \
     yum -y groupinstall "Development Tools" && \
@@ -121,7 +121,7 @@ FROM ubuntu:latest
 # 更新软件源并安装依赖
 RUN apt-get update -y && apt-get install -y libnuma-dev && \
     apt-get install -y build-essential && \
-    apt-get install -y wget git make vim curl
+    apt-get install -y wget git make vim curl gettext
 
 # 定义版本参数
 ARG GOLANG_VERSION=1.20.2

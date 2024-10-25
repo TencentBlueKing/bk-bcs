@@ -12,7 +12,7 @@
     - [修改并初始化编译参数](#修改并初始化编译参数)
     - [编译](#编译)
     - [编译产出物](#编译产出物)
-    - [模块配置范例](#模块配置范例)
+    - [模块配置示例](#模块配置示例)
     - [镜像构建](#镜像构建)
 
 
@@ -97,240 +97,58 @@ make bcs-k8s
 
 ### 编译产出物
 
-编译结束后，在 build 目录下会生成对应的产出物目录。
-
+编译结束后，在 build 目录下会生成对应的产出物目录。以下是组件列表信息，产出物详情请参见 [详细信息](./compile_build_list.md)
 ```text
 .
+|-- bcs-services
+|   |-- bcs-bkcmdb-synchronizer
+|   |-- bcs-cluster-manager
+|   |-- bcs-cluster-reporter
+|   |-- bcs-data-manager
+|   |-- bcs-gateway-discovery
+|   |-- bcs-helm-manager
+|   |-- bcs-k8s-watch
+|   |-- bcs-kube-agent
+|   |-- bcs-nodegroup-manager
+|   |-- bcs-project-manager
+|   |-- bcs-storage
+|   `-- bcs-user-manager
 |-- bcs-runtime
 |   `-- bcs-k8s
 |       |-- bcs-component
 |       |   |-- bcs-apiserver-proxy
-|       |   |   |-- Dockerfile
-|       |   |   |-- bcs-apiserver-proxy
-|       |   |   |-- bcs-apiserver-proxy-tools
-|       |   |   |-- bcs-apiserver-proxy.json.template
-|       |   |   |-- bcs-apiserver-proxy.yaml
-|       |   |   `-- container-start.sh
 |       |   |-- bcs-cluster-autoscaler
-|       |   |   |-- Dockerfile
-|       |   |   |-- bcs-cluster-autoscaler
-|       |   |   `-- hyper
-|       |   |       |-- bcs-cluster-autoscaler-1.16
-|       |   |       `-- bcs-cluster-autoscaler-1.22
 |       |   |-- bcs-external-privilege
-|       |   |   |-- Dockerfile
-|       |   |   `-- bcs-external-privilege
 |       |   |-- bcs-general-pod-autoscaler
-|       |   |   |-- Dockerfile
-|       |   |   `-- bcs-general-pod-autoscaler
 |       |   |-- bcs-image-loader
-|       |   |   |-- Dockerfile
-|       |   |   `-- bcs-image-loader
 |       |   |-- bcs-k8s-custom-scheduler
-|       |   |   |-- Dockerfile
-|       |   |   |-- bcs-k8s-custom-scheduler
-|       |   |   |-- bcs-k8s-custom-scheduler-kubeconfig.yaml
-|       |   |   |-- bcs-k8s-custom-scheduler.manifest.template
-|       |   |   `-- policy-config.json
 |       |   |-- bcs-netservice-controller
-|       |   |   |-- Dockerfile
-|       |   |   |-- bcs-netservice-controller
-|       |   |   |-- bcs-netservice-ipam
-|       |   |   `-- bcs-underlay-cni
 |       |   `-- bcs-webhook-server
-|       |       |-- Dockerfile
-|       |       |-- bcs-webhook-server
-|       |       `-- container-start.sh
 |       `-- bcs-network
 |           `-- bcs-ingress-controller
-|               |-- Dockerfile
-|               |-- bcs-ingress-controller
-|               `-- container-start.sh
 |-- bcs-scenarios
 |   |-- bcs-gitops-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-gitops-manager
-|   |   |-- bcs-gitops-manager.json.template
-|   |   `-- container-start.sh
 |   |-- bcs-gitops-proxy
-|   |   |-- Dockerfile
-|   |   |-- bcs-gitops-proxy
-|   |   |-- bcs-gitops-proxy.json.template
-|   |   `-- container-start.sh
 |   `-- bcs-powertrading
-|       |-- Dockerfile
-|       |-- bcs-powertrading.json.template
-|       `-- container-start.sh
-|-- bcs-services
-|   |-- bcs-bkcmdb-synchronizer
-|   |   |-- Dockerfile
-|   |   |-- bcs-bkcmdb-synchronizer
-|   |   |-- bcs-bkcmdb-synchronizer.json.template
-|   |   `-- container-start.sh
-|   |-- bcs-cluster-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-cluster-manager
-|   |   |-- bcs-cluster-manager.json.template
-|   |   |-- cloud.json.template
-|   |   |-- container-start.sh
-|   |   `-- swagger
-|   |       `-- swagger-ui
-|   |           |-- clustermanager.swagger.json
-|   |           |-- favicon-16x16.png
-|   |           |-- favicon-32x32.png
-|   |           |-- index.html
-|   |           |-- oauth2-redirect.html
-|   |           |-- swagger-ui-bundle.js
-|   |           |-- swagger-ui-bundle.js.map
-|   |           |-- swagger-ui-standalone-preset.js
-|   |           |-- swagger-ui-standalone-preset.js.map
-|   |           |-- swagger-ui.css
-|   |           |-- swagger-ui.css.map
-|   |           |-- swagger-ui.js
-|   |           `-- swagger-ui.js.map
-|   |-- bcs-cluster-reporter
-|   |   |-- Dockerfile
-|   |   `-- bcs-cluster-reporter
-|   |-- bcs-data-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-data-manager
-|   |   |-- bcs-data-manager.json.template
-|   |   |-- container-start.sh
-|   |   `-- swagger
-|   |       |-- bcs-data-manager.swagger.json
-|   |       |-- favicon-16x16.png
-|   |       |-- favicon-32x32.png
-|   |       |-- index.html
-|   |       |-- oauth2-redirect.html
-|   |       |-- swagger-ui-bundle.js
-|   |       |-- swagger-ui-bundle.js.map
-|   |       |-- swagger-ui-standalone-preset.js
-|   |       |-- swagger-ui-standalone-preset.js.map
-|   |       |-- swagger-ui.css
-|   |       |-- swagger-ui.css.map
-|   |       |-- swagger-ui.js
-|   |       `-- swagger-ui.js.map
-|   |-- bcs-gateway-discovery
-|   |   |-- Dockerfile.apisix
-|   |   |-- Dockerfile.gateway
-|   |   |-- Dockerfile.micro-gateway-apisix
-|   |   |-- README.md
-|   |   |-- apisix
-|   |   |   |-- bcs-auth
-|   |   |   |   |-- authentication.lua
-|   |   |   |   |-- bklogin.lua
-|   |   |   |   |-- jwt.lua
-|   |   |   |   `-- mock-bklogin.lua
-|   |   |   |-- bcs-auth.lua
-|   |   |   |-- bcs-common
-|   |   |   |   `-- upstreams.lua
-|   |   |   |-- bcs-dynamic-route.lua
-|   |   |   |-- bkbcs-auth
-|   |   |   |   `-- bkbcs.lua
-|   |   |   `-- bkbcs-auth.lua
-|   |   |-- apisix-start.sh
-|   |   |-- bcs-gateway-discovery
-|   |   |-- bcs-gateway-discovery.json.template
-|   |   |-- config.yaml.template
-|   |   `-- container-start.sh
-|   |-- bcs-helm-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-helm-manager
-|   |   |-- bcs-helm-manager-migrator
-|   |   |-- container-start.sh
-|   |   |-- lc_msgs.yaml
-|   |   `-- swagger
-|   |       `-- swagger-ui
-|   |           |-- bcs-helm-manager.swagger.json
-|   |           |-- favicon-16x16.png
-|   |           |-- favicon-32x32.png
-|   |           |-- index.html
-|   |           |-- oauth2-redirect.html
-|   |           |-- swagger-ui-bundle.js
-|   |           |-- swagger-ui-bundle.js.map
-|   |           |-- swagger-ui-standalone-preset.js
-|   |           |-- swagger-ui-standalone-preset.js.map
-|   |           |-- swagger-ui.css
-|   |           |-- swagger-ui.css.map
-|   |           |-- swagger-ui.js
-|   |           `-- swagger-ui.js.map
-|   |-- bcs-k8s-watch
-|   |   |-- Dockerfile
-|   |   |-- bcs-k8s-watch
-|   |   |-- bcs-k8s-watch.json.template
-|   |   |-- bcs-k8s-watch.yaml.template
-|   |   |-- container-start.sh
-|   |   `-- filter.json
-|   |-- bcs-kube-agent
-|   |   |-- Dockerfile
-|   |   |-- bcs-kube-agent
-|   |   |-- kube-agent-secret.yml
-|   |   `-- kube-agent.yaml
-|   |-- bcs-nodegroup-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-nodegroup-manager
-|   |   |-- bcs-nodegroup-manager.json.template
-|   |   `-- container-start.sh
-|   |-- bcs-project-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-project-manager
-|   |   |-- bcs-project-migration
-|   |   |-- bcs-variable-migration
-|   |   `-- swagger
-|   |       |-- bcsproject.swagger.json
-|   |       `-- swagger-ui
-|   |           |-- favicon-16x16.png
-|   |           |-- favicon-32x32.png
-|   |           |-- index.html
-|   |           |-- oauth2-redirect.html
-|   |           |-- swagger-ui-bundle.js
-|   |           |-- swagger-ui-bundle.js.map
-|   |           |-- swagger-ui-standalone-preset.js
-|   |           |-- swagger-ui-standalone-preset.js.map
-|   |           |-- swagger-ui.css
-|   |           |-- swagger-ui.css.map
-|   |           |-- swagger-ui.js
-|   |           `-- swagger-ui.js.map
-|   |-- bcs-storage
-|   |   |-- Dockerfile
-|   |   |-- bcs-storage
-|   |   |-- bcs-storage.json.template
-|   |   |-- container-start.sh
-|   |   |-- queue.conf.template
-|   |   `-- storage-database.conf.template
-|   |-- bcs-user-manager
-|   |   |-- Dockerfile
-|   |   |-- bcs-user-manager
-|   |   |-- bcs-user-manager.json.template
-|   |   `-- container-start.sh
-|   `-- cryptools
 ```
 
-可以对该目录进行打包进行部署。
+### 模块配置示例
 
-### 模块配置范例
+针对部分模块，编译输出目录有对应的配置模板，模板中预留了配置项的占位符。根据实际部署信息进行环境变量的配置，完成配置后可在启动前进行相关渲染。
 
-针对所有模块，编译输出目录都有对应的配置模板，模板中预留了配置项的占位符。
-请选择需要的模块，确认相关配置项，根据实际部署信息进行替换。
-
-相关的部署配置选项可以参考 $GOPATH/src/bk-bcs/scripts/config.sh，完成选项
-配置后可以在启动前进行相关渲染
+以 bcs-cluster-manager 为例：
 
 ```shell
-
-source config.sh
-
-for tpl in `find ./bcs-* -type f -name '*.template'`; do
-    echo "${tpl} ==> ${tpl%.template}"
-    cat $tpl | envsubst | tee ${tpl%.template}
-done
+module="bcs-cluster-manager"
+cat ${module}.json.template | envsubst | tee ${module}.json
 ```
 
 ### 镜像构建
 
-针对k8s的集成插件 watch、kube-agent等，默认地已经在编译输出目录放置推荐的 Dockerfile，可以参照以下用例自行构建选择容器化方式使用。
+默认地，已在编译输出目录放置项目推荐的 Dockerfile，可参照以下用例自行构建进行容器化方式使用。
 
 ```shell
-cd ./build/bcs-*/bcs-k8s-master/bcs-k8s-driver/
-docker build -t myk8sdriver:latest .
+## 以 bcs-cluster-manager 为例
+cd ./build/bcs-*/bcs-services/bcs-cluster-manager
+docker build -t my-bcs-cluster-manager:v1 .
 ```
