@@ -913,7 +913,8 @@ func (cd *argo) handleDeleteAppResource(ctx context.Context, application *v1alph
 		Force:        &needForce,
 	})
 	if err != nil {
-		if resource.Health.Status == health.HealthStatusMissing {
+		// 存在一些没有Health字段的资源,所以需要利用短路求值提前对health进行非空判断,防止出现panic
+		if resource.Health != nil && resource.Health.Status == health.HealthStatusMissing {
 			// nolint goconst
 			blog.Warnf("RequestID[%s], resource '%s/%s/%s' for cluster '%s' with application '%s' is missing, "+
 				"noneed care: %s", requestID, resource.Group, resource.Kind, resource.Name,
