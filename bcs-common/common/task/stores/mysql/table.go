@@ -39,15 +39,15 @@ type TaskRecord struct {
 	gorm.Model
 	TaskID              string            `json:"taskID" gorm:"type:varchar(191);uniqueIndex:idx_task_id"` // 唯一索引
 	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
-	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(255)"`
-	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(255)"`
+	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(191);index:idx_task_index"`
+	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(191);index:idx_task_index"`
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
 	CurrentStep         string            `json:"currentStep" gorm:"type:varchar(255)"`
 	StepSequence        []string          `json:"stepSequence" gorm:"type:text;serializer:json"`
 	CallbackName        string            `json:"callbackName" gorm:"type:varchar(255)"`
 	CommonParams        map[string]string `json:"commonParams" gorm:"type:text;serializer:json"`
 	CommonPayload       string            `json:"commonPayload" gorm:"type:text"`
-	Status              string            `json:"status" gorm:"type:varchar(255)"`
+	Status              string            `json:"status" gorm:"type:varchar(191);index:idx_status"`
 	Message             string            `json:"message" gorm:"type:text"`
 	ExecutionTime       uint32            `json:"executionTime"`
 	MaxExecutionSeconds uint32            `json:"maxExecutionSeconds"`
