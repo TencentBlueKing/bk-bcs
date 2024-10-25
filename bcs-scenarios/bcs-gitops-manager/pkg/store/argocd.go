@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -820,6 +821,7 @@ type ApplicationResource struct {
 	Namespace    string `json:"namespace"`
 	Group        string `json:"group"`
 	Version      string `json:"version"`
+	SyncWave     int64  `json:"syncWave,omitempty"`
 }
 
 // ApplicationDeleteResourceResult defines the resource deletion result
@@ -844,30 +846,33 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 	resources []*ApplicationResource) []ApplicationDeleteResourceResult {
 	var result []ApplicationDeleteResourceResult
 	if len(resources) == 0 {
-		result = make([]ApplicationDeleteResourceResult, 0, len(application.Status.Resources))
-		for _, resource := range application.Status.Resources {
-			if err := cd.deleteApplicationResource(ctx, application, &resource); err != nil {
-				result = append(result, ApplicationDeleteResourceResult{
-					Succeeded:  false,
-					ErrMessage: err.Error(),
-				})
-			} else {
-				result = append(result, ApplicationDeleteResourceResult{
-					Succeeded: true,
-				})
-			}
-		}
-		return result
+		resources = make([]*ApplicationResource, 0)
 	}
-	result = make([]ApplicationDeleteResourceResult, 0, len(resources))
-	for _, appResource := range resources {
-		key := buildResourceKeyWithCustomResource(appResource)
+	for _, resource := range application.Status.Resources {
+		resources = append(resources, &ApplicationResource{
+			ResourceName: resource.Name,
+			Kind:         resource.Kind,
+			Namespace:    resource.Namespace,
+			Group:        resource.Group,
+			Version:      resource.Version,
+			SyncWave:     resource.SyncWave,
+		})
+	}
+
+	// 按照 syncwave 值进行排序
+	sort.Slice(resources, func(i, j int) bool {
+		return resources[i].SyncWave > resources[j].SyncWave
+	})
+
+	// 按syncwave从大到小的顺序删除资源
+	for _, rw := range resources {
+		key := buildResourceKeyWithCustomResource(rw)
 		if err := cd.deleteApplicationResource(ctx, application, &v1alpha1.ResourceStatus{
-			Name:      appResource.ResourceName,
-			Kind:      appResource.Kind,
-			Namespace: appResource.Namespace,
-			Group:     appResource.Group,
-			Version:   appResource.Version,
+			Name:      rw.ResourceName,
+			Kind:      rw.Kind,
+			Namespace: rw.Namespace,
+			Group:     rw.Group,
+			Version:   rw.Version,
 		}); err != nil {
 			result = append(result, ApplicationDeleteResourceResult{
 				Succeeded:  false,
