@@ -9,7 +9,7 @@
     :input-search="false"
     :clearable="false"
     :loading="loading"
-    :search-placeholder="$t('配置项名称')"
+    :search-placeholder="basicInfo?.serviceType.value === 'file' ? $t('配置文件名') : $t('配置项名称')"
     :no-data-text="$t('暂无可用配置')"
     :no-match-text="$t('搜索结果为空')"
     @change="handleConfigChange">

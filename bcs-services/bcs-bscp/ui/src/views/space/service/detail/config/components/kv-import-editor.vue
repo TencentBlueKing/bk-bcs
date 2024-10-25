@@ -90,6 +90,7 @@
   import SeparatorSelect from '../../../../variables/separator-select.vue';
   import { IConfigKvItem } from '../../../../../../../types/config';
   import { importKvFormText, importKvFormJson, importKvFormYaml } from '../../../../../../api/config';
+  import useServiceStore from '../../../../../../store/service';
 
   interface errorLineItem {
     lineNumber: number;
@@ -98,6 +99,8 @@
 
   const { t } = useI18n();
   const emits = defineEmits(['hasError', 'update:modelValue']);
+
+  const serviceStore = useServiceStore();
 
   const isOpenFullScreen = ref(false);
   const codeEditorRef = ref();
@@ -248,13 +251,17 @@
 
   // 导入kv
   const handleImport = async () => {
+    let res;
     if (props.format === 'text') {
-      await importKvFormText(props.bkBizId, props.appId, kvs.value, false);
+      res = await importKvFormText(props.bkBizId, props.appId, kvs.value, false);
     } else if (props.format === 'json') {
-      await importKvFormJson(props.bkBizId, props.appId, jsonContent.value);
+      res = await importKvFormJson(props.bkBizId, props.appId, jsonContent.value);
     } else {
-      await importKvFormYaml(props.bkBizId, props.appId, yamlContent.value);
+      res = await importKvFormYaml(props.bkBizId, props.appId, yamlContent.value);
     }
+    serviceStore.$patch((state) => {
+      state.topIds = res.data.ids;
+    });
   };
 
   const handleSelectSeparator = (selectSeparator: string) => {

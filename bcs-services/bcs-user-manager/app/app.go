@@ -133,9 +133,9 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 
 	// RedisDSN 没有配置，检查 RedisConfig
 	if userMgrConfig.RedisDSN == "" {
-		redisConfig, err := parseRedisConfig(op.RedisConfig)
+		redisConfig, aErr := parseRedisConfig(op.RedisConfig)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing redis config and exit: %s", err.Error())
+			return nil, fmt.Errorf("error parsing redis config and exit: %s", aErr.Error())
 		}
 		userMgrConfig.RedisConfig = redisConfig
 	}

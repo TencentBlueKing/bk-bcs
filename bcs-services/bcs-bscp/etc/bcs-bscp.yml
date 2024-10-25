@@ -56,6 +56,11 @@ redisCluster:
   password:
   db: 1
 
+# gorm related settings
+gorm:
+  # 日志级别，支持silent、error、warn、info四种级别（不区分大小写），默认为info
+  logLevel:
+
 downstream:
   bounceIntervalHour: 48
 

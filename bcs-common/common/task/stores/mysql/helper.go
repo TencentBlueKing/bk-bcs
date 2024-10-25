@@ -90,8 +90,9 @@ func toTask(task *TaskRecord, steps []*StepRecord) *types.Task {
 		End:                 task.End,
 		ExecutionTime:       task.ExecutionTime,
 		MaxExecutionSeconds: task.MaxExecutionSeconds,
-		Creator:             task.Creator,
+		CreatedAt:           task.CreatedAt,
 		LastUpdate:          task.UpdatedAt,
+		Creator:             task.Creator,
 		Updater:             task.Updater,
 	}
 

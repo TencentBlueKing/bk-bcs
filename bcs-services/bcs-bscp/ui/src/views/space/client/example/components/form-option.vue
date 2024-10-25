@@ -11,7 +11,11 @@
             placement: 'top',
           }" />
       </template>
-      <KeySelect ref="keySelectorRef" @current-key="setCredential" />
+      <KeySelect
+        ref="keySelectorRef"
+        :selected-key-data="props.selectedKeyData"
+        @current-key="setCredential"
+        @selected-key-data="emits('selected-key-data', $event)" />
     </bk-form-item>
     <!-- 配置项/配置文件 -->
     <bk-form-item v-if="props.configShow" property="configName" :required="props.configShow">
@@ -27,10 +31,13 @@
       <config-selector ref="configSelectRef" @select-config="formData.configName = $event" />
     </bk-form-item>
     <bk-form-item v-if="props.dualSystemSupport" :label="$t('客户端操作系统')" property="systemType">
-      <bk-radio v-model="formData.systemType" label="Unix" @change="handleChangeSys(formData.systemType)">
+      <bk-radio v-model="formData.systemType" label="Unix" @change="handleChangeSys(formData.systemType as string)">
         Linux
       </bk-radio>
-      <bk-radio v-model="formData.systemType" label="Windows" @change="handleChangeSys(formData.systemType)" />
+      <bk-radio
+        v-model="formData.systemType"
+        label="Windows"
+        @change="handleChangeSys(formData.systemType as string)" />
     </bk-form-item>
     <bk-form-item v-if="props.directoryShow" property="tempDir" :required="props.directoryShow">
       <template #label>
@@ -124,7 +131,7 @@
   import AddLabel from './add-label.vue';
   // import p2pAcceleration from './p2p-acceleration.vue';
   import p2pLabel from './p2p-label.vue';
-  import { IExampleFormData } from '../../../../../../types/client';
+  import { IExampleFormData, newICredentialItem } from '../../../../../../types/client';
   import { useI18n } from 'vue-i18n';
   import { cloneDeep } from 'lodash';
   import { copyToClipBoard } from '../../../../../utils/index';
@@ -134,6 +141,7 @@
 
   const props = withDefaults(
     defineProps<{
+      selectedKeyData: newICredentialItem['spec'] | null; // 记忆密钥的信息
       directoryShow?: boolean; // 临时目录(所有文件型)
       p2pShow?: boolean; // p2p网络加速（Sidecar容器）
       configShow?: boolean; // 配置项名称（Python SDK、http(s)接口调用）
@@ -153,7 +161,7 @@
     },
   );
 
-  const emits = defineEmits(['update-option-data']);
+  const emits = defineEmits(['update-option-data', 'selected-key-data']);
 
   const { t } = useI18n();
   const route = useRoute();
