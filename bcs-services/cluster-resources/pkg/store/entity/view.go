@@ -34,6 +34,25 @@ type ViewFilter struct {
 	Name          string          `json:"name" bson:"name"`
 	Creator       []string        `json:"creator" bson:"creator"`
 	LabelSelector []LabelSelector `json:"labelSelector" bson:"labelSelector"`
+	CreateSource  *CreateSource   `json:"createSource" bson:"createSource"`
+}
+
+// CreateSource 具体创建来源
+type CreateSource struct {
+	Source   string                `json:"source"`
+	Template *CreateSourceTemplate `json:"template"`
+	Chart    *CreateSourceChart    `json:"chart"`
+}
+
+// CreateSourceTemplate 创建来源模板集
+type CreateSourceTemplate struct {
+	TemplateName    string `json:"templateName"`
+	TemplateVersion string `json:"templateVersion"`
+}
+
+// CreateSourceChart 创建来源helm chart
+type CreateSourceChart struct {
+	ChartName string `json:"chartName"`
 }
 
 // ViewScope 视图可见范围
@@ -102,6 +121,25 @@ func (v *View) ToMap() map[string]interface{} {
 			"name":          v.Filter.Name,
 			"creator":       v.Filter.Creator,
 			"labelSelector": ls,
+		}
+		if v.Filter.CreateSource != nil {
+			createSource := map[string]interface{}{
+				"source": v.Filter.CreateSource.Source,
+			}
+			if v.Filter.CreateSource.Template != nil {
+				template := map[string]interface{}{
+					"templateName":    v.Filter.CreateSource.Template.TemplateName,
+					"templateVersion": v.Filter.CreateSource.Template.TemplateVersion,
+				}
+				createSource["template"] = template
+			}
+			if v.Filter.CreateSource.Chart != nil {
+				chart := map[string]interface{}{
+					"chartName": v.Filter.CreateSource.Chart.ChartName,
+				}
+				createSource["chart"] = chart
+			}
+			m["filter"].(map[string]interface{})["createSource"] = createSource
 		}
 	}
 	return m
