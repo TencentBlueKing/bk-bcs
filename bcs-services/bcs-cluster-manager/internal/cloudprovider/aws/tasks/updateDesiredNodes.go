@@ -60,10 +60,11 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	desiredNodes := step.Params[cloudprovider.ScalingNodesNumKey.String()]
 	nodeNum, _ := strconv.Atoi(desiredNodes)
-	operator := step.Params[cloudprovider.OperatorKey.String()]
+	user := step.Params[cloudprovider.OperatorKey.String()]
 	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
-	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(operator) == 0 {
+	// check validate paras
+	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(desiredNodes) == 0 || len(user) == 0 {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask check parameters failed")
 		_ = cloudprovider.DeleteVirtualNodes(clusterID, nodeGroupID, taskID)
@@ -71,6 +72,8 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+
+	// get basic depend info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -90,6 +93,8 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	// apply nodes from cloud provider
 	err = applyInstanceMachines(ctx, dependInfo, uint64(nodeNum))
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
@@ -118,9 +123,9 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("ApplyInstanceMachinesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
+	if errLocal := state.UpdateStepSucc(start, stepName); errLocal != nil {
+		blog.Errorf("ApplyInstanceMachinesTask[%s] %s update to storage fatal", taskID, stepName)
+		return errLocal
 	}
 
 	// destroy virtual nodes
@@ -136,6 +141,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// get cloud nodeGroup asg
 	asgName, err := getAsgNameByNodeGroup(ctx, info)
 	if err != nil {
 		return fmt.Errorf("applyInstanceMachines[%s] getAsgNameByNodeGroup failed: %v", taskID, err)
@@ -145,6 +151,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
+	// get cloud asg info
 	asgInfo, err := asCli.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{&asgName}})
 	if err != nil {
@@ -152,6 +159,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
+	// update asg desired capacity
 	err = loop.LoopDoFunc(context.Background(), func() error {
 		err = asCli.SetDesiredCapacity(asgName, *asgInfo[0].DesiredCapacity+int64(nodeNum))
 		if err != nil {
@@ -173,6 +181,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 	return nil
 }
 
+// getInstancesFromAsg get instances by asg
 func getInstancesFromAsg(asCli *api.AutoScalingClient, asgName string) ([]*autoscaling.Instance, error) {
 	asgInfo, err := asCli.DescribeAutoScalingGroups(&autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []*string{&asgName}})
@@ -192,6 +201,8 @@ func getInstancesFromAsg(asCli *api.AutoScalingClient, asgName string) ([]*autos
 func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskState,
 	info *cloudprovider.CloudDependBasicInfo, nodeNum uint64) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// differentInstance get different instance from db
 	successInstance, err := differentInstance(ctx, info, nodeNum) // 与db中的node对比，筛选出被扩容出来的机器
 	if err != nil {
 		return fmt.Errorf("recordClusterInstanceToDB[%s] call differentInstance failed", taskID)
@@ -212,6 +223,7 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 		successInstanceID = append(successInstanceID, *v.InstanceId)
 	}
 
+	// checkInstance check instances
 	successIns, failureIns, err := checkInstance(info, successInstanceID)
 	if err != nil {
 		_ = applyInstanceMachines(ctx, info, 0)
@@ -243,6 +255,7 @@ func recordClusterInstanceToDB(ctx context.Context, state *cloudprovider.TaskSta
 	return nil
 }
 
+// checkInstance check instance status
 func checkInstance(info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) ([]string, []string, error) {
 	client, err := api.NewAWSClientSet(info.CmOption)
 	if err != nil {
@@ -251,9 +264,12 @@ func checkInstance(info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) (
 	}
 
 	successIns, failureIns := make([]string, 0), make([]string, 0)
+
+	// context timeout
 	timeCtx, cancel := context.WithTimeout(context.TODO(), 5*time.Minute)
 	defer cancel()
 
+	// loop instances status
 	err = loop.LoopDoFunc(timeCtx, func() error {
 		running, failed := make([]string, 0), make([]string, 0)
 		instances, errDes := client.DescribeInstancesPages(
@@ -288,6 +304,8 @@ func checkInstance(info *cloudprovider.CloudDependBasicInfo, nodeIDs []string) (
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return nil, nil, err
 	}
+
+	// check timeout
 	if errors.Is(err, context.DeadlineExceeded) {
 		instances, errDes := client.DescribeInstancesPages(
 			&ec2.DescribeInstancesInput{InstanceIds: aws.StringSlice(nodeIDs)})
@@ -327,6 +345,7 @@ func differentInstance(rootCtx context.Context, info *cloudprovider.CloudDependB
 		return nil, err
 	}
 
+	// getAsgNameByNodeGroup get asg name
 	asgName, err := getAsgNameByNodeGroup(rootCtx, info)
 	if err != nil {
 		return nil, err
@@ -342,6 +361,7 @@ func differentInstance(rootCtx context.Context, info *cloudprovider.CloudDependB
 	err = loop.LoopDoFunc(timeCtx, func() error {
 		newInstances := make([]*autoscaling.Instance, 0)
 
+		// get ags instances
 		instances, errGet := getInstancesFromAsg(asCli, asgName)
 		if errGet != nil {
 			return errGet
@@ -402,6 +422,8 @@ func transInstancesToNode(ctx context.Context, state *cloudprovider.TaskState, s
 	)
 
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	// get nodes by instanceId
 	err = retry.Do(func() error {
 		nodes, err = client.ListNodesByInstanceID(successInstanceID, &cloudprovider.ListNodesOption{
 			Common:       info.CmOption,
@@ -441,6 +463,7 @@ func transInstancesToNode(ctx context.Context, state *cloudprovider.TaskState, s
 	return nodeIPs, nil
 }
 
+// getAsgNameByNodeGroup get asg name by nodegroup
 func getAsgNameByNodeGroup(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
@@ -451,6 +474,8 @@ func getAsgNameByNodeGroup(ctx context.Context, info *cloudprovider.CloudDependB
 	}
 
 	var ng *eks.Nodegroup
+
+	// get nodegroups
 	err = retry.Do(
 		func() error {
 			ng, err = eksCli.DescribeNodegroup(&ngName, &info.Cluster.SystemID)
@@ -496,12 +521,14 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	successNodeNames := strings.Split(state.Task.CommonParams[cloudprovider.NodeNamesKey.String()], ",")
 	manual := state.Task.CommonParams[cloudprovider.ManualKey.String()]
 
+	// check validate paras
 	if len(clusterID) == 0 || len(nodeGroupID) == 0 || len(cloudID) == 0 || len(successNodeNames) == 0 {
 		blog.Errorf("CheckClusterNodesStatusTask[%s]: check parameter validate failed", taskID)
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask check parameters failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
+	// get depend basic info
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -516,13 +543,15 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+
+	// check cluster nodes status
 	successInstances, failureInstances, successIP, err := checkClusterInstanceStatus(ctx, dependInfo, successNodeNames)
 	if err != nil || len(successInstances) == 0 {
 		if manual != common.True {
 			// rollback failed nodes
 			_ = returnEksInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
 		}
-		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
+		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err)
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -551,14 +580,15 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error {
 	}
 
 	// update step
-	if err := state.UpdateStepSucc(start, stepName); err != nil {
-		blog.Errorf("CheckClusterNodesStatusTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
-		return err
+	if errLocal := state.UpdateStepSucc(start, stepName); errLocal != nil {
+		blog.Errorf("CheckClusterNodesStatusTask[%s] %s update to storage fatal", taskID, stepName)
+		return errLocal
 	}
 
 	return nil
 }
 
+// checkClusterInstanceStatus check cluster instance status
 func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	instanceNames []string) ([]string, []string, []string, error) {
 	var (
@@ -579,6 +609,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		running := make([]string, 0)
 		successIP := make([]string, 0)
 
+		// get k8s nodes
 		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID)
 		if err != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
@@ -590,6 +621,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			nodeNameMap[nodes[i].Name] = nodes[i]
 		}
 
+		// check node if ready
 		for _, ins := range instanceNames {
 			n, ok := nodeNameMap[ins]
 			if ok && utils.CheckNodeIfReady(n) {
@@ -619,10 +651,11 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	if errors.Is(err, context.DeadlineExceeded) {
 		running, failure, successIP := make([]string, 0), make([]string, 0), make([]string, 0)
 
-		nodes, err := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
-		if err != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v", taskID, info.Cluster.ClusterID, err)
-			return nil, nil, nil, err
+		nodes, errLocal := k8sOperator.ListClusterNodes(context.Background(), info.Cluster.ClusterID) // nolint
+		if errLocal != nil {
+			blog.Errorf("checkClusterInstanceStatus[%s] cluster[%s] failed: %v",
+				taskID, info.Cluster.ClusterID, errLocal)
+			return nil, nil, nil, errLocal
 		}
 
 		var nodeNameMap = make(map[string]*corev1.Node, 0)
@@ -658,6 +691,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	return addSuccessNodes, addFailureNodes, addSuccessNodesIP, nil
 }
 
+// getEksNodeIDFromNode get nodeId from k8s node
 func getEksNodeIDFromNode(node *corev1.Node) string {
 	nodeInfo := strings.Split(node.Spec.ProviderID, "/")
 	if len(nodeInfo) == 0 {
@@ -667,6 +701,7 @@ func getEksNodeIDFromNode(node *corev1.Node) string {
 	return nodeInfo[len(nodeInfo)-1]
 }
 
+// returnEksInstancesAndCleanNodes return cloud nodes and clean nodes
 func returnEksInstancesAndCleanNodes(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
 	instanceNames []string) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)

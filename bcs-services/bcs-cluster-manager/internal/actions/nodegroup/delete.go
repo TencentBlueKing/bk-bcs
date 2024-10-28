@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/avast/retry-go"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
@@ -576,7 +577,19 @@ func (da *CleanNodesAction) updateCleanNodesStatus() error {
 	// try to update Cluster & NodeGroup
 	for _, node := range da.cleanNodes {
 		node.Status = common.StatusDeleting
-		if err := da.model.UpdateNode(da.ctx, node); err != nil {
+
+		var (
+			err error
+		)
+		// maybe update node timeout thus solve problem by retry
+		err = retry.Do(func() error {
+			if errLocal := da.model.UpdateNode(da.ctx, node); errLocal != nil {
+				return errLocal
+			}
+
+			return nil
+		}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Millisecond*500))
+		if err != nil {
 			blog.Errorf("update NodeGroup %s with Nodes %v status change to DELETING failed, %s",
 				da.group.ClusterID, da.req.Nodes, err.Error(),
 			)

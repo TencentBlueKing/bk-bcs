@@ -564,7 +564,7 @@ func CheckClusterNodesStatusTask(taskID string, stepName string) error { // noli
 			// rollback failed nodes
 			_ = returnAzureInstancesAndCleanNodes(ctx, dependInfo, failureInstances)
 		}
-		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err.Error())
+		blog.Errorf("CheckClusterNodesStatusTask[%s]: checkClusterInstanceStatus failed: %s", taskID, err)
 		retErr := fmt.Errorf("CheckClusterNodesStatusTask checkClusterInstanceStatus failed")
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
@@ -656,12 +656,14 @@ func checkClusterInstanceStatus(rootCtx context.Context, info *cloudprovider.Clo
 		}
 		for _, vm := range instanceList {
 			id := api.VmIDToNodeID(vm)
-			if n, ok := k8sNodeMap[*vm.Properties.OSProfile.ComputerName]; ok {
+
+			if n, ok := k8sNodeMap[strings.ToLower(*vm.Properties.OSProfile.ComputerName)]; ok {
 				if ok && cmutils.CheckNodeIfReady(n) {
 					blog.Infof("checkClusterInstanceStatus[%s] node[%s] ready", taskID, id)
 					running = append(running, id)
 				}
 			}
+
 		}
 
 		blog.Infof("checkClusterInstanceStatus[%s] ready nodes[%+v]", taskID, running)

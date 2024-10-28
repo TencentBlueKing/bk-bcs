@@ -187,6 +187,7 @@ type InstanceType struct {
 	SystemDisk        *DataDisk
 	DataDisks         []*DataDisk
 	OversoldAvailable int32
+	Region            string
 }
 
 // InstanceSpec size
