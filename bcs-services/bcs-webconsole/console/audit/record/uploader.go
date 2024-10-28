@@ -19,6 +19,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -118,6 +119,35 @@ func (u *Uploader) IntervalUpload(ctx context.Context) error {
 			}
 
 			blog.Infof("interval upload done, result: %s", result)
+		}
+	}
+}
+
+// IntervalDelete 定时删除
+func (u *Uploader) IntervalDelete(ctx context.Context) error {
+	// RetentionDays 为0的情况下为永久的，不删除
+	if u.storage == nil || config.G.Audit.RetentionDays == 0 {
+		blog.Info("storage type not set or retention days is 0, delete just ignore")
+		return nil
+	}
+
+	timer := time.NewTicker(time.Hour)
+	defer timer.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			blog.Infof("interval delete folders done by ctx")
+			return nil
+
+		case <-timer.C:
+			err := u.deleteFolders()
+			if err != nil {
+				blog.Errorf("interval delete folders failed, err: %s", err)
+				continue
+			}
+
+			blog.Infof("interval delete folders done")
 		}
 	}
 }
@@ -230,6 +260,42 @@ func (u *Uploader) upload(cast *castFile) error {
 	cast.clean()
 
 	blog.Infof("upload file %s success", cast.filePath)
+
+	return nil
+}
+
+// 删除文件夹
+func (u *Uploader) deleteFolders() error {
+
+	// 1 分钟删除时间
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	folderNames, err := u.storage.ListFolders(ctx, "")
+	if err != nil {
+		return fmt.Errorf("list folders failed, err: %w", err)
+	}
+
+	var expireFolders []string
+	var invalidFolders []string
+	reserveDay := time.Duration(config.G.Audit.RetentionDays)
+	for _, v := range folderNames {
+		v = strings.Trim(v, "/")
+		date, err := time.Parse(dateTimeFormat, v)
+		if err != nil {
+			invalidFolders = append(invalidFolders, v)
+			continue
+		}
+		// 删除 RetentionDays 天前的文件夹
+		if date.Before(time.Now().Add(-time.Hour * 24 * reserveDay)) {
+			expireFolders = append(expireFolders, v)
+			if err := u.storage.DeleteFolders(ctx, v); err != nil {
+				return fmt.Errorf("delete folders %s failed, err: %w", v, err)
+			}
+		}
+	}
+
+	blog.Infof("delete folders success: %v, invalid folders: %v", expireFolders, invalidFolders)
 
 	return nil
 }

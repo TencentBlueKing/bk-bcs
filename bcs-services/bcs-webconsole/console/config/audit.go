@@ -19,8 +19,14 @@ import (
 
 // AuditConf 终端session记录配置
 type AuditConf struct {
-	Enabled bool   `yaml:"enabled"`
-	DataDir string `yaml:"data_dir"` // 格式如 ./data
+	Enabled       bool   `yaml:"enabled"`
+	DataDir       string `yaml:"data_dir"` // 格式如 ./data
+	RetentionDays int    `yaml:"retention_days"`
+}
+
+// Init : AuditConf init
+func (t *AuditConf) Init() {
+	t.RetentionDays = 0
 }
 
 func (t *AuditConf) defaultPath() string {

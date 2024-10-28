@@ -157,32 +157,67 @@ func (b *bkrepoStorage) ListFolders(ctx context.Context, folderName string) ([]s
 		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
 
 	folders := make([]string, 0)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+
+	// 全量列出
+	pageNumber := 1
+	pageSize := 1000
+	for pageSize != 0 {
+		newRawURL := fmt.Sprintf("%s?pageNumber=%d&pageSize=%d", rawURL, pageNumber, pageSize)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, newRawURL, nil)
+		if err != nil {
+			return folders, err
+		}
+		resp, err := b.client.Do(req)
+		if err != nil {
+			return folders, err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return folders, fmt.Errorf("get file list failed, Err code: %v", resp.StatusCode)
+		}
+		listResult := new(listFileResult)
+		if err := json.NewDecoder(resp.Body).Decode(listResult); err != nil {
+			return folders, fmt.Errorf("unmarshal resp err: %v", err)
+		}
+
+		for _, record := range listResult.Data.Records {
+			if record.Folder {
+				folders = append(folders, record.Name)
+			}
+		}
+
+		pageNumber++
+		// 非1000条的情况下直接退出
+		if len(listResult.Data.Records) != pageSize {
+			pageSize = 0
+		}
+
+	}
+	return folders, nil
+}
+
+// DeleteFolders delete of folders under current bkRepo folder
+func (b *bkrepoStorage) DeleteFolders(ctx context.Context, folderName string) error {
+	// 节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
+	// GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
+	rawURL := fmt.Sprintf("%s/repository/api/node/delete/%s/%s/%s", config.G.Repository.Bkrepo.Endpoint,
+		config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo, folderName)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, rawURL, nil)
 	if err != nil {
-		return folders, err
+		return err
 	}
 	resp, err := b.client.Do(req)
 	if err != nil {
-		return folders, err
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return folders, fmt.Errorf("get file list failed, Err code: %v", resp.StatusCode)
-	}
-	listResult := new(listFileResult)
-	if err := json.NewDecoder(resp.Body).Decode(listResult); err != nil {
-		return folders, fmt.Errorf("unmarshal resp err: %v", err)
-	}
-	if len(listResult.Data.Records) == 0 {
-		return folders, fmt.Errorf("folder %s is not exit", folderName)
+		return fmt.Errorf("delete folder failed, Err code: %v", resp.StatusCode)
 	}
 
-	for _, record := range listResult.Data.Records {
-		if record.Folder {
-			folders = append(folders, record.Name)
-		}
-	}
-	return folders, nil
+	return nil
 }
 
 // DownloadFile download file from bkRepo
