@@ -378,10 +378,28 @@ func protoFilterToFilter(filter *clusterRes.ViewFilter) *entity.ViewFilter {
 			Values: v.GetValues(),
 		})
 	}
+
+	createSource := &entity.CreateSource{
+		Source:   "",
+		Template: &entity.CreateSourceTemplate{},
+		Chart:    &entity.CreateSourceChart{},
+	}
+	if filter.GetCreateSource() != nil {
+		createSource.Source = filter.GetCreateSource().Source
+		if filter.GetCreateSource().Template != nil {
+			createSource.Template.TemplateName = filter.GetCreateSource().GetTemplate().GetTemplateName()
+			createSource.Template.TemplateVersion = filter.GetCreateSource().GetTemplate().GetTemplateVersion()
+		}
+		if filter.GetCreateSource().Chart != nil {
+			createSource.Chart.ChartName = filter.GetCreateSource().GetChart().GetChartName()
+		}
+	}
+
 	return &entity.ViewFilter{
 		Name:          filter.GetName(),
 		Creator:       filter.GetCreator(),
 		LabelSelector: ls,
+		CreateSource:  createSource,
 	}
 }
 

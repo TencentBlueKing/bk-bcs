@@ -56,6 +56,7 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 	filter := QueryFilter{
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
+		CreateSource:  req.GetCreateSource(),
 		LabelSelector: req.GetLabelSelector(),
 		IP:            req.GetIp(),
 		Status:        req.GetStatus(),
@@ -146,6 +147,7 @@ func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
 	filter := QueryFilter{
 		Creator:       req.GetCreator(),
 		Name:          req.GetName(),
+		CreateSource:  req.GetCreateSource(),
 		LabelSelector: req.GetLabelSelector(),
 		IP:            req.GetIp(),
 		Status:        req.GetStatus(),
@@ -190,6 +192,7 @@ func (h *Handler) MultiClusterResourceCount(ctx context.Context, req *clusterRes
 		Name:          req.GetName(),
 		LabelSelector: req.GetLabelSelector(),
 		Limit:         1,
+		CreateSource:  req.GetCreateSource(),
 	}
 	var err error
 
