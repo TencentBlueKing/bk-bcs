@@ -10,7 +10,7 @@
         <ClusterSelectPopover
           :selectable="false"
           :update-store="false"
-          :cluster-type="['independent', 'managed', 'virtual']"
+          cluster-type="all"
           @click="(clusterID) => handleGotoConsole({ clusterID })" />
       </template>
     </PopoverSelector>

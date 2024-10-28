@@ -133,13 +133,12 @@ const handleClick = (cluster) => {
   emits('click', cluster.clusterID);
 };
 watch(() => props.isShow, (val) => {
-  if(val) {
+  if (val) {
     // 如果已选择集群，滚动到活动项目
     const selectedClusterId = localValue.value;
     if (selectedClusterId) {
       clusterIdRef.value?.find(item => item.id === selectedClusterId).scrollIntoView({ behavior: 'auto', block: 'center' });
     }
   }
-  
 });
 </script>
