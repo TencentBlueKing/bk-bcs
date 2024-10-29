@@ -24,6 +24,7 @@ import (
 
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -274,34 +275,32 @@ func (s *service) ReadyHandler(c *gin.Context) {
 
 // 根据日期倒序排，无效的日期排最后
 func sortByDateDesc(folderNames []string) []string {
-	// 将字符串切片转换为 time.Time 切片，按照时间逆序排
-	var dates []time.Time
-	var invalidFolders []string
-	for _, v := range folderNames {
-		v = strings.Trim(v, "/")
+	type folder struct {
+		date time.Time
+		name string
+	}
+
+	folers := lo.Map(folderNames, func(item string, _ int) folder {
+		v := strings.Trim(item, "/")
 		date, err := time.Parse(time.DateOnly, v)
 		if err != nil {
-			invalidFolders = append(invalidFolders, v)
-			continue
+			date = time.Time{}
 		}
-		dates = append(dates, date)
-	}
+		return folder{date: date, name: v}
+	})
 
 	// 按照时间逆序排
-	sort.Slice(dates, func(i, j int) bool {
-		return dates[i].After(dates[j])
+	sort.Slice(folers, func(i, j int) bool {
+		// 时间一致, 按名称排序
+		if folers[i].date.Equal(folers[j].date) {
+			return folers[i].name > folers[j].name
+		}
+
+		return folers[i].date.After(folers[j].date)
 	})
 
-	// 无效的文件夹按照字符逆序排
-	sort.Slice(invalidFolders, func(i, j int) bool {
-		return invalidFolders[i] > invalidFolders[j]
+	names := lo.Map(folers, func(item folder, _ int) string {
+		return item.name
 	})
-
-	var newFolderNames []string
-	for _, date := range dates {
-		newFolderNames = append(newFolderNames, date.Format("2006-01-02"))
-	}
-
-	newFolderNames = append(newFolderNames, invalidFolders...)
-	return newFolderNames
+	return names
 }
