@@ -6,7 +6,8 @@
       :border="false"
       ref="yamlLayoutRef"
       initial-divide="230px"
-      class="h-full">
+      class="h-full"
+      @collapse-change="handleCollapseChange">
       <div
         slot="aside"
         class="bg-[#fff] h-full overflow-y-auto overflow-x-hidden">
@@ -24,7 +25,8 @@
         :class="[
           'flex flex-col',
           'shadow-[0_2px_4px_0_rgba(0,0,0,0.16)]',
-          'w-full bg-[#2E2E2E] h-full rounded-t-sm',
+          'bg-[#2E2E2E] h-full rounded-t-sm',
+          isCollapse ? '' : 'ml-[16px]'
         ]">
         <!-- 工具栏 -->
         <div
@@ -168,6 +170,11 @@ const explainK8sIssue = throttle(() => {
   assistantRef.value?.handleSendMsg(editorErr.value.message);
   assistantRef.value?.showAITips();
 }, 300);
+
+const isCollapse = ref(false);
+const handleCollapseChange = (value: boolean) => {
+  isCollapse.value = value;
+};
 
 watch(() => props.value, () => {
   if (!props.value) return;
