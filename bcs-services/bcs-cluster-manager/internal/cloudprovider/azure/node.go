@@ -112,7 +112,7 @@ func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt 
 			}
 
 			// filter cpu && mem
-			if cpu == 0 || mem == 0 || cpu < 4 || mem < 4 {
+			if cpu == 0 || mem == 0 || cpu < 2 || mem < 4 {
 				continue
 			}
 
