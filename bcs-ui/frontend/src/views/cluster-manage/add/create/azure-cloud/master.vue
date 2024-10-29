@@ -9,32 +9,33 @@
             <span class="flex text-[16px] text-[#f85356]">
               <i class="bcs-icon bcs-icon-hot"></i>
             </span>
-            <span class="ml-[8px]">{{ $t('bcs.cluster.managed') }}</span>
+            <span class="ml-[8px]">{{ $t('bcs.cluster.managed1') }}</span>
           </div>
         </bk-button>
       </div>
       <div class="text-[12px] leading-[20px] mt-[4px]">
-        <span>{{ $t('cluster.create.label.manageType.managed.desc') }}</span>
+        <span>{{ $t('azureCloud.label.aksDesc') }}</span>
       </div>
     </bk-form-item>
     <bk-form-item
       :label="$t('tke.label.apiServerCLB.text')"
       :desc="$t('tke.label.apiServerCLB.desc')"
-      property="clusterAdvanceSettings.clusterConnectSetting.securityGroup"
+      property="clusterAdvanceSettings.clusterConnectSetting.cidrs"
       error-display-type="normal"
-      key="securityGroup"
+      key="cidrs"
       required>
       <NetworkSelector
+        :ref="el => networkSelectorRef = el"
         class="max-w-[600px]"
-        :value="masterConfig.clusterAdvanceSettings.clusterConnectSetting"
+        :value="connectConfig"
         :region="region"
         :cloud-account-i-d="cloudAccountID"
         :cloud-i-d="cloudID"
         :value-list="[
           { label: $t('tke.label.apiServerCLB.internet'), value: 'internet' },
-          { label: $t('tke.label.apiServerCLB.intranet'), value: 'intranet' }
+          { label: $t('tke.label.apiServerCLB.intranet'), value: 'intranet' },
         ]"
-        @change="(v) => masterConfig.clusterAdvanceSettings.clusterConnectSetting = v" />
+        @change="handleChange" />
     </bk-form-item>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
       <bk-button @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
@@ -44,12 +45,9 @@
   </bk-form>
 </template>
 <script setup lang="ts">
-import { computed, inject, PropType, ref, watch } from 'vue';
+import { computed, PropType, ref } from 'vue';
 
-import { ClusterDataInjectKey, IHostNode, IInstanceItem } from '../../../types/types';
-
-import { cloudInstanceTypesByLevel } from '@/api/modules/cluster-manager';
-import $bkInfo from '@/components/bk-magic-2.0/bk-info';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import NetworkSelector from '@/views/cluster-manage/add/components/network-selector.vue';
 
@@ -80,249 +78,62 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['next', 'cancel', 'pre', 'resource-type', 'instances-change']);
-
-const clusterData = inject(ClusterDataInjectKey);
-const subnetZoneList = computed(() => {
-  if (!clusterData?.value) return [];
-
-  return clusterData.value?.clusterAdvanceSettings?.networkType === 'VPC-CNI'
-    ? clusterData.value?.networkSettings?.subnetSource?.new?.map(item => item.zone) || []
-    : [];
-});
+const emits = defineEmits(['next', 'cancel', 'pre']);
 
 // master配置
 const masterConfig = ref({
   manageType: 'MANAGED_CLUSTER',
-  autoGenerateMasterNodes: true,
-  master: [],
-  clusterBasicSettings: {
-    clusterLevel: 'L20',
-    isAutoUpgradeClusterLevel: true,
-    module: {
-      masterModuleID: '',
-    },
-  },
   clusterAdvanceSettings: {
     clusterConnectSetting: {
-      isExtranet: true,
-      subnetId: '',
-      securityGroup: [],
-    },
-  },
-  nodeSettings: {
-    masterLogin: {
-      initLoginUsername: '',
-      initLoginPassword: '',
-      keyPair: {
-        keyID: '',
-        keySecret: '',
-        keyPublic: '',
+      isExtranet: false,
+      internet: {
+        publicAccessCidrs: [],
       },
     },
   },
 });
 
-// 登录方式
-const loginType = ref<'password'|'ssh'>('password');
-const confirmPassword = ref('');
-// watch([
-//   () => masterConfig.value.nodeSettings.masterLogin.initLoginPassword,
-//   () => confirmPassword.value,
-//   () => masterConfig.value.nodeSettings.masterLogin.keyPair.keyID,
-//   () => masterConfig.value.nodeSettings.masterLogin.keyPair.keySecret,
-// ], () => {
-//   formRef.value?.$refs?.loginTypeRef?.validate();
-// });
+const connectConfig = ref({
+  ITNType: 'intranet',
+  isExtranet: false,
+  cidrs: [],
+  internet: {
+    publicIPAssigned: false,
+    publicAccessCidrs: [],
+  },
+});
+
+const networkSelectorRef = ref<InstanceType<typeof NetworkSelector> | null>(null);
 // 动态 i18n 问题，这里使用computed
 const masterConfigRules = computed(() => ({
-  'clusterBasicSettings.clusterLevel': [
-    {
-      required: true,
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'custom',
-    },
-  ],
-  'clusterAdvanceSettings.clusterConnectSetting.securityGroup': [
+  'clusterAdvanceSettings.clusterConnectSetting.cidrs': [
     {
       trigger: 'blur',
       message: $i18n.t('generic.validate.required'),
-      validator() {
-        // todo ip校验
-        if (masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.isExtranet) {
-          return !!masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.securityGroup;
+      async validator() {
+        if (connectConfig.value.ITNType === 'internet') {
+          return await networkSelectorRef.value?.validate();
         }
         return true;
-      },
-    },
-  ],
-  master: [
-    {
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'custom',
-      validator: () => {
-        if (masterConfig.value.autoGenerateMasterNodes) {
-          return true;
-        }
-        return !!masterConfig.value.master.length;
-      },
-    },
-    {
-      message: $i18n.t('cluster.create.validate.masterNum35'),
-      trigger: 'custom',
-      validator: () => {
-        if (masterConfig.value.autoGenerateMasterNodes) {
-          return true;
-        }
-        const maxMasterNum = [3, 5];
-        return masterConfig.value.master.length && maxMasterNum.includes(masterConfig.value.master.length);
-      },
-    },
-  ],
-  'clusterBasicSettings.module.masterModuleID': [
-    {
-      required: true,
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'custom',
-    },
-  ],
-  masterLogin: [
-    {
-      trigger: 'custom',
-      message: $i18n.t('generic.validate.required'),
-      validator() {
-        if (loginType.value === 'password') {
-          return !!masterConfig.value.nodeSettings.masterLogin.initLoginPassword;
-        }
-        return !!masterConfig.value.nodeSettings.masterLogin.keyPair.keyID
-         && !!masterConfig.value.nodeSettings.masterLogin.keyPair.keySecret;
-      },
-    },
-    {
-      trigger: 'custom',
-      message: $i18n.t('cluster.ca.nodePool.create.validate.password'),
-      validator() {
-        if (loginType.value === 'password') {
-          const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,30}$/;
-          return regex.test(masterConfig.value.nodeSettings.masterLogin.initLoginPassword);
-        }
-        return true;
-      },
-    },
-    {
-      trigger: 'custom',
-      message: $i18n.t('tke.validate.passwordNotSame'),
-      validator() {
-        if (loginType.value === 'password' && confirmPassword.value) {
-          return masterConfig.value.nodeSettings.masterLogin.initLoginPassword === confirmPassword.value;
-        }
-        return true;
-      },
-    },
-    {
-      trigger: 'blur',
-      message: $i18n.t('tke.validate.passwordNotSame'),
-      validator() {
-        if (loginType.value === 'password') {
-          return masterConfig.value.nodeSettings.masterLogin.initLoginPassword === confirmPassword.value;
-        }
-        return true;
-      },
-    },
-  ],
-  // bk-form-item 在apply-host-resource组件中
-  instanceChargeType: [
-    {
-      trigger: 'custom',
-      message: $i18n.t('generic.validate.required'),
-      validator() {
-        return !!instanceCommonConfig.value.instanceChargeType;
-      },
-    },
-  ],
-  // bk-form-item 在apply-host-resource组件中
-  instances: [{
-    trigger: 'custom',
-    message: $i18n.t('cluster.create.validate.masterNum35'),
-    validator() {
-      const count = instanceConfigList.value.reduce((pre, item) => {
-        pre += item.applyNum;
-        return pre;
-      }, 0);
-      return [3, 5].includes(count);
-    },
-  }],
-  // bk-form-item 在apply-host-resource组件中
-  securityGroupIDs: [
-    {
-      trigger: 'custom',
-      message: $i18n.t('generic.validate.required'),
-      validator() {
-        return !!instanceCommonConfig.value.securityGroupIDs?.length;
       },
     },
   ],
 }));
 
-// 机型配置
-const instanceLoading = ref(false);
-const instanceCommonConfig = ref<Partial<IInstanceItem>>({});
-
-const instanceConfigList = ref<Array<IInstanceItem>>([]);
-const instances = computed(() => instanceConfigList.value.map(item => ({
-  ...item,
-  ...instanceCommonConfig.value,
-  region: props.region,
-  vpcID: props.vpcID,
-  dockerGraphPath: '',
-})));
-watch(instances, () => {
-  formRef.value?.$refs?.applyHostResourceRef?.$refs?.instancesRef?.validate();
-  emits('instances-change', instances.value);
-});
-
-const level = ref('');
-const handleGetCloudInstanceTypesByLevel = async () => {
-  if (!props.region || !level.value || !props.cloudAccountID) return;
-
-  instanceLoading.value = true;
-  instanceConfigList.value = await cloudInstanceTypesByLevel({
-    $cloudId: props.cloudID,
-    $region: props.region,
-    $level: level.value,
-    vpcID: props.vpcID,
-    accountID: props.cloudAccountID,
-    zones: subnetZoneList.value.join(','),
-  }).catch(() => []);
-  if (!instanceConfigList.value.length) {
-    $bkInfo({
-      type: 'warning',
-      clsName: 'custom-info-confirm',
-      title: $i18n.t('tke.title.noAvailableSubnets'),
-      defaultInfo: true,
-      okText: $i18n.t('tke.button.addSubnets'),
-      confirmFn: async () => {
-        window.open(`https://console.cloud.tencent.com/vpc/vpc/detail?rid=1&id=${props.vpcID}`);
-      },
-    });
-  }
-  instanceLoading.value = false;
+// 整理参数
+function handleChange(data) {
+  connectConfig.value = data;
+  masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.isExtranet = data?.isExtranet;
+  // eslint-disable-next-line max-len
+  masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.internet.publicAccessCidrs = data?.internet?.publicAccessCidrs;
+  // eslint-disable-next-line max-len
+  if (!data?.isExtranet) masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.internet.publicAccessCidrs = [];
 };
 
 // master配置
 const handleChangeManageType = (type: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER') => {
   masterConfig.value.manageType = type;
-  masterConfig.value.master = [];
-  // validate();
 };
-watch([
-  () => props.region,
-  () => props.cloudAccountID,
-  () => props.vpcID,
-  () => subnetZoneList.value,
-], () => {
-  handleGetCloudInstanceTypesByLevel();
-});
 
 // 校验master节点
 const formRef = ref();
@@ -336,20 +147,16 @@ const preStep = () => {
   emits('pre');
 };
 // 下一步
+const { focusOnErrorField } = useFocusOnErrorField();
 const nextStep = async () => {
   const result = await validate();
   if (result) {
     emits('next', {
       ...masterConfig.value,
-      master: (masterConfig.value.master as IHostNode[]).map(item => item.ip),
     });
   } else {
     // 自动滚动到第一个错误的位置
-    const errDom = document.getElementsByClassName('form-error-tip');
-    errDom[0]?.scrollIntoView({
-      block: 'center',
-      behavior: 'smooth',
-    });
+    focusOnErrorField();
   }
 };
 // 取消

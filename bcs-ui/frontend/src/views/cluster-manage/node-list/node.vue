@@ -8,7 +8,7 @@
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
-        <i18n v-if="clusterData.provider !== 'awsCloud'" path="cluster.nodeList.article2">
+        <i18n v-if="!['awsCloud', 'azureCloud'].includes(clusterData.provider)" path="cluster.nodeList.article2">
           <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
           <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
         </i18n>

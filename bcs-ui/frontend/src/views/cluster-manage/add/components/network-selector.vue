@@ -13,7 +13,7 @@
     </div>
     <!-- 公网cidr -->
     <combination-input
-      v-if="clusterConnectSetting?.isExtranet"
+      v-show="clusterConnectSetting?.isExtranet"
       :list="clusterConnectSetting.cidrs"
       @data-change="updateSecurityGroup"
       :ref="el => combinationInputRef = el"

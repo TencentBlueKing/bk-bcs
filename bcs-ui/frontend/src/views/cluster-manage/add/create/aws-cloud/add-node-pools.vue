@@ -29,7 +29,7 @@
           {{$t('generic.button.delete')}}
         </bcs-button> -->
         <bcs-table
-          class="mt15 w-[800px]"
+          class="w-[800px]"
           height="200px"
           :ref="el => tableRef = el"
           v-bkloading="{ isLoading: loading }"
@@ -114,6 +114,7 @@
         <SecurityGroups
           class="max-w-[600px]"
           multiple
+          :show-extension="false"
           :region="region"
           :cloud-account-i-d="cloudAccountID"
           :cloud-i-d="cloudID"
@@ -635,3 +636,8 @@ defineExpose({
   validate,
 });
 </script>
+<style lang="postcss" scoped>
+/deep/ .bk-table-header, /deep/ .bk-table-body {
+  width: 100% !important;
+}
+</style>

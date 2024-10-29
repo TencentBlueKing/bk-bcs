@@ -346,8 +346,8 @@ import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import FormGroup from '@/components/form-group.vue';
-import usePage from '@/composables/use-page';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
+import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -421,6 +421,7 @@ export default defineComponent({
         zones: defaultValues.value.autoScaling?.zones || [],
         subnetIDs: defaultValues.value.autoScaling.subnetIDs || [], // 支持子网
       },
+      nodeOS: defaultValues.value.launchTemplate?.imageInfo?.imageName, // 操作系统类型
       launchTemplate: {
         imageInfo: {
           imageName: defaultValues.value.launchTemplate?.imageInfo?.imageName, // 镜像名称
@@ -483,7 +484,8 @@ export default defineComponent({
         {
           message: $i18n.t('cluster.ca.nodePool.create.validate.passwordNotSame'),
           trigger: 'blur',
-          validator: () => confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
+          validator: () => isEdit.value
+            || confirmPassword.value === nodePoolConfig.value.launchTemplate.initLoginPassword,
         },
       ],
       'nodePoolConfig.launchTemplate.initLoginUsername': [
@@ -817,6 +819,7 @@ export default defineComponent({
       // CPU和mem信息从机型获取
       nodePoolConfig.value.launchTemplate.CPU = curInstanceItem.value.cpu;
       nodePoolConfig.value.launchTemplate.Mem = curInstanceItem.value.memory;
+      nodePoolConfig.value.nodeOS = nodePoolConfig.value.launchTemplate.imageInfo.imageName;
       return nodePoolConfig.value;
     };
     const validate = async () => {

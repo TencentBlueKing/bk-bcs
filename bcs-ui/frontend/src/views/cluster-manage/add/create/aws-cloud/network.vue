@@ -134,6 +134,7 @@
         <SecurityGroups
           class="max-w-[600px]"
           :region="region"
+          :show-extension="false"
           :cloud-account-i-d="cloudAccountID"
           :cloud-i-d="cloudID"
           v-model="networkConfig.clusterAdvanceSettings.clusterConnectSetting.securityGroup" />

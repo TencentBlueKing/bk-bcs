@@ -41,6 +41,7 @@
             :region="clusterData.region"
             :cloud-account-i-d="clusterData.cloudAccountID"
             :cloud-i-d="cloudID"
+            :resource-group-name="clusterData.extraInfo?.clusterResourceGroup"
             ref="netRef"
             @pre="preStep"
             @next="nextStep"
@@ -89,7 +90,7 @@
             :master="clusterData.master"
             :master-login="clusterData.nodeSettings ? clusterData.nodeSettings.masterLogin : undefined"
             :manage-type="clusterData.manageType"
-            :auto-generate-master-nodes="clusterData.autoGenerateMasterNodes"
+            :resource-group-name="clusterData.extraInfo?.clusterResourceGroup"
             ref="nodesRef"
             @pre="preStep"
             @next="nextStep"
@@ -122,13 +123,13 @@ import $router from '@/router';
 import $store from '@/store';
 import StepTabLabel from '@/views/cluster-manage/add/components/step-tab-label.vue';
 
-const cloudID: CloudID = 'tencentPublicCloud';
+const cloudID: CloudID = 'azureCloud';
 
 const steps = ref([
   { name: 'basicInfo', disabled: false, isErr: false },
-  { name: 'network',  disabled: false, isErr: false },
-  { name: 'master',  disabled: false, isErr: false },
-  { name: 'nodes', disabled: false, isErr: false },
+  { name: 'network',  disabled: true, isErr: false },
+  { name: 'master',  disabled: true, isErr: false },
+  { name: 'nodes', disabled: true, isErr: false },
 ]);
 
 const activeTabName = ref<typeof steps.value[number]['name']>('basicInfo');

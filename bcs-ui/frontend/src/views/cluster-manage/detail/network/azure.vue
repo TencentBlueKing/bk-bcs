@@ -32,6 +32,7 @@
       <template v-else>
         <!-- Microsoft 云 -->
         <bk-form-item
+          v-if="clusterData.provider !== 'azureCloud'"
           :label="$t('cluster.labels.maxPodNum')">
           <span>{{ cidrStep }}</span>
           <span>({{ clusterIPv4CIDR }})</span>

@@ -58,6 +58,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  resourceGroupName: {
+    type: String,
+    default: '',
+  },
 });
 const emits = defineEmits(['input', 'change']);
 
@@ -66,11 +70,14 @@ const vpcLoading = ref(false);
 const vpcList = ref<Array<IVpcItem>>($store.state.cloudMetadata.vpcList);
 const handleGetVPCList = async () => {
   if (!props.region || !props.cloudAccountID || !props.cloudID) return;
+  // Azure云组要resourceGroupName
+  if (props.cloudID === 'azureCloud' && !props.resourceGroupName) return;
   vpcLoading.value = true;
   vpcList.value = await cloudVPC({
     $cloudId: props.cloudID,
     accountID: props.cloudAccountID,
     region: props.region,
+    ...(props.cloudID === 'azureCloud' ? { resourceGroupName: props.resourceGroupName } : {}),
   }).catch(() => []);
   $store.commit('cloudMetadata/updateVpcList', vpcList.value);
   vpcLoading.value = false;
@@ -84,6 +91,7 @@ const handleVpcChange = (vpc: string) => {
 watch([
   () => props.region,
   () => props.cloudAccountID,
+  () => props.resourceGroupName,
 ], () => {
   handleGetVPCList();
 });

@@ -8,27 +8,6 @@
           <p class="text-[#979BA5] leading-4 mt-[4px]">{{ $t('cluster.ca.nodePool.validate.name') }}</p>
         </bk-form-item>
         <bk-form-item
-          :label="$t('cluster.ca.nodePool.label.serviceRole')"
-          property="nodePoolConfig.autoScaling.serviceRole"
-          required
-          error-display-type="normal">
-          <div class="flex items-center h-[32px]">
-            <bcs-select
-              class="flex-1"
-              v-model="nodePoolConfig.autoScaling.serviceRole"
-              searchable
-              :loading="nodeRolesLoading"
-              :disabled="isEdit"
-              :clearable="false">
-              <bcs-option
-                v-for="role in nodeRoles"
-                :key="role.roleID"
-                :id="role.roleName"
-                :name="role.roleName" />
-            </bcs-select>
-          </div>
-        </bk-form-item>
-        <bk-form-item
           :label="$t('cluster.ca.nodePool.label.system')"
           error-display-type="normal"
           required>
@@ -48,7 +27,7 @@
             class="inline-flex items-center h-[32px]"
             v-model="nodePoolConfig.launchTemplate.InstanceChargeType"
             :disabled="isEdit">
-            <bk-radio value="ON_DEMAND" disabled>
+            <bk-radio value="SPOTPAID" disabled>
               {{ $t('tke.label.chargeType.postpaid_by_hour') }}
             </bk-radio>
           </bk-radio-group>
@@ -56,6 +35,32 @@
             <div>{{ $t('tke.label.chargeType.postpaid_by_hour_desc', [$t('tke.label.chargeType.postpaid_by_hour')]) }}</div>
           </div>
         </bk-form-item>
+        <!-- 可用区 -->
+        <bk-form-item
+          :label="$t('cluster.ca.nodePool.create.az.title')"
+          :desc="$t('azureCA.tips.zone')"
+          property="nodePoolConfig.autoScaling.zones"
+          error-display-type="normal"
+          required>
+          <div class="flex items-center h-[32px]">
+            <bcs-select
+              class="flex-1 max-w-[600px]"
+              v-model="nodePoolConfig.autoScaling.zones"
+              multiple
+              searchable
+              :loading="zoneListLoading"
+              :clearable="false"
+              selected-style="checkbox"
+              @change="handleSpecifiedZoneChange">
+              <bcs-option
+                v-for="zone in zoneList"
+                :key="zone.zone"
+                :id="zone.zone"
+                :name="zone.zoneName" />
+            </bcs-select>
+          </div>
+        </bk-form-item>
+        <!-- 机型 -->
         <bk-form-item :label="$t('cluster.ca.nodePool.create.instanceTypeConfig.title')">
           <div class="mb15" style="display: flex;">
             <div class="prefix-select">
@@ -64,7 +69,6 @@
                 v-model="CPU"
                 searchable
                 :clearable="false"
-                :disabled="isEdit"
                 :placeholder="' '"
                 class="bg-[#fff]">
                 <bcs-option id="" :name="$t('generic.label.total')"></bcs-option>
@@ -110,7 +114,7 @@
                 <span v-bk-tooltips="{ disabled: row.status !== 'SOLD_OUT', content: $t('cluster.ca.nodePool.create.instanceTypeConfig.status.soldOut') }">
                   <bcs-radio
                     :value="nodePoolConfig.launchTemplate.instanceType === row.nodeType"
-                    :disabled="row.status === 'SOLD_OUT'">
+                    :disabled="row.status === 'SOLD_OUT' || isEdit">
                     <span class="bcs-ellipsis">{{row.typeName}}</span>
                   </bcs-radio>
                 </span>
@@ -137,25 +141,13 @@
           <div class="mt25" style="display:flex;align-items:center;">
             <div class="prefix-select">
               <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
-              <bcs-select
-                v-model="nodePoolConfig.launchTemplate.systemDisk.diskType"
-                :disabled="isEdit"
-                :clearable="false"
-                class="min-width-150 bg-[#fff]">
-                <bcs-option
-                  v-for="diskItem in diskEnum"
-                  :key="diskItem.id"
-                  :id="diskItem.id"
-                  :name="diskItem.name">
-                </bcs-option>
-              </bcs-select>
             </div>
             <bk-input
-              class="w-[88px] bg-[#fff] ml10"
+              class="w-[88px] ml10"
               type="number"
               :disabled="isEdit"
-              :min="40"
-              :max="1024"
+              :min="50"
+              :max="2048"
               v-model="nodePoolConfig.launchTemplate.systemDisk.diskSize">
             </bk-input>
             <span :class="['company', { disabled: isEdit }]">GB</span>
@@ -165,7 +157,7 @@
               :disabled="isEdit"
               v-model="showDataDisks"
               @change="handleShowDataDisksChange">
-              <span>
+              <span v-bk-tooltips="$t('azureCA.tips.dataDisk')">
                 {{$t('cluster.ca.nodePool.create.instanceTypeConfig.label.purchaseDataDisk')}}
               </span>
             </bk-checkbox>
@@ -228,11 +220,11 @@
           error-display-type="normal"
           required>
           <bcs-table
-            :data="filterSubnetsList"
+            :data="sortSubnetsList"
             row-class-name="table-row-enable"
             v-bkloading="{ isLoading: subnetsLoading }"
             @row-click="handleCheckSubnets">
-            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetID')" min-width="240">
+            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetID')" min-width="150">
               <template #default="{ row }">
                 <bk-checkbox
                   :value="nodePoolConfig.autoScaling.subnetIDs.includes(row.subnetID)">
@@ -240,11 +232,9 @@
                 </bk-checkbox>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetName')" min-width="130" prop="subnetName" show-overflow-tooltip></bcs-table-column>
-            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.zone')" prop="zone" show-overflow-tooltip></bcs-table-column>
+            <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.subnetName')" prop="subnetName" show-overflow-tooltip></bcs-table-column>
             <bcs-table-column :label="$t('cluster.ca.nodePool.create.subnet.label.remainIp')" prop="availableIPAddressCount" align="right"></bcs-table-column>
           </bcs-table>
-          <p v-if="isShowTip" class="text-[12px] text-[#979BA5] leading-[18px] mt-[2px]">{{ $t('cluster.ca.nodePool.create.subnet.validate') }}</p>
         </bk-form-item>
       </bk-form>
     </div>
@@ -258,7 +248,7 @@
 import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
-import { cloudNoderoles } from '@/api/base';
+import { cloudSubnets, cloudsZones } from '@/api/modules/cluster-manager';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
@@ -298,6 +288,10 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    resourceGroupName: {
+      type: String,
+      default: '',
+    },
   },
   setup(props, ctx) {
     const { defaultValues, isEdit } = toRefs(props);
@@ -307,28 +301,28 @@ export default defineComponent({
     // 磁盘类型
     const diskEnum = ref([
       {
-        id: 'gp2',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.gp2'),
+        id: 'Standard_LRS',
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.Standard_LRS'),
       },
       {
-        id: 'gp3',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.gp3'),
+        id: 'StandardSSD_LRS',
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.StandardSSD_LRS'),
       },
       {
-        id: 'io1',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.io1'),
+        id: 'StandardSSD_ZRS',
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.StandardSSD_ZRS'),
       },
       {
-        id: 'io2',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.io2'),
+        id: 'Premium_LRS',
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.Premium_LRS'),
       },
       {
-        id: 'st1',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.st1'),
+        id: 'PremiumV2_LRS',
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.PremiumV2_LRS'),
       },
       {
-        id: 'sc1',
-        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.sc1'),
+        id: 'Premium_ZRS',
+        name: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.Premium_ZRS'),
       },
     ]);
     const user = computed(() => $store.state.user);
@@ -336,13 +330,12 @@ export default defineComponent({
       $id: defaultValues.value.$id || `id_${Date.now()}`,
       status: 'CREATING',
       creator: user.value.username, // 创建人
-      nodeGroupID: defaultValues.value.nodeGroupID, // 编辑时
       name: defaultValues.value.name || '', // 节点名称
       nodeOS: defaultValues.value.launchTemplate?.imageInfo?.imageName || '', // 节点操作系统
       autoScaling: {
-        serviceRole: defaultValues.value.autoScaling.serviceRole || '', // iam角色
         vpcID: '', // todo 放在basic-pool-info组件比较合适
         subnetIDs: defaultValues.value.autoScaling.subnetIDs || [], // 支持子网
+        zones: defaultValues.value.autoScaling.zones || [], // 可用区
       },
       launchTemplate: {
         imageInfo: {
@@ -352,11 +345,9 @@ export default defineComponent({
         CPU: '',
         Mem: '',
         instanceType: defaultValues.value.launchTemplate?.instanceType, // 机型信息
-        InstanceChargeType: 'ON_DEMAND', // 实例计费方式
+        InstanceChargeType: 'SPOTPAID', // 实例计费方式
         systemDisk: {
-          diskType: diskEnum.value.some(item => item.id === defaultValues.value.launchTemplate?.systemDisk?.diskType)
-            ? defaultValues.value.launchTemplate?.systemDisk?.diskType
-            : 'gp3', // 系统盘类型
+          diskType: defaultValues.value.launchTemplate?.systemDisk?.diskType, // 系统盘类型
           diskSize: defaultValues.value.launchTemplate?.systemDisk?.diskSize, // 系统盘大小
         },
         internetAccess: {
@@ -364,10 +355,10 @@ export default defineComponent({
         },
         // 密钥信息
         keyPair: {
-          keyID: defaultValues.value.launchTemplate?.keyPair?.keyID || '',
+          keyPublic: defaultValues.value.launchTemplate?.keyPair?.keyPublic || '',
           keySecret: defaultValues.value.launchTemplate?.keyPair?.keySecret || '',
         },
-        initLoginUsername: 'ec2-user', // 用户名
+        initLoginUsername: 'azureuser', // 用户名
         initLoginPassword: defaultValues.value.launchTemplate?.initLoginPassword, // 密码
         securityGroupIDs: defaultValues.value.launchTemplate?.securityGroupIDs || [], // 安全组
         dataDisks: defaultValues.value.launchTemplate?.dataDisks || [], // 数据盘
@@ -396,14 +387,6 @@ export default defineComponent({
           validator: (v: string) => /^[\u4E00-\u9FA5A-Za-z0-9._-]+$/.test(v) && v.length <= 255 && v.length >= 2,
         },
       ],
-      // IAM角色
-      'nodePoolConfig.autoScaling.serviceRole': [
-        {
-          message: $i18n.t('generic.validate.required'),
-          trigger: 'blur',
-          validator: () => nodePoolConfig.value.autoScaling.serviceRole,
-        },
-      ],
       // 子网校验
       'nodePoolConfig.autoScaling.subnetIDs': [
         {
@@ -411,28 +394,36 @@ export default defineComponent({
           trigger: 'blur',
           validator: () => !!nodePoolConfig.value.autoScaling.subnetIDs.length,
         },
+      ],
+      // 可用区校验
+      'nodePoolConfig.autoScaling.zones': [
         {
-          message: $i18n.t('cluster.ca.nodePool.create.subnet.validate'),
+          message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
-          validator: () => nodePoolConfig.value.autoScaling.subnetIDs.length >= 2,
+          validator: () => !!nodePoolConfig.value.autoScaling?.zones?.length,
         },
       ],
     });
 
-    // IAM角色
-    const nodeRoles = ref<any[]>([]);
-    const nodeRolesLoading = ref(false);
-    const handleGetNodeRoles = async () => {
-      if (!props.cloudID || !props.cloudAccountID || !$store.state.user.username) return;
-      nodeRolesLoading.value = true;
-      nodeRoles.value = await cloudNoderoles({
-        $cloudID: props.cloudID,
+    // 可用区
+    const zoneList = ref<any[]>([]);
+    const zoneListLoading = ref(false);
+    const handleGetZoneList = async () => {
+      if (!props.region || !props.cloudAccountID) return;
+      zoneListLoading.value = true;
+      zoneList.value = await cloudsZones({
+        $cloudId: props.cloudID,
+        region: props.region,
         accountID: props.cloudAccountID,
-        operator: $store.state.user.username,
-        roleType: 'nodeGroup',
-      }).catch(() => []);
-      nodeRolesLoading.value = false;
+      });
+      zoneListLoading.value = false;
     };
+    // 不再需要切换可用区类型
+    // 指定可用区
+    const handleSpecifiedZoneChange = () => {
+      nodePoolConfig.value.launchTemplate.instanceType = '';
+    };
+
     // 镜像
     watch(() => nodePoolConfig.value.launchTemplate.imageInfo.imageType, () => {
       // 获取镜像列表
@@ -461,9 +452,11 @@ export default defineComponent({
     const instanceTypesLoading = ref(false);
     const instanceData = ref<any[]>([]);
     const instanceTypesList = computed(() => {
+      const zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
       const cacheInstanceMap = {};
       // 先过滤可用区, 再过滤同类型机型
       return instanceData.value
+        .filter(instance => !zoneList.length || instance?.zones?.some(zone => zoneList.includes(zone)))
         .filter((instance) => {
         // todo 简单过滤同类型机型
           if (!cacheInstanceMap[instance.nodeType]) {
@@ -477,7 +470,9 @@ export default defineComponent({
     });
     let timer: any = null;
     watch(() => instanceTypesList.value.length, () => {
-      const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
+      // eslint-disable-next-line max-len
+      let index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
+      if (index === -1) index = 0;
       timer && clearTimeout(timer);
       timer = setTimeout(() => {
         pageChange(Math.ceil((index + 1) / pagination.value.limit));
@@ -510,6 +505,7 @@ export default defineComponent({
     watch(() => [
       CPU.value,
       Mem.value,
+      nodePoolConfig.value.autoScaling.zones,
     ], () => {
       // 重置机型
       nodePoolConfig.value.launchTemplate.instanceType = '';
@@ -575,8 +571,8 @@ export default defineComponent({
     const defaultDiskItem = defaultValues.value?.hardwareProfile?.dataDisks.length
       ? defaultValues.value.hardwareProfile.dataDisks[0]
       : {
-        // 默认为gp2
-        diskType: 'gp2',
+        // 默认为Premium_LRS
+        diskType: 'Premium_LRS',
         diskSize: '100',
         autoFormatAndMount: true,
       };
@@ -601,16 +597,27 @@ export default defineComponent({
       zoneName: string
       subnetID: string
     }>>([]);
-    const filterSubnetsList = computed(() => subnetsList.value);
+    const sortSubnetsList = computed(() => subnetsList.value
+      .sort((pre, current) => {
+        const isPreDisabled = curInstanceItem.value.zones?.includes(pre.zone);
+        const isCurrentDisabled = curInstanceItem.value.zones?.includes(current.zone);
+        if (isPreDisabled && !isCurrentDisabled) return -1;
+
+        if (!isPreDisabled && isCurrentDisabled) return 1;
+
+        return 0;
+      }));
     const subnetsRowClass = ({ row }) => 'table-row-enable';
     const handleGetSubnets = async () => {
+      if (!props.vpcID || !props.region || !props.resourceGroupName || !props.cloudAccountID) return;
       subnetsLoading.value = true;
-      subnetsList.value = await $store.dispatch('clustermanager/cloudSubnets', {
-        $cloudID: props.cloudID,
+      subnetsList.value = await cloudSubnets({
+        $cloudId: props.cloudID,
         region: props.region,
         accountID: props.cloudAccountID,
         vpcID: props.vpcID,
-      });
+        resourceGroupName: props.resourceGroupName,
+      }).catch(() => []);
       subnetsLoading.value = false;
     };
     const handleCheckSubnets = (row) => {
@@ -685,11 +692,11 @@ export default defineComponent({
     const clusterDetailLoading = ref(false);
 
     onMounted(async () => {
-      // nodeRoles
-      handleGetNodeRoles();
       handleGetOsImage();
       // 机型
       handleGetInstanceTypes();
+      // 可用区
+      handleGetZoneList();
       // 子网
       handleGetSubnets();
     });
@@ -699,10 +706,8 @@ export default defineComponent({
       subnetsLoading,
       isShowTip,
       subnetsList,
-      filterSubnetsList,
+      sortSubnetsList,
       handleSetDefaultInstance,
-      nodeRoles,
-      nodeRolesLoading,
       nodeConfigRef,
       formRef,
       basicFormRef,
@@ -737,6 +742,9 @@ export default defineComponent({
       // 子网
       subnetsRowClass,
       handleCheckSubnets,
+      zoneList,
+      zoneListLoading,
+      handleSpecifiedZoneChange,
     };
   },
 });
