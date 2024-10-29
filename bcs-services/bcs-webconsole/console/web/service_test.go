@@ -10,27 +10,32 @@
  * limitations under the License.
  */
 
-package config
+package web
 
 import (
-	"os"
-	"path/filepath"
+	"testing"
 )
 
-// AuditConf 终端session记录配置
-type AuditConf struct {
-	Enabled       bool   `yaml:"enabled"`
-	DataDir       string `yaml:"data_dir"` // 格式如 ./data
-	RetentionDays int    `yaml:"retention_days"`
-}
+func BenchmarkSortByDateDesc(b *testing.B) {
+	folderName := []string{
+		"2024-1-28",
+		"2023-01-28",
+		"2024-2-28",
+		"2024-01-28",
+		"2025-01-28",
+		"2025-01-27",
+		"2024-10-28",
+		"2025-10-28",
+		"2024-00-28",
+		"2024-01-00",
+	}
 
-// Init : AuditConf init
-func (t *AuditConf) Init() {
-	t.RetentionDays = 0
-}
+	var sample []string
+	for i := 0; i < 50; i++ {
+		sample = append(sample, folderName...)
+	}
 
-func (t *AuditConf) defaultPath() string {
-	// NOCC:gas/error(设计如此)
-	pwd, _ := os.Getwd()
-	return filepath.Join(pwd, "data")
+	b.StartTimer()
+	sortByDateDesc(sample)
+	b.StopTimer()
 }

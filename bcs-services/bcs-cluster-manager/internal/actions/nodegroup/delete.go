@@ -576,11 +576,9 @@ func (da *CleanNodesAction) getRelativeData() error {
 func (da *CleanNodesAction) updateCleanNodesStatus() error {
 	// try to update Cluster & NodeGroup
 	for _, node := range da.cleanNodes {
-		node.Status = common.StatusDeleting
+		var err error
 
-		var (
-			err error
-		)
+		node.Status = common.StatusDeleting
 		// maybe update node timeout thus solve problem by retry
 		err = retry.Do(func() error {
 			if errLocal := da.model.UpdateNode(da.ctx, node); errLocal != nil {
