@@ -79,6 +79,30 @@
                       :key="item.region" :id="item.region" :name="item.regionName"></bcs-option>
                   </bcs-select>
                 </bk-form-item>
+                <bk-form-item
+                  :label="$t('tke.label.nodemanArea')"
+                  property="clusterBasicSettings.area.bkCloudID"
+                  error-display-type="normal"
+                  required>
+                  <bk-select
+                    searchable
+                    :clearable="false"
+                    :loading="nodemanCloudLoading"
+                    v-model="basicInfo.clusterBasicSettings.area.bkCloudID">
+                    <bk-option
+                      v-for="item in nodemanCloudList"
+                      :key="item.bk_cloud_id"
+                      :id="item.bk_cloud_id"
+                      :name="item.bk_cloud_name">
+                    </bk-option>
+                    <template slot="extension">
+                      <SelectExtension
+                        :link-text="$t('tke.link.nodeman')"
+                        :link="`${PROJECT_CONFIG.nodemanHost}/#/cloud-manager`"
+                        @refresh="handleGetNodeManCloud" />
+                    </template>
+                  </bk-select>
+                </bk-form-item>
                 <bk-form-item :label="$t('cluster.labels.env')" property="environment" error-display-type="normal" required>
                   <bk-radio-group v-model="basicInfo.environment">
                     <bk-radio value="debug">
@@ -316,12 +340,13 @@
               </bk-checkbox>
             </template>
           </bk-alert>
-          <bk-form :ref="steps[3].formRef" :model="nodesConfig" class="mt-[16px]">
+          <bk-form :ref="steps[3].formRef" :model="nodesConfig" :rules="nodesConfigRules" class="mt-[16px]" v-if="!skipAddNodes">
             <bk-form-item
               :label="$t('cluster.create.label.hostResource')"
               class="tips-offset"
               property="nodes"
-              error-display-type="normal">
+              error-display-type="normal"
+              required>
               <IpSelector
                 :region="basicInfo.region"
                 :cloud-id="basicInfo.provider"
@@ -335,6 +360,17 @@
                 class="max-w-[80%]"
                 :validate-vpc-and-region="false"
                 @change="validateNodes" />
+            </bk-form-item>
+            <bk-form-item
+              :label="$t('tke.label.nodeModule.text')"
+              :desc="$t('tke.label.nodeModule.desc')"
+              property="workerModuleID"
+              error-display-type="normal"
+              required>
+              <TopoSelector
+                :placeholder="$t('generic.placeholder.select')"
+                v-model="nodesConfig.workerModuleID"
+                class="max-w-[600px]" />
             </bk-form-item>
           </bk-form>
         </bcs-tab-panel>
@@ -358,15 +394,16 @@
 import { merge } from 'lodash';
 import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
 
-import { ICloudRegion } from '../../types/types';
+import { ICloudRegion, INodeManCloud } from '../../types/types';
 
-import { cloudDetail, cloudRegionByAccount, cloudVersionModules, createCluster } from '@/api/modules/cluster-manager';
+import { cloudDetail, cloudRegionByAccount, cloudVersionModules, createCluster, nodemanCloud } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { LABEL_KEY_REGEXP } from '@/common/constant';
 import { validateCIDR } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import DescList from '@/components/desc-list.vue';
 import BcsContent from '@/components/layout/Content.vue';
+import SelectExtension from '@/components/select-extension.vue';
 import { useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -374,6 +411,7 @@ import $store from '@/store';
 import IpSelector from '@/views/cluster-manage/add/components/ip-selector.vue';
 import KubeApiServer from '@/views/cluster-manage/add/components/kube-api-server.vue';
 import StepTabLabel from '@/views/cluster-manage/add/components/step-tab-label.vue';
+import TopoSelector from '@/views/cluster-manage/autoscaler/components/topo-select-tree.vue';
 import KeyValue from '@/views/cluster-manage/components/key-value.vue';
 
 const $cloudId = 'bluekingCloud';
@@ -394,6 +432,12 @@ const basicInfo = ref({
   clusterBasicSettings: {
     version: '',
     OS: '',
+    area: {  // 云区域
+      bkCloudID: 0,
+    },
+    module: {
+      workerModuleID: '',
+    },
   },
   description: '',
   region: '',
@@ -420,6 +464,13 @@ const basicInfoRules = ref({
     },
   ],
   region: [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+  'clusterBasicSettings.area.bkCloudID': [
     {
       required: true,
       message: $i18n.t('generic.validate.required'),
@@ -599,17 +650,26 @@ const masterConfigRules = computed(() => ({
 // 节点配置
 const nodesConfig = ref<{
   nodes: any[]
+  workerModuleID: string
 }>({
   nodes: [],
+  workerModuleID: '',
 });
 // 动态 i18n 问题，这里使用computed
-// const nodesConfigRules = computed(() => ({
-//   nodes: [{
-//     message: $i18n.t('generic.validate.required'),
-//     trigger: 'custom',
-//     validator: () => !!nodesConfig.value.nodes.length,
-//   }],
-// }));
+const nodesConfigRules = computed(() => ({
+  nodes: [{
+    message: $i18n.t('generic.validate.required'),
+    trigger: 'custom',
+    validator: () => !!nodesConfig.value.nodes.length,
+  }],
+  workerModuleID: [
+    {
+      required: true,
+      message: $i18n.t('generic.validate.required'),
+      trigger: 'blur',
+    },
+  ],
+}));
 
 const skipAddNodes = ref(false);
 
@@ -644,6 +704,16 @@ const handleGetRegionList = async () => {
     $cloudId,
   }).catch(() => []);
   regionLoading.value = false;
+};
+
+// 管控区域
+const nodemanCloudList = ref<Array<INodeManCloud>>([]);
+const nodemanCloudLoading = ref(false);
+const handleGetNodeManCloud = async () => {
+  nodemanCloudLoading.value = true;
+  const data = await nodemanCloud().catch(() => []);
+  nodemanCloudList.value = data.filter(item => item.is_visible);
+  nodemanCloudLoading.value = false;
 };
 
 // 运行时组件变更
@@ -722,7 +792,7 @@ const handleShowConfirmDialog = async () => {
     activeTabName.value = step.name;
     return false;
   }));
-  const validateResults = await Promise.all(validateList);
+  const validateResults = await Promise.all(validateList.filter(item => item));
   if (validateResults.some(result => !result)) return;
 
   $bkInfo({
@@ -751,6 +821,7 @@ const handleCreateCluster = async () => {
     master: masterConfig.value.master.map(item => item.bk_host_innerip),
     nodes: !skipAddNodes.value ? nodesConfig.value.nodes.map(item => item.bk_host_innerip) : [],
   }, basicInfo.value, networkConfig.value);
+  params.clusterBasicSettings.module.workerModuleID = (!skipAddNodes.value && nodesConfig.value.nodes.length > 0) ? nodesConfig.value.workerModuleID : '';
 
   const result = await createCluster(params).then(() => true)
     .catch(() => false);
@@ -783,6 +854,7 @@ watch(() => basicInfo.value.environment, () => {
 onMounted(() => {
   handleGetTemplateList();
   handleGetRegionList();
+  handleGetNodeManCloud();
 });
 </script>
 <style lang="postcss" scoped>

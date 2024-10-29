@@ -1304,6 +1304,15 @@ cluster:
           desc: >-
             The runtime component version inherits the TKE cluster and does not
             support modification
+        dockerGraphPathDefault:
+          desc: The container directory inherits cluster and does not support
+            modification
+        containerRuntimeDefault:
+          desc: The runtime component inherits the cluster and does not support
+            modification
+        runtimeVersionDefault:
+          desc: The runtime component version inherits the cluster and does not
+            support modification
         imageProvider:
           title: Image provider
           desc: >-

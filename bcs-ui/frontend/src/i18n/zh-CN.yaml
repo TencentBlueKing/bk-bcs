@@ -1062,6 +1062,14 @@ cluster:
         runtimeVersion:
           title: 运行时版本
           desc: 运行时版本使用TKE集群配置，暂不支持修改
+        dockerGraphPathDefault:
+          desc: 容器目录使用集群配置，暂不支持修改
+        containerRuntimeDefault:
+          title: 运行时组件
+          desc: 运行时组件使用集群配置，暂不支持修改
+        runtimeVersionDefault:
+          title: 运行时版本
+          desc: 运行时版本使用集群配置，暂不支持修改
         imageProvider:
           title: 镜像提供方
           desc: 镜像提供方与操作系统使用TKE集群设置，暂不支持修改
