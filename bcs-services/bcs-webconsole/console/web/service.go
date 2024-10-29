@@ -18,9 +18,13 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"sort"
+	"strings"
+	"time"
 
 	gintrace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/gin"
 	"github.com/gin-gonic/gin"
+	"github.com/samber/lo"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
@@ -80,6 +84,10 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 		rest.APIError(c, fmt.Sprintf("List storage files err: %v\n", err))
 		return
 	}
+	// 按照时间逆序排
+	sort.Slice(fileNames, func(i, j int) bool {
+		return fileNames[i] > fileNames[j]
+	})
 	data := gin.H{
 		"folder_name":     folderName,
 		"file_names":      fileNames,
@@ -100,6 +108,10 @@ func (s *service) ReplayFoldersPageHandler(c *gin.Context) {
 		rest.APIError(c, fmt.Sprintf("List storage folder err: %v", err))
 		return
 	}
+
+	// 根据日期倒序排，无效的日期排最后
+	folderNames = sortByDateDesc(folderNames)
+
 	data := gin.H{
 		"folder_names":    folderNames,
 		"SITE_STATIC_URL": s.opts.RoutePrefix,
@@ -259,4 +271,36 @@ func (s *service) HealthyHandler(c *gin.Context) {
 // ReadyHandler xxx
 func (s *service) ReadyHandler(c *gin.Context) {
 	c.Data(http.StatusOK, "text/plain; charset=utf-8", []byte("OK"))
+}
+
+// 根据日期倒序排，无效的日期排最后
+func sortByDateDesc(folderNames []string) []string {
+	type folder struct {
+		date time.Time
+		name string
+	}
+
+	folers := lo.Map(folderNames, func(item string, _ int) folder {
+		v := strings.Trim(item, "/")
+		date, err := time.Parse(time.DateOnly, v)
+		if err != nil {
+			date = time.Time{}
+		}
+		return folder{date: date, name: v}
+	})
+
+	// 按照时间逆序排
+	sort.Slice(folers, func(i, j int) bool {
+		// 时间一致, 按名称排序
+		if folers[i].date.Equal(folers[j].date) {
+			return folers[i].name > folers[j].name
+		}
+
+		return folers[i].date.After(folers[j].date)
+	})
+
+	names := lo.Map(folers, func(item folder, _ int) string {
+		return item.name
+	})
+	return names
 }

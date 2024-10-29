@@ -132,6 +132,36 @@ func (c *cosStorage) ListFolders(ctx context.Context, folderName string) ([]stri
 	return folders, nil
 }
 
+// DeleteFolders delete folder from cos
+func (c *cosStorage) DeleteFolders(ctx context.Context, folderName string) error {
+	folderName = strings.Trim(folderName, "/")
+	folderName += "/"
+
+	var marker string
+	opt := &cos.BucketGetOptions{
+		Prefix:  folderName, // 表示要查询的文件夹
+		MaxKeys: 1000,       // 设置最大遍历出多少个对象, 一次 listobject 最大支持1000
+	}
+	isTruncated := true
+	for isTruncated {
+		opt.Marker = marker
+		v, _, err := c.client.Bucket.Get(ctx, opt)
+		if err != nil {
+			return err
+		}
+		for _, content := range v.Contents {
+			_, err = c.client.Object.Delete(ctx, content.Key)
+			if err != nil {
+				return err
+			}
+		}
+		isTruncated = v.IsTruncated
+		marker = v.NextMarker
+	}
+
+	return nil
+}
+
 // DownloadFile download file from cos
 func (c *cosStorage) DownloadFile(ctx context.Context, filePath string) (io.ReadCloser, error) {
 	resp, err := c.client.Object.Get(ctx, filePath, nil)

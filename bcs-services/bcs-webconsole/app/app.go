@@ -430,6 +430,10 @@ func (c *WebConsoleManager) Run() error {
 		return uploader.IntervalUpload(ctx)
 	})
 
+	eg.Go(func() error {
+		return uploader.IntervalDelete(ctx)
+	})
+
 	// 定时上报用户延迟命令列表数据
 	performance := perf.GetGlobalPerformance()
 	eg.Go(func() error {

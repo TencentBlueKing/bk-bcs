@@ -79,6 +79,7 @@ func newConfigurations() (*Configurations, error) {
 	c.Tracing.Init()
 
 	c.Audit = &AuditConf{}
+	c.Audit.Init()
 	// repository conf
 	c.Repository = &RepositoryConf{}
 
