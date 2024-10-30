@@ -17,8 +17,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -27,12 +25,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
+	"os"
+	"strconv"
 )
 
 // IMonitorApiClient monitor client interface
 type IMonitorApiClient interface {
 	ListNode(ctx context.Context) (*ListNodeResponse, error)
-	ListUptimeCheckTask(ctx context.Context) (*ListUptimeCheckResponse, error)
+	ListUptimeCheckTask(ctx context.Context, request *ListUptimeCheckRequest) (*ListUptimeCheckResponse, error)
 	CreateUptimeCheckTask(ctx context.Context,
 		req *CreateOrUpdateUptimeCheckTaskRequest) (*CreateOrUpdateUptimeCheckTaskResponse, error)
 	UpdateUptimeCheckTask(ctx context.Context,
@@ -83,9 +83,12 @@ func (b *BkmApiClient) SendRequest(ctx context.Context, method string, uri strin
 }
 
 // ListUptimeCheckTask list uptime check task
-func (b *BkmApiClient) ListUptimeCheckTask(ctx context.Context) (*ListUptimeCheckResponse,
+func (b *BkmApiClient) ListUptimeCheckTask(ctx context.Context, req *ListUptimeCheckRequest) (*ListUptimeCheckResponse,
 	error) {
-	req := &ListUptimeCheckRequest{BkBizID: b.BizID}
+	if req == nil {
+		return nil, fmt.Errorf("nil request")
+	}
+	req.BkBizID = b.BizID
 
 	param := struct {
 		*BaseRequest

@@ -15,10 +15,9 @@ package apiclient
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/apiclient/xrequests"
 	"net/http"
 	"os"
-
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/apiclient/xrequests"
 )
 
 var (
@@ -179,10 +178,13 @@ type Group struct {
 
 // ListUptimeCheckRequest list uptime check request
 type ListUptimeCheckRequest struct {
-	BkBizID         int64 `json:"bkBizID,omitempty"`
-	GetAvailable    bool  `json:"getAvailable,omitempty"`
-	GetTaskDuration bool  `json:"getTaskDuration,omitempty"`
-	GetGroups       bool  `json:"getGroups,omitempty"`
+	BkBizID         int64  `json:"bkBizID,omitempty"`
+	GetAvailable    bool   `json:"getAvailable,omitempty"`
+	GetTaskDuration bool   `json:"getTaskDuration,omitempty"`
+	GetGroups       bool   `json:"getGroups,omitempty"`
+	Plain           int    `json:"plain,omitempty"` // 仅返回元数据
+	Id              int64  `json:"id,omitempty"`
+	Name            string `json:"name,omitempty"`
 }
 
 // ListUptimeCheckResponse list uptime check resp
