@@ -1,26 +1,25 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.,
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
 // Package metric_manager xxx
-// nolint
 package metric_manager
 
 import (
 	"net/http"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"k8s.io/klog"
@@ -44,8 +43,8 @@ var (
 	requestLatencyAPI = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "plugin_latency_time",
 		Help:    "plugin latency statistic ",
-		Buckets: []float64{0.1, 0.5, 0.75, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0},
-	}, []string{"plugin", "condition1", "condition2", "condition3"})
+		Buckets: []float64{30, 60, 90, 120, 150, 180, 210, 240, 270},
+	}, []string{"plugin", "target", "condition2", "condition3"})
 
 	// MM
 	MM *MetricManger
@@ -63,6 +62,7 @@ func init() {
 type MetricManger struct {
 	registryMap     map[string]*prometheus.Registry
 	registryMapLock sync.Mutex
+	engine          *gin.Engine
 }
 
 // NewMetricManger init metric manager
@@ -70,6 +70,11 @@ func NewMetricManger() *MetricManger {
 	return &MetricManger{
 		registryMap: make(map[string]*prometheus.Registry),
 	}
+}
+
+// SetEngine xxx
+func (mm *MetricManger) SetEngine(r *gin.Engine) {
+	mm.engine = r
 }
 
 // SetSeperatedMetric 将指标暴露在独立于/metrics的其他路径上 /path/metrics
@@ -82,7 +87,7 @@ func (mm *MetricManger) SetSeperatedMetric(path string) {
 			promhttp.HandlerOpts{},
 		)
 
-		http.Handle("/"+path+"/metrics", componentAHandler)
+		mm.engine.GET("/"+path+"/metrics", gin.WrapH(componentAHandler))
 	}
 }
 
@@ -105,27 +110,52 @@ type GaugeVecSet struct {
 	Value  float64
 }
 
-// SetMetric xxx
-func SetMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
+// RefreshMetric refresh metric
+func RefreshMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
 	metricVec.Reset()
 
+	metricMap := make(map[string]string)
 	for _, gaugeVecSet := range gaugeVecSetList {
-		metricVec.WithLabelValues(gaugeVecSet.Labels...).Set(gaugeVecSet.Value)
+		if _, ok := metricMap[strings.Join(gaugeVecSet.Labels, "-")]; ok {
+			metricVec.WithLabelValues(gaugeVecSet.Labels...).Add(gaugeVecSet.Value)
+		} else {
+			metricMap[strings.Join(gaugeVecSet.Labels, "-")] = strings.Join(gaugeVecSet.Labels, "-")
+			metricVec.WithLabelValues(gaugeVecSet.Labels...).Set(gaugeVecSet.Value)
+		}
+	}
+}
 
-		defer func() {
-			if r := recover(); r != nil {
-				klog.Errorf("SetMetric failed: %s, stack: %v\n", r, string(debug.Stack()))
-				// klog.Errorf("SetMetric failed: %s", gaugeVecSet)
-				for _, gaugeVecSet1 := range gaugeVecSetList {
-					if gaugeVecSet1 != nil {
-						klog.Errorf("SetMetric failed: %s", strings.Join(gaugeVecSet1.Labels, ";"))
-						break
-					}
-				}
+// SetMetric xxx
+func SetMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
+	//metricVec.Reset()
+
+	wg := sync.WaitGroup{}
+	for _, gaugeVecSet := range gaugeVecSetList {
+		wg.Add(1)
+		go func(gaugeVecSet *GaugeVecSet) {
+			metricVec.WithLabelValues(gaugeVecSet.Labels...).Set(gaugeVecSet.Value)
+			wg.Done()
+		}(gaugeVecSet)
+	}
+	wg.Wait()
+}
+
+// DeleteMetric xxx
+func DeleteMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
+	wg := sync.WaitGroup{}
+	for _, gaugeVecSet := range gaugeVecSetList {
+		wg.Add(1)
+		go func(gaugeVecSet *GaugeVecSet) {
+			result := metricVec.DeleteLabelValues(gaugeVecSet.Labels...)
+			if !result {
+				klog.Error("delete metric result failed: ", result, metricVec, gaugeVecSet.Labels)
 			}
-		}()
+
+			wg.Done()
+		}(gaugeVecSet)
 	}
 
+	wg.Wait()
 }
 
 // SetCommonDurationMetric xxx
@@ -144,4 +174,9 @@ func (mm *MetricManger) RunPrometheusMetricsServer() {
 		}
 	}()
 	klog.Infof("run prometheus server ok")
+}
+
+// GetHttpHandler xxx
+func (mm *MetricManger) GetHttpHandler() http.Handler {
+	return promhttp.Handler()
 }

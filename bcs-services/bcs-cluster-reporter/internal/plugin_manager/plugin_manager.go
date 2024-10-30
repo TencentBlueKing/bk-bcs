@@ -11,32 +11,26 @@
  */
 
 // Package plugin_manager xxx
-package plugin_manager // nolint
+package plugin_manager
 
 import (
 	"fmt"
+	"k8s.io/klog"
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 var (
 	// Pm xxx
-	Pm           *pluginManager
+	Pm           *PluginManager
 	clusterTotal *prometheus.GaugeVec
 )
-
-// Plugin xxx
-type Plugin interface {
-	Name() string
-	Setup(configFilePath string) error
-	Stop() error
-}
 
 func init() {
 	Pm = NewPluginManager()
@@ -54,81 +48,106 @@ func Register(plugin Plugin) {
 	Pm.Register(plugin)
 }
 
-type pluginManager struct {
-	plugins         map[string]Plugin
-	config          *Config
-	configLock      sync.Mutex
-	concurrencyLock sync.Mutex
-	routinePool     *util.RoutinePool
+// PluginManager xxx
+type PluginManager struct {
+	plugins           map[string]Plugin
+	config            *Config
+	configLock        sync.Mutex
+	concurrencyLock   sync.Mutex
+	routinePool       *util.RoutinePool
+	clusterReportList map[string]map[string]string
 }
 
-func (pm *pluginManager) Register(plugin Plugin) {
+// Register xxx
+func (pm *PluginManager) Register(plugin Plugin) {
 	pm.plugins[plugin.Name()] = plugin
 }
 
-func (pm *pluginManager) GetPlugin(plugin string) Plugin {
+// GetPlugin xxx
+func (pm *PluginManager) GetPlugin(plugin string) Plugin {
 	if p, ok := pm.plugins[plugin]; ok {
 		return p
+	} else {
+		return nil
 	}
-	return nil
+}
+
+// GetPluginstr xxx
+func (pm *PluginManager) GetPluginstr() string {
+	result := ""
+	for name, _ := range pm.plugins {
+		result = fmt.Sprintf("%s,%s", name, result)
+	}
+	result = strings.TrimSuffix(result, ",")
+	return result
 }
 
 // SetConfig configure pluginmanager by config file
-func (pm *pluginManager) SetConfig(config *Config) {
+func (pm *PluginManager) SetConfig(config *Config) {
 	pm.configLock.Lock()
 	defer pm.configLock.Unlock()
 	if config != nil {
 		pm.config = config
 	}
 
-	for _, cluster := range config.ClusterConfigs {
-		metric_manager.MM.SetSeperatedMetric(cluster.ClusterID)
-	}
-
 	clusterTotal.WithLabelValues().Set(float64(len(pm.config.ClusterConfigs)))
 }
 
-func (pm *pluginManager) GetConfig() *Config {
+// GetConfig xxx
+func (pm *PluginManager) GetConfig() *Config {
 	pm.configLock.Lock()
 	defer pm.configLock.Unlock()
 	return pm.config
 }
 
-// SetupPlugin setup plugin
-// nolint
-func (pm *pluginManager) SetupPlugin(plugins string, pluginDir string) error {
+// SetClusterReport xxx
+func (pm *PluginManager) SetClusterReport(clusterID, name, report string) {
+	pm.clusterReportList[clusterID][name] = report
+}
+
+// SetupPlugin xxx
+func (pm *PluginManager) SetupPlugin(plugins string, pluginDir string, runMode string) error {
+	var wg sync.WaitGroup
 	for _, plugin := range strings.Split(plugins, ",") {
 		if p := pm.GetPlugin(plugin); p == nil {
 			return fmt.Errorf("Get Plugin %s failed, nil result", plugin)
 		} else {
-			err := p.Setup(filepath.Join(pluginDir, plugin+".conf"))
-			if err != nil {
-				return fmt.Errorf("Setup plugin %s failed: %s", p.Name(), err.Error())
-			}
+			wg.Add(1)
+			go func(plugin string) {
+				err := p.Setup(filepath.Join(pluginDir, plugin+".conf"), runMode)
+				if err != nil {
+					klog.Fatalf("Setup plugin %s failed: %s", p.Name(), err.Error())
+				}
+				wg.Done()
+			}(plugin)
 		}
 	}
+	wg.Wait()
 	return nil
 }
 
-func (pm *pluginManager) Lock() {
+// Lock xxx
+func (pm *PluginManager) Lock() {
 	pm.concurrencyLock.Lock()
 }
 
-func (pm *pluginManager) UnLock() {
+// Add xxx
+func (pm *PluginManager) UnLock() {
 	pm.concurrencyLock.Unlock()
 }
 
-func (pm *pluginManager) Add() {
+// Add xxx
+func (pm *PluginManager) Add() {
 	pm.routinePool.Add(1)
 }
 
-func (pm *pluginManager) Done() {
+// Done xxx
+func (pm *PluginManager) Done() {
 	pm.routinePool.Done()
 }
 
-// StopPlugin  stop plugin
-// nolint
-func (pm *pluginManager) StopPlugin(plugins string) error {
+// StopPlugin xxx
+func (pm *PluginManager) StopPlugin(plugins string) error {
 	for _, plugin := range strings.Split(plugins, ",") {
 		if p := pm.GetPlugin(plugin); p == nil {
 			return fmt.Errorf("Get Plugin %s failed, nil result", plugin)
@@ -143,10 +162,66 @@ func (pm *pluginManager) StopPlugin(plugins string) error {
 }
 
 // NewPluginManager xxx
-// nolint
-func NewPluginManager() *pluginManager {
-	return &pluginManager{
-		routinePool: util.NewRoutinePool(40),
-		plugins:     make(map[string]Plugin),
+func NewPluginManager() *PluginManager {
+
+	return &PluginManager{
+		routinePool:       util.NewRoutinePool(50),
+		plugins:           make(map[string]Plugin),
+		clusterReportList: make(map[string]map[string]string),
 	}
+}
+
+// Ready xxx
+func (pm *PluginManager) Ready(pluginStr string, targetID string) bool {
+	for _, plugin := range strings.Split(pluginStr, ",") {
+		p := pm.GetPlugin(plugin)
+		if p == nil {
+			continue
+		}
+		for {
+			if p.Ready(targetID) {
+				break
+			}
+			klog.Infof("%s for %s is not ready", plugin, targetID)
+			time.Sleep(5 * time.Second)
+		}
+	}
+	return true
+}
+
+// GetClusterResult xxx
+func (pm *PluginManager) GetClusterResult(pluginStr string, clusterID string) map[string]CheckResult {
+	Pm.Ready(pluginStr, clusterID)
+	result := make(map[string]CheckResult)
+	for _, plugin := range strings.Split(pluginStr, ",") {
+		p := pm.GetPlugin(plugin)
+		result[plugin] = p.GetResult(clusterID)
+	}
+	return result
+}
+
+// GetNodeResult xxx
+func (pm *PluginManager) GetNodeResult(pluginStr string) map[string]CheckResult {
+	result := make(map[string]CheckResult)
+	for _, plugin := range strings.Split(pluginStr, ",") {
+		p := pm.GetPlugin(plugin)
+		if p == nil {
+			continue
+		}
+		result[plugin] = p.GetResult("")
+	}
+	return result
+}
+
+// GetNodeDetail XXX
+func (pm *PluginManager) GetNodeDetail(pluginStr string) map[string]interface{} {
+	result := make(map[string]interface{})
+	for _, plugin := range strings.Split(pluginStr, ",") {
+		p := pm.GetPlugin(plugin)
+		if p == nil {
+			continue
+		}
+		result[plugin] = p.GetDetail()
+	}
+	return result
 }

@@ -11,23 +11,64 @@
  */
 
 // Package plugin_manager xxx
-package plugin_manager // nolint
+package plugin_manager
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"sync"
+)
+
+const (
+	RunModeOnce   = "once"
+	RunModeDaemon = "daemon"
+
+	TKECluster = "tke"
 )
 
 // Config Options bcs log options
 type Config struct {
-	ClusterConfigs  []ClusterConfig
+	ClusterConfigs  map[string]*ClusterConfig
+	NodeConfig      NodeConfig
 	InClusterConfig ClusterConfig
 }
 
 // ClusterConfig xxx
 type ClusterConfig struct {
-	Config     *rest.Config
-	ClusterID  string
-	BusinessID string
+	Config      *rest.Config
+	ClusterID   string
+	BusinessID  string
+	Master      []string
+	BCSCluster  clustermanager.Cluster
+	ClusterType string
+	ClientSet   *kubernetes.Clientset
+	Version     string
+
+	// net
+	ServiceCidr   string
+	Cidr          []string
+	MaskSize      int
+	ServiceMaxNum int
+	ServiceNum    int
+
+	// node
+	NodeNum  int
+	NodeInfo map[string]plugin.NodeInfo
+
+	// mutex
+	sync.Mutex
+}
+
+// NodeConfig xxx
+type NodeConfig struct {
+	Config    *rest.Config
+	ClientSet *kubernetes.Clientset
+	NodeName  string
+	Node      *v1.Node
+	HostPath  string
 }
 
 // Validate validate options

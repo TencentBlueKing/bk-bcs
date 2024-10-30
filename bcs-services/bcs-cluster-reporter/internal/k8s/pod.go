@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package k8s xxx
 package k8s
 
 import (
@@ -35,7 +36,7 @@ func GetPods(clientSet *kubernetes.Clientset, namespace string, opts v1.ListOpti
 		return podList.Items, nil
 	}
 	re, _ := regexp.Compile(nameRe)
-	result := make([]corev1.Pod, 0)
+	result := make([]corev1.Pod, 0, 0)
 	for _, pod := range podList.Items {
 		if re.MatchString(pod.Name) || strings.Contains(pod.Name, nameRe) {
 			result = append(result, pod)
