@@ -14,17 +14,19 @@ package tencentcloud
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
 	"github.com/pkg/errors"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	terrors "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/errors"
 	tprofile "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/throttle"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
@@ -90,6 +92,9 @@ type SdkWrapper struct {
 	clbCliMap sync.Map
 	// 加锁避免同时处理多个同Region的CLB时，触发concurrent write map错误
 	mu sync.Mutex
+
+	listenerNameValidateMode string // if in strict Mode, create ListenerName with clusterID
+	bcsClusterID             string
 }
 
 // NewSdkWrapper create sdk wrapper
@@ -112,6 +117,8 @@ func NewSdkWrapper() (*SdkWrapper, error) {
 	sw.cpf = cpf
 
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+	sw.bcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
+	sw.listenerNameValidateMode = os.Getenv(constant.EnvNameListenerNameValidateMode)
 	return sw, nil
 }
 
@@ -138,6 +145,37 @@ func NewSdkWrapperWithSecretIDKey(id, key string) (*SdkWrapper, error) {
 	sw.cpf = cpf
 
 	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+	sw.bcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
+	sw.listenerNameValidateMode = os.Getenv(constant.EnvNameListenerNameValidateMode)
+	return sw, nil
+}
+
+// NewSdkWrapperWithParams create sdk wrapper with secret id and secret key and domain
+func NewSdkWrapperWithParams(id, key, domain string) (*SdkWrapper, error) {
+	sw := &SdkWrapper{}
+	err := sw.loadEnv()
+	if err != nil {
+		return nil, err
+	}
+
+	sw.secretID = id
+	sw.secretKey = key
+	sw.domain = domain
+
+	credential := tcommon.NewCredential(
+		sw.secretID,
+		sw.secretKey,
+	)
+	cpf := tprofile.NewClientProfile()
+	if len(sw.domain) != 0 {
+		cpf.HttpProfile.Endpoint = sw.domain
+	}
+	sw.credential = credential
+	sw.cpf = cpf
+
+	sw.throttler = throttle.NewTokenBucket(sw.ratelimitqps, sw.ratelimitbucketSize)
+	sw.bcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
+	sw.listenerNameValidateMode = os.Getenv(constant.EnvNameListenerNameValidateMode)
 	return sw, nil
 }
 
@@ -193,6 +231,14 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, req *tclb.DescribeLoa
 
 // CreateListener wrap CreateListener, length of Ports should be less than 50
 func (sw *SdkWrapper) CreateListener(region string, req *tclb.CreateListenerRequest) ([]string, error) {
+	if sw.listenerNameValidateMode == constant.ListenerNameValidateModeStrict {
+		liNames := make([]*string, 0, len(req.ListenerNames))
+		for _, name := range req.ListenerNames {
+			liNames = append(liNames, tcommon.StringPtr(sw.bcsClusterID+"-"+*name))
+		}
+
+		req.ListenerNames = liNames
+	}
 	rounds := len(req.ListenerNames) / MaxListenersForCreateEachTime
 	remains := len(req.ListenerNames) % MaxListenersForCreateEachTime
 

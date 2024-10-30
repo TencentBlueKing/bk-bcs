@@ -17,12 +17,13 @@ import (
 	"strconv"
 	"strings"
 
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 )
 
 // convert clb health check info to crd fields
@@ -488,46 +489,6 @@ func convertHealthStatus(status string) string {
 	return statusStr
 }
 
-// transferCloudListener transfer cloud listener to local listener
-func transferCloudListener(lbID string, cloudLiResp *tclb.DescribeListenersResponse, portMap map[int]struct{}) (
-	[]string, map[string]*networkextensionv1.Listener, map[string]*networkextensionv1.IngressListenerAttribute,
-	map[string]*networkextensionv1.IngressListenerCertificate) {
-	var listenerIDs []string
-	retListenerMap := make(map[string]*networkextensionv1.Listener)
-	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
-	ruleIDCertMap := make(map[string]*networkextensionv1.IngressListenerCertificate)
-
-	for _, cloudLi := range cloudLiResp.Response.Listeners {
-		// only care about listener with given ports
-		if _, ok := portMap[int(*cloudLi.Port)]; !ok {
-			continue
-		}
-		listenerIDs = append(listenerIDs, *cloudLi.ListenerId)
-		li := &networkextensionv1.Listener{}
-		li.Spec.LoadbalancerID = lbID
-		li.Spec.Port = int(*cloudLi.Port)
-		// get segment listener end port
-		if cloudLi.EndPort != nil && *cloudLi.EndPort > 0 {
-			li.Spec.EndPort = int(*cloudLi.EndPort)
-		}
-		li.Spec.Protocol = strings.ToLower(*cloudLi.Protocol)
-		li.Spec.Certificate = convertCertificate(cloudLi.Certificate)
-		li.Spec.ListenerAttribute = convertListenerAttribute(cloudLi)
-		if len(cloudLi.Rules) != 0 {
-			for _, respRule := range cloudLi.Rules {
-				if respRule.LocationId != nil {
-					ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
-					ruleIDCertMap[*respRule.LocationId] = convertCertificate(respRule.Certificate)
-				}
-			}
-		}
-		li.Status.ListenerID = *cloudLi.ListenerId
-		retListenerMap[common.GetListenerNameWithProtocol(lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)] = li
-	}
-
-	return listenerIDs, retListenerMap, ruleIDAttrMap, ruleIDCertMap
-}
-
 // compareListener compare listener of cloud and local
 func compareListener(lbID string, cloudListenerMap map[string]*networkextensionv1.Listener,
 	localListener []*networkextensionv1.Listener) ([]*networkextensionv1.Listener, []*networkextensionv1.Listener, []*networkextensionv1.Listener) {
@@ -549,4 +510,34 @@ func compareListener(lbID string, cloudListenerMap map[string]*networkextensionv
 		}
 	}
 	return addListeners, updatedListeners, deleteCloudListeners
+}
+
+// ValidateListenerName validate listener name
+func ValidateListenerName(validateMode, lbID string, bcsClusterID string, cloudLi *tclb.Listener) bool {
+	liName := ""
+	if cloudLi.ListenerName != nil {
+		liName = *cloudLi.ListenerName
+	}
+	startPort := int(*cloudLi.Port)
+	protocol := strings.ToLower(*cloudLi.Protocol)
+	endPort := 0
+	if cloudLi.EndPort != nil && *cloudLi.EndPort > 0 {
+		endPort = int(*cloudLi.EndPort)
+	}
+
+	switch validateMode {
+	case constant.ListenerNameValidateModeNormal:
+		if liName == common.GetListenerName(lbID, startPort) || liName == common.GetListenerNameWithProtocol(lbID, protocol, startPort, endPort) {
+			return true
+		}
+		return false
+	case constant.ListenerNameValidateModeStrict:
+		if !strings.HasPrefix(liName, bcsClusterID+"-") {
+			return false
+		}
+
+		return true
+	default:
+		return true
+	}
 }
