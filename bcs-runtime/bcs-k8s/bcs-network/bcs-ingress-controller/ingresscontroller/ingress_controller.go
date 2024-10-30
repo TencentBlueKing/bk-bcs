@@ -80,8 +80,14 @@ func (ir *IngressReconciler) getIngressPredicate() predicate.Predicate {
 			if !okNew || !okOld {
 				return true
 			}
+			if newIngress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceNames] != oldIngress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceNames] {
+				return true
+			}
+			if newIngress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceIDs] != oldIngress.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceIDs] {
+				return true
+			}
+
 			if reflect.DeepEqual(newIngress.Spec, oldIngress.Spec) &&
-				reflect.DeepEqual(newIngress.Annotations, oldIngress.Annotations) &&
 				reflect.DeepEqual(newIngress.Finalizers, oldIngress.Finalizers) &&
 				reflect.DeepEqual(newIngress.DeletionTimestamp, oldIngress.DeletionTimestamp) {
 				blog.V(5).Infof("ingress %+v updated, but spec and annotation and finalizer not change", newIngress)
