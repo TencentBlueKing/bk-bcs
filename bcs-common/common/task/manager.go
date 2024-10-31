@@ -348,6 +348,11 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	}
 
 	start := time.Now()
+
+	// metrics
+	collectMetricStart(state)
+	defer collectMetricEnd(state)
+
 	// step timeout
 	stepCtx, stepCancel := GetTimeOutCtx(context.Background(), step.MaxExecutionSeconds)
 	defer stepCancel()
