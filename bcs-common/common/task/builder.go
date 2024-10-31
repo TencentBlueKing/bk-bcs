@@ -39,5 +39,9 @@ func NewByTaskBuilder(builder types.TaskBuilder, opts ...types.TaskOption) (*typ
 		return nil, err
 	}
 
+	if err := task.Validate(); err != nil {
+		return nil, err
+	}
+
 	return task, nil
 }
