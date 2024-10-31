@@ -279,6 +279,17 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 			t.End = endTime
 
 			t.TaskName = autils.Translate(ua.ctx, t.TaskType, t.TaskName, "")
+			ua.resp.Data.Results[i].TaskType = t.TaskType
+
+			allowRetry := true
+			// attention: 开启CA节点自动扩缩容的任务不允许手动重试
+			if utils.SliceContainInString([]string{cloudprovider.UpdateNodeGroupDesiredNode.String(),
+				cloudprovider.CleanNodeGroupNodes.String()}, t.TaskType) &&
+				t.GetCommonParams()[cloudprovider.ManualKey.String()] != common.True {
+				allowRetry = false
+			}
+
+			ua.resp.Data.Results[i].AllowRetry = allowRetry
 			ua.resp.Data.Results[i].Message = autils.TranslateMsg(ua.ctx, v.ResourceType, v.TaskType, v.Message, t)
 			ua.resp.Data.Results[i].Task = t
 		}

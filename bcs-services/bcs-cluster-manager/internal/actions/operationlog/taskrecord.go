@@ -83,9 +83,9 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 
 	allowRetry := true
 	// attention: 开启CA节点自动扩缩容不允许手动重试
-	if utils.StringContainInSlice(task.TaskType, []string{cloudprovider.UpdateNodeGroupDesiredNode.String(),
-		cloudprovider.CleanNodeGroupNodes.String()}) &&
-		task.GetCommonParams()[cloudprovider.ManualKey.String()] == common.False {
+	if utils.SliceContainInString([]string{cloudprovider.UpdateNodeGroupDesiredNode.String(),
+		cloudprovider.CleanNodeGroupNodes.String()}, task.TaskType) &&
+		task.GetCommonParams()[cloudprovider.ManualKey.String()] != common.True {
 		allowRetry = false
 	}
 

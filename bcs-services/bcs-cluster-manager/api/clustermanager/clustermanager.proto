@@ -12729,6 +12729,14 @@ message OperationLogDetail {
     title : "resourceName",
     description : "资源名称"
   }];
+  bool allowRetry = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "allowRetry",
+    description : "如果该操作是异步任务, 控制任务是否允许重试"
+  }];
+  bool allowSkip = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "allowSkip",
+    description : "如果该操作是异步任务, 控制任务是否允许跳过"
+  }];
 }
 
 message ListTaskStepLogsResponse {

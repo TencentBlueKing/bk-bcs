@@ -24,7 +24,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
+
+func allowTaskRetry(task *proto.Task) bool {
+	allowRetry := true
+	// attention: 开启CA节点自动扩缩容的任务不允许手动重试
+	if utils.SliceContainInString([]string{cloudprovider.UpdateNodeGroupDesiredNode.String(),
+		cloudprovider.CleanNodeGroupNodes.String()}, task.TaskType) && (task.GetCommonParams() != nil &&
+		task.GetCommonParams()[cloudprovider.ManualKey.String()] != common.True) {
+		allowRetry = false
+	}
+	return allowRetry
+}
 
 func updateTaskDataStatus(model store.ClusterManagerModel, task *proto.Task) error {
 	blog.Infof("updateTaskDataStatus[%s] taskType[%s]", task.TaskID, task.TaskType)

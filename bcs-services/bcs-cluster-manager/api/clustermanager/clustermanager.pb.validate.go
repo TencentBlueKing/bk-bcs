@@ -32644,6 +32644,10 @@ func (m *OperationLogDetail) Validate() error {
 
 	// no validation rules for ResourceName
 
+	// no validation rules for AllowRetry
+
+	// no validation rules for AllowSkip
+
 	return nil
 }
 

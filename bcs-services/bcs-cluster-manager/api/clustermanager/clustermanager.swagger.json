@@ -16874,6 +16874,18 @@
           "type": "string",
           "description": "资源名称",
           "title": "resourceName"
+        },
+        "allowRetry": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "如果该操作是异步任务, 控制任务是否允许重试",
+          "title": "allowRetry"
+        },
+        "allowSkip": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "如果该操作是异步任务, 控制任务是否允许跳过",
+          "title": "allowSkip"
         }
       }
     },
