@@ -34,11 +34,17 @@ var (
 	UnixZeroTime = time.Unix(0, 0)
 )
 
+// BaseModel 添加 CreatedAt 索引
+type BaseModel struct {
+	gorm.Model
+	CreatedAt time.Time `gorm:"index"`
+}
+
 // TaskRecord 任务记录
 type TaskRecord struct {
-	gorm.Model
+	BaseModel
 	TaskID              string            `json:"taskID" gorm:"type:varchar(191);uniqueIndex:idx_task_id"` // 唯一索引
-	TaskType            string            `json:"taskType" gorm:"type:varchar(255)"`
+	TaskType            string            `json:"taskType" gorm:"type:varchar(191);index:idx_task_type"`
 	TaskIndex           string            `json:"TaskIndex" gorm:"type:varchar(191);index:idx_task_index"`
 	TaskIndexType       string            `json:"TaskIndexType" gorm:"type:varchar(191);index:idx_task_index"`
 	TaskName            string            `json:"taskName" gorm:"type:varchar(255)"`
