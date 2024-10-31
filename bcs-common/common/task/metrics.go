@@ -23,33 +23,33 @@ var (
 	stepRunningCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "step_running_count",
 		Help: "The number of running step.",
-	}, []string{"task_type", "task_name", "executor"})
+	}, []string{"task_type", "executor"})
 
 	// step执行总数
 	stepExecuteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "step_execute_total",
 		Help: "Counter of step execute count.",
-	}, []string{"task_type", "task_name", "executor", "status"})
+	}, []string{"task_type", "executor", "status"})
 
 	// step执行耗时
 	stepExecuteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "step_execute_duration_seconds",
 		Help:    "Histogram of duration for step execute.",
-		Buckets: []float64{1, 10, 30, 60, 60 * 5, 60 * 10, 60 * 30, 3600, 3600 * 2},
-	}, []string{"task_type", "task_name", "executor", "status"})
+		Buckets: []float64{1, 10, 30, 60, 60 * 5, 60 * 10, 60 * 30, 3600, 3600 * 2, 3600 * 4, 3600 * 8},
+	}, []string{"task_type", "executor", "status"})
 
 	// task执行总数
 	taskExecuteTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "task_execute_total",
 		Help: "Counter of task execute.",
-	}, []string{"task_type", "task_name", "status"})
+	}, []string{"task_type", "status"})
 
 	// task执行耗时
 	taskExecuteDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "task_execute_duration_seconds",
 		Help:    "Histogram of duration for task execute.",
 		Buckets: []float64{1, 10, 30, 60, 60 * 5, 60 * 10, 60 * 30, 3600, 3600 * 2, 3600 * 4, 3600 * 8},
-	}, []string{"task_type", "task_name", "status"})
+	}, []string{"task_type", "status"})
 )
 
 func init() {
@@ -64,7 +64,6 @@ func init() {
 func collectMetricStart(state *State) {
 	stepRunningCount.WithLabelValues(
 		state.task.GetTaskType(),
-		state.task.GetTaskName(),
 		state.step.Executor).Inc()
 }
 
@@ -74,30 +73,25 @@ func collectMetricEnd(state *State) {
 	if state.task.GetStatus() != types.TaskStatusInit && state.task.GetStatus() != types.TaskStatusRunning {
 		taskExecuteTotal.WithLabelValues(
 			state.task.GetTaskType(),
-			state.task.GetTaskName(),
 			state.task.GetStatus()).Inc()
 
 		taskExecuteDuration.WithLabelValues(
 			state.task.GetTaskType(),
-			state.task.GetTaskName(),
 			state.task.GetStatus()).Observe(state.task.GetExecutionTime().Seconds())
 	}
 
 	// 任务步骤完成时, 记录执行结果
 	stepRunningCount.WithLabelValues(
 		state.task.GetTaskType(),
-		state.task.GetTaskName(),
 		state.step.Executor).Dec()
 
 	stepExecuteTotal.WithLabelValues(
 		state.task.GetTaskType(),
-		state.task.GetTaskName(),
 		state.step.Executor,
 		state.step.GetStatus()).Inc()
 
 	stepExecuteDuration.WithLabelValues(
 		state.task.GetTaskType(),
-		state.task.GetTaskName(),
 		state.step.Executor,
 		state.step.GetStatus()).Observe(state.step.GetExecutionTime().Seconds())
 }
