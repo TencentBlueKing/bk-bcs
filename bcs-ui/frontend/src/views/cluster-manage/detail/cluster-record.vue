@@ -57,14 +57,20 @@
       </bk-table-column>
       <bcs-table-column :label="$t('generic.label.action')" width="100">
         <template #default="{ row }">
-          <bcs-button text v-if="row.taskID" @click="showTaskDetail(row)">{{ $t("generic.button.detail") }}</bcs-button>
-          <bcs-button
-            text
-            v-if="row.taskID && row.status !== 'SUCCESS'"
-            class="ml-[8px]"
-            @click="handleRetryTask(row)">
-            {{ $t("generic.button.retry") }}
-          </bcs-button>
+          <template v-if="row.taskID">
+            <bcs-button
+              text
+              v-if="row.taskID"
+              @click="showTaskDetail(row)">{{ $t("generic.button.detail") }}</bcs-button>
+            <bcs-button
+              text
+              v-if="row.taskID && row.status !== 'SUCCESS' && row.allowRetry"
+              class="ml-[8px]"
+              @click="handleRetryTask(row)">
+              {{ $t("generic.button.retry") }}
+            </bcs-button>
+          </template>
+          <span v-else>--</span>
         </template>
       </bcs-table-column>
       <template #empty>
