@@ -113,6 +113,8 @@ pre:
 	go mod tidy
 	go fmt ./...
 	cd ./scripts && chmod +x vet.sh && ./vet.sh
+
+tongsuo:
 	cd ./scripts && chmod +x tongsuo.sh && ./tongsuo.sh
 
 gateway:pre
@@ -162,7 +164,7 @@ webhook-server:pre
 	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-webhook-server ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
 	cd ${BCS_COMPONENT_PATH}/bcs-webhook-server && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-webhook-server/bcs-webhook-server ./cmd/server.go
 
-tools:pre
+tools:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services
 	cd ${BCS_INSTALL_PATH}/cryptool && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o  ${WORKSPACE}/${PACKAGEPATH}/bcs-services/cryptools main.go
 
@@ -171,7 +173,7 @@ ui:pre
 	cp -R ${BCS_CONF_UI_PATH} ${PACKAGEPATH}
 	cd ${BCS_UI_PATH} && ls -la && cd frontend && npm install && npm run build && cd ../ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-ui/bcs-ui ./cmd/bcs-ui
 
-user-manager:pre
+user-manager:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-user-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-user-manager ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-user-manager/ && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-user-manager/bcs-user-manager ./main.go
@@ -262,7 +264,7 @@ ingress-controller:pre
 #end of network plugins
 
 # bcs-service section
-cluster-manager:pre
+cluster-manager:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-cluster-manager/* ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-cluster-manager/swagger
@@ -327,7 +329,7 @@ data-manager:pre
 	cp ${BCS_SERVICES_PATH}/bcs-data-manager/proto/bcs-data-manager/bcs-data-manager.swagger.json  ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/bcs-data-manager.swagger.json
 	cd bcs-services/bcs-data-manager/ && go mod tidy -go=1.16 && go mod tidy -go=1.17 && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-data-manager/bcs-data-manager ./main.go
 
-helm-manager:pre
+helm-manager:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-helm-manager
 	cp -R ${BCS_SERVICES_PATH}/bcs-helm-manager/images/bcs-helm-manager/* ${PACKAGEPATH}/bcs-services/bcs-helm-manager/
 	# swagger
