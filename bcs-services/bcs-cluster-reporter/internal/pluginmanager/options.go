@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package plugin_manager xxx
-package plugin_manager
+// Package pluginmanager xxx
+package pluginmanager
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -19,6 +19,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 	"sync"
 )
 
@@ -45,6 +46,7 @@ type ClusterConfig struct {
 	BCSCluster  clustermanager.Cluster
 	ClusterType string
 	ClientSet   *kubernetes.Clientset
+	MetricSet   *metricsclientset.Clientset
 	Version     string
 
 	// net

@@ -16,14 +16,14 @@ package nodecheck
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/processcheck"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/types/process"
 	"path/filepath"
 	"strings"
 )
 
-func checkProcess(detail processcheck.Detail, nodeName string) []plugin_manager.CheckItem {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+func checkProcess(detail processcheck.Detail, nodeName string) []pluginmanager.CheckItem {
+	result := make([]pluginmanager.CheckItem, 0, 0)
 
 	// 做一些通用的检查
 	// TODO 后续考虑支持在nodeagent中配置自定义参数检查项
@@ -45,16 +45,16 @@ func checkProcess(detail processcheck.Detail, nodeName string) []plugin_manager.
 	return result
 }
 
-func checkDocker(processInfo process.ProcessInfo) []plugin_manager.CheckItem {
-	checkItem := plugin_manager.CheckItem{
+func checkDocker(processInfo process.ProcessInfo) []pluginmanager.CheckItem {
+	checkItem := pluginmanager.CheckItem{
 		ItemName: processConfigCheckItem,
 		Status:   normalStatus,
-		Level:    plugin_manager.WARNLevel,
+		Level:    pluginmanager.WARNLevel,
 		Detail:   fmt.Sprintf(StringMap[ConfigFileDetail], "docker daemon.json"),
 		Normal:   true,
 	}
 
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	for fileName, configfile := range processInfo.ConfigFiles {
 		if filepath.Base(fileName) == "daemon.json" {
 			if !strings.Contains(configfile, "data-root") && !strings.Contains(configfile, "\"graph\"") {
@@ -66,10 +66,10 @@ func checkDocker(processInfo process.ProcessInfo) []plugin_manager.CheckItem {
 		}
 	}
 
-	checkItem = plugin_manager.CheckItem{
+	checkItem = pluginmanager.CheckItem{
 		ItemName: processConfigCheckItem,
 		Status:   normalStatus,
-		Level:    plugin_manager.WARNLevel,
+		Level:    pluginmanager.WARNLevel,
 		Detail:   fmt.Sprintf(StringMap[ConfigFileDetail], "docker service"),
 		Normal:   true,
 	}
@@ -86,14 +86,14 @@ func checkDocker(processInfo process.ProcessInfo) []plugin_manager.CheckItem {
 	return result
 }
 
-func checkKubelet(processInfo process.ProcessInfo) []plugin_manager.CheckItem {
-	checkItem := plugin_manager.CheckItem{
+func checkKubelet(processInfo process.ProcessInfo) []pluginmanager.CheckItem {
+	checkItem := pluginmanager.CheckItem{
 		ItemName: processConfigCheckItem,
-		Level:    plugin_manager.WARNLevel,
+		Level:    pluginmanager.WARNLevel,
 		Normal:   true,
 	}
 
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 
 	flags := []string{"--root-dir", "--read-only-port=0"}
 	for _, param := range processInfo.Params {

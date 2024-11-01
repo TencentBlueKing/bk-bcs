@@ -16,6 +16,8 @@ package containercheck
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"net"
 	"os"
 	"path"
@@ -30,8 +32,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/types/process"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
@@ -60,9 +60,9 @@ var (
 )
 
 func init() {
-	metric_manager.Register(containerStatusMetric)
-	metric_manager.Register(containerPorcessStatus)
-	metric_manager.Register(runtimeStatus)
+	metricmanager.Register(containerStatusMetric)
+	metricmanager.Register(containerPorcessStatus)
+	metricmanager.Register(runtimeStatus)
 }
 
 // Plugin xxx
@@ -70,7 +70,7 @@ type Plugin struct {
 	opt    *Options
 	ready  bool
 	Detail Detail
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 }
 
 // Detail xxx
@@ -95,7 +95,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -113,7 +113,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -132,21 +132,21 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-// Check xxx
+// Check check container status and state
 func (p *Plugin) Check() {
 	// 初始化变量
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 
-	node := plugin_manager.Pm.GetConfig().NodeConfig
+	node := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := node.NodeName
 
 	var runtimeErr error
 
-	containerStatusGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
-	containerPidStatusGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
-	runtimeStatusGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	containerStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	containerPidStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	runtimeStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	p.ready = false
 
@@ -154,7 +154,7 @@ func (p *Plugin) Check() {
 		p.CheckLock.Unlock()
 
 		if runtimeErr != nil {
-			checkItem := plugin_manager.CheckItem{
+			checkItem := pluginmanager.CheckItem{
 				ItemName:   pluginName,
 				ItemTarget: nodeName,
 				Detail:     fmt.Sprintf("check %s failed: %s", runtimeTarget, runtimeErr.Error()),
@@ -165,21 +165,19 @@ func (p *Plugin) Check() {
 			checkItem.Detail = fmt.Sprintf("runtime error: %s", runtimeErr.Error())
 			result = append(result, checkItem)
 
-			runtimeStatusGaugeVecSetList = append(runtimeStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
+			runtimeStatusGaugeVecSetList = append(runtimeStatusGaugeVecSetList, &metricmanager.GaugeVecSet{
 				Labels: []string{nodeName, runtimeErrorStatus}, Value: float64(1),
 			})
 		}
 
-		metric_manager.RefreshMetric(containerStatusMetric, containerStatusGaugeVecSetList)
-		metric_manager.RefreshMetric(containerPorcessStatus, containerPidStatusGaugeVecSetList)
-		metric_manager.RefreshMetric(runtimeStatus, runtimeStatusGaugeVecSetList)
+		metricmanager.RefreshMetric(containerStatusMetric, containerStatusGaugeVecSetList)
+		metricmanager.RefreshMetric(containerPorcessStatus, containerPidStatusGaugeVecSetList)
+		metricmanager.RefreshMetric(runtimeStatus, runtimeStatusGaugeVecSetList)
 
-		p.Result = plugin_manager.CheckResult{
+		p.Result = pluginmanager.CheckResult{
 			Items: result,
 		}
-		if !p.ready {
-			p.ready = true
-		}
+		p.ready = true
 		klog.Infof("end %s", p.Name())
 	}()
 
@@ -191,6 +189,7 @@ func (p *Plugin) Check() {
 		klog.Infof("sockPath param is %s, remove default sockpathes", p.opt.SockPath)
 	}
 
+	// 获取可用的socket
 	for _, socketPath = range sockList {
 		conn, err := net.Dial("unix", path.Join(node.HostPath, socketPath))
 		if err != nil {
@@ -208,143 +207,167 @@ func (p *Plugin) Check() {
 
 	socketPath = path.Join(node.HostPath, socketPath)
 	if strings.Contains(socketPath, "docker.sock") {
-		cli, err := GetDockerCli(socketPath)
+		checkItemList, gvsList, err := dockerCheck(socketPath, node)
 		if err != nil {
 			runtimeErr = err
 			return
 		}
-
-		defer func() {
-			err = cli.Close()
-			if err != nil {
-				klog.Errorf("close docker cli failed: %s", err.Error())
-			}
-		}()
-
-		containerList, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
-		if err != nil {
-			runtimeErr = err
-			return
-		}
-
-		// check container status
-		for _, container := range containerList {
-			klog.Infof("start check for docker container %s", container.Names)
-			status, containerInfo, err := DockerContainerCheck(cli, container.ID, container.State)
-			if err != nil {
-				klog.Errorf("check container %s failed: %s", container.Names, err.Error())
-			}
-
-			if status != Normalstatus {
-				klog.Errorf("container id: %s,inspect: %s, state: %s", container.ID, status, container.State)
-
-				containerStatusGaugeVecSetList = append(containerStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
-					Labels: []string{container.ID, strings.Join(container.Names, "_"), nodeName, status}, Value: float64(1),
-				})
-				result = append(result, plugin_manager.CheckItem{
-					ItemName:   pluginName,
-					ItemTarget: nodeName,
-					Normal:     false,
-					Detail:     fmt.Sprintf("container %s state is %s", strings.Join(container.Names, "_"), status),
-					Status:     inspectCoantainerError,
-				})
-				continue
-			}
-
-			// 验证dns pod中的resolv内容正确
-			checkItem, status, err := CheckDNSContainer(containerInfo.Name, containerInfo.ResolvConfPath, nodeName, node.HostPath)
-			if err != nil {
-				klog.Errorf("check container %s failed: %s", container.Names, err.Error())
-				containerStatusGaugeVecSetList = append(containerStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
-					Labels: []string{container.ID, strings.Join(container.Names, "_"), nodeName, status}, Value: float64(1),
-				})
-				result = append(result, *checkItem)
-			}
-		}
+		result = append(result, checkItemList...)
+		containerStatusGaugeVecSetList = append(containerStatusGaugeVecSetList, gvsList...)
 	} else if strings.Contains(socketPath, "containerd.sock") {
-		// 连接到 containerd
-		cli, err := containerd.New(socketPath)
+		checkItemList, gvsList, err := containerdCheck(socketPath, node)
 		if err != nil {
 			runtimeErr = err
 			return
 		}
-		defer func() {
-			err = cli.Close()
-			if err != nil {
-				klog.Errorf("close docker cli failed: %s", err.Error())
-			}
-		}()
-
-		ctx := namespaces.WithNamespace(util.GetCtx(10*time.Second), "k8s.io")
-
-		containerList, err := cli.Containers(ctx)
-		if err != nil {
-			runtimeErr = err
-			return
-		}
-
-		// check container status
-		for _, container := range containerList {
-			klog.Infof("start check for containerd container %s", container.ID())
-			status, podName, err := ContainerdContainerCheck(container, ctx)
-			if err != nil {
-				klog.Errorf("check container %s failed: %s", podName, err.Error())
-			}
-
-			if status != Normalstatus {
-				containerStatusGaugeVecSetList = append(containerStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
-					Labels: []string{container.ID(), podName, nodeName, status}, Value: float64(1),
-				})
-				result = append(result, plugin_manager.CheckItem{
-					ItemName:   pluginName,
-					ItemTarget: nodeName,
-					Normal:     false,
-					Status:     inconsistentStatus,
-					Detail:     fmt.Sprintf("container of %s state is %s", podName, status),
-				})
-				continue
-			}
-
-			// 验证dns pod中的resolv内容正确
-			spec, err := container.Spec(ctx)
-			if err != nil {
-				klog.Errorf("check container %s failed: %s", podName, err.Error())
-				continue
-			}
-			resolvConfPath := ""
-			for _, mount := range spec.Mounts {
-				if mount.Destination == "/etc/resolv.conf" {
-					resolvConfPath = mount.Source
-				}
-			}
-			checkItem, status, err := CheckDNSContainer(podName, resolvConfPath, nodeName, node.HostPath)
-			if err != nil {
-				klog.Errorf("check container %s failed: %s", podName, err.Error())
-				containerStatusGaugeVecSetList = append(containerStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
-					Labels: []string{container.ID(), podName, nodeName, status}, Value: float64(1),
-				})
-				result = append(result, *checkItem)
-			}
-		}
-
+		result = append(result, checkItemList...)
+		containerStatusGaugeVecSetList = append(containerStatusGaugeVecSetList, gvsList...)
 	} else {
 		runtimeErr = fmt.Errorf("unknown socket %s", socketPath)
 		return
 	}
 
-	runtimeStatusGaugeVecSetList = append(runtimeStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
+	runtimeStatusGaugeVecSetList = append(runtimeStatusGaugeVecSetList, &metricmanager.GaugeVecSet{
 		Labels: []string{nodeName, Normalstatus}, Value: float64(1),
 	})
-	result = append(result, plugin_manager.CheckItem{
+	result = append(result, pluginmanager.CheckItem{
 		ItemName:   pluginName,
 		ItemTarget: nodeName,
-		Level:      plugin_manager.WARNLevel,
+		Level:      pluginmanager.WARNLevel,
 		Normal:     true,
 		Status:     Normalstatus,
 	})
 }
 
-// DockerContainerCheck xxx
+// dockerCheck 检查docker容器状态
+func dockerCheck(socketPath string, node pluginmanager.NodeConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	checkItemList := make([]pluginmanager.CheckItem, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0)
+	nodeName := node.NodeName
+	// 检查docker容器状态
+	cli, err := GetDockerCli(socketPath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	defer func() {
+		_ = cli.Close()
+	}()
+
+	containerList, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check container status
+	for _, container := range containerList {
+		klog.Infof("start check for docker container %s", container.Names)
+		status, containerInfo, err := DockerContainerCheck(cli, container.ID, container.State)
+		if err != nil {
+			klog.Errorf("check container %s failed: %s", container.Names, err.Error())
+		}
+
+		if status != Normalstatus {
+			klog.Errorf("container id: %s,inspect: %s, state: %s", container.ID, status, container.State)
+
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+				Labels: []string{container.ID, strings.Join(container.Names, "_"), nodeName, status}, Value: float64(1),
+			})
+			checkItemList = append(checkItemList, pluginmanager.CheckItem{
+				ItemName:   pluginName,
+				ItemTarget: nodeName,
+				Normal:     false,
+				Detail:     fmt.Sprintf("container %s state is %s", strings.Join(container.Names, "_"), status),
+				Status:     inspectCoantainerError,
+			})
+			continue
+		}
+
+		// 验证dns pod中的resolv内容正确
+		checkItem, status, err := CheckDNSContainer(containerInfo.Name, containerInfo.ResolvConfPath, nodeName, node.HostPath)
+		if err != nil {
+			klog.Errorf("check container %s failed: %s", container.Names, err.Error())
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+				Labels: []string{container.ID, strings.Join(container.Names, "_"), nodeName, status}, Value: float64(1),
+			})
+			checkItemList = append(checkItemList, *checkItem)
+		}
+	}
+
+	return checkItemList, gvsList, nil
+}
+
+// containerdCheck 检查containerd容器状态
+func containerdCheck(socketPath string, node pluginmanager.NodeConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	checkItemList := make([]pluginmanager.CheckItem, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0)
+	nodeName := node.NodeName
+
+	// 连接到 containerd
+	cli, err := containerd.New(socketPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func() {
+		_ = cli.Close()
+	}()
+
+	ctx := namespaces.WithNamespace(util.GetCtx(10*time.Second), "k8s.io")
+
+	containerList, err := cli.Containers(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// check container status
+	for _, container := range containerList {
+		klog.Infof("start check for containerd container %s", container.ID())
+		status, podName, err := ContainerdContainerCheck(container, ctx)
+		if err != nil {
+			klog.Errorf("check container %s failed: %s", podName, err.Error())
+		}
+
+		if status != Normalstatus {
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+				Labels: []string{container.ID(), podName, nodeName, status}, Value: float64(1),
+			})
+			checkItemList = append(checkItemList, pluginmanager.CheckItem{
+				ItemName:   pluginName,
+				ItemTarget: nodeName,
+				Normal:     false,
+				Status:     inconsistentStatus,
+				Detail:     fmt.Sprintf("container of %s state is %s", podName, status),
+			})
+			continue
+		}
+
+		// 验证dns pod中的resolv内容正确
+		spec, err := container.Spec(ctx)
+		if err != nil {
+			klog.Errorf("check container %s failed: %s", podName, err.Error())
+			continue
+		}
+		resolvConfPath := ""
+		for _, mount := range spec.Mounts {
+			if mount.Destination == "/etc/resolv.conf" {
+				resolvConfPath = mount.Source
+			}
+		}
+		// 验证dns pod中的resolv内容正确
+		checkItem, status, err := CheckDNSContainer(podName, resolvConfPath, nodeName, node.HostPath)
+		if err != nil {
+			klog.Errorf("check container %s failed: %s", podName, err.Error())
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+				Labels: []string{container.ID(), podName, nodeName, status}, Value: float64(1),
+			})
+			checkItemList = append(checkItemList, *checkItem)
+		}
+	}
+
+	return checkItemList, gvsList, nil
+}
+
+// DockerContainerCheck 检查容器状态一致性以及进程状态
 func DockerContainerCheck(cli *client.Client, containerID string, state string) (string, types.ContainerJSON, error) {
 	containerInfo, err := GetContainerInfo(cli, containerID)
 	if err != nil {
@@ -375,7 +398,7 @@ func DockerContainerCheck(cli *client.Client, containerID string, state string) 
 	return Normalstatus, containerInfo, nil
 }
 
-// ContainerdContainerCheck xxx
+// ContainerdContainerCheck 检查容器状态一致性以及进程状态
 func ContainerdContainerCheck(container containerd.Container, ctx context.Context) (string, string, error) {
 	info, err := container.Info(ctx, containerd.WithoutRefreshedMetadata)
 	if err != nil {
@@ -406,12 +429,14 @@ func ContainerdContainerCheck(container containerd.Container, ctx context.Contex
 }
 
 // CheckDNSContainer 验证dns pod中的resolv内容正确
-func CheckDNSContainer(name string, resolvConfPath string, nodeName string, hostPath string) (*plugin_manager.CheckItem, string, error) {
-	checkItem := &plugin_manager.CheckItem{
+func CheckDNSContainer(name string, resolvConfPath string, nodeName string, hostPath string) (*pluginmanager.CheckItem, string, error) {
+	checkItem := &pluginmanager.CheckItem{
 		ItemName:   pluginName,
 		ItemTarget: nodeName,
 		Normal:     true,
 	}
+
+	// 判断该容器是否为kube-system下的 dns 容器
 	if strings.Contains(name, "kube-system") && (strings.Contains(name, "coredns") || strings.Contains(name, "kube-dns")) && !strings.Contains(name, "k8s_POD") {
 		klog.Infof("check dns pod %s %s", name, resolvConfPath)
 
@@ -452,6 +477,7 @@ func CheckDNSContainer(name string, resolvConfPath string, nodeName string, host
 		sort.Strings(dnsLines)
 		sort.Strings(hostLines)
 
+		// 判断容器内的resolv文件中的nameserver配置和母机上的是否一致
 		equal := true
 		if len(dnsLines) != len(hostLines) {
 			equal = false
@@ -506,7 +532,7 @@ func (p *Plugin) Ready(string) bool {
 }
 
 // GetResult xxx
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 
@@ -515,7 +541,7 @@ func (p *Plugin) Execute() {
 	p.Check()
 }
 
-// GetDetail
+// GetDetail xxx
 func (p *Plugin) GetDetail() interface{} {
 	return p.Detail
 }

@@ -15,6 +15,7 @@ package nodecheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/diskcheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/netcheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/nodeinfocheck"
@@ -24,17 +25,16 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/dnscheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/hwcheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/processcheck"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -42,7 +42,7 @@ import (
 type Plugin struct {
 	opt            *Options
 	testYamlString string
-	plugin_manager.ClusterPlugin
+	pluginmanager.ClusterPlugin
 }
 
 var (
@@ -51,11 +51,11 @@ var (
 		Name: "cluster_node_availability",
 		Help: "cluster_node_availability, 1 means OK",
 	}, nodeAvailabilityLabels)
-	nodeAvailabilityGaugeVecSetMap = make(map[string][]*metric_manager.GaugeVecSet)
+	nodeAvailabilityGaugeVecSetMap = make(map[string][]*metricmanager.GaugeVecSet)
 )
 
 func init() {
-	metric_manager.Register(nodeAvailability)
+	metricmanager.Register(nodeAvailability)
 }
 
 // Setup xxx
@@ -70,7 +70,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		return err
 	}
 
-	p.Result = make(map[string]plugin_manager.CheckResult)
+	p.Result = make(map[string]pluginmanager.CheckResult)
 	p.ReadyMap = make(map[string]bool)
 
 	interval := p.opt.Interval
@@ -123,19 +123,19 @@ func (p *Plugin) Check() {
 	defer func() {
 		klog.Infof("end %s", p.Name())
 		p.CheckLock.Unlock()
-		metric_manager.SetCommonDurationMetric([]string{p.Name(), "", "", ""}, start)
+		metricmanager.SetCommonDurationMetric([]string{p.Name(), "", "", ""}, start)
 	}()
 
-	clusterConfigs := plugin_manager.Pm.GetConfig().ClusterConfigs
+	clusterConfigs := pluginmanager.Pm.GetConfig().ClusterConfigs
 
 	wg := sync.WaitGroup{}
 
 	// 遍历所有集群
 	for _, cluster := range clusterConfigs {
 		wg.Add(1)
-		plugin_manager.Pm.Add()
+		pluginmanager.Pm.Add()
 
-		go func(cluster *plugin_manager.ClusterConfig) {
+		go func(cluster *pluginmanager.ClusterConfig) {
 			cluster.Lock()
 			klog.Infof("start nodecheck for %s", cluster.ClusterID)
 
@@ -149,15 +149,15 @@ func (p *Plugin) Check() {
 
 			defer func() {
 				cluster.Unlock()
-				plugin_manager.Pm.Done()
+				pluginmanager.Pm.Done()
 				p.WriteLock.Lock()
 				p.ReadyMap[cluster.ClusterID] = true
 				p.WriteLock.Unlock()
 				wg.Done()
 				klog.Infof("end nodecheck for %s", cluster.ClusterID)
 			}()
-			clusterResult := plugin_manager.CheckResult{
-				Items: make([]plugin_manager.CheckItem, 0, 0),
+			clusterResult := pluginmanager.CheckResult{
+				Items: make([]pluginmanager.CheckItem, 0, 0),
 			}
 
 			clientSet, _ := k8s.GetClientsetByConfig(config)
@@ -169,7 +169,7 @@ func (p *Plugin) Check() {
 				return
 			}
 
-			nodeAvailabilityGVSMap := make(map[string][]*metric_manager.GaugeVecSet)
+			nodeAvailabilityGVSMap := make(map[string][]*metricmanager.GaugeVecSet)
 			//遍历该集群的nodeagent configmap
 			klog.Infof("%s nodeagent configmap num: %d", clusterId, len(cmList.Items))
 			for _, configmap := range cmList.Items {
@@ -190,7 +190,7 @@ func (p *Plugin) Check() {
 				}
 				nodeName := strings.TrimSuffix(configmap.Name, "-v1")
 
-				nodeinfo := make(map[string]plugin_manager.PluginInfo)
+				nodeinfo := make(map[string]pluginmanager.PluginInfo)
 				err = yaml.Unmarshal([]byte(configmap.Data["nodeinfo"]), nodeinfo)
 				if err != nil {
 					klog.Errorf("unmarshal %s nodeinfo %s failed: %s", clusterId, configmap.Name, err.Error())
@@ -200,12 +200,18 @@ func (p *Plugin) Check() {
 				// 获取节点的checkitem并生成metric的map
 				nodeInfo := plugin.NodeInfo{}
 				checkItemList, infoItemList, nodeGVSMap := checkNodePluginResult(nodeinfo, strings.TrimSuffix(configmap.Name, "-v1"), clusterId, clusterbiz, &nodeInfo)
+				// 一个节点每类异常指标只能有一个
+				for name, list := range nodeGVSMap {
+					if len(list) > 1 {
+						nodeGVSMap[name] = list[:1]
+					}
+				}
 
 				clusterResult.Items = append(clusterResult.Items, checkItemList...)
 				clusterResult.InfoItemList = append(clusterResult.InfoItemList, infoItemList...)
 				for key, nodeGVSList := range nodeGVSMap {
 					if _, ok := nodeAvailabilityGVSMap[key]; !ok {
-						nodeAvailabilityGVSMap[key] = make([]*metric_manager.GaugeVecSet, 0, 0)
+						nodeAvailabilityGVSMap[key] = make([]*metricmanager.GaugeVecSet, 0, 0)
 					}
 					nodeAvailabilityGVSMap[key] = append(nodeAvailabilityGVSMap[key], nodeGVSList...)
 				}
@@ -213,29 +219,25 @@ func (p *Plugin) Check() {
 				cluster.NodeInfo[nodeName] = nodeInfo
 			}
 
-			nodeAvailabilityGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+			nodeAvailabilityGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 			for key, gvsList := range nodeAvailabilityGVSMap {
 				if len(gvsList) == 0 {
-					nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, &metric_manager.GaugeVecSet{
+					nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, &metricmanager.GaugeVecSet{
 						Labels: []string{clusterId, clusterbiz, key, "node", normalStatus},
 						Value:  1,
 					})
 				} else {
-					// 如果大于1,如果有异常则只增加一条异常的指标，否则增加一条正常的指标
-					nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, gvsList[0])
-					for _, gvs := range gvsList {
-						if gvs.Labels[4] != normalStatus {
-							nodeAvailabilityGaugeVecSetList[len(nodeAvailabilityGaugeVecSetList)-1] = gvs
-							break
-						}
+					// 汇总所有节点检测异常指标，一个节点，一类异常指标只能有一条
+					for _, gaugeVecSet := range gvsList {
+						nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, gaugeVecSet)
 					}
 				}
 			}
 
 			p.WriteLock.Lock()
-			metric_manager.DeleteMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterId])
+			metricmanager.DeleteMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterId])
 			nodeAvailabilityGaugeVecSetMap[clusterId] = nodeAvailabilityGaugeVecSetList
-			metric_manager.SetMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterId])
+			metricmanager.SetMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterId])
 			p.Result[clusterId] = clusterResult
 			p.WriteLock.Unlock()
 		}(cluster)
@@ -246,34 +248,30 @@ func (p *Plugin) Check() {
 	// clean deleted cluster data
 	for clusterID, _ := range p.ReadyMap {
 		if _, ok := clusterConfigs[clusterID]; !ok {
-			p.ReadyMap[clusterID] = false
-			klog.Infof("delete cluster %s", clusterID)
-		}
-	}
-
-	for clusterID, ready := range p.ReadyMap {
-		if !ready {
 			delete(p.ReadyMap, clusterID)
 			delete(nodeAvailabilityGaugeVecSetMap, clusterID)
 			delete(p.Result, clusterID)
-			metric_manager.DeleteMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterID])
+			metricmanager.DeleteMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterID])
+			klog.Infof("delete cluster %s", clusterID)
+			klog.Infof("delete cluster %s", clusterID)
 		}
 	}
 }
 
-func checkNodePluginResult(nodeinfo map[string]plugin_manager.PluginInfo, nodeName string, clusterId, clusterbiz string, nodeInfo *plugin.NodeInfo) ([]plugin_manager.CheckItem, []plugin_manager.InfoItem, map[string][]*metric_manager.GaugeVecSet) {
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
-	infoItemList := make([]plugin_manager.InfoItem, 0, 0)
-	nodeGVSMap := make(map[string][]*metric_manager.GaugeVecSet)
+// checkNodePluginResult 解析node check PluginInfo
+func checkNodePluginResult(nodeinfo map[string]pluginmanager.PluginInfo, nodeName string, clusterId, clusterbiz string, nodeInfo *plugin.NodeInfo) ([]pluginmanager.CheckItem, []pluginmanager.InfoItem, map[string][]*metricmanager.GaugeVecSet) {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	infoItemList := make([]pluginmanager.InfoItem, 0, 0)
+	nodeGVSMap := make(map[string][]*metricmanager.GaugeVecSet)
 
 	// 所有节点检测项，不管正常与否都应该返回对应checkitem
 	for name, pluginInfo := range nodeinfo {
 		for _, checkItem := range pluginInfo.Result.Items {
 			if _, ok := nodeGVSMap[checkItem.ItemName]; !ok {
-				nodeGVSMap[checkItem.ItemName] = make([]*metric_manager.GaugeVecSet, 0, 0)
+				nodeGVSMap[checkItem.ItemName] = make([]*metricmanager.GaugeVecSet, 0, 0)
 			}
 
-			nodeGVSMap[checkItem.ItemName] = append(nodeGVSMap[checkItem.ItemName], &metric_manager.GaugeVecSet{
+			nodeGVSMap[checkItem.ItemName] = append(nodeGVSMap[checkItem.ItemName], &metricmanager.GaugeVecSet{
 				Labels: []string{clusterId, clusterbiz, checkItem.ItemName, "node", checkItem.Status},
 				Value:  1,
 			})
@@ -281,42 +279,13 @@ func checkNodePluginResult(nodeinfo map[string]plugin_manager.PluginInfo, nodeNa
 
 		switch name {
 		case "processcheck":
-			for _, checkItem := range pluginInfo.Result.Items {
-				checkItem.ItemName = processcheck.StringMap[checkItem.ItemName]
-				checkItem.Status = processcheck.StringMap[checkItem.Status]
-				checkItemList = append(checkItemList, checkItem)
-			}
-			detailBytes, err := yaml.Marshal(pluginInfo.Detail)
+			pluginCheckItemList, gvsList, err := getProcessCheckResult(pluginInfo, nodeName, clusterId, clusterbiz)
 			if err != nil {
 				klog.Errorf(err.Error())
 				continue
 			}
-
-			detail := processcheck.Detail{}
-			err = yaml.Unmarshal(detailBytes, &detail)
-			if err != nil {
-				klog.Errorf(err.Error())
-				continue
-			}
-
-			// 检查进程配置，生成checkitem
-			processResult := checkProcess(detail, nodeName)
-			checkItemList = append(checkItemList, processResult...)
-
-			for index, checkItem := range processResult {
-				if _, ok := nodeGVSMap[checkItem.ItemName]; !ok {
-					nodeGVSMap[checkItem.ItemName] = make([]*metric_manager.GaugeVecSet, 0, 0)
-
-				}
-				nodeGVSMap[checkItem.ItemName] = append(nodeGVSMap[checkItem.ItemName], &metric_manager.GaugeVecSet{
-					Labels: []string{clusterId, clusterbiz, checkItem.ItemName, "node", checkItem.Status},
-					Value:  1,
-				})
-
-				checkItem.ItemName = StringMap[checkItem.ItemName]
-				checkItem.Status = StringMap[checkItem.Status]
-				processResult[index] = checkItem
-			}
+			checkItemList = append(checkItemList, pluginCheckItemList...)
+			nodeGVSMap[processConfigCheckItem] = gvsList
 
 		case "dnscheck":
 			for _, checkItem := range pluginInfo.Result.Items {
@@ -349,26 +318,71 @@ func checkNodePluginResult(nodeinfo map[string]plugin_manager.PluginInfo, nodeNa
 				checkItemList = append(checkItemList, checkItem)
 			}
 		case "nodeinfocheck":
-			for _, checkItem := range pluginInfo.Result.Items {
-				checkItem.ItemName = nodeinfocheck.StringMap[checkItem.ItemName]
-				checkItem.Status = nodeinfocheck.StringMap[checkItem.Status]
-				checkItemList = append(checkItemList, checkItem)
-			}
-
-			for _, infoItem := range pluginInfo.Result.InfoItemList {
-
-				if infoItem.ItemName == nodeinfocheck.ZoneItemType {
-					nodeInfo.Zone = infoItem.Result.(string)
-				} else if infoItem.ItemName == nodeinfocheck.RegionItemType {
-					nodeInfo.Region = infoItem.Result.(string)
-				} else if infoItem.ItemName == nodeinfocheck.InstanceTypeItemType {
-					nodeInfo.Type = infoItem.Result.(string)
-				}
-			}
+			checkItemList = append(checkItemList, getNodeinfoCheckResult(pluginInfo, nodeInfo)...)
 		}
 	}
 
 	return checkItemList, infoItemList, nodeGVSMap
+}
+
+func getProcessCheckResult(pluginInfo pluginmanager.PluginInfo, nodeName, clusterId, clusterbiz string) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	checkItemList := make([]pluginmanager.CheckItem, 0)
+	nodeGVSMap := make([]*metricmanager.GaugeVecSet, 0)
+	for _, checkItem := range pluginInfo.Result.Items {
+		checkItem.ItemName = processcheck.StringMap[checkItem.ItemName]
+		checkItem.Status = processcheck.StringMap[checkItem.Status]
+		checkItemList = append(checkItemList, checkItem)
+	}
+	detailBytes, err := yaml.Marshal(pluginInfo.Detail)
+	if err != nil {
+		return checkItemList, nodeGVSMap, err
+	}
+
+	detail := processcheck.Detail{}
+	err = yaml.Unmarshal(detailBytes, &detail)
+	if err != nil {
+		return checkItemList, nodeGVSMap, err
+	}
+
+	// 检查进程配置，生成checkitem
+	processResult := checkProcess(detail, nodeName)
+	checkItemList = append(checkItemList, processResult...)
+
+	for index, checkItem := range processResult {
+		nodeGVSMap = append(nodeGVSMap, &metricmanager.GaugeVecSet{
+			Labels: []string{clusterId, clusterbiz, checkItem.ItemName, "node", checkItem.Status},
+			Value:  1,
+		})
+
+		checkItem.ItemName = StringMap[checkItem.ItemName]
+		checkItem.Status = StringMap[checkItem.Status]
+		processResult[index] = checkItem
+	}
+
+	return checkItemList, nodeGVSMap, nil
+}
+
+func getNodeinfoCheckResult(pluginInfo pluginmanager.PluginInfo, nodeInfo *plugin.NodeInfo) []pluginmanager.CheckItem {
+	checkItemList := make([]pluginmanager.CheckItem, 0)
+
+	for _, checkItem := range pluginInfo.Result.Items {
+		checkItem.ItemName = nodeinfocheck.StringMap[checkItem.ItemName]
+		checkItem.Status = nodeinfocheck.StringMap[checkItem.Status]
+		checkItemList = append(checkItemList, checkItem)
+	}
+
+	for _, infoItem := range pluginInfo.Result.InfoItemList {
+		switch infoItem.ItemName {
+		case nodeinfocheck.ZoneItemType:
+			nodeInfo.Zone = infoItem.Result.(string)
+		case nodeinfocheck.RegionItemType:
+			nodeInfo.Zone = infoItem.Result.(string)
+		case nodeinfocheck.InstanceTypeItemType:
+			nodeInfo.Zone = infoItem.Result.(string)
+		}
+	}
+
+	return checkItemList
 }
 
 // Ready xxx
@@ -379,7 +393,7 @@ func (p *Plugin) Ready(clusterID string) bool {
 }
 
 // GetResult xxx
-func (p *Plugin) GetResult(s string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(s string) pluginmanager.CheckResult {
 	return p.Result[s]
 }
 

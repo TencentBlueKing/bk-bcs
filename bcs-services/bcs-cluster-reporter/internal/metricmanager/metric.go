@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package metric_manager xxx
-package metric_manager
+// Package metricmanager xxx
+package metricmanager
 
 import (
 	"net/http"
@@ -129,15 +129,15 @@ func RefreshMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSe
 func SetMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
 	//metricVec.Reset()
 
-	wg := sync.WaitGroup{}
+	metricMap := make(map[string]string)
 	for _, gaugeVecSet := range gaugeVecSetList {
-		wg.Add(1)
-		go func(gaugeVecSet *GaugeVecSet) {
+		if _, ok := metricMap[strings.Join(gaugeVecSet.Labels, "-")]; ok {
+			metricVec.WithLabelValues(gaugeVecSet.Labels...).Add(gaugeVecSet.Value)
+		} else {
+			metricMap[strings.Join(gaugeVecSet.Labels, "-")] = strings.Join(gaugeVecSet.Labels, "-")
 			metricVec.WithLabelValues(gaugeVecSet.Labels...).Set(gaugeVecSet.Value)
-			wg.Done()
-		}(gaugeVecSet)
+		}
 	}
-	wg.Wait()
 }
 
 // DeleteMetric xxx

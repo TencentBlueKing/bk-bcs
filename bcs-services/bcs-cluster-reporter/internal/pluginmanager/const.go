@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package plugin_manager xxx
-package plugin_manager
+// Package pluginmanager xxx
+package pluginmanager
 
 import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 

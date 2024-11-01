@@ -15,6 +15,8 @@ package netcheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"net"
 	"os/exec"
 	"runtime/debug"
@@ -31,8 +33,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -42,9 +42,10 @@ type Plugin struct {
 	dnsLock sync.Mutex
 	ready   bool
 	Detail  Detail
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 }
 
+// Detail xxx
 type Detail struct {
 }
 
@@ -57,7 +58,7 @@ var (
 )
 
 func init() {
-	metric_manager.Register(netAvailability)
+	metricmanager.Register(netAvailability)
 }
 
 // Setup xxx
@@ -79,7 +80,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -97,7 +98,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -127,15 +128,15 @@ func (p *Plugin) Check() {
 		p.CheckLock.Unlock()
 	}()
 	p.ready = false
-	result := make([]plugin_manager.CheckItem, 0, 0)
-	nodeconfig := plugin_manager.Pm.GetConfig().NodeConfig
+	result := make([]pluginmanager.CheckItem, 0, 0)
+	nodeconfig := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := nodeconfig.NodeName
 
 	defer func() {
 		if r := recover(); r != nil {
 			klog.Errorf("netcheck failed: %s, stack: %v\n", r, string(debug.Stack()))
 		}
-		p.Result = plugin_manager.CheckResult{
+		p.Result = pluginmanager.CheckResult{
 			Items: result,
 		}
 
@@ -144,9 +145,9 @@ func (p *Plugin) Check() {
 		}
 	}()
 
-	gaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	gaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	defer func() {
-		metric_manager.RefreshMetric(netAvailability, gaugeVecSetList)
+		metricmanager.RefreshMetric(netAvailability, gaugeVecSetList)
 	}()
 
 	cidr := nodeconfig.Node.Spec.PodCIDR
@@ -160,16 +161,16 @@ func (p *Plugin) Check() {
 	devStatus, err := CheckDevIP(cidr)
 	if err != nil {
 		klog.Errorf(err.Error())
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
-			Level:      plugin_manager.RISKLevel,
+			Level:      pluginmanager.RISKLevel,
 			Normal:     false,
 			Detail:     fmt.Sprintf("check interface failed: %s", err.Error()),
 			Status:     devStatus,
 		})
 
-		gaugeVecSetList = append(gaugeVecSetList, &metric_manager.GaugeVecSet{
+		gaugeVecSetList = append(gaugeVecSetList, &metricmanager.GaugeVecSet{
 			Labels: []string{nodeconfig.NodeName, nodeconfig.NodeName, devStatus},
 			Value:  float64(1),
 		})
@@ -178,10 +179,10 @@ func (p *Plugin) Check() {
 
 	// 检查节点的容器网络
 	// checkitem上报是否有pod ping不通
-	checkItem := plugin_manager.CheckItem{
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   pluginName,
 		ItemTarget: nodeName,
-		Level:      plugin_manager.RISKLevel,
+		Level:      pluginmanager.RISKLevel,
 		Normal:     true,
 		Detail:     "ping dns pod success",
 		Status:     NormalStatus,
@@ -196,12 +197,13 @@ func (p *Plugin) Check() {
 	}
 
 	result = append(result, checkItem)
-	gaugeVecSetList = append(gaugeVecSetList, &metric_manager.GaugeVecSet{
+	gaugeVecSetList = append(gaugeVecSetList, &metricmanager.GaugeVecSet{
 		Labels: []string{nodeconfig.NodeName, nodeconfig.NodeName, status},
 		Value:  float64(1),
 	})
 }
 
+// CheckOverLay xxx
 func CheckOverLay(clientSet *kubernetes.Clientset) (string, error) {
 	//测试访问dns pod是否OK
 	ipList := make([]string, 0, 0)
@@ -228,19 +230,19 @@ func CheckOverLay(clientSet *kubernetes.Clientset) (string, error) {
 	return NormalStatus, nil
 }
 
-func PINGCheck(ip string) (status string) {
+// PINGCheck xxx
+func PINGCheck(ip string) string {
 	pingCmd := exec.Command("ping", "-c1", "-W1", ip)
 	output, err := pingCmd.CombinedOutput()
 	if err != nil {
-		status = PingFailedStatus
 		klog.Error(string(output), err.Error())
-		return
+		return PingFailedStatus
 	}
 
-	status = NormalStatus
-	return
+	return NormalStatus
 }
 
+// GetIFAddr xxx
 func GetIFAddr(ifName string) (net.IP, error) {
 	sock, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_DGRAM, 0)
 	if err != nil {
@@ -269,7 +271,7 @@ func GetIFAddr(ifName string) (net.IP, error) {
 	return ip, err
 }
 
-// 目前只兼容cni0与flannel的场景
+// CheckDevIP 目前只兼容cni0与flannel的场景
 func CheckDevIP(cidr string) (string, error) {
 	_, subnet, _ := net.ParseCIDR(cidr)
 
@@ -304,6 +306,7 @@ func CheckDevIP(cidr string) (string, error) {
 	return NormalStatus, nil
 }
 
+// GetLinkIp xxx
 func GetLinkIp(deviceType string) (net.IP, net.IPMask, string, error) {
 	links, err := netlink.LinkList()
 	if err != nil {
@@ -329,22 +332,22 @@ func GetLinkIp(deviceType string) (net.IP, net.IPMask, string, error) {
 	return nil, nil, "", fmt.Errorf("not found")
 }
 
+// Ready xxx
 func (p *Plugin) Ready(string) bool {
 	return p.ready
 }
 
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+// GetResult xxx
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 
+// Execute xxx
 func (p *Plugin) Execute() {
 	p.Check()
 }
 
+// GetDetail xxx
 func (p *Plugin) GetDetail() interface{} {
 	return p.Detail
-}
-
-func (p *Plugin) GetString(key string) string {
-	return StringMap[key]
 }

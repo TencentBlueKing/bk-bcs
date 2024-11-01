@@ -13,11 +13,9 @@
 // Package clustercheck xxx
 package clustercheck
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-)
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
 // 在集群中创建job探测集群是否正常运行
 func init() {
-	plugin_manager.Register(&Plugin{})
+	pluginmanager.Register(&Plugin{})
 }

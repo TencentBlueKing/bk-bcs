@@ -15,6 +15,8 @@ package timecheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"strings"
 	"time"
 
@@ -23,8 +25,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -32,10 +32,11 @@ import (
 type Plugin struct {
 	opt   *Options
 	ready bool
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 	Detail Detail
 }
 
+// Detail xxx
 type Detail struct {
 }
 
@@ -48,7 +49,7 @@ var (
 )
 
 func init() {
-	metric_manager.Register(ntpAvailability)
+	metricmanager.Register(ntpAvailability)
 }
 
 // Setup xxx
@@ -70,7 +71,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -88,7 +89,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -111,7 +112,7 @@ func (p *Plugin) Name() string {
 
 // Check xxx
 func (p *Plugin) Check() {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
@@ -119,21 +120,21 @@ func (p *Plugin) Check() {
 		p.CheckLock.Unlock()
 	}()
 
-	nodeconfig := plugin_manager.Pm.GetConfig().NodeConfig
+	nodeconfig := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := nodeconfig.NodeName
 	p.ready = false
 
-	var gaugeVecSet *metric_manager.GaugeVecSet
+	var gaugeVecSet *metricmanager.GaugeVecSet
 
 	servers := strings.Split(p.opt.TimeServers, ",")
 	offset, err := GetTimeOffset(servers[rand.Intn(len(servers)-1)])
 	if err != nil {
 		klog.Errorf("get time offset failed: %s", err.Error())
-		gaugeVecSet = &metric_manager.GaugeVecSet{
+		gaugeVecSet = &metricmanager.GaugeVecSet{
 			Labels: []string{nodeName, timeErrorStatus},
 			Value:  0,
 		}
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
 			Normal:     false,
@@ -144,16 +145,16 @@ func (p *Plugin) Check() {
 		klog.Infof("%s result is %.8fs", p.Name(), float64(offset/time.Second))
 
 		if offset > 3*time.Second {
-			result = append(result, plugin_manager.CheckItem{
+			result = append(result, pluginmanager.CheckItem{
 				ItemName:   pluginName,
 				ItemTarget: nodeName,
-				Level:      plugin_manager.RISKLevel,
+				Level:      pluginmanager.RISKLevel,
 				Normal:     false,
 				Detail:     fmt.Sprintf("%s offset is %v", nodeName, offset),
 				Status:     timeOffsetErrorStatus,
 			})
 
-			gaugeVecSet = &metric_manager.GaugeVecSet{
+			gaugeVecSet = &metricmanager.GaugeVecSet{
 				Labels: []string{nodeName, timeOffsetErrorStatus},
 				Value:  float64(offset) / float64(time.Second),
 			}
@@ -161,23 +162,23 @@ func (p *Plugin) Check() {
 	}
 
 	if len(result) == 0 {
-		gaugeVecSet = &metric_manager.GaugeVecSet{
+		gaugeVecSet = &metricmanager.GaugeVecSet{
 			Labels: []string{nodeName, "ok"},
 			Value:  float64(offset) / float64(time.Second),
 		}
 
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
-			Level:      plugin_manager.RISKLevel,
-			Status:     plugin_manager.NormalStatus,
+			Level:      pluginmanager.RISKLevel,
+			Status:     pluginmanager.NormalStatus,
 			Normal:     true,
 			Detail:     fmt.Sprintf("%s offset is %v", nodeName, offset),
 		})
 
 	}
-	metric_manager.RefreshMetric(ntpAvailability, []*metric_manager.GaugeVecSet{gaugeVecSet})
-	p.Result = plugin_manager.CheckResult{
+	metricmanager.RefreshMetric(ntpAvailability, []*metricmanager.GaugeVecSet{gaugeVecSet})
+	p.Result = pluginmanager.CheckResult{
 		Items: result,
 	}
 
@@ -187,6 +188,7 @@ func (p *Plugin) Check() {
 
 }
 
+// GetTimeOffset xxx
 func GetTimeOffset(timeserver string) (time.Duration, error) {
 	localTime := time.Now()
 
@@ -202,22 +204,22 @@ func GetTimeOffset(timeserver string) (time.Duration, error) {
 	return diff, nil
 }
 
+// Ready xxx
 func (p *Plugin) Ready(string) bool {
 	return p.ready
 }
 
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+// GetResult xxx
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 
+// Execute xxx
 func (p *Plugin) Execute() {
 	p.Check()
 }
 
+// GetDetail xxx
 func (p *Plugin) GetDetail() interface{} {
 	return p.Detail
-}
-
-func (p *Plugin) GetString(key string) string {
-	return StringMap[key]
 }

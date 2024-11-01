@@ -13,11 +13,9 @@
 // Package systemappcheck xxx
 package systemappcheck
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-)
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
 // 检测系统命名空间下的应用与静态pod
 func init() {
-	plugin_manager.Register(&Plugin{})
+	pluginmanager.Register(&Plugin{})
 }

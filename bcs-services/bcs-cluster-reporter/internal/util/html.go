@@ -61,14 +61,13 @@ src="https://p.qpic.cn/xingzhengzhushou/610796532/45f14853-5747-4e96-963d-05f69d
 		<th>{{ . }}</th>
 		{{ end}}
 	</tr>
-    
-    {{ range .Data}}
-        <tr>
+	{{ range .Data}}
+		<tr>
 			{{ range . }}
-            <td>{{ . }}</td>
-            {{ end}}
-        </tr>
-    {{ end}}
+			<td>{{ . }}</td>
+			{{ end}}
+		</tr>
+	{{ end}}
 </table>
 {{ end}}
 
@@ -89,50 +88,53 @@ src="https://p.qpic.cn/xingzhengzhushou/610796532/45f14853-5747-4e96-963d-05f69d
 
 <table>
 <tr>
-        <th>Header 1</th>
-        <th>Header 2</th>
-        <th>Header 3</th>
-        <th>Header 4</th>
-    </tr>
-    <tr>
-        <td>Row 1, Cell 1</td>
-        <td>Row 1, Cell 2</td>
-        <td>Row 1, Cell 3</td>
-        <!-- 第一行有3个单元格 -->
-    </tr>
-    <tr>
-        <td>Row 2, Cell 1</td>
-        <td colspan="2">Row 2, Cell 2 (spanning 2 columns)</td>
-        <!-- 第二行有2个单元格，第二个单元格跨越2列 -->
-    </tr>
-    <tr>
-        <td>Row 3, Cell 1</td>
-        <td>Row 3, Cell 2</td>
-        <td>Row 3, Cell 3</td>
-        <td>Row 3, Cell 4</td>
-        <!-- 第三行有4个单元格 -->
-    </tr>
-    <tr>
-        <td>Row 4, Cell 1</td>
-        <!-- 第四行只有1个单元格 -->
-    </tr>
+		<th>Header 1</th>
+		<th>Header 2</th>
+		<th>Header 3</th>
+		<th>Header 4</th>
+	</tr>
+	<tr>
+		<td>Row 1, Cell 1</td>
+		<td>Row 1, Cell 2</td>
+		<td>Row 1, Cell 3</td>
+		<!-- 第一行有3个单元格 -->
+	</tr>
+	<tr>
+		<td>Row 2, Cell 1</td>
+		<td colspan="2">Row 2, Cell 2 (spanning 2 columns)</td>
+		<!-- 第二行有2个单元格，第二个单元格跨越2列 -->
+	</tr>
+	<tr>
+		<td>Row 3, Cell 1</td>
+		<td>Row 3, Cell 2</td>
+		<td>Row 3, Cell 3</td>
+		<td>Row 3, Cell 4</td>
+		<!-- 第三行有4个单元格 -->
+	</tr>
+	<tr>
+		<td>Row 4, Cell 1</td>
+		<!-- 第四行只有1个单元格 -->
+	</tr>
 </table>
 </body>
 
 </html>`
 )
 
+// HtmlEmail XXX
 type HtmlEmail struct {
 	content string
 	doc     *goquery.Document
 }
 
+// HtmlTable xxx
 type HtmlTable struct {
 	Title   string
 	Headers []string
 	Data    [][]string
 }
 
+// NewHtmlEmail xxx
 func NewHtmlEmail() *HtmlEmail {
 	// test goquery
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader(`<html>
@@ -161,6 +163,7 @@ tfoot { background-color: #ffff00; }
 	}
 }
 
+// GetText xxx
 func (h *HtmlEmail) GetText() string {
 	ret, err := h.doc.Html()
 	if err != nil {
@@ -169,10 +172,12 @@ func (h *HtmlEmail) GetText() string {
 	return ret
 }
 
+// Append xxx
 func (h *HtmlEmail) Append(html string) {
 	h.doc.Find("body").AppendHtml(html)
 }
 
+// AppendNodes xxx
 func (h *HtmlEmail) AppendNodes(ns ...*html.Node) {
 	h.doc.Find("body").AppendNodes(ns...)
 }

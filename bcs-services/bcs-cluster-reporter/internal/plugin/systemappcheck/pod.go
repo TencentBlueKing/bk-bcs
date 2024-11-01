@@ -16,6 +16,9 @@ package systemappcheck
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"strconv"
 	"strings"
 	"time"
@@ -26,15 +29,11 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
-// TODO 静态pod参数不一致问题检查
-// CheckStaticPod
-func CheckStaticPod(cluster *plugin_manager.ClusterConfig) ([]plugin_manager.CheckItem, []*metric_manager.GaugeVecSet, error) {
+// CheckStaticPod check static pod config
+func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
 	staticPodcache, ok := util.GetCache(cluster.ClusterID + "staticpod")
 	podList := make([]v1.Pod, 0, 0)
 	if ok {
@@ -66,8 +65,8 @@ func CheckStaticPod(cluster *plugin_manager.ClusterConfig) ([]plugin_manager.Che
 		}
 	}
 
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	newStaticPodNameList := make([]string, 0, 0)
 	for _, pod := range podList {
@@ -88,7 +87,7 @@ func CheckStaticPod(cluster *plugin_manager.ClusterConfig) ([]plugin_manager.Che
 			checkItemList = append(checkItemList, CheckApiserver(&pod, cluster)...)
 		}
 		if strings.HasPrefix(pod.Name, "etcd") {
-			checkItemList = append(checkItemList, CheckETCD(&pod, cluster)...)
+			checkItemList = append(checkItemList, CheckETCD(&pod)...)
 		}
 		if strings.HasPrefix(pod.Name, "kube-controller-manager") {
 			checkItemList = append(checkItemList, CheckKCM(&pod, cluster)...)
@@ -98,17 +97,18 @@ func CheckStaticPod(cluster *plugin_manager.ClusterConfig) ([]plugin_manager.Che
 	}
 
 	if !ok {
+		// 缓存集群当前static pod信息，避免频繁list pod
 		util.SetCacheWithTimeout(cluster.ClusterID+"staticpod", newStaticPodNameList, time.Hour*24)
 	}
 
 	if len(checkItemList) == 0 {
-		checkItemList = append(checkItemList, plugin_manager.CheckItem{
+		checkItemList = append(checkItemList, pluginmanager.CheckItem{
 			ItemName:   SystemAppConfigCheckItem,
 			ItemTarget: "static pod",
 			Normal:     true,
 			Detail:     "",
 			Tags:       nil,
-			Level:      plugin_manager.WARNLevel,
+			Level:      pluginmanager.WARNLevel,
 		})
 	}
 
@@ -116,7 +116,7 @@ func CheckStaticPod(cluster *plugin_manager.ClusterConfig) ([]plugin_manager.Che
 	okFlag := true
 	for index, checkItem := range checkItemList {
 		if !checkItem.Normal {
-			gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 				Labels: []string{cluster.ClusterID, cluster.BusinessID, "kube-system", checkItem.ItemTarget, "pod", checkItem.Status},
 				Value:  1,
 			})
@@ -126,16 +126,18 @@ func CheckStaticPod(cluster *plugin_manager.ClusterConfig) ([]plugin_manager.Che
 	}
 
 	if okFlag {
-		gvsList = append(gvsList, &metric_manager.GaugeVecSet{
-			Labels: []string{cluster.ClusterID, cluster.BusinessID, "kube-system", "static pod", "pod", plugin_manager.NormalStatus},
+		gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+			Labels: []string{cluster.ClusterID, cluster.BusinessID, "kube-system", "static pod", "pod", pluginmanager.NormalStatus},
 			Value:  1,
 		})
 	}
 
+	// 静态pod参数不一致问题检查
 	return checkItemList, gvsList, nil
 }
 
-func CheckKCM(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_manager.CheckItem {
+// CheckKCM check kcm config
+func CheckKCM(pod *v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
 	cidrFlag := false
 	cidr := make([]string, 0, 0)
 	for _, arg := range append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...) {
@@ -163,8 +165,9 @@ func CheckKCM(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_manag
 	return nil
 }
 
-func CheckETCD(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_manager.CheckItem {
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
+// CheckETCD check etcd config
+func CheckETCD(pod *v1.Pod) []pluginmanager.CheckItem {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 
 	// 检查参数
 	floatFlagList := []plugin.FloatFlag{
@@ -178,14 +181,14 @@ func CheckETCD(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_mana
 	for _, floatFlag := range floatFlagList {
 		detail := plugin.CheckFlag(append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...), floatFlag)
 		if detail != "" {
-			checkItemList = append(checkItemList, plugin_manager.CheckItem{
+			checkItemList = append(checkItemList, pluginmanager.CheckItem{
 				ItemName:   SystemAppConfigCheckItem,
 				ItemTarget: pod.Name,
 				Status:     UnrecommandedStatus,
 				Normal:     false,
 				Detail:     detail,
 				Tags:       nil,
-				Level:      plugin_manager.WARNLevel,
+				Level:      pluginmanager.WARNLevel,
 			})
 		}
 	}
@@ -195,28 +198,28 @@ func CheckETCD(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_mana
 	for _, volume := range pod.Spec.Volumes {
 		if volume.HostPath.Path == "/var/lib/etcd" {
 			checkFlag = true
-			checkItemList = append(checkItemList, plugin_manager.CheckItem{
+			checkItemList = append(checkItemList, pluginmanager.CheckItem{
 				ItemName:   SystemAppConfigCheckItem,
 				ItemTarget: pod.Name,
 				Status:     ConfigErrorStatus,
 				Normal:     false,
 				Detail:     fmt.Sprintf(StringMap[etcdDataDiskDetail], volume.HostPath.Path),
 				Tags:       nil,
-				Level:      plugin_manager.WARNLevel,
+				Level:      pluginmanager.WARNLevel,
 			})
 			break
 		}
 	}
 
 	if !checkFlag {
-		checkItemList = append(checkItemList, plugin_manager.CheckItem{
+		checkItemList = append(checkItemList, pluginmanager.CheckItem{
 			ItemName:   SystemAppConfigCheckItem,
 			ItemTarget: pod.Name,
-			Status:     plugin_manager.NormalStatus,
+			Status:     pluginmanager.NormalStatus,
 			Normal:     true,
 			Detail:     "",
 			Tags:       nil,
-			Level:      plugin_manager.WARNLevel,
+			Level:      pluginmanager.WARNLevel,
 		})
 	}
 
@@ -224,22 +227,23 @@ func CheckETCD(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_mana
 	return checkItemList
 }
 
-func CheckApiserver(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin_manager.CheckItem {
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
+// CheckApiserver check apiserver config
+func CheckApiserver(pod *v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 
 	setFlagList := []string{"--goaway-chance", "--audit-policy-file"}
 
 	for _, arg := range append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...) {
 		for index, flag := range setFlagList {
 			if strings.Contains(arg, flag) && flag != "" {
-				checkItemList = append(checkItemList, plugin_manager.CheckItem{
+				checkItemList = append(checkItemList, pluginmanager.CheckItem{
 					ItemName:   SystemAppConfigCheckItem,
 					ItemTarget: pod.Name,
-					Status:     plugin_manager.NormalStatus,
+					Status:     pluginmanager.NormalStatus,
 					Normal:     true,
 					Detail:     "",
 					Tags:       nil,
-					Level:      plugin_manager.WARNLevel,
+					Level:      pluginmanager.WARNLevel,
 				})
 				setFlagList[index] = ""
 			}
@@ -252,14 +256,14 @@ func CheckApiserver(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin
 
 	for _, setFlag := range setFlagList {
 		if setFlag != "" {
-			checkItemList = append(checkItemList, plugin_manager.CheckItem{
+			checkItemList = append(checkItemList, pluginmanager.CheckItem{
 				ItemName:   SystemAppConfigCheckItem,
 				ItemTarget: pod.Name,
 				Status:     ConfigNotFoundStatus,
 				Normal:     false,
 				Detail:     fmt.Sprintf(StringMap[FlagUnsetDetailFormat], setFlag),
 				Tags:       nil,
-				Level:      plugin_manager.WARNLevel,
+				Level:      pluginmanager.WARNLevel,
 			})
 			return checkItemList
 		}
@@ -271,21 +275,22 @@ func CheckApiserver(pod *v1.Pod, cluster *plugin_manager.ClusterConfig) []plugin
 	// 检查状态
 }
 
-func CheckLabel(pod *v1.Pod) []plugin_manager.CheckItem {
-	checkItem := plugin_manager.CheckItem{
+// CheckLabel xxx
+func CheckLabel(pod *v1.Pod) []pluginmanager.CheckItem {
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   SystemAppConfigCheckItem,
 		ItemTarget: pod.Name,
 		Detail:     fmt.Sprintf(StringMap[NoLabelDetailFormat], pod.Name),
 		Tags:       nil,
-		Level:      plugin_manager.RISKLevel,
+		Level:      pluginmanager.RISKLevel,
 	}
 
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	if len(pod.Labels) == 0 {
 		checkItem.Status = NolabelStatus
 		checkItem.Normal = false
 	} else {
-		checkItem.Status = plugin_manager.NormalStatus
+		checkItem.Status = pluginmanager.NormalStatus
 		checkItem.Normal = true
 	}
 
@@ -294,22 +299,32 @@ func CheckLabel(pod *v1.Pod) []plugin_manager.CheckItem {
 	return result
 }
 
-func CheckSystemWorkLoadConfig(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem {
-	result := make([]plugin_manager.CheckItem, 0, 0)
-	result = append(result, CheckCoredns(clientSet)...)
-	result = append(result, CheckKubeProxy(clientSet)...)
+// CheckSystemWorkLoadConfig 检查系统应用配置
+func CheckSystemWorkLoadConfig(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet) {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	checkItemList = append(checkItemList, CheckCoredns(cluster.ClientSet)...)
+	checkItemList = append(checkItemList, CheckKubeProxy(cluster.ClientSet)...)
 
-	return result
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
+
+	for _, checkItem := range checkItemList {
+		gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+			Labels: []string{cluster.ClusterID, cluster.BusinessID, "kube-system", checkItem.ItemTarget, "app", checkItem.Status},
+			Value:  1,
+		})
+	}
+
+	return checkItemList, gvsList
 }
 
-// TODO 代码逻辑优化
-func CheckCoredns(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem {
-	result := make([]plugin_manager.CheckItem, 0, 0)
-	checkItem := plugin_manager.CheckItem{
+// CheckCoredns 检查coredns config
+func CheckCoredns(clientSet *kubernetes.Clientset) []pluginmanager.CheckItem {
+	result := make([]pluginmanager.CheckItem, 0, 0)
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   SystemAppConfigCheckItem,
 		ItemTarget: "coredns",
 		Tags:       nil,
-		Level:      plugin_manager.RISKLevel,
+		Level:      pluginmanager.RISKLevel,
 	}
 
 	cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get(util.GetCtx(10*time.Second), "coredns", metav1.GetOptions{ResourceVersion: "0"})
@@ -326,6 +341,7 @@ func CheckCoredns(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem {
 		return result
 	}
 
+	// 检查coredns是否配置了健康检查端口以及lameduck配置
 	flagList := []string{
 		"ready", "lameduck",
 	}
@@ -342,7 +358,7 @@ func CheckCoredns(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem {
 	}
 
 	if len(result) == 0 {
-		checkItem.Status = plugin_manager.NormalStatus
+		checkItem.Status = pluginmanager.NormalStatus
 		checkItem.Normal = true
 		result = append(result, checkItem)
 	}
@@ -350,13 +366,14 @@ func CheckCoredns(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem {
 	return result
 }
 
-func CheckKubeProxy(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem {
-	result := make([]plugin_manager.CheckItem, 0, 0)
-	checkItem := plugin_manager.CheckItem{
+// CheckKubeProxy check kube-proxy config
+func CheckKubeProxy(clientSet *kubernetes.Clientset) []pluginmanager.CheckItem {
+	result := make([]pluginmanager.CheckItem, 0, 0)
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   SystemAppConfigCheckItem,
 		ItemTarget: "kube-proxy",
 		Tags:       nil,
-		Level:      plugin_manager.RISKLevel,
+		Level:      pluginmanager.RISKLevel,
 		Normal:     true,
 	}
 
@@ -374,6 +391,7 @@ func CheckKubeProxy(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem 
 		return result
 	}
 
+	// 检查proxy模式是否为ipvs以及udp timeout是否设置
 	var ipvsFlag, udpTimeoutFlag bool
 	for _, arg := range append(ds.Spec.Template.Spec.Containers[0].Command, ds.Spec.Template.Spec.Containers[0].Args...) {
 		if strings.Contains(arg, "proxy-mode=ipvs") {
@@ -388,7 +406,7 @@ func CheckKubeProxy(clientSet *kubernetes.Clientset) []plugin_manager.CheckItem 
 		checkItem.Detail = StringMap[kubeProxyIpvsDetail]
 		checkItem.Status = ConfigErrorStatus
 	} else {
-		checkItem.Status = plugin_manager.NormalStatus
+		checkItem.Status = pluginmanager.NormalStatus
 	}
 
 	result = append(result, checkItem)

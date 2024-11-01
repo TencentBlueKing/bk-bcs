@@ -19,6 +19,7 @@ type Options struct {
 	Processes []ProcessCheckConfig `json:"processes" yaml:"processes"`
 }
 
+// ProcessCheckConfig xxx
 type ProcessCheckConfig struct {
 	Name       string `json:"name" yaml:"name"`
 	ConfigFile string `json:"configFile" yaml:"configFile"`

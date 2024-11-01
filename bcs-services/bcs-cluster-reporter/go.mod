@@ -12,21 +12,16 @@ replace (
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240725124512-1f33a499f31d
 	github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager v0.0.0-20240913071335-8812bb30f497
 	github.com/beevik/ntp v1.4.1
 	github.com/containerd/containerd v1.7.11
-	github.com/coreos/go-systemd/v22 v22.5.0
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/gin-contrib/pprof v1.5.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/go-echarts/go-echarts/v2 v2.4.0
-	github.com/go-echarts/snapshot-chromedp v0.0.4
 	github.com/hashicorp/go-version v1.6.0
 	github.com/jaypipes/ghw v0.12.0
 	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/miekg/dns v1.1.50
-	github.com/oracle/oci-go-sdk v24.3.0+incompatible
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.19.0
 	github.com/prometheus/client_model v0.5.0
@@ -36,7 +31,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/vishvananda/netlink v1.2.1-beta.2
-	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611
 	golang.org/x/net v0.24.0
 	golang.org/x/sys v0.20.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -49,6 +43,7 @@ require (
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/kubectl v0.29.0
 	k8s.io/metrics v0.29.0
+	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3
 )
 
 require (
@@ -57,7 +52,7 @@ require (
 	github.com/containerd/cgroups/v3 v3.0.3 // indirect
 	github.com/containerd/containerd/v2 v2.0.0-rc.1
 	github.com/containerd/continuity v0.4.3 // indirect
-	github.com/containerd/errdefs v0.1.0
+	github.com/containerd/errdefs v0.1.0 // indirect
 	github.com/containerd/fifo v1.1.0 // indirect
 	github.com/containerd/platforms v0.1.1 // indirect
 	github.com/containerd/plugin v0.1.0 // indirect
@@ -94,9 +89,6 @@ require (
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
-	github.com/chromedp/cdproto v0.0.0-20231011050154-1d073bb38998 // indirect
-	github.com/chromedp/chromedp v0.9.3 // indirect
-	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -138,7 +130,6 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.3.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
@@ -244,7 +235,6 @@ require (
 	k8s.io/apiserver v0.29.2 // indirect
 	k8s.io/component-base v0.29.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20231214164306-ab13479f8bf8 // indirect
-	k8s.io/utils v0.0.0-20240902221715-702e33fdd3c3 // indirect
 	oras.land/oras-go v1.2.4 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/kustomize/api v0.16.0 // indirect

@@ -14,20 +14,20 @@
 package systemappcheck
 
 import (
+	"k8s.io/klog/v2"
 	"strings"
 	"time"
 
 	"gopkg.in/yaml.v2"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // CheckTKENetwork xxx
-func CheckTKENetwork(cluster *plugin_manager.ClusterConfig) []plugin_manager.CheckItem {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+func CheckTKENetwork(cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
+	result := make([]pluginmanager.CheckItem, 0, 0)
 
 	cm, err := cluster.ClientSet.CoreV1().ConfigMaps("kube-system").Get(util.GetCtx(10*time.Second), "tke-network-conf", metav1.GetOptions{ResourceVersion: "0"})
 	if err != nil {

@@ -13,11 +13,9 @@
 // Package nodecheck xxx
 package nodecheck
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-)
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
 // 检测nodeagent namespace下各个节点上报的configmap
 func init() {
-	plugin_manager.Register(&Plugin{})
+	pluginmanager.Register(&Plugin{})
 }

@@ -15,6 +15,8 @@ package nodeinfocheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"os"
 	"path"
 	"time"
@@ -23,8 +25,6 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/qcloud"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -32,10 +32,11 @@ import (
 type Plugin struct {
 	opt   *Options
 	ready bool
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 	Detail Detail
 }
 
+// Detail xxx
 type Detail struct {
 }
 
@@ -48,7 +49,7 @@ var (
 )
 
 func init() {
-	metric_manager.Register(nodeMetadataMetric)
+	metricmanager.Register(nodeMetadataMetric)
 }
 
 // Setup xxx
@@ -74,7 +75,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -92,7 +93,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -113,11 +114,11 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
-// Check xxx
+// Check for node's platform info
 func (p *Plugin) Check() {
-	result := plugin_manager.CheckResult{
-		Items:        make([]plugin_manager.CheckItem, 0, 0),
-		InfoItemList: make([]plugin_manager.InfoItem, 0, 0),
+	result := pluginmanager.CheckResult{
+		Items:        make([]pluginmanager.CheckItem, 0, 0),
+		InfoItemList: make([]pluginmanager.InfoItem, 0, 0),
 	}
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
@@ -128,9 +129,9 @@ func (p *Plugin) Check() {
 
 	p.ready = false
 
-	nodeconfig := plugin_manager.Pm.GetConfig().NodeConfig
+	nodeconfig := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := nodeconfig.NodeName
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	// qcloudinfo
 	_, err := os.Stat(path.Join(nodeconfig.HostPath, "/etc/cloud/cloud.cfg"))
@@ -141,42 +142,42 @@ func (p *Plugin) Check() {
 		if err != nil {
 			klog.Errorf("get cvm info failed: %s", err.Error())
 			if !os.IsNotExist(err) {
-				checkItem := plugin_manager.CheckItem{
+				checkItem := pluginmanager.CheckItem{
 					ItemName:   pluginName,
 					ItemTarget: nodeName,
 					Normal:     false,
 					Detail:     fmt.Sprintf("get nodeinfo failed: %s", err.Error()),
 					Status:     errorStatus,
 				}
-				gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 					Labels: []string{nodeName, ZoneItemType, errorStatus}, Value: float64(1),
 				})
 				result.Items = append(result.Items, checkItem)
 			}
 		} else {
 			klog.Infof("node metadata is %v", *nodeMetadata)
-			gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 				Labels: []string{nodeName, ZoneItemType, nodeMetadata.Zone}, Value: float64(1),
 			})
-			result.InfoItemList = append(result.InfoItemList, plugin_manager.InfoItem{
+			result.InfoItemList = append(result.InfoItemList, pluginmanager.InfoItem{
 				ItemName: ZoneItemType,
 				Labels:   map[string]string{"type": ZoneItemType},
 				Result:   nodeMetadata.Zone,
 			})
 
-			gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 				Labels: []string{nodeName, RegionItemType, nodeMetadata.Region}, Value: float64(1),
 			})
-			result.InfoItemList = append(result.InfoItemList, plugin_manager.InfoItem{
+			result.InfoItemList = append(result.InfoItemList, pluginmanager.InfoItem{
 				ItemName: RegionItemType,
 				Labels:   map[string]string{"type": RegionItemType},
 				Result:   nodeMetadata.Region,
 			})
 
-			gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 				Labels: []string{nodeName, InstanceTypeItemType, nodeMetadata.InstanceType}, Value: float64(1),
 			})
-			result.InfoItemList = append(result.InfoItemList, plugin_manager.InfoItem{
+			result.InfoItemList = append(result.InfoItemList, pluginmanager.InfoItem{
 				ItemName: InstanceTypeItemType,
 				Labels:   map[string]string{"type": InstanceTypeItemType},
 				Result:   nodeMetadata.InstanceType,
@@ -184,7 +185,7 @@ func (p *Plugin) Check() {
 		}
 	}
 
-	metric_manager.RefreshMetric(nodeMetadataMetric, gvsList)
+	metricmanager.RefreshMetric(nodeMetadataMetric, gvsList)
 	p.Result = result
 
 	if !p.ready {
@@ -193,7 +194,7 @@ func (p *Plugin) Check() {
 }
 
 // GetResult return check result by cluster ID
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 

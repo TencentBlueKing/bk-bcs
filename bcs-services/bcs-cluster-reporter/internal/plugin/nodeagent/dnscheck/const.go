@@ -17,10 +17,7 @@ const (
 	pluginName       = "dnscheck"
 	NormalStatus     = "ok"
 	ResolvFailStauts = "resolvefailed"
-	initContent      = `interval: 600
-checkDomain:
-  - tke.internal.tencentcloudapi.com
-  - cloud.tencent.com`
+	initContent      = `interval: 600`
 
 	clusterDNSType        = "pod dns check"
 	clusterDNSclusterType = "cluster"

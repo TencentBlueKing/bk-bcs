@@ -13,6 +13,7 @@
 // Package nodecheck xxx
 package nodecheck
 
+// Options xxx
 type Options struct {
 	Interval int `json:"interval" yaml:"interval"`
 }

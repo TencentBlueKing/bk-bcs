@@ -18,9 +18,7 @@ const (
 	pluginName     = "netcheck"
 	netCheckTarget = pluginName
 	// 包含list namespace下全量的pod操作，不建议太过频繁
-	initContent = `interval: 3600
-LabelSelector: "name=nodeagent"
-`
+	initContent         = `interval: 3600`
 	errorStatus         = "err"
 	devDistinctStatus   = "dev_distinct"
 	devCheckItemType    = "dev"

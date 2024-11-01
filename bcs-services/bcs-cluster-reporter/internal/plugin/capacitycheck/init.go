@@ -13,10 +13,8 @@
 // Package capacitycheck xxx
 package capacitycheck
 
-import (
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-)
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
 func init() {
-	plugin_manager.Register(&Plugin{})
+	pluginmanager.Register(&Plugin{})
 }

@@ -27,14 +27,14 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // Plugin uploader
 type Plugin struct {
 	opt *Options
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 	ready bool
 }
 
@@ -61,7 +61,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -79,7 +79,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -97,15 +97,15 @@ func (p *Plugin) Check() {
 		p.ready = true
 	}()
 
-	pluginstr := strings.Replace(plugin_manager.Pm.GetPluginstr(), p.Name(), "", 1)
+	pluginstr := strings.Replace(pluginmanager.Pm.GetPluginstr(), p.Name(), "", 1)
 	pluginstr = strings.Replace(pluginstr, ",,", ",", 1)
-	plugin_manager.Pm.Ready(pluginstr, "")
-	checkResult := plugin_manager.Pm.GetNodeResult(plugin_manager.Pm.GetPluginstr())
-	checkDetail := plugin_manager.Pm.GetNodeDetail(plugin_manager.Pm.GetPluginstr())
-	uploadResult := make(map[string]plugin_manager.PluginInfo)
+	pluginmanager.Pm.Ready(pluginstr, "")
+	checkResult := pluginmanager.Pm.GetNodeResult(pluginmanager.Pm.GetPluginstr())
+	checkDetail := pluginmanager.Pm.GetNodeDetail(pluginmanager.Pm.GetPluginstr())
+	uploadResult := make(map[string]pluginmanager.PluginInfo)
 
-	for _, name := range strings.Split(plugin_manager.Pm.GetPluginstr(), ",") {
-		uploadResult[name] = plugin_manager.PluginInfo{
+	for _, name := range strings.Split(pluginmanager.Pm.GetPluginstr(), ",") {
+		uploadResult[name] = pluginmanager.PluginInfo{
 			Result: checkResult[name],
 			Detail: checkDetail[name],
 		}
@@ -211,7 +211,7 @@ func (p *Plugin) Check() {
 				}
 
 				ctx = util.GetCtx(time.Second * 10)
-				_, err := cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
+				_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
 				if err != nil {
 					klog.Errorf(err.Error())
 					return
@@ -242,7 +242,7 @@ func (p *Plugin) Check() {
 			}
 
 			ctx = util.GetCtx(time.Second * 10)
-			_, err := cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
+			_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
 			if err != nil {
 				klog.Errorf(err.Error())
 				return
@@ -285,8 +285,8 @@ func (p *Plugin) Ready(string) bool {
 }
 
 // GetResult xxx
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
-	return plugin_manager.CheckResult{}
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
+	return pluginmanager.CheckResult{}
 }
 
 // Stop xxx

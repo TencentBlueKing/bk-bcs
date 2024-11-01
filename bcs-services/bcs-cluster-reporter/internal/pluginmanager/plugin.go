@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package plugin_manager xxx
-package plugin_manager
+// Package pluginmanager xxx
+package pluginmanager
 
 import (
 	"sync"
@@ -119,7 +119,7 @@ func (p *ClusterPlugin) GetDetail() interface{} {
 	return false
 }
 
-// / PluginInfo xxx
+// PluginInfo xxx
 type PluginInfo struct {
 	Result CheckResult `yaml:"result"`
 	Detail interface{} `yaml:"detail"`

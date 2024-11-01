@@ -15,6 +15,8 @@ package hwcheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"os"
 	"path"
 	"strings"
@@ -25,8 +27,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -45,17 +45,19 @@ var (
 )
 
 func init() {
-	metric_manager.Register(deviceStatus)
-	metric_manager.Register(hardwareError)
+	metricmanager.Register(deviceStatus)
+	metricmanager.Register(hardwareError)
 }
 
+// Plugin XXX
 type Plugin struct {
 	opt    *Options
 	ready  bool
 	Detail Detail
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 }
 
+// Detail XXX
 type Detail struct {
 }
 
@@ -77,7 +79,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		interval = 60
 	}
 
-	node := plugin_manager.Pm.GetConfig().NodeConfig
+	node := pluginmanager.Pm.GetConfig().NodeConfig
 
 	logFileConfigList := make([]LogFileConfig, 0, 0)
 	for _, logFileConfig := range p.opt.LogFileConfigList {
@@ -95,7 +97,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	p.opt.LogFileConfigList = logFileConfigList
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -113,7 +115,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -132,8 +134,9 @@ func (p *Plugin) Name() string {
 	return pluginName
 }
 
+// Check check for hardware problem
 func (p *Plugin) Check() {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
@@ -141,7 +144,7 @@ func (p *Plugin) Check() {
 		p.CheckLock.Unlock()
 	}()
 
-	node := plugin_manager.Pm.GetConfig().NodeConfig
+	node := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := node.NodeName
 	p.ready = false
 
@@ -151,14 +154,14 @@ func (p *Plugin) Check() {
 		return
 	}
 
-	deviceStatusGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	deviceStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	for _, device := range deviceList {
-		deviceStatusGaugeVecSetList = append(deviceStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
+		deviceStatusGaugeVecSetList = append(deviceStatusGaugeVecSetList, &metricmanager.GaugeVecSet{
 			Labels: []string{device.Address, strings.Replace(device.Vendor.Name, " ", "_", -1), nodeName, device.Revision},
 			Value:  float64(1),
 		})
 		if device.Revision == "ff" {
-			result = append(result, plugin_manager.CheckItem{
+			result = append(result, pluginmanager.CheckItem{
 				ItemName:   pluginName,
 				ItemTarget: nodeName,
 				Normal:     false,
@@ -169,9 +172,9 @@ func (p *Plugin) Check() {
 
 	}
 
-	metric_manager.SetMetric(deviceStatus, deviceStatusGaugeVecSetList)
+	metricmanager.SetMetric(deviceStatus, deviceStatusGaugeVecSetList)
 
-	hardwareErrorGVSList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	hardwareErrorGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	for _, logFileConfig := range p.opt.LogFileConfigList {
 		logList, err := logFileConfig.logFile.CheckNewEntriesOnce()
 		if err != nil {
@@ -188,13 +191,13 @@ func (p *Plugin) Check() {
 					}
 				}
 
-				hardwareErrorGVSList = append(hardwareErrorGVSList, &metric_manager.GaugeVecSet{
+				hardwareErrorGVSList = append(hardwareErrorGVSList, &metricmanager.GaugeVecSet{
 					Labels: []string{logFileConfig.Rule, nodeName},
 					Value:  float64(count),
 				})
 
 				if count > 0 {
-					result = append(result, plugin_manager.CheckItem{
+					result = append(result, pluginmanager.CheckItem{
 						ItemName:   pluginName,
 						ItemTarget: nodeName,
 						Normal:     false,
@@ -205,9 +208,9 @@ func (p *Plugin) Check() {
 			}
 		}
 	}
-	metric_manager.RefreshMetric(hardwareError, hardwareErrorGVSList)
+	metricmanager.RefreshMetric(hardwareError, hardwareErrorGVSList)
 
-	p.Result = plugin_manager.CheckResult{
+	p.Result = pluginmanager.CheckResult{
 		Items: result,
 	}
 
@@ -216,6 +219,7 @@ func (p *Plugin) Check() {
 	}
 }
 
+// GetDeviceStatus xxx
 func GetDeviceStatus(hostPath string) ([]*ghw.PCIDevice, error) {
 	pciInfo, err := ghw.PCI(&option.Option{
 		Chroot: &hostPath,
@@ -226,9 +230,9 @@ func GetDeviceStatus(hostPath string) ([]*ghw.PCIDevice, error) {
 
 	deviceList := make([]*ghw.PCIDevice, 0, 0)
 	for _, device := range pciInfo.Devices {
-		file, err := os.Open(fmt.Sprintf("/sys/bus/pci/devices/%s/config", device.Address))
-		if err != nil {
-			klog.Errorf("Error opening file:", err)
+		file, openErr := os.Open(fmt.Sprintf("/sys/bus/pci/devices/%s/config", device.Address))
+		if openErr != nil {
+			klog.Errorf("Error opening file: %s", openErr.Error())
 			continue
 		}
 		defer file.Close()
@@ -236,7 +240,7 @@ func GetDeviceStatus(hostPath string) ([]*ghw.PCIDevice, error) {
 		revision := make([]byte, 1)
 		_, err = file.ReadAt(revision, 8) // Revision ID is at offset 8
 		if err != nil {
-			klog.Errorf("Error reading file:", err)
+			klog.Errorf("Error reading file: %s", err.Error())
 			continue
 		}
 
@@ -251,22 +255,22 @@ func GetDeviceStatus(hostPath string) ([]*ghw.PCIDevice, error) {
 	return deviceList, nil
 }
 
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+// GetResult xxx
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 
+// Execute xxx
 func (p *Plugin) Execute() {
 	p.Check()
 }
 
+// GetDetail xxx
 func (p *Plugin) GetDetail() interface{} {
 	return p.Detail
 }
 
+// Ready xxx
 func (p *Plugin) Ready(string) bool {
 	return p.ready
-}
-
-func (p *Plugin) GetString(key string) string {
-	return StringMap[key]
 }

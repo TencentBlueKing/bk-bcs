@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package metric_manager xxx
-package metric_manager
+// Package metricmanager xxx
+package metricmanager
 
 import (
 	"fmt"

@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
@@ -27,7 +28,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -118,8 +118,8 @@ func Run() error {
 	if hostPath == "/" {
 		hostPath = util.GetHostPath()
 	}
-	plugin_manager.Pm.SetConfig(&plugin_manager.Config{
-		NodeConfig: plugin_manager.NodeConfig{
+	pluginmanager.Pm.SetConfig(&pluginmanager.Config{
+		NodeConfig: pluginmanager.NodeConfig{
 			Config:    config,
 			ClientSet: clientSet,
 			NodeName:  nodeName,
@@ -130,14 +130,14 @@ func Run() error {
 
 	// 读取配置文件
 	go func() {
-		err := plugin_manager.Pm.SetupPlugin(cmdOptions.Plugins, cmdOptions.ConfigPath, cmdOptions.RunMode)
+		err := pluginmanager.Pm.SetupPlugin(cmdOptions.Plugins, cmdOptions.ConfigPath, cmdOptions.RunMode)
 		if err != nil {
 			klog.Fatalf(err.Error())
 		}
 	}()
 
 	// listening OS shutdown singal
-	if cmdOptions.RunMode == plugin_manager.RunModeDaemon {
+	if cmdOptions.RunMode == pluginmanager.RunModeDaemon {
 		r := gin.Default()
 		pprof.Register(r)
 
@@ -152,14 +152,14 @@ func Run() error {
 		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 		<-signalChan
 	} else {
-		plugin_manager.Pm.Ready(cmdOptions.Plugins, "node")
-		result := plugin_manager.Pm.GetNodeResult(cmdOptions.Plugins)
+		pluginmanager.Pm.Ready(cmdOptions.Plugins, "node")
+		result := pluginmanager.Pm.GetNodeResult(cmdOptions.Plugins)
 		// TODO 支持json格式输出
-		checkItemList := make([]plugin_manager.CheckItem, 0, 0)
+		checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 		for _, item := range result {
 			checkItemList = append(checkItemList, item.Items...)
 		}
-		infoItemList := make([]plugin_manager.InfoItem, 0, 0)
+		infoItemList := make([]pluginmanager.InfoItem, 0, 0)
 		for _, item := range result {
 			infoItemList = append(infoItemList, item.InfoItemList...)
 		}

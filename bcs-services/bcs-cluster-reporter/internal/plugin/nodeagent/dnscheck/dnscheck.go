@@ -16,6 +16,8 @@ package dnscheck
 import (
 	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"net"
 	"runtime/debug"
 	"strings"
@@ -28,8 +30,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -39,15 +39,17 @@ type Plugin struct {
 	dnsLock sync.Mutex
 	ready   bool
 	Detail  Detail
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 }
 
+// DnsCheckResult xxx
 type DnsCheckResult struct {
 	Type   string `yaml:"type"`
 	Node   string `yaml:"node"`
 	Status string `yaml:"status"`
 }
 
+// Detail xxx
 type Detail struct {
 }
 
@@ -66,8 +68,8 @@ var (
 )
 
 func init() {
-	metric_manager.Register(dnsAvailability)
-	metric_manager.Register(dnsLatency)
+	metricmanager.Register(dnsAvailability)
+	metricmanager.Register(dnsLatency)
 }
 
 // Setup xxx
@@ -89,7 +91,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -107,7 +109,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -130,7 +132,7 @@ func (p *Plugin) Name() string {
 
 // Check xxx
 func (p *Plugin) Check() {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
@@ -138,7 +140,7 @@ func (p *Plugin) Check() {
 		p.CheckLock.Unlock()
 	}()
 
-	node := plugin_manager.Pm.GetConfig().NodeConfig
+	node := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := node.NodeName
 	p.ready = false
 
@@ -148,33 +150,33 @@ func (p *Plugin) Check() {
 		}
 	}()
 
-	dnsStatusGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	dnsStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	ctx := util.GetCtx(time.Second * 10)
 
 	status, err := p.checkDNS(ctx, append(p.opt.CheckDomain, "kubernetes.default.svc.cluster.local"), "", node.ClientSet)
-	dnsStatusGaugeVecSetList = append(dnsStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
+	dnsStatusGaugeVecSetList = append(dnsStatusGaugeVecSetList, &metricmanager.GaugeVecSet{
 		Labels: []string{"pod", nodeName, status},
 		Value:  float64(1),
 	})
 	if status != NormalStatus {
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			// 写入configmap默认使用英文
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
-			Level:      plugin_manager.RISKLevel,
+			Level:      pluginmanager.RISKLevel,
 			Normal:     false,
 			Detail:     fmt.Sprintf("pod cluster dns resolv failed: %s", err.Error()),
 			Status:     status,
 		})
 	} else {
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			// 写入configmap默认使用英文
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
 			Status:     status,
 			Normal:     true,
-			Level:      plugin_manager.RISKLevel,
+			Level:      pluginmanager.RISKLevel,
 			Detail:     fmt.Sprintf("pod cluster dns resolv %v normally", append(p.opt.CheckDomain, "kubernetes.default.svc.cluster.local")),
 		})
 		klog.Infof("cluster dns check ok")
@@ -182,17 +184,17 @@ func (p *Plugin) Check() {
 
 	ctx = util.GetCtx(time.Second * 10)
 	status, err = p.checkDNS(ctx, p.opt.CheckDomain, fmt.Sprintf("%s/etc/resolv.conf", node.HostPath), node.ClientSet)
-	dnsStatusGaugeVecSetList = append(dnsStatusGaugeVecSetList, &metric_manager.GaugeVecSet{
+	dnsStatusGaugeVecSetList = append(dnsStatusGaugeVecSetList, &metricmanager.GaugeVecSet{
 		Labels: []string{"host", nodeName, status},
 		Value:  float64(1),
 	})
 
 	if status != NormalStatus {
 		if err != nil {
-			result = append(result, plugin_manager.CheckItem{
+			result = append(result, pluginmanager.CheckItem{
 				ItemName:   pluginName,
 				ItemTarget: nodeName,
-				Level:      plugin_manager.RISKLevel,
+				Level:      pluginmanager.RISKLevel,
 				Normal:     false,
 				Detail:     fmt.Sprintf("pod cluster dns failed: %s", err.Error()),
 				Status:     status,
@@ -200,21 +202,21 @@ func (p *Plugin) Check() {
 			klog.Errorf("host dns check failed: %s %s", status, err.Error())
 		}
 	} else {
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
-			Level:      plugin_manager.RISKLevel,
+			Level:      pluginmanager.RISKLevel,
 			Normal:     true,
-			Status:     plugin_manager.NormalStatus,
+			Status:     pluginmanager.NormalStatus,
 			Detail:     fmt.Sprintf("pod cluster dns resolv %v normally", p.opt.CheckDomain),
 		})
 		klog.Infof("host dns check ok")
 	}
 
-	p.Result = plugin_manager.CheckResult{
+	p.Result = pluginmanager.CheckResult{
 		Items: result,
 	}
-	metric_manager.RefreshMetric(dnsAvailability, dnsStatusGaugeVecSetList)
+	metricmanager.RefreshMetric(dnsAvailability, dnsStatusGaugeVecSetList)
 
 	if !p.ready {
 		p.ready = true
@@ -319,10 +321,11 @@ func dnsLookup(r *net.Resolver, host string) (time.Duration, error) {
 }
 
 // GetResult return check result by cluster ID
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 
+// GetDetail xxx
 func (p *Plugin) GetDetail() interface{} {
 	return p.Detail
 }

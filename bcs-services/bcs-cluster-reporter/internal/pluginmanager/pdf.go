@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package plugin_manager xxx
-package plugin_manager
+// Package pluginmanager xxx
+package pluginmanager
 
 import (
 	"fmt"
@@ -180,9 +180,11 @@ func NewCheckItemPDFTable(title string) *util.PDFTable {
 func AddCheckItemToPDFTable(item CheckItem, table *util.PDFTable) {
 	values := make([]util.Column, 0, 0)
 	if !item.Normal {
-		values = append(values, util.Column{Content: item.ItemName}, util.Column{Content: item.ItemTarget}, util.Column{Content: item.Level}, util.Column{Content: item.Status, Color: util.Color{Red: 238, Green: 56, Blue: 43}}, util.Column{Content: item.Detail})
+		values = append(values, util.Column{Content: item.ItemName}, util.Column{Content: item.ItemTarget}, util.Column{Content: item.Level},
+			util.Column{Content: item.Status, Color: util.Color{Red: 238, Green: 56, Blue: 43}}, util.Column{Content: item.Detail})
 	} else {
-		values = append(values, util.Column{Content: item.ItemName}, util.Column{Content: item.ItemTarget}, util.Column{Content: item.Level}, util.Column{Content: item.Status}, util.Column{Content: item.Detail})
+		values = append(values, util.Column{Content: item.ItemName}, util.Column{Content: item.ItemTarget}, util.Column{Content: item.Level},
+			util.Column{Content: item.Status}, util.Column{Content: item.Detail})
 	}
 	table.Line++
 

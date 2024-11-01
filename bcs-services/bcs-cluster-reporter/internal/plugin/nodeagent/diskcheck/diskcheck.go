@@ -15,6 +15,8 @@ package diskcheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"os"
 	"path/filepath"
 	"time"
@@ -24,8 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
@@ -33,7 +33,7 @@ import (
 type Plugin struct {
 	opt   *Options
 	ready bool
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 	Detail Detail
 }
 
@@ -50,7 +50,7 @@ var (
 )
 
 func init() {
-	metric_manager.Register(fsAvailability)
+	metricmanager.Register(fsAvailability)
 }
 
 // Setup xxx
@@ -76,7 +76,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -94,7 +94,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -117,7 +117,7 @@ func (p *Plugin) Name() string {
 
 // Check xxx
 func (p *Plugin) Check() {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
@@ -127,9 +127,9 @@ func (p *Plugin) Check() {
 
 	p.ready = false
 
-	node := plugin_manager.Pm.GetConfig().NodeConfig
+	node := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := node.NodeName
-	fsGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	fsGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	mountInfoList, err := GetFSMountInfo(node.HostPath)
 	if err != nil {
@@ -141,16 +141,16 @@ func (p *Plugin) Check() {
 		err = TestFS(node.HostPath, mountInfo.Mountpoint)
 		if err != nil {
 			klog.Infof("test fs %s failed: %s", mountInfo.Mountpoint, err.Error())
-			fsGaugeVecSetList = append(fsGaugeVecSetList, &metric_manager.GaugeVecSet{
+			fsGaugeVecSetList = append(fsGaugeVecSetList, &metricmanager.GaugeVecSet{
 				Labels: []string{mountInfo.Mountpoint, nodeName, "notok"}, Value: float64(1),
 			})
-			result = append(result, plugin_manager.CheckItem{
+			result = append(result, pluginmanager.CheckItem{
 				ItemName:   pluginName,
 				ItemTarget: nodeName,
 				Normal:     false,
 				Detail:     fmt.Sprintf("testfs %s failed: %s", mountInfo.Mountpoint, err.Error()),
 				Status:     testFailStatus,
-				Level:      plugin_manager.WARNLevel,
+				Level:      pluginmanager.WARNLevel,
 			})
 
 		} else {
@@ -159,22 +159,22 @@ func (p *Plugin) Check() {
 	}
 
 	if len(fsGaugeVecSetList) == 0 {
-		fsGaugeVecSetList = append(fsGaugeVecSetList, &metric_manager.GaugeVecSet{
+		fsGaugeVecSetList = append(fsGaugeVecSetList, &metricmanager.GaugeVecSet{
 			Labels: []string{"/", nodeName, NormalStatus}, Value: float64(1),
 		})
 
-		result = append(result, plugin_manager.CheckItem{
+		result = append(result, pluginmanager.CheckItem{
 			ItemName:   pluginName,
 			ItemTarget: nodeName,
 			Normal:     true,
 			Detail:     "",
 			Status:     NormalStatus,
-			Level:      plugin_manager.WARNLevel,
+			Level:      pluginmanager.WARNLevel,
 		})
 	}
 
-	metric_manager.RefreshMetric(fsAvailability, fsGaugeVecSetList)
-	p.Result = plugin_manager.CheckResult{
+	metricmanager.RefreshMetric(fsAvailability, fsGaugeVecSetList)
+	p.Result = pluginmanager.CheckResult{
 		Items: result,
 	}
 
@@ -183,6 +183,7 @@ func (p *Plugin) Check() {
 	}
 }
 
+// GetFSMountInfo get mount point info
 func GetFSMountInfo(hostPath string) ([]*mountinfo.Info, error) {
 	mountInfoList, err := GetProcessMountInfo(hostPath, 1)
 	if err != nil {
@@ -200,6 +201,7 @@ func GetFSMountInfo(hostPath string) ([]*mountinfo.Info, error) {
 	return fsMountInfoList, err
 }
 
+// TestFS check if data can be writen in fs
 func TestFS(hostPath, path string) error {
 	rand.Seed(time.Now().UnixNano())
 	fileName := filepath.Join(hostPath, path, fmt.Sprintf("%d", rand.Intn(1000))+".nodeagent")
@@ -230,6 +232,7 @@ func TestFS(hostPath, path string) error {
 	return nil
 }
 
+// GetProcessMountInfo get process mount info
 func GetProcessMountInfo(hostPath string, pid int32) ([]*mountinfo.Info, error) {
 	f, err := os.Open(fmt.Sprintf("%s/proc/%d/mountinfo", hostPath, pid))
 	if err != nil {
@@ -244,22 +247,22 @@ func GetProcessMountInfo(hostPath string, pid int32) ([]*mountinfo.Info, error) 
 	return mountInfoList, nil
 }
 
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+// GetResult xxx
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 
+// Execute xxx
 func (p *Plugin) Execute() {
 	p.Check()
 }
 
+// GetDetail xxx
 func (p *Plugin) GetDetail() interface{} {
 	return p.Detail
 }
 
+// Ready xxx
 func (p *Plugin) Ready(string) bool {
 	return p.ready
-}
-
-func (p *Plugin) GetString(key string) string {
-	return StringMap[key]
 }

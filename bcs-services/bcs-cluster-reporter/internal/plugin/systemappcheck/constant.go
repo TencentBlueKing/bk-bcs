@@ -39,14 +39,7 @@ const (
 	ConfigOtherErrorStatus = "ConfigOtherErrorStatus"
 	UnrecommandedStatus    = "UnrecommandedStatus"
 	ConfigNotFoundStatus   = "confignotfound"
-	initContent            = `interval: 300
-namespace:
-  - kube-system
-  - bcs-system
-  - bk-system
-  - default
-  - bkmonitor-operator
-`
+	initContent            = `interval: 300`
 
 	StaticPodConfigTarget = "StaticPodConfigTarget"
 	SystemAppConfigTarget = "SystemAppConfigTarget"

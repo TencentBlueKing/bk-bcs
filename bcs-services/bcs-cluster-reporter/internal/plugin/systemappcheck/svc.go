@@ -15,28 +15,27 @@ package systemappcheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"sync"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // CheckService xxx
-func CheckService(clientSet *kubernetes.Clientset, clusterID string) ([]plugin_manager.CheckItem, []*metric_manager.GaugeVecSet, error) {
-	namespaceList, err := clientSet.CoreV1().Namespaces().List(util.GetCtx(time.Second*10), metav1.ListOptions{ResourceVersion: "0"})
+func CheckService(cluster *pluginmanager.ClusterConfig, clusterID string) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	namespaceList, err := cluster.ClientSet.CoreV1().Namespaces().List(util.GetCtx(time.Second*10), metav1.ListOptions{ResourceVersion: "0"})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	var wg sync.WaitGroup
 	routinePool := util.NewRoutinePool(20)
@@ -49,7 +48,7 @@ func CheckService(clientSet *kubernetes.Clientset, clusterID string) ([]plugin_m
 				routinePool.Done()
 			}()
 
-			serviceList, err := clientSet.CoreV1().Services(namespace.Name).List(util.GetCtx(time.Second*10), metav1.ListOptions{ResourceVersion: "0"})
+			serviceList, err := cluster.ClientSet.CoreV1().Services(namespace.Name).List(util.GetCtx(time.Second*10), metav1.ListOptions{ResourceVersion: "0"})
 			if err != nil {
 				klog.Errorf("%s get service in namespace %s failed: %s", clusterID, namespace.Name, err.Error())
 				return
@@ -58,17 +57,17 @@ func CheckService(clientSet *kubernetes.Clientset, clusterID string) ([]plugin_m
 			for _, svc := range serviceList.Items {
 				if svc.Spec.Type == "LoadBalancer" {
 					if len(svc.Status.LoadBalancer.Ingress) == 0 {
-						checkItemList = append(checkItemList, plugin_manager.CheckItem{
+						checkItemList = append(checkItemList, pluginmanager.CheckItem{
 							ItemName:   SystemAppConfigCheckItem,
 							ItemTarget: svc.Name,
 							Status:     ConfigErrorStatus,
 							Normal:     false,
 							Detail:     fmt.Sprintf(StringMap[lbSVCNoIpDetail], svc.Namespace, svc.Name),
 							Tags:       nil,
-							Level:      plugin_manager.WARNLevel,
+							Level:      pluginmanager.WARNLevel,
 						})
-						gvsList = append(gvsList, &metric_manager.GaugeVecSet{
-							Labels: []string{namespace.Name, svc.Name, "service", ConfigErrorStatus},
+						gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+							Labels: []string{cluster.ClusterID, cluster.BusinessID, namespace.Name, svc.Name, "service", ConfigErrorStatus},
 							Value:  1,
 						})
 					}

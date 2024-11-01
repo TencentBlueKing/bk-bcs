@@ -17,7 +17,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"math/rand"
 	"os"
 	"runtime/debug"
@@ -25,7 +26,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
 	batchv1 "k8s.io/api/batch/v1"
@@ -40,17 +40,17 @@ import (
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
-// Plugin xxx
+// Plugin define cluster check plugin
 type Plugin struct {
 	opt            *Options
 	testYamlString string
-	plugin_manager.ClusterPlugin
+	pluginmanager.ClusterPlugin
 }
 
+// define plugin vars
 var (
 	clusterAvailabilityLabels                   = []string{"target", "bk_biz_id", "status"}
 	clusterCheckDurationLabels                  = []string{"target", "bk_biz_id", "step"}
@@ -75,17 +75,18 @@ var (
 	}, clusterApiserverCertificateExpirationLabels)
 	unstructuredObj = &unstructured.Unstructured{}
 
-	clusterCheckGaugeVecSetList         = make(map[string][]*metric_manager.GaugeVecSet)
-	clusterCheckDurationGaugeVecSetList = make(map[string][]*metric_manager.GaugeVecSet)
-	certificateExpirationGVSList        = make(map[string][]*metric_manager.GaugeVecSet)
-	clusterVersionGaugeVecSetList       = make(map[string][]*metric_manager.GaugeVecSet)
+	clusterCheckGaugeVecSetList         = make(map[string][]*metricmanager.GaugeVecSet)
+	clusterCheckDurationGaugeVecSetList = make(map[string][]*metricmanager.GaugeVecSet)
+	certificateExpirationGVSList        = make(map[string][]*metricmanager.GaugeVecSet)
+	clusterVersionGaugeVecSetList       = make(map[string][]*metricmanager.GaugeVecSet)
 )
 
 func init() {
-	metric_manager.Register(clusterAvailability)
-	metric_manager.Register(clusterCheckDuration)
-	metric_manager.Register(clusterApiserverCertificateExpiration)
-	metric_manager.Register(clusterVersion)
+	// register plugin metric
+	metricmanager.Register(clusterAvailability)
+	metricmanager.Register(clusterCheckDuration)
+	metricmanager.Register(clusterApiserverCertificateExpiration)
+	metricmanager.Register(clusterVersion)
 }
 
 // Setup xxx
@@ -105,7 +106,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		return err
 	}
 
-	p.Result = make(map[string]plugin_manager.CheckResult)
+	p.Result = make(map[string]pluginmanager.CheckResult)
 	p.ReadyMap = make(map[string]bool)
 
 	decode := scheme.Codecs.UniversalDeserializer().Decode
@@ -130,13 +131,13 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		interval = 300
 	}
 
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
 					if p.opt.Synchronization {
-						plugin_manager.Pm.Lock()
+						pluginmanager.Pm.Lock()
 					}
 					go p.Check()
 				} else {
@@ -151,7 +152,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -172,7 +173,7 @@ func (p *Plugin) Name() string {
 
 func int64Ptr(i int64) *int64 { return &i }
 
-// Check xxx
+// Check check for cluster apiserver cert, control panael availability and store result
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.CheckLock.Lock()
@@ -180,30 +181,30 @@ func (p *Plugin) Check() {
 	defer func() {
 		klog.Infof("end %s", p.Name())
 		if p.opt.Synchronization {
-			plugin_manager.Pm.UnLock()
+			pluginmanager.Pm.UnLock()
 		}
 		p.CheckLock.Unlock()
-		metric_manager.SetCommonDurationMetric([]string{"clustercheck", "", "", ""}, start)
+		metricmanager.SetCommonDurationMetric([]string{"clustercheck", "", "", ""}, start)
 	}()
 
-	clusterConfigs := plugin_manager.Pm.GetConfig().ClusterConfigs
+	clusterConfigs := pluginmanager.Pm.GetConfig().ClusterConfigs
 	wg := sync.WaitGroup{}
 
 	// 遍历所有集群
 	for _, cluster := range clusterConfigs {
 		wg.Add(1)
-		plugin_manager.Pm.Add()
+		pluginmanager.Pm.Add()
 
-		go func(cluster *plugin_manager.ClusterConfig) {
+		go func(cluster *pluginmanager.ClusterConfig) {
 			defer func() {
 				wg.Done()
-				plugin_manager.Pm.Done()
+				pluginmanager.Pm.Done()
 			}()
 
 			clusterId := cluster.ClusterID
-			clusterResult := plugin_manager.CheckResult{
-				Items:        make([]plugin_manager.CheckItem, 0, 0),
-				InfoItemList: make([]plugin_manager.InfoItem, 0, 0),
+			clusterResult := pluginmanager.CheckResult{
+				Items:        make([]pluginmanager.CheckItem, 0, 0),
+				InfoItemList: make([]pluginmanager.InfoItem, 0, 0),
 			}
 
 			klog.Infof("start clustercheck for %s", clusterId)
@@ -212,10 +213,10 @@ func (p *Plugin) Check() {
 			p.ReadyMap[cluster.ClusterID] = false
 			p.WriteLock.Unlock()
 
-			loopClusterChecktGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
-			loopClusterCheckDurationGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
-			loopCertificateExpirationGVSList := make([]*metric_manager.GaugeVecSet, 0, 0)
-			loopClusterVersionGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+			loopClusterChecktGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
+			loopClusterCheckDurationGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
+			loopCertificateExpirationGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
+			loopClusterVersionGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 			defer func() {
 				if r := recover(); r != nil {
@@ -259,7 +260,7 @@ func (p *Plugin) Check() {
 			clusterResult.InfoItemList = append(clusterResult.InfoItemList, infoItemList...)
 			loopClusterChecktGaugeVecSetList = append(loopClusterChecktGaugeVecSetList, gvs)
 			loopClusterCheckDurationGaugeVecSetList = append(loopClusterCheckDurationGaugeVecSetList, gvsList...)
-			loopClusterVersionGaugeVecSetList = append(loopClusterVersionGaugeVecSetList, &metric_manager.GaugeVecSet{
+			loopClusterVersionGaugeVecSetList = append(loopClusterVersionGaugeVecSetList, &metricmanager.GaugeVecSet{
 				Labels: []string{clusterId, cluster.BusinessID, cluster.Version},
 				Value:  1,
 			})
@@ -270,15 +271,15 @@ func (p *Plugin) Check() {
 
 			// delete former metric
 			if _, ok := clusterCheckGaugeVecSetList[cluster.ClusterID]; !ok {
-				clusterCheckGaugeVecSetList[clusterId] = make([]*metric_manager.GaugeVecSet, 0, 0)
-				clusterCheckDurationGaugeVecSetList[clusterId] = make([]*metric_manager.GaugeVecSet, 0, 0)
-				certificateExpirationGVSList[clusterId] = make([]*metric_manager.GaugeVecSet, 0, 0)
-				clusterVersionGaugeVecSetList[clusterId] = make([]*metric_manager.GaugeVecSet, 0, 0)
+				clusterCheckGaugeVecSetList[clusterId] = make([]*metricmanager.GaugeVecSet, 0, 0)
+				clusterCheckDurationGaugeVecSetList[clusterId] = make([]*metricmanager.GaugeVecSet, 0, 0)
+				certificateExpirationGVSList[clusterId] = make([]*metricmanager.GaugeVecSet, 0, 0)
+				clusterVersionGaugeVecSetList[clusterId] = make([]*metricmanager.GaugeVecSet, 0, 0)
 			} else {
-				metric_manager.DeleteMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterId])
-				metric_manager.DeleteMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList[clusterId])
-				metric_manager.DeleteMetric(clusterApiserverCertificateExpiration, certificateExpirationGVSList[clusterId])
-				metric_manager.DeleteMetric(clusterVersion, clusterVersionGaugeVecSetList[clusterId])
+				metricmanager.DeleteMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterId])
+				metricmanager.DeleteMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList[clusterId])
+				metricmanager.DeleteMetric(clusterApiserverCertificateExpiration, certificateExpirationGVSList[clusterId])
+				metricmanager.DeleteMetric(clusterVersion, clusterVersionGaugeVecSetList[clusterId])
 			}
 
 			// refresh new metric data
@@ -295,10 +296,10 @@ func (p *Plugin) Check() {
 			certificateExpirationGVSList[clusterId] = loopCertificateExpirationGVSList
 			clusterVersionGaugeVecSetList[clusterId] = loopClusterVersionGaugeVecSetList
 
-			metric_manager.SetMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterId])
-			metric_manager.SetMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList[clusterId])
-			metric_manager.SetMetric(clusterApiserverCertificateExpiration, certificateExpirationGVSList[clusterId])
-			metric_manager.SetMetric(clusterVersion, clusterVersionGaugeVecSetList[clusterId])
+			metricmanager.SetMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterId])
+			metricmanager.SetMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList[clusterId])
+			metricmanager.SetMetric(clusterApiserverCertificateExpiration, certificateExpirationGVSList[clusterId])
+			metricmanager.SetMetric(clusterVersion, clusterVersionGaugeVecSetList[clusterId])
 
 			p.ReadyMap[clusterId] = true
 			p.WriteLock.Unlock()
@@ -316,26 +317,29 @@ func (p *Plugin) Check() {
 		}
 	}
 
-	for clusterID, ready := range p.ReadyMap {
-		if !ready {
+	// 从readymap和指标中清理已删除集群
+	for clusterID, _ := range p.ReadyMap {
+		if _, ok := clusterConfigs[clusterID]; !ok {
 			delete(p.ReadyMap, clusterID)
-			metric_manager.DeleteMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterID])
-			metric_manager.DeleteMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList[clusterID])
-			metric_manager.DeleteMetric(clusterApiserverCertificateExpiration, certificateExpirationGVSList[clusterID])
-			metric_manager.DeleteMetric(clusterVersion, clusterVersionGaugeVecSetList[clusterID])
+			metricmanager.DeleteMetric(clusterAvailability, clusterCheckGaugeVecSetList[clusterID])
+			metricmanager.DeleteMetric(clusterCheckDuration, clusterCheckDurationGaugeVecSetList[clusterID])
+			metricmanager.DeleteMetric(clusterApiserverCertificateExpiration, certificateExpirationGVSList[clusterID])
+			metricmanager.DeleteMetric(clusterVersion, clusterVersionGaugeVecSetList[clusterID])
 			delete(clusterCheckGaugeVecSetList, clusterID)
 			delete(clusterCheckDurationGaugeVecSetList, clusterID)
 			delete(certificateExpirationGVSList, clusterID)
 			delete(clusterVersionGaugeVecSetList, clusterID)
 			delete(p.Result, clusterID)
+			klog.Infof("delete cluster %s", clusterID)
 		}
 	}
 
 }
 
-func getApiserverCert(clusterConfig *plugin_manager.ClusterConfig) ([]plugin_manager.CheckItem, []*metric_manager.GaugeVecSet, error) {
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
+// getApiserverCert get apsierver cert expiration through api port
+func getApiserverCert(clusterConfig *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	// 检查自签证书
 	index := rand.Intn(len(clusterConfig.Master))
 	expiration, err := util.GetServerCert("apiserver-loopback-client", clusterConfig.Master[index], "60002")
@@ -347,17 +351,17 @@ func getApiserverCert(clusterConfig *plugin_manager.ClusterConfig) ([]plugin_man
 		}
 	}
 
-	checkItem := plugin_manager.CheckItem{
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   ClusterApiserverCertExpirationCheckItem,
 		ItemTarget: ApiserverTarget,
 		Normal:     true,
 		Status:     NormalStatus,
 		Detail:     fmt.Sprintf(StringMap[AboutToExpireDetail], clusterConfig.ClusterID, expiration.Sub(time.Now())/time.Second),
-		Level:      plugin_manager.WARNLevel,
+		Level:      pluginmanager.WARNLevel,
 		Tags:       nil,
 	}
 
-	// 一周
+	// 时间在1周以内则返回异常
 	if expiration.Sub(time.Now()) < 604800*time.Second {
 		checkItem.Normal = false
 		checkItem.Status = AboutToExpireStatus
@@ -366,7 +370,7 @@ func getApiserverCert(clusterConfig *plugin_manager.ClusterConfig) ([]plugin_man
 
 	checkItemList = append(checkItemList, checkItem)
 
-	gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+	gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, "self signed"},
 		Value:  float64(expiration.Sub(time.Now()) / time.Second),
 	})
@@ -381,16 +385,17 @@ func getApiserverCert(clusterConfig *plugin_manager.ClusterConfig) ([]plugin_man
 		}
 	}
 
-	checkItem = plugin_manager.CheckItem{
+	checkItem = pluginmanager.CheckItem{
 		ItemName:   ClusterApiserverCertExpirationCheckItem,
 		ItemTarget: ApiserverTarget,
 		Normal:     true,
 		Status:     NormalStatus,
 		Detail:     fmt.Sprintf(StringMap[AboutToExpireDetail], clusterConfig.ClusterID, expiration.Sub(time.Now())/time.Second),
-		Level:      plugin_manager.WARNLevel,
+		Level:      pluginmanager.WARNLevel,
 		Tags:       nil,
 	}
 
+	// 时间在1周以内则返回异常
 	if expiration.Sub(time.Now()) < 604800*time.Second {
 		checkItem.Normal = false
 		checkItem.Status = AboutToExpireStatus
@@ -399,7 +404,7 @@ func getApiserverCert(clusterConfig *plugin_manager.ClusterConfig) ([]plugin_man
 
 	checkItemList = append(checkItemList, checkItem)
 
-	gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+	gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, "apiserver"},
 		Value:  float64(expiration.Sub(time.Now()) / time.Second),
 	})
@@ -408,34 +413,36 @@ func getApiserverCert(clusterConfig *plugin_manager.ClusterConfig) ([]plugin_man
 }
 
 // testClusterByCreateUnstructuredObj test cluster by create a unstructuredObj workload and watch what will happen
-func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructured, clusterConfig *plugin_manager.ClusterConfig,
-) ([]plugin_manager.CheckItem, []plugin_manager.InfoItem, *metric_manager.GaugeVecSet, []*metric_manager.GaugeVecSet, error) {
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
-	infoItemList := make([]plugin_manager.InfoItem, 0, 0)
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
-	var gvs *metric_manager.GaugeVecSet
+func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructured, clusterConfig *pluginmanager.ClusterConfig,
+) ([]pluginmanager.CheckItem, []pluginmanager.InfoItem, *metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, error) {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	infoItemList := make([]pluginmanager.InfoItem, 0, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	var gvs *metricmanager.GaugeVecSet
 
-	workloadToScheduleCost := time.Duration(0)
-	workloadToPodCost := time.Duration(0)
-	worloadToRunningCost := time.Duration(0)
+	var workloadToScheduleCost time.Duration
+	var workloadToPodCost time.Duration
+	var worloadToRunningCost time.Duration
 
 	clusterUnstructuredObj := unstructuredObj.DeepCopy()
+	// 随机workload名，避免重复导致的问题
 	clusterUnstructuredObj.SetName("bcs-blackbox-job-" + time.Now().Format("150405"))
 	var status string
 
-	checkItem := plugin_manager.CheckItem{
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   ClusterAvailabilityItem,
 		ItemTarget: ApiserverTarget,
 		Detail:     "",
-		Level:      plugin_manager.WARNLevel,
+		Level:      pluginmanager.WARNLevel,
 		Tags:       nil,
 	}
 
 	// 获取k8s集群version,确认集群是否可访问
 	version, err := k8s.GetK8sVersion(clusterConfig.ClientSet)
 	if err != nil {
+		// 如果失败则直接返回
 		status = AvailabilityClusterFailStatus
-		gvs = &metric_manager.GaugeVecSet{
+		gvs = &metricmanager.GaugeVecSet{
 			Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, status},
 			Value:  1,
 		}
@@ -449,20 +456,21 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 	}
 
 	// store version info
-	infoItem := plugin_manager.InfoItem{
+	infoItem := pluginmanager.InfoItem{
 		ItemName: ClusterVersionItem,
 		Result:   version,
 	}
 	clusterConfig.Version = version
-	gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+	gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, version},
 		Value:  1,
 	})
 	infoItemList = append(infoItemList, infoItem)
 
+	// 获取dynamic resource interface
 	dri, err := getResourceInterface(clusterConfig, unstructuredObj, &status)
 	if err != nil {
-		gvs = &metric_manager.GaugeVecSet{
+		gvs = &metricmanager.GaugeVecSet{
 			Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, status},
 			Value:  1,
 		}
@@ -479,13 +487,15 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 		go func() {
 			backgroundDeletion := metav1.DeletePropagationBackground
 
-			jobList, err := clusterConfig.ClientSet.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{
+			// 获取所有的匹配job，避免历史残留
+			jobList, listErr := clusterConfig.ClientSet.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{
 				ResourceVersion: "0",
 				LabelSelector:   "bcs-cluster-reporter=bcs-cluster-reporter",
 			})
-			if err != nil {
-				klog.Errorf("%s get job failed %s", clusterConfig.ClusterID, err.Error())
+			if listErr != nil {
+				klog.Errorf("%s get job failed %s", clusterConfig.ClusterID, listErr.Error())
 			} else {
+				// 避免过快删除导致异常事件
 				time.Sleep(5 * time.Second)
 				for _, job := range jobList.Items {
 					klog.Infof("%s start to delete job %s", clusterConfig.ClusterID, job.Name)
@@ -502,29 +512,27 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 		}()
 	}()
 
-	ctx := util.GetCtx(30 * time.Second)
-	if strings.Contains(clusterConfig.ClusterID, "BCS-K8S-2") {
-		ctx = util.GetCtx(10 * time.Second)
-	}
+	// watch并判断创建clusterUnstructuredObj中发生的各种情况
 	status, workloadToScheduleCost, workloadToPodCost, worloadToRunningCost, err =
-		getWatchStatus(ctx, clusterConfig.ClientSet, clusterUnstructuredObj, dri, namespace, clusterConfig.ClusterID)
+		getWatchStatus(clusterConfig.ClientSet, clusterUnstructuredObj, dri, namespace, clusterConfig.ClusterID)
 
 	infoItemList = append(infoItemList,
-		plugin_manager.InfoItem{ItemName: worloadToRunningItem, Result: worloadToRunningCost},
-		plugin_manager.InfoItem{ItemName: workloadToScheduleItem, Result: workloadToScheduleCost},
-		plugin_manager.InfoItem{ItemName: workloadToPodItem, Result: workloadToPodCost})
+		pluginmanager.InfoItem{ItemName: worloadToRunningItem, Result: worloadToRunningCost},
+		pluginmanager.InfoItem{ItemName: workloadToScheduleItem, Result: workloadToScheduleCost},
+		pluginmanager.InfoItem{ItemName: workloadToPodItem, Result: workloadToPodCost})
 
-	gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+	gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, workloadToPod},
-		Value:  float64(workloadToPodCost) / float64(time.Second)}, &metric_manager.GaugeVecSet{
+		Value:  float64(workloadToPodCost) / float64(time.Second)}, &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, workloadToSchedule},
 		Value:  float64(workloadToScheduleCost) / float64(time.Second),
-	}, &metric_manager.GaugeVecSet{
+	}, &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, worloadToRunning},
 		Value:  float64(worloadToRunningCost) / float64(time.Second),
 	})
 
-	gvs = &metric_manager.GaugeVecSet{
+	// 集群可用性检测结果单独一个指标
+	gvs = &metricmanager.GaugeVecSet{
 		Labels: []string{clusterConfig.ClusterID, clusterConfig.BusinessID, status},
 		Value:  1,
 	}
@@ -536,7 +544,8 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 	return checkItemList, infoItemList, gvs, gvsList, err
 }
 
-func getResourceInterface(clusterConfig *plugin_manager.ClusterConfig, clusterUnstructuredObj *unstructured.Unstructured, status *string) (dynamic.ResourceInterface, error) {
+// getResourceInterface get dynamic resource interface
+func getResourceInterface(clusterConfig *pluginmanager.ClusterConfig, clusterUnstructuredObj *unstructured.Unstructured, status *string) (dynamic.ResourceInterface, error) {
 	clusterGVK := clusterUnstructuredObj.GroupVersionKind()
 	ctx := util.GetCtx(10 * time.Second)
 
@@ -585,14 +594,21 @@ func getResourceInterface(clusterConfig *plugin_manager.ClusterConfig, clusterUn
 }
 
 // getWatchStatus get pod status of the workload, and return it.
-func getWatchStatus(ctx context.Context, clientSet *kubernetes.Clientset, clusterUnstructuredObj *unstructured.Unstructured,
+func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *unstructured.Unstructured,
 	dri dynamic.ResourceInterface, namespace string, clusterID string) (status string,
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
 	startTime := time.Now()
+
+	ctx := util.GetCtx(30 * time.Second)
+	// 测试集群的timeout时间缩短到10s
+	if strings.Contains(clusterID, "BCS-K8S-2") {
+		ctx = util.GetCtx(10 * time.Second)
+	}
+
 	defer func() {
 		klog.Infof("%s getWatchStatus duration %.2f s", clusterID, float64(time.Now().Sub(startTime)/time.Second))
 	}()
-	// TimeoutSeconds: int64Ptr(500)
+	// 启动watch，观察对应label的pod的所有事件
 	watchInterface, err := clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{ResourceVersion: "0",
 		LabelSelector: "bcs-cluster-reporter=bcs-cluster-reporter", TimeoutSeconds: int64Ptr(30)})
 	if err != nil {
@@ -609,7 +625,10 @@ func getWatchStatus(ctx context.Context, clientSet *kubernetes.Clientset, cluste
 		}()
 	}()
 
+	// 记录发起创建workload的时间
 	createStartTime := time.Now()
+
+	// 创建workload
 	testObj, err := dri.Create(ctx, clusterUnstructuredObj, metav1.CreateOptions{})
 	if err != nil {
 		klog.Errorf("%s Create failed %s", clusterID, err.Error())
@@ -622,7 +641,7 @@ func getWatchStatus(ctx context.Context, clientSet *kubernetes.Clientset, cluste
 		return
 	}
 
-	// 防止apiserver时间有偏差
+	// 校验testObj创建时间，以检测apiserver时间是否有偏差
 	createTS := testObj.GetCreationTimestamp()
 	if createStartTime.Sub(createTS.Local()) > time.Second*5 || createStartTime.Sub(createTS.Local()) < 0-time.Second*5 {
 		status = AvailabilityTimeOffsetStatus
@@ -630,37 +649,29 @@ func getWatchStatus(ctx context.Context, clientSet *kubernetes.Clientset, cluste
 	}
 
 	createPodFlag := false
-	extendFlag := false
 	for {
 		select {
+		// 等待watch返回
 		case e, ok := <-watchInterface.ResultChan():
 			if !ok {
+				// watch异常结束
 				klog.Errorf("%s watch failed", clusterID)
 				watchInterface.Stop()
-
-				// retry only once
-				if !extendFlag {
-					extendFlag = true
-					watchInterface, err = clientSet.CoreV1().Pods(namespace).Watch(util.GetCtx(30*time.Second), metav1.ListOptions{ResourceVersion: "0",
-						LabelSelector: "bcs-cluster-reporter=bcs-cluster-reporter", TimeoutSeconds: int64Ptr(int64(10))})
-					if err == nil {
-						continue
-					}
-				}
-
 				status = AvailabilityWatchErrorStatus
 				err = fmt.Errorf("%s watch failed %s", clusterID, err.Error())
 				return
 			} else if pod, ok := e.Object.(*v1.Pod); ok {
+				// 获取到对应pod的事件
 				if !createPodFlag {
 					workloadToPodCost = pod.CreationTimestamp.Sub(createStartTime)
 					createPodFlag = true
 				}
 
+				// 判断pod是否已经成功调度
 				if strings.Contains(pod.Name, clusterUnstructuredObj.GetName()) {
 					if pod.Spec.NodeName != "" {
 						status = NormalStatus
-						// pod调度成功耗时
+						// pod调度成功耗时，调度成功直接返回
 						klog.Infof("cluster %s schedule pod successful", clusterID)
 						workloadToScheduleCost, worloadToRunningCost = getPodLifeCycleTimePoint(pod, createStartTime)
 						return
@@ -678,19 +689,13 @@ func getWatchStatus(ctx context.Context, clientSet *kubernetes.Clientset, cluste
 				klog.Errorf(clusterID, e)
 			}
 		case <-ctx.Done():
+			// 时间到期时判断当前已获得的pod状态并返回
 			if !createPodFlag {
 				status = AvailabilityCreatePodTimeoutStatus
 				klog.Errorf("%s create pod timeout", clusterID)
 			} else {
-				if extendFlag {
-					status = AvailabilitySchedulePodTimeoutStatus
-					klog.Errorf("%s wait scheduled watch event timeout", clusterID)
-				} else {
-					klog.Infof("extend %s scheduled watch timeout", clusterID)
-					ctx = util.GetCtx(30 * time.Second)
-					extendFlag = true
-					continue
-				}
+				status = AvailabilitySchedulePodTimeoutStatus
+				klog.Errorf("%s wait scheduled watch event timeout", clusterID)
 			}
 			return
 		}
@@ -698,10 +703,10 @@ func getWatchStatus(ctx context.Context, clientSet *kubernetes.Clientset, cluste
 }
 
 // getPodLifeCycleTimePoint get the time costed of every stag after the workload is created
-func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadToScheduleCost, worloadToRunningCost time.Duration) {
-	workloadToScheduleCost = 0
-	worloadToRunningCost = 0
+func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (time.Duration, time.Duration) {
+	var workloadToScheduleCost, worloadToRunningCost time.Duration
 	for _, condition := range pod.Status.Conditions {
+		// 获取pod调度的时间
 		if condition.Type == v1.PodScheduled && condition.Status == v1.ConditionTrue {
 			if workloadToScheduleCost == 0 {
 				workloadToScheduleCost = condition.LastTransitionTime.Sub(createStartTime)
@@ -714,17 +719,7 @@ func getPodLifeCycleTimePoint(pod *v1.Pod, createStartTime time.Time) (workloadT
 		}
 	}
 
-	if pod.Status.Phase == "Running" {
-		if worloadToRunningCost == 0 {
-			worloadToRunningCost = time.Since(createStartTime)
-		}
-	} else if pod.Status.Phase == "Completed" || pod.Status.Phase == "Succeeded" {
-		if worloadToRunningCost == 0 {
-			worloadToRunningCost = time.Since(createStartTime)
-		}
-		return
-	}
-	return
+	return workloadToScheduleCost, worloadToRunningCost
 }
 
 // Ready return true if cluster check is over
@@ -735,6 +730,6 @@ func (p *Plugin) Ready(clusterID string) bool {
 }
 
 // GetResult return check result by cluster ID
-func (p *Plugin) GetResult(clusterID string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(clusterID string) pluginmanager.CheckResult {
 	return p.Result[clusterID]
 }

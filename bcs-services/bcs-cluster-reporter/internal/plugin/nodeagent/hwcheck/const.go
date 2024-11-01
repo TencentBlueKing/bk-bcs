@@ -25,12 +25,7 @@ const (
 	LogCheckItemType   = "log check"
 	LogCheckItemTarget = "log"
 
-	initContent = `interval: 600
-logFileConfigs:
-  - path: "/var/log/messages"
-    keyWordList: 
-      - "mce: [Hardware Error]"
-    rule: "mce"`
+	initContent = `interval: 600`
 )
 
 var (

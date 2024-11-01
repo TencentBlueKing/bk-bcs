@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package plugin_manager xxx
-package plugin_manager
+// Package pluginmanager xxx
+package pluginmanager
 
 import (
 	"fmt"
@@ -131,7 +131,7 @@ func (pm *PluginManager) Lock() {
 	pm.concurrencyLock.Lock()
 }
 
-// Add xxx
+// UnLock xxx
 func (pm *PluginManager) UnLock() {
 	pm.concurrencyLock.Unlock()
 }

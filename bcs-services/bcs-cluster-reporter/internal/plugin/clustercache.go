@@ -15,7 +15,7 @@ package plugin
 
 // NodeInfo node info struct
 type NodeInfo struct {
-	//CheckItemMap map[string][]plugin_manager.CheckItem
+	//CheckItemMap map[string][]pluginmanager.CheckItem
 	Region string
 	Zone   string
 	Type   string

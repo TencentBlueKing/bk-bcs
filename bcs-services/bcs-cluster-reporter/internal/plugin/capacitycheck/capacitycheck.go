@@ -16,6 +16,8 @@ package capacitycheck
 import (
 	"bytes"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"math"
 	"net"
 	"strconv"
@@ -23,8 +25,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
@@ -42,11 +42,11 @@ import (
 type Plugin struct {
 	opt            *Options
 	testYamlString string
-	plugin_manager.ClusterPlugin
+	pluginmanager.ClusterPlugin
 }
 
 var (
-	clusterGVSMap   = make(map[string][]*metric_manager.GaugeVecSet)
+	clusterGVSMap   = make(map[string][]*metricmanager.GaugeVecSet)
 	clusterCapacity = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: ClusterCapacityMetricName,
 		Help: ClusterCapacityMetricName,
@@ -56,7 +56,7 @@ var (
 )
 
 func init() {
-	metric_manager.Register(clusterCapacity)
+	metricmanager.Register(clusterCapacity)
 }
 
 // Setup xxx
@@ -71,7 +71,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		return err
 	}
 
-	p.Result = make(map[string]plugin_manager.CheckResult)
+	p.Result = make(map[string]pluginmanager.CheckResult)
 	p.ReadyMap = make(map[string]bool)
 
 	interval := p.opt.Interval
@@ -79,13 +79,13 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		interval = 60
 	}
 
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
 					if p.opt.Synchronization {
-						plugin_manager.Pm.Lock()
+						pluginmanager.Pm.Lock()
 					}
 					go p.Check()
 				} else {
@@ -100,7 +100,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -114,14 +114,12 @@ func (p *Plugin) Stop() error {
 	return nil
 }
 
-// Name xxx
+// Name return plugin name
 func (p *Plugin) Name() string {
 	return pluginName
 }
 
-func int64Ptr(i int64) *int64 { return &i }
-
-// Check xxx
+// Check cluster capacity and store result
 func (p *Plugin) Check() {
 	start := time.Now()
 	p.CheckLock.Lock()
@@ -129,13 +127,13 @@ func (p *Plugin) Check() {
 	defer func() {
 		klog.Infof("end %s", p.Name())
 		if p.opt.Synchronization {
-			plugin_manager.Pm.UnLock()
+			pluginmanager.Pm.UnLock()
 		}
 		p.CheckLock.Unlock()
-		metric_manager.SetCommonDurationMetric([]string{"clustercheck", "", "", ""}, start)
+		metricmanager.SetCommonDurationMetric([]string{"clustercheck", "", "", ""}, start)
 	}()
 
-	clusterConfigs := plugin_manager.Pm.GetConfig().ClusterConfigs
+	clusterConfigs := pluginmanager.Pm.GetConfig().ClusterConfigs
 
 	wg := sync.WaitGroup{}
 
@@ -144,11 +142,11 @@ func (p *Plugin) Check() {
 		wg.Add(1)
 		routinePool.Add(1)
 
-		plugin_manager.Pm.Ready("systemappcheck,nodecheck", cluster.ClusterID)
-		go func(cluster *plugin_manager.ClusterConfig) {
+		pluginmanager.Pm.Ready("systemappcheck,nodecheck", cluster.ClusterID)
+		go func(cluster *pluginmanager.ClusterConfig) {
 			cluster.Lock()
 			klog.Infof("start capacitycheck for %s", cluster.ClusterID)
-			gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
+			gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 			p.WriteLock.Lock()
 			p.ReadyMap[cluster.ClusterID] = false
@@ -164,9 +162,9 @@ func (p *Plugin) Check() {
 				klog.Infof("end capacitycheck for %s", cluster.ClusterID)
 			}()
 
-			clusterResult := plugin_manager.CheckResult{
-				Items:        make([]plugin_manager.CheckItem, 0, 0),
-				InfoItemList: make([]plugin_manager.InfoItem, 0, 0),
+			clusterResult := pluginmanager.CheckResult{
+				Items:        make([]pluginmanager.CheckItem, 0, 0),
+				InfoItemList: make([]pluginmanager.InfoItem, 0, 0),
 			}
 
 			defer func() {
@@ -198,7 +196,7 @@ func (p *Plugin) Check() {
 					continue
 				}
 
-				clusterResult.InfoItemList = append(clusterResult.InfoItemList, plugin_manager.InfoItem{
+				clusterResult.InfoItemList = append(clusterResult.InfoItemList, pluginmanager.InfoItem{
 					ItemName: fmt.Sprintf("%s num", resource),
 					Result:   objectNum,
 				})
@@ -210,7 +208,7 @@ func (p *Plugin) Check() {
 					cluster.NodeNum = objectNum
 				}
 
-				gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 					Labels: []string{cluster.ClusterID, cluster.BusinessID, fmt.Sprintf("%s num", resource), NormalStatus},
 					Value:  float64(objectNum),
 				})
@@ -221,17 +219,17 @@ func (p *Plugin) Check() {
 				mask, _ := strconv.Atoi(strings.Split(cluster.ServiceCidr, "/")[1])
 				cluster.ServiceMaxNum = 1 << uint(32-mask)
 
-				clusterResult.InfoItemList = append(clusterResult.InfoItemList, plugin_manager.InfoItem{
+				clusterResult.InfoItemList = append(clusterResult.InfoItemList, pluginmanager.InfoItem{
 					ItemName: ServiceMaxNumCheckItemType,
 					Result:   cluster.ServiceMaxNum,
 				})
 
-				clusterResult.InfoItemList = append(clusterResult.InfoItemList, plugin_manager.InfoItem{
+				clusterResult.InfoItemList = append(clusterResult.InfoItemList, pluginmanager.InfoItem{
 					ItemName: ServiceCidrCheckItemType,
 					Result:   cluster.ServiceCidr,
 				})
 
-				gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 					Labels: []string{cluster.ClusterID, cluster.BusinessID, ServiceNumCheckItemType, NormalStatus},
 					Value:  float64(cluster.ServiceMaxNum - cluster.ServiceNum),
 				})
@@ -253,17 +251,17 @@ func (p *Plugin) Check() {
 				maxNodeNum := totalIPNum / int(nodePodNum)
 
 				// cidr允许的最大节点数
-				clusterResult.InfoItemList = append(clusterResult.InfoItemList, plugin_manager.InfoItem{
+				clusterResult.InfoItemList = append(clusterResult.InfoItemList, pluginmanager.InfoItem{
 					ItemName: NodeCidrNumCheckItemType,
 					Result:   maxNodeNum,
 				})
 
-				clusterResult.InfoItemList = append(clusterResult.InfoItemList, plugin_manager.InfoItem{
+				clusterResult.InfoItemList = append(clusterResult.InfoItemList, pluginmanager.InfoItem{
 					ItemName: NodeMaxPodCheckItemType,
 					Result:   nodePodNum,
 				})
 
-				gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 					Labels: []string{cluster.ClusterID, cluster.BusinessID, NodeCidrNumCheckItemType, NormalStatus},
 					Value:  float64(maxNodeNum),
 				})
@@ -280,8 +278,8 @@ func (p *Plugin) Check() {
 			clusterResult.InfoItemList = append(clusterResult.InfoItemList, infoItemList...)
 
 			p.WriteLock.Lock()
-			metric_manager.DeleteMetric(clusterCapacity, clusterGVSMap[cluster.ClusterID])
-			metric_manager.SetMetric(clusterCapacity, gvsList)
+			metricmanager.DeleteMetric(clusterCapacity, clusterGVSMap[cluster.ClusterID])
+			metricmanager.SetMetric(clusterCapacity, gvsList)
 			clusterGVSMap[cluster.ClusterID] = gvsList
 			p.WriteLock.Unlock()
 		}(cluster)
@@ -297,11 +295,13 @@ func (p *Plugin) Check() {
 		}
 	}
 
-	for clusterID, ready := range p.ReadyMap {
-		if !ready {
+	// 从readymap和指标中清理已删除集群
+	for clusterID, _ := range p.ReadyMap {
+		if _, ok := clusterConfigs[clusterID]; !ok {
 			delete(p.ReadyMap, clusterID)
-			metric_manager.DeleteMetric(clusterCapacity, clusterGVSMap[clusterID])
+			metricmanager.DeleteMetric(clusterCapacity, clusterGVSMap[clusterID])
 			delete(clusterGVSMap, clusterID)
+			klog.Infof("delete cluster %s", clusterID)
 		}
 	}
 	p.WriteLock.Unlock()
@@ -354,26 +354,26 @@ func GetObjectNum(metricFamilies map[string]*io_prometheus_client.MetricFamily, 
 }
 
 // GetMasterCheckResult Check master info and generate check result
-func GetMasterCheckResult(clusterInfo *plugin_manager.ClusterConfig) ([]plugin_manager.CheckItem, []*metric_manager.GaugeVecSet) {
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
-	checkItemList := make([]plugin_manager.CheckItem, 0, 0)
+func GetMasterCheckResult(clusterInfo *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet) {
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 
-	checkItem := plugin_manager.CheckItem{
+	checkItem := pluginmanager.CheckItem{
 		ItemName:   pluginName,
 		ItemTarget: MasterTarget,
 		Status:     NormalStatus,
 		Normal:     len(clusterInfo.Master) >= 3,
-		Level:      plugin_manager.WARNLevel,
+		Level:      pluginmanager.WARNLevel,
 		Tags:       nil,
 	}
 	if len(clusterInfo.Master) < 3 {
 		checkItem.Status = MasterNumHAErrorStatus
 		checkItem.Detail = fmt.Sprintf(StringMap[MasterNumDetailFormart], len(clusterInfo.Master))
-		gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+		gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 			Labels: []string{clusterInfo.ClusterID, clusterInfo.BusinessID, MasterNumItemType, MasterNumHAErrorStatus},
 			Value:  float64(len(clusterInfo.Master))})
 	} else {
-		gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+		gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 			Labels: []string{clusterInfo.ClusterID, clusterInfo.BusinessID, MasterNumItemType, NormalStatus},
 			Value:  float64(len(clusterInfo.Master))})
 	}
@@ -390,18 +390,18 @@ func GetMasterCheckResult(clusterInfo *plugin_manager.ClusterConfig) ([]plugin_m
 
 	for zone, num := range zoneNum {
 		if (num)*2 >= len(clusterInfo.Master) {
-			checkItem = plugin_manager.CheckItem{
+			checkItem = pluginmanager.CheckItem{
 				ItemName:   pluginName,
 				ItemTarget: MasterTarget,
 				Status:     MasterZoneHAErrorStatus,
 				Normal:     (num)*2 < len(clusterInfo.Master),
 				Detail:     fmt.Sprintf(StringMap[MasterZoneDetailFormart], zone, num),
-				Level:      plugin_manager.WARNLevel,
+				Level:      pluginmanager.WARNLevel,
 				Tags:       nil,
 			}
 			checkItemList = append(checkItemList, checkItem)
 
-			gvsList = append(gvsList, &metric_manager.GaugeVecSet{
+			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
 				Labels: []string{clusterInfo.ClusterID, clusterInfo.BusinessID, MasterZoneItemType, MasterZoneHAErrorStatus},
 				Value:  1})
 			break
@@ -412,9 +412,9 @@ func GetMasterCheckResult(clusterInfo *plugin_manager.ClusterConfig) ([]plugin_m
 }
 
 // GetNodeCheckResult Check node info and generate check result
-func GetNodeCheckResult(clusterInfo *plugin_manager.ClusterConfig) ([]plugin_manager.InfoItem, []*metric_manager.GaugeVecSet) {
-	gvsList := make([]*metric_manager.GaugeVecSet, 0, 0)
-	infoItemList := make([]plugin_manager.InfoItem, 0, 0)
+func GetNodeCheckResult(clusterInfo *pluginmanager.ClusterConfig) ([]pluginmanager.InfoItem, []*metricmanager.GaugeVecSet) {
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	infoItemList := make([]pluginmanager.InfoItem, 0, 0)
 
 	zoneNum := make(map[string]int)
 	for _, nodeInfo := range clusterInfo.NodeInfo {
@@ -425,7 +425,7 @@ func GetNodeCheckResult(clusterInfo *plugin_manager.ClusterConfig) ([]plugin_man
 	}
 
 	for zone, num := range zoneNum {
-		infoItemList = append(infoItemList, plugin_manager.InfoItem{
+		infoItemList = append(infoItemList, pluginmanager.InfoItem{
 			ItemName: pluginName,
 			Labels:   map[string]string{"zone": zone},
 			Result:   fmt.Sprintf("%d", num),
@@ -441,7 +441,7 @@ func GetNodeCheckResult(clusterInfo *plugin_manager.ClusterConfig) ([]plugin_man
 	}
 
 	for nodeType, num := range typeNum {
-		infoItemList = append(infoItemList, plugin_manager.InfoItem{
+		infoItemList = append(infoItemList, pluginmanager.InfoItem{
 			ItemName: pluginName,
 			Labels:   map[string]string{"type": nodeType},
 			Result:   fmt.Sprintf("%d", num),
@@ -459,6 +459,6 @@ func (p *Plugin) Ready(clusterID string) bool {
 }
 
 // GetResult return check result by cluster ID
-func (p *Plugin) GetResult(clusterID string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(clusterID string) pluginmanager.CheckResult {
 	return p.Result[clusterID]
 }

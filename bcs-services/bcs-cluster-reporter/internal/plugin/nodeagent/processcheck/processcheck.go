@@ -15,6 +15,8 @@ package processcheck
 
 import (
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"os"
 	"path"
 	"strings"
@@ -24,8 +26,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog/v2"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/types/process"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
@@ -48,24 +48,27 @@ var (
 )
 
 func init() {
-	metric_manager.Register(processStatus)
-	metric_manager.Register(processCPU)
+	metricmanager.Register(processStatus)
+	metricmanager.Register(processCPU)
 }
 
+// Plugin xxx
 type Plugin struct {
 	opt   *Options
 	ready bool
 
 	// detail用来记录详细的检查信息到configmap，提供给cluster-reporter做进一步分析
 	Detail Detail
-	plugin_manager.NodePlugin
+	pluginmanager.NodePlugin
 }
 
+// Detail xxx
 type Detail struct {
 	ProcessInfo   []process.ProcessInfo
 	ProcessStatus []process.ProcessStatus
 }
 
+// ProcessCheckResult xxx
 type ProcessCheckResult struct {
 	Node   string `yaml:"node"`
 	Status string `yaml:"status"`
@@ -93,7 +96,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	p.Detail = Detail{}
 
 	// run as daemon
-	if runMode == plugin_manager.RunModeDaemon {
+	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
@@ -111,7 +114,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				}
 			}
 		}()
-	} else if runMode == plugin_manager.RunModeOnce {
+	} else if runMode == pluginmanager.RunModeOnce {
 		p.Check()
 	}
 
@@ -133,7 +136,7 @@ func (p *Plugin) Name() string {
 
 // Check xxx
 func (p *Plugin) Check() {
-	result := make([]plugin_manager.CheckItem, 0, 0)
+	result := make([]pluginmanager.CheckItem, 0, 0)
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
@@ -141,11 +144,11 @@ func (p *Plugin) Check() {
 		p.CheckLock.Unlock()
 	}()
 
-	nodeconfig := plugin_manager.Pm.GetConfig().NodeConfig
+	nodeconfig := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := nodeconfig.NodeName
 
 	processInfoList := make([]process.ProcessInfo, 0, 0)
-	processGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	processGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	processStatusList, err := process.GetProcessStatus()
 	if err != nil {
@@ -155,7 +158,7 @@ func (p *Plugin) Check() {
 	// 检测所有进程状态
 	newAbnormalProcessStatusMap := make(map[int32]process.ProcessStatus)
 	abnormalProcessStatusList := make([]process.ProcessStatus, 0, 0)
-	processCPUGVSList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	processCPUGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	for _, pstatus := range processStatusList {
 		if pstatus.Status == "D" || pstatus.Status == "Z" {
 			klog.Infof("status of process %s %s is %s", pstatus.Pid, pstatus.Name, pstatus.Status)
@@ -164,30 +167,30 @@ func (p *Plugin) Check() {
 			if abnormalProcessStatus, ok := abnormalProcessStatusMap[pstatus.Pid]; ok && pstatus.Status == "D" {
 				if abnormalProcessStatus.Pid == pstatus.Pid && abnormalProcessStatus.CreateTime == pstatus.CreateTime && abnormalProcessStatus.CpuTime == pstatus.CpuTime {
 					// cputime didn't increase, means process stayed in D status in this interval
-					processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+					processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
 						Labels: []string{pstatus.Name, pstatus.Status, nodeName}, Value: float64(1),
 					})
 
-					result = append(result, plugin_manager.CheckItem{
+					result = append(result, pluginmanager.CheckItem{
 						ItemName:   pluginName,
 						ItemTarget: nodeName,
 						Normal:     false,
 						Detail:     fmt.Sprintf("%s process %s status is %s", nodeName, pstatus.Name, pstatus.Status),
-						Level:      plugin_manager.WARNLevel,
+						Level:      pluginmanager.WARNLevel,
 						Status:     dStatus,
 					})
 					abnormalProcessStatusList = append(abnormalProcessStatusList, pstatus)
 				}
 			} else if pstatus.Status == "Z" {
-				processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+				processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
 					Labels: []string{pstatus.Name, pstatus.Status, nodeName}, Value: float64(1),
 				})
-				result = append(result, plugin_manager.CheckItem{
+				result = append(result, pluginmanager.CheckItem{
 					ItemName:   pluginName,
 					ItemTarget: nodeName,
 					Normal:     false,
 					Detail:     fmt.Sprintf("%s process %s status is %s", nodeName, pstatus.Name, pstatus.Status),
-					Level:      plugin_manager.WARNLevel,
+					Level:      pluginmanager.WARNLevel,
 					Status:     zStatus,
 				})
 				abnormalProcessStatusList = append(abnormalProcessStatusList, pstatus)
@@ -215,13 +218,13 @@ func (p *Plugin) Check() {
 						continue
 					}
 
-					processCPUGVSList = append(processCPUGVSList, &metric_manager.GaugeVecSet{
+					processCPUGVSList = append(processCPUGVSList, &metricmanager.GaugeVecSet{
 						Labels: []string{pStatus.Name, nodeName},
 						Value:  pStatus.CpuTime,
 					})
 				}
 
-				metric_manager.RefreshMetric(processCPU, processCPUGVSList)
+				metricmanager.RefreshMetric(processCPU, processCPUGVSList)
 				time.Sleep(time.Second * 30)
 
 			}
@@ -230,11 +233,11 @@ func (p *Plugin) Check() {
 
 	abnormalProcessStatusMap = newAbnormalProcessStatusMap
 
-	checkItem := plugin_manager.CheckItem{
+	checkItem := pluginmanager.CheckItem{
 		ItemName: pluginName,
 		Normal:   true,
 		Detail:   "",
-		Level:    plugin_manager.WARNLevel,
+		Level:    pluginmanager.WARNLevel,
 		Status:   NormalStatus,
 	}
 	// status中只记录异常的进程状态
@@ -252,7 +255,7 @@ func (p *Plugin) Check() {
 
 			result = append(result, checkItem)
 
-			processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+			processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
 				Labels: []string{pcc.Name, processOtherErrorStatus, nodeName}, Value: float64(1),
 			})
 
@@ -271,7 +274,7 @@ func (p *Plugin) Check() {
 
 				result = append(result, checkItem)
 
-				processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+				processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
 					Labels: []string{pcc.Name, processOtherErrorStatus, nodeName}, Value: float64(1),
 				})
 			} else if pcc.ConfigFile != "" {
@@ -286,7 +289,7 @@ func (p *Plugin) Check() {
 
 	if len(processGaugeVecSetList) == 0 {
 		checkItem.ItemTarget = nodeName
-		processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+		processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
 			Labels: []string{"", NormalStatus, nodeName}, Value: float64(1),
 		})
 
@@ -296,7 +299,7 @@ func (p *Plugin) Check() {
 	// info中记录所有指定的进程信息
 	p.Detail.ProcessInfo = processInfoList
 
-	p.Result = plugin_manager.CheckResult{
+	p.Result = pluginmanager.CheckResult{
 		Items: result,
 	}
 
@@ -305,7 +308,7 @@ func (p *Plugin) Check() {
 	}
 
 	// return result
-	metric_manager.RefreshMetric(processStatus, processGaugeVecSetList)
+	metricmanager.RefreshMetric(processStatus, processGaugeVecSetList)
 }
 
 // RecordProcessCpu xxx
@@ -342,7 +345,7 @@ func (p *Plugin) Ready(string) bool {
 }
 
 // GetResult xxx
-func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 	return p.Result
 }
 

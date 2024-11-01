@@ -23,10 +23,7 @@ const (
 	zStatus                         = "z"
 	dStatus                         = "d"
 	processOtherErrorStatus         = "error"
-	initContent                     = `interval: 60
-pluginDir: /data/bcs/nodeagent
-processes:
-  - name: kubelet`
+	initContent                     = `interval: 600`
 )
 
 var (
