@@ -169,7 +169,7 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	return clusterName, nil
 }
 
-func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo,
+func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // nolint
 	groups []*proto.NodeGroup) *container.CreateClusterRequest {
 	req := &container.CreateClusterRequest{
 		Cluster: &container.Cluster{

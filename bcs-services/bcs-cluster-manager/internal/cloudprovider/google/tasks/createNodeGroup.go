@@ -345,7 +345,7 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 
 // newItFromBaseIt new instanceTemplate from base instanceTemplate
 func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, // nolint
-	computeCli *api.ComputeServiceClient, url, taskID string) error {
+	computeCli *api.ComputeServiceClient, url, taskID string) error { // nolint
 	oldItNameInfo := strings.Split(newIt.Name, "-")
 	randStr := utils.RandomHexString(8)
 	oldItNameInfo[len(oldItNameInfo)-1] = randStr
