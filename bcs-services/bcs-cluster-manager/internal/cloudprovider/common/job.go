@@ -15,6 +15,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -207,7 +208,7 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 		err   error
 	)
 
-	servers, err := GetIPCloudIDByNodeIPs(ctx, ips)
+	servers, err := GetIPCloudIDByNodeIPs(ctx, bizID, ips)
 	if err != nil {
 		blog.Errorf("task[%s] ExecuteScriptByJob failed: %v", taskID, err)
 		return "", err
@@ -272,13 +273,40 @@ func ExecuteScriptByJob(ctx context.Context, stepName, bizID, content string, ip
 	return job.GetJobTaskLink(jobID), nil
 }
 
+func getBizHosts(bizID string) (map[int64]cmdb.HostData, error) {
+	biz, err := strconv.Atoi(bizID)
+	if err != nil {
+		blog.Errorf("strconv BusinessID to int failed: %v", err)
+		return nil, err
+	}
+	hosts, err := cmdb.GetCmdbClient().FetchAllHostsByBizID(biz, false)
+	if err != nil {
+		blog.Errorf("cmdb FetchAllHostsByBizID failed: %v", err)
+		return nil, err
+	}
+
+	var (
+		hostsMap = make(map[int64]cmdb.HostData, 0)
+	)
+	for i := range hosts {
+		hostsMap[hosts[i].BKHostID] = hosts[i]
+	}
+	return hostsMap, nil
+}
+
 // GetIPCloudIDByNodeIPs get serverIP cloudInfo by cmdb
-func GetIPCloudIDByNodeIPs(ctx context.Context, ips []string) ([]job.ServerInfo, error) {
+func GetIPCloudIDByNodeIPs(ctx context.Context, bizID string, ips []string) ([]job.ServerInfo, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
+	// withoutBiz maybe get other biz host
 	hostDetailData, err := cmdb.GetCmdbClient().QueryAllHostInfoWithoutBiz(ips)
 	if err != nil {
 		blog.Errorf("task[%s] GetIPCloudIDByNodeIPs failed: %v", taskID, err)
+		return nil, err
+	}
+
+	bizHostsMap, err := getBizHosts(bizID)
+	if err != nil {
 		return nil, err
 	}
 
@@ -286,6 +314,11 @@ func GetIPCloudIDByNodeIPs(ctx context.Context, ips []string) ([]job.ServerInfo,
 		servers = make([]job.ServerInfo, 0)
 	)
 	for _, host := range hostDetailData {
+		_, ok := bizHostsMap[host.BKHostID]
+		if !ok {
+			continue
+		}
+
 		servers = append(servers, job.ServerInfo{
 			BkCloudID: uint64(host.BkCloudID),
 			Ip:        host.BKHostInnerIP,

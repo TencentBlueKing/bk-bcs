@@ -82,7 +82,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 			}
 			_, err = kubeCli.Discovery().ServerVersion()
 			if err != nil {
-				blog.Errorf("reportClusterHealthStatus GetClusterClient failed: %v", errLocal)
+				blog.Errorf("reportClusterHealthStatus GetClusterClient failed: %v", err)
 				// if options.GetEditionInfo().IsCommunicationEdition() {}
 				_ = d.updateClusterStatus(cls.ClusterID, common.StatusConnectClusterFailed)
 

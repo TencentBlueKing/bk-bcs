@@ -90,10 +90,15 @@ func (c *ComputeServiceClient) ListRegions(ctx context.Context) ([]*proto.Region
 	result := make([]*proto.RegionInfo, 0)
 	for _, v := range regions.Items {
 		if v.Name != "" && v.Description != "" {
+			status := ""
+			if v.Status == "UP" {
+				status = BCSRegionStateAvailable
+			}
+
 			result = append(result, &proto.RegionInfo{
 				Region:      v.Name,
 				RegionName:  v.Description,
-				RegionState: v.Status,
+				RegionState: status,
 			})
 		}
 	}
@@ -125,11 +130,16 @@ func (c *ComputeServiceClient) ListZones(ctx context.Context) ([]*proto.ZoneInfo
 	result := make([]*proto.ZoneInfo, 0)
 	for _, v := range zones.Items {
 		if strings.Contains(v.Name, region) {
+			status := ""
+			if v.Status == "UP" {
+				status = BCSRegionStateAvailable
+			}
+
 			result = append(result, &proto.ZoneInfo{
 				ZoneID:    strconv.FormatUint(v.Id, 10),
 				Zone:      v.Name,
 				ZoneName:  v.Name,
-				ZoneState: v.Status,
+				ZoneState: status,
 			})
 		}
 	}

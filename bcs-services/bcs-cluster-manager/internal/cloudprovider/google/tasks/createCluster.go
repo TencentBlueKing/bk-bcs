@@ -72,6 +72,10 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 
 	nodeGroups := make([]*proto.NodeGroup, 0)
 	for _, ngID := range strings.Split(nodeGroupIDs, ",") {
+		if ngID == "" {
+			continue
+		}
+
 		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
 		if errGet != nil {
 			blog.Errorf("CreateGKEClusterTask[%s]: GetNodeGroupByGroupID for cluster %s in task %s "+
@@ -100,6 +104,7 @@ func CreateGKEClusterTask(taskID string, stepName string) error {
 	}
 
 	dependInfo.Cluster.SystemID = clsId
+
 	err = cloudprovider.UpdateCluster(dependInfo.Cluster)
 	if err != nil {
 		blog.Errorf("createGKECluster[%s] update cluster systemID[%s] failed %s",
@@ -150,6 +155,15 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		return "", fmt.Errorf("createGKECluster[%s] create cluster failed, %v", taskID, err)
 	}
 
+	// gke集群 region级别 zone级别
+	clusterType := common.Regions
+	if len(strings.Split(info.Cluster.Region, "-")) == 3 {
+		clusterType = common.Zones
+	}
+
+	info.Cluster.ExtraInfo = make(map[string]string, 0)
+	info.Cluster.ExtraInfo[api.GKEClusterLocationType] = clusterType
+
 	blog.Infof("createGKECluster[%s] call createGKECluster UpdateClusterSystemID successful", taskID)
 
 	return clusterName, nil
@@ -188,11 +202,10 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo,
 					ClusterDns: "KUBE_DNS",
 				},
 			},
-			NetworkPolicy: &container.NetworkPolicy{
-				Enabled:  true,
-				Provider: "CALICO",
-			},
 			AddonsConfig: &container.AddonsConfig{
+				HttpLoadBalancing: &container.HttpLoadBalancing{
+					Disabled: false, // 启用 HTTP 负载均衡
+				},
 				DnsCacheConfig: &container.DnsCacheConfig{
 					Enabled: true,
 				},
@@ -234,7 +247,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo,
 
 	req.Cluster.PrivateClusterConfig = &container.PrivateClusterConfig{
 		// 是否将主服务器的内部 IP 地址用作集群终端节点 就是在控制台中选择了专用集群
-		EnablePrivateEndpoint: info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet,
+		EnablePrivateEndpoint: !info.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet,
 		EnablePrivateNodes:    true,
 		MasterGlobalAccessConfig: &container.PrivateClusterMasterGlobalAccessConfig{
 			Enabled: true,
@@ -246,6 +259,24 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo,
 			Enabled: true,
 		}
 	} else {
+		req.Cluster.NetworkPolicy = &container.NetworkPolicy{
+			Enabled:  true,
+			Provider: "CALICO",
+		}
+
+		req.Cluster.MonitoringConfig = &container.MonitoringConfig{
+			AdvancedDatapathObservabilityConfig: &container.AdvancedDatapathObservabilityConfig{
+				EnableMetrics: false,
+				RelayMode:     "disabled",
+			},
+			ComponentConfig: &container.MonitoringComponentConfig{
+				EnableComponents: []string{},
+			},
+			ManagedPrometheusConfig: &container.ManagedPrometheusConfig{
+				Enabled: false,
+			},
+		}
+
 		for _, ng := range groups {
 			ng.CloudNodeGroupID = strings.ToLower(ng.NodeGroupID)
 			nodePool := api.GenerateNodePool(generateCreateClusterNodePoolInput(ng, info.Cluster))
@@ -940,7 +971,9 @@ func updateNodeToDB(ctx context.Context, state *cloudprovider.TaskState, info *c
 		}
 	}
 
+	state.Task.CommonParams[cloudprovider.DynamicNodeIPListKey.String()] = strings.Join(addSuccessNodes, ",")
 	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(addSuccessNodes, ",")
+	state.Task.CommonParams[cloudprovider.NodeNamesKey.String()] = strings.Join(addSuccessNodes, ",")
 
 	return nil
 }

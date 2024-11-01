@@ -719,10 +719,12 @@ func IsSupportAutoScale(store store.ClusterManagerModel, cls proto.Cluster) bool
 	if cloudId == "" {
 		return false
 	}
+
 	cloud, err := store.GetCloud(context.Background(), cloudId)
 	if err != nil || cloud == nil {
 		return false
 	}
+
 	if cloud.GetConfInfo().GetDisableNodeGroup() {
 		return false
 	}
@@ -730,7 +732,12 @@ func IsSupportAutoScale(store store.ClusterManagerModel, cls proto.Cluster) bool
 	if cls.ClusterType == common.ClusterTypeVirtual {
 		return false
 	}
+
 	if cls.ClusterCategory == common.Importer && cls.ImportCategory == common.KubeConfigImport {
+		return false
+	}
+
+	if cls.Provider == common.GcpCloudProvider && cls.ManageType == common.ClusterManageTypeManaged {
 		return false
 	}
 

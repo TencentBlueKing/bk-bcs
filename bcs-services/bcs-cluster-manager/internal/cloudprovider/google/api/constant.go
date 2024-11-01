@@ -85,4 +85,10 @@ const (
 	MetadataKeyBlockProjectSshKey = "block-project-ssh-keys"
 	// MetadataKeyStartupScript is key name for startup script
 	MetadataKeyStartupScript = "startup-script"
+
+	// BCSRegionStateAvailable xxx
+	BCSRegionStateAvailable = "AVAILABLE"
+
+	// NetworkPolicyCalico for calico network policy
+	NetworkPolicyProviderCalico = "CALICO"
 )

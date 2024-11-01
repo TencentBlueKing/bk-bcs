@@ -21,6 +21,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cidrtree"
 )
 
 var vpcMgr sync.Once
@@ -59,7 +60,7 @@ func (vm *VPCManager) ListVpcs(vpcID string, opt *cloudprovider.ListNetworksOpti
 		})
 	}
 
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return result, nil
 }
 
 // ListSubnets list vpc subnets
@@ -115,7 +116,54 @@ func (vm *VPCManager) ListBandwidthPacks(opt *cloudprovider.CommonOption) ([]*pr
 // CheckConflictInVpcCidr check cidr if conflict with vpc cidrs
 func (vm *VPCManager) CheckConflictInVpcCidr(vpcID string, cidr string,
 	opt *cloudprovider.CheckConflictInVpcCidrOption) ([]string, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	locationList := strings.Split(opt.Region, "-")
+	if len(locationList) == 3 {
+		opt.Region = strings.Join(locationList[:2], "-")
+	}
+
+	client, err := NewComputeServiceClient(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("create google client failed, err %s", err.Error())
+	}
+	subnets, err := client.ListSubnetworks(context.Background(), opt.Region)
+	if err != nil {
+		return nil, fmt.Errorf("list subnets failed, err %s", err.Error())
+	}
+
+	if len(subnets.Items) == 0 {
+		return nil, fmt.Errorf("subnet not found")
+	}
+
+	ipNets := make([]*net.IPNet, 0)
+	for _, v := range subnets.Items {
+		networkInfo := strings.Split(v.Network, "/")
+		if vpcID != "" && vpcID != networkInfo[len(networkInfo)-1] {
+			continue
+		}
+
+		for _, ipRange := range v.SecondaryIpRanges {
+			_, c, err := net.ParseCIDR(ipRange.IpCidrRange)
+			if err != nil {
+				return nil, err
+			}
+
+			ipNets = append(ipNets, c)
+		}
+	}
+
+	_, c, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+
+	conflictCidrs := make([]string, 0)
+	for i := range ipNets {
+		if cidrtree.CidrContains(ipNets[i], c) || cidrtree.CidrContains(c, ipNets[i]) {
+			conflictCidrs = append(conflictCidrs, ipNets[i].String())
+		}
+	}
+
+	return conflictCidrs, nil
 }
 
 // AllocateOverlayCidr allocate overlay cidr
