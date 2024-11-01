@@ -18,7 +18,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.54.2
+          version: v1.61.0
           args: --timeout=30m
           working-directory: bcs-services/bcs-webconsole
   bcs-monitor:
@@ -38,7 +38,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.54.2
+          version: v1.61.0
           args: --timeout=30m
           working-directory: bcs-services/bcs-monitor
   bcs-bscp:
@@ -118,7 +118,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.54.2
+          version: v1.61.0
           args: --timeout=30m --out-format=colored-line-number
           working-directory: bcs-services/bcs-project-manager
   bcs-user-manager:
@@ -139,7 +139,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.54.2
-          args: --timeout=30m
+          args: --timeout=30m --out-format=colored-line-number
           working-directory: bcs-services/bcs-user-manager
   bcs-cluster-resources:
     name: bcs-cluster-resources
@@ -158,7 +158,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.54.2
+          version: v1.61.0
           args: --timeout=30m
           working-directory: bcs-services/cluster-resources
 
@@ -179,7 +179,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.54.2
+          version: v1.61.0
           args: --timeout=30m
           working-directory: bcs-common/common/task
       - name: Test

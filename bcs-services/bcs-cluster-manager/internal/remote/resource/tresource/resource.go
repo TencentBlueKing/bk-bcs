@@ -415,6 +415,7 @@ func (rm *ResManClient) GetInstanceTypesV2(ctx context.Context, region string, s
 				return nil
 			}(),
 			OversoldAvailable: poolUsage.OversoldAvailable,
+			Region:            pool.GetBaseConfig().GetZone().GetRegion(),
 		})
 	}
 

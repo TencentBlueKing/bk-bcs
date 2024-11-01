@@ -69,6 +69,11 @@ func (c *Context) GetTaskIndex() string {
 	return c.task.GetTaskIndex()
 }
 
+// GetTaskIndexType get task index type
+func (c *Context) GetTaskIndexType() string {
+	return c.task.GetTaskIndexType()
+}
+
 // GetTaskStatus get task status
 func (c *Context) GetTaskStatus() string {
 	return c.task.GetStatus()

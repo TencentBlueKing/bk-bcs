@@ -7909,6 +7909,35 @@ func (m *ViewFilter) validate(all bool) error {
 
 	}
 
+	if all {
+		switch v := interface{}(m.GetCreateSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ViewFilterValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ViewFilterValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ViewFilterValidationError{
+				field:  "CreateSource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return ViewFilterMultiError(errors)
 	}
@@ -7985,6 +8014,368 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ViewFilterValidationError{}
+
+// Validate checks the field values on CreateSource with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CreateSource) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateSource with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CreateSourceMultiError, or
+// nil if none found.
+func (m *CreateSource) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateSource) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Source
+
+	if all {
+		switch v := interface{}(m.GetTemplate()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateSourceValidationError{
+					field:  "Template",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateSourceValidationError{
+					field:  "Template",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTemplate()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateSourceValidationError{
+				field:  "Template",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetChart()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateSourceValidationError{
+					field:  "Chart",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateSourceValidationError{
+					field:  "Chart",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetChart()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateSourceValidationError{
+				field:  "Chart",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return CreateSourceMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateSourceMultiError is an error wrapping multiple validation errors
+// returned by CreateSource.ValidateAll() if the designated constraints aren't met.
+type CreateSourceMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateSourceMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateSourceMultiError) AllErrors() []error { return m }
+
+// CreateSourceValidationError is the validation error returned by
+// CreateSource.Validate if the designated constraints aren't met.
+type CreateSourceValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateSourceValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateSourceValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateSourceValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateSourceValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateSourceValidationError) ErrorName() string { return "CreateSourceValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CreateSourceValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateSource.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateSourceValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateSourceValidationError{}
+
+// Validate checks the field values on Template with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Template) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Template with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in TemplateMultiError, or nil
+// if none found.
+func (m *Template) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Template) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TemplateName
+
+	// no validation rules for TemplateVersion
+
+	if len(errors) > 0 {
+		return TemplateMultiError(errors)
+	}
+
+	return nil
+}
+
+// TemplateMultiError is an error wrapping multiple validation errors returned
+// by Template.ValidateAll() if the designated constraints aren't met.
+type TemplateMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m TemplateMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m TemplateMultiError) AllErrors() []error { return m }
+
+// TemplateValidationError is the validation error returned by
+// Template.Validate if the designated constraints aren't met.
+type TemplateValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e TemplateValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e TemplateValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e TemplateValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e TemplateValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e TemplateValidationError) ErrorName() string { return "TemplateValidationError" }
+
+// Error satisfies the builtin error interface
+func (e TemplateValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTemplate.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = TemplateValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = TemplateValidationError{}
+
+// Validate checks the field values on Chart with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Chart) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Chart with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in ChartMultiError, or nil if none found.
+func (m *Chart) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Chart) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ChartName
+
+	if len(errors) > 0 {
+		return ChartMultiError(errors)
+	}
+
+	return nil
+}
+
+// ChartMultiError is an error wrapping multiple validation errors returned by
+// Chart.ValidateAll() if the designated constraints aren't met.
+type ChartMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ChartMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ChartMultiError) AllErrors() []error { return m }
+
+// ChartValidationError is the validation error returned by Chart.Validate if
+// the designated constraints aren't met.
+type ChartValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ChartValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ChartValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ChartValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ChartValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ChartValidationError) ErrorName() string { return "ChartValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ChartValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sChart.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ChartValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ChartValidationError{}
 
 // Validate checks the field values on CreateViewConfigReq with the rules
 // defined in the proto definition for this message. If any rules are
@@ -13118,6 +13509,35 @@ func (m *FetchMultiClusterResourceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if all {
+		switch v := interface{}(m.GetCreateSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FetchMultiClusterResourceReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FetchMultiClusterResourceReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FetchMultiClusterResourceReqValidationError{
+				field:  "CreateSource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return FetchMultiClusterResourceReqMultiError(errors)
 	}
@@ -13585,6 +14005,35 @@ func (m *FetchMultiClusterCustomResourceReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	if all {
+		switch v := interface{}(m.GetCreateSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FetchMultiClusterCustomResourceReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FetchMultiClusterCustomResourceReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FetchMultiClusterCustomResourceReqValidationError{
+				field:  "CreateSource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return FetchMultiClusterCustomResourceReqMultiError(errors)
 	}
@@ -13795,6 +14244,35 @@ func (m *MultiClusterResourceCountReq) validate(all bool) error {
 	}
 
 	// no validation rules for Name
+
+	if all {
+		switch v := interface{}(m.GetCreateSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, MultiClusterResourceCountReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, MultiClusterResourceCountReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return MultiClusterResourceCountReqValidationError{
+				field:  "CreateSource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	if len(errors) > 0 {
 		return MultiClusterResourceCountReqMultiError(errors)

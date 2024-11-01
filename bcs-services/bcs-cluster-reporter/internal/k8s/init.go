@@ -10,9 +10,12 @@
  * limitations under the License.
  */
 
+// Package k8s xxx
 package k8s
 
 import (
+	"os"
+
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/discovery/cached/memory"
@@ -31,7 +34,7 @@ func GetClientsetByConfig(config *rest.Config) (*kubernetes.Clientset, error) {
 // GetRestClientGetterByConfig restClient
 func GetRestClientGetterByConfig(config *rest.Config) *RESTClientGetter {
 	return &RESTClientGetter{
-		clientconfig: clientcmd.NewDefaultClientConfig(BuildKubeconfig(config), nil),
+		clientconfig: clientcmd.NewDefaultClientConfig(BuildKubeconfig(config), &clientcmd.ConfigOverrides{Timeout: "20"}),
 	}
 }
 
@@ -41,9 +44,29 @@ func GetRestConfigByConfig(filePath string) (*rest.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	kubeconfig.QPS = 300
-	kubeconfig.Burst = 600
+	kubeconfig.QPS = 30
+	kubeconfig.Burst = 60
 	return kubeconfig, nil
+}
+
+// GetRestConfig get rest config by kubeconfig file
+func GetRestConfig() (*rest.Config, error) {
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		kubeconfig = os.Getenv("HOME") + "/.kube/config"
+	}
+	restConfig, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		restConfig, err = rest.InClusterConfig()
+		if err != nil {
+			restConfig = &rest.Config{
+				Host: "http://localhost:8080",
+			}
+		}
+	}
+	restConfig.QPS = 30
+	restConfig.Burst = 60
+	return restConfig, nil
 }
 
 // BuildKubeconfig build cluster config
@@ -58,9 +81,10 @@ func BuildKubeconfig(config *rest.Config) clientcmdapi.Config {
 	}
 
 	kubeConfig.Clusters["default-cluster"] = &clientcmdapi.Cluster{
-		Server:                config.Host,
-		CertificateAuthority:  config.CAFile,
-		InsecureSkipTLSVerify: config.Insecure,
+		Server:                   config.Host,
+		CertificateAuthority:     config.CAFile,
+		InsecureSkipTLSVerify:    config.Insecure,
+		CertificateAuthorityData: config.CAData,
 	}
 
 	kubeConfig.Contexts["default-context"] = &clientcmdapi.Context{
@@ -69,9 +93,11 @@ func BuildKubeconfig(config *rest.Config) clientcmdapi.Config {
 		AuthInfo:  "default",
 	}
 	kubeConfig.AuthInfos["default"] = &clientcmdapi.AuthInfo{
-		TokenFile: config.BearerTokenFile,
-		Username:  config.Username,
-		Token:     config.BearerToken,
+		TokenFile:             config.BearerTokenFile,
+		Username:              config.Username,
+		Token:                 config.BearerToken,
+		ClientKeyData:         config.TLSClientConfig.KeyData,
+		ClientCertificateData: config.TLSClientConfig.CertData,
 	}
 
 	return kubeConfig

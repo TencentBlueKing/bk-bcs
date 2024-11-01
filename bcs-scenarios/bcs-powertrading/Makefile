@@ -1,5 +1,6 @@
 
 GOPATH:=$(shell go env GOPATH)
+OUTPUT=build/bcs.${VERSION}
 
 bcs_edition?=inner_edition
 
@@ -60,7 +61,9 @@ cm-proto:
 
 .PHONY: build
 build:
-	go build ${LDFLAG} -o bcs-powertrading *.go
+	mkdir -p ${OUTPUT}/bcs-powertrading/
+	cp -r ./image/* ${OUTPUT}/bcs-powertrading/
+	go build ${LDFLAG} -o ${OUTPUT}/bcs-powertrading/bcs-powertrading *.go
 
 .PHONY: test
 test:

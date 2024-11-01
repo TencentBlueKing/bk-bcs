@@ -17,6 +17,7 @@ bcs:
   cluster:
     share: 共享集群
     managed: 托管集群
+    managed1: 托管集群
     selfDeployed: 独立集群
     federation: 联邦集群
     kubeConfig: kubeConfig导入
@@ -802,7 +803,10 @@ cluster:
         awsDesc: Amazon VPC CNI ：AWS 的网络插件，可以在集群内启用 Pod 联网。
         awsLink: Amazon VPC CNI功能概述
     azure:
-      chargingModel: 收费模式
+      securityGroup:
+        text: 安全组
+        vpcLink: '选择将应用到在您的控制平面子网中创建的 AKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 {0}  中的相应页面。'
+        vpcMaster: VPC 控制台
   detail:
     title:
       overview: 集群总览
@@ -1062,6 +1066,14 @@ cluster:
         runtimeVersion:
           title: 运行时版本
           desc: 运行时版本使用TKE集群配置，暂不支持修改
+        dockerGraphPathDefault:
+          desc: 容器目录使用集群配置，暂不支持修改
+        containerRuntimeDefault:
+          title: 运行时组件
+          desc: 运行时组件使用集群配置，暂不支持修改
+        runtimeVersionDefault:
+          title: 运行时版本
+          desc: 运行时版本使用集群配置，暂不支持修改
         imageProvider:
           title: 镜像提供方
           desc: 镜像提供方与操作系统使用TKE集群设置，暂不支持修改

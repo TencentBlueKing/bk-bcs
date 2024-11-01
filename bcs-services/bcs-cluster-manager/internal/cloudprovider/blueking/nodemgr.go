@@ -17,11 +17,14 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 )
 
 var nodeMgr sync.Once
@@ -101,7 +104,82 @@ func (nm *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesO
 // ListNodeInstanceType list node type by zone and node family
 func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
+		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
+
+	return nm.getInnerInstanceTypes(info)
+}
+
+// getInnerInstanceTypes get inner instance types info
+func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( // nolint
+	[]*proto.InstanceType, error) {
+	blog.Infof("getInnerInstanceTypes %+v", info)
+
+	targetTypes, err := tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
+		info.Region, resource.InstanceSpec{
+			BizID:        info.BizID,
+			Cpu:          info.Cpu,
+			Mem:          info.Memory,
+			Provider:     info.Provider,
+			ResourceType: info.ResourceType,
+		})
+	if err != nil {
+		blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)
+		return nil, err
+	}
+	blog.Infof("getInnerInstanceTypes successful[%+v]", targetTypes)
+
+	var instanceTypes = make([]*proto.InstanceType, 0)
+	for _, t := range targetTypes {
+		instanceTypes = append(instanceTypes, &proto.InstanceType{
+			NodeType:       t.NodeType,
+			TypeName:       t.TypeName,
+			NodeFamily:     t.NodeFamily,
+			Cpu:            t.Cpu,
+			Memory:         t.Memory,
+			Gpu:            t.Gpu,
+			Status:         t.Status, // SOLD_OUT
+			UnitPrice:      0,
+			Zones:          t.Zones,
+			Provider:       t.Provider,
+			ResourcePoolID: t.ResourcePoolID,
+			SystemDisk: func() *proto.DataDisk {
+				if t.SystemDisk == nil {
+					return nil
+				}
+
+				return &proto.DataDisk{
+					DiskType: t.SystemDisk.DiskType,
+					DiskSize: t.SystemDisk.DiskSize,
+				}
+			}(),
+			DataDisks: func() []*proto.DataDisk {
+				disks := make([]*proto.DataDisk, 0)
+				for i := range t.DataDisks {
+					disks = append(disks, &proto.DataDisk{
+						DiskType: t.DataDisks[i].DiskType,
+						DiskSize: t.DataDisks[i].DiskSize,
+					})
+				}
+				return disks
+			}(),
+			AvailableQuota: uint32(t.OversoldAvailable),
+			Region: func() string {
+				if info.Region != "" {
+					return info.Region
+				}
+				return t.Region
+			}(),
+		})
+	}
+
+	blog.Infof("getInnerInstanceTypes successful[%+v]", instanceTypes)
+
+	if info.Provider == resource.SelfPool || info.Provider == resource.CrPool {
+		return instanceTypes, nil
+	}
+
+	return nil, err
 }
 
 // ListOsImage list image os

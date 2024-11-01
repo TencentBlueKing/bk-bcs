@@ -1,10 +1,10 @@
 /*
- * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.,
  * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
  * Licensed under the MIT License (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  * http://opensource.org/licenses/MIT
- * Unless required by applicable law or agreed to in writing, software distributed under
+ * Unless required by applicable law or agreed to in writing, software distributed under,
  * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
@@ -15,7 +15,6 @@ package bcs
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -23,10 +22,9 @@ import (
 	"time"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/rest"
 	k8srest "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/rest"
 )
 
 // GetClusters get clustermanager clusters by ids
@@ -37,8 +35,8 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{
-		token: cm.token,
+	rt = &rest.BcsTransport{
+		Token: cm.token,
 	}
 	httpClient = &http.Client{Transport: rt}
 
@@ -46,7 +44,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		clusterIds = append(clusterIds, "")
 	}
 
-	resultList := make([]cmproto.Cluster, 0)
+	resultList := make([]cmproto.Cluster, 0, 0)
 	for _, clusterId := range clusterIds {
 		svcUrl, _ := url.Parse(cm.url + _urlMap["GetClusters"])
 		if clusterId != "" {
@@ -72,16 +70,17 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		}
 
 		clusterData, _ := json.Marshal(result.Data)
-		clusterList := make([]cmproto.Cluster, 0)
+		clusterList := make([]cmproto.Cluster, 0, 0)
 		err = json.Unmarshal(clusterData, &clusterList)
 		if err != nil {
+			klog.Errorf(err.Error())
 			cluster := cmproto.Cluster{}
 			err = json.Unmarshal(clusterData, &cluster)
 			if err != nil {
-				e := fmt.Errorf("unmarshal cluster response failed %s", err.Error())
-				klog.V(3).Info(e.Error())
+				e := fmt.Errorf("Unmarshal cluster response failed %s", err.Error())
 				return nil, e
 			}
+
 			clusterList = append(clusterList, cluster)
 		}
 		resultList = append(resultList, clusterList...)
@@ -92,7 +91,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 // GetNodesByClusterId get cluster nodes
 func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node, error) {
 	if clusterId == "" {
-		return nil, errors.New("ClusterId cannot be blank")
+		return nil, fmt.Errorf("ClusterId cannot be blank")
 	}
 	svcUrl, _ := url.Parse(cm.url + fmt.Sprintf(_urlMap["GetNodesByClusterId"], clusterId))
 	klog.V(6).Infof("start ClusterManager request %s", svcUrl.String())
@@ -102,7 +101,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{token: cm.token}
+	rt = &rest.BcsTransport{Token: cm.token}
 	httpClient = &http.Client{Transport: rt, Timeout: 10 * time.Second}
 
 	req := rest.NewRequest(httpClient, "GET", svcUrl, nil)
@@ -119,15 +118,15 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 
 	if !result.Result {
 		e := fmt.Errorf("cluster response result failed: %s", result.Msg)
-		klog.V(3).Info(e.Error())
+		klog.Info(e.Error())
 		return nil, e
 	}
 
 	nodeData, _ := json.Marshal(result.Data)
-	nodeList := make([]cmproto.Node, 0)
+	nodeList := make([]cmproto.Node, 0, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
-		e := fmt.Errorf("unmarshal cluster response failed %s", err.Error())
+		e := fmt.Errorf("Unmarshal cluster response failed %s", err.Error())
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}
@@ -144,7 +143,7 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{token: cm.token}
+	rt = &rest.BcsTransport{Token: cm.token}
 	httpClient = &http.Client{Transport: rt}
 
 	req := rest.NewRequest(httpClient, "GET", svcUrl, nil)
@@ -161,22 +160,22 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 
 	if !result.Result {
 		e := fmt.Errorf("getnode response result failed: %s", result.Msg)
-		klog.V(3).Info(e.Error())
+		klog.Errorf(e.Error())
 		return nil, e
 	}
 
 	nodeData, _ := json.Marshal(result.Data)
-	nodeList := make([]cmproto.Node, 0)
+	nodeList := make([]cmproto.Node, 0, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
 		e := fmt.Errorf("Unmarshal getnode response failed %s", err.Error())
-		klog.V(3).Info(e.Error())
+		klog.Errorf(e.Error())
 		return nil, e
 	}
 
 	if len(nodeList) != 1 {
 		e := fmt.Errorf("getnode result num wrong %s", err.Error())
-		klog.V(3).Info(e.Error())
+		klog.Errorf(e.Error())
 		return nil, e
 	}
 
@@ -193,6 +192,9 @@ func (cm *ClusterManager) GetKubeconfig(clusterID string) *k8srest.Config {
 			CAFile:   "",
 			CAData:   nil,
 		},
+		Timeout: time.Minute,
+		QPS:     30,
+		Burst:   60,
 	}
 
 	return config

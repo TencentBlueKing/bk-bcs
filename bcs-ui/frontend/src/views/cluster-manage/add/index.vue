@@ -166,7 +166,6 @@ export default defineComponent({
             title: $i18n.t('publicCloud.azure.title'),
             desc: $i18n.t('publicCloud.azure.desc'),
             type: 'createAzureCloud',
-            disabled: true,
           },
           // huawei
           {

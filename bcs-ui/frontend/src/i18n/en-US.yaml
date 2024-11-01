@@ -23,6 +23,7 @@ bcs:
   cluster:
     share: Shared cluster
     managed: TKE (Managed cluster)
+    managed1: Managed cluster
     selfDeployed: Self-deployed cluster
     federation: Federation
     kubeConfig: KubeConfig
@@ -947,7 +948,14 @@ cluster:
           the cluster.
         awsLink: Overview of Amazon VPC CNI functionality.
     azure:
-      chargingModel: Charging model
+      securityGroup:
+        text: Safety group
+        vpcLink: >-
+          'This selection will apply to the Safety group of the AKS-managed
+          elastic network interfaces created in your control plane subnet. To
+          create a new Safety group, please go to the appropriate page in the
+          {0}.'
+        vpcMaster: VPC console
   detail:
     title:
       overview: Overview
@@ -1303,6 +1311,15 @@ cluster:
           title: Runtime version
           desc: >-
             The runtime component version inherits the TKE cluster and does not
+            support modification
+        dockerGraphPathDefault:
+          desc: The container directory inherits cluster and does not support
+            modification
+        containerRuntimeDefault:
+          desc: The runtime component inherits the cluster and does not support
+            modification
+        runtimeVersionDefault:
+          desc: The runtime component version inherits the cluster and does not
             support modification
         imageProvider:
           title: Image provider

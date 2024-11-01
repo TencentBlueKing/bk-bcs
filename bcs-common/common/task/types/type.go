@@ -72,6 +72,7 @@ type Task struct {
 	Updater             string            `json:"updater"`
 	Start               time.Time         `json:"start"`
 	End                 time.Time         `json:"end"`
+	CreatedAt           time.Time         `json:"createdAt"`
 	LastUpdate          time.Time         `json:"lastUpdate"`
 }
 

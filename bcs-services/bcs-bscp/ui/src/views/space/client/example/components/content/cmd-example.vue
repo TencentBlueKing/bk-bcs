@@ -7,7 +7,9 @@
       :dual-system-support="true"
       :config-show="true"
       :config-label="basicInfo?.serviceType.value === 'file' ? '配置文件名' : '配置项名称'"
-      @update-option-data="getOptionData" />
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="getOptionData"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="preview-container">
       <p class="headline">{{ $t('配置指引与示例预览') }}</p>
       <div class="guide-wrap">
@@ -51,6 +53,7 @@
   import { ref, Ref, computed, inject, onMounted, nextTick } from 'vue';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { IVariableEditParams } from '../../../../../../../types/variable';
+  import { newICredentialItem } from '../../../../../../../types/client';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import CodePreview from '../code-preview.vue';
@@ -58,7 +61,13 @@
   import { useI18n } from 'vue-i18n';
   import { useRoute } from 'vue-router';
 
-  const props = defineProps<{ contentScrollTop: Function; kvName: string }>();
+  const props = defineProps<{
+    contentScrollTop: Function;
+    kvName: string;
+    selectedKeyData: newICredentialItem['spec'] | null;
+  }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const { t } = useI18n();
   const route = useRoute();

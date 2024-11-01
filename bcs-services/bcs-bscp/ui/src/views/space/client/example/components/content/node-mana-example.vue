@@ -5,7 +5,9 @@
       :associate-config-show="true"
       :dual-system-support="true"
       :line-break-show="true"
-      @update-option-data="getOptionData" />
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="getOptionData"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="node-content">
       <span class="node-label">{{ $t('示例预览') }}</span>
       <div class="top-tip">
@@ -114,6 +116,7 @@
   import { ref, Ref, inject } from 'vue';
   import { useRoute } from 'vue-router';
   import { Share, CopyShape } from 'bkui-vue/lib/icon';
+  import { newICredentialItem } from '../../../../../../../types/client';
   import { copyToClipBoard } from '../../../../../../utils/index';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
@@ -123,6 +126,10 @@
     key: String;
     value: String;
   }
+
+  const props = defineProps<{ selectedKeyData: newICredentialItem['spec'] | null }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const { t, locale } = useI18n();
   const route = useRoute();

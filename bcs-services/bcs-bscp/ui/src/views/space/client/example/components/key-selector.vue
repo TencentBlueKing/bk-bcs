@@ -51,19 +51,16 @@
 <script lang="ts" setup>
   import { ref, Ref, onMounted, inject } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
-  import { ICredentialItem } from '../../../../../../types/credential';
+  import { newICredentialItem } from '../../../../../../types/client';
   import { getCredentialList } from '../../../../../api/credentials';
   import { AngleUpFill, RightTurnLine } from 'bkui-vue/lib/icon';
   import { debounce } from 'lodash';
 
-  // 继承接口，用于将脱敏与否的密钥都传递出去，用于复制示例
-  type newICredentialItem = ICredentialItem & {
-    spec: {
-      privacyCredential: string;
-    };
-  };
+  const props = defineProps<{
+    selectedKeyData: newICredentialItem['spec'] | null;
+  }>();
 
-  const emits = defineEmits(['current-key']);
+  const emits = defineEmits(['current-key', 'selected-key-data']);
 
   const route = useRoute();
   const router = useRouter();
@@ -79,8 +76,12 @@
   const bizId = ref(String(route.params.spaceId));
   const credentialList = ref<newICredentialItem[]>([]);
 
-  onMounted(() => {
-    loadCredentialList();
+  onMounted(async () => {
+    await loadCredentialList();
+    // 当前服务下其他示例已选择密钥时，载入选择的密钥
+    if (props.selectedKeyData !== null) {
+      handleSelectChange(props.selectedKeyData);
+    }
   });
 
   // 表单校验失败检查密钥是否为空
@@ -119,6 +120,7 @@
     currentValue.value.key = enc_credential;
     currentValue.value.privacyCredential = privacyCredential;
     emits('current-key', enc_credential, privacyCredential);
+    emits('selected-key-data', val);
     validateCredential();
   };
   // 密钥脱敏

@@ -170,6 +170,7 @@ import { INodeManCloud } from '../../../types/types';
 
 import {
   cloudDetail,
+  cloudRoles,
   cloudVersionModules,
   nodemanCloud,
 } from '@/api/modules/cluster-manager';
@@ -300,7 +301,7 @@ const handleGetTemplateList = async () => {
 };
 
 // 云凭证
-const { cloudAccounts, getCloudRolesList } = useCloud();
+const { cloudAccounts } = useCloud();
 const accountLoading = ref(false);
 const accountList = ref<ICloudAccount[]>([]);
 const handleGetAccounts = async () => {
@@ -320,9 +321,13 @@ const gotoTencentToken = () => {
 const roleLoading = ref(false);
 const roleList = ref<ICloudRole[]>([]);
 async function handleGetRoles() {
+  if (!props.cloudID || !basicInfo.value.cloudAccountID) return;
   roleLoading.value = true;
-  const { data } = await getCloudRolesList(props.cloudID, basicInfo.value.cloudAccountID, 'cluster');
-  roleList.value = data;
+  roleList.value = await cloudRoles({
+    $cloudId: props.cloudID,
+    accountID: basicInfo.value.cloudAccountID,
+    roleType: 'cluster',
+  }).catch(() => []);
   // 初始化第一个角色
   basicInfo.value.clusterIamRole = roleList.value?.[0]?.roleName || '';
   roleLoading.value = false;

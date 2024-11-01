@@ -250,7 +250,7 @@
           </template>
         </bcs-table-column>
         <bcs-table-column :label="$t('cluster.ca.nodePool.label.system')" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.nodeOS || '' }}</template>
+          <template #default="{ row }">{{ row.nodeOS || '--' }}</template>
         </bcs-table-column>
         <bcs-table-column :label="$t('tkeCa.label.provider.text')" show-overflow-tooltip v-if="curCluster.provider === 'tencentCloud'">
           <template #default="{ row }">

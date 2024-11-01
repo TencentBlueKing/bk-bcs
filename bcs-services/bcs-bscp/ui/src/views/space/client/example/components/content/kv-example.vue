@@ -5,7 +5,9 @@
       :directory-show="false"
       :config-show="props.kvName === 'http' || (props.kvName === 'python' && activeTab === 0)"
       :config-label="basicInfo?.serviceType.value === 'file' ? '配置文件名' : '配置项名称'"
-      @update-option-data="(data) => getOptionData(data)" />
+      :selected-key-data="props.selectedKeyData"
+      @update-option-data="(data) => getOptionData(data)"
+      @selected-key-data="emits('selected-key-data', $event)" />
     <div class="preview-container">
       <div class="kv-handle-content">
         <span class="preview-label">{{ $t('示例预览') }}</span>
@@ -42,6 +44,7 @@
   import { copyToClipBoard } from '../../../../../../utils/index';
   import { CloseLine } from 'bkui-vue/lib/icon';
   import { IVariableEditParams } from '../../../../../../../types/variable';
+  import { newICredentialItem } from '../../../../../../../types/client';
   import BkMessage from 'bkui-vue/lib/message';
   import FormOption from '../form-option.vue';
   import codePreview from '../code-preview.vue';
@@ -50,7 +53,10 @@
 
   const props = defineProps<{
     kvName: string;
+    selectedKeyData: newICredentialItem['spec'] | null;
   }>();
+
+  const emits = defineEmits(['selected-key-data']);
 
   const basicInfo = inject<{ serviceName: Ref<string>; serviceType: Ref<string> }>('basicInfo');
   const { t } = useI18n();
@@ -72,7 +78,6 @@
     labelArr: [],
     labelArrType: '', // 展示格式
     configName: '', // 配置项
-    tempDir: '', // http临时目录路径(file)
   });
 
   // 代码预览上方提示框

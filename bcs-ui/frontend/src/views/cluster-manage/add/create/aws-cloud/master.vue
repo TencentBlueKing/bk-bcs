@@ -9,7 +9,7 @@
             <span class="flex text-[16px] text-[#f85356]">
               <i class="bcs-icon bcs-icon-hot"></i>
             </span>
-            <span class="ml-[8px]">{{ $t('bcs.cluster.managed') }}</span>
+            <span class="ml-[8px]">{{ $t('bcs.cluster.managed1') }}</span>
           </div>
         </bk-button>
       </div>

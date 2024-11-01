@@ -8,7 +8,7 @@
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
-        <i18n v-if="clusterData.provider !== 'awsCloud'" path="cluster.nodeList.article2">
+        <i18n v-if="!['awsCloud', 'azureCloud'].includes(clusterData.provider)" path="cluster.nodeList.article2">
           <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
           <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
         </i18n>
@@ -20,7 +20,7 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud', 'huaweiCloud','awsCloud'].includes(curSelectedCluster.provider || '')">
+    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud', 'huaweiCloud','awsCloud', 'bluekingCloud'].includes(curSelectedCluster.provider || '')">
       <div class="flex items-center text-[12px]">
         <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
           {{ $t('tke.label.nodeModule.text') }}

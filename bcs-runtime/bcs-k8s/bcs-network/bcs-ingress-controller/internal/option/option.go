@@ -120,6 +120,11 @@ type ControllerOption struct {
 
 	// ListenerBypassMaxConcurrent listener bypass最大并发数
 	ListenerBypassMaxConcurrent int
+
+	// BcsClusterID bcs cluster id, set from env
+	BcsClusterID string
+	// BkBizID blue king biz id, set from env
+	BkBizID string
 }
 
 // Conf 服务配置
@@ -184,6 +189,15 @@ func (op *ControllerOption) SetFromEnv() {
 	op.ImageTag = imageTag
 
 	op.PodNamespace = os.Getenv(constant.EnvIngressPodNamespace)
+
+	op.BcsClusterID = os.Getenv(constant.EnvNameBkBCSClusterID)
+	if len(op.BcsClusterID) == 0 {
+		blog.Fatalf("not set env %s", constant.EnvNameBkBCSClusterID)
+	}
+	op.BkBizID = os.Getenv(constant.EnvNameBkBizID)
+	if len(op.BkBizID) == 0 {
+		blog.Fatalf("not set env %s", constant.EnvNameBkBizID)
+	}
 }
 
 // BindFromCommandLine 读取命令行参数并绑定

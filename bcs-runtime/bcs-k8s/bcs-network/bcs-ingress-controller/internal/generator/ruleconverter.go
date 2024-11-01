@@ -121,7 +121,7 @@ func (rc *RuleConverter) DoConvert() ([]networkextensionv1.Listener, error) {
 // generate 7 layer listener by rule info
 func (rc *RuleConverter) generate7LayerListener(region, lbID string) (*networkextensionv1.Listener, error) {
 	li := &networkextensionv1.Listener{}
-	li.SetName(GetListenerName(lbID, rc.rule.Port))
+	li.SetName(common.GetListenerName(lbID, rc.rule.Port))
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels
 	// the ingress name in labels is used for checking conficts
@@ -199,7 +199,7 @@ func (rc *RuleConverter) generate4LayerListener(region, lbID string) (*networkex
 	if rc.isTCPUDPPortReuse {
 		li.SetName(common.GetListenerNameWithProtocol(lbID, rc.rule.Protocol, rc.rule.Port, 0))
 	} else {
-		li.SetName(GetListenerName(lbID, rc.rule.Port))
+		li.SetName(common.GetListenerName(lbID, rc.rule.Port))
 	}
 	li.SetNamespace(rc.ingressNamespace)
 	// set ingress name in labels

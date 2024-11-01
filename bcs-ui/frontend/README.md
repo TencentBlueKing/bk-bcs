@@ -131,7 +131,10 @@ CSS文件目前禁止添加新样式，准备通过[tailwindui](https://tailwind
 
 - 禁止使用mixins
 - CSS全部使用 `tailwindcss` 来写
-
+- 按钮组件bk-button在有icon的时候需要注意:
+  1. <bk-button icon="xx">{{xxx}}</bk-button> :不换行icon和文字间无间隙
+  2. <bk-button icon="xx">
+      {{xxx}}</bk-button>  ：换行后，icon和文字间有间隙，和magicbox展示的带icon的button的效果是一样的
 ### TODO
 
 - 代码编辑器逐步替换为 `monaco-editor/new-editor`，以前`monaco-editor/editor.vue`、`ace-editor`和`k8s-create/yaml-mode`不要再使用

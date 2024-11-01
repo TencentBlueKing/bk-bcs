@@ -23,6 +23,7 @@ import (
 	"time"
 
 	etcd3 "go.etcd.io/etcd/client/v3"
+	"gorm.io/gorm/logger"
 
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/logs"
 	"github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/tools"
@@ -1387,4 +1388,59 @@ func (g GSE) validate() error {
 			"pod id, container name must all be set")
 	}
 	return nil
+}
+
+// Gorm defines the grom related settings.
+type Gorm struct {
+	LogLevel GormLogLevel `yaml:"logLevel"`
+}
+
+// GormLogLevel is gorm log level type
+type GormLogLevel string
+
+const (
+	// GormLogSilent used for gorm log level
+	GormLogSilent GormLogLevel = "silent"
+	// GormLogError used for gorm log level
+	GormLogError GormLogLevel = "error"
+	// GormLogWarn used for gorm log level
+	GormLogWarn GormLogLevel = "warn"
+	// GormLogInfo used for gorm log level
+	GormLogInfo GormLogLevel = "info"
+)
+
+// GetLogLevel get log level for gorm.
+func (g Gorm) GetLogLevel() logger.LogLevel {
+	switch strings.ToLower(string(g.LogLevel)) {
+	case string(GormLogSilent):
+		return logger.Silent
+	case string(GormLogError):
+		return logger.Error
+	case string(GormLogWarn):
+		return logger.Warn
+	case string(GormLogInfo):
+		return logger.Info
+	default:
+		return logger.Info
+	}
+}
+
+// validate if the gorm is valid or not.
+func (g Gorm) validate() error {
+	switch strings.ToLower(string(g.LogLevel)) {
+	case string(GormLogSilent):
+	case string(GormLogError):
+	case string(GormLogWarn):
+	case string(GormLogInfo):
+	default:
+		return fmt.Errorf("unsopported log level: %s", g.LogLevel)
+	}
+	return nil
+}
+
+// trySetDefault try set the default value of gorm
+func (g *Gorm) trySetDefault() {
+	if g.LogLevel == "" {
+		g.LogLevel = GormLogInfo
+	}
 }

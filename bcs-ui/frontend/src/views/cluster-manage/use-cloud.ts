@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import {
   cloudAccounts as cloudAccountsAPI,
   cloudRegionByAccount,
-  cloudRoles,
   cloudSecurityGroups,
   cloudVPC,
   clusterConnect as clusterConnectAPI,
@@ -121,18 +120,6 @@ export default function () {
       }
     };
   };
-  // 角色列表
-  async function getCloudRolesList($cloudId: CloudID|undefined, accountID, roleType) {
-    if (!$cloudId) return { data: [] };
-    const res = await cloudRoles({
-      $cloudId,
-      accountID,
-      roleType,
-    }, { needRes: true }).catch(() => []);
-    return res as {
-      data: ICloudRole[]
-    };
-  }
   // 创建云账号
   const createCloudAccounts = async <T = IGoogleAccount>(params: ICreateAccountParams<T>) => {
     const result = await createCloudAccountsAPI({
@@ -269,6 +256,5 @@ export default function () {
     securityGroups,
     handleGetSecurityGroups,
     providerNameMap,
-    getCloudRolesList,
   };
 }

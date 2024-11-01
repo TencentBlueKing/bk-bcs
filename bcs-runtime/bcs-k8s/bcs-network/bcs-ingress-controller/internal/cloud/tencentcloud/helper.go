@@ -572,7 +572,7 @@ func (c *Clb) updateListenerRule(region, lbID, listenerID string,
 
 // add listener rule
 func (c *Clb) addListenerRule(region, lbID, listenerID string, listenerAttribute *networkextensionv1.
-	IngressListenerAttribute, rule networkextensionv1.ListenerRule) error {
+IngressListenerAttribute, rule networkextensionv1.ListenerRule) error {
 	// construct create rule request
 	req := tclb.NewCreateRuleRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)

@@ -17,7 +17,7 @@
           </bk-radio>
           <bk-radio
             value="nodePool"
-            v-if="curCluster && curCluster.autoScale && provider !== 'bluekingCloud'">
+            v-if="curCluster && curCluster.autoScale">
             {{ $t('manualNode.title.source.addFromNodePool') }}
           </bk-radio>
         </bk-radio-group>
@@ -62,9 +62,6 @@ export default defineComponent({
     const nodeSource = ref<'nodePool'|'ip'>('ip');
     const setDefaultNodeSource = () => {
       switch (provider.value) {
-        case 'bluekingCloud':
-          nodeSource.value = 'ip';// bluekingCloud 只能添加IP节点
-          break;
         case 'gcpCloud':
           nodeSource.value = 'nodePool';// gcpCloud 只能通过节点池添加节点
           break;

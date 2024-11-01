@@ -25,6 +25,7 @@ type Provider interface {
 	UploadFileByReader(ctx context.Context, r io.Reader, filePath string) error
 	ListFile(ctx context.Context, folderName string) ([]string, error)
 	ListFolders(ctx context.Context, folderName string) ([]string, error)
+	DeleteFolders(ctx context.Context, folderName string) error
 	IsExist(ctx context.Context, filePath string) (bool, error)
 	DownloadFile(ctx context.Context, filePath string) (io.ReadCloser, error)
 }

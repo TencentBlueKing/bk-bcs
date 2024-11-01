@@ -20,13 +20,12 @@ import (
 	"strconv"
 	"strings"
 
-	gocache "github.com/patrickmn/go-cache"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	gocache "github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // MonitorHelper helper func for monitor client
@@ -54,23 +53,11 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 	if !listener.IsUptimeCheckEnable() {
 		return 0, nil
 	}
-	taskName := genUptimeCheckTaskName(listener, m.bcsClusterID)
-	var cloudTask *UptimeCheckTask
-
-	taskResp, err := m.apiCli.ListUptimeCheckTask(ctx)
+	cloudTask, err := m.getCloudTask(ctx, listener)
 	if err != nil {
 		return 0, err
 	}
-	for _, task := range taskResp.Data {
-		if listener.GetUptimeCheckTaskStatus().ID != 0 && task.ID == listener.GetUptimeCheckTaskStatus().ID {
-			cloudTask = task
-			break
-		}
-		if task.Name == taskName {
-			cloudTask = task
-			break
-		}
-	}
+
 	// 1. 有task， 但目前targetGroup为空 -> 需要删除对应拨测任务
 	// 2. 有task， targetGroup有值 -> 对应更新拨测任务（判断是否要更新）
 	// 3. 没task， targetGroup没值 -> 无事发生
@@ -79,7 +66,7 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 		if listener.IsEmptyTargetGroup() {
 			blog.Info("listener '%s/%s' empty targetGroup, delete uptime check task[%d]... ", listener.GetNamespace(),
 				listener.GetName(), cloudTask.ID)
-			if err = m.apiCli.DeleteUptimeCheckTask(ctx, cloudTask.ID); err != nil {
+			if err := m.apiCli.DeleteUptimeCheckTask(ctx, cloudTask.ID); err != nil {
 				return 0, fmt.Errorf("delete uptime check task'%d' faield ,err: %v", cloudTask.ID, err)
 			}
 			return 0, nil
@@ -351,4 +338,38 @@ func genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID 
 	}
 	return fmt.Sprintf("bcs-%s-%s-%d/%s/%s", listener.Spec.LoadbalancerID, listener.Spec.Protocol,
 		port, bcsClusterID, listener.GetListenerSourceNamespace())
+}
+
+func (m *MonitorHelper) getCloudTask(ctx context.Context, listener *networkextensionv1.Listener) (*UptimeCheckTask, error) {
+	var cloudTask *UptimeCheckTask
+	taskName := genUptimeCheckTaskName(listener, m.bcsClusterID)
+	if listener.GetUptimeCheckTaskStatus().ID != 0 {
+		taskResp, err := m.apiCli.ListUptimeCheckTask(ctx, &ListUptimeCheckRequest{Id: listener.
+			GetUptimeCheckTaskStatus().ID})
+		if err != nil {
+			return nil, err
+		}
+		if len(taskResp.Data) > 1 {
+			return nil, fmt.Errorf("get uptime check task by ID[%d] more than 1, task count: %d",
+				listener.GetUptimeCheckTaskStatus().ID, len(taskResp.Data))
+		}
+		if len(taskResp.Data) == 1 {
+			cloudTask = taskResp.Data[0]
+		}
+	}
+	if cloudTask == nil {
+		taskResp, err := m.apiCli.ListUptimeCheckTask(ctx, &ListUptimeCheckRequest{Name: taskName})
+		if err != nil {
+			return nil, err
+		}
+		if len(taskResp.Data) > 1 {
+			return nil, fmt.Errorf("get uptime check task by Name[%s] more than 1, task count: %d",
+				taskName, len(taskResp.Data))
+		}
+		if len(taskResp.Data) == 1 {
+			cloudTask = taskResp.Data[0]
+		}
+	}
+
+	return cloudTask, nil
 }

@@ -70,6 +70,41 @@ const AwsNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views
 // 编辑配置
 const AwsEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/aws/edit-node-pool.vue');
 
+// k8s ca
+// 新建节点池
+const BluekingNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/k8s/node-pool.vue');
+// 扩缩容记录
+const BluekingNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/k8s/node-pool-detail.vue');
+// 编辑配置
+const BluekingEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/k8s/edit-node-pool.vue');
+
+// 添加节点路由映射对象
+const nodePoolRouterMap = {
+  gcpCloud: 'googleNodePool',
+  azureCloud: 'azureNodePool',
+  huaweiCloud: 'huaweiNodePool',
+  awsCloud: 'awsNodePool',
+  bluekingCloud: 'bluekingNodePool',
+};
+
+// 节点配置路由映射对象
+const nodePoolConfigRouterMap = {
+  gcpCloud: 'googleEditNodePool',
+  azureCloud: 'azureEditNodePool',
+  huaweiCloud: 'huaweiEditNodePool',
+  awsCloud: 'awsEditNodePool',
+  bluekingCloud: 'bluekingEditNodePool',
+};
+
+// 节点池详情路由映射对象
+const nodePoolDetailRouterMap = {
+  gcpCloud: 'googleNodePoolDetail',
+  azureCloud: 'azureNodePoolDetail',
+  huaweiCloud: 'huaweiNodePoolDetail',
+  awsCloud: 'awsNodePoolDetail',
+  bluekingCloud: 'bluekingNodePoolDetail',
+};
+
 // 集群管理
 export default [
   {
@@ -339,24 +374,8 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      let name = '';
-      // 优化,增加azureCA,huawei节点新建
-      switch (cluster?.provider) {
-        case 'gcpCloud':
-          name = 'googleNodePool';
-          break;
-        case 'azureCloud':
-          name = 'azureNodePool';
-          break;
-        case 'huaweiCloud':
-          name = 'huaweiNodePool';
-          break;
-        case 'awsCloud':
-          name = 'awsNodePool';
-          break;
-      }
-      name ? next({
-        name,
+      cluster?.provider && nodePoolRouterMap[cluster.provider] ? next({
+        name: nodePoolRouterMap[cluster.provider],
         params: { ...to.params },
         query: { ...to.query },
       }) : next();
@@ -374,24 +393,8 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      let name = '';
-      // 优化，增加azureCA,huaweiCA节点配置
-      switch (cluster?.provider) {
-        case 'gcpCloud':
-          name = 'googleEditNodePool';
-          break;
-        case 'azureCloud':
-          name = 'azureEditNodePool';
-          break;
-        case 'huaweiCloud':
-          name = 'huaweiEditNodePool';
-          break;
-        case 'awsCloud':
-          name = 'awsEditNodePool';
-          break;
-      }
-      name ? next({
-        name,
+      cluster?.provider && nodePoolConfigRouterMap[cluster.provider] ? next({
+        name: nodePoolConfigRouterMap[cluster.provider],
         params: { ...to.params },
         query: { ...to.query },
       }) : next();
@@ -409,24 +412,8 @@ export default [
     beforeEnter(to, from, next) {
       const clusterList = $store.state.cluster.clusterList as ICluster[];
       const cluster = clusterList.find(item => item.clusterID === to.params.clusterId);
-      let name = '';
-      // 优化，增加azureCA,huaweiCA节点池详情
-      switch (cluster?.provider) {
-        case 'gcpCloud':
-          name = 'googleNodePoolDetail';
-          break;
-        case 'azureCloud':
-          name = 'azureNodePoolDetail';
-          break;
-        case 'huaweiCloud':
-          name = 'huaweiNodePoolDetail';
-          break;
-        case 'awsCloud':
-          name = 'awsNodePoolDetail';
-          break;
-      }
-      name ? next({
-        name,
+      cluster?.provider && nodePoolDetailRouterMap[cluster.provider] ? next({
+        name: nodePoolDetailRouterMap[cluster.provider],
         params: { ...to.params },
         query: { ...to.query },
       }) : next();
@@ -562,6 +549,37 @@ export default [
     name: 'awsNodePoolDetail',
     props: true,
     component: AwsNodePoolDetail,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // k8s ca
+  {
+    path: 'cluster/:clusterId/k8s/nodepools',
+    name: 'bluekingNodePool',
+    props: true,
+    component: BluekingNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/k8s/nodepools/:nodeGroupID',
+    name: 'bluekingEditNodePool',
+    props: true,
+    component: BluekingEditNodePool,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  {
+    path: 'cluster/:clusterId/k8s/nodepools/:nodeGroupID/detail',
+    name: 'bluekingNodePoolDetail',
+    props: true,
+    component: BluekingNodePoolDetail,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

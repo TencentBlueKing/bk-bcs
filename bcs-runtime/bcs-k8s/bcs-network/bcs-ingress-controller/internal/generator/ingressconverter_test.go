@@ -45,7 +45,7 @@ func getExistedListeners() []networkextensionv1.Listener {
 	return []networkextensionv1.Listener{
 		{
 			ObjectMeta: k8smetav1.ObjectMeta{
-				Name:      GetListenerName("lb-1", 8000),
+				Name:      common.GetListenerName("lb-1", 8000),
 				Namespace: "ns1",
 			},
 			Spec: networkextensionv1.ListenerSpec{
@@ -57,7 +57,7 @@ func getExistedListeners() []networkextensionv1.Listener {
 		},
 		{
 			ObjectMeta: k8smetav1.ObjectMeta{
-				Name:      GetListenerName("lb-1", 8001),
+				Name:      common.GetListenerName("lb-1", 8001),
 				Namespace: "ns1",
 			},
 			Spec: networkextensionv1.ListenerSpec{
@@ -321,10 +321,10 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb-1", 8000): {
+				common.GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb-1", 8000),
+						Name:      common.GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
@@ -392,10 +392,10 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb-1", 8000): {
+				common.GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb-1", 8000),
+						Name:      common.GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
@@ -468,10 +468,10 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb-1", 8000): {
+				common.GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb-1", 8000),
+						Name:      common.GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,
@@ -563,10 +563,10 @@ func TestIngressConvert(t *testing.T) {
 				},
 			},
 			generatedListeners: map[string]networkextensionv1.Listener{
-				GetListenerName("lb-1", 8000): {
+				common.GetListenerName("lb-1", 8000): {
 					TypeMeta: k8smetav1.TypeMeta{},
 					ObjectMeta: k8smetav1.ObjectMeta{
-						Name:      GetListenerName("lb-1", 8000),
+						Name:      common.GetListenerName("lb-1", 8000),
 						Namespace: "test",
 						Labels: map[string]string{
 							"ingress1": networkextensionv1.LabelValueForIngressName,

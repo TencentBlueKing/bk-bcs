@@ -1,39 +1,19 @@
 <template>
   <bcs-resize-layout
-    :collapsible="true"
+    collapsible
     v-bkloading="{ isLoading }"
     disabled
     :border="false"
-    :initial-divide="formToJson && formToJson.length ? '230px' : '0px'"
-    @collapse-change="handleCollapseChange"
-    class="flex h-full">
+    ref="layoutRef"
+    initial-divide="230px"
+    class="flex h-full"
+    @collapse-change="handleCollapseChange">
     <div slot="aside" class="bg-[#fff] h-full overflow-y-auto overflow-x-hidden">
-      <div
-        :class="[
-          'h-full py-[0 8px] border-r-[1px] border-solid bg-[#fff] w-[230px] pt-[12px]'
-        ]">
-        <div
-          v-for="item, index in formToJson"
-          :key="index"
-          :class="[
-            'flex items-center cursor-pointer leading-[20px]',
-            'h-[32px] text-[12px] px-[12px]',
-            activeFormIndex === index ? 'bg-[#e1ecff] text-[#3a84ff] border-r-2 border-[#3a84ff]' : ''
-          ]"
-          @click="handleAnchor(index)">
-          <span
-            :class="[
-              'rounded-full w-2.5 h-2.5 bg-[red] border-2 border-white flex-shrink-0',
-              validArray[index] ? 'visible' : 'invisible'
-            ]"></span>
-          <span
-            :class="[
-              'rounded-full w-4 h-4 leading-[1rem] text-center text-[#fff] mx-2 flex-shrink-0',
-              activeFormIndex === index ? 'bg-[#3a84ff] text-[#fff]' : 'bg-[#979ba5]'
-            ]">{{ index + 1 }}</span>
-          <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item || $t('templateFile.label.untitled') }}</span>
-        </div>
-      </div>
+      <left-nav
+        :list="formToJson"
+        :valid-array="validArray"
+        :active-index="activeFormIndex"
+        @cellClick="({ index }) => handleAnchor(index)" />
     </div>
     <div slot="main" class="h-full">
       <div
@@ -166,7 +146,9 @@ import { computed, nextTick, onBeforeMount, ref, set, watch } from 'vue';
 
 import createForm from '@blueking/bkui-form/dist/bkui-form-umd';
 
+import BcsVarInput from './bcs-var-input.vue';
 import BcsVarDatasourceInput from './bcs-variable-datasource-input.vue';
+import leftNav from './left-nav.vue';
 import { updateVarList } from './use-store';
 
 import '@blueking/bkui-form/dist/bkui-form.css';
@@ -187,6 +169,10 @@ const props = defineProps({
   value: {
     type: String,
     default: '',
+  },
+  isAdd: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -232,6 +218,17 @@ const formToJson = computed(() => schemaFormData.value.reduce<Array<string>>((pr
   pre.push(name);
   return pre;
 }, []));
+
+const layoutRef = ref();
+const watchOnce = watch(formToJson, () => {
+  // 空数组或第一项为空字符串，返回
+  if (!formToJson.value.length || !formToJson.value[0]) return;
+  // 只有一项数据时折叠起来
+  if (formToJson.value && formToJson.value.length < 2) {
+    layoutRef.value?.setCollapse(true);
+  }
+  watchOnce();
+});
 
 // 资源名称唯一校验
 function handleValidatorName(index: number) {
@@ -463,7 +460,7 @@ const handleCollapseChange = (value: boolean) => {
 
 watch(() => props.value, async () => {
   if (!props.value && props.isEdit) return;// 编辑态时不初始化表单
-  if (!props.value) {
+  if (props.isAdd) {
     // 非编辑态时默认初始化一条数据
     schemaFormData.value = [cloneDeep(initFormData)];
     return;

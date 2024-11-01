@@ -333,7 +333,7 @@ export default defineComponent({
     ]);
     const user = computed(() => $store.state.user);
     const nodePoolConfig = ref({
-      $id: `id_${Date.now()}`,
+      $id: defaultValues.value.$id || `id_${Date.now()}`,
       status: 'CREATING',
       creator: user.value.username, // 创建人
       nodeGroupID: defaultValues.value.nodeGroupID, // 编辑时
@@ -423,6 +423,7 @@ export default defineComponent({
     const nodeRoles = ref<any[]>([]);
     const nodeRolesLoading = ref(false);
     const handleGetNodeRoles = async () => {
+      if (!props.cloudID || !props.cloudAccountID || !$store.state.user.username) return;
       nodeRolesLoading.value = true;
       nodeRoles.value = await cloudNoderoles({
         $cloudID: props.cloudID,

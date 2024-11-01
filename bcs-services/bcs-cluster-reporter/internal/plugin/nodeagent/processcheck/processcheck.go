@@ -1,0 +1,362 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Package processcheck xxx
+package processcheck
+
+import (
+	"fmt"
+	"os"
+	"path"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metric_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/types/process"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
+)
+
+var (
+	processStatusLabels = []string{"name", "status", "node"}
+	processStatus       = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "process_status",
+		Help: "process_status",
+	}, processStatusLabels)
+	processCPU = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "agent_process_cpu_seconds_total",
+		Help: "agent_process_cpu_seconds_total, 1 means OK",
+	}, []string{"name", "node"})
+	abnormalProcessStatusMap = make(map[int32]process.ProcessStatus)
+
+	processCPUCheckFlag    = false
+	processCPUCheckMap     = make(map[int32]int32)
+	processCPUCheckMapLock sync.Mutex
+)
+
+func init() {
+	metric_manager.Register(processStatus)
+	metric_manager.Register(processCPU)
+}
+
+type Plugin struct {
+	opt   *Options
+	ready bool
+
+	// detail用来记录详细的检查信息到configmap，提供给cluster-reporter做进一步分析
+	Detail Detail
+	plugin_manager.NodePlugin
+}
+
+type Detail struct {
+	ProcessInfo   []process.ProcessInfo
+	ProcessStatus []process.ProcessStatus
+}
+
+type ProcessCheckResult struct {
+	Node   string `yaml:"node"`
+	Status string `yaml:"status"`
+	Name   string `yaml:"name"`
+}
+
+// Setup xxx
+func (p *Plugin) Setup(configFilePath string, runMode string) error {
+	p.opt = &Options{}
+
+	err := util.ReadorInitConf(configFilePath, p.opt, initContent)
+	if err != nil {
+		return err
+	}
+
+	if err = p.opt.Validate(); err != nil {
+		return err
+	}
+
+	interval := p.opt.Interval
+	if interval == 0 {
+		interval = 60
+	}
+
+	p.Detail = Detail{}
+
+	// run as daemon
+	if runMode == plugin_manager.RunModeDaemon {
+		go func() {
+			for {
+				if p.CheckLock.TryLock() {
+					p.CheckLock.Unlock()
+					go p.Check()
+				} else {
+					klog.Infof("the former %s didn't over, skip in this loop", p.Name())
+				}
+				select {
+				case result := <-p.StopChan:
+					klog.Infof("stop plugin %s by signal %d", p.Name(), result)
+					return
+				case <-time.After(time.Duration(interval) * time.Second):
+					continue
+				}
+			}
+		}()
+	} else if runMode == plugin_manager.RunModeOnce {
+		p.Check()
+	}
+
+	return nil
+}
+
+// Stop xxx
+func (p *Plugin) Stop() error {
+	p.StopChan <- 1
+	processCPUCheckFlag = false
+	klog.Infof("plugin %s stopped", p.Name())
+	return nil
+}
+
+// Name xxx
+func (p *Plugin) Name() string {
+	return pluginName
+}
+
+// Check xxx
+func (p *Plugin) Check() {
+	result := make([]plugin_manager.CheckItem, 0, 0)
+	p.CheckLock.Lock()
+	klog.Infof("start %s", p.Name())
+	defer func() {
+		klog.Infof("end %s", p.Name())
+		p.CheckLock.Unlock()
+	}()
+
+	nodeconfig := plugin_manager.Pm.GetConfig().NodeConfig
+	nodeName := nodeconfig.NodeName
+
+	processInfoList := make([]process.ProcessInfo, 0, 0)
+	processGaugeVecSetList := make([]*metric_manager.GaugeVecSet, 0, 0)
+
+	processStatusList, err := process.GetProcessStatus()
+	if err != nil {
+		klog.Errorf("Get process status failed: %s", err.Error())
+	}
+
+	// 检测所有进程状态
+	newAbnormalProcessStatusMap := make(map[int32]process.ProcessStatus)
+	abnormalProcessStatusList := make([]process.ProcessStatus, 0, 0)
+	processCPUGVSList := make([]*metric_manager.GaugeVecSet, 0, 0)
+	for _, pstatus := range processStatusList {
+		if pstatus.Status == "D" || pstatus.Status == "Z" {
+			klog.Infof("status of process %s %s is %s", pstatus.Pid, pstatus.Name, pstatus.Status)
+			// 避免如正常的等待IO被计入D状态进程
+			newAbnormalProcessStatusMap[pstatus.Pid] = pstatus
+			if abnormalProcessStatus, ok := abnormalProcessStatusMap[pstatus.Pid]; ok && pstatus.Status == "D" {
+				if abnormalProcessStatus.Pid == pstatus.Pid && abnormalProcessStatus.CreateTime == pstatus.CreateTime && abnormalProcessStatus.CpuTime == pstatus.CpuTime {
+					// cputime didn't increase, means process stayed in D status in this interval
+					processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+						Labels: []string{pstatus.Name, pstatus.Status, nodeName}, Value: float64(1),
+					})
+
+					result = append(result, plugin_manager.CheckItem{
+						ItemName:   pluginName,
+						ItemTarget: nodeName,
+						Normal:     false,
+						Detail:     fmt.Sprintf("%s process %s status is %s", nodeName, pstatus.Name, pstatus.Status),
+						Level:      plugin_manager.WARNLevel,
+						Status:     dStatus,
+					})
+					abnormalProcessStatusList = append(abnormalProcessStatusList, pstatus)
+				}
+			} else if pstatus.Status == "Z" {
+				processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+					Labels: []string{pstatus.Name, pstatus.Status, nodeName}, Value: float64(1),
+				})
+				result = append(result, plugin_manager.CheckItem{
+					ItemName:   pluginName,
+					ItemTarget: nodeName,
+					Normal:     false,
+					Detail:     fmt.Sprintf("%s process %s status is %s", nodeName, pstatus.Name, pstatus.Status),
+					Level:      plugin_manager.WARNLevel,
+					Status:     zStatus,
+				})
+				abnormalProcessStatusList = append(abnormalProcessStatusList, pstatus)
+			}
+		}
+	}
+
+	RecordProcessCpu([]string{"kswapd"}, processStatusList)
+
+	if processCPUCheckFlag {
+		go func() {
+			for {
+				processCPUCheckMapLock.Lock()
+				defer func() {
+					processCPUCheckMapLock.Unlock()
+				}()
+				if !processCPUCheckFlag {
+					return
+				}
+
+				for _, pid := range processCPUCheckMap {
+					pStatus, err := process.GetProcessStatusByPID(pid)
+					if err != nil {
+						klog.Errorf(err.Error())
+						continue
+					}
+
+					processCPUGVSList = append(processCPUGVSList, &metric_manager.GaugeVecSet{
+						Labels: []string{pStatus.Name, nodeName},
+						Value:  pStatus.CpuTime,
+					})
+				}
+
+				metric_manager.RefreshMetric(processCPU, processCPUGVSList)
+				time.Sleep(time.Second * 30)
+
+			}
+		}()
+	}
+
+	abnormalProcessStatusMap = newAbnormalProcessStatusMap
+
+	checkItem := plugin_manager.CheckItem{
+		ItemName: pluginName,
+		Normal:   true,
+		Detail:   "",
+		Level:    plugin_manager.WARNLevel,
+		Status:   NormalStatus,
+	}
+	// status中只记录异常的进程状态
+	p.Detail.ProcessStatus = abnormalProcessStatusList
+
+	// 检测opt中指定的进程，记录进程详细信息
+	for _, pcc := range p.opt.Processes {
+		checkItem.ItemTarget = nodeName
+		processInfo, processErr := process.GetProcessInfo(pcc.Name, 0)
+		if processErr != nil {
+			klog.Errorf("Get process %s info failed: %s", pcc.Name, processErr.Error())
+			checkItem.Detail = fmt.Sprintf("Get process %s info failed: %s", pcc.Name, processErr.Error())
+			checkItem.Normal = false
+			checkItem.Status = processOtherErrorStatus
+
+			result = append(result, checkItem)
+
+			processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+				Labels: []string{pcc.Name, processOtherErrorStatus, nodeName}, Value: float64(1),
+			})
+
+			continue
+		}
+
+		if pcc.ConfigFile != "" {
+			configFile, configFileErr := getConfigFile(pcc)
+			if configFileErr != nil {
+				klog.Errorf(configFileErr.Error())
+
+				checkItem.Normal = false
+				checkItem.Detail = fmt.Sprintf("Get process %s info failed: %s", pcc.Name, configFileErr.Error())
+				checkItem.ItemTarget = nodeName
+				checkItem.Status = processOtherErrorStatus
+
+				result = append(result, checkItem)
+
+				processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+					Labels: []string{pcc.Name, processOtherErrorStatus, nodeName}, Value: float64(1),
+				})
+			} else if pcc.ConfigFile != "" {
+				processInfo.ConfigFiles[pcc.ConfigFile] = configFile
+			}
+		}
+
+		if processInfo != nil {
+			processInfoList = append(processInfoList, *processInfo)
+		}
+	}
+
+	if len(processGaugeVecSetList) == 0 {
+		checkItem.ItemTarget = nodeName
+		processGaugeVecSetList = append(processGaugeVecSetList, &metric_manager.GaugeVecSet{
+			Labels: []string{"", NormalStatus, nodeName}, Value: float64(1),
+		})
+
+		result = append(result, checkItem)
+	}
+
+	// info中记录所有指定的进程信息
+	p.Detail.ProcessInfo = processInfoList
+
+	p.Result = plugin_manager.CheckResult{
+		Items: result,
+	}
+
+	if !p.ready {
+		p.ready = true
+	}
+
+	// return result
+	metric_manager.RefreshMetric(processStatus, processGaugeVecSetList)
+}
+
+// RecordProcessCpu xxx
+func RecordProcessCpu(processNameList []string, processStatusList []process.ProcessStatus) {
+	for _, pstatus := range processStatusList {
+		for _, name := range processNameList {
+			if strings.Contains(pstatus.Name, name) {
+				if _, ok := processCPUCheckMap[pstatus.Pid]; !ok {
+					processCPUCheckMapLock.Lock()
+					processCPUCheckMap[pstatus.Pid] = pstatus.Pid
+					processCPUCheckMapLock.Unlock()
+				}
+			}
+		}
+	}
+}
+
+// GetConfigfile xxx
+func getConfigFile(p ProcessCheckConfig) (string, error) {
+	if p.ConfigFile != "" {
+		data, err := os.ReadFile(path.Join(os.Getenv("HOST_PATH"), p.ConfigFile))
+		if err != nil {
+			return "", err
+		}
+		return string(data), nil
+	} else {
+		return "", nil
+	}
+}
+
+// Ready xxx
+func (p *Plugin) Ready(string) bool {
+	return p.ready
+}
+
+// GetResult xxx
+func (p *Plugin) GetResult(string) plugin_manager.CheckResult {
+	return p.Result
+}
+
+// GetDetail xxx
+func (p *Plugin) GetDetail() interface{} {
+	return p.Detail
+}
+
+// Execute xxx
+func (p *Plugin) Execute() {
+	p.Check()
+}
+
+// GetString xxx
+func (p *Plugin) GetString(key string) string {
+	return StringMap[key]
+}

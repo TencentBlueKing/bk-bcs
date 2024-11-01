@@ -27,14 +27,19 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/eventer"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"os"
 )
 
 // Clb client to operate clb instance
 type Clb struct {
 	sdkWrapper *SdkWrapper
 	apiWrapper *APIWrapper
+
+	listenerNameValidateMode string // if in strict Mode, create ListenerName with clusterID
+	bcsClusterID             string
 }
 
 // NewClb create clb client
@@ -48,8 +53,10 @@ func NewClb() (*Clb, error) {
 		return nil, err
 	}
 	return &Clb{
-		sdkWrapper: sdkWrapper,
-		apiWrapper: apiWrapper,
+		sdkWrapper:               sdkWrapper,
+		apiWrapper:               apiWrapper,
+		listenerNameValidateMode: os.Getenv(constant.EnvNameListenerNameValidateMode),
+		bcsClusterID:             os.Getenv(constant.EnvNameBkBCSClusterID),
 	}, nil
 }
 
@@ -64,8 +71,10 @@ func NewClbWithSecretIDKey(id, key string) (*Clb, error) {
 		return nil, err
 	}
 	return &Clb{
-		sdkWrapper: sdkWrapper,
-		apiWrapper: apiWrapper,
+		sdkWrapper:               sdkWrapper,
+		apiWrapper:               apiWrapper,
+		listenerNameValidateMode: os.Getenv(constant.EnvNameListenerNameValidateMode),
+		bcsClusterID:             os.Getenv(constant.EnvNameBkBCSClusterID),
 	}, nil
 }
 
@@ -88,8 +97,10 @@ func NewClbWithSecret(data map[string][]byte, _ client.Client, _ eventer.WatchEv
 		return nil, err
 	}
 	return &Clb{
-		sdkWrapper: sdkWrapper,
-		apiWrapper: apiWrapper,
+		sdkWrapper:               sdkWrapper,
+		apiWrapper:               apiWrapper,
+		listenerNameValidateMode: os.Getenv(constant.EnvNameListenerNameValidateMode),
+		bcsClusterID:             os.Getenv(constant.EnvNameBkBCSClusterID),
 	}, nil
 }
 

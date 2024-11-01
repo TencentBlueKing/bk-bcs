@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package bcs xxx
 package bcs
 
 import (
@@ -36,7 +37,6 @@ func NewClusterManager(token, apiserver, apiGatewayUrl, apiGatewayToken string) 
 }
 
 // BcsTransport client
-// nolint
 type BcsTransport struct {
 	token string
 }
@@ -51,8 +51,7 @@ func (t *BcsTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			// NOCC:gas/tls(设计如此)
-			InsecureSkipVerify: true, // nolint 设置为 true 来禁用证书验证
+			InsecureSkipVerify: true, // 设置为 true 来禁用证书验证
 		},
 	}
 

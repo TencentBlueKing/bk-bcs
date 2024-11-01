@@ -14,6 +14,7 @@
       :name="`${item.securityGroupName}(${item.securityGroupID})`">
     </bk-option>
     <SelectExtension
+      v-if="showExtension"
       slot="extension"
       :link-text="$t('tke.link.securityGroup')"
       link="https://console.cloud.tencent.com/vpc/security-group"
@@ -61,6 +62,14 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  resourceGroupName: {
+    type: String,
+    default: '',
+  },
+  showExtension: {
+    type: Boolean,
+    default: true,
+  },
 });
 
 const emits = defineEmits(['input', 'change']);
@@ -70,11 +79,14 @@ const securityGroupLoading = ref(false);
 const securityGroups = ref<Array<ISecurityGroup>>($store.state.cloudMetadata.securityGroupsList);
 const handleGetSecurityGroups = async () => {
   if (!props.region || !props.cloudAccountID || !props.cloudID) return;
+  // Azure云组要resourceGroupName
+  if (props.cloudID === 'azureCloud' && !props.resourceGroupName) return;
   securityGroupLoading.value = true;
   securityGroups.value = await cloudSecurityGroups({
     $cloudId: props.cloudID,
     accountID: props.cloudAccountID,
     region: props.region,
+    ...(props.cloudID === 'azureCloud' ? { resourceGroupName: props.resourceGroupName } : {}),
   }).catch(() => []);
   $store.commit('cloudMetadata/updateSecurityGroupsList', securityGroups.value);
   securityGroupLoading.value = false;

@@ -1,125 +1,172 @@
 <template>
-  <bk-form :model="nodeConfig" :rules="nodeConfigRules" ref="formRef">
-    <bk-form-item :label="$t('cluster.create.label.initNodeTemplate')">
-      <TemplateSelector
-        class="max-w-[600px]"
-        v-model="nodeConfig.nodeTemplateID"
-        :provider="cloudID"
-        :show-preview="false" />
-    </bk-form-item>
-    <bk-form-item
-      key="master"
-      class="tips-offset"
-      :label="$t('cluster.create.label.hostResource')"
-      property="nodes"
-      error-display-type="normal"
-      required
-      ref="masterItemRef">
-      <bk-radio-group
-        class="flex items-center mb-[6px] h-[32px] max-w-[600px]"
-        v-model="nodeConfig.autoGenerateMasterNodes"
-        v-bk-tooltips="{
-          content: $t('tke.tips.needSameResourceType'),
-          disabled: !disableChooseResourceType,
-        }">
-        <bk-radio :disabled="disableChooseResourceType" :value="true">
-          {{ $t('cluster.create.label.applyResource') }}
-        </bk-radio>
-        <bk-radio :disabled="disableChooseResourceType" :value="false">
-          {{ $t('cluster.create.label.useExitHost') }}
-        </bk-radio>
-      </bk-radio-group>
-      <IpSelector
-        :region="region"
-        :cloud-id="provider"
-        :disabled-ip-list="disabledIpList"
-        :region-list="regionList"
-        :vpc="{ vpcID: vpcID }"
-        :account-i-d="cloudAccountID"
-        :available-zone-list="subnetZoneList"
-        v-model="nodeConfig.nodes"
-        class="max-w-[80%]"
-        v-if="!nodeConfig.autoGenerateMasterNodes"
-        @change="handleValidateNode" />
-    </bk-form-item>
-    <!-- 申请主机资源 -->
-    <template v-if="nodeConfig.autoGenerateMasterNodes">
-      <bcs-divider></bcs-divider>
-      <ApplyHostResource
-        class="mt-[8px] mb-[20px]"
-        :show-recommended-config="false"
-        :region="region"
-        :cloud-account-i-d="cloudAccountID"
-        :cloud-i-d="cloudID"
-        :vpc-i-d="vpcID"
-        :security-groups="securityGroups"
-        :instances="instanceConfigList"
-        :disable-data-disk="false"
-        :disable-internet-access="false"
-        :max-nodes="100"
-        node-role="WORKER"
-        v-bkloading="{ isLoading: instanceLoading }"
-        ref="applyHostResourceRef"
-        @instance-list-change="handleInstanceListChange"
-        @common-config-change="handleCommonConfigChange"
-        @delete-instance="handleDeleteInstance" />
-    </template>
-    <bk-form-item
-      :label="$t('tke.label.nodeModule.text')"
-      :desc="$t('tke.label.nodeModule.desc')"
-      property="clusterBasicSettings.module.workerModuleID"
-      error-display-type="normal"
-      required>
-      <TopoSelector
-        :placeholder="$t('generic.placeholder.select')"
-        v-model="nodeConfig.clusterBasicSettings.module.workerModuleID"
-        class="max-w-[600px]" />
-    </bk-form-item>
-    <!-- 用户名和密码 -->
-    <bk-form-item
-      :label="$t('tke.label.loginType.text')"
-      :desc="$t('tke.label.loginType.desc')"
-      property="workerLogin"
-      error-display-type="normal"
-      required
-      ref="loginTypeRef">
-      <LoginType
-        :region="region"
-        :cloud-account-i-d="cloudAccountID"
-        :cloud-i-d="cloudID"
-        :confirm-pass="confirmPassword"
-        :value="nodeConfig.nodeSettings.workerLogin"
-        :type="loginType"
-        @pass-blur="validateLogin('custom')"
-        @confirm-pass-blur="validateLogin('')"
-        @key-secret-blur="validateLogin('')"
-        @change="handleLoginValueChange"
-        @type-change="(v) => loginType = v"
-        @pass-change="handleConfirmPasswordChange" />
-    </bk-form-item>
-    <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
-      <bk-button class="min-w-[88px]" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
-      <bk-button
-        theme="primary"
-        class="ml10 min-w-[88px]"
-        @click="handleConfirm">{{ $t('generic.button.confirm') }}</bk-button>
-      <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
-    </div>
-  </bk-form>
+  <div>
+    <bk-form :model="nodeConfig" :rules="nodeConfigRules" ref="formRef">
+      <bk-form-item
+        :label="$t('cluster.create.aws.label.defaultNodePool')"
+        required
+        error-display-type="normal"
+        property="nodePoolGroups"
+      >
+        <!-- <bcs-button
+          theme="primary"
+          outline
+          icon="plus"
+          @click="handleAddNode">
+          {{$t('cluster.create.aws.nodePool')}}
+        </bcs-button>
+        <bcs-button
+          theme="primary"
+          outline
+          icon="delete"
+          @click="handleDeleteNode">
+          {{$t('generic.button.delete')}}
+        </bcs-button> -->
+        <bcs-table
+          class="w-[650px]"
+          height="200px"
+          :ref="el => tableRef = el"
+          v-bkloading="{ isLoading: loading }"
+          :row-class-name="getNodePoolRowClassName"
+          :data="nodePoolTableData"
+          @selection-change="handleSelectionChange">
+          <!-- <bcs-table-column type="selection" width="60" :selectable="handleSelectable">
+            <template #default="{ row }">
+              <bcs-checkbox
+                v-bk-tooltips="{
+                  content: $t('cluster.create.aws.tips.subnetEmpty'),
+                  disabled: handleSelectable(row)
+                }"
+                :checked="!!selectionList.find(item => item === row)"
+                :disabled="!handleSelectable(row)"
+                @change="handleRowSelectionChange(row)">
+              </bcs-checkbox>
+            </template>
+          </bcs-table-column> -->
+          <bcs-table-column
+            :label="$t('cluster.ca.nodePool.label.name')"
+            prop="name"
+            width="150">
+          </bcs-table-column>
+          <bcs-table-column
+            :label="$t('cluster.ca.nodePool.label.nodeQuota')"
+            prop="autoScaling.maxSize"
+            width="100">
+          </bcs-table-column>
+          <bcs-table-column
+            :label="$t('cluster.ca.nodePool.label.nodeCounts')"
+            prop="autoScaling.desiredSize"
+            width="100">
+          </bcs-table-column>
+          <bcs-table-column
+            :label="$t('generic.ipSelector.label.serverModel')"
+            prop="nodeOS">
+          </bcs-table-column>
+          <bcs-table-column
+            :label="$t('generic.label.action')"
+            prop="action">
+            <template #default="{ $index, row }">
+              <bcs-button text @click="handleEdit(row, $index)">{{ $t('generic.button.edit') }}</bcs-button>
+              <!-- <bcs-button text class="ml-[10px]" @click="handleDelete($index)">
+                {{ $t('generic.button.delete') }}
+              </bcs-button> -->
+            </template>
+          </bcs-table-column>
+        </bcs-table>
+      </bk-form-item>
+      <!-- 用户名和密码 -->
+      <bk-form-item
+        :label="$t('tke.label.loginType.text')"
+        :desc="$t('tke.label.loginType.desc')"
+        required
+        error-display-type="normal">
+        <LoginTypeWithName
+          class="max-w-[650px]"
+          :ref="el => loginTypeRef = el"
+          :value="nodeConfig.nodeSettings.workerLogin"
+          @change="handleGetLoginMessage" />
+      </bk-form-item>
+      <bk-form-item
+        :label="$t('cluster.create.aws.securityGroup.text')"
+        :desc="{
+          allowHTML: true,
+          content: '#secPlugin1',
+        }"
+        error-display-type="normal"
+        required
+        property="networkSettings.securityGroupIDs">
+        <SecurityGroups
+          class="max-w-[650px]"
+          multiple
+          :region="region"
+          :show-extension="false"
+          :cloud-account-i-d="cloudAccountID"
+          :cloud-i-d="cloudID"
+          :resource-group-name="resourceGroupName"
+          v-model="nodeConfig.nodeSettings.securityGroupIDs" />
+        <div id="secPlugin1">
+          <div>
+            <i18n path="cluster.create.azure.securityGroup.vpcLink">
+              <span
+                class="text-[12px] text-[#699DF4] cursor-pointer"
+                @click="openLink('https://portal.azure.com/#browse/Microsoft.Network%2FNetworkSecurityGroups')">
+                {{ $t('cluster.create.azure.securityGroup.vpcMaster') }}
+              </span>
+            </i18n>
+          </div>
+        </div>
+      </bk-form-item>
+      <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
+        <bk-button class="min-w-[88px]" @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
+        <bk-button
+          theme="primary"
+          class="ml10 min-w-[88px]"
+          @click="handleConfirm">{{ $t('generic.button.confirm') }}</bk-button>
+        <bk-button class="ml10" @click="handleCancel">{{ $t('generic.button.cancel') }}</bk-button>
+      </div>
+    </bk-form>
+    <bcs-sideslider
+      :is-show.sync="showNodeConfig"
+      :quick-close="false"
+      :title="model === 'add' ? $t('cluster.create.aws.nodePool') : $t('cluster.create.aws.editNodePool')"
+      :width="740">
+      <template #content>
+        <keep-alive>
+          <component
+            :is="stepComMap[curStep]"
+            :save-loading="saveLoading"
+            :region="region"
+            :cloud-account-i-d="cloudAccountID"
+            :cloud-i-d="cloudID"
+            :default-values="nodeDefaultValues"
+            :vpc-i-d="vpcID"
+            :bk-cloud-i-d="bkCloudID"
+            :resource-group-name="resourceGroupName"
+            v-if="!isLoading"
+            @next="handleNextStep"
+            @pre="handlePreStep"
+            @add="handleAddnode"
+            @close="closeSlider"
+          />
+        </keep-alive>
+      </template>
+    </bcs-sideslider>
+  </div>
 </template>
 <script setup lang="ts">
-import { computed, inject, PropType, ref, watch } from 'vue';
+import { cloneDeep } from 'lodash';
+import { computed, onMounted, PropType, ref, watch } from 'vue';
 
-import ApplyHostResource from './apply-host-resource.vue';
-import { ClusterDataInjectKey, IHostNode, IInstanceItem, ISecurityGroup } from '../../../types/types';
+import LoginTypeWithName from '../../components/login-type-with-name.vue';
 
-import { cloudSecurityGroups } from '@/api/modules/cluster-manager';
+import NodePoolConfig from './node-pool-config.vue';
+import NodePoolInfo from './node-pool-info.vue';
+
+import { recommendNodeGroupConf } from '@/api/modules/cluster-manager';
+import { mergeDeep } from '@/common/util';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
-import $store from '@/store';
-import IpSelector from '@/views/cluster-manage/add/components/ip-selector.vue';
-import LoginType from '@/views/cluster-manage/add/components/login-type.vue';
-import TopoSelector from '@/views/cluster-manage/autoscaler/components/topo-select-tree.vue';
-import TemplateSelector from '@/views/cluster-manage/components/template-selector.vue';
+import $store from '@/store/index';
+import SecurityGroups from '@/views/cluster-manage/add/components/security-groups.vue';
 
 const props = defineProps({
   region: {
@@ -162,246 +209,298 @@ const props = defineProps({
       },
     }),
   },
-  autoGenerateMasterNodes: {
-    type: Boolean,
-    default: false,
-  },
   manageType: {
     type: String as PropType<'MANAGED_CLUSTER'|'INDEPENDENT_CLUSTER'>,
     default: 'MANAGED_CLUSTER',
   },
+  bkCloudID: {
+    type: Number,
+    default: 9,
+  },
+  resourceGroupName: {
+    type: String,
+    default: '',
+  },
 });
 
 const emits = defineEmits(['next', 'cancel', 'pre', 'confirm', 'instances-change']);
-
-const regionList = computed(() => $store.state.cloudMetadata.regionList);
-
-const disableChooseResourceType = computed(() => props.manageType === 'INDEPENDENT_CLUSTER');
-
-const clusterData = inject(ClusterDataInjectKey);
-const subnetZoneList = computed(() => {
-  if (!clusterData?.value) return [];
-
-  return clusterData.value?.clusterAdvanceSettings?.networkType === 'VPC-CNI'
-    ? clusterData.value?.networkSettings?.subnetSource?.new?.map(item => item.zone) || []
-    : [];
-});
-
-const disabledIpList = computed(() => props.master.map(ip => ({
-  ip,
-  tips: $i18n.t('cluster.create.validate.ipExitInMaster'),
-})));
 // node配置
-const nodeConfig = ref({
-  autoGenerateMasterNodes: false,
-  nodes: [],
-  nodeTemplateID: '',
-  clusterBasicSettings: {
-    module: {
-      workerModuleID: '',
-    },
-  },
+const nodeConfig = ref<any>({
+  nodeGroups: [],
   nodeSettings: {
-    workerLogin: props.masterLogin,
+    workerLogin: {
+      initLoginUsername: 'azureuser',
+      initLoginPassword: '',
+      confirmPassword: '',
+      keyPair: {
+        keySecret: '',
+        keyPublic: '',
+      },
+    },
+    securityGroupIDs: [],
   },
 });
-watch(
-  [
-    () => props.autoGenerateMasterNodes,
-  ],
-  () => {
-    nodeConfig.value.autoGenerateMasterNodes = props.autoGenerateMasterNodes;
-  },
-  { immediate: true },
-);
 
-const watchOnce = watch(() => props.masterLogin, () => {
-  // 默认跟master密码保持一致
-  nodeConfig.value.nodeSettings.workerLogin = JSON.parse(JSON.stringify(props.masterLogin));
-  confirmPassword.value = nodeConfig.value.nodeSettings.workerLogin.initLoginPassword;
-  const { keyID, keySecret } = nodeConfig.value.nodeSettings.workerLogin?.keyPair || {};
-  if (keyID && keySecret) {
-    loginType.value = 'ssh';
-  } else {
-    loginType.value = 'password';
-  }
-  watchOnce();
-});
-
-// 登录方式
-const loginType = ref<'password'|'ssh'>('password');
-const confirmPassword = ref('');
-const validateLogin = (trigger = '') => {
-  formRef.value?.$refs?.loginTypeRef?.validate(trigger);
-};
-const handleLoginValueChange = (value) => {
-  nodeConfig.value.nodeSettings.workerLogin = value;
-};
-const handleConfirmPasswordChange = (v) => {
-  confirmPassword.value = v;
-};
-
-// watch([
-//   () => nodeConfig.value.nodeSettings.workerLogin.initLoginPassword,
-//   () => confirmPassword.value,
-//   () => nodeConfig.value.nodeSettings.workerLogin.keyPair.keyID,
-//   () => nodeConfig.value.nodeSettings.workerLogin.keyPair.keySecret,
-// ], () => {
-//   formRef.value?.$refs?.loginTypeRef?.validate();
-// });
 // 动态 i18n 问题，这里使用computed
 const nodeConfigRules = computed(() => ({
-  nodes: [{
-    message: $i18n.t('generic.validate.required'),
-    trigger: 'custom',
-    validator: () => {
-      if (nodeConfig.value.autoGenerateMasterNodes) {
-        return true;
-      }
-      return !!nodeConfig.value.nodes.length;
-    },
-  }],
-  'clusterBasicSettings.module.workerModuleID': [
-    {
-      required: true,
-      message: $i18n.t('generic.validate.required'),
-      trigger: 'custom',
-    },
-  ],
-  workerLogin: [
+  'networkSettings.securityGroupIDs': [
     {
       trigger: 'custom',
       message: $i18n.t('generic.validate.required'),
       validator() {
-        if (loginType.value === 'password') {
-          return !!nodeConfig.value.nodeSettings.workerLogin.initLoginPassword;
-        }
-        return !!nodeConfig.value.nodeSettings.workerLogin.keyPair.keyID
-         && !!nodeConfig.value.nodeSettings.workerLogin.keyPair.keySecret;
-      },
-    },
-    {
-      trigger: 'custom',
-      message: $i18n.t('cluster.ca.nodePool.create.validate.password'),
-      validator() {
-        if (loginType.value === 'password') {
-          const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{8,30}$/;
-          return regex.test(nodeConfig.value.nodeSettings.workerLogin.initLoginPassword);
-        }
-        return true;
-      },
-    },
-    {
-      trigger: 'custom',
-      message: $i18n.t('tke.validate.passwordNotSame'),
-      validator() {
-        if (loginType.value === 'password' && confirmPassword.value) {
-          return nodeConfig.value.nodeSettings.workerLogin.initLoginPassword === confirmPassword.value;
-        }
-        return true;
-      },
-    },
-    {
-      trigger: 'blur',
-      message: $i18n.t('tke.validate.passwordNotSame'),
-      validator() {
-        if (loginType.value === 'password') {
-          return nodeConfig.value.nodeSettings.workerLogin.initLoginPassword === confirmPassword.value;
-        }
-        return true;
+        return nodeConfig.value.nodeSettings.securityGroupIDs.length > 0;
       },
     },
   ],
-  // bk-form-item 在apply-host-resource组件中
-  instanceChargeType: [
+  nodePoolGroups: [
     {
       trigger: 'custom',
-      message: $i18n.t('generic.validate.required'),
+      message: $i18n.t('cluster.create.aws.validate.subnet'),
       validator() {
-        return !!instanceCommonConfig.value.instanceChargeType;
-      },
-    },
-  ],
-  // bk-form-item 在apply-host-resource组件中
-  instances: [{
-    trigger: 'custom',
-    message: $i18n.t('generic.validate.required'),
-    validator() {
-      const count = instanceConfigList.value.reduce((pre, item) => {
-        pre += item.applyNum;
-        return pre;
-      }, 0);
-      return count > 0;
-    },
-  }],
-  // bk-form-item 在apply-host-resource组件中
-  securityGroupIDs: [
-    {
-      trigger: 'custom',
-      message: $i18n.t('generic.validate.required'),
-      validator() {
-        return !!instanceCommonConfig.value.securityGroupIDs?.length;
+        const list = nodePoolTableData.value;
+        if (list.length > 0) {
+          return list.every(item => item?.autoScaling?.subnetIDs && item?.autoScaling?.subnetIDs.length > 0);
+        }
+        return true;
       },
     },
   ],
 }));
 
-const handleValidateNode = () => {
-  formRef.value?.$refs?.masterItemRef?.validate();
+// 跳转链接
+const openLink = (link: string) => {
+  if (!link) return;
+
+  window.open(link);
 };
 
-// 机型配置
-const instanceLoading = ref(false);
-const instanceCommonConfig = ref<Partial<IInstanceItem>>({});
-const handleCommonConfigChange = (config: Partial<IInstanceItem>) => {
-  instanceCommonConfig.value = config;
+const curIndex = ref();
+const model = ref<'add' | 'edit'>('add');
+const nodePoolTableData = ref<any[]>([]);
+const selectionList = ref<any[]>([]);
+// 点击添加节点
+function handleAddNode() {
+  nodeDefaultValues.value = cloneDeep(defaultValues.value);
+  model.value = 'add';
+  showNodeConfig.value = true;
+};
+// 删除节点按钮
+function handleDeleteNode() {
+  if (selectionList.value.length === 0) return;
+  nodePoolTableData.value = nodePoolTableData.value.reduce((pre, curItem) => {
+    if (selectionList.value.findIndex(item => item.$id === curItem.$id) < 0) {
+      pre.push(curItem);
+    }
+    return pre;
+  }, []);
+};
+// 添加/编辑节点操作
+function handleAddnode() {
+  if (model.value === 'add') {
+    nodePoolTableData.value = [...nodePoolTableData.value, nodePoolData.value];
+  } else {
+    nodePoolTableData.value.splice(curIndex.value, 1, nodePoolData.value);
+  }
+  nodePoolData.value = {};
+}
+// 删除节点操作
+function handleDelete(index) {
+  nodePoolTableData.value = nodePoolTableData.value.filter((_, i) => i !== index);
+}
+// 编辑节点
+function handleEdit(row, index) {
+  formRef.value?.clearError();
+  loginTypeRef.value?.clearError();
+  curIndex.value = index;
+  nodeDefaultValues.value = cloneDeep(mergeDeep(nodeDefaultValues.value, row));
+  model.value = 'edit';
+  showNodeConfig.value = true;
+}
+// 选择节点
+function handleSelectionChange(selection) {
+  selectionList.value = selection;
+}
+
+
+// 选择单个节点
+const tableRef = ref();
+function handleRowSelectionChange(row) {
+  const index = selectionList.value.findIndex(item => item.$id === row.$id);
+  if (index > -1) {
+    selectionList.value.splice(index, 1);
+    // 更新表格原本选中状态
+    tableRef.value?.toggleRowSelection(row, false);
+  } else {
+    selectionList.value.push(row);
+    tableRef.value?.toggleRowSelection(row, true);
+  }
+};
+// 关闭侧滑框
+function closeSlider() {
+  showNodeConfig.value = false;
+  curStep.value = 1;
+  nodeDefaultValues.value = cloneDeep(defaultValues.value);
+}
+
+const curStep = ref(1);
+const stepComMap = {
+  1: NodePoolConfig,
+  2: NodePoolInfo,
+};
+const nodePoolData = ref<Record<string, any>>({});
+const handleNextStep = (data) => {
+  nodePoolData.value = mergeDeep(nodePoolData.value, data);
+  if (curStep.value + 1 <= 2) {
+    curStep.value = curStep.value + 1;
+  }
+};
+const handlePreStep = () => {
+  curStep.value = curStep.value - 1;
 };
 
-const instanceConfigList = ref<Array<IInstanceItem>>([]);
-const handleInstanceListChange = (data: IInstanceItem[]) => {
-  instanceConfigList.value = data;
-};
-const handleDeleteInstance = (index: number) => {
-  instanceConfigList.value.splice(index, 1);
-};
-const instances = computed(() => instanceConfigList.value.map(item => ({
-  ...item,
-  ...instanceCommonConfig.value,
-  region: props.region,
-  vpcID: props.vpcID,
-  dockerGraphPath: '',
-})));
-watch(instances, () => {
-  formRef.value?.$refs?.applyHostResourceRef?.$refs?.instancesRef?.validate();
-  emits('instances-change', instances.value);
+const isLoading = ref(false);
+const saveLoading = ref(false);
+
+// 节点池默认配置
+const defaultValues = ref({
+  autoScaling: {
+    maxSize: 10,
+    minSize: 0,
+    multiZoneSubnetPolicy: 'PRIORITY',
+    retryPolicy: 'IMMEDIATE_RETRY',
+    scalingMode: 'CLASSIC_SCALING',
+  },
+  clusterID: '',
+  creator: '',
+  enableAutoscale: true,
+  launchTemplate: {
+    CPU: 4,
+    Mem: 8,
+    dataDisks: [],
+    imageInfo: {
+      imageID: 'img-eb30mz89',
+    },
+    internetAccess: {
+      internetChargeType: 'TRAFFIC_POSTPAID_BY_HOUR',
+      internetMaxBandwidth: '0',
+      publicIPAssigned: false,
+    },
+    systemDisk: {
+      diskSize: '100',
+      diskType: 'DISK_TYPE_ZFS',
+    },
+    keyPair: {
+      keyPublic: '',
+      keySecret: '',
+    },
+  },
+  name: '',
+  nodeTemplate: {
+    dockerGraphPath: '/data/bcs/service/docker',
+    taints: [],
+    unSchedulable: 0,
+  },
+  region: '',
 });
-
-// 安全组
-const securityGroupLoading = ref(false);
-const securityGroups = ref<Array<ISecurityGroup>>([]);
-const handleGetSecurityGroups = async () => {
-  if (!props.region || !props.cloudAccountID) return;
-  securityGroupLoading.value = true;
-  securityGroups.value = await cloudSecurityGroups({
+const nodeDefaultValues = ref();
+const loading = ref(false);
+// 获取节点池默认数据
+async function getNodeGroupData() {
+  loading.value = true;
+  const result = await recommendNodeGroupConf({
     $cloudId: props.cloudID,
-    accountID: props.cloudAccountID,
     region: props.region,
+    accountID: props.cloudAccountID,
   }).catch(() => []);
-  securityGroupLoading.value = false;
+  nodePoolTableData.value = result.map((item, index) => setNodeInfo(item, index));
+  loading.value = false;
+}
+
+const user = computed(() => $store.state.user);
+function setNodeInfo(data, index) {
+  return {
+    $id: `${index}id_${Date.now()}`,
+    status: 'CREATING',
+    creator: user.value.username,
+    name: data?.name || '', // 节点名称
+    nodeOS: data?.instanceProfile?.nodeOS || '', // 节点操作系统
+    autoScaling: {
+      serviceRole: data?.serviceRoleName || '', // iam角色
+      subnetIDs: data?.networkProfile?.subnetIDs || [], // 支持子网
+      maxSize: data?.scalingProfile?.maxSize,
+      desiredSize: data?.scalingProfile?.desiredSize || 0,
+    },
+    launchTemplate: {
+      CPU: data?.hardwareProfile?.CPU || '',
+      GPU: data?.hardwareProfile?.GPU || '',
+      Mem: data?.hardwareProfile?.Mem || '',
+      instanceType: data?.instanceProfile?.instanceType, // 机型信息
+      InstanceChargeType: data?.instanceProfile?.instanceChargeType, // 实例计费方式
+      systemDisk: {
+        diskType: data?.hardwareProfile?.systemDisk?.diskType,
+        diskSize: data?.hardwareProfile?.systemDisk?.diskSize, // 系统盘大小
+      },
+      internetAccess: {
+        publicIPAssigned: data?.networkProfile?.publicIPAssigned, // 分配免费公网IP
+      },
+      // 密钥信息
+      keyPair: {
+        keyPublic: '',
+        keySecret: '',
+      },
+      initLoginUsername: '', // 用户名
+      securityGroupIDs: [], // 安全组
+      dataDisks: data?.hardwareProfile?.dataDisks || [], // 数据盘
+      // 默认值
+      isSecurityService: true,
+      isMonitorService: true,
+    },
+    nodeTemplate: {
+      dataDisks: data?.hardwareProfile?.dataDisks || [],
+    },
+  };
+}
+
+// 添加、编辑节点池
+const showNodeConfig = ref(false);
+
+// 设置行背景颜色
+function getNodePoolRowClassName({ row }) {
+  return row?.autoScaling?.subnetIDs && row?.autoScaling?.subnetIDs.length > 0 ? '' : '!bg-red-50';
+};
+// 设置是否可选
+function handleSelectable(row) {
+  return row?.autoScaling?.subnetIDs && row?.autoScaling?.subnetIDs.length > 0;
 };
 
 watch([
   () => props.region,
   () => props.cloudAccountID,
 ], () => {
-  handleGetSecurityGroups();
+  getNodeGroupData();
 });
 
-// 校验master节点
+watch(() => nodeConfig.value.nodeSettings.workerLogin, () => {
+  defaultValues.value.launchTemplate.keyPair = nodeConfig.value.nodeSettings?.workerLogin?.keyPair;
+  nodePoolTableData.value.forEach((node) => {
+    !node?.launchTemplate && (node.launchTemplate = {});
+    !node?.launchTemplate?.keyPair && (node.launchTemplate.keyPair = {});
+    node.launchTemplate.keyPair.keyPublic = nodeConfig.value.nodeSettings?.workerLogin?.keyPair?.keyPublic;
+    node.launchTemplate.keyPair.keySecret = nodeConfig.value.nodeSettings?.workerLogin?.keyPair?.keySecret;
+  });
+}, { deep: true });
+
+// 校验表单
 const formRef = ref();
+const loginTypeRef = ref();
 const validate = async () => {
   const result = await formRef.value?.validate().catch(() => false);
-  return result;
+  const result1 = await loginTypeRef.value?.validate().catch(() => false);
+  return result && result1;
+};
+
+function handleGetLoginMessage(data) {
+  nodeConfig.value.nodeSettings.workerLogin = data;
 };
 
 // 上一步
@@ -409,21 +508,25 @@ const preStep = () => {
   emits('pre');
 };
 // 下一步
+const { focusOnErrorField } = useFocusOnErrorField();
 const handleConfirm = async () => {
   const result = await validate();
   if (result) {
+    nodeConfig.value.nodeGroups = nodePoolTableData.value;
+    nodeConfig.value.nodeGroups.forEach((item, index) => {
+      item.autoScaling.vpcID = props.vpcID;
+      item.bkCloudID = props.bkCloudID;
+      item.launchTemplate.securityGroupIDs = [...nodeConfig.value.nodeSettings.securityGroupIDs];
+      item.launchTemplate = mergeDeep(item.launchTemplate, nodeConfig.value.nodeSettings.workerLogin);
+      item.nodeGroupType = index === 0 ? 'System' : 'User';
+    });
     emits('next', {
       ...nodeConfig.value,
-      nodes: (nodeConfig.value.nodes as IHostNode[]).map(item => item.ip),
     });
     emits('confirm');
   } else {
     // 自动滚动到第一个错误的位置
-    const errDom = document.getElementsByClassName('form-error-tip');
-    errDom[0]?.scrollIntoView({
-      block: 'center',
-      behavior: 'smooth',
-    });
+    focusOnErrorField();
   }
 };
 // 取消
@@ -431,7 +534,18 @@ const handleCancel = () => {
   emits('cancel');
 };
 
+onMounted(async () => {
+  isLoading.value = true;
+  nodeDefaultValues.value = cloneDeep(defaultValues.value);
+  isLoading.value = false;
+});
+
 defineExpose({
   validate,
 });
 </script>
+<style lang="postcss" scoped>
+/deep/ .bk-table-header, /deep/ .bk-table-body {
+  width: 100% !important;
+}
+</style>

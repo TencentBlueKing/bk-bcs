@@ -28,6 +28,7 @@ import (
 
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	"strings"
 )
 
 // desribe listener info and listener targets with port list, used by batch operation
@@ -54,7 +55,7 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 		return nil, nil
 	}
 
-	listenerIDs, retListenerMap, ruleIDAttrMap, ruleIDCertMap := transferCloudListener(lbID, resp, portMap)
+	listenerIDs, retListenerMap, ruleIDAttrMap, ruleIDCertMap := c.transferCloudListener(lbID, resp, portMap)
 
 	// 2. describe listener targets
 	if len(listenerIDs) == 0 {
@@ -937,4 +938,48 @@ func (c *Clb) resolveUpdateListenerGroup(region string, group []*networkextensio
 		blog.Warnf("invalid batch protocol %s", group[0].Spec.Protocol)
 		return nil, fmt.Errorf("invalid batch protocol %s", group[0].Spec.Protocol)
 	}
+}
+
+// transferCloudListener transfer cloud listener to local listener
+func (c *Clb) transferCloudListener(lbID string, cloudLiResp *tclb.DescribeListenersResponse, portMap map[int]struct{}) (
+	[]string, map[string]*networkextensionv1.Listener, map[string]*networkextensionv1.IngressListenerAttribute,
+	map[string]*networkextensionv1.IngressListenerCertificate) {
+	var listenerIDs []string
+	retListenerMap := make(map[string]*networkextensionv1.Listener)
+	ruleIDAttrMap := make(map[string]*networkextensionv1.IngressListenerAttribute)
+	ruleIDCertMap := make(map[string]*networkextensionv1.IngressListenerCertificate)
+
+	for _, cloudLi := range cloudLiResp.Response.Listeners {
+		// only care about listener with given ports
+		if _, ok := portMap[int(*cloudLi.Port)]; !ok {
+			continue
+		}
+		if !ValidateListenerName(c.listenerNameValidateMode, lbID, c.bcsClusterID, cloudLi) {
+			continue
+		}
+
+		listenerIDs = append(listenerIDs, *cloudLi.ListenerId)
+		li := &networkextensionv1.Listener{}
+		li.Spec.LoadbalancerID = lbID
+		li.Spec.Port = int(*cloudLi.Port)
+		// get segment listener end port
+		if cloudLi.EndPort != nil && *cloudLi.EndPort > 0 {
+			li.Spec.EndPort = int(*cloudLi.EndPort)
+		}
+		li.Spec.Protocol = strings.ToLower(*cloudLi.Protocol)
+		li.Spec.Certificate = convertCertificate(cloudLi.Certificate)
+		li.Spec.ListenerAttribute = convertListenerAttribute(cloudLi)
+		if len(cloudLi.Rules) != 0 {
+			for _, respRule := range cloudLi.Rules {
+				if respRule.LocationId != nil {
+					ruleIDAttrMap[*respRule.LocationId] = convertRuleAttribute(respRule)
+					ruleIDCertMap[*respRule.LocationId] = convertCertificate(respRule.Certificate)
+				}
+			}
+		}
+		li.Status.ListenerID = *cloudLi.ListenerId
+		retListenerMap[common.GetListenerNameWithProtocol(lbID, li.Spec.Protocol, li.Spec.Port, li.Spec.EndPort)] = li
+	}
+
+	return listenerIDs, retListenerMap, ruleIDAttrMap, ruleIDCertMap
 }

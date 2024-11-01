@@ -79,6 +79,22 @@ const (
 	// EnvNameBkAppSecret env name for bk_app_secret
 	EnvNameBkAppSecret = "BK_APP_SECRET"
 
+	// EnvNameListenerNameValidateMode env name for enable listener name validate
+	// option value:
+	// empty: default value, means disable validate
+	// NORMAL: enable validate, but not validate cluster ID
+	// STRICT: enable validate, and validate cluster ID
+	EnvNameListenerNameValidateMode = "LISTENER_NAME_VALIDATE_MODE"
+
+	// ListenerNameValidateModeClose close listener name validate
+	ListenerNameValidateModeClose = "CLOSE"
+	// ListenerNameValidateModeNormal normal mode for listener name validate
+	// exp: lb-xxx-protocol-port / lb-xxx-port
+	ListenerNameValidateModeNormal = "NORMAL"
+	// ListenerNameValidateModeStrict strict mode for listener name validate
+	// exp: BCS-K8S-XXX-lb-xxx-protocol-port / BCS-K8S-XXX-lb-xxx-port
+	ListenerNameValidateModeStrict = "STRICT"
+
 	// DelimiterForLbID delimiter for lb id
 	DelimiterForLbID = ":"
 

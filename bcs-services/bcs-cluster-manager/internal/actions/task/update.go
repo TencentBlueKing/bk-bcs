@@ -156,6 +156,12 @@ func (ua *RetryAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
 		return err
 	}
+
+	retry := allowTaskRetry(ua.task)
+	if !retry {
+		return fmt.Errorf("autoscaler task can't manual retry")
+	}
+
 	// check task status
 	switch ua.task.Status {
 	case cloudprovider.TaskStatusInit, cloudprovider.TaskStatusRunning, cloudprovider.TaskStatusSuccess:
