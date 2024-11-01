@@ -107,6 +107,11 @@ func (t *Task) GetTaskIndex() string {
 	return t.TaskIndex
 }
 
+// GetTaskIndexType get task index type
+func (t *Task) GetTaskIndexType() string {
+	return t.TaskIndexType
+}
+
 // GetStep get step by name
 func (t *Task) GetStep(stepName string) (*Step, bool) {
 	for _, step := range t.Steps {
