@@ -279,7 +279,7 @@ cluster-reporter:
 
 nodeagent:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodeagent
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-cluster-reporter/* ${PACKAGEPATH}/bcs-services/bcs-nodeagent/
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-nodeagent/* ${PACKAGEPATH}/bcs-services/bcs-nodeagent/
 	cd ${BCS_SERVICES_PATH}/bcs-cluster-reporter/cmd/nodeagent && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-nodeagent/bcs-nodeagent ./main.go
 
 project-manager:pre
