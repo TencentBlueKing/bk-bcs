@@ -129,6 +129,11 @@ else
   fi
 fi
 
+#add label
+yq -i '.metadata.labels.k8s-app="kube-controller-manager"' /etc/kubernetes/manifests/kube-controller-manager.yaml
+yq -i '.metadata.labels.k8s-app="kube-apiserver"' /etc/kubernetes/manifests/kube-apiserver.yaml
+yq -i '.metadata.labels.k8s-app="kube-scheduler"' /etc/kubernetes/manifests/kube-scheduler.yaml
+
 for pod_file in "${pod_files[@]}"; do
   cp "${ROOT_DIR}/${pod_file}" /etc/kubernetes/manifests/
 done

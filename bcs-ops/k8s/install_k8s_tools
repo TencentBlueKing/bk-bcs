@@ -92,7 +92,7 @@ _curl_k8s() {
     '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' \
     "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
-  url=${REPO_URL:-}/${file}
+  url=${REPO_URL:-}/k8s/${file}
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
   else
@@ -104,7 +104,7 @@ _curl_k8s() {
     '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' \
     "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
-  url="${REPO_URL}/${file}"
+  url="${REPO_URL}/crictl/${file}"
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
   else
@@ -116,7 +116,7 @@ _curl_k8s() {
     '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' \
     "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
-  url="${REPO_URL}/${file}"
+  url="${REPO_URL}/cni-plugins/${file}"
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
   else
@@ -130,7 +130,7 @@ _offline_k8s() {
   local bin_path tar_name
   bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
 
-  tar_name=$(find "$bin_path" -iname "k8s-*.tgz" -type f | head -1)
+  tar_name=$(find "$bin_path" -iname "k8s-*-${ARCH}.tgz" -type f | head -1)
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else
@@ -141,14 +141,14 @@ _offline_k8s() {
       --strip-components=1 systemd/10-kubeadm.conf
   fi
 
-  tar_name=$(find "$bin_path" -iname "crictl-*.tgz" -type f | head -1)
+  tar_name=$(find "$bin_path" -iname "crictl-*-${ARCH}.tgz" -type f | head -1)
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else
     tar xvzf "${tar_name}" -C /usr/bin/ --strip-components=1 bin/
   fi
 
-  tar_name=$(find "$bin_path" -iname "cni-plugins-*.tgz" -type f | head -1)
+  tar_name=$(find "$bin_path" -iname "cni-plugins-*-${ARCH}.tgz" -type f | head -1)
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else

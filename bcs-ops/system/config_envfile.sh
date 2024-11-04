@@ -55,13 +55,18 @@ init_env() {
   LAN_IPv6=${LAN_IPv6:-}
   BCS_SYSCTL=${BCS_SYSCTL:=1}
   if [[ -z ${LAN_IP} ]] && [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
-    LAN_IP="$("${ROOT_DIR}"/system/get_lan_ip -4)"
+    LAN_IP="$("${ROOT_DIR}"/system/get_lan_ip -4 ${LAN_DEV})"
   fi
   if [[ -z $LAN_IPv6 ]] && [[ ${K8S_IPv6_STATUS,,} != "disable" ]]; then
     LAN_IPv6="$("${ROOT_DIR}"/system/get_lan_ip -6)"
   fi
   BCS_OFFLINE=${BCS_OFFLINE:-}
   INSTALL_METHOD=${INSTALL_METHOD:-"yum"}
+  if [[ $(uname -m) == "x86_64" ]];then
+    ARCH="amd64"
+  elif [[ $(uname -m) == "aarch64" ]];then
+    ARCH="arm64"
+  fi
 
   # cri
   CRI_TYPE=${CRI_TYPE:-"docker"}
@@ -111,7 +116,7 @@ init_env() {
   ## yum_mirror
   MIRROR_URL=${MIRROR_URL:-"https://mirrors.tencent.com"}
   ## repo_url
-  REPO_URL=${REPO_URL:-"https://bkopen-1252002024.file.myqcloud.com/ce7/tools"}
+  REPO_URL=${REPO_URL:-"https://bkopen-1252002024.file.myqcloud.com/bcs-ops"}
   ##
   MIRROR_IP=${MIRROR_IP:-}
   ## image_registry
@@ -127,7 +132,7 @@ init_env() {
   # apiserver HA
   ENABLE_APISERVER_HA=${ENABLE_APISERVER_HA:-"false"}
   APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
-  VIP=${VIP:-}
+  VIP=${VIP:-"1.2.3.4"}
   ## bcs apiserver proxy
   APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.29.0-alpha.130-tencent"}
   PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
@@ -163,7 +168,7 @@ _setIPUsage_and_exit() {
 you can set LAN_IP manually by following:
 set -x
 LAN_IP=<YOUR LAN IP>
-LAN_IPv6<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
+LAN_IPv6=<YOUR LAN ipv6> #if enable K8S_IPv6_STATUS=dualstack
 set -x
 EOF
   exit 1
@@ -172,6 +177,9 @@ EOF
 check_env() {
   trap "utils::on_ERR;" ERR
   # match k8s_ver
+  if [[ $K8S_VER =~ ^v1\.2[0-8] ]]; then
+    K8S_VER=${K8S_VER#v}
+  fi
   if ! [[ $K8S_VER =~ ^1\.2[0-8] ]]; then
     utils::log "ERROR" \
       "Only support K8S_VER 1.2[0-8].x, here is :${K8S_VER}"
@@ -250,6 +258,7 @@ BCS_SYSCTL=${BCS_SYSCTL:=1}
 K8S_IPv6_STATUS="${K8S_IPv6_STATUS}"
 BCS_OFFLINE="${BCS_OFFLINE}"
 INSTALL_METHOD="${INSTALL_METHOD}"
+ARCH="${ARCH}"
 
 ## CRI
 CRI_TYPE="${CRI_TYPE}"
@@ -272,6 +281,7 @@ CRI_EOF
         ;;
     esac
   )
+
 
 ## K8S
 ETCD_LIB="${ETCD_LIB}"

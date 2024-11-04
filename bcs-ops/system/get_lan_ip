@@ -58,7 +58,7 @@ _on_cloud() {
   elif curl -m 2 -ifs "${aws_meta_api}" >/dev/null; then
     meta_api="${aws_meta_api}"
   else
-    _on_baremetal
+    _on_baremetal $1
     return 0
   fi
 
@@ -73,7 +73,8 @@ _on_cloud() {
 }
 
 _on_baremetal() {
-  if [ -n "$LAN_DEV" ];then
+  LAN_DEV=$1
+  if [ -n "${LAN_DEV}" ];then
     if ip addr show ${LAN_DEV} >/dev/null;then
       LAN_IP=$(ip addr show ${LAN_DEV}|grep "inet "|awk ' { print $2 } '|sed "s/\/.*//g")
       if [[ -n $LAN_IP ]]; then
@@ -124,7 +125,11 @@ main() {
         exit 0
         ;;
       -4)
-        _on_cloud
+        if [ $# -ge 2 ]; then
+          _on_cloud $2
+        else
+          _on_cloud ""
+        fi
         ;;
       -6)
         _on_baremetal_v6

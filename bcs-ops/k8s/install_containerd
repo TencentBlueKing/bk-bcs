@@ -85,7 +85,7 @@ _curl_containerd() {
   name="containerd"
   ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
-  url=${REPO_URL}/${file}
+  url=${REPO_URL}/containerd/${file}
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
   else
@@ -95,7 +95,7 @@ _curl_containerd() {
   name="runc"
   ver=$(awk '/version: \"'"${K8S_VER}"'\"/{f=1;next} f && /'"${name}"':/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
   file="${name}-${ver}.tgz"
-  url="${REPO_URL}/${file}"
+  url="${REPO_URL}/runc/${file}"
   if curl -sSfL "${url}" -o "${bin_path}/${file}" -m "360"; then
     utils::log "INFO" "Downloaded ${url}"
   else
@@ -109,15 +109,50 @@ _offline_containerd() {
   local bin_path tar_name
   bin_path=${ROOT_DIR}/version-${K8S_VER}/bin-tools/
 
-  tar_name=$(find "$bin_path" -iname "containerd-*.tgz" -type f | head -1)
+  tar_name=$(find "$bin_path" -iname "containerd-*-${ARCH}.tgz" -type f | head -1)
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else
     tar xvzf "${tar_name}" -C /usr/local/bin/ --strip-components=1 bin/
-    tar xvzf "${tar_name}" -C /etc/systemd/system/ --strip-components=1 systemd/
+    cat <<EOF >/etc/systemd/system/containerd.service
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network-online.target docker.socket firewalld.service
+Wants=network-online.target
+Requires=docker.socket
+
+[Service]
+Type=notify
+# the default is not to use systemd for cgroups because the delegate issues still
+# exists and systemd currently does not support the cgroup feature set required
+# for containers run by docker
+ExecStart=/usr/bin/dockerd -H fd://
+ExecReload=/bin/kill -s HUP \$MAINPID
+LimitNOFILE=1048576
+# Having non-zero Limit*s causes performance problems due to accounting overhead
+# in the kernel. We recommend using cgroups to do container-local accounting.
+LimitNPROC=infinity
+LimitCORE=infinity
+# Uncomment TasksMax if your systemd version supports it.
+# Only systemd 226 and above support this version.
+#TasksMax=infinity
+TimeoutStartSec=0
+# set delegate yes so that systemd does not reset the cgroups of docker containers
+Delegate=yes
+# kill only the docker process, not all processes in the cgroup
+KillMode=process
+# restart the docker process if it exits prematurely
+Restart=on-failure
+StartLimitBurst=3
+StartLimitInterval=60s
+
+[Install]
+WantedBy=multi-user.target
+EOF
   fi
 
-  tar_name=$(find "$bin_path" -iname "runc-*.tgz" -type f | head -1)
+  tar_name=$(find "$bin_path" -iname "runc-*-${ARCH}.tgz" -type f | head -1)
   if [[ -z ${tar_name} ]]; then
     utils::log "FATAL" "can't find docker installation package in ${bin_path}"
   else

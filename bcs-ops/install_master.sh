@@ -60,6 +60,9 @@ safe_source "${ROOT_DIR}/env/bcs.env"
 # wait to check kubelet start
 sleep 30
 if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
+  if [[ -n ${JOIN_CMD:-} ]]; then
+    utils::log "FATAL" "install master need to set MASTER_JOIN_CMD but JOIN_CMD is set"
+  fi
   if systemctl is-active kubelet.service -q; then
     utils::log "WARN" "kubelet service is active now, skip kubeadm init"
   else
@@ -84,8 +87,8 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
       "${ROOT_DIR}"/k8s/operate_kube_vip apply
     elif [[ ${APISERVER_HA_MODE} == "bcs-apiserver-proxy" ]]; then
       "${ROOT_DIR}"/k8s/operate_bap apply
-    else
-      "${ROOT_DIR}"/k8s/operate_bap apply
+    elif [[ ${APISERVER_HA_MODE} == "third-party" ]];then
+      utils::log "INFO" "use third-party lb, do nothing"
     fi
   fi
 
@@ -94,6 +97,9 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
       utils::log "FATAL" "fail to apply multus"
     fi
   fi
+
+  # create etcd secret
+  kubectl create secret generic etcd-client-cert --from-file=etcd-ca=/etc/kubernetes/pki/ca.crt --from-file=etcd-client-key=/etc/kubernetes/pki/apiserver-etcd-client.key --from-file=etcd-client=/etc/kubernetes/pki/apiserver-etcd-client.crt -n kube-system
 else
   if systemctl is-active kubelet.service -q; then
     utils::log "WARN" "kubelet service is active now, skip kubeadm join"

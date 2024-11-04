@@ -21,7 +21,7 @@ LIMIT_VALUE="204800"
 BASE_YUM_LINK="http://mirrors.cloud.tencent.com/repo/centos7_base.repo"
 BASE_EPEL_LINK="http://mirrors.cloud.tencent.com/repo/epel-7.repo"
 BACKUPTIME=$(date +%Y%m%d_%H%M)
-RPM_LIST=(utpdate chrony screen pssh yq parallel zip unzip rsync gawk curl lsof tar sed iproute uuid psmisc wget rsync jq expect uuid bash-completion lsof openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel zlib-devel iproute procps-ng bind-utils)
+RPM_LIST=(ntpdate chrony screen pssh parallel zip unzip rsync gawk curl lsof tar sed iproute uuid psmisc wget rsync jq expect uuid bash-completion lsof openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel zlib-devel iproute procps-ng bind-utils)
 NTP_SEVER="cn.pool.ntp.org"
 if [[ -n ${BCS_OFFLINE:-} ]]; then
     SET_LIST=(set_kernel_params set_ulimit set_hostname set_selinux close_swap stop_firewalld install_tools)

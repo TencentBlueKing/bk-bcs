@@ -35,7 +35,7 @@ Usage:
     [ -h --help -?     show usage ]
     [ -v -V --version  show script version]
     [ -i --install     support: ${INSTALL_PROJECTS[*]}]
-    [ -r --render      suppport: ${RENDER_PROJECTS[*]}]
+    [ -r --render      support: ${RENDER_PROJECTS[*]}]
     [ -c --clean       support: ${CLEAN_PROJECTS[*]}]
     [ -e --check       support: ${CHECK_PROJECTS[*]}]
 EOF
