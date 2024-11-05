@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package util xxx
 package util
 
 import "sync"

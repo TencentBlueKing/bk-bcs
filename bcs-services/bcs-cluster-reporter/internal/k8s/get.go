@@ -14,38 +14,55 @@
 package k8s
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	version2 "k8s.io/apimachinery/pkg/version"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 )
 
 // GetK8sVersion get cluster k8s version
 func GetK8sVersion(clientSet *kubernetes.Clientset) (string, error) {
-	versionChann := make(chan int)
-	var version string
+	var versionStr string
 	var versionError error
-	var versionInfo *version2.Info
+	var versionInfo *version.Info
+
+	ctx, cancel := context.WithTimeout(context.Background(), 11*time.Second)
 	go func() {
 		versionInfo, versionError = clientSet.ServerVersion()
-		if versionError != nil {
-			version = ""
-		} else if versionInfo.GitVersion == "" {
-			version = ""
-			versionError = fmt.Errorf("get blank result")
-		} else {
-			version = versionInfo.GitVersion
+		if ctx.Err() != nil {
+			return
 		}
-		versionChann <- 0
+		cancel()
 	}()
 
 	select {
 	case <-time.After(10 * time.Second):
 		return "", fmt.Errorf("get k8s version timeout")
 
-	case <-versionChann:
+	case <-ctx.Done():
 	}
 
-	return version, versionError
+	if versionError != nil {
+		versionStr = ""
+	} else if versionInfo.GitVersion == "" {
+		versionStr = ""
+		versionError = fmt.Errorf("get blank result")
+	} else {
+		versionStr = versionInfo.GitVersion
+	}
+
+	return versionStr, versionError
+}
+
+// GetK8sApi get apiserver api list
+func GetK8sApi(clientSet *kubernetes.Clientset) ([]*v1.APIResourceList, error) {
+	apiResources, err := clientSet.Discovery().ServerPreferredResources()
+	if err != nil {
+		return nil, err
+	}
+
+	return apiResources, nil
 }

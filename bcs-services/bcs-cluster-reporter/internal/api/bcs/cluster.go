@@ -10,12 +10,11 @@
  * limitations under the License.
  */
 
-// Package bcs
+// Package bcs xxx
 package bcs
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -36,8 +35,8 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{
-		token: cm.token,
+	rt = &rest.BcsTransport{
+		Token: cm.token,
 	}
 	httpClient = &http.Client{Transport: rt}
 
@@ -65,7 +64,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		}
 
 		if !result.Result {
-			e := errors.New(fmt.Sprintf("cluster response result failed: %s", result.Msg))
+			e := fmt.Errorf("cluster response result failed: %s", result.Msg)
 			klog.V(3).Info(e.Error())
 			return nil, e
 		}
@@ -74,15 +73,15 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 		clusterList := make([]cmproto.Cluster, 0, 0)
 		err = json.Unmarshal(clusterData, &clusterList)
 		if err != nil {
+			klog.Errorf(err.Error())
 			cluster := cmproto.Cluster{}
 			err = json.Unmarshal(clusterData, &cluster)
 			if err != nil {
-				e := errors.New(fmt.Sprintf("Unmarshal cluster response failed %s", err.Error()))
-				klog.V(3).Info(e.Error())
+				e := fmt.Errorf("Unmarshal cluster response failed %s", err.Error())
 				return nil, e
-			} else {
-				clusterList = append(clusterList, cluster)
 			}
+
+			clusterList = append(clusterList, cluster)
 		}
 		resultList = append(resultList, clusterList...)
 	}
@@ -92,7 +91,7 @@ func (cm *ClusterManager) GetClusters(clusterIds []string) ([]cmproto.Cluster, e
 // GetNodesByClusterId get cluster nodes
 func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node, error) {
 	if clusterId == "" {
-		return nil, errors.New("ClusterId cannot be blank")
+		return nil, fmt.Errorf("ClusterId cannot be blank")
 	}
 	svcUrl, _ := url.Parse(cm.url + fmt.Sprintf(_urlMap["GetNodesByClusterId"], clusterId))
 	klog.V(6).Infof("start ClusterManager request %s", svcUrl.String())
@@ -102,7 +101,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{token: cm.token}
+	rt = &rest.BcsTransport{Token: cm.token}
 	httpClient = &http.Client{Transport: rt, Timeout: 10 * time.Second}
 
 	req := rest.NewRequest(httpClient, "GET", svcUrl, nil)
@@ -118,8 +117,8 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 	}
 
 	if !result.Result {
-		e := errors.New(fmt.Sprintf("cluster response result failed: %s", result.Msg))
-		klog.V(3).Info(e.Error())
+		e := fmt.Errorf("cluster response result failed: %s", result.Msg)
+		klog.Info(e.Error())
 		return nil, e
 	}
 
@@ -127,7 +126,7 @@ func (cm *ClusterManager) GetNodesByClusterId(clusterId string) ([]cmproto.Node,
 	nodeList := make([]cmproto.Node, 0, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
-		e := errors.New(fmt.Sprintf("Unmarshal cluster response failed %s", err.Error()))
+		e := fmt.Errorf("Unmarshal cluster response failed %s", err.Error())
 		klog.V(3).Info(e.Error())
 		return nil, e
 	}
@@ -144,7 +143,7 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 		httpClient *http.Client
 	)
 
-	rt = &BcsTransport{token: cm.token}
+	rt = &rest.BcsTransport{Token: cm.token}
 	httpClient = &http.Client{Transport: rt}
 
 	req := rest.NewRequest(httpClient, "GET", svcUrl, nil)
@@ -160,8 +159,8 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 	}
 
 	if !result.Result {
-		e := errors.New(fmt.Sprintf("getnode response result failed: %s", result.Msg))
-		klog.V(3).Info(e.Error())
+		e := fmt.Errorf("getnode response result failed: %s", result.Msg)
+		klog.Errorf(e.Error())
 		return nil, e
 	}
 
@@ -169,14 +168,14 @@ func (cm *ClusterManager) GetNode(ip string) (*cmproto.Node, error) {
 	nodeList := make([]cmproto.Node, 0, 0)
 	err = json.Unmarshal(nodeData, &nodeList)
 	if err != nil {
-		e := errors.New(fmt.Sprintf("Unmarshal getnode response failed %s", err.Error()))
-		klog.V(3).Info(e.Error())
+		e := fmt.Errorf("Unmarshal getnode response failed %s", err.Error())
+		klog.Errorf(e.Error())
 		return nil, e
 	}
 
 	if len(nodeList) != 1 {
-		e := errors.New(fmt.Sprintf("getnode result num wrong %s", err.Error()))
-		klog.V(3).Info(e.Error())
+		e := fmt.Errorf("getnode result num wrong %s", err.Error())
+		klog.Errorf(e.Error())
 		return nil, e
 	}
 
@@ -193,6 +192,9 @@ func (cm *ClusterManager) GetKubeconfig(clusterID string) *k8srest.Config {
 			CAFile:   "",
 			CAData:   nil,
 		},
+		Timeout: time.Minute,
+		QPS:     30,
+		Burst:   60,
 	}
 
 	return config

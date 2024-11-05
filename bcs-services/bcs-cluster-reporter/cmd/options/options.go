@@ -42,6 +42,7 @@ type BcsClusterReporterOptions struct {
 	InCluster bool
 	ClusterID string
 	BizID     string
+	RunMode   string
 }
 
 // NewBcsClusterReporterOptions init options
@@ -68,10 +69,43 @@ func (bcro *BcsClusterReporterOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringSliceVar(&bcro.BcsClusterList, "bcsClusterList", []string{}, "Set the clusters id to check and report")
 
 	fs.StringVarP(&bcro.KubeConfigDir, "kubeConfigDir", "", "",
-		"Set the kubeconfig path to load, kubeconfig file should have suffix of config")
+		"Set the kubeconfig path to load kubeconfig files, and the kubeconfig files’ name should end with \"config\"")
 
 	// incluster选项
 	fs.BoolVarP(&bcro.InCluster, "inCluster", "", false, "Set true the reporter will work as in-cluster mode")
 	fs.StringVarP(&bcro.ClusterID, "clusterID", "", "0", "Set clusterID")
 	fs.StringVarP(&bcro.BizID, "bizID", "", "incluster", "Set cluster bizID")
+	fs.StringVar(&bcro.RunMode, "runMode", "daemon", "daemon, once")
+}
+
+// NodeAgentOptions component options
+type NodeAgentOptions struct {
+	HostPath       string
+	Upstream       string
+	ConfigPath     string
+	Plugins        string
+	RunMode        string
+	PluginDir      string
+	CMNamespace    string
+	Addr           string
+	KubeConfigPath string
+}
+
+// NewNodeAgentOptions return NodeAgentOptions
+func NewNodeAgentOptions() *NodeAgentOptions {
+	return &NodeAgentOptions{}
+}
+
+// AddFlags xxx
+func (brro *NodeAgentOptions) AddFlags(fs *pflag.FlagSet) {
+	fs.StringVar(&brro.Plugins, "plugins", "dnscheck,containercheck,hwcheck,processcheck,diskcheck,netcheck,timecheck,nodeinfocheck,uploader", "plugins")
+	fs.StringVar(&brro.KubeConfigPath, "kubeconfigPath", "/root/.kube/config", "if incluster failed, use this kubeconfig path")
+
+	fs.StringVar(&brro.HostPath, "hostPath", "/", "set here or set HOST_PATH env")
+	fs.StringVar(&brro.Upstream, "upstream", "cluster", "cluster, mysql")
+	fs.StringVar(&brro.RunMode, "runMode", "once", "daemon, once")
+	fs.StringVar(&brro.PluginDir, "pluginDir", "/data/bcs/nodeagent", "/data/bcs/nodeagent")
+	fs.StringVar(&brro.ConfigPath, "configPath", "/data/bcs/nodeagent/", "/data/bcs/nodeagent/")
+	fs.StringVar(&brro.CMNamespace, "cmNamespace", "nodeagent", "namespace to store nodeagent checkresult configmap")
+	fs.StringVar(&brro.Addr, "addr", "0.0.0.0:6216", "addr to bind listen")
 }

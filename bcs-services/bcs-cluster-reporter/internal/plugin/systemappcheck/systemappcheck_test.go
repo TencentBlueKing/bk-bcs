@@ -10,13 +10,13 @@
  * limitations under the License.
  */
 
-package systempodcheck
+// Package systemappcheck xxx
+package systemappcheck
 
 import (
 	"fmt"
 	"testing"
 
-	"helm.sh/helm/v3/pkg/release"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,9 +69,4 @@ func TestGetResourceGaugeVecSet(t *testing.T) {
 	fmt.Println(unstr.GetName())
 	fmt.Println(unstr.GetObjectKind().GroupVersionKind().Kind)
 	fmt.Println(unstr.GetObjectKind())
-
-	GetResourceGaugeVecSet("aa", "bb", obj, release.Release{
-		Namespace: "cc",
-		Name:      "nonchart",
-	})
 }

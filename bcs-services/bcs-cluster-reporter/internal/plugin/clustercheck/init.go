@@ -10,17 +10,12 @@
  * limitations under the License.
  */
 
+// Package clustercheck xxx
 package clustercheck
 
-import (
-	"sync"
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin_manager"
-)
-
+// 在集群中创建job探测集群是否正常运行
 func init() {
-	plugin_manager.Register(&Plugin{
-		checkLock: sync.Mutex{},
-		stopChan:  make(chan int),
-	})
+	pluginmanager.Register(&Plugin{})
 }

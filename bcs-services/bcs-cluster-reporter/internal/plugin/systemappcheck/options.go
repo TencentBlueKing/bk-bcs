@@ -10,12 +10,19 @@
  * limitations under the License.
  */
 
-package systempodcheck
+// Package systemappcheck xxx
+package systemappcheck
+
+import (
+	"strings"
+)
 
 // Options bcs log options
 type Options struct {
-	Components []Component `json:"components" yaml:"components"`
-	Interval   int         `json:"interval" yaml:"interval"`
+	Components           []Component            `json:"components" yaml:"components"`
+	ComponentVersionConf []ComponentVersionConf `json:"componentVersionConf" yaml:"componentVersionConf"`
+	Interval             int                    `json:"interval" yaml:"interval"`
+	Namespaces           []string               `json:"namespaces" yaml:"namespaces"`
 }
 
 // Component xxx
@@ -23,6 +30,14 @@ type Component struct {
 	Namespace string `json:"namespace" yaml:"namespace"`
 	Name      string `json:"name" yaml:"name"`
 	Resource  string `json:"resource" yaml:"resource"`
+}
+
+// ComponentVersionConf component version config
+type ComponentVersionConf struct {
+	Name string `json:"name" yaml:"name"`
+
+	NiceToUpgrade string `json:"niceToUpgrade" yaml:"niceToUpgrade"`
+	NeedUpgrade   string `json:"needUpgrade" yaml:"needUpgrade"`
 }
 
 // Validate validate options
@@ -33,5 +48,58 @@ func (o *Options) Validate() error {
 	// if len(o.Kubeconfig) == 0 {
 	//	return fmt.Errorf("kubeconfig cannot be empty")
 	// }
+
+	if o.Namespaces == nil || len(o.Namespaces) == 0 {
+		o.Namespaces = []string{"kube-system", "default", "bk-system", "bcs-system", "bkmonitor-operator"}
+	}
+
+	if o.Components != nil {
+		components := []Component{
+			{
+				Namespace: "kube-system",
+				Name:      "kube-proxy",
+				Resource:  "daemonset",
+			}, {
+				Namespace: "kube-system",
+				Name:      "kube-dns",
+				Resource:  "deployment",
+			}, {
+				Namespace: "kube-system",
+				Name:      "coredns",
+				Resource:  "deployment",
+			},
+		}
+		for _, component := range components {
+			setFlag := false
+			for _, optionComponent := range o.Components {
+				if optionComponent.Name == component.Name &&
+					optionComponent.Namespace == component.Namespace && strings.EqualFold(optionComponent.Resource, component.Resource) {
+					setFlag = true
+					break
+				}
+			}
+
+			if !setFlag {
+				o.Components = append(o.Components, component)
+			}
+		}
+	} else {
+		o.Components = []Component{
+			{
+				Namespace: "kube-system",
+				Name:      "kube-proxy",
+				Resource:  "daemonset",
+			}, {
+				Namespace: "kube-system",
+				Name:      "kube-dns",
+				Resource:  "deployment",
+			}, {
+				Namespace: "kube-system",
+				Name:      "coredns",
+				Resource:  "deployment",
+			},
+		}
+	}
+
 	return nil
 }
