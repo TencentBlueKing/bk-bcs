@@ -146,7 +146,6 @@ import { computed, nextTick, onBeforeMount, ref, set, watch } from 'vue';
 
 import createForm from '@blueking/bkui-form/dist/bkui-form-umd';
 
-import BcsVarInput from './bcs-var-input.vue';
 import BcsVarDatasourceInput from './bcs-variable-datasource-input.vue';
 import leftNav from './left-nav.vue';
 import { updateVarList } from './use-store';
@@ -213,9 +212,9 @@ const validArray = computed(() => schemaFormData.value.reduce<Array<boolean>>((p
   pre.push(!name);
   return pre;
 }, []));
-const formToJson = computed(() => schemaFormData.value.reduce<Array<string>>((pre, cur) => {
+const formToJson = computed(() => schemaFormData.value.reduce<Array<{name: string}>>((pre, cur) => {
   const name = cur?.formData?.metadata?.name || '';
-  pre.push(name);
+  pre.push({ name });
   return pre;
 }, []));
 
@@ -430,7 +429,7 @@ const handleAnchor = (index: number) => {
 
 const handleBlur = (index: number, name: string) => {
   if (formToJson.value.length === 0) return;
-  formToJson.value[index] = name ? name : '';
+  formToJson.value[index].name = name ? name : '';
 };
 
 const sectionRefs = ref();

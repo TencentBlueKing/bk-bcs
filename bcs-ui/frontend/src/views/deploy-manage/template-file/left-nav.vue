@@ -25,7 +25,7 @@
           ]">{{ index + 1 }}</span>
         <span class="bcs-ellipsis" v-bk-overflow-tips>
           <slot :item="item">
-            {{ item || $t('templateFile.label.untitled') }}
+            {{ item.name || $t('templateFile.label.untitled') }}
           </slot>
         </span>
       </div>
@@ -33,9 +33,11 @@
   </div>
 </template>
 <script setup lang="ts">
+import { PropType } from 'vue';
+
 defineProps({
   list: {
-    type: Array,
+    type: Array as PropType<{name: string, offset?: number}[]>,
     default: () => [],
   },
   activeIndex: {

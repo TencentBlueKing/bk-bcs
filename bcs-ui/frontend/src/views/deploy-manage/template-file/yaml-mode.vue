@@ -14,11 +14,7 @@
         <left-nav
           :list="yamlToJson"
           :active-index="activeContentIndex"
-          @cellClick="({ item }) => handleAnchor(item)">
-          <template #default="{ item }">
-            <span class="bcs-ellipsis" v-bk-overflow-tips>{{ item?.name }}</span>
-          </template>
-        </left-nav>
+          @cellClick="({ item }) => handleAnchor(item)" />
       </div>
       <div
         slot="main"
@@ -106,15 +102,15 @@ const content = ref('');
 const activeContentIndex = ref(0);
 const yamlToJson = computed(() => {
   let offset = 0;
-  return content.value.split('---')
+  return yamljs.loadAll(content.value)
     .reduce<Array<{ name: string; offset: number }>>((pre, doc) => {
-    const name = yamljs.load(doc)?.metadata?.name;
+    const name = doc?.metadata?.name;
     if (name) {
       pre.push({
         name,
         offset,
       });
-      offset += doc.length;
+      offset += yamljs.dump(doc).length;
     }
     return pre;
   }, []);
@@ -135,6 +131,7 @@ const watchOnce = watch(yamlToJson, () => {
   // 只有一项数据时折叠起来
   if (yamlToJson.value && yamlToJson.value.length < 2) {
     yamlLayoutRef.value?.setCollapse(true);
+    yamlLayoutRef.value.$refs.aside.style.transition = '';
   }
   watchOnce();
 });
