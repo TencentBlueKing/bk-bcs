@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -33,6 +34,8 @@ type MonitorHelper struct {
 	apiCli       IMonitorApiClient
 	lbIDCache    *gocache.Cache
 	bcsClusterID string
+
+	IndependentDataID bool
 }
 
 // NewMonitorHelper return new monitor helper
@@ -41,6 +44,8 @@ func NewMonitorHelper(lbIDCache *gocache.Cache) *MonitorHelper {
 		apiCli:       NewBkmApiClient(),
 		lbIDCache:    lbIDCache,
 		bcsClusterID: os.Getenv(constant.EnvNameBkBCSClusterID),
+
+		IndependentDataID: true,
 	}
 }
 
@@ -77,13 +82,17 @@ func (m *MonitorHelper) EnsureUptimeCheck(ctx context.Context, listener *network
 			return 0, err1
 		}
 		if m.compareUptimeCheckTask(cloudTask, createTaskReq) {
-			resp, err2 := m.apiCli.UpdateUptimeCheckTask(ctx, createTaskReq)
+			if err2 := m.apiCli.DeleteUptimeCheckTask(ctx, cloudTask.ID); err2 != nil {
+				return 0, fmt.Errorf("delete uptime check task failed, err: %v", err2)
+			}
+			resp, err2 := m.apiCli.CreateUptimeCheckTask(ctx, createTaskReq)
 			if err2 != nil {
-				return 0, fmt.Errorf("update uptime check task failed, err: %v", err2)
+				return 0, fmt.Errorf("create uptime check task failed, err: %v", err2)
 			}
 			if err2 = m.apiCli.DeployUptimeCheckTask(ctx, resp.Data.ID); err1 != nil {
 				return 0, fmt.Errorf("deploy uptime check task failed, err: %v", err2)
 			}
+			return resp.Data.ID, nil
 		}
 
 		return cloudTask.ID, nil
@@ -131,7 +140,6 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		return nil, fmt.Errorf("get node id list for listener '%s/%s' failed, err: %v", listener.GetNamespace(),
 			listener.GetName(), err)
 	}
-
 	req := &CreateOrUpdateUptimeCheckTaskRequest{
 		Protocol:   uptimeCheckConfig.Protocol,
 		NodeIDList: nodeIDList,
@@ -148,6 +156,18 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 		},
 		Name:        genUptimeCheckTaskName(listener, m.bcsClusterID),
 		GroupIDList: []int64{},
+	}
+	if m.IndependentDataID {
+		req.IndependentDataID = true
+		req.Labels = map[string]string{
+			"bcs_cluster_id":       m.bcsClusterID,
+			"bcs_owner_name":       listener.Annotations[networkextensionv1.LabelKeyForOwnerName],
+			"bcs_owner_kind":       listener.Annotations[networkextensionv1.LabelKeyForOwnerKind],
+			"bcs_owner_namespace":  listener.GetNamespace(),
+			"bcs_source_namespace": listener.GetListenerSourceNamespace(),
+			"bcs_source_name":      listener.GetListenerSourceName(),
+			"bcs_loadbalancer_id":  listener.Spec.LoadbalancerID,
+		}
 	}
 
 	if len(uptimeCheckConfig.URLList) != 0 {
@@ -308,6 +328,9 @@ func (m *MonitorHelper) getNodeIDList(ctx context.Context, nodes []string) ([]in
 
 // return true if need update
 func (m *MonitorHelper) compareUptimeCheckTask(cloudTask *UptimeCheckTask, createReq *CreateOrUpdateUptimeCheckTaskRequest) bool {
+	if cloudTask.Name != createReq.Name {
+		return true
+	}
 	if len(cloudTask.Nodes) != len(createReq.NodeIDList) {
 		return true
 	}
@@ -326,7 +349,17 @@ func (m *MonitorHelper) compareUptimeCheckTask(cloudTask *UptimeCheckTask, creat
 		}
 	}
 
-	// todo 增加协议/端口的匹配判断
+	if m.IndependentDataID {
+		if cloudTask.IndependentDataID != createReq.IndependentDataID || !reflect.DeepEqual(cloudTask.Labels,
+			createReq.Labels) {
+			return true
+		}
+	}
+
+	if cloudTask.Status != "running" {
+		return true
+	}
+
 	return false
 }
 
@@ -336,8 +369,8 @@ func genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID 
 		EndPort != 0 {
 		port = listener.Spec.EndPort
 	}
-	return fmt.Sprintf("bcs-%s-%s-%d/%s/%s", listener.Spec.LoadbalancerID, listener.Spec.Protocol,
-		port, bcsClusterID, listener.GetListenerSourceNamespace())
+	return fmt.Sprintf("bcs-%s-%s-%d/%s", listener.Spec.LoadbalancerID, listener.Spec.Protocol,
+		port, bcsClusterID)
 }
 
 func (m *MonitorHelper) getCloudTask(ctx context.Context, listener *networkextensionv1.Listener) (*UptimeCheckTask, error) {

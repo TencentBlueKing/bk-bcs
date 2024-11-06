@@ -17,6 +17,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -25,8 +27,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
-	"os"
-	"strconv"
 )
 
 // IMonitorApiClient monitor client interface
@@ -191,7 +191,7 @@ func (b *BkmApiClient) UpdateUptimeCheckTask(ctx context.Context,
 }
 
 // DeployUptimeCheckTask deploy uptime check task
-func (b BkmApiClient) DeployUptimeCheckTask(ctx context.Context, taskID int64) error {
+func (b *BkmApiClient) DeployUptimeCheckTask(ctx context.Context, taskID int64) error {
 	req := &DeployUptimeCheckRequest{TaskID: taskID}
 
 	param := struct {
