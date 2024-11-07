@@ -5036,6 +5036,12 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "TemplateSet.ConvertTemplateToHelm",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/helm"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "TemplateSet.GetEnvManage",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 			Method:  []string{"GET"},
@@ -5121,6 +5127,8 @@ type TemplateSetService interface {
 	PreviewTemplateFile(ctx context.Context, in *DeployTemplateFileReq, opts ...client.CallOption) (*CommonResp, error)
 	// 部署模板文件
 	DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, opts ...client.CallOption) (*CommonResp, error)
+	// 普通模板文件转换为 Helm 格式模板文件
+	ConvertTemplateToHelm(ctx context.Context, in *ConvertTemplateToHelmReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取环境管理详情
 	GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取环境管理列表
@@ -5367,6 +5375,16 @@ func (c *templateSetService) DeployTemplateFile(ctx context.Context, in *DeployT
 	return out, nil
 }
 
+func (c *templateSetService) ConvertTemplateToHelm(ctx context.Context, in *ConvertTemplateToHelmReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.ConvertTemplateToHelm", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *templateSetService) GetEnvManage(ctx context.Context, in *GetEnvManageReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.GetEnvManage", in)
 	out := new(CommonResp)
@@ -5474,6 +5492,8 @@ type TemplateSetHandler interface {
 	PreviewTemplateFile(context.Context, *DeployTemplateFileReq, *CommonResp) error
 	// 部署模板文件
 	DeployTemplateFile(context.Context, *DeployTemplateFileReq, *CommonResp) error
+	// 普通模板文件转换为 Helm 格式模板文件
+	ConvertTemplateToHelm(context.Context, *ConvertTemplateToHelmReq, *CommonResp) error
 	// 获取环境管理详情
 	GetEnvManage(context.Context, *GetEnvManageReq, *CommonResp) error
 	// 获取环境管理列表
@@ -5512,6 +5532,7 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		ListTemplateFileVariables(ctx context.Context, in *ListTemplateFileVariablesReq, out *CommonResp) error
 		PreviewTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error
 		DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error
+		ConvertTemplateToHelm(ctx context.Context, in *ConvertTemplateToHelmReq, out *CommonResp) error
 		GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error
 		ListEnvManages(ctx context.Context, in *ListEnvManagesReq, out *CommonListResp) error
 		CreateEnvManage(ctx context.Context, in *CreateEnvManageReq, out *CommonResp) error
@@ -5656,6 +5677,12 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.ConvertTemplateToHelm",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/helm"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.GetEnvManage",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/envs/{id}"},
 		Method:  []string{"GET"},
@@ -5784,6 +5811,10 @@ func (h *templateSetHandler) PreviewTemplateFile(ctx context.Context, in *Deploy
 
 func (h *templateSetHandler) DeployTemplateFile(ctx context.Context, in *DeployTemplateFileReq, out *CommonResp) error {
 	return h.TemplateSetHandler.DeployTemplateFile(ctx, in, out)
+}
+
+func (h *templateSetHandler) ConvertTemplateToHelm(ctx context.Context, in *ConvertTemplateToHelmReq, out *CommonResp) error {
+	return h.TemplateSetHandler.ConvertTemplateToHelm(ctx, in, out)
 }
 
 func (h *templateSetHandler) GetEnvManage(ctx context.Context, in *GetEnvManageReq, out *CommonResp) error {

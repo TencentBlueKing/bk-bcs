@@ -656,6 +656,21 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 	return nil, nil
 }
 
+// ConvertTemplateToHelm 普通模板文件转换为 Helm 格式模板文件
+func (t *TemplateAction) ConvertTemplateToHelm(
+	ctx context.Context, req *clusterRes.ConvertTemplateToHelmReq) (map[string]interface{}, error) {
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	// 变量如果开头是 .Values. 的则不动，不是的就加上 .Values.
+	content := replaceTemplateFileToHelm(req.Content)
+
+	return map[string]interface{}{
+		"content": content,
+	}, nil
+}
+
 // renderTemplates render templates
 func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity.TemplateDeploy,
 	vars map[string]string, ns string) ([]map[string]interface{}, error) {
