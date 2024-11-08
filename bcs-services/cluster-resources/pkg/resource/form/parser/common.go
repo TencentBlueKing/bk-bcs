@@ -20,6 +20,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -63,8 +64,15 @@ func SplitManifests(bigFile string) []string {
 
 // SimpleHead defines what the structure of the head of a manifest file
 type SimpleHead struct {
-	Version string `yaml:"apiVersion"`
-	Kind    string `yaml:"kind,omitempty"`
+	Version  string   `yaml:"apiVersion"`
+	Kind     string   `yaml:"kind,omitempty"`
+	Metadata Metadata `yaml:"metadata"`
+}
+
+// Metadata defines what the structure of the metadata of a manifest file
+type Metadata struct {
+	Name   string `yaml:"name"`
+	Labels map[string]interface{}
 }
 
 // GetManifestMetadata 获取 Manifest metadata
@@ -87,4 +95,40 @@ func GetResourceTypesFromManifest(manifest string) []string {
 		}
 	}
 	return slice.RemoveDuplicateValues(resourceType)
+}
+
+// GetLablesFromManifest get labels from manifest
+func GetLablesFromManifest(manifest string, kind, associateName string) map[string]interface{} {
+	resp := make([]map[string]interface{}, 0)
+	manifests := SplitManifests(manifest)
+	for _, v := range manifests {
+		metadata := GetManifestMetadata(v)
+		// 筛选关联应用的labels
+		if associateName != "" {
+			if associateName == metadata.Metadata.Name && kind == metadata.Kind {
+				for kk, vv := range metadata.Metadata.Labels {
+					resp = append(resp, map[string]interface{}{
+						"key":   kk,
+						"value": vv,
+					})
+				}
+			}
+			continue
+		}
+
+		if kind == metadata.Kind {
+			resp = append(resp, map[string]interface{}{
+				"label":    metadata.Metadata.Name,
+				"value":    metadata.Metadata.Name,
+				"disabled": false,
+				"tips":     "",
+			})
+
+		}
+	}
+
+	if associateName != "" {
+		return map[string]interface{}{action.FormDataFormat: resp}
+	}
+	return map[string]interface{}{action.SelectItemsFormat: resp}
 }

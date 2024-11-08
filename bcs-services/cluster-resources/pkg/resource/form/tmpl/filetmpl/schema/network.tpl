@@ -399,7 +399,46 @@ portConf:
 selector:
   title: {{ i18n "选择器" .lang }}
   type: object
+  required:
+    - associatedResources
+    - associatedApplications
+    - labels
   properties:
+    associatedResources:
+      title: {{ i18n "关联资源" .lang }}
+      type: string
+      default: Deployment
+      ui:component:
+        name: select
+        props:
+          clearable: false
+          datasource:
+            - label: Deployment
+              value: Deployment
+            - label: StatefulSet
+              value: StatefulSet
+    associatedApplications:
+      title: {{ i18n "关联应用" .lang }}
+      type: string
+      ui:component:
+        name: select
+        props:
+           clearable: false
+           remoteConfig:
+             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/labels/${$context.versionID}?kind=${$self.getValue('spec.selector.associatedResources')}` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "spec.selector.associatedResources"
+          then:
+            state:
+              value: ""
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"       
+      ui:rules:
+        - required
     labels:
       title: {{ i18n "标签选择器" .lang }}
       type: array

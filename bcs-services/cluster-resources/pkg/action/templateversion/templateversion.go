@@ -15,8 +15,10 @@ package templateversion
 
 import (
 	"context"
+	"errors"
 	"sort"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/coreos/go-semver/semver"
 
@@ -125,6 +127,35 @@ func (t *TemplateVersionAction) GetContent(ctx context.Context, templateSpace, t
 	}
 
 	return templateVersion[0].ToMap(), nil
+}
+
+// GetTemplateAssociateLabels xxx
+func (t *TemplateVersionAction) GetTemplateAssociateLabels(
+	ctx context.Context, in *clusterRes.GetTemplateAssociateLabelsReq) (map[string]interface{}, error) {
+
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	templateVersion, err := t.model.GetTemplateVersion(ctx, in.Id)
+	if err != nil {
+		if errors.Is(err, drivers.ErrTableRecordNotFound) {
+			return map[string]interface{}{}, nil
+		}
+		return nil, err
+	}
+
+	// 只能查看当前项目的版本
+	if templateVersion.ProjectCode != p.Code {
+		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
+	}
+
+	return parser.GetLablesFromManifest(templateVersion.Content, in.Kind, in.AssociateName), nil
 }
 
 // List xxx
