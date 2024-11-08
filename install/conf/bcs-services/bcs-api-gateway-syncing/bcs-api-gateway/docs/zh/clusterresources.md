@@ -3,6 +3,26 @@
 集群资源管理接口提供了对集群中各种类型资源（如 Workload、Config、Network、Storage
 等）的管理功能，支持对这些资源进行创建、读取、更新和删除（CRUD）操作，以及扩缩容、重启等特定操作。
 
+## 身份认证
+
+cluster-resources 的接口不能使用 admin 的 bearer token，调用权限中心接口鉴权时无法获取用户 ID，导致出现错误：
+
+```bash
+curl -X GET 'http://bcs-api.bkdomain/bcsapi/v4/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments' \
+-H 'Authorization: Bearer xxx'
+
+{"code":2,"message":"ctx validate failed: Username/ProjectID/ClusterID required","requestID":"xxx","data":null,"webAnnotations":null}
+```
+
+使用蓝鲸的 bk_token 可以正常访问接口，在请求 Header 中添加 `Cookie: bk_token={bk_token}` 和 `User-Agent: Mozillaxxxxxx` 即可：
+
+```bash
+curl -X GET \
+-H 'Cookie: bk_token=xxx' \
+-H 'User-Agent: xxx' \
+'http://bcs-api.bkdomain/bcsapi/v4/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}'
+```
+
 ## 接口路径规则
 
 接口路径通常遵循以下通用规则：
