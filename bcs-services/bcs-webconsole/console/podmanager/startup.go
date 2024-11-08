@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/route"
 )
 
 // StartupManager xxx
@@ -402,30 +403,24 @@ func GetKubectldVersion(clusterId string) (string, error) {
 	return v, err
 }
 
-// ProjectIdContext projectId context
-type ProjectIdContext string
+// AuthContextType auth context type
+type AuthContextType string
 
-// ProjectIdContextKey projectId context key
-const ProjectIdContextKey ProjectIdContext = "projectIdContext"
+// AuthContextKey auth context key
+const AuthContextKey AuthContextType = "auth_context"
 
 // 获取kubeconfig server
 func (m *StartupManager) getServer(clusterId string) string {
 	server := fmt.Sprintf("%s/clusters/%s", config.G.BCS.Host, clusterId)
-	projectId, ok := m.ctx.Value(ProjectIdContextKey).(string)
+	authContext, ok := m.ctx.Value(AuthContextKey).(*route.AuthContext)
 	// 取不出来及空的情况下返回默认地址
-	if !ok || projectId == "" {
+	if !ok || authContext.ProjectId == "" {
 		return server
 	}
 
-	cluster, err := bcs.GetCluster(m.ctx, projectId, clusterId)
-	if err != nil {
-		// 报错情况下返回默认的
-		return server
-	}
-
-	// 共享集群的项目Id和当前项目会不一致，如果是共享集群则加上/projects/%s
-	if cluster.IsShared && cluster.ProjectId != projectId {
-		return fmt.Sprintf("%s/projects/%s/clusters/%s", config.G.BCS.Host, cluster.ProjectId, clusterId)
+	// 如果是共享集群则加上/projects/%s
+	if authContext.BindCluster != nil && authContext.BindCluster.IsShared && authContext.BindProject != nil {
+		return fmt.Sprintf("%s/projects/%s/clusters/%s", config.G.BCS.Host, authContext.BindProject.Code, clusterId)
 	}
 	return server
 }
