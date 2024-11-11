@@ -37,9 +37,9 @@ enabled=1
 gpgcheck=0
 
 EOF
-  curl https://mirrors.tencent.com/kubernetes_new/core%3a/stable%3a/v1.27%3a/build/rpm/isv%3akubernetes%3acore%3astable%3av1.27%3abuild.repo  >> /etc/yum.repos.d/kubernetes.repo
+  curl https://mirrors.tencent.com/kubernetes_new/core%3a/stable%3a/v1.27/rpm/isv%3akubernetes%3acore%3astable%3av1.27.repo  >> /etc/yum.repos.d/kubernetes.repo
   echo "" >> /etc/yum.repos.d/kubernetes.repo
-  curl https://mirrors.tencent.com/kubernetes_new/core%3a/stable%3a/v1.28%3a/build/rpm/isv%3akubernetes%3acore%3astable%3av1.28%3abuild.repo  >> /etc/yum.repos.d/kubernetes.repo
+  curl https://mirrors.tencent.com/kubernetes_new/core%3a/stable%3a/v1.28/rpm/isv%3akubernetes%3acore%3astable%3av1.28.repo  >> /etc/yum.repos.d/kubernetes.repo
   yum install -y -q yum-utils
   yum-config-manager --add-repo "$ROOT_DIR/kubernetes.repo"
   yum clean all

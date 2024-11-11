@@ -1,5 +1,5 @@
 PKG_NAME = bcs-ops
-VER = v0.0.2
+VER = v0.0.3
 CURRENT_VERSION = release-$(VER)
 
 clean:
