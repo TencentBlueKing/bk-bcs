@@ -47,9 +47,11 @@ func Send(ctx context.Context, hr *HTTPRequest) ([]byte, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "marshal body failed")
 		}
+		// NOCC:Server Side Request Forgery(只是代码封装，所有 URL都是可信的)
 		req, err = http.NewRequestWithContext(ctx, hr.Method, hr.Url, bytes.NewBuffer(body))
 		blog.Infof("Body: %s", string(body))
 	} else {
+		// NOCC:Server Side Request Forgery(只是代码封装，所有 URL都是可信的)
 		req, err = http.NewRequestWithContext(ctx, hr.Method, hr.Url, nil)
 	}
 	if err != nil {

@@ -77,6 +77,7 @@ func (s *ArgoStreamSession) forwardStreamToArgo(rw http.ResponseWriter, req *htt
 	if fieldsQuery != "" {
 		fields = strings.Split(fieldsQuery, ",")
 	}
+	// NOCC:Server Side Request Forgery(只是代码封装，所有 URL都是可信的)
 	forwardReq, err := http.NewRequestWithContext(req.Context(), req.Method, fullPath, req.Body)
 	if err != nil {
 		return errors.Wrapf(err, "create forward request failed")
