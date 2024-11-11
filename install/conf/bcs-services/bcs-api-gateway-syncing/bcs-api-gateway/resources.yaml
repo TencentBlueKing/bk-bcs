@@ -826,6 +826,56 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /{version}/clustermanager/v1/cloud/kubeConfig:
+    put:
+      operationId: check_kubeconfig
+      description: kubeConfig连接集群可用性检测
+      tags:
+        - bcs-cluster-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/clustermanager/v1/cloud/kubeConfig
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/clustermanager/v1/cluster/import:
+    post:
+      operationId: import_cluster
+      description: 导入用户集群
+      tags:
+        - bcs-cluster-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/clustermanager/v1/cluster/import
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
   /{version}/clustermanager/v1/cluster:
     get:
       operationId: list_project_clusters
@@ -1223,4 +1273,156 @@ paths:
         authConfig:
           userVerifiedRequired: false
         disabledStages: []
+        descriptionEn:
+  /{version}/clusterresources/:
+    x-bk-apigateway-method-any:
+      operationId: clusterresources
+      description: 集群资源相关API
+      tags:
+        - bcs-service
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: false
+        allowApplyPermission: false
+        matchSubpath: true
+        backend:
+          type: HTTP
+          method: any
+          path: /bcsapi/{version}/clusterresources/
+          matchSubpath: true
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments:
+    get:
+      operationId: list_deployments
+      description: 获取 Deployment 列表
+      tags:
+        - bcs-cluster-resources
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages: []
+        descriptionEn:
+  /{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}:
+    get:
+      operationId: get_deployment
+      description: 查询 Deployment 详细信息
+      tags:
+        - bcs-cluster-resources
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+    put:
+      operationId: update_deployment
+      description: 更新 Deployment
+      tags:
+        - bcs-cluster-resources
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /bcsapi/{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+    delete:
+      operationId: delete_deployment
+      description: 删除 Deployment
+      tags:
+        - bcs-cluster-resources
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /bcsapi/{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/deployments/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+  /{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments:
+    post:
+      operationId: create_deployment
+      description: 创建 Deployment
+      tags:
+        - bcs-cluster-resources
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/{version}/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/workloads/deployments
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
         descriptionEn:
