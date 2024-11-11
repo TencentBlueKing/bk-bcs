@@ -22,10 +22,12 @@ import (
 	"github.com/google/uuid"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/tasks"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/template"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var taskMgr sync.Once
@@ -40,6 +42,15 @@ func newtask() *Task {
 	task := &Task{
 		works: make(map[string]interface{}),
 	}
+
+	// create cluster task
+	task.works[createGKEClusterStep.StepMethod] = tasks.CreateGKEClusterTask
+	task.works[checkGKEClusterStatusStep.StepMethod] = tasks.CheckGKEClusterStatusTask
+	task.works[checkGKENodeGroupsStatusStep.StepMethod] = tasks.CheckGKENodeGroupsStatusTask
+	task.works[updateGKENodeGroupsToDBStep.StepMethod] = tasks.UpdateGKENodesGroupToDBTask
+	task.works[checkCreateClusterNodeStatusStep.StepMethod] = tasks.CheckGKEClusterNodesStatusTask
+	task.works[updateGKENodesToDBStep.StepMethod] = tasks.UpdateGKENodesToDBTask
+	task.works[registerGKEClusterKubeConfigStep.StepMethod] = tasks.RegisterGKEClusterKubeConfigTask
 
 	// import task
 	task.works[importClusterNodesStep.StepMethod] = tasks.ImportClusterNodesTask
@@ -94,8 +105,155 @@ func (t *Task) BuildDeleteVirtualClusterTask(cls *proto.Cluster,
 }
 
 // BuildCreateClusterTask build create cluster task
-func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, // nolint
+	opt *cloudprovider.CreateClusterOption) (*proto.Task, error) {
+	if cls == nil {
+		return nil, fmt.Errorf("BuildCreateClusterTask cluster info empty")
+	}
+	if opt == nil || opt.Cloud == nil {
+		return nil, fmt.Errorf("BuildCreateClusterTask TaskOptions is lost")
+	}
+
+	nodeGroups := make([]*proto.NodeGroup, 0)
+	var desireSize uint32
+	for _, ngID := range opt.NodeGroupIDs {
+		nodeGroup, errGet := actions.GetNodeGroupByGroupID(cloudprovider.GetStorageModel(), ngID)
+		if errGet != nil {
+			return nil, fmt.Errorf("BuildCreateClusterTask GetNodeGroupByGroupID failed, %s", errGet.Error())
+		}
+		nodeGroups = append(nodeGroups, nodeGroup)
+		desireSize += nodeGroup.AutoScaling.DesiredSize
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.CreateCluster),
+		TaskName:       cloudprovider.CreateClusterTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      cls.ClusterID,
+		ProjectID:      cls.ProjectID,
+		Creator:        opt.Operator,
+		Updater:        opt.Operator,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(createClusterTaskTemplate, cls.ClusterID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	createClusterTask := &CreateClusterTaskOption{Cluster: cls, NodeGroupIDs: opt.NodeGroupIDs}
+
+	// step0: createGKECluster and return clusterID inject common paras
+	createClusterTask.BuildCreateClusterStep(task)
+	// step1: check cluster status by clusterID
+	createClusterTask.BuildCheckClusterStatusStep(task)
+	// step2: register managed cluster kubeConfig
+	createClusterTask.BuildRegisterClsKubeConfigStep(task)
+
+	if cls.ManageType == icommon.ClusterManageTypeIndependent {
+		if len(nodeGroups) != 0 {
+			// step3: check cluster nodes status
+			createClusterTask.BuildCheckNodeGroupsStatusStep(task)
+			// step4: update nodegroups to DB
+			createClusterTask.BuildUpdateNodeGroupsToDBStep(task)
+		}
+
+		if desireSize != 0 {
+			// step5: check cluster nodegroups status
+			createClusterTask.BuildCheckClusterNodesStatusStep(task)
+			// step6: update nodes to DB
+			createClusterTask.BuildUpdateNodesToDBStep(task)
+		}
+	}
+
+	if cls.ManageType == icommon.ClusterManageTypeIndependent && desireSize != 0 {
+		// step7: install gse agent
+		common.BuildInstallGseAgentTaskStep(task, &common.GseInstallInfo{
+			ClusterId:          cls.ClusterID,
+			BusinessId:         cls.BusinessID,
+			CloudArea:          cls.GetClusterBasicSettings().GetArea(),
+			User:               nodeGroups[0].GetLaunchTemplate().GetInitLoginUsername(),
+			Passwd:             nodeGroups[0].GetLaunchTemplate().GetInitLoginPassword(),
+			KeyInfo:            nodeGroups[0].GetLaunchTemplate().GetKeyPair(),
+			AllowReviseCloudId: icommon.True,
+		}, cloudprovider.WithStepAllowSkip(true))
+
+		// step8: transfer host module
+		moduleID := cls.GetClusterBasicSettings().GetModule().GetWorkerModuleID()
+		if moduleID != "" {
+			common.BuildTransferHostModuleStep(task, cls.BusinessID, cls.GetClusterBasicSettings().GetModule().
+				GetWorkerModuleID(), cls.GetClusterBasicSettings().GetModule().GetMasterModuleID())
+		}
+
+		// step9: 业务后置自定义流程: 支持标准运维任务 或者 后置脚本
+		if len(nodeGroups) > 0 && nodeGroups[0].GetNodeTemplate() != nil &&
+			len(nodeGroups[0].GetNodeTemplate().UserScript) > 0 {
+			common.BuildJobExecuteScriptStep(task, common.JobExecParas{
+				ClusterID: cls.ClusterID,
+				Content:   nodeGroups[0].GetNodeTemplate().UserScript,
+				// dynamic node ips
+				NodeIps:   "",
+				Operator:  opt.Operator,
+				StepName:  common.PostInitStepJob,
+				Translate: common.PostInitJob,
+			})
+		}
+		// business post define sops task or script
+		if len(nodeGroups) > 0 && nodeGroups[0].GetNodeTemplate() != nil &&
+			nodeGroups[0].GetNodeTemplate().ScaleOutExtraAddons != nil {
+			err := template.BuildSopsFactory{
+				StepName: template.UserAfterInit,
+				Cluster:  cls,
+				Extra: template.ExtraInfo{
+					// dynamic node ips
+					NodeIPList:      "",
+					NodeOperator:    opt.Operator,
+					ShowSopsUrl:     true,
+					TranslateMethod: template.UserPostInit,
+				}}.BuildSopsStep(task, nodeGroups[0].GetNodeTemplate().ScaleOutExtraAddons, false)
+			if err != nil {
+				return nil, fmt.Errorf("BuildCreateClusterTask business BuildBkSopsStepAction failed: %v", err)
+			}
+		}
+
+		// step10: 若需要则设置节点注解
+		common.BuildNodeAnnotationsTaskStep(task, cls.ClusterID, nil, func() map[string]string {
+			if opt.NodeTemplate != nil && len(opt.NodeTemplate.GetAnnotations()) > 0 {
+				return opt.NodeTemplate.GetAnnotations()
+			}
+			return nil
+		}())
+
+		// step11: remove inner nodes taints
+		common.BuildRemoveInnerTaintTaskStep(task, cls.ClusterID, cls.Provider)
+	}
+
+	// step12: install cluster watch component
+	common.BuildWatchComponentTaskStep(task, cls, "")
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildCreateClusterTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.OperatorKey.String()] = opt.Operator
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CreateClusterJob.String()
+
+	if len(opt.WorkerNodes) > 0 {
+		task.CommonParams[cloudprovider.WorkerNodeIPsKey.String()] = strings.Join(opt.WorkerNodes, ",")
+	}
+	if len(opt.MasterNodes) > 0 {
+		task.CommonParams[cloudprovider.MasterNodeIPsKey.String()] = strings.Join(opt.MasterNodes, ",")
+	}
+
+	return task, nil
 }
 
 // BuildImportClusterTask build import cluster task
