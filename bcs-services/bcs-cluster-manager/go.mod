@@ -14,7 +14,6 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute v1.0.0
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice v1.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.1.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armsubscriptions v1.3.0
@@ -70,6 +69,11 @@ require (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kubectl v0.0.0-00010101000000-000000000000
 	sigs.k8s.io/aws-iam-authenticator v0.6.17
+)
+
+require (
+	github.com/Azure/azure-sdk-for-go/profile/p20200901 v0.1.1
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3 v3.0.0
 )
 
 require (
