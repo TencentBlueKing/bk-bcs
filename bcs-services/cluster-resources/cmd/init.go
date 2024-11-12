@@ -137,6 +137,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		return err
 	}
 
+	// ipv6 support
 	if crSvc.conf.Server.AddressIPv6 != "" {
 		ipv6Addr := net.JoinHostPort(crSvc.conf.Server.AddressIPv6, grpcPort)
 		metadata[types.IPV6] = ipv6Addr
@@ -184,6 +185,7 @@ func (crSvc *clusterResourcesService) initMicro() error {
 		return err
 	}
 
+	// init micro service
 	crSvc.microSvc = micro.NewService(micro.AfterStop(func() error {
 		audit2.GetAuditClient().Close()
 		return nil
@@ -247,6 +249,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 
 	var etcdTLS *tls.Config
 	var err error
+	// etcd cert
 	if crSvc.conf.Etcd.EtcdCa != "" && crSvc.conf.Etcd.EtcdCert != "" && crSvc.conf.Etcd.EtcdKey != "" {
 		etcdSecure = true
 		etcdTLS, err = ssl.ClientTslConfVerity(
@@ -272,6 +275,7 @@ func (crSvc *clusterResourcesService) initRegistry() error {
 
 // initTLSConfig 初始化 Server 与 client TLS 配置
 func (crSvc *clusterResourcesService) initTLSConfig() error {
+	// server tls config
 	if crSvc.conf.Server.Cert != "" && crSvc.conf.Server.Key != "" && crSvc.conf.Server.Ca != "" {
 		tlsConfig, err := ssl.ServerTslConfVerityClient(
 			crSvc.conf.Server.Ca, crSvc.conf.Server.Cert, crSvc.conf.Server.Key, crSvc.conf.Server.CertPwd,
@@ -284,6 +288,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 		log.Info(crSvc.ctx, "load cluster resources server tls config successfully")
 	}
 
+	// client tls config
 	if crSvc.conf.Client.Cert != "" && crSvc.conf.Client.Key != "" && crSvc.conf.Client.Ca != "" {
 		tlsConfig, err := ssl.ClientTslConfVerity(
 			crSvc.conf.Client.Ca, crSvc.conf.Client.Cert, crSvc.conf.Client.Key, crSvc.conf.Client.CertPwd,
@@ -305,6 +310,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 
+	// grpc dial options
 	grpcDialOpts := []grpc.DialOption{
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallRecvMsgSize(conf.MaxGrpcMsgSize),
@@ -337,6 +343,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		}
 	}
 
+	// init route
 	router := mux.NewRouter()
 	router.Handle("/{uri:.*}", rmMux)
 	log.Info(crSvc.ctx, "register grpc service handler to path /")
@@ -363,6 +370,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 		),
 	}
 
+	// ipv6 support
 	dualStackListener := listener.NewDualStackListener()
 	if err := dualStackListener.AddListenerWithAddr(httpAddr); err != nil {
 		return err
@@ -395,6 +403,7 @@ func handlerSwagger(w http.ResponseWriter, r *http.Request) {
 	httpSwagger.Handler(httpSwagger.URL("cluster-resources.swagger.json")).ServeHTTP(w, r)
 }
 
+// run 启动 HTTP 服务
 func (crSvc *clusterResourcesService) run(httpAddr string, dualStackListener net.Listener) {
 	var err error
 	log.Info(crSvc.ctx, "start http gateway server on address %s", httpAddr)
@@ -424,6 +433,7 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 		Handler: metricMux,
 	}
 
+	// ipv6 support
 	dualStackListener := listener.NewDualStackListener()
 	if err := dualStackListener.AddListenerWithAddr(metricAddr); err != nil {
 		return err
@@ -436,6 +446,7 @@ func (crSvc *clusterResourcesService) initMetricService() error {
 		log.Info(crSvc.ctx, "metric serve dualStackListener with ipv6: %s", ipv6Addr)
 	}
 
+	// start metric server
 	go func() {
 		var err error
 		log.Info(crSvc.ctx, "start metric server on address %s", metricAddr)
@@ -476,6 +487,8 @@ func (crSvc *clusterResourcesService) initModel() error {
 
 		password = string(realPwd)
 	}
+
+	// init mongo options
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(crSvc.conf.Mongo.Address, ","),
 		ConnectTimeoutSeconds: int(crSvc.conf.Mongo.ConnectTimeout),
@@ -488,6 +501,7 @@ func (crSvc *clusterResourcesService) initModel() error {
 		Monitor:               otelmongo.NewMonitor(),
 	}
 
+	// init mongo db
 	mongoDB, err := mongo.NewDB(mongoOptions)
 	if err != nil {
 		log.Error(crSvc.ctx, "init mongo db failed, err %s", err.Error())

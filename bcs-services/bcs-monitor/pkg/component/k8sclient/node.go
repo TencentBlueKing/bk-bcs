@@ -45,6 +45,7 @@ func GetNodeList(ctx context.Context, clusterID string, excludeMasterRole, filte
 	nodeNameList := make([]string, 0)
 	for _, item := range nodeList.Items {
 		// 过滤掉被标记的节点，该 annotation 表示该节点不参与资源调度
+		// nolint
 		if v, ok := item.Annotations["io.tencent.bcs.dev/filter-node-resource"]; ok && v == "true" && filter {
 			continue
 		}
@@ -114,7 +115,6 @@ func GetMasterNodeList(ctx context.Context, clusterID string) ([]string, []strin
 	}
 
 	listOptions := metav1.ListOptions{}
-	listOptions.LabelSelector = "node-role.kubernetes.io/master=true,io.tencent.bcs.dev/filter-node-resource!=true"
 
 	nodeList, err := client.CoreV1().Nodes().List(ctx, listOptions)
 	if err != nil {
@@ -124,6 +124,20 @@ func GetMasterNodeList(ctx context.Context, clusterID string) ([]string, []strin
 	nodeIPList := make([]string, 0)
 	nodeNameList := make([]string, 0)
 	for _, item := range nodeList.Items {
+		// 过滤掉被标记的节点，该 annotation 表示该节点不参与资源调度
+		var (
+			filter bool
+			master bool
+		)
+		if v, ok := item.Annotations["io.tencent.bcs.dev/filter-node-resource"]; ok && v == "true" {
+			filter = true
+		}
+		if v, ok := item.Labels["node-role.kubernetes.io/master"]; ok && v == "true" {
+			master = true
+		}
+		if !filter && !master {
+			continue
+		}
 		nodeNameList = append(nodeNameList, item.Name)
 		for _, addr := range item.Status.Addresses {
 			if addr.Type == v1.NodeInternalIP {
