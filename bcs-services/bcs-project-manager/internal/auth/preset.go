@@ -51,4 +51,13 @@ var ActionPermissions = map[string]string{
 	"Namespace.ListNamespaces":       namespace.CanListNamespaceOperation,
 	"Namespace.ListNativeNamespaces": namespace.CanListNamespaceOperation,
 	"Namespace.DeleteNamespace":      namespace.CanDeleteNamespaceOperation,
+	// project quota
+	"BCSProjectQuota.CreateProjectQuota":    project.CanCreateProjectOperation,
+	"BCSProjectQuota.GetProjectQuota":       project.CanViewProjectOperation,
+	"BCSProjectQuota.UpdateProjectQuota":    project.CanEditProjectOperation,
+	"BCSProjectQuota.ScaleUpProjectQuota":   project.CanEditProjectOperation,
+	"BCSProjectQuota.ScaleDownProjectQuota": project.CanEditProjectOperation,
+	"BCSProjectQuota.DeleteProjectQuota":    project.CanCreateProjectOperation,
+	"BCSProjectQuota.ListProjectQuotas":     project.CanViewProjectOperation,
+	"BCSProjectQuota.GetProjectQuotasUsage": project.CanViewProjectOperation,
 }

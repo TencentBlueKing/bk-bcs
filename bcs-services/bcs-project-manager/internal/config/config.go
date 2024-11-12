@@ -111,15 +111,16 @@ type IAMConfig struct {
 
 // ITSMConfig itsm操作需要的配置
 type ITSMConfig struct {
-	Enable                   bool   `yaml:"enable" usage:"enable ITSM sync"`
-	AutoRegister             bool   `yaml:"autoRegister" usage:"auto register itsm services"`
-	External                 bool   `yaml:"external" usage:"use itsm as external"`
-	GatewayHost              string `yaml:"gatewayHost" usage:"gateway host"`
-	Host                     string `yaml:"host" usage:"itsm esb host"`
-	CreateNamespaceServiceID int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
-	UpdateNamespaceServiceID int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
-	DeleteNamespaceServiceID int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`
-	Approvers                string `yaml:"approvers" usage:"approvers for itsm"`
+	Enable                      bool   `yaml:"enable" usage:"enable ITSM sync"`
+	AutoRegister                bool   `yaml:"autoRegister" usage:"auto register itsm services"`
+	External                    bool   `yaml:"external" usage:"use itsm as external"`
+	GatewayHost                 string `yaml:"gatewayHost" usage:"gateway host"`
+	Host                        string `yaml:"host" usage:"itsm esb host"`
+	CreateNamespaceServiceID    int    `yaml:"createNsSvcID" usage:"service id for create ns service"`
+	UpdateNamespaceServiceID    int    `yaml:"updateNsSvcID" usage:"service id for update ns service"`
+	DeleteNamespaceServiceID    int    `yaml:"deleteNsSvcID" usage:"service id for delete ns service"`
+	QuotaManagerCommonServiceID int    `yaml:"quotaCommonSvcID" usage:"service id for quota manager common service"`
+	Approvers                   string `yaml:"approvers" usage:"approvers for itsm"`
 }
 
 // BkMonitorConfig 蓝鲸监控操作需要的配置
@@ -172,6 +173,13 @@ type ListForIAMConfig struct {
 	All  bool     `yaml:"all" usage:"list all projects"`
 }
 
+// TaskConfig option for dispatch task broker & worker
+type TaskConfig struct {
+	QueueAddress string `yaml:"address"`
+	Exchange     string `yaml:"exchange"`
+	WorkerCnt    int    `yaml:"workerCnt"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd                       EtcdConfig                   `yaml:"etcd"`
@@ -192,6 +200,7 @@ type ProjectConfig struct {
 	ListForIAM                 ListForIAMConfig             `yaml:"listForIAM"`
 	TracingConfig              conf.TracingConfig           `yaml:"tracingConfig"`
 	RestrictAuthorizedProjects bool                         `yaml:"restrictAuthorizedProjects"`
+	TaskConfig                 TaskConfig                   `yaml:"taskConfig"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {
@@ -222,15 +231,15 @@ func LoadConfig(filePath string) (*ProjectConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	conf := &ProjectConfig{}
-	if err = yaml.Unmarshal(yamlFile, conf); err != nil {
+	confLocal := &ProjectConfig{}
+	if err = yaml.Unmarshal(yamlFile, confLocal); err != nil {
 		return nil, err
 	}
 	// 初始化服务地址
-	conf.initServerAddress()
+	confLocal.initServerAddress()
 	// 初始化mongo password
-	conf.initFromEnv()
+	confLocal.initFromEnv()
 	// 用于后续的使用
-	GlobalConf = conf
-	return conf, nil
+	GlobalConf = confLocal
+	return confLocal, nil
 }

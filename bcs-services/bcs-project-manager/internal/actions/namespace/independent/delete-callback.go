@@ -19,7 +19,7 @@ import (
 )
 
 // DeleteNamespaceCallback implement for DeleteNamespaceCallback interface
-func (a *IndependentNamespaceAction) DeleteNamespaceCallback(ctx context.Context,
+func (c *IndependentNamespaceAction) DeleteNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
 	return nil
 }

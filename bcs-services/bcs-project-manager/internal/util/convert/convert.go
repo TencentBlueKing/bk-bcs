@@ -14,9 +14,11 @@
 package convert
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
+	"google.golang.org/protobuf/encoding/protojson"
 	spb "google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -34,6 +36,48 @@ func Map2pbStruct(m map[string]interface{}) *spb.Struct {
 	return &spb.Struct{
 		Fields: fields,
 	}
+}
+
+// ProtobufStructToMap converts a protobuf struct to a map.
+func ProtobufStructToMap(s *spb.Struct) (map[string]interface{}, error) {
+	b, err := protojson.Marshal(s)
+	if err != nil {
+		return nil, err
+	}
+	m := make(map[string]interface{})
+	err = json.Unmarshal(b, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// MarshalInterfaceToListValue trans interface to ListValue
+func MarshalInterfaceToListValue(data interface{}) (*spb.ListValue, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	l := &spb.ListValue{}
+	err = l.UnmarshalJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+// MarshalInterfaceToValue trans interface to Struct
+func MarshalInterfaceToValue(data interface{}) (*spb.Struct, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	l := &spb.Struct{}
+	err = l.UnmarshalJSON(b)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
 }
 
 // MapBool2pbStruct convert bool type to pbstruct
@@ -141,105 +185,82 @@ func InterfaceToValue(v interface{}) *spb.Value {
 	}
 }
 
-// NOCC:golint/fnsize(设计如此:)
-// nolint
 func toValue(v reflect.Value) *spb.Value {
 	switch v.Kind() {
 	case reflect.Bool:
-		return &spb.Value{
-			Kind: &spb.Value_BoolValue{
-				BoolValue: v.Bool(),
-			},
-		}
+		return &spb.Value{Kind: &spb.Value_BoolValue{BoolValue: v.Bool()}}
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return &spb.Value{
-			Kind: &spb.Value_NumberValue{
-				NumberValue: float64(v.Int()),
-			},
-		}
+		return numberValue(float64(v.Int()))
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return &spb.Value{
-			Kind: &spb.Value_NumberValue{
-				NumberValue: float64(v.Uint()),
-			},
-		}
+		return numberValue(float64(v.Uint()))
 	case reflect.Float32, reflect.Float64:
-		return &spb.Value{
-			Kind: &spb.Value_NumberValue{
-				NumberValue: v.Float(),
-			},
-		}
+		return &spb.Value{Kind: &spb.Value_NumberValue{NumberValue: v.Float()}}
 	case reflect.Ptr:
 		if v.IsNil() {
 			return nil
 		}
 		return toValue(reflect.Indirect(v))
 	case reflect.Array, reflect.Slice:
-		size := v.Len()
-		if size == 0 {
-			return nil
-		}
-		values := make([]*spb.Value, size)
-		for i := 0; i < size; i++ {
-			values[i] = toValue(v.Index(i))
-		}
-		return &spb.Value{
-			Kind: &spb.Value_ListValue{
-				ListValue: &spb.ListValue{
-					Values: values,
-				},
-			},
-		}
+		return listValue(v)
 	case reflect.Struct:
-		t := v.Type()
-		size := v.NumField()
-		if size == 0 {
-			return nil
-		}
-		fields := make(map[string]*spb.Value, size)
-		for i := 0; i < size; i++ {
-			name := t.Field(i).Name
-			if len(name) > 0 && 'A' <= name[0] && name[0] <= 'Z' {
-				fields[name] = toValue(v.Field(i))
-			}
-		}
-		if len(fields) == 0 {
-			return nil
-		}
-		return &spb.Value{
-			Kind: &spb.Value_StructValue{
-				StructValue: &spb.Struct{
-					Fields: fields,
-				},
-			},
-		}
+		return structValue(v)
 	case reflect.Map:
-		keys := v.MapKeys()
-		if len(keys) == 0 {
-			return nil
-		}
-		fields := make(map[string]*spb.Value, len(keys))
-		for _, k := range keys {
-			if k.Kind() == reflect.String {
-				fields[k.String()] = toValue(v.MapIndex(k))
-			}
-		}
-		if len(fields) == 0 {
-			return nil
-		}
-		return &spb.Value{
-			Kind: &spb.Value_StructValue{
-				StructValue: &spb.Struct{
-					Fields: fields,
-				},
-			},
-		}
+		return mapValue(v)
 	default:
-		// 最后排序
-		return &spb.Value{
-			Kind: &spb.Value_StringValue{
-				StringValue: fmt.Sprint(v),
-			},
+		return &spb.Value{Kind: &spb.Value_StringValue{StringValue: fmt.Sprint(v)}}
+	}
+}
+
+func numberValue(num float64) *spb.Value {
+	return &spb.Value{Kind: &spb.Value_NumberValue{NumberValue: num}}
+}
+
+func listValue(v reflect.Value) *spb.Value {
+	size := v.Len()
+	if size == 0 {
+		return nil
+	}
+	values := make([]*spb.Value, size)
+	for i := 0; i < size; i++ {
+		values[i] = toValue(v.Index(i))
+	}
+	return &spb.Value{Kind: &spb.Value_ListValue{ListValue: &spb.ListValue{Values: values}}}
+}
+
+func structValue(v reflect.Value) *spb.Value {
+	t := v.Type()
+	size := v.NumField()
+	if size == 0 {
+		return nil
+	}
+	fields := make(map[string]*spb.Value, size)
+	for i := 0; i < size; i++ {
+		name := t.Field(i).Name
+		if len(name) > 0 && 'A' <= name[0] && name[0] <= 'Z' {
+			fields[name] = toValue(v.Field(i))
 		}
 	}
+	if len(fields) == 0 {
+		return nil
+	}
+	return &spb.Value{Kind: &spb.Value_StructValue{StructValue: &spb.Struct{Fields: fields}}}
+}
+
+func mapValue(v reflect.Value) *spb.Value {
+	keys := v.MapKeys()
+	if len(keys) == 0 {
+		return nil
+	}
+	fields := make(map[string]*spb.Value, len(keys))
+	for _, k := range keys {
+		if k.Kind() == reflect.String {
+			fields[k.String()] = toValue(v.MapIndex(k))
+		}
+	}
+
+	if len(fields) == 0 {
+		return nil
+	}
+
+	return &spb.Value{Kind: &spb.Value_StructValue{StructValue: &spb.Struct{Fields: fields}}}
 }

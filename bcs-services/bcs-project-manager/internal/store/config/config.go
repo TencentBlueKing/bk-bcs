@@ -39,6 +39,9 @@ const (
 	ConfigKeyUpdateNamespaceItsmServiceID = "update_namespace_itsm_service_id"
 	// ConfigKeyDeleteNamespaceItsmServiceID used to create an itsm ticket when deleting a namespace in a shared cluster
 	ConfigKeyDeleteNamespaceItsmServiceID = "delete_namespace_itsm_service_id"
+
+	// QuotaManagerCommonItsmServiceID used to create an itsm ticket when quota manager
+	QuotaManagerCommonItsmServiceID = "quota_manager_common_itsm_service_id"
 )
 
 // NOCC:deadcode/unused(设计如此:)

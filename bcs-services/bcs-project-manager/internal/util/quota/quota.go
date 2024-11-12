@@ -42,6 +42,60 @@ func ValidateResourceQuota(quota *proto.ResourceQuota) error {
 	return nil
 }
 
+// ResourceMemoryCompute resource mem calculate
+func ResourceMemoryCompute(inc bool, origin string, num string) (string, error) {
+	memOriginQuantity, err := resource.ParseQuantity(origin)
+	if err != nil {
+		return "", errorx.NewParamErr("failed to parse origin memory quantity")
+	}
+
+	memQuantity, err := resource.ParseQuantity(num)
+	if err != nil {
+		return "", errorx.NewParamErr("failed to parse add memory quantity")
+	}
+
+	// origin add num
+	if inc {
+		memOriginQuantity.Add(memQuantity)
+		return memOriginQuantity.String(), nil
+	}
+
+	cmp := memOriginQuantity.Cmp(memQuantity)
+	if cmp == -1 {
+		return "0", nil
+	}
+	memOriginQuantity.Sub(memQuantity)
+
+	return memOriginQuantity.String(), nil
+}
+
+// ResourceCpuCompute resource cpu calculate
+func ResourceCpuCompute(inc bool, origin string, num string) (string, error) {
+	cpuOriginQuantity, err := resource.ParseQuantity(origin)
+	if err != nil {
+		return "", errorx.NewParamErr("failed to parse origin cpu quantity")
+	}
+
+	cpuQuantity, err := resource.ParseQuantity(num)
+	if err != nil {
+		return "", errorx.NewParamErr("failed to parse add cpu quantity")
+	}
+
+	// origin add num
+	if inc {
+		cpuOriginQuantity.Add(cpuQuantity)
+		return cpuOriginQuantity.String(), nil
+	}
+
+	cmp := cpuOriginQuantity.Cmp(cpuQuantity)
+	if cmp == -1 {
+		return "0", nil
+	}
+	cpuOriginQuantity.Sub(cpuQuantity)
+
+	return cpuOriginQuantity.String(), nil
+}
+
 // TransferToProto transfer k8s ResourceQuota to proto ResourceQuota
 func TransferToProto(q *corev1.ResourceQuota) (
 	quota *proto.ResourceQuota, used *proto.ResourceQuota, cpuUseRate float32, memoryUseRate float32) {

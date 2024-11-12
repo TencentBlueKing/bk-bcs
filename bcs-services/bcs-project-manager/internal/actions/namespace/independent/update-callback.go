@@ -19,7 +19,7 @@ import (
 )
 
 // UpdateNamespaceCallback implement for UpdateNamespaceCallback interface
-func (a *IndependentNamespaceAction) UpdateNamespaceCallback(ctx context.Context,
+func (c *IndependentNamespaceAction) UpdateNamespaceCallback(ctx context.Context,
 	req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error {
 	return nil
 }

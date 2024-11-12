@@ -34,7 +34,7 @@ import (
 )
 
 // ListNamespaces implement for ListNamespaces interface
-func (a *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
+func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error {
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
 	if err != nil {

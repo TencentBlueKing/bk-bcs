@@ -18,6 +18,7 @@ import (
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 )
@@ -44,9 +45,8 @@ func GetClientGroup() *ClientGroup {
 	return group
 }
 
-// Client get client from client group by clusterID
-func (cg *ClientGroup) Client(clusterID string) (*kubernetes.Clientset, error) {
-	restConfig := &rest.Config{
+func (cg *ClientGroup) getRestConfig(clusterID string) *rest.Config {
+	return &rest.Config{
 		Host:        cg.GatewayHost + "/clusters/" + clusterID,
 		BearerToken: cg.AuthToken,
 		TLSClientConfig: rest.TLSClientConfig{
@@ -55,10 +55,29 @@ func (cg *ClientGroup) Client(clusterID string) (*kubernetes.Clientset, error) {
 		QPS:   100,
 		Burst: 100,
 	}
+}
+
+// Client get client from client group by clusterID
+func (cg *ClientGroup) Client(clusterID string) (*kubernetes.Clientset, error) {
+	restConfig := cg.getRestConfig(clusterID)
 	clientset, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		logging.Error("get clientset for cluster %s failed, err: ", clusterID)
 		return nil, err
 	}
 	return clientset, nil
+}
+
+// RuntimeClient get client from controller runtime client by clusterID
+func (cg *ClientGroup) RuntimeClient(clusterID string) (client.Client, error) {
+	restConfig := cg.getRestConfig(clusterID)
+
+	// 创建 Controller-runtime 客户端
+	runtimeClient, err := client.New(restConfig, client.Options{})
+	if err != nil {
+		logging.Error("get runtime client for cluster %s failed, err: ", clusterID)
+		return nil, err
+	}
+
+	return runtimeClient, nil
 }

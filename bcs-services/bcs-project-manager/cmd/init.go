@@ -58,6 +58,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/manager"
+	pmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
@@ -111,6 +112,7 @@ func newProjectSvc(opt *conf.ProjectConfig) *ProjectService {
 func (p *ProjectService) Init() error {
 	for _, f := range []func() error{
 		p.initTLSConfig,
+		p.runTaskServer,
 		p.initMongo,
 		p.initCache,
 		p.initEtcd,
@@ -189,6 +191,19 @@ func (p *ProjectService) initMongo() error {
 	store.InitModel(store.GetMongo())
 	p.model = store.GetModel()
 	logging.Info("init mongo successfully")
+	return nil
+}
+
+func (p *ProjectService) runTaskServer() error {
+	_, err := pmanager.RunTaskManager()
+	if err != nil {
+		logging.Error("run task manager failed, err: %s", err.Error())
+		return err
+	}
+
+	pmanager.RegisterQuotaMgrs()
+	pmanager.RegisterValidateMgrs()
+
 	return nil
 }
 
@@ -390,6 +405,12 @@ func (p *ProjectService) registerHandlers(grpcServer server.Server) error {
 		logging.Error("register healthz handler failed, err: %s", err.Error())
 		return err
 	}
+	// 添加项目额度相关handler
+	if err := proto.RegisterBCSProjectQuotaHandler(grpcServer, handler.NewProjectQuota(p.model)); err != nil {
+		logging.Error("register healthz handler failed, err: %s", err.Error())
+		return err
+	}
+
 	return nil
 }
 
@@ -470,6 +491,17 @@ func (p *ProjectService) registerGatewayFromEndPoint(gwMux *runtime.ServeMux, gr
 		logging.Error("register healthz endpoints to gateway failed, err %s", err.Error())
 		return err
 	}
+	// 注册额度管理相关 endpoint
+	if err := proto.RegisterBCSProjectQuotaGwFromEndpoint(
+		context.TODO(),
+		gwMux,
+		net.JoinHostPort(p.opt.Server.Address, strconv.Itoa(p.opt.Server.Port)),
+		grpcDialOpts,
+	); err != nil {
+		logging.Error("register project quota endpoints to gateway failed, err %s", err.Error())
+		return err
+	}
+
 	return nil
 }
 

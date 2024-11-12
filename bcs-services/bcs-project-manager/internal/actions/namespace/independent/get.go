@@ -35,7 +35,7 @@ import (
 )
 
 // GetNamespace implement for GetNamespace interface
-func (a *IndependentNamespaceAction) GetNamespace(ctx context.Context,
+func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	req *proto.GetNamespaceRequest, resp *proto.GetNamespaceResponse) error {
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
 	if err != nil {

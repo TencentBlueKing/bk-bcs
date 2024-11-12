@@ -26,7 +26,7 @@ import (
 )
 
 // ListNativeNamespaces implement for ListNativeNamespaces interface
-func (a *IndependentNamespaceAction) ListNativeNamespaces(ctx context.Context,
+func (c *IndependentNamespaceAction) ListNativeNamespaces(ctx context.Context,
 	req *proto.ListNativeNamespacesRequest, resp *proto.ListNativeNamespacesResponse) error {
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
 	if err != nil {
@@ -43,7 +43,7 @@ func (a *IndependentNamespaceAction) ListNativeNamespaces(ctx context.Context,
 		logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 		return err
 	}
-	project, err := a.model.GetProject(ctx, cluster.GetProjectID())
+	project, err := c.model.GetProject(ctx, cluster.GetProjectID())
 	if err != nil {
 		logging.Error("get project %s from db failed, err: %s", cluster, err.Error())
 		return errorx.NewDBErr(err.Error())

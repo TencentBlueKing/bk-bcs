@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/config"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
 	vvm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variablevalue"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/entity"
@@ -70,6 +71,16 @@ type ProjectModel interface {
 
 	GetConfig(ctx context.Context, key string) (string, error)
 	SetConfig(ctx context.Context, key, value string) error
+
+	CreateProjectQuota(ctx context.Context, projectQuota *quota.ProjectQuota) error
+	GetProjectQuotaById(ctx context.Context, quotaId string) (*quota.ProjectQuota, error)
+	UpdateProjectQuota(ctx context.Context, projectQuota *quota.ProjectQuota) error
+	DeleteProjectQuota(ctx context.Context, quotaId string) error
+	ListProjectQuotas(ctx context.Context, cond *operator.Condition,
+		pagination *page.Pagination) ([]quota.ProjectQuota, int64, error)
+	UpdateProjectQuotaByField(ctx context.Context, projectQuota entity.M) error
+	ListProjectQuotasByProjectId(ctx context.Context, projectId string) ([]quota.ProjectQuota, error)
+	ListProjectQuotasByBizId(ctx context.Context, bizId string) ([]quota.ProjectQuota, error)
 }
 
 type modelSet struct {
@@ -78,6 +89,7 @@ type modelSet struct {
 	*vdm.ModelVariableDefinition
 	*vvm.ModelVariableValue
 	*config.ModelConfig
+	*quota.ModelProjectQuota
 }
 
 var model *modelSet
@@ -90,6 +102,7 @@ func New(db drivers.DB) ProjectModel {
 		ModelVariableDefinition: vdm.New(db),
 		ModelVariableValue:      vvm.New(db),
 		ModelConfig:             config.New(db),
+		ModelProjectQuota:       quota.New(db),
 	}
 }
 
@@ -101,6 +114,7 @@ func InitModel(db drivers.DB) {
 		ModelVariableDefinition: vdm.New(db),
 		ModelVariableValue:      vvm.New(db),
 		ModelConfig:             config.New(db),
+		ModelProjectQuota:       quota.New(db),
 	}
 }
 

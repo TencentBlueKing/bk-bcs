@@ -120,3 +120,13 @@ func NewRequestBkMonitorErr(msg string) *ProjectError {
 func NewReadableErr(code uint32, msg string) *ProjectError {
 	return NewProjectError(code, msg, "")
 }
+
+// NewBuildTaskErr build task error
+func NewBuildTaskErr(msg string) *ProjectError {
+	return NewProjectError(RequestTaskErr, RequestTaskErrMsg, fmt.Sprint(msg))
+}
+
+// NewCheckQuotaStatusErr check quota status error
+func NewCheckQuotaStatusErr(msg string) *ProjectError {
+	return NewProjectError(RequestCheckQuotaStatusErr, RequestQuotaStatusErrMsg, fmt.Sprint(msg))
+}

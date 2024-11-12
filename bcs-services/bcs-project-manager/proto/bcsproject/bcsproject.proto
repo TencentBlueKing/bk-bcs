@@ -2617,3 +2617,648 @@ message PingResponse {
     description: "请求 ID"
   }];
 }
+
+// BCSProjectQuota 项目维度的额度/容量管理(共享集群、CA整机额度、算力集群额度)
+service BCSProjectQuota {
+
+  // CreateProjectQuota 申请项目资源额度
+  rpc CreateProjectQuota(CreateProjectQuotaRequest) returns (ProjectQuotaResponse) {
+    option (google.api.http) = {
+      post : "/bcsproject/v1/projectQuotas"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "创建项目配额信息"
+      summary : "创建项目配额信息"
+    };
+  }
+
+  rpc GetProjectQuota(GetProjectQuotaRequest) returns (ProjectQuotaResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projectQuotas/{quotaId}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "通过quotaID查询项目quota信息"
+      summary : "查询项目quota资源信息"
+    };
+  }
+
+  rpc UpdateProjectQuota(UpdateProjectQuotaRequest) returns (ProjectQuotaResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projectQuotas/{quotaId}"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新项目quota信息"
+      summary : "更新项目资源quota"
+    };
+  }
+
+  rpc ScaleUpProjectQuota(ScaleUpProjectQuotaRequest) returns (ScaleUpProjectQuotaResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projectQuotas/{quotaId}/scaleup"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "扩容项目quota"
+      summary : "扩容项目资源quota"
+    };
+  }
+
+  rpc ScaleDownProjectQuota(ScaleDownProjectQuotaRequest) returns (ScaleDownProjectQuotaResponse) {
+    option (google.api.http) = {
+      put : "/bcsproject/v1/projectQuotas/{quotaId}/scaledown"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "缩容项目quota"
+      summary : "缩容项目资源quota"
+    };
+  }
+
+  // DeleteProjectQuota 退回资源额度
+  rpc DeleteProjectQuota(DeleteProjectQuotaRequest) returns (ProjectQuotaResponse) {
+    option (google.api.http) = {
+      delete : "/bcsproject/v1/projectQuotas/{quotaId}"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "删除项目资源quota"
+    };
+  }
+
+  rpc ListProjectQuotas(ListProjectQuotasRequest) returns (ListProjectQuotasResponse){
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projectQuotas"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "通过查询参数过滤项目quota列表, 支持分页和全量数据"
+      summary : "查询项目资源quota列表"
+    };
+  }
+
+  rpc GetProjectQuotasUsage(GetProjectQuotasUsageReq) returns (GetProjectQuotasUsageResp){
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projectQuotas/{quotaId}/usage"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询用户项目quota的使用情况, 包括配额和已使用资源"
+      summary : "查询项目配额使用情况"
+    };
+  }
+}
+
+message ProjectQuota {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ProjectQuota"
+      description : "项目配额信息(支持不同类型)"
+    }
+  };
+  string quotaId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "资源配额ID"
+  }];
+  string quotaName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaName",
+    description: "配额中文名称, 长度不能超过64字符"
+  }];
+  string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目ID, 全局唯一, 长度为32位字符串, 自动生成"
+  }];
+  string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过32字符"
+  }];
+  string clusterId = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群ID"
+  }];
+  string clusterName = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterName",
+    description: "集群名称"
+  }];
+  string nameSpace = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nameSpace",
+    description: "集群名称空间维度的额度管理"
+  }];
+  string businessID = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "项目绑定的蓝鲸CMDB中业务ID信息"
+  }];
+  string businessName = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessName",
+    description: "项目绑定的蓝鲸CMDB中业务名称"
+  }];
+  string description = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "description",
+    description: "项目配额描述"
+  }];
+  bool isDeleted = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isDeleted",
+    description: "项目下该资源配额是否已下线(默认软删),同类型同种类资源仅不允许重复申请,可更改配额"
+  }];
+  string quotaType = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaType",
+    description: "资源类型(目前支持CA整机资源、共享集群维度资源)"
+  }];
+  QuotaResource quota = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "不同资源类型的具体配置资源quota"
+  }];
+  string status = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "资源quota的状态(申请中、审批中、已申请)"
+  }];
+  string message = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message",
+    description: "不同状态中的具体原因(审批不通过、资源不足等原因)"
+  }];
+  string createTime = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "createTime",
+    description: "创建时间"
+  }];
+  string updateTime = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updateTime",
+    description: "更新时间"
+  }];
+  string creator = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "creator",
+    description: "项目创建者"
+  }];
+  string updater = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater",
+    description: "项目更新者"
+  }];
+  string provider = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "provider",
+    description: "云底层资源提供方"
+  }];
+}
+
+message QuotaResource {
+  InstanceTypeConfig zoneResources = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zoneResources",
+    description: "机型所在可用区资源配置"
+  }];
+  DeviceInfo cpu = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpu",
+    description: "共享集群资源下该项目的cpu额度"
+  }];
+  DeviceInfo mem = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mem",
+    description: "共享集群资源下该项目的mem额度"
+  }];
+  DeviceInfo gpu = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpu",
+    description: "共享集群资源下该项目的gpu额度"
+  }];
+}
+
+message QuotaStrategy {
+  google.protobuf.Int64Value expectTime = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "expectTime",
+    description: "quota期望生效时间, 时间戳。若为nil 或者为空则标识审批通过后立即执行"
+  }];
+  bool IsUrgencyResource = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isUrgencyResource",
+    description: "该quota额度是否为紧急资源,若为紧急资源，计费方式有所不同"
+  }];
+}
+
+// InstanceTypeConfig 整机资源配置
+message InstanceTypeConfig {
+  string region = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "region",
+    description: "地域"
+  }];
+  string instanceType = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "instanceType",
+    description: "机型"
+  }];
+  uint32 cpu = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cpu",
+    description: "机型cpu信息，与机型instanceType互斥，比instanceType优先级高"
+  }];
+  uint32 mem = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "mem",
+    description: "机型mem信息，与机型instanceType互斥，比instanceType优先级高"
+  }];
+  uint32 gpu = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpu",
+    description: "机型gpu信息，与机型instanceType互斥，比instanceType优先级高，可以会为0"
+  }];
+  string zoneId = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zoneId",
+    description: "可用区Id"
+  }];
+  string zoneName = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "zoneName",
+    description: "可用区名称"
+  }];
+  uint32 quotaNum = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaNum",
+    description: "机型申请的配额"
+  }];
+  DataDisk systemDisk = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "systemDisk",
+    description: "系统盘信息，BCS默认设置为高性能云盘，大小为50G"
+  }];
+  repeated DataDisk dataDisks = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "dataDisks",
+    description: "数据盘信息，无默认设置则不购买"
+  }];
+}
+
+// DataDisk 数据盘定义
+message DataDisk {
+  string diskType = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "diskType",
+    description: "数据盘类型，LOCAL_BASIC（默认）,LOCAL_SSD,CLOUD_BASE,CLOUD_SSD,CLOUD_PREMIUM(高性能云硬盘)"
+  }];
+  string diskSize = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "diskSize",
+    description: "数据盘大小，10G起跳，默认为0，为0时不购买"
+  }];
+}
+
+// DeviceInfo device data (cpu/mem/gpu)
+message DeviceInfo {
+  string deviceType = 1;
+  string deviceQuota = 2;
+  map<string, string> attributes = 3;
+}
+
+message CreateProjectQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "CreateProjectQuotaRequest"
+      description : "创建项目维度的quota资源配额"
+      required : [
+        "name",
+        "projectCode"
+      ]
+    }
+  };
+
+  string quotaName = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaName",
+    description: "配额中文名称, 长度不能超过64字符"
+  }, (validate.rules).string = {min_len : 1, max_len : 10240}];
+  string projectID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目ID, 全局唯一, 长度为32位字符串, 自动生成"
+  }];
+  string projectCode = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过32字符"
+  }];
+  string clusterId = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群ID"
+  }];
+  string clusterName = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterName",
+    description: "集群名称"
+  }];
+  string nameSpace = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nameSpace",
+    description: "集群名称空间维度的额度管理"
+  }];
+  string businessID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "项目绑定的蓝鲸CMDB中业务ID信息"
+  }];
+  string businessName = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessName",
+    description: "项目绑定的蓝鲸CMDB中业务名称"
+  }];
+  string description = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "description",
+    description: "项目配额描述"
+  }];
+  string quotaType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaType",
+    description: "资源类型(目前支持CA整机资源、共享集群维度资源)"
+  }];
+  string provider = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "provider",
+    description: "quota资源的供应商, 不同provider支持多种类型的quota"
+  }];
+  QuotaResource quota = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "不同资源类型的具体配置资源quota"
+  }];
+  map<string, string> labels = 13[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "资源quota的标签配置"
+  }];
+}
+
+message GetProjectQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectQuotaRequest"
+      description : "查询指定项目quota信息"
+      required : [
+        "quotaId"
+      ]
+    }
+  };
+
+  string quotaId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "项目quotaID"
+  }];
+}
+
+message UpdateProjectQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateProjectQuotaRequest"
+      description : "更新项目quota请求"
+    }
+  };
+
+  string quotaId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "资源quotaId"
+  }, (validate.rules).string = {len: 32, pattern: "^[0-9a-zA-Z-]+$"}];
+  string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "项目中文名称, 长度不能超过64字符"
+  }, (validate.rules).string = {max_len: 64}];
+  QuotaResource quota = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "更新资源quota"
+  }];
+  string updater = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater",
+    description: "更新者"
+  }];
+}
+
+message DeleteProjectQuotaRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteProjectQuotaRequest"
+      description : "删除项目资源quota"
+      required : [
+        "quotaId"
+      ]
+    }
+  };
+
+  string quotaId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "项目资源quotaId"
+  }, (validate.rules).string = {max_len: 128, pattern: "^[0-9a-zA-Z-]+$"}];
+}
+
+message ProjectQuotaResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ProjectQuota data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "返回详细信息, 可以为空"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  google.protobuf.Struct task = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "task",
+    description: "异步任务task详情信息"
+  }];
+  Perms web_annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "项目更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message ListProjectQuotasRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectQuotasRequest"
+      description : "通过查询条件查询项目维度的资源quota列表"
+    }
+  };
+
+  string quotaId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "配额Id"
+  }];
+  string quotaName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaName",
+    description: "配额中文名称"
+  }];
+  string projectID = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目ID, 全局唯一, 长度为32位字符串, 自动生成"
+  }];
+  string projectCode = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectCode",
+    description: "项目编码(英文缩写), 全局唯一, 长度不能超过32字符"
+  }];
+  string businessID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "businessID",
+    description: "项目绑定的蓝鲸CMDB中业务ID信息"
+  }];
+  string quotaType = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaType",
+    description: "资源类型(目前支持CA整机资源、共享集群维度资源)"
+  }];
+}
+
+message ListProjectQuotasData{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectQuotasData"
+      description : "项目资源quota数据"
+    }
+  };
+
+  uint32 total = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "total",
+    description: "总量"
+  }];
+  repeated ProjectQuota results = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "results",
+    description: "项目资源quota数据"
+  }];
+}
+
+message ListProjectQuotasResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ListProjectQuotasData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "返回项目quota信息, 包含总量及项目quota列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "项目更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message GetProjectQuotasUsageReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectQuotasUsageReq"
+      description : "查询指定项目quota使用情况"
+      required : [
+        "quotaId"
+      ]
+    }
+  };
+
+  string quotaId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "项目quotaId"
+  }];
+}
+
+message GetProjectQuotasUsageResp {
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  GetProjectQuotasUsageData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data",
+    description: "返回项目quota资源使用情况"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "项目更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message ZoneResourceUsage {
+  string zone = 1;
+  uint32 quota = 2;
+  uint32 used = 3;
+}
+
+message GetProjectQuotasUsageData {
+  ProjectQuota quota = 1;
+  string region = 2;
+  string instanceType = 3;
+  ZoneResourceUsage quotaUsage = 4;
+  uint32 cpu = 5;
+  uint32 mem = 6;
+  uint32 gpu = 7;
+}
+
+message ScaleUpProjectQuotaRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ScaleUpProjectQuotaRequest"
+      description : "根据不同的资源类型增量扩容项目维度的资源quota"
+    }
+  };
+
+  string quotaId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "配额Id"
+  }];
+  QuotaResource quota = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "扩容的资源容量,增量容量扩容"
+  }];
+  string updater = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater",
+    description: "操作人"
+  }];
+}
+
+message ScaleUpProjectQuotaResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  google.protobuf.Struct task = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "task",
+    description: "异步任务task详情信息"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "项目更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
+
+message ScaleDownProjectQuotaRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ScaleDownProjectQuotaRequest"
+      description : "缩容项目维度的资源quota"
+    }
+  };
+
+  string quotaId = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaId",
+    description: "配额Id"
+  }];
+  QuotaResource quota = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quota",
+    description: "缩容的资源容量"
+  }];
+  string updater = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "updater",
+    description: "操作人"
+  }];
+}
+
+message ScaleDownProjectQuotaResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  google.protobuf.Struct task = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "task",
+    description: "异步任务task详情信息"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+  Perms web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "项目更多信息，主要是权限相关"
+  }, json_name = "web_annotations"];
+}
