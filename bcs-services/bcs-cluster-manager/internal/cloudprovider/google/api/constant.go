@@ -13,6 +13,19 @@
 package api
 
 const (
+	// ClusterStatusProvisioning indicates the cluster is being created
+	ClusterStatusProvisioning = "PROVISIONING"
+	// ClusterStatusRunning indicates the cluster is running and fully usable
+	ClusterStatusRunning = "RUNNING"
+	// ClusterStatusReconciling indicates that some work is actively being done on the cluster, such as upgrading the master or node software
+	ClusterStatusReconciling = "RECONCILING"
+	// ClusterStatusStopping indicates the cluster is being deleted
+	ClusterStatusStopping = "STOPPING"
+	// ClusterStatusError indicates the cluster is unusable
+	ClusterStatusError = "ERROR"
+	// ClusterStatusDegraded indicates the cluster requires user action to restore full functionality
+	ClusterStatusDegraded = "DEGRADED"
+
 	// NodeGroupStatusProvisioning indicates the node pool is being created
 	NodeGroupStatusProvisioning = "PROVISIONING"
 	// NodeGroupStatusRunning indicates the node pool has been created and is fully usable
@@ -72,4 +85,10 @@ const (
 	MetadataKeyBlockProjectSshKey = "block-project-ssh-keys"
 	// MetadataKeyStartupScript is key name for startup script
 	MetadataKeyStartupScript = "startup-script"
+
+	// BCSRegionStateAvailable xxx
+	BCSRegionStateAvailable = "AVAILABLE"
+
+	// NetworkPolicyCalico for calico network policy
+	NetworkPolicyProviderCalico = "CALICO"
 )

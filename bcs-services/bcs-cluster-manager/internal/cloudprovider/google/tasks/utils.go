@@ -81,11 +81,11 @@ func checkGKEOperationStatus(containerCli *api.ContainerServiceClient, operation
 		}
 		if o.Status == "DONE" {
 			if o.Error != nil {
-				return fmt.Errorf("%d, %v", o.Error.Code, o.Error.Details)
+				return fmt.Errorf("operation error: %d, %v", o.Error.Code, o.Error.Details)
 			}
 			return loop.EndLoop
 		}
-		blog.Infof("taskID[%s] operation %s still running", taskID, o.SelfLink)
+		blog.Infof("taskID[%s] operation[%s] %s still running", taskID, o.Status, o.SelfLink)
 		return nil
 	}, loop.LoopInterval(d))
 }

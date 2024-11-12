@@ -53,7 +53,7 @@ func (n *NodeManager) GetNodeByIP(ip string, opt *cloudprovider.GetNodeOption) (
 
 // ListNodesByIP list node by IP set
 func (n *NodeManager) ListNodesByIP(ips []string, opt *cloudprovider.ListNodesOption) ([]*proto.Node, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	return nil, nil
 }
 
 // GetCVMImageIDByImageName get imageID by imageName

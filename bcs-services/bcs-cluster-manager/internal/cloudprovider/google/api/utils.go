@@ -202,50 +202,54 @@ func genCreateNodePoolRequest(req *CreateNodePoolRequest) *container.CreateNodeP
 	if req == nil || req.NodePool == nil {
 		return nil
 	}
-	newReq := &container.CreateNodePoolRequest{
-		NodePool: &container.NodePool{
-			Name:             req.NodePool.Name,
-			InitialNodeCount: req.NodePool.InitialNodeCount,
-			Locations:        req.NodePool.Locations,
-			MaxPodsConstraint: &container.MaxPodsConstraint{
-				MaxPodsPerNode: req.NodePool.MaxPodsConstraint.MaxPodsPerNode,
-			},
-			Autoscaling: &container.NodePoolAutoscaling{
-				Enabled: false,
-			},
-		},
+
+	return &container.CreateNodePoolRequest{
+		NodePool: GenerateNodePool(req),
 	}
-	if req.NodePool.Config != nil {
-		newReq.NodePool.Config = generateNodeConfig(req.NodePool.Config)
-	}
-	if req.NodePool.Management != nil {
-		newReq.NodePool.Management = &container.NodeManagement{
-			AutoRepair:  req.NodePool.Management.AutoRepair,
-			AutoUpgrade: req.NodePool.Management.AutoUpgrade,
-		}
-	}
-	return newReq
 }
 
-func generateNodeConfig(nc *NodeConfig) *container.NodeConfig {
-	conf := &container.NodeConfig{}
-	conf.MachineType = nc.MachineType
-	conf.Labels = nc.Labels
-	conf.Taints = func(t []*Taint) []*container.NodeTaint {
-		nt := make([]*container.NodeTaint, 0)
-		for _, v := range t {
-			nt = append(nt, &container.NodeTaint{
-				Key:    v.Key,
-				Value:  v.Value,
-				Effect: v.Effect,
-			})
+// GenerateNodePool generate NodePool from CreateNodePoolRequest
+func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
+	nodePool := &container.NodePool{
+		Name:             input.NodePool.Name,
+		InitialNodeCount: input.NodePool.InitialNodeCount,
+		Locations:        input.NodePool.Locations,
+		MaxPodsConstraint: &container.MaxPodsConstraint{
+			MaxPodsPerNode: input.NodePool.MaxPodsConstraint.MaxPodsPerNode,
+		},
+		Autoscaling: &container.NodePoolAutoscaling{
+			Enabled: false,
+		},
+	}
+
+	if input.NodePool.Config != nil {
+		nodePool.Config = &container.NodeConfig{
+			MachineType: input.NodePool.Config.MachineType,
+			Labels:      input.NodePool.Config.Labels,
+			Taints: func(t []*Taint) []*container.NodeTaint {
+				nt := make([]*container.NodeTaint, 0)
+				for _, v := range t {
+					nt = append(nt, &container.NodeTaint{
+						Key:    v.Key,
+						Value:  v.Value,
+						Effect: v.Effect,
+					})
+				}
+				return nt
+			}(input.NodePool.Config.Taints),
+			DiskType:   input.NodePool.Config.DiskType,
+			DiskSizeGb: input.NodePool.Config.DiskSizeGb,
+			ImageType:  input.NodePool.Config.ImageType,
 		}
-		return nt
-	}(nc.Taints)
-	conf.DiskType = nc.DiskType
-	conf.DiskSizeGb = nc.DiskSizeGb
-	conf.ImageType = nc.ImageType
-	return conf
+	}
+	if input.NodePool.Management != nil {
+		nodePool.Management = &container.NodeManagement{
+			AutoRepair:  input.NodePool.Management.AutoRepair,
+			AutoUpgrade: input.NodePool.Management.AutoUpgrade,
+		}
+	}
+
+	return nodePool
 }
 
 // GetGCEResourceInfo get resource info from url
@@ -385,6 +389,44 @@ func GetInstanceTemplateLocation(url string) (*string, error) {
 	}
 
 	return &location, nil
+}
+
+// CreateInstanceTemplate create zonal/regional InstanceTemplate
+func CreateInstanceTemplate(computeCli *ComputeServiceClient, url string, it *compute.InstanceTemplate) (*compute.Operation, error) {
+	itInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("CreateInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+
+	if utils.StringInSlice("instanceTemplates", itInfo) {
+		o, err := computeCli.CreateInstanceTemplate(context.Background(), itInfo[3], it)
+		if err != nil {
+			blog.Errorf("CreateInstanceTemplate failed: %v", err)
+			return nil, err
+		}
+		return o, nil
+	}
+	return nil, fmt.Errorf("CreateInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
+}
+
+// DeleteInstanceTemplate create zonal/regional InstanceTemplate
+func DeleteInstanceTemplate(computeCli *ComputeServiceClient, url string) (*compute.Operation, error) {
+	itInfo, err := GetGCEResourceInfo(url)
+	if err != nil {
+		blog.Errorf("CreateInstanceTemplate failed: %v", err)
+		return nil, err
+	}
+
+	if utils.StringInSlice("instanceTemplates", itInfo) {
+		o, err := computeCli.DeleteInstanceTemplate(context.Background(), itInfo[3], itInfo[(len(itInfo)-1)])
+		if err != nil {
+			blog.Errorf("CreateInstanceTemplate failed: %v", err)
+			return nil, err
+		}
+		return o, nil
+	}
+	return nil, fmt.Errorf("CreateInstanceTemplate failed, incorrect InstanceTemplate url: %s", url)
 }
 
 // GetOperation get zonal/regional/global Operation

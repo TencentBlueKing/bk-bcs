@@ -283,7 +283,7 @@ func getIgmAndIt(computeCli *api.ComputeServiceClient, cloudNodeGroup *container
 
 	oldItName := it.Name
 	newIt := it
-	err = newItFromBaseIt(newIt, group, computeCli, taskID)
+	err = newItFromBaseIt(newIt, group, computeCli, igm.InstanceTemplate, taskID)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -345,7 +345,7 @@ func patchIgm(newIt *compute.InstanceTemplate, igm *compute.InstanceGroupManager
 
 // newItFromBaseIt new instanceTemplate from base instanceTemplate
 func newItFromBaseIt(newIt *compute.InstanceTemplate, group *proto.NodeGroup, // nolint
-	computeCli *api.ComputeServiceClient, taskID string) error {
+	computeCli *api.ComputeServiceClient, url, taskID string) error { // nolint
 	oldItNameInfo := strings.Split(newIt.Name, "-")
 	randStr := utils.RandomHexString(8)
 	oldItNameInfo[len(oldItNameInfo)-1] = randStr

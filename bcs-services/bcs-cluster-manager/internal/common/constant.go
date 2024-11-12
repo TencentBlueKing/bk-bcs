@@ -585,3 +585,8 @@ const (
 	// NOTIFYANDAUTORENEW // 自动续期
 	NOTIFYANDAUTORENEW = "NOTIFY_AND_AUTO_RENEW"
 )
+
+const (
+	// GcpCloudProvider gcp cloud provider
+	GcpCloudProvider = "gcpCloud"
+)
