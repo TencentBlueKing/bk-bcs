@@ -132,7 +132,11 @@ func replaceTemplateFileToHelm(template string) string {
 		// 去掉 {{ 和 }}
 		varName := strings.TrimSpace(s[2 : len(s)-2])
 		if !strings.HasPrefix(varName, ".Values.") {
-			varName = ".Values" + varName
+			if strings.HasPrefix(varName, ".") {
+				varName = ".Values" + varName
+			} else {
+				varName = ".Values." + varName
+			}
 		}
 		return "{{ " + varName + " }}"
 	})
