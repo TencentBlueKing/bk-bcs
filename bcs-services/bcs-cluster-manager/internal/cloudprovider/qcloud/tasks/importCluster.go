@@ -20,7 +20,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -59,17 +58,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	if err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s]: getClusterDependBasicInfo failed: %v", taskID, err)
 		retErr := fmt.Errorf("getClusterDependBasicInfo failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
-	// import cluster instances
-	err = importClusterInstances(basicInfo)
-	if err != nil {
-		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
-			fmt.Sprintf("import cluster instances failed [%s]", err))
-		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
-		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -321,51 +309,6 @@ func importClusterCredential(ctx context.Context, data *cloudprovider.CloudDepen
 	}
 
 	err = cloudprovider.UpdateClusterCredentialByConfig(data.Cluster.ClusterID, config)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	masterInfos, nodeInfos, err := getClusterInstancesByClusterID(data)
-	if err != nil {
-		return err
-	}
-
-	var (
-		masterNodes        = make(map[string]*proto.Node)
-		masterIPs, nodeIPs = make([]string, 0), make([]string, 0)
-	)
-	for i := range masterInfos {
-		masterIPs = append(masterIPs, masterInfos[i].InstanceIP)
-	}
-	for i := range nodeInfos {
-		nodeIPs = append(nodeIPs, nodeInfos[i].InstanceIP)
-	}
-
-	// import cluster
-	if data.Cluster.ManageType == icommon.ClusterManageTypeIndependent {
-		nodes, errTrans := transInstanceIPToNodes(masterIPs, &cloudprovider.ListNodesOption{
-			Common:       data.CmOption,
-			ClusterVPCID: data.Cluster.VpcID,
-		})
-		if errTrans != nil {
-			return nil
-		}
-		for _, node := range nodes {
-			node.Status = icommon.StatusRunning
-			masterNodes[node.InnerIP] = node
-		}
-		data.Cluster.Master = masterNodes
-	}
-
-	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
-		Common:       data.CmOption,
-		ClusterVPCID: data.Cluster.VpcID,
-		ClusterID:    data.Cluster.ClusterID,
-	})
 	if err != nil {
 		return err
 	}

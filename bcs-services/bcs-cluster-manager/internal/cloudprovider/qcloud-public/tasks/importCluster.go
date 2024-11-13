@@ -419,21 +419,6 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) ([]string,
 		data.Cluster.Master = masterNodes
 	}
 
-	err = importClusterNodesToCM(context.Background(), nodeInfos, &cloudprovider.ListNodesOption{
-		Common:       data.CmOption,
-		ClusterVPCID: data.Cluster.VpcID,
-		ClusterID:    data.Cluster.ClusterID,
-		NodeTemplateID: func() string {
-			if data.NodeTemplate != nil {
-				return data.NodeTemplate.NodeTemplateID
-			}
-			return ""
-		}(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-
 	return masterIPs, nodeIPs, nil
 }
 

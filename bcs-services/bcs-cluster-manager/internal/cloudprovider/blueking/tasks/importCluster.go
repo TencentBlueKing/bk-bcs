@@ -173,6 +173,11 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	data.Cluster.Master = masterNodes
 	// data.Cluster.Status = icommon.StatusRunning
 
+	// 导入方式是 kubeconfig 集群节点不写入数据库
+	if data.Cluster.ClusterCategory == icommon.Importer && data.Cluster.ImportCategory == icommon.KubeConfigImport {
+		return nil
+	}
+
 	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
 		Common:       data.CmOption,
 		ClusterVPCID: data.Cluster.VpcID,

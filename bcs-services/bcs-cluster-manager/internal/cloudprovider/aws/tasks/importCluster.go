@@ -18,16 +18,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	k8scorev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
@@ -103,15 +95,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// import cluster instances
-	err = importClusterInstances(basicInfo)
-	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
-		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
 	// update cluster masterNodes info
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 	if err != nil {
@@ -123,57 +106,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
-	}
-
-	return nil
-}
-
-func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
-	kubeConfig, err := encrypt.Decrypt(nil, data.Cluster.KubeConfig)
-	if err != nil {
-		return fmt.Errorf("decode kube config failed: %v", err)
-	}
-	kubeConfigByte := []byte(kubeConfig)
-
-	config, err := clientcmd.RESTConfigFromKubeConfig(kubeConfigByte)
-	if err != nil {
-		return fmt.Errorf("build rest config failed: %v", err)
-	}
-
-	config.Burst = 200
-	config.QPS = 100
-	kubeCli, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return fmt.Errorf("build kube client failed: %s", err)
-	}
-
-	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("list nodes failed, %s", err.Error())
-	}
-
-	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
-	for i := range nodes {
-		ipv4, ipv6 := utils.GetNodeIPAddress(&nodes[i])
-		node := &proto.Node{
-			InnerIP:   utils.SliceToString(ipv4),
-			InnerIPv6: utils.SliceToString(ipv6),
-			Status:    common.StatusRunning,
-			NodeName:  nodes[i].Name,
-			ClusterID: clusterID,
-		}
-		err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
-		if err != nil {
-			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", nodes[i].Name, err)
-		}
 	}
 
 	return nil

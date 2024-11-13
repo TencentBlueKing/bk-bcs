@@ -205,11 +205,6 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		}
 	}
 
-	err = importClusterNodesToCM(context.Background(), nodes.Items, data.Cluster.ClusterID)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

@@ -14,7 +14,6 @@ package tasks
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -22,50 +21,12 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-	k8scorev1 "k8s.io/api/core/v1"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
-
-func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
-	for _, n := range nodes {
-		innerIP := ""
-		for _, v := range n.Status.Addresses {
-			if v.Type == k8scorev1.NodeInternalIP {
-				innerIP = v.Address
-				break
-			}
-		}
-		if innerIP == "" {
-			continue
-		}
-		node, err := cloudprovider.GetStorageModel().GetNodeByIP(ctx, innerIP)
-		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-			blog.Errorf("importClusterNodes GetNodeByIP[%s] failed: %v", innerIP, err)
-			// no import node when found err
-			continue
-		}
-
-		if node == nil {
-			node = &proto.Node{
-				InnerIP:   innerIP,
-				Status:    common.StatusRunning,
-				ClusterID: clusterID,
-			}
-			err = cloudprovider.GetStorageModel().CreateNode(ctx, node)
-			if err != nil {
-				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", innerIP, err)
-			}
-			continue
-		}
-	}
-
-	return nil
-}
 
 func setModuleInfo(group *proto.NodeGroup, bkBizIDString string) {
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&

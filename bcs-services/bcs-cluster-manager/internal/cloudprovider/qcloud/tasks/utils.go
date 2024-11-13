@@ -147,7 +147,7 @@ func updateNodeIPByNodeID(ctx context.Context, clusterId string, n business.Inst
 	return nil
 }
 
-func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
+func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) { // nolint
 	nodes, err := business.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
 		ClusterVPCID: opt.ClusterVPCID,
@@ -157,41 +157,6 @@ func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption)
 	}
 
 	return nodes, nil
-}
-
-func importClusterNodesToCM(ctx context.Context, ipList []string, opt *cloudprovider.ListNodesOption) error {
-	nodes, err := business.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
-		Common:       opt.Common,
-		ClusterVPCID: opt.ClusterVPCID,
-	})
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nodes {
-		node, err := cloudprovider.GetStorageModel().GetNodeByIP(ctx, n.InnerIP)
-		if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-			blog.Errorf("importClusterNodes GetNodeByIP[%s] failed: %v", n.InnerIP, err)
-			// no import node when found err
-			continue
-		}
-
-		n.ClusterID = opt.ClusterID
-		n.Status = common.StatusRunning
-		if node == nil {
-			err = cloudprovider.GetStorageModel().CreateNode(ctx, n)
-			if err != nil {
-				blog.Errorf("importClusterNodes CreateNode[%s] failed: %v", n.InnerIP, err)
-			}
-			continue
-		}
-		err = cloudprovider.GetStorageModel().UpdateNode(ctx, n)
-		if err != nil {
-			blog.Errorf("importClusterNodes UpdateNode[%s] failed: %v", n.InnerIP, err)
-		}
-	}
-
-	return nil
 }
 
 // releaseClusterCIDR release cluster CIDR

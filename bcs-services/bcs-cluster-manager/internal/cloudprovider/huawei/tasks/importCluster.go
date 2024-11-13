@@ -15,24 +15,16 @@ package tasks
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	k8scorev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/huawei/business"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // RegisterClusterKubeConfigTask register cluster kubeConfig connection
@@ -142,15 +134,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	// import cluster instances
-	err = importClusterInstances(basicInfo)
-	if err != nil {
-		blog.Errorf("ImportClusterNodesTask[%s]: importClusterInstances failed: %v", taskID, err)
-		retErr := fmt.Errorf("importClusterInstances failed, %s", err.Error())
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
-	}
-
 	// update cluster masterNodes info
 	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), basicInfo.Cluster)
 	if err != nil {
@@ -162,90 +145,6 @@ func ImportClusterNodesTask(taskID string, stepName string) error {
 	if err = state.UpdateStepSucc(start, stepName); err != nil {
 		blog.Errorf("ImportClusterNodesTask[%s] task %s %s update to storage fatal", taskID, taskID, stepName)
 		return err
-	}
-
-	return nil
-}
-
-func importClusterInstances(info *cloudprovider.CloudDependBasicInfo) error {
-	kubeConfigByte, err := encrypt.Decrypt(nil, info.Cluster.KubeConfig)
-	if err != nil {
-		return fmt.Errorf("decode kube config failed: %v", err)
-	}
-
-	kubeRet := base64.StdEncoding.EncodeToString([]byte(kubeConfigByte))
-	kubeCli, err := clusterops.NewKubeClient(kubeRet)
-	if err != nil {
-		return fmt.Errorf("importClusterInstances NewKubeClient failed: %v", err)
-	}
-
-	nodes, err := kubeCli.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("list nodes failed, %s", err.Error())
-	}
-
-	err = importClusterNodesToCM(context.Background(), nodes.Items, info)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node,
-	info *cloudprovider.CloudDependBasicInfo) error {
-	// 获取zones
-
-	ecsCli, err := api.NewEcsClient(info.CmOption)
-	if err != nil {
-		return err
-	}
-
-	zones, err := ecsCli.ListAvailabilityZones()
-	if err != nil {
-		return err
-	}
-
-	for _, n := range nodes {
-		var (
-			nodeZone string
-			node     = &proto.Node{}
-		)
-
-		zone, ok := n.Labels[utils.ZoneKubernetesFlag]
-		if ok {
-			nodeZone = zone
-		}
-		zone, ok = n.Labels[utils.ZoneTopologyFlag]
-		if ok && nodeZone == "" {
-			nodeZone = zone
-		}
-
-		ipv4, ipv6 := utils.GetNodeIPAddress(&n)
-		node.ZoneID = nodeZone
-		node.InnerIP = utils.SliceToString(ipv4)
-		node.InnerIPv6 = utils.SliceToString(ipv6)
-		node.ClusterID = info.Cluster.ClusterID
-		node.Status = common.StatusRunning
-		node.NodeID = n.Spec.ProviderID
-		node.NodeName = n.Name
-		node.InstanceType = n.Labels[utils.NodeInstanceTypeFlag]
-
-		if nodeZone != "" {
-			for _, v := range zones {
-				if v.ZoneName == nodeZone {
-					node.ZoneName = fmt.Sprintf("可用区%d", func() int {
-						return business.GetZoneNameByZoneId(info.Cluster.Region, v.ZoneName)
-					}())
-				}
-			}
-		}
-
-		err := cloudprovider.GetStorageModel().CreateNode(ctx, node)
-		if err != nil {
-			blog.Errorf("ImportClusterNodesToCM CreateNode[%s] failed: %v", n.Name, err)
-			continue
-		}
 	}
 
 	return nil
