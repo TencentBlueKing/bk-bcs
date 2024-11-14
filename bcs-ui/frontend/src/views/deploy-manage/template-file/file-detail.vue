@@ -14,30 +14,14 @@
         <i class="bcs-icon-btn ml-[10px] bk-icon icon-edit-line text-[#979ba5]" @click="showMetadataDialog = true"></i>
       </span>
       <!-- 版本列表 -->
-      <bcs-select
-        class="w-[160px] bg-[#fff]"
-        :loading="versionLoading"
-        :clearable="false"
-        :popover-min-width="160"
-        searchable
+      <version-selector
+        ref="versionRef"
+        class="w-[160px]"
         v-model="curVersionID"
-        @change="handleVersionChange">
-        <bcs-option
-          v-for="item in versionList"
-          :key="item.id"
-          :id="item.id"
-          :name="item.draft ?
-            (item.version ?
-              `${$t('templateFile.tag.draft')}( ${$t('templateFile.tag.baseOn')} ${item.version} )`
-              : $t('templateFile.tag.draft'))
-            : item.version" />
-        <template #extension>
-          <SelectExtension
-            :link-text="$t('templateFile.button.versionManage')"
-            @link="showVersionList = true"
-            @refresh="listTemplateVersion" />
-        </template>
-      </bcs-select>
+        show-extension
+        :id="id"
+        @change="handleChange"
+        @link="showVersionList = true" />
     </div>
     <div class="px-[24px] mt-[16px] h-[calc(100%-72px)] overflow-auto" v-if="fileStore.editMode === 'form'">
       <FormMode
@@ -68,14 +52,16 @@
           :template-i-d="fileMetadata?.id"
           :template-space="templateSpace"
           class="px-[24px] py-[20px]"
-          @delete="listTemplateVersion"
+          @delete="refreshVersionList"
           @deleteFile="refresh" />
       </template>
     </bcs-sideslider>
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onActivated, onBeforeMount, ref, watch } from 'vue';
+import { onBeforeMount, ref, watch } from 'vue';
+
+import versionSelector from '../components/version-selector.vue';
 
 import FileMetadataDialog from './file-metadata.vue';
 import FormMode from './form-mode.vue';
@@ -86,7 +72,6 @@ import YamlMode from './yaml-mode.vue';
 import { IListTemplateMetadataItem, ITemplateSpaceData, ITemplateVersionItem } from '@/@types/cluster-resource-patch';
 import { ResourceService, TemplateSetService  } from '@/api/modules/new-cluster-resource';
 import $bkMessage from '@/common/bkmagic';
-import SelectExtension from '@/components/select-extension.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
@@ -151,23 +136,24 @@ const setMetadata = async (data: Pick<ClusterResource.UpdateTemplateMetadataReq,
   }
 };
 
-// 版本列表
-const versionLoading = ref(false);
+// 版本信息
 const curVersionID = ref(props.versionID);
-const versionList = ref<ITemplateVersionItem[]>([]);
-const curVersionData = computed(() => versionList.value.find(item => item.id === curVersionID.value));
-const listTemplateVersion = async () => {
-  if (!props.id) return;
-  versionLoading.value = true;
-  versionList.value = await TemplateSetService.ListTemplateVersion({
-    $templateID: props.id,
-  }).catch(() => []);
-  // 版本不对时重置为第一个
-  if (!versionList.value.find(item => item.id === curVersionID.value)) {
-    curVersionID.value = versionList.value.at(0)?.id;
-  }
-  versionLoading.value = false;
-};
+const versionRef = ref();
+const curVersionData = ref<ITemplateVersionItem>();
+function refreshVersionList() {
+  versionRef.value?.listTemplateVersion();
+}
+async function handleChange(versionData) {
+  curVersionData.value = versionData;
+  if (!curVersionData.value?.content) return;
+
+  // 更新部署按钮显示状态
+  updateShowDeployBtn(!curVersionData.value?.draft);
+
+  isCanTransform.value = await canTransform(curVersionData.value?.content);
+  fileStore.editMode = curVersionData.value?.editFormat || 'yaml';
+  fileStore.isFormModeDisabled = !isCanTransform.value;// 设置表单禁用（详情的顶部模式切换在首页，这里用全局共享数据处理）
+}
 
 // 切换版本详情
 async function handleVersionChange() {
@@ -202,38 +188,24 @@ function refresh() {
   updateTemplateMetadataList(props.templateSpace);
 }
 
-watch(curVersionData, async () => {
-  if (!curVersionData.value?.content) return;
-
-  // 更新部署按钮显示状态
-  updateShowDeployBtn(!curVersionData.value?.draft);
-
-  isCanTransform.value = await canTransform(curVersionData.value?.content);
-  fileStore.editMode = curVersionData.value?.editFormat || 'yaml';
-  fileStore.isFormModeDisabled = !isCanTransform.value;// 设置表单禁用（详情的顶部模式切换在首页，这里用全局共享数据处理）
-});
-
 watch(() => props.id, () => {
   fileStore.editMode = undefined;// 重置mode
   getTemplateMetadata();
-  listTemplateVersion();
 });
 
 watch(() => props.templateSpace, () => {
   getTemplateSpace();
 });
 
-watch(() => props.versionID, () => {
+watch(() => props.versionID, (val) => {
+  if (!val) return;
   curVersionID.value = props.versionID;
 });
+
+watch(curVersionID, handleVersionChange);
 
 onBeforeMount(() => {
   getTemplateSpace();
   getTemplateMetadata();
-  listTemplateVersion();
-});
-
-onActivated(() => {
-  listTemplateVersion();
 });
 </script>
