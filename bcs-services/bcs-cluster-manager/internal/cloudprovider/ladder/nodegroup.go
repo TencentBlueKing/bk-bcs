@@ -14,6 +14,7 @@
 package ladder
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -25,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -366,6 +368,130 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 		return nil, err
 	}
 	return task, nil
+}
+
+// GetProjectCaResourceQuota get project ca resource quota
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
+
+	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
+
+	filterGroups := make([]proto.NodeGroup, 0)
+	// filter yunti ca nodeGroup
+	for i := range groups {
+		if !utils.StringInSlice(groups[i].GetNodeGroupType(), []string{common.Normal.String(), ""}) {
+			continue
+		}
+
+		if groups[i].GetExtraInfo() != nil {
+			rt, ok := groups[i].ExtraInfo[resource.ResourcePoolType]
+			if ok &&
+				utils.StringContainInSlice(rt, []string{resource.SelfPool, resource.CrPool}) {
+				continue
+			}
+		}
+
+		if groups[i].GetRegion() == "" || groups[i].GetLaunchTemplate().GetInstanceType() == "" {
+			continue
+		}
+
+		filterGroups = append(filterGroups, groups[i])
+	}
+
+
+
+	var (
+		lock         = sync.Mutex{}
+		insZoneQuota = make(map[string]map[string]*proto.ProjectAutoscalerQuota, 0)
+	)
+
+	barrier := utils.NewRoutinePool(20)
+	defer barrier.Close()
+
+	for i := range filterGroups {
+		barrier.Add(1)
+
+		go func(group proto.NodeGroup) {
+			defer barrier.Done()
+
+			// 地域-机型 维度的 资源池 和 可用区列表
+			zonePools, resourceZones, err := tresource.GetResourceManagerClient().ListRegionZonePools(
+				context.Background(), resource.YunTiPool,
+				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType())
+			if err != nil {
+				blog.Errorf("GetProjectCaResourceQuota[%s:%s] ListRegionZonePools failed: %v",
+					group.ProjectID, group.NodeGroupID, err)
+				return
+			}
+			if len(resourceZones) == 0 || len(zonePools) == 0 {
+				blog.Errorf("GetProjectCaResourceQuota[%s:%s] region[%s] instanceType[%s] 无可用区机型",
+					group.ProjectID, group.NodeGroupID, group.GetRegion(), group.GetLaunchTemplate().GetInstanceType())
+				return
+			}
+
+			total, cur, pre, err := daemon.GetGroupCurAndPredictNodes(cloudprovider.GetStorageModel(),
+				group.GetNodeGroupID(), resourceZones)
+			if err != nil {
+				blog.Errorf("GetProjectCaResourceQuota[%s:%s] failed: %v", group.GetProjectID(), err)
+				return
+			}
+
+			blog.Infof("GetProjectCaResourceQuota[%s] cur[%v] max[%v] currentNodes[%v] preNodes[%v] totalNodes[%v]",
+				group.GetNodeGroupID(), group.GetAutoScaling().GetDesiredSize(), group.GetAutoScaling().GetMaxSize(),
+				cur, pre, total)
+
+			lock.Lock()
+
+			if insZoneQuota[group.GetLaunchTemplate().GetInstanceType()] == nil {
+				insZoneQuota[group.GetLaunchTemplate().GetInstanceType()] = make(map[string]*proto.ProjectAutoscalerQuota, 0)
+			}
+
+			// 统计已使用
+			for zone, num := range cur {
+				_, ok := insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone]
+				if !ok {
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone] = &proto.ProjectAutoscalerQuota{
+						InstanceType: group.GetLaunchTemplate().GetInstanceType(),
+						Region:       group.GetRegion(),
+						Zone:         zone,
+						Used:         uint32(num),
+						GroupIds:     []string{group.GetNodeGroupID()},
+					}
+				} else {
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].Used += uint32(num)
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds = append(insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds, group.GetNodeGroupID())
+				}
+			}
+
+			// 统计quota总量
+			for zone, num := range total {
+				_, ok := insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone]
+				if !ok {
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone] = &proto.ProjectAutoscalerQuota{
+						InstanceType: group.GetLaunchTemplate().GetInstanceType(),
+						Region:       group.GetRegion(),
+						Zone:         zone,
+						Total:        uint32(num),
+					}
+				} else {
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].Total += uint32(num)
+				}
+			}
+			lock.Unlock()
+
+			return
+		}(filterGroups[i])
+	}
+	barrier.Wait()
+
+	projectQuotas := make([]*proto.ProjectAutoscalerQuota, 0)
+	for _, zoneQuota := range insZoneQuota {
+		for _, quota := range zoneQuota {
+			projectQuotas = append(projectQuotas, quota)
+		}
+	}
+
+	return projectQuotas, nil
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit

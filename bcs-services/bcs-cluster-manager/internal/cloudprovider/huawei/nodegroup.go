@@ -382,3 +382,9 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
 	return nil
 }
+
+// GetProjectCaResourceQuota get project ca resource quota
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
+	return nil, nil
+}

@@ -40488,3 +40488,246 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = BusinessInfoValidationError{}
+
+// Validate checks the field values on GetProjectResourceQuotaUsageRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, an error is returned.
+func (m *GetProjectResourceQuotaUsageRequest) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ProviderID
+
+	return nil
+}
+
+// GetProjectResourceQuotaUsageRequestValidationError is the validation error
+// returned by GetProjectResourceQuotaUsageRequest.Validate if the designated
+// constraints aren't met.
+type GetProjectResourceQuotaUsageRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectResourceQuotaUsageRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectResourceQuotaUsageRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectResourceQuotaUsageRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectResourceQuotaUsageRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectResourceQuotaUsageRequestValidationError) ErrorName() string {
+	return "GetProjectResourceQuotaUsageRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectResourceQuotaUsageRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectResourceQuotaUsageRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectResourceQuotaUsageRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectResourceQuotaUsageRequestValidationError{}
+
+// Validate checks the field values on GetProjectResourceQuotaUsageResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, an error is returned.
+func (m *GetProjectResourceQuotaUsageResponse) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProjectResourceQuotaUsageResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProjectResourceQuotaUsageResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetProjectResourceQuotaUsageResponseValidationError is the validation error
+// returned by GetProjectResourceQuotaUsageResponse.Validate if the designated
+// constraints aren't met.
+type GetProjectResourceQuotaUsageResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectResourceQuotaUsageResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectResourceQuotaUsageResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectResourceQuotaUsageResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectResourceQuotaUsageResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectResourceQuotaUsageResponseValidationError) ErrorName() string {
+	return "GetProjectResourceQuotaUsageResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectResourceQuotaUsageResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectResourceQuotaUsageResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectResourceQuotaUsageResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectResourceQuotaUsageResponseValidationError{}
+
+// Validate checks the field values on ProjectAutoscalerQuota with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ProjectAutoscalerQuota) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for InstanceType
+
+	// no validation rules for Region
+
+	// no validation rules for Zone
+
+	// no validation rules for Total
+
+	// no validation rules for Used
+
+	return nil
+}
+
+// ProjectAutoscalerQuotaValidationError is the validation error returned by
+// ProjectAutoscalerQuota.Validate if the designated constraints aren't met.
+type ProjectAutoscalerQuotaValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProjectAutoscalerQuotaValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProjectAutoscalerQuotaValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProjectAutoscalerQuotaValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProjectAutoscalerQuotaValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProjectAutoscalerQuotaValidationError) ErrorName() string {
+	return "ProjectAutoscalerQuotaValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProjectAutoscalerQuotaValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProjectAutoscalerQuota.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProjectAutoscalerQuotaValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProjectAutoscalerQuotaValidationError{}
