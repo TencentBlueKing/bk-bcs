@@ -287,8 +287,8 @@ import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import { cloudsZones } from '@/api/modules/cluster-manager';
 import FormGroup from '@/components/form-group.vue';
-import usePage from '@/composables/use-page';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
+import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -348,6 +348,7 @@ export default defineComponent({
         vpcID: '', // todo 放在basic-pool-info组件比较合适
         zones: defaultValues.value.autoScaling?.zones || [],
       },
+      nodeOS: defaultValues.value.launchTemplate?.imageInfo?.imageName, // 操作系统类型
       launchTemplate: {
         imageInfo: {
           imageName: defaultValues.value.launchTemplate?.imageInfo?.imageName, // 镜像名称
@@ -663,6 +664,7 @@ export default defineComponent({
       // CPU和mem信息从机型获取
       nodePoolConfig.value.launchTemplate.CPU = curInstanceItem.value.cpu;
       nodePoolConfig.value.launchTemplate.Mem = curInstanceItem.value.memory;
+      nodePoolConfig.value.nodeOS = nodePoolConfig.value.launchTemplate.imageInfo.imageName;
       return nodePoolConfig.value;
     };
     const validate = async () => {
@@ -690,7 +692,7 @@ export default defineComponent({
 
       return true;
     };
-    
+
     const { focusOnErrorField } = useFocusOnErrorField();
     const handleNext = async () => {
       // 校验错误滚动到第一个错误的位置

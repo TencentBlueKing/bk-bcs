@@ -30,6 +30,8 @@ bcs:
     cloud: Cloud credential import
     platform: Platform created
     machine: Machine
+    autopilot: AutoPilot
+    standard: Standard
   msg:
     emptyHostResource: >-
       You do not have any host resources under the current business. Please
@@ -500,6 +502,9 @@ generic:
     clusterName: >-
       The cluster name can only contain numbers, letters, mid-line lines (-),
       down line (_), The beginning must be numbers or letters
+    gkeLable: >-
+      Can only contain lowercase letters ([a-z]), numeric characters ([0-9]),
+      underscores (_), and dashes (-), and must start with a letter
   title:
     curVersion: Current
     diffVersion: Comparison version
@@ -956,6 +961,24 @@ cluster:
           create a new Safety group, please go to the appropriate page in the
           {0}.'
         vpcMaster: VPC console
+    google:
+      labels:
+        areaType: Area Type
+        region: region
+        zone: zone
+      tips:
+        containerNet: >-
+          All pods in the cluster will be assigned an IP address from this range.
+          Please enter a range and mask in CIDR notation within the network range.
+          Once this setting is confirmed, it cannot be changed, so please evaluate
+          carefully before filling it in.
+        autopilot: >-
+          GKE manages the underlying infrastructure, such as node configuration,
+          auto-scaling, automatic upgrades, baseline security configurations,
+          and baseline network configurations.
+        standard: >-
+          You are responsible for managing the underlying infrastructure,
+          including configuring the individual nodes.
   detail:
     title:
       overview: Overview

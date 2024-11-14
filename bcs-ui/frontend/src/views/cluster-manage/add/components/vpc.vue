@@ -10,7 +10,7 @@
     <bk-option
       v-for="item in vpcList"
       :key="item.vpcId"
-      :id="item.vpcId"
+      :id="item[valueKey]"
       :name="`${item.name}(${item.vpcId})`">
       <div class="flex items-center place-content-between">
         <span>
@@ -20,6 +20,7 @@
       </div>
     </bk-option>
     <SelectExtension
+      v-if="showLink"
       slot="extension"
       :link-text="$t('tke.link.vpc')"
       link="https://console.cloud.tencent.com/vpc/vpc"
@@ -61,6 +62,14 @@ const props = defineProps({
   resourceGroupName: {
     type: String,
     default: '',
+  },
+  showLink: {
+    type: Boolean,
+    default: true,
+  },
+  valueKey: {
+    type: String,
+    default: 'vpcId',
   },
 });
 const emits = defineEmits(['input', 'change']);

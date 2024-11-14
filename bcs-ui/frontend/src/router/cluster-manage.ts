@@ -14,8 +14,10 @@ const CreateVCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cl
 const CreateK8SCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/k8s.vue');
 // 创建aws云集群
 const CreateAWSCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/aws-cloud/index.vue');
-// 创建aws云集群
+// 创建微软云集群
 const CreateAzureCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/azure-cloud/index.vue');
+// 创建谷歌云集群
+const CreateGoogleCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/google-cloud/index.vue');
 
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import/import-cluster.vue');
@@ -172,6 +174,16 @@ export default [
     path: 'clusters/cloud/azure',
     name: 'CreateAzureCloudCluster',
     component: CreateAzureCloudCluster,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // 创建谷歌云集群
+  {
+    path: 'clusters/cloud/google',
+    name: 'CreateGoogleCloudCluster',
+    component: CreateGoogleCloudCluster,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,

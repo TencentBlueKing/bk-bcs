@@ -85,7 +85,7 @@
             <span v-else>{{ cloudAreaName || '--' }}</span>
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.label.system')">
-            {{clusterOS || '--'}}
+            {{nodeOS || '--'}}
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.create.containerRuntime.title')">
             {{`${clusterData.clusterAdvanceSettings
@@ -331,6 +331,7 @@ export default defineComponent({
     ]);
 
     // 获取详情
+    const nodeOS = computed(() => nodePoolData.value?.nodeOS);
     const getNodeGroupDetail = async () => {
       nodePoolData.value = await $store.dispatch('clustermanager/nodeGroupDetail', {
         $nodeGroupID: props.nodeGroupID,
@@ -440,6 +441,7 @@ export default defineComponent({
       zoneLoading,
       cloudAreaLoading,
       cloudAreaName,
+      nodeOS,
     };
   },
 });

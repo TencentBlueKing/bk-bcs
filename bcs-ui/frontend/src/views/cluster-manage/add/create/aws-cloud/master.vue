@@ -27,7 +27,7 @@
       <NetworkSelector
         :ref="el => networkSelectorRef = el"
         class="max-w-[600px]"
-        :value="masterConfig.clusterAdvanceSettings.clusterConnectSetting"
+        :value="connectConfig"
         :region="region"
         :cloud-account-i-d="cloudAccountID"
         :cloud-i-d="cloudID"
@@ -35,7 +35,7 @@
           { label: $t('tke.label.apiServerCLB.internet'), value: 'internet' },
           { label: $t('tke.label.apiServerCLB.intranet'), value: 'intranet' },
         ]"
-        @change="(v) => masterConfig.clusterAdvanceSettings.clusterConnectSetting = v" />
+        @change="handleChange" />
     </bk-form-item>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">
       <bk-button @click="preStep">{{ $t('generic.button.pre') }}</bk-button>
@@ -86,15 +86,23 @@ const masterConfig = ref({
   autoGenerateMasterNodes: true,
   clusterAdvanceSettings: {
     clusterConnectSetting: {
-      ITNType: 'intranet',
       isExtranet: false,
       subnetId: '',
-      cidrs: [],
       internet: {
         publicIPAssigned: false,
         publicAccessCidrs: [],
       },
     },
+  },
+});
+
+const connectConfig = ref({
+  ITNType: 'intranet',
+  isExtranet: false,
+  cidrs: [],
+  internet: {
+    publicIPAssigned: false,
+    publicAccessCidrs: [],
   },
 });
 
@@ -106,7 +114,7 @@ const masterConfigRules = computed(() => ({
       trigger: 'blur',
       message: $i18n.t('generic.validate.required'),
       async validator() {
-        if (masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.ITNType === 'internet') {
+        if (connectConfig.value.ITNType === 'internet') {
           return await networkSelectorRef.value?.validate();
         }
         return true;
@@ -114,6 +122,16 @@ const masterConfigRules = computed(() => ({
     },
   ],
 }));
+
+// 整理参数
+function handleChange(data) {
+  connectConfig.value = data;
+  masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.isExtranet = data?.isExtranet;
+  // eslint-disable-next-line max-len
+  masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.internet.publicAccessCidrs = data?.internet?.publicAccessCidrs;
+  // eslint-disable-next-line max-len
+  if (!data?.isExtranet) masterConfig.value.clusterAdvanceSettings.clusterConnectSetting.internet.publicAccessCidrs = [];
+};
 
 // master配置
 const handleChangeManageType = (type: 'INDEPENDENT_CLUSTER' | 'MANAGED_CLUSTER') => {

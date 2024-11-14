@@ -158,7 +158,6 @@ export default defineComponent({
             title: $i18n.t('publicCloud.google.title'),
             desc: $i18n.t('publicCloud.google.desc'),
             type: 'createGoogleCloud',
-            disabled: true,
           },
           // Azure
           {
@@ -289,6 +288,7 @@ export default defineComponent({
       createTencentCloud: 'createTKECluster',
       createAWSCloud: 'CreateAWSCloudCluster',
       createAzureCloud: 'CreateAzureCloudCluster',
+      createGoogleCloud: 'CreateGoogleCloudCluster',
       createK8S: 'createK8SCluster',
       createVCluster: 'createVCluster',
       // importKubeConfig: 'importCluster',
