@@ -130,6 +130,8 @@ func (plugin *AppPlugin) Init() error {
 	appRouter.PathPrefix("").Methods("PUT", "POST", "DELETE", "PATCH").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationEditHandler))
 	// GET with prefix /api/v1/applications/{name}
+	appRouter.Path("").Methods("GET").
+		Handler(plugin.middleware.HttpWrapper(plugin.applicationGetHandler))
 	appRouter.PathPrefix("").Methods("GET").
 		Handler(plugin.middleware.HttpWrapper(plugin.applicationViewsHandler))
 
@@ -335,6 +337,29 @@ func (plugin *AppPlugin) applicationDeleteResourcesHandler(r *http.Request) (*ht
 		RequestID: ctxutils.RequestID(r.Context()),
 		Data:      results,
 	})
+}
+
+func (plugin *AppPlugin) applicationGetHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	appName := mux.Vars(r)["name"]
+	if appName == "" {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("request application name cannot be empty"))
+	}
+	argoApp, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appName,
+		permitcheck.AppViewRSAction)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	// 优化项：如果是单独获取 application 详情，则返回缓存内容
+	queries := r.URL.Query()
+	for k := range queries {
+		// 如果出现 query 参数非只 projects，则表明非是获取 application 详情
+		if k != "projects" {
+			return r, mw.ReturnArgoReverse()
+		}
+	}
+	blog.Infof("RequestID[%s] get application from cache", ctxutils.RequestID(r.Context()))
+	return r, mw.ReturnJSONResponse(argoApp)
 }
 
 // GET with prefix /api/v1/applications/{name}
