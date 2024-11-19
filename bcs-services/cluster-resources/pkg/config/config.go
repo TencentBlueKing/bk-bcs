@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
+	constant "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -64,6 +65,10 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	}
 	if conf.Global.IAM.Host == "" {
 		conf.Global.IAM.Host = envs.BKIAMHost
+	}
+
+	if conf.Global.SharedCluster.AnnotationKeyProjectCode == "" {
+		conf.Global.SharedCluster.AnnotationKeyProjectCode = constant.ProjectCodeAnnoKey
 	}
 
 	if conf.Redis.Password == "" {
@@ -339,8 +344,9 @@ type IAMConf struct {
 
 // SharedClusterConf 共享集群相关配置
 type SharedClusterConf struct {
-	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
-	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+	EnabledCObjKinds         []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
+	EnabledCRDs              []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+	AnnotationKeyProjectCode string   `yaml:"annotationKeyProjectCode" usage:"共享集群ProjectCode注解的key"`
 }
 
 // MultiClusterConf 多集群相关配置
