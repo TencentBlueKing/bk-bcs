@@ -795,6 +795,46 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/template/helm": {
+      "post": {
+        "summary": "Convert template to helm",
+        "description": "普通模板文件转换为 Helm 格式",
+        "operationId": "TemplateSet_ConvertTemplateToHelm",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesConvertTemplateToHelmReq"
+            }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}": {
       "get": {
         "summary": "Get template metadata detail",
@@ -10040,6 +10080,21 @@
       "description": "通用响应体，适用于资源型 API 请求返回，如需定义详细的 data 结构则不使用该响应体",
       "title": "CommonResp"
     },
+    "clusterresourcesConvertTemplateToHelmReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "content": {
+          "type": "string",
+          "title": "模板文件内容"
+        }
+      },
+      "description": "部署模板文件",
+      "title": "DeployTemplateFileReq"
+    },
     "clusterresourcesCopyTemplateSpaceReq": {
       "type": "object",
       "properties": {
@@ -10815,7 +10870,7 @@
           "type": "string",
           "title": "name"
         },
-        "CreateSource": {
+        "createSource": {
           "$ref": "#/definitions/clusterresourcesCreateSource",
           "title": "createSource"
         }
