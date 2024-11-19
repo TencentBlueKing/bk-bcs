@@ -193,6 +193,9 @@
         "enableInsTypeUsage": ${enableInsTypeUsage},
         "enableAllocateCidr": ${enableAllocateCidr}
     },
+    "sharedCluster": {
+      "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}"
+    }
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",
     "version": "${bcsClusterManagerVersion}",
