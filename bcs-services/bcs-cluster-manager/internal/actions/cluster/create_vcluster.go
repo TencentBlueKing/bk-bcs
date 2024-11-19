@@ -186,11 +186,11 @@ func (ca *CreateVirtualClusterAction) validate() error {
 	}
 	if ca.req.Ns.Annotations == nil {
 		ca.req.Ns.Annotations = map[string]string{
-			utils.ProjectCode:      ca.req.ProjectCode,
+			options.GetGlobalCMOptions().SharedCluster.AnnoKeyProjCode: ca.req.ProjectCode,
 			utils.NamespaceCreator: ca.req.Creator,
 		}
 	} else {
-		ca.req.Ns.Annotations[utils.ProjectCode] = ca.req.ProjectCode
+		ca.req.Ns.Annotations[options.GetGlobalCMOptions().SharedCluster.AnnoKeyProjCode] = ca.req.ProjectCode
 		ca.req.Ns.Annotations[utils.NamespaceCreator] = ca.req.Creator
 	}
 
