@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	nsutils "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/namespace"
@@ -48,7 +49,7 @@ func (a *SharedNamespaceAction) ListNativeNamespaces(ctx context.Context,
 	}
 	retDatas := []*proto.NativeNamespaceData{}
 	for _, namespace := range namespaces {
-		projectCode, ok := namespace.Annotations[constant.AnnotationKeyProjectCode]
+		projectCode, ok := namespace.Annotations[config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode]
 		if !ok {
 			continue
 		}
