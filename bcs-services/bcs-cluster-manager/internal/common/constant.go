@@ -181,6 +181,20 @@ func IsContainerdRuntime(runtime string) bool {
 	return runtime == ContainerdRuntime
 }
 
+// business cloud key info
+const (
+	// KeyPart xxx
+	KeyPart = "运营部门"
+	// KeyProduct xxx
+	KeyProduct = "运营产品"
+	// KeyOneBiz xxx
+	KeyOneBiz = "一级业务"
+	// KeySecondBiz xxx
+	KeySecondBiz = "二级业务"
+	// KeyOperator xxx
+	KeyOperator = "负责人"
+)
+
 const (
 	// Iptables iptables mode
 	Iptables = "iptables"

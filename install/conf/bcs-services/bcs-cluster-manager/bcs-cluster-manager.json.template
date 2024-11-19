@@ -47,6 +47,13 @@
         "server": "${bcsCmdbServer}",
         "debug": ${bcsCmdbDebug}
     },
+    "tenCmdb": {
+        "enable": ${bcsTenCmdbEnable},
+        "appId": "${bcsTenCmdbAppId}",
+        "appKey": "${bcsTenCmdbAppKey}",
+        "server": "${bcsTenCmdbAppServer}",
+        "debug": ${bcsTenCmdbDebug}
+    },
     "resource": {
         "enable": ${bcsResourceManagerEnable},
         "module": "${bcsResourceManagerModule}"

@@ -1465,3 +1465,28 @@ func GetOverlayCidrBlocks(cloudId, vpcId string) ([]*net.IPNet, error) {
 func GetCloudByProvider(provider string) (*proto.Cloud, error) {
 	return GetStorageModel().GetCloudByProvider(context.Background(), provider)
 }
+
+// GetCloudBizTags get cloud tags
+func GetCloudBizTags(bizId int64, operator string) (map[string]string, error) {
+	client := cmdb.GetCmdbClient()
+	bizID, err := client.GetBS2IDByBizID(bizId)
+	if err != nil {
+		return nil, err
+	}
+
+	tClient := cmdb.GetTCmdbClient()
+	// 查询二级业务详情
+	business2, err := tClient.QueryBusinessLevel2DetailInfo(bizID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取业务标签
+	return map[string]string{
+		common.KeyPart:      options.GetGlobalCMOptions().TagDepart,
+		common.KeyProduct:   business2.BsiProductName + fmt.Sprintf("_%v", business2.BsiProductId),
+		common.KeyOneBiz:    business2.BizLevel1Name + fmt.Sprintf("_%v", business2.BizLevel1Id),
+		common.KeySecondBiz: business2.BizLevel2Name + fmt.Sprintf("_%v", business2.BizLevel2Id),
+		common.KeyOperator:  operator,
+	}, nil
+}

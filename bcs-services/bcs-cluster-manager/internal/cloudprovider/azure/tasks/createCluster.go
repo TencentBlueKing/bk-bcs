@@ -215,13 +215,13 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		}(),
 		Properties: &armcontainerservice.ManagedClusterProperties{
 			APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
-				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
+				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet), // nolint
 				AuthorizedIPRanges: func() []*string {
 					ipRanges := make([]*string, 0)
 					if cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
 						for _, ip := range cluster.ClusterAdvanceSettings.ClusterConnectSetting.
 							Internet.PublicAccessCidrs {
-							ipRanges = append(ipRanges, to.Ptr(ip))
+							ipRanges = append(ipRanges, to.Ptr(ip)) // nolint
 						}
 					}
 
@@ -240,7 +240,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			NetworkProfile: &armcontainerservice.NetworkProfile{
 				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginAzure),
 				NetworkPolicy: to.Ptr(armcontainerservice.NetworkPolicyCalico),
-				PodCidr:       to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),
+				PodCidr:       to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),                  // nolint
 				ServiceCidr:   to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
 				DNSServiceIP:  to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
 				ServiceCidrs:  []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
