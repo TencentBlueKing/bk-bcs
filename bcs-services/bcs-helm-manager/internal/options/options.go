@@ -143,20 +143,26 @@ type EncryptSecret struct {
 	Secret string `json:"secret" yaml:"secret"`
 }
 
+// SharedClusterConfig options of shared cluster config
+type SharedClusterConfig struct {
+	AnnotationKeyProjCode string `json:"annotationKeyProjCode" yaml:"annotationKeyProjCode"`
+}
+
 // HelmManagerOptions options of helm manager
 type HelmManagerOptions struct {
-	Etcd        EtcdOption    `json:"etcd" yaml:"etcd"`
-	BcsLog      LogConfig     `json:"log" yaml:"log"`
-	Swagger     SwaggerConfig `json:"swagger" yaml:"swagger"`
-	Mongo       MongoConfig   `json:"mongo" yaml:"mongo"`
-	Repo        RepoConfig    `json:"repo" yaml:"repo"`
-	Release     ReleaseConfig `json:"release" yaml:"release"`
-	IAM         IAMConfig     `json:"iam" yaml:"iam"`
-	JWT         JWTConfig     `json:"jwt" yaml:"jwt"`
-	Credentials []Credential  `json:"credentials" yaml:"credentials"`
-	Encrypt     Encrypt       `json:"encrypt" yaml:"encrypt"`
-	Debug       bool          `json:"debug" yaml:"debug"`
-	TLS         TLS           `json:"tls" yaml:"tls"`
+	Etcd          EtcdOption          `json:"etcd" yaml:"etcd"`
+	BcsLog        LogConfig           `json:"log" yaml:"log"`
+	Swagger       SwaggerConfig       `json:"swagger" yaml:"swagger"`
+	Mongo         MongoConfig         `json:"mongo" yaml:"mongo"`
+	Repo          RepoConfig          `json:"repo" yaml:"repo"`
+	Release       ReleaseConfig       `json:"release" yaml:"release"`
+	IAM           IAMConfig           `json:"iam" yaml:"iam"`
+	JWT           JWTConfig           `json:"jwt" yaml:"jwt"`
+	Credentials   []Credential        `json:"credentials" yaml:"credentials"`
+	Encrypt       Encrypt             `json:"encrypt" yaml:"encrypt"`
+	Debug         bool                `json:"debug" yaml:"debug"`
+	TLS           TLS                 `json:"tls" yaml:"tls"`
+	SharedCluster SharedClusterConfig `json:"sharedCluster" yaml:"sharedCluster"`
 	ServerConfig
 }
 
