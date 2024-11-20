@@ -121,6 +121,7 @@ func (s *Synchronizer) Init() {
 		blog.Errorf("init mq failed, err: %s", err.Error())
 	}
 
+	s.initSharedClusterConf()
 }
 
 func (s *Synchronizer) initTlsConfig() error {
@@ -166,6 +167,12 @@ func (s *Synchronizer) initMQ() error {
 	s.MQ = rabbitmq.NewRabbitMQ(&s.BkcmdbSynchronizerOption.RabbitMQ)
 
 	return nil
+}
+
+func (s *Synchronizer) initSharedClusterConf() {
+	if s.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode == "" {
+		s.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode = "io.tencent.bcs.projectcode"
+	}
 }
 
 // Run run the synchronizer
