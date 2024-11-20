@@ -365,7 +365,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 			}
 		} else {
 			bizid := bkCluster.BizID
-			if projectCode, ok := v.Data.Annotations["io.tencent.bcs.projectcode"]; ok {
+			if projectCode, ok := v.Data.Annotations[s.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode]; ok {
 				gpr := pmp.GetProjectRequest{
 					ProjectIDOrCode: projectCode,
 				}

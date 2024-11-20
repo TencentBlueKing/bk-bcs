@@ -2781,7 +2781,8 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(
 	}
 
 	bizid := bkCluster.BizID
-	if projectCode, ok := namespace.Annotations["io.tencent.bcs.projectcode"]; ok {
+	annotationKey := b.Syncer.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode
+	if projectCode, ok := namespace.Annotations[annotationKey]; ok {
 		gpr := pmp.GetProjectRequest{
 			ProjectIDOrCode: projectCode,
 		}
