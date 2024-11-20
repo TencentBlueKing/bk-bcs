@@ -498,7 +498,8 @@ func (cli *PermVerifyClient) verifyClientNSScopedPermission(ctx context.Context,
 }
 
 // getProjectFromResource
-func (cli *PermVerifyClient) getProjectFromResource(ctx context.Context, resource ClusterResource) (*component.Project, error) {
+func (cli *PermVerifyClient) getProjectFromResource(
+	ctx context.Context, resource ClusterResource) (*component.Project, error) {
 	if resource.ClusterID == "" {
 		return nil, fmt.Errorf("resource clusterID is null")
 	}
