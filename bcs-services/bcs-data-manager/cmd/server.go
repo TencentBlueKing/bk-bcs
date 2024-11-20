@@ -124,6 +124,8 @@ func (s *Server) Init() error {
 		return err
 	}
 
+	// init shared cluster config
+	s.initSharedClusterConf()
 	// init metric, pprof
 	s.initExtraModules()
 	// init system signal handler
@@ -445,7 +447,7 @@ func (s *Server) initWorker() error {
 	}
 	// init resourceGetter
 	s.resourceGetter = common.NewGetter(s.opt.FilterRules.NeedFilter, selectClusters, s.opt.FilterRules.Env,
-		pmClient, bcsMonitorCli)
+		s.opt.SharedClusterConfig.AnnoKeyProjCode, pmClient, bcsMonitorCli)
 	// init producer
 	producerCron := cron.New()
 	s.producer = worker.NewProducer(s.ctx, msgQueue, producerCron, cmCli, k8sStorageCli, mesosStorageCli,
@@ -654,6 +656,13 @@ func (s *Server) initStorageCli() (bcsapi.Storage, bcsapi.Storage, error) {
 	}
 	blog.Infof("init mesos storage cli success")
 	return k8sStorageCli, mesosStorageCli, nil
+}
+
+// initSharedClusterConf init shared cluster config
+func (s *Server) initSharedClusterConf() {
+	if s.opt.SharedClusterConfig.AnnoKeyProjCode == "" {
+		s.opt.SharedClusterConfig.AnnoKeyProjCode = types.AnnotationKeyProjectCode
+	}
 }
 
 // initExtraModules xxx

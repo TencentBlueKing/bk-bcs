@@ -70,6 +70,9 @@
       "username": "${kafkaUsername}",
       "password": "${kafkaPassword}"
   },
+  "sharedClusterConfig": {
+      "annoKeyProjCode": "${sharedClusterAnnoKeyProjCode}"
+  }
   "bkbaseConfigPath": "${bkbaseConfigPath}",
   "tspiderConfigPath": "${tspiderConfigPath}"
 }

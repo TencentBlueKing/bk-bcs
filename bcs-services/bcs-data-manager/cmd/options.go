@@ -118,29 +118,35 @@ type KafkaConfig struct {
 	Password  string `json:"password"`
 }
 
+// SharedClusterConfig options of shared cluster
+type SharedClusterConfig struct {
+	AnnoKeyProjCode string `json:"annoKeyProjCode"`
+}
+
 // DataManagerOptions options of data manager
 type DataManagerOptions struct {
 	conf.FileConfig
 	conf.LogConfig
 	ClientConfig
 	ServerConfig
-	Mongo                  MongoOption        `json:"mongoConf"`
-	BcsMonitorConf         BcsMonitorConfig   `json:"bcsMonitorConf"`
-	QueueConfig            QueueConfig        `json:"queueConfig"`
-	HandleConfig           HandleConfig       `json:"handleConfig"`
-	Etcd                   EtcdOption         `json:"etcd"`
-	BcsAPIConf             BcsAPIConfig       `json:"bcsApiConf"`
-	Debug                  bool               `json:"debug"`
-	FilterRules            ClusterFilterRules `json:"filterRules"`
-	AppCode                string             `json:"appCode"`
-	AppSecret              string             `json:"appSecret"`
-	ProducerConfig         ProducerConfig     `json:"producerConfig"`
-	KafkaConfig            KafkaConfig        `json:"kafkaConfig"`
-	NeedSendKafka          bool               `json:"needSendKafka"`
-	IgnoreBkMonitorCluster bool               `json:"ignoreBkMonitorCluster"`
-	QueryFromBkMonitor     bool               `json:"queryFromBkMonitor"`
-	BkbaseConfigPath       string             `json:"bkbaseConfigPath"`
-	TspiderConfigPath      string             `json:"tspiderConfigPath"`
+	Mongo                  MongoOption         `json:"mongoConf"`
+	BcsMonitorConf         BcsMonitorConfig    `json:"bcsMonitorConf"`
+	QueueConfig            QueueConfig         `json:"queueConfig"`
+	HandleConfig           HandleConfig        `json:"handleConfig"`
+	Etcd                   EtcdOption          `json:"etcd"`
+	BcsAPIConf             BcsAPIConfig        `json:"bcsApiConf"`
+	Debug                  bool                `json:"debug"`
+	FilterRules            ClusterFilterRules  `json:"filterRules"`
+	AppCode                string              `json:"appCode"`
+	AppSecret              string              `json:"appSecret"`
+	ProducerConfig         ProducerConfig      `json:"producerConfig"`
+	KafkaConfig            KafkaConfig         `json:"kafkaConfig"`
+	SharedClusterConfig    SharedClusterConfig `json:"sharedClusterConfig"`
+	NeedSendKafka          bool                `json:"needSendKafka"`
+	IgnoreBkMonitorCluster bool                `json:"ignoreBkMonitorCluster"`
+	QueryFromBkMonitor     bool                `json:"queryFromBkMonitor"`
+	BkbaseConfigPath       string              `json:"bkbaseConfigPath"`
+	TspiderConfigPath      string              `json:"tspiderConfigPath"`
 }
 
 // ClusterFilterRules rules for cluster filter
