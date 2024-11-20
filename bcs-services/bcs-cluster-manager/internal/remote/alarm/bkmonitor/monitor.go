@@ -14,7 +14,7 @@
 package bkmonitor
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -178,7 +178,7 @@ func (c *Client) bkmonitorHostAlarmConfig(user string, config *alarm.ShieldHost)
 
 	if !respData.Result {
 		blog.Errorf("call api ShieldHostAlarmConfig failed: %v", respData.Message)
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 
 	// successfully request

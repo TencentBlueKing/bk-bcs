@@ -14,7 +14,7 @@
 package tmp
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 	"time"
 
@@ -130,7 +130,7 @@ func (c *Client) ShieldHostAlarmConfig(user string, config *alarm.ShieldHost) er
 
 	if !respData.Result {
 		blog.Errorf("call api ShieldHostAlarmConfig failed: %v", respData.Message)
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 
 	// successfully request
