@@ -323,6 +323,20 @@ func (h *Handler) DeployTemplateFile(
 	return nil
 }
 
+// ConvertTemplateToHelm 普通模板文件转换为 Helm 格式模板文件
+func (h *Handler) ConvertTemplateToHelm(
+	ctx context.Context, req *clusterRes.ConvertTemplateToHelmReq, resp *clusterRes.CommonResp) error {
+	action := template.NewTemplateAction(h.model)
+	result, err := action.ConvertTemplateToHelm(ctx, req)
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(result); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetEnvManage xxx
 func (h *Handler) GetEnvManage(
 	ctx context.Context, req *clusterRes.GetEnvManageReq, resp *clusterRes.CommonResp) error {

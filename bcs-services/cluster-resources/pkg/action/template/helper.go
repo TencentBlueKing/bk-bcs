@@ -125,6 +125,23 @@ func replaceTemplateFileVar(template string, values map[string]string) string {
 	})
 }
 
+// replaceTemplateFileToHelm replace template file to helm
+func replaceTemplateFileToHelm(template string) string {
+	re := regexp.MustCompile(templateFileVarPattern)
+	return re.ReplaceAllStringFunc(template, func(s string) string {
+		// 去掉 {{ 和 }}
+		varName := strings.TrimSpace(s[2 : len(s)-2])
+		if !strings.HasPrefix(varName, ".Values.") {
+			if strings.HasPrefix(varName, ".") {
+				varName = ".Values" + varName
+			} else {
+				varName = ".Values." + varName
+			}
+		}
+		return "{{ " + varName + " }}"
+	})
+}
+
 // patchTemplateAnnotations patch template annotations
 func patchTemplateAnnotations(manifest map[string]interface{}, username, templateSpace, templateName,
 	templateVersion string) map[string]interface{} {
