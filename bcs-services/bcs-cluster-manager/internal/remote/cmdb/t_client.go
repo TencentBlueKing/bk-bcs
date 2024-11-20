@@ -16,6 +16,7 @@ package cmdb
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -149,7 +150,7 @@ func (t *TClient) QueryBusinessLevel2DetailInfo(bizL2ID int) (*BusinessL2Info, e
 
 	if respData.Code != "0" {
 		blog.Errorf("call api queryBusinessLevel2DetailInfo[%s] failed: %v", respData.TraceID, respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api queryBusinessLevel2DetailInfo with url(%s) successfully", reqURL)
@@ -201,7 +202,7 @@ func (t *TClient) queryServerInfoByIps(ips []string) ([]Server, error) {
 
 	if respData.Code != "0" {
 		blog.Errorf("call api queryAllServerByBaseCondition[%s] failed: %v", respData.TraceID, respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api queryAllServerByBaseCondition with url(%s) successfully", reqURL)
