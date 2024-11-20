@@ -297,24 +297,24 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 	if resource.ClusterID == "" || resource.Namespace == "" {
 		return false, errors.New("resource clusterID or resource namespace is null")
 	}
-	projectID, err := cli.getProjectIDFromResource(ctx, resource)
+	project, err := cli.getProjectFromResource(ctx, resource)
 	if err != nil {
 		return false, fmt.Errorf("getProjectIDByClusterID[%s] failed", resource.ClusterID)
 	}
 	// if clusterType is shared, need to check namespace belong to project
 	if clusterType == Shared {
 		var exist bool
-		exist, err = cli.checkNamespaceInProjectCluster(ctx, projectID, resource.ClusterID, resource.Namespace)
+		exist, err = cli.checkNamespaceInProjectCluster(ctx, project.ProjectCode, resource.ClusterID, resource.Namespace)
 		if err != nil {
 			return false, err
 		}
 		if !exist {
 			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] not exist "+
-				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID) // nolint goconst
+				"project[%s] cluster[%s]", resource.Namespace, project.ProjectCode, resource.ClusterID) // nolint goconst
 			return false, nil
 		}
 		blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission namespace[%s] exist "+
-			"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+			"project[%s] cluster[%s]", resource.Namespace, project.ProjectCode, resource.ClusterID)
 	}
 
 	// generate namespace id
@@ -329,7 +329,7 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 		RType:     string(namespace.SysNamespace),
 		RInstance: nameSpaceID,
 		Rp: namespace.NamespaceScopedResourcePath{
-			ProjectID: projectID,
+			ProjectID: project.ProjectID,
 			ClusterID: resource.ClusterID,
 		},
 		Attr: utils.GetResourceAttr(resource.ResourceType),
@@ -346,20 +346,15 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 		return false, err
 	}
 
-	go addAudit(ctx, user, projectID, action, actionID, resource)
+	go addAudit(ctx, user, project.ProjectCode, action, actionID, resource)
 	return allow, nil
 }
 
 // checkNamespaceInProjectCluster
-func (cli *PermVerifyClient) checkNamespaceInProjectCluster(ctx context.Context, projectID, clusterID string,
+func (cli *PermVerifyClient) checkNamespaceInProjectCluster(ctx context.Context, projectCode, clusterID string,
 	namespace string) (bool, error) {
-	project, err := component.GetProjectWithCache(ctx, projectID)
-	if err != nil {
-		blog.Log(ctx).Errorf("checkNamespaceInProjectCluster get project failed: %v", err)
-		return false, err
-	}
 	// 获取共享集群所在项目的命名空间列表，检查是否属于该项目
-	namespaceList, err := component.GetCachedClusterNamespaces(ctx, project.ProjectCode, clusterID)
+	namespaceList, err := component.GetCachedClusterNamespaces(ctx, projectCode, clusterID)
 	if err != nil {
 		blog.Log(ctx).Errorf("checkNamespaceInProjectCluster failed: %v", err)
 		return false, err
@@ -411,7 +406,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 			resource.ClusterID, namespaceScopedType, actionID)
 	}
 
-	projectID, err := cli.getProjectIDFromResource(ctx, resource)
+	project, err := cli.getProjectFromResource(ctx, resource)
 	if err != nil {
 		return false, err
 	}
@@ -422,7 +417,7 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	}
 
 	// get resource
-	rn1, err := cli.getResource(ctx, isClusterResourcePerm, clusterType, resource, projectID)
+	rn1, err := cli.getResource(ctx, isClusterResourcePerm, clusterType, resource, project)
 	if err != nil {
 		return false, err
 	}
@@ -440,13 +435,13 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 		return false, err
 	}
 
-	go addAudit(ctx, user, projectID, action, actionID, resource)
+	go addAudit(ctx, user, project.ProjectCode, action, actionID, resource)
 	return allow, nil
 }
 
 // getResource get resource
 func (cli *PermVerifyClient) getResource(ctx context.Context, isClusterResourcePerm bool, clusterType ClusterType,
-	resource ClusterResource, projectID string) (*iam.ResourceNode, error) {
+	resource ClusterResource, project *component.Project) (*iam.ResourceNode, error) {
 	// cal nameSpace perm ID
 
 	var rn1 *iam.ResourceNode
@@ -456,24 +451,24 @@ func (cli *PermVerifyClient) getResource(ctx context.Context, isClusterResourceP
 			RType:     string(cluster.SysCluster),
 			RInstance: resource.ClusterID,
 			Rp: namespace.NamespaceResourcePath{
-				ProjectID:     projectID,
+				ProjectID:     project.ProjectID,
 				IsClusterPerm: isClusterResourcePerm,
 			},
 		}
 	} else {
 		// if clusterType is shared, need to check namespace belong to project
 		if clusterType == Shared {
-			exist, err := cli.checkNamespaceInProjectCluster(ctx, projectID, resource.ClusterID, resource.Namespace)
+			exist, err := cli.checkNamespaceInProjectCluster(ctx, project.ProjectCode, resource.ClusterID, resource.Namespace)
 			if err != nil {
 				return nil, err
 			}
 			if !exist {
 				blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] not exist "+
-					"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+					"project[%s] cluster[%s]", resource.Namespace, project.ProjectCode, resource.ClusterID)
 				return nil, nil
 			}
 			blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission namespace[%s] exist "+
-				"project[%s] cluster[%s]", resource.Namespace, projectID, resource.ClusterID)
+				"project[%s] cluster[%s]", resource.Namespace, project.ProjectCode, resource.ClusterID)
 		}
 		// generate namespace id
 		nameSpaceID := authUtils.CalcIAMNsID(resource.ClusterID, resource.Namespace)
@@ -482,7 +477,7 @@ func (cli *PermVerifyClient) getResource(ctx context.Context, isClusterResourceP
 			RType:     string(namespace.SysNamespace),
 			RInstance: nameSpaceID,
 			Rp: namespace.NamespaceResourcePath{
-				ProjectID: projectID,
+				ProjectID: project.ProjectID,
 				ClusterID: resource.ClusterID,
 			},
 		}
@@ -502,10 +497,10 @@ func (cli *PermVerifyClient) verifyClientNSScopedPermission(ctx context.Context,
 	return nsAllow, nil
 }
 
-// getProjectIDFromResource
-func (cli *PermVerifyClient) getProjectIDFromResource(ctx context.Context, resource ClusterResource) (string, error) {
+// getProjectFromResource
+func (cli *PermVerifyClient) getProjectFromResource(ctx context.Context, resource ClusterResource) (*component.Project, error) {
 	if resource.ClusterID == "" {
-		return "", fmt.Errorf("resource clusterID is null")
+		return nil, fmt.Errorf("resource clusterID is null")
 	}
 
 	var (
@@ -516,13 +511,18 @@ func (cli *PermVerifyClient) getProjectIDFromResource(ctx context.Context, resou
 	} else {
 		cls, err := component.GetClusterByClusterID(ctx, resource.ClusterID)
 		if err != nil {
-			return "", fmt.Errorf("GetClusterByClusterID[%s] failed", resource.ClusterID)
+			return nil, fmt.Errorf("GetClusterByClusterID[%s] failed", resource.ClusterID)
 		}
 		projectID = cls.ProjectID
-		blog.Log(ctx).Infof("get projectID %s from cluster %s", resource.ClusterID, projectID)
+		blog.Log(ctx).Infof("got projectID %s from cluster %s", projectID, resource.ClusterID)
+	}
+	project, err := component.GetProjectWithCache(ctx, projectID)
+	if err != nil {
+		blog.Log(ctx).Errorf("get project with projectID failed: %v", err)
+		return nil, err
 	}
 
-	return projectID, nil
+	return project, nil
 }
 
 // verifyUserClusterScopedPermission
@@ -548,12 +548,12 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 		return false, fmt.Errorf("invalid action[%s]", action)
 	}
 
-	projectID, err := cli.getProjectIDFromResource(ctx, resource)
+	project, err := cli.getProjectFromResource(ctx, resource)
 	if err != nil {
 		return false, err
 	}
 	blog.Log(ctx).Infof("verifyUserClusterScopedPermission getProjectIDByClusterID[%s]: %s", resource.ClusterID,
-		projectID)
+		project.ProjectCode)
 
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
@@ -565,7 +565,7 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 		RType:     string(cluster.SysCluster),
 		RInstance: resource.ClusterID,
 		Rp: cluster.ClusterScopedResourcePath{
-			ProjectID: projectID,
+			ProjectID: project.ProjectID,
 		},
 	}
 
@@ -580,7 +580,7 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 		return false, err
 	}
 
-	go addAudit(ctx, user, projectID, action, actionID, resource)
+	go addAudit(ctx, user, project.ProjectCode, action, actionID, resource)
 	return allow, nil
 }
 
@@ -629,7 +629,7 @@ func transToAPIServerURL(url string) string {
 	return ""
 }
 
-func addAudit(pCtx context.Context, user, projectID, method, actionID string, res ClusterResource) {
+func addAudit(pCtx context.Context, user, projectCode, method, actionID string, res ClusterResource) {
 	requestID := utils.GetRequestIDFromContext(pCtx)
 	ctx := context.WithValue(context.Background(), utils.ContextValueKeyRequestID, requestID)
 
@@ -646,11 +646,6 @@ func addAudit(pCtx context.Context, user, projectID, method, actionID string, re
 		return
 	}
 
-	project, err := component.GetProjectWithCache(ctx, projectID)
-	if err != nil {
-		blog.Log(ctx).Errorf("get project failed: %v", err.Error())
-		return
-	}
 	auditCtx := audit.RecorderContext{
 		Username:  user,
 		RequestID: utils.GetRequestIDFromContext(ctx),
@@ -658,12 +653,12 @@ func addAudit(pCtx context.Context, user, projectID, method, actionID string, re
 		EndTime:   time.Now(),
 	}
 	resource := audit.Resource{
-		ProjectCode:  project.ProjectCode,
+		ProjectCode:  projectCode,
 		ResourceType: audit.ResourceTypeK8SResource,
 		ResourceID:   res.URL,
 		ResourceName: res.URL,
 		ResourceData: map[string]interface{}{
-			"ProjectCode": project.ProjectCode,
+			"ProjectCode": projectCode,
 			"ClusterID":   res.ClusterID,
 			"Namespace":   res.Namespace,
 			"URL":         res.URL,
@@ -687,7 +682,7 @@ func addAudit(pCtx context.Context, user, projectID, method, actionID string, re
 		SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
 
 	// activity
-	err = sqlstore.CreateActivity([]*models.Activity{
+	err := sqlstore.CreateActivity([]*models.Activity{
 		{
 			ProjectCode:  resource.ProjectCode,
 			ResourceType: string(resource.ResourceType),
