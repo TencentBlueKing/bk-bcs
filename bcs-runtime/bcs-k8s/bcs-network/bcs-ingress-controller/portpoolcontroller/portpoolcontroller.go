@@ -100,7 +100,8 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 		if err != nil {
 			blog.Warnf("delete port pool '%s/%s' failed, err: %s", portPool.GetNamespace(), portPool.GetName(),
 				err.Error())
-			metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.EventTypeDelete)
+			metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.FailTypeDeleteFailed, portPool.Namespace,
+				portPool.Name)
 			ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "delete port pool failed", err.Error())
 			return ctrl.Result{
 				Requeue:      true,
@@ -130,7 +131,8 @@ func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) 
 	if err != nil {
 		blog.Errorf("ensure portPool '%s/%s' failed, err: %s", portPool.GetNamespace(), portPool.GetName(),
 			err.Error())
-		metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.EventTypeUnknown)
+		metrics.IncreaseFailMetric(metrics.ObjectPortPool, metrics.FailTypeReconcileError, portPool.Namespace,
+			portPool.Name)
 		ppr.recordListenerEvent(portPool, k8scorev1.EventTypeWarning, "update port pool failed", err.Error())
 		return ctrl.Result{
 			Requeue:      true,

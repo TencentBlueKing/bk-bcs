@@ -14,25 +14,10 @@
           class="flex-1 mr-[24px]"
           :label="$t('templateFile.label.fileVersion')"
           required>
-          <bcs-select
-            class="bg-[#fff]"
-            :loading="versionLoading"
-            :clearable="false"
-            :popover-min-width="160"
-            searchable
-            v-model="formData.templateVersions">
-            <bcs-option
-              v-for="item in versionList"
-              :key="item.id"
-              :id="item.id"
-              :name="item.version">
-              <div class="flex items-center">
-                <span class="mr-[8px]">{{ item.version }}</span>
-                <bcs-tag class="mr-[8px]" theme="warning" v-if="item.latest">latest</bcs-tag>
-                <bcs-tag v-if="item.latestDeployVersion === item.version">LatestDeployed</bcs-tag>
-              </div>
-            </bcs-option>
-          </bcs-select>
+          <version-selector
+            v-model="formData.templateVersions"
+            :id="id"
+            on-draft />
         </bk-form-item>
         <bk-form-item
           property="namespace"
@@ -194,9 +179,11 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, watch } from 'vue';
 
+import versionSelector from '../components/version-selector.vue';
+
 import Namespace from './namespace-v2.vue';
 
-import { IListTemplateMetadataItem, IPreviewItem, ITemplateVersionItem, IVarItem } from '@/@types/cluster-resource-patch';
+import { IListTemplateMetadataItem, IPreviewItem, IVarItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
 import AiAssistant from '@/components/ai-assistant.vue';
 import FormGroup from '@/components/form-group.vue';
@@ -275,22 +262,6 @@ async function getTemplateMetadata() {
   }).catch(() => ({}));
   loading.value = false;
 }
-
-// 版本列表
-const versionLoading = ref(false);
-const versionList = ref<ITemplateVersionItem[]>([]);
-const listTemplateVersion = async () => {
-  if (!props.id) return;
-  versionLoading.value = true;
-  versionList.value = await TemplateSetService.ListTemplateVersion({
-    $templateID: props.id,
-  }).catch(() => []);
-  // 筛选出非草稿版本
-  versionList.value = versionList.value.filter(item => !item.draft);
-  // 设置默认文件版本，根据qurey传递，没有就默认第一项
-  formData.value.templateVersions = versionList.value.find(item => item.version === props.version)?.id || versionList.value[0]?.id || '';
-  versionLoading.value = false;
-};
 
 // 获取模板文件的变量列表
 const varLoading = ref(false);
@@ -400,7 +371,6 @@ watch(
 
 onBeforeMount(() => {
   getTemplateMetadata();
-  listTemplateVersion();
 });
 </script>
 <style scoped lang="postcss">

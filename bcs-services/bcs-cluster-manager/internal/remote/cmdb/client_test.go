@@ -111,35 +111,6 @@ func TestClient_GetBS2IDByBizID(t *testing.T) {
 	t.Log(id)
 }
 
-func TestClient_GetBizInfo(t *testing.T) {
-	cli := getNewClient()
-	business, err := cli.GetBizInfo(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(business.BsiID, business.BsiName, business.BsipID, business.BsiProductId, business.BsiProductName,
-		business.BsiL1, business.BsiL2)
-
-	// 查询一级业务详情
-	business1, err := cli.GetBizInfo(int64(business.BsiL1))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(business1.BsiName, business1.BsiL1)
-}
-
-func TestClient_GetCloudTags(t *testing.T) {
-	cli := getNewClient()
-	tags, err := cli.GetCloudTags(BizInfo{BizID: 1068}, "xxx")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(tags)
-}
-
 func TestClient_SearchBizInstTopo(t *testing.T) {
 	cli := getNewClient()
 

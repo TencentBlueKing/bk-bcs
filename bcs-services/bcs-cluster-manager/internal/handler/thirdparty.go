@@ -227,3 +227,19 @@ func (cm *ClusterManager) GetScopeHostCheck(ctx context.Context,
 	blog.V(3).Infof("reqID: %s, action: GetScopeHostCheck, req %v", reqID, req)
 	return nil
 }
+
+// GetProjectResourceQuotaUsage implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetProjectResourceQuotaUsage(ctx context.Context,
+	req *cmproto.GetProjectResourceQuotaUsageRequest, resp *cmproto.GetProjectResourceQuotaUsageResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	la := thirdparty.NewGetProjectResourceQuotaUsageAction(cm.model)
+	la.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetProjectResourceQuotaUsage", "grpc",
+		strconv.Itoa(int(resp.Code)), start)
+	blog.V(3).Infof("reqID: %s, action: GetProjectResourceQuotaUsage, req %v", reqID, req)
+	return nil
+}

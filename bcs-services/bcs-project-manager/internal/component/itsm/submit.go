@@ -226,3 +226,45 @@ func SubmitDeleteNamespaceTicket(username, projectCode, clusterID, namespace str
 	}
 	return CreateTicket(username, serviceID, fields)
 }
+
+// SubmitQuotaManagerCommonTicket create new itsm quota manager ticket 额度管理通用审批单据
+func SubmitQuotaManagerCommonTicket(username, projectCode, clusterID, content string) (*CreateTicketData, error) {
+	var (
+		serviceID int
+		itsmConf  = config.GlobalConf.ITSM
+	)
+
+	if itsmConf.AutoRegister {
+		serviceIDStr, err := store.GetModel().GetConfig(context.Background(),
+			configm.QuotaManagerCommonItsmServiceID)
+		if err != nil {
+			return nil, err
+		}
+		serviceID, err = strconv.Atoi(serviceIDStr)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		serviceID = itsmConf.QuotaManagerCommonServiceID
+	}
+
+	fields := []map[string]interface{}{
+		{
+			"key":   "title",
+			"value": "额度管理通用审批单据",
+		},
+		{
+			"key":   "PROJECT_CODE",
+			"value": projectCode,
+		},
+		{
+			"key":   "CLUSTER_ID",
+			"value": clusterID,
+		},
+		{
+			"key":   "apply_content",
+			"value": content,
+		},
+	}
+	return CreateTicket(username, serviceID, fields)
+}

@@ -402,6 +402,7 @@ func getDiffBetweenListenerRule(existedListener, newListener *networkextensionv1
 			updateRule.RuleID = existedRule.RuleID
 			updateRule.ListenerAttribute = rule.ListenerAttribute
 			updateRule.TargetGroup = rule.TargetGroup
+			updateRule.Certificate = rule.Certificate
 			updatedRules = append(updatedRules, updateRule)
 			updateOldRules = append(updateOldRules, existedRule)
 		}

@@ -33,15 +33,6 @@ func GetCityZoneByCityName(name string) string {
 	return ""
 }
 
-// business cloud key info
-const (
-	KeyPart      = "运营部门"
-	KeyProduct   = "运营产品"
-	KeyOneBiz    = "一级业务"
-	KeySecondBiz = "二级业务"
-	KeyOperator  = "负责人"
-)
-
 // field result
 const (
 	fieldBS2NameID = "bs2_name_id"
@@ -115,7 +106,8 @@ func (c Condition) String() string {
 
 var (
 	and Condition = "AND"
-	or  Condition = "OR" // nolint
+	or  Condition = "OR"
+	in  Condition = "IN"// nolint
 )
 
 // Page page
@@ -311,83 +303,6 @@ const (
 	methodServer      = "Server"
 	methodBusinessRaw = "BusinessRaw"
 )
-
-var (
-	fieldBizInfo    = []string{"BsiId", "BsipId", "BsiProductName", "BsiProductId", "BsiName", "BsiL1", "BsiL2"}
-	fieldServerInfo = []string{"SvrOperator", "SvrBakOperator", "SvrIp", "SvrAssetId"}
-)
-
-// PagingInfo page info
-type PagingInfo struct {
-	StartIndex int `json:"start_index"`
-	PageSize   int `json:"page_size"`
-	TotalRows  int `json:"return_total_rows"`
-}
-
-// QueryBusinessInfoReq query business request
-type QueryBusinessInfoReq struct {
-	Method    string                 `json:"method"`
-	ReqColumn []string               `json:"req_column"`
-	KeyValues map[string]interface{} `json:"key_values"`
-}
-
-// QueryBusinessInfoResp query business resp
-type QueryBusinessInfoResp struct {
-	Code      string       `json:"code"`
-	Message   string       `json:"message"`
-	Result    bool         `json:"result"`
-	RequestID string       `json:"request_id"`
-	Data      BusinessInfo `json:"data"`
-}
-
-// BusinessInfo business resp
-type BusinessInfo struct {
-	Data []Business `json:"data"`
-}
-
-// Business business info
-type Business struct {
-	// 运营产品名称和ID
-	BsiProductName string `json:"BsiProductName"`
-	BsiProductId   int    `json:"BsiProductId"`
-	BsiID          int    `json:"BsiId"`
-	BsipID         int    `json:"BsipId"`
-	// 业务名称
-	BsiName string `json:"BsiName"`
-	// 一级/二级业务ID
-	BsiL1 int `json:"BsiL1"`
-	BsiL2 int `json:"BsiL2"`
-}
-
-// GetAssetIdsByIpsReq query server request
-type GetAssetIdsByIpsReq struct {
-	Method    string                 `json:"method"`
-	ReqColumn []string               `json:"req_column"`
-	KeyValues map[string]interface{} `json:"key_values"`
-	PageInfo  PagingInfo             `json:"paging_info"`
-}
-
-// GetAssetIdsByIpsResp query server resp
-type GetAssetIdsByIpsResp struct {
-	Code      string     `json:"code"`
-	Message   string     `json:"message"`
-	Result    bool       `json:"result"`
-	RequestID string     `json:"request_id"`
-	Data      ServerInfo `json:"data"`
-}
-
-// ServerInfo server resp
-type ServerInfo struct {
-	Data []Server `json:"data"`
-}
-
-// Server server info
-type Server struct {
-	ServerAssetId string `json:"SvrAssetId"`
-	ServerIp      string `json:"SvrIp"`
-	SvrOperator   string `json:"SvrOperator"`
-	BakOperator   string `json:"SvrBakOperator"`
-}
 
 // BizInfo business id info
 type BizInfo struct {

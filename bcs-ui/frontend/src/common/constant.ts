@@ -26,6 +26,15 @@ export const SECRET_REGEX = '^[0-9a-zA-Z-~]+$';
 export const SECRETKEY_REGEX = '^[0-9a-zA-Z/-]+$';
 export const CLUSTER_NAME_REGEX = '^[0-9A-Za-z][A-Za-z0-9-_]*';
 
+// 只能包含小写字母（[a-z]）、数字字符（[0-9]）、下划线（_）和破折号（-），并且必须以字母开头
+export const GKE_LABEL_NAME_REGEX = '^[a-z][a-z0-9_-]*$';
+
+// 内网cidr 正则
+export const INTRANET_CIDR_REGEX = '\\b(10\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2[0-9]|3[0-1])\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3})\\/([0-9]|[1-2][0-9]|3[0-2])\\b';
+
+// 公网cidr 正则
+export const INTERNET_CIDR_REGEX = '\\b((?!(10|127)\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}|172\\.(1[6-9]|2[0-9]|3[0-1])\\.\\d{1,3}\\.\\d{1,3}|192\\.168\\.\\d{1,3}\\.\\d{1,3}|0\\.0\\.0\\.0|255\\.255\\.255\\.255))(\\d{1,3}\\.){3}\\d{1,3}\\/([0-9]|[1-2][0-9]|3[0-2])\\b';
+
 // 集群环境
 export const CLUSTER_ENV = {
   stag: 'UAT',

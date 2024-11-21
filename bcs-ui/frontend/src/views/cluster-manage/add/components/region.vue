@@ -41,6 +41,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  filter: {
+    type: Function,
+    default: null,
+  },
 });
 const emits = defineEmits(['input', 'change']);
 // 区域列表
@@ -56,6 +60,9 @@ const handleGetRegionList = async () => {
   }).catch(() => []);
   $store.commit('cloudMetadata/updateRegionList', data);
   regionList.value = data.filter(item => item.regionState === 'AVAILABLE');
+  if (props.filter) {
+    regionList.value = props.filter(regionList.value, handleGetRegionList);
+  }
   regionLoading.value = false;
 };
 

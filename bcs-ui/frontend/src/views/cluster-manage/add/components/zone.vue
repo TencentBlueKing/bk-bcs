@@ -3,6 +3,7 @@
     searchable
     :clearable="false"
     :value="value"
+    :loading="zoneLoading"
     @change="handleZoneChange">
     <bcs-option
       v-for="zone in zoneList"

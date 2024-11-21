@@ -53,8 +53,10 @@ func DoRequest(ctx context.Context, hr *HTTPRequest) []byte {
 		if err != nil {
 			utils.ExitError(fmt.Sprintf("marshal request body failed: %s", err.Error()))
 		}
-		req, err = http.NewRequestWithContext(ctx, hr.Method, urlStr, bytes.NewBuffer(body))
+		// NOCC:Server Side Request Forgery(只是代码封装，所有 URL都是可信的)
+		req, err = http.NewRequestWithContext(ctx, hr.Method, urlStr, bytes.NewBuffer(body)) // nolint
 	} else {
+		// NOCC:Server Side Request Forgery(只是代码封装，所有 URL都是可信的)
 		req, err = http.NewRequestWithContext(ctx, hr.Method, urlStr, nil)
 	}
 	if err != nil {

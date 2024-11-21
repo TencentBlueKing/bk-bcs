@@ -37,7 +37,6 @@ import (
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -81,13 +80,8 @@ func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster,
 
 // generateTags tags info
 func generateTags(bizID int64, operator string) map[string]string {
-	cli := cmdb.GetCmdbClient()
-	if cli == nil {
-		return nil
-	}
-
 	// get internal cloud tags
-	tags, err := cli.GetCloudTags(cmdb.BizInfo{BizID: bizID}, operator)
+	tags, err := cloudprovider.GetCloudBizTags(bizID, operator)
 	if err != nil {
 		blog.Errorf("TKE cluster generateTags failed: %v", err)
 		return nil

@@ -3,10 +3,13 @@
     <!-- 谷歌云 -->
     <bk-form-item :label="$t('cluster.labels.clusterType')">
       <span class="text-[#313238]">
-        {{ $t('bcs.cluster.managed') }}
+        {{ manageType === 'MANAGED_CLUSTER' ? $t('bcs.cluster.autopilot') : $t('bcs.cluster.standard') }}
       </span>
-      <span class="text-[#979BA5]">
+      <span v-if="manageType === 'MANAGED_CLUSTER'" class="text-[#979BA5]">
         ({{ $t('cluster.create.label.manageType.managed.gkeDesc') }})
+      </span>
+      <span v-if="manageType === 'INDEPENDENT_CLUSTER'" class="text-[#979BA5]">
+        ({{ $t('cluster.create.google.tips.standard') }})
       </span>
     </bk-form-item>
     <bk-form-item
@@ -43,10 +46,14 @@ export default defineComponent({
     // google cloud locationType
     const locationType = computed(() => curCluster.value?.extraInfo?.locationType);
 
+    // google cloud manageType
+    const manageType = computed(() => curCluster.value?.manageType);
+
 
     return {
       curCluster,
       locationType,
+      manageType,
     };
   },
 });

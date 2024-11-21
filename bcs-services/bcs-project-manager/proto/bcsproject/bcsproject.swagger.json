@@ -159,6 +159,324 @@
         ]
       }
     },
+    "/bcsproject/v1/projectQuotas": {
+      "get": {
+        "summary": "查询项目资源quota列表",
+        "description": "通过查询参数过滤项目quota列表, 支持分页和全量数据",
+        "operationId": "BCSProjectQuota_ListProjectQuotas",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectListProjectQuotasResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "quotaId. 配额Id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "quotaName",
+            "description": "quotaName. 配额中文名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectID",
+            "description": "projectID. 项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projectCode",
+            "description": "projectCode. 项目编码(英文缩写), 全局唯一, 长度不能超过32字符",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "businessID",
+            "description": "businessID. 项目绑定的蓝鲸CMDB中业务ID信息",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "quotaType",
+            "description": "quotaType. 资源类型(目前支持CA整机资源、共享集群维度资源)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      },
+      "post": {
+        "summary": "创建项目配额信息",
+        "description": "创建项目配额信息",
+        "operationId": "BCSProjectQuota_CreateProjectQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectCreateProjectQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
+    "/bcsproject/v1/projectQuotas/{quotaId}": {
+      "get": {
+        "summary": "查询项目quota资源信息",
+        "description": "通过quotaID查询项目quota信息",
+        "operationId": "BCSProjectQuota_GetProjectQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "项目quotaID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      },
+      "delete": {
+        "summary": "DeleteProjectQuota 退回资源额度",
+        "description": "删除项目资源quota",
+        "operationId": "BCSProjectQuota_DeleteProjectQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "项目资源quotaId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      },
+      "put": {
+        "summary": "更新项目资源quota",
+        "description": "更新项目quota信息",
+        "operationId": "BCSProjectQuota_UpdateProjectQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectProjectQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "资源quotaId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectUpdateProjectQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
+    "/bcsproject/v1/projectQuotas/{quotaId}/scaledown": {
+      "put": {
+        "summary": "缩容项目资源quota",
+        "description": "缩容项目quota",
+        "operationId": "BCSProjectQuota_ScaleDownProjectQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectScaleDownProjectQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "配额Id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectScaleDownProjectQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
+    "/bcsproject/v1/projectQuotas/{quotaId}/scaleup": {
+      "put": {
+        "summary": "扩容项目资源quota",
+        "description": "扩容项目quota",
+        "operationId": "BCSProjectQuota_ScaleUpProjectQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectScaleUpProjectQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "配额Id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/bcsprojectScaleUpProjectQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
+    "/bcsproject/v1/projectQuotas/{quotaId}/usage": {
+      "get": {
+        "summary": "查询项目配额使用情况",
+        "description": "查询用户项目quota的使用情况, 包括配额和已使用资源",
+        "operationId": "BCSProjectQuota_GetProjectQuotasUsage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectGetProjectQuotasUsageResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "quotaId",
+            "description": "项目quotaId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProjectQuota"
+        ]
+      }
+    },
     "/bcsproject/v1/projects": {
       "get": {
         "summary": "查询项目列表",
@@ -1792,6 +2110,83 @@
         }
       }
     },
+    "bcsprojectCreateProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaName": {
+          "type": "string",
+          "description": "配额中文名称, 长度不能超过64字符",
+          "title": "quotaName"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过32字符",
+          "title": "projectCode"
+        },
+        "clusterId": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterId"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "nameSpace": {
+          "type": "string",
+          "description": "集群名称空间维度的额度管理",
+          "title": "nameSpace"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "businessName": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务名称",
+          "title": "businessName"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目配额描述",
+          "title": "description"
+        },
+        "quotaType": {
+          "type": "string",
+          "description": "资源类型(目前支持CA整机资源、共享集群维度资源)",
+          "title": "quotaType"
+        },
+        "provider": {
+          "type": "string",
+          "description": "quota资源的供应商, 不同provider支持多种类型的quota",
+          "title": "provider"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "不同资源类型的具体配置资源quota",
+          "title": "quota"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "创建项目维度的quota资源配额",
+      "title": "CreateProjectQuotaRequest",
+      "required": [
+        "name",
+        "projectCode"
+      ]
+    },
     "bcsprojectCreateProjectRequest": {
       "type": "object",
       "properties": {
@@ -2016,6 +2411,22 @@
         }
       }
     },
+    "bcsprojectDataDisk": {
+      "type": "object",
+      "properties": {
+        "diskType": {
+          "type": "string",
+          "description": "数据盘类型，LOCAL_BASIC（默认）,LOCAL_SSD,CLOUD_BASE,CLOUD_SSD,CLOUD_PREMIUM(高性能云硬盘)",
+          "title": "diskType"
+        },
+        "diskSize": {
+          "type": "string",
+          "description": "数据盘大小，10G起跳，默认为0，为0时不购买",
+          "title": "diskSize"
+        }
+      },
+      "title": "DataDisk 数据盘定义"
+    },
     "bcsprojectDeleteNamespaceResponse": {
       "type": "object",
       "properties": {
@@ -2085,6 +2496,24 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectDeviceInfo": {
+      "type": "object",
+      "properties": {
+        "deviceType": {
+          "type": "string"
+        },
+        "deviceQuota": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "DeviceInfo device data (cpu/mem/gpu)"
     },
     "bcsprojectGetBusinessResponse": {
       "type": "object",
@@ -2178,6 +2607,66 @@
         "web_annotations": {
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectGetProjectQuotasUsageData": {
+      "type": "object",
+      "properties": {
+        "quota": {
+          "$ref": "#/definitions/bcsprojectProjectQuota"
+        },
+        "region": {
+          "type": "string"
+        },
+        "instanceType": {
+          "type": "string"
+        },
+        "quotaUsage": {
+          "$ref": "#/definitions/bcsprojectZoneResourceUsage"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "gpu": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "bcsprojectGetProjectQuotasUsageResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectGetProjectQuotasUsageData",
+          "description": "返回项目quota资源使用情况",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
           "title": "web_annotations"
         }
       }
@@ -2324,6 +2813,69 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectInstanceTypeConfig": {
+      "type": "object",
+      "properties": {
+        "region": {
+          "type": "string",
+          "description": "地域",
+          "title": "region"
+        },
+        "instanceType": {
+          "type": "string",
+          "description": "机型",
+          "title": "instanceType"
+        },
+        "cpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型cpu信息，与机型instanceType互斥，比instanceType优先级高",
+          "title": "cpu"
+        },
+        "mem": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型mem信息，与机型instanceType互斥，比instanceType优先级高",
+          "title": "mem"
+        },
+        "gpu": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型gpu信息，与机型instanceType互斥，比instanceType优先级高，可以会为0",
+          "title": "gpu"
+        },
+        "zoneId": {
+          "type": "string",
+          "description": "可用区Id",
+          "title": "zoneId"
+        },
+        "zoneName": {
+          "type": "string",
+          "description": "可用区名称",
+          "title": "zoneName"
+        },
+        "quotaNum": {
+          "type": "integer",
+          "format": "int64",
+          "description": "机型申请的配额",
+          "title": "quotaNum"
+        },
+        "systemDisk": {
+          "$ref": "#/definitions/bcsprojectDataDisk",
+          "description": "系统盘信息，BCS默认设置为高性能云盘，大小为50G",
+          "title": "systemDisk"
+        },
+        "dataDisks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectDataDisk"
+          },
+          "description": "数据盘信息，无默认设置则不购买",
+          "title": "dataDisks"
+        }
+      },
+      "title": "InstanceTypeConfig 整机资源配置"
     },
     "bcsprojectLabel": {
       "type": "object",
@@ -2597,6 +3149,58 @@
       },
       "description": "项目列表数据",
       "title": "ListProjectData"
+    },
+    "bcsprojectListProjectQuotasData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "description": "总量",
+          "title": "total"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectProjectQuota"
+          },
+          "description": "项目资源quota数据",
+          "title": "results"
+        }
+      },
+      "description": "项目资源quota数据",
+      "title": "ListProjectQuotasData"
+    },
+    "bcsprojectListProjectQuotasResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectListProjectQuotasData",
+          "description": "返回项目quota信息, 包含总量及项目quota列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
     },
     "bcsprojectListProjectsForIAMResp": {
       "type": "object",
@@ -3109,6 +3713,150 @@
       "description": "项目的基本信息",
       "title": "Project"
     },
+    "bcsprojectProjectQuota": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "资源配额ID",
+          "title": "quotaId"
+        },
+        "quotaName": {
+          "type": "string",
+          "description": "配额中文名称, 长度不能超过64字符",
+          "title": "quotaName"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID, 全局唯一, 长度为32位字符串, 自动生成",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过32字符",
+          "title": "projectCode"
+        },
+        "clusterId": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterId"
+        },
+        "clusterName": {
+          "type": "string",
+          "description": "集群名称",
+          "title": "clusterName"
+        },
+        "nameSpace": {
+          "type": "string",
+          "description": "集群名称空间维度的额度管理",
+          "title": "nameSpace"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "businessName": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务名称",
+          "title": "businessName"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目配额描述",
+          "title": "description"
+        },
+        "isDeleted": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目下该资源配额是否已下线(默认软删),同类型同种类资源仅不允许重复申请,可更改配额",
+          "title": "isDeleted"
+        },
+        "quotaType": {
+          "type": "string",
+          "description": "资源类型(目前支持CA整机资源、共享集群维度资源)",
+          "title": "quotaType"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "不同资源类型的具体配置资源quota",
+          "title": "quota"
+        },
+        "status": {
+          "type": "string",
+          "description": "资源quota的状态(申请中、审批中、已申请)",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "不同状态中的具体原因(审批不通过、资源不足等原因)",
+          "title": "message"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "creator": {
+          "type": "string",
+          "description": "项目创建者",
+          "title": "creator"
+        },
+        "updater": {
+          "type": "string",
+          "description": "项目更新者",
+          "title": "updater"
+        },
+        "provider": {
+          "type": "string",
+          "description": "云底层资源提供方",
+          "title": "provider"
+        }
+      },
+      "description": "项目配额信息(支持不同类型)",
+      "title": "ProjectQuota"
+    },
+    "bcsprojectProjectQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectProjectQuota",
+          "description": "返回详细信息, 可以为空",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "task": {
+          "type": "object",
+          "description": "异步任务task详情信息",
+          "title": "task"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
     "bcsprojectProjectResponse": {
       "type": "object",
       "properties": {
@@ -3137,6 +3885,31 @@
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "项目更多信息，主要是权限相关",
           "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectQuotaResource": {
+      "type": "object",
+      "properties": {
+        "zoneResources": {
+          "$ref": "#/definitions/bcsprojectInstanceTypeConfig",
+          "description": "机型所在可用区资源配置",
+          "title": "zoneResources"
+        },
+        "cpu": {
+          "$ref": "#/definitions/bcsprojectDeviceInfo",
+          "description": "共享集群资源下该项目的cpu额度",
+          "title": "cpu"
+        },
+        "mem": {
+          "$ref": "#/definitions/bcsprojectDeviceInfo",
+          "description": "共享集群资源下该项目的mem额度",
+          "title": "mem"
+        },
+        "gpu": {
+          "$ref": "#/definitions/bcsprojectDeviceInfo",
+          "description": "共享集群资源下该项目的gpu额度",
+          "title": "gpu"
         }
       }
     },
@@ -3191,6 +3964,112 @@
           "type": "string",
           "description": "limits.cpu",
           "title": "limits.memory"
+        }
+      }
+    },
+    "bcsprojectScaleDownProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "配额Id",
+          "title": "quotaId"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "缩容的资源容量",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "操作人",
+          "title": "updater"
+        }
+      },
+      "description": "缩容项目维度的资源quota",
+      "title": "ScaleDownProjectQuotaRequest"
+    },
+    "bcsprojectScaleDownProjectQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "task": {
+          "type": "object",
+          "description": "异步任务task详情信息",
+          "title": "task"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectScaleUpProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "配额Id",
+          "title": "quotaId"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "扩容的资源容量,增量容量扩容",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "操作人",
+          "title": "updater"
+        }
+      },
+      "description": "根据不同的资源类型增量扩容项目维度的资源quota",
+      "title": "ScaleUpProjectQuotaRequest"
+    },
+    "bcsprojectScaleUpProjectQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "task": {
+          "type": "object",
+          "description": "异步任务task详情信息",
+          "title": "task"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/bcsprojectPerms",
+          "description": "项目更多信息，主要是权限相关",
+          "title": "web_annotations"
         }
       }
     },
@@ -3560,6 +4439,33 @@
         }
       }
     },
+    "bcsprojectUpdateProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "资源quotaId",
+          "title": "quotaId"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "更新资源quota",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        }
+      },
+      "description": "更新项目quota请求",
+      "title": "UpdateProjectQuotaRequest"
+    },
     "bcsprojectUpdateProjectRequest": {
       "type": "object",
       "properties": {
@@ -3906,6 +4812,22 @@
           "type": "string",
           "description": "请求 ID",
           "title": "request id"
+        }
+      }
+    },
+    "bcsprojectZoneResourceUsage": {
+      "type": "object",
+      "properties": {
+        "zone": {
+          "type": "string"
+        },
+        "quota": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "used": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

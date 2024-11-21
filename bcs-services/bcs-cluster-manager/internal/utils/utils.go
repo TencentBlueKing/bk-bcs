@@ -686,3 +686,14 @@ func Uint32ToInt(uint32Nums []uint32) ([]int, error) {
 
 	return intNums, nil
 }
+
+// ConvertStringsToInterfaces xxx
+func ConvertStringsToInterfaces(strings []string) []interface{} {
+	interfaces := make([]interface{}, len(strings))
+
+	for i, v := range strings {
+		interfaces[i] = v
+	}
+
+	return interfaces
+}

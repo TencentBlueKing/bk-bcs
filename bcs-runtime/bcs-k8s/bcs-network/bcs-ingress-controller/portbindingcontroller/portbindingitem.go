@@ -42,7 +42,7 @@ func newPortBindingItemHandler(ctx context.Context, k8sClient client.Client) *po
 func (pbih *portBindingItemHandler) ensureItem(
 	portBinding *networkextensionv1.PortBinding, tmpTargetGroup *networkextensionv1.ListenerTargetGroup,
 	item *networkextensionv1.PortBindingItem, itemStatus *networkextensionv1.
-		PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
+PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 	// when status is empty, just return initializing status
 	if itemStatus == nil {
 		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
@@ -108,6 +108,7 @@ func (pbih *portBindingItemHandler) ensureItem(
 				cpListener.Labels = make(map[string]string)
 			}
 			cpListener.Labels[networkextensionv1.LabelKeyForSourceNamespace] = portBinding.GetNamespace()
+			cpListener.Labels[networkextensionv1.LabelKeyForSourceName] = portBinding.GetName()
 
 			if err := pbih.k8sClient.Update(context.Background(), cpListener, &client.UpdateOptions{}); err != nil {
 				return err
@@ -168,6 +169,7 @@ func (pbih *portBindingItemHandler) deleteItem(
 		cpListener.Status.Status = networkextensionv1.ListenerStatusNotSynced
 		if cpListener.Labels != nil {
 			delete(cpListener.Labels, networkextensionv1.LabelKeyForSourceNamespace)
+			delete(cpListener.Labels, networkextensionv1.LabelKeyForSourceName)
 		}
 		if err := pbih.k8sClient.Update(context.Background(), cpListener, &client.UpdateOptions{}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())

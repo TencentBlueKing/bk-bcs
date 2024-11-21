@@ -118,8 +118,8 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	_ = c.BindQuery(consoleQuery)
 
 	// 传递给下游函数
-	projectId := route.MustGetAuthContext(c).ProjectId
-	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), podmanager.ProjectIdContextKey, projectId))
+	c.Request = c.Request.WithContext(
+		context.WithValue(c.Request.Context(), podmanager.AuthContextKey, authCtx))
 
 	// 封装一个独立函数, 统计耗时
 	podCtx, err := func() (podCtx *types.PodContext, err error) {

@@ -25,7 +25,7 @@ import (
 )
 
 // SyncNamespace implement for SyncNamespace interface
-func (a *IndependentNamespaceAction) SyncNamespace(ctx context.Context,
+func (c *IndependentNamespaceAction) SyncNamespace(ctx context.Context,
 	req *proto.SyncNamespaceRequest, resp *proto.SyncNamespaceResponse) error {
 	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
 	if err != nil {

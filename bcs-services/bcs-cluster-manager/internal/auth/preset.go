@@ -190,6 +190,7 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetExternalNodeScriptByGroupID": cluster.CanManageClusterOperation,
 	"ClusterManager.TransNodeGroupToNodeTemplate":   cluster.CanManageClusterOperation,
 	"ClusterManager.CleanDbHistoryData":             "",
+	"ClusterManager.GetProjectResourceQuotaUsage":   project.CanViewProjectOperation,
 
 	// cloud template
 	"ClusterManager.CreateCloud": "",

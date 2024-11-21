@@ -37,6 +37,8 @@ const (
 	LabelKeyForUptimeCheckListener = "uptime_check.bkbcs.tencent.com"
 	// LabelKeyForSourceNamespace label key for namespace where original resources located
 	LabelKeyForSourceNamespace = "source_namespace.bkbcs.tencent.com"
+	// LabelKeyForSourceName label key for name of original resources
+	LabelKeyForSourceName = "source_name.bkbcs.tencent.com"
 	// LabelValueTrue label value for true
 	LabelValueTrue = "true"
 	// LabelValueFalse label value for false
@@ -234,6 +236,15 @@ func (l *Listener) GetListenerSourceNamespace() string {
 		}
 	}
 	return l.Namespace
+}
+
+// GetListenerSourceName 返回listener对应实例名称
+func (l *Listener) GetListenerSourceName() string {
+	if l.Labels != nil {
+		name := l.Labels[LabelKeyForSourceName]
+		return name
+	}
+	return "NULL"
 }
 
 // IsEmptyTargetGroup return true if listener's target group is empty

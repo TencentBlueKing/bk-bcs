@@ -846,17 +846,18 @@ func (cd *argo) DeleteApplicationResource(ctx context.Context, application *v1al
 	resources []*ApplicationResource) []ApplicationDeleteResourceResult {
 	var result []ApplicationDeleteResourceResult
 	if len(resources) == 0 {
+		// 如果没有传入要删除的resources，则删除所有resource
 		resources = make([]*ApplicationResource, 0)
-	}
-	for _, resource := range application.Status.Resources {
-		resources = append(resources, &ApplicationResource{
-			ResourceName: resource.Name,
-			Kind:         resource.Kind,
-			Namespace:    resource.Namespace,
-			Group:        resource.Group,
-			Version:      resource.Version,
-			SyncWave:     resource.SyncWave,
-		})
+		for _, resource := range application.Status.Resources {
+			resources = append(resources, &ApplicationResource{
+				ResourceName: resource.Name,
+				Kind:         resource.Kind,
+				Namespace:    resource.Namespace,
+				Group:        resource.Group,
+				Version:      resource.Version,
+				SyncWave:     resource.SyncWave,
+			})
+		}
 	}
 
 	// 按照 syncwave 值进行排序

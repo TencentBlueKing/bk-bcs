@@ -71,6 +71,7 @@ itsm:
   createNsSvcID: 0
   updateNsSvcID: 0
   deleteNsSvcID: 0
+  quotaCommonSvcID: 0
 clientActionExemptPerm:
   clientActions:
   - clientID: test
@@ -87,3 +88,8 @@ bcscc:
 bcsGateway:
   host: ""
   token: ""
+taskConfig:
+  address: ""
+  exchange: ""
+  workerCnt: ""
+

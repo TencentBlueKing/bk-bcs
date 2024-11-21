@@ -15,6 +15,7 @@ package google
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -24,6 +25,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
 )
 
@@ -125,7 +127,88 @@ func (ng *NodeGroup) generatePatchInstanceGroupManager(group *proto.NodeGroup) *
 
 // RecommendNodeGroupConf recommends nodegroup configs
 func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	if opt == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
+
+	if len(strings.Split(opt.Region, "-")) == 2 {
+		client, err := api.NewComputeServiceClient(opt)
+		if err != nil {
+			return nil, fmt.Errorf("create google client failed, err %s", err.Error())
+		}
+		zones, err := client.ListZones(context.Background())
+		if err != nil {
+			return nil, fmt.Errorf("list regions failed, err %s", err.Error())
+		}
+
+		if len(zones) == 0 {
+			return nil, fmt.Errorf("no available zone")
+		}
+
+		opt.Region = zones[0].ZoneName
+	}
+
+	mgr := api.NodeManager{}
+	insTypes, err := mgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
+		Region: opt.Region,
+		Cpu:    8,
+		Memory: 16,
+	}, opt)
+	if err != nil {
+		return nil, fmt.Errorf("list node instance type failed, %s", err.Error())
+	}
+
+	validInsTypes := make([]*proto.InstanceType, 0)
+	for _, in := range insTypes {
+		if in.Status == common.InstanceSell {
+			validInsTypes = append(validInsTypes, in)
+		}
+	}
+	if len(validInsTypes) == 0 {
+		return nil, fmt.Errorf("RecommendNodeGroupConf no valid instanceType for 8c16g")
+	}
+
+	configs := make([]*proto.RecommendNodeGroupConf, 0)
+	configs = append(configs,
+		generateNodeGroupConf(validInsTypes[0]),
+	)
+
+	return configs, nil
+}
+
+func generateNodeGroupConf(t *proto.InstanceType) *proto.RecommendNodeGroupConf {
+	return &proto.RecommendNodeGroupConf{
+		Name:  "default",
+		Zones: t.Zones,
+		InstanceProfile: &proto.InstanceProfile{
+			NodeOS:             "UBUNTU_CONTAINERD",
+			InstanceType:       t.NodeType,
+			InstanceChargeType: "TRAFFIC_POSTPAID_BY_HOUR",
+		},
+		HardwareProfile: &proto.HardwareProfile{
+			CPU: 8,
+			Mem: 16,
+			SystemDisk: &proto.DataDisk{
+				DiskType: "pd-standard",
+				DiskSize: "50",
+			},
+			DataDisks: []*proto.DataDisk{
+				{
+					DiskType: "pd-standard",
+					DiskSize: "50",
+				},
+			},
+		},
+		NetworkProfile: &proto.NetworkProfile{
+			PublicIPAssigned: false,
+		},
+		ScalingProfile: &proto.ScalingProfile{
+			DesiredSize: 1,
+			MaxSize:     10,
+			// 释放模式
+			ScalingMode: "Delete",
+		},
+	}
 }
 
 // GetNodesInGroup get all nodes belong to NodeGroup
@@ -327,4 +410,10 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 // CheckResourcePoolQuota check resource pool quota when revise group limit
 func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
 	return nil
+}
+
+// GetProjectCaResourceQuota get project ca resource quota
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
+	return nil, nil
 }

@@ -27,7 +27,7 @@ import (
 )
 
 // UpdateNamespace implement for UpdateNamespace interface
-func (a *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
+func (c *IndependentNamespaceAction) UpdateNamespace(ctx context.Context,
 	req *proto.UpdateNamespaceRequest, resp *proto.UpdateNamespaceResponse) error {
 	if err := quotautils.ValidateResourceQuota(req.Quota); err != nil {
 		return err

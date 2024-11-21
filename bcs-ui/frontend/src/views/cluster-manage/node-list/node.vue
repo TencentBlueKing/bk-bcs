@@ -8,7 +8,7 @@
     <bcs-alert type="info" class="cluster-node-tip">
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
-        <i18n v-if="!['awsCloud', 'azureCloud'].includes(clusterData.provider)" path="cluster.nodeList.article2">
+        <i18n v-if="isShowTableAlertAfter" path="cluster.nodeList.article2">
           <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
           <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
         </i18n>
@@ -20,46 +20,47 @@
       </div>
     </bcs-alert>
     <!-- 修改节点转移模块 -->
-    <template v-if="['tencentCloud', 'tencentPublicCloud', 'gcpCloud', 'azureCloud', 'huaweiCloud','awsCloud', 'bluekingCloud'].includes(curSelectedCluster.provider || '')">
-      <div class="flex items-center text-[12px]">
-        <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
-          {{ $t('tke.label.nodeModule.text') }}
-        </div>
-        <span class="mx-[4px]">:</span>
-        <template v-if="isEditModule">
-          <div class="flex items-center">
-            <TopoSelector
-              :placeholder="$t('generic.placeholder.select')"
-              :cluster-id="clusterId"
-              v-model="curModuleID"
-              class="w-[360px]"
-              @change="handleWorkerModuleChange"
-              @node-data-change="handleNodeChange" />
-            <span
-              class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
-              text
-              @click="handleSaveWorkerModule">{{ $t('generic.button.save') }}</span>
-            <span
-              class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
-              text
-              @click="isEditModule = false">{{ $t('generic.button.cancel') }}</span>
-          </div>
-        </template>
-        <template v-else>
-          <span>
-            {{ clusterData.clusterBasicSettings && clusterData.clusterBasicSettings.module
-              ? clusterData.clusterBasicSettings.module.workerModuleName || '--'
-              : '--' }}
-          </span>
-          <span
-            class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
-            @click="handleEditWorkerModule">
-            <i class="bk-icon icon-edit-line"></i>
-          </span>
-        </template>
+    <div class="flex items-center text-[12px]">
+      <div class="text-[#979BA5] bcs-border-tips" v-bk-tooltips="$t('tke.tips.transferNodeCMDBModule')">
+        {{ $t('tke.label.nodeModule.text') }}
       </div>
-      <bcs-divider></bcs-divider>
-    </template>
+      <span class="mx-[4px]">:</span>
+      <template v-if="isEditModule">
+        <div class="flex items-center">
+          <TopoSelector
+            :placeholder="$t('generic.placeholder.select')"
+            :cluster-id="clusterId"
+            v-model="curModuleID"
+            class="w-[360px]"
+            @change="handleWorkerModuleChange"
+            @node-data-change="handleNodeChange" />
+          <span
+            class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
+            text
+            @click="handleSaveWorkerModule">{{ $t('generic.button.save') }}</span>
+          <span
+            class="text-[12px] text-[#3a84ff] ml-[8px] cursor-pointer"
+            text
+            @click="isEditModule = false">{{ $t('generic.button.cancel') }}</span>
+        </div>
+      </template>
+      <template v-else>
+        <span>
+          {{ clusterData.clusterBasicSettings && clusterData.clusterBasicSettings.module
+            ? clusterData.clusterBasicSettings.module.workerModuleName || '--'
+            : '--' }}
+        </span>
+        <span
+          :class="[
+            'hover:text-[#3a84ff] cursor-pointer ml-[8px]',
+            isGkeManagedCluster ? '!cursor-not-allowed' : ''
+          ]"
+          @click="handleEditWorkerModule">
+          <i class="bk-icon icon-edit-line"></i>
+        </span>
+      </template>
+    </div>
+    <bcs-divider></bcs-divider>
     <!-- 操作栏 -->
     <div class="cluster-node-operate">
       <div class="left">
@@ -571,7 +572,7 @@
                       </li>
                     </template>
                     <li
-                      :class="['bcs-dropdown-item', { disabled: isKubeConfigOrAgentImportCluster || isCloudSelfNode(row) }]"
+                      :class="['bcs-dropdown-item', { disabled: isKubeConfigOrAgentImportCluster || isCloudSelfNode(row) || isGkeManagedCluster }]"
                       v-bk-tooltips="{
                         disabled: !isKubeConfigOrAgentImportCluster && !isCloudSelfNode(row),
                         content: $t('cluster.nodeList.tips.disableImportClusterAction'),
@@ -805,10 +806,12 @@ export default defineComponent({
 
     // 修改节点转移模块设置
     const { clusterData, getClusterDetail } = useClusterInfo();// clusterData和curCluster一样，就是多了云上的数据信息
+    const isGkeManagedCluster = computed(() => clusterData.value.provider === 'gcpCloud' && clusterData.value.manageType === 'MANAGED_CLUSTER');
     const isEditModule = ref(false);
     const curModuleID = ref();
     const curNodeModule = ref<Record<string, any>>({});
     const handleEditWorkerModule = () => {
+      if (isGkeManagedCluster.value) return;
       curModuleID.value = Number(clusterData.value.clusterBasicSettings?.module?.workerModuleID);
       isEditModule.value = true;
     };
@@ -1162,7 +1165,7 @@ export default defineComponent({
       && (curSelectedCluster.value.importCategory === 'kubeConfig' || curSelectedCluster.value.importCategory === 'machine'));
     const disableAddNodeBtn = computed(() =>
       // kubeConfig导入集群, 控制面导入集群 和未开启原生k8s集群时禁用掉添加节点按钮
-      isKubeConfigOrAgentImportCluster.value || (!flagsMap.value.k8s && clusterData.value.provider === 'bluekingCloud'));
+      isKubeConfigOrAgentImportCluster.value || (!flagsMap.value.k8s && clusterData.value.provider === 'bluekingCloud') || isGkeManagedCluster.value);
     // cloud私有节点
     const isCloudSelfNode = row => curSelectedCluster.value.clusterCategory === 'importer'
       && (curSelectedCluster.value.provider === 'gcpCloud' || curSelectedCluster.value.provider === 'azureCloud'
@@ -1592,7 +1595,7 @@ export default defineComponent({
       curCheckedNodes.value = [];
     };
     const handleDeleteNode = async (row) => {
-      if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row)) return;
+      if (isKubeConfigOrAgentImportCluster.value || isCloudSelfNode(row) || isGkeManagedCluster.value) return;
 
       curCheckedNodes.value = [row];
       showDeleteDialog.value = true;
@@ -1951,6 +1954,9 @@ export default defineComponent({
     };
     const podDisabled = computed(() => !selections.value.every(select => select.status === 'REMOVABLE'));
 
+    // 是否显示表头alert的后半段
+    const isShowTableAlertAfter = computed(() => !['awsCloud', 'azureCloud', 'gcpCloud'].includes(clusterData.value.provider));
+
     watch(pageConf, () => {
       // 非跨页全选在分页变更时重置selections
       if (![
@@ -2073,6 +2079,8 @@ export default defineComponent({
       deleting,
       isCloudSelfNode,
       disableAddNodeBtn,
+      isGkeManagedCluster,
+      isShowTableAlertAfter,
     };
   },
 });

@@ -126,7 +126,8 @@ func (lc *ListenerBypassReconciler) Reconcile(req ctrl.Request) (ctrl.Result, er
 	if err != nil {
 		blog.Errorf("ensure uptime check for listener '%s/%s' failed, err: %s", listener.GetNamespace(),
 			listener.GetName(), err.Error())
-		_ = lc.updateListenerStatus(req.NamespacedName, 0, networkextensionv1.ListenerStatusNotSynced, err.Error())
+		// 这里仍保留拨测任务ID， 避免删除错误等原因， 清理了拨测任务ID
+		_ = lc.updateListenerStatus(req.NamespacedName, listener.GetUptimeCheckTaskStatus().ID, networkextensionv1.ListenerStatusNotSynced, err.Error())
 		return ctrl.Result{}, err
 	}
 

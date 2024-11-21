@@ -70,9 +70,6 @@ func (pf *PodFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterfa
 		Name:      pod.GetName(),
 		Namespace: pod.GetNamespace(),
 	}})
-
-	// check if related portBinding created success
-	go checkPortBindingCreate(pf.cli, pod.GetNamespace(), pod.GetName())
 }
 
 // Update implement EventFilter
@@ -116,11 +113,6 @@ func (pf *PodFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterfa
 		Name:      newPod.GetName(),
 		Namespace: newPod.GetNamespace(),
 	}})
-
-	// 如果删除portpool相关annotation，认为用户不再需要绑定端口，会在portBinding reconcile过程中删除相关PortBinding
-	if !checkPortPoolAnnotation(newPod.Annotations) && checkPortPoolAnnotation(oldPod.Annotations) {
-		go checkPortBindingDelete(pf.cli, newPod.GetNamespace(), newPod.GetName())
-	}
 }
 
 // Delete implement EventFilter
@@ -139,8 +131,6 @@ func (pf *PodFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterfa
 		Name:      pod.GetName(),
 		Namespace: pod.GetNamespace(),
 	}})
-
-	go checkPortBindingDelete(pf.cli, pod.GetNamespace(), pod.GetName())
 }
 
 // Generic implement EventFilter

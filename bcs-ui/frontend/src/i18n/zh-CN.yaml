@@ -24,6 +24,8 @@ bcs:
     cloud: 云凭证导入
     platform: 平台创建
     machine: 控制面服务器导入
+    autopilot: 托管集群
+    standard: 标准集群
   msg:
     emptyHostResource: 您在当前业务下没有主机资源，请联系业务运维
     notDevOps: 您不是当前项目绑定业务的运维人员，请联系业务运维人员
@@ -462,6 +464,7 @@ generic:
     fieldRequired: '{0} 必填'
     fieldRepeat: '{0} 重复'
     clusterName: 集群名称只能包含数字、字母、中划线(-)、下划线(_)，且开头必须是数字或字母
+    gkeLable: '只能包含小写字母（[a-z]）、数字字符（[0-9]）、下划线（_）和破折号（-），并且必须以字母开头'
   title:
     createPublicCluster: 新建公有云集群
     diffVersion: 线上版本
@@ -807,6 +810,15 @@ cluster:
         text: 安全组
         vpcLink: '选择将应用到在您的控制平面子网中创建的 AKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 {0}  中的相应页面。'
         vpcMaster: VPC 控制台
+    google:
+      labels:
+        areaType: 位置类型
+        region: 区域
+        zone: 可用区
+      tips:
+        containerNet: 集群中所有 pod 都会分配一个此范围的IP地址。请以 CIDR 表示法输入网络范围内一个范围、掩码，此设置一经确定便无法更改，请谨慎评估后填写
+        autopilot: GKE管理底层基础架构，例如节点配置、自动扩缩、自动升级、基准安全配置和基准网络配置。
+        standard: 您负责管理底层基础架构，包括配置各个节点。
   detail:
     title:
       overview: 集群总览

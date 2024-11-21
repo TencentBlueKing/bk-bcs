@@ -47,6 +47,10 @@ const (
 	ObjectIngress = "ingress"
 	// ObjectPortPool object for port pool
 	ObjectPortPool = "portpool"
+
+	FailTypeConfigError    = "config_error"
+	FailTypeDeleteFailed   = "delete_failed"
+	FailTypeReconcileError = "reconcile_error"
 )
 
 var (
@@ -96,7 +100,7 @@ var (
 		Subsystem: "failed",
 		Name:      "counter",
 		Help:      "The total failed counter for different object",
-	}, []string{"object", "type"})
+	}, []string{"object", "type", "namespace", "name"})
 )
 
 func init() {
@@ -127,6 +131,6 @@ func IncreaseEventCounter(object, eventType string) {
 }
 
 // IncreaseFailMetric increase fail counter
-func IncreaseFailMetric(object string, failedType string) {
-	failCounter.WithLabelValues(object, failedType).Inc()
+func IncreaseFailMetric(object string, failedType string, namespace, name string) {
+	failCounter.WithLabelValues(object, failedType, namespace, name).Inc()
 }

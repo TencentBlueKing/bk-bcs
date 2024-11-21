@@ -300,7 +300,7 @@ func (cm *ClusterManager) initTaskServer() error {
 
 // init remote client for cloud dependent data client, client may be disable or empty
 func (cm *ClusterManager) initRemoteClient() error { // nolint
-	// init tags client
+	// init bkcc client
 	err := cmdb.SetCmdbClient(cmdb.Options{
 		Enable:     cm.opt.Cmdb.Enable,
 		AppCode:    cm.opt.Cmdb.AppCode,
@@ -312,6 +312,19 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 	if err != nil {
 		return err
 	}
+
+	// init ten cmdb client
+	err = cmdb.SetTCmdbClient(cmdb.TOptions{
+		Enable: cm.opt.TenCmdb.Enable,
+		AppId:  cm.opt.TenCmdb.AppId,
+		AppKey: cm.opt.TenCmdb.AppKey,
+		Server: cm.opt.TenCmdb.Server,
+		Debug:  cm.opt.TenCmdb.Debug,
+	})
+	if err != nil {
+		return err
+	}
+
 	// init perm client
 	err = ssmAuth.SetAccessClient(ssmAuth.Options{
 		Server: cm.opt.Access.Server,
@@ -562,33 +575,7 @@ func (cm *ClusterManager) initCloudTemplateConfig() error {
 	return nil
 }
 
-// updateCloudConfig update cloud config template
-func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
-	timeStr := time.Now().Format(time.RFC3339)
-	cloud.UpdateTime = timeStr
-
-	destCloud, err := cm.model.GetCloud(cm.ctx, cloud.CloudID)
-	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) &&
-		!errors.Is(err, util.ErrDecryptCloudCredential) {
-		blog.Errorf("updateCloudConfig GetCloud[%s] failed: %v", cloud.CloudID, err)
-		return err
-	}
-
-	// generate new cloud config
-	if destCloud == nil {
-		cloud.CreatTime = timeStr
-		err = cm.model.CreateCloud(cm.ctx, cloud)
-		if err != nil {
-			blog.Errorf("updateCloudConfig CreateCloud[%s] failed: %v", cloud.CloudID, err)
-			return err
-		}
-
-		blog.Infof("updateCloudConfig[%s] success", cloud.CloudID)
-		return nil
-	}
-
-	// update existed cloud config
-	destCloud.UpdateTime = timeStr
+func updateDestCloudFields(destCloud, cloud *cmproto.Cloud) {
 	destCloud.Editable = cloud.Editable
 	if cloud.Name != "" {
 		destCloud.Name = cloud.Name
@@ -638,6 +625,36 @@ func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
 	if cloud.PlatformInfo != nil {
 		destCloud.PlatformInfo = cloud.PlatformInfo
 	}
+}
+
+// updateCloudConfig update cloud config template
+func (cm *ClusterManager) updateCloudConfig(cloud *cmproto.Cloud) error {
+	timeStr := time.Now().Format(time.RFC3339)
+	cloud.UpdateTime = timeStr
+
+	destCloud, err := cm.model.GetCloud(cm.ctx, cloud.CloudID)
+	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) &&
+		!errors.Is(err, util.ErrDecryptCloudCredential) {
+		blog.Errorf("updateCloudConfig GetCloud[%s] failed: %v", cloud.CloudID, err)
+		return err
+	}
+
+	// generate new cloud config
+	if destCloud == nil {
+		cloud.CreatTime = timeStr
+		err = cm.model.CreateCloud(cm.ctx, cloud)
+		if err != nil {
+			blog.Errorf("updateCloudConfig CreateCloud[%s] failed: %v", cloud.CloudID, err)
+			return err
+		}
+
+		blog.Infof("updateCloudConfig[%s] success", cloud.CloudID)
+		return nil
+	}
+
+	// update existed cloud config
+	destCloud.UpdateTime = timeStr
+	updateDestCloudFields(destCloud, cloud)
 
 	err = cm.model.UpdateCloud(cm.ctx, destCloud)
 	if err != nil {

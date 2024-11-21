@@ -215,13 +215,13 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		}(),
 		Properties: &armcontainerservice.ManagedClusterProperties{
 			APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
-				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet),
+				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet), // nolint
 				AuthorizedIPRanges: func() []*string {
 					ipRanges := make([]*string, 0)
 					if cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
 						for _, ip := range cluster.ClusterAdvanceSettings.ClusterConnectSetting.
 							Internet.PublicAccessCidrs {
-							ipRanges = append(ipRanges, to.Ptr(ip))
+							ipRanges = append(ipRanges, to.Ptr(ip)) // nolint
 						}
 					}
 
@@ -242,9 +242,11 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 				NetworkPolicy: to.Ptr(armcontainerservice.NetworkPolicyCalico),
 				NetworkPluginMode: func() *armcontainerservice.NetworkPluginMode {
 					if cluster.ClusterAdvanceSettings.NetworkType == common.AzureCniOverlay {
+						// 使用azure cni overlay插件
 						return to.Ptr(armcontainerservice.NetworkPluginModeOverlay)
 					}
 
+					// 使用azure cni node subnet插件
 					return to.Ptr(armcontainerservice.NetworkPluginMode(""))
 				}(),
 				PodCidr:      to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),

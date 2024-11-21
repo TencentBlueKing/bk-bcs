@@ -100,7 +100,7 @@ type BKOpsConfig struct {
 	FrontURL    string `json:"frontURL"`
 }
 
-// CmdbConfig for cloud different tags info
+// CmdbConfig for bkcc cmdb
 type CmdbConfig struct {
 	Enable     bool   `json:"enable"`
 	AppCode    string `json:"appCode"`
@@ -108,6 +108,15 @@ type CmdbConfig struct {
 	BkUserName string `json:"bkUserName"`
 	Server     string `json:"server"`
 	Debug      bool   `json:"debug"`
+}
+
+// TenCmdbConfig for tencent cmdb
+type TenCmdbConfig struct {
+	Enable bool   `json:"enable"`
+	AppId  string `json:"appId"`
+	AppKey string `json:"appKey"`
+	Server string `json:"server"`
+	Debug  bool   `json:"debug"`
 }
 
 // NodeManConfig for nodeman
@@ -292,6 +301,7 @@ type ClusterManagerOptions struct {
 	Broker             BrokerConfig          `json:"broker"`
 	BKOps              BKOpsConfig           `json:"bkOps"`
 	Cmdb               CmdbConfig            `json:"cmdb"`
+	TenCmdb            TenCmdbConfig         `json:"tenCmdb"`
 	NodeMan            NodeManConfig         `json:"nodeman"`
 	ResourceManager    ResourceManagerConfig `json:"resource"`
 	ProjectManager     ProjectManagerConfig  `json:"project"`

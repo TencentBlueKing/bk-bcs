@@ -131,7 +131,8 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if ingress.DeletionTimestamp != nil {
 		// should remove ingress finalizer in ProcessDeleteIngress
 		if retry, err := ir.IngressConverter.ProcessDeleteIngress(req.Name, req.Namespace); err != nil {
-			metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.EventTypeDelete)
+			metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeDeleteFailed, ingress.Namespace,
+				ingress.Name)
 			blog.Errorf("process deleted ingress %s/%s failed, err %s", req.Name, req.Namespace, err.Error())
 			return ctrl.Result{
 				Requeue:      true,
@@ -173,7 +174,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if err != nil {
-		metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.EventTypeUnknown)
+		metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeReconcileError, ingress.Namespace, ingress.Name)
 		// create event for ingress
 		ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeWarning,
 			"process ingress failed", "error: %s", err.Error())

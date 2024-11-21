@@ -3,7 +3,7 @@ kind: Config
 clusters:
 - cluster:
     # 共享集群使用的server地址，${cluster_id}为共享集群ID
-    server: '${bcs_api_host}/projects/${projectID}/clusters/${cluster_id}/'
+    server: '${bcs_api_host}/projects/${projectCode}/clusters/${cluster_id}/'
   name: '${cluster_id}'
 contexts:
 - context:

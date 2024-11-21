@@ -475,6 +475,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetProjectResourceQuotaUsage",
+			Path:    []string{"/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.CreateTask",
 			Path:    []string{"/clustermanager/v1/task"},
 			Method:  []string{"POST"},
@@ -992,6 +998,7 @@ type ClusterManagerService interface {
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...client.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
 	GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...client.CallOption) (*GetProviderResourceUsageResponse, error)
+	GetProjectResourceQuotaUsage(ctx context.Context, in *GetProjectResourceQuotaUsageRequest, opts ...client.CallOption) (*GetProjectResourceQuotaUsageResponse, error)
 	// * Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...client.CallOption) (*RetryTaskResponse, error)
@@ -1832,6 +1839,16 @@ func (c *clusterManagerService) GetProviderResourceUsage(ctx context.Context, in
 	return out, nil
 }
 
+func (c *clusterManagerService) GetProjectResourceQuotaUsage(ctx context.Context, in *GetProjectResourceQuotaUsageRequest, opts ...client.CallOption) (*GetProjectResourceQuotaUsageResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetProjectResourceQuotaUsage", in)
+	out := new(GetProjectResourceQuotaUsageResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...client.CallOption) (*CreateTaskResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.CreateTask", in)
 	out := new(CreateTaskResponse)
@@ -2635,6 +2652,7 @@ type ClusterManagerHandler interface {
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest, *EnableNodeGroupAutoScaleResponse) error
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest, *DisableNodeGroupAutoScaleResponse) error
 	GetProviderResourceUsage(context.Context, *GetProviderResourceUsageRequest, *GetProviderResourceUsageResponse) error
+	GetProjectResourceQuotaUsage(context.Context, *GetProjectResourceQuotaUsageRequest, *GetProjectResourceQuotaUsageResponse) error
 	// * Task information management *
 	CreateTask(context.Context, *CreateTaskRequest, *CreateTaskResponse) error
 	RetryTask(context.Context, *RetryTaskRequest, *RetryTaskResponse) error
@@ -2808,6 +2826,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, out *EnableNodeGroupAutoScaleResponse) error
 		DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, out *DisableNodeGroupAutoScaleResponse) error
 		GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, out *GetProviderResourceUsageResponse) error
+		GetProjectResourceQuotaUsage(ctx context.Context, in *GetProjectResourceQuotaUsageRequest, out *GetProjectResourceQuotaUsageResponse) error
 		CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error
 		RetryTask(ctx context.Context, in *RetryTaskRequest, out *RetryTaskResponse) error
 		SkipTask(ctx context.Context, in *SkipTaskRequest, out *SkipTaskResponse) error
@@ -3320,6 +3339,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetProviderResourceUsage",
 		Path:    []string{"/clustermanager/v1/providers/{providerID}/resource_usage"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetProjectResourceQuotaUsage",
+		Path:    []string{"/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4052,6 +4077,10 @@ func (h *clusterManagerHandler) DisableNodeGroupAutoScale(ctx context.Context, i
 
 func (h *clusterManagerHandler) GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, out *GetProviderResourceUsageResponse) error {
 	return h.ClusterManagerHandler.GetProviderResourceUsage(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetProjectResourceQuotaUsage(ctx context.Context, in *GetProjectResourceQuotaUsageRequest, out *GetProjectResourceQuotaUsageResponse) error {
+	return h.ClusterManagerHandler.GetProjectResourceQuotaUsage(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) CreateTask(ctx context.Context, in *CreateTaskRequest, out *CreateTaskResponse) error {

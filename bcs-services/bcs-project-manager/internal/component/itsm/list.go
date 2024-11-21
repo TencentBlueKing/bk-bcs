@@ -26,9 +26,27 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 )
 
+const (
+	// FINISHED FINISHED已结束
+	FINISHED = "FINISHED"
+	// TERMINATED TERMINATED被终止
+	TERMINATED = "TERMINATED"
+	// SUSPENDED SUSPENDED被挂起
+	SUSPENDED = "SUSPENDED"
+	// RUNNING RUNNING处理中
+	RUNNING = "RUNNING"
+	// RESOLVED RESOLVED已解决
+	RESOLVED = "RESOLVED"
+	// CONFIRMED CONFIRMED待解决
+	CONFIRMED = "CONFIRMED"
+	// REVOKED REVOKED已撤销
+	REVOKED = "REVOKED"
+)
+
 var (
-	listTicketsPath = "/itsm/get_tickets/"
-	limit           = 100
+	listTicketsPath          = "/itsm/get_tickets/"
+	ticketApprovalResultPath = "/itsm/ticket_approval_result/"
+	limit                    = 100
 )
 
 // ListTicketsResp itsm list tickets resp
@@ -111,4 +129,60 @@ func ListTickets(snList []string) ([]TicketsItem, error) {
 		page++
 	}
 	return tickets, nil
+}
+
+// ListTicketsApprovalResp itsm list tickets approval resp
+type ListTicketsApprovalResp struct {
+	component.CommonResp
+	Data []TicketApprovalItem `json:"data"`
+}
+
+// TicketApprovalItem ITSM ticket approval result
+type TicketApprovalItem struct {
+	SN             string `json:"sn"`
+	Title          string `json:"title"`
+	CurrentStatus  string `json:"current_status"`
+	TicketURL      string `json:"ticket_url"`
+	CommentID      string `json:"comment_id"`
+	UpdatedBy      string `json:"updated_by"`
+	UpdateAt       string `json:"update_at"`
+	ApprovalResult bool   `json:"approve_result"`
+}
+
+// ListTicketsApprovalResult list itsm tickets approval result by sn list
+func ListTicketsApprovalResult(snList []string) ([]TicketApprovalItem, error) {
+	itsmConf := config.GlobalConf.ITSM
+	// 默认使用网关访问，如果为外部版，则使用ESB访问
+	host := itsmConf.GatewayHost
+	if itsmConf.External {
+		host = itsmConf.Host
+	}
+
+	reqURL := fmt.Sprintf("%s%s", host, ticketApprovalResultPath)
+	req := gorequest.SuperAgent{
+		Url:    reqURL,
+		Method: "POST",
+		Data: map[string]interface{}{
+			"sn": snList,
+		},
+	}
+	// 请求API
+	proxy := ""
+	body, err := component.Request(req, timeout, proxy, component.GetAuthHeader())
+	if err != nil {
+		logging.Error("request list itsm tickets approval %v failed, %s", snList, err.Error())
+		return nil, errorx.NewRequestITSMErr(err.Error())
+	}
+	// 解析返回的body
+	resp := &ListTicketsApprovalResp{}
+	if err = json.Unmarshal([]byte(body), resp); err != nil {
+		logging.Error("parse itsm body error, body: %v", body)
+		return nil, err
+	}
+	if resp.Code != 0 {
+		logging.Error("list itsm tickets approval %v failed, msg: %s", snList, resp.Message)
+		return nil, errors.New(resp.Message)
+	}
+
+	return resp.Data, nil
 }

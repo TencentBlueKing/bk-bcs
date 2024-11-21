@@ -20,6 +20,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,13 +30,10 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
-	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
 )
 
 // RuleConverter rule converter
@@ -283,6 +283,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 
 	if err != nil {
 		if k8serrors.IsNotFound(err) {
+			metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeConfigError, rc.ingress.Namespace, rc.ingress.Name)
 			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
 				fmt.Sprintf("service '%s/%s' not found", svcNamespace, svcRoute.ServiceName))
 			return nil, nil
@@ -303,6 +304,7 @@ func (rc *RuleConverter) generateServiceBackendList(svcRoute *networkextensionv1
 		rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
 			fmt.Sprintf("port %d is not found in service %s/%s, please add port definition on service",
 				svcRoute.ServicePort, svcRoute.ServiceName, svcNamespace))
+		metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeConfigError, rc.ingress.Namespace, rc.ingress.Name)
 		return nil, nil
 	}
 
@@ -512,6 +514,7 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 			}
 		}
 		if !found {
+			metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeConfigError, rc.ingress.Namespace, rc.ingress.Name)
 			rc.eventer.Eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
 				fmt.Sprintf("port %s is not found in pod %s/%s, please add port definition on pod(containerPort)",
 					svcPort.TargetPort.String(), pod.Namespace, pod.Name))
@@ -532,6 +535,7 @@ func (rc *RuleConverter) getNodePortBackends(
 			fmt.Sprintf("get no node port of service %s/%s 's port %+v, "+
 				"please check if service type is NodePort or LoadBalancer",
 				svc.GetNamespace(), svc.GetName(), svcPort))
+		metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeConfigError, rc.ingress.Namespace, rc.ingress.Name)
 		return nil, nil
 	}
 

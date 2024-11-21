@@ -82,6 +82,14 @@ const (
 	RequestBkMonitorErrMsg = "request bk monitor api error"
 	// RequestITSMErrMsg 请求 bk itsm api 异常信息
 	RequestITSMErrMsg = "request bk itsm api error"
+	// RequestTaskErr 构建任务异常
+	RequestTaskErr = commErr.AdditionErrorCode + 514
+	// RequestTaskErrMsg 构建任务异常信息
+	RequestTaskErrMsg = "build task error"
+	// RequestCheckQuotaStatusErr 检测额度状态异常
+	RequestCheckQuotaStatusErr = commErr.AdditionErrorCode + 515
+	// RequestQuotaStatusErrMsg 检测额度状态异常信息
+	RequestQuotaStatusErrMsg = "check quota status error"
 	// NoPermissionErr 无权限
 	NoPermissionErr = 40403
 	// ProjectNotExistsErr 项目不存在

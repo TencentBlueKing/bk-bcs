@@ -163,7 +163,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 
 import $bkMessage from '@/common/bkmagic';
-import { NAME_REGEX, SECRET_REGEX } from '@/common/constant';
+import { NAME_REGEX } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
@@ -274,13 +274,6 @@ const formRules = ref({
       required: true,
       message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
-    },
-    {
-      message: $i18n.t('azureCloud.tips.secretRegex'),
-      trigger: 'blur',
-      validator(val) {
-        return new RegExp(SECRET_REGEX, 'g').test(val);
-      },
     },
   ],
 });

@@ -56,9 +56,6 @@ func (nf *NodeFilter) Create(e event.CreateEvent, q workqueue.RateLimitingInterf
 		Name:      node.GetName(),
 		Namespace: nf.nodePortBindingNs,
 	}})
-
-	// check if related portBinding created success
-	go checkPortBindingCreate(nf.cli, nf.nodePortBindingNs, node.GetName())
 }
 
 // Update implement EventFilter
@@ -80,11 +77,6 @@ func (nf *NodeFilter) Update(e event.UpdateEvent, q workqueue.RateLimitingInterf
 		Name:      newNode.GetName(),
 		Namespace: nf.nodePortBindingNs,
 	}})
-
-	// 如果删除portpool相关annotation，认为用户不再需要绑定端口，会在portBinding reconcile过程中删除相关PortBinding
-	if !checkPortPoolAnnotation(newNode.Annotations) && checkPortPoolAnnotation(oldNode.Annotations) {
-		go checkPortBindingDelete(nf.cli, nf.nodePortBindingNs, newNode.GetName())
-	}
 }
 
 // Delete implement EventFilter
@@ -103,8 +95,6 @@ func (nf *NodeFilter) Delete(e event.DeleteEvent, q workqueue.RateLimitingInterf
 		Name:      node.GetName(),
 		Namespace: nf.nodePortBindingNs,
 	}})
-
-	go checkPortBindingDelete(nf.cli, nf.nodePortBindingNs, node.GetName())
 }
 
 // Generic implement EventFilter

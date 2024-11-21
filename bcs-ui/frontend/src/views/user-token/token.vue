@@ -260,6 +260,7 @@ export default defineComponent({
     const user = computed(() => $store.state.user);
     // 使用案例
     const projectID = computed(() => $store.getters.curProjectId);
+    const projectCode = computed(() => $store.getters.curProjectCode);
     const kubeConfigExample = ref('kubectl --kubeconfig=/root/.kube/demo_config get node');
 
     const demoConfigExample = ref(renderTemplate(clusterDemoConfig, {
@@ -280,13 +281,13 @@ export default defineComponent({
       username: user.value.username,
       token: `\${${$i18n.t('apiToken.text')}}`,
       bcs_api_host: window.BCS_API_HOST,
-      projectID: projectID.value,
+      projectCode: projectCode.value,
     }));
-    const shareApiExample = 'curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/projects/${projectID}/clusters/${cluster_id}/version"';
+    const shareApiExample = 'curl -X GET -H "Authorization: Bearer ${token}" -H "accept: application/json" "${bcs_api_host}/projects/${projectCode}/clusters/${cluster_id}/version"';
     const shareBcsApiExample = ref(renderTemplate(shareApiExample, {
       token: `\${${$i18n.t('apiToken.text')}}`,
       bcs_api_host: window.BCS_API_HOST,
-      projectID: projectID.value,
+      projectCode: projectCode.value,
     }));
 
     const timeList = ref([

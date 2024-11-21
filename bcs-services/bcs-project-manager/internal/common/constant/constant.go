@@ -16,6 +16,8 @@ package constant
 const (
 	// ServiceName BCS 服务名称
 	ServiceName = "bcs-project-manager"
+	// ModuleName module name
+	ModuleName = "bcsproject"
 	// ServiceDomain 域名，用于注册到APISIX
 	ServiceDomain = "project.bkbcs.tencent.com"
 	// ClusterManagerDomain 用于发现 ClusterManager 服务

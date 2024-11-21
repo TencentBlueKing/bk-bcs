@@ -15,9 +15,10 @@ package apiclient
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/apiclient/xrequests"
 	"net/http"
 	"os"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/apiclient/xrequests"
 )
 
 var (
@@ -76,12 +77,14 @@ type UptimeCheckTask struct {
 	// UpdateTime    time.Time `json:"update_time,omitempty"`
 	// CreateUser    string    `json:"create_user,omitempty"`
 	// UpdateUser    string    `json:"update_user,omitempty"`
-	IsDeleted     bool   `json:"is_deleted,omitempty"`
-	BkBizID       int64  `json:"bk_biz_id,omitempty"`
-	Name          string `json:"name,omitempty"`
-	Protocol      string `json:"protocol,omitempty"`
-	CheckInterval int    `json:"check_interval,omitempty"`
-	Status        string `json:"status,omitempty"`
+	IsDeleted         bool              `json:"is_deleted,omitempty"`
+	BkBizID           int64             `json:"bk_biz_id,omitempty"`
+	Name              string            `json:"name,omitempty"`
+	Protocol          string            `json:"protocol,omitempty"`
+	CheckInterval     int               `json:"check_interval,omitempty"`
+	Status            string            `json:"status,omitempty"`
+	IndependentDataID bool              `json:"indepentent_dataid,omitempty"` // 独立数据ID， 传Label时固定为true
+	Labels            map[string]string `json:"labels,omitempty"`
 }
 
 // Config uptime check task config
@@ -224,6 +227,9 @@ type CreateOrUpdateUptimeCheckTaskRequest struct {
 	Location    Location `json:"location"`
 	Name        string   `json:"name"`
 	GroupIDList []int64  `json:"group_id_list"` // 拨测任务组ID
+
+	IndependentDataID bool              `json:"indepentent_dataid,omitempty"` // 独立数据ID， 传Label时固定为true
+	Labels            map[string]string `json:"labels,omitempty"`
 }
 
 // -----------------------------------------------

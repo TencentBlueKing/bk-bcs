@@ -787,6 +787,15 @@ service ClusterManager {
       summary : "获取资源使用情况"
     };
   }
+  rpc GetProjectResourceQuotaUsage(GetProjectResourceQuotaUsageRequest) returns (GetProjectResourceQuotaUsageResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/projects/{projectID}/providers/{providerID}/autoscaler/resource_usage"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取项目维度集群节点池的CA资源使用情况"
+      summary : "获取项目维度用户CA资源使用情况"
+    };
+  }
 
   //* Task information management *
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse) {
@@ -14539,7 +14548,7 @@ message GetProviderResourceUsageRequest {
     json_schema : {
       title : "GetProviderResourceUsageRequest"
       description : "获取资源池对应机型的使用业务 & 根据不同参数筛选出符合条件的资源池对应的使用业务",
-      required: ["projectID"]
+      required: ["providerID"]
     }
   };
 
@@ -14612,4 +14621,63 @@ message BusinessInfo {
   string poolId=17;
   string groupUsers=18;
   string url=19;
+}
+
+message GetProjectResourceQuotaUsageRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectResourceQuotaUsageRequest"
+      description : "获取项目维度不同云用户CA资源的使用情况",
+      required: ["projectID", "providerID"]
+    }
+  };
+
+  string projectID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectID",
+    description: "项目ID"
+  }];
+  string providerID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "providerID",
+    description: "资源供应provider，目前支持 selfProvisionCloud/tencentCloud"
+  }];
+}
+
+message GetProjectResourceQuotaUsageResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProviderResourceUsageResponse"
+      description : "查询资源池的业务使用情况返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "机型维度的业务使用情况"
+  }];
+  WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属项目权限"
+  }];
+}
+
+message ProjectAutoscalerQuota {
+  string instanceType=1;
+  string region=2;
+  string zone=3;
+  uint32 total=5;
+  uint32 used=6;
+  repeated string groupIds=4;
 }
