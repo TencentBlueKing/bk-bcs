@@ -673,12 +673,23 @@
       :quick-close="true"
       transfer>
       <div slot="content">
-        <div class="log-wrapper" v-bkloading="{ isLoading: logSideDialogConf.loading }">
-          <TaskList
+        <div v-bkloading="{ isLoading: logSideDialogConf.loading }">
+          <TaskLog
             :data="logSideDialogConf.taskData"
-            @retry="handleRetry(logSideDialogConf.row)"
-            @skip="handleSkip">
-          </TaskList>
+            enable-auto-refresh
+            enable-statistics
+            type="multi-task"
+            :status="logSideDialogConf.status"
+            :title="logSideDialogConf.title"
+            :loading="logSideDialogConf.loading"
+            :height="'calc(100vh - 92px)'"
+            :rolling-loading="false"
+            step-actions="FAILED"
+            @refresh="handleShowLog(logSideDialogConf.row)"
+            @auto-refresh="handleAutoRefresh"
+            @download="getDownloadTaskRecords"
+            @retry="(data) => handleRetry(logSideDialogConf.row, data)"
+            @skip="handleSkip" />
         </div>
       </div>
     </bk-sideslider>
@@ -712,20 +723,23 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onActivated, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
+import { computed, defineComponent, onActivated, onBeforeMount, onBeforeUnmount, onMounted, ref, set, watch } from 'vue';
 import { TranslateResult } from 'vue-i18n';
+
+import TaskLog from '@blueking/task-log/vue2';
 
 import useTableAcrossCheck from '../../../composables/use-table-across-check';
 import useTableSearchSelect, { ISearchSelectData } from '../../../composables/use-table-search-select';
 import useTableSetting from '../../../composables/use-table-setting';
 import { useClusterInfo, useClusterList, useTask } from '../cluster/use-cluster';
 import TaintContent from '../components/taint.vue';
-import TaskList from '../components/task-list.vue';
 
 import DeleteNode from './delete-node.vue';
 import useNode from './use-node';
 
-import { setClusterModule } from '@/api/modules/cluster-manager';
+import '@blueking/task-log/vue2/vue2.css';
+import { clusterTaskRecords, setClusterModule, taskLogsDownloadURL } from '@/api/modules/cluster-manager';
+import { parseUrl } from '@/api/request';
 import $bkMessage from '@/common/bkmagic';
 import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 import { copyText, formatBytes, padIPv6 } from '@/common/util';
@@ -779,7 +793,7 @@ export default defineComponent({
     KeyValue,
     TaintContent,
     ApplyHost,
-    TaskList,
+    TaskLog,
     BcsCascade,
     TopoSelector,
     DeleteNode,
@@ -1662,7 +1676,14 @@ export default defineComponent({
       }
     };
     // 节点重试
-    const handleRetry = async (row) => {
+    const handleRetry = async (row, data?) => {
+      if (data && !data?.step?.allowRetry) {
+        $bkMessage({
+          theme: 'warning',
+          message: $i18n.t('cluster.title.allowRetry'),
+        });
+        return;
+      }
       $bkInfo({
         type: 'warning',
         title: $i18n.t('cluster.title.retryTask'),
@@ -1677,7 +1698,7 @@ export default defineComponent({
           });
           if (result) {
             await handleGetNodeData();
-            logSideDialogConf.value.isShow && await getTaskTableData(row);
+            logSideDialogConf.value.isShow && await getTaskStepData(row);
           }
           logSideDialogConf.value.loading = false;
           tableLoading.value = false;
@@ -1687,6 +1708,13 @@ export default defineComponent({
     // 跳过任务
     const { skipTask } = useTask();
     const handleSkip = (row) => {
+      if (!row?.step?.allowSkip) {
+        $bkMessage({
+          theme: 'warning',
+          message: $i18n.t('cluster.title.cantSkip'),
+        });
+        return;
+      }
       $bkInfo({
         type: 'warning',
         title: $i18n.t('cluster.title.skipTask'),
@@ -1837,52 +1865,47 @@ export default defineComponent({
     const logSideDialogConf = ref({
       isShow: false,
       title: '',
-      taskID: '',
+      taskID: '', // 最新任务ID
       taskData: [],
-      row: null,
+      row: null, // 当前节点
       loading: false,
+      status: '',
     });
     const handleShowLog = async (row) => {
       logSideDialogConf.value.isShow = true;
       logSideDialogConf.value.title = row.nodeName || row.innerIP;
       logSideDialogConf.value.row = row;
       logSideDialogConf.value.loading = true;
-      await getTaskTableData(row);
+      await getTaskStepData(row);
       logSideDialogConf.value.loading = false;
     };
-    const getTaskTableData = async (row) => {
-      let logStatus = '';
+
+    const getTaskStepData = async (row) => {
+      let taskID = '';
       if (row.taskID) {
-        const { stepSequence = [], steps, status, taskID } = await taskDetail(row.taskID);
-        logStatus = status;
-        logSideDialogConf.value.taskData = stepSequence.map(key => steps[key]) as unknown as any;
-        logSideDialogConf.value.taskID = taskID;
+        taskID = row.taskID;
       } else {
-        const { taskData, latestTask } = await getTaskData({
+        const { latestTask } = await getTaskData({
           clusterId: row.cluster_id,
           nodeIP: row.inner_ip,
         });
-        logStatus = latestTask?.status;
-        logSideDialogConf.value.taskData = taskData || [];
-        logSideDialogConf.value.taskID = latestTask?.taskID || '';
+        taskID = latestTask?.taskID || '';
       }
-      if (['RUNNING', 'INITIALZING'].includes(logStatus)) {
-        logIntervalStart();
-      } else {
-        logIntervalStop();
-      }
-    };
-    const { stop: logIntervalStop, start: logIntervalStart } = useInterval(async () => {
-      const row = logSideDialogConf.value.row as any;
-      if (!row) {
-        logIntervalStop();
+      if (!taskID) {
+        logSideDialogConf.value.taskData = [];
+        logSideDialogConf.value.status = '';
         return;
       }
-      await getTaskTableData(row);
-    }, 5000);
+      const { status, step } = await clusterTaskRecords({
+        taskID,
+      }).catch(() => ({ status: '', step: [] }));
+      logSideDialogConf.value.taskData = step;
+      logSideDialogConf.value.status = status;
+    };
+
     const closeLog = () => {
       logSideDialogConf.value.row = null;
-      logIntervalStop();
+      autoRefresh.stop();
     };
 
     // 获取节点指标
@@ -1975,6 +1998,49 @@ export default defineComponent({
       }
     }, 5000);
 
+    // 自动刷新
+    const autoRefresh = useInterval(async () => {
+      const row = logSideDialogConf.value.row as any;
+      if (!row) {
+        autoRefresh.stop();
+        return;
+      }
+      await getTaskStepData(row);
+    }, 5000);
+    function handleAutoRefresh(v: boolean) {
+      if (v) {
+        autoRefresh.start();
+      } else {
+        autoRefresh.stop();
+      }
+    };
+
+    const timeRange = ref<Date[]>([]);
+    // 下载集群操作日志
+    async function getDownloadTaskRecords() {
+      if (!props.clusterId) return;
+      const { url } = parseUrl('get', taskLogsDownloadURL, {
+        startTime: Math.ceil(new Date(timeRange.value[0]).getTime() / 1000),
+        endTime: Math.ceil(new Date(timeRange.value[1]).getTime() / 1000),
+        clusterID: props.clusterId,
+        limit: pagination.value.limit,
+        page: pagination.value.current,
+        v2: true,
+      });
+      url && window.open(url);
+    }
+
+    onBeforeMount(() => {
+      // 初始化默认时间
+      const end = new Date();
+      const start = new Date();
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+      timeRange.value = [
+        start,
+        end,
+      ];
+    });
+
     onMounted(async () => {
       getClusterDetail(curSelectedCluster.value.clusterID || '', true);
       await handleGetNodeData();
@@ -1989,7 +2055,7 @@ export default defineComponent({
       }
     });
     onBeforeUnmount(() => {
-      logIntervalStop();
+      autoRefresh.stop();
       stop();
     });
     return {
@@ -2042,7 +2108,6 @@ export default defineComponent({
       handleDeleteNode,
       handleSchedulerNode,
       handleRetry,
-      handleSkip,
       handleBatchEnableNodes,
       handleBatchStopNodes,
       handleBatchReAddNodes,
@@ -2081,6 +2146,9 @@ export default defineComponent({
       disableAddNodeBtn,
       isGkeManagedCluster,
       isShowTableAlertAfter,
+      handleAutoRefresh,
+      getDownloadTaskRecords,
+      handleSkip,
     };
   },
 });

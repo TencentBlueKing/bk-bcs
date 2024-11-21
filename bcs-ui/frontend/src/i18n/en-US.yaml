@@ -614,6 +614,8 @@ cluster:
     skipTask: Confirm skip current task
     retryTask: Confirm retry task
     opRecord: Operate record
+    cantSkip: cannot skip current task
+    cantRetry: cannot retry task
   button:
     useSharedCluster: Use shared cluster
     addCluster: Add
