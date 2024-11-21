@@ -249,10 +249,10 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 
 	userName := ctxkey.GetUsernameFromCtx(ctx)
 
+	renderMode := constants.RenderMode(req.GetRenderMode()).GetRenderMode()
 	// 非草稿状态下：创建模板文件版本
 	versionID := ""
 	if !req.GetIsDraft() {
-		renderMode := constants.RenderMode(req.GetRenderMode())
 		// 创建顺序：templateVersion -> template
 		templateVersion := &entity.TemplateVersion{
 			ProjectCode:   p.Code,
@@ -263,7 +263,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 			EditFormat:    req.GetEditFormat(),
 			Content:       req.GetContent(),
 			Creator:       userName,
-			RenderMode:    renderMode.GetRenderMode(),
+			RenderMode:    renderMode,
 		}
 		versionID, err = t.model.CreateTemplateVersion(ctx, templateVersion)
 		if err != nil {
@@ -283,6 +283,7 @@ func (t *TemplateAction) Create(ctx context.Context, req *clusterRes.CreateTempl
 		VersionMode:   0,
 		Version:       req.GetVersion(),
 		IsDraft:       req.GetIsDraft(),
+		RenderMode:    renderMode,
 	}
 	// 草稿状态，新增相关字段
 	if req.GetIsDraft() {
@@ -349,6 +350,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		}
 	}
 
+	renderMode := constants.RenderMode(req.GetRenderMode()).GetRenderMode()
 	updateTemplate := entity.M{
 		"name":            req.GetName(),
 		"description":     req.GetDescription(),
@@ -359,6 +361,7 @@ func (t *TemplateAction) Update(ctx context.Context, req *clusterRes.UpdateTempl
 		"draftVersion":    req.GetDraftVersion(),
 		"draftContent":    req.GetDraftContent(),
 		"draftEditFormat": req.GetDraftEditFormat(),
+		"renderMode":      renderMode,
 	}
 	if req.GetVersionMode() == clusterRes.VersionMode_SpecifyVersion && req.GetVersion() != "" {
 		updateTemplate["version"] = req.GetVersion()

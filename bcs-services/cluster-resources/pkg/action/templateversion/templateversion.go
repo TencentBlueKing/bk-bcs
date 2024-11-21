@@ -189,6 +189,7 @@ func (t *TemplateVersionAction) List(
 			Creator:       tmp.Updator,
 			CreateAt:      tmp.UpdateAt,
 			Draft:         true,
+			RenderMode:    tmp.RenderMode,
 		}
 		m = append(m, draftVersion.ToMap())
 	}
