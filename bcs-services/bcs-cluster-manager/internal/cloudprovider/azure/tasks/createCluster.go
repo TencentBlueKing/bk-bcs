@@ -253,7 +253,7 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
 				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
 				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
-				PodCidrs:     []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
+				//PodCidrs:     []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
 			},
 			ServicePrincipalProfile: &armcontainerservice.ManagedClusterServicePrincipalProfile{
 				ClientID: to.Ptr(info.CmOption.Account.ClientID),     // nolint
