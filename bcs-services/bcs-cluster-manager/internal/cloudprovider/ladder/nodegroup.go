@@ -430,7 +430,7 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // noli
 			total, cur, pre, err := daemon.GetGroupCurAndPredictNodes(cloudprovider.GetStorageModel(),
 				group.GetNodeGroupID(), resourceZones)
 			if err != nil {
-				blog.Errorf("GetProjectCaResourceQuota[%s:%s] failed: %v", group.GetProjectID(), err)
+				blog.Errorf("GetProjectCaResourceQuota[%s:%s] failed: %v", group.GetProjectID(), group.GetNodeGroupID(), err)
 				return
 			}
 

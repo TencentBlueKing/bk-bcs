@@ -560,6 +560,8 @@ cluster:
     skipTask: 确认跳过当前步骤
     retryTask: 确认重试任务
     opRecord: 操作记录
+    cantSkip: 无法跳过当前步骤
+    cantRetry: 无法重试当前步骤
   button:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群
