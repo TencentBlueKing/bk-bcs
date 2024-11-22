@@ -398,8 +398,6 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 		filterGroups = append(filterGroups, groups[i])
 	}
 
-
-
 	var (
 		lock         = sync.Mutex{}
 		insZoneQuota = make(map[string]map[string]*proto.ProjectAutoscalerQuota, 0)
@@ -432,7 +430,7 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 			total, cur, pre, err := daemon.GetGroupCurAndPredictNodes(cloudprovider.GetStorageModel(),
 				group.GetNodeGroupID(), resourceZones)
 			if err != nil {
-				blog.Errorf("GetProjectCaResourceQuota[%s:%s] failed: %v", group.GetProjectID(), err)
+				blog.Errorf("GetProjectCaResourceQuota[%s:%s] failed: %v", group.GetProjectID(), group.GetNodeGroupID(), err)
 				return
 			}
 
@@ -459,7 +457,8 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 					}
 				} else {
 					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].Used += uint32(num)
-					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds = append(insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds, group.GetNodeGroupID())
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds =
+						append(insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds, group.GetNodeGroupID())
 				}
 			}
 
