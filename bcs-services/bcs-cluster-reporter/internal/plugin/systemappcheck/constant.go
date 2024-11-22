@@ -34,12 +34,13 @@ const (
 	ChartVersionNormalStatus = "deployed"
 	APPNotfoundAppStatus     = "appnotfound"
 
-	ConfigErrorStatus      = "configerr"
-	NolabelStatus          = "no labels"
-	ConfigOtherErrorStatus = "ConfigOtherErrorStatus"
-	UnrecommandedStatus    = "UnrecommandedStatus"
-	ConfigNotFoundStatus   = "confignotfound"
-	initContent            = `interval: 300`
+	ConfigErrorStatus         = "configerr"
+	ConfigInconsistencyStatus = "configinconsistency "
+	NolabelStatus             = "no labels"
+	ConfigOtherErrorStatus    = "ConfigOtherErrorStatus"
+	UnrecommandedStatus       = "UnrecommandedStatus"
+	ConfigNotFoundStatus      = "confignotfound"
+	initContent               = `interval: 300`
 
 	StaticPodConfigTarget = "StaticPodConfigTarget"
 	SystemAppConfigTarget = "SystemAppConfigTarget"
@@ -68,6 +69,7 @@ var (
 		ServiceConfigTarget:   "service配置检查",
 
 		ConfigErrorStatus:         "配置错误",
+		ConfigInconsistencyStatus: "配置不一致",
 		ConfigNotFoundStatus:      "配置不存在",
 		ConfigOtherErrorStatus:    "其它问题",
 		APPNotfoundAppStatus:      "应用不存在",
@@ -100,6 +102,7 @@ var (
 		ServiceConfigTarget:   "service config check",
 
 		ConfigErrorStatus:         ConfigErrorStatus,
+		ConfigInconsistencyStatus: ConfigInconsistencyStatus,
 		ConfigNotFoundStatus:      ConfigNotFoundStatus,
 		ConfigOtherErrorStatus:    "other err",
 		APPNotfoundAppStatus:      APPNotfoundAppStatus,

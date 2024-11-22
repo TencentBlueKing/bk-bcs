@@ -193,7 +193,7 @@ func (p *Plugin) Check() {
 				nodeinfo := make(map[string]pluginmanager.PluginInfo)
 				err = yaml.Unmarshal([]byte(configmap.Data["nodeinfo"]), nodeinfo)
 				if err != nil {
-					klog.Errorf("unmarshal %s nodeinfo %s failed: %s", clusterId, configmap.Name, err.Error())
+					//klog.Errorf("unmarshal %s nodeinfo %s failed: %s", clusterId, configmap.Name, err.Error())
 					continue
 				}
 
@@ -227,7 +227,6 @@ func (p *Plugin) Check() {
 						Value:  1,
 					})
 				} else {
-					// 汇总所有节点检测异常指标，一个节点，一类异常指标只能有一条
 					for _, gaugeVecSet := range gvsList {
 						nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, gaugeVecSet)
 					}
@@ -248,11 +247,10 @@ func (p *Plugin) Check() {
 	// clean deleted cluster data
 	for clusterID, _ := range p.ReadyMap {
 		if _, ok := clusterConfigs[clusterID]; !ok {
+			metricmanager.DeleteMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterID])
 			delete(p.ReadyMap, clusterID)
 			delete(nodeAvailabilityGaugeVecSetMap, clusterID)
 			delete(p.Result, clusterID)
-			metricmanager.DeleteMetric(nodeAvailability, nodeAvailabilityGaugeVecSetMap[clusterID])
-			klog.Infof("delete cluster %s", clusterID)
 			klog.Infof("delete cluster %s", clusterID)
 		}
 	}
@@ -376,9 +374,9 @@ func getNodeinfoCheckResult(pluginInfo pluginmanager.PluginInfo, nodeInfo *plugi
 		case nodeinfocheck.ZoneItemType:
 			nodeInfo.Zone = infoItem.Result.(string)
 		case nodeinfocheck.RegionItemType:
-			nodeInfo.Zone = infoItem.Result.(string)
+			nodeInfo.Region = infoItem.Result.(string)
 		case nodeinfocheck.InstanceTypeItemType:
-			nodeInfo.Zone = infoItem.Result.(string)
+			nodeInfo.Type = infoItem.Result.(string)
 		}
 	}
 

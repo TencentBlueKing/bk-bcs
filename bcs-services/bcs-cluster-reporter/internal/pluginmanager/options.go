@@ -59,6 +59,7 @@ type ClusterConfig struct {
 	// node
 	NodeNum  int
 	NodeInfo map[string]plugin.NodeInfo
+	ALLEKLET bool
 
 	// mutex
 	sync.Mutex

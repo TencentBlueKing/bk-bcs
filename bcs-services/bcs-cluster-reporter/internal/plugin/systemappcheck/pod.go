@@ -19,17 +19,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	"k8s.io/klog"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/klog/v2"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // CheckStaticPod check static pod config
@@ -69,6 +68,8 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	newStaticPodNameList := make([]string, 0, 0)
+
+	etcdPodList := make([]*v1.Pod, 0, 0)
 	for _, pod := range podList {
 		if len(pod.OwnerReferences) == 0 {
 			continue
@@ -87,14 +88,16 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 			checkItemList = append(checkItemList, CheckApiserver(&pod, cluster)...)
 		}
 		if strings.HasPrefix(pod.Name, "etcd") {
-			checkItemList = append(checkItemList, CheckETCD(&pod)...)
+			etcdPodList = append(etcdPodList, &pod)
 		}
+
 		if strings.HasPrefix(pod.Name, "kube-controller-manager") {
 			checkItemList = append(checkItemList, CheckKCM(&pod, cluster)...)
 		}
 
 		checkItemList = append(checkItemList, CheckLabel(&pod)...)
 	}
+	checkItemList = append(checkItemList, CheckETCD(etcdPodList, cluster)...)
 
 	if !ok {
 		// 缓存集群当前static pod信息，避免频繁list pod
@@ -166,61 +169,83 @@ func CheckKCM(pod *v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager
 }
 
 // CheckETCD check etcd config
-func CheckETCD(pod *v1.Pod) []pluginmanager.CheckItem {
-	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
+	checkItemList := make([]pluginmanager.CheckItem, 0)
+	podParamList := make([][]string, 0)
 
-	// 检查参数
-	floatFlagList := []plugin.FloatFlag{
-		{Name: "--heartbeat-interval",
-			CompareType: "ge",
-			Value:       1000,
-			Needed:      true,
-		},
-	}
+	for _, pod := range podList {
+		// 检查参数
+		floatFlagList := []plugin.FloatFlag{
+			{Name: "--heartbeat-interval",
+				CompareType: "ge",
+				Value:       1000,
+				Needed:      true,
+			},
+		}
 
-	for _, floatFlag := range floatFlagList {
-		detail := plugin.CheckFlag(append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...), floatFlag)
-		if detail != "" {
+		for _, floatFlag := range floatFlagList {
+			detail := plugin.CheckFlag(append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...), floatFlag)
+			if detail != "" {
+				checkItemList = append(checkItemList, pluginmanager.CheckItem{
+					ItemName:   SystemAppConfigCheckItem,
+					ItemTarget: pod.Name,
+					Status:     UnrecommandedStatus,
+					Normal:     false,
+					Detail:     detail,
+					Tags:       nil,
+					Level:      pluginmanager.WARNLevel,
+				})
+			}
+		}
+
+		// 磁盘配置
+		checkFlag := false
+		for _, volume := range pod.Spec.Volumes {
+			if volume.HostPath.Path == "/var/lib/etcd" {
+				checkFlag = true
+				checkItemList = append(checkItemList, pluginmanager.CheckItem{
+					ItemName:   SystemAppConfigCheckItem,
+					ItemTarget: pod.Name,
+					Status:     UnrecommandedStatus,
+					Normal:     false,
+					Detail:     fmt.Sprintf(StringMap[etcdDataDiskDetail], volume.HostPath.Path),
+					Tags:       nil,
+					Level:      pluginmanager.WARNLevel,
+				})
+				break
+			}
+		}
+
+		if !checkFlag {
 			checkItemList = append(checkItemList, pluginmanager.CheckItem{
 				ItemName:   SystemAppConfigCheckItem,
-				ItemTarget: pod.Name,
-				Status:     UnrecommandedStatus,
-				Normal:     false,
-				Detail:     detail,
+				ItemTarget: "etcd",
+				Status:     pluginmanager.NormalStatus,
+				Normal:     true,
+				Detail:     "",
 				Tags:       nil,
 				Level:      pluginmanager.WARNLevel,
 			})
 		}
+
+		podParamList = append(podParamList, pod.Spec.Containers[0].Args)
 	}
 
-	// 磁盘配置
-	checkFlag := false
-	for _, volume := range pod.Spec.Volumes {
-		if volume.HostPath.Path == "/var/lib/etcd" {
-			checkFlag = true
+	// 检查etcd参数是否一致
+	for _, param := range []string{"heartbeat-interval", "election-timeout"} {
+		err := checkParamConsistency(podParamList, param)
+		if err != nil {
+			klog.Errorf("%s checkParamConsistency failed: %s", cluster.ClusterID, err.Error())
 			checkItemList = append(checkItemList, pluginmanager.CheckItem{
 				ItemName:   SystemAppConfigCheckItem,
-				ItemTarget: pod.Name,
-				Status:     ConfigErrorStatus,
+				ItemTarget: "etcd",
+				Status:     ConfigInconsistencyStatus,
 				Normal:     false,
-				Detail:     fmt.Sprintf(StringMap[etcdDataDiskDetail], volume.HostPath.Path),
+				Detail:     err.Error(),
 				Tags:       nil,
 				Level:      pluginmanager.WARNLevel,
 			})
-			break
 		}
-	}
-
-	if !checkFlag {
-		checkItemList = append(checkItemList, pluginmanager.CheckItem{
-			ItemName:   SystemAppConfigCheckItem,
-			ItemTarget: pod.Name,
-			Status:     pluginmanager.NormalStatus,
-			Normal:     true,
-			Detail:     "",
-			Tags:       nil,
-			Level:      pluginmanager.WARNLevel,
-		})
 	}
 
 	// 检查状态
@@ -292,6 +317,7 @@ func CheckLabel(pod *v1.Pod) []pluginmanager.CheckItem {
 	} else {
 		checkItem.Status = pluginmanager.NormalStatus
 		checkItem.Normal = true
+		checkItem.Detail = ""
 	}
 
 	result = append(result, checkItem)
@@ -411,4 +437,28 @@ func CheckKubeProxy(clientSet *kubernetes.Clientset) []pluginmanager.CheckItem {
 
 	result = append(result, checkItem)
 	return result
+}
+
+// checkParamConsistency param format --XXXXX=XXXXXX
+func checkParamConsistency(podsParamList [][]string, checkParam string) error {
+	value := ""
+	for _, paramList := range podsParamList {
+		for _, param := range paramList {
+			if !strings.Contains(param, "=") {
+				return nil
+			}
+
+			if strings.HasPrefix(param, "--"+checkParam) {
+				if value == "" {
+					value = strings.SplitN(param, "=", 2)[1]
+				} else {
+					if value != strings.SplitN(param, "=", 2)[1] {
+						return fmt.Errorf("check param %s is %s and %s, inconsistency", checkParam, value, strings.SplitN(param, "=", 2)[1])
+					}
+				}
+			}
+		}
+	}
+	return nil
+
 }

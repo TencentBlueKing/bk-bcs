@@ -15,8 +15,6 @@ package systemappcheck
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	utiltrace "k8s.io/utils/trace"
 	"os"
 	"reflect"
@@ -25,6 +23,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	internalUtil "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/hashicorp/go-version"
 	"github.com/prometheus/client_golang/prometheus"
 	"gopkg.in/yaml.v2"
@@ -32,12 +34,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
-	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	internalUtil "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // Plugin xxx
@@ -262,12 +259,13 @@ func (p *Plugin) Check() {
 			// 获取配置文件中的component列表(有可能不是helm方式部署的)
 			clusterComponent := make([]Component, 0, 0)
 			for index, _ := range p.opt.Components {
-				if p.opt.Components[index].Resource != deployment && p.opt.Components[index].Resource != daemonset && p.opt.Components[index].Resource != statefulset {
-					klog.Errorf("unsupported resource type %s", p.opt.Components[index].Resource)
+				if strings.EqualFold(p.opt.Components[index].Resource, deployment) &&
+					strings.EqualFold(p.opt.Components[index].Resource, daemonset) &&
+					strings.EqualFold(p.opt.Components[index].Resource, statefulset) {
+					klog.Errorf("unsupported resource type %s", p.opt.Components[index])
 					continue
 				}
 				clusterComponent = append(clusterComponent, p.opt.Components[index])
-
 			}
 
 			// 遍历各个namespace下的releases，基于release进行应用状态的检测
@@ -284,7 +282,7 @@ func (p *Plugin) Check() {
 				for index, c := range clusterComponent {
 					if c.Name == component.Name &&
 						c.Namespace == component.Namespace &&
-						c.Resource == component.Resource {
+						strings.EqualFold(c.Resource, component.Resource) {
 						clusterComponent = append(clusterComponent[:index], clusterComponent[index+1:]...)
 						break
 					}
@@ -345,7 +343,10 @@ func (p *Plugin) Check() {
 				val.Status = StringMap[val.Status]
 				clusterResult.Items[key] = val
 			}
+
+			p.WriteLock.Lock()
 			p.Result[clusterId] = clusterResult
+			p.WriteLock.Unlock()
 
 			trace.Step("refresh metric")
 		}(cluster)
@@ -497,9 +498,12 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 }
 
 // GetStatus get workload ready status
-func GetStatus(updatedReplicas int, availableReplicas int, replicas int) string {
-	// 期望副本数=可用副本数=最新副本数
-	if availableReplicas == replicas && updatedReplicas == replicas {
+func GetStatus(updatedReplicas int, availableReplicas int, replicas int, nodeNum int) string {
+	// 如果节点数较少则只期望可用副本数>=nodenum
+	if nodeNum < replicas && availableReplicas >= nodeNum {
+		return NormalStatus
+		// 期望副本数=可用副本数=最新副本数
+	} else if availableReplicas == replicas && updatedReplicas == replicas {
 		return NormalStatus
 	} else {
 		return AppStatusNotReadyStatus
@@ -511,13 +515,20 @@ func GetStatus(updatedReplicas int, availableReplicas int, replicas int) string 
 func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, rel string,
 	componentVersionConfList []ComponentVersionConf) (
 	[]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, []*metricmanager.GaugeVecSet, error) {
+	// daemonset可能按需部署，比如vcluster不部署daemonset
+	if component.Name == "kube-proxy" && cluster.ClusterType == "virtual" {
+		return nil, nil, nil, nil, nil
+	} else if component.Name == "kube-proxy" && cluster.ALLEKLET {
+		return nil, nil, nil, nil, nil
+	}
+
 	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 	statusGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	imageGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	configGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
 
 	// 检查workload status, 是否ready
-	status, containerImageList, err := getWorkLoadStatus(component.Resource, component.Name, component.Namespace, cluster.ClientSet, cluster.MetricSet)
+	status, containerImageList, err := getWorkLoadStatus(component.Resource, component.Name, component.Namespace, cluster)
 	if err != nil {
 		checkItemList = append(checkItemList, pluginmanager.CheckItem{
 			ItemName:   SystemAppStatusCheckItemName,
@@ -581,15 +592,15 @@ func CheckComponent(component Component, cluster *pluginmanager.ClusterConfig, r
 }
 
 // getWorkLoadStatus xxx
-func getWorkLoadStatus(workloadType string, workloadName string, namespace string, clientSet *kubernetes.Clientset, metricsClient *metricsclientset.Clientset) (string, []containerImage, error) {
+func getWorkLoadStatus(workloadType string, workloadName string, namespace string, cluster *pluginmanager.ClusterConfig) (string, []containerImage, error) {
 	var containerImageList []containerImage
 	var status = NormalStatus
 	var err error
 	ctx := internalUtil.GetCtx(10 * time.Second)
-	switch workloadType {
-	case deployment:
+	switch strings.ToLower(workloadType) {
+	case strings.ToLower(deployment):
 		var deploy *v1.Deployment
-		deploy, err = clientSet.AppsV1().Deployments(namespace).Get(ctx, workloadName, metav1.GetOptions{
+		deploy, err = cluster.ClientSet.AppsV1().Deployments(namespace).Get(ctx, workloadName, metav1.GetOptions{
 			ResourceVersion: "0",
 		})
 
@@ -599,12 +610,12 @@ func getWorkLoadStatus(workloadType string, workloadName string, namespace strin
 				status = APPNotfoundAppStatus
 			}
 		} else {
-			containerImageList, status, err = getDeployCheckResult(deploy, metricsClient)
+			containerImageList, status, err = getDeployCheckResult(deploy, cluster)
 		}
 
-	case daemonset:
+	case strings.ToLower(daemonset):
 		var ds *v1.DaemonSet
-		ds, err = clientSet.AppsV1().DaemonSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
+		ds, err = cluster.ClientSet.AppsV1().DaemonSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
 			ResourceVersion: "0",
 		})
 
@@ -614,12 +625,12 @@ func getWorkLoadStatus(workloadType string, workloadName string, namespace strin
 				status = APPNotfoundAppStatus
 			}
 		} else {
-			containerImageList, status, err = getDSCheckResult(ds, metricsClient)
+			containerImageList, status, err = getDSCheckResult(ds, cluster)
 		}
 
-	case statefulset:
+	case strings.ToLower(statefulset):
 		var sts *v1.StatefulSet
-		sts, err = clientSet.AppsV1().StatefulSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
+		sts, err = cluster.ClientSet.AppsV1().StatefulSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
 			ResourceVersion: "0",
 		})
 
@@ -629,8 +640,10 @@ func getWorkLoadStatus(workloadType string, workloadName string, namespace strin
 				status = APPNotfoundAppStatus
 			}
 		} else {
-			containerImageList, status, err = getSTSCheckResult(sts, metricsClient)
+			containerImageList, status, err = getSTSCheckResult(sts, cluster)
 		}
+	default:
+		klog.Errorf("unsupported resource type %s", workloadType)
 	}
 
 	if err != nil {
@@ -676,7 +689,7 @@ type containerImage struct {
 }
 
 // getSTSCheckResult 检查statefulset类型workload
-func getSTSCheckResult(sts *v1.StatefulSet, ms *metricsclientset.Clientset) ([]containerImage, string, error) {
+func getSTSCheckResult(sts *v1.StatefulSet, cluster *pluginmanager.ClusterConfig) ([]containerImage, string, error) {
 	containerImageList := make([]containerImage, 0, 0)
 	for _, container := range sts.Spec.Template.Spec.Containers {
 		containerImageList = append(containerImageList, containerImage{
@@ -689,19 +702,19 @@ func getSTSCheckResult(sts *v1.StatefulSet, ms *metricsclientset.Clientset) ([]c
 	status := GetStatus(
 		int(sts.Status.UpdatedReplicas),
 		int(sts.Status.ReadyReplicas),
-		int(sts.Status.Replicas))
+		int(sts.Status.Replicas), cluster.NodeNum)
 
 	if status != NormalStatus {
 		return containerImageList, status, nil
 	}
 
 	// 检测workload当前资源使用情况
-	status, err := CheckPodMetric(sts.Spec.Template.Spec.Containers, ms, sts.Namespace, sts.Spec.Selector.MatchLabels)
+	status, err := CheckPodMetric(sts.Spec.Template.Spec.Containers, cluster, sts.Namespace, sts.Spec.Selector.MatchLabels)
 	return containerImageList, status, err
 }
 
 // getDSCheckResult 检查daemonset类型workload
-func getDSCheckResult(ds *v1.DaemonSet, ms *metricsclientset.Clientset) ([]containerImage, string, error) {
+func getDSCheckResult(ds *v1.DaemonSet, cluster *pluginmanager.ClusterConfig) ([]containerImage, string, error) {
 	containerImageList := make([]containerImage, 0, 0)
 	for _, container := range ds.Spec.Template.Spec.Containers {
 		containerImageList = append(containerImageList, containerImage{
@@ -714,7 +727,7 @@ func getDSCheckResult(ds *v1.DaemonSet, ms *metricsclientset.Clientset) ([]conta
 	status := GetStatus(
 		int(ds.Status.UpdatedNumberScheduled),
 		int(ds.Status.NumberReady),
-		int(ds.Status.DesiredNumberScheduled))
+		int(ds.Status.DesiredNumberScheduled), cluster.NodeNum)
 	if status != NormalStatus {
 		return containerImageList, status, nil
 	}
@@ -725,7 +738,7 @@ func getDSCheckResult(ds *v1.DaemonSet, ms *metricsclientset.Clientset) ([]conta
 }
 
 // getDeployCheckResult 检查deployment类型workload
-func getDeployCheckResult(deploy *v1.Deployment, ms *metricsclientset.Clientset) ([]containerImage, string, error) {
+func getDeployCheckResult(deploy *v1.Deployment, cluster *pluginmanager.ClusterConfig) ([]containerImage, string, error) {
 	containerImageList := make([]containerImage, 0, 0)
 	for _, container := range deploy.Spec.Template.Spec.Containers {
 		containerImageList = append(containerImageList, containerImage{
@@ -738,30 +751,30 @@ func getDeployCheckResult(deploy *v1.Deployment, ms *metricsclientset.Clientset)
 	status := GetStatus(
 		int(deploy.Status.UpdatedReplicas),
 		int(deploy.Status.ReadyReplicas),
-		int(deploy.Status.Replicas))
+		int(deploy.Status.Replicas), cluster.NodeNum)
 	if status != NormalStatus {
 		return containerImageList, status, nil
 	}
 
 	// 检测workload当前资源使用情况
-	status, err := CheckPodMetric(deploy.Spec.Template.Spec.Containers, ms, deploy.Namespace, deploy.Spec.Selector.MatchLabels)
+	status, err := CheckPodMetric(deploy.Spec.Template.Spec.Containers, cluster, deploy.Namespace, deploy.Spec.Selector.MatchLabels)
 	return containerImageList, status, err
 }
 
 // CheckPodMetric check pod resource metric, generate high load gvs
-func CheckPodMetric(containerList []corev1.Container, ms *metricsclientset.Clientset, namespace string, matchLabels map[string]string) (string, error) {
-	if ms == nil {
+func CheckPodMetric(containerList []corev1.Container, cluster *pluginmanager.ClusterConfig, namespace string, matchLabels map[string]string) (string, error) {
+	if cluster.MetricSet == nil {
 		return NormalStatus, nil
 	}
 	// 基于workload的label获取pod metric
-	podMetricList, err := ms.MetricsV1beta1().PodMetricses(namespace).List(internalUtil.GetCtx(15*time.Second),
+	podMetricList, err := cluster.MetricSet.MetricsV1beta1().PodMetricses(namespace).List(internalUtil.GetCtx(15*time.Second),
 		metav1.ListOptions{
 			ResourceVersion: "0",
 			LabelSelector:   metav1.FormatLabelSelector(&metav1.LabelSelector{MatchLabels: matchLabels})})
 
 	if err != nil {
+		klog.Infof("%s get metric failed: %s", cluster.ClusterID, err.Error())
 		if strings.Contains(err.Error(), "the server could not find the requested resource") {
-			klog.Infof(err.Error())
 			return NormalStatus, nil
 		} else {
 			return AppMetricErrorStatus, err
