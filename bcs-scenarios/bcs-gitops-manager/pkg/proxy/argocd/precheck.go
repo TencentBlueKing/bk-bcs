@@ -13,11 +13,16 @@
 package argocd
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 
 	mw "github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/permitcheck"
@@ -38,11 +43,20 @@ type PreCheckPlugin struct {
 // Init all project sub path handler
 // project plugin is a subRouter, all path registered is relative
 func (plugin *PreCheckPlugin) Init() error {
-	plugin.Path("/mr/info").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.preCheckViewHandler))
-	plugin.Path("/record").Methods(http.MethodPost).Handler(plugin.middleware.HttpWrapper(plugin.common))
-	plugin.Path("/task").Methods(http.MethodPut).Handler(plugin.middleware.HttpWrapper(plugin.common))
-	plugin.Path("/task").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.common))
-	plugin.Path("/tasks").Methods(http.MethodGet).Handler(plugin.middleware.HttpWrapper(plugin.common))
+	plugin.Path("/mr/info").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckViewHandler))
+	plugin.Path("/record").Methods(http.MethodPost).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckCreateRecordHandler))
+	plugin.Path("/task").Methods(http.MethodPut).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckCreateRecordHandler))
+	plugin.Path("/task").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckGetTaskHandler))
+	plugin.Path("/tasks").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckListTaskHandler))
+	plugin.Path("/scan/report").Methods(http.MethodGet).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckGetScanReportHandler))
+	plugin.Path("/scan/report").Methods(http.MethodPost).
+		Handler(plugin.middleware.HttpWrapper(plugin.preCheckCreateScanReportHandler))
 	blog.Infof("precheck plugin init successfully")
 	return nil
 }
@@ -55,12 +69,106 @@ func (plugin *PreCheckPlugin) preCheckViewHandler(r *http.Request) (*http.Reques
 	// mrIID := r.PathValue("mrIID")
 	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repo, permitcheck.RepoViewRSAction)
 	if statusCode != http.StatusOK {
-		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check repo '%s' permission failed: %w", repo,
+		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check repo '%s' permission failed: %v", repo,
 			err))
 	}
 	return r, mw.ReturnPreCheckReverse()
 }
 
-func (plugin *PreCheckPlugin) common(r *http.Request) (*http.Request, *mw.HttpResponse) {
+func (plugin *PreCheckPlugin) preCheckGetScanReportHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	queryValues := r.URL.Query()
+	app := queryValues.Get("app")
+	_, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), app, permitcheck.AppViewRSAction)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check app '%s' permission failed: %v", app,
+			err))
+	}
+	return r, mw.ReturnPreCheckReverse()
+}
+
+func (plugin *PreCheckPlugin) preCheckCreateScanReportHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	req := make(map[string]interface{})
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
+	}
+	if err = json.Unmarshal(body, &req); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
+	}
+	app := req["appName"]
+	appStr, ok := app.(string)
+	if !ok {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("assert app to string failed:%v", app))
+	}
+	_, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appStr,
+		permitcheck.AppUpdateRSAction)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check app '%s' permission failed: %v", app,
+			err))
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	length := len(body)
+	r.Header.Set("Content-Length", strconv.Itoa(length))
+	r.ContentLength = int64(length)
+	return r, mw.ReturnPreCheckReverse()
+}
+
+func (plugin *PreCheckPlugin) preCheckListTaskHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	projects := r.URL.Query()["projects"]
+	if len(projects) == 0 {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("query param 'projects' cannot be empty"))
+	}
+	for _, project := range projects {
+		_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), project,
+			permitcheck.ProjectViewRSAction)
+		if statusCode != http.StatusOK {
+			return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check project '%s' permission failed: %v",
+				project, err))
+		}
+	}
+	return r, mw.ReturnPreCheckReverse()
+}
+
+func (plugin *PreCheckPlugin) preCheckGetTaskHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	queryValues := r.URL.Query()
+	project := queryValues.Get("project")
+
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), project,
+		permitcheck.ProjectViewRSAction)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check project '%s' permission failed: %v",
+			project, err))
+	}
+
+	return r, mw.ReturnPreCheckReverse()
+}
+
+func (plugin *PreCheckPlugin) preCheckCreateRecordHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
+	req := make(map[string]interface{})
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "read body failed"))
+	}
+	if err = json.Unmarshal(body, &req); err != nil {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
+	}
+	project := req["project"]
+	projectStr, ok := project.(string)
+	if !ok {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("assert app to string failed:%v", project))
+	}
+	_, statusCode, err := plugin.permitChecker.CheckProjectPermission(r.Context(), projectStr,
+		permitcheck.ProjectViewRSAction)
+	if statusCode != http.StatusOK {
+		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check project '%s' permission failed: %v",
+			project, err))
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+	length := len(body)
+	r.Header.Set("Content-Length", strconv.Itoa(length))
+	r.ContentLength = int64(length)
 	return r, mw.ReturnPreCheckReverse()
 }
