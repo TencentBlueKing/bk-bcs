@@ -168,7 +168,7 @@ func createAKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 }
 
 // generateCreateClusterRequest generate create cluster request
-func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
+func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) ( // nolint
 	*armcontainerservice.ManagedCluster, error) {
 	cluster := info.Cluster
 	if cluster.NetworkSettings == nil {

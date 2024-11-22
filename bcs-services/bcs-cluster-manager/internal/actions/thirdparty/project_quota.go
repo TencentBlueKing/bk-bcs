@@ -42,7 +42,7 @@ type GetProjectResourceQuotaUsageAction struct {
 
 	groups []cmproto.NodeGroup
 
-	regionInsTypes map[string][]string
+	regionInsTypes map[string][]string // nolint
 }
 
 // NewGetProjectResourceQuotaUsageAction create action
