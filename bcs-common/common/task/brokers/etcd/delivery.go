@@ -139,6 +139,8 @@ func (d *deliver) Ack() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
+	time.Sleep(time.Millisecond * 2000)
+
 	pendingKey := fmt.Sprintf("%s/%s", pendingTaskPrefix, d.key)
 	_, err := d.client.Delete(ctx, pendingKey)
 	if err != nil {

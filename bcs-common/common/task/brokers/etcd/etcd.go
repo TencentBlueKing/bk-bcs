@@ -277,7 +277,6 @@ func (b *etcdBroker) Publish(ctx context.Context, signature *tasks.Signature) er
 	// Adjust routing key (this decides which queue the message will be published to)
 	b.Broker.AdjustRoutingKey(signature)
 
-	now := time.Now()
 	msg, err := json.Marshal(signature)
 	if err != nil {
 		return fmt.Errorf("JSON marshal error: %s", err)
@@ -285,9 +284,8 @@ func (b *etcdBroker) Publish(ctx context.Context, signature *tasks.Signature) er
 
 	key := fmt.Sprintf("%s/%s/%s", pendingTaskPrefix, signature.RoutingKey, signature.UUID)
 
-	// Check the ETA signature field, if it is set and it is in the future,
-	// delay the task
-	if signature.ETA != nil && signature.ETA.After(now) {
+	// Check the ETA signature field, delay the task
+	if signature.ETA != nil {
 		key = fmt.Sprintf("%s/eta-%d/%s/%s",
 			delayedTaskPrefix, signature.ETA.UnixMilli(), signature.RoutingKey, signature.UUID)
 	}
@@ -553,16 +551,19 @@ func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
 		if taskKey == "" {
 			continue
 		}
+
 		pendingKey := fmt.Sprintf("%s/%s", pendingTaskPrefix, taskKey)
-		cmp := clientv3.Compare(clientv3.ModRevision(key), "=", kv.ModRevision)
+		delayKeyNotChange := clientv3.Compare(clientv3.ModRevision(key), "=", kv.ModRevision)
+		pendingKeyNotExist := clientv3.Compare(clientv3.CreateRevision(pendingKey), "=", 0)
+
 		deleteReq := clientv3.OpDelete(key)
 		putReq := clientv3.OpPut(pendingKey, string(kv.Value))
-		c, err := b.client.Txn(handleCtx).If(cmp).Then(deleteReq, putReq).Commit()
+		c, err := b.client.Txn(handleCtx).If(delayKeyNotChange, pendingKeyNotExist).Then(deleteReq, putReq).Commit()
 		if err != nil {
 			return fmt.Errorf("handle delay task %s failed, err: %w", key, err)
 		}
 		if !c.Succeeded {
-			log.WARNING.Printf("handle delay task %s not success", key)
+			log.WARNING.Printf("handle delay task %s compare not success", key)
 			continue
 		}
 		log.DEBUG.Printf("send delay task %s to pending queue done", key)
