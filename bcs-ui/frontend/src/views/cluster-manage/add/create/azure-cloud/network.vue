@@ -34,7 +34,7 @@
           </span>
         </div>
       </bk-form-item>
-      <!-- <bk-form-item
+      <bk-form-item
         :label="$t('cluster.create.label.defaultNetPlugin')"
         :desc="{
           allowHTML: true,
@@ -48,18 +48,10 @@
           <bcs-option id="AzureCniNodeSubnet" name="Azure CNI Node Subnet"></bcs-option>
         </bcs-select>
         <div id="netPlugin">
-          <div>{{ $t('cluster.create.aws.tips.awsDesc') }}</div>
-          <div>
-            <i18n path="tke.button.goDetail">
-              <span
-                class="text-[12px] text-[#699DF4] cursor-pointer"
-                @click="openLink('https://docs.aws.amazon.com/zh_cn/eks/latest/userguide/managing-vpc-cni.html')">
-                {{ $t('cluster.create.aws.tips.awsLink') }}
-              </span>
-            </i18n>
-          </div>
+          <div>{{ $t('cluster.create.azure.tips.overlay') }}</div>
+          <div>{{ $t('cluster.create.azure.tips.nodeSubnet') }}</div>
         </div>
-      </bk-form-item> -->
+      </bk-form-item>
       <bk-form-item
         :label="$t('cluster.create.label.clusterIPType.text')"
         property="networkSettings.clusterIpType"
@@ -212,9 +204,9 @@ const networkConfig = ref({
     maxNodePodNum: 110, // 单节点pod数量上限
     clusterIpType: 'ipv4', // ipv4
   },
-  // clusterAdvanceSettings: {
-  //   networkType: 'AzureCniOverlay',   // 网络插件
-  // },
+  clusterAdvanceSettings: {
+    networkType: 'AzureCniOverlay',   // 网络插件
+  },
 });
 
 const conflictCIDR = ref('');
@@ -338,13 +330,6 @@ watch([
   networkConfig.value.vpcID = '';
 }, { immediate: true });
 
-// 跳转链接
-const openLink = (link: string) => {
-  if (!link) return;
-
-  window.open(link);
-};
-
 // 校验
 const formRef = ref();
 const validate = async () => {
@@ -366,7 +351,6 @@ const nextStep = async () => {
   if (result) {
     emits('next', {
       ...networkConfig.value,
-      // networkType: networkConfig.value.clusterAdvanceSettings.networkType === 'AzureCniOverlay' ? 'overlay' : 'underlay',
     });
   } else {
     // 自动滚动到第一个错误的位置

@@ -963,6 +963,11 @@ cluster:
           create a new Safety group, please go to the appropriate page in the
           {0}.'
         vpcMaster: VPC console
+      tips:
+        overlay: Azure CNI Overlay：Cluster nodes will be deployed to an Azure Virtual Network (VNet) subnet.
+        nodeSubnet: >-
+          Azure CNI Node Subnet：Each Pod will receive an IP address from the
+          subnet and can communicate directly with other Pods and services.
     google:
       labels:
         areaType: Area Type

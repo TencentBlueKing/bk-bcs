@@ -812,6 +812,9 @@ cluster:
         text: 安全组
         vpcLink: '选择将应用到在您的控制平面子网中创建的 AKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 {0}  中的相应页面。'
         vpcMaster: VPC 控制台
+      tips:
+        overlay: Azure CNI Overlay：群集节点将部署到 Azure 虚拟网络 (VNet) 子网中。
+        nodeSubnet: Azure CNI Node Subnet：每个 Pod 将接收 IP 子网中的 IP 地址，并且可以直接与其他 Pod 和服务通信。
     google:
       labels:
         areaType: 位置类型

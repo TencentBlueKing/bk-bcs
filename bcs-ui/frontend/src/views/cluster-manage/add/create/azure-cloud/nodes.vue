@@ -215,7 +215,7 @@ const props = defineProps({
   },
   bkCloudID: {
     type: Number,
-    default: 9,
+    default: 0,
   },
   resourceGroupName: {
     type: String,
