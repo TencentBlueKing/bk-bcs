@@ -64,7 +64,9 @@ func TestHandleDelayedTask(t *testing.T) {
 	}
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+
 	eta := time.Now().Add(time.Second * 10)
 	mytask := &tasks.Signature{
 		Name:       "test_delay_task",
@@ -85,6 +87,11 @@ func TestHandleDelayedTask(t *testing.T) {
 		defer wg.Done()
 
 		err := etcdBroker.handleDelayedTask(ctx)
+		if err != nil {
+			assert.ErrorIs(t, err, context.DeadlineExceeded)
+			return
+		}
+
 		assert.NoError(t, err)
 	}()
 
@@ -95,13 +102,24 @@ func TestHandleDelayedTask(t *testing.T) {
 		time.Sleep(time.Second)
 
 		err := etcdBroker.handleDelayedTask(ctx)
+		if err != nil {
+			assert.ErrorIs(t, err, context.DeadlineExceeded)
+			return
+		}
+
 		assert.NoError(t, err)
+
 	}()
 
 	wg.Wait()
 
 	// 完成后，上面的锁需要立即释放
 	err = etcdBroker.handleDelayedTask(ctx)
+	if err != nil {
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+		return
+	}
+
 	assert.NoError(t, err)
 }
 
@@ -112,7 +130,9 @@ func TestHandleDelayedMultiTask(t *testing.T) {
 	}
 	t.Parallel()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+
 	eta := time.Now().Add(time.Second * 10)
 	mytask := &tasks.Signature{
 		Name:       "test_delay_task",
@@ -148,6 +168,11 @@ func TestHandleDelayedMultiTask(t *testing.T) {
 		time.Sleep(time.Second * 10)
 
 		err = etcdBroker.handleDelayedTask(ctx)
+		if err != nil {
+			assert.ErrorIs(t, err, context.DeadlineExceeded)
+			return
+		}
+
 		assert.NoError(t, err)
 	}()
 

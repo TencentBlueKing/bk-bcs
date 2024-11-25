@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,7 +31,6 @@ import (
 	"github.com/RichardKnop/machinery/v2/log"
 	"github.com/RichardKnop/machinery/v2/tasks"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/client/v3/concurrency"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -50,7 +48,9 @@ type etcdBroker struct {
 	wg          sync.WaitGroup
 	pendingTask map[string]struct{}
 	runningTask map[string]struct{}
+	delayedTask map[string]*delayTask
 	mtx         sync.RWMutex
+	delayedMtx  sync.RWMutex
 }
 
 // New ..
@@ -73,6 +73,7 @@ func New(ctx context.Context, conf *config.Config) (iface.Broker, error) {
 		client:      client,
 		pendingTask: make(map[string]struct{}),
 		runningTask: make(map[string]struct{}),
+		delayedTask: make(map[string]*delayTask),
 	}
 
 	return &broker, nil
@@ -284,7 +285,8 @@ func (b *etcdBroker) Publish(ctx context.Context, signature *tasks.Signature) er
 
 	key := fmt.Sprintf("%s/%s/%s", pendingTaskPrefix, signature.RoutingKey, signature.UUID)
 
-	// Check the ETA signature field, delay the task
+	// Check the ETA signature field, alway delay the task if not nil,
+	// prevent the key overwrite by slow ack request
 	if signature.ETA != nil {
 		key = fmt.Sprintf("%s/eta-%d/%s/%s",
 			delayedTaskPrefix, signature.ETA.UnixMilli(), signature.RoutingKey, signature.UUID)
@@ -414,7 +416,7 @@ func (b *etcdBroker) listWatchRunningTask(ctx context.Context) error {
 	wc := b.client.Watch(watchCtx, runningTaskPrefix, watchOpts...)
 	for wresp := range wc {
 		if wresp.Err() != nil {
-			return watchCtx.Err()
+			return wresp.Err()
 		}
 
 		b.mtx.Lock()
@@ -473,7 +475,7 @@ func (b *etcdBroker) listWatchPendingTask(ctx context.Context, queue string) err
 	wc := b.client.Watch(watchCtx, keyPrefix, watchOpts...)
 	for wresp := range wc {
 		if wresp.Err() != nil {
-			return watchCtx.Err()
+			return wresp.Err()
 		}
 
 		b.mtx.Lock()
@@ -492,81 +494,6 @@ func (b *etcdBroker) listWatchPendingTask(ctx context.Context, queue string) err
 			}
 		}
 		b.mtx.Unlock()
-	}
-
-	return nil
-}
-
-func (b *etcdBroker) handleDelayedTask(ctx context.Context) error {
-	s, err := concurrency.NewSession(b.client)
-	if err != nil {
-		return err
-	}
-	defer s.Close() // nolint
-
-	m := concurrency.NewMutex(s, delayedTaskLockKey)
-
-	// 最长等待30s获取锁
-	lockCtx, lockCancel := context.WithTimeout(ctx, time.Second*30)
-	defer lockCancel()
-	if err = m.Lock(lockCtx); err != nil {
-		return err
-	}
-
-	defer func() {
-		unlockCtx, unlockCancel := context.WithTimeout(context.Background(), time.Second*5)
-		defer unlockCancel()
-
-		if err = m.Unlock(unlockCtx); err != nil {
-			log.ERROR.Printf("unlock delayed task failed, err: %s", err)
-		}
-	}()
-
-	// 异步任务随时可能插入, 最多处理1分钟后重新获取任务列表(aka 异步任务到期后, 最多延迟1分钟放到pending队列)
-	handleCtx, handleCancel := context.WithTimeout(ctx, time.Minute)
-	defer handleCancel()
-
-	keyPrefix := fmt.Sprintf("%s/eta-", delayedTaskPrefix)
-	end := strconv.FormatInt(time.Now().UnixMilli(), 10)
-	rangeOpts := []clientv3.OpOption{
-		clientv3.WithRange(keyPrefix + end),
-		clientv3.WithSort(clientv3.SortByKey, clientv3.SortAscend), // 按时间排序,优先处理最早的任务
-		clientv3.WithLimit(10000),
-	}
-	resp, err := b.client.Get(handleCtx, keyPrefix+"0", rangeOpts...)
-	if err != nil {
-		return err
-	}
-
-	for _, kv := range resp.Kvs {
-		// 超时控制
-		select {
-		case <-handleCtx.Done():
-			return handleCtx.Err()
-		default:
-		}
-
-		key := string(kv.Key)
-		taskKey := findTaskKey(key)
-		if taskKey == "" {
-			continue
-		}
-
-		pendingKey := fmt.Sprintf("%s/%s", pendingTaskPrefix, taskKey)
-		delayKeyNotChange := clientv3.Compare(clientv3.ModRevision(key), "=", kv.ModRevision)
-		pendingKeyNotExist := clientv3.Compare(clientv3.CreateRevision(pendingKey), "=", 0)
-
-		deleteReq := clientv3.OpDelete(key)
-		putReq := clientv3.OpPut(pendingKey, string(kv.Value))
-		c, err := b.client.Txn(handleCtx).If(delayKeyNotChange, pendingKeyNotExist).Then(deleteReq, putReq).Commit()
-		if err != nil {
-			return fmt.Errorf("handle delay task %s failed, err: %w", key, err)
-		}
-		if !c.Succeeded {
-			log.WARNING.Printf("handle delay task %s compare not success", key)
-			continue
-		}
-		log.DEBUG.Printf("send delay task %s to pending queue done", key)
 	}
 
 	return nil
