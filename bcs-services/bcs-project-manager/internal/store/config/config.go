@@ -39,7 +39,12 @@ const (
 	ConfigKeyUpdateNamespaceItsmServiceID = "update_namespace_itsm_service_id"
 	// ConfigKeyDeleteNamespaceItsmServiceID used to create an itsm ticket when deleting a namespace in a shared cluster
 	ConfigKeyDeleteNamespaceItsmServiceID = "delete_namespace_itsm_service_id"
-
+	// ConfigCreateNamespaceItsmServiceName used to create an itsm service when creating a namespace in a shared cluster
+	ConfigCreateNamespaceItsmServiceName = "创建共享集群命名空间"
+	// ConfigUpdateNamespaceItsmServiceName used to create an itsm service when updating a namespace in a shared cluster
+	ConfigUpdateNamespaceItsmServiceName = "更新共享集群命名空间"
+	// ConfigDeleteNamespaceItsmServiceName used to create an itsm service when deleting a namespace in a shared cluster
+	ConfigDeleteNamespaceItsmServiceName = "删除共享集群命名空间"
 	// QuotaManagerCommonItsmServiceID used to create an itsm ticket when quota manager
 	QuotaManagerCommonItsmServiceID = "quota_manager_common_itsm_service_id"
 )
