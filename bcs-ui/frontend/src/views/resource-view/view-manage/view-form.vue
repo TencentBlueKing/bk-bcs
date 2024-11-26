@@ -116,6 +116,39 @@
           :key="viewData.id"
           :cluster-namespaces="viewData.clusterNamespaces" />
       </template>
+      <template v-else-if="item.id === 'source'">
+        <bk-radio-group
+          class="mb-[8px]"
+          v-if="viewData.filter.createSource"
+          v-model="viewData.filter.createSource.source"
+          @change="handlerChange">
+          <bk-radio-button value="Template">
+            <i class="bcs-icon bcs-icon-templete"></i>
+            <span class="text-[12px]">Template</span>
+          </bk-radio-button>
+          <bk-radio-button value="Helm">
+            <i class="bcs-icon bcs-icon-helm"></i>
+            <span class="text-[12px]">Helm</span>
+          </bk-radio-button>
+          <bk-radio-button value="Client">
+            <i class="bcs-icon bcs-icon-client"></i>
+            <span class="text-[12px]">Client</span>
+          </bk-radio-button>
+          <bk-radio-button value="Web">
+            <i class="bcs-icon bcs-icon-web"></i>
+            <span class="text-[12px]">Web</span>
+          </bk-radio-button>
+        </bk-radio-group>
+        <bcs-input
+          v-if="viewData.filter.createSource?.source
+            && ['Template', 'Helm'].includes(viewData.filter.createSource.source)"
+          v-model.trim="sourceKeyword"
+          clearable
+          :placeholder="
+            viewData.filter.createSource.source === 'Template'
+              ? $t('view.placeholder.searchTemplate')
+              : $t('view.placeholder.searchHelm')"></bcs-input>
+      </template>
       <template v-else>
         <bcs-input v-model.trim="viewData.filter[item.id]" clearable :placeholder="item.placeholder"></bcs-input>
       </template>
@@ -143,7 +176,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { cloneDeep, isEqual, merge } from 'lodash';
+import { cloneDeep, debounce, isEqual, merge } from 'lodash';
 import { computed, PropType, ref, watch } from 'vue';
 
 import BkUserSelector from '@blueking/user-selector';
@@ -185,9 +218,15 @@ const addFieldPopoverRef = ref();
 // 视图数据
 const viewData = ref<IViewData>({
   name: '',
-  filter: {},
+  filter: {
+    createSource: {
+      source: '',
+    },
+  },
   clusterNamespaces: [],
 });
+// 来源输入框
+const sourceKeyword = ref<string|undefined>('');
 const displayClusterNamespaces = computed(() => {
   if (!viewData.value.clusterNamespaces?.length) {
     return [{
@@ -220,6 +259,11 @@ const fieldList = ref<Array<IFieldItem>>([
     status: '',
     placeholder: $i18n.t('view.placeholder.resourceName'),
   },
+  {
+    title: $i18n.t('generic.label.source'),
+    id: 'source',
+    status: '',
+  },
 ]);
 const filterFieldList = computed(() => fieldList.value.filter(item => !item.status).sort((a, b) => {
   if (a.id < b.id) {
@@ -239,6 +283,8 @@ watch(fieldList, () => {
 const resetFieldListStatus = () => {
   fieldList.value.forEach((item) => {
     if (viewData.value.filter?.[item.id]?.length) {
+      item.status = 'added';
+    } else if (item.id === 'source' &&  viewData.value.filter.createSource?.source?.length) {
       item.status = 'added';
     } else {
       item.status = '';
@@ -311,6 +357,9 @@ const handleAddField = (item: IFieldItem) => {
       }
       return 0;
     });
+    if (data?.id === 'source') {
+      viewData.value.filter.createSource && (viewData.value.filter.createSource.source = 'Template');
+    }
   }
   addFieldPopoverRef.value?.hide();
 };
@@ -319,18 +368,81 @@ const handleDeleteField = (item: IFieldItem) => {
   const data = fieldList.value.find(data => data.id === item.id);
   if (data) {
     data.status = '';
-    viewData.value.filter[item.id] = Array.isArray(viewData.value.filter[item.id]) ? [] : '';
+    if (item.id === 'source') {
+      viewData.value.filter.createSource = {
+        source: '',
+        template: {
+          templateName: '',
+          templateVersion: '',
+        },
+        chart: {
+          chartName: '',
+        },
+      };
+    } else {
+      viewData.value.filter[item.id] = Array.isArray(viewData.value.filter[item.id]) ? [] : '';
+    }
   }
 };
+
+// 选择来源类型
+function handlerChange() {
+  const source = viewData.value.filter.createSource;
+  source?.chart && (source.chart.chartName = '');
+  source?.template && (source.template.templateVersion = '');
+  source?.template && (source.template.templateName = '');
+  if (source?.source === 'Client' || source?.source === 'Web') {
+    sourceKeyword.value = '';
+  }
+  setCreateSource();
+}
+function setCreateSource() {
+  if (!viewData.value.filter.createSource) return;
+  if (viewData.value.filter.createSource.source === 'Template') {
+    const list = sourceKeyword.value?.split(':') || [];
+    let name = '';
+    if (!list[list?.length - 1]) {
+      name = sourceKeyword.value || '';
+    } else {
+      const arr = [...list];
+      arr.pop();
+      name = arr.join(':');
+    }
+    const version = list && list.length > 1 ? list[list.length - 1] : '';
+    viewData.value.filter.createSource.template = { templateName: name, templateVersion: version };
+  } else if (viewData.value.filter.createSource.source === 'Helm') {
+    viewData.value.filter.createSource.chart = { chartName: sourceKeyword.value || '' };
+  }
+}
+const setCreateSourceDeb = debounce(setCreateSource, 300);
+watch(sourceKeyword, setCreateSourceDeb);
 
 watch(() => props.data, () => {
   if (isEqual(props.data, viewData.value)) return;
 
   viewData.value = merge({
     name: '',
-    filter: {},
+    filter: {
+      createSource: {
+        source: '',
+        template: {
+          templateName: '',
+          templateVersion: '',
+        },
+        chart: {
+          chartName: '',
+        },
+      },
+    },
     clusterNamespaces: [],
   }, cloneDeep(props.data));
+  if (viewData.value.filter.createSource?.source) {
+    sourceKeyword.value = viewData.value.filter.createSource?.chart?.chartName
+      || `${viewData.value.filter?.createSource?.template?.templateName}${
+        viewData.value.filter?.createSource?.template?.templateVersion
+          ? `:${viewData.value.filter?.createSource?.template?.templateVersion}`
+          : ''}`;
+  }
   resetFieldListStatus();
 }, { immediate: true, deep: true });
 
@@ -338,3 +450,13 @@ watch(viewData, () => {
   emits('change', viewData.value);
 }, { deep: true });
 </script>
+<style lang="postcss" scoped>
+/deep/ .bk-form-radio-button {
+  .bk-radio-button-text {
+    width: 88px;
+    height: 26px;
+    line-height: 26px;
+    padding: 0;
+  }
+}
+</style>

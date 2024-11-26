@@ -41,7 +41,8 @@ export default function () {
       // hack 过滤掉空字段（接口不能传一空数据）
       tmpViewData.filter = Object.keys(tmpViewData.filter || {}).reduce((pre, key) => {
         const field = tmpViewData.filter;
-        if (!field[key]?.length) return pre;
+        if (((typeof field[key] === 'string' || Array.isArray(field[key])) && !field[key]?.length)
+          || (key === 'createSource' && !field.createSource?.source?.length)) return pre;
 
         if (key === 'labelSelector') {
           pre[key] = field[key]?.filter(item => !!item.key); // 过滤空的标签

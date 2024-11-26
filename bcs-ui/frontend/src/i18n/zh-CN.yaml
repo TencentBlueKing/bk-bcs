@@ -2491,6 +2491,7 @@ view:
     clusterView: 集群视图
     customView: 自定义视图
     addCustomView: 添加自定义视图
+    onlyData: 仅看有资源的分类
   tips:
     selectMultiCluster: 批量选择集群
     confirmDelete: 确定删除视图
@@ -2505,6 +2506,8 @@ view:
     searchNameOrCreator: 搜索资源名称/创建人
     searchNameOrCreatorOrIP: 搜索资源名称/创建人/IP
     searchResourceKind: 搜索资源类型
+    searchTemplate: 请输入 Template 名称模糊搜索
+    searchHelm: 请输入 Helm 名称模糊搜索
   status:
     saveAs: 另存成功
 manualNode:

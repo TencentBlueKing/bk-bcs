@@ -1,6 +1,9 @@
 <template>
   <div
-    :class="[!openSideMenu ? 'w-[60px]' : '']"
+    :class="[
+      !openSideMenu ? 'w-[60px]' : '',
+      'overflow-x-hidden'
+    ]"
     @mouseenter="handleMenuMouseEnter"
     @mouseleave="handleMenuMouseLeave">
     <div
@@ -26,6 +29,24 @@
           v-else>
         </i>
       </div>
+      <div v-show="openSideMenu" class="flex-[0_0_auto] flex items-center justify-between px-[16px] pt-[16px] pb-[8px]">
+        <bk-checkbox
+          :true-value="true"
+          :false-value="false"
+          v-model="nonEmptyKind">
+          <span class="text-[12px]">{{ $t('view.button.onlyData') }}</span>
+        </bk-checkbox>
+        <span
+          :class="[
+            'flex items-center text-[#3A84FF] text-[12px]',
+            isLoading ? 'cursor-not-allowed' : 'cursor-pointer'
+          ]"
+          @click.stop="refreshMenu">
+          <LoadingIcon v-if="isLoading"></LoadingIcon>
+          <i v-else class="bcs-icon bcs-icon-reset mr-[5px] p-[2px]"></i>
+          <span>{{ $t('generic.log.button.refresh') }}</span>
+        </span>
+      </div>
       <!-- 菜单 -->
       <div class="side-menu-wrapper flex-1 overflow-y-auto">
         <bcs-navigation-menu
@@ -39,6 +60,7 @@
           :default-active="activeMenu.id"
           :before-nav-change="handleBeforeNavChange"
           :key="searchName"
+          v-if="isReloadMenu"
           class="resource-view-menu">
           <bcs-navigation-menu-item
             v-for="menu in clusterResourceMenus"
@@ -213,6 +235,29 @@ watch(searchName, () => {
 });
 
 const { menus, disabledMenuIDs, flatLeafMenus } = useMenu();
+// 只显示有数据的资源
+const nonEmptyKind = ref(false);
+// 重新渲染菜单
+const isReloadMenu = ref(true);
+function reloadMenu() {
+  isReloadMenu.value = false;
+  setTimeout(() => {
+    isReloadMenu.value = true;
+  });
+}
+// 刷新菜单
+function refreshMenu() {
+  if (isLoading.value) return;
+  handleGetCustomResourceDefinition();
+  handleGetMultiClusterResourcesCount();
+}
+watch(nonEmptyKind, () => {
+  reloadMenu();
+  if (nonEmptyKind.value) {
+    const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
+    handleChangeMenu(menu);
+  }
+});
 // 左侧菜单
 const activeMenu = ref<Partial<IMenu>>({});
 // 所有叶子菜单项
@@ -225,19 +270,23 @@ const clusterResourceMenus = computed<IMenu[]>(() => {
   return data.reduce<IMenu[]>((pre, item) => {
     if (item.children?.length) {
       const newChildrenList = item.children
-        .filter(menu => menu.title?.toLocaleLowerCase()?.includes(searchValue));
+        .filter(menu => menu.title?.toLocaleLowerCase()?.includes(searchValue) && filterCriteria(menu));
       if (newChildrenList.length) {
         pre.push({
           ...item,
           children: newChildrenList,
         });
       }
-    } else if (item.title?.toLocaleLowerCase()?.includes(searchValue)) {
+    } else if (item.title?.toLocaleLowerCase()?.includes(searchValue) && filterCriteria(item)) {
       pre.push(item);
     }
     return pre;
   }, []);
 });
+function filterCriteria(item) {
+  return (!nonEmptyKind.value || (nonEmptyKind.value && item?.meta?.kind && countMap.value[item.meta.kind]) !== 0);
+};
+
 // 当前路由
 const route = computed(() => toRef(reactive($router), 'currentRoute').value);
 // 设置当前菜单ID
@@ -388,7 +437,28 @@ const handleGetMultiClusterResourcesCount = async () => {
   countMap.value = await getMultiClusterResourcesCount({
     ...curViewData.value,
   });
+  const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
+  handleChangeMenu(menu);
 };
+
+/**
+ * 获取第一个菜单叶子节点
+ * 初始化指向第一个资源页面，筛选过后第一个页面可能没有资源，就找出第一个有资源的然后跳转
+ * @param arr
+ */
+function getFirstLeafNode(arr: Array<IMenu>) {
+  if (!Array.isArray(arr) || arr.length === 0) return;
+
+  let firstElement = arr[0];
+
+  // 递归处理：如果firstElement是数组，继续查找
+  while (firstElement?.children) {
+    // eslint-disable-next-line prefer-destructuring
+    firstElement = firstElement.children[0];
+  }
+
+  return firstElement; // 返回第一个叶子节点
+}
 
 watch(curViewData, (newValue, oldValue) => {
   if (!curViewData.value || isEqual(newValue, oldValue)) return;

@@ -107,6 +107,26 @@ export default defineComponent({
       Recreate: $i18n.t('k8s.updateStrategy.reCreate'),
     });
 
+    // 来源类型
+    const sourceTypeMap = ref({
+      Template: {
+        iconClass: 'bcs-icon bcs-icon-templete',
+        iconText: 'Template',
+      },
+      Helm: {
+        iconClass: 'bcs-icon bcs-icon-helm',
+        iconText: 'Helm',
+      },
+      Client: {
+        iconClass: 'bcs-icon bcs-icon-client',
+        iconText: 'Client',
+      },
+      Web: {
+        iconClass: 'bcs-icon bcs-icon-web',
+        iconText: 'Web',
+      },
+    });
+
     const renderCrdHeader = (h, { column }) => {
       const additionalData = additionalColumns.value.find(item => item.name === column.label);
       return h('span', {
@@ -670,6 +690,7 @@ export default defineComponent({
       searchSelectValue,
       searchSelectKey,
       detailLoading,
+      sourceTypeMap,
     };
   },
   render() {
@@ -791,6 +812,7 @@ export default defineComponent({
                 goNamespace: this.goNamespace,
                 isViewEditable: this.isViewEditable,
                 isClusterMode: this.isClusterMode,
+                sourceTypeMap: this.sourceTypeMap,
               })
           }
         </div>

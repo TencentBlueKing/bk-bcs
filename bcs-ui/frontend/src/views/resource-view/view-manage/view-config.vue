@@ -140,6 +140,29 @@
                 </span>
               </bcs-tag>
             </ViewField>
+            <ViewField
+              :title="$t('generic.label.source')"
+              :deletable="false"
+              :active="activeField === 'source'"
+              class="rounded-sm p-[8px] mt-[8px]"
+              v-if="originViewData.filter?.createSource?.source">
+              <bcs-tag class="m-[0px]">
+                <span class="bcs-ellipsis" v-bk-overflow-tips>
+                  <span>{{ originViewData.filter?.createSource?.source || '--' }}</span>
+                  <span v-if="originViewData.filter?.createSource?.source === 'Helm'">
+                    <span v-if="originViewData.filter?.createSource?.chart?.chartName">/ </span>
+                    {{ originViewData.filter?.createSource?.chart?.chartName }}
+                  </span>
+                  <span v-else-if="originViewData.filter?.createSource?.source === 'Template'">
+                    <span v-if="originViewData.filter?.createSource?.template?.templateName">/ </span>
+                    <span>{{ `${originViewData.filter?.createSource?.template?.templateName}${
+                      originViewData.filter?.createSource?.template?.templateVersion
+                        ? `:${originViewData.filter?.createSource?.template?.templateVersion}`
+                        : ''}` }}</span>
+                  </span>
+                </span>
+              </bcs-tag>
+            </ViewField>
           </div>
         </div>
         <!-- 临时条件 -->
@@ -595,7 +618,7 @@ watch(dashboardViewID, () => {
 });
 
 // 高亮点击的字段
-const activeField = ref<'clusterNamespaces'|'creator'|'labelSelector'|'name'>();
+const activeField = ref<'clusterNamespaces'|'creator'|'labelSelector'|'name'|'source'>();
 let timeoutID;
 onBeforeMount(() => {
   bus.$on('locate-to-field', (field) => {

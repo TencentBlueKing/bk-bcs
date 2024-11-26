@@ -65,18 +65,34 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.source')" show-overflow-tooltip>
+        <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
-              {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
-                handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
-            </span>
-            <span v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
-              {{ handleGetExtData(row.metadata.uid, 'chart')
-                ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
-                : 'Helm' }}
-            </span>
-            <span v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+            <div class="flex items-center">
+              <bk-popover
+                class="size-[16px] mr-[4px]"
+                :content="sourceTypeMap?.[handleGetExtData(row.metadata.uid, 'createSource')]?.iconText"
+                :tippy-options="{ interactive: false }">
+                <i
+                  class="text-[14px] p-[1px]"
+                  :class="sourceTypeMap?.[handleGetExtData(row.metadata.uid, 'createSource')]?.iconClass"></i>
+              </bk-popover>
+              <span
+                v-bk-overflow-tips="{ interactive: false }"
+                class="bcs-ellipsis" v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
+                {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
+                  handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
+              </span>
+              <span
+                v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
+                v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
+                {{ handleGetExtData(row.metadata.uid, 'chart')
+                  ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
+                  : 'Helm' }}
+              </span>
+              <span
+                v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
+                v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+            </div>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -222,6 +238,26 @@ const handleGetExtData = (uid: string, ext?: string, defaultData?: any) => {
   const extData = data.value.manifestExt?.[uid] || {};
   return ext ? (extData[ext] || defaultData) : extData;
 };
+
+// 来源类型
+const sourceTypeMap = ref({
+  Template: {
+    iconClass: 'bcs-icon bcs-icon-templete',
+    iconText: 'Template',
+  },
+  Helm: {
+    iconClass: 'bcs-icon bcs-icon-helm',
+    iconText: 'Helm',
+  },
+  Client: {
+    iconClass: 'bcs-icon bcs-icon-client',
+    iconText: 'Client',
+  },
+  Web: {
+    iconClass: 'bcs-icon bcs-icon-web',
+    iconText: 'Web',
+  },
+});
 
 // 详情侧栏
 const showDetailPanel = ref(false);

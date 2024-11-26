@@ -3096,6 +3096,7 @@ view:
     addCustomView: Add
     clusterView: Cluster view
     customView: Custom view
+    onlyData: Available Categories
   tips:
     selectMultiCluster: Select clusters in bulk
     confirmDelete: Confirm to delete the view
@@ -3110,6 +3111,8 @@ view:
     searchNameOrCreator: Search resource name and creator
     searchNameOrCreatorOrIP: 'Search resource name, creator, IP'
     searchResourceKind: Search resource kinds
+    searchTemplate: Please enter the template name for fuzzy search
+    searchHelm: Please enter the helm name for fuzzy search
   status:
     saveAs: Saved
 manualNode:

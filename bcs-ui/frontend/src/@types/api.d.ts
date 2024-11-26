@@ -37,6 +37,16 @@ interface IViewFilter {
     op: '='|'In'|'NotIn'|'Exists'|'DoesNotExist'
     values: string[]
   }>
+  createSource?: {
+    source?: string,
+    template?: {
+      templateName: string,
+      templateVersion: string
+    },
+    chart?: {
+      chartName: string
+    }
+  }
 }
 
 interface IClusterNamespace {
