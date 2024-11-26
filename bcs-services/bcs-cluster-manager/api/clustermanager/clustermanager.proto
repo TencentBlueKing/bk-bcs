@@ -3419,6 +3419,11 @@ message CloudConfigInfo {
       title: "disableCheckGroupResource",
       description: "cloud是否关闭节点池资源quota校验开关"
     }];
+  uint32 maxWorkerNodeNum = 9[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "maxWorkerNodeNum",
+      description: "最大工作节点数量限制"
+    }];
 }
 
 // CloudNetworkInfo storage for cloud network info

@@ -835,53 +835,52 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 		result = &AddExistedInstanceResult{}
 	)
 
-	for i, id := range nodeIDs {
+	idChunks := utils.SplitStringsChunks(nodeIDs, common.ClusterAddNodesLimit)
+	for _, ids := range idChunks {
 		var (
-			newNodeIDs     = make([]string, 0)
-			nodeIPs        = make([]string, 0)
 			resp           *api.AddExistedInstanceRsp
 			addInstanceReq *api.AddExistedInstanceReq
+			nodeIPs        = make([]string, 0)
 		)
 
-		if ip, ok := idToIP[nodeIDs[i]]; ok {
-			nodeIPs = append(nodeIPs, ip)
-			newNodeIDs = append(newNodeIDs, id)
+		for i := range ids {
+			if ip, ok := idToIP[ids[i]]; ok {
+				nodeIPs = append(nodeIPs, ip)
+			}
 		}
 
-		if (i+1)%100 == 0 || i+1 == len(nodeIDs) {
-			// nodeGroup or nodeTemplate
-			if isNodeGroup {
-				addInstanceReq = GenerateNGAddExistedInstanceReq(info, newNodeIDs, nodeIPs, passwd, operator, options)
-			} else {
-				addInstanceReq = GenerateNTAddExistedInstanceReq(info, newNodeIDs, nodeIPs, passwd, operator, options)
-			}
+		// nodeGroup or nodeTemplate
+		if isNodeGroup {
+			addInstanceReq = GenerateNGAddExistedInstanceReq(info, ids, nodeIPs, passwd, operator, options)
+		} else {
+			addInstanceReq = GenerateNTAddExistedInstanceReq(info, ids, nodeIPs, passwd, operator, options)
+		}
 
-			blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, *addInstanceReq)
+		blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, *addInstanceReq)
 
-			err = retry.Do(func() error {
-				resp, err = tkeCli.AddExistedInstancesToCluster(addInstanceReq)
-				if err != nil {
-					return err
-				}
-
-				return nil
-			}, retry.Attempts(3))
+		err = retry.Do(func() error {
+			resp, err = tkeCli.AddExistedInstancesToCluster(addInstanceReq)
 			if err != nil {
-				blog.Errorf("AddNodesToCluster[%s] AddExistedInstancesToCluster failed: %v", taskID, err)
-				return nil, err
+				return err
 			}
 
-			if len(resp.SuccessInstanceIDs) > 0 {
-				result.SuccessNodes = resp.SuccessInstanceIDs
-			}
-			if len(resp.FailedInstanceIDs) > 0 || len(resp.TimeoutInstanceIDs) > 0 {
-				result.FailedNodes = append(result.FailedNodes, resp.TimeoutInstanceIDs...)
-				result.FailedNodes = append(result.FailedNodes, resp.FailedInstanceIDs...)
-			}
-
-			blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
-				"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
+			return nil
+		}, retry.Attempts(3))
+		if err != nil {
+			blog.Errorf("AddNodesToCluster[%s] AddExistedInstancesToCluster failed: %v", taskID, err)
+			return nil, err
 		}
+
+		if len(resp.SuccessInstanceIDs) > 0 {
+			result.SuccessNodes = resp.SuccessInstanceIDs
+		}
+		if len(resp.FailedInstanceIDs) > 0 || len(resp.TimeoutInstanceIDs) > 0 {
+			result.FailedNodes = append(result.FailedNodes, resp.TimeoutInstanceIDs...)
+			result.FailedNodes = append(result.FailedNodes, resp.FailedInstanceIDs...)
+		}
+
+		blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
+			"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,

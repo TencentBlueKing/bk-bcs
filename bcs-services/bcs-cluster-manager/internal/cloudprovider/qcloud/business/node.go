@@ -401,15 +401,44 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 		}
 	)
 
+	idChunks := utils.SplitStringsChunks(ids, common.ClusterAddNodesLimit)
+	for _, v := range idChunks {
+		ins, err := checkCvmInstance(ctx, client, v, taskId)
+		if err != nil {
+			return nil, err
+		}
+
+		instances.SuccessNodes = append(instances.SuccessNodes, ins.SuccessNodes...)
+		instances.FailedNodes = append(instances.FailedNodes, ins.FailedNodes...)
+	}
+
+	blog.Infof("CheckCvmInstanceState[%s] success[%v] failure[%v]",
+		taskId, instances.SuccessNodes, instances.FailedNodes)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
+		fmt.Sprintf("success [%v] failure [%v]", instances.SuccessNodes, instances.FailedNodes))
+
+	return instances, nil
+}
+
+func checkCvmInstance(ctx context.Context, client *api.NodeClient, ids []string, taskId string) (
+	*InstanceList, error) {
+	var (
+		instances = &InstanceList{
+			SuccessNodes: make([]InstanceInfo, 0),
+			FailedNodes:  make([]InstanceInfo, 0),
+		}
+	)
+
 	// wait check delete component status
 	timeContext, cancel := context.WithTimeout(ctx, time.Minute*10)
 	defer cancel()
 
 	// wait all nodes to be ready
-	err = loop.LoopDoFunc(timeContext, func() error {
+	err := loop.LoopDoFunc(timeContext, func() error {
 		cloudInstances, errLocal := client.GetInstancesById(ids)
 		if errLocal != nil {
-			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
+			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), errLocal)
 			return nil
 		}
 
@@ -504,11 +533,6 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 		instances.SuccessNodes = running
 		instances.FailedNodes = failure
 	}
-	blog.Infof("CheckCvmInstanceState[%s] success[%v] failure[%v]",
-		taskId, instances.SuccessNodes, instances.FailedNodes)
-
-	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskId, stepName,
-		fmt.Sprintf("success [%v] failure [%v]", instances.SuccessNodes, instances.FailedNodes))
 
 	return instances, nil
 }
