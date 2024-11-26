@@ -34,6 +34,8 @@
       is-edit
       v-else-if="fileStore.editMode === 'yaml'"
       :value="curVersionData?.content"
+      :version="curVersionID"
+      :render-mode="curVersionData?.renderMode"
       ref="yamlMode" />
     <!-- 元信息 -->
     <FileMetadataDialog

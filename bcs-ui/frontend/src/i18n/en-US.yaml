@@ -3767,6 +3767,8 @@ templateFile:
     import: Import
     export: Export all folders
     exportFolder: Export Folder
+    upgrade: Upgrade to Helm template
+    rollback: Rollback
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
     searchVersion: Version Number/Version Log/Updater
@@ -3801,6 +3803,7 @@ templateFile:
     disableYamlToFormReason: >-
       Source file, {0}, please continue to use the source mode to edit the
       template or modify and try again
+    disableYamlToFormReasonHelm: Helm template do not currently support form mode
     preKind: Pre kind
     nextKind: Next kind
     bookmark: Bookmark folder
@@ -3809,10 +3812,12 @@ templateFile:
       Supports .tgz and .tar.gz compressed file formats, with a maximum size of
       {0}MB
     createSpace: Create Folder
+    helmdesc: The current file has been upgraded to a Helm template. After saving, switching back to a non-Helm template will no longer be supported.
   tag:
     draft: draft
     baseOn: base on
     latestUpdate: Last Updated
+    helm: Helm template
 templateSet:
   title:
     set: Template Set

@@ -1,6 +1,7 @@
 <template>
   <div class="overflow-hidden" ref="contentRef">
     <bcs-resize-layout
+      v-show="!renderMode || (isEdit && renderMode !== 'Helm') || (!isEdit && renderMode !== 'Helm' && !upgrade)"
       collapsible
       disabled
       :border="false"
@@ -24,66 +25,37 @@
           'bg-[#2E2E2E] h-full rounded-t-sm',
           isCollapse ? '' : 'ml-[16px]'
         ]">
-        <!-- 工具栏 -->
-        <div
-          :class="[
-            'flex items-center justify-between pl-[24px] pr-[16px] h-[40px]',
-            'border-b-[1px] border-solid border-[#000]'
-          ]">
-          <span class="text-[#C4C6CC] text-[14px]"></span>
-          <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
-            <!-- <i class="bk-icon icon-upload-cloud text-[14px] hover:text-[#699df4] cursor-pointer"></i> -->
-            <AiAssistant ref="assistantRef" />
-            <i
-              :class="[
-                'hover:text-[#699df4] cursor-pointer',
-                isFullscreen ? 'bcs-icon bcs-icon-zoom-out' : 'bcs-icon bcs-icon-enlarge'
-              ]"
-              @click="switchFullScreen">
-            </i>
-          </span>
-        </div>
-        <!-- 代码编辑器 -->
-        <bcs-resize-layout
-          placement="bottom"
-          :border="false"
-          :auto-minimize="true"
-          :initial-divide="editorErr.message ? 100 : 0"
-          :max="300"
-          :min="100"
-          :disabled="!editorErr.message"
-          class="!h-0 flex-1 file-editor">
-          <template #aside>
-            <EditorStatus
-              :message="editorErr.message"
-              v-show="!!editorErr.message" />
-          </template>
-          <template #main>
-            <CodeEditor
-              :readonly="isEdit"
-              :options="opt"
-              multi-document
-              ref="codeEditorRef"
-              v-model="content"
-              @error="handleEditorErr" />
-          </template>
-        </bcs-resize-layout>
+        <yaml-content
+          ref="yamlContentRefInside"
+          :is-edit="isEdit"
+          :value="content"
+          :version="version"
+          :render-mode="renderMode"
+          :upgrade="upgrade"
+          :content-origin="contentOrigin"
+          @setContentOrigin="(val) => contentOrigin = val"
+          @updateUpgrade="(val) => upgrade = val" />
       </div>
     </bcs-resize-layout>
+    <yaml-content
+      v-show="renderMode === 'Helm' || upgrade"
+      ref="yamlContentRef"
+      :is-edit="isEdit"
+      :value="content"
+      :version="version"
+      :render-mode="renderMode"
+      :upgrade="upgrade"
+      :content-origin="contentOrigin"
+      @setContentOrigin="(val) => contentOrigin = val"
+      @updateUpgrade="(val) => upgrade = val" />
   </div>
 </template>
 <script setup lang="ts">
 import yamljs from 'js-yaml';
-import { throttle } from 'lodash';
-import * as monaco from 'monaco-editor';
 import { computed, ref, watch } from 'vue';
 
 import leftNav from './left-nav.vue';
-
-import AiAssistant from '@/components/ai-assistant.vue';
-import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import useFullScreen from '@/composables/use-fullscreen';
-import EditorStatus from '@/views/resource-view/resource-update/editor-status.vue';
+import yamlContent from './yaml-content.vue';
 
 const props = defineProps({
   isEdit: {
@@ -94,15 +66,87 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  version: {
+    type: String,
+    default: '',
+  },
+  renderMode: {
+    type: String,
+    default: '',
+  },
 });
 
-const assistantRef = ref<InstanceType<typeof AiAssistant>>();
-const codeEditorRef = ref<InstanceType<typeof CodeEditor>>();
+const emits = defineEmits(['getUpgradeStatus']);
+
+const upgrade  = ref(false);
 const content = ref('');
+const contentOrigin = ref('');
 const activeContentIndex = ref(0);
-const yamlToJson = computed(() => {
+const yamlToJson = ref();
+
+const yamlLayoutRef = ref();
+const watchOnce = watch(yamlToJson, () => {
+  // 只有一项数据时折叠起来
+  if (yamlToJson.value && yamlToJson.value.length < 2) {
+    yamlLayoutRef.value?.setCollapse(true);
+    yamlLayoutRef.value && (yamlLayoutRef.value.$refs.aside.style.transition = '');
+  }
+  watchOnce();
+});
+
+// 使用v-show，v-if时resize-layout某些值会被初始化，导致只有一个值时也展开，间隙也会消失
+const yamlRef = computed(() => {
+  if (!props.renderMode
+    || (props.isEdit && props.renderMode !== 'Helm')
+    || (!props.isEdit && props.renderMode !== 'Helm' && !upgrade.value)) {
+    return yamlContentRefInside.value;
+  };
+  return yamlContentRef.value;
+});
+const yamlContentRef = ref();
+const yamlContentRefInside = ref();
+// 跳转到对应的yaml
+const handleAnchor = (item: typeof yamlToJson.value[number]) => {
+  const index = yamlToJson.value.findIndex(d => d === item);
+  yamlRef.value?.setPosition(item.offset);
+  activeContentIndex.value = index;
+};
+
+// 获取数据
+const getData = () => yamlRef.value?.getData();
+
+// 校验数据
+const validate = async () => yamlRef.value?.validate();
+
+const isCollapse = ref(false);
+const handleCollapseChange = (value: boolean) => {
+  isCollapse.value = value;
+};
+
+watch([
+  () => upgrade.value,
+  () => props.renderMode,
+], () => {
+  emits('getUpgradeStatus', {
+    isHelm: props.renderMode === 'Helm' || upgrade.value,
+    upgrade: upgrade.value,
+  });
+});
+
+watch(() => props.value, () => {
+  if (!props.value) return;
+  content.value = props.value;
+  yamlRef.value?.setValue(props.value, '');
+}, { immediate: true });
+
+// 使用watch，如果使用computed，props.value还未来得及赋值给content.value，会出现把Helm当作yaml解析的情况
+watch([content, () => props.version], () => {
+  // 初始化数据
+  yamlToJson.value = [];
+  activeContentIndex.value = 0;
+  if (!props.renderMode || props.renderMode === 'Helm' || upgrade.value) return [];
   let offset = 0;
-  return yamljs.loadAll(content.value)
+  yamlToJson.value =  yamljs.loadAll(content.value)
     .reduce<Array<{ name: string; offset: number }>>((pre, doc) => {
     const name = doc?.metadata?.name;
     if (name) {
@@ -114,75 +158,21 @@ const yamlToJson = computed(() => {
     }
     return pre;
   }, []);
-});
-const opt = computed<monaco.editor.IStandaloneEditorConstructionOptions>(() => {
-  if (props.isEdit) return {
-    roundedSelection: false,
-    scrollBeyondLastLine: false,
-    renderLineHighlight: 'none',
-    minimap: { enabled: true },
-  };
-
-  return { minimap: { enabled: true } };
-});
-
-const yamlLayoutRef = ref();
-const watchOnce = watch(yamlToJson, () => {
-  // 只有一项数据时折叠起来
-  if (yamlToJson.value && yamlToJson.value.length < 2) {
-    yamlLayoutRef.value?.setCollapse(true);
-    yamlLayoutRef.value.$refs.aside.style.transition = '';
-  }
-  watchOnce();
-});
-
-
-// yaml异常
-const editorErr = ref({
-  type: '',
-  message: '',
-});
-function handleEditorErr(err: string) { // 捕获编辑器错误提示
-  editorErr.value.type = 'content'; // 编辑内容错误
-  editorErr.value.message = err;
-};
-
-// 跳转到对应的yaml
-const handleAnchor = (item: typeof yamlToJson.value[number]) => {
-  const index = yamlToJson.value.findIndex(d => d === item);
-  codeEditorRef.value?.setPosition(item.offset);
-  activeContentIndex.value = index;
-};
-
-// 获取数据
-const getData = () => content.value;
-
-// 校验数据
-const validate = async () => !editorErr.value.message;
-
-// 全屏
-const { contentRef, isFullscreen, switchFullScreen } = useFullScreen();
-// 调用AI
-const explainK8sIssue = throttle(() => {
-  assistantRef.value?.handleSendMsg(editorErr.value.message);
-  assistantRef.value?.showAITips();
-}, 300);
-
-const isCollapse = ref(false);
-const handleCollapseChange = (value: boolean) => {
-  isCollapse.value = value;
-};
-
-watch(() => props.value, () => {
-  if (!props.value) return;
-  content.value = props.value;
-  codeEditorRef.value?.setValue(props.value, '');
 }, { immediate: true });
 
-watch(() => editorErr.value.message, () => {
-  if (!editorErr.value.message) return;
+watch(() => props.version, () => {
+  // 触发语法校验
+  content.value = '';
+  // 使用setTimeout才会重新触发校验
+  setTimeout(() => {
+    content.value = props.value;
+  });
+});
 
-  explainK8sIssue();
+watch(yamlRef, (newVal, oldVal) => {
+  // 同步两个编辑器的值
+  oldVal && yamlContentRef.value?.setValue(oldVal.getData());
+  oldVal && yamlContentRefInside.value?.setValue(oldVal.getData());
 });
 
 defineExpose({

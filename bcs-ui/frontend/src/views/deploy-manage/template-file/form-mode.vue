@@ -225,6 +225,7 @@ const watchOnce = watch(formToJson, () => {
   // 只有一项数据时折叠起来
   if (formToJson.value && formToJson.value.length < 2) {
     layoutRef.value?.setCollapse(true);
+    layoutRef.value && (layoutRef.value.$refs.aside.style.transition = '');
   }
   watchOnce();
 });

@@ -36,6 +36,9 @@
         class="h-full"
         v-else-if="editMode === 'yaml'"
         :value="versionDetail.content"
+        :version="versionID"
+        :render-mode="versionDetail?.renderMode"
+        @getUpgradeStatus="getUpgradeStatus"
         ref="yamlMode" />
     </div>
     <!-- 转换异常提示 -->
@@ -52,7 +55,8 @@
           {{ $t('templateFile.title.disableYamlToForm') }}
         </span>
         <div class="bg-[#F5F6FA] px-[16px] py-[12px] mt-[16px]">
-          {{ $t('templateFile.tips.disableYamlToFormReason', [reason]) }}
+          <span v-if="isHelm || upgrade">{{ $t('templateFile.tips.disableYamlToFormReasonHelm', [reason]) }}</span>
+          <span v-else>{{ $t('templateFile.tips.disableYamlToFormReason', [reason]) }}</span>
         </div>
         <bcs-button theme="primary" class="mt-[16px]" @click="showErrorTipsDialog = false">
           {{ $t('generic.button.know') }}
@@ -102,7 +106,7 @@
           <bcs-button
             theme="primary"
             class="min-w-[88px]"
-            :disabled="versionDetail.content === originalContent && !fileMetadata?.isDraft"
+            :disabled="versionDetail.content === originalContent && !fileMetadata?.isDraft && !upgrade"
             @click="showVersionDialog = true">
             {{ $t('generic.button.confirmSave') }}
           </bcs-button>
@@ -234,6 +238,7 @@ async function getDraftContent() {
   versionDetail.value = {
     content: fileMetadata.value?.draftContent,
     version: fileMetadata.value?.version,
+    renderMode: fileMetadata.value?.renderMode,
   };
   // 保存原始数据
   originalContent.value = versionDetail.value.content || '';
@@ -286,11 +291,20 @@ async function handleShowDiffSlider() {
   showDiffSlider.value = true;
 }
 
+// 是否升级为Helm 模板
+const isHelm = ref(false);
+const upgrade = ref(false);
+function getUpgradeStatus(data) {
+  isHelm.value = data.isHelm;
+  upgrade.value = data.upgrade;
+};
+
 // 创建新版本
 async function createTemplateVersion(versionData: { version: string; versionDescription: string }) {
   if (!fileMetadata.value?.id || !versionDetail.value.content) return;
 
   creating.value = true;
+  const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.CreateTemplateVersion({
     description: versionData?.versionDescription,
     $templateID: fileMetadata.value?.id,
@@ -298,6 +312,7 @@ async function createTemplateVersion(versionData: { version: string; versionDesc
     content: versionDetail.value.content,
     force: false,
     editFormat: editMode.value as string,
+    ...params,
   }).catch(() => false);
   creating.value = false;
   if (result) {
@@ -329,6 +344,7 @@ async function handleSaveDraft() {
   if (!isValid) return;
 
   versionDetail.value.content = await handleGetReqData();
+  const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.UpdateTemplateMetadata({
     $id: props.id, // 模板文件元数据 ID
     name: fileMetadata.value?.name, // 模板文件元数据名称
@@ -341,6 +357,7 @@ async function handleSaveDraft() {
     draftVersion: versionDetail.value.version || '',
     draftContent: versionDetail.value.content || '',
     draftEditFormat: editMode.value,
+    ...params,
   }).then(() => true)
     .catch(() => false);
   if (result) {

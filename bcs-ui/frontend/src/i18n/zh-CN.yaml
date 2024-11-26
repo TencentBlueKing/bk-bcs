@@ -3015,6 +3015,8 @@ templateFile:
     import: 导入文件包
     export: 导出全部
     exportFolder: 导出文件夹
+    upgrade: 升级为 Helm 模板
+    rollback: 撤销本次升级
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
@@ -3047,16 +3049,19 @@ templateFile:
     untitled: 未命名
   tips:
     disableYamlToFormReason: '源码文件中，{0}，请继续使用源码模式编辑模板或修改再尝试'
+    disableYamlToFormReasonHelm: Helm模板暂不支持表单模式
     preKind: 上一个类型
     nextKind: 下一个类型
     bookmark: 收藏文件夹
     unbookmark: 取消收藏
     uploadTips: '支持.tgz, .tar.gz类型压缩包，文件小于{0}M'
     createSpace: 新建文件夹
+    helmdesc: 当前文件已升级为 Helm 模板，保存后将不再支持切换回非 Helm 模板。
   tag:
     draft: 草稿
     baseOn: 基于
     latestUpdate: 最新更新
+    helm: Helm 模板
 templateSet:
   title:
     set: 模板集

@@ -1,6 +1,12 @@
 <template>
   <div class="bg-[#fff] h-full overflow-y-auto overflow-x-hidden">
+    <bcs-exception
+      type="empty"
+      scene="part"
+      v-if="list.length === 0">
+    </bcs-exception>
     <div
+      v-else
       :class="[
         'h-full py-[0 8px] border-r-[1px] border-solid bg-[#fff] w-[230px] pt-[12px]'
       ]">

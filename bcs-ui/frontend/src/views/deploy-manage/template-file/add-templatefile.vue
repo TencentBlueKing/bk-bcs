@@ -31,7 +31,9 @@
         is-add
         v-else-if="editMode === 'yaml'"
         :value="formData.content"
-        ref="yamlMode" />
+        ref="yamlMode"
+        render-mode="Simple"
+        @getUpgradeStatus="getUpgradeStatus" />
     </div>
     <!-- 转换异常提示 -->
     <bcs-dialog :show-footer="false" v-model="showErrorTipsDialog">
@@ -47,7 +49,8 @@
           {{ $t('templateFile.title.disableYamlToForm') }}
         </span>
         <div class="bg-[#F5F6FA] px-[16px] py-[12px] mt-[16px]">
-          {{ $t('templateFile.tips.disableYamlToFormReason', [reason]) }}
+          <span v-if="isHelm">{{ $t('templateFile.tips.disableYamlToFormReasonHelm', [reason]) }}</span>
+          <span v-else>{{ $t('templateFile.tips.disableYamlToFormReason', [reason]) }}</span>
         </div>
         <bcs-button theme="primary" class="mt-[16px]" @click="showErrorTipsDialog = false">
           {{ $t('generic.button.know') }}
@@ -200,6 +203,13 @@ async function handleSaveData() {
   if (!result) return;
   showVersionDialog.value = true;
 }
+
+// 是否升级为Helm 模板
+const isHelm = ref(false);
+function getUpgradeStatus(data) {
+  isHelm.value = data.isHelm;
+};
+
 async function handleCreateFile(versionData: Pick<ClusterResource.CreateTemplateMetadataReq, 'version'|'versionDescription'>) {
   // 设置版本信息
   formData.version = versionData.version;
@@ -207,10 +217,12 @@ async function handleCreateFile(versionData: Pick<ClusterResource.CreateTemplate
   const content = await handleGetReqData();
 
   creating.value = true;
+  const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.CreateTemplateMetadata({
     ...formData,
     $templateSpaceID: props.templateSpace,
     content,
+    ...params,
   }).then(() => true)
     .catch(() => false);
   creating.value = false;
@@ -232,9 +244,11 @@ async function handleSaveDraft() {
   formData.draftContent = await handleGetReqData();
 
   creating.value = true;
+  const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.CreateTemplateMetadata({
     ...formData,
     $templateSpaceID: props.templateSpace,
+    ...params,
   }).then(() => true)
     .catch(() => false);
   creating.value = false;
