@@ -532,7 +532,7 @@ func (t *TemplateAction) PreviewTemplateFile(ctx context.Context, req *clusterRe
 	}
 
 	// helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
-	content, errRender := renderTemplateForHelmMode(templates, req.GetValues())
+	content, errRender := renderTemplateForHelmMode(templates, req.GetValues(), req.GetVariables())
 	if errRender != nil {
 		return map[string]interface{}{"items": []string{}, "error": errRender.Error()}, nil
 	}
@@ -602,7 +602,7 @@ func (t *TemplateAction) DeployTemplateFile(ctx context.Context, req *clusterRes
 	}
 
 	// helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
-	content, errRender := renderTemplateForHelmMode(templates, req.GetValues())
+	content, errRender := renderTemplateForHelmMode(templates, req.GetValues(), req.GetVariables())
 	if errRender != nil {
 		return map[string]interface{}{"items": []string{}, "error": errRender.Error()}, nil
 	}
@@ -679,7 +679,10 @@ func (t *TemplateAction) renderTemplates(ctx context.Context, templates []entity
 	vars map[string]string, ns string) ([]map[string]interface{}, error) {
 	manifests := make([]map[string]interface{}, 0)
 	for i := range templates {
-		templates[i].Content = replaceTemplateFileVar(templates[i].Content, vars)
+		// helm模式的已经在renderTemplateForHelmMode转过了
+		if templates[i].RenderMode != string(constants.HelmRenderMode) {
+			templates[i].Content = replaceTemplateFileVar(templates[i].Content, vars)
+		}
 		mm := parser.SplitManifests(templates[i].Content)
 		for _, v := range mm {
 			manifest := map[string]interface{}{}

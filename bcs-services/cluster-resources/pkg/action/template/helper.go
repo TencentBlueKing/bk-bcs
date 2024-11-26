@@ -106,10 +106,9 @@ func parseTemplateFileVar(template string) []string {
 		if match == nil || len(match) < 2 {
 			continue
 		}
-		if match[1] == "" {
-			continue
+		if strings.HasPrefix(match[1], ".Values.") {
+			vars = append(vars, strings.TrimSpace(match[1]))
 		}
-		vars = append(vars, strings.TrimSpace(match[1]))
 	}
 	vars = slice.RemoveDuplicateValues(vars)
 	return vars
@@ -282,7 +281,8 @@ func validAndFillChart(cht *chart.Chart, value string) (map[string]string, error
 }
 
 // helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
-func renderTemplateForHelmMode(td []entity.TemplateDeploy, value string) (map[string]string, error) {
+func renderTemplateForHelmMode(
+	td []entity.TemplateDeploy, value string, variables map[string]string) (map[string]string, error) {
 	cht := chart.Chart{
 		Raw:       []*chart.File{},
 		Metadata:  &chart.Metadata{},
@@ -292,6 +292,8 @@ func renderTemplateForHelmMode(td []entity.TemplateDeploy, value string) (map[st
 	for _, v := range td {
 		// helm 模式才转
 		if v.RenderMode == string(constants.HelmRenderMode) {
+			// 先填充来自variable的变量
+			v.Content = replaceTemplateFileVar(v.Content, variables)
 			cht.Templates = append(cht.Templates, &chart.File{
 				Name: path.Join(v.TemplateSpace, v.TemplateName),
 				Data: []byte(v.Content),
