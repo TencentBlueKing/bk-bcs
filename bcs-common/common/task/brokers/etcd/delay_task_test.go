@@ -31,18 +31,24 @@ func TestMakeDelayTask(t *testing.T) {
 	}{
 		{
 			name:    "delayed_task1",
-			input:   "/machinery/v2/broker/delayed_tasks/eta-0/machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
+			input:   "/machinery/v2/broker/delayed_tasks/eta-1/machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
 			taskKey: "machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
-			eta:     time.UnixMilli(0),
+			eta:     time.UnixMilli(1),
 		},
 		{
-			name:    "delayed_task1",
+			name:    "delayed_task2",
 			input:   "/machinery/v2/broker/delayed_tasks/eta-0/machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
 			taskKey: "machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
 			eta:     time.UnixMilli(0),
 		},
 		{
 			name:    "delayed_task3",
+			input:   "/machinery/v2/broker/delayed_tasks/eta-1732356480593/machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
+			taskKey: "machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
+			eta:     time.UnixMilli(1732356480593),
+		},
+		{
+			name:    "delayed_task4",
 			input:   "/machinery/v2/broker/delayed_tasks/eta-1732356480583/machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
 			taskKey: "machinery_tasks/d30986b4-6634-4013-bf56-88c0463450c2-test-0",
 			eta:     time.UnixMilli(1732356480583),
@@ -54,7 +60,6 @@ func TestMakeDelayTask(t *testing.T) {
 			kv := &mvccpb.KeyValue{Key: []byte(tt.input)}
 			task, err := makeDelayTask(kv)
 			require.NoError(t, err)
-
 			assert.Equal(t, tt.input, task.key)
 			assert.Equal(t, tt.taskKey, task.taskKey)
 			assert.Equal(t, tt.eta, task.eta)

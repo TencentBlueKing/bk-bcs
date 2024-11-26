@@ -203,6 +203,10 @@ func (b *etcdBroker) handleDelayTask(ctx context.Context) {
 		return taskList[i].eta.Before(taskList[j].eta)
 	})
 
+	// 异步任务随时可能插入, 最多处理1分钟后重新获取任务列表(aka 异步任务到期后, 最多延迟1分钟放到pending队列)
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	for _, task := range taskList {
 		// 超时控制
 		select {
