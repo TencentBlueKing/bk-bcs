@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/dustin/go-humanize"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
@@ -112,7 +113,7 @@ func (b *bkrepoStorage) IsExist(ctx context.Context, filePath string) (bool, err
 }
 
 // ListFile list of files under a bkRepo folder
-func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
+func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]FileContent, error) {
 	// 节点详情 https://github.com/TencentBlueKing/bk-repo/blob/master/docs/apidoc/node/node.md
 	// GET /repository/api/node/page/{projectId}/{repoName}/{fullPath}
 	// 目前一天最多一千条，pageSize限制为1000条
@@ -120,7 +121,7 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 		config.G.Repository.Bkrepo.Endpoint, config.G.Repository.Bkrepo.Project, config.G.Repository.Bkrepo.Repo,
 		folderName)
 
-	files := make([]string, 0)
+	var files []FileContent
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return files, err
@@ -143,7 +144,10 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]stri
 
 	for _, record := range listResult.Data.Records {
 		if !record.Folder {
-			files = append(files, record.Name)
+			files = append(files, FileContent{
+				FileName:      record.Name,
+				ProcessedSize: humanize.Bytes(uint64(record.Size)),
+			})
 		}
 	}
 	return files, nil
