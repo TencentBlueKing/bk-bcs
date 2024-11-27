@@ -17,10 +17,33 @@
     <div id="file">
         {{range $k,$v:=.file_names}}
         <ul>
-            <li><a href="{{ $.SITE_STATIC_URL }}/replay/{{ $.folder_name }}/{{$v}}" target="_blank" >{{$v}}</a></li>
+            <li class="row">
+                <a class="col" href="{{ $.SITE_STATIC_URL }}/replay/{{ $.folder_name }}/{{$v.FileName}}" target="_blank" >
+                    {{$v.FileName}}
+                </a>
+                <span class="size">{{$v.Size}}</span>
+            </li>
         </ul>
         {{end}}
     </div>
 
 </body>
+<style>
+    .row {
+        display: flex;
+        align-items: center;
+    }
+    .col {
+        min-width: 640px;
+        max-width: 640px;
+        display: inline-block;
+    }
+    .size {
+        min-width: 130px;
+        max-width: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: end;
+    }
+</style>
 </html>

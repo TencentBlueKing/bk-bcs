@@ -23,7 +23,7 @@ import (
 type Provider interface {
 	UploadFile(ctx context.Context, localFile, filePath string) error
 	UploadFileByReader(ctx context.Context, r io.Reader, filePath string) error
-	ListFile(ctx context.Context, folderName string) ([]string, error)
+	ListFile(ctx context.Context, folderName string) ([]FileContent, error)
 	ListFolders(ctx context.Context, folderName string) ([]string, error)
 	DeleteFolders(ctx context.Context, folderName string) error
 	IsExist(ctx context.Context, filePath string) (bool, error)
@@ -41,5 +41,34 @@ func NewProvider(providerType string) (Provider, error) {
 		return nil, fmt.Errorf("repo provider is required")
 	default:
 		return nil, fmt.Errorf("repo provider %s is not supported", providerType)
+	}
+}
+
+// FileContent repo file content
+type FileContent struct {
+	FileName string
+	Size     string
+}
+
+func formatBytes(size int64) string {
+	const (
+		_        = iota
+		KB int64 = 1 << (10 * iota)
+		MB
+		GB
+		TB
+	)
+
+	switch {
+	case size >= TB:
+		return fmt.Sprintf("%.2f TB", float64(size)/float64(TB))
+	case size >= GB:
+		return fmt.Sprintf("%.2f GB", float64(size)/float64(GB))
+	case size >= MB:
+		return fmt.Sprintf("%.2f MB", float64(size)/float64(MB))
+	case size >= KB:
+		return fmt.Sprintf("%.2f KB", float64(size)/float64(KB))
+	default:
+		return fmt.Sprintf("%d B", size)
 	}
 }
