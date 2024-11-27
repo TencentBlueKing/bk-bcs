@@ -55,6 +55,7 @@ var (
 	mongoPwd    string
 	mongoDBName string
 	initProject bool
+	migrateCC   bool
 
 	ccdb  *gorm.DB
 	model store.ProjectModel
@@ -97,45 +98,10 @@ func main() {
 		return
 	}
 
-	ccProjects := fetchBCSCCData()
-	var totalCount, insertCount, updateCount int
-	fmt.Printf("total projects length in cc: %d\n", len(ccProjects))
-	projects, _, err := model.ListProjects(context.Background(), operator.EmptyCondition, &page.Pagination{All: true})
-	if err != nil {
-		fmt.Printf("list projects in bcs db failed, err: %s\n", err.Error())
-		return
+	if migrateCC {
+		migrateCCData()
 	}
-	projectsMap := map[string]pm.Project{}
-	fmt.Printf("total projects length in bcs: %d\n", len(projects))
-	for _, project := range projects {
-		projectsMap[project.ProjectID] = project
-	}
-	for _, ccProject := range ccProjects {
-		project, exists := projectsMap[ccProject.ProjectID]
-		if !exists {
-			if err := insertProject(ccProject); err != nil {
-				fmt.Printf("insert project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
-				return
-			}
-			insertCount++
-			fmt.Printf("insert project %s success, count %d\n", ccProject.ProjectID, insertCount)
-			continue
-		}
-		if checkUpdate(ccProject, project) {
-			if err := updateProject(ccProject, project); err != nil {
-				fmt.Printf("update project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
-				return
-			}
-			updateCount++
-			fmt.Printf("update project %s success, count %d\n", ccProject.ProjectID, updateCount)
-		}
-		totalCount++
-		if totalCount%1000 == 0 {
-			fmt.Printf("[%s] checked projects num: %d\n", time.Now().Format(time.RFC3339), totalCount)
-		}
-	}
-	fmt.Printf("[%s] migrate success! inserted %d projects, updated %d projects\n",
-		time.Now().Format(time.RFC3339), insertCount, updateCount)
+
 	if initProject {
 		fmt.Println("start init built-in project...")
 		if err := initBuiltInProject(); err != nil {
@@ -162,6 +128,8 @@ func parseFlags() {
 
 	// init built-in project
 	flag.BoolVar(&initProject, "init_project", false, "whether to init the built-in project")
+	// migrate cc data
+	flag.BoolVar(&migrateCC, "migrate_cc", false, "whether to migrate cc data")
 
 	flag.Parse()
 }
@@ -181,6 +149,9 @@ func initDB() error {
 	model = store.New(store.GetMongo())
 
 	// mysql
+	if !migrateCC {
+		return nil
+	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local", mysqlUser, mysqlPwd, mysqlHost,
 		mysqlPort, mysqlDBName)
 	db, err := gorm.Open("mysql", dsn)
@@ -201,6 +172,49 @@ func fetchBCSCCData() []BCSCCProjectData {
 	var p []BCSCCProjectData
 	ccdb.Table(mysqlTableName).Select("*").Scan(&p)
 	return p
+}
+
+// migrateCCData 迁移cc数据
+func migrateCCData() {
+	ccProjects := fetchBCSCCData()
+	var totalCount, insertCount, updateCount int
+	fmt.Printf("total projects length in cc: %d\n", len(ccProjects))
+	projects, _, err := model.ListProjects(context.Background(), operator.EmptyCondition, &page.Pagination{All: true})
+	if err != nil {
+		fmt.Printf("list projects in bcs db failed, err: %s\n", err.Error())
+		return
+	}
+	projectsMap := map[string]pm.Project{}
+	fmt.Printf("total projects length in bcs: %d\n", len(projects))
+	for _, project := range projects {
+		projectsMap[project.ProjectID] = project
+	}
+	for _, ccProject := range ccProjects {
+		totalCount++
+		if totalCount%1000 == 0 {
+			fmt.Printf("[%s] checked projects num: %d\n", time.Now().Format(time.RFC3339), totalCount)
+		}
+		project, exists := projectsMap[ccProject.ProjectID]
+		if !exists {
+			if err := insertProject(ccProject); err != nil {
+				fmt.Printf("insert project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
+				return
+			}
+			insertCount++
+			fmt.Printf("insert project %s success, count %d\n", ccProject.ProjectID, insertCount)
+			continue
+		}
+		if checkUpdate(ccProject, project) {
+			if err := updateProject(ccProject, project); err != nil {
+				fmt.Printf("update project %s failed, err: %s\n", ccProject.ProjectID, err.Error())
+				return
+			}
+			updateCount++
+			fmt.Printf("update project %s success, count %d\n", ccProject.ProjectID, updateCount)
+		}
+	}
+	fmt.Printf("[%s] migrate success! inserted %d projects, updated %d projects\n",
+		time.Now().Format(time.RFC3339), insertCount, updateCount)
 }
 
 // upsertInitProject 初始化集群配置，项目ID / Code 固定
