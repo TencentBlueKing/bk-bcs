@@ -61,7 +61,7 @@ const curNsData = computed(() => nsData.value.filter(item => !!item));// 过滤�
 watch(() => props.value, () => {
   if (isEqual(props.value, curNsData.value)) return;
   if (!props.value?.length) {
-    nsData.value = nsList.value[0]?.name ? [nsList.value[0].name] : [];// 全部命名空间逻辑
+    nsData.value = [];// 全部命名空间逻辑
   } else {
     nsData.value = JSON.parse(JSON.stringify(props.value));
   }
@@ -90,10 +90,6 @@ const handleGetNsData = async () => {
   if (!exist) return;
   nsLoading.value = true;
   nsList.value = await getNamespaceData({ $clusterId: props.clusterId });
-  // nsData为空，初始化时默认第一个
-  if (!nsData.value[0] && nsList.value[0]?.name) {
-    nsData.value = [nsList.value[0].name];
-  }
   nsLoading.value = false;
 };
 

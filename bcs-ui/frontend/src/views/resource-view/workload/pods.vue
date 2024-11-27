@@ -158,14 +158,21 @@
                     :class="sourceTypeMap?.[handleGetExtData(row.metadata.uid, 'createSource')]?.iconClass"></i>
                 </bk-popover>
                 <span
-                  v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
-                  v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
+                  v-bk-overflow-tips="{ interactive: false }"
+                  class="bcs-ellipsis" v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
                   {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
                     handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
                 </span>
                 <span
-                  v-bk-overflow-tips="{ interactive: false }"
-                  class="bcs-ellipsis" v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+                  v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
+                  v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
+                  {{ handleGetExtData(row.metadata.uid, 'chart')
+                    ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
+                    : 'Helm' }}
+                </span>
+                <span
+                  v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
+                  v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
               </div>
             </template>
           </bk-table-column>

@@ -252,8 +252,10 @@ function refreshMenu() {
   handleGetMultiClusterResourcesCount();
 }
 watch(nonEmptyKind, () => {
+  localStorage.setItem('nonEmptyKind', nonEmptyKind.value.toString());
   reloadMenu();
-  if (nonEmptyKind.value) {
+  if (nonEmptyKind.value && !filterLeafMenus.value.find(item => activeMenu.value?.id === item.id)) {
+    // 选中第一个叶子菜单
     const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
     handleChangeMenu(menu);
   }
@@ -262,6 +264,8 @@ watch(nonEmptyKind, () => {
 const activeMenu = ref<Partial<IMenu>>({});
 // 所有叶子菜单项
 const leafMenus = computed(() => flatLeafMenus(menus.value));
+// 筛选过后所有叶子菜单项
+const filterLeafMenus = computed(() => flatLeafMenus(clusterResourceMenus.value));
 // 一级菜单
 const clusterResourceMenus = computed<IMenu[]>(() => {
   const data = menus.value.find(item => item.id === 'CLUSTERRESOURCE')?.children || [];
@@ -437,8 +441,12 @@ const handleGetMultiClusterResourcesCount = async () => {
   countMap.value = await getMultiClusterResourcesCount({
     ...curViewData.value,
   });
-  const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
-  handleChangeMenu(menu);
+  if (nonEmptyKind.value && !filterLeafMenus.value.find(item => activeMenu.value?.id === item.id)) {
+    const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
+    handleChangeMenu(menu);
+  }
+  // 重新渲染菜单
+  nonEmptyKind.value && reloadMenu();
 };
 
 /**
@@ -467,6 +475,13 @@ watch(curViewData, (newValue, oldValue) => {
 }, { deep: true });
 
 onBeforeMount(() => {
+  // 获取/设置nonEmptyKind
+  if (localStorage.getItem('nonEmptyKind')) {
+    nonEmptyKind.value = (localStorage.getItem('nonEmptyKind') === 'true');
+  } else {
+    localStorage.setItem('nonEmptyKind', nonEmptyKind.value.toString());
+  }
+
   bus.$on('set-resource-count', (kind: string, count: number) => {
     if (count === undefined) return;
 

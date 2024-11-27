@@ -130,7 +130,7 @@
             <i class="bcs-icon bcs-icon-helm"></i>
             <span class="text-[12px]">Helm</span>
           </bk-radio-button>
-          <bk-radio-button value="Client">
+          <bk-radio-button class="!ml-[-2px]" value="Client">
             <i class="bcs-icon bcs-icon-client"></i>
             <span class="text-[12px]">Client</span>
           </bk-radio-button>
