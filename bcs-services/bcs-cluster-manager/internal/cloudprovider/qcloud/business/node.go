@@ -402,8 +402,8 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 	)
 
 	idChunks := utils.SplitStringsChunks(ids, common.ClusterAddNodesLimit)
-	for _, v := range idChunks {
-		ins, err := checkCvmInstance(ctx, client, v, taskId)
+	for _, ids := range idChunks {
+		ins, err := checkCvmInstance(ctx, client, ids, taskId)
 		if err != nil {
 			return nil, err
 		}
