@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/tencentyun/cos-go-sdk-v5"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -80,8 +81,8 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]FileCon
 		for _, content := range v.Contents {
 			fn := strings.TrimPrefix(content.Key, folderName)
 			files = append(files, FileContent{
-				FileName: fn,
-				Size:     formatBytes(content.Size),
+				FileName:      fn,
+				ProcessedSize: humanize.Bytes(uint64(content.Size)),
 			})
 		}
 		isTruncated = v.IsTruncated // 是否还有数据

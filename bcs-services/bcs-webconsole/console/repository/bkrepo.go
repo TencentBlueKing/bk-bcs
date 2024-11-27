@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/dustin/go-humanize"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
@@ -144,8 +145,8 @@ func (b *bkrepoStorage) ListFile(ctx context.Context, folderName string) ([]File
 	for _, record := range listResult.Data.Records {
 		if !record.Folder {
 			files = append(files, FileContent{
-				FileName: record.Name,
-				Size:     formatBytes(int64(record.Size)),
+				FileName:      record.Name,
+				ProcessedSize: humanize.Bytes(uint64(record.Size)),
 			})
 		}
 	}
