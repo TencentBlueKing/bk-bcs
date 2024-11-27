@@ -51,7 +51,7 @@ func makeDelayTask(kv *mvccpb.KeyValue) (*delayTask, error) {
 	taskKey := fmt.Sprintf("%s/%s", parts[6], parts[7])
 
 	// eta-{ms} -> {ms}
-	etaStr := parts[5][4:]
+	etaStr := strings.TrimPrefix(parts[5], "eta-")
 
 	etaMilli, err := strconv.Atoi(etaStr)
 	if err != nil {
