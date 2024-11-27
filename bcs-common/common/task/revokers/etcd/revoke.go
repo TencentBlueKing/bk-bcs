@@ -125,7 +125,7 @@ func (b *etcdRevoker) listWatchRevoke(ctx context.Context) error {
 	wc := b.client.Watch(watchCtx, revokePrefix, watchOpts...)
 	for wresp := range wc {
 		if wresp.Err() != nil {
-			return watchCtx.Err()
+			return wresp.Err()
 		}
 
 		for _, ev := range wresp.Events {
