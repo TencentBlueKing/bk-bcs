@@ -1003,3 +1003,9 @@ func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 
 	return ""
 }
+
+// UpdateCloudKubeConfig update cloud kube config
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) (bool, error) {
+	return false, cloudprovider.ErrCloudNotImplemented
+}

@@ -1081,3 +1081,9 @@ func getSurplusCidrNum(mulList []string, step uint32) uint32 {
 
 	return step * uint32(surplusCidrCnt)
 }
+
+// UpdateCloudKubeConfig update cloud kube config
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) (bool, error) {
+	return business.UpdateCloudKubeConfig(kubeConfig, opt)
+}

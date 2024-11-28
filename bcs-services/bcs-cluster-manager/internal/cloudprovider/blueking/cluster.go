@@ -21,6 +21,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/blueking/business"
 )
 
 func init() {
@@ -287,4 +288,14 @@ func (c *Cluster) SwitchClusterNetwork(
 func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
 	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
+}
+
+// UpdateCloudKubeConfig update cloud kube config
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) (bool, error) {
+	if kubeConfig == "" {
+		return false, fmt.Errorf("kubeConfig is empty")
+	}
+
+	return business.UpdateCloudKubeConfig(kubeConfig, opt)
 }

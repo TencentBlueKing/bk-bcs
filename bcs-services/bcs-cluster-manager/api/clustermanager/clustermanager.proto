@@ -413,6 +413,17 @@ service ClusterManager {
       summary : "更新ClusterCredential详情"
     };
   }
+  
+  rpc UpdateClusterKubeConfig(UpdateClusterKubeConfigReq) returns (UpdateClusterKubeConfigResp) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clusters/{clusterID}/clustercredential"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新云kubeConfig"
+      summary : "更新平台集群对应云的kubeConfig"
+    };
+  }
 
   rpc DeleteClusterCredential(DeleteClusterCredentialReq)
       returns (DeleteClusterCredentialResp) {
@@ -5826,6 +5837,26 @@ message KubeConfigReq {
   },(validate.rules).string = {min_len :1}];
 }
 
+message UpdateClusterKubeConfigReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateClusterKubeConfigReq"
+      description : "更新平台集群对应云的kubeConfig"
+      required : [
+        "clusterID"
+      ]
+    }
+  };
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群ID"
+  }];
+  string kubeConfig = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kubeConfig",
+    description: "云集群kubeConfig文件"
+  },(validate.rules).string = {min_len :1}];
+}
+
 message KubeConfigConnectReq {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -5870,6 +5901,26 @@ message KubeConfigResp {
     json_schema : {
       title : "KubeConfigResp"
       description : "检测kubeConfig可用性结果返回"
+      required : [ "code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message", description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
+}
+
+message UpdateClusterKubeConfigResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateClusterKubeConfigResp"
+      description : "更新云集群kubeConfig结果返回"
       required : [ "code", "message", "data"]
     }
   };
