@@ -77,64 +77,64 @@ func (ua *UpdateKubeconfigAction) validate() error {
 	return nil
 }
 
-func (ca *UpdateKubeconfigAction) setResp(code uint32, msg string) {
-	ca.resp.Code = code
-	ca.resp.Message = msg
-	ca.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+func (ua *UpdateKubeconfigAction) setResp(code uint32, msg string) {
+	ua.resp.Code = code
+	ua.resp.Message = msg
+	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
 // Handle create cluster request
-func (ca *UpdateKubeconfigAction) Handle(ctx context.Context, req *cmproto.UpdateClusterKubeConfigReq, // nolint
+func (ua *UpdateKubeconfigAction) Handle(ctx context.Context, req *cmproto.UpdateClusterKubeConfigReq, // nolint
 	resp *cmproto.UpdateClusterKubeConfigResp) {
 	if req == nil || resp == nil {
 		blog.Errorf("create cluster failed, req or resp is empty")
 		return
 	}
-	ca.ctx = ctx
-	ca.req = req
-	ca.resp = resp
+	ua.ctx = ctx
+	ua.req = req
+	ua.resp = resp
 
 	// check node if exist in cloud_provider
-	if err := ca.validate(); err != nil {
-		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+	if err := ua.validate(); err != nil {
+		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
 
 	// Create Cluster by CloudProvider, underlay cloud cluster manager interface
-	provider, err := cloudprovider.GetClusterMgr(ca.cloud.CloudProvider)
+	provider, err := cloudprovider.GetClusterMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cluster %s relative cloud provider %s failed, %s",
-			req.ClusterID, ca.cloud.CloudProvider, err.Error())
-		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+			req.ClusterID, ua.cloud.CloudProvider, err.Error())
+		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 
 	cmOption, err := cloudprovider.GetCredential(&cloudprovider.CredentialData{
-		Cloud:     ca.cloud,
-		AccountID: ca.cluster.CloudAccountID,
+		Cloud:     ua.cloud,
+		AccountID: ua.cluster.CloudAccountID,
 	})
 	if err != nil {
 		blog.Errorf("get credential for cloud provider %s/%s failed, %s",
-			ca.cloud.CloudID, ca.cloud.CloudProvider, err.Error())
-		ca.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
+			ua.cloud.CloudID, ua.cloud.CloudProvider, err.Error())
+		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())
 		return
 	}
 
-	ok, err := provider.UpdateCloudKubeConfig(ca.req.KubeConfig,
+	ok, err := provider.UpdateCloudKubeConfig(ua.req.KubeConfig,
 		&cloudprovider.UpdateCloudKubeConfigOption{
-			Cluster:      ca.cluster,
+			Cluster:      ua.cluster,
 			CommonOption: *cmOption,
 		},
 	)
 	if err != nil {
-		ca.setResp(common.BcsErrClusterManagerCheckKubeConnErr, err.Error())
+		ua.setResp(common.BcsErrClusterManagerCheckKubeConnErr, err.Error())
 		return
 	}
 
 	if !ok {
-		ca.setResp(common.BcsErrClusterManagerCheckKubeConnErr, "update cluster kubeConfig failed")
+		ua.setResp(common.BcsErrClusterManagerCheckKubeConnErr, "update cluster kubeConfig failed")
 		return
 	}
 
-	ca.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

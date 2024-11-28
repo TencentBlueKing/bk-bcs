@@ -16,6 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
@@ -56,7 +57,10 @@ func UpdateCloudKubeConfig(kubeConfig string, opt *cloudprovider.UpdateCloudKube
 	}
 
 	opt.Cluster.KubeConfig = kubeRet
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), opt.Cluster)
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), opt.Cluster)
+	if err != nil {
+		return false, err
+	}
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 		YamlContent: kubeRet,

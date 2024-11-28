@@ -371,7 +371,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 }
 
 // GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // nolint
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 
 	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
@@ -476,9 +476,8 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].Total += uint32(num)
 				}
 			}
-			lock.Unlock()
 
-			return
+			lock.Unlock()
 		}(filterGroups[i])
 	}
 	barrier.Wait()

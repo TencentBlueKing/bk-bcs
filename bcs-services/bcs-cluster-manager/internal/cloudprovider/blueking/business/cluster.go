@@ -29,7 +29,10 @@ func UpdateCloudKubeConfig(kubeConfig string, opt *cloudprovider.UpdateCloudKube
 	}
 
 	opt.Cluster.KubeConfig = kubeRet
-	cloudprovider.GetStorageModel().UpdateCluster(context.Background(), opt.Cluster)
+	err = cloudprovider.GetStorageModel().UpdateCluster(context.Background(), opt.Cluster)
+	if err != nil {
+		return false, err
+	}
 
 	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
 		YamlContent: kubeRet,
