@@ -832,49 +832,56 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 	}
 
 	var (
-		resp           *api.AddExistedInstanceRsp
-		result         = &AddExistedInstanceResult{}
-		addInstanceReq *api.AddExistedInstanceReq
-		nodeIPs        = make([]string, 0)
+		result = &AddExistedInstanceResult{}
 	)
-	for i := range nodeIDs {
-		if ip, ok := idToIP[nodeIDs[i]]; ok {
-			nodeIPs = append(nodeIPs, ip)
+
+	idChunks := utils.SplitStringsChunks(nodeIDs, common.ClusterAddNodesLimit)
+	for _, ids := range idChunks {
+		var (
+			resp           *api.AddExistedInstanceRsp
+			addInstanceReq *api.AddExistedInstanceReq
+			nodeIPs        = make([]string, 0)
+		)
+
+		for i := range ids {
+			if ip, ok := idToIP[ids[i]]; ok {
+				nodeIPs = append(nodeIPs, ip)
+			}
 		}
-	}
 
-	// nodeGroup or nodeTemplate
-	if isNodeGroup {
-		addInstanceReq = GenerateNGAddExistedInstanceReq(info, nodeIDs, nodeIPs, passwd, operator, options)
-	} else {
-		addInstanceReq = GenerateNTAddExistedInstanceReq(info, nodeIDs, nodeIPs, passwd, operator, options)
-	}
+		// nodeGroup or nodeTemplate
+		if isNodeGroup {
+			addInstanceReq = GenerateNGAddExistedInstanceReq(info, ids, nodeIPs, passwd, operator, options)
+		} else {
+			addInstanceReq = GenerateNTAddExistedInstanceReq(info, ids, nodeIPs, passwd, operator, options)
+		}
 
-	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, *addInstanceReq)
+		blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster request[%+v]", taskID, *addInstanceReq)
 
-	err = retry.Do(func() error {
-		resp, err = tkeCli.AddExistedInstancesToCluster(addInstanceReq)
+		err = retry.Do(func() error {
+			resp, err = tkeCli.AddExistedInstancesToCluster(addInstanceReq)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}, retry.Attempts(3))
 		if err != nil {
-			return err
+			blog.Errorf("AddNodesToCluster[%s] AddExistedInstancesToCluster failed: %v", taskID, err)
+			return nil, err
 		}
 
-		return nil
-	}, retry.Attempts(3))
-	if err != nil {
-		blog.Errorf("AddNodesToCluster[%s] AddExistedInstancesToCluster failed: %v", taskID, err)
-		return nil, err
-	}
+		if len(resp.SuccessInstanceIDs) > 0 {
+			result.SuccessNodes = resp.SuccessInstanceIDs
+		}
+		if len(resp.FailedInstanceIDs) > 0 || len(resp.TimeoutInstanceIDs) > 0 {
+			result.FailedNodes = append(result.FailedNodes, resp.TimeoutInstanceIDs...)
+			result.FailedNodes = append(result.FailedNodes, resp.FailedInstanceIDs...)
+		}
 
-	if len(resp.SuccessInstanceIDs) > 0 {
-		result.SuccessNodes = resp.SuccessInstanceIDs
+		blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
+			"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
 	}
-	if len(resp.FailedInstanceIDs) > 0 || len(resp.TimeoutInstanceIDs) > 0 {
-		result.FailedNodes = append(result.FailedNodes, resp.TimeoutInstanceIDs...)
-		result.FailedNodes = append(result.FailedNodes, resp.FailedInstanceIDs...)
-	}
-
-	blog.Infof("AddNodesToCluster[%s] AddExistedInstancesToCluster success[%v] failed[%v]"+
-		"reasons[%v]", taskID, result.SuccessNodes, result.FailedNodes, resp.FailedReasons)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		fmt.Sprintf("success [%v] failed [%v]", result.SuccessNodes, result.FailedNodes))
@@ -937,8 +944,8 @@ func CheckClusterDeletedNodes(ctx context.Context, info *cloudprovider.CloudDepe
 func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
 	instanceIDs []string) ([]string, []string, error) {
 	var (
-		addSuccessNodes = make([]string, 0)
-		addFailureNodes = make([]string, 0)
+		allAddSuccessNodes = make([]string, 0)
+		allAddFailureNodes = make([]string, 0)
 	)
 
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
@@ -950,88 +957,100 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		return nil, nil, err
 	}
 
-	// wait node group state to normal
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 12*time.Minute)
-	defer cancel()
+	idChunks := utils.SplitStringsChunks(instanceIDs, common.ClusterAddNodesLimit)
+	for _, ids := range idChunks {
+		var (
+			addSuccessNodes = make([]string, 0)
+			addFailureNodes = make([]string, 0)
+		)
 
-	// wait all nodes to be ready
-	err = loop.LoopDoFunc(timeCtx, func() error {
-		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
-			ClusterID:   info.Cluster.SystemID,
-			InstanceIDs: instanceIDs,
-		})
-		if errQuery != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
-			return nil
-		}
+		// wait node group state to normal
+		timeCtx, cancel := context.WithTimeout(context.TODO(), 12*time.Minute)
+		defer cancel()
 
-		index := 0
-		running, failure := make([]string, 0), make([]string, 0)
-		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
-			switch *ins.InstanceState {
-			case api.RunningInstanceTke.String():
-				running = append(running, *ins.InstanceId)
-				index++
-			case api.FailedInstanceTke.String():
-				failure = append(failure, *ins.InstanceId)
-				index++
-			default:
+		// wait all nodes to be ready
+		err = loop.LoopDoFunc(timeCtx, func() error {
+			instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
+				ClusterID:   info.Cluster.SystemID,
+				InstanceIDs: ids,
+			})
+			if errQuery != nil {
+				blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
+				return nil
 			}
-		}
 
-		if index == len(instanceIDs) {
+			index := 0
+			running, failure := make([]string, 0), make([]string, 0)
+			for _, ins := range instances {
+				blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
+				switch *ins.InstanceState {
+				case api.RunningInstanceTke.String():
+					running = append(running, *ins.InstanceId)
+					index++
+				case api.FailedInstanceTke.String():
+					failure = append(failure, *ins.InstanceId)
+					index++
+				default:
+				}
+			}
+
+			if index == len(ids) {
+				addSuccessNodes = running
+				addFailureNodes = failure
+				return loop.EndLoop
+			}
+
+			return nil
+		}, loop.LoopInterval(20*time.Second))
+		// other error
+		if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
+			return nil, nil, err
+		}
+		// timeout error
+		if errors.Is(err, context.DeadlineExceeded) {
+			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
+
+			running, failure := make([]string, 0), make([]string, 0)
+			instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
+				ClusterID:   info.Cluster.SystemID,
+				InstanceIDs: ids,
+			})
+			if errQuery != nil {
+				blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
+				return nil, nil, errQuery
+			}
+			for _, ins := range instances {
+				blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
+				switch *ins.InstanceState {
+				case api.RunningInstanceTke.String():
+					running = append(running, *ins.InstanceId)
+				default:
+					failure = append(failure, *ins.InstanceId)
+				}
+			}
 			addSuccessNodes = running
 			addFailureNodes = failure
-			return loop.EndLoop
 		}
 
-		return nil
-	}, loop.LoopInterval(20*time.Second))
-	// other error
-	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
-		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
-		return nil, nil, err
-	}
-	// timeout error
-	if errors.Is(err, context.DeadlineExceeded) {
-		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
+		allAddSuccessNodes = append(allAddSuccessNodes, addSuccessNodes...)
+		allAddFailureNodes = append(allAddFailureNodes, addFailureNodes...)
 
-		running, failure := make([]string, 0), make([]string, 0)
-		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
-			ClusterID:   info.Cluster.SystemID,
-			InstanceIDs: instanceIDs,
-		})
-		if errQuery != nil {
-			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
-			return nil, nil, errQuery
-		}
-		for _, ins := range instances {
-			blog.Infof("checkClusterInstanceStatus[%s] instance[%s] status[%s]", taskID, *ins.InstanceId, *ins.InstanceState)
-			switch *ins.InstanceState {
-			case api.RunningInstanceTke.String():
-				running = append(running, *ins.InstanceId)
-			default:
-				failure = append(failure, *ins.InstanceId)
-			}
-		}
-		addSuccessNodes = running
-		addFailureNodes = failure
+		blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 	}
-	blog.Infof("checkClusterInstanceStatus[%s] success[%v] failure[%v]", taskID, addSuccessNodes, addFailureNodes)
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
-		fmt.Sprintf("success [%v] failure [%v]", addSuccessNodes, addFailureNodes))
+		fmt.Sprintf("success [%v] failure [%v]", allAddSuccessNodes, allAddFailureNodes))
 
 	// set cluster node status
-	for _, n := range addFailureNodes {
+	for _, n := range allAddFailureNodes {
 		err = cloudprovider.UpdateNodeStatus(false, n, common.StatusAddNodesFailed)
 		if err != nil {
 			blog.Errorf("checkClusterInstanceStatus[%s] UpdateNodeStatusByInstanceID[%s] failed: %v", taskID, n, err)
 		}
 	}
 
-	return addSuccessNodes, addFailureNodes, nil
+	return allAddSuccessNodes, allAddFailureNodes, nil
 }
 
 // GetFailedNodesReason get add nodes failed reason

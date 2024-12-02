@@ -873,7 +873,12 @@ func (ua *AddNodesAction) validate() error {
 	}
 
 	// cluster add nodes limit at a time
-	if len(ua.req.Nodes) > common.ClusterAddNodesLimit {
+	limit := ua.cloud.ConfInfo.MaxWorkerNodeNum
+	if limit == 0 {
+		limit = common.ClusterAddNodesLimit
+	}
+
+	if len(ua.req.Nodes) > int(limit) {
 		errMsg := fmt.Errorf("add nodes failed: cluster[%s] add NodesLimit exceed %d",
 			ua.cluster.ClusterID, common.ClusterAddNodesLimit)
 		blog.Errorf(errMsg.Error())
