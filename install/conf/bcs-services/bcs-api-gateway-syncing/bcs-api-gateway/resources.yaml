@@ -288,6 +288,134 @@ paths:
           resourcePermissionRequired: false
         disabledStages: []
         descriptionEn:
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons:
+    get:
+      operationId: list_addons
+      description: 获取集群组件列表
+      tags:
+        - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+    post:
+      operationId: install_addons
+      description: 安装集群组件
+      tags:
+        - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: post
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons
+          matchSubpath: false
+          timeout: 0
+          upstreams: { }
+          transformHeaders: { }
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+
+  /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}:
+    get:
+      operationId: get_addons_details
+      description: 获取集群组件详情
+      tags:
+        - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: get
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+    put:
+      operationId: update_addons
+      description: 更新集群组件
+      tags:
+        - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: put
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
+    delete:
+      operationId: uninstall_addons
+      description: 卸载集群组件
+      tags:
+        - bcs-helm-manager
+      responses:
+        default:
+          description: ''
+      x-bk-apigateway-resource:
+        isPublic: true
+        allowApplyPermission: true
+        matchSubpath: false
+        backend:
+          type: HTTP
+          method: delete
+          path: /bcsapi/v4/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}
+          matchSubpath: false
+          timeout: 0
+          upstreams: {}
+          transformHeaders: {}
+        authConfig:
+          userVerifiedRequired: false
+        disabledStages:
+          - autotest
+        descriptionEn:
   /helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}:
     delete:
       operationId: uninstall_release
