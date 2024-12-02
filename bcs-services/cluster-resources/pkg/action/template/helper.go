@@ -92,13 +92,13 @@ func buildTemplateSetsAnnotation(templates []*clusterRes.TemplateID) string {
 func parseMultiTemplateFileVar(templates []entity.TemplateDeploy) []string {
 	vars := make([]string, 0)
 	for _, template := range templates {
-		vars = append(vars, parseTemplateFileVar(template.Content)...)
+		vars = append(vars, parseTemplateFileVar(template.Content, template.RenderMode)...)
 	}
 	return vars
 }
 
 // parseTemplateFileVar parse template file variables
-func parseTemplateFileVar(template string) []string {
+func parseTemplateFileVar(template, renderMode string) []string {
 	re := regexp.MustCompile(templateFileVarPattern)
 	vars := make([]string, 0)
 	matches := re.FindAllStringSubmatch(template, -1)
@@ -106,7 +106,12 @@ func parseTemplateFileVar(template string) []string {
 		if match == nil || len(match) < 2 {
 			continue
 		}
-		if strings.HasPrefix(match[1], ".Values.") {
+		if match[1] == "" {
+			continue
+		}
+		if renderMode != string(constants.HelmRenderMode) {
+			vars = append(vars, strings.TrimSpace(match[1]))
+		} else if strings.HasPrefix(match[1], ".Values.") {
 			vars = append(vars, strings.TrimSpace(match[1]))
 		}
 	}
