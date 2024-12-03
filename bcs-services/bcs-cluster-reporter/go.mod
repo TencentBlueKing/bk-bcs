@@ -12,7 +12,6 @@ replace (
 
 require (
 	github.com/PuerkitoBio/goquery v1.9.2
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240725124512-1f33a499f31d
 	github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager v0.0.0-20240913071335-8812bb30f497
 	github.com/beevik/ntp v1.4.1
 	github.com/containerd/containerd v1.7.11

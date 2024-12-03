@@ -152,6 +152,7 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 		AddPodLabel:           req.Rule.AddPodLabel,
 		ExtraLabels:           req.Rule.ExtraLabels,
 		LogRuleContainer:      []bklog.LogRuleContainer{req.Rule.LogRuleContainer},
+		Username:              c.Username,
 	}
 }
 
@@ -197,6 +198,7 @@ func (req *UpdateLogRuleReq) toBKLog(c *rest.Context, ruleName string) *bklog.Up
 		AddPodLabel:           req.Rule.AddPodLabel,
 		ExtraLabels:           req.Rule.ExtraLabels,
 		LogRuleContainer:      []bklog.LogRuleContainer{req.Rule.LogRuleContainer},
+		Username:              c.Username,
 	}
 }
 

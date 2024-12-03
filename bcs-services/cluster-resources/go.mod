@@ -1,6 +1,6 @@
 module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 
-go 1.20
+go 1.23
 
 replace (
 	github.com/chai2010/gettext-go => github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5
