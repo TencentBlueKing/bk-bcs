@@ -1245,6 +1245,16 @@ service ClusterManager {
       summary : "查询Node列表"
     };
   }
+  rpc ListCloudInstancesByPost(ListCloudInstancesRequest) returns (ListCloudInstancesResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clouds/{cloudID}/instances"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "通过 POST 查询各个云的节点列表以支持更长的查询条件"
+      summary : "查询Node列表（POST）"
+    };
+  }
   rpc GetCloudAccountType(GetCloudAccountTypeRequest) returns (GetCloudAccountTypeResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/accounttype"

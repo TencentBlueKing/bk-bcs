@@ -1524,6 +1524,45 @@
         "tags": [
           "ClusterManager"
         ]
+      },
+      "post": {
+        "summary": "查询Node列表（POST）",
+        "description": "通过 POST 查询各个云的节点列表以支持更长的查询条件",
+        "operationId": "ClusterManager_ListCloudInstancesByPost",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudInstancesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudInstancesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
       }
     },
     "/clustermanager/v1/clouds/{cloudID}/instancetypes": {
@@ -14448,6 +14487,33 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerListCloudInstancesRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云信息",
+          "title": "cloudID"
+        },
+        "region": {
+          "type": "string",
+          "description": "云地域信息",
+          "title": "region"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "云凭证ID, 通过指定的云账号信息获取",
+          "title": "accountID"
+        },
+        "ipList": {
+          "type": "string",
+          "description": "云节点的私有网络IP地址, 通过,隔开",
+          "title": "ipList"
+        }
+      },
+      "description": "查询各个云节点列表",
+      "title": "ListCloudInstancesRequest"
     },
     "clustermanagerListCloudInstancesResponse": {
       "type": "object",

@@ -160,6 +160,23 @@ func (cm *ClusterManager) ListCloudInstances(ctx context.Context,
 	return nil
 }
 
+// ListCloudInstancesByPost implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudInstancesByPost(ctx context.Context,
+	req *cmproto.ListCloudInstancesRequest, resp *cmproto.ListCloudInstancesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudresource.NewListCloudInstancesAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudInstancesByPost", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudInstancesByPost, req %v, resp.Code %d, resp.Message %s, resp.Data.Length: %v",
+		reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudInstancesByPost, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCloudOsImage implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudOsImage(ctx context.Context,
 	req *cmproto.ListCloudOsImageRequest, resp *cmproto.ListCloudOsImageResponse) error {
