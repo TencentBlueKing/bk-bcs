@@ -14,7 +14,10 @@
 package namespace
 
 import (
+	"encoding/json"
+
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 )
@@ -29,6 +32,23 @@ func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectC
 		nsList = append(nsList, ns)
 	}
 	return nsList
+}
+
+// FilterTableNamespaces filter shared table namespace
+func FilterTableNamespaces(namespaceList *metav1.Table, shared bool, projectCode string) (*metav1.Table, error) {
+	nsList := []metav1.TableRow{}
+	for _, ns := range namespaceList.Rows {
+		pom := metav1.PartialObjectMetadata{}
+		if err := json.Unmarshal(ns.Object.Raw, &pom); err != nil {
+			return namespaceList, err
+		}
+		if shared && pom.Annotations != nil && pom.Annotations[constant.AnnotationKeyProjectCode] != projectCode {
+			continue
+		}
+		nsList = append(nsList, ns)
+	}
+	namespaceList.Rows = nsList
+	return namespaceList, nil
 }
 
 // FilterOutVcluster filter out vcluster namespaces

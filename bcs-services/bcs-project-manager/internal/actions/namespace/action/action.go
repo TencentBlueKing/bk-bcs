@@ -16,6 +16,8 @@ package action
 import (
 	"context"
 
+	spb "google.golang.org/protobuf/types/known/structpb"
+
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -35,6 +37,8 @@ type NamespaceAction interface {
 	ListNamespaces(ctx context.Context, req *proto.ListNamespacesRequest, resp *proto.ListNamespacesResponse) error
 	ListNativeNamespaces(ctx context.Context,
 		req *proto.ListNativeNamespacesRequest, resp *proto.ListNativeNamespacesResponse) error
+	ListNativeNamespacesContent(ctx context.Context,
+		req *proto.ListNativeNamespacesContentRequest, resp *spb.Struct) error
 	DeleteNamespace(ctx context.Context, req *proto.DeleteNamespaceRequest, resp *proto.DeleteNamespaceResponse) error
 	DeleteNamespaceCallback(ctx context.Context,
 		req *proto.NamespaceCallbackRequest, resp *proto.NamespaceCallbackResponse) error

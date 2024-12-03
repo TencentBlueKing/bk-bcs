@@ -14,9 +14,14 @@ package shared
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 
+	spb "google.golang.org/protobuf/types/known/structpb"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
@@ -68,5 +73,62 @@ func (a *SharedNamespaceAction) ListNativeNamespaces(ctx context.Context,
 		retDatas = append(retDatas, retData)
 	}
 	resp.Data = retDatas
+	return nil
+}
+
+// ListNativeNamespacesContent implement for ListNativeNamespacesContent interface
+func (a *SharedNamespaceAction) ListNativeNamespacesContent(ctx context.Context,
+	req *proto.ListNativeNamespacesContentRequest, resp *spb.Struct) error {
+	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
+	if err != nil {
+		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+		return err
+	}
+	accept := common.GetAcceptType(ctx)
+	nsList, err := client.CoreV1().RESTClient().Get().Resource("namespaces").SetHeader("Accept", accept).DoRaw(ctx)
+	if err != nil {
+		return errorx.NewClusterErr(err.Error())
+	}
+
+	if req.GetProjectIDOrCode() != "-" {
+		project, errr := a.model.GetProject(context.TODO(), req.GetProjectIDOrCode())
+		if errr != nil {
+			logging.Error("get project from db failed, err: %s", errr.Error())
+			return errorx.NewDBErr(errr.Error())
+		}
+		// Table和json返回的结果不同
+		if strings.Contains(accept, "Table") {
+			mt := &metav1.Table{}
+			err = json.Unmarshal(nsList, mt)
+			if err != nil {
+				return errorx.NewInnerErr(err.Error())
+			}
+			mt, err = nsutils.FilterTableNamespaces(mt, true, project.ProjectCode)
+			if err != nil {
+				return errorx.NewInnerErr(err.Error())
+			}
+			nsList, err = json.Marshal(mt)
+			if err != nil {
+				return errorx.NewInnerErr(err.Error())
+			}
+
+		} else {
+			mt := &v1.NamespaceList{}
+			err = json.Unmarshal(nsList, mt)
+			if err != nil {
+				return errorx.NewInnerErr(err.Error())
+			}
+			mt.Items = nsutils.FilterNamespaces(mt, true, project.ProjectCode)
+			nsList, err = json.Marshal(mt)
+			if err != nil {
+				return errorx.NewInnerErr(err.Error())
+			}
+		}
+	}
+
+	err = resp.UnmarshalJSON(nsList)
+	if err != nil {
+		return errorx.NewInnerErr(err.Error())
+	}
 	return nil
 }

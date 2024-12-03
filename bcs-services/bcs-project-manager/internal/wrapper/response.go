@@ -48,8 +48,12 @@ func RenderResponse(rsp interface{}, requestID string, err error) error {
 	if v.Elem().FieldByName("RequestID").IsValid() {
 		v.Elem().FieldByName("RequestID").SetString(requestID)
 	}
-	v.Elem().FieldByName("Message").SetString(msg)
-	v.Elem().FieldByName("Code").SetUint(uint64(code))
+	if v.Elem().FieldByName("Message").IsValid() {
+		v.Elem().FieldByName("Message").SetString(msg)
+	}
+	if v.Elem().FieldByName("Code").IsValid() {
+		v.Elem().FieldByName("Code").SetUint(uint64(code))
+	}
 	if err == nil {
 		return nil
 	}
