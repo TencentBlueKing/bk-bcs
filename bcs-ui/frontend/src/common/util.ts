@@ -781,3 +781,27 @@ export function download(content, fileName) {
   document.body.removeChild(dom); // 下载完成移除元素
   window.URL.revokeObjectURL(url); // 释放掉 blob 对象
 }
+
+/**
+ * 格式化时间 - 最大单位 天
+ */
+export function takesTimeFormat(seconds: number | string) {
+  const sortList = [
+    { unit: 'd', calculate: 24 * 60 * 60 },
+    { unit: 'h', calculate: 60 * 60 },
+    { unit: 'm', calculate: 60 },
+    { unit: 's', calculate: 1 },
+  ];
+  let nonZero = false; // 非零开头
+  let remainders = parseInt(String(seconds), 10);
+  const arr = sortList.reduce<string[]>((arr, item) => {
+    const num = Math.floor(remainders / item.calculate);
+    remainders = remainders % item.calculate;
+    if (num || nonZero) {
+      arr.push(`${num}${item.unit}`);
+      nonZero = true;
+    }
+    return arr;
+  }, []);
+  return arr.join(' ') || 0;
+}
