@@ -920,4 +920,3 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 	return nil, nil
 }
-

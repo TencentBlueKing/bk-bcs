@@ -126,6 +126,23 @@ func (cm *ClusterManager) ListCloudInstanceTypes(ctx context.Context,
 	return nil
 }
 
+// ListCloudDiskTypes implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudDiskTypes(ctx context.Context,
+	req *cmproto.ListCloudDiskTypesRequest, resp *cmproto.ListCloudDiskTypesResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	fa := cloudresource.NewListDiskTypeAction(cm.model)
+	fa.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudInstanceTypes", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListCloudInstanceTypes, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCloudInstances implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCloudInstances(ctx context.Context,
 	req *cmproto.ListCloudInstancesRequest, resp *cmproto.ListCloudInstancesResponse) error {

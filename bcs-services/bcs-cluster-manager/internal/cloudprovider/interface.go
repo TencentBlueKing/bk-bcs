@@ -256,6 +256,8 @@ type NodeManager interface {
 	GetZoneList(opt *GetZoneListOption) ([]*proto.ZoneInfo, error)
 	// ListNodeInstanceType get node instance type list
 	ListNodeInstanceType(info InstanceInfo, opt *CommonOption) ([]*proto.InstanceType, error)
+	// ListDiskTypes get disk type list
+	ListDiskTypes(instanceTypes []string, zones []string, opt *CommonOption) (map[string]string, error)
 	// ListOsImage get osimage list
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 	// ListKeyPairs list ssh keyPairs
