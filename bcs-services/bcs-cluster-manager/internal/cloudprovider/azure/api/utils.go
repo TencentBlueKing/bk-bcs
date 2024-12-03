@@ -20,9 +20,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Azure/azure-sdk-for-go/profile/p20200901/resourcemanager/containerservice/armcontainerservice"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	armcontainerservicev3 "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -35,11 +36,11 @@ import (
 // bcs nodeGroup 转换为 aks agentPool
 type nodeGroupToPool struct {
 	group *proto.NodeGroup
-	pool  *armcontainerservice.AgentPool
+	pool  *armcontainerservicev3.AgentPool
 }
 
 // newNodeGroupToAgentPoolConverter create nodeGroupToPool
-func newNodeGroupToAgentPoolConverter(group *proto.NodeGroup, pool *armcontainerservice.AgentPool) *nodeGroupToPool {
+func newNodeGroupToAgentPoolConverter(group *proto.NodeGroup, pool *armcontainerservicev3.AgentPool) *nodeGroupToPool {
 	return &nodeGroupToPool{
 		group: group,
 		pool:  pool,
@@ -49,7 +50,7 @@ func newNodeGroupToAgentPoolConverter(group *proto.NodeGroup, pool *armcontainer
 // convert 转换
 func (c *nodeGroupToPool) convert() {
 	if c.pool.Properties == nil {
-		c.pool.Properties = new(armcontainerservice.ManagedClusterAgentPoolProfileProperties)
+		c.pool.Properties = new(armcontainerservicev3.ManagedClusterAgentPoolProfileProperties)
 	}
 	properties := c.pool.Properties
 	// 以下为必填参数
@@ -65,7 +66,7 @@ func (c *nodeGroupToPool) convert() {
 	// 设置节点池大小
 	properties.Count = to.Ptr(int32(c.group.AutoScaling.DesiredSize))
 	// 设置节点池为用户模式
-	properties.Mode = to.Ptr(armcontainerservice.AgentPoolModeUser)
+	properties.Mode = to.Ptr(armcontainerservicev3.AgentPoolModeUser)
 	// 设置Azure节点池的弹性伸缩
 	properties.EnableAutoScaling = to.Ptr(false)
 	// 是否分配公网IP
@@ -108,7 +109,7 @@ func (c *nodeGroupToPool) setScalingMode() {
 		return
 	}
 	found := false
-	for _, mode := range armcontainerservice.PossibleScaleDownModeValues() {
+	for _, mode := range armcontainerservicev3.PossibleScaleDownModeValues() {
 		if string(mode) == asg.ScalingMode {
 			found = true
 			break
@@ -117,19 +118,19 @@ func (c *nodeGroupToPool) setScalingMode() {
 	if !found {
 		return
 	}
-	c.pool.Properties.ScaleDownMode = to.Ptr(armcontainerservice.ScaleDownMode(asg.ScalingMode))
+	c.pool.Properties.ScaleDownMode = to.Ptr(armcontainerservicev3.ScaleDownMode(asg.ScalingMode))
 }
 
 // setOSDiskType 设置系统盘类型
 func (c *nodeGroupToPool) setOSDiskType() {
 	// 默认 使用托管类型(Managed)
-	c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskTypeManaged)
+	c.pool.Properties.OSDiskType = to.Ptr(armcontainerservicev3.OSDiskTypeManaged)
 	lc := c.group.LaunchTemplate
 	if lc.SystemDisk == nil || len(lc.SystemDisk.DiskType) == 0 {
 		return
 	}
 	found := false
-	for _, osDiskType := range armcontainerservice.PossibleOSDiskTypeValues() {
+	for _, osDiskType := range armcontainerservicev3.PossibleOSDiskTypeValues() {
 		if string(osDiskType) == lc.SystemDisk.DiskType {
 			found = true
 			break
@@ -138,7 +139,7 @@ func (c *nodeGroupToPool) setOSDiskType() {
 	if !found {
 		return
 	}
-	c.pool.Properties.OSDiskType = to.Ptr(armcontainerservice.OSDiskType(lc.SystemDisk.DiskType))
+	c.pool.Properties.OSDiskType = to.Ptr(armcontainerservicev3.OSDiskType(lc.SystemDisk.DiskType))
 }
 
 // setOSDiskSizeGB 设置系统盘大小
@@ -165,14 +166,14 @@ func (c *nodeGroupToPool) setOSDiskSizeGB() {
 func (c *nodeGroupToPool) setOSAndInstanceType() {
 	nodeOS := c.group.NodeOS
 	// 默认系统类型为linux
-	c.pool.Properties.OSType = to.Ptr(armcontainerservice.OSTypeLinux)
+	c.pool.Properties.OSType = to.Ptr(armcontainerservicev3.OSTypeLinux)
 	if strings.Contains(nodeOS, winTypeOS) {
-		c.pool.Properties.OSType = to.Ptr(armcontainerservice.OSTypeWindows)
+		c.pool.Properties.OSType = to.Ptr(armcontainerservicev3.OSTypeWindows)
 	}
 	// 默认OS为Ubuntu
-	c.pool.Properties.OSSKU = to.Ptr(armcontainerservice.OSSKUUbuntu)
+	c.pool.Properties.OSSKU = to.Ptr(armcontainerservicev3.OSSKUUbuntu)
 	if c.group.LaunchTemplate != nil && c.group.LaunchTemplate.ImageInfo != nil {
-		c.pool.Properties.OSSKU = to.Ptr(armcontainerservice.OSSKU(c.group.LaunchTemplate.ImageInfo.ImageName))
+		c.pool.Properties.OSSKU = to.Ptr(armcontainerservicev3.OSSKU(c.group.LaunchTemplate.ImageInfo.ImageName))
 	}
 	if c.group.LaunchTemplate != nil {
 		c.pool.Properties.VMSize = to.Ptr(c.group.LaunchTemplate.InstanceType)
@@ -306,14 +307,14 @@ func (c *nodeGroupToPool) regexpMaxPods(kp string) int32 {
 // poolToNodeGroup AKS agentPool 转换为 BCS	NodeGroup
 type poolToNodeGroup struct {
 	group      *proto.NodeGroup
-	pool       *armcontainerservice.AgentPool
-	properties *armcontainerservice.ManagedClusterAgentPoolProfileProperties
+	pool       *armcontainerservicev3.AgentPool
+	properties *armcontainerservicev3.ManagedClusterAgentPoolProfileProperties
 }
 
 // newPoolToNodeGroupConverter create poolToNodeGroup
-func newPoolToNodeGroupConverter(pool *armcontainerservice.AgentPool, group *proto.NodeGroup) *poolToNodeGroup {
+func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *proto.NodeGroup) *poolToNodeGroup {
 	if pool.Properties == nil {
-		pool.Properties = new(armcontainerservice.ManagedClusterAgentPoolProfileProperties)
+		pool.Properties = new(armcontainerservicev3.ManagedClusterAgentPoolProfileProperties)
 	}
 	return &poolToNodeGroup{
 		group:      group,
@@ -408,9 +409,9 @@ func (c *poolToNodeGroup) setScaleDownMode() {
 		return
 	}
 	switch *mode {
-	case armcontainerservice.ScaleDownModeDelete:
+	case armcontainerservicev3.ScaleDownModeDelete:
 		asg.ScalingMode = "CLASSIC_SCALING"
-	case armcontainerservice.ScaleDownModeDeallocate:
+	case armcontainerservicev3.ScaleDownModeDeallocate:
 		asg.ScalingMode = "WAKE_UP_STOPPED_SCALING"
 	}
 }
@@ -1496,12 +1497,12 @@ func SetImageReferenceNull(set *armcompute.VirtualMachineScaleSet) {
 }
 
 // SetAgentPoolFromNodeGroup 更新pool，只允许设置tag、vm、label、taint
-func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice.AgentPool) {
+func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservicev3.AgentPool) {
 	if group == nil || pool == nil {
 		return
 	}
 	if pool.Properties == nil {
-		pool.Properties = new(armcontainerservice.ManagedClusterAgentPoolProfileProperties)
+		pool.Properties = new(armcontainerservicev3.ManagedClusterAgentPoolProfileProperties)
 	}
 	pool.Properties.Tags = make(map[string]*string)
 	for k := range group.Tags {

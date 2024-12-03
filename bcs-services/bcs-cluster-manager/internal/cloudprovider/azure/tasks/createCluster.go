@@ -24,7 +24,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/containerservice/armcontainerservice/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork"
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
@@ -168,7 +168,7 @@ func createAKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 }
 
 // generateCreateClusterRequest generate create cluster request
-func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) (
+func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, groups []*proto.NodeGroup) ( // nolint
 	*armcontainerservice.ManagedCluster, error) {
 	cluster := info.Cluster
 	if cluster.NetworkSettings == nil {
@@ -240,11 +240,20 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			NetworkProfile: &armcontainerservice.NetworkProfile{
 				NetworkPlugin: to.Ptr(armcontainerservice.NetworkPluginAzure),
 				NetworkPolicy: to.Ptr(armcontainerservice.NetworkPolicyCalico),
-				PodCidr:       to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),                  // nolint
-				ServiceCidr:   to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
-				DNSServiceIP:  to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
-				ServiceCidrs:  []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
-				PodCidrs:      []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
+				NetworkPluginMode: func() *armcontainerservice.NetworkPluginMode {
+					if cluster.ClusterAdvanceSettings.NetworkType == common.AzureCniOverlay {
+						// 使用azure cni overlay插件
+						return to.Ptr(armcontainerservice.NetworkPluginModeOverlay)
+					}
+
+					// 使用azure cni node subnet插件
+					return to.Ptr(armcontainerservice.NetworkPluginMode(""))
+				}(),
+				PodCidr:      to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR),
+				ServiceCidr:  to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR),                  // nolint
+				DNSServiceIP: to.Ptr(genDNSServiceIP(cluster.NetworkSettings.ServiceIPv4CIDR)), // nolint
+				ServiceCidrs: []*string{to.Ptr(cluster.NetworkSettings.ServiceIPv4CIDR)},       // nolint
+				//PodCidrs:     []*string{to.Ptr(cluster.NetworkSettings.ClusterIPv4CIDR)},       // nolint
 			},
 			ServicePrincipalProfile: &armcontainerservice.ManagedClusterServicePrincipalProfile{
 				ClientID: to.Ptr(info.CmOption.Account.ClientID),     // nolint
