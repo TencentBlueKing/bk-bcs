@@ -751,6 +751,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudInstancesByPost",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instances"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetCloudAccountType",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
 			Method:  []string{"GET"},
@@ -1050,6 +1056,7 @@ type ClusterManagerService interface {
 	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...client.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
+	ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
 	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
@@ -2299,6 +2306,16 @@ func (c *clusterManagerService) ListCloudInstances(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudInstancesByPost", in)
+	out := new(ListCloudInstancesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudAccountType", in)
 	out := new(GetCloudAccountTypeResponse)
@@ -2704,6 +2721,7 @@ type ClusterManagerHandler interface {
 	ListCloudProjects(context.Context, *ListCloudProjectsRequest, *ListCloudProjectsResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
+	ListCloudInstancesByPost(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
 	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
@@ -2872,6 +2890,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
+		ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
@@ -3619,6 +3638,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudInstancesByPost",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instances"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetCloudAccountType",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
 		Method:  []string{"GET"},
@@ -4261,6 +4286,10 @@ func (h *clusterManagerHandler) ListCloudOsImage(ctx context.Context, in *ListCl
 
 func (h *clusterManagerHandler) ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error {
 	return h.ClusterManagerHandler.ListCloudInstances(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error {
+	return h.ClusterManagerHandler.ListCloudInstancesByPost(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error {
