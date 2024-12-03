@@ -28,7 +28,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/tasks"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -270,6 +272,7 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 	return updateClusterInfo(cloudID, opt)
 }
 
+// getCloudCluster get tke cloud cluster
 func getCloudCluster(cloudID string, opt *cloudprovider.CommonOption) (*tke.Cluster, error) {
 	cli, err := api.NewTkeClient(opt)
 	if err != nil {
@@ -329,6 +332,7 @@ func checkIfWhiteImageOsNames(opt *cloudprovider.ClusterGroupOption) bool {
 	return utils.StringInSlice(osName, utils.WhiteImageOsName)
 }
 
+// clusterSupportNodeNum cluster support node num
 func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32, uint32, uint32) {
 	var (
 		ipNum          uint32
@@ -366,6 +370,7 @@ func clusterSupportNodeNum(tkeCls *tke.Cluster, cluster *proto.Cluster) (uint32,
 	return uint32(clusterNodeNum), uint32(maxClusterNodeNum) - uint32(clusterNodeNum), uint32(surplusNodeNum)
 }
 
+// updateClusterInfo update cluster info
 func updateClusterInfo(cloudID string, opt *cloudprovider.GetClusterOption) (*proto.Cluster, error) {
 	cls, err := getCloudCluster(cloudID, &opt.CommonOption)
 	if err != nil {
@@ -450,6 +455,7 @@ func (c *Cluster) ListCluster(opt *cloudprovider.ListClusterOption) ([]*proto.Cl
 	return transTKEClusterToCloudCluster(opt.Region, tkeClusters), nil
 }
 
+// transTKEClusterToCloudCluster trans cluster
 func transTKEClusterToCloudCluster(region string, clusters []*tke.Cluster) []*proto.CloudClusterInfo {
 	cloudClusterList := make([]*proto.CloudClusterInfo, 0)
 	for _, cls := range clusters {
@@ -551,6 +557,7 @@ func (c *Cluster) DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node
 	return task, nil
 }
 
+// skipGlobalRouterCIDR skip global router cidr
 func skipGlobalRouterCIDR(cls *proto.Cluster) bool {
 	if cls.ExtraInfo != nil {
 		v, ok := cls.ExtraInfo[api.GlobalRouteCIDRCheck]
@@ -756,6 +763,7 @@ func (c *Cluster) AppendCloudNodeInfo(ctx context.Context,
 	return nil
 }
 
+// mergeSubnetSource merge subnets
 func mergeSubnetSource(originSubs, newSubs []*proto.NewSubnet) []*proto.NewSubnet {
 	if originSubs == nil {
 		originSubs = make([]*proto.NewSubnet, 0)
@@ -836,17 +844,18 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 		return false, err
 	}
 
+	// GetClusterEndpointStatus endpoint status
 	status, err := client.GetClusterEndpointStatus(clusterID, isExtranet)
 	if err != nil {
 		return false, err
 	}
-
 	blog.Infof("cluster endpoint status: %s", status)
 
 	if !status.Created() {
 		return false, fmt.Errorf("cluster endpoint status is not created")
 	}
 
+	// get cluster kubeconfig
 	kubeConfig, err := client.GetTKEClusterKubeConfig(clusterID, isExtranet)
 	if err != nil {
 		return false, err
@@ -868,6 +877,7 @@ func (c *Cluster) CheckClusterEndpointStatus(clusterID string, isExtranet bool,
 // CheckIfGetNodesFromCluster check cluster if can get nodes from k8s
 func (c *Cluster) CheckIfGetNodesFromCluster(ctx context.Context, cluster *proto.Cluster,
 	nodes []*proto.ClusterNode) bool {
+	// managed cluster
 	if cluster.ManageType == icommon.ClusterManageTypeManaged && !utils.ExistRunningNodes(nodes) {
 		blog.Infof("CheckIfGetNodesFromCluster[%s] successful", cluster.ClusterID)
 		return false
@@ -986,6 +996,46 @@ func (c *Cluster) CheckClusterNetworkStatus(clusterId string,
 	return true, nil
 }
 
+// UpdateCloudKubeConfig update cluster kubeconfig to clustercredential
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) error {
+	if kubeConfig == "" {
+		// 开启admin权限, 并生成kubeconfig
+		clusterKube, connectKube, err := tasks.OpenClusterAdminKubeConfig(
+			context.Background(), &cloudprovider.CloudDependBasicInfo{
+				Cluster:  opt.Cluster,
+				CmOption: &opt.CommonOption,
+			})
+		if err != nil {
+			return err
+		}
+		blog.Infof("UpdateCloudKubeConfig[%s] openClusterAdminKubeConfig[%s] [%s] success",
+			opt.Cluster.ClusterID, clusterKube, connectKube)
+
+		kubeBytes, err := base64.StdEncoding.DecodeString(clusterKube)
+		if err != nil {
+			return err
+		}
+		kubeConfig = string(kubeBytes)
+	}
+
+	// update cluster credential
+	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		YamlContent: kubeConfig,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = cloudprovider.UpdateClusterCredentialByConfig(opt.Cluster.ClusterID, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// getClusterCidrAvailableIPNum get global router ip num
 func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, uint32, error) {
 	return business.GetClusterGrIPSurplus(option, clusterId, tkeId)
 }
@@ -1031,6 +1081,7 @@ func autoScaleClusterCidr(option cloudprovider.CommonOption, cls *proto.Cluster,
 	return business.AddGrCidrsToCluster(&option, cls.GetVpcID(), cls, maskIPNum, nil)
 }
 
+// getClusterCidrStep get cluster cidr step
 func getClusterCidrStep(cls *proto.Cluster) uint32 {
 	defaultCidrStep := cls.NetworkSettings.CidrStep
 
@@ -1047,6 +1098,7 @@ func getClusterCidrStep(cls *proto.Cluster) uint32 {
 	return defaultCidrStep
 }
 
+// getTkeClusterNetworkType get tke cluster networkType
 func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 	property := *cluster.Property
 
@@ -1066,6 +1118,7 @@ func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 	return ""
 }
 
+// getSurplusCidrList xxx
 func getSurplusCidrList(mulList []string, step uint32) []uint32 {
 	cidrList := make([]uint32, 0)
 
@@ -1076,6 +1129,7 @@ func getSurplusCidrList(mulList []string, step uint32) []uint32 {
 	return cidrList
 }
 
+// getSurplusCidrNum xxx
 func getSurplusCidrNum(mulList []string, step uint32) uint32 {
 	surplusCidrCnt := utils.MultiClusterCIDRCnt - len(mulList)
 

@@ -173,14 +173,18 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	data.Cluster.Master = masterNodes
 	// data.Cluster.Status = icommon.StatusRunning
 
-	err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
-		Common:       data.CmOption,
-		ClusterVPCID: data.Cluster.VpcID,
-		ClusterID:    data.Cluster.ClusterID,
-	})
-	if err != nil {
-		return err
-	}
+	blog.Infof("cluster[%s] masterIPs[%+v] nodeIPs[%+v]", data.Cluster.GetClusterID(), masterIPs, nodeIPs)
+
+	/*
+		err = importClusterNodesToCM(context.Background(), nodeIPs, &cloudprovider.ListNodesOption{
+			Common:       data.CmOption,
+			ClusterVPCID: data.Cluster.VpcID,
+			ClusterID:    data.Cluster.ClusterID,
+		})
+		if err != nil {
+			return err
+		}
+	*/
 
 	return nil
 }

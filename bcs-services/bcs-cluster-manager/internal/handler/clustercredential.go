@@ -87,3 +87,19 @@ func (cm *ClusterManager) DeleteClusterCredential(ctx context.Context,
 	blog.V(3).Infof("reqID: %s, action: deleteclustercredential, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// UpdateClusterKubeConfig implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) UpdateClusterKubeConfig(ctx context.Context,
+	req *cmproto.UpdateClusterKubeConfigReq, resp *cmproto.UpdateClusterKubeConfigResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := clustercredac.NewUpdateKubeconfigAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("UpdateCloudKubeConfig", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: UpdateCloudKubeConfig, req %v, resp %v", reqID, req, resp)
+	return nil
+}

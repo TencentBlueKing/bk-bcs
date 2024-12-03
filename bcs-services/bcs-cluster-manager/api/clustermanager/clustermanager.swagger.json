@@ -3674,6 +3674,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clusters/{clusterID}/clustercredential": {
+      "put": {
+        "summary": "更新平台集群对应云的kubeConfig",
+        "description": "更新云集群kubeConfig",
+        "operationId": "ClusterManager_UpdateClusterKubeConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterKubeConfigResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerUpdateClusterKubeConfigReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clusters/{clusterID}/module": {
       "put": {
         "summary": "更新集群master和node的转移模块信息",
@@ -10337,6 +10378,11 @@
           "$ref": "#/definitions/clustermanagerSharedClusterRanges",
           "description": "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)",
           "title": "sharedRanges"
+        },
+        "status": {
+          "type": "string",
+          "description": "创建集群导入集群数据时设置集群状态,默认情况下设置空即可,仅onlyCreateInfo为true时起作用",
+          "title": "status"
         }
       },
       "description": "创建集群请求，如果集群已经存在，直接报错。更新集群信息请使用Update接口",
@@ -19321,6 +19367,55 @@
         "data"
       ]
     },
+    "clustermanagerUpdateClusterKubeConfigReq": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "clusterID"
+        },
+        "kubeConfig": {
+          "type": "string",
+          "description": "云集群kubeConfig文件",
+          "title": "kubeConfig"
+        }
+      },
+      "description": "更新平台集群对应云的kubeConfig",
+      "title": "UpdateClusterKubeConfigReq",
+      "required": [
+        "clusterID"
+      ]
+    },
+    "clustermanagerUpdateClusterKubeConfigResp": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        }
+      },
+      "description": "更新云集群kubeConfig结果返回",
+      "title": "UpdateClusterKubeConfigResp",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
     "clustermanagerUpdateClusterModuleRequest": {
       "type": "object",
       "properties": {
@@ -19583,6 +19678,11 @@
           "$ref": "#/definitions/clustermanagerSharedClusterRanges",
           "description": "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)",
           "title": "sharedRanges"
+        },
+        "labels2": {
+          "$ref": "#/definitions/clustermanagerMapStruct",
+          "description": "集群的labels，用于携带额外的信息",
+          "title": "labels2"
         }
       },
       "description": "更新集群信息请求，该接口仅用于信息更新和修正，不会触发任何行为动作。如果需要执行自动化相关流程，请根据需要使用对应的接口",

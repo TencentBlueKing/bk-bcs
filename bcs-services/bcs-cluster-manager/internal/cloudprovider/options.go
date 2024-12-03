@@ -518,6 +518,13 @@ type CheckEndpointStatusOption struct {
 	ResourceGroupName string
 }
 
+// UpdateCloudKubeConfigOption update cloud kubeconfig option
+type UpdateCloudKubeConfigOption struct {
+	CommonOption
+	Cluster           *proto.Cluster
+	ResourceGroupName string
+}
+
 // CheckConflictInVpcCidrOption check conflict in vpc cidr Option
 type CheckConflictInVpcCidrOption struct {
 	CommonOption

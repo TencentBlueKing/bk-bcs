@@ -1093,7 +1093,7 @@ func RegisterManageClusterKubeConfigTask(taskID string, stepName string) error {
 		"register tke cluster endpoint kubeconfig successful")
 
 	// 开启admin权限, 并生成kubeconfig
-	clusterKube, connectKube, err := openClusterAdminKubeConfig(ctx, dependInfo)
+	clusterKube, connectKube, err := OpenClusterAdminKubeConfig(ctx, dependInfo)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("open cluster admin kubeconfig failed [%s]", err))
@@ -1205,8 +1205,8 @@ func getRandomSubnetByVpcID(ctx context.Context, info *cloudprovider.CloudDepend
 	return *availableSubnet[rand.Intn(len(availableSubnet))].SubnetId, nil // nolint
 }
 
-// openClusterAdminKubeConfig open account cluster admin perm
-func openClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, string, error) {
+// OpenClusterAdminKubeConfig open account cluster admin perm
+func OpenClusterAdminKubeConfig(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (string, string, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	tkeCli, err := api.NewTkeClient(info.CmOption)
