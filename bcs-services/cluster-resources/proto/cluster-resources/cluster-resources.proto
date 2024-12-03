@@ -1773,7 +1773,7 @@ service TemplateSet {
 	// 获取模板文件关联labels
 	rpc GetTemplateAssociateLabels(GetTemplateAssociateLabelsReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectCode}/template/labels/{id}"
+			get: "/clusterresources/v1/projects/{projectCode}/template/{id}/labels"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
 			description: "获取模板文件关联labels"

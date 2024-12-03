@@ -28547,7 +28547,7 @@ var (
 
 	pattern_TemplateSet_GetTemplateVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "versions", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_TemplateSet_GetTemplateAssociateLabels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "labels", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_TemplateSet_GetTemplateAssociateLabels_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "id", "labels"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_TemplateSet_GetTemplateContent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "template", "detail"}, "", runtime.AssumeColonVerbOpt(true)))
 

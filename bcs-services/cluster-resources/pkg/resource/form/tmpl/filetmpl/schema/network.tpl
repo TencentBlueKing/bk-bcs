@@ -425,7 +425,7 @@ selector:
         props:
            clearable: false
            remoteConfig:
-             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/labels/${$context.versionID}?kind=${$self.getValue('spec.selector.associatedResources')}` {{`}}`}}"
+             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/${$context.versionID}/labels?kind=${$self.getValue('spec.selector.associatedResources')}` {{`}}`}}"
       ui:reactions:
         - lifetime: init
           then:

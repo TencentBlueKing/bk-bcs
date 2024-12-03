@@ -4989,7 +4989,7 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "TemplateSet.GetTemplateAssociateLabels",
-			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/labels/{id}"},
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{id}/labels"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -5651,7 +5651,7 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.GetTemplateAssociateLabels",
-		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/labels/{id}"},
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/{id}/labels"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
