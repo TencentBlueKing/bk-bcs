@@ -23,7 +23,7 @@ import (
 type Provider interface {
 	UploadFile(ctx context.Context, localFile, filePath string) error
 	UploadFileByReader(ctx context.Context, r io.Reader, filePath string) error
-	ListFile(ctx context.Context, folderName string) ([]string, error)
+	ListFile(ctx context.Context, folderName string) ([]FileContent, error)
 	ListFolders(ctx context.Context, folderName string) ([]string, error)
 	DeleteFolders(ctx context.Context, folderName string) error
 	IsExist(ctx context.Context, filePath string) (bool, error)
@@ -42,4 +42,10 @@ func NewProvider(providerType string) (Provider, error) {
 	default:
 		return nil, fmt.Errorf("repo provider %s is not supported", providerType)
 	}
+}
+
+// FileContent repo file content
+type FileContent struct {
+	FileName      string
+	ProcessedSize string
 }

@@ -43,7 +43,7 @@ EOF
   yum install -y -q yum-utils
   yum-config-manager --add-repo "$ROOT_DIR/kubernetes.repo"
   yum clean all
-  yum makecache fast || yum makecache
+  yum makecache fast 2>/dev/null|| yum makecache
 }
 
 #######################################

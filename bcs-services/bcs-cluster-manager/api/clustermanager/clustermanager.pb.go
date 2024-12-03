@@ -39021,6 +39021,7 @@ type ClusterManagerClient interface {
 	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...grpc.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...grpc.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...grpc.CallOption) (*ListCloudInstancesResponse, error)
+	ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, opts ...grpc.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...grpc.CallOption) (*GetCloudAccountTypeResponse, error)
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...grpc.CallOption) (*GetCloudBandwidthPackagesResponse, error)
 	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...grpc.CallOption) (*ListCloudRuntimeInfoResponse, error)
@@ -40156,6 +40157,15 @@ func (c *clusterManagerClient) ListCloudInstances(ctx context.Context, in *ListC
 	return out, nil
 }
 
+func (c *clusterManagerClient) ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, opts ...grpc.CallOption) (*ListCloudInstancesResponse, error) {
+	out := new(ListCloudInstancesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudInstancesByPost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerClient) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...grpc.CallOption) (*GetCloudAccountTypeResponse, error) {
 	out := new(GetCloudAccountTypeResponse)
 	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCloudAccountType", in, out, opts...)
@@ -40534,6 +40544,7 @@ type ClusterManagerServer interface {
 	ListCloudProjects(context.Context, *ListCloudProjectsRequest) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest) (*ListCloudInstancesResponse, error)
+	ListCloudInstancesByPost(context.Context, *ListCloudInstancesRequest) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest) (*GetCloudAccountTypeResponse, error)
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest) (*GetCloudBandwidthPackagesResponse, error)
 	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest) (*ListCloudRuntimeInfoResponse, error)
@@ -40944,6 +40955,9 @@ func (*UnimplementedClusterManagerServer) ListCloudOsImage(ctx context.Context, 
 }
 func (*UnimplementedClusterManagerServer) ListCloudInstances(ctx context.Context, req *ListCloudInstancesRequest) (*ListCloudInstancesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudInstances not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudInstancesByPost(ctx context.Context, req *ListCloudInstancesRequest) (*ListCloudInstancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCloudInstancesByPost not implemented")
 }
 func (*UnimplementedClusterManagerServer) GetCloudAccountType(ctx context.Context, req *GetCloudAccountTypeRequest) (*GetCloudAccountTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloudAccountType not implemented")
@@ -43191,6 +43205,24 @@ func _ClusterManager_ListCloudInstances_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ClusterManager_ListCloudInstancesByPost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCloudInstancesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCloudInstancesByPost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudInstancesByPost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCloudInstancesByPost(ctx, req.(*ListCloudInstancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ClusterManager_GetCloudAccountType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetCloudAccountTypeRequest)
 	if err := dec(in); err != nil {
@@ -44160,6 +44192,10 @@ var _ClusterManager_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListCloudInstances",
 			Handler:    _ClusterManager_ListCloudInstances_Handler,
+		},
+		{
+			MethodName: "ListCloudInstancesByPost",
+			Handler:    _ClusterManager_ListCloudInstancesByPost_Handler,
 		},
 		{
 			MethodName: "GetCloudAccountType",

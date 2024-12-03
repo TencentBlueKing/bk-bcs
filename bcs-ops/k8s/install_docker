@@ -65,7 +65,7 @@ _yum_docker() {
   yum-config-manager --add-repo "${repo_file}"
   yum clean all
   [[ ! -f /etc/yum.repos.d/tlinux-docker-ce.repo ]] || mv /etc/yum.repos.d/tlinux-docker-ce.repo /etc/yum.repos.d/tlinux-docker-ce.repo.bak
-  yum makecache fast || yum makecache
+  yum makecache fast 2>/dev/null|| yum makecache
 
   local pkg_pat pkg_ver
   pkg_pat="$(sed -e 's/-ce-/\\\\.ce.*/g' -e 's/-/.*/g' \
