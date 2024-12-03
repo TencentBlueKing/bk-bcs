@@ -105,9 +105,9 @@ func (c Condition) String() string {
 }
 
 var (
-	and Condition = "AND"
-	or  Condition = "OR"
-	in  Condition = "IN"// nolint
+	and Condition = "AND" // nolint
+	or  Condition = "OR"  // nolint
+	in  Condition = "IN"  // nolint
 )
 
 // Page page
@@ -297,11 +297,11 @@ type HostDetailData struct {
 }
 
 const (
-	keyBizID          = "BsiId"
-	keySvrIP          = "SvrIp"
-	methodBusiness    = "Business"
-	methodServer      = "Server"
-	methodBusinessRaw = "BusinessRaw"
+	keyBizID          = "BsiId"       // nolint
+	keySvrIP          = "SvrIp"       // nolint
+	methodBusiness    = "Business"    // nolint
+	methodServer      = "Server"      // nolint
+	methodBusinessRaw = "BusinessRaw" // nolint
 )
 
 // BizInfo business id info
