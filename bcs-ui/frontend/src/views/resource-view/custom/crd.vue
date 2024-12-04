@@ -67,32 +67,9 @@
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <div class="flex items-center">
-              <bk-popover
-                class="size-[16px] mr-[4px]"
-                :content="sourceTypeMap?.[handleGetExtData(row.metadata.uid, 'createSource')]?.iconText"
-                :tippy-options="{ interactive: false }">
-                <i
-                  class="text-[14px] p-[1px]"
-                  :class="sourceTypeMap?.[handleGetExtData(row.metadata.uid, 'createSource')]?.iconClass"></i>
-              </bk-popover>
-              <span
-                v-bk-overflow-tips="{ interactive: false }"
-                class="bcs-ellipsis" v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
-                {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
-                  handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
-              </span>
-              <span
-                v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
-                v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
-                {{ handleGetExtData(row.metadata.uid, 'chart')
-                  ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
-                  : 'Helm' }}
-              </span>
-              <span
-                v-bk-overflow-tips="{ interactive: false }" class="bcs-ellipsis"
-                v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
-            </div>
+            <sourceTableCell
+              :row="row"
+              :source-type-map="sourceTypeMap" />
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -138,8 +115,9 @@
 <script lang="ts" setup>
 import yamljs from 'js-yaml';
 import { isEqual } from 'lodash';
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 
+import sourceTableCell from '../common/source-table-cell.vue';
 import useSearch from '../common/use-search';
 import { ISubscribeData } from '../common/use-subscribe';
 import useTableData from '../common/use-table-data';
@@ -302,6 +280,9 @@ const {
   searchSelectValue,
   searchSelectKey,
 } = useSearch();
+
+// 暴露方法
+provide('handleGetExtData', handleGetExtData);
 
 const { start, stop } = useInterval(() => handleGetTableData(false), 5000);
 onBeforeMount(() => {

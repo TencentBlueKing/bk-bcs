@@ -41,7 +41,7 @@ export default function () {
     if (tmpViewData) {
       // hack 过滤掉空字段（接口不能传一空数据）
       tmpViewData.filter = Object.keys(tmpViewData.filter || {}).reduce((pre, key) => {
-        const field = tmpViewData.filter;
+        const field = cloneDeep(tmpViewData.filter);
         if (isDeepEmpty(get(field, key))) return pre;
 
         if (key === 'labelSelector') {
