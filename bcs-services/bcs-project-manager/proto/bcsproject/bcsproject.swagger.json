@@ -1848,6 +1848,39 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectIDOrCode}/active": {
+      "get": {
+        "summary": "查询项目是否活跃",
+        "description": "查询项目是否活跃",
+        "operationId": "BCSProject_GetProjectActive",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/bcsprojectGetProjectActiveResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID或项目英文名",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "BCSProject"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces": {
       "get": {
         "summary": "获取原生命名空间内容",
@@ -2648,6 +2681,32 @@
           "$ref": "#/definitions/bcsprojectPerms",
           "description": "更多信息，主要是权限相关",
           "title": "web_annotations"
+        }
+      }
+    },
+    "bcsprojectGetProjectActiveResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/bcsprojectProjectActiveData",
+          "description": "返回可用业务列表",
+          "title": "data"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
         }
       }
     },
@@ -3752,6 +3811,17 @@
       },
       "description": "项目的基本信息",
       "title": "Project"
+    },
+    "bcsprojectProjectActiveData": {
+      "type": "object",
+      "properties": {
+        "isActive": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否活跃",
+          "title": "isActive"
+        }
+      }
     },
     "bcsprojectProjectQuota": {
       "type": "object",

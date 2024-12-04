@@ -119,6 +119,16 @@ service BCSProject {
       summary : "查询开启容器服务的项目列表用于IAM授权"
     };
   }
+
+  rpc GetProjectActive(GetProjectActiveRequest) returns (GetProjectActiveResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectIDOrCode}/active"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询项目是否活跃"
+      summary : "查询项目是否活跃"
+    };
+  }
 }
 
 message Project {
@@ -588,6 +598,45 @@ message ListProjectsForIAMResp{
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "request id",
     description: "请求 ID"
+  }];
+}
+
+message GetProjectActiveRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectActiveRequest"
+      description : "查询项目是否活跃"
+    }
+  };
+  string projectIDOrCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "projectIDOrCode",
+    description: "项目ID或项目英文名"
+  }];
+}
+
+message GetProjectActiveResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ProjectActiveData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回可用业务列表"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message ProjectActiveData {
+  bool isActive = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "isActive",
+    description: "是否活跃"
   }];
 }
 
