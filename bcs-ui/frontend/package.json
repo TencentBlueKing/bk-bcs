@@ -18,7 +18,7 @@
     "@blueking/login-modal": "^1.0.2",
     "@blueking/notice-component-vue2": "^2.0.5",
     "@blueking/platform-config": "^1.0.5",
-    "@blueking/task-log": "^0.0.4",
+    "@blueking/task-log": "^0.0.5",
     "@blueking/user-selector": "^1.0.9",
     "axios": "^1.7.7",
     "base-64": "^0.1.0",
