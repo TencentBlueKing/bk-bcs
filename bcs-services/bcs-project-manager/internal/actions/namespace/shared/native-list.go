@@ -90,45 +90,43 @@ func (a *SharedNamespaceAction) ListNativeNamespacesContent(ctx context.Context,
 		return errorx.NewClusterErr(err.Error())
 	}
 
-	if req.GetProjectIDOrCode() != "-" {
-		project, errr := a.model.GetProject(context.TODO(), req.GetProjectIDOrCode())
-		if errr != nil {
-			logging.Error("get project from db failed, err: %s", errr.Error())
-			return errorx.NewDBErr(errr.Error())
-		}
-		// Table和json返回的结果不同
-		if strings.Contains(accept, "Table") {
-			mt := &metav1.Table{}
-			err = json.Unmarshal(nsList, mt)
-			if err != nil {
-				return errorx.NewInnerErr(err.Error())
-			}
-			mt, err = nsutils.FilterTableNamespaces(mt, true, project.ProjectCode)
-			if err != nil {
-				return errorx.NewInnerErr(err.Error())
-			}
-			nsList, err = json.Marshal(mt)
-			if err != nil {
-				return errorx.NewInnerErr(err.Error())
-			}
-
-		} else {
-			mt := &v1.NamespaceList{}
-			err = json.Unmarshal(nsList, mt)
-			if err != nil {
-				return errorx.NewInnerErr(err.Error())
-			}
-			mt.Items = nsutils.FilterNamespaces(mt, true, project.ProjectCode)
-			nsList, err = json.Marshal(mt)
-			if err != nil {
-				return errorx.NewInnerErr(err.Error())
-			}
-		}
+	if req.GetProjectIDOrCode() == "-" {
+		return resp.UnmarshalJSON(nsList)
 	}
 
-	err = resp.UnmarshalJSON(nsList)
+	project, errr := a.model.GetProject(context.TODO(), req.GetProjectIDOrCode())
+	if errr != nil {
+		logging.Error("get project from db failed, err: %s", errr.Error())
+		return errorx.NewDBErr(errr.Error())
+	}
+	// Table和json返回的结果不同
+	if strings.Contains(accept, "Table") {
+		mt := &metav1.Table{}
+		err = json.Unmarshal(nsList, mt)
+		if err != nil {
+			return errorx.NewInnerErr(err.Error())
+		}
+		mt, err = nsutils.FilterTableNamespaces(mt, project.ProjectCode)
+		if err != nil {
+			return errorx.NewInnerErr(err.Error())
+		}
+		nsList, err = json.Marshal(mt)
+		if err != nil {
+			return errorx.NewInnerErr(err.Error())
+		}
+
+		return resp.UnmarshalJSON(nsList)
+	}
+
+	mt := &v1.NamespaceList{}
+	err = json.Unmarshal(nsList, mt)
 	if err != nil {
 		return errorx.NewInnerErr(err.Error())
 	}
-	return nil
+	mt.Items = nsutils.FilterNamespaces(mt, true, project.ProjectCode)
+	nsList, err = json.Marshal(mt)
+	if err != nil {
+		return errorx.NewInnerErr(err.Error())
+	}
+	return resp.UnmarshalJSON(nsList)
 }

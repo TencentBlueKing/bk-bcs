@@ -35,14 +35,14 @@ func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectC
 }
 
 // FilterTableNamespaces filter shared table namespace
-func FilterTableNamespaces(namespaceList *metav1.Table, shared bool, projectCode string) (*metav1.Table, error) {
+func FilterTableNamespaces(namespaceList *metav1.Table, projectCode string) (*metav1.Table, error) {
 	nsList := []metav1.TableRow{}
 	for _, ns := range namespaceList.Rows {
 		pom := metav1.PartialObjectMetadata{}
 		if err := json.Unmarshal(ns.Object.Raw, &pom); err != nil {
 			return namespaceList, err
 		}
-		if shared && pom.Annotations != nil && pom.Annotations[constant.AnnotationKeyProjectCode] != projectCode {
+		if pom.Annotations == nil || pom.Annotations[constant.AnnotationKeyProjectCode] != projectCode {
 			continue
 		}
 		nsList = append(nsList, ns)
