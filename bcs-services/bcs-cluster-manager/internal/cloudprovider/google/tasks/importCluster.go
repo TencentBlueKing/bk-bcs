@@ -207,8 +207,8 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 }
 
 // ImportClusterNodesToCM writes cluster nodes to DB
-func importClusterNodesToCM(
-	ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error {
+func importClusterNodesToCM( // nolint
+	ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error { // nolint
 
 	for _, v := range nodes {
 		nodeZone := ""
