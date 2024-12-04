@@ -309,7 +309,7 @@ func (c *Client) QueryHostInfoWithoutBiz(field string, values []string, page Pag
 
 	if !respData.Result {
 		blog.Errorf("call api QueryHostInfoWithoutBiz failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api QueryHostInfoWithoutBiz with url(%s) successfully", reqURL)
@@ -383,7 +383,7 @@ func (c *Client) FindHostTopoRelation(bizID int, page Page) (int, []HostTopoRela
 
 	if !respData.Result {
 		blog.Errorf("call api FindHostTopoRelation failed: %v", respData.Message)
-		return 0, nil, fmt.Errorf(respData.Message)
+		return 0, nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api FindHostTopoRelation with url(%s) successfully", reqURL)
@@ -436,7 +436,7 @@ func (c *Client) SearchCloudAreaByCloudID(cloudID int) (*SearchCloudAreaInfo, er
 
 	if !respData.Result {
 		blog.Errorf("call api SearchCloudAreaByCloudID failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 
 	// successfully request
@@ -490,7 +490,7 @@ func (c *Client) QueryHostByBizID(bizID int, page Page) (int, []HostData, error)
 
 	if !respData.Result {
 		blog.Errorf("call api QueryHostNumByBizID failed: %v", respData.Message)
-		return 0, nil, fmt.Errorf(respData.Message)
+		return 0, nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api QueryHostNumByBizID with url(%s) successfully", reqURL)
@@ -536,7 +536,7 @@ func (c *Client) FindHostBizRelations(hostID []int) ([]HostBizRelations, error) 
 
 	if !respData.Result {
 		blog.Errorf("call api FindHostBizRelations failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api FindHostBizRelations with url(%s) successfully", reqURL)
@@ -579,7 +579,7 @@ func (c *Client) TransHostToRecycleModule(bizID int, hostID []int) error {
 
 	if !respData.Result {
 		blog.Errorf("call api TransHostToRecycleModule failed: %v", respData.Message)
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api TransHostToRecycleModule with url(%s) successfully", reqURL)
@@ -623,7 +623,7 @@ func (c *Client) GetBizInternalModule(ctx context.Context, bizID int) (*BizInter
 	metrics.ReportLibRequestMetric("cmdb", "GetBizInternalModule", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 
 	return &respData.Data, nil
@@ -664,7 +664,7 @@ func (c *Client) TransHostAcrossBiz(hostInfo TransHostAcrossBizInfo) error {
 	metrics.ReportLibRequestMetric("cmdb", "TransHostAcrossBiz", "http", metrics.LibCallStatusOK, start)
 
 	if !respData.Result {
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 
 	return nil
@@ -707,7 +707,7 @@ func (c *Client) GetBusinessMaintainer(bizID int) (*BusinessData, error) {
 
 	if !respData.Result {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
@@ -756,7 +756,7 @@ func (c *Client) GetBS2IDByBizID(bizID int64) (int, error) {
 
 	if !respData.Result {
 		blog.Errorf("call api GetBS2IDByBizID failed: %v", respData.Message)
-		return 0, fmt.Errorf(respData.Message)
+		return 0, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api GetBS2IDByBizID with url(%s) successfully", reqURL)
@@ -1064,7 +1064,7 @@ func (c *Client) AddHostFromCmpy(svrIds []string, ips []string, assetIds []strin
 
 	if !respData.Result {
 		blog.Errorf("call api AddHostFromCmpy failed: %v", respData.Message)
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api AddHostFromCmpy with url(%s) successfully", reqURL)
@@ -1108,7 +1108,7 @@ func (c *Client) SyncHostInfoFromCmpy(bkCloudId int, bkHostIds []int64) error {
 
 	if !respData.Result {
 		blog.Errorf("call api SyncHostInfoFromCmpy failed: %v", respData.Message)
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 	blog.Infof("call api SyncHostInfoFromCmpy with url(%s) successfully", reqURL)
 

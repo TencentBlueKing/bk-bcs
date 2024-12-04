@@ -89,12 +89,9 @@ func (h *Handler) YAMLToForm(ctx context.Context, req *clusterRes.YAMLToFormReq,
 	for _, v := range manifests {
 		// 变量不能 yaml 解析，先替换为占位符
 		v = strings.ReplaceAll(v, ": "+YAMLVarMagic, ": "+YAMLVarMagicPlaceholder)
-		manifest := map[string]interface{}{}
-		// 检查yaml 内容格式
-		if err = checkYamlFormat(v); err != nil {
-			return err
-		}
-		if errr := yaml.Unmarshal([]byte(v), &manifest); errr != nil {
+		// yaml格式检查并获取manifest
+		manifest, errr := getManifestByYamlValid(v)
+		if errr != nil {
 			resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"resources": nil, "canTransform": false,
 				"message": errr.Error()})
 			return err
@@ -117,16 +114,16 @@ func (h *Handler) YAMLToForm(ctx context.Context, req *clusterRes.YAMLToFormReq,
 	return err
 }
 
-// 检查content yaml格式
-func checkYamlFormat(content string) error {
+// yaml格式检查并获取manifest
+func getManifestByYamlValid(content string) (map[string]interface{}, error) {
+	v := make(map[string]interface{}, 0)
 	if content == "" {
-		return nil
+		return v, nil
 	}
-	var v interface{}
 	decoder := yaml.NewDecoder(strings.NewReader(content))
 	err := decoder.Decode(&v)
 	if err != nil {
-		return err
+		return v, err
 	}
-	return nil
+	return v, nil
 }

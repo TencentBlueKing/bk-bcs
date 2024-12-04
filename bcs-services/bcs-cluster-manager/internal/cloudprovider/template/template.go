@@ -118,7 +118,7 @@ func (sopStep *BkSopsStepAction) BuildBkSopsStepAction(task *proto.Task, cluster
 				taskName = pluginName
 			}
 
-			if plugin.Params == nil || len(plugin.Params) == 0 {
+			if len(plugin.Params) == 0 {
 				continue
 			}
 
