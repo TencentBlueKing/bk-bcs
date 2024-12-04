@@ -31,7 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
-func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error {
+func importClusterNodesToCM(ctx context.Context, nodes []k8scorev1.Node, clusterID string) error { // nolint
 	for _, n := range nodes {
 		innerIP := ""
 		for _, v := range n.Status.Addresses {

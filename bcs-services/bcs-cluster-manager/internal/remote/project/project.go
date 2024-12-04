@@ -16,6 +16,7 @@ package project
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"time"
 
@@ -141,7 +142,7 @@ func (pm *ProManClient) GetProjectInfo(projectIdOrCode string, isCache bool) (*b
 
 	if resp.Code != 0 {
 		blog.Errorf("GetProjectInfo[%s] GetProject err: %v", projectIdOrCode, resp.GetMessage())
-		return nil, fmt.Errorf(resp.Message)
+		return nil, errors.New(resp.Message)
 	}
 
 	if isCache {

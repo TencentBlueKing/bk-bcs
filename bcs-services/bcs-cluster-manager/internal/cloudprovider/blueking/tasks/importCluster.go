@@ -189,7 +189,8 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 	return nil
 }
 
-func importClusterNodesToCM(ctx context.Context, ipList []types.NodeAddress, opt *cloudprovider.ListNodesOption) error {
+func importClusterNodesToCM(ctx context.Context, ipList []types.NodeAddress, // nolint
+	opt *cloudprovider.ListNodesOption) error {
 	nodes, err := transInstanceIPToNodes(ipList, &cloudprovider.ListNodesOption{
 		Common: opt.Common,
 	})

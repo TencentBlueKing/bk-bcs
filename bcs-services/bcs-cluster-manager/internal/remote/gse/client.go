@@ -315,7 +315,7 @@ func (c *Client) GetAgentStatusV1(req *GetAgentStatusReq) (*GetAgentStatusResp, 
 	if !respData.Result {
 		blog.Errorf("call api GetAgentStatus failed: %v, request_id: %s", respData.Message,
 			respData.RequestID)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 
 	if len(respData.Data) == 0 {
