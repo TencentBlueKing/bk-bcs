@@ -38,7 +38,7 @@ interface IViewFilter {
     values: string[]
   }>
   createSource?: {
-    source?: string,
+    source: 'Template'|'Helm'|'Client'|'Web'|'',
     template?: {
       templateName: string,
       templateVersion: string
@@ -66,9 +66,10 @@ interface IViewData {
   updateAt?: string
 }
 
+type ViewFilterID = 'clusterNamespaces'|'creator'|'labelSelector'|'name'|'createSource.source';
 interface IFieldItem {
   title: string
-  id: string
+  id: ViewFilterID
   status: 'added' | ''// added: 已经添加的条件, 空: 为添加的条件
   placeholder?: string
 }

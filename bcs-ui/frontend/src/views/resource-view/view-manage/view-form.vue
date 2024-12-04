@@ -116,12 +116,12 @@
           :key="viewData.id"
           :cluster-namespaces="viewData.clusterNamespaces" />
       </template>
-      <template v-else-if="item.id === 'source'">
+      <template v-else-if="item.id === 'createSource.source'">
         <bk-radio-group
           class="mb-[8px]"
           v-if="viewData.filter.createSource"
           v-model="viewData.filter.createSource.source"
-          @change="handlerChange">
+          @change="handleSourceTypeChange">
           <bk-radio-button value="Template">
             <i class="bcs-icon bcs-icon-templete"></i>
             <span class="text-[12px]">Template</span>
@@ -142,12 +142,14 @@
         <bcs-input
           v-if="viewData.filter.createSource?.source
             && ['Template', 'Helm'].includes(viewData.filter.createSource.source)"
-          v-model.trim="sourceKeyword"
+          :value="sourceValue"
           clearable
           :placeholder="
             viewData.filter.createSource.source === 'Template'
               ? $t('view.placeholder.searchTemplate')
-              : $t('view.placeholder.searchHelm')"></bcs-input>
+              : $t('view.placeholder.searchHelm')"
+          @change="handleSourceChange">
+        </bcs-input>
       </template>
       <template v-else>
         <bcs-input v-model.trim="viewData.filter[item.id]" clearable :placeholder="item.placeholder"></bcs-input>
@@ -176,7 +178,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { cloneDeep, debounce, isEqual, merge } from 'lodash';
+import { cloneDeep, get, isEqual, merge, set } from 'lodash';
 import { computed, PropType, ref, watch } from 'vue';
 
 import BkUserSelector from '@blueking/user-selector';
@@ -226,7 +228,21 @@ const viewData = ref<IViewData>({
   clusterNamespaces: [],
 });
 // 来源输入框
-const sourceKeyword = ref<string|undefined>('');
+const sourceValue = computed(() => {
+  const source = viewData.value?.filter?.createSource?.source;
+
+  // helm来源
+  if (source === 'Helm') {
+    return viewData.value.filter?.createSource?.chart?.chartName;
+  }
+  // template来源，拼接版本数据
+  if (source === 'Template') {
+    const template = viewData.value.filter?.createSource?.template;
+    return `${template?.templateName}${template?.templateVersion ? `:${template?.templateVersion}` : ''}`;
+  }
+  // 其他来源
+  return '';
+});
 const displayClusterNamespaces = computed(() => {
   if (!viewData.value.clusterNamespaces?.length) {
     return [{
@@ -261,7 +277,7 @@ const fieldList = ref<Array<IFieldItem>>([
   },
   {
     title: $i18n.t('generic.label.source'),
-    id: 'source',
+    id: 'createSource.source',
     status: '',
   },
 ]);
@@ -282,9 +298,7 @@ watch(fieldList, () => {
 // 重置临时条件
 const resetFieldListStatus = () => {
   fieldList.value.forEach((item) => {
-    if (viewData.value.filter?.[item.id]?.length) {
-      item.status = 'added';
-    } else if (item.id === 'source' &&  viewData.value.filter.createSource?.source?.length) {
+    if (get(viewData.value.filter, item.id)?.length) {
       item.status = 'added';
     } else {
       item.status = '';
@@ -350,6 +364,10 @@ const handleAddField = (item: IFieldItem) => {
   const data = fieldList.value.find(data => data.id === item.id);
   if (data) {
     data.status = 'added';
+    // 来源字段设置默认值
+    if (data?.id === 'createSource.source' && !viewData.value.filter?.createSource?.source) {
+      set(viewData.value.filter, data?.id, 'Template');
+    }
     // 排序（新添加的总是排在最后）
     fieldList.value.sort((pre, current) => {
       if (current.id === item.id) {
@@ -357,9 +375,6 @@ const handleAddField = (item: IFieldItem) => {
       }
       return 0;
     });
-    if (data?.id === 'source') {
-      viewData.value.filter.createSource && (viewData.value.filter.createSource.source = 'Template');
-    }
   }
   addFieldPopoverRef.value?.hide();
 };
@@ -368,54 +383,47 @@ const handleDeleteField = (item: IFieldItem) => {
   const data = fieldList.value.find(data => data.id === item.id);
   if (data) {
     data.status = '';
-    if (item.id === 'source') {
-      viewData.value.filter.createSource = {
-        source: '',
-        template: {
-          templateName: '',
-          templateVersion: '',
-        },
-        chart: {
-          chartName: '',
-        },
-      };
-    } else {
-      viewData.value.filter[item.id] = Array.isArray(viewData.value.filter[item.id]) ? [] : '';
-    }
+    const emptyValue = Array.isArray(get(viewData.value.filter, item.id)) ? [] : '';
+    set(viewData.value.filter, item.id, emptyValue);
   }
 };
 
-// 选择来源类型
-function handlerChange() {
-  const source = viewData.value.filter.createSource;
-  source?.chart && (source.chart.chartName = '');
-  source?.template && (source.template.templateVersion = '');
-  source?.template && (source.template.templateName = '');
-  if (source?.source === 'Client' || source?.source === 'Web') {
-    sourceKeyword.value = '';
+// 来源类型变更时重置数据
+function handleSourceTypeChange() {
+  if (viewData.value.filter.createSource?.template) {
+    viewData.value.filter.createSource.template = {
+      templateName: '',
+      templateVersion: '',
+    };
   }
-  setCreateSource();
+
+  if (viewData.value.filter.createSource?.chart) {
+    viewData.value.filter.createSource.chart = { chartName: '' };
+  }
 }
-function setCreateSource() {
-  if (!viewData.value.filter.createSource) return;
+
+// 来源变更
+function handleSourceChange(v: string) {
+  if (!viewData.value.filter.createSource?.source) return;
+
   if (viewData.value.filter.createSource.source === 'Template') {
-    const list = sourceKeyword.value?.split(':') || [];
-    let name = '';
-    if (!list[list?.length - 1]) {
-      name = sourceKeyword.value || '';
+    // reverse为了方便取出最后分隔作为version
+    const [last, ...reset] = v?.split(':')?.reverse() || [];
+    if (reset?.length) {
+      viewData.value.filter.createSource.template = {
+        templateName: reset?.join(':'),
+        templateVersion: last,
+      };
     } else {
-      const arr = [...list];
-      arr.pop();
-      name = arr.join(':');
+      viewData.value.filter.createSource.template = {
+        templateName: last,
+        templateVersion: '',
+      };
     }
-    const version = list && list.length > 1 ? list[list.length - 1] : '';
-    viewData.value.filter.createSource.template = { templateName: name, templateVersion: version };
   } else if (viewData.value.filter.createSource.source === 'Helm') {
-    viewData.value.filter.createSource.chart = { chartName: sourceKeyword.value || '' };
+    viewData.value.filter.createSource.chart = { chartName: v || '' };
   }
 }
-const setCreateSourceDeb = debounce(setCreateSource, 300);
-watch(sourceKeyword, setCreateSourceDeb);
 
 watch(() => props.data, () => {
   if (isEqual(props.data, viewData.value)) return;
@@ -436,13 +444,6 @@ watch(() => props.data, () => {
     },
     clusterNamespaces: [],
   }, cloneDeep(props.data));
-  if (viewData.value.filter.createSource?.source) {
-    sourceKeyword.value = viewData.value.filter.createSource?.chart?.chartName
-      || `${viewData.value.filter?.createSource?.template?.templateName}${
-        viewData.value.filter?.createSource?.template?.templateVersion
-          ? `:${viewData.value.filter?.createSource?.template?.templateVersion}`
-          : ''}`;
-  }
   resetFieldListStatus();
 }, { immediate: true, deep: true });
 

@@ -130,7 +130,7 @@ export default function useTableData() {
   }) => {
     const res = await multiClusterCustomResourceDefinition(
       params,
-      { needRes: true, cancelPrevious: true, cancelWhenRouteChange: false },
+      { needRes: true, cancelPrevious: false, cancelWhenRouteChange: false },
     ).catch(() => ({
       data: {
         manifest: {},

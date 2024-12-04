@@ -23,8 +23,8 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import { every } from 'lodash';
 import moment from 'moment';
-
 /**
  * 判断是否是对象
  *
@@ -804,4 +804,14 @@ export function takesTimeFormat(seconds: number | string) {
     return arr;
   }, []);
   return arr.join(' ') || 0;
+}
+
+// 检查属性是否为空
+export function isDeepEmpty(obj) {
+  if (isObject(obj)) {
+    // 如果是对象，检查每一个子属性
+    return every(obj, value => isDeepEmpty(value));
+  }
+  // 使用 lodash 的 isEmpty 来检查其他类型
+  return isEmpty(obj);
 }

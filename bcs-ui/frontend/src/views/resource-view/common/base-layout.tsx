@@ -142,7 +142,13 @@ export default defineComponent({
         ],
       }, [column.label]);
     };
-    const getJsonPathValue = (row, path: string) => jp.value(row, path.indexOf('$') === 0 ? path : `$.${path}`);
+    const getJsonPathValue = (row, path: string) => {
+      try {
+        return jp.value(row, path?.indexOf('$') === 0 ? path : `$.${path}`);
+      } catch (_) {
+        return undefined;
+      }
+    };
     // 状态
     const statusMap = {
       normal: $i18n.t('generic.status.ready'),
