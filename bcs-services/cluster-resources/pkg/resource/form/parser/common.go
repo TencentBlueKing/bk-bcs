@@ -103,27 +103,27 @@ func GetLablesFromManifest(manifest string, kind, associateName string) map[stri
 	manifests := SplitManifests(manifest)
 	for _, v := range manifests {
 		metadata := GetManifestMetadata(v)
-		// 筛选关联应用的labels
-		if associateName != "" {
-			if associateName == metadata.Metadata.Name && kind == metadata.Kind {
-				for kk, vv := range metadata.Metadata.Labels {
-					resp = append(resp, map[string]interface{}{
-						"key":   kk,
-						"value": vv,
-					})
-				}
-			}
+		if kind != metadata.Kind {
 			continue
 		}
-
-		if kind == metadata.Kind {
+		// 筛选关联资源名称列表
+		if associateName == "" {
 			resp = append(resp, map[string]interface{}{
 				"label":    metadata.Metadata.Name,
 				"value":    metadata.Metadata.Name,
 				"disabled": false,
 				"tips":     "",
 			})
-
+			continue
+		}
+		// 筛选关联应用的labels
+		if associateName == metadata.Metadata.Name {
+			for kk, vv := range metadata.Metadata.Labels {
+				resp = append(resp, map[string]interface{}{
+					"key":   kk,
+					"value": vv,
+				})
+			}
 		}
 	}
 
