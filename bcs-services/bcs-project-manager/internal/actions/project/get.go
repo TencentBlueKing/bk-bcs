@@ -15,7 +15,6 @@ package project
 import (
 	"context"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
@@ -60,16 +59,12 @@ func (ga *GetAction) Active(ctx context.Context, req *proto.GetProjectActiveRequ
 	ga.ctx = ctx
 
 	p, err := ga.model.GetProject(ctx, req.ProjectIDOrCode)
-	// 未开启容器服务，直接返回不活跃
-	if err == drivers.ErrTableRecordNotFound {
-		return false, nil
-	}
 	if err != nil {
 		return false, errorx.NewDBErr(err.Error())
 	}
 
 	// 未开启容器服务，直接返回不活跃
-	if p.Kind != "k8s" {
+	if p.Kind == "" {
 		return false, nil
 	}
 
@@ -78,22 +73,18 @@ func (ga *GetAction) Active(ctx context.Context, req *proto.GetProjectActiveRequ
 		return false, err
 	}
 
-	// 没有集群则返回不活跃
-	if len(clusters) == 0 {
-		return false, nil
-	}
-
-	// 没有共享集群命名空间则返回不活跃
 	for _, v := range clusters {
-		if v.IsShared {
-			isActive, err := listSharedNamespace(ctx, v.ClusterID, p.ProjectCode)
-			if err != nil {
-				return false, err
-			}
-			// 存在共享集群命名空间则返回活跃
-			if isActive {
-				return true, nil
-			}
+		// 存在独立集群则返回活跃
+		if !v.IsShared {
+			return true, nil
+		}
+		isActive, err := listSharedNamespace(ctx, v.ClusterID, p.ProjectCode)
+		if err != nil {
+			return false, err
+		}
+		// 存在共享集群命名空间则返回活跃
+		if isActive {
+			return true, nil
 		}
 	}
 

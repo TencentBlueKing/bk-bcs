@@ -625,7 +625,7 @@ message GetProjectActiveResponse{
   }];
   ProjectActiveData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "data", 
-    description: "返回可用业务列表"
+    description: "返回项目活跃信息"
   }];
   string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "request id",

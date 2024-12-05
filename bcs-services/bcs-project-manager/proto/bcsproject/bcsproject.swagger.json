@@ -2700,7 +2700,7 @@
         },
         "data": {
           "$ref": "#/definitions/bcsprojectProjectActiveData",
-          "description": "返回可用业务列表",
+          "description": "返回项目活跃信息",
           "title": "data"
         },
         "requestID": {
