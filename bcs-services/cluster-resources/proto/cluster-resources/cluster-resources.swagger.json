@@ -11266,6 +11266,10 @@
         "draftEditFormat": {
           "type": "string",
           "title": "模板文件草稿编辑模式"
+        },
+        "renderMode": {
+          "type": "string",
+          "title": "草稿模板文件语法模式"
         }
       },
       "description": "更新模板文件元数据",

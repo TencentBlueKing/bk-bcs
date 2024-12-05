@@ -92,13 +92,13 @@ func buildTemplateSetsAnnotation(templates []*clusterRes.TemplateID) string {
 func parseMultiTemplateFileVar(templates []entity.TemplateDeploy) []string {
 	vars := make([]string, 0)
 	for _, template := range templates {
-		vars = append(vars, parseTemplateFileVar(template.Content)...)
+		vars = append(vars, parseTemplateFileVar(template.Content, template.RenderMode)...)
 	}
 	return vars
 }
 
 // parseTemplateFileVar parse template file variables
-func parseTemplateFileVar(template string) []string {
+func parseTemplateFileVar(template, renderMode string) []string {
 	re := regexp.MustCompile(templateFileVarPattern)
 	vars := make([]string, 0)
 	matches := re.FindAllStringSubmatch(template, -1)
@@ -109,7 +109,11 @@ func parseTemplateFileVar(template string) []string {
 		if match[1] == "" {
 			continue
 		}
-		vars = append(vars, strings.TrimSpace(match[1]))
+		if renderMode != string(constants.HelmRenderMode) {
+			vars = append(vars, strings.TrimSpace(match[1]))
+		} else if strings.HasPrefix(match[1], ".Values.") {
+			vars = append(vars, strings.TrimSpace(match[1]))
+		}
 	}
 	vars = slice.RemoveDuplicateValues(vars)
 	return vars
@@ -282,7 +286,8 @@ func validAndFillChart(cht *chart.Chart, value string) (map[string]string, error
 }
 
 // helm 语法模式 模板文件内容进行helm template 渲染, 简单语法模式自动跳过
-func renderTemplateForHelmMode(td []entity.TemplateDeploy, value string) (map[string]string, error) {
+func renderTemplateForHelmMode(
+	td []entity.TemplateDeploy, value string, variables map[string]string) (map[string]string, error) {
 	cht := chart.Chart{
 		Raw:       []*chart.File{},
 		Metadata:  &chart.Metadata{},
@@ -292,6 +297,8 @@ func renderTemplateForHelmMode(td []entity.TemplateDeploy, value string) (map[st
 	for _, v := range td {
 		// helm 模式才转
 		if v.RenderMode == string(constants.HelmRenderMode) {
+			// 先填充来自variable的变量
+			v.Content = replaceTemplateFileVar(v.Content, variables)
 			cht.Templates = append(cht.Templates, &chart.File{
 				Name: path.Join(v.TemplateSpace, v.TemplateName),
 				Data: []byte(v.Content),

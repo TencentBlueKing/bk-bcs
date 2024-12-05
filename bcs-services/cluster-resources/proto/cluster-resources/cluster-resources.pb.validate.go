@@ -11046,6 +11046,8 @@ func (m *UpdateTemplateMetadataReq) validate(all bool) error {
 
 	// no validation rules for DraftEditFormat
 
+	// no validation rules for RenderMode
+
 	if len(errors) > 0 {
 		return UpdateTemplateMetadataReqMultiError(errors)
 	}

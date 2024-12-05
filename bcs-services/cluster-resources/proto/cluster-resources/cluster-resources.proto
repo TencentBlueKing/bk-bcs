@@ -3268,6 +3268,9 @@ message UpdateTemplateMetadataReq {
 	string draftEditFormat = 12 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "模板文件草稿编辑模式"
 	}];
+	string renderMode = 13 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "草稿模板文件语法模式"
+	}];
 }
 
 enum VersionMode {
