@@ -1848,6 +1848,46 @@
         ]
       }
     },
+    "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces": {
+      "get": {
+        "summary": "获取原生命名空间内容",
+        "description": "获取原生命名空间内容",
+        "operationId": "Namespace_ListNativeNamespacesContent",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectIDOrCode",
+            "description": "项目ID或项目英文名, 为 '-' 则不校验项目信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Namespace"
+        ]
+      }
+    },
     "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/native/namespaces": {
       "get": {
         "summary": "获取原生命名空间列表",

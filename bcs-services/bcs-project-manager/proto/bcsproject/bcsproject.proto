@@ -882,6 +882,15 @@ service Namespace {
       summary : "获取原生命名空间列表"
     };
   }
+  rpc ListNativeNamespacesContent(ListNativeNamespacesContentRequest) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取原生命名空间内容"
+      summary : "获取原生命名空间内容"
+    };
+  }
 }
 
 message SyncNamespaceRequest {
@@ -1310,6 +1319,28 @@ message ListNativeNamespacesResponse {
     title : "web_annotations",
     description : "项目更多信息，主要是权限相关"
   }, json_name = "web_annotations"];
+}
+
+message ListNativeNamespacesContentRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNativeNamespacesContentRequest"
+      description : "获取原生命名空间内容"
+      required : [
+        "projectIDOrCode",
+        "clusterID"
+      ]
+    }
+  };
+
+  string projectIDOrCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectIDOrCode", 
+    description: "项目ID或项目英文名, 为 '-' 则不校验项目信息"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID", 
+    description: "集群ID"
+  }];
 }
 
 message DeleteNamespaceRequest {
