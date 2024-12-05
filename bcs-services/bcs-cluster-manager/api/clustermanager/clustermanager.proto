@@ -6407,7 +6407,7 @@ message UpdateClusterReq {
    string status = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status", 
     description: "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
-  }, (validate.rules).string = {in: ["INITIALIZATION", "RUNNING", "CREATE-FAILURE", "CONNECT-FAILURE", "IMPORT-FAILURE", "RUNNING", "DELETING","DELETED","DELETE-FAILURE"]}];
+  }, (validate.rules).string = {in: ["INITIALIZATION", "RUNNING", "CREATE-FAILURE", "CONNECT-FAILURE", "IMPORT-FAILURE", "DELETING","DELETED","DELETE-FAILURE"]}];
   map<string, BKOpsPlugin> bcsAddons = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "bcsAddons", 
     description: "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，如果填写错误直接报错"
