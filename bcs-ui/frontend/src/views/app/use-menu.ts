@@ -427,6 +427,12 @@ export default function useMenu() {
           icon: 'bcs-icon bcs-icon-apps',
           route: 'projectInfo',
         },
+        {
+          title: $i18n.t('nav.projectQuotas'),
+          id: 'PROJECTQUOTAS',
+          icon: 'bcs-icon bcs-icon-apps',
+          route: 'projectQuotas',
+        },
       ],
     },
     {
