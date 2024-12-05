@@ -1770,6 +1770,17 @@ service TemplateSet {
 		};
 	}
 
+	// 获取模板文件关联labels
+	rpc GetTemplateAssociateLabels(GetTemplateAssociateLabelsReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/{id}/labels"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件关联labels"
+			summary: "Get template associate labels"
+		};
+	}	
+
 	// 获取模板文件详情
 	rpc GetTemplateContent(GetTemplateContentReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -3302,6 +3313,24 @@ message GetTemplateVersionReq {
 	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "项目编码"
 	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+}
+
+message GetTemplateAssociateLabelsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetTemplateAssociateLabelsReq", description: "获取模板文件关联labels"}
+	};
+	string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件版本 ID"
+	}, (validate.rules).string = {len : 24}];
+	string projectCode = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {min_len: 1}];
+	string associateName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "关联资源名称"
+	}, (validate.rules).string = {max_len: 256}];
 }
 
 message GetTemplateContentReq {
