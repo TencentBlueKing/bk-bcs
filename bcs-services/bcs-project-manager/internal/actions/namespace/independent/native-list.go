@@ -15,8 +15,10 @@ package independent
 import (
 	"context"
 
+	spb "google.golang.org/protobuf/types/known/structpb"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
@@ -60,5 +62,27 @@ func (c *IndependentNamespaceAction) ListNativeNamespaces(ctx context.Context,
 		retDatas = append(retDatas, retData)
 	}
 	resp.Data = retDatas
+	return nil
+}
+
+// ListNativeNamespacesContent implement for ListNativeNamespacesContent interface
+func (c *IndependentNamespaceAction) ListNativeNamespacesContent(ctx context.Context,
+	req *proto.ListNativeNamespacesContentRequest, resp *spb.Struct) error {
+
+	client, err := clientset.GetClientGroup().Client(req.GetClusterID())
+	if err != nil {
+		logging.Error("get clientset for cluster %s failed, err: %s", req.GetClusterID(), err.Error())
+		return err
+	}
+	accept := common.GetAcceptType(ctx)
+	nsList, err := client.CoreV1().RESTClient().Get().Resource("namespaces").SetHeader("Accept", accept).DoRaw(ctx)
+	if err != nil {
+		return errorx.NewClusterErr(err.Error())
+	}
+
+	err = resp.UnmarshalJSON(nsList)
+	if err != nil {
+		return errorx.NewInnerErr(err.Error())
+	}
 	return nil
 }

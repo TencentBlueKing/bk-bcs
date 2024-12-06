@@ -282,7 +282,7 @@ func (f *QueryFilter) createSourceTemplateNameFilter(resources []*storage.Resour
 	return result
 }
 
-// createSourceTemplateNameFilter 模板名称来源过滤器
+// createSourceTemplateVersionFilter 模板版本来源过滤器
 func (f *QueryFilter) createSourceTemplateVersionFilter(resources []*storage.Resource) []*storage.Resource {
 	result := []*storage.Resource{}
 	if f.CreateSource.Template == nil {

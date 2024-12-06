@@ -203,3 +203,17 @@ func getProjectIDs(p *map[string]interface{}) []string {
 	}
 	return ids
 }
+
+// GetProjectActive get projects active
+func (p *ProjectHandler) GetProjectActive(ctx context.Context,
+	req *proto.GetProjectActiveRequest, resp *proto.GetProjectActiveResponse) error {
+	lap := project.NewGetAction(p.model)
+	isActive, e := lap.Active(ctx, req)
+	if e != nil {
+		return e
+	}
+	resp.Data = &proto.ProjectActiveData{
+		IsActive: isActive,
+	}
+	return nil
+}
