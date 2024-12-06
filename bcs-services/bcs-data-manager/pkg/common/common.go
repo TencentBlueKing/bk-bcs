@@ -60,28 +60,30 @@ type GetterInterface interface {
 
 // ResourceGetter common resource getter
 type ResourceGetter struct {
-	needFilter     bool
-	clusterIDs     map[string]bool
-	env            string
-	cache          *cache.Cache
-	projectManager bcsproject.BcsProjectManagerClient
-	bcsMonitorCli  bcsmonitor.ClientInterface
+	needFilter      bool
+	clusterIDs      map[string]bool
+	env             string
+	cache           *cache.Cache
+	projectManager  bcsproject.BcsProjectManagerClient
+	bcsMonitorCli   bcsmonitor.ClientInterface
+	AnnoKeyProjCode string
 }
 
 // NewGetter new common resource getter
-func NewGetter(needFilter bool, clusterIds []string, env string,
+func NewGetter(needFilter bool, clusterIds []string, env string, annoKeyProjCode string,
 	pmClient bcsproject.BcsProjectManagerClient, bcsMonitorCli bcsmonitor.ClientInterface) GetterInterface {
 	clusterMap := make(map[string]bool, len(clusterIds))
 	for index := range clusterIds {
 		clusterMap[clusterIds[index]] = true
 	}
 	return &ResourceGetter{
-		needFilter:     needFilter,
-		clusterIDs:     clusterMap,
-		env:            env,
-		cache:          cache.New(time.Minute*10, time.Minute*60),
-		projectManager: pmClient,
-		bcsMonitorCli:  bcsMonitorCli,
+		needFilter:      needFilter,
+		clusterIDs:      clusterMap,
+		env:             env,
+		cache:           cache.New(time.Minute*10, time.Minute*60),
+		projectManager:  pmClient,
+		bcsMonitorCli:   bcsMonitorCli,
+		AnnoKeyProjCode: annoKeyProjCode,
 	}
 }
 
@@ -449,7 +451,7 @@ func (g *ResourceGetter) GetK8sNamespaceList(ctx context.Context, clusterMeta *t
 	for _, namespace := range namespaces {
 		if clusterLabel != nil && clusterLabel["isShared"] == "true" {
 			nsAnnotation := namespace.Data.Annotations
-			if projectCode, ok := nsAnnotation["io.tencent.bcs.projectcode"]; ok {
+			if projectCode, ok := nsAnnotation[g.AnnoKeyProjCode]; ok {
 				namespaceProjectCode = projectCode
 				project, err := g.GetProjectInfo(ctx, "", namespaceProjectCode, pmCli)
 				if err != nil {
