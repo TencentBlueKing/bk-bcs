@@ -296,14 +296,6 @@ type HostDetailData struct {
 	CpuModule        string `json:"bk_cpu_module"`
 }
 
-const (
-	keyBizID          = "BsiId"       // nolint
-	keySvrIP          = "SvrIp"       // nolint
-	methodBusiness    = "Business"    // nolint
-	methodServer      = "Server"      // nolint
-	methodBusinessRaw = "BusinessRaw" // nolint
-)
-
 // BizInfo business id info
 type BizInfo struct {
 	BizID int64 `json:"bizID"`
