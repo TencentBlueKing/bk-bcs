@@ -23,8 +23,8 @@
 * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 * IN THE SOFTWARE.
 */
+import { every } from 'lodash';
 import moment from 'moment';
-
 /**
  * 判断是否是对象
  *
@@ -780,4 +780,38 @@ export function download(content, fileName) {
   dom.click();
   document.body.removeChild(dom); // 下载完成移除元素
   window.URL.revokeObjectURL(url); // 释放掉 blob 对象
+}
+
+/**
+ * 格式化时间 - 最大单位 天
+ */
+export function takesTimeFormat(seconds: number | string) {
+  const sortList = [
+    { unit: 'd', calculate: 24 * 60 * 60 },
+    { unit: 'h', calculate: 60 * 60 },
+    { unit: 'm', calculate: 60 },
+    { unit: 's', calculate: 1 },
+  ];
+  let nonZero = false; // 非零开头
+  let remainders = parseInt(String(seconds), 10);
+  const arr = sortList.reduce<string[]>((arr, item) => {
+    const num = Math.floor(remainders / item.calculate);
+    remainders = remainders % item.calculate;
+    if (num || nonZero) {
+      arr.push(`${num}${item.unit}`);
+      nonZero = true;
+    }
+    return arr;
+  }, []);
+  return arr.join(' ') || 0;
+}
+
+// 检查属性是否为空
+export function isDeepEmpty(obj) {
+  if (isObject(obj)) {
+    // 如果是对象，检查每一个子属性
+    return every(obj, value => isDeepEmpty(value));
+  }
+  // 使用 lodash 的 isEmpty 来检查其他类型
+  return isEmpty(obj);
 }

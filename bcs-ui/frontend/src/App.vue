@@ -67,6 +67,11 @@ const { init } = useCalcHeight([
     el: '.nav-slider-list',
     calc: [noticeRef, '.bk-navigation-header', '.nav-slider-footer'],
   },
+  {
+    prop: 'height',
+    el: '.v-m-menu-box',
+    calc: [noticeRef, '.bk-navigation-header', '.v-m-view-selector'],
+  },
 ]);
 
 // 权限弹窗

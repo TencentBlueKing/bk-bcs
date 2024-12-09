@@ -83,6 +83,18 @@ func (gm *GoroutineManager) Restart(id string, param interface{}) {
 	}
 }
 
+// Stop 重启一个指定ID的goroutine
+func (gm *GoroutineManager) Stop(id string, param interface{}) {
+	gm.mu.Lock()
+	done, exists := gm.workers[id]
+	if exists {
+		done <- true           // 发送停止信号
+		delete(gm.workers, id) // 从map中移除
+		fmt.Printf("id: %s 已停止", id)
+	}
+	gm.mu.Unlock()
+}
+
 // List 返回所有正在运行的goroutine的列表
 func (gm *GoroutineManager) List() []string {
 	gm.mu.Lock()

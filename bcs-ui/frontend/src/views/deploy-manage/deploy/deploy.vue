@@ -315,13 +315,11 @@ async function handleDeployTemplateFile() {
   if (!validate) return;
 
   deploying.value = true;
-  const params = curVersionData.value?.renderMode === 'Helm' ? { values: curVersionData.value?.content } : {};
   const result = await TemplateSetService.DeployTemplateFile({
     ...formData.value,
     templateVersions: Array.isArray(formData.value.templateVersions)
       ? formData.value.templateVersions
       : [formData.value.templateVersions],
-    ...params,
   }).catch(() => false);
   deploying.value = false;
   if (result) {
@@ -336,13 +334,11 @@ async function handlePreviewData() {
 
   showPreviewSideslider.value = true;
   previewLoading.value = true;
-  const params = curVersionData.value?.renderMode === 'Helm' ? { values: curVersionData.value?.content } : {};
   const { items = [], error = '' } = await TemplateSetService.PreviewTemplateFile({
     ...formData.value,
     templateVersions: Array.isArray(formData.value.templateVersions)
       ? formData.value.templateVersions
       : [formData.value.templateVersions],
-    ...params,
   }).catch(() => ({ items: [] }));
   previewData.value = items;
   curPreviewName.value = previewData.value.at(0)?.name || '';

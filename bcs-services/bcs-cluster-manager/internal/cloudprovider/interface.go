@@ -338,6 +338,8 @@ type ClusterManager interface {
 	ListProjects(opt *CommonOption) ([]*proto.CloudProject, error)
 	// CheckClusterEndpointStatus check cluster endpoint status
 	CheckClusterEndpointStatus(clusterID string, isExtranet bool, opt *CheckEndpointStatusOption) (bool, error)
+	// UpdateCloudKubeConfig update cluster kubeconfig to clustercredential
+	UpdateCloudKubeConfig(kubeconfig string, opt *UpdateCloudKubeConfigOption) error
 	// GetMasterSuggestedMachines get master suggested machines
 	GetMasterSuggestedMachines(level, vpcId string,
 		opt *GetMasterSuggestedMachinesOption) ([]*proto.InstanceTemplateConfig, error)

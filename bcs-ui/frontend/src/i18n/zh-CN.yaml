@@ -129,6 +129,7 @@ nav:
   network: 网络
   cloudToken: 云凭证
   templateFile: 模板文件
+  projectQuotas: 项目配额
 iam:
   title:
     perms: 该操作需要以下权限
@@ -324,9 +325,6 @@ generic:
       text: 停止调度
       title: '确认对节点 {ip} 停止调度'
       title1: 请确认是否批量停止调度
-      subTitle: >-
-        如果有使用Ingress及LoadBalancer类型的Service，节点停止调度后，Service
-        Controller会剔除LB到nodePort的映射
       subTitle2: '请确认是否停止 {ip} 等 {num} 个IP调度'
     uncordon:
       text: 允许调度
@@ -561,7 +559,7 @@ cluster:
     retryTask: 确认重试任务
     opRecord: 操作记录
     cantSkip: 无法跳过当前步骤
-    cantRetry: 无法重试当前步骤
+    allowRetry: 无法重试当前步骤
   button:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群
@@ -809,20 +807,21 @@ cluster:
         awsLink: Amazon VPC CNI功能概述
     azure:
       securityGroup:
-        text: 安全组
         vpcLink: '选择将应用到在您的控制平面子网中创建的 AKS 托管弹性网络接口的安全组。 要创建新的安全组，请转到 {0}  中的相应页面。'
         vpcMaster: VPC 控制台
       tips:
         overlay: Azure CNI Overlay：群集节点将部署到 Azure 虚拟网络 (VNet) 子网中。
         nodeSubnet: Azure CNI Node Subnet：每个 Pod 将接收 IP 子网中的 IP 地址，并且可以直接与其他 Pod 和服务通信。
+      chargingModel: cluster.create.azure.chargingModel
     google:
       labels:
         areaType: 位置类型
         region: 区域
         zone: 可用区
       tips:
-        containerNet: 集群中所有 pod 都会分配一个此范围的IP地址。请以 CIDR 表示法输入网络范围内一个范围、掩码，此设置一经确定便无法更改，请谨慎评估后填写
-        autopilot: GKE管理底层基础架构，例如节点配置、自动扩缩、自动升级、基准安全配置和基准网络配置。
+        containerNet: >-
+          集群中所有 pod 都会分配一个此范围的IP地址。请以 CIDR
+          表示法输入网络范围内一个范围、掩码，此设置一经确定便无法更改，请谨慎评估后填写
         standard: 您负责管理底层基础架构，包括配置各个节点。
   detail:
     title:
@@ -1086,10 +1085,8 @@ cluster:
         dockerGraphPathDefault:
           desc: 容器目录使用集群配置，暂不支持修改
         containerRuntimeDefault:
-          title: 运行时组件
           desc: 运行时组件使用集群配置，暂不支持修改
         runtimeVersionDefault:
-          title: 运行时版本
           desc: 运行时版本使用集群配置，暂不支持修改
         imageProvider:
           title: 镜像提供方
@@ -2162,6 +2159,7 @@ projects:
     create: 创建项目
     name: 项目名称
     info: 项目信息
+    quota: 项目配额
     join: 加入项目
     en: 英文缩写
     mode: 编排类型
@@ -2169,6 +2167,13 @@ projects:
     bizTips: 该项目下已有集群信息，如需更改绑定业务信息，请先删除已有集群
     label:
       project: 项目
+      region: 城市
+      zone: 可用区
+      instance: 实例规格
+      Num: 总量
+      used: 已使用
+      available: 可用
+      AssociatedNodePool: 关联节点池
     edit: 编辑项目
     engName: 项目英文名
     intro: 项目说明
@@ -2613,7 +2618,6 @@ azureCloud:
     search: 搜索ID/名称/SubscriptionID/tenantID/ClientID/集群
   tips:
     nameRegex: 仅支持英文、数字和字符(-)
-    secretRegex: 仅支持英文、数字和字符(-或~)
   label:
     loginUser: 登录用户
     create: 新建凭证
@@ -3101,3 +3105,10 @@ diff:
   delete: 删除
   change: 变化
   add: 新增
+城市: 城市
+可用区: 可用区
+实例规格: 实例规格
+总量: 总量
+已使用: 已使用
+可用: 可用
+关联节电池: 关联节电池

@@ -115,6 +115,9 @@ func (ua *UpdateAction) setBaseInfo() {
 	if ua.req.Labels != nil {
 		ua.cluster.Labels = ua.req.Labels
 	}
+	if ua.req.Labels2 != nil {
+		ua.cluster.Labels = ua.req.Labels2.GetValues()
+	}
 	if len(ua.req.Status) != 0 {
 		ua.cluster.Status = ua.req.Status
 	}

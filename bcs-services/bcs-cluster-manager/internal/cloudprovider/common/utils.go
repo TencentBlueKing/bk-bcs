@@ -762,7 +762,7 @@ func checkNodeValidatePods(ctx context.Context, clusterID, nodeName string) (boo
 		}
 	}
 	if len(warnMessages) > 0 {
-		return false, fmt.Errorf(strings.Join(warnMessages, ";"))
+		return false, errors.New(strings.Join(warnMessages, ";"))
 	}
 
 	return true, nil

@@ -414,6 +414,17 @@ service ClusterManager {
     };
   }
 
+  rpc UpdateClusterKubeConfig(UpdateClusterKubeConfigReq) returns (UpdateClusterKubeConfigResp) {
+    option (google.api.http) = {
+      put : "/clustermanager/v1/clusters/{clusterID}/clustercredential"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "更新云集群kubeConfig"
+      summary : "更新平台集群对应云的kubeConfig"
+    };
+  }
+
   rpc DeleteClusterCredential(DeleteClusterCredentialReq)
       returns (DeleteClusterCredentialResp) {
     option (google.api.http) = {
@@ -1243,6 +1254,16 @@ service ClusterManager {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "根据筛选条件查询各个云的节点列表"
       summary : "查询Node列表"
+    };
+  }
+  rpc ListCloudInstancesByPost(ListCloudInstancesRequest) returns (ListCloudInstancesResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clouds/{cloudID}/instances"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "通过 POST 查询各个云的节点列表以支持更长的查询条件"
+      summary : "查询Node列表（POST）"
     };
   }
   rpc GetCloudAccountType(GetCloudAccountTypeRequest) returns (GetCloudAccountTypeResponse) {
@@ -5300,6 +5321,10 @@ message CreateClusterReq {
     title: "sharedRanges",
     description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
   }];
+  string status = 45[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "status",
+    description: "创建集群导入集群数据时设置集群状态,默认情况下设置空即可,仅onlyCreateInfo为true时起作用"
+  }];
 }
 
 message CreateClusterResp {
@@ -6382,22 +6407,17 @@ message UpdateClusterReq {
   map<string, string> labels = 13[
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "labels",
-      description : "集群的labels，用于携带额外的信息，最大不得超过20个"
-    },
-    (validate.rules).map.max_pairs = 20
-  ];
+      description : "集群的labels，用于携带额外的信息，最大不得超过20个, 已废弃"
+   },(validate.rules).map.max_pairs = 20];
   string updater = 14 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "updater",
       description : "操作人员名称"
-    },
-    (validate.rules).string = {max_len : 1024}
-  ];
-  string status = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+   },(validate.rules).string = {max_len : 1024}];
+   string status = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "status", 
     description: "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION，DELETED"
-  }, (validate.rules).string = {in: ["CREATING", "RUNNING", "DELETING", "FAILURE", "INITIALIZATION", "DELETED", ""]}
-  ];
+  }, (validate.rules).string = {in: ["INITIALIZATION", "RUNNING", "CREATE-FAILURE", "CONNECT-FAILURE", "IMPORT-FAILURE", "DELETING","DELETED","DELETE-FAILURE"]}];
   map<string, BKOpsPlugin> bcsAddons = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "bcsAddons", 
     description: "创建集群时进行BCS内置插件安装，该信息会索引云上默认配置信息进行对比与补充，如果填写错误直接报错"
@@ -6493,6 +6513,11 @@ message UpdateClusterReq {
     title: "sharedRanges",
     description: "共享集群可见范围设置(当is_shared为true时且sharedRanges为空时,共享平台所有项目；sharedRanges不为空时,共享给某些业务或者项目，共享项目只有使用权限)"
   }];
+  MapStruct labels2 = 40 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "labels2",
+      description : "集群的labels，用于携带额外的信息"
+    }];
 }
 
 message UpdateClusterResp {
@@ -7923,6 +7948,46 @@ message UpdateClusterCredentialResp {
       } ];
   bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
                         {title : "result", description : "返回结果"} ];
+}
+
+message UpdateClusterKubeConfigReq {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateClusterKubeConfigReq"
+      description : "更新平台集群对应云的kubeConfig"
+      required : [
+        "clusterID"
+      ]
+    }
+  };
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群ID"
+  }];
+  string kubeConfig = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "kubeConfig",
+    description: "云集群kubeConfig文件"
+  }];
+}
+
+message UpdateClusterKubeConfigResp {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateClusterKubeConfigResp"
+      description : "更新云集群kubeConfig结果返回"
+      required : [ "code", "message", "data"]
+    }
+  };
+
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", description : "返回错误码"
+  }];
+  string message = 2[ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "message", description: "返回错误信息"
+  }];
+  bool result = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result", description : "返回结果"
+  }];
 }
 
 message DeleteClusterCredentialReq {
@@ -14741,10 +14806,32 @@ message GetProjectResourceQuotaUsageResponse {
 }
 
 message ProjectAutoscalerQuota {
-  string instanceType=1;
-  string region=2;
-  string zone=3;
-  uint32 total=5;
-  uint32 used=6;
-  repeated string groupIds=4;
+  string instanceType=1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "instanceType",
+    description : "机型信息"
+  }];
+  string region=2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "地域信息"
+  }];
+  string zone=3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "zone",
+    description : "可用区信息"
+  }];
+  uint32 total=5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "total",
+    description : "机型在某个可用区的总额度"
+  }];
+  uint32 used=6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "used",
+    description : "机型在某个可用区的已使用额度"
+  }];
+  repeated string groupIds=7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "groupIds",
+    description : "机型在某个可用区的已使用当前额度的节点池"
+  }];
+  repeated string totalGroupIds = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "totalGroupIds",
+    description : "机型在某个可用区的总额度的节点池"
+  }];
 }

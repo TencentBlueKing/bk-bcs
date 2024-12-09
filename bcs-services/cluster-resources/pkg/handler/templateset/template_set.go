@@ -217,6 +217,20 @@ func (h *Handler) GetTemplateVersion(
 	return nil
 }
 
+// GetTemplateAssociateLabels 获取模板文件关联labels
+func (h *Handler) GetTemplateAssociateLabels(
+	ctx context.Context, in *clusterRes.GetTemplateAssociateLabelsReq, out *clusterRes.CommonResp) error {
+	action := templateversion.NewTemplateVersionAction(h.model)
+	data, err := action.GetTemplateAssociateLabels(ctx, in)
+	if err != nil {
+		return err
+	}
+	if out.Data, err = pbstruct.Map2pbStruct(data); err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetTemplateContent 获取模板文件详情
 func (h *Handler) GetTemplateContent(
 	ctx context.Context, in *clusterRes.GetTemplateContentReq, out *clusterRes.CommonResp) error {

@@ -143,7 +143,7 @@
             <ViewField
               :title="$t('generic.label.source')"
               :deletable="false"
-              :active="activeField === 'source'"
+              :active="activeField === 'createSource.source'"
               class="rounded-sm p-[8px] mt-[8px]"
               v-if="originViewData.filter?.createSource?.source">
               <bcs-tag class="m-[0px]">
@@ -618,7 +618,7 @@ watch(dashboardViewID, () => {
 });
 
 // 高亮点击的字段
-const activeField = ref<'clusterNamespaces'|'creator'|'labelSelector'|'name'|'source'>();
+const activeField = ref<ViewFilterID>();
 let timeoutID;
 onBeforeMount(() => {
   bus.$on('locate-to-field', (field) => {

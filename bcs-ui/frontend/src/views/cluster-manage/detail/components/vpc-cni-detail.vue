@@ -14,6 +14,7 @@
         :data="subnets"
         :span-method="objectSpanMethod"
         col-border
+        ref="tableRef"
         v-bkloading="{ isLoading: subnetLoading }"
         class="network-table">
         <bk-table-column :label="$t('tke.label.zone')" prop="zoneName"></bk-table-column>
@@ -46,7 +47,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import AddSubnetDialog from './add-subnet-dialog.vue';
 
@@ -143,6 +144,7 @@ const handleConfirmAddSubnet = async () => {
 };
 
 // 合并单元格
+const tableRef = ref();
 const firstRowspan = ref({});
 const objectSpanMethod = ({ row, column }) => {
   if (column.property === 'zoneName' || column.property === 'counts') {
@@ -165,6 +167,12 @@ const objectSpanMethod = ({ row, column }) => {
   }
 };
 
+// 监听table宽高变化
+const resizeObserver = new ResizeObserver(() => {
+  // table的span-methods方法会在表格宽度变化时重新执行，需要重置firstRowspan
+  firstRowspan.value = {};
+});
+
 watch(() => props.data?.clusterID, async () => {
   if (!props.data?.clusterID) return;
 
@@ -173,4 +181,12 @@ watch(() => props.data?.clusterID, async () => {
   await handleGetSubnets();
   subnetLoading.value = false;
 }, { immediate: true });
+
+onMounted(() => {
+  tableRef.value && resizeObserver.observe(tableRef.value.$el);
+});
+
+onBeforeUnmount(() => {
+  tableRef.value && resizeObserver.unobserve(tableRef.value.$el);
+});
 </script>

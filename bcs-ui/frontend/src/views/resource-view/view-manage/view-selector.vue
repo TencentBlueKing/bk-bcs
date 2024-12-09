@@ -11,7 +11,7 @@
     ref="popoverSelectRef">
     <div
       :class="[
-        'flex items-center justify-center h-[66px]',
+        'flex items-center justify-center h-[66px] v-m-view-selector',
         showViewInfo ? 'w-[260px]' : 'w-[60px]'
       ]">
       <!-- 视图信息 -->
@@ -83,7 +83,7 @@
           cluster-type="all"
           :value="clusterID"
           :selectable="isDefaultView"
-          :isShow="!isHide"
+          :is-show="!isHide"
           v-show="viewMode === 'cluster'"
           @click="changeClusterView" />
         <!-- 自定义视图 -->

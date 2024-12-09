@@ -346,3 +346,9 @@ func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
 	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
 }
+
+// UpdateCloudKubeConfig update cluster kubeconfig to clustercredential
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}

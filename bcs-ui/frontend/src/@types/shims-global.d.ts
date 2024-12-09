@@ -47,7 +47,7 @@ interface Window {
   readonly RUN_ENV: string
   readonly BK_USER_HOST: string
   readonly PREFERRED_DOMAINS: string
-  readonly $loginModal: any
+  $loginModal: any
   BkTrace: any
   readonly BK_STATIC_URL: string
   readonly BCS_NAMESPACE_PREFIX: string

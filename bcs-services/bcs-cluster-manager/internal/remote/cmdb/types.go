@@ -106,8 +106,8 @@ func (c Condition) String() string {
 
 var (
 	and Condition = "AND"
-	or  Condition = "OR"
-	in  Condition = "IN"// nolint
+	or  Condition = "OR" // nolint
+	in  Condition = "IN" // nolint
 )
 
 // Page page
@@ -295,14 +295,6 @@ type HostDetailData struct {
 	SubZoneID        string `json:"sub_zone_id"`
 	CpuModule        string `json:"bk_cpu_module"`
 }
-
-const (
-	keyBizID          = "BsiId"
-	keySvrIP          = "SvrIp"
-	methodBusiness    = "Business"
-	methodServer      = "Server"
-	methodBusinessRaw = "BusinessRaw"
-)
 
 // BizInfo business id info
 type BizInfo struct {

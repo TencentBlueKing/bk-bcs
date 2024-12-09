@@ -164,6 +164,7 @@ var ActionPermissions = map[string]string{
 	// cluster credential
 	"ClusterManager.GetClusterCredential":    cluster.CanManageClusterOperation,
 	"ClusterManager.UpdateClusterCredential": cluster.CanManageClusterOperation,
+	"ClusterManager.UpdateClusterKubeConfig": cluster.CanManageClusterOperation,
 	"ClusterManager.DeleteClusterCredential": "",
 	"ClusterManager.ListClusterCredential":   "",
 

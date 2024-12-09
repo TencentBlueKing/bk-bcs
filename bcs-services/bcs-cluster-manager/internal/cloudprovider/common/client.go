@@ -162,7 +162,7 @@ func (c *Client) CreateBkOpsTask(paras *CreateTaskPathParas,
 
 	if !respData.Result {
 		blog.Errorf("call api CreateBkOpsTask failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 	// successfully request
 	blog.Infof("call api CreateBkOpsTask with url(%s) successfully", reqUrl)
@@ -215,7 +215,7 @@ func (c *Client) StartBkOpsTask(paras *TaskPathParas,
 
 	if !respData.Result {
 		blog.Errorf("call api StartBkOpsTask failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 
 	// successfully request
@@ -271,7 +271,7 @@ func (c *Client) GetTaskStatus(paras *TaskPathParas,
 
 	if !respData.Result {
 		blog.Errorf("call api GetTaskStatus failed: %v", respData.Message)
-		return nil, fmt.Errorf(respData.Message)
+		return nil, errors.New(respData.Message)
 	}
 
 	// successfully request
@@ -326,7 +326,7 @@ func (c *Client) GetBusinessTemplateList(path *TemplateListPathPara,
 
 	if !resp.Result {
 		blog.Errorf("call api GetBusinessTemplateList failed: %v", resp.Message)
-		return nil, fmt.Errorf(resp.Message)
+		return nil, errors.New(resp.Message)
 	}
 
 	// successfully request
@@ -372,7 +372,7 @@ func (c *Client) GetUserProjectDetailInfo(bizID string) (*ProjectInfo, error) {
 
 	if !resp.Result {
 		blog.Errorf("call api GetUserProjectDetailInfo failed: %v", resp.Message)
-		return nil, fmt.Errorf(resp.Message)
+		return nil, errors.New(resp.Message)
 	}
 
 	// successfully request
@@ -424,7 +424,7 @@ func (c *Client) GetBusinessTemplateInfo(path *TemplateDetailPathPara,
 
 	if !resp.Result {
 		blog.Errorf("call api GetBusinessTemplateInfo failed: %v", resp.Message)
-		return nil, fmt.Errorf(resp.Message)
+		return nil, errors.New(resp.Message)
 	}
 
 	// successfully request
@@ -481,7 +481,7 @@ func (c *Client) OperateBkOpsTask(paras *TaskPathParas, request *OperateTaskRequ
 
 	if !respData.Result {
 		blog.Errorf("call api OperateBkOpsTask failed: %v", respData.Message)
-		return fmt.Errorf(respData.Message)
+		return errors.New(respData.Message)
 	}
 
 	// successfully request

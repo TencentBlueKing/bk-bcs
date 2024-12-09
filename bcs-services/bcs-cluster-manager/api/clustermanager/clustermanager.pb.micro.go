@@ -253,6 +253,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.UpdateClusterKubeConfig",
+			Path:    []string{"/clustermanager/v1/clusters/{clusterID}/clustercredential"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.DeleteClusterCredential",
 			Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
 			Method:  []string{"DELETE"},
@@ -757,6 +763,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudInstancesByPost",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instances"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetCloudAccountType",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
 			Method:  []string{"GET"},
@@ -963,6 +975,7 @@ type ClusterManagerService interface {
 	//* cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...client.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error)
+	UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, opts ...client.CallOption) (*UpdateClusterKubeConfigResp, error)
 	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...client.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...client.CallOption) (*ListClusterCredentialResp, error)
 	//* federation cluster management
@@ -1057,6 +1070,7 @@ type ClusterManagerService interface {
 	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...client.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
 	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
+	ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error)
 	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error)
 	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...client.CallOption) (*GetCloudBandwidthPackagesResponse, error)
 	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...client.CallOption) (*ListCloudRuntimeInfoResponse, error)
@@ -1469,6 +1483,16 @@ func (c *clusterManagerService) GetClusterCredential(ctx context.Context, in *Ge
 func (c *clusterManagerService) UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...client.CallOption) (*UpdateClusterCredentialResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.UpdateClusterCredential", in)
 	out := new(UpdateClusterCredentialResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, opts ...client.CallOption) (*UpdateClusterKubeConfigResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.UpdateClusterKubeConfig", in)
+	out := new(UpdateClusterKubeConfigResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2316,6 +2340,16 @@ func (c *clusterManagerService) ListCloudInstances(ctx context.Context, in *List
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, opts ...client.CallOption) (*ListCloudInstancesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudInstancesByPost", in)
+	out := new(ListCloudInstancesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...client.CallOption) (*GetCloudAccountTypeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetCloudAccountType", in)
 	out := new(GetCloudAccountTypeResponse)
@@ -2628,6 +2662,7 @@ type ClusterManagerHandler interface {
 	//* cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq, *GetClusterCredentialResp) error
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq, *UpdateClusterCredentialResp) error
+	UpdateClusterKubeConfig(context.Context, *UpdateClusterKubeConfigReq, *UpdateClusterKubeConfigResp) error
 	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq, *DeleteClusterCredentialResp) error
 	ListClusterCredential(context.Context, *ListClusterCredentialReq, *ListClusterCredentialResp) error
 	//* federation cluster management
@@ -2722,6 +2757,7 @@ type ClusterManagerHandler interface {
 	ListCloudProjects(context.Context, *ListCloudProjectsRequest, *ListCloudProjectsResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
 	ListCloudInstances(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
+	ListCloudInstancesByPost(context.Context, *ListCloudInstancesRequest, *ListCloudInstancesResponse) error
 	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest, *GetCloudAccountTypeResponse) error
 	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest, *GetCloudBandwidthPackagesResponse) error
 	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest, *ListCloudRuntimeInfoResponse) error
@@ -2807,6 +2843,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
 		GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, out *GetClusterCredentialResp) error
 		UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error
+		UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, out *UpdateClusterKubeConfigResp) error
 		DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error
 		ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, out *ListClusterCredentialResp) error
 		InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, out *InitFederationClusterResp) error
@@ -2891,6 +2928,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
 		ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
+		ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error
 		GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error
 		GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, out *GetCloudBandwidthPackagesResponse) error
 		ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, out *ListCloudRuntimeInfoResponse) error
@@ -3136,6 +3174,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.UpdateClusterCredential",
 		Path:    []string{"/clustermanager/v1/clustercredential/{serverKey}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.UpdateClusterKubeConfig",
+		Path:    []string{"/clustermanager/v1/clusters/{clusterID}/clustercredential"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
@@ -3644,6 +3688,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudInstancesByPost",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/instances"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetCloudAccountType",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/accounttype"},
 		Method:  []string{"GET"},
@@ -3954,6 +4004,10 @@ func (h *clusterManagerHandler) GetClusterCredential(ctx context.Context, in *Ge
 
 func (h *clusterManagerHandler) UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, out *UpdateClusterCredentialResp) error {
 	return h.ClusterManagerHandler.UpdateClusterCredential(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, out *UpdateClusterKubeConfigResp) error {
+	return h.ClusterManagerHandler.UpdateClusterKubeConfig(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, out *DeleteClusterCredentialResp) error {
@@ -4290,6 +4344,10 @@ func (h *clusterManagerHandler) ListCloudOsImage(ctx context.Context, in *ListCl
 
 func (h *clusterManagerHandler) ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error {
 	return h.ClusterManagerHandler.ListCloudInstances(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudInstancesByPost(ctx context.Context, in *ListCloudInstancesRequest, out *ListCloudInstancesResponse) error {
+	return h.ClusterManagerHandler.ListCloudInstancesByPost(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, out *GetCloudAccountTypeResponse) error {

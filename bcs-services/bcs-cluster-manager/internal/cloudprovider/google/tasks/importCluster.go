@@ -191,22 +191,24 @@ func importClusterInstances(data *cloudprovider.CloudDependBasicInfo) error {
 		}
 	}
 
-	gceCli, err := api.NewComputeServiceClient(data.CmOption)
-	if err != nil {
-		return fmt.Errorf("get gce client failed, %s", err.Error())
-	}
+	/*
+		gceCli, err := api.NewComputeServiceClient(data.CmOption)
+		if err != nil {
+			return fmt.Errorf("get gce client failed, %s", err.Error())
+		}
 
-	err = importClusterNodesToCM(context.Background(), gceCli, nodes.Items, data.Cluster.ClusterID)
-	if err != nil {
-		return err
-	}
+		err = importClusterNodesToCM(context.Background(), gceCli, nodes.Items, data.Cluster.ClusterID)
+		if err != nil {
+			return err
+		}
+	*/
 
 	return nil
 }
 
 // ImportClusterNodesToCM writes cluster nodes to DB
-func importClusterNodesToCM(
-	ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error {
+func importClusterNodesToCM( // nolint
+	ctx context.Context, gceCli *api.ComputeServiceClient, nodes []k8scorev1.Node, clusterID string) error { // nolint
 
 	for _, v := range nodes {
 		nodeZone := ""

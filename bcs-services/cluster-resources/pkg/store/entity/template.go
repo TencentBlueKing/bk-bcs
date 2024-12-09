@@ -37,6 +37,7 @@ type Template struct {
 	DraftEditFormat     string             `json:"draftEditFormat" bson:"draftEditFormat"`
 	LatestDeployVersion string             `json:"latestDeployVersion" bson:"latestDeployVersion"`
 	LatestDeployer      string             `json:"latestDeployer" bson:"latestDeployer"`
+	RenderMode          string             `json:"renderMode" bson:"renderMode"`
 }
 
 // ToMap trans Template to map
@@ -66,5 +67,6 @@ func (t *Template) ToMap() map[string]interface{} {
 	m["draftEditFormat"] = t.DraftEditFormat
 	m["latestDeployVersion"] = t.LatestDeployVersion
 	m["latestDeployer"] = t.LatestDeployer
+	m["renderMode"] = t.RenderMode
 	return m
 }

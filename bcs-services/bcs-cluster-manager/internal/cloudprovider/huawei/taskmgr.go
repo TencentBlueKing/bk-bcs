@@ -268,7 +268,7 @@ func (t *Task) BuildImportClusterTask(cls *proto.Cluster, opt *cloudprovider.Imp
 	// step1: import cluster registerKubeConfigStep
 	importCluster.BuildRegisterKubeConfigStep(task)
 	// step2: import cluster nodes step
-	importCluster.BuildImportClusterNodesStep(task)
+	// importCluster.BuildImportClusterNodesStep(task)
 	// step3: install cluster watch component
 	common.BuildWatchComponentTaskStep(task, cls, "")
 	// step3: install image pull secret addon if config

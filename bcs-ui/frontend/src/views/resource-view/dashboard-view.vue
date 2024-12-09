@@ -8,7 +8,7 @@
         @toggle-view-config="showViewConfig = !showViewConfig"
         @create-new-view="handleCreateView"
         @edit-view="handleEditView" />
-      <div class="flex items-start h-[calc(100%-66px)] overflow-auto">
+      <div class="flex items-start v-m-menu-box overflow-auto">
         <!-- 视图配置 -->
         <ViewConfig
           v-if="showViewConfig"

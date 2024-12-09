@@ -985,6 +985,12 @@ func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
 	return false, cloudprovider.ErrCloudNotImplemented
 }
 
+// UpdateCloudKubeConfig update cluster kubeconfig to clustercredential
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) error {
+	return cloudprovider.ErrCloudNotImplemented
+}
+
 func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 	property := *cluster.Property
 

@@ -64,7 +64,7 @@ func ListLogCollectorsWithPath(ctx context.Context, clusterID, spaceUID string,
 	path string) ([]ListBCSCollectorRespData, error) {
 	url := fmt.Sprintf("%s/%s", config.G.BKLog.APIServer, path)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func ListLogCollectorsWithPath(ctx context.Context, clusterID, spaceUID string,
 func CreateLogCollectors(ctx context.Context, req *CreateBCSCollectorReq) (*CreateBCSCollectorRespData, error) {
 	url := fmt.Sprintf("%s/create_bcs_collector", config.G.BKLog.APIServer)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization(req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func UpdateLogCollectors(ctx context.Context, ruleID int, req *UpdateBCSCollecto
 	error) {
 	url := fmt.Sprintf("%s/update_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization(req.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func UpdateLogCollectors(ctx context.Context, ruleID int, req *UpdateBCSCollecto
 func DeleteLogCollectors(ctx context.Context, ruleID int) error {
 	url := fmt.Sprintf("%s/delete_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return err
 	}
@@ -202,10 +202,10 @@ func DeleteLogCollectors(ctx context.Context, ruleID int) error {
 }
 
 // RetryLogCollectors retry log collectors
-func RetryLogCollectors(ctx context.Context, ruleID int) error {
+func RetryLogCollectors(ctx context.Context, ruleID int, username string) error {
 	url := fmt.Sprintf("%s/retry_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization(username)
 	if err != nil {
 		return err
 	}
@@ -236,10 +236,10 @@ func RetryLogCollectors(ctx context.Context, ruleID int) error {
 }
 
 // StartLogCollectors start log collectors
-func StartLogCollectors(ctx context.Context, ruleID int) error {
+func StartLogCollectors(ctx context.Context, ruleID int, username string) error {
 	url := fmt.Sprintf("%s/start_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization(username)
 	if err != nil {
 		return err
 	}
@@ -270,10 +270,10 @@ func StartLogCollectors(ctx context.Context, ruleID int) error {
 }
 
 // StopLogCollectors stop log collectors
-func StopLogCollectors(ctx context.Context, ruleID int) error {
+func StopLogCollectors(ctx context.Context, ruleID int, username string) error {
 	url := fmt.Sprintf("%s/stop_bcs_collector/%d", config.G.BKLog.APIServer, ruleID)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization(username)
 	if err != nil {
 		return err
 	}
@@ -307,7 +307,7 @@ func StopLogCollectors(ctx context.Context, ruleID int) error {
 func HasLog(ctx context.Context, indexSetID int) (bool, error) {
 	url := fmt.Sprintf("%s/esquery_search", config.G.BKLog.APIServer)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return false, err
 	}
@@ -342,7 +342,7 @@ func HasLog(ctx context.Context, indexSetID int) (bool, error) {
 func GetStorageClusters(ctx context.Context, spaceUID string) ([]GetStorageClustersRespData, error) {
 	url := fmt.Sprintf("%s/databus_storage/cluster_groups", config.G.BKLog.APIServer)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return nil, err
 	}
@@ -374,10 +374,10 @@ func GetStorageClusters(ctx context.Context, spaceUID string) ([]GetStorageClust
 }
 
 // SwitchStorage switch storage
-func SwitchStorage(ctx context.Context, spaceUID, bcsClusterID string, storageClusterID int) error {
+func SwitchStorage(ctx context.Context, spaceUID, bcsClusterID string, storageClusterID int, username string) error {
 	url := fmt.Sprintf("%s/switch_bcs_collector_storage", config.G.BKLog.APIServer)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization(username)
 	if err != nil {
 		return err
 	}
@@ -418,7 +418,7 @@ func SwitchStorage(ctx context.Context, spaceUID, bcsClusterID string, storageCl
 func GetBcsCollectorStorage(ctx context.Context, spaceUID, clusterID string) (int, error) {
 	url := fmt.Sprintf("%s/get_bcs_collector_storage", config.G.BKLog.APIServer)
 	// generate bk api auth header, X-Bkapi-Authorization
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return 0, err
 	}

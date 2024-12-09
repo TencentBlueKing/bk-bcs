@@ -86,13 +86,13 @@ func TestHandleDelayedTask(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		err := etcdBroker.handleDelayedTask(ctx)
-		if err != nil {
-			assert.ErrorIs(t, err, context.DeadlineExceeded)
+		herr := etcdBroker.handleDelayedTask(ctx)
+		if herr != nil {
+			assert.ErrorIs(t, herr, context.DeadlineExceeded)
 			return
 		}
 
-		assert.NoError(t, err)
+		assert.NoError(t, herr)
 	}()
 
 	wg.Add(1)
@@ -101,13 +101,13 @@ func TestHandleDelayedTask(t *testing.T) {
 		// 排队等待
 		time.Sleep(time.Second)
 
-		err := etcdBroker.handleDelayedTask(ctx)
-		if err != nil {
-			assert.ErrorIs(t, err, context.DeadlineExceeded)
+		herr := etcdBroker.handleDelayedTask(ctx)
+		if herr != nil {
+			assert.ErrorIs(t, herr, context.DeadlineExceeded)
 			return
 		}
 
-		assert.NoError(t, err)
+		assert.NoError(t, herr)
 
 	}()
 

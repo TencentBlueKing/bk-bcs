@@ -210,11 +210,14 @@ type AuthInfo struct {
 }
 
 // GetBKAPIAuthorization generate bk api auth header, X-Bkapi-Authorization
-func GetBKAPIAuthorization() (string, error) {
+func GetBKAPIAuthorization(username string) (string, error) {
+	if username == "" {
+		username = config.G.Base.BKUsername
+	}
 	auth := &AuthInfo{
 		BkAppCode:   config.G.Base.AppCode,
 		BkAppSecret: config.G.Base.AppSecret,
-		BkUserName:  config.G.Base.BKUsername,
+		BkUserName:  username,
 	}
 
 	userAuth, err := json.Marshal(auth)

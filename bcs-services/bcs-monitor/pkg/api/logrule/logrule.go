@@ -305,12 +305,13 @@ func RetryLogRule(c *rest.Context) (interface{}, error) {
 			AddPodLabel:           rule.Rule.AddPodLabel,
 			ExtraLabels:           rule.Rule.ExtraLabels,
 			LogRuleContainer:      []bklog.LogRuleContainer{rule.Rule.LogRuleContainer},
+			Username:              c.Username,
 		})
 		return nil, nil
 	}
 
 	// 重试 bklog collector
-	err = bklog.RetryLogCollectors(c.Request.Context(), rule.RuleID)
+	err = bklog.RetryLogCollectors(c.Request.Context(), rule.RuleID, c.Username)
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
@@ -356,7 +357,7 @@ func EnableLogRule(c *rest.Context) (interface{}, error) {
 	}
 
 	// 开启 bklog collector
-	err = bklog.StartLogCollectors(c.Request.Context(), rule.RuleID)
+	err = bklog.StartLogCollectors(c.Request.Context(), rule.RuleID, c.Username)
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
@@ -402,7 +403,7 @@ func DisableLogRule(c *rest.Context) (interface{}, error) {
 	}
 
 	// 停止 bklog collector
-	err = bklog.StopLogCollectors(c.Request.Context(), rule.RuleID)
+	err = bklog.StopLogCollectors(c.Request.Context(), rule.RuleID, c.Username)
 	if err != nil {
 		data.Update(entity.FieldKeyStatus, entity.FailedStatus)
 		data.Update(entity.FieldKeyMessage, err.Error())
@@ -461,7 +462,7 @@ func SwitchStorage(c *rest.Context) (interface{}, error) {
 	}
 
 	if err := bklog.SwitchStorage(c.Request.Context(),
-		GetSpaceID(c.ProjectCode), c.ClusterId, req.StorageClusterID); err != nil {
+		GetSpaceID(c.ProjectCode), c.ClusterId, req.StorageClusterID, c.Username); err != nil {
 		return nil, err
 	}
 

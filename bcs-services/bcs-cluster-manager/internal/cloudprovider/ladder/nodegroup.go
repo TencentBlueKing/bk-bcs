@@ -371,7 +371,7 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 }
 
 // GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // nolint
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 
 	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
@@ -477,8 +477,6 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 				}
 			}
 			lock.Unlock()
-
-			return
 		}(filterGroups[i])
 	}
 	barrier.Wait()
@@ -490,7 +488,34 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
 		}
 	}
 
+	for _, projectQuota := range projectQuotas {
+		matchProjectAutoscalerQuotaByGroup(filterGroups, projectQuota)
+	}
+
 	return projectQuotas, nil
+}
+
+func matchProjectAutoscalerQuotaByGroup(groups []proto.NodeGroup, projectQuota *proto.ProjectAutoscalerQuota) {
+	if projectQuota.GetTotalGroupIds() == nil {
+		projectQuota.TotalGroupIds = make([]string, 0)
+	}
+
+	for _, group := range groups {
+		if group.Region != projectQuota.Region {
+			continue
+		}
+		if group.GetLaunchTemplate().GetInstanceType() != projectQuota.InstanceType {
+			continue
+		}
+
+		// 任意可用区 && 指定可用区
+		if group.GetAutoScaling().GetZones() == nil || len(group.GetAutoScaling().GetZones()) == 0 ||
+			(len(group.GetAutoScaling().Zones) == 1 && group.GetAutoScaling().Zones[0] == "") ||
+			utils.StringInSlice(projectQuota.Zone, group.GetAutoScaling().GetZones()) {
+			projectQuota.TotalGroupIds = append(projectQuota.TotalGroupIds, group.NodeGroupID)
+			continue
+		}
+	}
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit

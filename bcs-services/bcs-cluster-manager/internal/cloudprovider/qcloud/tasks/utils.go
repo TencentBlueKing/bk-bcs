@@ -147,7 +147,7 @@ func updateNodeIPByNodeID(ctx context.Context, clusterId string, n business.Inst
 	return nil
 }
 
-func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) {
+func transInstanceIPToNodes(ipList []string, opt *cloudprovider.ListNodesOption) ([]*cmproto.Node, error) { // nolint
 	nodes, err := business.ListNodesByIP(ipList, &cloudprovider.ListNodesOption{
 		Common:       opt.Common,
 		ClusterVPCID: opt.ClusterVPCID,

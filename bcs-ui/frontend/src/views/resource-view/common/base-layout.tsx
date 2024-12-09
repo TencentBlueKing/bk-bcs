@@ -2,7 +2,7 @@
 import yamljs from 'js-yaml';
 import jp from 'jsonpath';
 import { isEqual } from 'lodash';
-import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, provide, ref, toRefs, watch } from 'vue';
 
 import NSSelect from '../view-manage/ns-select.vue';
 import useViewConfig from '../view-manage/use-view-config';
@@ -142,7 +142,13 @@ export default defineComponent({
         ],
       }, [column.label]);
     };
-    const getJsonPathValue = (row, path: string) => jp.value(row, path.indexOf('$') === 0 ? path : `$.${path}`);
+    const getJsonPathValue = (row, path: string) => {
+      try {
+        return jp.value(row, path?.indexOf('$') === 0 ? path : `$.${path}`);
+      } catch (_) {
+        return undefined;
+      }
+    };
     // 状态
     const statusMap = {
       normal: $i18n.t('generic.status.ready'),
@@ -621,6 +627,9 @@ export default defineComponent({
     };
 
     const { start, stop } = useInterval(() => handleGetTableData(false), 5000);
+
+    // 通过provide暴露方法
+    provide('handleGetExtData', handleGetExtData);
 
     onMounted(async () => {
       isLoading.value = true;

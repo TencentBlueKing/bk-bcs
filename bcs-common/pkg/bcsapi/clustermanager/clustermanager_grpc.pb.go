@@ -18,221 +18,154 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-const (
-	ClusterManager_CreateCluster_FullMethodName             = "/clustermanager.ClusterManager/CreateCluster"
-	ClusterManager_RetryCreateClusterTask_FullMethodName    = "/clustermanager.ClusterManager/RetryCreateClusterTask"
-	ClusterManager_CheckCloudKubeConfig_FullMethodName      = "/clustermanager.ClusterManager/CheckCloudKubeConfig"
-	ClusterManager_ImportCluster_FullMethodName             = "/clustermanager.ClusterManager/ImportCluster"
-	ClusterManager_UpdateCluster_FullMethodName             = "/clustermanager.ClusterManager/UpdateCluster"
-	ClusterManager_AddNodesToCluster_FullMethodName         = "/clustermanager.ClusterManager/AddNodesToCluster"
-	ClusterManager_DeleteNodesFromCluster_FullMethodName    = "/clustermanager.ClusterManager/DeleteNodesFromCluster"
-	ClusterManager_ListNodesInCluster_FullMethodName        = "/clustermanager.ClusterManager/ListNodesInCluster"
-	ClusterManager_ListMastersInCluster_FullMethodName      = "/clustermanager.ClusterManager/ListMastersInCluster"
-	ClusterManager_DeleteCluster_FullMethodName             = "/clustermanager.ClusterManager/DeleteCluster"
-	ClusterManager_GetCluster_FullMethodName                = "/clustermanager.ClusterManager/GetCluster"
-	ClusterManager_ListCluster_FullMethodName               = "/clustermanager.ClusterManager/ListCluster"
-	ClusterManager_ListProjectCluster_FullMethodName        = "/clustermanager.ClusterManager/ListProjectCluster"
-	ClusterManager_ListCommonCluster_FullMethodName         = "/clustermanager.ClusterManager/ListCommonCluster"
-	ClusterManager_GetNode_FullMethodName                   = "/clustermanager.ClusterManager/GetNode"
-	ClusterManager_UpdateNode_FullMethodName                = "/clustermanager.ClusterManager/UpdateNode"
-	ClusterManager_CheckNodeInCluster_FullMethodName        = "/clustermanager.ClusterManager/CheckNodeInCluster"
-	ClusterManager_CordonNode_FullMethodName                = "/clustermanager.ClusterManager/CordonNode"
-	ClusterManager_UnCordonNode_FullMethodName              = "/clustermanager.ClusterManager/UnCordonNode"
-	ClusterManager_DrainNode_FullMethodName                 = "/clustermanager.ClusterManager/DrainNode"
-	ClusterManager_UpdateNodeLabels_FullMethodName          = "/clustermanager.ClusterManager/UpdateNodeLabels"
-	ClusterManager_UpdateNodeTaints_FullMethodName          = "/clustermanager.ClusterManager/UpdateNodeTaints"
-	ClusterManager_GetClusterCredential_FullMethodName      = "/clustermanager.ClusterManager/GetClusterCredential"
-	ClusterManager_UpdateClusterCredential_FullMethodName   = "/clustermanager.ClusterManager/UpdateClusterCredential"
-	ClusterManager_DeleteClusterCredential_FullMethodName   = "/clustermanager.ClusterManager/DeleteClusterCredential"
-	ClusterManager_ListClusterCredential_FullMethodName     = "/clustermanager.ClusterManager/ListClusterCredential"
-	ClusterManager_InitFederationCluster_FullMethodName     = "/clustermanager.ClusterManager/InitFederationCluster"
-	ClusterManager_AddFederatedCluster_FullMethodName       = "/clustermanager.ClusterManager/AddFederatedCluster"
-	ClusterManager_CreateNamespace_FullMethodName           = "/clustermanager.ClusterManager/CreateNamespace"
-	ClusterManager_UpdateNamespace_FullMethodName           = "/clustermanager.ClusterManager/UpdateNamespace"
-	ClusterManager_DeleteNamespace_FullMethodName           = "/clustermanager.ClusterManager/DeleteNamespace"
-	ClusterManager_GetNamespace_FullMethodName              = "/clustermanager.ClusterManager/GetNamespace"
-	ClusterManager_ListNamespace_FullMethodName             = "/clustermanager.ClusterManager/ListNamespace"
-	ClusterManager_CreateNamespaceQuota_FullMethodName      = "/clustermanager.ClusterManager/CreateNamespaceQuota"
-	ClusterManager_UpdateNamespaceQuota_FullMethodName      = "/clustermanager.ClusterManager/UpdateNamespaceQuota"
-	ClusterManager_DeleteNamespaceQuota_FullMethodName      = "/clustermanager.ClusterManager/DeleteNamespaceQuota"
-	ClusterManager_GetNamespaceQuota_FullMethodName         = "/clustermanager.ClusterManager/GetNamespaceQuota"
-	ClusterManager_ListNamespaceQuota_FullMethodName        = "/clustermanager.ClusterManager/ListNamespaceQuota"
-	ClusterManager_CreateNamespaceWithQuota_FullMethodName  = "/clustermanager.ClusterManager/CreateNamespaceWithQuota"
-	ClusterManager_CreateProject_FullMethodName             = "/clustermanager.ClusterManager/CreateProject"
-	ClusterManager_UpdateProject_FullMethodName             = "/clustermanager.ClusterManager/UpdateProject"
-	ClusterManager_DeleteProject_FullMethodName             = "/clustermanager.ClusterManager/DeleteProject"
-	ClusterManager_GetProject_FullMethodName                = "/clustermanager.ClusterManager/GetProject"
-	ClusterManager_ListProject_FullMethodName               = "/clustermanager.ClusterManager/ListProject"
-	ClusterManager_CreateCloud_FullMethodName               = "/clustermanager.ClusterManager/CreateCloud"
-	ClusterManager_UpdateCloud_FullMethodName               = "/clustermanager.ClusterManager/UpdateCloud"
-	ClusterManager_DeleteCloud_FullMethodName               = "/clustermanager.ClusterManager/DeleteCloud"
-	ClusterManager_GetCloud_FullMethodName                  = "/clustermanager.ClusterManager/GetCloud"
-	ClusterManager_ListCloud_FullMethodName                 = "/clustermanager.ClusterManager/ListCloud"
-	ClusterManager_CreateCloudVPC_FullMethodName            = "/clustermanager.ClusterManager/CreateCloudVPC"
-	ClusterManager_UpdateCloudVPC_FullMethodName            = "/clustermanager.ClusterManager/UpdateCloudVPC"
-	ClusterManager_DeleteCloudVPC_FullMethodName            = "/clustermanager.ClusterManager/DeleteCloudVPC"
-	ClusterManager_ListCloudVPC_FullMethodName              = "/clustermanager.ClusterManager/ListCloudVPC"
-	ClusterManager_ListCloudRegions_FullMethodName          = "/clustermanager.ClusterManager/ListCloudRegions"
-	ClusterManager_GetVPCCidr_FullMethodName                = "/clustermanager.ClusterManager/GetVPCCidr"
-	ClusterManager_CreateNodeGroup_FullMethodName           = "/clustermanager.ClusterManager/CreateNodeGroup"
-	ClusterManager_UpdateNodeGroup_FullMethodName           = "/clustermanager.ClusterManager/UpdateNodeGroup"
-	ClusterManager_DeleteNodeGroup_FullMethodName           = "/clustermanager.ClusterManager/DeleteNodeGroup"
-	ClusterManager_GetNodeGroup_FullMethodName              = "/clustermanager.ClusterManager/GetNodeGroup"
-	ClusterManager_ListNodeGroup_FullMethodName             = "/clustermanager.ClusterManager/ListNodeGroup"
-	ClusterManager_MoveNodesToGroup_FullMethodName          = "/clustermanager.ClusterManager/MoveNodesToGroup"
-	ClusterManager_RemoveNodesFromGroup_FullMethodName      = "/clustermanager.ClusterManager/RemoveNodesFromGroup"
-	ClusterManager_CleanNodesInGroup_FullMethodName         = "/clustermanager.ClusterManager/CleanNodesInGroup"
-	ClusterManager_CleanNodesInGroupV2_FullMethodName       = "/clustermanager.ClusterManager/CleanNodesInGroupV2"
-	ClusterManager_ListNodesInGroup_FullMethodName          = "/clustermanager.ClusterManager/ListNodesInGroup"
-	ClusterManager_UpdateGroupDesiredNode_FullMethodName    = "/clustermanager.ClusterManager/UpdateGroupDesiredNode"
-	ClusterManager_UpdateGroupDesiredSize_FullMethodName    = "/clustermanager.ClusterManager/UpdateGroupDesiredSize"
-	ClusterManager_EnableNodeGroupAutoScale_FullMethodName  = "/clustermanager.ClusterManager/EnableNodeGroupAutoScale"
-	ClusterManager_DisableNodeGroupAutoScale_FullMethodName = "/clustermanager.ClusterManager/DisableNodeGroupAutoScale"
-	ClusterManager_CreateTask_FullMethodName                = "/clustermanager.ClusterManager/CreateTask"
-	ClusterManager_RetryTask_FullMethodName                 = "/clustermanager.ClusterManager/RetryTask"
-	ClusterManager_UpdateTask_FullMethodName                = "/clustermanager.ClusterManager/UpdateTask"
-	ClusterManager_DeleteTask_FullMethodName                = "/clustermanager.ClusterManager/DeleteTask"
-	ClusterManager_GetTask_FullMethodName                   = "/clustermanager.ClusterManager/GetTask"
-	ClusterManager_ListTask_FullMethodName                  = "/clustermanager.ClusterManager/ListTask"
-	ClusterManager_CreateAutoScalingOption_FullMethodName   = "/clustermanager.ClusterManager/CreateAutoScalingOption"
-	ClusterManager_UpdateAutoScalingOption_FullMethodName   = "/clustermanager.ClusterManager/UpdateAutoScalingOption"
-	ClusterManager_DeleteAutoScalingOption_FullMethodName   = "/clustermanager.ClusterManager/DeleteAutoScalingOption"
-	ClusterManager_GetAutoScalingOption_FullMethodName      = "/clustermanager.ClusterManager/GetAutoScalingOption"
-	ClusterManager_ListAutoScalingOption_FullMethodName     = "/clustermanager.ClusterManager/ListAutoScalingOption"
-	ClusterManager_UpdateAutoScalingStatus_FullMethodName   = "/clustermanager.ClusterManager/UpdateAutoScalingStatus"
-	ClusterManager_CreateCloudAccount_FullMethodName        = "/clustermanager.ClusterManager/CreateCloudAccount"
-	ClusterManager_UpdateCloudAccount_FullMethodName        = "/clustermanager.ClusterManager/UpdateCloudAccount"
-	ClusterManager_DeleteCloudAccount_FullMethodName        = "/clustermanager.ClusterManager/DeleteCloudAccount"
-	ClusterManager_ListCloudAccount_FullMethodName          = "/clustermanager.ClusterManager/ListCloudAccount"
-	ClusterManager_ListCloudAccountToPerm_FullMethodName    = "/clustermanager.ClusterManager/ListCloudAccountToPerm"
-	ClusterManager_GetCloudRegions_FullMethodName           = "/clustermanager.ClusterManager/GetCloudRegions"
-	ClusterManager_GetCloudRegionZones_FullMethodName       = "/clustermanager.ClusterManager/GetCloudRegionZones"
-	ClusterManager_ListCloudRegionCluster_FullMethodName    = "/clustermanager.ClusterManager/ListCloudRegionCluster"
-	ClusterManager_ListCloudSubnets_FullMethodName          = "/clustermanager.ClusterManager/ListCloudSubnets"
-	ClusterManager_ListCloudSecurityGroups_FullMethodName   = "/clustermanager.ClusterManager/ListCloudSecurityGroups"
-	ClusterManager_ListCloudInstanceTypes_FullMethodName    = "/clustermanager.ClusterManager/ListCloudInstanceTypes"
-	ClusterManager_ListCloudOsImage_FullMethodName          = "/clustermanager.ClusterManager/ListCloudOsImage"
-	ClusterManager_ListOperationLogs_FullMethodName         = "/clustermanager.ClusterManager/ListOperationLogs"
-	ClusterManager_ListResourceSchema_FullMethodName        = "/clustermanager.ClusterManager/ListResourceSchema"
-	ClusterManager_GetResourceSchema_FullMethodName         = "/clustermanager.ClusterManager/GetResourceSchema"
-	ClusterManager_QueryPermByActionID_FullMethodName       = "/clustermanager.ClusterManager/QueryPermByActionID"
-	ClusterManager_ListBKCloud_FullMethodName               = "/clustermanager.ClusterManager/ListBKCloud"
-	ClusterManager_ListCCTopology_FullMethodName            = "/clustermanager.ClusterManager/ListCCTopology"
-)
-
 // ClusterManagerClient is the client API for ClusterManager service.
 //
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ClusterManagerClient interface {
-	//* cluster management
+	// * cluster management
 	CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...grpc.CallOption) (*CreateClusterResp, error)
 	RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...grpc.CallOption) (*RetryCreateClusterResp, error)
 	CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...grpc.CallOption) (*KubeConfigResp, error)
+	CheckCloudKubeConfigConnect(ctx context.Context, in *KubeConfigConnectReq, opts ...grpc.CallOption) (*KubeConfigConnectResp, error)
 	ImportCluster(ctx context.Context, in *ImportClusterReq, opts ...grpc.CallOption) (*ImportClusterResp, error)
 	UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...grpc.CallOption) (*UpdateClusterResp, error)
 	AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...grpc.CallOption) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...grpc.CallOption) (*DeleteNodesResponse, error)
+	BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...grpc.CallOption) (*BatchDeleteClusterNodesResponse, error)
+	GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, opts ...grpc.CallOption) (*GetClustersMetaDataResponse, error)
 	ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...grpc.CallOption) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...grpc.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...grpc.CallOption) (*DeleteClusterResp, error)
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...grpc.CallOption) (*GetClusterResp, error)
-	ListCluster(ctx context.Context, in *ListClusterReq, opts ...grpc.CallOption) (*ListClusterResp, error)
 	ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...grpc.CallOption) (*ListProjectClusterResp, error)
+	ListCluster(ctx context.Context, in *ListClusterReq, opts ...grpc.CallOption) (*ListClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...grpc.CallOption) (*ListCommonClusterResp, error)
-	//* node management
+	AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...grpc.CallOption) (*AddSubnetToClusterResp, error)
+	SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...grpc.CallOption) (*SwitchClusterUnderlayNetworkResp, error)
+	CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...grpc.CallOption) (*CreateVirtualClusterResp, error)
+	DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...grpc.CallOption) (*DeleteVirtualClusterResp, error)
+	UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...grpc.CallOption) (*UpdateVirtualClusterQuotaResp, error)
+	// * node management
 	GetNode(ctx context.Context, in *GetNodeRequest, opts ...grpc.CallOption) (*GetNodeResponse, error)
+	GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...grpc.CallOption) (*GetNodeInfoResponse, error)
+	RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...grpc.CallOption) (*CommonResp, error)
 	UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...grpc.CallOption) (*UpdateNodeResponse, error)
+	UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, opts ...grpc.CallOption) (*UpdateClusterModuleResponse, error)
 	CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...grpc.CallOption) (*CheckNodesResponse, error)
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...grpc.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...grpc.CallOption) (*UnCordonNodeResponse, error)
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...grpc.CallOption) (*DrainNodeResponse, error)
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...grpc.CallOption) (*UpdateNodeLabelsResponse, error)
+	UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...grpc.CallOption) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...grpc.CallOption) (*UpdateNodeTaintsResponse, error)
-	//* cluster credential management
+	// * cluster credential management
 	GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...grpc.CallOption) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...grpc.CallOption) (*UpdateClusterCredentialResp, error)
+	UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, opts ...grpc.CallOption) (*UpdateClusterKubeConfigResp, error)
 	DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...grpc.CallOption) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...grpc.CallOption) (*ListClusterCredentialResp, error)
-	//* federation cluster management
+	// * federation cluster management
 	InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...grpc.CallOption) (*InitFederationClusterResp, error)
 	AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...grpc.CallOption) (*AddFederatedClusterResp, error)
-	//* namespace management *
-	CreateNamespace(ctx context.Context, in *CreateNamespaceReq, opts ...grpc.CallOption) (*CreateNamespaceResp, error)
-	UpdateNamespace(ctx context.Context, in *UpdateNamespaceReq, opts ...grpc.CallOption) (*UpdateNamespaceResp, error)
-	DeleteNamespace(ctx context.Context, in *DeleteNamespaceReq, opts ...grpc.CallOption) (*DeleteNamespaceResp, error)
-	GetNamespace(ctx context.Context, in *GetNamespaceReq, opts ...grpc.CallOption) (*GetNamespaceResp, error)
-	ListNamespace(ctx context.Context, in *ListNamespaceReq, opts ...grpc.CallOption) (*ListNamespaceResp, error)
-	//* NamespaceQuota management *
-	CreateNamespaceQuota(ctx context.Context, in *CreateNamespaceQuotaReq, opts ...grpc.CallOption) (*CreateNamespaceQuotaResp, error)
-	UpdateNamespaceQuota(ctx context.Context, in *UpdateNamespaceQuotaReq, opts ...grpc.CallOption) (*UpdateNamespaceQuotaResp, error)
-	DeleteNamespaceQuota(ctx context.Context, in *DeleteNamespaceQuotaReq, opts ...grpc.CallOption) (*DeleteNamespaceQuotaResp, error)
-	GetNamespaceQuota(ctx context.Context, in *GetNamespaceQuotaReq, opts ...grpc.CallOption) (*GetNamespaceQuotaResp, error)
-	ListNamespaceQuota(ctx context.Context, in *ListNamespaceQuotaReq, opts ...grpc.CallOption) (*ListNamespaceQuotaResp, error)
-	CreateNamespaceWithQuota(ctx context.Context, in *CreateNamespaceWithQuotaReq, opts ...grpc.CallOption) (*CreateNamespaceWithQuotaResp, error)
-	//* project information management *
-	CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error)
-	UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...grpc.CallOption) (*UpdateProjectResponse, error)
-	DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...grpc.CallOption) (*DeleteProjectResponse, error)
-	GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*GetProjectResponse, error)
-	ListProject(ctx context.Context, in *ListProjectRequest, opts ...grpc.CallOption) (*ListProjectResponse, error)
-	//* Cloud information management *
+	// * Cloud information management *
 	CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...grpc.CallOption) (*CreateCloudResponse, error)
 	UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...grpc.CallOption) (*UpdateCloudResponse, error)
 	DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...grpc.CallOption) (*DeleteCloudResponse, error)
 	GetCloud(ctx context.Context, in *GetCloudRequest, opts ...grpc.CallOption) (*GetCloudResponse, error)
 	ListCloud(ctx context.Context, in *ListCloudRequest, opts ...grpc.CallOption) (*ListCloudResponse, error)
-	//* Cloud VPC information management *
+	// * Cloud VPC information management *
 	CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...grpc.CallOption) (*CreateCloudVPCResponse, error)
 	UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...grpc.CallOption) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...grpc.CallOption) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...grpc.CallOption) (*ListCloudVPCResponse, error)
 	ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...grpc.CallOption) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...grpc.CallOption) (*GetVPCCidrResponse, error)
-	//* NodeGroup information management *
+	// * NodeGroup information management *
 	CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...grpc.CallOption) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...grpc.CallOption) (*UpdateNodeGroupResponse, error)
 	DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...grpc.CallOption) (*DeleteNodeGroupResponse, error)
 	GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...grpc.CallOption) (*GetNodeGroupResponse, error)
+	ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, opts ...grpc.CallOption) (*ListClusterNodeGroupResponse, error)
 	ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...grpc.CallOption) (*ListNodeGroupResponse, error)
+	RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, opts ...grpc.CallOption) (*RecommendNodeGroupConfResp, error)
 	MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...grpc.CallOption) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...grpc.CallOption) (*RemoveNodesFromGroupResponse, error)
 	CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...grpc.CallOption) (*CleanNodesInGroupResponse, error)
 	CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, opts ...grpc.CallOption) (*CleanNodesInGroupV2Response, error)
-	ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, opts ...grpc.CallOption) (*ListNodesInGroupResponse, error)
+	ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...grpc.CallOption) (*ListNodesInGroupResponse, error)
+	ListNodesInGroupV2(ctx context.Context, in *ListNodesInGroupV2Request, opts ...grpc.CallOption) (*ListNodesInGroupV2Response, error)
 	UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...grpc.CallOption) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...grpc.CallOption) (*UpdateGroupDesiredSizeResponse, error)
+	UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...grpc.CallOption) (*UpdateGroupMinMaxSizeResponse, error)
+	UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, opts ...grpc.CallOption) (*UpdateGroupAsTimeRangeResponse, error)
+	GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...grpc.CallOption) (*GetExternalNodeScriptResponse, error)
+	TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...grpc.CallOption) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...grpc.CallOption) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...grpc.CallOption) (*DisableNodeGroupAutoScaleResponse, error)
-	//* Task information management *
+	GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...grpc.CallOption) (*GetProviderResourceUsageResponse, error)
+	GetProjectResourceQuotaUsage(ctx context.Context, in *GetProjectResourceQuotaUsageRequest, opts ...grpc.CallOption) (*GetProjectResourceQuotaUsageResponse, error)
+	// * Task information management *
 	CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...grpc.CallOption) (*CreateTaskResponse, error)
 	RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...grpc.CallOption) (*RetryTaskResponse, error)
+	SkipTask(ctx context.Context, in *SkipTaskRequest, opts ...grpc.CallOption) (*SkipTaskResponse, error)
 	UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...grpc.CallOption) (*UpdateTaskResponse, error)
 	DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*DeleteTaskResponse, error)
 	GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error)
 	ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error)
-	//* ClusterAutoScalingOption information management *
+	// * ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...grpc.CallOption) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...grpc.CallOption) (*UpdateAutoScalingOptionResponse, error)
+	UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, opts ...grpc.CallOption) (*UpdateAsOptionDeviceProviderResponse, error)
 	DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...grpc.CallOption) (*DeleteAutoScalingOptionResponse, error)
 	GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...grpc.CallOption) (*GetAutoScalingOptionResponse, error)
 	ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...grpc.CallOption) (*ListAutoScalingOptionResponse, error)
 	UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, opts ...grpc.CallOption) (*UpdateAutoScalingStatusResponse, error)
+	SyncAutoScalingOption(ctx context.Context, in *SyncAutoScalingOptionRequest, opts ...grpc.CallOption) (*SyncAutoScalingOptionResponse, error)
+	// Cloud NodeTemplate info management
+	CreateNodeTemplate(ctx context.Context, in *CreateNodeTemplateRequest, opts ...grpc.CallOption) (*CreateNodeTemplateResponse, error)
+	UpdateNodeTemplate(ctx context.Context, in *UpdateNodeTemplateRequest, opts ...grpc.CallOption) (*UpdateNodeTemplateResponse, error)
+	DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, opts ...grpc.CallOption) (*DeleteNodeTemplateResponse, error)
+	ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, opts ...grpc.CallOption) (*ListNodeTemplateResponse, error)
+	GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...grpc.CallOption) (*GetNodeTemplateResponse, error)
+	// NotifyTemplate info management
+	CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, opts ...grpc.CallOption) (*CreateNotifyTemplateResponse, error)
+	DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, opts ...grpc.CallOption) (*DeleteNotifyTemplateResponse, error)
+	ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, opts ...grpc.CallOption) (*ListNotifyTemplateResponse, error)
 	// Cloud Account information management
 	CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...grpc.CallOption) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...grpc.CallOption) (*UpdateCloudAccountResponse, error)
+	MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, opts ...grpc.CallOption) (*MigrateCloudAccountResponse, error)
 	DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...grpc.CallOption) (*DeleteCloudAccountResponse, error)
 	ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...grpc.CallOption) (*ListCloudAccountResponse, error)
 	ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...grpc.CallOption) (*ListCloudAccountPermResponse, error)
+	VerifyCloudAccount(ctx context.Context, in *VerifyCloudAccountRequest, opts ...grpc.CallOption) (*VerifyCloudAccountResponse, error)
 	// Cloud Resource management
+	GetServiceRoles(ctx context.Context, in *GetServiceRolesRequest, opts ...grpc.CallOption) (*GetServiceRolesResponse, error)
+	GetResourceGroups(ctx context.Context, in *GetResourceGroupsRequest, opts ...grpc.CallOption) (*GetResourceGroupsResponse, error)
 	GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...grpc.CallOption) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...grpc.CallOption) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...grpc.CallOption) (*ListCloudRegionClusterResponse, error)
+	ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, opts ...grpc.CallOption) (*ListCloudVpcsResponse, error)
+	CheckCidrConflictFromVpc(ctx context.Context, in *CheckCidrConflictFromVpcRequest, opts ...grpc.CallOption) (*CheckCidrConflictFromVpcResponse, error)
 	ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...grpc.CallOption) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...grpc.CallOption) (*ListCloudSecurityGroupsResponse, error)
+	ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, opts ...grpc.CallOption) (*ListKeyPairsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...grpc.CallOption) (*ListCloudInstanceTypeResponse, error)
+	GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, opts ...grpc.CallOption) (*GetMasterSuggestedMachinesResponse, error)
+	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...grpc.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...grpc.CallOption) (*ListCloudOsImageResponse, error)
+	ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...grpc.CallOption) (*ListCloudInstancesResponse, error)
+	GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...grpc.CallOption) (*GetCloudAccountTypeResponse, error)
+	GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...grpc.CallOption) (*GetCloudBandwidthPackagesResponse, error)
+	ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...grpc.CallOption) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...grpc.CallOption) (*ListOperationLogsResponse, error)
+	// Task Step logs
+	ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...grpc.CallOption) (*ListTaskStepLogsResponse, error)
+	// Task records
+	ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, opts ...grpc.CallOption) (*ListTaskRecordsResponse, error)
+	// CleanDbHistoryData clean DB history data
+	CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...grpc.CallOption) (*CleanDbHistoryDataResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...grpc.CallOption) (*CommonListResp, error)
@@ -240,10 +173,33 @@ type ClusterManagerClient interface {
 	GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...grpc.CallOption) (*CommonResp, error)
 	// Perm interface
 	QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...grpc.CallOption) (*QueryPermByActionIDResponse, error)
-	// third party
-	// list bk cloud
+	// thirdParty interface(cmdb/bksops等)
 	ListBKCloud(ctx context.Context, in *ListBKCloudRequest, opts ...grpc.CallOption) (*CommonListResp, error)
 	ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, opts ...grpc.CallOption) (*CommonResp, error)
+	GetBkSopsTemplateList(ctx context.Context, in *GetBkSopsTemplateListRequest, opts ...grpc.CallOption) (*GetBkSopsTemplateListResponse, error)
+	GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, opts ...grpc.CallOption) (*GetBkSopsTemplateInfoResponse, error)
+	GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, opts ...grpc.CallOption) (*GetInnerTemplateValuesResponse, error)
+	DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, opts ...grpc.CallOption) (*DebugBkSopsTaskResponse, error)
+	// IP selector interface
+	// 批量获取多个配置项, 返回配置项内容map
+	GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, opts ...grpc.CallOption) (*GetBatchCustomSettingResponse, error)
+	// 批量获取含各节点主机数量的拓扑树
+	GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...grpc.CallOption) (*GetBizTopologyHostResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
+	GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...grpc.CallOption) (*GetTopologyNodesResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机ID，用于IP选择器全选（当前仅支持业务拓扑节点，业务集仅支持传入业务集根节点）
+	GetTopologyHostIdsNodes(ctx context.Context, in *GetTopologyHostIdsNodesRequest, opts ...grpc.CallOption) (*GetTopologyHostIdsNodesResponse, error)
+	// 根据主机IDs获取机器详情信息
+	GetHostsDetails(ctx context.Context, in *GetHostsDetailsRequest, opts ...grpc.CallOption) (*GetHostsDetailsResponse, error)
+	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
+	GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...grpc.CallOption) (*GetScopeHostCheckResponse, error)
+	// Cloud module flag management
+	CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...grpc.CallOption) (*CreateCloudModuleFlagResponse, error)
+	UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...grpc.CallOption) (*UpdateCloudModuleFlagResponse, error)
+	DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, opts ...grpc.CallOption) (*DeleteCloudModuleFlagResponse, error)
+	ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, opts ...grpc.CallOption) (*ListCloudModuleFlagResponse, error)
+	// cluster manager health interface
+	Health(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
 }
 
 type clusterManagerClient struct {
@@ -256,7 +212,7 @@ func NewClusterManagerClient(cc grpc.ClientConnInterface) ClusterManagerClient {
 
 func (c *clusterManagerClient) CreateCluster(ctx context.Context, in *CreateClusterReq, opts ...grpc.CallOption) (*CreateClusterResp, error) {
 	out := new(CreateClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +221,7 @@ func (c *clusterManagerClient) CreateCluster(ctx context.Context, in *CreateClus
 
 func (c *clusterManagerClient) RetryCreateClusterTask(ctx context.Context, in *RetryCreateClusterReq, opts ...grpc.CallOption) (*RetryCreateClusterResp, error) {
 	out := new(RetryCreateClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_RetryCreateClusterTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/RetryCreateClusterTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +230,16 @@ func (c *clusterManagerClient) RetryCreateClusterTask(ctx context.Context, in *R
 
 func (c *clusterManagerClient) CheckCloudKubeConfig(ctx context.Context, in *KubeConfigReq, opts ...grpc.CallOption) (*KubeConfigResp, error) {
 	out := new(KubeConfigResp)
-	err := c.cc.Invoke(ctx, ClusterManager_CheckCloudKubeConfig_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CheckCloudKubeConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CheckCloudKubeConfigConnect(ctx context.Context, in *KubeConfigConnectReq, opts ...grpc.CallOption) (*KubeConfigConnectResp, error) {
+	out := new(KubeConfigConnectResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CheckCloudKubeConfigConnect", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +248,7 @@ func (c *clusterManagerClient) CheckCloudKubeConfig(ctx context.Context, in *Kub
 
 func (c *clusterManagerClient) ImportCluster(ctx context.Context, in *ImportClusterReq, opts ...grpc.CallOption) (*ImportClusterResp, error) {
 	out := new(ImportClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ImportCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ImportCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +257,7 @@ func (c *clusterManagerClient) ImportCluster(ctx context.Context, in *ImportClus
 
 func (c *clusterManagerClient) UpdateCluster(ctx context.Context, in *UpdateClusterReq, opts ...grpc.CallOption) (*UpdateClusterResp, error) {
 	out := new(UpdateClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +266,7 @@ func (c *clusterManagerClient) UpdateCluster(ctx context.Context, in *UpdateClus
 
 func (c *clusterManagerClient) AddNodesToCluster(ctx context.Context, in *AddNodesRequest, opts ...grpc.CallOption) (*AddNodesResponse, error) {
 	out := new(AddNodesResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_AddNodesToCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/AddNodesToCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +275,25 @@ func (c *clusterManagerClient) AddNodesToCluster(ctx context.Context, in *AddNod
 
 func (c *clusterManagerClient) DeleteNodesFromCluster(ctx context.Context, in *DeleteNodesRequest, opts ...grpc.CallOption) (*DeleteNodesResponse, error) {
 	out := new(DeleteNodesResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteNodesFromCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteNodesFromCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) BatchDeleteNodesFromCluster(ctx context.Context, in *BatchDeleteClusterNodesRequest, opts ...grpc.CallOption) (*BatchDeleteClusterNodesResponse, error) {
+	out := new(BatchDeleteClusterNodesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/BatchDeleteNodesFromCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetClustersMetaData(ctx context.Context, in *GetClustersMetaDataRequest, opts ...grpc.CallOption) (*GetClustersMetaDataResponse, error) {
+	out := new(GetClustersMetaDataResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetClustersMetaData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +302,7 @@ func (c *clusterManagerClient) DeleteNodesFromCluster(ctx context.Context, in *D
 
 func (c *clusterManagerClient) ListNodesInCluster(ctx context.Context, in *ListNodesInClusterRequest, opts ...grpc.CallOption) (*ListNodesInClusterResponse, error) {
 	out := new(ListNodesInClusterResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListNodesInCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListNodesInCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -328,7 +311,7 @@ func (c *clusterManagerClient) ListNodesInCluster(ctx context.Context, in *ListN
 
 func (c *clusterManagerClient) ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...grpc.CallOption) (*ListMastersInClusterResponse, error) {
 	out := new(ListMastersInClusterResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListMastersInCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListMastersInCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +320,7 @@ func (c *clusterManagerClient) ListMastersInCluster(ctx context.Context, in *Lis
 
 func (c *clusterManagerClient) DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...grpc.CallOption) (*DeleteClusterResp, error) {
 	out := new(DeleteClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -346,16 +329,7 @@ func (c *clusterManagerClient) DeleteCluster(ctx context.Context, in *DeleteClus
 
 func (c *clusterManagerClient) GetCluster(ctx context.Context, in *GetClusterReq, opts ...grpc.CallOption) (*GetClusterResp, error) {
 	out := new(GetClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_GetCluster_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) ListCluster(ctx context.Context, in *ListClusterReq, opts ...grpc.CallOption) (*ListClusterResp, error) {
-	out := new(ListClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +338,16 @@ func (c *clusterManagerClient) ListCluster(ctx context.Context, in *ListClusterR
 
 func (c *clusterManagerClient) ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...grpc.CallOption) (*ListProjectClusterResp, error) {
 	out := new(ListProjectClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListProjectCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListProjectCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListCluster(ctx context.Context, in *ListClusterReq, opts ...grpc.CallOption) (*ListClusterResp, error) {
+	out := new(ListClusterResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +356,52 @@ func (c *clusterManagerClient) ListProjectCluster(ctx context.Context, in *ListP
 
 func (c *clusterManagerClient) ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...grpc.CallOption) (*ListCommonClusterResp, error) {
 	out := new(ListCommonClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCommonCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCommonCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...grpc.CallOption) (*AddSubnetToClusterResp, error) {
+	out := new(AddSubnetToClusterResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/AddSubnetToCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) SwitchClusterUnderlayNetwork(ctx context.Context, in *SwitchClusterUnderlayNetworkReq, opts ...grpc.CallOption) (*SwitchClusterUnderlayNetworkResp, error) {
+	out := new(SwitchClusterUnderlayNetworkResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/SwitchClusterUnderlayNetwork", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CreateVirtualCluster(ctx context.Context, in *CreateVirtualClusterReq, opts ...grpc.CallOption) (*CreateVirtualClusterResp, error) {
+	out := new(CreateVirtualClusterResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateVirtualCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) DeleteVirtualCluster(ctx context.Context, in *DeleteVirtualClusterReq, opts ...grpc.CallOption) (*DeleteVirtualClusterResp, error) {
+	out := new(DeleteVirtualClusterResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteVirtualCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateVirtualClusterQuota(ctx context.Context, in *UpdateVirtualClusterQuotaReq, opts ...grpc.CallOption) (*UpdateVirtualClusterQuotaResp, error) {
+	out := new(UpdateVirtualClusterQuotaResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateVirtualClusterQuota", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +410,25 @@ func (c *clusterManagerClient) ListCommonCluster(ctx context.Context, in *ListCo
 
 func (c *clusterManagerClient) GetNode(ctx context.Context, in *GetNodeRequest, opts ...grpc.CallOption) (*GetNodeResponse, error) {
 	out := new(GetNodeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetNode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetNode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetNodeInfo(ctx context.Context, in *GetNodeInfoRequest, opts ...grpc.CallOption) (*GetNodeInfoResponse, error) {
+	out := new(GetNodeInfoResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetNodeInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) RecordNodeInfo(ctx context.Context, in *RecordNodeInfoRequest, opts ...grpc.CallOption) (*CommonResp, error) {
+	out := new(CommonResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/RecordNodeInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -391,7 +437,16 @@ func (c *clusterManagerClient) GetNode(ctx context.Context, in *GetNodeRequest, 
 
 func (c *clusterManagerClient) UpdateNode(ctx context.Context, in *UpdateNodeRequest, opts ...grpc.CallOption) (*UpdateNodeResponse, error) {
 	out := new(UpdateNodeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateNode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateNode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateClusterModule(ctx context.Context, in *UpdateClusterModuleRequest, opts ...grpc.CallOption) (*UpdateClusterModuleResponse, error) {
+	out := new(UpdateClusterModuleResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateClusterModule", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +455,7 @@ func (c *clusterManagerClient) UpdateNode(ctx context.Context, in *UpdateNodeReq
 
 func (c *clusterManagerClient) CheckNodeInCluster(ctx context.Context, in *CheckNodesRequest, opts ...grpc.CallOption) (*CheckNodesResponse, error) {
 	out := new(CheckNodesResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CheckNodeInCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CheckNodeInCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +464,7 @@ func (c *clusterManagerClient) CheckNodeInCluster(ctx context.Context, in *Check
 
 func (c *clusterManagerClient) CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...grpc.CallOption) (*CordonNodeResponse, error) {
 	out := new(CordonNodeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CordonNode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CordonNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -418,7 +473,7 @@ func (c *clusterManagerClient) CordonNode(ctx context.Context, in *CordonNodeReq
 
 func (c *clusterManagerClient) UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...grpc.CallOption) (*UnCordonNodeResponse, error) {
 	out := new(UnCordonNodeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UnCordonNode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UnCordonNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +482,7 @@ func (c *clusterManagerClient) UnCordonNode(ctx context.Context, in *UnCordonNod
 
 func (c *clusterManagerClient) DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...grpc.CallOption) (*DrainNodeResponse, error) {
 	out := new(DrainNodeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DrainNode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DrainNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +491,16 @@ func (c *clusterManagerClient) DrainNode(ctx context.Context, in *DrainNodeReque
 
 func (c *clusterManagerClient) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...grpc.CallOption) (*UpdateNodeLabelsResponse, error) {
 	out := new(UpdateNodeLabelsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateNodeLabels_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateNodeLabels", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...grpc.CallOption) (*UpdateNodeAnnotationsResponse, error) {
+	out := new(UpdateNodeAnnotationsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateNodeAnnotations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -445,7 +509,7 @@ func (c *clusterManagerClient) UpdateNodeLabels(ctx context.Context, in *UpdateN
 
 func (c *clusterManagerClient) UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...grpc.CallOption) (*UpdateNodeTaintsResponse, error) {
 	out := new(UpdateNodeTaintsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateNodeTaints_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateNodeTaints", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -454,7 +518,7 @@ func (c *clusterManagerClient) UpdateNodeTaints(ctx context.Context, in *UpdateN
 
 func (c *clusterManagerClient) GetClusterCredential(ctx context.Context, in *GetClusterCredentialReq, opts ...grpc.CallOption) (*GetClusterCredentialResp, error) {
 	out := new(GetClusterCredentialResp)
-	err := c.cc.Invoke(ctx, ClusterManager_GetClusterCredential_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetClusterCredential", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +527,16 @@ func (c *clusterManagerClient) GetClusterCredential(ctx context.Context, in *Get
 
 func (c *clusterManagerClient) UpdateClusterCredential(ctx context.Context, in *UpdateClusterCredentialReq, opts ...grpc.CallOption) (*UpdateClusterCredentialResp, error) {
 	out := new(UpdateClusterCredentialResp)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateClusterCredential_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateClusterCredential", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateClusterKubeConfig(ctx context.Context, in *UpdateClusterKubeConfigReq, opts ...grpc.CallOption) (*UpdateClusterKubeConfigResp, error) {
+	out := new(UpdateClusterKubeConfigResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateClusterKubeConfig", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -472,7 +545,7 @@ func (c *clusterManagerClient) UpdateClusterCredential(ctx context.Context, in *
 
 func (c *clusterManagerClient) DeleteClusterCredential(ctx context.Context, in *DeleteClusterCredentialReq, opts ...grpc.CallOption) (*DeleteClusterCredentialResp, error) {
 	out := new(DeleteClusterCredentialResp)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteClusterCredential_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteClusterCredential", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -481,7 +554,7 @@ func (c *clusterManagerClient) DeleteClusterCredential(ctx context.Context, in *
 
 func (c *clusterManagerClient) ListClusterCredential(ctx context.Context, in *ListClusterCredentialReq, opts ...grpc.CallOption) (*ListClusterCredentialResp, error) {
 	out := new(ListClusterCredentialResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListClusterCredential_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListClusterCredential", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -490,7 +563,7 @@ func (c *clusterManagerClient) ListClusterCredential(ctx context.Context, in *Li
 
 func (c *clusterManagerClient) InitFederationCluster(ctx context.Context, in *InitFederationClusterReq, opts ...grpc.CallOption) (*InitFederationClusterResp, error) {
 	out := new(InitFederationClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_InitFederationCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/InitFederationCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -499,151 +572,7 @@ func (c *clusterManagerClient) InitFederationCluster(ctx context.Context, in *In
 
 func (c *clusterManagerClient) AddFederatedCluster(ctx context.Context, in *AddFederatedClusterReq, opts ...grpc.CallOption) (*AddFederatedClusterResp, error) {
 	out := new(AddFederatedClusterResp)
-	err := c.cc.Invoke(ctx, ClusterManager_AddFederatedCluster_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) CreateNamespace(ctx context.Context, in *CreateNamespaceReq, opts ...grpc.CallOption) (*CreateNamespaceResp, error) {
-	out := new(CreateNamespaceResp)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateNamespace_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) UpdateNamespace(ctx context.Context, in *UpdateNamespaceReq, opts ...grpc.CallOption) (*UpdateNamespaceResp, error) {
-	out := new(UpdateNamespaceResp)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateNamespace_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) DeleteNamespace(ctx context.Context, in *DeleteNamespaceReq, opts ...grpc.CallOption) (*DeleteNamespaceResp, error) {
-	out := new(DeleteNamespaceResp)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteNamespace_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) GetNamespace(ctx context.Context, in *GetNamespaceReq, opts ...grpc.CallOption) (*GetNamespaceResp, error) {
-	out := new(GetNamespaceResp)
-	err := c.cc.Invoke(ctx, ClusterManager_GetNamespace_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) ListNamespace(ctx context.Context, in *ListNamespaceReq, opts ...grpc.CallOption) (*ListNamespaceResp, error) {
-	out := new(ListNamespaceResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListNamespace_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) CreateNamespaceQuota(ctx context.Context, in *CreateNamespaceQuotaReq, opts ...grpc.CallOption) (*CreateNamespaceQuotaResp, error) {
-	out := new(CreateNamespaceQuotaResp)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateNamespaceQuota_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) UpdateNamespaceQuota(ctx context.Context, in *UpdateNamespaceQuotaReq, opts ...grpc.CallOption) (*UpdateNamespaceQuotaResp, error) {
-	out := new(UpdateNamespaceQuotaResp)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateNamespaceQuota_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) DeleteNamespaceQuota(ctx context.Context, in *DeleteNamespaceQuotaReq, opts ...grpc.CallOption) (*DeleteNamespaceQuotaResp, error) {
-	out := new(DeleteNamespaceQuotaResp)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteNamespaceQuota_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) GetNamespaceQuota(ctx context.Context, in *GetNamespaceQuotaReq, opts ...grpc.CallOption) (*GetNamespaceQuotaResp, error) {
-	out := new(GetNamespaceQuotaResp)
-	err := c.cc.Invoke(ctx, ClusterManager_GetNamespaceQuota_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) ListNamespaceQuota(ctx context.Context, in *ListNamespaceQuotaReq, opts ...grpc.CallOption) (*ListNamespaceQuotaResp, error) {
-	out := new(ListNamespaceQuotaResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListNamespaceQuota_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) CreateNamespaceWithQuota(ctx context.Context, in *CreateNamespaceWithQuotaReq, opts ...grpc.CallOption) (*CreateNamespaceWithQuotaResp, error) {
-	out := new(CreateNamespaceWithQuotaResp)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateNamespaceWithQuota_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) CreateProject(ctx context.Context, in *CreateProjectRequest, opts ...grpc.CallOption) (*CreateProjectResponse, error) {
-	out := new(CreateProjectResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) UpdateProject(ctx context.Context, in *UpdateProjectRequest, opts ...grpc.CallOption) (*UpdateProjectResponse, error) {
-	out := new(UpdateProjectResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) DeleteProject(ctx context.Context, in *DeleteProjectRequest, opts ...grpc.CallOption) (*DeleteProjectResponse, error) {
-	out := new(DeleteProjectResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) GetProject(ctx context.Context, in *GetProjectRequest, opts ...grpc.CallOption) (*GetProjectResponse, error) {
-	out := new(GetProjectResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *clusterManagerClient) ListProject(ctx context.Context, in *ListProjectRequest, opts ...grpc.CallOption) (*ListProjectResponse, error) {
-	out := new(ListProjectResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListProject_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/AddFederatedCluster", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -652,7 +581,7 @@ func (c *clusterManagerClient) ListProject(ctx context.Context, in *ListProjectR
 
 func (c *clusterManagerClient) CreateCloud(ctx context.Context, in *CreateCloudRequest, opts ...grpc.CallOption) (*CreateCloudResponse, error) {
 	out := new(CreateCloudResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateCloud_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateCloud", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -661,7 +590,7 @@ func (c *clusterManagerClient) CreateCloud(ctx context.Context, in *CreateCloudR
 
 func (c *clusterManagerClient) UpdateCloud(ctx context.Context, in *UpdateCloudRequest, opts ...grpc.CallOption) (*UpdateCloudResponse, error) {
 	out := new(UpdateCloudResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateCloud_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateCloud", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -670,7 +599,7 @@ func (c *clusterManagerClient) UpdateCloud(ctx context.Context, in *UpdateCloudR
 
 func (c *clusterManagerClient) DeleteCloud(ctx context.Context, in *DeleteCloudRequest, opts ...grpc.CallOption) (*DeleteCloudResponse, error) {
 	out := new(DeleteCloudResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteCloud_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteCloud", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -679,7 +608,7 @@ func (c *clusterManagerClient) DeleteCloud(ctx context.Context, in *DeleteCloudR
 
 func (c *clusterManagerClient) GetCloud(ctx context.Context, in *GetCloudRequest, opts ...grpc.CallOption) (*GetCloudResponse, error) {
 	out := new(GetCloudResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetCloud_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCloud", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -688,7 +617,7 @@ func (c *clusterManagerClient) GetCloud(ctx context.Context, in *GetCloudRequest
 
 func (c *clusterManagerClient) ListCloud(ctx context.Context, in *ListCloudRequest, opts ...grpc.CallOption) (*ListCloudResponse, error) {
 	out := new(ListCloudResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloud_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloud", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -697,7 +626,7 @@ func (c *clusterManagerClient) ListCloud(ctx context.Context, in *ListCloudReque
 
 func (c *clusterManagerClient) CreateCloudVPC(ctx context.Context, in *CreateCloudVPCRequest, opts ...grpc.CallOption) (*CreateCloudVPCResponse, error) {
 	out := new(CreateCloudVPCResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateCloudVPC_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateCloudVPC", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -706,7 +635,7 @@ func (c *clusterManagerClient) CreateCloudVPC(ctx context.Context, in *CreateClo
 
 func (c *clusterManagerClient) UpdateCloudVPC(ctx context.Context, in *UpdateCloudVPCRequest, opts ...grpc.CallOption) (*UpdateCloudVPCResponse, error) {
 	out := new(UpdateCloudVPCResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateCloudVPC_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateCloudVPC", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +644,7 @@ func (c *clusterManagerClient) UpdateCloudVPC(ctx context.Context, in *UpdateClo
 
 func (c *clusterManagerClient) DeleteCloudVPC(ctx context.Context, in *DeleteCloudVPCRequest, opts ...grpc.CallOption) (*DeleteCloudVPCResponse, error) {
 	out := new(DeleteCloudVPCResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteCloudVPC_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteCloudVPC", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -724,7 +653,7 @@ func (c *clusterManagerClient) DeleteCloudVPC(ctx context.Context, in *DeleteClo
 
 func (c *clusterManagerClient) ListCloudVPC(ctx context.Context, in *ListCloudVPCRequest, opts ...grpc.CallOption) (*ListCloudVPCResponse, error) {
 	out := new(ListCloudVPCResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudVPC_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudVPC", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -733,7 +662,7 @@ func (c *clusterManagerClient) ListCloudVPC(ctx context.Context, in *ListCloudVP
 
 func (c *clusterManagerClient) ListCloudRegions(ctx context.Context, in *ListCloudRegionsRequest, opts ...grpc.CallOption) (*ListCloudRegionsResponse, error) {
 	out := new(ListCloudRegionsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudRegions_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudRegions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -742,7 +671,7 @@ func (c *clusterManagerClient) ListCloudRegions(ctx context.Context, in *ListClo
 
 func (c *clusterManagerClient) GetVPCCidr(ctx context.Context, in *GetVPCCidrRequest, opts ...grpc.CallOption) (*GetVPCCidrResponse, error) {
 	out := new(GetVPCCidrResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetVPCCidr_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetVPCCidr", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -751,7 +680,7 @@ func (c *clusterManagerClient) GetVPCCidr(ctx context.Context, in *GetVPCCidrReq
 
 func (c *clusterManagerClient) CreateNodeGroup(ctx context.Context, in *CreateNodeGroupRequest, opts ...grpc.CallOption) (*CreateNodeGroupResponse, error) {
 	out := new(CreateNodeGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateNodeGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateNodeGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -760,7 +689,7 @@ func (c *clusterManagerClient) CreateNodeGroup(ctx context.Context, in *CreateNo
 
 func (c *clusterManagerClient) UpdateNodeGroup(ctx context.Context, in *UpdateNodeGroupRequest, opts ...grpc.CallOption) (*UpdateNodeGroupResponse, error) {
 	out := new(UpdateNodeGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateNodeGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateNodeGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -769,7 +698,7 @@ func (c *clusterManagerClient) UpdateNodeGroup(ctx context.Context, in *UpdateNo
 
 func (c *clusterManagerClient) DeleteNodeGroup(ctx context.Context, in *DeleteNodeGroupRequest, opts ...grpc.CallOption) (*DeleteNodeGroupResponse, error) {
 	out := new(DeleteNodeGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteNodeGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteNodeGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -778,7 +707,16 @@ func (c *clusterManagerClient) DeleteNodeGroup(ctx context.Context, in *DeleteNo
 
 func (c *clusterManagerClient) GetNodeGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...grpc.CallOption) (*GetNodeGroupResponse, error) {
 	out := new(GetNodeGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetNodeGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetNodeGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListClusterNodeGroup(ctx context.Context, in *ListClusterNodeGroupRequest, opts ...grpc.CallOption) (*ListClusterNodeGroupResponse, error) {
+	out := new(ListClusterNodeGroupResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListClusterNodeGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -787,7 +725,16 @@ func (c *clusterManagerClient) GetNodeGroup(ctx context.Context, in *GetNodeGrou
 
 func (c *clusterManagerClient) ListNodeGroup(ctx context.Context, in *ListNodeGroupRequest, opts ...grpc.CallOption) (*ListNodeGroupResponse, error) {
 	out := new(ListNodeGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListNodeGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListNodeGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) RecommendNodeGroupConf(ctx context.Context, in *RecommendNodeGroupConfReq, opts ...grpc.CallOption) (*RecommendNodeGroupConfResp, error) {
+	out := new(RecommendNodeGroupConfResp)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/RecommendNodeGroupConf", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -796,7 +743,7 @@ func (c *clusterManagerClient) ListNodeGroup(ctx context.Context, in *ListNodeGr
 
 func (c *clusterManagerClient) MoveNodesToGroup(ctx context.Context, in *MoveNodesToGroupRequest, opts ...grpc.CallOption) (*MoveNodesToGroupResponse, error) {
 	out := new(MoveNodesToGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_MoveNodesToGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/MoveNodesToGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -805,7 +752,7 @@ func (c *clusterManagerClient) MoveNodesToGroup(ctx context.Context, in *MoveNod
 
 func (c *clusterManagerClient) RemoveNodesFromGroup(ctx context.Context, in *RemoveNodesFromGroupRequest, opts ...grpc.CallOption) (*RemoveNodesFromGroupResponse, error) {
 	out := new(RemoveNodesFromGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_RemoveNodesFromGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/RemoveNodesFromGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -814,7 +761,7 @@ func (c *clusterManagerClient) RemoveNodesFromGroup(ctx context.Context, in *Rem
 
 func (c *clusterManagerClient) CleanNodesInGroup(ctx context.Context, in *CleanNodesInGroupRequest, opts ...grpc.CallOption) (*CleanNodesInGroupResponse, error) {
 	out := new(CleanNodesInGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CleanNodesInGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CleanNodesInGroup", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -823,16 +770,25 @@ func (c *clusterManagerClient) CleanNodesInGroup(ctx context.Context, in *CleanN
 
 func (c *clusterManagerClient) CleanNodesInGroupV2(ctx context.Context, in *CleanNodesInGroupV2Request, opts ...grpc.CallOption) (*CleanNodesInGroupV2Response, error) {
 	out := new(CleanNodesInGroupV2Response)
-	err := c.cc.Invoke(ctx, ClusterManager_CleanNodesInGroupV2_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CleanNodesInGroupV2", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *clusterManagerClient) ListNodesInGroup(ctx context.Context, in *ListNodesInGroupRequest, opts ...grpc.CallOption) (*ListNodesInGroupResponse, error) {
+func (c *clusterManagerClient) ListNodesInGroup(ctx context.Context, in *GetNodeGroupRequest, opts ...grpc.CallOption) (*ListNodesInGroupResponse, error) {
 	out := new(ListNodesInGroupResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListNodesInGroup_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListNodesInGroup", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListNodesInGroupV2(ctx context.Context, in *ListNodesInGroupV2Request, opts ...grpc.CallOption) (*ListNodesInGroupV2Response, error) {
+	out := new(ListNodesInGroupV2Response)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListNodesInGroupV2", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -841,7 +797,7 @@ func (c *clusterManagerClient) ListNodesInGroup(ctx context.Context, in *ListNod
 
 func (c *clusterManagerClient) UpdateGroupDesiredNode(ctx context.Context, in *UpdateGroupDesiredNodeRequest, opts ...grpc.CallOption) (*UpdateGroupDesiredNodeResponse, error) {
 	out := new(UpdateGroupDesiredNodeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateGroupDesiredNode_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateGroupDesiredNode", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -850,7 +806,43 @@ func (c *clusterManagerClient) UpdateGroupDesiredNode(ctx context.Context, in *U
 
 func (c *clusterManagerClient) UpdateGroupDesiredSize(ctx context.Context, in *UpdateGroupDesiredSizeRequest, opts ...grpc.CallOption) (*UpdateGroupDesiredSizeResponse, error) {
 	out := new(UpdateGroupDesiredSizeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateGroupDesiredSize_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateGroupDesiredSize", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateGroupMinMaxSize(ctx context.Context, in *UpdateGroupMinMaxSizeRequest, opts ...grpc.CallOption) (*UpdateGroupMinMaxSizeResponse, error) {
+	out := new(UpdateGroupMinMaxSizeResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateGroupMinMaxSize", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateGroupAsTimeRange(ctx context.Context, in *UpdateGroupAsTimeRangeRequest, opts ...grpc.CallOption) (*UpdateGroupAsTimeRangeResponse, error) {
+	out := new(UpdateGroupAsTimeRangeResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateGroupAsTimeRange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetExternalNodeScriptByGroupID(ctx context.Context, in *GetExternalNodeScriptRequest, opts ...grpc.CallOption) (*GetExternalNodeScriptResponse, error) {
+	out := new(GetExternalNodeScriptResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetExternalNodeScriptByGroupID", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) TransNodeGroupToNodeTemplate(ctx context.Context, in *TransNodeGroupToNodeTemplateRequest, opts ...grpc.CallOption) (*TransNodeGroupToNodeTemplateResponse, error) {
+	out := new(TransNodeGroupToNodeTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/TransNodeGroupToNodeTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -859,7 +851,7 @@ func (c *clusterManagerClient) UpdateGroupDesiredSize(ctx context.Context, in *U
 
 func (c *clusterManagerClient) EnableNodeGroupAutoScale(ctx context.Context, in *EnableNodeGroupAutoScaleRequest, opts ...grpc.CallOption) (*EnableNodeGroupAutoScaleResponse, error) {
 	out := new(EnableNodeGroupAutoScaleResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_EnableNodeGroupAutoScale_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/EnableNodeGroupAutoScale", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -868,7 +860,25 @@ func (c *clusterManagerClient) EnableNodeGroupAutoScale(ctx context.Context, in 
 
 func (c *clusterManagerClient) DisableNodeGroupAutoScale(ctx context.Context, in *DisableNodeGroupAutoScaleRequest, opts ...grpc.CallOption) (*DisableNodeGroupAutoScaleResponse, error) {
 	out := new(DisableNodeGroupAutoScaleResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DisableNodeGroupAutoScale_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DisableNodeGroupAutoScale", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetProviderResourceUsage(ctx context.Context, in *GetProviderResourceUsageRequest, opts ...grpc.CallOption) (*GetProviderResourceUsageResponse, error) {
+	out := new(GetProviderResourceUsageResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetProviderResourceUsage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetProjectResourceQuotaUsage(ctx context.Context, in *GetProjectResourceQuotaUsageRequest, opts ...grpc.CallOption) (*GetProjectResourceQuotaUsageResponse, error) {
+	out := new(GetProjectResourceQuotaUsageResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetProjectResourceQuotaUsage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -877,7 +887,7 @@ func (c *clusterManagerClient) DisableNodeGroupAutoScale(ctx context.Context, in
 
 func (c *clusterManagerClient) CreateTask(ctx context.Context, in *CreateTaskRequest, opts ...grpc.CallOption) (*CreateTaskResponse, error) {
 	out := new(CreateTaskResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -886,7 +896,16 @@ func (c *clusterManagerClient) CreateTask(ctx context.Context, in *CreateTaskReq
 
 func (c *clusterManagerClient) RetryTask(ctx context.Context, in *RetryTaskRequest, opts ...grpc.CallOption) (*RetryTaskResponse, error) {
 	out := new(RetryTaskResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_RetryTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/RetryTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) SkipTask(ctx context.Context, in *SkipTaskRequest, opts ...grpc.CallOption) (*SkipTaskResponse, error) {
+	out := new(SkipTaskResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/SkipTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -895,7 +914,7 @@ func (c *clusterManagerClient) RetryTask(ctx context.Context, in *RetryTaskReque
 
 func (c *clusterManagerClient) UpdateTask(ctx context.Context, in *UpdateTaskRequest, opts ...grpc.CallOption) (*UpdateTaskResponse, error) {
 	out := new(UpdateTaskResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -904,7 +923,7 @@ func (c *clusterManagerClient) UpdateTask(ctx context.Context, in *UpdateTaskReq
 
 func (c *clusterManagerClient) DeleteTask(ctx context.Context, in *DeleteTaskRequest, opts ...grpc.CallOption) (*DeleteTaskResponse, error) {
 	out := new(DeleteTaskResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -913,7 +932,7 @@ func (c *clusterManagerClient) DeleteTask(ctx context.Context, in *DeleteTaskReq
 
 func (c *clusterManagerClient) GetTask(ctx context.Context, in *GetTaskRequest, opts ...grpc.CallOption) (*GetTaskResponse, error) {
 	out := new(GetTaskResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -922,7 +941,7 @@ func (c *clusterManagerClient) GetTask(ctx context.Context, in *GetTaskRequest, 
 
 func (c *clusterManagerClient) ListTask(ctx context.Context, in *ListTaskRequest, opts ...grpc.CallOption) (*ListTaskResponse, error) {
 	out := new(ListTaskResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListTask_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListTask", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -931,7 +950,7 @@ func (c *clusterManagerClient) ListTask(ctx context.Context, in *ListTaskRequest
 
 func (c *clusterManagerClient) CreateAutoScalingOption(ctx context.Context, in *CreateAutoScalingOptionRequest, opts ...grpc.CallOption) (*CreateAutoScalingOptionResponse, error) {
 	out := new(CreateAutoScalingOptionResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateAutoScalingOption_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateAutoScalingOption", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -940,7 +959,16 @@ func (c *clusterManagerClient) CreateAutoScalingOption(ctx context.Context, in *
 
 func (c *clusterManagerClient) UpdateAutoScalingOption(ctx context.Context, in *UpdateAutoScalingOptionRequest, opts ...grpc.CallOption) (*UpdateAutoScalingOptionResponse, error) {
 	out := new(UpdateAutoScalingOptionResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateAutoScalingOption_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateAutoScalingOption", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateAsOptionDeviceProvider(ctx context.Context, in *UpdateAsOptionDeviceProviderRequest, opts ...grpc.CallOption) (*UpdateAsOptionDeviceProviderResponse, error) {
+	out := new(UpdateAsOptionDeviceProviderResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateAsOptionDeviceProvider", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -949,7 +977,7 @@ func (c *clusterManagerClient) UpdateAutoScalingOption(ctx context.Context, in *
 
 func (c *clusterManagerClient) DeleteAutoScalingOption(ctx context.Context, in *DeleteAutoScalingOptionRequest, opts ...grpc.CallOption) (*DeleteAutoScalingOptionResponse, error) {
 	out := new(DeleteAutoScalingOptionResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteAutoScalingOption_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteAutoScalingOption", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -958,7 +986,7 @@ func (c *clusterManagerClient) DeleteAutoScalingOption(ctx context.Context, in *
 
 func (c *clusterManagerClient) GetAutoScalingOption(ctx context.Context, in *GetAutoScalingOptionRequest, opts ...grpc.CallOption) (*GetAutoScalingOptionResponse, error) {
 	out := new(GetAutoScalingOptionResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetAutoScalingOption_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetAutoScalingOption", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -967,7 +995,7 @@ func (c *clusterManagerClient) GetAutoScalingOption(ctx context.Context, in *Get
 
 func (c *clusterManagerClient) ListAutoScalingOption(ctx context.Context, in *ListAutoScalingOptionRequest, opts ...grpc.CallOption) (*ListAutoScalingOptionResponse, error) {
 	out := new(ListAutoScalingOptionResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListAutoScalingOption_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListAutoScalingOption", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -976,7 +1004,88 @@ func (c *clusterManagerClient) ListAutoScalingOption(ctx context.Context, in *Li
 
 func (c *clusterManagerClient) UpdateAutoScalingStatus(ctx context.Context, in *UpdateAutoScalingStatusRequest, opts ...grpc.CallOption) (*UpdateAutoScalingStatusResponse, error) {
 	out := new(UpdateAutoScalingStatusResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateAutoScalingStatus_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateAutoScalingStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) SyncAutoScalingOption(ctx context.Context, in *SyncAutoScalingOptionRequest, opts ...grpc.CallOption) (*SyncAutoScalingOptionResponse, error) {
+	out := new(SyncAutoScalingOptionResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/SyncAutoScalingOption", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CreateNodeTemplate(ctx context.Context, in *CreateNodeTemplateRequest, opts ...grpc.CallOption) (*CreateNodeTemplateResponse, error) {
+	out := new(CreateNodeTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateNodeTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateNodeTemplate(ctx context.Context, in *UpdateNodeTemplateRequest, opts ...grpc.CallOption) (*UpdateNodeTemplateResponse, error) {
+	out := new(UpdateNodeTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateNodeTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) DeleteNodeTemplate(ctx context.Context, in *DeleteNodeTemplateRequest, opts ...grpc.CallOption) (*DeleteNodeTemplateResponse, error) {
+	out := new(DeleteNodeTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteNodeTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListNodeTemplate(ctx context.Context, in *ListNodeTemplateRequest, opts ...grpc.CallOption) (*ListNodeTemplateResponse, error) {
+	out := new(ListNodeTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListNodeTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetNodeTemplate(ctx context.Context, in *GetNodeTemplateRequest, opts ...grpc.CallOption) (*GetNodeTemplateResponse, error) {
+	out := new(GetNodeTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetNodeTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CreateNotifyTemplate(ctx context.Context, in *CreateNotifyTemplateRequest, opts ...grpc.CallOption) (*CreateNotifyTemplateResponse, error) {
+	out := new(CreateNotifyTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateNotifyTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) DeleteNotifyTemplate(ctx context.Context, in *DeleteNotifyTemplateRequest, opts ...grpc.CallOption) (*DeleteNotifyTemplateResponse, error) {
+	out := new(DeleteNotifyTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteNotifyTemplate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListNotifyTemplate(ctx context.Context, in *ListNotifyTemplateRequest, opts ...grpc.CallOption) (*ListNotifyTemplateResponse, error) {
+	out := new(ListNotifyTemplateResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListNotifyTemplate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -985,7 +1094,7 @@ func (c *clusterManagerClient) UpdateAutoScalingStatus(ctx context.Context, in *
 
 func (c *clusterManagerClient) CreateCloudAccount(ctx context.Context, in *CreateCloudAccountRequest, opts ...grpc.CallOption) (*CreateCloudAccountResponse, error) {
 	out := new(CreateCloudAccountResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_CreateCloudAccount_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateCloudAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -994,7 +1103,16 @@ func (c *clusterManagerClient) CreateCloudAccount(ctx context.Context, in *Creat
 
 func (c *clusterManagerClient) UpdateCloudAccount(ctx context.Context, in *UpdateCloudAccountRequest, opts ...grpc.CallOption) (*UpdateCloudAccountResponse, error) {
 	out := new(UpdateCloudAccountResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_UpdateCloudAccount_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateCloudAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) MigrateCloudAccount(ctx context.Context, in *MigrateCloudAccountRequest, opts ...grpc.CallOption) (*MigrateCloudAccountResponse, error) {
+	out := new(MigrateCloudAccountResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/MigrateCloudAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1003,7 +1121,7 @@ func (c *clusterManagerClient) UpdateCloudAccount(ctx context.Context, in *Updat
 
 func (c *clusterManagerClient) DeleteCloudAccount(ctx context.Context, in *DeleteCloudAccountRequest, opts ...grpc.CallOption) (*DeleteCloudAccountResponse, error) {
 	out := new(DeleteCloudAccountResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_DeleteCloudAccount_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteCloudAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1012,7 +1130,7 @@ func (c *clusterManagerClient) DeleteCloudAccount(ctx context.Context, in *Delet
 
 func (c *clusterManagerClient) ListCloudAccount(ctx context.Context, in *ListCloudAccountRequest, opts ...grpc.CallOption) (*ListCloudAccountResponse, error) {
 	out := new(ListCloudAccountResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudAccount_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudAccount", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1021,7 +1139,34 @@ func (c *clusterManagerClient) ListCloudAccount(ctx context.Context, in *ListClo
 
 func (c *clusterManagerClient) ListCloudAccountToPerm(ctx context.Context, in *ListCloudAccountPermRequest, opts ...grpc.CallOption) (*ListCloudAccountPermResponse, error) {
 	out := new(ListCloudAccountPermResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudAccountToPerm_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudAccountToPerm", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) VerifyCloudAccount(ctx context.Context, in *VerifyCloudAccountRequest, opts ...grpc.CallOption) (*VerifyCloudAccountResponse, error) {
+	out := new(VerifyCloudAccountResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/VerifyCloudAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetServiceRoles(ctx context.Context, in *GetServiceRolesRequest, opts ...grpc.CallOption) (*GetServiceRolesResponse, error) {
+	out := new(GetServiceRolesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetServiceRoles", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetResourceGroups(ctx context.Context, in *GetResourceGroupsRequest, opts ...grpc.CallOption) (*GetResourceGroupsResponse, error) {
+	out := new(GetResourceGroupsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetResourceGroups", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1030,7 +1175,7 @@ func (c *clusterManagerClient) ListCloudAccountToPerm(ctx context.Context, in *L
 
 func (c *clusterManagerClient) GetCloudRegions(ctx context.Context, in *GetCloudRegionsRequest, opts ...grpc.CallOption) (*GetCloudRegionsResponse, error) {
 	out := new(GetCloudRegionsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetCloudRegions_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCloudRegions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1039,7 +1184,7 @@ func (c *clusterManagerClient) GetCloudRegions(ctx context.Context, in *GetCloud
 
 func (c *clusterManagerClient) GetCloudRegionZones(ctx context.Context, in *GetCloudRegionZonesRequest, opts ...grpc.CallOption) (*GetCloudRegionZonesResponse, error) {
 	out := new(GetCloudRegionZonesResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_GetCloudRegionZones_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCloudRegionZones", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1048,7 +1193,25 @@ func (c *clusterManagerClient) GetCloudRegionZones(ctx context.Context, in *GetC
 
 func (c *clusterManagerClient) ListCloudRegionCluster(ctx context.Context, in *ListCloudRegionClusterRequest, opts ...grpc.CallOption) (*ListCloudRegionClusterResponse, error) {
 	out := new(ListCloudRegionClusterResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudRegionCluster_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudRegionCluster", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListCloudVpcs(ctx context.Context, in *ListCloudVpcsRequest, opts ...grpc.CallOption) (*ListCloudVpcsResponse, error) {
+	out := new(ListCloudVpcsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudVpcs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CheckCidrConflictFromVpc(ctx context.Context, in *CheckCidrConflictFromVpcRequest, opts ...grpc.CallOption) (*CheckCidrConflictFromVpcResponse, error) {
+	out := new(CheckCidrConflictFromVpcResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CheckCidrConflictFromVpc", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1057,7 +1220,7 @@ func (c *clusterManagerClient) ListCloudRegionCluster(ctx context.Context, in *L
 
 func (c *clusterManagerClient) ListCloudSubnets(ctx context.Context, in *ListCloudSubnetsRequest, opts ...grpc.CallOption) (*ListCloudSubnetsResponse, error) {
 	out := new(ListCloudSubnetsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudSubnets_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudSubnets", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1066,7 +1229,16 @@ func (c *clusterManagerClient) ListCloudSubnets(ctx context.Context, in *ListClo
 
 func (c *clusterManagerClient) ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...grpc.CallOption) (*ListCloudSecurityGroupsResponse, error) {
 	out := new(ListCloudSecurityGroupsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudSecurityGroups_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudSecurityGroups", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, opts ...grpc.CallOption) (*ListKeyPairsResponse, error) {
+	out := new(ListKeyPairsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListKeypairs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1075,7 +1247,25 @@ func (c *clusterManagerClient) ListCloudSecurityGroups(ctx context.Context, in *
 
 func (c *clusterManagerClient) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...grpc.CallOption) (*ListCloudInstanceTypeResponse, error) {
 	out := new(ListCloudInstanceTypeResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudInstanceTypes_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudInstanceTypes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, opts ...grpc.CallOption) (*GetMasterSuggestedMachinesResponse, error) {
+	out := new(GetMasterSuggestedMachinesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetMasterSuggestedMachines", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...grpc.CallOption) (*ListCloudProjectsResponse, error) {
+	out := new(ListCloudProjectsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudProjects", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1084,7 +1274,43 @@ func (c *clusterManagerClient) ListCloudInstanceTypes(ctx context.Context, in *L
 
 func (c *clusterManagerClient) ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...grpc.CallOption) (*ListCloudOsImageResponse, error) {
 	out := new(ListCloudOsImageResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCloudOsImage_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudOsImage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListCloudInstances(ctx context.Context, in *ListCloudInstancesRequest, opts ...grpc.CallOption) (*ListCloudInstancesResponse, error) {
+	out := new(ListCloudInstancesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudInstances", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetCloudAccountType(ctx context.Context, in *GetCloudAccountTypeRequest, opts ...grpc.CallOption) (*GetCloudAccountTypeResponse, error) {
+	out := new(GetCloudAccountTypeResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCloudAccountType", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetCloudBandwidthPackages(ctx context.Context, in *GetCloudBandwidthPackagesRequest, opts ...grpc.CallOption) (*GetCloudBandwidthPackagesResponse, error) {
+	out := new(GetCloudBandwidthPackagesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetCloudBandwidthPackages", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListCloudRuntimeInfo(ctx context.Context, in *ListCloudRuntimeInfoRequest, opts ...grpc.CallOption) (*ListCloudRuntimeInfoResponse, error) {
+	out := new(ListCloudRuntimeInfoResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudRuntimeInfo", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1093,7 +1319,34 @@ func (c *clusterManagerClient) ListCloudOsImage(ctx context.Context, in *ListClo
 
 func (c *clusterManagerClient) ListOperationLogs(ctx context.Context, in *ListOperationLogsRequest, opts ...grpc.CallOption) (*ListOperationLogsResponse, error) {
 	out := new(ListOperationLogsResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_ListOperationLogs_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListOperationLogs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListTaskStepLogs(ctx context.Context, in *ListTaskStepLogsRequest, opts ...grpc.CallOption) (*ListTaskStepLogsResponse, error) {
+	out := new(ListTaskStepLogsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListTaskStepLogs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListTaskRecords(ctx context.Context, in *ListTaskRecordsRequest, opts ...grpc.CallOption) (*ListTaskRecordsResponse, error) {
+	out := new(ListTaskRecordsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListTaskRecords", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CleanDbHistoryData(ctx context.Context, in *CleanDbHistoryDataRequest, opts ...grpc.CallOption) (*CleanDbHistoryDataResponse, error) {
+	out := new(CleanDbHistoryDataResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CleanDbHistoryData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1102,7 +1355,7 @@ func (c *clusterManagerClient) ListOperationLogs(ctx context.Context, in *ListOp
 
 func (c *clusterManagerClient) ListResourceSchema(ctx context.Context, in *ListResourceSchemaRequest, opts ...grpc.CallOption) (*CommonListResp, error) {
 	out := new(CommonListResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListResourceSchema_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListResourceSchema", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1111,7 +1364,7 @@ func (c *clusterManagerClient) ListResourceSchema(ctx context.Context, in *ListR
 
 func (c *clusterManagerClient) GetResourceSchema(ctx context.Context, in *GetResourceSchemaRequest, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
-	err := c.cc.Invoke(ctx, ClusterManager_GetResourceSchema_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetResourceSchema", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1120,7 +1373,7 @@ func (c *clusterManagerClient) GetResourceSchema(ctx context.Context, in *GetRes
 
 func (c *clusterManagerClient) QueryPermByActionID(ctx context.Context, in *QueryPermByActionIDRequest, opts ...grpc.CallOption) (*QueryPermByActionIDResponse, error) {
 	out := new(QueryPermByActionIDResponse)
-	err := c.cc.Invoke(ctx, ClusterManager_QueryPermByActionID_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/QueryPermByActionID", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1129,7 +1382,7 @@ func (c *clusterManagerClient) QueryPermByActionID(ctx context.Context, in *Quer
 
 func (c *clusterManagerClient) ListBKCloud(ctx context.Context, in *ListBKCloudRequest, opts ...grpc.CallOption) (*CommonListResp, error) {
 	out := new(CommonListResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListBKCloud_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListBKCloud", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1138,7 +1391,142 @@ func (c *clusterManagerClient) ListBKCloud(ctx context.Context, in *ListBKCloudR
 
 func (c *clusterManagerClient) ListCCTopology(ctx context.Context, in *ListCCTopologyRequest, opts ...grpc.CallOption) (*CommonResp, error) {
 	out := new(CommonResp)
-	err := c.cc.Invoke(ctx, ClusterManager_ListCCTopology_FullMethodName, in, out, opts...)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCCTopology", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetBkSopsTemplateList(ctx context.Context, in *GetBkSopsTemplateListRequest, opts ...grpc.CallOption) (*GetBkSopsTemplateListResponse, error) {
+	out := new(GetBkSopsTemplateListResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetBkSopsTemplateList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetBkSopsTemplateInfo(ctx context.Context, in *GetBkSopsTemplateInfoRequest, opts ...grpc.CallOption) (*GetBkSopsTemplateInfoResponse, error) {
+	out := new(GetBkSopsTemplateInfoResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetBkSopsTemplateInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetInnerTemplateValues(ctx context.Context, in *GetInnerTemplateValuesRequest, opts ...grpc.CallOption) (*GetInnerTemplateValuesResponse, error) {
+	out := new(GetInnerTemplateValuesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetInnerTemplateValues", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) DebugBkSopsTask(ctx context.Context, in *DebugBkSopsTaskRequest, opts ...grpc.CallOption) (*DebugBkSopsTaskResponse, error) {
+	out := new(DebugBkSopsTaskResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DebugBkSopsTask", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetBatchCustomSetting(ctx context.Context, in *GetBatchCustomSettingRequest, opts ...grpc.CallOption) (*GetBatchCustomSettingResponse, error) {
+	out := new(GetBatchCustomSettingResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetBatchCustomSetting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetBizTopologyHost(ctx context.Context, in *GetBizTopologyHostRequest, opts ...grpc.CallOption) (*GetBizTopologyHostResponse, error) {
+	out := new(GetBizTopologyHostResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetBizTopologyHost", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetTopologyNodes(ctx context.Context, in *GetTopologyNodesRequest, opts ...grpc.CallOption) (*GetTopologyNodesResponse, error) {
+	out := new(GetTopologyNodesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetTopologyNodes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetTopologyHostIdsNodes(ctx context.Context, in *GetTopologyHostIdsNodesRequest, opts ...grpc.CallOption) (*GetTopologyHostIdsNodesResponse, error) {
+	out := new(GetTopologyHostIdsNodesResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetTopologyHostIdsNodes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetHostsDetails(ctx context.Context, in *GetHostsDetailsRequest, opts ...grpc.CallOption) (*GetHostsDetailsResponse, error) {
+	out := new(GetHostsDetailsResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetHostsDetails", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) GetScopeHostCheck(ctx context.Context, in *GetScopeHostCheckRequest, opts ...grpc.CallOption) (*GetScopeHostCheckResponse, error) {
+	out := new(GetScopeHostCheckResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/GetScopeHostCheck", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) CreateCloudModuleFlag(ctx context.Context, in *CreateCloudModuleFlagRequest, opts ...grpc.CallOption) (*CreateCloudModuleFlagResponse, error) {
+	out := new(CreateCloudModuleFlagResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/CreateCloudModuleFlag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...grpc.CallOption) (*UpdateCloudModuleFlagResponse, error) {
+	out := new(UpdateCloudModuleFlagResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/UpdateCloudModuleFlag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, opts ...grpc.CallOption) (*DeleteCloudModuleFlagResponse, error) {
+	out := new(DeleteCloudModuleFlagResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/DeleteCloudModuleFlag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, opts ...grpc.CallOption) (*ListCloudModuleFlagResponse, error) {
+	out := new(ListCloudModuleFlagResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/ListCloudModuleFlag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerClient) Health(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error) {
+	out := new(HealthResponse)
+	err := c.cc.Invoke(ctx, "/clustermanager.ClusterManager/Health", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1146,118 +1534,151 @@ func (c *clusterManagerClient) ListCCTopology(ctx context.Context, in *ListCCTop
 }
 
 // ClusterManagerServer is the server API for ClusterManager service.
-// All implementations must embed UnimplementedClusterManagerServer
-// for forward compatibility
 type ClusterManagerServer interface {
-	//* cluster management
+	// * cluster management
 	CreateCluster(context.Context, *CreateClusterReq) (*CreateClusterResp, error)
 	RetryCreateClusterTask(context.Context, *RetryCreateClusterReq) (*RetryCreateClusterResp, error)
 	CheckCloudKubeConfig(context.Context, *KubeConfigReq) (*KubeConfigResp, error)
+	CheckCloudKubeConfigConnect(context.Context, *KubeConfigConnectReq) (*KubeConfigConnectResp, error)
 	ImportCluster(context.Context, *ImportClusterReq) (*ImportClusterResp, error)
 	UpdateCluster(context.Context, *UpdateClusterReq) (*UpdateClusterResp, error)
 	AddNodesToCluster(context.Context, *AddNodesRequest) (*AddNodesResponse, error)
 	DeleteNodesFromCluster(context.Context, *DeleteNodesRequest) (*DeleteNodesResponse, error)
+	BatchDeleteNodesFromCluster(context.Context, *BatchDeleteClusterNodesRequest) (*BatchDeleteClusterNodesResponse, error)
+	GetClustersMetaData(context.Context, *GetClustersMetaDataRequest) (*GetClustersMetaDataResponse, error)
 	ListNodesInCluster(context.Context, *ListNodesInClusterRequest) (*ListNodesInClusterResponse, error)
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest) (*ListMastersInClusterResponse, error)
 	DeleteCluster(context.Context, *DeleteClusterReq) (*DeleteClusterResp, error)
 	GetCluster(context.Context, *GetClusterReq) (*GetClusterResp, error)
-	ListCluster(context.Context, *ListClusterReq) (*ListClusterResp, error)
 	ListProjectCluster(context.Context, *ListProjectClusterReq) (*ListProjectClusterResp, error)
+	ListCluster(context.Context, *ListClusterReq) (*ListClusterResp, error)
 	ListCommonCluster(context.Context, *ListCommonClusterReq) (*ListCommonClusterResp, error)
-	//* node management
+	AddSubnetToCluster(context.Context, *AddSubnetToClusterReq) (*AddSubnetToClusterResp, error)
+	SwitchClusterUnderlayNetwork(context.Context, *SwitchClusterUnderlayNetworkReq) (*SwitchClusterUnderlayNetworkResp, error)
+	CreateVirtualCluster(context.Context, *CreateVirtualClusterReq) (*CreateVirtualClusterResp, error)
+	DeleteVirtualCluster(context.Context, *DeleteVirtualClusterReq) (*DeleteVirtualClusterResp, error)
+	UpdateVirtualClusterQuota(context.Context, *UpdateVirtualClusterQuotaReq) (*UpdateVirtualClusterQuotaResp, error)
+	// * node management
 	GetNode(context.Context, *GetNodeRequest) (*GetNodeResponse, error)
+	GetNodeInfo(context.Context, *GetNodeInfoRequest) (*GetNodeInfoResponse, error)
+	RecordNodeInfo(context.Context, *RecordNodeInfoRequest) (*CommonResp, error)
 	UpdateNode(context.Context, *UpdateNodeRequest) (*UpdateNodeResponse, error)
+	UpdateClusterModule(context.Context, *UpdateClusterModuleRequest) (*UpdateClusterModuleResponse, error)
 	CheckNodeInCluster(context.Context, *CheckNodesRequest) (*CheckNodesResponse, error)
 	CordonNode(context.Context, *CordonNodeRequest) (*CordonNodeResponse, error)
 	UnCordonNode(context.Context, *UnCordonNodeRequest) (*UnCordonNodeResponse, error)
 	DrainNode(context.Context, *DrainNodeRequest) (*DrainNodeResponse, error)
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest) (*UpdateNodeLabelsResponse, error)
+	UpdateNodeAnnotations(context.Context, *UpdateNodeAnnotationsRequest) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest) (*UpdateNodeTaintsResponse, error)
-	//* cluster credential management
+	// * cluster credential management
 	GetClusterCredential(context.Context, *GetClusterCredentialReq) (*GetClusterCredentialResp, error)
 	UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq) (*UpdateClusterCredentialResp, error)
+	UpdateClusterKubeConfig(context.Context, *UpdateClusterKubeConfigReq) (*UpdateClusterKubeConfigResp, error)
 	DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq) (*DeleteClusterCredentialResp, error)
 	ListClusterCredential(context.Context, *ListClusterCredentialReq) (*ListClusterCredentialResp, error)
-	//* federation cluster management
+	// * federation cluster management
 	InitFederationCluster(context.Context, *InitFederationClusterReq) (*InitFederationClusterResp, error)
 	AddFederatedCluster(context.Context, *AddFederatedClusterReq) (*AddFederatedClusterResp, error)
-	//* namespace management *
-	CreateNamespace(context.Context, *CreateNamespaceReq) (*CreateNamespaceResp, error)
-	UpdateNamespace(context.Context, *UpdateNamespaceReq) (*UpdateNamespaceResp, error)
-	DeleteNamespace(context.Context, *DeleteNamespaceReq) (*DeleteNamespaceResp, error)
-	GetNamespace(context.Context, *GetNamespaceReq) (*GetNamespaceResp, error)
-	ListNamespace(context.Context, *ListNamespaceReq) (*ListNamespaceResp, error)
-	//* NamespaceQuota management *
-	CreateNamespaceQuota(context.Context, *CreateNamespaceQuotaReq) (*CreateNamespaceQuotaResp, error)
-	UpdateNamespaceQuota(context.Context, *UpdateNamespaceQuotaReq) (*UpdateNamespaceQuotaResp, error)
-	DeleteNamespaceQuota(context.Context, *DeleteNamespaceQuotaReq) (*DeleteNamespaceQuotaResp, error)
-	GetNamespaceQuota(context.Context, *GetNamespaceQuotaReq) (*GetNamespaceQuotaResp, error)
-	ListNamespaceQuota(context.Context, *ListNamespaceQuotaReq) (*ListNamespaceQuotaResp, error)
-	CreateNamespaceWithQuota(context.Context, *CreateNamespaceWithQuotaReq) (*CreateNamespaceWithQuotaResp, error)
-	//* project information management *
-	CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error)
-	UpdateProject(context.Context, *UpdateProjectRequest) (*UpdateProjectResponse, error)
-	DeleteProject(context.Context, *DeleteProjectRequest) (*DeleteProjectResponse, error)
-	GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error)
-	ListProject(context.Context, *ListProjectRequest) (*ListProjectResponse, error)
-	//* Cloud information management *
+	// * Cloud information management *
 	CreateCloud(context.Context, *CreateCloudRequest) (*CreateCloudResponse, error)
 	UpdateCloud(context.Context, *UpdateCloudRequest) (*UpdateCloudResponse, error)
 	DeleteCloud(context.Context, *DeleteCloudRequest) (*DeleteCloudResponse, error)
 	GetCloud(context.Context, *GetCloudRequest) (*GetCloudResponse, error)
 	ListCloud(context.Context, *ListCloudRequest) (*ListCloudResponse, error)
-	//* Cloud VPC information management *
+	// * Cloud VPC information management *
 	CreateCloudVPC(context.Context, *CreateCloudVPCRequest) (*CreateCloudVPCResponse, error)
 	UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest) (*UpdateCloudVPCResponse, error)
 	DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest) (*DeleteCloudVPCResponse, error)
 	ListCloudVPC(context.Context, *ListCloudVPCRequest) (*ListCloudVPCResponse, error)
 	ListCloudRegions(context.Context, *ListCloudRegionsRequest) (*ListCloudRegionsResponse, error)
 	GetVPCCidr(context.Context, *GetVPCCidrRequest) (*GetVPCCidrResponse, error)
-	//* NodeGroup information management *
+	// * NodeGroup information management *
 	CreateNodeGroup(context.Context, *CreateNodeGroupRequest) (*CreateNodeGroupResponse, error)
 	UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest) (*UpdateNodeGroupResponse, error)
 	DeleteNodeGroup(context.Context, *DeleteNodeGroupRequest) (*DeleteNodeGroupResponse, error)
 	GetNodeGroup(context.Context, *GetNodeGroupRequest) (*GetNodeGroupResponse, error)
+	ListClusterNodeGroup(context.Context, *ListClusterNodeGroupRequest) (*ListClusterNodeGroupResponse, error)
 	ListNodeGroup(context.Context, *ListNodeGroupRequest) (*ListNodeGroupResponse, error)
+	RecommendNodeGroupConf(context.Context, *RecommendNodeGroupConfReq) (*RecommendNodeGroupConfResp, error)
 	MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest) (*MoveNodesToGroupResponse, error)
 	RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest) (*RemoveNodesFromGroupResponse, error)
 	CleanNodesInGroup(context.Context, *CleanNodesInGroupRequest) (*CleanNodesInGroupResponse, error)
 	CleanNodesInGroupV2(context.Context, *CleanNodesInGroupV2Request) (*CleanNodesInGroupV2Response, error)
-	ListNodesInGroup(context.Context, *ListNodesInGroupRequest) (*ListNodesInGroupResponse, error)
+	ListNodesInGroup(context.Context, *GetNodeGroupRequest) (*ListNodesInGroupResponse, error)
+	ListNodesInGroupV2(context.Context, *ListNodesInGroupV2Request) (*ListNodesInGroupV2Response, error)
 	UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest) (*UpdateGroupDesiredNodeResponse, error)
 	UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest) (*UpdateGroupDesiredSizeResponse, error)
+	UpdateGroupMinMaxSize(context.Context, *UpdateGroupMinMaxSizeRequest) (*UpdateGroupMinMaxSizeResponse, error)
+	UpdateGroupAsTimeRange(context.Context, *UpdateGroupAsTimeRangeRequest) (*UpdateGroupAsTimeRangeResponse, error)
+	GetExternalNodeScriptByGroupID(context.Context, *GetExternalNodeScriptRequest) (*GetExternalNodeScriptResponse, error)
+	TransNodeGroupToNodeTemplate(context.Context, *TransNodeGroupToNodeTemplateRequest) (*TransNodeGroupToNodeTemplateResponse, error)
 	EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest) (*EnableNodeGroupAutoScaleResponse, error)
 	DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest) (*DisableNodeGroupAutoScaleResponse, error)
-	//* Task information management *
+	GetProviderResourceUsage(context.Context, *GetProviderResourceUsageRequest) (*GetProviderResourceUsageResponse, error)
+	GetProjectResourceQuotaUsage(context.Context, *GetProjectResourceQuotaUsageRequest) (*GetProjectResourceQuotaUsageResponse, error)
+	// * Task information management *
 	CreateTask(context.Context, *CreateTaskRequest) (*CreateTaskResponse, error)
 	RetryTask(context.Context, *RetryTaskRequest) (*RetryTaskResponse, error)
+	SkipTask(context.Context, *SkipTaskRequest) (*SkipTaskResponse, error)
 	UpdateTask(context.Context, *UpdateTaskRequest) (*UpdateTaskResponse, error)
 	DeleteTask(context.Context, *DeleteTaskRequest) (*DeleteTaskResponse, error)
 	GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error)
 	ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error)
-	//* ClusterAutoScalingOption information management *
+	// * ClusterAutoScalingOption information management *
 	CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest) (*CreateAutoScalingOptionResponse, error)
 	UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest) (*UpdateAutoScalingOptionResponse, error)
+	UpdateAsOptionDeviceProvider(context.Context, *UpdateAsOptionDeviceProviderRequest) (*UpdateAsOptionDeviceProviderResponse, error)
 	DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest) (*DeleteAutoScalingOptionResponse, error)
 	GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest) (*GetAutoScalingOptionResponse, error)
 	ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest) (*ListAutoScalingOptionResponse, error)
 	UpdateAutoScalingStatus(context.Context, *UpdateAutoScalingStatusRequest) (*UpdateAutoScalingStatusResponse, error)
+	SyncAutoScalingOption(context.Context, *SyncAutoScalingOptionRequest) (*SyncAutoScalingOptionResponse, error)
+	// Cloud NodeTemplate info management
+	CreateNodeTemplate(context.Context, *CreateNodeTemplateRequest) (*CreateNodeTemplateResponse, error)
+	UpdateNodeTemplate(context.Context, *UpdateNodeTemplateRequest) (*UpdateNodeTemplateResponse, error)
+	DeleteNodeTemplate(context.Context, *DeleteNodeTemplateRequest) (*DeleteNodeTemplateResponse, error)
+	ListNodeTemplate(context.Context, *ListNodeTemplateRequest) (*ListNodeTemplateResponse, error)
+	GetNodeTemplate(context.Context, *GetNodeTemplateRequest) (*GetNodeTemplateResponse, error)
+	// NotifyTemplate info management
+	CreateNotifyTemplate(context.Context, *CreateNotifyTemplateRequest) (*CreateNotifyTemplateResponse, error)
+	DeleteNotifyTemplate(context.Context, *DeleteNotifyTemplateRequest) (*DeleteNotifyTemplateResponse, error)
+	ListNotifyTemplate(context.Context, *ListNotifyTemplateRequest) (*ListNotifyTemplateResponse, error)
 	// Cloud Account information management
 	CreateCloudAccount(context.Context, *CreateCloudAccountRequest) (*CreateCloudAccountResponse, error)
 	UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest) (*UpdateCloudAccountResponse, error)
+	MigrateCloudAccount(context.Context, *MigrateCloudAccountRequest) (*MigrateCloudAccountResponse, error)
 	DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest) (*DeleteCloudAccountResponse, error)
 	ListCloudAccount(context.Context, *ListCloudAccountRequest) (*ListCloudAccountResponse, error)
 	ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest) (*ListCloudAccountPermResponse, error)
+	VerifyCloudAccount(context.Context, *VerifyCloudAccountRequest) (*VerifyCloudAccountResponse, error)
 	// Cloud Resource management
+	GetServiceRoles(context.Context, *GetServiceRolesRequest) (*GetServiceRolesResponse, error)
+	GetResourceGroups(context.Context, *GetResourceGroupsRequest) (*GetResourceGroupsResponse, error)
 	GetCloudRegions(context.Context, *GetCloudRegionsRequest) (*GetCloudRegionsResponse, error)
 	GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest) (*GetCloudRegionZonesResponse, error)
 	ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest) (*ListCloudRegionClusterResponse, error)
+	ListCloudVpcs(context.Context, *ListCloudVpcsRequest) (*ListCloudVpcsResponse, error)
+	CheckCidrConflictFromVpc(context.Context, *CheckCidrConflictFromVpcRequest) (*CheckCidrConflictFromVpcResponse, error)
 	ListCloudSubnets(context.Context, *ListCloudSubnetsRequest) (*ListCloudSubnetsResponse, error)
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest) (*ListCloudSecurityGroupsResponse, error)
+	ListKeypairs(context.Context, *ListKeyPairsRequest) (*ListKeyPairsResponse, error)
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest) (*ListCloudInstanceTypeResponse, error)
+	GetMasterSuggestedMachines(context.Context, *GetMasterSuggestedMachinesRequest) (*GetMasterSuggestedMachinesResponse, error)
+	ListCloudProjects(context.Context, *ListCloudProjectsRequest) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest) (*ListCloudOsImageResponse, error)
+	ListCloudInstances(context.Context, *ListCloudInstancesRequest) (*ListCloudInstancesResponse, error)
+	GetCloudAccountType(context.Context, *GetCloudAccountTypeRequest) (*GetCloudAccountTypeResponse, error)
+	GetCloudBandwidthPackages(context.Context, *GetCloudBandwidthPackagesRequest) (*GetCloudBandwidthPackagesResponse, error)
+	ListCloudRuntimeInfo(context.Context, *ListCloudRuntimeInfoRequest) (*ListCloudRuntimeInfoResponse, error)
 	// Operation logs
 	ListOperationLogs(context.Context, *ListOperationLogsRequest) (*ListOperationLogsResponse, error)
+	// Task Step logs
+	ListTaskStepLogs(context.Context, *ListTaskStepLogsRequest) (*ListTaskStepLogsResponse, error)
+	// Task records
+	ListTaskRecords(context.Context, *ListTaskRecordsRequest) (*ListTaskRecordsResponse, error)
+	// CleanDbHistoryData clean DB history data
+	CleanDbHistoryData(context.Context, *CleanDbHistoryDataRequest) (*CleanDbHistoryDataResponse, error)
 	// ** ResourceSchema **
 	// ListResourceSchema
 	ListResourceSchema(context.Context, *ListResourceSchemaRequest) (*CommonListResp, error)
@@ -1265,325 +1686,483 @@ type ClusterManagerServer interface {
 	GetResourceSchema(context.Context, *GetResourceSchemaRequest) (*CommonResp, error)
 	// Perm interface
 	QueryPermByActionID(context.Context, *QueryPermByActionIDRequest) (*QueryPermByActionIDResponse, error)
-	// third party
-	// list bk cloud
+	// thirdParty interface(cmdb/bksops等)
 	ListBKCloud(context.Context, *ListBKCloudRequest) (*CommonListResp, error)
 	ListCCTopology(context.Context, *ListCCTopologyRequest) (*CommonResp, error)
-	mustEmbedUnimplementedClusterManagerServer()
+	GetBkSopsTemplateList(context.Context, *GetBkSopsTemplateListRequest) (*GetBkSopsTemplateListResponse, error)
+	GetBkSopsTemplateInfo(context.Context, *GetBkSopsTemplateInfoRequest) (*GetBkSopsTemplateInfoResponse, error)
+	GetInnerTemplateValues(context.Context, *GetInnerTemplateValuesRequest) (*GetInnerTemplateValuesResponse, error)
+	DebugBkSopsTask(context.Context, *DebugBkSopsTaskRequest) (*DebugBkSopsTaskResponse, error)
+	// IP selector interface
+	// 批量获取多个配置项, 返回配置项内容map
+	GetBatchCustomSetting(context.Context, *GetBatchCustomSettingRequest) (*GetBatchCustomSettingResponse, error)
+	// 批量获取含各节点主机数量的拓扑树
+	GetBizTopologyHost(context.Context, *GetBizTopologyHostRequest) (*GetBizTopologyHostResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机信息(当前仅支持业务拓扑节点)
+	GetTopologyNodes(context.Context, *GetTopologyNodesRequest) (*GetTopologyNodesResponse, error)
+	// 根据多个拓扑节点与搜索条件批量分页查询所包含的主机ID，用于IP选择器全选（当前仅支持业务拓扑节点，业务集仅支持传入业务集根节点）
+	GetTopologyHostIdsNodes(context.Context, *GetTopologyHostIdsNodesRequest) (*GetTopologyHostIdsNodesResponse, error)
+	// 根据主机IDs获取机器详情信息
+	GetHostsDetails(context.Context, *GetHostsDetailsRequest) (*GetHostsDetailsResponse, error)
+	// 根据用户手动输入的IP/IPv6/主机名/hostId等关键字信息获取真实存在的机器信息
+	GetScopeHostCheck(context.Context, *GetScopeHostCheckRequest) (*GetScopeHostCheckResponse, error)
+	// Cloud module flag management
+	CreateCloudModuleFlag(context.Context, *CreateCloudModuleFlagRequest) (*CreateCloudModuleFlagResponse, error)
+	UpdateCloudModuleFlag(context.Context, *UpdateCloudModuleFlagRequest) (*UpdateCloudModuleFlagResponse, error)
+	DeleteCloudModuleFlag(context.Context, *DeleteCloudModuleFlagRequest) (*DeleteCloudModuleFlagResponse, error)
+	ListCloudModuleFlag(context.Context, *ListCloudModuleFlagRequest) (*ListCloudModuleFlagResponse, error)
+	// cluster manager health interface
+	Health(context.Context, *HealthRequest) (*HealthResponse, error)
 }
 
-// UnimplementedClusterManagerServer must be embedded to have forward compatible implementations.
+// UnimplementedClusterManagerServer can be embedded to have forward compatible implementations.
 type UnimplementedClusterManagerServer struct {
 }
 
-func (UnimplementedClusterManagerServer) CreateCluster(context.Context, *CreateClusterReq) (*CreateClusterResp, error) {
+func (*UnimplementedClusterManagerServer) CreateCluster(ctx context.Context, req *CreateClusterReq) (*CreateClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) RetryCreateClusterTask(context.Context, *RetryCreateClusterReq) (*RetryCreateClusterResp, error) {
+func (*UnimplementedClusterManagerServer) RetryCreateClusterTask(ctx context.Context, req *RetryCreateClusterReq) (*RetryCreateClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetryCreateClusterTask not implemented")
 }
-func (UnimplementedClusterManagerServer) CheckCloudKubeConfig(context.Context, *KubeConfigReq) (*KubeConfigResp, error) {
+func (*UnimplementedClusterManagerServer) CheckCloudKubeConfig(ctx context.Context, req *KubeConfigReq) (*KubeConfigResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckCloudKubeConfig not implemented")
 }
-func (UnimplementedClusterManagerServer) ImportCluster(context.Context, *ImportClusterReq) (*ImportClusterResp, error) {
+func (*UnimplementedClusterManagerServer) CheckCloudKubeConfigConnect(ctx context.Context, req *KubeConfigConnectReq) (*KubeConfigConnectResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckCloudKubeConfigConnect not implemented")
+}
+func (*UnimplementedClusterManagerServer) ImportCluster(ctx context.Context, req *ImportClusterReq) (*ImportClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ImportCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateCluster(context.Context, *UpdateClusterReq) (*UpdateClusterResp, error) {
+func (*UnimplementedClusterManagerServer) UpdateCluster(ctx context.Context, req *UpdateClusterReq) (*UpdateClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) AddNodesToCluster(context.Context, *AddNodesRequest) (*AddNodesResponse, error) {
+func (*UnimplementedClusterManagerServer) AddNodesToCluster(ctx context.Context, req *AddNodesRequest) (*AddNodesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddNodesToCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteNodesFromCluster(context.Context, *DeleteNodesRequest) (*DeleteNodesResponse, error) {
+func (*UnimplementedClusterManagerServer) DeleteNodesFromCluster(ctx context.Context, req *DeleteNodesRequest) (*DeleteNodesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNodesFromCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) ListNodesInCluster(context.Context, *ListNodesInClusterRequest) (*ListNodesInClusterResponse, error) {
+func (*UnimplementedClusterManagerServer) BatchDeleteNodesFromCluster(ctx context.Context, req *BatchDeleteClusterNodesRequest) (*BatchDeleteClusterNodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchDeleteNodesFromCluster not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetClustersMetaData(ctx context.Context, req *GetClustersMetaDataRequest) (*GetClustersMetaDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClustersMetaData not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListNodesInCluster(ctx context.Context, req *ListNodesInClusterRequest) (*ListNodesInClusterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNodesInCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) ListMastersInCluster(context.Context, *ListMastersInClusterRequest) (*ListMastersInClusterResponse, error) {
+func (*UnimplementedClusterManagerServer) ListMastersInCluster(ctx context.Context, req *ListMastersInClusterRequest) (*ListMastersInClusterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMastersInCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteCluster(context.Context, *DeleteClusterReq) (*DeleteClusterResp, error) {
+func (*UnimplementedClusterManagerServer) DeleteCluster(ctx context.Context, req *DeleteClusterReq) (*DeleteClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) GetCluster(context.Context, *GetClusterReq) (*GetClusterResp, error) {
+func (*UnimplementedClusterManagerServer) GetCluster(ctx context.Context, req *GetClusterReq) (*GetClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCluster(context.Context, *ListClusterReq) (*ListClusterResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListCluster not implemented")
-}
-func (UnimplementedClusterManagerServer) ListProjectCluster(context.Context, *ListProjectClusterReq) (*ListProjectClusterResp, error) {
+func (*UnimplementedClusterManagerServer) ListProjectCluster(ctx context.Context, req *ListProjectClusterReq) (*ListProjectClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListProjectCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCommonCluster(context.Context, *ListCommonClusterReq) (*ListCommonClusterResp, error) {
+func (*UnimplementedClusterManagerServer) ListCluster(ctx context.Context, req *ListClusterReq) (*ListClusterResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCluster not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCommonCluster(ctx context.Context, req *ListCommonClusterReq) (*ListCommonClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCommonCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) GetNode(context.Context, *GetNodeRequest) (*GetNodeResponse, error) {
+func (*UnimplementedClusterManagerServer) AddSubnetToCluster(ctx context.Context, req *AddSubnetToClusterReq) (*AddSubnetToClusterResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddSubnetToCluster not implemented")
+}
+func (*UnimplementedClusterManagerServer) SwitchClusterUnderlayNetwork(ctx context.Context, req *SwitchClusterUnderlayNetworkReq) (*SwitchClusterUnderlayNetworkResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwitchClusterUnderlayNetwork not implemented")
+}
+func (*UnimplementedClusterManagerServer) CreateVirtualCluster(ctx context.Context, req *CreateVirtualClusterReq) (*CreateVirtualClusterResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateVirtualCluster not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteVirtualCluster(ctx context.Context, req *DeleteVirtualClusterReq) (*DeleteVirtualClusterResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteVirtualCluster not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateVirtualClusterQuota(ctx context.Context, req *UpdateVirtualClusterQuotaReq) (*UpdateVirtualClusterQuotaResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVirtualClusterQuota not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetNode(ctx context.Context, req *GetNodeRequest) (*GetNodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNode not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateNode(context.Context, *UpdateNodeRequest) (*UpdateNodeResponse, error) {
+func (*UnimplementedClusterManagerServer) GetNodeInfo(ctx context.Context, req *GetNodeInfoRequest) (*GetNodeInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNodeInfo not implemented")
+}
+func (*UnimplementedClusterManagerServer) RecordNodeInfo(ctx context.Context, req *RecordNodeInfoRequest) (*CommonResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecordNodeInfo not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateNode(ctx context.Context, req *UpdateNodeRequest) (*UpdateNodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNode not implemented")
 }
-func (UnimplementedClusterManagerServer) CheckNodeInCluster(context.Context, *CheckNodesRequest) (*CheckNodesResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateClusterModule(ctx context.Context, req *UpdateClusterModuleRequest) (*UpdateClusterModuleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateClusterModule not implemented")
+}
+func (*UnimplementedClusterManagerServer) CheckNodeInCluster(ctx context.Context, req *CheckNodesRequest) (*CheckNodesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckNodeInCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) CordonNode(context.Context, *CordonNodeRequest) (*CordonNodeResponse, error) {
+func (*UnimplementedClusterManagerServer) CordonNode(ctx context.Context, req *CordonNodeRequest) (*CordonNodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CordonNode not implemented")
 }
-func (UnimplementedClusterManagerServer) UnCordonNode(context.Context, *UnCordonNodeRequest) (*UnCordonNodeResponse, error) {
+func (*UnimplementedClusterManagerServer) UnCordonNode(ctx context.Context, req *UnCordonNodeRequest) (*UnCordonNodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnCordonNode not implemented")
 }
-func (UnimplementedClusterManagerServer) DrainNode(context.Context, *DrainNodeRequest) (*DrainNodeResponse, error) {
+func (*UnimplementedClusterManagerServer) DrainNode(ctx context.Context, req *DrainNodeRequest) (*DrainNodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DrainNode not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest) (*UpdateNodeLabelsResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateNodeLabels(ctx context.Context, req *UpdateNodeLabelsRequest) (*UpdateNodeLabelsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNodeLabels not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest) (*UpdateNodeTaintsResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateNodeAnnotations(ctx context.Context, req *UpdateNodeAnnotationsRequest) (*UpdateNodeAnnotationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateNodeAnnotations not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateNodeTaints(ctx context.Context, req *UpdateNodeTaintsRequest) (*UpdateNodeTaintsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNodeTaints not implemented")
 }
-func (UnimplementedClusterManagerServer) GetClusterCredential(context.Context, *GetClusterCredentialReq) (*GetClusterCredentialResp, error) {
+func (*UnimplementedClusterManagerServer) GetClusterCredential(ctx context.Context, req *GetClusterCredentialReq) (*GetClusterCredentialResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterCredential not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateClusterCredential(context.Context, *UpdateClusterCredentialReq) (*UpdateClusterCredentialResp, error) {
+func (*UnimplementedClusterManagerServer) UpdateClusterCredential(ctx context.Context, req *UpdateClusterCredentialReq) (*UpdateClusterCredentialResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateClusterCredential not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteClusterCredential(context.Context, *DeleteClusterCredentialReq) (*DeleteClusterCredentialResp, error) {
+func (*UnimplementedClusterManagerServer) UpdateClusterKubeConfig(ctx context.Context, req *UpdateClusterKubeConfigReq) (*UpdateClusterKubeConfigResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateClusterKubeConfig not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteClusterCredential(ctx context.Context, req *DeleteClusterCredentialReq) (*DeleteClusterCredentialResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterCredential not implemented")
 }
-func (UnimplementedClusterManagerServer) ListClusterCredential(context.Context, *ListClusterCredentialReq) (*ListClusterCredentialResp, error) {
+func (*UnimplementedClusterManagerServer) ListClusterCredential(ctx context.Context, req *ListClusterCredentialReq) (*ListClusterCredentialResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListClusterCredential not implemented")
 }
-func (UnimplementedClusterManagerServer) InitFederationCluster(context.Context, *InitFederationClusterReq) (*InitFederationClusterResp, error) {
+func (*UnimplementedClusterManagerServer) InitFederationCluster(ctx context.Context, req *InitFederationClusterReq) (*InitFederationClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InitFederationCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) AddFederatedCluster(context.Context, *AddFederatedClusterReq) (*AddFederatedClusterResp, error) {
+func (*UnimplementedClusterManagerServer) AddFederatedCluster(ctx context.Context, req *AddFederatedClusterReq) (*AddFederatedClusterResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddFederatedCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) CreateNamespace(context.Context, *CreateNamespaceReq) (*CreateNamespaceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespace not implemented")
-}
-func (UnimplementedClusterManagerServer) UpdateNamespace(context.Context, *UpdateNamespaceReq) (*UpdateNamespaceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateNamespace not implemented")
-}
-func (UnimplementedClusterManagerServer) DeleteNamespace(context.Context, *DeleteNamespaceReq) (*DeleteNamespaceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteNamespace not implemented")
-}
-func (UnimplementedClusterManagerServer) GetNamespace(context.Context, *GetNamespaceReq) (*GetNamespaceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetNamespace not implemented")
-}
-func (UnimplementedClusterManagerServer) ListNamespace(context.Context, *ListNamespaceReq) (*ListNamespaceResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListNamespace not implemented")
-}
-func (UnimplementedClusterManagerServer) CreateNamespaceQuota(context.Context, *CreateNamespaceQuotaReq) (*CreateNamespaceQuotaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespaceQuota not implemented")
-}
-func (UnimplementedClusterManagerServer) UpdateNamespaceQuota(context.Context, *UpdateNamespaceQuotaReq) (*UpdateNamespaceQuotaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateNamespaceQuota not implemented")
-}
-func (UnimplementedClusterManagerServer) DeleteNamespaceQuota(context.Context, *DeleteNamespaceQuotaReq) (*DeleteNamespaceQuotaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteNamespaceQuota not implemented")
-}
-func (UnimplementedClusterManagerServer) GetNamespaceQuota(context.Context, *GetNamespaceQuotaReq) (*GetNamespaceQuotaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetNamespaceQuota not implemented")
-}
-func (UnimplementedClusterManagerServer) ListNamespaceQuota(context.Context, *ListNamespaceQuotaReq) (*ListNamespaceQuotaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListNamespaceQuota not implemented")
-}
-func (UnimplementedClusterManagerServer) CreateNamespaceWithQuota(context.Context, *CreateNamespaceWithQuotaReq) (*CreateNamespaceWithQuotaResp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateNamespaceWithQuota not implemented")
-}
-func (UnimplementedClusterManagerServer) CreateProject(context.Context, *CreateProjectRequest) (*CreateProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateProject not implemented")
-}
-func (UnimplementedClusterManagerServer) UpdateProject(context.Context, *UpdateProjectRequest) (*UpdateProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateProject not implemented")
-}
-func (UnimplementedClusterManagerServer) DeleteProject(context.Context, *DeleteProjectRequest) (*DeleteProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteProject not implemented")
-}
-func (UnimplementedClusterManagerServer) GetProject(context.Context, *GetProjectRequest) (*GetProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetProject not implemented")
-}
-func (UnimplementedClusterManagerServer) ListProject(context.Context, *ListProjectRequest) (*ListProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListProject not implemented")
-}
-func (UnimplementedClusterManagerServer) CreateCloud(context.Context, *CreateCloudRequest) (*CreateCloudResponse, error) {
+func (*UnimplementedClusterManagerServer) CreateCloud(ctx context.Context, req *CreateCloudRequest) (*CreateCloudResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCloud not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateCloud(context.Context, *UpdateCloudRequest) (*UpdateCloudResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateCloud(ctx context.Context, req *UpdateCloudRequest) (*UpdateCloudResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCloud not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteCloud(context.Context, *DeleteCloudRequest) (*DeleteCloudResponse, error) {
+func (*UnimplementedClusterManagerServer) DeleteCloud(ctx context.Context, req *DeleteCloudRequest) (*DeleteCloudResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCloud not implemented")
 }
-func (UnimplementedClusterManagerServer) GetCloud(context.Context, *GetCloudRequest) (*GetCloudResponse, error) {
+func (*UnimplementedClusterManagerServer) GetCloud(ctx context.Context, req *GetCloudRequest) (*GetCloudResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloud not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloud(context.Context, *ListCloudRequest) (*ListCloudResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloud(ctx context.Context, req *ListCloudRequest) (*ListCloudResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloud not implemented")
 }
-func (UnimplementedClusterManagerServer) CreateCloudVPC(context.Context, *CreateCloudVPCRequest) (*CreateCloudVPCResponse, error) {
+func (*UnimplementedClusterManagerServer) CreateCloudVPC(ctx context.Context, req *CreateCloudVPCRequest) (*CreateCloudVPCResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCloudVPC not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateCloudVPC(context.Context, *UpdateCloudVPCRequest) (*UpdateCloudVPCResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateCloudVPC(ctx context.Context, req *UpdateCloudVPCRequest) (*UpdateCloudVPCResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCloudVPC not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteCloudVPC(context.Context, *DeleteCloudVPCRequest) (*DeleteCloudVPCResponse, error) {
+func (*UnimplementedClusterManagerServer) DeleteCloudVPC(ctx context.Context, req *DeleteCloudVPCRequest) (*DeleteCloudVPCResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCloudVPC not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudVPC(context.Context, *ListCloudVPCRequest) (*ListCloudVPCResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudVPC(ctx context.Context, req *ListCloudVPCRequest) (*ListCloudVPCResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudVPC not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudRegions(context.Context, *ListCloudRegionsRequest) (*ListCloudRegionsResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudRegions(ctx context.Context, req *ListCloudRegionsRequest) (*ListCloudRegionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudRegions not implemented")
 }
-func (UnimplementedClusterManagerServer) GetVPCCidr(context.Context, *GetVPCCidrRequest) (*GetVPCCidrResponse, error) {
+func (*UnimplementedClusterManagerServer) GetVPCCidr(ctx context.Context, req *GetVPCCidrRequest) (*GetVPCCidrResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVPCCidr not implemented")
 }
-func (UnimplementedClusterManagerServer) CreateNodeGroup(context.Context, *CreateNodeGroupRequest) (*CreateNodeGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) CreateNodeGroup(ctx context.Context, req *CreateNodeGroupRequest) (*CreateNodeGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateNodeGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateNodeGroup(context.Context, *UpdateNodeGroupRequest) (*UpdateNodeGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateNodeGroup(ctx context.Context, req *UpdateNodeGroupRequest) (*UpdateNodeGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNodeGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteNodeGroup(context.Context, *DeleteNodeGroupRequest) (*DeleteNodeGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) DeleteNodeGroup(ctx context.Context, req *DeleteNodeGroupRequest) (*DeleteNodeGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteNodeGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) GetNodeGroup(context.Context, *GetNodeGroupRequest) (*GetNodeGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) GetNodeGroup(ctx context.Context, req *GetNodeGroupRequest) (*GetNodeGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNodeGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) ListNodeGroup(context.Context, *ListNodeGroupRequest) (*ListNodeGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) ListClusterNodeGroup(ctx context.Context, req *ListClusterNodeGroupRequest) (*ListClusterNodeGroupResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClusterNodeGroup not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListNodeGroup(ctx context.Context, req *ListNodeGroupRequest) (*ListNodeGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNodeGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) MoveNodesToGroup(context.Context, *MoveNodesToGroupRequest) (*MoveNodesToGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) RecommendNodeGroupConf(ctx context.Context, req *RecommendNodeGroupConfReq) (*RecommendNodeGroupConfResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecommendNodeGroupConf not implemented")
+}
+func (*UnimplementedClusterManagerServer) MoveNodesToGroup(ctx context.Context, req *MoveNodesToGroupRequest) (*MoveNodesToGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MoveNodesToGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) RemoveNodesFromGroup(context.Context, *RemoveNodesFromGroupRequest) (*RemoveNodesFromGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) RemoveNodesFromGroup(ctx context.Context, req *RemoveNodesFromGroupRequest) (*RemoveNodesFromGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveNodesFromGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) CleanNodesInGroup(context.Context, *CleanNodesInGroupRequest) (*CleanNodesInGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) CleanNodesInGroup(ctx context.Context, req *CleanNodesInGroupRequest) (*CleanNodesInGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CleanNodesInGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) CleanNodesInGroupV2(context.Context, *CleanNodesInGroupV2Request) (*CleanNodesInGroupV2Response, error) {
+func (*UnimplementedClusterManagerServer) CleanNodesInGroupV2(ctx context.Context, req *CleanNodesInGroupV2Request) (*CleanNodesInGroupV2Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CleanNodesInGroupV2 not implemented")
 }
-func (UnimplementedClusterManagerServer) ListNodesInGroup(context.Context, *ListNodesInGroupRequest) (*ListNodesInGroupResponse, error) {
+func (*UnimplementedClusterManagerServer) ListNodesInGroup(ctx context.Context, req *GetNodeGroupRequest) (*ListNodesInGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListNodesInGroup not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateGroupDesiredNode(context.Context, *UpdateGroupDesiredNodeRequest) (*UpdateGroupDesiredNodeResponse, error) {
+func (*UnimplementedClusterManagerServer) ListNodesInGroupV2(ctx context.Context, req *ListNodesInGroupV2Request) (*ListNodesInGroupV2Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNodesInGroupV2 not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateGroupDesiredNode(ctx context.Context, req *UpdateGroupDesiredNodeRequest) (*UpdateGroupDesiredNodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupDesiredNode not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateGroupDesiredSize(context.Context, *UpdateGroupDesiredSizeRequest) (*UpdateGroupDesiredSizeResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateGroupDesiredSize(ctx context.Context, req *UpdateGroupDesiredSizeRequest) (*UpdateGroupDesiredSizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupDesiredSize not implemented")
 }
-func (UnimplementedClusterManagerServer) EnableNodeGroupAutoScale(context.Context, *EnableNodeGroupAutoScaleRequest) (*EnableNodeGroupAutoScaleResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateGroupMinMaxSize(ctx context.Context, req *UpdateGroupMinMaxSizeRequest) (*UpdateGroupMinMaxSizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupMinMaxSize not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateGroupAsTimeRange(ctx context.Context, req *UpdateGroupAsTimeRangeRequest) (*UpdateGroupAsTimeRangeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateGroupAsTimeRange not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetExternalNodeScriptByGroupID(ctx context.Context, req *GetExternalNodeScriptRequest) (*GetExternalNodeScriptResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExternalNodeScriptByGroupID not implemented")
+}
+func (*UnimplementedClusterManagerServer) TransNodeGroupToNodeTemplate(ctx context.Context, req *TransNodeGroupToNodeTemplateRequest) (*TransNodeGroupToNodeTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransNodeGroupToNodeTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) EnableNodeGroupAutoScale(ctx context.Context, req *EnableNodeGroupAutoScaleRequest) (*EnableNodeGroupAutoScaleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnableNodeGroupAutoScale not implemented")
 }
-func (UnimplementedClusterManagerServer) DisableNodeGroupAutoScale(context.Context, *DisableNodeGroupAutoScaleRequest) (*DisableNodeGroupAutoScaleResponse, error) {
+func (*UnimplementedClusterManagerServer) DisableNodeGroupAutoScale(ctx context.Context, req *DisableNodeGroupAutoScaleRequest) (*DisableNodeGroupAutoScaleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableNodeGroupAutoScale not implemented")
 }
-func (UnimplementedClusterManagerServer) CreateTask(context.Context, *CreateTaskRequest) (*CreateTaskResponse, error) {
+func (*UnimplementedClusterManagerServer) GetProviderResourceUsage(ctx context.Context, req *GetProviderResourceUsageRequest) (*GetProviderResourceUsageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProviderResourceUsage not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetProjectResourceQuotaUsage(ctx context.Context, req *GetProjectResourceQuotaUsageRequest) (*GetProjectResourceQuotaUsageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetProjectResourceQuotaUsage not implemented")
+}
+func (*UnimplementedClusterManagerServer) CreateTask(ctx context.Context, req *CreateTaskRequest) (*CreateTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTask not implemented")
 }
-func (UnimplementedClusterManagerServer) RetryTask(context.Context, *RetryTaskRequest) (*RetryTaskResponse, error) {
+func (*UnimplementedClusterManagerServer) RetryTask(ctx context.Context, req *RetryTaskRequest) (*RetryTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetryTask not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateTask(context.Context, *UpdateTaskRequest) (*UpdateTaskResponse, error) {
+func (*UnimplementedClusterManagerServer) SkipTask(ctx context.Context, req *SkipTaskRequest) (*SkipTaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SkipTask not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateTask(ctx context.Context, req *UpdateTaskRequest) (*UpdateTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTask not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteTask(context.Context, *DeleteTaskRequest) (*DeleteTaskResponse, error) {
+func (*UnimplementedClusterManagerServer) DeleteTask(ctx context.Context, req *DeleteTaskRequest) (*DeleteTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTask not implemented")
 }
-func (UnimplementedClusterManagerServer) GetTask(context.Context, *GetTaskRequest) (*GetTaskResponse, error) {
+func (*UnimplementedClusterManagerServer) GetTask(ctx context.Context, req *GetTaskRequest) (*GetTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTask not implemented")
 }
-func (UnimplementedClusterManagerServer) ListTask(context.Context, *ListTaskRequest) (*ListTaskResponse, error) {
+func (*UnimplementedClusterManagerServer) ListTask(ctx context.Context, req *ListTaskRequest) (*ListTaskResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTask not implemented")
 }
-func (UnimplementedClusterManagerServer) CreateAutoScalingOption(context.Context, *CreateAutoScalingOptionRequest) (*CreateAutoScalingOptionResponse, error) {
+func (*UnimplementedClusterManagerServer) CreateAutoScalingOption(ctx context.Context, req *CreateAutoScalingOptionRequest) (*CreateAutoScalingOptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAutoScalingOption not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateAutoScalingOption(context.Context, *UpdateAutoScalingOptionRequest) (*UpdateAutoScalingOptionResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateAutoScalingOption(ctx context.Context, req *UpdateAutoScalingOptionRequest) (*UpdateAutoScalingOptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutoScalingOption not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteAutoScalingOption(context.Context, *DeleteAutoScalingOptionRequest) (*DeleteAutoScalingOptionResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateAsOptionDeviceProvider(ctx context.Context, req *UpdateAsOptionDeviceProviderRequest) (*UpdateAsOptionDeviceProviderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAsOptionDeviceProvider not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteAutoScalingOption(ctx context.Context, req *DeleteAutoScalingOptionRequest) (*DeleteAutoScalingOptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAutoScalingOption not implemented")
 }
-func (UnimplementedClusterManagerServer) GetAutoScalingOption(context.Context, *GetAutoScalingOptionRequest) (*GetAutoScalingOptionResponse, error) {
+func (*UnimplementedClusterManagerServer) GetAutoScalingOption(ctx context.Context, req *GetAutoScalingOptionRequest) (*GetAutoScalingOptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAutoScalingOption not implemented")
 }
-func (UnimplementedClusterManagerServer) ListAutoScalingOption(context.Context, *ListAutoScalingOptionRequest) (*ListAutoScalingOptionResponse, error) {
+func (*UnimplementedClusterManagerServer) ListAutoScalingOption(ctx context.Context, req *ListAutoScalingOptionRequest) (*ListAutoScalingOptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAutoScalingOption not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateAutoScalingStatus(context.Context, *UpdateAutoScalingStatusRequest) (*UpdateAutoScalingStatusResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateAutoScalingStatus(ctx context.Context, req *UpdateAutoScalingStatusRequest) (*UpdateAutoScalingStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAutoScalingStatus not implemented")
 }
-func (UnimplementedClusterManagerServer) CreateCloudAccount(context.Context, *CreateCloudAccountRequest) (*CreateCloudAccountResponse, error) {
+func (*UnimplementedClusterManagerServer) SyncAutoScalingOption(ctx context.Context, req *SyncAutoScalingOptionRequest) (*SyncAutoScalingOptionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SyncAutoScalingOption not implemented")
+}
+func (*UnimplementedClusterManagerServer) CreateNodeTemplate(ctx context.Context, req *CreateNodeTemplateRequest) (*CreateNodeTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNodeTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateNodeTemplate(ctx context.Context, req *UpdateNodeTemplateRequest) (*UpdateNodeTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateNodeTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteNodeTemplate(ctx context.Context, req *DeleteNodeTemplateRequest) (*DeleteNodeTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteNodeTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListNodeTemplate(ctx context.Context, req *ListNodeTemplateRequest) (*ListNodeTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNodeTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetNodeTemplate(ctx context.Context, req *GetNodeTemplateRequest) (*GetNodeTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNodeTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) CreateNotifyTemplate(ctx context.Context, req *CreateNotifyTemplateRequest) (*CreateNotifyTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNotifyTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteNotifyTemplate(ctx context.Context, req *DeleteNotifyTemplateRequest) (*DeleteNotifyTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteNotifyTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListNotifyTemplate(ctx context.Context, req *ListNotifyTemplateRequest) (*ListNotifyTemplateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNotifyTemplate not implemented")
+}
+func (*UnimplementedClusterManagerServer) CreateCloudAccount(ctx context.Context, req *CreateCloudAccountRequest) (*CreateCloudAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateCloudAccount not implemented")
 }
-func (UnimplementedClusterManagerServer) UpdateCloudAccount(context.Context, *UpdateCloudAccountRequest) (*UpdateCloudAccountResponse, error) {
+func (*UnimplementedClusterManagerServer) UpdateCloudAccount(ctx context.Context, req *UpdateCloudAccountRequest) (*UpdateCloudAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCloudAccount not implemented")
 }
-func (UnimplementedClusterManagerServer) DeleteCloudAccount(context.Context, *DeleteCloudAccountRequest) (*DeleteCloudAccountResponse, error) {
+func (*UnimplementedClusterManagerServer) MigrateCloudAccount(ctx context.Context, req *MigrateCloudAccountRequest) (*MigrateCloudAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MigrateCloudAccount not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteCloudAccount(ctx context.Context, req *DeleteCloudAccountRequest) (*DeleteCloudAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCloudAccount not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudAccount(context.Context, *ListCloudAccountRequest) (*ListCloudAccountResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudAccount(ctx context.Context, req *ListCloudAccountRequest) (*ListCloudAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudAccount not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudAccountToPerm(context.Context, *ListCloudAccountPermRequest) (*ListCloudAccountPermResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudAccountToPerm(ctx context.Context, req *ListCloudAccountPermRequest) (*ListCloudAccountPermResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudAccountToPerm not implemented")
 }
-func (UnimplementedClusterManagerServer) GetCloudRegions(context.Context, *GetCloudRegionsRequest) (*GetCloudRegionsResponse, error) {
+func (*UnimplementedClusterManagerServer) VerifyCloudAccount(ctx context.Context, req *VerifyCloudAccountRequest) (*VerifyCloudAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyCloudAccount not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetServiceRoles(ctx context.Context, req *GetServiceRolesRequest) (*GetServiceRolesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServiceRoles not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetResourceGroups(ctx context.Context, req *GetResourceGroupsRequest) (*GetResourceGroupsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetResourceGroups not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetCloudRegions(ctx context.Context, req *GetCloudRegionsRequest) (*GetCloudRegionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloudRegions not implemented")
 }
-func (UnimplementedClusterManagerServer) GetCloudRegionZones(context.Context, *GetCloudRegionZonesRequest) (*GetCloudRegionZonesResponse, error) {
+func (*UnimplementedClusterManagerServer) GetCloudRegionZones(ctx context.Context, req *GetCloudRegionZonesRequest) (*GetCloudRegionZonesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloudRegionZones not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudRegionCluster(context.Context, *ListCloudRegionClusterRequest) (*ListCloudRegionClusterResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudRegionCluster(ctx context.Context, req *ListCloudRegionClusterRequest) (*ListCloudRegionClusterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudRegionCluster not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudSubnets(context.Context, *ListCloudSubnetsRequest) (*ListCloudSubnetsResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudVpcs(ctx context.Context, req *ListCloudVpcsRequest) (*ListCloudVpcsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCloudVpcs not implemented")
+}
+func (*UnimplementedClusterManagerServer) CheckCidrConflictFromVpc(ctx context.Context, req *CheckCidrConflictFromVpcRequest) (*CheckCidrConflictFromVpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckCidrConflictFromVpc not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudSubnets(ctx context.Context, req *ListCloudSubnetsRequest) (*ListCloudSubnetsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudSubnets not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest) (*ListCloudSecurityGroupsResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudSecurityGroups(ctx context.Context, req *ListCloudSecurityGroupsRequest) (*ListCloudSecurityGroupsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudSecurityGroups not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest) (*ListCloudInstanceTypeResponse, error) {
+func (*UnimplementedClusterManagerServer) ListKeypairs(ctx context.Context, req *ListKeyPairsRequest) (*ListKeyPairsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListKeypairs not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudInstanceTypes(ctx context.Context, req *ListCloudInstanceTypeRequest) (*ListCloudInstanceTypeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudInstanceTypes not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCloudOsImage(context.Context, *ListCloudOsImageRequest) (*ListCloudOsImageResponse, error) {
+func (*UnimplementedClusterManagerServer) GetMasterSuggestedMachines(ctx context.Context, req *GetMasterSuggestedMachinesRequest) (*GetMasterSuggestedMachinesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMasterSuggestedMachines not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudProjects(ctx context.Context, req *ListCloudProjectsRequest) (*ListCloudProjectsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCloudProjects not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudOsImage(ctx context.Context, req *ListCloudOsImageRequest) (*ListCloudOsImageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCloudOsImage not implemented")
 }
-func (UnimplementedClusterManagerServer) ListOperationLogs(context.Context, *ListOperationLogsRequest) (*ListOperationLogsResponse, error) {
+func (*UnimplementedClusterManagerServer) ListCloudInstances(ctx context.Context, req *ListCloudInstancesRequest) (*ListCloudInstancesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCloudInstances not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetCloudAccountType(ctx context.Context, req *GetCloudAccountTypeRequest) (*GetCloudAccountTypeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCloudAccountType not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetCloudBandwidthPackages(ctx context.Context, req *GetCloudBandwidthPackagesRequest) (*GetCloudBandwidthPackagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCloudBandwidthPackages not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudRuntimeInfo(ctx context.Context, req *ListCloudRuntimeInfoRequest) (*ListCloudRuntimeInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCloudRuntimeInfo not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListOperationLogs(ctx context.Context, req *ListOperationLogsRequest) (*ListOperationLogsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListOperationLogs not implemented")
 }
-func (UnimplementedClusterManagerServer) ListResourceSchema(context.Context, *ListResourceSchemaRequest) (*CommonListResp, error) {
+func (*UnimplementedClusterManagerServer) ListTaskStepLogs(ctx context.Context, req *ListTaskStepLogsRequest) (*ListTaskStepLogsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTaskStepLogs not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListTaskRecords(ctx context.Context, req *ListTaskRecordsRequest) (*ListTaskRecordsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTaskRecords not implemented")
+}
+func (*UnimplementedClusterManagerServer) CleanDbHistoryData(ctx context.Context, req *CleanDbHistoryDataRequest) (*CleanDbHistoryDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CleanDbHistoryData not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListResourceSchema(ctx context.Context, req *ListResourceSchemaRequest) (*CommonListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListResourceSchema not implemented")
 }
-func (UnimplementedClusterManagerServer) GetResourceSchema(context.Context, *GetResourceSchemaRequest) (*CommonResp, error) {
+func (*UnimplementedClusterManagerServer) GetResourceSchema(ctx context.Context, req *GetResourceSchemaRequest) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetResourceSchema not implemented")
 }
-func (UnimplementedClusterManagerServer) QueryPermByActionID(context.Context, *QueryPermByActionIDRequest) (*QueryPermByActionIDResponse, error) {
+func (*UnimplementedClusterManagerServer) QueryPermByActionID(ctx context.Context, req *QueryPermByActionIDRequest) (*QueryPermByActionIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryPermByActionID not implemented")
 }
-func (UnimplementedClusterManagerServer) ListBKCloud(context.Context, *ListBKCloudRequest) (*CommonListResp, error) {
+func (*UnimplementedClusterManagerServer) ListBKCloud(ctx context.Context, req *ListBKCloudRequest) (*CommonListResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListBKCloud not implemented")
 }
-func (UnimplementedClusterManagerServer) ListCCTopology(context.Context, *ListCCTopologyRequest) (*CommonResp, error) {
+func (*UnimplementedClusterManagerServer) ListCCTopology(ctx context.Context, req *ListCCTopologyRequest) (*CommonResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCCTopology not implemented")
 }
-func (UnimplementedClusterManagerServer) mustEmbedUnimplementedClusterManagerServer() {}
-
-// UnsafeClusterManagerServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to ClusterManagerServer will
-// result in compilation errors.
-type UnsafeClusterManagerServer interface {
-	mustEmbedUnimplementedClusterManagerServer()
+func (*UnimplementedClusterManagerServer) GetBkSopsTemplateList(ctx context.Context, req *GetBkSopsTemplateListRequest) (*GetBkSopsTemplateListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBkSopsTemplateList not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetBkSopsTemplateInfo(ctx context.Context, req *GetBkSopsTemplateInfoRequest) (*GetBkSopsTemplateInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBkSopsTemplateInfo not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetInnerTemplateValues(ctx context.Context, req *GetInnerTemplateValuesRequest) (*GetInnerTemplateValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInnerTemplateValues not implemented")
+}
+func (*UnimplementedClusterManagerServer) DebugBkSopsTask(ctx context.Context, req *DebugBkSopsTaskRequest) (*DebugBkSopsTaskResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DebugBkSopsTask not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetBatchCustomSetting(ctx context.Context, req *GetBatchCustomSettingRequest) (*GetBatchCustomSettingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBatchCustomSetting not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetBizTopologyHost(ctx context.Context, req *GetBizTopologyHostRequest) (*GetBizTopologyHostResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBizTopologyHost not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetTopologyNodes(ctx context.Context, req *GetTopologyNodesRequest) (*GetTopologyNodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTopologyNodes not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetTopologyHostIdsNodes(ctx context.Context, req *GetTopologyHostIdsNodesRequest) (*GetTopologyHostIdsNodesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTopologyHostIdsNodes not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetHostsDetails(ctx context.Context, req *GetHostsDetailsRequest) (*GetHostsDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHostsDetails not implemented")
+}
+func (*UnimplementedClusterManagerServer) GetScopeHostCheck(ctx context.Context, req *GetScopeHostCheckRequest) (*GetScopeHostCheckResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetScopeHostCheck not implemented")
+}
+func (*UnimplementedClusterManagerServer) CreateCloudModuleFlag(ctx context.Context, req *CreateCloudModuleFlagRequest) (*CreateCloudModuleFlagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateCloudModuleFlag not implemented")
+}
+func (*UnimplementedClusterManagerServer) UpdateCloudModuleFlag(ctx context.Context, req *UpdateCloudModuleFlagRequest) (*UpdateCloudModuleFlagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCloudModuleFlag not implemented")
+}
+func (*UnimplementedClusterManagerServer) DeleteCloudModuleFlag(ctx context.Context, req *DeleteCloudModuleFlagRequest) (*DeleteCloudModuleFlagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCloudModuleFlag not implemented")
+}
+func (*UnimplementedClusterManagerServer) ListCloudModuleFlag(ctx context.Context, req *ListCloudModuleFlagRequest) (*ListCloudModuleFlagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCloudModuleFlag not implemented")
+}
+func (*UnimplementedClusterManagerServer) Health(ctx context.Context, req *HealthRequest) (*HealthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Health not implemented")
 }
 
-func RegisterClusterManagerServer(s grpc.ServiceRegistrar, srv ClusterManagerServer) {
-	s.RegisterService(&ClusterManager_ServiceDesc, srv)
+func RegisterClusterManagerServer(s *grpc.Server, srv ClusterManagerServer) {
+	s.RegisterService(&_ClusterManager_serviceDesc, srv)
 }
 
 func _ClusterManager_CreateCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1596,7 +2175,7 @@ func _ClusterManager_CreateCluster_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateCluster(ctx, req.(*CreateClusterReq))
@@ -1614,7 +2193,7 @@ func _ClusterManager_RetryCreateClusterTask_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_RetryCreateClusterTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/RetryCreateClusterTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).RetryCreateClusterTask(ctx, req.(*RetryCreateClusterReq))
@@ -1632,10 +2211,28 @@ func _ClusterManager_CheckCloudKubeConfig_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CheckCloudKubeConfig_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CheckCloudKubeConfig",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CheckCloudKubeConfig(ctx, req.(*KubeConfigReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CheckCloudKubeConfigConnect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KubeConfigConnectReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CheckCloudKubeConfigConnect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CheckCloudKubeConfigConnect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CheckCloudKubeConfigConnect(ctx, req.(*KubeConfigConnectReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1650,7 +2247,7 @@ func _ClusterManager_ImportCluster_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ImportCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ImportCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ImportCluster(ctx, req.(*ImportClusterReq))
@@ -1668,7 +2265,7 @@ func _ClusterManager_UpdateCluster_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateCluster(ctx, req.(*UpdateClusterReq))
@@ -1686,7 +2283,7 @@ func _ClusterManager_AddNodesToCluster_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_AddNodesToCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/AddNodesToCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).AddNodesToCluster(ctx, req.(*AddNodesRequest))
@@ -1704,10 +2301,46 @@ func _ClusterManager_DeleteNodesFromCluster_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteNodesFromCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteNodesFromCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteNodesFromCluster(ctx, req.(*DeleteNodesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_BatchDeleteNodesFromCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BatchDeleteClusterNodesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).BatchDeleteNodesFromCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/BatchDeleteNodesFromCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).BatchDeleteNodesFromCluster(ctx, req.(*BatchDeleteClusterNodesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetClustersMetaData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClustersMetaDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetClustersMetaData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetClustersMetaData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetClustersMetaData(ctx, req.(*GetClustersMetaDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1722,7 +2355,7 @@ func _ClusterManager_ListNodesInCluster_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListNodesInCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListNodesInCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListNodesInCluster(ctx, req.(*ListNodesInClusterRequest))
@@ -1740,7 +2373,7 @@ func _ClusterManager_ListMastersInCluster_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListMastersInCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListMastersInCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListMastersInCluster(ctx, req.(*ListMastersInClusterRequest))
@@ -1758,7 +2391,7 @@ func _ClusterManager_DeleteCluster_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteCluster(ctx, req.(*DeleteClusterReq))
@@ -1776,28 +2409,10 @@ func _ClusterManager_GetCluster_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetCluster(ctx, req.(*GetClusterReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_ListCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListClusterReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).ListCluster(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_ListCluster_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).ListCluster(ctx, req.(*ListClusterReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1812,10 +2427,28 @@ func _ClusterManager_ListProjectCluster_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListProjectCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListProjectCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListProjectCluster(ctx, req.(*ListProjectClusterReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClusterReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCluster(ctx, req.(*ListClusterReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1830,10 +2463,100 @@ func _ClusterManager_ListCommonCluster_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCommonCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCommonCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCommonCluster(ctx, req.(*ListCommonClusterReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_AddSubnetToCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddSubnetToClusterReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).AddSubnetToCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/AddSubnetToCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).AddSubnetToCluster(ctx, req.(*AddSubnetToClusterReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_SwitchClusterUnderlayNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SwitchClusterUnderlayNetworkReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).SwitchClusterUnderlayNetwork(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/SwitchClusterUnderlayNetwork",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).SwitchClusterUnderlayNetwork(ctx, req.(*SwitchClusterUnderlayNetworkReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CreateVirtualCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateVirtualClusterReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CreateVirtualCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CreateVirtualCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CreateVirtualCluster(ctx, req.(*CreateVirtualClusterReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_DeleteVirtualCluster_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteVirtualClusterReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).DeleteVirtualCluster(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/DeleteVirtualCluster",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).DeleteVirtualCluster(ctx, req.(*DeleteVirtualClusterReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateVirtualClusterQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateVirtualClusterQuotaReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateVirtualClusterQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateVirtualClusterQuota",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateVirtualClusterQuota(ctx, req.(*UpdateVirtualClusterQuotaReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1848,10 +2571,46 @@ func _ClusterManager_GetNode_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetNode_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetNode(ctx, req.(*GetNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetNodeInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNodeInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetNodeInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetNodeInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetNodeInfo(ctx, req.(*GetNodeInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_RecordNodeInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordNodeInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).RecordNodeInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/RecordNodeInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).RecordNodeInfo(ctx, req.(*RecordNodeInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1866,10 +2625,28 @@ func _ClusterManager_UpdateNode_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateNode_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateNode(ctx, req.(*UpdateNodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateClusterModule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateClusterModuleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateClusterModule(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateClusterModule",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateClusterModule(ctx, req.(*UpdateClusterModuleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1884,7 +2661,7 @@ func _ClusterManager_CheckNodeInCluster_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CheckNodeInCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CheckNodeInCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CheckNodeInCluster(ctx, req.(*CheckNodesRequest))
@@ -1902,7 +2679,7 @@ func _ClusterManager_CordonNode_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CordonNode_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CordonNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CordonNode(ctx, req.(*CordonNodeRequest))
@@ -1920,7 +2697,7 @@ func _ClusterManager_UnCordonNode_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UnCordonNode_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UnCordonNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UnCordonNode(ctx, req.(*UnCordonNodeRequest))
@@ -1938,7 +2715,7 @@ func _ClusterManager_DrainNode_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DrainNode_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DrainNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DrainNode(ctx, req.(*DrainNodeRequest))
@@ -1956,10 +2733,28 @@ func _ClusterManager_UpdateNodeLabels_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateNodeLabels_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateNodeLabels",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateNodeLabels(ctx, req.(*UpdateNodeLabelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateNodeAnnotations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateNodeAnnotationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateNodeAnnotations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateNodeAnnotations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateNodeAnnotations(ctx, req.(*UpdateNodeAnnotationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1974,7 +2769,7 @@ func _ClusterManager_UpdateNodeTaints_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateNodeTaints_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateNodeTaints",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateNodeTaints(ctx, req.(*UpdateNodeTaintsRequest))
@@ -1992,7 +2787,7 @@ func _ClusterManager_GetClusterCredential_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetClusterCredential_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetClusterCredential",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetClusterCredential(ctx, req.(*GetClusterCredentialReq))
@@ -2010,10 +2805,28 @@ func _ClusterManager_UpdateClusterCredential_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateClusterCredential_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateClusterCredential",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateClusterCredential(ctx, req.(*UpdateClusterCredentialReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateClusterKubeConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateClusterKubeConfigReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateClusterKubeConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateClusterKubeConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateClusterKubeConfig(ctx, req.(*UpdateClusterKubeConfigReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2028,7 +2841,7 @@ func _ClusterManager_DeleteClusterCredential_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteClusterCredential_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteClusterCredential",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteClusterCredential(ctx, req.(*DeleteClusterCredentialReq))
@@ -2046,7 +2859,7 @@ func _ClusterManager_ListClusterCredential_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListClusterCredential_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListClusterCredential",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListClusterCredential(ctx, req.(*ListClusterCredentialReq))
@@ -2064,7 +2877,7 @@ func _ClusterManager_InitFederationCluster_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_InitFederationCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/InitFederationCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).InitFederationCluster(ctx, req.(*InitFederationClusterReq))
@@ -2082,298 +2895,10 @@ func _ClusterManager_AddFederatedCluster_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_AddFederatedCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/AddFederatedCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).AddFederatedCluster(ctx, req.(*AddFederatedClusterReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_CreateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateNamespaceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).CreateNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_CreateNamespace_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).CreateNamespace(ctx, req.(*CreateNamespaceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_UpdateNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateNamespaceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).UpdateNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_UpdateNamespace_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).UpdateNamespace(ctx, req.(*UpdateNamespaceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_DeleteNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteNamespaceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).DeleteNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_DeleteNamespace_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).DeleteNamespace(ctx, req.(*DeleteNamespaceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_GetNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetNamespaceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).GetNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_GetNamespace_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).GetNamespace(ctx, req.(*GetNamespaceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_ListNamespace_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListNamespaceReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).ListNamespace(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_ListNamespace_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).ListNamespace(ctx, req.(*ListNamespaceReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_CreateNamespaceQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateNamespaceQuotaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).CreateNamespaceQuota(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_CreateNamespaceQuota_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).CreateNamespaceQuota(ctx, req.(*CreateNamespaceQuotaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_UpdateNamespaceQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateNamespaceQuotaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).UpdateNamespaceQuota(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_UpdateNamespaceQuota_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).UpdateNamespaceQuota(ctx, req.(*UpdateNamespaceQuotaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_DeleteNamespaceQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteNamespaceQuotaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).DeleteNamespaceQuota(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_DeleteNamespaceQuota_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).DeleteNamespaceQuota(ctx, req.(*DeleteNamespaceQuotaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_GetNamespaceQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetNamespaceQuotaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).GetNamespaceQuota(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_GetNamespaceQuota_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).GetNamespaceQuota(ctx, req.(*GetNamespaceQuotaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_ListNamespaceQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListNamespaceQuotaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).ListNamespaceQuota(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_ListNamespaceQuota_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).ListNamespaceQuota(ctx, req.(*ListNamespaceQuotaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_CreateNamespaceWithQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateNamespaceWithQuotaReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).CreateNamespaceWithQuota(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_CreateNamespaceWithQuota_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).CreateNamespaceWithQuota(ctx, req.(*CreateNamespaceWithQuotaReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_CreateProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).CreateProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_CreateProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).CreateProject(ctx, req.(*CreateProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_UpdateProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).UpdateProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_UpdateProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).UpdateProject(ctx, req.(*UpdateProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_DeleteProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).DeleteProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_DeleteProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).DeleteProject(ctx, req.(*DeleteProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_GetProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).GetProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_GetProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).GetProject(ctx, req.(*GetProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ClusterManager_ListProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterManagerServer).ListProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ClusterManager_ListProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).ListProject(ctx, req.(*ListProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2388,7 +2913,7 @@ func _ClusterManager_CreateCloud_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateCloud_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateCloud",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateCloud(ctx, req.(*CreateCloudRequest))
@@ -2406,7 +2931,7 @@ func _ClusterManager_UpdateCloud_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateCloud_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateCloud",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateCloud(ctx, req.(*UpdateCloudRequest))
@@ -2424,7 +2949,7 @@ func _ClusterManager_DeleteCloud_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteCloud_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteCloud",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteCloud(ctx, req.(*DeleteCloudRequest))
@@ -2442,7 +2967,7 @@ func _ClusterManager_GetCloud_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetCloud_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetCloud",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetCloud(ctx, req.(*GetCloudRequest))
@@ -2460,7 +2985,7 @@ func _ClusterManager_ListCloud_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloud_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloud",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloud(ctx, req.(*ListCloudRequest))
@@ -2478,7 +3003,7 @@ func _ClusterManager_CreateCloudVPC_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateCloudVPC_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateCloudVPC",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateCloudVPC(ctx, req.(*CreateCloudVPCRequest))
@@ -2496,7 +3021,7 @@ func _ClusterManager_UpdateCloudVPC_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateCloudVPC_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateCloudVPC",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateCloudVPC(ctx, req.(*UpdateCloudVPCRequest))
@@ -2514,7 +3039,7 @@ func _ClusterManager_DeleteCloudVPC_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteCloudVPC_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteCloudVPC",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteCloudVPC(ctx, req.(*DeleteCloudVPCRequest))
@@ -2532,7 +3057,7 @@ func _ClusterManager_ListCloudVPC_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudVPC_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudVPC",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudVPC(ctx, req.(*ListCloudVPCRequest))
@@ -2550,7 +3075,7 @@ func _ClusterManager_ListCloudRegions_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudRegions_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudRegions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudRegions(ctx, req.(*ListCloudRegionsRequest))
@@ -2568,7 +3093,7 @@ func _ClusterManager_GetVPCCidr_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetVPCCidr_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetVPCCidr",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetVPCCidr(ctx, req.(*GetVPCCidrRequest))
@@ -2586,7 +3111,7 @@ func _ClusterManager_CreateNodeGroup_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateNodeGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateNodeGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateNodeGroup(ctx, req.(*CreateNodeGroupRequest))
@@ -2604,7 +3129,7 @@ func _ClusterManager_UpdateNodeGroup_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateNodeGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateNodeGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateNodeGroup(ctx, req.(*UpdateNodeGroupRequest))
@@ -2622,7 +3147,7 @@ func _ClusterManager_DeleteNodeGroup_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteNodeGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteNodeGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteNodeGroup(ctx, req.(*DeleteNodeGroupRequest))
@@ -2640,10 +3165,28 @@ func _ClusterManager_GetNodeGroup_Handler(srv interface{}, ctx context.Context, 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetNodeGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetNodeGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetNodeGroup(ctx, req.(*GetNodeGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListClusterNodeGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListClusterNodeGroupRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListClusterNodeGroup(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListClusterNodeGroup",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListClusterNodeGroup(ctx, req.(*ListClusterNodeGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2658,10 +3201,28 @@ func _ClusterManager_ListNodeGroup_Handler(srv interface{}, ctx context.Context,
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListNodeGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListNodeGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListNodeGroup(ctx, req.(*ListNodeGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_RecommendNodeGroupConf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecommendNodeGroupConfReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).RecommendNodeGroupConf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/RecommendNodeGroupConf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).RecommendNodeGroupConf(ctx, req.(*RecommendNodeGroupConfReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2676,7 +3237,7 @@ func _ClusterManager_MoveNodesToGroup_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_MoveNodesToGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/MoveNodesToGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).MoveNodesToGroup(ctx, req.(*MoveNodesToGroupRequest))
@@ -2694,7 +3255,7 @@ func _ClusterManager_RemoveNodesFromGroup_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_RemoveNodesFromGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/RemoveNodesFromGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).RemoveNodesFromGroup(ctx, req.(*RemoveNodesFromGroupRequest))
@@ -2712,7 +3273,7 @@ func _ClusterManager_CleanNodesInGroup_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CleanNodesInGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CleanNodesInGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CleanNodesInGroup(ctx, req.(*CleanNodesInGroupRequest))
@@ -2730,7 +3291,7 @@ func _ClusterManager_CleanNodesInGroupV2_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CleanNodesInGroupV2_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CleanNodesInGroupV2",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CleanNodesInGroupV2(ctx, req.(*CleanNodesInGroupV2Request))
@@ -2739,7 +3300,7 @@ func _ClusterManager_CleanNodesInGroupV2_Handler(srv interface{}, ctx context.Co
 }
 
 func _ClusterManager_ListNodesInGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListNodesInGroupRequest)
+	in := new(GetNodeGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -2748,10 +3309,28 @@ func _ClusterManager_ListNodesInGroup_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListNodesInGroup_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListNodesInGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterManagerServer).ListNodesInGroup(ctx, req.(*ListNodesInGroupRequest))
+		return srv.(ClusterManagerServer).ListNodesInGroup(ctx, req.(*GetNodeGroupRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListNodesInGroupV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListNodesInGroupV2Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListNodesInGroupV2(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListNodesInGroupV2",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListNodesInGroupV2(ctx, req.(*ListNodesInGroupV2Request))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2766,7 +3345,7 @@ func _ClusterManager_UpdateGroupDesiredNode_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateGroupDesiredNode_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateGroupDesiredNode",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateGroupDesiredNode(ctx, req.(*UpdateGroupDesiredNodeRequest))
@@ -2784,10 +3363,82 @@ func _ClusterManager_UpdateGroupDesiredSize_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateGroupDesiredSize_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateGroupDesiredSize",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateGroupDesiredSize(ctx, req.(*UpdateGroupDesiredSizeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateGroupMinMaxSize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateGroupMinMaxSizeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateGroupMinMaxSize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateGroupMinMaxSize",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateGroupMinMaxSize(ctx, req.(*UpdateGroupMinMaxSizeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateGroupAsTimeRange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateGroupAsTimeRangeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateGroupAsTimeRange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateGroupAsTimeRange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateGroupAsTimeRange(ctx, req.(*UpdateGroupAsTimeRangeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetExternalNodeScriptByGroupID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetExternalNodeScriptRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetExternalNodeScriptByGroupID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetExternalNodeScriptByGroupID",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetExternalNodeScriptByGroupID(ctx, req.(*GetExternalNodeScriptRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_TransNodeGroupToNodeTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransNodeGroupToNodeTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).TransNodeGroupToNodeTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/TransNodeGroupToNodeTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).TransNodeGroupToNodeTemplate(ctx, req.(*TransNodeGroupToNodeTemplateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2802,7 +3453,7 @@ func _ClusterManager_EnableNodeGroupAutoScale_Handler(srv interface{}, ctx conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_EnableNodeGroupAutoScale_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/EnableNodeGroupAutoScale",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).EnableNodeGroupAutoScale(ctx, req.(*EnableNodeGroupAutoScaleRequest))
@@ -2820,10 +3471,46 @@ func _ClusterManager_DisableNodeGroupAutoScale_Handler(srv interface{}, ctx cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DisableNodeGroupAutoScale_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DisableNodeGroupAutoScale",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DisableNodeGroupAutoScale(ctx, req.(*DisableNodeGroupAutoScaleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetProviderResourceUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProviderResourceUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetProviderResourceUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetProviderResourceUsage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetProviderResourceUsage(ctx, req.(*GetProviderResourceUsageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetProjectResourceQuotaUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetProjectResourceQuotaUsageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetProjectResourceQuotaUsage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetProjectResourceQuotaUsage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetProjectResourceQuotaUsage(ctx, req.(*GetProjectResourceQuotaUsageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2838,7 +3525,7 @@ func _ClusterManager_CreateTask_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateTask(ctx, req.(*CreateTaskRequest))
@@ -2856,10 +3543,28 @@ func _ClusterManager_RetryTask_Handler(srv interface{}, ctx context.Context, dec
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_RetryTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/RetryTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).RetryTask(ctx, req.(*RetryTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_SkipTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SkipTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).SkipTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/SkipTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).SkipTask(ctx, req.(*SkipTaskRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2874,7 +3579,7 @@ func _ClusterManager_UpdateTask_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateTask(ctx, req.(*UpdateTaskRequest))
@@ -2892,7 +3597,7 @@ func _ClusterManager_DeleteTask_Handler(srv interface{}, ctx context.Context, de
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteTask(ctx, req.(*DeleteTaskRequest))
@@ -2910,7 +3615,7 @@ func _ClusterManager_GetTask_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetTask(ctx, req.(*GetTaskRequest))
@@ -2928,7 +3633,7 @@ func _ClusterManager_ListTask_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListTask_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListTask",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListTask(ctx, req.(*ListTaskRequest))
@@ -2946,7 +3651,7 @@ func _ClusterManager_CreateAutoScalingOption_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateAutoScalingOption_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateAutoScalingOption",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateAutoScalingOption(ctx, req.(*CreateAutoScalingOptionRequest))
@@ -2964,10 +3669,28 @@ func _ClusterManager_UpdateAutoScalingOption_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateAutoScalingOption_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateAutoScalingOption",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateAutoScalingOption(ctx, req.(*UpdateAutoScalingOptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateAsOptionDeviceProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAsOptionDeviceProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateAsOptionDeviceProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateAsOptionDeviceProvider",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateAsOptionDeviceProvider(ctx, req.(*UpdateAsOptionDeviceProviderRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2982,7 +3705,7 @@ func _ClusterManager_DeleteAutoScalingOption_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteAutoScalingOption_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteAutoScalingOption",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteAutoScalingOption(ctx, req.(*DeleteAutoScalingOptionRequest))
@@ -3000,7 +3723,7 @@ func _ClusterManager_GetAutoScalingOption_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetAutoScalingOption_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetAutoScalingOption",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetAutoScalingOption(ctx, req.(*GetAutoScalingOptionRequest))
@@ -3018,7 +3741,7 @@ func _ClusterManager_ListAutoScalingOption_Handler(srv interface{}, ctx context.
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListAutoScalingOption_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListAutoScalingOption",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListAutoScalingOption(ctx, req.(*ListAutoScalingOptionRequest))
@@ -3036,10 +3759,172 @@ func _ClusterManager_UpdateAutoScalingStatus_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateAutoScalingStatus_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateAutoScalingStatus",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateAutoScalingStatus(ctx, req.(*UpdateAutoScalingStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_SyncAutoScalingOption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SyncAutoScalingOptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).SyncAutoScalingOption(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/SyncAutoScalingOption",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).SyncAutoScalingOption(ctx, req.(*SyncAutoScalingOptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CreateNodeTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNodeTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CreateNodeTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CreateNodeTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CreateNodeTemplate(ctx, req.(*CreateNodeTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateNodeTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateNodeTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateNodeTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateNodeTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateNodeTemplate(ctx, req.(*UpdateNodeTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_DeleteNodeTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteNodeTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).DeleteNodeTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/DeleteNodeTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).DeleteNodeTemplate(ctx, req.(*DeleteNodeTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListNodeTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListNodeTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListNodeTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListNodeTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListNodeTemplate(ctx, req.(*ListNodeTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetNodeTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNodeTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetNodeTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetNodeTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetNodeTemplate(ctx, req.(*GetNodeTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CreateNotifyTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateNotifyTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CreateNotifyTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CreateNotifyTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CreateNotifyTemplate(ctx, req.(*CreateNotifyTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_DeleteNotifyTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteNotifyTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).DeleteNotifyTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/DeleteNotifyTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).DeleteNotifyTemplate(ctx, req.(*DeleteNotifyTemplateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListNotifyTemplate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListNotifyTemplateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListNotifyTemplate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListNotifyTemplate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListNotifyTemplate(ctx, req.(*ListNotifyTemplateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3054,7 +3939,7 @@ func _ClusterManager_CreateCloudAccount_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_CreateCloudAccount_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/CreateCloudAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).CreateCloudAccount(ctx, req.(*CreateCloudAccountRequest))
@@ -3072,10 +3957,28 @@ func _ClusterManager_UpdateCloudAccount_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_UpdateCloudAccount_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/UpdateCloudAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).UpdateCloudAccount(ctx, req.(*UpdateCloudAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_MigrateCloudAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MigrateCloudAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).MigrateCloudAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/MigrateCloudAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).MigrateCloudAccount(ctx, req.(*MigrateCloudAccountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3090,7 +3993,7 @@ func _ClusterManager_DeleteCloudAccount_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_DeleteCloudAccount_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/DeleteCloudAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).DeleteCloudAccount(ctx, req.(*DeleteCloudAccountRequest))
@@ -3108,7 +4011,7 @@ func _ClusterManager_ListCloudAccount_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudAccount_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudAccount",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudAccount(ctx, req.(*ListCloudAccountRequest))
@@ -3126,10 +4029,64 @@ func _ClusterManager_ListCloudAccountToPerm_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudAccountToPerm_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudAccountToPerm",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudAccountToPerm(ctx, req.(*ListCloudAccountPermRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_VerifyCloudAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyCloudAccountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).VerifyCloudAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/VerifyCloudAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).VerifyCloudAccount(ctx, req.(*VerifyCloudAccountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetServiceRoles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetServiceRolesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetServiceRoles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetServiceRoles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetServiceRoles(ctx, req.(*GetServiceRolesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetResourceGroups_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetResourceGroupsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetResourceGroups(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetResourceGroups",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetResourceGroups(ctx, req.(*GetResourceGroupsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3144,7 +4101,7 @@ func _ClusterManager_GetCloudRegions_Handler(srv interface{}, ctx context.Contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetCloudRegions_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetCloudRegions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetCloudRegions(ctx, req.(*GetCloudRegionsRequest))
@@ -3162,7 +4119,7 @@ func _ClusterManager_GetCloudRegionZones_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetCloudRegionZones_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetCloudRegionZones",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetCloudRegionZones(ctx, req.(*GetCloudRegionZonesRequest))
@@ -3180,10 +4137,46 @@ func _ClusterManager_ListCloudRegionCluster_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudRegionCluster_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudRegionCluster",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudRegionCluster(ctx, req.(*ListCloudRegionClusterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListCloudVpcs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCloudVpcsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCloudVpcs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudVpcs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCloudVpcs(ctx, req.(*ListCloudVpcsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CheckCidrConflictFromVpc_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckCidrConflictFromVpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CheckCidrConflictFromVpc(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CheckCidrConflictFromVpc",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CheckCidrConflictFromVpc(ctx, req.(*CheckCidrConflictFromVpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3198,7 +4191,7 @@ func _ClusterManager_ListCloudSubnets_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudSubnets_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudSubnets",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudSubnets(ctx, req.(*ListCloudSubnetsRequest))
@@ -3216,10 +4209,28 @@ func _ClusterManager_ListCloudSecurityGroups_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudSecurityGroups_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudSecurityGroups",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudSecurityGroups(ctx, req.(*ListCloudSecurityGroupsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListKeypairs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListKeyPairsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListKeypairs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListKeypairs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListKeypairs(ctx, req.(*ListKeyPairsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3234,10 +4245,46 @@ func _ClusterManager_ListCloudInstanceTypes_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudInstanceTypes_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudInstanceTypes",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudInstanceTypes(ctx, req.(*ListCloudInstanceTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetMasterSuggestedMachines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMasterSuggestedMachinesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetMasterSuggestedMachines(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetMasterSuggestedMachines",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetMasterSuggestedMachines(ctx, req.(*GetMasterSuggestedMachinesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListCloudProjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCloudProjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCloudProjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudProjects",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCloudProjects(ctx, req.(*ListCloudProjectsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3252,10 +4299,82 @@ func _ClusterManager_ListCloudOsImage_Handler(srv interface{}, ctx context.Conte
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCloudOsImage_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudOsImage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCloudOsImage(ctx, req.(*ListCloudOsImageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListCloudInstances_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCloudInstancesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCloudInstances(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudInstances",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCloudInstances(ctx, req.(*ListCloudInstancesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetCloudAccountType_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCloudAccountTypeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetCloudAccountType(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetCloudAccountType",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetCloudAccountType(ctx, req.(*GetCloudAccountTypeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetCloudBandwidthPackages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCloudBandwidthPackagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetCloudBandwidthPackages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetCloudBandwidthPackages",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetCloudBandwidthPackages(ctx, req.(*GetCloudBandwidthPackagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListCloudRuntimeInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCloudRuntimeInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCloudRuntimeInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudRuntimeInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCloudRuntimeInfo(ctx, req.(*ListCloudRuntimeInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3270,10 +4389,64 @@ func _ClusterManager_ListOperationLogs_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListOperationLogs_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListOperationLogs",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListOperationLogs(ctx, req.(*ListOperationLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListTaskStepLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTaskStepLogsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListTaskStepLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListTaskStepLogs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListTaskStepLogs(ctx, req.(*ListTaskStepLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListTaskRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTaskRecordsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListTaskRecords(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListTaskRecords",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListTaskRecords(ctx, req.(*ListTaskRecordsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CleanDbHistoryData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CleanDbHistoryDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CleanDbHistoryData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CleanDbHistoryData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CleanDbHistoryData(ctx, req.(*CleanDbHistoryDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -3288,7 +4461,7 @@ func _ClusterManager_ListResourceSchema_Handler(srv interface{}, ctx context.Con
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListResourceSchema_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListResourceSchema",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListResourceSchema(ctx, req.(*ListResourceSchemaRequest))
@@ -3306,7 +4479,7 @@ func _ClusterManager_GetResourceSchema_Handler(srv interface{}, ctx context.Cont
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_GetResourceSchema_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/GetResourceSchema",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).GetResourceSchema(ctx, req.(*GetResourceSchemaRequest))
@@ -3324,7 +4497,7 @@ func _ClusterManager_QueryPermByActionID_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_QueryPermByActionID_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/QueryPermByActionID",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).QueryPermByActionID(ctx, req.(*QueryPermByActionIDRequest))
@@ -3342,7 +4515,7 @@ func _ClusterManager_ListBKCloud_Handler(srv interface{}, ctx context.Context, d
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListBKCloud_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListBKCloud",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListBKCloud(ctx, req.(*ListBKCloudRequest))
@@ -3360,7 +4533,7 @@ func _ClusterManager_ListCCTopology_Handler(srv interface{}, ctx context.Context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: ClusterManager_ListCCTopology_FullMethodName,
+		FullMethod: "/clustermanager.ClusterManager/ListCCTopology",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ClusterManagerServer).ListCCTopology(ctx, req.(*ListCCTopologyRequest))
@@ -3368,10 +4541,277 @@ func _ClusterManager_ListCCTopology_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-// ClusterManager_ServiceDesc is the grpc.ServiceDesc for ClusterManager service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var ClusterManager_ServiceDesc = grpc.ServiceDesc{
+func _ClusterManager_GetBkSopsTemplateList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBkSopsTemplateListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetBkSopsTemplateList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetBkSopsTemplateList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetBkSopsTemplateList(ctx, req.(*GetBkSopsTemplateListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetBkSopsTemplateInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBkSopsTemplateInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetBkSopsTemplateInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetBkSopsTemplateInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetBkSopsTemplateInfo(ctx, req.(*GetBkSopsTemplateInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetInnerTemplateValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInnerTemplateValuesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetInnerTemplateValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetInnerTemplateValues",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetInnerTemplateValues(ctx, req.(*GetInnerTemplateValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_DebugBkSopsTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DebugBkSopsTaskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).DebugBkSopsTask(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/DebugBkSopsTask",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).DebugBkSopsTask(ctx, req.(*DebugBkSopsTaskRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetBatchCustomSetting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBatchCustomSettingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetBatchCustomSetting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetBatchCustomSetting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetBatchCustomSetting(ctx, req.(*GetBatchCustomSettingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetBizTopologyHost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBizTopologyHostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetBizTopologyHost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetBizTopologyHost",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetBizTopologyHost(ctx, req.(*GetBizTopologyHostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetTopologyNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTopologyNodesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetTopologyNodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetTopologyNodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetTopologyNodes(ctx, req.(*GetTopologyNodesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetTopologyHostIdsNodes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTopologyHostIdsNodesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetTopologyHostIdsNodes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetTopologyHostIdsNodes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetTopologyHostIdsNodes(ctx, req.(*GetTopologyHostIdsNodesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetHostsDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetHostsDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetHostsDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetHostsDetails",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetHostsDetails(ctx, req.(*GetHostsDetailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_GetScopeHostCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetScopeHostCheckRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).GetScopeHostCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/GetScopeHostCheck",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).GetScopeHostCheck(ctx, req.(*GetScopeHostCheckRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_CreateCloudModuleFlag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateCloudModuleFlagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).CreateCloudModuleFlag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/CreateCloudModuleFlag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).CreateCloudModuleFlag(ctx, req.(*CreateCloudModuleFlagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_UpdateCloudModuleFlag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCloudModuleFlagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).UpdateCloudModuleFlag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/UpdateCloudModuleFlag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).UpdateCloudModuleFlag(ctx, req.(*UpdateCloudModuleFlagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_DeleteCloudModuleFlag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCloudModuleFlagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).DeleteCloudModuleFlag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/DeleteCloudModuleFlag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).DeleteCloudModuleFlag(ctx, req.(*DeleteCloudModuleFlagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_ListCloudModuleFlag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCloudModuleFlagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).ListCloudModuleFlag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/ListCloudModuleFlag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).ListCloudModuleFlag(ctx, req.(*ListCloudModuleFlagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ClusterManager_Health_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HealthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ClusterManagerServer).Health(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clustermanager.ClusterManager/Health",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ClusterManagerServer).Health(ctx, req.(*HealthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _ClusterManager_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "clustermanager.ClusterManager",
 	HandlerType: (*ClusterManagerServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -3386,6 +4826,10 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckCloudKubeConfig",
 			Handler:    _ClusterManager_CheckCloudKubeConfig_Handler,
+		},
+		{
+			MethodName: "CheckCloudKubeConfigConnect",
+			Handler:    _ClusterManager_CheckCloudKubeConfigConnect_Handler,
 		},
 		{
 			MethodName: "ImportCluster",
@@ -3404,6 +4848,14 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_DeleteNodesFromCluster_Handler,
 		},
 		{
+			MethodName: "BatchDeleteNodesFromCluster",
+			Handler:    _ClusterManager_BatchDeleteNodesFromCluster_Handler,
+		},
+		{
+			MethodName: "GetClustersMetaData",
+			Handler:    _ClusterManager_GetClustersMetaData_Handler,
+		},
+		{
 			MethodName: "ListNodesInCluster",
 			Handler:    _ClusterManager_ListNodesInCluster_Handler,
 		},
@@ -3420,24 +4872,56 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_GetCluster_Handler,
 		},
 		{
-			MethodName: "ListCluster",
-			Handler:    _ClusterManager_ListCluster_Handler,
-		},
-		{
 			MethodName: "ListProjectCluster",
 			Handler:    _ClusterManager_ListProjectCluster_Handler,
+		},
+		{
+			MethodName: "ListCluster",
+			Handler:    _ClusterManager_ListCluster_Handler,
 		},
 		{
 			MethodName: "ListCommonCluster",
 			Handler:    _ClusterManager_ListCommonCluster_Handler,
 		},
 		{
+			MethodName: "AddSubnetToCluster",
+			Handler:    _ClusterManager_AddSubnetToCluster_Handler,
+		},
+		{
+			MethodName: "SwitchClusterUnderlayNetwork",
+			Handler:    _ClusterManager_SwitchClusterUnderlayNetwork_Handler,
+		},
+		{
+			MethodName: "CreateVirtualCluster",
+			Handler:    _ClusterManager_CreateVirtualCluster_Handler,
+		},
+		{
+			MethodName: "DeleteVirtualCluster",
+			Handler:    _ClusterManager_DeleteVirtualCluster_Handler,
+		},
+		{
+			MethodName: "UpdateVirtualClusterQuota",
+			Handler:    _ClusterManager_UpdateVirtualClusterQuota_Handler,
+		},
+		{
 			MethodName: "GetNode",
 			Handler:    _ClusterManager_GetNode_Handler,
 		},
 		{
+			MethodName: "GetNodeInfo",
+			Handler:    _ClusterManager_GetNodeInfo_Handler,
+		},
+		{
+			MethodName: "RecordNodeInfo",
+			Handler:    _ClusterManager_RecordNodeInfo_Handler,
+		},
+		{
 			MethodName: "UpdateNode",
 			Handler:    _ClusterManager_UpdateNode_Handler,
+		},
+		{
+			MethodName: "UpdateClusterModule",
+			Handler:    _ClusterManager_UpdateClusterModule_Handler,
 		},
 		{
 			MethodName: "CheckNodeInCluster",
@@ -3460,6 +4944,10 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_UpdateNodeLabels_Handler,
 		},
 		{
+			MethodName: "UpdateNodeAnnotations",
+			Handler:    _ClusterManager_UpdateNodeAnnotations_Handler,
+		},
+		{
 			MethodName: "UpdateNodeTaints",
 			Handler:    _ClusterManager_UpdateNodeTaints_Handler,
 		},
@@ -3470,6 +4958,10 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateClusterCredential",
 			Handler:    _ClusterManager_UpdateClusterCredential_Handler,
+		},
+		{
+			MethodName: "UpdateClusterKubeConfig",
+			Handler:    _ClusterManager_UpdateClusterKubeConfig_Handler,
 		},
 		{
 			MethodName: "DeleteClusterCredential",
@@ -3486,70 +4978,6 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddFederatedCluster",
 			Handler:    _ClusterManager_AddFederatedCluster_Handler,
-		},
-		{
-			MethodName: "CreateNamespace",
-			Handler:    _ClusterManager_CreateNamespace_Handler,
-		},
-		{
-			MethodName: "UpdateNamespace",
-			Handler:    _ClusterManager_UpdateNamespace_Handler,
-		},
-		{
-			MethodName: "DeleteNamespace",
-			Handler:    _ClusterManager_DeleteNamespace_Handler,
-		},
-		{
-			MethodName: "GetNamespace",
-			Handler:    _ClusterManager_GetNamespace_Handler,
-		},
-		{
-			MethodName: "ListNamespace",
-			Handler:    _ClusterManager_ListNamespace_Handler,
-		},
-		{
-			MethodName: "CreateNamespaceQuota",
-			Handler:    _ClusterManager_CreateNamespaceQuota_Handler,
-		},
-		{
-			MethodName: "UpdateNamespaceQuota",
-			Handler:    _ClusterManager_UpdateNamespaceQuota_Handler,
-		},
-		{
-			MethodName: "DeleteNamespaceQuota",
-			Handler:    _ClusterManager_DeleteNamespaceQuota_Handler,
-		},
-		{
-			MethodName: "GetNamespaceQuota",
-			Handler:    _ClusterManager_GetNamespaceQuota_Handler,
-		},
-		{
-			MethodName: "ListNamespaceQuota",
-			Handler:    _ClusterManager_ListNamespaceQuota_Handler,
-		},
-		{
-			MethodName: "CreateNamespaceWithQuota",
-			Handler:    _ClusterManager_CreateNamespaceWithQuota_Handler,
-		},
-		{
-			MethodName: "CreateProject",
-			Handler:    _ClusterManager_CreateProject_Handler,
-		},
-		{
-			MethodName: "UpdateProject",
-			Handler:    _ClusterManager_UpdateProject_Handler,
-		},
-		{
-			MethodName: "DeleteProject",
-			Handler:    _ClusterManager_DeleteProject_Handler,
-		},
-		{
-			MethodName: "GetProject",
-			Handler:    _ClusterManager_GetProject_Handler,
-		},
-		{
-			MethodName: "ListProject",
-			Handler:    _ClusterManager_ListProject_Handler,
 		},
 		{
 			MethodName: "CreateCloud",
@@ -3612,8 +5040,16 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_GetNodeGroup_Handler,
 		},
 		{
+			MethodName: "ListClusterNodeGroup",
+			Handler:    _ClusterManager_ListClusterNodeGroup_Handler,
+		},
+		{
 			MethodName: "ListNodeGroup",
 			Handler:    _ClusterManager_ListNodeGroup_Handler,
+		},
+		{
+			MethodName: "RecommendNodeGroupConf",
+			Handler:    _ClusterManager_RecommendNodeGroupConf_Handler,
 		},
 		{
 			MethodName: "MoveNodesToGroup",
@@ -3636,12 +5072,32 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_ListNodesInGroup_Handler,
 		},
 		{
+			MethodName: "ListNodesInGroupV2",
+			Handler:    _ClusterManager_ListNodesInGroupV2_Handler,
+		},
+		{
 			MethodName: "UpdateGroupDesiredNode",
 			Handler:    _ClusterManager_UpdateGroupDesiredNode_Handler,
 		},
 		{
 			MethodName: "UpdateGroupDesiredSize",
 			Handler:    _ClusterManager_UpdateGroupDesiredSize_Handler,
+		},
+		{
+			MethodName: "UpdateGroupMinMaxSize",
+			Handler:    _ClusterManager_UpdateGroupMinMaxSize_Handler,
+		},
+		{
+			MethodName: "UpdateGroupAsTimeRange",
+			Handler:    _ClusterManager_UpdateGroupAsTimeRange_Handler,
+		},
+		{
+			MethodName: "GetExternalNodeScriptByGroupID",
+			Handler:    _ClusterManager_GetExternalNodeScriptByGroupID_Handler,
+		},
+		{
+			MethodName: "TransNodeGroupToNodeTemplate",
+			Handler:    _ClusterManager_TransNodeGroupToNodeTemplate_Handler,
 		},
 		{
 			MethodName: "EnableNodeGroupAutoScale",
@@ -3652,12 +5108,24 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_DisableNodeGroupAutoScale_Handler,
 		},
 		{
+			MethodName: "GetProviderResourceUsage",
+			Handler:    _ClusterManager_GetProviderResourceUsage_Handler,
+		},
+		{
+			MethodName: "GetProjectResourceQuotaUsage",
+			Handler:    _ClusterManager_GetProjectResourceQuotaUsage_Handler,
+		},
+		{
 			MethodName: "CreateTask",
 			Handler:    _ClusterManager_CreateTask_Handler,
 		},
 		{
 			MethodName: "RetryTask",
 			Handler:    _ClusterManager_RetryTask_Handler,
+		},
+		{
+			MethodName: "SkipTask",
+			Handler:    _ClusterManager_SkipTask_Handler,
 		},
 		{
 			MethodName: "UpdateTask",
@@ -3684,6 +5152,10 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_UpdateAutoScalingOption_Handler,
 		},
 		{
+			MethodName: "UpdateAsOptionDeviceProvider",
+			Handler:    _ClusterManager_UpdateAsOptionDeviceProvider_Handler,
+		},
+		{
 			MethodName: "DeleteAutoScalingOption",
 			Handler:    _ClusterManager_DeleteAutoScalingOption_Handler,
 		},
@@ -3700,12 +5172,52 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_UpdateAutoScalingStatus_Handler,
 		},
 		{
+			MethodName: "SyncAutoScalingOption",
+			Handler:    _ClusterManager_SyncAutoScalingOption_Handler,
+		},
+		{
+			MethodName: "CreateNodeTemplate",
+			Handler:    _ClusterManager_CreateNodeTemplate_Handler,
+		},
+		{
+			MethodName: "UpdateNodeTemplate",
+			Handler:    _ClusterManager_UpdateNodeTemplate_Handler,
+		},
+		{
+			MethodName: "DeleteNodeTemplate",
+			Handler:    _ClusterManager_DeleteNodeTemplate_Handler,
+		},
+		{
+			MethodName: "ListNodeTemplate",
+			Handler:    _ClusterManager_ListNodeTemplate_Handler,
+		},
+		{
+			MethodName: "GetNodeTemplate",
+			Handler:    _ClusterManager_GetNodeTemplate_Handler,
+		},
+		{
+			MethodName: "CreateNotifyTemplate",
+			Handler:    _ClusterManager_CreateNotifyTemplate_Handler,
+		},
+		{
+			MethodName: "DeleteNotifyTemplate",
+			Handler:    _ClusterManager_DeleteNotifyTemplate_Handler,
+		},
+		{
+			MethodName: "ListNotifyTemplate",
+			Handler:    _ClusterManager_ListNotifyTemplate_Handler,
+		},
+		{
 			MethodName: "CreateCloudAccount",
 			Handler:    _ClusterManager_CreateCloudAccount_Handler,
 		},
 		{
 			MethodName: "UpdateCloudAccount",
 			Handler:    _ClusterManager_UpdateCloudAccount_Handler,
+		},
+		{
+			MethodName: "MigrateCloudAccount",
+			Handler:    _ClusterManager_MigrateCloudAccount_Handler,
 		},
 		{
 			MethodName: "DeleteCloudAccount",
@@ -3720,6 +5232,18 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_ListCloudAccountToPerm_Handler,
 		},
 		{
+			MethodName: "VerifyCloudAccount",
+			Handler:    _ClusterManager_VerifyCloudAccount_Handler,
+		},
+		{
+			MethodName: "GetServiceRoles",
+			Handler:    _ClusterManager_GetServiceRoles_Handler,
+		},
+		{
+			MethodName: "GetResourceGroups",
+			Handler:    _ClusterManager_GetResourceGroups_Handler,
+		},
+		{
 			MethodName: "GetCloudRegions",
 			Handler:    _ClusterManager_GetCloudRegions_Handler,
 		},
@@ -3732,6 +5256,14 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_ListCloudRegionCluster_Handler,
 		},
 		{
+			MethodName: "ListCloudVpcs",
+			Handler:    _ClusterManager_ListCloudVpcs_Handler,
+		},
+		{
+			MethodName: "CheckCidrConflictFromVpc",
+			Handler:    _ClusterManager_CheckCidrConflictFromVpc_Handler,
+		},
+		{
 			MethodName: "ListCloudSubnets",
 			Handler:    _ClusterManager_ListCloudSubnets_Handler,
 		},
@@ -3740,16 +5272,56 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ClusterManager_ListCloudSecurityGroups_Handler,
 		},
 		{
+			MethodName: "ListKeypairs",
+			Handler:    _ClusterManager_ListKeypairs_Handler,
+		},
+		{
 			MethodName: "ListCloudInstanceTypes",
 			Handler:    _ClusterManager_ListCloudInstanceTypes_Handler,
+		},
+		{
+			MethodName: "GetMasterSuggestedMachines",
+			Handler:    _ClusterManager_GetMasterSuggestedMachines_Handler,
+		},
+		{
+			MethodName: "ListCloudProjects",
+			Handler:    _ClusterManager_ListCloudProjects_Handler,
 		},
 		{
 			MethodName: "ListCloudOsImage",
 			Handler:    _ClusterManager_ListCloudOsImage_Handler,
 		},
 		{
+			MethodName: "ListCloudInstances",
+			Handler:    _ClusterManager_ListCloudInstances_Handler,
+		},
+		{
+			MethodName: "GetCloudAccountType",
+			Handler:    _ClusterManager_GetCloudAccountType_Handler,
+		},
+		{
+			MethodName: "GetCloudBandwidthPackages",
+			Handler:    _ClusterManager_GetCloudBandwidthPackages_Handler,
+		},
+		{
+			MethodName: "ListCloudRuntimeInfo",
+			Handler:    _ClusterManager_ListCloudRuntimeInfo_Handler,
+		},
+		{
 			MethodName: "ListOperationLogs",
 			Handler:    _ClusterManager_ListOperationLogs_Handler,
+		},
+		{
+			MethodName: "ListTaskStepLogs",
+			Handler:    _ClusterManager_ListTaskStepLogs_Handler,
+		},
+		{
+			MethodName: "ListTaskRecords",
+			Handler:    _ClusterManager_ListTaskRecords_Handler,
+		},
+		{
+			MethodName: "CleanDbHistoryData",
+			Handler:    _ClusterManager_CleanDbHistoryData_Handler,
 		},
 		{
 			MethodName: "ListResourceSchema",
@@ -3770,6 +5342,66 @@ var ClusterManager_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListCCTopology",
 			Handler:    _ClusterManager_ListCCTopology_Handler,
+		},
+		{
+			MethodName: "GetBkSopsTemplateList",
+			Handler:    _ClusterManager_GetBkSopsTemplateList_Handler,
+		},
+		{
+			MethodName: "GetBkSopsTemplateInfo",
+			Handler:    _ClusterManager_GetBkSopsTemplateInfo_Handler,
+		},
+		{
+			MethodName: "GetInnerTemplateValues",
+			Handler:    _ClusterManager_GetInnerTemplateValues_Handler,
+		},
+		{
+			MethodName: "DebugBkSopsTask",
+			Handler:    _ClusterManager_DebugBkSopsTask_Handler,
+		},
+		{
+			MethodName: "GetBatchCustomSetting",
+			Handler:    _ClusterManager_GetBatchCustomSetting_Handler,
+		},
+		{
+			MethodName: "GetBizTopologyHost",
+			Handler:    _ClusterManager_GetBizTopologyHost_Handler,
+		},
+		{
+			MethodName: "GetTopologyNodes",
+			Handler:    _ClusterManager_GetTopologyNodes_Handler,
+		},
+		{
+			MethodName: "GetTopologyHostIdsNodes",
+			Handler:    _ClusterManager_GetTopologyHostIdsNodes_Handler,
+		},
+		{
+			MethodName: "GetHostsDetails",
+			Handler:    _ClusterManager_GetHostsDetails_Handler,
+		},
+		{
+			MethodName: "GetScopeHostCheck",
+			Handler:    _ClusterManager_GetScopeHostCheck_Handler,
+		},
+		{
+			MethodName: "CreateCloudModuleFlag",
+			Handler:    _ClusterManager_CreateCloudModuleFlag_Handler,
+		},
+		{
+			MethodName: "UpdateCloudModuleFlag",
+			Handler:    _ClusterManager_UpdateCloudModuleFlag_Handler,
+		},
+		{
+			MethodName: "DeleteCloudModuleFlag",
+			Handler:    _ClusterManager_DeleteCloudModuleFlag_Handler,
+		},
+		{
+			MethodName: "ListCloudModuleFlag",
+			Handler:    _ClusterManager_ListCloudModuleFlag_Handler,
+		},
+		{
+			MethodName: "Health",
+			Handler:    _ClusterManager_Health_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

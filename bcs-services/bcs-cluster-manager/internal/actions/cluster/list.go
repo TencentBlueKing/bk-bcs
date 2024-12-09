@@ -1037,7 +1037,7 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 		// 是否共享给当前项目/业务
 		if clusterList[i].SharedRanges != nil && ((len(clusterList[i].SharedRanges.GetProjectIdOrCodes()) > 0 &&
 			utils.StringContainInSlice(projectId, clusterList[i].SharedRanges.ProjectIdOrCodes)) ||
-			(len(clusterList[i].SharedRanges.GetBizs()) > 0 &&
+			(len(clusterList[i].SharedRanges.GetBizs()) > 0 && len(bizId) > 0 &&
 				utils.StringContainInSlice(bizId, clusterList[i].SharedRanges.GetBizs()))) {
 			clusters = append(clusters, shieldClusterInfo(&clusterList[i]))
 
@@ -1051,6 +1051,10 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 			clusters = append(clusters, shieldClusterInfo(&clusterList[i]))
 			continue
 		}
+	}
+
+	if len(clusters) > 0 {
+		sort.Sort(utils.ClusterSlice(clusters))
 	}
 
 	return clusters, nil

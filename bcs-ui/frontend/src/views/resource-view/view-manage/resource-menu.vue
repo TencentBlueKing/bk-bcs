@@ -33,7 +33,8 @@
         <bk-checkbox
           :true-value="true"
           :false-value="false"
-          v-model="nonEmptyKind">
+          v-model="hideEmptyCountResourceMenu"
+          @change="handleToggleResourceMenuShow">
           <span class="text-[12px]">{{ $t('view.button.onlyData') }}</span>
         </bk-checkbox>
         <span
@@ -59,8 +60,7 @@
           :unique-opened="false"
           :default-active="activeMenu.id"
           :before-nav-change="handleBeforeNavChange"
-          :key="searchName"
-          v-if="isReloadMenu"
+          :key="menuKey"
           class="resource-view-menu">
           <bcs-navigation-menu-item
             v-for="menu in clusterResourceMenus"
@@ -236,14 +236,13 @@ watch(searchName, () => {
 
 const { menus, disabledMenuIDs, flatLeafMenus } = useMenu();
 // 只显示有数据的资源
-const nonEmptyKind = ref(false);
-// 重新渲染菜单
-const isReloadMenu = ref(true);
-function reloadMenu() {
-  isReloadMenu.value = false;
-  setTimeout(() => {
-    isReloadMenu.value = true;
-  });
+const hideEmptyCountResourceMenu = ref(localStorage.getItem('__BCS_RESOURCE_VIEW_MENU_HIDE__') === 'true');
+// 解决菜单渲染问题
+const randomKey = ref('');
+const menuKey = computed(() => `${searchName.value}-${hideEmptyCountResourceMenu.value}-${randomKey.value}`);
+// 切换菜单显示和隐藏
+function handleToggleResourceMenuShow(v: boolean) {
+  localStorage.setItem('__BCS_RESOURCE_VIEW_MENU_HIDE__', `${v}`);
 }
 // 刷新菜单
 function refreshMenu() {
@@ -251,45 +250,37 @@ function refreshMenu() {
   handleGetCustomResourceDefinition();
   handleGetMultiClusterResourcesCount();
 }
-watch(nonEmptyKind, () => {
-  localStorage.setItem('nonEmptyKind', nonEmptyKind.value.toString());
-  reloadMenu();
-  if (nonEmptyKind.value && !filterLeafMenus.value.find(item => activeMenu.value?.id === item.id)) {
-    // 选中第一个叶子菜单
-    const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
-    handleChangeMenu(menu);
-  }
-});
 // 左侧菜单
 const activeMenu = ref<Partial<IMenu>>({});
 // 所有叶子菜单项
 const leafMenus = computed(() => flatLeafMenus(menus.value));
-// 筛选过后所有叶子菜单项
-const filterLeafMenus = computed(() => flatLeafMenus(clusterResourceMenus.value));
 // 一级菜单
 const clusterResourceMenus = computed<IMenu[]>(() => {
   const data = menus.value.find(item => item.id === 'CLUSTERRESOURCE')?.children || [];
-  // 资源名称搜索
-  const searchValue = searchName.value.toLocaleLowerCase();
   return data.reduce<IMenu[]>((pre, item) => {
     if (item.children?.length) {
       const newChildrenList = item.children
-        .filter(menu => menu.title?.toLocaleLowerCase()?.includes(searchValue) && filterCriteria(menu));
+        .filter(menu => filterMenu(menu));
       if (newChildrenList.length) {
         pre.push({
           ...item,
           children: newChildrenList,
         });
       }
-    } else if (item.title?.toLocaleLowerCase()?.includes(searchValue) && filterCriteria(item)) {
+    } else if (filterMenu(item)) {
       pre.push(item);
     }
     return pre;
   }, []);
 });
-function filterCriteria(item) {
-  return (!nonEmptyKind.value || (nonEmptyKind.value && item?.meta?.kind && countMap.value[item.meta.kind]) !== 0);
-};
+// 过滤菜单
+function filterMenu(menu: IMenu) {
+  const searchValue = searchName.value.toLocaleLowerCase();
+  if (hideEmptyCountResourceMenu.value) {
+    return menu?.title?.toLocaleLowerCase()?.includes(searchValue) && countMap.value[menu.meta?.kind] !== 0;
+  }
+  return menu?.title?.toLocaleLowerCase()?.includes(searchValue);
+}
 
 // 当前路由
 const route = computed(() => toRef(reactive($router), 'currentRoute').value);
@@ -441,32 +432,13 @@ const handleGetMultiClusterResourcesCount = async () => {
   countMap.value = await getMultiClusterResourcesCount({
     ...curViewData.value,
   });
-  if (nonEmptyKind.value && !filterLeafMenus.value.find(item => activeMenu.value?.id === item.id)) {
-    const menu = getFirstLeafNode(clusterResourceMenus.value) as IMenu;
-    handleChangeMenu(menu);
-  }
-  // 重新渲染菜单
-  nonEmptyKind.value && reloadMenu();
 };
-
-/**
- * 获取第一个菜单叶子节点
- * 初始化指向第一个资源页面，筛选过后第一个页面可能没有资源，就找出第一个有资源的然后跳转
- * @param arr
- */
-function getFirstLeafNode(arr: Array<IMenu>) {
-  if (!Array.isArray(arr) || arr.length === 0) return;
-
-  let firstElement = arr[0];
-
-  // 递归处理：如果firstElement是数组，继续查找
-  while (firstElement?.children) {
-    // eslint-disable-next-line prefer-destructuring
-    firstElement = firstElement.children[0];
+watch(countMap, (newValue, oldValue) => {
+  // hack 修复count数量获取后菜单没有更新的异常
+  if (!isEqual(newValue, oldValue) && hideEmptyCountResourceMenu.value) {
+    randomKey.value = `${Math.random() * 10}`;
   }
-
-  return firstElement; // 返回第一个叶子节点
-}
+});
 
 watch(curViewData, (newValue, oldValue) => {
   if (!curViewData.value || isEqual(newValue, oldValue)) return;
@@ -475,13 +447,6 @@ watch(curViewData, (newValue, oldValue) => {
 }, { deep: true });
 
 onBeforeMount(() => {
-  // 获取/设置nonEmptyKind
-  if (localStorage.getItem('nonEmptyKind')) {
-    nonEmptyKind.value = (localStorage.getItem('nonEmptyKind') === 'true');
-  } else {
-    localStorage.setItem('nonEmptyKind', nonEmptyKind.value.toString());
-  }
-
   bus.$on('set-resource-count', (kind: string, count: number) => {
     if (count === undefined) return;
 
