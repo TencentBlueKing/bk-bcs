@@ -105,9 +105,9 @@ func (c Condition) String() string {
 }
 
 var (
-	and Condition = "AND"
-	or  Condition = "OR" // nolint
-	in  Condition = "IN" // nolint
+	and Condition = "AND" // nolint
+	or  Condition = "OR"  // nolint
+	in  Condition = "IN"  // nolint
 )
 
 // Page page
@@ -295,6 +295,14 @@ type HostDetailData struct {
 	SubZoneID        string `json:"sub_zone_id"`
 	CpuModule        string `json:"bk_cpu_module"`
 }
+
+const (
+	keyBizID          = "BsiId"       // nolint
+	keySvrIP          = "SvrIp"       // nolint
+	methodBusiness    = "Business"    // nolint
+	methodServer      = "Server"      // nolint
+	methodBusinessRaw = "BusinessRaw" // nolint
+)
 
 // BizInfo business id info
 type BizInfo struct {
