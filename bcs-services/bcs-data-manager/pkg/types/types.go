@@ -106,6 +106,12 @@ const (
 	SecondTimeFormat = "2006-01-02 15:04:05"
 )
 
+// Shared cluster
+const (
+	// AnnotationKeyProjectCode default project code annotation key
+	AnnotationKeyProjectCode = "io.tencent.bcs.projectcode"
+)
+
 // ProjectMeta meta for project
 type ProjectMeta struct {
 	ProjectID   string            `json:"projectID"`
