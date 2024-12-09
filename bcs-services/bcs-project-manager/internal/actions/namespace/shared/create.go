@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace/independent"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
@@ -50,7 +49,7 @@ func (a *SharedNamespaceAction) CreateNamespace(ctx context.Context,
 	if !config.GlobalConf.ITSM.Enable {
 		ia := independent.NewIndependentNamespaceAction(a.model)
 		req.Annotations = append(req.Annotations, &proto.Annotation{
-			Key:   constant.AnnotationKeyProjectCode,
+			Key:   config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode,
 			Value: req.GetProjectCode(),
 		})
 		return ia.CreateNamespace(ctx, req, resp)

@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcscc"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	nsm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/namespace"
 	vdm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/variabledefinition"
@@ -66,8 +67,8 @@ func (a *SharedNamespaceAction) CreateNamespaceCallback(ctx context.Context,
 		namespace := &corev1.Namespace{}
 		namespace.SetName(ns.Name)
 		namespace.SetAnnotations(map[string]string{
-			constant.AnnotationKeyProjectCode: req.GetProjectCode(),
-			constant.AnnotationKeyCreator:     ns.Creator,
+			config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode: req.GetProjectCode(),
+			constant.AnnotationKeyCreator:                         ns.Creator,
 		})
 		_, err = client.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 		if err != nil {

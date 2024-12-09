@@ -180,6 +180,11 @@ type TaskConfig struct {
 	WorkerCnt    int    `yaml:"workerCnt"`
 }
 
+// SharedClusterConfig 共享集群相关配置
+type SharedClusterConfig struct {
+	AnnoKeyProjCode string `yaml:"annoKeyProjCode"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd                       EtcdConfig                   `yaml:"etcd"`
@@ -201,6 +206,7 @@ type ProjectConfig struct {
 	TracingConfig              conf.TracingConfig           `yaml:"tracingConfig"`
 	RestrictAuthorizedProjects bool                         `yaml:"restrictAuthorizedProjects"`
 	TaskConfig                 TaskConfig                   `yaml:"taskConfig"`
+	SharedClusterConfig        SharedClusterConfig          `yaml:"sharedClusterConfig"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {
@@ -219,6 +225,9 @@ func (conf *ProjectConfig) initFromEnv() {
 	}
 	if conf.BcsGateway.Token == "" {
 		conf.BcsGateway.Token = envs.BCSGatewayToken
+	}
+	if conf.SharedClusterConfig.AnnoKeyProjCode == "" {
+		conf.SharedClusterConfig.AnnoKeyProjCode = envs.AnnotationKeyProjectCode
 	}
 }
 
