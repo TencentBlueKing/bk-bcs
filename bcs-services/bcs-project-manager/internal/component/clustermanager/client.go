@@ -16,6 +16,7 @@ package clustermanager
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -207,5 +208,73 @@ func ListClusters(projectID string) ([]*Cluster, error) {
 		logging.Error("list clusters from cluster manager failed, msg: %s", resp.GetMessage())
 		return nil, errors.New(resp.GetMessage())
 	}
+	return resp.GetData(), nil
+}
+
+// GetResourceUsage get project resource usage
+func GetResourceUsage(projectID, provider string) ([]*ProjectAutoscalerQuota, error) {
+	cli, closeCon, err := GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return nil, err
+	}
+	defer closeCon()
+	req := &GetProjectResourceQuotaUsageRequest{
+		ProjectID:  projectID,
+		ProviderID: provider,
+	}
+	resp, err := cli.GetProjectResourceQuotaUsage(context.Background(), req)
+	if err != nil {
+		logging.Error("get project resource usage from cluster manager failed, err: %s", err.Error())
+		return nil, err
+	}
+	if resp.GetCode() != 0 {
+		logging.Error("get project resource usage from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errors.New(resp.GetMessage())
+	}
+
+	data, err := resp.GetData().MarshalJSON()
+	if err != nil {
+		return nil, err
+	}
+	logging.Info("get project resource usage from cluster manager, data: %s", string(data))
+
+	var pqs []*ProjectAutoscalerQuota
+
+	if err = json.Unmarshal(data, &pqs); err != nil {
+		logging.Error("unmarshal error: %s", err.Error())
+		return nil, err
+	}
+
+	for _, pq := range pqs {
+		logging.Info("pq: %v", *pq)
+	}
+
+	return pqs, nil
+}
+
+// GetNodeGroup get node group
+func GetNodeGroup(nodeGroupID string) (*NodeGroup, error) {
+	cli, closeCon, err := GetClusterManagerClient()
+	if err != nil {
+		logging.Error("get cluster manager client failed, err: %s", err.Error())
+		return nil, err
+	}
+	defer closeCon()
+	req := &GetNodeGroupRequest{
+		NodeGroupID: nodeGroupID,
+	}
+
+	resp, err := cli.GetNodeGroup(context.Background(), req)
+	if err != nil {
+		logging.Error("get project resource usage from cluster manager failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	if resp.GetCode() != 0 {
+		logging.Error("get project resource usage from cluster manager failed, msg: %s", resp.GetMessage())
+		return nil, errors.New(resp.GetMessage())
+	}
+
 	return resp.GetData(), nil
 }

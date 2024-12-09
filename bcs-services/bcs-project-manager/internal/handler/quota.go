@@ -104,6 +104,11 @@ func (p *ProjectQuotaHandler) DeleteProjectQuota(ctx context.Context,
 // ListProjectQuotas list project quotas records
 func (p *ProjectQuotaHandler) ListProjectQuotas(ctx context.Context,
 	req *proto.ListProjectQuotasRequest, resp *proto.ListProjectQuotasResponse) error {
+	la := aquota.NewListQuotaAction(p.model)
+	e := la.Do(ctx, req, resp)
+	if e != nil {
+		return e
+	}
 
 	return nil
 }

@@ -38,7 +38,7 @@ func (t *taskManager) Name() string {
 // CreateProjectQuotaTask build create project quota task
 func (t *taskManager) CreateProjectQuotaTask(quota *proto.ProjectQuota,
 	opt *provider.CreateProjectQuotaOptions) (*types.Task, error) {
-	builder := tasks.NewCreateProjectQuotaTask(*quota)
+	builder := tasks.NewCreateProjectQuotaTask(quota)
 
 	return builder.BuildTask(types.TaskInfo{
 		TaskIndex: quota.QuotaId,
