@@ -733,6 +733,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudDiskTypes",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/disktypes"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.GetMasterSuggestedMachines",
 			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes"},
 			Method:  []string{"GET"},
@@ -1059,6 +1065,7 @@ type ClusterManagerService interface {
 	ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, opts ...client.CallOption) (*ListCloudSecurityGroupsResponse, error)
 	ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, opts ...client.CallOption) (*ListKeyPairsResponse, error)
 	ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, opts ...client.CallOption) (*ListCloudInstanceTypeResponse, error)
+	ListCloudDiskTypes(ctx context.Context, in *ListCloudDiskTypesRequest, opts ...client.CallOption) (*ListCloudDiskTypesResponse, error)
 	GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, opts ...client.CallOption) (*GetMasterSuggestedMachinesResponse, error)
 	ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, opts ...client.CallOption) (*ListCloudProjectsResponse, error)
 	ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, opts ...client.CallOption) (*ListCloudOsImageResponse, error)
@@ -2283,6 +2290,16 @@ func (c *clusterManagerService) ListCloudInstanceTypes(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudDiskTypes(ctx context.Context, in *ListCloudDiskTypesRequest, opts ...client.CallOption) (*ListCloudDiskTypesResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudDiskTypes", in)
+	out := new(ListCloudDiskTypesResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, opts ...client.CallOption) (*GetMasterSuggestedMachinesResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetMasterSuggestedMachines", in)
 	out := new(GetMasterSuggestedMachinesResponse)
@@ -2735,6 +2752,7 @@ type ClusterManagerHandler interface {
 	ListCloudSecurityGroups(context.Context, *ListCloudSecurityGroupsRequest, *ListCloudSecurityGroupsResponse) error
 	ListKeypairs(context.Context, *ListKeyPairsRequest, *ListKeyPairsResponse) error
 	ListCloudInstanceTypes(context.Context, *ListCloudInstanceTypeRequest, *ListCloudInstanceTypeResponse) error
+	ListCloudDiskTypes(context.Context, *ListCloudDiskTypesRequest, *ListCloudDiskTypesResponse) error
 	GetMasterSuggestedMachines(context.Context, *GetMasterSuggestedMachinesRequest, *GetMasterSuggestedMachinesResponse) error
 	ListCloudProjects(context.Context, *ListCloudProjectsRequest, *ListCloudProjectsResponse) error
 	ListCloudOsImage(context.Context, *ListCloudOsImageRequest, *ListCloudOsImageResponse) error
@@ -2905,6 +2923,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListCloudSecurityGroups(ctx context.Context, in *ListCloudSecurityGroupsRequest, out *ListCloudSecurityGroupsResponse) error
 		ListKeypairs(ctx context.Context, in *ListKeyPairsRequest, out *ListKeyPairsResponse) error
 		ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error
+		ListCloudDiskTypes(ctx context.Context, in *ListCloudDiskTypesRequest, out *ListCloudDiskTypesResponse) error
 		GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, out *GetMasterSuggestedMachinesResponse) error
 		ListCloudProjects(ctx context.Context, in *ListCloudProjectsRequest, out *ListCloudProjectsResponse) error
 		ListCloudOsImage(ctx context.Context, in *ListCloudOsImageRequest, out *ListCloudOsImageResponse) error
@@ -3639,6 +3658,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudDiskTypes",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/disktypes"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetMasterSuggestedMachines",
 		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes"},
 		Method:  []string{"GET"},
@@ -4299,6 +4324,10 @@ func (h *clusterManagerHandler) ListKeypairs(ctx context.Context, in *ListKeyPai
 
 func (h *clusterManagerHandler) ListCloudInstanceTypes(ctx context.Context, in *ListCloudInstanceTypeRequest, out *ListCloudInstanceTypeResponse) error {
 	return h.ClusterManagerHandler.ListCloudInstanceTypes(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudDiskTypes(ctx context.Context, in *ListCloudDiskTypesRequest, out *ListCloudDiskTypesResponse) error {
+	return h.ClusterManagerHandler.ListCloudDiskTypes(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) GetMasterSuggestedMachines(ctx context.Context, in *GetMasterSuggestedMachinesRequest, out *GetMasterSuggestedMachinesResponse) error {
