@@ -13,6 +13,9 @@ const huaweiCloud = () => import(/* webpackChunkName: 'project' */'@/views/proje
 // 亚马逊云
 const amazonCloud = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/cloudtoken/amazonCloud.vue');
 
+// 项目配额
+const ProjectQuotas = () => import(/* webpackChunkName: 'project' */'@/views/project-manage/project/project-quotas.vue');
+
 export default [
   {
     path: 'operate-audit',
@@ -28,6 +31,11 @@ export default [
     path: 'project-info',
     name: 'projectInfo',
     component: ProjectInfo,
+  },
+  {
+    path: 'project-quotas',
+    name: 'projectQuotas',
+    component: ProjectQuotas,
   },
   {
     path: 'tencent-cloud',

@@ -2708,6 +2708,46 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceUpdate(
 
 	if len(*bkNamespaces) == 1 {
 		bkNamespace := (*bkNamespaces)[0]
+
+		pmCli, err := b.Syncer.GetProjectManagerGrpcGwClient()
+		if err != nil {
+			blog.Errorf("get project manager grpc gw client failed, err: %s", err.Error())
+			return nil
+		}
+
+		nsbizid := bkCluster.BizID
+		if projectCode, ok := namespace.Annotations["io.tencent.bcs.projectcode"]; ok {
+			gpr := pmp.GetProjectRequest{
+				ProjectIDOrCode: projectCode,
+			}
+
+			if project, errP := pmCli.Cli.GetProject(pmCli.Ctx, &gpr); errP == nil {
+				if project.Data.BusinessID != "" {
+					bizid, errPP := strconv.ParseInt(project.Data.BusinessID, 10, 64)
+					if errPP != nil {
+						blog.Errorf("parse string err: %v", errPP)
+					} else {
+						nsbizid = bizid
+					}
+				}
+			} else {
+				blog.Errorf("get project error : %v", errP)
+			}
+		}
+
+		if bkNamespace.BizID != nsbizid {
+			err = b.Syncer.DeleteAllByClusterAndNamespace(bkCluster, &bkNamespace, db)
+			if err != nil {
+				blog.Errorf(fmt.Sprintf("handleNamespaceUpdate err: %s", err.Error()))
+				return err
+			}
+			err := b.handleNamespaceCreate(namespace, bkCluster, db)
+			if err != nil {
+				blog.Errorf(fmt.Sprintf("handleNamespaceCreate err: %s", err.Error()))
+				return err
+			}
+		}
+
 		nsToUpdate := make(map[int64]*client.UpdateBcsNamespaceRequestData, 0)
 		needToUpdate, updateData := b.Syncer.CompareNamespace(&bkNamespace, &storage.Namespace{Data: namespace})
 		if needToUpdate {
@@ -2796,10 +2836,6 @@ func (b *BcsBkcmdbSynchronizerHandler) handleNamespaceCreate(
 		} else {
 			blog.Errorf("get project error : %v", err)
 		}
-	}
-
-	if bizid != bkCluster.BizID {
-		bizid = int64(71)
 	}
 
 	nsToAdd := make(map[int64][]bkcmdbkube.Namespace, 0)

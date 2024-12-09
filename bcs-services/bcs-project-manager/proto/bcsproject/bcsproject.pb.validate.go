@@ -2023,6 +2023,351 @@ var _ interface {
 	ErrorName() string
 } = ListProjectsForIAMRespValidationError{}
 
+// Validate checks the field values on GetProjectActiveRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetProjectActiveRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProjectActiveRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetProjectActiveRequestMultiError, or nil if none found.
+func (m *GetProjectActiveRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProjectActiveRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ProjectIDOrCode
+
+	if len(errors) > 0 {
+		return GetProjectActiveRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProjectActiveRequestMultiError is an error wrapping multiple validation
+// errors returned by GetProjectActiveRequest.ValidateAll() if the designated
+// constraints aren't met.
+type GetProjectActiveRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProjectActiveRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProjectActiveRequestMultiError) AllErrors() []error { return m }
+
+// GetProjectActiveRequestValidationError is the validation error returned by
+// GetProjectActiveRequest.Validate if the designated constraints aren't met.
+type GetProjectActiveRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectActiveRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectActiveRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectActiveRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectActiveRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectActiveRequestValidationError) ErrorName() string {
+	return "GetProjectActiveRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectActiveRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectActiveRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectActiveRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectActiveRequestValidationError{}
+
+// Validate checks the field values on GetProjectActiveResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetProjectActiveResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetProjectActiveResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetProjectActiveResponseMultiError, or nil if none found.
+func (m *GetProjectActiveResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetProjectActiveResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetProjectActiveResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetProjectActiveResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetProjectActiveResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for RequestID
+
+	if len(errors) > 0 {
+		return GetProjectActiveResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetProjectActiveResponseMultiError is an error wrapping multiple validation
+// errors returned by GetProjectActiveResponse.ValidateAll() if the designated
+// constraints aren't met.
+type GetProjectActiveResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetProjectActiveResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetProjectActiveResponseMultiError) AllErrors() []error { return m }
+
+// GetProjectActiveResponseValidationError is the validation error returned by
+// GetProjectActiveResponse.Validate if the designated constraints aren't met.
+type GetProjectActiveResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetProjectActiveResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetProjectActiveResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetProjectActiveResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetProjectActiveResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetProjectActiveResponseValidationError) ErrorName() string {
+	return "GetProjectActiveResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetProjectActiveResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetProjectActiveResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetProjectActiveResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetProjectActiveResponseValidationError{}
+
+// Validate checks the field values on ProjectActiveData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *ProjectActiveData) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ProjectActiveData with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ProjectActiveDataMultiError, or nil if none found.
+func (m *ProjectActiveData) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ProjectActiveData) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for IsActive
+
+	if len(errors) > 0 {
+		return ProjectActiveDataMultiError(errors)
+	}
+
+	return nil
+}
+
+// ProjectActiveDataMultiError is an error wrapping multiple validation errors
+// returned by ProjectActiveData.ValidateAll() if the designated constraints
+// aren't met.
+type ProjectActiveDataMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ProjectActiveDataMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ProjectActiveDataMultiError) AllErrors() []error { return m }
+
+// ProjectActiveDataValidationError is the validation error returned by
+// ProjectActiveData.Validate if the designated constraints aren't met.
+type ProjectActiveDataValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ProjectActiveDataValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ProjectActiveDataValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ProjectActiveDataValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ProjectActiveDataValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ProjectActiveDataValidationError) ErrorName() string {
+	return "ProjectActiveDataValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ProjectActiveDataValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sProjectActiveData.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ProjectActiveDataValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ProjectActiveDataValidationError{}
+
 // Validate checks the field values on GetBusinessRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

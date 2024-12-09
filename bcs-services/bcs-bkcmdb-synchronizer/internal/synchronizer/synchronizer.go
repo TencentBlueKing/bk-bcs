@@ -16,9 +16,12 @@ package synchronizer
 import (
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
+	"net"
 	"net/http"
 	_ "net/http/pprof" //nolint
 	"os"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -247,6 +250,7 @@ func (s *Synchronizer) Run() {
 	}
 
 	clusters := resp.Data
+
 	clusterMap := make(map[string]*cmp.Cluster)
 	var clusterList ClusterList
 
@@ -269,6 +273,46 @@ func (s *Synchronizer) Run() {
 		gm.Start(w, clusterMap[w])
 	}
 
+	go func() {
+		time.Sleep(time.Second * 10)
+		ticker := time.NewTicker(10 * time.Minute)
+		defer ticker.Stop()
+		for ; true; <-ticker.C {
+			respT, errT := cmCli.Cli.ListCluster(cmCli.Ctx, &lcReq)
+			if errT != nil {
+				blog.Errorf("list cluster failed, err: %s", errT.Error())
+				continue
+			}
+
+			clustersT := respT.Data
+
+			clusterMapT := make(map[string]*cmp.Cluster)
+			var clusterListT ClusterList
+
+			s.runCluster(clustersT, whiteList, blackList, clusterMapT, &clusterListT)
+
+			blog.Infof("clusterListT: %v", clusterListT)
+
+			sort.Sort(clusterListT)
+
+			workListT := clusterListT[podIndex*len(clusterListT)/replicas : (podIndex+1)*len(clusterListT)/replicas]
+
+			for _, wT := range workListT {
+				if exist, _ := common.InArray(wT, workList); !exist {
+					blog.Infof("%s started", wT)
+					gm.Start(wT, clusterMapT[wT])
+				}
+			}
+
+			for _, wT := range workList {
+				if exist, _ := common.InArray(wT, workListT); !exist {
+					blog.Infof("%s stopped", wT)
+					gm.Stop(wT, clusterMapT[wT])
+				}
+			}
+		}
+	}()
+
 	//for _, cluster := range clusterMap {
 	//	if exist, _ := common.InArray(cluster.ClusterID, clusterList); exist {
 	//		go s.sync(cluster)
@@ -282,6 +326,7 @@ func (s *Synchronizer) Run() {
 		http.HandleFunc("/worklist", common.HandleWorkList(gm, workList))
 		http.HandleFunc("/syncStorage", s.syncStorageHandler(clusterMap))
 		http.HandleFunc("/syncStore", s.syncStoreHandler(clusterMap))
+		http.HandleFunc("/sync", s.syncHandler(clusterList))
 
 		if err := http.ListenAndServe(":8080", nil); err != nil {
 			blog.Errorf("Goroutine Manager start error: %v\n", err)
@@ -311,7 +356,7 @@ func (s *Synchronizer) Run() {
 					blog.Errorf("get bk cluster failed, err: %s", err.Error())
 					continue
 				}
-				go s.syncStorage(clusterMap[w], bkCluster)
+				go s.syncStorage(clusterMap[w], bkCluster, false)
 				time.Sleep(time.Minute)
 			}
 		}
@@ -393,6 +438,7 @@ func (s *Synchronizer) Run() {
 func (s *Synchronizer) runCluster(clusters []*cmp.Cluster, whiteList, blackList []string,
 	clusterMap map[string]*cmp.Cluster, clusterList *ClusterList) {
 	for _, cluster := range clusters {
+		blog.Infof("clusterID: %s", cluster.ClusterID)
 		if len(whiteList) > 0 {
 			if exit, _ := common.InArray(cluster.ClusterID, whiteList); !exit {
 				continue
@@ -446,8 +492,85 @@ func (s *Synchronizer) syncStorageHandler(clusterMap map[string]*cmp.Cluster) ht
 			return
 		}
 
-		go s.syncStorage(clusterMap[clusterId], bkCluster)
+		go s.syncStorage(clusterMap[clusterId], bkCluster, true)
 		fmt.Fprintf(w, "BcsClusterID: %s\n syncStorage started.", clusterId)
+	}
+}
+
+func (s *Synchronizer) syncHandler(clusterList ClusterList) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := r.URL.Query().Get("cluster")
+		if clusterId == "" {
+			http.Error(w, "缺少cluster", http.StatusBadRequest)
+			return
+		}
+
+		sort.Sort(clusterList)
+		replicas := s.BkcmdbSynchronizerOption.Synchronizer.Replicas
+
+		index := -1
+
+		for i := 0; i < replicas; i++ {
+			if exist, _ := common.InArray(clusterId,
+				clusterList[i*len(clusterList)/replicas:(i+1)*len(clusterList)/replicas]); exist {
+				index = i
+				break
+			}
+		}
+
+		if index == -1 {
+			http.Error(w, "cluster not found", http.StatusBadRequest)
+			return
+		}
+
+		hostname, err := os.Hostname()
+		if err != nil {
+			hostname = "unknown"
+		}
+		// 使用 LookupCNAME 函数来查找 CNAME
+		fqdn, err := net.LookupCNAME(hostname)
+		if err != nil {
+			blog.Errorf("Error looking up CNAME: %v", err)
+		} else {
+			blog.Infof("Fully Qualified Domain Name: %s", fqdn)
+		}
+
+		re := regexp.MustCompile("[0-9]+")
+		replaced := re.ReplaceAllString(fqdn, strconv.Itoa(index))
+		forwardUrl := fmt.Sprintf("http://%s:8080/syncStorage?cluster=%s",
+			strings.TrimSuffix(replaced, "."), clusterId)
+
+		// 发送 GET 请求
+		resp, err := http.Get(forwardUrl)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			blog.Errorf("Error: %v", err)
+			return
+		}
+		defer resp.Body.Close() // 确保在函数返回时关闭响应体
+
+		// 检查响应状态码
+		if resp.StatusCode != http.StatusOK {
+			http.Error(w, fmt.Sprintf("Error: received non-200 response code: %d\n", resp.StatusCode),
+				http.StatusBadRequest)
+			blog.Errorf("Error: received non-200 response code: %d\n", resp.StatusCode)
+			return
+		}
+
+		// 读取响应体
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			blog.Errorf("Error reading response body: %v", err)
+			return
+		}
+
+		// 输出响应体
+		blog.Infof("Response Body: %s", string(body))
+
+		blog.Infof("BcsClusterID: %s index: %d, url: %s\n, forward response: %s",
+			clusterId, index, forwardUrl, string(body))
+		fmt.Fprintf(w, "BcsClusterID: %s sync started.\n", clusterId)
 	}
 }
 
@@ -471,7 +594,7 @@ func (s *Synchronizer) syncStoreHandler(clusterMap map[string]*cmp.Cluster) http
 	}
 }
 
-func (s *Synchronizer) syncStorage(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster) {
+func (s *Synchronizer) syncStorage(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, force bool) {
 	path := "/data/bcs/bcs-bkcmdb-synchronizer/db/" + bkCluster.Uid + ".db"
 
 	db := sqlite.Open(path)
@@ -479,7 +602,7 @@ func (s *Synchronizer) syncStorage(cluster *cmp.Cluster, bkCluster *bkcmdbkube.C
 		blog.Errorf("open db failed, path: %s", path)
 	}
 
-	s.syncStore(bkCluster, false)
+	s.syncStore(bkCluster, force)
 	blog.Infof("syncStorage %s started", cluster.ClusterID)
 	// err := s.Syncer.SyncPods(cluster, bkCluster, db)
 	// if err != nil {

@@ -333,6 +333,60 @@ func local_request_BCSProject_ListProjectsForIAM_0(ctx context.Context, marshale
 
 }
 
+func request_BCSProject_GetProjectActive_0(ctx context.Context, marshaler runtime.Marshaler, client BCSProjectClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetProjectActiveRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectIDOrCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectIDOrCode")
+	}
+
+	protoReq.ProjectIDOrCode, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectIDOrCode", err)
+	}
+
+	msg, err := client.GetProjectActive(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_BCSProject_GetProjectActive_0(ctx context.Context, marshaler runtime.Marshaler, server BCSProjectServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetProjectActiveRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectIDOrCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectIDOrCode")
+	}
+
+	protoReq.ProjectIDOrCode, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectIDOrCode", err)
+	}
+
+	msg, err := server.GetProjectActive(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Business_GetBusiness_0(ctx context.Context, marshaler runtime.Marshaler, client BusinessClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetBusinessRequest
 	var metadata runtime.ServerMetadata
@@ -3486,6 +3540,26 @@ func RegisterBCSProjectGwServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
+	mux.Handle("GET", pattern_BCSProject_GetProjectActive_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_BCSProject_GetProjectActive_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BCSProject_GetProjectActive_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -4487,6 +4561,26 @@ func RegisterBCSProjectGwClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
+	mux.Handle("GET", pattern_BCSProject_GetProjectActive_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_BCSProject_GetProjectActive_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_BCSProject_GetProjectActive_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -4504,6 +4598,8 @@ var (
 	pattern_BCSProject_ListAuthorizedProjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "authorized_projects"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_BCSProject_ListProjectsForIAM_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"bcsproject", "v1", "projects_for_iam"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_BCSProject_GetProjectActive_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"bcsproject", "v1", "projects", "projectIDOrCode", "active"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
@@ -4520,6 +4616,8 @@ var (
 	forward_BCSProject_ListAuthorizedProjects_0 = runtime.ForwardResponseMessage
 
 	forward_BCSProject_ListProjectsForIAM_0 = runtime.ForwardResponseMessage
+
+	forward_BCSProject_GetProjectActive_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterBusinessGwFromEndpoint is same as RegisterBusinessGw but
