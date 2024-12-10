@@ -49,8 +49,8 @@
           error-display-type="normal"
           required>
           <div v-if="Object.keys(labels).length">
-            <keyValueSelector
-              :labels="labels"
+            <KeyValueSelector
+              :datasource="labels"
               :value="metricData.selector"
               @change="handleLabelChange" />
           </div>
@@ -118,10 +118,10 @@
 <script lang='ts' setup>
 import { computed, onMounted, ref, watch } from 'vue';
 
-import keyValueSelector from './key-value-selector.vue';
 import useMetric, { IMetricData } from './use-metric';
 
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import KeyValueSelector from '@/components/key-value-selector.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';

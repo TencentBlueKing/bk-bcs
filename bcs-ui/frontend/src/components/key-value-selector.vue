@@ -8,19 +8,23 @@
       <bk-input class="w-[230px]" :value="labels[key]" disabled></bk-input>
       <bk-checkbox
         class="ml-[10px]"
-        :value="(key in value)"
+        :value="(key in labelValue)"
         @change="handleLabelChange(key, labels[key])">
       </bk-checkbox>
     </div>
   </div>
 </template>
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { computed, defineComponent, ref, watch } from 'vue';
 
+type DataSourceItem = {
+  label: string;
+  value: string;
+};
 export default defineComponent({
   props: {
-    labels: {
-      type: Object,
+    datasource: {
+      type: [Object, Array<DataSourceItem>],
       default: () => ({}),
       required: true,
     },
@@ -32,9 +36,18 @@ export default defineComponent({
   },
   emits: ['change'],
   setup(props, { emit }) {
+    const labels = computed(() => {
+      if (Array.isArray(props.datasource)) {
+        return (props.datasource as DataSourceItem[]).reduce((pre, item) => {
+          pre[item.label] = item.value;
+          return pre;
+        }, {});
+      }
+      return props.datasource;
+    });
     const labelValue = ref({});
 
-    const handleLabelChange = (key, value) => {
+    const handleLabelChange = (key: string, value: string) => {
       if (key in labelValue.value) {
         delete labelValue.value[key];
       } else {
@@ -45,9 +58,11 @@ export default defineComponent({
 
     watch(() => props.value, (value) => {
       labelValue.value = JSON.parse(JSON.stringify(value));
-    });
+    }, { immediate: true });
 
     return {
+      labels,
+      labelValue,
       handleLabelChange,
     };
   },
