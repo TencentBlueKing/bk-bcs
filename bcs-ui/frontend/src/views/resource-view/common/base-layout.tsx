@@ -380,9 +380,10 @@ export default defineComponent({
 
       // 从详情接口中获取全量数据
       if (category.value === 'custom_objects') {
+        const namespace = scope.value === 'Namespaced' ? row?.metadata?.namespace : '';
         curDetailRow.value.data = await handleGetCustomObjectDetail({
           name: row?.metadata?.name,
-          namespace: row?.metadata?.namespace,
+          namespace,
           clusterID: curDetailRow.value.extData?.clusterID,
         });
       } else {
@@ -858,7 +859,7 @@ export default defineComponent({
                       }
                   </div>
                 ),
-                content: () => <div class="h-[calc(100vh-60px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
+                content: () => <div class="h-[calc(100vh-52px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
                   {
                     (this.detailType.active === 'overview'
                       ? (this.$scopedSlots.detail?.({

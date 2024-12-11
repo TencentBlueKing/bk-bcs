@@ -50,11 +50,11 @@ export default defineComponent({
       if (!curProject.value.projectID) return;
 
       isLoading.value = true;
-      const { results = [] } = await fetchProjectQuotas({
+      const res = await fetchProjectQuotas({
         projectID: curProject.value.projectID,
         provider: 'selfProvisionCloud',
       }).catch(() => ({ results: [] }));
-      data.value = results;
+      data.value = res?.results || [];
       isLoading.value = false;
     }
 
