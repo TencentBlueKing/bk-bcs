@@ -14,6 +14,7 @@ source:
       - /bcs-services/bcs-netservice/.*
       - /bcs-services/bcs-netservice/bcs-ipam/.*
       - /bcs-services/bcs-argocd-manager/.*
+      - /bcs-services/bcs-bscp/.*
       - /bcs-services/bcs-client/.*
       - /bcs-runtime/bcs-k8s/kubebkbcs/.*
       - /bcs-runtime/bcs-k8s/kubedeprecated/.*

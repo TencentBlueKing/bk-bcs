@@ -41,26 +41,6 @@ jobs:
           version: v1.61.0
           args: --timeout=30m
           working-directory: bcs-services/bcs-monitor
-  bcs-bscp:
-    name: bcs-bscp
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: setup go
-        uses: actions/setup-go@v3
-        with:
-          go-version-file: bcs-services/bcs-bscp/go.mod
-      - name: go mod tidy check
-        uses: katexochen/go-tidy-check@v2
-        with:
-          modules: bcs-services/bcs-bscp
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.54.2
-          args: --timeout=30m --skip-dirs=test --skip-dirs=pkg/logs/glog --out-format=colored-line-number
-          working-directory: bcs-services/bcs-bscp
   bcs-cluster-manager:
     name: bcs-cluster-manager
     runs-on: ubuntu-latest

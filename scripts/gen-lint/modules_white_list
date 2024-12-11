@@ -22,8 +22,6 @@ bcs-scenarios/bcs-monitor-controller
 bcs-scenarios/bcs-powertrading
 bcs-scenarios/bcs-terraform-controller
 bcs-services/bcs-bkcmdb-synchronizer
-# bcs-services/bcs-bscp
-bcs-services/bcs-bscp/cmd/vault-server/vault
 bcs-services/bcs-cli/bcs-cluster-manager
 bcs-services/bcs-cli/bcs-data-manager
 bcs-services/bcs-cli/bcs-project-manager
