@@ -103,7 +103,9 @@
           </bk-table-column>
           <bk-table-column :label="$t('k8s.image')" min-width="200" :show-overflow-tooltip="false">
             <template #default="{ row }">
-              <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
+              <span
+                class="select-all"
+                v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                 {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
               </span>
             </template>

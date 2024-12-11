@@ -54,7 +54,9 @@
         </bk-table-column>
         <bk-table-column :label="$t('k8s.image')" width="450" :show-overflow-tooltip="false">
           <template slot-scope="{ row }">
-            <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
+            <span
+              class="select-all"
+              v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
               {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
             </span>
           </template>

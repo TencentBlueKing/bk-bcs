@@ -30,6 +30,7 @@ import $router from '@/router';
 export type ComponentIdType = 'WorkloadDetail' | 'PodDetail' | 'ContainerDetail';
 export interface ITitle {
   name: string; // 展示名称
+  kind?: string; // 类型
   id: string;// 组件ID
   params?: any; // 组件参数
 }
@@ -126,7 +127,8 @@ export default defineComponent({
         id: '',
       },
       {
-        name: `${cobjSubTitleMap[props.kind] || subTitleMap[props.category]}: ${props.name}`,
+        name: props.name,
+        kind: cobjSubTitleMap[props.kind] || subTitleMap[props.category],
         id: defaultComId,
         params: {
           ...props,

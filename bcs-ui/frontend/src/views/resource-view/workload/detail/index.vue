@@ -30,6 +30,7 @@ import $router from '@/router';
 export type ComponentIdType = 'WorkloadDetail' | 'PodDetail' | 'ContainerDetail';
 export interface INavItem {
   name: string; // 展示名称
+  kind?: string; // 类型
   id: ComponentIdType|'';// 组件ID
   params?: Record<string, any>; // 组件参数
   query?: Record<string, any>// 查询条件
@@ -116,7 +117,8 @@ export default defineComponent({
       if (props.category === 'pods') {
         // Pods详情
         data.push({
-          name: `${subTitleMap[props.kind] || props.kind}: ${props.name}`,
+          name: props.name,
+          kind: subTitleMap[props.kind] || props.kind,
           id: 'PodDetail',
           params: {
             ...props,
@@ -126,14 +128,16 @@ export default defineComponent({
         // workload详情
         data.push(...[
           {
-            name: `${subTitleMap[props.kind] || props.kind}: ${props.name}`,
+            name: props.name,
+            kind: subTitleMap[props.kind] || props.kind,
             id: 'WorkloadDetail',
             params: {
               ...props,
             },
           },
           {
-            name: `${subTitleMap.Pod}: ${props.pod}`,
+            name: props.pod,
+            kind: subTitleMap.Pod,
             id: 'PodDetail',
             params: {
               name: props.pod,
@@ -151,7 +155,8 @@ export default defineComponent({
       }
       // 容器详情
       data.push({
-        name: `${subTitleMap.Container}: ${props.container}`,
+        name: props.container,
+        kind: subTitleMap.Container,
         id: 'ContainerDetail',
         params: {
           namespace: props.namespace,

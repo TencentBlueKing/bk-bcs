@@ -3,7 +3,7 @@
     <div class="workload-detail-info">
       <div class="workload-info-basic">
         <div class="basic-left">
-          <span class="name mr20">{{ metadata.name }}</span>
+          <span class="name mr20 select-all">{{ metadata.name }}</span>
           <div class="basic-wrapper">
             <div
               v-for="item in basicInfoList"
@@ -45,16 +45,16 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.namespace') }}</span>
-          <span class="value">{{ metadata.namespace }}</span>
+          <span class="value select-all">{{ metadata.namespace }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.image') }}</span>
-          <span class="value" v-bk-overflow-tips="getImagesTips(manifestExt.images)">
+          <span class="value select-all" v-bk-overflow-tips="getImagesTips(manifestExt.images)">
             {{ manifestExt.images && manifestExt.images.join(', ') }}</span>
         </div>
         <div class="info-item">
           <span class="label">UID</span>
-          <span class="value">{{ metadata.uid }}</span>
+          <span class="value select-all">{{ metadata.uid }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
@@ -190,7 +190,9 @@
             </bcs-table-column>
             <bcs-table-column :label="$t('k8s.image')" min-width="200" :show-overflow-tooltip="false">
               <template #default="{ row }">
-                <span v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
+                <span
+                  class="select-all"
+                  v-bk-tooltips.top="(handleGetExtData(row.metadata.uid, 'images') || []).join('<br />')">
                   {{ (handleGetExtData(row.metadata.uid, 'images') || []).join(', ') }}
                 </span>
               </template>

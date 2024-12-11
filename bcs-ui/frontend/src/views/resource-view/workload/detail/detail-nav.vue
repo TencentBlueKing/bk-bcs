@@ -4,7 +4,13 @@
       <i class="bcs-icon bcs-icon-arrows-left icon-back"></i>
     </span>
     <span class="title-wrapper" v-for="(item, index) in curNavList" :key="index">
-      <span class="title-item" @click="routeHop(item, index)">{{item.name}}</span>
+      <span class="title-item" @click="routeHop(item, index)">
+        <span v-if="!item?.kind">{{ item.name }}</span>
+        <template v-else>
+          <span>{{ item.kind }}: </span>
+          <span :class="[index === (curNavList.length - 1) ? 'select-all' : '']">{{ item.name }}</span>
+        </template>
+      </span>
       <span class="separator" v-if="index < (curNavList.length - 1)">/</span>
     </span>
   </div>

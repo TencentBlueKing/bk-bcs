@@ -3,7 +3,7 @@
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
-          <span class="name mr20">{{ detail && detail.containerName }}</span>
+          <span class="name mr20 select-all">{{ detail && detail.containerName }}</span>
           <div class="basic-wrapper">
             <div class="basic-item">
               <span class="label">{{ $t('dashboard.workload.container.hostIP') }}</span>
@@ -23,11 +23,11 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('dashboard.workload.container.containerID') }}</span>
-          <span class="value" v-bk-overflow-tips>{{ detail && detail.containerID }}</span>
+          <span class="value select-all" v-bk-overflow-tips>{{ detail && detail.containerID }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.image') }}</span>
-          <span class="value" v-bk-overflow-tips>{{ detail && detail.image }}</span>
+          <span class="value select-all" v-bk-overflow-tips>{{ detail && detail.image }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.create.label.networkMode.text') }}</span>

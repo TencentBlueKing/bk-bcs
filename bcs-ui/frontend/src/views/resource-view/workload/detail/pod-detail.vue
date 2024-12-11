@@ -3,7 +3,7 @@
     <div class="workload-detail-info" v-bkloading="{ isLoading }">
       <div class="workload-info-basic">
         <div class="basic-left">
-          <span class="name mr20">{{ metadata.name }}</span>
+          <span class="name mr20 select-all">{{ metadata.name }}</span>
           <div class="basic-wrapper">
             <StatusIcon class="basic-item" :status="manifestExt.status"></StatusIcon>
             <div class="basic-item">
@@ -43,12 +43,12 @@
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.namespace') }}</span>
-          <span class="value" v-bk-overflow-tips>{{ metadata.namespace }}</span>
+          <span class="value select-all" v-bk-overflow-tips>{{ metadata.namespace }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('k8s.image') }}</span>
           <span
-            class="value"
+            class="value select-all"
             v-bk-overflow-tips="getImagesTips(manifestExt.images)">
             {{ manifestExt.images && manifestExt.images.join(', ') }}
           </span>
@@ -59,7 +59,7 @@
         </div>
         <div class="info-item">
           <span class="label">UID</span>
-          <span class="value" v-bk-overflow-tips>{{ metadata.uid }}</span>
+          <span class="value select-all" v-bk-overflow-tips>{{ metadata.uid }}</span>
         </div>
         <div class="info-item">
           <span class="label">{{ $t('cluster.labels.createdAt') }}</span>
@@ -123,7 +123,13 @@
               </template>
             </bk-table-column>
             <bk-table-column :label="$t('container.label.restartCnt')" prop="restartCnt"></bk-table-column>
-            <bk-table-column :label="$t('k8s.image')" prop="image"></bk-table-column>
+            <bcs-table-column :label="$t('k8s.image')" min-width="200" show-overflow-tooltip>
+              <template #default="{ row }">
+                <span class="select-all">
+                  {{ row.image || '--' }}
+                </span>
+              </template>
+            </bcs-table-column>
             <bk-table-column
               :label="$t('generic.label.action')"
               width="200"
