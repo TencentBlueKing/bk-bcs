@@ -263,6 +263,7 @@ func (cm *ClusterManager) initModel() error {
 	password := cm.opt.Mongo.Password
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(cm.opt.Mongo.Address, ","),
+		Replicaset:            cm.opt.Mongo.Replicaset,
 		ConnectTimeoutSeconds: int(cm.opt.Mongo.ConnectTimeout),
 		Database:              cm.opt.Mongo.Database,
 		Username:              cm.opt.Mongo.Username,

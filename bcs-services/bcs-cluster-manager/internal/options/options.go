@@ -74,6 +74,7 @@ type TunnelConfig struct {
 // MongoConfig option for mongo
 type MongoConfig struct {
 	Address        string `json:"address"`
+	Replicaset     string `json:"replicaset"`
 	ConnectTimeout uint   `json:"connecttimeout"`
 	Database       string `json:"database"`
 	Username       string `json:"username"`
