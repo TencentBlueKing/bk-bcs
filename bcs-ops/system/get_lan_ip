@@ -58,7 +58,7 @@ _on_cloud() {
   elif curl -m 2 -ifs "${aws_meta_api}" >/dev/null; then
     meta_api="${aws_meta_api}"
   else
-    _on_baremetal $1
+    _on_baremetal "$1"
     return 0
   fi
 
@@ -67,7 +67,7 @@ _on_cloud() {
   if [[ -n $LAN_IP ]]; then
     echo "$LAN_IP"
   else
-    _on_baremetal
+    _on_baremetal "$1"
   fi
   return 0
 }
