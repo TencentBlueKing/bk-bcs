@@ -269,28 +269,45 @@ install_tools() {
 set_time_sync() {
     curr=$(date +'%Y-%m-%d %H:%M')
     OFFSET_TIME=$(ntpdate -q cn.pool.ntp.org | grep ntpdate | awk -F 'offset' '{print $2}' | awk '{print $1}' | cut -d '-' -f2 | awk -F "." '{print $1}')
+    if [ -z "$OFFSET_TIME" ];then
+      OFFSET_TIME=$(chronyc tracking|grep "System time"|awk ' { print $4 } '| awk -F "." '{print $1}')
+    fi
+    if [ -z "$OFFSET_TIME" ];then
+      error "│   └──[FAIL] => $1 : 当前主机时间偏移获取失败"
+      return
+    fi
+
     if [ $OFFSET_TIME -ge 3 ]; then
-        ntpdate $NTP_SEVER >/dev/null
-        mv /etc/chrony.conf /etc/chrony.conf.$BACKUPTIME
-        cat >>"/etc/chrony.conf" <<EOF
-    server $NTP_SEVER iburst
-    driftfile /var/lib/chrony/drift
-    allow 0.0.0.0/0
-    makestep 1.0 3
-    rtcsync
-    local stratum 10
-    logdir /var/log/chrony
-    EOF
-        systemctl stop chronyd >/dev/null
-        systemctl start chronyd >/dev/null
-        sleep 5
-        systemctl stop chronyd
-        systemctl start chronyd
-        chronyc -a makestep >/dev/null
-        timedatectl set-ntp yes
+        if ! ntpdate $NTP_SEVER >/dev/null;then
+          mv /etc/chrony.conf /etc/chrony.conf.$BACKUPTIME
+          cat >>"/etc/chrony.conf" <<EOF
+server $NTP_SEVER iburst
+driftfile /var/lib/chrony/drift
+allow 0.0.0.0/0
+makestep 1.0 3
+rtcsync
+local stratum 10
+logdir /var/log/chrony
 EOF
+          systemctl stop chronyd >/dev/null
+          systemctl start chronyd >/dev/null
+          sleep 5
+          systemctl stop chronyd
+          systemctl start chronyd
+          chronyc -a makestep >/dev/null
+          timedatectl set-ntp yes
+        fi
+
         nowtime=$(date +'%Y-%m-%d %H:%M')
         OFFSET_TIME=$(ntpdate -q cn.pool.ntp.org | grep ntpdate | awk -F 'offset' '{print $2}' | awk '{print $1}' | cut -d '-' -f2 | awk -F "." '{print $1}')
+        if [ -z "$OFFSET_TIME" ];then
+          OFFSET_TIME=$(chronyc tracking|grep "System time"|awk ' { print $4 } '| awk -F "." '{print $1}')
+        fi
+        if [ -z "$OFFSET_TIME" ];then
+          error "│   └──[FAIL] => $1 : 当前主机时间偏移获取失败"
+          return
+        fi
+
         if [ $OFFSET_TIME -ge 3 ]; then
             error "│   └──[FAIL] => $1 : 当前时间($nowtime).主机时间与时间服务器不一致"
         else
