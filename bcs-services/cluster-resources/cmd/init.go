@@ -491,6 +491,7 @@ func (crSvc *clusterResourcesService) initModel() error {
 	// init mongo options
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(crSvc.conf.Mongo.Address, ","),
+		Replicaset:            crSvc.conf.Mongo.Replicaset,
 		ConnectTimeoutSeconds: int(crSvc.conf.Mongo.ConnectTimeout),
 		AuthDatabase:          crSvc.conf.Mongo.AuthDatabase,
 		Database:              crSvc.conf.Mongo.Database,
