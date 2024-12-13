@@ -1,6 +1,7 @@
 {
     "mongo": {
         "address": "${bcsClusterManagerMongoAddress}",
+        "replicaset": "${bcsClusterManagerMongoReplicaset}",
         "connecttimeout": ${bcsClusterManagerMongoConnectTimeout},
         "database": "${bcsClusterManagerMongoDatabase}",
         "username": "${bcsClusterManagerMongoUsername}",
