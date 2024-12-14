@@ -270,7 +270,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 				tmpEndPort = int(p + item.GetSegmentLength() - 1)
 			}
 			tmpName := common.GetListenerNameWithProtocol(lbID, protocol, int(tmpStartPort), tmpEndPort)
-			listener, ok := listenerMap[tmpName]
+			li, ok := listenerMap[tmpName]
 			if !ok {
 				notReady = true
 				if inErr := ppih.K8sClient.Create(context.Background(), ppih.generateListener(
@@ -279,6 +279,7 @@ func (ppih *PortPoolItemHandler) ensureListeners(region, lbID string, item *nete
 					blog.Warnf("create listener %s failed, err %s", tmpName, inErr.Error())
 				}
 			} else {
+				listener := li.DeepCopy()
 				if !checkListenerLabels(listener.Labels, ppih.PortPoolName,
 					item.ItemName) || !reflect.DeepEqual(listener.Spec.Certificate,
 					item.Certificate) || !reflect.DeepEqual(listener.

@@ -62,8 +62,8 @@ func NewListenerBypassReconciler(client client.Client, lbIDCache *gocache.Cache,
 func (lc *ListenerBypassReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	metrics.IncreaseEventCounter("listener-bypass", metrics.EventTypeUnknown)
 
-	listener := &networkextensionv1.Listener{}
-	if err := lc.Client.Get(context.TODO(), req.NamespacedName, listener); err != nil {
+	li := &networkextensionv1.Listener{}
+	if err := lc.Client.Get(context.TODO(), req.NamespacedName, li); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -73,6 +73,7 @@ func (lc *ListenerBypassReconciler) Reconcile(req ctrl.Request) (ctrl.Result, er
 			RequeueAfter: 5 * time.Second,
 		}, nil
 	}
+	listener := li.DeepCopy()
 
 	if listener.DeletionTimestamp != nil {
 		if !common.ContainsString(listener.Finalizers, constant.FinalizerNameUptimeCheck) {

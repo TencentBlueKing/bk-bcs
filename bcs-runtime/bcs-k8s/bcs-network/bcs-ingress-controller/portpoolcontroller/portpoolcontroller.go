@@ -15,6 +15,7 @@ package portpoolcontroller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"time"
@@ -187,16 +188,76 @@ func (ppr *PortPoolReconciler) initPortPoolCache() error {
 			}
 		}
 	}
+	portBindingMap := make(map[string]struct{})
 	bindingItemList := &networkextensionv1.PortBindingList{}
 	if err := ppr.k8sClient.List(context.Background(), bindingItemList); err != nil {
 		return fmt.Errorf("list port binding list failed, err %s", err.Error())
 	}
 	for _, portBinding := range bindingItemList.Items {
+		portBindingMap[fmt.Sprintf("%s/%s", portBinding.GetNamespace(), portBinding.GetName())] = struct{}{}
 		for _, bindingItem := range portBinding.Spec.PortBindingList {
 			ppr.poolCache.SetPortBindingUsed(bindingItem, portBinding.GetPortBindingType(),
 				portBinding.GetNamespace(), portBinding.GetName())
 		}
 	}
+
+	if err := ppr.setUsedPortForPod(portBindingMap); err != nil {
+		return fmt.Errorf("set used port for pod failed, err %s", err.Error())
+	}
+	if err := ppr.setUsedPortForNode(portBindingMap); err != nil {
+		return fmt.Errorf("set used port for node failed, err %s", err.Error())
+	}
+
+	return nil
+}
+
+func (ppr *PortPoolReconciler) setUsedPortForPod(portBindingMap map[string]struct{}) error {
+	podList := &k8scorev1.PodList{}
+	if err := ppr.k8sClient.List(context.Background(), podList); err != nil {
+		return fmt.Errorf("list pod list failed, err %s", err.Error())
+	}
+	for _, pod := range podList.Items {
+		if bindingItemStr, bok := pod.Annotations[constant.AnnotationForPortPoolBindings]; bok {
+			if _, ok := portBindingMap[fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())]; !ok {
+				// pod上已经分配了端口， 但还未生成portbinding
+				var bindItemList []*networkextensionv1.PortBindingItem
+				if err := json.Unmarshal([]byte(bindingItemStr), &bindItemList); err != nil {
+					return fmt.Errorf("unmarshal port binding item failed, err %s", err.Error())
+				}
+
+				for _, bindingItem := range bindItemList {
+					ppr.poolCache.SetPortBindingUsed(bindingItem, networkextensionv1.PortBindingTypePod,
+						pod.GetNamespace(), pod.GetName())
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (ppr *PortPoolReconciler) setUsedPortForNode(portBindingMap map[string]struct{}) error {
+	nodeList := &k8scorev1.NodeList{}
+	if err := ppr.k8sClient.List(context.Background(), nodeList); err != nil {
+		return fmt.Errorf("list node list failed, err %s", err.Error())
+	}
+	for _, node := range nodeList.Items {
+		if bindingItemStr, bok := node.Annotations[constant.AnnotationForPortPoolBindings]; bok {
+			if _, ok := portBindingMap[fmt.Sprintf("%s/%s", ppr.opts.NodePortBindingNs, node.GetName())]; !ok {
+				// node上已经分配了端口， 但还未生成portbinding
+				var bindItemList []*networkextensionv1.PortBindingItem
+				if err := json.Unmarshal([]byte(bindingItemStr), &bindItemList); err != nil {
+					return fmt.Errorf("unmarshal port binding item failed, err %s", err.Error())
+				}
+
+				for _, bindingItem := range bindItemList {
+					ppr.poolCache.SetPortBindingUsed(bindingItem, networkextensionv1.PortBindingTypeNode,
+						ppr.opts.NodePortBindingNs, node.GetName())
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
