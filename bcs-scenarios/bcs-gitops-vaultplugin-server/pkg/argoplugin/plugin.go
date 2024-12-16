@@ -16,10 +16,12 @@ package argoplugin
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/argoproj-labs/argocd-vault-plugin/pkg/types"
 	"github.com/hashicorp/vault/api"
+	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-vaultplugin-server/pkg/secret"
@@ -65,6 +67,16 @@ func (v *VaultArgoPlugin) Login() error {
 func (v *VaultArgoPlugin) GetSecrets(kvpath string, version string,
 	annotations map[string]string) (map[string]interface{}, error) {
 	_, secretPath := common.ParseKvPath(kvpath)
+	if version != "" {
+		ver, err := strconv.Atoi(version)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("Get secret version [%s] error", version))
+		}
+		return v.secretManager.GetSecretWithVersion(context.Background(), &secret.SecretRequest{
+			Project: v.project,
+			Path:    secretPath,
+		}, ver)
+	}
 	return v.secretManager.GetSecret(context.Background(), &secret.SecretRequest{
 		Project: v.project,
 		Path:    secretPath,
