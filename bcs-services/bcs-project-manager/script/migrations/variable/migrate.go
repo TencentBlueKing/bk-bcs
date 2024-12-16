@@ -60,10 +60,11 @@ var (
 	ccDBName string
 
 	// bcs mongodb config
-	mongoAddr   string
-	mongoUser   string
-	mongoPwd    string
-	mongoDBName string
+	mongoAddr       string
+	mongoReplicaset string
+	mongoUser       string
+	mongoPwd        string
+	mongoDBName     string
 
 	// db instance
 	ccDB   *gorm.DB
@@ -88,6 +89,7 @@ func parseFlags() {
 
 	// mongo for bcs-project-manager
 	flag.StringVar(&mongoAddr, "mongo_addr", "", "mongo address")
+	flag.StringVar(&mongoReplicaset, "mongo_replicaset", "", "mongo replicaset")
 	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
 	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
 	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
