@@ -50,7 +50,7 @@ feature_flags:
 | SERVICEACCOUNT               |
 | HORIZONTALPODAUTOSCALER      |
 | CRD                          |
-| CUSTOM_RESOURCE              |
+| CUSTOM_GAME_RESOURCE              |
 | GAMEDEPLOYMENT               |
 | GAMESTATEFULSET              |
 | HOOKTEMPLATE                 |

@@ -58,7 +58,7 @@ export const parseUrl = (reqMethod, url, body = {}) => {
       newUrl = newUrl.replace(`/${key}`, '');
     }
     // todo 重名问题
-    newUrl = newUrl.replace(new RegExp(`\\${key}`, 'g'), variableData[key]);
+    newUrl = newUrl.replace(new RegExp(`\\${key}\\b`, 'g'), variableData[key]);
     // 删除URL上的参数
     delete params[key];
   });

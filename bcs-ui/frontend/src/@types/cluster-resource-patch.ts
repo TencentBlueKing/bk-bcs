@@ -32,6 +32,7 @@ export interface IListTemplateMetadataItem {
   draftVersion: string
   isDraft: boolean
   draftEditFormat: 'form' | 'yaml'
+  renderMode: string
 }
 
 export interface ITemplateVersionItem {
@@ -49,6 +50,7 @@ export interface ITemplateVersionItem {
   'latest': boolean
   'latestDeployVersion': string
   'latestDeployer': string
+  'renderMode': string
 }
 
 export interface IVarItem {

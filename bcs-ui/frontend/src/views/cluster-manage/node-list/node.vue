@@ -1164,7 +1164,6 @@ export default defineComponent({
       retryTask,
       setNodeLabels,
       batchDeleteNodes,
-      taskDetail,
       getAllNodeOverview,
     } = useNode();
 
@@ -1541,7 +1540,7 @@ export default defineComponent({
       title, subTitle, callback,
     }: {
       title: TranslateResult;
-      subTitle: TranslateResult;
+      subTitle?: TranslateResult;
       callback: Function;
     }) => {
       $bkInfo({
@@ -1560,7 +1559,6 @@ export default defineComponent({
     const handleStopNode = (row) => {
       bkComfirmInfo({
         title: $i18n.t('generic.button.cordon.title', { ip: row.nodeName }),
-        subTitle: $i18n.t('generic.button.cordon.subTitle'),
         callback: async () => {
           const result = await handleCordonNodes({
             clusterID: row.cluster_id,

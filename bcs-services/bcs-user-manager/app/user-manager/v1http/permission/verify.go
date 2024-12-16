@@ -401,7 +401,8 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	}
 
 	// get project id
-	if clusterType == Shared && actionID != namespace.NameSpaceView.String() {
+	if clusterType == Shared && (actionID != namespace.NameSpaceView.String() &&
+		actionID != namespace.NameSpaceList.String()) {
 		return false, fmt.Errorf("verifyUserNamespacePermission shared cluster[%s] not support %s permission %s",
 			resource.ClusterID, namespaceScopedType, actionID)
 	}
@@ -498,7 +499,8 @@ func (cli *PermVerifyClient) verifyClientNSScopedPermission(ctx context.Context,
 }
 
 // getProjectFromResource
-func (cli *PermVerifyClient) getProjectFromResource(ctx context.Context, resource ClusterResource) (*component.Project, error) {
+func (cli *PermVerifyClient) getProjectFromResource(
+	ctx context.Context, resource ClusterResource) (*component.Project, error) {
 	if resource.ClusterID == "" {
 		return nil, fmt.Errorf("resource clusterID is null")
 	}

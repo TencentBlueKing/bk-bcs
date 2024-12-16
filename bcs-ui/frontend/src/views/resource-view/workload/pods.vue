@@ -59,7 +59,8 @@
           goNamespace,
           handleFilterChange,
           isViewEditable,
-          isClusterMode
+          isClusterMode,
+          sourceTypeMap
         }">
         <bk-table
           :data="curPageData"
@@ -145,13 +146,11 @@
               <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
             </template>
           </bk-table-column>
-          <bk-table-column :label="$t('generic.label.source')" show-overflow-tooltip>
+          <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
             <template #default="{ row }">
-              <span v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
-                {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
-                  handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
-              </span>
-              <span v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+              <sourceTableCell
+                :row="row"
+                :source-type-map="sourceTypeMap" />
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -201,6 +200,7 @@
 import { cloneDeep } from 'lodash';
 import { computed, defineComponent, ref, watch } from 'vue';
 
+import sourceTableCell from '../common/source-table-cell.vue';
 import NsSelect from '../view-manage/ns-select.vue';
 import useViewConfig from '../view-manage/use-view-config';
 
@@ -215,7 +215,7 @@ import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'WorkloadPods',
-  components: { BaseLayout, StatusIcon, BcsLog, NsSelect },
+  components: { BaseLayout, StatusIcon, BcsLog, NsSelect, sourceTableCell },
   setup() {
     // 显示日志
     const showLog = ref(false);

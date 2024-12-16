@@ -69,6 +69,7 @@ func main() { // nolint
 	flag.String("bcslog_backtraceat", "", "when logging hits line file:N, emit a stack trace")
 	// mongo config
 	flag.String("mongo_address", "127.0.0.1:27017", "mongo server address")
+	flag.String("mongo_replicaset", "", "mongo replica set name")
 	flag.Uint("mongo_connecttimeout", 3, "mongo server connnect timeout")
 	flag.String("mongo_database", "", "database in mongo for cluster manager")
 	flag.String("mongo_username", "", "mongo username for cluster manager")

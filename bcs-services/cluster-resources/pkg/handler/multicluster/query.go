@@ -88,6 +88,7 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 	if err != nil {
 		return nil, err
 	}
+	resources = ApplyFilter(resources, q.ViewFilter.CreateSourceFilter)
 	// 第二次过滤
 	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
 		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter,

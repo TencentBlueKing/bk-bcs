@@ -21,6 +21,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/types"
 )
 
 func init() {
@@ -287,4 +288,26 @@ func (c *Cluster) SwitchClusterNetwork(
 func (c *Cluster) CheckClusterNetworkStatus(cloudID string,
 	opt *cloudprovider.CheckClusterNetworkStatusOption) (bool, error) {
 	return false, cloudprovider.ErrCloudNotImplemented
+}
+
+// UpdateCloudKubeConfig update cloud kube config
+func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
+	opt *cloudprovider.UpdateCloudKubeConfigOption) error {
+	if kubeConfig == "" {
+		return fmt.Errorf("kubeConfig is empty")
+	}
+
+	config, err := types.GetKubeConfigFromYAMLBody(false, types.YamlInput{
+		YamlContent: kubeConfig,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = cloudprovider.UpdateClusterCredentialByConfig(opt.Cluster.ClusterID, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

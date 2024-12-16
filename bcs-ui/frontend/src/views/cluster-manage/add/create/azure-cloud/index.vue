@@ -91,6 +91,7 @@
             :master-login="clusterData.nodeSettings ? clusterData.nodeSettings.masterLogin : undefined"
             :manage-type="clusterData.manageType"
             :resource-group-name="clusterData.extraInfo?.clusterResourceGroup"
+            :bk-cloud-i-d="clusterData?.clusterBasicSettings?.area?.bkCloudID"
             ref="nodesRef"
             @pre="preStep"
             @next="nextStep"

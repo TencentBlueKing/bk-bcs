@@ -17,7 +17,8 @@
           <version-selector
             v-model="formData.templateVersions"
             :id="id"
-            on-draft />
+            on-draft
+            @change="handleChange" />
         </bk-form-item>
         <bk-form-item
           property="namespace"
@@ -183,7 +184,7 @@ import versionSelector from '../components/version-selector.vue';
 
 import Namespace from './namespace-v2.vue';
 
-import { IListTemplateMetadataItem, IPreviewItem, IVarItem } from '@/@types/cluster-resource-patch';
+import { IListTemplateMetadataItem, IPreviewItem, ITemplateVersionItem, IVarItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
 import AiAssistant from '@/components/ai-assistant.vue';
 import FormGroup from '@/components/form-group.vue';
@@ -305,6 +306,10 @@ async function listTemplateFileVariables() {
 }
 
 // 部署
+const curVersionData = ref<ITemplateVersionItem>();
+function handleChange(versionData) {
+  curVersionData.value = versionData;
+}
 async function handleDeployTemplateFile() {
   const validate = await formRef.value?.validate().catch(() => false);
   if (!validate) return;

@@ -324,6 +324,7 @@ type CreateBCSCollectorReq struct {
 	AddPodLabel           bool               `json:"add_pod_label"`
 	ExtraLabels           []Label            `json:"extra_labels,omitempty"`
 	LogRuleContainer      []LogRuleContainer `json:"config"`
+	Username              string             `json:"-"`
 }
 
 // String get req json string
@@ -363,6 +364,7 @@ type UpdateBCSCollectorReq struct {
 	AddPodLabel           bool               `json:"add_pod_label"`
 	ExtraLabels           []Label            `json:"extra_labels"`
 	LogRuleContainer      []LogRuleContainer `json:"config"`
+	Username              string             `json:"-"`
 }
 
 // String get req json string

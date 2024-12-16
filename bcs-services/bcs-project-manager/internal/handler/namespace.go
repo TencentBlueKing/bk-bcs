@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	authnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	spb "google.golang.org/protobuf/types/known/structpb"
 
 	na "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/actions/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/auth"
@@ -227,6 +228,19 @@ func sortNamespaces(list []*proto.NamespaceData) []*proto.NamespaceData {
 	retData = append(retData, deleting...)
 	retData = append(retData, exists...)
 	return retData
+}
+
+// ListNativeNamespacesContent implement for ListNativeNamespacesContent interface
+func (p *NamespaceHandler) ListNativeNamespacesContent(ctx context.Context,
+	req *proto.ListNativeNamespacesContentRequest, resp *spb.Struct) error {
+	action, err := na.NewNamespaceFactory(p.model).Action(req.GetClusterID(), req.ProjectIDOrCode)
+	if err != nil {
+		logging.Error("get namespace client for cluster %s from client factory failed, err: %s",
+			req.GetClusterID(), err.Error())
+		return err
+	}
+
+	return action.ListNativeNamespacesContent(ctx, req, resp)
 }
 
 // DeleteNamespace implement for DeleteNamespace interface

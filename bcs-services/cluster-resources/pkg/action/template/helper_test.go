@@ -77,7 +77,7 @@ func TestParseTemplateFileVar(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		actual := parseTemplateFileVar(c.input)
+		actual := parseTemplateFileVar(c.input, "")
 		if !reflect.DeepEqual(actual, c.expect) {
 			t.Errorf("input: %s, expect: %v, actual: %v", c.input, c.expect, actual)
 		}

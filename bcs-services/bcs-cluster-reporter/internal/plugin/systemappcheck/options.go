@@ -50,7 +50,7 @@ func (o *Options) Validate() error {
 	// }
 
 	if o.Namespaces == nil || len(o.Namespaces) == 0 {
-		o.Namespaces = []string{"kube-system", "default", "bk-system", "bcs-system", "bkmonitor-operator"}
+		o.Namespaces = []string{"kube-system", "bk-system", "bcs-system", "bkmonitor-operator"}
 	}
 
 	if o.Components != nil {
@@ -59,10 +59,6 @@ func (o *Options) Validate() error {
 				Namespace: "kube-system",
 				Name:      "kube-proxy",
 				Resource:  "daemonset",
-			}, {
-				Namespace: "kube-system",
-				Name:      "kube-dns",
-				Resource:  "deployment",
 			}, {
 				Namespace: "kube-system",
 				Name:      "coredns",
@@ -89,10 +85,6 @@ func (o *Options) Validate() error {
 				Namespace: "kube-system",
 				Name:      "kube-proxy",
 				Resource:  "daemonset",
-			}, {
-				Namespace: "kube-system",
-				Name:      "kube-dns",
-				Resource:  "deployment",
 			}, {
 				Namespace: "kube-system",
 				Name:      "coredns",

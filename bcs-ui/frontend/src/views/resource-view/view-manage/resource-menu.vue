@@ -1,6 +1,9 @@
 <template>
   <div
-    :class="[!openSideMenu ? 'w-[60px]' : '']"
+    :class="[
+      !openSideMenu ? 'w-[60px]' : '',
+      'overflow-x-hidden'
+    ]"
     @mouseenter="handleMenuMouseEnter"
     @mouseleave="handleMenuMouseLeave">
     <div
@@ -26,6 +29,25 @@
           v-else>
         </i>
       </div>
+      <div v-show="openSideMenu" class="flex-[0_0_auto] flex items-center justify-between px-[16px] pt-[16px] pb-[8px]">
+        <bk-checkbox
+          :true-value="true"
+          :false-value="false"
+          v-model="hideEmptyCountResourceMenu"
+          @change="handleToggleResourceMenuShow">
+          <span class="text-[12px]">{{ $t('view.button.onlyData') }}</span>
+        </bk-checkbox>
+        <span
+          :class="[
+            'flex items-center text-[#3A84FF] text-[12px]',
+            isLoading ? 'cursor-not-allowed' : 'cursor-pointer'
+          ]"
+          @click.stop="refreshMenu">
+          <LoadingIcon v-if="isLoading"></LoadingIcon>
+          <i v-else class="bcs-icon bcs-icon-reset mr-[5px] p-[2px]"></i>
+          <span>{{ $t('generic.log.button.refresh') }}</span>
+        </span>
+      </div>
       <!-- 菜单 -->
       <div class="side-menu-wrapper flex-1 overflow-y-auto">
         <bcs-navigation-menu
@@ -38,7 +60,7 @@
           :unique-opened="false"
           :default-active="activeMenu.id"
           :before-nav-change="handleBeforeNavChange"
-          :key="searchName"
+          :key="menuKey"
           class="resource-view-menu">
           <bcs-navigation-menu-item
             v-for="menu in clusterResourceMenus"
@@ -213,6 +235,21 @@ watch(searchName, () => {
 });
 
 const { menus, disabledMenuIDs, flatLeafMenus } = useMenu();
+// 只显示有数据的资源
+const hideEmptyCountResourceMenu = ref(localStorage.getItem('__BCS_RESOURCE_VIEW_MENU_HIDE__') === 'true');
+// 解决菜单渲染问题
+const randomKey = ref('');
+const menuKey = computed(() => `${searchName.value}-${hideEmptyCountResourceMenu.value}-${randomKey.value}`);
+// 切换菜单显示和隐藏
+function handleToggleResourceMenuShow(v: boolean) {
+  localStorage.setItem('__BCS_RESOURCE_VIEW_MENU_HIDE__', `${v}`);
+}
+// 刷新菜单
+function refreshMenu() {
+  if (isLoading.value) return;
+  handleGetCustomResourceDefinition();
+  handleGetMultiClusterResourcesCount();
+}
 // 左侧菜单
 const activeMenu = ref<Partial<IMenu>>({});
 // 所有叶子菜单项
@@ -220,24 +257,31 @@ const leafMenus = computed(() => flatLeafMenus(menus.value));
 // 一级菜单
 const clusterResourceMenus = computed<IMenu[]>(() => {
   const data = menus.value.find(item => item.id === 'CLUSTERRESOURCE')?.children || [];
-  // 资源名称搜索
-  const searchValue = searchName.value.toLocaleLowerCase();
   return data.reduce<IMenu[]>((pre, item) => {
     if (item.children?.length) {
       const newChildrenList = item.children
-        .filter(menu => menu.title?.toLocaleLowerCase()?.includes(searchValue));
+        .filter(menu => filterMenu(menu));
       if (newChildrenList.length) {
         pre.push({
           ...item,
           children: newChildrenList,
         });
       }
-    } else if (item.title?.toLocaleLowerCase()?.includes(searchValue)) {
+    } else if (filterMenu(item)) {
       pre.push(item);
     }
     return pre;
   }, []);
 });
+// 过滤菜单
+function filterMenu(menu: IMenu) {
+  const searchValue = searchName.value.toLocaleLowerCase();
+  if (hideEmptyCountResourceMenu.value) {
+    return menu?.title?.toLocaleLowerCase()?.includes(searchValue) && countMap.value[menu.meta?.kind] !== 0;
+  }
+  return menu?.title?.toLocaleLowerCase()?.includes(searchValue);
+}
+
 // 当前路由
 const route = computed(() => toRef(reactive($router), 'currentRoute').value);
 // 设置当前菜单ID
@@ -389,6 +433,12 @@ const handleGetMultiClusterResourcesCount = async () => {
     ...curViewData.value,
   });
 };
+watch(countMap, (newValue, oldValue) => {
+  // hack 修复count数量获取后菜单没有更新的异常
+  if (!isEqual(newValue, oldValue) && hideEmptyCountResourceMenu.value) {
+    randomKey.value = `${Math.random() * 10}`;
+  }
+});
 
 watch(curViewData, (newValue, oldValue) => {
   if (!curViewData.value || isEqual(newValue, oldValue)) return;

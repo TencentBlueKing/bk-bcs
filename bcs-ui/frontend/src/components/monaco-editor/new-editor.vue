@@ -39,6 +39,7 @@ export default defineComponent({
     fullScreen: { type: Boolean, default: false },
     isModelValue: { type: Boolean, default: false }, // 是否开启在value变化时自动更新编辑器值（不能和v-model同时使用，不然会出现编辑器一直跳到第一行）
     multiDocument: { type: Boolean, default: false }, // 是否支持多个yaml编辑
+    noValidate: { type: Boolean, default: false }, // 是否关闭校验
   },
   setup(props, ctx) {
     const {
@@ -55,6 +56,7 @@ export default defineComponent({
       fullScreen,
       isModelValue,
       multiDocument,
+      noValidate,
     } = toRefs(props);
 
     const tools = computed(() => {
@@ -72,6 +74,12 @@ export default defineComponent({
           // 触发一次yaml格式校验（原始字符串需要校验）
           let yamlToJson = {};
           if (multiDocument.value) {
+            // 不校验
+            if (noValidate.value) {
+              resolveValue = emitValue;
+              break;
+            }
+            // 这一行校验失败
             yamlToJson = yamljs.loadAll(emitValue) || [];
           } else {
             yamlToJson = yamljs.load(emitValue) || {};

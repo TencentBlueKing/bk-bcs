@@ -294,6 +294,35 @@ func (s *Syncer) SyncNodes(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, 
 	return err
 }
 
+func (s *Syncer) getBizidByProjectCode(projectCode string) (int64, error) {
+	// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
+	pmCli, err := s.GetProjectManagerGrpcGwClient()
+	if err != nil {
+		blog.Errorf("get project manager grpc gw client failed, err: %s", err.Error())
+		return 0, err
+	}
+	gpr := pmp.GetProjectRequest{
+		ProjectIDOrCode: projectCode,
+	}
+	project, errP := pmCli.Cli.GetProject(pmCli.Ctx, &gpr)
+	if errP != nil {
+		blog.Errorf("get project failed, err: %s", errP.Error())
+		return 0, errP
+	}
+
+	if project != nil && project.Data != nil && project.Data.BusinessID != "" {
+		bizid, errPP := strconv.ParseInt(project.Data.BusinessID, 10, 64)
+		if errPP != nil {
+			blog.Errorf("projectcode parse string err: %v", errPP)
+			return 0, errPP
+		}
+
+		blog.Infof("projectcode: %s, bizid: %d", projectCode, bizid)
+		return bizid, nil
+	}
+	return 0, errors.New("projectcode not found")
+}
+
 // SyncNamespaces sync namespaces
 // nolint funlen
 func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Cluster, db *gorm.DB) error {
@@ -301,6 +330,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 	storageCli, err := s.GetBcsStorageClient()
 	if err != nil {
 		blog.Errorf("get bcs storage client failed, err: %s", err.Error())
+		return err
 	}
 
 	// get namespace
@@ -348,15 +378,33 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 		}
 	}
 
-	// GetProjectManagerGrpcGwClient is a function that returns a project manager gRPC gateway client.
-	pmCli, err := s.GetProjectManagerGrpcGwClient()
-	if err != nil {
-		blog.Errorf("get project manager grpc gw client failed, err: %s", err.Error())
-		return nil
-	}
-
 	for k, v := range nsMap {
+		nsbizid := bkCluster.BizID
+		if projectCode, ok := v.Data.Annotations["io.tencent.bcs.projectcode"]; ok {
+			bizid, errP := s.getBizidByProjectCode(projectCode)
+			if errP != nil {
+				blog.Errorf("get bizid by projectcode err: %v", errP)
+			} else {
+				nsbizid = bizid
+			}
+		}
+
 		if _, ok := bkNsMap[k]; ok {
+			if bkNsMap[k].BizID != nsbizid {
+				err = s.DeleteAllByClusterAndNamespace(bkCluster, bkNsMap[k], db)
+				if err != nil {
+					blog.Errorf("delete namespace error: %v", err)
+					continue
+				}
+				if _, ok = nsToAdd[nsbizid]; ok {
+					nsToAdd[nsbizid] = append(nsToAdd[nsbizid], s.GenerateBkNsData(bkCluster, v))
+					blog.Infof("nsToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
+				} else {
+					nsToAdd[nsbizid] = []bkcmdbkube.Namespace{s.GenerateBkNsData(bkCluster, v)}
+					blog.Infof("nsToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
+				}
+				continue
+			}
 			// CompareNamespace compare bkns and k8sns
 			needToUpdate, updateData := s.CompareNamespace(bkNsMap[k], v)
 			if needToUpdate {
@@ -364,35 +412,11 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 				blog.Infof("nsToUpdate: %s+%s", bkCluster.Uid, v.Data.Name)
 			}
 		} else {
-			bizid := bkCluster.BizID
-			if projectCode, ok := v.Data.Annotations["io.tencent.bcs.projectcode"]; ok {
-				gpr := pmp.GetProjectRequest{
-					ProjectIDOrCode: projectCode,
-				}
-
-				if project, err := pmCli.Cli.GetProject(pmCli.Ctx, &gpr); err == nil {
-					if project != nil && project.Data != nil && project.Data.BusinessID != "" {
-						bizid, err = strconv.ParseInt(project.Data.BusinessID, 10, 64)
-						if err != nil {
-							blog.Errorf("projectcode parse string err: %v", err)
-						}
-					}
-				} else {
-					blog.Errorf("projectcode get project error : %v", err)
-				}
-
-				blog.Infof("projectcode: %s, bizid: %d", projectCode, bizid)
-			}
-
-			//if bizid != bkCluster.BizID {
-			//	bizid = int64(71)
-			//}
-
-			if _, ok = nsToAdd[bizid]; ok {
-				nsToAdd[bizid] = append(nsToAdd[bizid], s.GenerateBkNsData(bkCluster, v))
+			if _, ok = nsToAdd[nsbizid]; ok {
+				nsToAdd[nsbizid] = append(nsToAdd[nsbizid], s.GenerateBkNsData(bkCluster, v))
 				blog.Infof("nsToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
 			} else {
-				nsToAdd[bizid] = []bkcmdbkube.Namespace{s.GenerateBkNsData(bkCluster, v)}
+				nsToAdd[nsbizid] = []bkcmdbkube.Namespace{s.GenerateBkNsData(bkCluster, v)}
 				blog.Infof("nsToAdd: %s+%s", bkCluster.Uid, v.Data.Name)
 			}
 		}
@@ -5239,6 +5263,16 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 						Limit: 200,
 						Start: 0,
 					},
+					Filter: &client.PropertyFilter{
+						Condition: "AND",
+						Rules: []client.Rule{
+							{
+								Field:    "cluster_uid",
+								Operator: "in",
+								Value:    []string{bkCluster.Uid},
+							},
+						},
+					},
 				},
 				Kind: workloadType,
 			}, nil, false)
@@ -5284,6 +5318,137 @@ func (s *Syncer) DeleteAllByCluster(bkCluster *bkcmdbkube.Cluster) error {
 	blog.Infof("start delete all cluster: %s", bkCluster.Uid)
 	if errDC := s.deleteAllByClusterCluster(bkCluster); errDC != nil {
 		return errDC
+	}
+	blog.Infof("delete all cluster success: %s", bkCluster.Uid)
+	blog.Infof("delete all success: %s", bkCluster.Uid)
+	return nil
+}
+
+// DeleteAllByClusterAndNamespace clean by cluster and namespace
+// nolint
+func (s *Syncer) DeleteAllByClusterAndNamespace(bkCluster *bkcmdbkube.Cluster, bkNamespace *bkcmdbkube.Namespace, db *gorm.DB) error {
+	blog.Infof("start delete all: %s namespace: %s", bkCluster.Uid, bkNamespace.Name)
+	for {
+		got, err := s.CMDBClient.GetBcsPod(&client.GetBcsPodRequest{
+			CommonRequest: client.CommonRequest{
+				BKBizID: bkCluster.BizID,
+				Fields:  []string{"id"},
+				Page: client.Page{
+					Limit: 200,
+					Start: 0,
+				},
+				Filter: &client.PropertyFilter{
+					Condition: "AND",
+					Rules: []client.Rule{
+						{
+							Field:    "cluster_uid",
+							Operator: "in",
+							Value:    []string{bkCluster.Uid},
+						},
+						{
+							Field:    "namespace",
+							Operator: "in",
+							Value:    []string{bkNamespace.Name},
+						},
+					},
+				},
+			},
+		}, nil, false)
+		if err != nil {
+			blog.Errorf("GetBcsPod() error = %v", err)
+			return fmt.Errorf("GetBcsPod() error = %v", err)
+		}
+		podToDelete := make([]int64, 0)
+		for _, pod := range *got {
+			podToDelete = append(podToDelete, pod.ID)
+		}
+
+		if len(podToDelete) == 0 {
+			break
+		} else {
+			blog.Infof("delete pod: %v", podToDelete)
+			err := s.CMDBClient.DeleteBcsPod(&client.DeleteBcsPodRequest{
+				Data: &[]client.DeleteBcsPodRequestData{
+					{
+						BKBizID: &bkCluster.BizID,
+						IDs:     &podToDelete,
+					},
+				},
+			}, db)
+			if err != nil {
+				blog.Errorf("DeleteBcsPod() error = %v", err)
+				return fmt.Errorf("DeleteBcsPod() error = %v", err)
+			}
+		}
+	}
+	blog.Infof("delete all pod success: %s", bkCluster.Uid)
+
+	blog.Infof("start delete all workload: %s", bkCluster.Uid)
+	workloadTypes := []string{"deployment", "statefulSet", "daemonSet", "gameDeployment", "gameStatefulSet", "pods"}
+
+	for _, workloadType := range workloadTypes {
+		for {
+			got, err := s.CMDBClient.GetBcsWorkload(&client.GetBcsWorkloadRequest{
+				CommonRequest: client.CommonRequest{
+					BKBizID: bkCluster.BizID,
+					Fields:  []string{"id"},
+					Page: client.Page{
+						Limit: 200,
+						Start: 0,
+					},
+					Filter: &client.PropertyFilter{
+						Condition: "AND",
+						Rules: []client.Rule{
+							{
+								Field:    "cluster_uid",
+								Operator: "in",
+								Value:    []string{bkCluster.Uid},
+							},
+							{
+								Field:    "namespace",
+								Operator: "in",
+								Value:    []string{bkNamespace.Name},
+							},
+						},
+					},
+				},
+				Kind: workloadType,
+			}, nil, false)
+			if err != nil {
+				blog.Errorf("GetBcsWorkload() error = %v", err)
+				return fmt.Errorf("GetBcsWorkload() error = %v", err)
+			}
+			workloadToDelete := make([]int64, 0)
+			for _, workload := range *got {
+				workloadToDelete = append(workloadToDelete, (int64)(workload.(map[string]interface{})["id"].(float64)))
+			}
+
+			if len(workloadToDelete) == 0 {
+				break
+			} else {
+				blog.Infof("delete workload: %v", workloadToDelete)
+				err := s.CMDBClient.DeleteBcsWorkload(&client.DeleteBcsWorkloadRequest{
+					BKBizID: &bkCluster.BizID,
+					Kind:    &workloadType,
+					IDs:     &workloadToDelete,
+				}, db)
+				if err != nil {
+					blog.Errorf("DeleteBcsWorkload() error = %v", err)
+					return fmt.Errorf("DeleteBcsWorkload() error = %v", err)
+				}
+			}
+		}
+	}
+	blog.Infof("delete all workload success: %s", bkCluster.Uid)
+
+	blog.Infof("start delete all namespace: %s", bkCluster.Uid)
+	err := s.CMDBClient.DeleteBcsNamespace(&client.DeleteBcsNamespaceRequest{
+		BKBizID: &bkCluster.BizID,
+		IDs:     &[]int64{bkNamespace.ID},
+	}, db)
+	if err != nil {
+		blog.Errorf("DeleteBcsNamespace() error = %v", err)
+		return fmt.Errorf("DeleteBcsNamespace() error = %v", err)
 	}
 	blog.Infof("delete all cluster success: %s", bkCluster.Uid)
 	blog.Infof("delete all success: %s", bkCluster.Uid)

@@ -666,6 +666,11 @@
             {{row.task ? row.task.end : '--'}}
           </template>
         </bcs-table-column>
+        <bcs-table-column :label="$t('generic.label.execTime2')" width="180" show-overflow-tooltip>
+          <template #default="{ row }">
+            {{row?.task?.executionTime ? takesTimeFormat(row.task.executionTime) : '--'}}
+          </template>
+        </bcs-table-column>
         <bcs-table-column
           :label="$t('generic.label.status')"
           width="150"
@@ -764,7 +769,7 @@ import AutoScalerFormItem from './components/form-item.vue';
 import { updateClusterAutoScalingProviders } from '@/api/modules/cluster-manager';
 import { clusterOverview } from '@/api/modules/monitor';
 import $bkMessage from '@/common/bkmagic';
-import { copyText, formatBytes } from '@/common/util';
+import { copyText, formatBytes, takesTimeFormat } from '@/common/util';
 import { CheckType } from '@/components/across-check.vue';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
@@ -2059,6 +2064,7 @@ export default defineComponent({
       handleNodeFilterChange,
       searchIpData,
       handleClonePool,
+      takesTimeFormat,
     };
   },
 });

@@ -489,7 +489,34 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // noli
 		}
 	}
 
+	for _, projectQuota := range projectQuotas {
+		matchProjectAutoscalerQuotaByGroup(filterGroups, projectQuota)
+	}
+
 	return projectQuotas, nil
+}
+
+func matchProjectAutoscalerQuotaByGroup(groups []proto.NodeGroup, projectQuota *proto.ProjectAutoscalerQuota) {
+	if projectQuota.GetTotalGroupIds() == nil {
+		projectQuota.TotalGroupIds = make([]string, 0)
+	}
+
+	for _, group := range groups {
+		if group.Region != projectQuota.Region {
+			continue
+		}
+		if group.GetLaunchTemplate().GetInstanceType() != projectQuota.InstanceType {
+			continue
+		}
+
+		// 任意可用区 && 指定可用区
+		if group.GetAutoScaling().GetZones() == nil || len(group.GetAutoScaling().GetZones()) == 0 ||
+			(len(group.GetAutoScaling().Zones) == 1 && group.GetAutoScaling().Zones[0] == "") ||
+			utils.StringInSlice(projectQuota.Zone, group.GetAutoScaling().GetZones()) {
+			projectQuota.TotalGroupIds = append(projectQuota.TotalGroupIds, group.NodeGroupID)
+			continue
+		}
+	}
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit

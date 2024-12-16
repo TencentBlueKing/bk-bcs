@@ -377,6 +377,8 @@ export const TemplateSetService = {
   CollectFolder: (params?: ClusterResource.ListTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/space/$templateSpaceID/collects')(params, config),
   // 取消收藏文件夹
   UnCollectFolder: (params?: ClusterResource.ListTemplateMetadataReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('delete', '/clusterresources/v1/projects/$projectCode/template/space/$templateSpaceID/collects')(params, config),
+  // yaml转换为Helm
+  changeToHelm: (params?: ClusterResource.HelmTemplateReq, config?: IFetchConfig): Promise<ClusterResource.CommonResp extends { data: any } ? ClusterResource.CommonResp['data'] : ClusterResource.CommonResp> => request('post', '/clusterresources/v1/projects/$projectCode/template/helm')(params, config),
 };
 export const MultiClusterService = {
 // 获取多集群原生资源列表

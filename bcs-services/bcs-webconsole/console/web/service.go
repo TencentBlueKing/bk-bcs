@@ -86,7 +86,7 @@ func (s *service) ReplayFilesPageHandler(c *gin.Context) {
 	}
 	// 按照时间逆序排
 	sort.Slice(fileNames, func(i, j int) bool {
-		return fileNames[i] > fileNames[j]
+		return fileNames[i].FileName > fileNames[j].FileName
 	})
 	data := gin.H{
 		"folder_name":     folderName,

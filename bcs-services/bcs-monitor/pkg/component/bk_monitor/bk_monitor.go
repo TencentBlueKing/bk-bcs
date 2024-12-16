@@ -169,7 +169,7 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 		"end":    strconv.FormatInt(end, 10),
 	}
 
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +321,7 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]Metri
 		return cacheResult.([]MetricList), nil
 	}
 
-	authInfo, err := component.GetBKAPIAuthorization()
+	authInfo, err := component.GetBKAPIAuthorization("")
 	if err != nil {
 		return nil, err
 	}

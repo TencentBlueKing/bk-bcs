@@ -5,7 +5,7 @@
         curPageData, pageConf, statusMap, updateStrategyMap, handlePageChange, handlePageSizeChange,
         handleGetExtData, gotoDetail, handleSortChange,handleUpdateResource,handleDeleteResource,
         handleEnlargeCapacity, handleShowViewConfig, handleRestart, handleGotoUpdateRecord,
-        handleRollback, clusterNameMap, goNamespace, isViewEditable, isClusterMode
+        handleRollback, clusterNameMap, goNamespace, isViewEditable, isClusterMode, sourceTypeMap
       }">
       <bk-table
         :data="curPageData"
@@ -78,18 +78,11 @@
             <span>{{handleGetExtData(row.metadata.uid, 'creator') || '--'}}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.source')" show-overflow-tooltip>
+        <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
-              {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
-                handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
-            </span>
-            <span v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
-              {{ handleGetExtData(row.metadata.uid, 'chart')
-                ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
-                : 'Helm' }}
-            </span>
-            <span v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+            <sourceTableCell
+              :row="row"
+              :source-type-map="sourceTypeMap" />
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -166,12 +159,13 @@
 import { defineComponent } from 'vue';
 
 import StatusIcon from '../../../components/status-icon';
+import sourceTableCell from '../common/source-table-cell.vue';
 
 import LoadingIcon from '@/components/loading-icon.vue';
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'DashboardStateful',
-  components: { BaseLayout, StatusIcon, LoadingIcon },
+  components: { BaseLayout, StatusIcon, LoadingIcon, sourceTableCell },
 });
 </script>

@@ -37,6 +37,16 @@ interface IViewFilter {
     op: '='|'In'|'NotIn'|'Exists'|'DoesNotExist'
     values: string[]
   }>
+  createSource?: {
+    source: 'Template'|'Helm'|'Client'|'Web'|'',
+    template?: {
+      templateName: string,
+      templateVersion: string
+    },
+    chart?: {
+      chartName: string
+    }
+  }
 }
 
 interface IClusterNamespace {
@@ -56,9 +66,10 @@ interface IViewData {
   updateAt?: string
 }
 
+type ViewFilterID = 'clusterNamespaces'|'creator'|'labelSelector'|'name'|'createSource.source';
 interface IFieldItem {
   title: string
-  id: string
+  id: ViewFilterID
   status: 'added' | ''// added: 已经添加的条件, 空: 为添加的条件
   placeholder?: string
 }

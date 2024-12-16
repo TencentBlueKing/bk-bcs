@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep, get } from 'lodash';
 import { computed } from 'vue';
 
 import { MultiClusterResourcesType } from '../common/use-table-data';
@@ -12,6 +12,7 @@ import {
   viewConfigDetail,
   viewConfigList,
   viewConfigRename as viewConfigRenameApi } from '@/api/modules/cluster-resource';
+import { isDeepEmpty } from '@/common/util';
 import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -40,8 +41,8 @@ export default function () {
     if (tmpViewData) {
       // hack 过滤掉空字段（接口不能传一空数据）
       tmpViewData.filter = Object.keys(tmpViewData.filter || {}).reduce((pre, key) => {
-        const field = tmpViewData.filter;
-        if (!field[key]?.length) return pre;
+        const field = cloneDeep(tmpViewData.filter);
+        if (isDeepEmpty(get(field, key))) return pre;
 
         if (key === 'labelSelector') {
           pre[key] = field[key]?.filter(item => !!item.key); // 过滤空的标签

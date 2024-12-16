@@ -165,7 +165,7 @@ func (p *Plugin) Check() {
 				ItemName:   pluginName,
 				ItemTarget: nodeName,
 				Normal:     false,
-				Detail:     fmt.Sprintf("device %s revision is %s", device.Vendor.Name, device.Revision),
+				Detail:     fmt.Sprintf("device %s %s revision is %s", device.Vendor.Name, device.Address, device.Revision),
 				Status:     ffStatus,
 			})
 		}

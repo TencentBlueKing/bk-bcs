@@ -65,18 +65,11 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.source')" show-overflow-tooltip>
+        <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
-              {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
-                handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
-            </span>
-            <span v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
-              {{ handleGetExtData(row.metadata.uid, 'chart')
-                ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
-                : 'Helm' }}
-            </span>
-            <span v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+            <sourceTableCell
+              :row="row"
+              :source-type-map="sourceTypeMap" />
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -122,8 +115,9 @@
 <script lang="ts" setup>
 import yamljs from 'js-yaml';
 import { isEqual } from 'lodash';
-import { computed, onBeforeMount, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 
+import sourceTableCell from '../common/source-table-cell.vue';
 import useSearch from '../common/use-search';
 import { ISubscribeData } from '../common/use-subscribe';
 import useTableData from '../common/use-table-data';
@@ -223,6 +217,26 @@ const handleGetExtData = (uid: string, ext?: string, defaultData?: any) => {
   return ext ? (extData[ext] || defaultData) : extData;
 };
 
+// 来源类型
+const sourceTypeMap = ref({
+  Template: {
+    iconClass: 'bcs-icon bcs-icon-templete',
+    iconText: 'Template',
+  },
+  Helm: {
+    iconClass: 'bcs-icon bcs-icon-helm',
+    iconText: 'Helm',
+  },
+  Client: {
+    iconClass: 'bcs-icon bcs-icon-client',
+    iconText: 'Client',
+  },
+  Web: {
+    iconClass: 'bcs-icon bcs-icon-web',
+    iconText: 'Web',
+  },
+});
+
 // 详情侧栏
 const showDetailPanel = ref(false);
 // 当前详情行数据
@@ -266,6 +280,9 @@ const {
   searchSelectValue,
   searchSelectKey,
 } = useSearch();
+
+// 暴露方法
+provide('handleGetExtData', handleGetExtData);
 
 const { start, stop } = useInterval(() => handleGetTableData(false), 5000);
 onBeforeMount(() => {

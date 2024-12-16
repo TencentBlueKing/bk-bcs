@@ -3,6 +3,8 @@ IMAGE_REGISTRY = mirrors.tencent.com
 IMAGE_REPO = bcs-bkcmdb-synchronizer
 IMAGE_NAMESPACE = bcs
 COMPILE_DATE := $(shell date +"%Y-%m-%d")
+GOOS ?= linux
+GOARCH ?= amd64
 
 
 LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
@@ -23,7 +25,7 @@ tidy:
 	@go mod tidy
 
 synchronizer: tidy
-	@export CGO_ENABLED=1; GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o bin/${BIN} cmd/synchronizer/*.go
+	@export CGO_ENABLED=1; GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAG} -o bin/${BIN} cmd/synchronizer/*.go
 
 .PHONY: build
 build: clean synchronizer

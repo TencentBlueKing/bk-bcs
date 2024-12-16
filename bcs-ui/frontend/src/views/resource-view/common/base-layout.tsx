@@ -2,7 +2,7 @@
 import yamljs from 'js-yaml';
 import jp from 'jsonpath';
 import { isEqual } from 'lodash';
-import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, provide, ref, toRefs, watch } from 'vue';
 
 import NSSelect from '../view-manage/ns-select.vue';
 import useViewConfig from '../view-manage/use-view-config';
@@ -107,6 +107,26 @@ export default defineComponent({
       Recreate: $i18n.t('k8s.updateStrategy.reCreate'),
     });
 
+    // 来源类型
+    const sourceTypeMap = ref({
+      Template: {
+        iconClass: 'bcs-icon bcs-icon-templete',
+        iconText: 'Template',
+      },
+      Helm: {
+        iconClass: 'bcs-icon bcs-icon-helm',
+        iconText: 'Helm',
+      },
+      Client: {
+        iconClass: 'bcs-icon bcs-icon-client',
+        iconText: 'Client',
+      },
+      Web: {
+        iconClass: 'bcs-icon bcs-icon-web',
+        iconText: 'Web',
+      },
+    });
+
     const renderCrdHeader = (h, { column }) => {
       const additionalData = additionalColumns.value.find(item => item.name === column.label);
       return h('span', {
@@ -122,7 +142,13 @@ export default defineComponent({
         ],
       }, [column.label]);
     };
-    const getJsonPathValue = (row, path: string) => jp.value(row, path.indexOf('$') === 0 ? path : `$.${path}`);
+    const getJsonPathValue = (row, path: string) => {
+      try {
+        return jp.value(row, path?.indexOf('$') === 0 ? path : `$.${path}`);
+      } catch (_) {
+        return undefined;
+      }
+    };
     // 状态
     const statusMap = {
       normal: $i18n.t('generic.status.ready'),
@@ -354,9 +380,10 @@ export default defineComponent({
 
       // 从详情接口中获取全量数据
       if (category.value === 'custom_objects') {
+        const namespace = scope.value === 'Namespaced' ? row?.metadata?.namespace : '';
         curDetailRow.value.data = await handleGetCustomObjectDetail({
           name: row?.metadata?.name,
-          namespace: row?.metadata?.namespace,
+          namespace,
           clusterID: curDetailRow.value.extData?.clusterID,
         });
       } else {
@@ -602,6 +629,9 @@ export default defineComponent({
 
     const { start, stop } = useInterval(() => handleGetTableData(false), 5000);
 
+    // 通过provide暴露方法
+    provide('handleGetExtData', handleGetExtData);
+
     onMounted(async () => {
       isLoading.value = true;
       await handleGetTableData();
@@ -670,6 +700,7 @@ export default defineComponent({
       searchSelectValue,
       searchSelectKey,
       detailLoading,
+      sourceTypeMap,
     };
   },
   render() {
@@ -791,6 +822,7 @@ export default defineComponent({
                 goNamespace: this.goNamespace,
                 isViewEditable: this.isViewEditable,
                 isClusterMode: this.isClusterMode,
+                sourceTypeMap: this.sourceTypeMap,
               })
           }
         </div>
@@ -827,7 +859,7 @@ export default defineComponent({
                       }
                   </div>
                 ),
-                content: () => <div class="h-[calc(100vh-60px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
+                content: () => <div class="h-[calc(100vh-52px)] overflow-auto" v-bkloading={{ isLoading: this.detailLoading }}>
                   {
                     (this.detailType.active === 'overview'
                       ? (this.$scopedSlots.detail?.({

@@ -533,4 +533,7 @@ declare namespace ClusterResource {
   export interface ExportTemplateReq {
     templateSpaceNames: string[] // 模板空间名称
   }
+  export interface HelmTemplateReq {
+    content: string // 模板文件版本
+  }
 }

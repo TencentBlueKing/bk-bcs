@@ -14,6 +14,8 @@ syntax = "proto3";
 
 package bcsproject;
 
+option go_package = "./;bcsproject";
+
 import "google/api/annotations.proto";
 import "google/protobuf/wrappers.proto";
 import "protoc-gen-swagger/options/annotations.proto";
@@ -117,6 +119,16 @@ service BCSProject {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "查询开启容器服务的项目列表用于IAM授权"
       summary : "查询开启容器服务的项目列表用于IAM授权"
+    };
+  }
+
+  rpc GetProjectActive(GetProjectActiveRequest) returns (GetProjectActiveResponse) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectIDOrCode}/active"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询项目是否活跃"
+      summary : "查询项目是否活跃"
     };
   }
 }
@@ -591,6 +603,45 @@ message ListProjectsForIAMResp{
   }];
 }
 
+message GetProjectActiveRequest{
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProjectActiveRequest"
+      description : "查询项目是否活跃"
+    }
+  };
+  string projectIDOrCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "projectIDOrCode",
+    description: "项目ID或项目英文名"
+  }];
+}
+
+message GetProjectActiveResponse{
+  uint32 code = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code", 
+    description: "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description: "返回错误信息"
+  }];
+  ProjectActiveData data = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "data", 
+    description: "返回项目活跃信息"
+  }];
+  string requestID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "request id",
+    description: "请求 ID"
+  }];
+}
+
+message ProjectActiveData {
+  bool isActive = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "isActive",
+    description: "是否活跃"
+  }];
+}
+
 service Business {
   rpc GetBusiness(GetBusinessRequest) returns (GetBusinessResponse) {
     option (google.api.http) = {
@@ -880,6 +931,15 @@ service Namespace {
     option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
       description : "获取原生命名空间列表"
       summary : "获取原生命名空间列表"
+    };
+  }
+  rpc ListNativeNamespacesContent(ListNativeNamespacesContentRequest) returns (google.protobuf.Struct) {
+    option (google.api.http) = {
+      get : "/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取原生命名空间内容"
+      summary : "获取原生命名空间内容"
     };
   }
 }
@@ -1310,6 +1370,28 @@ message ListNativeNamespacesResponse {
     title : "web_annotations",
     description : "项目更多信息，主要是权限相关"
   }, json_name = "web_annotations"];
+}
+
+message ListNativeNamespacesContentRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListNativeNamespacesContentRequest"
+      description : "获取原生命名空间内容"
+      required : [
+        "projectIDOrCode",
+        "clusterID"
+      ]
+    }
+  };
+
+  string projectIDOrCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "projectIDOrCode", 
+    description: "项目ID或项目英文名, 为 '-' 则不校验项目信息"
+  }];
+  string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID", 
+    description: "集群ID"
+  }];
 }
 
 message DeleteNamespaceRequest {
@@ -2794,6 +2876,29 @@ message ProjectQuota {
     title: "provider",
     description: "云底层资源提供方"
   }];
+  repeated NodeGroup nodeGroups = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroups",
+    description: "相关nodeGroups"
+  }];
+}
+
+message NodeGroup {
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群ID"
+  }];
+  string nodeGroupId = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroupId",
+    description: "节点池ID"
+  }];
+  uint32 quotaNum = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaNum",
+    description: "机型申请的配额"
+  }];
+  uint32 quotaUsed = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaUsed",
+    description: "机型已使用的配额"
+  }];
 }
 
 message QuotaResource {
@@ -2860,11 +2965,15 @@ message InstanceTypeConfig {
     title: "quotaNum",
     description: "机型申请的配额"
   }];
-  DataDisk systemDisk = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  uint32 quotaUsed = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaUsed",
+    description: "机型已使用的配额"
+  }];
+  DataDisk systemDisk = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "systemDisk",
     description: "系统盘信息，BCS默认设置为高性能云盘，大小为50G"
   }];
-  repeated DataDisk dataDisks = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated DataDisk dataDisks = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dataDisks",
     description: "数据盘信息，无默认设置则不购买"
   }];
@@ -3073,6 +3182,10 @@ message ListProjectQuotasRequest{
   string quotaType = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quotaType",
     description: "资源类型(目前支持CA整机资源、共享集群维度资源)"
+  }];
+  string provider = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "provider",
+    description: "云底层资源提供方"
   }];
 }
 

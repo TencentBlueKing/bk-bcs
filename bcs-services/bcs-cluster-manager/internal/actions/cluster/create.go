@@ -304,7 +304,11 @@ func (ca *CreateAction) importClusterData(cls *cmproto.Cluster) error {
 		return err
 	}
 	blog.Infof("Cluster %s only create information", ca.req.ClusterID)
+
 	cls.Status = common.StatusRunning
+	if ca.req.GetStatus() != "" {
+		cls.Status = ca.req.GetStatus()
+	}
 
 	// save clusterInfo to DB
 	err = importClusterData(ca.model, cls)

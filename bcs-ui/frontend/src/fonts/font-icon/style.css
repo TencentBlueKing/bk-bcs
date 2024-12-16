@@ -938,9 +938,21 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-templete:before {
 	content: "\e23e";
 }
+.bcs-icon-shoucang:before {
+	content: "\e246";
+}
 .bcs-icon-operations:before {
 	content: "\e240";
 }
 .bcs-icon-xinjianwenjianjia:before {
 	content: "\e245";
+}
+.bcs-icon-shengji:before {
+	content: "\e247";
+}
+.bcs-icon-web:before {
+	content: "\e248";
+}
+.bcs-icon-client:before {
+	content: "\e249";
 }

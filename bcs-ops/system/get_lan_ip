@@ -49,8 +49,8 @@ error() {
 #######################################
 _on_cloud() {
   local qcloud_meta_api aws_meta_api
-  qcloud_meta_api="http://169.254.0.23/latest/meta-data"
-  aws_meta_api="http://169.254.169.254/latest/meta-data"
+  qcloud_meta_api="http://169.254.0.23/latest/meta-data/local-ipv4"
+  aws_meta_api="http://169.254.169.254/latest/meta-data/local-ipv4"
 
   local meta_api
   if curl -m 2 -qIfs "${qcloud_meta_api}" >/dev/null; then
@@ -58,16 +58,16 @@ _on_cloud() {
   elif curl -m 2 -ifs "${aws_meta_api}" >/dev/null; then
     meta_api="${aws_meta_api}"
   else
-    _on_baremetal $1
+    _on_baremetal "$1"
     return 0
   fi
 
-  LAN_IP="$(curl -ssf ${meta_api}/local-ipv4)"
+  LAN_IP="$(curl -ssf ${meta_api})"
 
   if [[ -n $LAN_IP ]]; then
     echo "$LAN_IP"
   else
-    _on_baremetal
+    _on_baremetal "$1"
   fi
   return 0
 }

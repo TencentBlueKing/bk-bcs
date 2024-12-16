@@ -56,7 +56,7 @@ const emits = defineEmits(['change', 'input']);
 
 const { getNamespaceData } = useNamespace();
 
-const nsData = ref([]);
+const nsData = ref<string[]>([]);
 const curNsData = computed(() => nsData.value.filter(item => !!item));// 过滤全部命名空间
 watch(() => props.value, () => {
   if (isEqual(props.value, curNsData.value)) return;

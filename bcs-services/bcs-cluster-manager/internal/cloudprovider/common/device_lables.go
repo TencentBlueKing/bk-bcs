@@ -131,7 +131,7 @@ func setNodeDeviceLabels(ctx context.Context, clusterID string, device *resource
 		return fmt.Errorf("device info empty")
 	}
 
-	if device.Labels == nil || len(device.Labels) == 0 {
+	if len(device.Labels) == 0 {
 		blog.Errorf("setNodeDeviceLabels[%s] device[%s] labels empty",
 			taskID, device.DeviceID)
 		return nil
@@ -173,7 +173,7 @@ func setNodeDeviceAnnotations(ctx context.Context, clusterID string, device *res
 		return fmt.Errorf("device info empty")
 	}
 
-	if device.Annotations == nil || len(device.Annotations) == 0 {
+	if len(device.Annotations) == 0 {
 		blog.Errorf("setNodeDeviceAnnotations[%s] device[%s] annotations empty",
 			taskID, device.DeviceID)
 		return nil

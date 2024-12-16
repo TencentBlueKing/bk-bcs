@@ -116,6 +116,41 @@
           :key="viewData.id"
           :cluster-namespaces="viewData.clusterNamespaces" />
       </template>
+      <template v-else-if="item.id === 'createSource.source'">
+        <bk-radio-group
+          class="mb-[8px]"
+          v-if="viewData.filter.createSource"
+          v-model="viewData.filter.createSource.source"
+          @change="handleSourceTypeChange">
+          <bk-radio-button value="Template">
+            <i class="bcs-icon bcs-icon-templete"></i>
+            <span class="text-[12px]">Template</span>
+          </bk-radio-button>
+          <bk-radio-button value="Helm">
+            <i class="bcs-icon bcs-icon-helm"></i>
+            <span class="text-[12px]">Helm</span>
+          </bk-radio-button>
+          <bk-radio-button class="!ml-[-2px]" value="Client">
+            <i class="bcs-icon bcs-icon-client"></i>
+            <span class="text-[12px]">Client</span>
+          </bk-radio-button>
+          <bk-radio-button value="Web">
+            <i class="bcs-icon bcs-icon-web"></i>
+            <span class="text-[12px]">Web</span>
+          </bk-radio-button>
+        </bk-radio-group>
+        <bcs-input
+          v-if="viewData.filter.createSource?.source
+            && ['Template', 'Helm'].includes(viewData.filter.createSource.source)"
+          :value="sourceValue"
+          clearable
+          :placeholder="
+            viewData.filter.createSource.source === 'Template'
+              ? $t('view.placeholder.searchTemplate')
+              : $t('view.placeholder.searchHelm')"
+          @change="handleSourceChange">
+        </bcs-input>
+      </template>
       <template v-else>
         <bcs-input v-model.trim="viewData.filter[item.id]" clearable :placeholder="item.placeholder"></bcs-input>
       </template>
@@ -143,7 +178,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { cloneDeep, isEqual, merge } from 'lodash';
+import { cloneDeep, get, isEqual, merge, set } from 'lodash';
 import { computed, PropType, ref, watch } from 'vue';
 
 import BkUserSelector from '@blueking/user-selector';
@@ -185,8 +220,28 @@ const addFieldPopoverRef = ref();
 // 视图数据
 const viewData = ref<IViewData>({
   name: '',
-  filter: {},
+  filter: {
+    createSource: {
+      source: '',
+    },
+  },
   clusterNamespaces: [],
+});
+// 来源输入框
+const sourceValue = computed(() => {
+  const source = viewData.value?.filter?.createSource?.source;
+
+  // helm来源
+  if (source === 'Helm') {
+    return viewData.value.filter?.createSource?.chart?.chartName;
+  }
+  // template来源，拼接版本数据
+  if (source === 'Template') {
+    const template = viewData.value.filter?.createSource?.template;
+    return `${template?.templateName}${template?.templateVersion ? `:${template?.templateVersion}` : ''}`;
+  }
+  // 其他来源
+  return '';
 });
 const displayClusterNamespaces = computed(() => {
   if (!viewData.value.clusterNamespaces?.length) {
@@ -220,6 +275,11 @@ const fieldList = ref<Array<IFieldItem>>([
     status: '',
     placeholder: $i18n.t('view.placeholder.resourceName'),
   },
+  {
+    title: $i18n.t('generic.label.source'),
+    id: 'createSource.source',
+    status: '',
+  },
 ]);
 const filterFieldList = computed(() => fieldList.value.filter(item => !item.status).sort((a, b) => {
   if (a.id < b.id) {
@@ -238,7 +298,7 @@ watch(fieldList, () => {
 // 重置临时条件
 const resetFieldListStatus = () => {
   fieldList.value.forEach((item) => {
-    if (viewData.value.filter?.[item.id]?.length) {
+    if (get(viewData.value.filter, item.id)?.length) {
       item.status = 'added';
     } else {
       item.status = '';
@@ -304,6 +364,10 @@ const handleAddField = (item: IFieldItem) => {
   const data = fieldList.value.find(data => data.id === item.id);
   if (data) {
     data.status = 'added';
+    // 来源字段设置默认值
+    if (data?.id === 'createSource.source' && !viewData.value.filter?.createSource?.source) {
+      set(viewData.value.filter, data?.id, 'Template');
+    }
     // 排序（新添加的总是排在最后）
     fieldList.value.sort((pre, current) => {
       if (current.id === item.id) {
@@ -319,16 +383,65 @@ const handleDeleteField = (item: IFieldItem) => {
   const data = fieldList.value.find(data => data.id === item.id);
   if (data) {
     data.status = '';
-    viewData.value.filter[item.id] = Array.isArray(viewData.value.filter[item.id]) ? [] : '';
+    const emptyValue = Array.isArray(get(viewData.value.filter, item.id)) ? [] : '';
+    set(viewData.value.filter, item.id, emptyValue);
   }
 };
+
+// 来源类型变更时重置数据
+function handleSourceTypeChange() {
+  if (viewData.value.filter.createSource?.template) {
+    viewData.value.filter.createSource.template = {
+      templateName: '',
+      templateVersion: '',
+    };
+  }
+
+  if (viewData.value.filter.createSource?.chart) {
+    viewData.value.filter.createSource.chart = { chartName: '' };
+  }
+}
+
+// 来源变更
+function handleSourceChange(v: string) {
+  if (!viewData.value.filter.createSource?.source) return;
+
+  if (viewData.value.filter.createSource.source === 'Template') {
+    // reverse为了方便取出最后分隔作为version
+    const [last, ...reset] = v?.split(':')?.reverse() || [];
+    if (reset?.length) {
+      viewData.value.filter.createSource.template = {
+        templateName: reset?.join(':'),
+        templateVersion: last,
+      };
+    } else {
+      viewData.value.filter.createSource.template = {
+        templateName: last,
+        templateVersion: '',
+      };
+    }
+  } else if (viewData.value.filter.createSource.source === 'Helm') {
+    viewData.value.filter.createSource.chart = { chartName: v || '' };
+  }
+}
 
 watch(() => props.data, () => {
   if (isEqual(props.data, viewData.value)) return;
 
   viewData.value = merge({
     name: '',
-    filter: {},
+    filter: {
+      createSource: {
+        source: '',
+        template: {
+          templateName: '',
+          templateVersion: '',
+        },
+        chart: {
+          chartName: '',
+        },
+      },
+    },
     clusterNamespaces: [],
   }, cloneDeep(props.data));
   resetFieldListStatus();
@@ -338,3 +451,13 @@ watch(viewData, () => {
   emits('change', viewData.value);
 }, { deep: true });
 </script>
+<style lang="postcss" scoped>
+/deep/ .bk-form-radio-button {
+  .bk-radio-button-text {
+    width: 88px;
+    height: 26px;
+    line-height: 26px;
+    padding: 0;
+  }
+}
+</style>

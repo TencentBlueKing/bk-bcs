@@ -142,20 +142,18 @@ func SetMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
 
 // DeleteMetric xxx
 func DeleteMetric(metricVec *prometheus.GaugeVec, gaugeVecSetList []*GaugeVecSet) {
-	wg := sync.WaitGroup{}
+	metricMap := make(map[string]string)
 	for _, gaugeVecSet := range gaugeVecSetList {
-		wg.Add(1)
-		go func(gaugeVecSet *GaugeVecSet) {
+		if _, ok := metricMap[strings.Join(gaugeVecSet.Labels, "-")]; ok {
+			continue
+		} else {
+			metricMap[strings.Join(gaugeVecSet.Labels, "-")] = strings.Join(gaugeVecSet.Labels, "-")
 			result := metricVec.DeleteLabelValues(gaugeVecSet.Labels...)
 			if !result {
 				klog.Error("delete metric result failed: ", result, metricVec, gaugeVecSet.Labels)
 			}
-
-			wg.Done()
-		}(gaugeVecSet)
+		}
 	}
-
-	wg.Wait()
 }
 
 // SetCommonDurationMetric xxx

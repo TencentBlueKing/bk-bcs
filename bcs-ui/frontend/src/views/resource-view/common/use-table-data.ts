@@ -98,7 +98,7 @@ export default function useTableData() {
   const getMultiClusterResources = async (params: MultiClusterResourcesType & {
     $kind: string
   }) => {
-    const res = await multiClusterResources(params, { needRes: true, cancelPrevious: true }).catch(() => ({
+    const res = await multiClusterResources(params, { needRes: true, cancelPrevious: false }).catch(() => ({
       data: {
         manifest: {},
         manifestExt: {},
@@ -113,7 +113,7 @@ export default function useTableData() {
   const getMultiClusterResourcesCRD = async (params: MultiClusterResourcesType & {
     $crd: string
   }) => {
-    const res = await multiClusterResourcesCRD(params, { needRes: true, cancelPrevious: true }).catch(() => ({
+    const res = await multiClusterResourcesCRD(params, { needRes: true, cancelPrevious: false }).catch(() => ({
       data: {
         manifest: {},
         manifestExt: {},
@@ -130,7 +130,7 @@ export default function useTableData() {
   }) => {
     const res = await multiClusterCustomResourceDefinition(
       params,
-      { needRes: true, cancelPrevious: true },
+      { needRes: true, cancelPrevious: false, cancelWhenRouteChange: false },
     ).catch(() => ({
       data: {
         manifest: {},
@@ -146,7 +146,7 @@ export default function useTableData() {
   const getMultiClusterResourcesCount = async (params: Omit<MultiClusterResourcesType, 'limit'|'offset'>) => {
     const data = await multiClusterResourcesCount(
       params,
-      { cancelPrevious: true, cancelWhenRouteChange: false },
+      { cancelPrevious: true },
     ).catch(() => ({}));
     return data as Record<string, number>;
   };

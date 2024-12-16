@@ -14,6 +14,10 @@
         <span class="text-[#313238] text-[12px]">
           {{ `${curProject.businessName}(${curProject.businessID})` }}
         </span>
+        <i
+          class="bcs-icon bcs-icon-fenxiang bcs-icon-btn text-[#3a84ff] flex-1 ml-[4px]"
+          @click="handleGotoCMDB">
+        </i>
       </bk-form-item>
     </bk-form>
   </BcsContent>
@@ -30,8 +34,15 @@ export default defineComponent({
   setup() {
     const { curProject } = useProject();
 
+    // 跳转CMDB
+    function handleGotoCMDB() {
+      if (!window.BK_CC_HOST || !curProject.value.businessID) return;
+      window.open(`${window.BK_CC_HOST}#/resource/business/details/${curProject.value.businessID}`);
+    }
+
     return {
       curProject,
+      handleGotoCMDB,
     };
   },
 });

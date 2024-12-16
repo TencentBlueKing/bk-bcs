@@ -10,6 +10,7 @@
  * limitations under the License.
  */
 
+// Package clustercredential xxx
 package clustercredential
 
 import (

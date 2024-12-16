@@ -30,7 +30,7 @@ import PopoverSelector from '@/components/popover-selector.vue';
 type DataSourceItem = {
   label: string;
   value: string;
-}
+};
 interface Props {
   value?: string | number
   disableVarList?: boolean
@@ -43,7 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
   value: () => '',
   disableVarList: () => false,
   type: () => 'text',
-  datasource: () => []
+  datasource: () => [],
 });
 const emits = defineEmits<Emits>();
 
@@ -58,14 +58,12 @@ function handleInput(v: string) {
     popoverRef.value?.show();
   }
 }
-const newDatasource = computed(() => props.datasource?.length
-  ? props.datasource.map(item => {
-      return {
-        key: item.value,
-        name: item.label
-      };
-    })
-  : fileStore.varList);
+const newDatasource = computed(() => (props.datasource?.length
+  ? props.datasource.map(item => ({
+    key: item.value,
+    name: item.label,
+  }))
+  : fileStore.varList));
 
 function handleSetVar(key: string) {
   emits('input', `{{ ${key} }}`);

@@ -6,7 +6,8 @@
         handlePageChange, handlePageSizeChange,
         handleGetExtData, handleShowDetail,
         handleSortChange,handleUpdateResource, isClusterMode,
-        handleDeleteResource, handleShowViewConfig,clusterNameMap, goNamespace, isViewEditable
+        handleDeleteResource, handleShowViewConfig,clusterNameMap,
+        goNamespace, isViewEditable, sourceTypeMap
       }">
       <bk-table
         :data="curPageData"
@@ -73,18 +74,11 @@
               {{ handleGetExtData(row.metadata.uid, 'age') }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="$t('generic.label.source')" show-overflow-tooltip>
+        <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
           <template #default="{ row }">
-            <span v-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Template'">
-              {{ `${handleGetExtData(row.metadata.uid, 'templateName') || '--'}:${
-                handleGetExtData(row.metadata.uid, 'templateVersion') || '--'}` }}
-            </span>
-            <span v-else-if="handleGetExtData(row.metadata.uid, 'createSource') === 'Helm'">
-              {{ handleGetExtData(row.metadata.uid, 'chart')
-                ?`${handleGetExtData(row.metadata.uid, 'chart') || '--'}`
-                : 'Helm' }}
-            </span>
-            <span v-else>{{ handleGetExtData(row.metadata.uid, 'createSource') }}</span>
+            <sourceTableCell
+              :row="row"
+              :source-type-map="sourceTypeMap" />
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.editMode.text')" width="100">
@@ -126,12 +120,14 @@
 <script>
 import { defineComponent } from 'vue';
 
+import sourceTableCell from '../common/source-table-cell.vue';
+
 import ServiceDetail from './service-detail.vue';
 
 import BaseLayout from '@/views/resource-view/common/base-layout';
 
 export default defineComponent({
   name: 'NetworkService',
-  components: { BaseLayout, ServiceDetail },
+  components: { BaseLayout, ServiceDetail, sourceTableCell },
 });
 </script>

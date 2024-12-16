@@ -27,7 +27,7 @@ import (
 )
 
 // NewCreateProjectQuotaTask build create project quota task
-func NewCreateProjectQuotaTask(quota bcsproject.ProjectQuota) task.TaskBuilder {
+func NewCreateProjectQuotaTask(quota *bcsproject.ProjectQuota) task.TaskBuilder {
 	return &createProjectQuota{
 		projectQuota: quota,
 	}
@@ -35,7 +35,7 @@ func NewCreateProjectQuotaTask(quota bcsproject.ProjectQuota) task.TaskBuilder {
 
 // createProjectQuota task
 type createProjectQuota struct {
-	projectQuota bcsproject.ProjectQuota
+	projectQuota *bcsproject.ProjectQuota
 }
 
 // Name 任务名称
@@ -79,7 +79,7 @@ func (cpq *createProjectQuota) buildCaInstanceTypesQuotaSteps() []*types.Step {
 
 	// 1. 审批联邦集群配额申请
 	// 2. 等待审批通过，审批通过后, 更新配额状态; 审批拒绝后, 更新配额申请状态
-	content := fmt.Sprintf("user %s apply for project %s CA resources quota: region(%s) " + // nolint
+	content := fmt.Sprintf("user %s apply for project %s CA resources quota: region(%s) "+ // nolint
 		"zone(%s) instanceType(%s) quota(%v)", cpq.projectQuota.GetCreator(), cpq.projectQuota.GetProjectCode(),
 		cpq.projectQuota.GetQuota().GetZoneResources().Region, cpq.projectQuota.GetQuota().GetZoneResources().ZoneId,
 		cpq.projectQuota.GetQuota().GetZoneResources().InstanceType,

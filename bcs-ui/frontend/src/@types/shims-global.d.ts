@@ -47,13 +47,14 @@ interface Window {
   readonly RUN_ENV: string
   readonly BK_USER_HOST: string
   readonly PREFERRED_DOMAINS: string
-  readonly $loginModal: any
+  $loginModal: any
   BkTrace: any
   readonly BK_STATIC_URL: string
   readonly BCS_NAMESPACE_PREFIX: string
   readonly BK_LOG_HOST: string
   readonly BK_DOMAIN: string
   readonly BK_SHARED_RES_BASE_JS_URL: string
+  readonly BK_CC_HOST: string
 }
 
 declare const BK_BCS_WELCOME: string;

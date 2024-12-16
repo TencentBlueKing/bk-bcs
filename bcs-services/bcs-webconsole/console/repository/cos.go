@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dustin/go-humanize"
 	"github.com/tencentyun/cos-go-sdk-v5"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
@@ -56,7 +57,7 @@ func (c *cosStorage) UploadFileByReader(ctx context.Context, r io.Reader, filePa
 }
 
 // ListFile list current folder files
-func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string, error) {
+func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]FileContent, error) {
 	var marker string
 	folderName = strings.Trim(folderName, "/")
 	folderName += "/"
@@ -66,7 +67,7 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string,
 		MaxKeys:   200,        // 设置最大遍历出多少个对象, 一次 listobject 最大支持1000
 	}
 
-	files := make([]string, 0)
+	var files []FileContent
 	isTruncated := true
 	for isTruncated {
 		opt.Marker = marker
@@ -79,7 +80,10 @@ func (c *cosStorage) ListFile(ctx context.Context, folderName string) ([]string,
 		}
 		for _, content := range v.Contents {
 			fn := strings.TrimPrefix(content.Key, folderName)
-			files = append(files, fn)
+			files = append(files, FileContent{
+				FileName:      fn,
+				ProcessedSize: humanize.Bytes(uint64(content.Size)),
+			})
 		}
 		isTruncated = v.IsTruncated // 是否还有数据
 		marker = v.NextMarker       // 设置下次请求的起始 key

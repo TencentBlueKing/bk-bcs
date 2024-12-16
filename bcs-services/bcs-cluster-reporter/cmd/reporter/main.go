@@ -21,6 +21,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	v12 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 	"net/http"
 	"os"
@@ -43,6 +46,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
+	apiv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/capacitycheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/clustercheck"
@@ -409,6 +413,8 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 
 			if strings.HasPrefix(cluster.SystemID, "cls") {
 				clusterConfig.ClusterType = pluginmanager.TKECluster
+			} else {
+				clusterConfig.ClusterType = cluster.ClusterType
 			}
 
 			mapLock.Lock()
@@ -484,6 +490,35 @@ func GetClusterInfo(kubeConfigDir string, existClusterConfigList map[string]*plu
 	return clusterConfigList, nil
 }
 
+func checkMetricAPI(cluster *pluginmanager.ClusterConfig) error {
+	dynamicConfig, err := dynamic.NewForConfig(cluster.Config)
+	if err != nil {
+		return fmt.Errorf("%s get metric failed: %s", cluster.ClusterID, err.Error())
+	}
+
+	result, err := dynamicConfig.Resource(schema.GroupVersionResource{
+		Group:    "apiregistration.k8s.io",
+		Version:  "v1",
+		Resource: "apiservices",
+	}).Get(util.GetCtx(10*time.Second), "v1beta1.metrics.k8s.io", v1.GetOptions{ResourceVersion: "0"})
+
+	if err != nil {
+		return fmt.Errorf("%s get metric failed: %s", cluster.ClusterID, err.Error())
+	}
+
+	apiService := &apiv1.APIService{}
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(result.Object, apiService); err != nil {
+		return fmt.Errorf("%s get metric failed: %s", cluster.ClusterID, err.Error())
+	}
+
+	for _, condition := range apiService.Status.Conditions {
+		if condition.Status == apiv1.ConditionFalse {
+			return fmt.Errorf("%s get metric failed: %s %s", cluster.ClusterID, condition.Reason, condition.Message)
+		}
+	}
+	return nil
+}
+
 // GetClusterConfig return ClusterConfig by clusterID and rest config
 func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.ClusterConfig, error) {
 	clusterConfig := &pluginmanager.ClusterConfig{}
@@ -512,10 +547,13 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 	// 跳过work node为0的集群
 	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), v1.ListOptions{ResourceVersion: "0"})
 	masterList := make([]string, 0, 0)
+	nodeNum := 0
+	ekletNum := 0
 	if err != nil {
 		klog.Errorf("get %s node failed: %s", clusterID, err.Error())
 	} else {
-		nodeNum := len(nodeList.Items)
+		nodeNum = len(nodeList.Items)
+
 		for _, node := range nodeList.Items {
 			for key, val := range node.Labels {
 				if key == "node-role.kubernetes.io/master" && (val == "true" || val == "") {
@@ -525,7 +563,8 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 							masterList = append(masterList, address.Address)
 						}
 					}
-
+				} else if key == "node.kubernetes.io/instance-type" && val == "eklet" {
+					ekletNum = ekletNum + 1
 				}
 			}
 		}
@@ -537,15 +576,23 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 	}
 
 	clusterConfig = &pluginmanager.ClusterConfig{
+		ClusterID: clusterID,
 		Config:    config,
 		ClientSet: clientSet,
 		MetricSet: metricsClient,
 		Master:    masterList,
+		NodeNum:   nodeNum,
+		// 判断集群是否只有超级节点
+		ALLEKLET: ekletNum == nodeNum,
 	}
 
-	clusterConfig.ClusterID = "incluster"
-	clusterConfig.BusinessID = "0"
-	clusterConfig.NodeInfo = make(map[string]plugin.NodeInfo)
+	// 检测集群得metricAPI是否可用，不可用置为nil
+	err = checkMetricAPI(clusterConfig)
+	if err != nil {
+		clusterConfig.MetricSet = nil
+		klog.Errorf(err.Error())
+	}
+
 	return clusterConfig, nil
 }
 
