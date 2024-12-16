@@ -21574,7 +21574,7 @@ func (m *UpdateClusterReq) validate(all bool) error {
 	if _, ok := _UpdateClusterReq_Status_InLookup[m.GetStatus()]; !ok {
 		err := UpdateClusterReqValidationError{
 			field:  "Status",
-			reason: "value must be in list [INITIALIZATION RUNNING CREATE-FAILURE CONNECT-FAILURE IMPORT-FAILURE DELETING DELETED DELETE-FAILURE]",
+			reason: "value must be in list [INITIALIZATION RUNNING CREATE-FAILURE CONNECT-FAILURE IMPORT-FAILURE DELETING DELETED DELETE-FAILURE ]",
 		}
 		if !all {
 			return err
@@ -22082,6 +22082,7 @@ var _UpdateClusterReq_Status_InLookup = map[string]struct{}{
 	"DELETING":        {},
 	"DELETED":         {},
 	"DELETE-FAILURE":  {},
+	"":                {},
 }
 
 // Validate checks the field values on UpdateClusterResp with the rules defined

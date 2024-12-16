@@ -16,6 +16,7 @@
         clearable
         :placeholder="$t('projects.project.search')"
         :right-icon="'bk-icon icon-search'"
+        maxlength="64"
         v-model="keyword">
       </bk-input>
     </div>

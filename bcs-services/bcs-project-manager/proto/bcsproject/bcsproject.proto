@@ -14,6 +14,8 @@ syntax = "proto3";
 
 package bcsproject;
 
+option go_package = "./;bcsproject";
+
 import "google/api/annotations.proto";
 import "google/protobuf/wrappers.proto";
 import "protoc-gen-swagger/options/annotations.proto";
@@ -2874,6 +2876,29 @@ message ProjectQuota {
     title: "provider",
     description: "云底层资源提供方"
   }];
+  repeated NodeGroup nodeGroups = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroups",
+    description: "相关nodeGroups"
+  }];
+}
+
+message NodeGroup {
+  string clusterId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterId",
+    description: "集群ID"
+  }];
+  string nodeGroupId = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeGroupId",
+    description: "节点池ID"
+  }];
+  uint32 quotaNum = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaNum",
+    description: "机型申请的配额"
+  }];
+  uint32 quotaUsed = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaUsed",
+    description: "机型已使用的配额"
+  }];
 }
 
 message QuotaResource {
@@ -2940,11 +2965,15 @@ message InstanceTypeConfig {
     title: "quotaNum",
     description: "机型申请的配额"
   }];
-  DataDisk systemDisk = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  uint32 quotaUsed = 9 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "quotaUsed",
+    description: "机型已使用的配额"
+  }];
+  DataDisk systemDisk = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "systemDisk",
     description: "系统盘信息，BCS默认设置为高性能云盘，大小为50G"
   }];
-  repeated DataDisk dataDisks = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated DataDisk dataDisks = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "dataDisks",
     description: "数据盘信息，无默认设置则不购买"
   }];
@@ -3153,6 +3182,10 @@ message ListProjectQuotasRequest{
   string quotaType = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quotaType",
     description: "资源类型(目前支持CA整机资源、共享集群维度资源)"
+  }];
+  string provider = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "provider",
+    description: "云底层资源提供方"
   }];
 }
 

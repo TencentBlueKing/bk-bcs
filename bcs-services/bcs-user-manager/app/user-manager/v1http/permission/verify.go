@@ -401,7 +401,8 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 	}
 
 	// get project id
-	if clusterType == Shared && actionID != namespace.NameSpaceView.String() {
+	if clusterType == Shared && (actionID != namespace.NameSpaceView.String() &&
+		actionID != namespace.NameSpaceList.String()) {
 		return false, fmt.Errorf("verifyUserNamespacePermission shared cluster[%s] not support %s permission %s",
 			resource.ClusterID, namespaceScopedType, actionID)
 	}

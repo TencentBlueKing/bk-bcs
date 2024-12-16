@@ -74,6 +74,9 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	if conf.Mongo.Address == "" {
 		conf.Mongo.Address = envs.MongoAddress
 	}
+	if conf.Mongo.Replicaset == "" {
+		conf.Mongo.Replicaset = envs.MongoReplicaset
+	}
 	if conf.Mongo.Username == "" {
 		conf.Mongo.Username = envs.MongoUsername
 	}
@@ -283,6 +286,7 @@ type RedisConf struct {
 // MongoConfig option for mongo
 type MongoConfig struct {
 	Address        string `json:"address" yaml:"address"`
+	Replicaset     string `json:"replicaset" yaml:"replicaset"`
 	ConnectTimeout uint   `json:"connectTimeout" yaml:"connectTimeout"`
 	AuthDatabase   string `json:"authDatabase" yaml:"authDatabase"`
 	Database       string `json:"database" yaml:"database"`

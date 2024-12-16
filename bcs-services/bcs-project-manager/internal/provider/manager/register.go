@@ -56,6 +56,7 @@ func RunTaskManager() (*task.TaskManager, error) {
 		},
 		Backend: &bcsmongo.Options{
 			Hosts:                 strings.Split(config.GlobalConf.Mongo.Address, ","),
+			Replicaset:            config.GlobalConf.Mongo.Replicaset,
 			ConnectTimeoutSeconds: int(config.GlobalConf.Mongo.ConnectTimeout),
 			Database:              config.GlobalConf.Mongo.Database,
 			Username:              config.GlobalConf.Mongo.Username,

@@ -49,18 +49,10 @@
           error-display-type="normal"
           required>
           <div v-if="Object.keys(labels).length">
-            <div
-              class="flex items-center mb-[10px]"
-              v-for="key in Object.keys(labels)" :key="key">
-              <bk-input class="w-[230px]" :value="key" disabled></bk-input>
-              <span class="mx-[15px] text-[#c3cdd7]">=</span>
-              <bk-input class="w-[230px]" :value="labels[key]" disabled></bk-input>
-              <bk-checkbox
-                class="ml-[10px]"
-                :value="(key in metricData.selector)"
-                @change="handleLabelChange(key, labels[key])">
-              </bk-checkbox>
-            </div>
+            <KeyValueSelector
+              :datasource="labels"
+              :value="metricData.selector"
+              @change="handleLabelChange" />
           </div>
           <div class="text-[12px]" v-else>
             {{ $t('plugin.metric.tips.noLabel') }}
@@ -95,7 +87,7 @@
       <bk-form-item :label="$t('plugin.metric.endpoints.params')">
         <KeyValue :min-item="0" v-model="metricData.params" />
       </bk-form-item>
-      <div class="flex">
+      <div class="flex mt-[8px]">
         <bk-form-item
           :label="$t('plugin.metric.endpoints.interval')"
           property="interval"
@@ -129,6 +121,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import useMetric, { IMetricData } from './use-metric';
 
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
+import KeyValueSelector from '@/components/key-value-selector.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -244,12 +237,8 @@ watch(() => metricData.value.$namespaceId, () => {
 });
 
 // label变更
-const handleLabelChange = (key, value) => {
-  if (key in metricData.value.selector) {
-    delete metricData.value.selector[key];
-  } else {
-    metricData.value.selector[key] = value;
-  }
+const handleLabelChange = (value) => {
+  metricData.value.selector = value;
 };
 // 跳转service资源
 const handleGotoService = () => {

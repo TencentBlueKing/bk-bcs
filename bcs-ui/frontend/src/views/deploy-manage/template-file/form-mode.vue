@@ -155,6 +155,7 @@ import { ISchemaData } from '@/@types/cluster-resource-patch';
 import { ResourceService } from '@/api/modules/new-cluster-resource';
 import request from '@/api/request';
 import CollapseTitle from '@/components/cluster-selector/collapse-title.vue';
+import KeyValueSelector from '@/components/key-value-selector.vue';
 import Validate from '@/components/validate.vue';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
@@ -193,6 +194,7 @@ const BKSchemaForm = createForm({
   namespace: 'bcs',
   components: {
     input: BcsVarDatasourceInput,
+    kvSelector: KeyValueSelector,
   },
   baseWidgets: {
     radio: 'bk-radio',
