@@ -67,7 +67,7 @@ func (b *BKMonitorClient) Push(message *BKMonitorMessage) {
 	bs, _ := json.Marshal(message)
 	httpClient := http.DefaultClient
 	httpClient.Timeout = 30 * time.Second
-	blog.Infof("push to bkmonitor: %s", string(bs))
+	// blog.Infof("push to bkmonitor: %s", string(bs))
 	resp, err := httpClient.Post(b.op.BKMonitorPushUrl, "application/json", bytes.NewBuffer(bs))
 	if err != nil {
 		blog.Errorf("analysis push to bkmonitor failed: %s", err.Error())
@@ -88,11 +88,12 @@ func (b *BKMonitorClient) Push(message *BKMonitorMessage) {
 
 // BKMonitorGetMessage defines the message of query bkmonitor
 type BKMonitorGetMessage struct {
-	PromQL         string `json:"promql"`
-	Start          string `json:"start"`
-	End            string `json:"end"`
-	RecentDuration int64  `json:"recentDuration,omitempty"` // unit:second
-	Step           string `json:"step"`
+	PromQL         string            `json:"promql"`
+	PromQLs        map[string]string `json:"promqls"`
+	Start          string            `json:"start"`
+	End            string            `json:"end"`
+	RecentDuration int64             `json:"recentDuration,omitempty"` // unit:second
+	Step           string            `json:"step"`
 
 	BKBizType string `json:"bkBizType"`
 }
@@ -128,6 +129,7 @@ type BKMonitorSeries struct {
 
 // BKMonitorSeriesItem defines the series of bkmonitor search
 type BKMonitorSeriesItem struct {
+	Name      string  `json:"name,omitempty"`
 	Timestamp int64   `json:"timestamp"`
 	Value     float64 `json:"value"`
 }

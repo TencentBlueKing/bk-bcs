@@ -62,6 +62,7 @@ type Interface interface {
 	UpdateSyncInfo(info *SyncInfo) error
 
 	ListActivityUser(project string) ([]ActivityUser, error)
+	List7DayActivityUsers() ([]ActivityUser, error)
 
 	SaveOrUpdateResourceInfo(info *ResourceInfo) error
 	ListResourceInfosByProject(projects []string) ([]ResourceInfo, error)

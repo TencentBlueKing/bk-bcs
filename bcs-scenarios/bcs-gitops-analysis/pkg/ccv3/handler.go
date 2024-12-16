@@ -13,13 +13,10 @@
 package ccv3
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
-	"time"
+	"strconv"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-analysis/options"
@@ -37,13 +34,6 @@ func NewHandler() Interface {
 	}
 }
 
-type commonResponse struct {
-	Code      int64  `json:"code"`
-	Result    bool   `json:"result"`
-	RequestId string `json:"request_id"`
-	Message   string `json:"message"`
-}
-
 type queryRule struct {
 	Field    string      `json:"field"`
 	Operator string      `json:"operator"`
@@ -53,6 +43,7 @@ type queryRule struct {
 type searchBusinessRequest struct {
 	Fields            []string           `json:"fields"`
 	BizPropertyFilter *bizPropertyFilter `json:"biz_property_filter,omitempty"`
+	Page              *page              `json:"page"`
 }
 
 type bizPropertyFilter struct {
@@ -60,9 +51,17 @@ type bizPropertyFilter struct {
 	Rules     []*queryRule `json:"rules"`
 }
 
+type page struct {
+	Start int `json:"start"`
+	Limit int `json:"limit"`
+}
+
 type searchBusinessResponse struct {
-	commonResponse `json:",inline"`
-	Data           *searchBusinessResponseData `json:"data"`
+	Code      int64                       `json:"code"`
+	Result    bool                        `json:"result"`
+	RequestId string                      `json:"request_id"`
+	Message   string                      `json:"message"`
+	Data      *searchBusinessResponseData `json:"data"`
 }
 
 type searchBusinessResponseData struct {
@@ -70,13 +69,22 @@ type searchBusinessResponseData struct {
 	Info  []CCBusiness `json:"info"`
 }
 
+// CCBusiness business for cc
+type CCBusiness struct {
+	BkBizId      int64  `json:"bk_biz_id"`
+	BkBizName    string `json:"bk_biz_name"`
+	BkMaintainer string `json:"bk_biz_maintainer"`
+	GroupName    string `json:"bk_oper_grp_name"`
+	GroupID      int64  `json:"bk_oper_grp_name_id"`
+	LocalBizID   string `json:"local_biz_id,omitempty"`
+}
+
 // SearchBusiness search businesses with bk_biz_ids
 func (h *handler) SearchBusiness(bkBizIds []int64) ([]CCBusiness, error) {
 	req := &searchBusinessRequest{
-		Fields: []string{"bk_biz_id", "bk_biz_name", "bk_biz_maintainer"},
-	}
-	if len(bkBizIds) != 0 {
-		req.BizPropertyFilter = &bizPropertyFilter{
+		Fields: []string{"bk_biz_id", "bk_biz_name", "bk_biz_maintainer", "bk_oper_grp_name", "bk_oper_grp_name_id",
+			"local_biz_id"},
+		BizPropertyFilter: &bizPropertyFilter{
 			Condition: "AND",
 			Rules: []*queryRule{
 				{
@@ -85,54 +93,32 @@ func (h *handler) SearchBusiness(bkBizIds []int64) ([]CCBusiness, error) {
 					Value:    bkBizIds,
 				},
 			},
-		}
-	}
-	respBytes, err := h.query(req, searchBusinessApi)
-	if err != nil {
-		return nil, errors.Wrapf(err, "CC search business query failed")
+		},
+		Page: &page{
+			Start: 0,
+			Limit: 1000,
+		},
 	}
 	resp := new(searchBusinessResponse)
-	if err := json.Unmarshal(respBytes, resp); err != nil {
-		return nil, errors.Wrapf(err, "CC search business unmarshal failed")
+	if err := h.query(h.op.BKCCUrl+searchBusinessApi, http.MethodPost, req, resp); err != nil {
+		return nil, errors.Wrapf(err, "CC search business query failed")
 	}
 	if resp.Code != 0 {
 		return nil, errors.Errorf("response code not 0, errMsg: %s", resp.Message)
 	}
-	if resp.Data != nil {
-		return resp.Data.Info, nil
+	if resp.Data == nil {
+		return nil, nil
 	}
-	return nil, nil
-}
-
-var (
-	bkAuthFormat = `{"bk_app_code": "%s", "bk_app_secret": "%s", "bk_token": "%s"}`
-)
-
-func (h *handler) query(request interface{}, uri string) (resp []byte, err error) {
-	data, err := json.Marshal(request)
-	if err != nil {
-		return nil, errors.Wrapf(err, "marshal failed")
+	for i := range resp.Data.Info {
+		bizInfo := resp.Data.Info[i]
+		if bizInfo.LocalBizID != "" {
+			v, err := strconv.ParseInt(bizInfo.LocalBizID, 0, 64)
+			if err != nil {
+				blog.Errorf("parse local_biz_id '%s' failed", bizInfo.LocalBizID)
+				continue
+			}
+			resp.Data.Info[i].BkBizId = int64(v)
+		}
 	}
-	httpRequest, err := http.NewRequest("POST", h.op.BKCCUrl+uri,
-		bytes.NewBuffer(data))
-	if err != nil {
-		return nil, errors.Wrapf(err, "create request failed")
-	}
-	httpRequest.Header.Set("Content-Type", "application/json")
-	httpRequest.Header.Set("Accept", "application/json")
-	httpRequest.Header.Set("X-Bkapi-Authorization", fmt.Sprintf(bkAuthFormat, h.op.Auth.AppCode,
-		h.op.Auth.AppSecret, "admin"))
-	c := &http.Client{
-		Timeout: time.Second * 20,
-	}
-	httpResponse, err := c.Do(httpRequest)
-	if err != nil {
-		return nil, err
-	}
-	defer httpResponse.Body.Close()
-	respBytes, err := io.ReadAll(httpResponse.Body)
-	if err != nil {
-		return nil, errors.Wrapf(err, "read http response failed")
-	}
-	return respBytes, nil
+	return resp.Data.Info, nil
 }

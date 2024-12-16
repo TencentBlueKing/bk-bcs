@@ -167,8 +167,8 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 		Router:     ops.PathPrefix(common.GitOpsProxyURL + "/api/metric").Subrouter(),
 		middleware: middleware,
 	}
-	analysisPlugin := &AnalysisPlugin{
-		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis").Subrouter(),
+	analysisNewPlugin := &AnalysisNewPlugin{
+		Router:        ops.PathPrefix(common.GitOpsProxyURL + "/api/v1/analysis_new").Subrouter(),
 		middleware:    middleware,
 		permitChecker: permitChecker,
 		store:         store.GlobalStore(),
@@ -204,7 +204,7 @@ func (ops *ArgocdProxy) initArgoPathHandler() error {
 	initializer := []func() error{
 		auditPlugin.Init, projectPlugin.Init, clusterPlugin.Init, repositoryPlugin.Init,
 		appPlugin.Init, streamPlugin.Init, webhookPlugin.Init, grpcPlugin.Init,
-		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisPlugin.Init,
+		secretPlugin.Init, metricPlugin.Init, appsetPlugin.Init, analysisNewPlugin.Init,
 		monitorPlugin.Init, terraformPlugin.Init, permissionPlugin.Init, workflowPlugin.Init, preCheckPlugin.Init,
 	}
 

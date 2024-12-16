@@ -45,7 +45,8 @@ func (c *checker) CheckProjectPermission(ctx context.Context, project string, ac
 	return argoProj, http.StatusOK, nil
 }
 
-func (c *checker) getMultiProjectsMultiActionsPermission(ctx context.Context, projects []string) (
+// getMultiProjectsMultiActionsPermit get multiple projects with multiple actions permission
+func (c *checker) getMultiProjectsMultiActionsPermit(ctx context.Context, projects []string) (
 	[]interface{}, *UserResourcePermission, int, error) {
 	resultObjs := make([]interface{}, 0, len(projects))
 	urp := &UserResourcePermission{
@@ -80,6 +81,7 @@ func (c *checker) getMultiProjectsMultiActionsPermission(ctx context.Context, pr
 	return resultObjs, urp, http.StatusOK, nil
 }
 
+// getProjectMultiActionsPermission get project multiple actions permissions
 func (c *checker) getProjectMultiActionsPermission(ctx context.Context, project string) (
 	*v1alpha1.AppProject, map[RSAction]bool, int, error) {
 	pctx, statusCode, err := c.createPermitContext(ctx, project)

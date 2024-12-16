@@ -77,7 +77,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -781,8 +780,6 @@ func (cd *argo) ListApplications(ctx context.Context, query *appclient.Applicati
 		}
 	}
 
-	blog.Infof("RequestID[%s] query applications with params: %s", ctxutils.RequestID(ctx),
-		utils.MarshalObject(query))
 	result := &v1alpha1.ApplicationList{
 		Items: make([]v1alpha1.Application, 0),
 	}

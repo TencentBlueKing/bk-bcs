@@ -143,11 +143,15 @@ func (h *handler) CheckBusinessPermission(ctx context.Context, bizID string, act
 	if bizID == "" {
 		return http.StatusBadRequest, errors.Errorf("bizID cannot be empty")
 	}
+	user := ctxutils.User(ctx)
+	if common.IsAdminUser(user.ClientID) {
+		return http.StatusOK, nil
+	}
+
 	projectList, statusCode, err := h.ListProjects(ctx)
 	if err != nil {
 		return statusCode, err
 	}
-
 	for _, proj := range projectList.Items {
 		// GetBCSProjectBusinessKey return the business id of project
 		projectBizID := common.GetBCSProjectBusinessKey(proj.Annotations)

@@ -38,6 +38,7 @@ func (c *checker) UserAllPermissions(ctx context.Context, project string) ([]*Us
 	return permits, http.StatusOK, nil
 }
 
+// queryUserSingleTypePermission query user permission with single resource type
 func (c *checker) queryUserSingleTypePermission(ctx context.Context, project string, rsType RSType,
 	rsNames []string) ([]interface{}, *UserResourcePermission, int, error) {
 	start := time.Now()
@@ -49,7 +50,7 @@ func (c *checker) queryUserSingleTypePermission(ctx context.Context, project str
 	var err error
 	switch rsType {
 	case ProjectRSType:
-		resources, result, statusCode, err = c.getMultiProjectsMultiActionsPermission(ctx, []string{project})
+		resources, result, statusCode, err = c.getMultiProjectsMultiActionsPermit(ctx, []string{project})
 	case ClusterRSType:
 		resources, result, statusCode, err = c.getMultiClustersMultiActionsPermission(ctx, project, rsNames)
 	case RepoRSType:

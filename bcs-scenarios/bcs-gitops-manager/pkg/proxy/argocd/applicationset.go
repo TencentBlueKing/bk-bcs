@@ -119,6 +119,7 @@ type AppSetClusterScopeResponse struct {
 	Data      *dao.AppSetClusterScope `json:"data"`
 }
 
+// getClusterScope get the cluster scope
 func (plugin *ApplicationSetPlugin) getClusterScope(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appsetName := mux.Vars(r)["name"]
 	if appsetName == "" {
@@ -147,6 +148,7 @@ type AppSetClusterScopeSetRequest struct {
 	Clusters []string `json:"clusters"`
 }
 
+// setClusterScope set the cluster scope
 func (plugin *ApplicationSetPlugin) setClusterScope(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appsetName := mux.Vars(r)["name"]
 	if appsetName == "" {
@@ -231,6 +233,10 @@ func (plugin *ApplicationSetPlugin) CreateOrUpdate(r *http.Request) (*http.Reque
 		if err != nil {
 			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
 		}
+	} else {
+		if statusCode, err = plugin.permitChecker.CheckAppSetUpdate(r.Context(), argoAppSet); err != nil {
+			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check update applicationset failed"))
+		}
 	}
 
 	updatedBody, err := json.Marshal(argoAppSet)
@@ -288,7 +294,7 @@ func (plugin *ApplicationSetPlugin) List(r *http.Request) (*http.Request, *mw.Ht
 	return r, mw.ReturnJSONResponse(appsetList)
 }
 
-// Get one applicationset
+// Get the applicationSet with name
 func (plugin *ApplicationSetPlugin) Get(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	appsetName := mux.Vars(r)["name"]
 	if appsetName == "" {
@@ -303,6 +309,7 @@ func (plugin *ApplicationSetPlugin) Get(r *http.Request) (*http.Request, *mw.Htt
 	return r, mw.ReturnJSONResponse(appSet)
 }
 
+// setApplicationSetAudit set audit for application
 func (plugin *ApplicationSetPlugin) setApplicationSetAudit(r *http.Request, project, appSetName string,
 	action ctxutils.AuditAction, data string) *http.Request {
 	httpRequest := ctxutils.SetAuditMessage(r, &dao.UserAudit{

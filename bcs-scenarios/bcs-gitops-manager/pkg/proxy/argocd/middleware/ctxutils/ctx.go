@@ -34,7 +34,11 @@ const (
 
 // RequestID return the requestID of context
 func RequestID(ctx context.Context) string {
-	return ctx.Value(traceconst.RequestIDHeaderKey).(string)
+	v := ctx.Value(traceconst.RequestIDHeaderKey)
+	if v == nil {
+		return ""
+	}
+	return v.(string)
 }
 
 // User return user info of context

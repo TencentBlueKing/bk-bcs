@@ -104,18 +104,53 @@ func (d *driver) createTable(tableName string, obj interface{}) error {
 
 // ListActivityUser return the activity users for project
 func (d *driver) ListActivityUser(project string) ([]ActivityUser, error) {
-	rows, err := d.rateClient.Table(tableActivityUser).Where("project = ?", project).Rows()
+	rows, err := d.rateClient.Table(tableActivityUser).Where("project = ?", project).
+		Order("lastActivityTime DESC").Rows()
 	if err != nil {
 		return nil, errors.Wrapf(err, "query activity users failed")
 	}
 	defer rows.Close() // nolint
 
 	result := make([]ActivityUser, 0)
+	appeared := make(map[string]struct{})
 	for rows.Next() {
 		activityUser := new(ActivityUser)
 		if err = d.db.ScanRows(rows, activityUser); err != nil {
 			return nil, errors.Wrapf(err, "scan activity user rows failed")
 		}
+		// 防止因脏数据导致的数据不一致
+		if _, ok := appeared[activityUser.Project+activityUser.UserName]; ok {
+			continue
+		}
+		appeared[activityUser.Project+activityUser.UserName] = struct{}{}
+		result = append(result, *activityUser)
+	}
+	return result, nil
+}
+
+// List7DayActivityUsers return last 7day activity user
+func (d *driver) List7DayActivityUsers() ([]ActivityUser, error) {
+	t := time.Now()
+	v := t.Add(-7 * 24 * time.Hour)
+	rows, err := d.rateClient.Table(tableActivityUser).Where("lastActivityTime > ?", v).
+		Order("lastActivityTime ASC").Rows()
+	if err != nil {
+		return nil, errors.Wrapf(err, "query 7day activity users failed")
+	}
+	defer rows.Close()
+
+	result := make([]ActivityUser, 0)
+	appeared := make(map[string]struct{})
+	for rows.Next() {
+		activityUser := new(ActivityUser)
+		if err = d.db.ScanRows(rows, activityUser); err != nil {
+			return nil, errors.Wrapf(err, "scan activity user rows failed")
+		}
+		// 防止因脏数据导致的数据不一致
+		if _, ok := appeared[activityUser.Project+"/"+activityUser.UserName]; ok {
+			continue
+		}
+		appeared[activityUser.Project+"/"+activityUser.UserName] = struct{}{}
 		result = append(result, *activityUser)
 	}
 	return result, nil
@@ -135,12 +170,28 @@ func (d *driver) ListSyncInfosForProject(project string) ([]SyncInfo, error) {
 	}
 	defer rows.Close() // nolint
 
-	result := make([]SyncInfo, 0)
+	syncs := make(map[string]*SyncInfo)
 	for rows.Next() {
 		syncInfo := new(SyncInfo)
 		if err = d.db.ScanRows(rows, syncInfo); err != nil {
 			return nil, errors.Wrapf(err, "scan syncinfo rows failed")
 		}
+		oldSyncInfo, ok := syncs[syncInfo.Application]
+		if !ok {
+			syncs[syncInfo.Application] = syncInfo
+			continue
+		}
+		// 应用可能出现被删除后重建同名应用的情况，将应用的同步合并
+		if oldSyncInfo.UpdateTime.Before(syncInfo.UpdateTime) {
+			syncInfo.SyncTotal += oldSyncInfo.SyncTotal
+			syncs[syncInfo.Application] = syncInfo
+		} else {
+			oldSyncInfo.SyncTotal += syncInfo.SyncTotal
+		}
+	}
+
+	result := make([]SyncInfo, 0)
+	for _, syncInfo := range syncs {
 		result = append(result, *syncInfo)
 	}
 	return result, nil

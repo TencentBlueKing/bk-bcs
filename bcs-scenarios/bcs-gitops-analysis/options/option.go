@@ -34,19 +34,18 @@ type AnalysisOptions struct {
 	AppMetricNamespace string `json:"appMetricNamespace"`
 	AppMetricName      string `json:"appMetricName"`
 
-	ExternalAnalysisUrl   string `json:"externalAnalysisUrl"`
-	ExternalAnalysisToken string `json:"externalAnalysisToken"`
-
 	BKMonitorPushUrl    string `json:"bkMonitorPushUrl"`
 	BKMonitorPushDataID int64  `json:"bkMonitorPushDataID"`
 	BKMonitorPushToken  string `json:"bkMonitorPushToken"`
-
-	BKMonitorGetUrl      string `json:"bkMonitorGetUrl"`
-	BKMonitorGetUser     string `json:"bkMonitorGetUser"`
-	BKMonitorGetBizID    int64  `json:"bkMonitorGetBizID"`
-	BKMonitorSLOStartDay string `json:"bkMonitorSLOStartDay"`
+	BKMonitorGetUrl     string `json:"bkMonitorGetUrl"`
+	BKMonitorGetUser    string `json:"bkMonitorGetUser"`
+	BKMonitorGetBizID   int64  `json:"bkMonitorGetBizID"`
 
 	BKCCUrl string `json:"bkccUrl"`
+
+	ExternalAnalysisUrl   string `json:"externalAnalysisUrl"`
+	ExternalAnalysisToken string `json:"externalAnalysisToken"`
+	IsExternal            bool   `json:"-"`
 
 	Auth         AuthConfig                `json:"auth,omitempty"`
 	DBConfig     DBConfig                  `json:"dbConfig,omitempty"`
@@ -85,5 +84,8 @@ func GlobalOptions() *AnalysisOptions {
 // Parse the config options
 func Parse() *AnalysisOptions {
 	conf.Parse(op)
+	if op.ExternalAnalysisUrl == "" {
+		op.IsExternal = true
+	}
 	return op
 }

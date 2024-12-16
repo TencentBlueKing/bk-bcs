@@ -128,6 +128,7 @@ func (c *checker) CheckAppSetPermission(ctx context.Context, appSet string, acti
 	return objs[0].(*v1alpha1.ApplicationSet), http.StatusOK, nil
 }
 
+// getMultiAppSetMultiActionPermission get multiple appset with multiple action permission
 func (c *checker) getMultiAppSetMultiActionPermission(ctx context.Context, project string,
 	appSets []string) ([]interface{}, *UserResourcePermission, int, error) {
 	resultAppSets := make([]interface{}, 0, len(appSets))
@@ -213,7 +214,7 @@ func (c *checker) getMultiAppSetMultiActionPermission(ctx context.Context, proje
 	return resultAppSets, result, http.StatusOK, nil
 }
 
-// CheckAppSetCreate check appset create permission
+// CheckAppSetCreate check appset create permission, and set some default values
 func (c *checker) CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (
 	[]*v1alpha1.Application, int, error) {
 	projName := appSet.Spec.Template.Spec.Project
@@ -251,6 +252,105 @@ func (c *checker) CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.Applic
 	return results, 0, nil
 }
 
+// CheckAppSetUpdate check appset update, check appset which have some fields
+func (c *checker) CheckAppSetUpdate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (int, error) {
+	projName := appSet.Spec.Template.Spec.Project
+	if !strings.HasPrefix(appSet.Name, projName+"-") {
+		return http.StatusBadRequest, errors.Errorf("appset name '%s' not have prefix '%s'",
+			appSet.Name, projName+"-")
+	}
+	if !strings.HasPrefix(appSet.Spec.Template.Name, projName+"-") {
+		return http.StatusBadRequest, errors.Errorf("appset '.spec.template.name' not have prefix '%s'",
+			projName+"-")
+	}
+	argoProject, statusCode, err := c.CheckProjectPermission(ctx, projName, ProjectEditRSAction)
+	if err != nil {
+		return statusCode, errors.Wrapf(err, "check project permission failed")
+	}
+	appSet.Spec.Template.Annotations[common.ProjectIDKey] = common.GetBCSProjectID(argoProject.Annotations)
+	appSet.Spec.Template.Annotations[common.ProjectBusinessIDKey] =
+		common.GetBCSProjectBusinessKey(argoProject.Annotations)
+	return 0, nil
+}
+
+// checkMatrixGenerator check the matrix type generator
+func checkMatrixGenerator(index int, generator *v1alpha1.ApplicationSetGenerator) ([]string, []string) {
+	var repoUrls []string
+	var errs []string
+	for j := range generator.Matrix.Generators {
+		matrixGenerator := generator.Matrix.Generators[j]
+		if matrixGenerator.Clusters != nil || matrixGenerator.SCMProvider != nil ||
+			matrixGenerator.ClusterDecisionResource != nil || matrixGenerator.PullRequest != nil ||
+			matrixGenerator.Merge != nil {
+			errs = append(errs, fmt.Sprintf("generator[%d] with matrix generator[%d] "+
+				"has not allowed generator type", index, j))
+		}
+		if matrixGenerator.Git != nil {
+			repoUrls = append(repoUrls, matrixGenerator.Git.RepoURL)
+		}
+	}
+	generator.Matrix.Template = v1alpha1.ApplicationSetTemplate{}
+	return repoUrls, errs
+}
+
+// checkMergeGenerator check merge generator
+func checkMergeGenerator(index int, generator *v1alpha1.ApplicationSetGenerator) ([]string, []string) {
+	var repoUrls []string
+	var errs []string
+	for j := range generator.Merge.Generators {
+		mergeGenerator := generator.Merge.Generators[j]
+		if mergeGenerator.Clusters != nil || mergeGenerator.SCMProvider != nil ||
+			mergeGenerator.ClusterDecisionResource != nil || mergeGenerator.PullRequest != nil ||
+			mergeGenerator.Merge != nil {
+			errs = append(errs, fmt.Sprintf("generator[%d] with merge generator[%d] "+
+				"has not allowed generator type", index, j))
+		}
+		if mergeGenerator.Git != nil {
+			repoUrls = append(repoUrls, mergeGenerator.Git.RepoURL)
+		}
+	}
+	generator.Merge.Template = v1alpha1.ApplicationSetTemplate{}
+	return repoUrls, errs
+}
+
+// checkGenerator check the generator
+func checkGenerator(index int, generator *v1alpha1.ApplicationSetGenerator) ([]string, []string) {
+	var errs []string
+	var repoUrls []string
+	if generator.Clusters != nil || generator.SCMProvider != nil ||
+		generator.ClusterDecisionResource != nil || generator.PullRequest != nil {
+		errs = append(errs, fmt.Sprintf("generator[%d] has not allowed generator type", index))
+		return repoUrls, errs
+	}
+	if generator.Git != nil {
+		generator.Git.Template = v1alpha1.ApplicationSetTemplate{}
+		repoUrls = append(repoUrls, generator.Git.RepoURL)
+	}
+	if generator.List != nil {
+		// rewrite generator.List.Template to empty value
+		generator.List.Template = v1alpha1.ApplicationSetTemplate{}
+	}
+	if generator.Matrix != nil {
+		if len(generator.Matrix.Generators) == 0 {
+			errs = append(errs, fmt.Sprintf("generator[%d] with matrix generator have 0 generators", index))
+			return repoUrls, errs
+		}
+		tmpRepoUrls, tmpErrs := checkMatrixGenerator(index, generator)
+		repoUrls = append(repoUrls, tmpRepoUrls...)
+		errs = append(errs, tmpErrs...)
+	}
+	if generator.Merge != nil {
+		if len(generator.Merge.Generators) == 0 {
+			errs = append(errs, fmt.Sprintf("generator[%d] with merge generator have 0 generators", index))
+			return repoUrls, errs
+		}
+		tmpRepoUrls, tmpErrs := checkMergeGenerator(index, generator)
+		repoUrls = append(repoUrls, tmpRepoUrls...)
+		errs = append(errs, tmpErrs...)
+	}
+	return repoUrls, errs
+}
+
 // checkApplicationSetGenerator check applicationset generator
 func (c *checker) checkApplicationSetGenerator(ctx context.Context, appSet *v1alpha1.ApplicationSet) error {
 	projName := appSet.Spec.Template.Spec.Project
@@ -259,57 +359,9 @@ func (c *checker) checkApplicationSetGenerator(ctx context.Context, appSet *v1al
 	// NOTE: 仅允许 List/Git/Matrix/Merge Generator
 	for i := range appSet.Spec.Generators {
 		generator := appSet.Spec.Generators[i]
-		if generator.Clusters != nil || generator.SCMProvider != nil ||
-			generator.ClusterDecisionResource != nil || generator.PullRequest != nil {
-			errs = append(errs, fmt.Sprintf("generator[%d] has not allowed generator type", i))
-			continue
-		}
-		if generator.Git != nil {
-			generator.Git.Template = v1alpha1.ApplicationSetTemplate{}
-			repoUrls = append(repoUrls, generator.Git.RepoURL)
-		}
-		if generator.List != nil {
-			// rewrite generator.List.Template to empty value
-			generator.List.Template = v1alpha1.ApplicationSetTemplate{}
-		}
-		if generator.Matrix != nil {
-			if len(generator.Matrix.Generators) == 0 {
-				errs = append(errs, fmt.Sprintf("generator[%d] with matrix generator have 0 generators", i))
-				continue
-			}
-			for j := range generator.Matrix.Generators {
-				matrixGenerator := generator.Matrix.Generators[j]
-				if matrixGenerator.Clusters != nil || matrixGenerator.SCMProvider != nil ||
-					matrixGenerator.ClusterDecisionResource != nil || matrixGenerator.PullRequest != nil ||
-					matrixGenerator.Merge != nil {
-					errs = append(errs, fmt.Sprintf("generator[%d] with matrix generator[%d] "+
-						"has not allowed generator type", i, j))
-				}
-				if matrixGenerator.Git != nil {
-					repoUrls = append(repoUrls, matrixGenerator.Git.RepoURL)
-				}
-			}
-			generator.Matrix.Template = v1alpha1.ApplicationSetTemplate{}
-		}
-		if generator.Merge != nil {
-			if len(generator.Merge.Generators) == 0 {
-				errs = append(errs, fmt.Sprintf("generator[%d] with merge generator have 0 generators", i))
-				continue
-			}
-			for j := range generator.Merge.Generators {
-				mergeGenerator := generator.Merge.Generators[j]
-				if mergeGenerator.Clusters != nil || mergeGenerator.SCMProvider != nil ||
-					mergeGenerator.ClusterDecisionResource != nil || mergeGenerator.PullRequest != nil ||
-					mergeGenerator.Merge != nil {
-					errs = append(errs, fmt.Sprintf("generator[%d] with merge generator[%d] "+
-						"has not allowed generator type", i, j))
-				}
-				if mergeGenerator.Git != nil {
-					repoUrls = append(repoUrls, mergeGenerator.Git.RepoURL)
-				}
-			}
-			generator.Merge.Template = v1alpha1.ApplicationSetTemplate{}
-		}
+		tmpRepoUrls, tmpErrs := checkGenerator(i, &generator)
+		repoUrls = append(repoUrls, tmpRepoUrls...)
+		errs = append(errs, tmpErrs...)
 	}
 	if len(errs) != 0 {
 		return errors.Errorf("gitops only allowed [list,git,matrix] generator: %s", strings.Join(errs, "; "))
