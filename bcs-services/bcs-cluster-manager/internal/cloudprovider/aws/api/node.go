@@ -441,3 +441,9 @@ func (nm *NodeManager) GetServiceRoles(opt *cloudprovider.CommonOption, roleType
 func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption) (map[string][]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// ListDiskTypes get disk type list
+func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, opt *cloudprovider.CommonOption) (
+	map[string]string, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}

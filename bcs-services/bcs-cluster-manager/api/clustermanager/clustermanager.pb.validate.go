@@ -47629,6 +47629,244 @@ var _ interface {
 	ErrorName() string
 } = InstanceTypeValidationError{}
 
+// Validate checks the field values on ListCloudDiskTypesRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudDiskTypesRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudDiskTypesRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudDiskTypesRequestMultiError, or nil if none found.
+func (m *ListCloudDiskTypesRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudDiskTypesRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if utf8.RuneCountInString(m.GetCloudID()) < 2 {
+		err := ListCloudDiskTypesRequestValidationError{
+			field:  "CloudID",
+			reason: "value length must be at least 2 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for AccountID
+
+	// no validation rules for Region
+
+	if len(m.GetInstanceTypes()) < 1 {
+		err := ListCloudDiskTypesRequestValidationError{
+			field:  "InstanceTypes",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ListCloudDiskTypesRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudDiskTypesRequestMultiError is an error wrapping multiple validation
+// errors returned by ListCloudDiskTypesRequest.ValidateAll() if the
+// designated constraints aren't met.
+type ListCloudDiskTypesRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudDiskTypesRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudDiskTypesRequestMultiError) AllErrors() []error { return m }
+
+// ListCloudDiskTypesRequestValidationError is the validation error returned by
+// ListCloudDiskTypesRequest.Validate if the designated constraints aren't met.
+type ListCloudDiskTypesRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudDiskTypesRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudDiskTypesRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudDiskTypesRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudDiskTypesRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudDiskTypesRequestValidationError) ErrorName() string {
+	return "ListCloudDiskTypesRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudDiskTypesRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudDiskTypesRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudDiskTypesRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudDiskTypesRequestValidationError{}
+
+// Validate checks the field values on ListCloudDiskTypesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListCloudDiskTypesResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudDiskTypesResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListCloudDiskTypesResponseMultiError, or nil if none found.
+func (m *ListCloudDiskTypesResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudDiskTypesResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	// no validation rules for Data
+
+	if len(errors) > 0 {
+		return ListCloudDiskTypesResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudDiskTypesResponseMultiError is an error wrapping multiple
+// validation errors returned by ListCloudDiskTypesResponse.ValidateAll() if
+// the designated constraints aren't met.
+type ListCloudDiskTypesResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudDiskTypesResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudDiskTypesResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudDiskTypesResponseValidationError is the validation error returned
+// by ListCloudDiskTypesResponse.Validate if the designated constraints aren't met.
+type ListCloudDiskTypesResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudDiskTypesResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudDiskTypesResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudDiskTypesResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudDiskTypesResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudDiskTypesResponseValidationError) ErrorName() string {
+	return "ListCloudDiskTypesResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudDiskTypesResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudDiskTypesResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudDiskTypesResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudDiskTypesResponseValidationError{}
+
 // Validate checks the field values on GetMasterSuggestedMachinesRequest with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, the first error encountered is returned, or nil if there are

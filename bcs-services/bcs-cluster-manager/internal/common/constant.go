@@ -48,6 +48,15 @@ var (
 	Task ResourceType = "task"
 	// Account type
 	Account ResourceType = "account"
+	// DiskType disk type
+	DiskType = map[string]string{
+		"CLOUD_BASIC":   "普通云硬盘",
+		"CLOUD_PREMIUM": "高性能云硬盘",
+		"CLOUD_BSSD":    "通用型SSD云硬盘",
+		"CLOUD_SSD":     "SSD云硬盘",
+		"CLOUD_HSSD":    "增强型SSD云硬盘",
+		"CLOUD_TSSD":    "极速型SSD云硬盘",
+	}
 )
 
 // NodeType node type
