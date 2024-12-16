@@ -457,8 +457,9 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // noli
 					}
 				} else {
 					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].Used += uint32(num)
-					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds =
-						append(insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds, group.GetNodeGroupID())
+					insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds = append(
+						insZoneQuota[group.GetLaunchTemplate().GetInstanceType()][zone].GroupIds,
+						group.GetNodeGroupID())
 				}
 			}
 
