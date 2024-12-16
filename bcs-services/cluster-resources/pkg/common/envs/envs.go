@@ -52,6 +52,7 @@ var (
 	BKIAMSystemID    = envx.Get("BK_IAM_SYSTEM_ID", "")
 	RedisPassword    = envx.Get("REDIS_PASSWORD", "")
 	MongoAddress     = envx.Get("MONGO_ADDRESS", "")
+	MongoReplicaset  = envx.Get("MONGO_REPLICASET", "")
 	MongoUsername    = envx.Get("MONGO_USERNAME", "")
 	MongoPassword    = envx.Get("MONGO_PASSWORD", "")
 )
