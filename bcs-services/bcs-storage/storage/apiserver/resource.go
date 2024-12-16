@@ -23,7 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
-	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
@@ -266,6 +266,7 @@ func (a *APIResource) GetStoreClient(key string) store.Store {
 
 func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 	address := dbConf.Read(key, "Addr")
+	replicaset := dbConf.Read(key, "Replicaset")
 	timeoutRaw := dbConf.Read(key, "ConnectTimeout")
 	timeout, err := strconv.Atoi(timeoutRaw)
 	if err != nil {
@@ -298,6 +299,7 @@ func (a *APIResource) parseMongodb(key string, dbConf *conf.Config) error {
 
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(address, ","),
+		Replicaset:            replicaset,
 		ConnectTimeoutSeconds: timeout,
 		Database:              database,
 		Username:              username,
