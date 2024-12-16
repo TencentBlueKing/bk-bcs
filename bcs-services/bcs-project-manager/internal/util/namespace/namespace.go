@@ -20,13 +20,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 )
 
 // FilterNamespaces filter shared namespace
 func FilterNamespaces(namespaceList *corev1.NamespaceList, shared bool, projectCode string) []corev1.Namespace {
 	nsList := []corev1.Namespace{}
 	for _, ns := range namespaceList.Items {
-		if shared && ns.Annotations[constant.AnnotationKeyProjectCode] != projectCode {
+		if shared && ns.Annotations[config.GlobalConf.SharedClusterConfig.AnnoKeyProjCode] != projectCode {
 			continue
 		}
 		nsList = append(nsList, ns)
