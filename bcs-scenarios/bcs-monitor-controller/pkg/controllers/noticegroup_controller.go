@@ -26,12 +26,14 @@ import (
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	monitorextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/api/v1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/apiclient"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/fileoperator"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-monitor-controller/pkg/utils"
 )
 
@@ -43,6 +45,8 @@ type NoticeGroupReconciler struct {
 	Ctx           context.Context
 	FileOp        *fileoperator.FileOperator
 	MonitorApiCli apiclient.IMonitorApiClient
+
+	Opts *option.ControllerOption
 }
 
 // nolint
@@ -150,6 +154,7 @@ func (r *NoticeGroupReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&monitorextensionv1.NoticeGroup{}).
 		WithEventFilter(r.eventPredicate()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: r.Opts.MaxConcurrentControllers}).
 		Complete(r)
 }
 

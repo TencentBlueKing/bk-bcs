@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -187,6 +188,7 @@ func (r *PanelReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&monitorextensionv1.Panel{}).
 		Watches(&source.Kind{Type: &v1.ConfigMap{}}, &configmapFilter{r.Client}).
 		WithEventFilter(r.eventPredicate()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: r.Opts.MaxConcurrentControllers}).
 		Complete(r)
 }
 

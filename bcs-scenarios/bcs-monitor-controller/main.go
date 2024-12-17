@@ -19,8 +19,6 @@ import (
 	"os"
 	"strconv"
 
-	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
-	// to ensure that exec-entrypoint and run can make use of them.
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/http/httpserver"
 	corev1 "k8s.io/api/core/v1"
@@ -126,6 +124,7 @@ func main() {
 		Ctx:           ctx,
 		FileOp:        fileOp,
 		MonitorApiCli: apiclient.NewBkmApiClient("noticeGroup", opts),
+		Opts:          opts,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "NoticeGroup")
 		os.Exit(1)

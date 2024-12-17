@@ -30,6 +30,7 @@ import (
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
@@ -108,10 +109,6 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				return ctrl.Result{}, err
 			}
 		}
-		ruleNameMap := make(map[string]interface{})
-		for _, rule := range originalRules {
-			ruleNameMap[rule.Name] = struct{}{}
-		}
 
 		if err := r.MonitorApiCli.DownloadConfig(monitorRule.Spec.BizID, monitorRule.Spec.BizToken); err != nil {
 			blog.Errorf("DownloadConfig for bizID[%s] failed, err: %s", monitorRule.Spec.BizID, err.Error())
@@ -135,9 +132,6 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				blog.Warnf("unknown file name format, file name: %s", fileName)
 				return false
 			}
-			if _, ok := ruleNameMap[fileRuleName[0]]; !ok {
-				return false
-			}
 			return true
 		})
 		if err != nil {
@@ -147,9 +141,11 @@ func (r *MonitorRuleReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		}
 
 		blog.Infof("load rule: %s", utils.ToJsonString(currentRule))
+
 		if currentRule != nil {
 			blog.Infof("currentRules: %s, monitorRule: %s", utils.ToJsonString(currentRule), utils.ToJsonString(monitorRule))
-			mergeRules := patch.ThreeWayMergeMonitorRule(originalRules, currentRule.Spec.Rules, monitorRule.Spec.Rules)
+			mergeRules := patch.ThreeWayMergeMonitorRule(monitorRule.Spec.Scenario, originalRules,
+				currentRule.Spec.Rules, monitorRule.Spec.Rules)
 
 			// 这里的修改不会实际应用到cr上，只在reconcile中使用
 			monitorRule.Spec.Rules = mergeRules
@@ -230,6 +226,7 @@ func (r *MonitorRuleReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&monitorextensionv1.MonitorRule{}).
 		WithEventFilter(r.eventPredicate()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: r.Opts.MaxConcurrentControllers}).
 		Complete(r)
 }
 

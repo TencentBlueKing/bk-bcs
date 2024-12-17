@@ -21,30 +21,43 @@ import (
 
 // NoticeAction 执行通知
 type NoticeAction struct {
-	Execute        *NoticeType `json:"execute" yaml:"execute"`
-	ExecuteFailed  *NoticeType `json:"execute_failed" yaml:"execute_failed"`
-	ExecuteSuccess *NoticeType `json:"execute_success" yaml:"execute_success"`
+	Execute        *NoticeWay `json:"execute" yaml:"execute"`
+	ExecuteFailed  *NoticeWay `json:"execute_failed" yaml:"execute_failed"`
+	ExecuteSuccess *NoticeWay `json:"execute_success" yaml:"execute_success"`
 }
 
 // NoticeAlert 告警通知
 type NoticeAlert struct {
-	Fatal   *NoticeType `json:"fatal" yaml:"fatal"`
-	Remind  *NoticeType `json:"remind" yaml:"remind"`
-	Warning *NoticeType `json:"warning" yaml:"warning"`
+	Fatal   *NoticeWay `json:"fatal" yaml:"fatal"`
+	Remind  *NoticeWay `json:"remind" yaml:"remind"`
+	Warning *NoticeWay `json:"warning" yaml:"warning"`
+}
+
+// NoticeWay 通知方式
+type NoticeWay struct {
+	NoticeWays []*NoticeType `json:"notice_ways" yaml:"notice_ways"`
 }
 
 // NoticeType 通知方式
 type NoticeType struct {
-	Type    []string `json:"type" yaml:"type"`
-	ChatIds []string `json:"chatids,omitempty" yaml:"chatids,omitempty"`
+	Name      string   `json:"name" yaml:"name"`
+	Receivers []string `json:"receivers,omitempty" yaml:"receivers"`
+}
+
+// Mention 通知对象
+type Mention struct {
+	ID         string `json:"id" yaml:"id"`
+	MemberType string `json:"member_type" yaml:"member_type"`
 }
 
 // NoticeGroupDetail 告警组配置
 type NoticeGroupDetail struct {
-	Action map[string]*NoticeAction `json:"action,omitempty" yaml:"action,omitempty"` // 执行通知
-	Alert  map[string]*NoticeAlert  `json:"alert,omitempty" yaml:"alert,omitempty"`   // 告警通知
-	Users  []string                 `json:"users,omitempty" yaml:"users,omitempty"`   // 通知对象
-	Name   string                   `json:"name,omitempty" yaml:"name,omitempty"`     // 告警组名称
+	Action      map[string]*NoticeAction `json:"action,omitempty" yaml:"action,omitempty"`     // 执行通知
+	Alert       map[string]*NoticeAlert  `json:"alert,omitempty" yaml:"alert,omitempty"`       // 告警通知
+	Users       []string                 `json:"users,omitempty" yaml:"users,omitempty"`       // 通知对象
+	Name        string                   `json:"name,omitempty" yaml:"name,omitempty"`         // 告警组名称
+	Channels    []string                 `json:"channels,omitempty" yaml:"channels,omitempty"` // 通知渠道
+	MentionList []*Mention               `json:"mention_list,omitempty" yaml:"mention_list,omitempty"`
 }
 
 // NoticeGroupSpec defines the desired state of NoticeGroup

@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -68,7 +68,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 			}
 
 			switch {
-			case strings.HasPrefix(info.Name(), "monitorrule") || strings.HasPrefix(info.Name(), "mr"):
+			case strings.HasPrefix(info.Name(), "monitorrule"):
 				blog.Infof("scenario '%s' got monitor rule: %s", scenario, info.Name())
 				var monitorRule monitorextensionv1.MonitorRule
 				inErr = runtime.DecodeInto(r.decoder, data, &monitorRule)
@@ -78,7 +78,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 				}
 
 				res.MonitorRule = append(res.MonitorRule, &monitorRule)
-			case strings.HasPrefix(info.Name(), "noticegroup") || strings.HasPrefix(info.Name(), "ng"):
+			case strings.HasPrefix(info.Name(), "noticegroup"):
 				blog.Infof("scenario '%s' got notice group: %s", scenario, info.Name())
 				var noticeGroup monitorextensionv1.NoticeGroup
 				inErr = runtime.DecodeInto(r.decoder, data, &noticeGroup)
@@ -88,7 +88,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 				}
 
 				res.NoticeGroup = append(res.NoticeGroup, &noticeGroup)
-			case strings.HasPrefix(info.Name(), "panel") || strings.HasPrefix(info.Name(), "p"):
+			case strings.HasPrefix(info.Name(), "panel"):
 				blog.Infof("scenario '%s' got panel: %s", scenario, info.Name())
 				var panel monitorextensionv1.Panel
 				inErr = runtime.DecodeInto(r.decoder, data, &panel)
@@ -98,7 +98,7 @@ func (r *MonitorRender) ReadScenario(repoKey, scenario string) (*Result, error) 
 				}
 
 				res.Panel = append(res.Panel, &panel)
-			case strings.HasPrefix(info.Name(), "configmap") || strings.HasPrefix(info.Name(), "cm"):
+			case strings.HasPrefix(info.Name(), "configmap"):
 				blog.Infof("scenario '%s' got configmap: %s", scenario, info.Name())
 				var configmap v1.ConfigMap
 				inErr = runtime.DecodeInto(r.decoder, data, &configmap)
@@ -184,6 +184,9 @@ func (r *MonitorRender) LoadRule(
 		return nil, err
 	}
 
+	if len(rules) == 0 {
+		return nil, nil
+	}
 	mr := &monitorextensionv1.MonitorRule{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GenerateMonitorRuleName,
@@ -242,6 +245,10 @@ func (r *MonitorRender) loadPanel(path string) ([]*v1.ConfigMap, *monitorextensi
 	})
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if len(configmaps) == 0 && len(dashBoards) == 0 {
+		return nil, nil, nil
 	}
 	panel := &monitorextensionv1.Panel{
 		ObjectMeta: metav1.ObjectMeta{
@@ -326,6 +333,9 @@ func (r *MonitorRender) loadNoticeGroup(path string) (*monitorextensionv1.Notice
 		return nil, err
 	}
 
+	if len(ngs) == 0 {
+		return nil, nil
+	}
 	ng := &monitorextensionv1.NoticeGroup{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GenerateNoticeGroupName,

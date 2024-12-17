@@ -85,46 +85,64 @@ spec:
                             description: NoticeAction 执行通知
                             properties:
                               execute:
-                                description: NoticeType 通知方式
+                                description: NoticeWay 通知方式
                                 properties:
-                                  chatids:
+                                  notice_ways:
                                     items:
-                                      type: string
-                                    type: array
-                                  type:
-                                    items:
-                                      type: string
+                                      description: NoticeType 通知方式
+                                      properties:
+                                        name:
+                                          type: string
+                                        receivers:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - name
+                                      type: object
                                     type: array
                                 required:
-                                - type
+                                - notice_ways
                                 type: object
                               execute_failed:
-                                description: NoticeType 通知方式
+                                description: NoticeWay 通知方式
                                 properties:
-                                  chatids:
+                                  notice_ways:
                                     items:
-                                      type: string
-                                    type: array
-                                  type:
-                                    items:
-                                      type: string
+                                      description: NoticeType 通知方式
+                                      properties:
+                                        name:
+                                          type: string
+                                        receivers:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - name
+                                      type: object
                                     type: array
                                 required:
-                                - type
+                                - notice_ways
                                 type: object
                               execute_success:
-                                description: NoticeType 通知方式
+                                description: NoticeWay 通知方式
                                 properties:
-                                  chatids:
+                                  notice_ways:
                                     items:
-                                      type: string
-                                    type: array
-                                  type:
-                                    items:
-                                      type: string
+                                      description: NoticeType 通知方式
+                                      properties:
+                                        name:
+                                          type: string
+                                        receivers:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - name
+                                      type: object
                                     type: array
                                 required:
-                                - type
+                                - notice_ways
                                 type: object
                             required:
                             - execute
@@ -137,46 +155,64 @@ spec:
                             description: NoticeAlert 告警通知
                             properties:
                               fatal:
-                                description: NoticeType 通知方式
+                                description: NoticeWay 通知方式
                                 properties:
-                                  chatids:
+                                  notice_ways:
                                     items:
-                                      type: string
-                                    type: array
-                                  type:
-                                    items:
-                                      type: string
+                                      description: NoticeType 通知方式
+                                      properties:
+                                        name:
+                                          type: string
+                                        receivers:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - name
+                                      type: object
                                     type: array
                                 required:
-                                - type
+                                - notice_ways
                                 type: object
                               remind:
-                                description: NoticeType 通知方式
+                                description: NoticeWay 通知方式
                                 properties:
-                                  chatids:
+                                  notice_ways:
                                     items:
-                                      type: string
-                                    type: array
-                                  type:
-                                    items:
-                                      type: string
+                                      description: NoticeType 通知方式
+                                      properties:
+                                        name:
+                                          type: string
+                                        receivers:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - name
+                                      type: object
                                     type: array
                                 required:
-                                - type
+                                - notice_ways
                                 type: object
                               warning:
-                                description: NoticeType 通知方式
+                                description: NoticeWay 通知方式
                                 properties:
-                                  chatids:
+                                  notice_ways:
                                     items:
-                                      type: string
-                                    type: array
-                                  type:
-                                    items:
-                                      type: string
+                                      description: NoticeType 通知方式
+                                      properties:
+                                        name:
+                                          type: string
+                                        receivers:
+                                          items:
+                                            type: string
+                                          type: array
+                                      required:
+                                      - name
+                                      type: object
                                     type: array
                                 required:
-                                - type
+                                - notice_ways
                                 type: object
                             required:
                             - fatal
@@ -184,6 +220,23 @@ spec:
                             - warning
                             type: object
                           type: object
+                        channels:
+                          items:
+                            type: string
+                          type: array
+                        mention_list:
+                          items:
+                            description: Mention 通知对象
+                            properties:
+                              id:
+                                type: string
+                              member_type:
+                                type: string
+                            required:
+                            - id
+                            - member_type
+                            type: object
+                          type: array
                         name:
                           type: string
                         users:

@@ -18,3 +18,29 @@ type DashBoard struct {
 	UID     string `json:"uid,omitempty"`
 	Version int64  `json:"version,omitempty"`
 }
+
+var (
+	bcsMonitorAppendLabel = []string{
+		"BCS内置告警",
+	}
+)
+
+func appendLabels(labels []string) []string {
+	newLabels := make([]string, 0)
+	newLabels = append(newLabels, labels...)
+	for _, appendLabel := range bcsMonitorAppendLabel {
+		exist := false
+		for _, label := range labels {
+			if appendLabel == label {
+				exist = true
+				break
+			}
+		}
+
+		if !exist {
+			newLabels = append(newLabels, appendLabel)
+		}
+	}
+
+	return newLabels
+}

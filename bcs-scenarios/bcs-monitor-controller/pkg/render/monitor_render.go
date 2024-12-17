@@ -14,7 +14,6 @@
 package render
 
 import (
-	// NOCC:gas/crypto(误报 未使用于密钥)
 	"crypto/md5"
 	"fmt"
 
@@ -118,9 +117,11 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 		}
 		mr.Status.SyncStatus.State = monitorextensionv1.SyncStateNeedReSync
 
-		if appMonitor.Spec.RuleEnhance != nil {
-			ruleEnhance := appMonitor.Spec.RuleEnhance
-			for _, rawRule := range mr.Spec.Rules {
+		for _, rawRule := range mr.Spec.Rules {
+			rawRule.Labels = appendLabels(rawRule.Labels)
+
+			if appMonitor.Spec.RuleEnhance != nil {
+				ruleEnhance := appMonitor.Spec.RuleEnhance
 				if len(ruleEnhance.NoticeGroupReplace) != 0 {
 					rawRule.Notice.UserGroups = ruleEnhance.NoticeGroupReplace
 				}
@@ -167,6 +168,14 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 		renderedMrs = append(renderedMrs, mr)
 	}
 
+	renderedMrs = append(renderedMrs, r.generateCopyRules(appMonitor, rawMrs)...)
+
+	return renderedMrs
+}
+
+func (r *MonitorRender) generateCopyRules(appMonitor *monitorextensionv1.AppMonitor,
+	rawMrs []*monitorextensionv1.MonitorRule) []*monitorextensionv1.MonitorRule {
+	cpMrList := make([]*monitorextensionv1.MonitorRule, 0)
 	if appMonitor.Spec.RuleEnhance != nil {
 		for _, cpConfig := range appMonitor.Spec.RuleEnhance.CopyRules {
 			for _, mr := range rawMrs {
@@ -188,11 +197,11 @@ func (r *MonitorRender) renderMonitorRule(appMonitor *monitorextensionv1.AppMoni
 						rule.Notice.UserGroups = mergeStringList(rule.Notice.UserGroups, cpConfig.NoticeGroupAppend)
 					}
 				}
-				renderedMrs = append(renderedMrs, cpMr)
+				cpMrList = append(cpMrList, cpMr)
 			}
 		}
 	}
-	return renderedMrs
+	return cpMrList
 }
 
 func (r *MonitorRender) renderNoticeGroup(appMonitor *monitorextensionv1.AppMonitor,

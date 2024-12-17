@@ -14,6 +14,8 @@
 package patch
 
 import (
+	"reflect"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/go-cmp/cmp"
 
@@ -25,7 +27,8 @@ import (
 // original: 上次变更的rule
 // current： 当前bkm平台上的rule
 // modified： 本次尝试变更的rule
-func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetail) []*v1.MonitorRuleDetail {
+func ThreeWayMergeMonitorRule(scenario string, original, current, modified []*v1.MonitorRuleDetail) []*v1.
+	MonitorRuleDetail {
 	mergeResult := make([]*v1.MonitorRuleDetail, 0)
 
 	originalMap := make(map[string]*v1.MonitorRuleDetail)
@@ -43,16 +46,22 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 	}
 
 	for _, modifiedRule := range modified {
-		originalRule, ok := originalMap[modifiedRule.Name]
-		if !ok { // 新增策略
+		currentRule, currentOk := currentMap[modifiedRule.Name]
+		if !currentOk { // 用户删除了对应策略 or 新建策略
 			mergeResult = append(mergeResult, modifiedRule)
 			continue
 		}
 
-		currentRule, ok := currentMap[modifiedRule.Name]
-		if !ok { // 用户删除了对应策略 or 新建策略
-			mergeResult = append(mergeResult, modifiedRule)
-			continue
+		originalRule, ok := originalMap[modifiedRule.Name]
+		if !ok {
+			if !currentOk { // 新增策略
+				mergeResult = append(mergeResult, modifiedRule)
+				continue
+			} else if scenario == "bcs-cluster" || scenario == "test" {
+				// 特殊适配， 仅针对bcs-cluster生效。 背景： bcs-cluster原本只包括集群相关的监控策略， 后续需要纳管组件相关策略
+				// 纳管了其他场景时，需要保留原策略
+				originalRule = modifiedRule
+			}
 		}
 
 		// 策略：
@@ -66,10 +75,15 @@ func ThreeWayMergeMonitorRule(original, current, modified []*v1.MonitorRuleDetai
 			mergeRule = modifiedRule
 			// 告警组配置以用户设置为准
 			mergeRule.Notice = mergeNoticeGroup(currentRule.Notice, modifiedRule.Notice)
+			// label覆盖
+			mergeRule.Labels = modifiedRule.Labels
 		} else {
 			blog.Infof("[%s]changed Rule..", originalRule.Name)
 			// 用户进行了修改， 不做变更
 			mergeRule = currentRule
+			mergeRule.Notice = mergeNoticeGroup(currentRule.Notice, modifiedRule.Notice)
+			// label覆盖
+			mergeRule.Labels = modifiedRule.Labels
 		}
 
 		mergeResult = append(mergeResult, mergeRule)
@@ -94,7 +108,7 @@ func compareMonitorRule(mr1, mr2 *v1.MonitorRuleDetail) bool {
 	}
 
 	// compare detect
-	if !cmp.Equal(mr1.Detect, mr2.Detect) {
+	if !reflect.DeepEqual(mr1.Detect, mr2.Detect) {
 		return false
 	}
 

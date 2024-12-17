@@ -71,6 +71,8 @@ type ControllerOption struct {
 	ArgoAdminNamespace string
 	// EnableArgo
 	EnableArgo bool
+
+	MaxConcurrentControllers int
 }
 
 // BindFromCommandLine bind from
@@ -99,6 +101,7 @@ func (c *ControllerOption) BindFromCommandLine() {
 		"directory path to store bkm download config")
 	flag.StringVar(&c.ArgoAdminNamespace, "argo_admin_namespace", "default", "argo admin namespace")
 	flag.BoolVar(&c.EnableArgo, "enable_argo", false, "enable argo")
+	flag.IntVar(&c.MaxConcurrentControllers, "max_concurrent_controllers", 10, "max concurrent controllers")
 	c.ScenarioGitRefreshFreq = time.Second * time.Duration(scenarioRefreshFreqSec)
 	c.RepoRefreshFreq = time.Second * time.Duration(repoRefreshFreqSec)
 	c.Verbosity = int32(verbosity)
