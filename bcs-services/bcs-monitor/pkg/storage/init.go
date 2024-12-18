@@ -57,6 +57,7 @@ func InitStorage() {
 		mongoConf := config.G.Mongo
 		mongoOptions := &mongo.Options{
 			Hosts:                 strings.Split(mongoConf.Address, ","),
+			Replicaset:            mongoConf.Replicaset,
 			ConnectTimeoutSeconds: int(mongoConf.ConnectTimeout),
 			AuthDatabase:          mongoConf.AuthDatabase,
 			Database:              mongoConf.Database,

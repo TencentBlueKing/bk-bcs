@@ -15,6 +15,7 @@ package config
 // MongoConf mongo config
 type MongoConf struct {
 	Address        string `yaml:"address"`
+	Replicaset     string `yaml:"replicaset"`
 	AuthDatabase   string `yaml:"authdatabase"`
 	Database       string `yaml:"database"`
 	Username       string `yaml:"username"`

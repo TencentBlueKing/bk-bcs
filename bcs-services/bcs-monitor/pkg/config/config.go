@@ -183,6 +183,9 @@ func (c *Configuration) ReadFrom(content []byte) error {
 	if c.Mongo.Address == "" {
 		c.Mongo.Address = MONGO_ADDRESS
 	}
+	if c.Mongo.Replicaset == "" {
+		c.Mongo.Replicaset = MONGO_REPLICASET
+	}
 	if c.Mongo.Username == "" {
 		c.Mongo.Username = MONGO_USERNAME
 	}
