@@ -33,6 +33,7 @@ type EtcdConfig struct {
 // MongoConfig mongo db config
 type MongoConfig struct {
 	Address        string `yaml:"address"`
+	Replicaset     string `yaml:"replicaset"`
 	ConnectTimeout uint   `yaml:"connecttimeout"`
 	Database       string `yaml:"database"`
 	Username       string `yaml:"username"`

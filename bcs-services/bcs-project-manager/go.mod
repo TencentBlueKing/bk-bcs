@@ -8,7 +8,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418123107-72b120390195
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241213022113-d2cc3e32d60c
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	github.com/envoyproxy/protoc-gen-validate v1.0.4

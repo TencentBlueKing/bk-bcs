@@ -45,17 +45,18 @@ const (
 )
 
 var (
-	mysqlHost   string
-	mysqlPort   uint
-	mysqlUser   string
-	mysqlPwd    string
-	mysqlDBName string
-	mongoAddr   string
-	mongoUser   string
-	mongoPwd    string
-	mongoDBName string
-	initProject bool
-	migrateCC   bool
+	mysqlHost       string
+	mysqlPort       uint
+	mysqlUser       string
+	mysqlPwd        string
+	mysqlDBName     string
+	mongoAddr       string
+	mongoReplicaset string
+	mongoUser       string
+	mongoPwd        string
+	mongoDBName     string
+	initProject     bool
+	migrateCC       bool
 
 	ccdb  *gorm.DB
 	model store.ProjectModel
@@ -122,6 +123,7 @@ func parseFlags() {
 
 	// mongo
 	flag.StringVar(&mongoAddr, "mongo_addr", "", "mongo address")
+	flag.StringVar(&mongoReplicaset, "mongo_replicaset", "", "mongo replicaset")
 	flag.StringVar(&mongoUser, "mongo_user", "", "access mongo username")
 	flag.StringVar(&mongoPwd, "mongo_pwd", "", "access mongo password")
 	flag.StringVar(&mongoDBName, "mongo_db_name", "", "access mongo db name")
@@ -138,6 +140,7 @@ func initDB() error {
 	// mongo
 	store.InitMongo(&config.MongoConfig{
 		Address:        mongoAddr,
+		Replicaset:     mongoReplicaset,
 		ConnectTimeout: 5,
 		Database:       mongoDBName,
 		Username:       mongoUser,
