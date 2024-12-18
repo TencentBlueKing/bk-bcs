@@ -136,7 +136,12 @@ func CheckIsProjNSinSharedCluster(ctx context.Context, clusterID, namespace stri
 	if err != nil {
 		return err
 	}
-	if !isProjNSinSharedCluster(manifest, projInfo.Code) {
+	clusterInfo, err := cluster.FromContext(ctx)
+	if err != nil {
+		return err
+	}
+	// 共享集群非管理端项目id和管理端不一致的情况需要判断某命名空间，是否属于指定项目
+	if clusterInfo.ProjID != projInfo.ID && !isProjNSinSharedCluster(manifest, projInfo.Code) {
 		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "命名空间 %s 在该共享集群中不属于指定项目"), namespace)
 	}
 	return nil
