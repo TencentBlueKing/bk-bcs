@@ -20,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/encrypt"
-	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 )
 
 func getPublishOptions(key string, queueConf *conf.Config) (msgqueue.QueueOption, error) {
