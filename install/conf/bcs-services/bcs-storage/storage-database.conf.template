@@ -1,5 +1,6 @@
 [mongodb/dynamic]
 Addr = ${mongodbHost}
+Replicaset = ${mongodbReplicaset}
 ConnectTimeout = 0
 Database = dynamic
 Username = ${mongodbUsername}
@@ -11,6 +12,7 @@ ListenerName = commonWatcher
 
 [mongodb/event]
 Addr = ${mongodbEventHost}
+Replicaset = ${mongodbReplicaset}
 ConnectTimeout = 0
 Database = event
 Username = ${mongodbEventUsername}
@@ -20,6 +22,7 @@ ListenerName = commonWatcher
 
 [mongodb/alarm]
 Addr = ${mongodbHost}
+Replicaset = ${mongodbReplicaset}
 ConnectTimeout = 0
 Database = alarm
 Username = ${mongodbUsername}
@@ -29,6 +32,7 @@ ListenerName = commonWatcher
 
 [mongodb/metric]
 Addr = ${mongodbHost}
+Replicaset = ${mongodbReplicaset}
 ConnectTimeout = 0
 Database = metric
 Username = ${mongodbUsername}
@@ -38,6 +42,7 @@ ListenerName = commonWatcher
 
 [mongodb/host]
 Addr = ${mongodbHost}
+Replicaset = ${mongodbReplicaset}
 ConnectTimeout = 0
 Database = host
 Username = ${mongodbUsername}
@@ -46,6 +51,7 @@ MaxPoolSize = ${mongodbMaxPoolSize}
 
 [mongodb/clusterConfig]
 Addr = ${mongodbHost}
+Replicaset = ${mongodbReplicaset}
 ConnectTimeout = 0
 Database = clusterConfig
 Username = ${mongodbUsername}

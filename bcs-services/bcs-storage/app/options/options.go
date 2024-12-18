@@ -16,7 +16,7 @@ package options
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/static"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/tracing"
 )
 
@@ -47,8 +47,8 @@ type StorageOptions struct {
 
 	ServerCert *CertConfig
 	ClientCert *CertConfig
-	Etcd       registryv4.CMDOptions `json:"etcdRegistry"`
-	Tracing    tracing.Options       `json:"tracing"`
+	Etcd       registry.CMDOptions `json:"etcdRegistry"`
+	Tracing    tracing.Options     `json:"tracing"`
 
 	DBConfig               string `json:"database_config_file" value:"storage-database.conf" usage:"Config file for database."`
 	QueueConfig            string `json:"queue_config_file" value:"queue.conf" usage:"Config file for database."`
@@ -75,6 +75,6 @@ func NewStorageOptions() *StorageOptions {
 			CertPwd: static.ClientCertPwd,
 			IsSSL:   false,
 		},
-		Etcd: registryv4.CMDOptions{},
+		Etcd: registry.CMDOptions{},
 	}
 }

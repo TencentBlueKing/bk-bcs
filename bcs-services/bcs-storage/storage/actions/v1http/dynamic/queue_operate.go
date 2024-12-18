@@ -15,7 +15,7 @@ package dynamic
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-storage/storage/apiserver"
