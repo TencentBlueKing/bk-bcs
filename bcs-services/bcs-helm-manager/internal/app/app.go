@@ -217,6 +217,7 @@ func (hm *HelmManager) initModel() error {
 	}
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(hm.opt.Mongo.Address, ","),
+		Replicaset:            hm.opt.Mongo.Replicaset,
 		ConnectTimeoutSeconds: int(hm.opt.Mongo.ConnectTimeout),
 		AuthDatabase:          hm.opt.Mongo.AuthDatabase,
 		Database:              hm.opt.Mongo.Database,
