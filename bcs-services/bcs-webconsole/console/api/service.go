@@ -136,7 +136,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 			metrics.CollectPodReady(
 				podmanager.GetAdminClusterId(authCtx.ClusterId),
 				podmanager.GetNamespace(),
-				podmanager.GetPodName(authCtx.ClusterId, authCtx.Username),
+				podmanager.GetPodName(authCtx.ProjectId, authCtx.ClusterId, authCtx.Username),
 				err,
 				podReadyDuration,
 			)

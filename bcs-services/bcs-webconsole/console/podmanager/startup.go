@@ -289,10 +289,10 @@ func GetNamespace() string {
 // makeSlugName 规范化名称
 // 符合k8s规则 https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#rfc-1035-label-names
 // 返回格式{hash[8]}-{slugname[20]}
-func makeSlugName(username string) string {
+func makeSlugName(projectID, clusterID, username string) string {
 	h := sha1.New() // nolint
-	h.Write([]byte(username))
-	hashId := hex.EncodeToString(h.Sum(nil))[:8]
+	h.Write([]byte(projectID + clusterID + username))
+	hashId := hex.EncodeToString(h.Sum(nil))[:5]
 
 	// 有些命名非k8s规范, slug 处理
 	slug.CustomSub = map[string]string{
@@ -301,34 +301,39 @@ func makeSlugName(username string) string {
 	slug.Lowercase = true
 
 	username = slug.Make(username)
-	if len(username) > 20 {
-		username = username[:20]
+	if len(username) > 8 {
+		username = username[:8]
 	}
-	return fmt.Sprintf("%s-%s", hashId, username)
+
+	if len(projectID) > 8 {
+		projectID = projectID[:8]
+	}
+
+	// 返回格式：{project_id}-{cluster_id}-{username}-{hash}
+	return fmt.Sprintf("%s-%s-%s-%s", projectID, clusterID, username, hashId)
 }
 
 // getUid
-func getUid(clusterID, username string) string {
-	username = makeSlugName(username)
-	uid := fmt.Sprintf("%s-u%s", clusterID, username)
+func getUid(projectID, clusterID, username string) string {
+	uid := makeSlugName(projectID, clusterID, username)
 	uid = strings.ToLower(uid)
 
 	return uid
 }
 
 // getConfigMapName 获取configMap名称
-func getConfigMapName(clusterID, username string) string {
-	username = makeSlugName(username)
-	cmName := fmt.Sprintf("kube-config-%s-u%s", clusterID, username)
+func getConfigMapName(projectID, clusterID, username string) string {
+	slugName := makeSlugName(projectID, clusterID, username)
+	cmName := fmt.Sprintf("kube-config-%s", slugName)
 	cmName = strings.ToLower(cmName)
 
 	return cmName
 }
 
 // GetPodName 获取pod名称
-func GetPodName(clusterID, username string) string {
-	username = makeSlugName(username)
-	podName := fmt.Sprintf("kubectld-%s-u%s", clusterID, username)
+func GetPodName(projectID, clusterID, username string) string {
+	slugName := makeSlugName(projectID, clusterID, username)
+	podName := fmt.Sprintf("kubectld-%s", slugName)
 	podName = strings.ToLower(podName)
 
 	return podName
@@ -418,8 +423,8 @@ func (m *StartupManager) getServer(clusterId string) string {
 		return server
 	}
 
-	// 如果是共享集群则加上/projects/%s
-	if authContext.BindCluster != nil && authContext.BindCluster.IsShared && authContext.BindProject != nil {
+	// 共享集群非管理端加上/projects/%s
+	if authContext.BindCluster.IsShared && authContext.BindProject.ProjectId != authContext.BindCluster.ProjectId {
 		return fmt.Sprintf("%s/projects/%s/clusters/%s", config.G.BCS.Host, authContext.BindProject.Code, clusterId)
 	}
 	return server
