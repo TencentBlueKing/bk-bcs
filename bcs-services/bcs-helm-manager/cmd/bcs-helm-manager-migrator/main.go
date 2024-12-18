@@ -103,6 +103,7 @@ func main() {
 	// init mongo options
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(C.Mongo.Address, ","),
+		Replicaset:            C.Mongo.Replicaset,
 		ConnectTimeoutSeconds: int(C.Mongo.ConnectTimeout),
 		AuthDatabase:          C.Mongo.AuthDatabase,
 		Database:              C.Mongo.Database,

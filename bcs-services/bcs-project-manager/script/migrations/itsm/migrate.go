@@ -57,6 +57,7 @@ func initDB() error {
 	// mongo
 	store.InitMongo(&config.MongoConfig{
 		Address:        config.GlobalConf.Mongo.Address,
+		Replicaset:     config.GlobalConf.Mongo.Replicaset,
 		ConnectTimeout: config.GlobalConf.Mongo.ConnectTimeout,
 		Database:       config.GlobalConf.Mongo.Database,
 		Username:       config.GlobalConf.Mongo.Username,
