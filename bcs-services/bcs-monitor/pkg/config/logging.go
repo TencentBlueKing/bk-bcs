@@ -20,6 +20,7 @@ import (
 func defaultLogConf() *conf.LogConfig {
 	logconfig := conf.LogConfig{
 		ToStdErr: true,
+		Level:    "info",
 	}
 	return &logconfig
 }

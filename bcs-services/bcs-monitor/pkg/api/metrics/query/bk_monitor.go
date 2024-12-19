@@ -16,9 +16,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/chonla/format"
 	"gopkg.in/yaml.v2"
-	"k8s.io/klog/v2"
 
 	bkmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
@@ -215,12 +215,12 @@ func NewBKMonitorHandler(bkBizID, clusterID string) *BKMonitorHandler {
 		if v.Type == config.BKMONITOR {
 			c, err := yaml.Marshal(v.Config)
 			if err != nil {
-				klog.Errorf("marshal content of store configuration error, %s", err.Error())
+				blog.Errorf("marshal content of store configuration error, %s", err.Error())
 				continue
 			}
 			var conf Config
 			if err := yaml.UnmarshalStrict(c, &conf); err != nil {
-				klog.Errorf("parsing bk_monitor store config error, %s", err.Error())
+				blog.Errorf("parsing bk_monitor store config error, %s", err.Error())
 				continue
 			}
 			for _, dis := range conf.Dispatch {

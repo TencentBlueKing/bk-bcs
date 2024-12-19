@@ -18,6 +18,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -25,7 +26,6 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source"
@@ -102,7 +102,7 @@ func (s *BCSSystemStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 // NOCC:golint/fnsize(设计如此)
 func (s *BCSSystemStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error { // nolint
 	ctx := srv.Context()
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=",
+	blog.Infow(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime=",
 		r.MinTime, "maxTime", r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// series 数据, 这里只查询最近 SeriesStepDeltaSeconds

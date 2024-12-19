@@ -22,7 +22,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/rand"
-	"k8s.io/klog/v2"
 
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -53,7 +52,7 @@ type Entrypoint struct {
 func GetEntrypoints(c *rest.Context) (interface{}, error) {
 	req := &GetEntrypointsReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
-		klog.Errorf("GetEntrypoints bind req json error, %s", err.Error())
+		blog.Errorf("GetEntrypoints bind req json error, %s", err.Error())
 		return nil, err
 	}
 
@@ -153,7 +152,7 @@ func GetLogRule(c *rest.Context) (interface{}, error) {
 func CreateLogRule(c *rest.Context) (interface{}, error) {
 	req := &CreateLogRuleReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
-		klog.Errorf("CreateLogCollector bind req json error, %s", err.Error())
+		blog.Errorf("CreateLogCollector bind req json error, %s", err.Error())
 		return nil, err
 	}
 	req.RuleName = fmt.Sprintf("%s_%s", req.Name, rand.String(5))
@@ -196,7 +195,7 @@ func UpdateLogRule(c *rest.Context) (interface{}, error) {
 	}
 	req := &UpdateLogRuleReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
-		klog.Errorf("UpdateLogCollector bind req json error, %s", err.Error())
+		blog.Errorf("UpdateLogCollector bind req json error, %s", err.Error())
 		return nil, err
 	}
 
@@ -457,7 +456,7 @@ type SwitchStorageReq struct {
 func SwitchStorage(c *rest.Context) (interface{}, error) {
 	req := &SwitchStorageReq{}
 	if err := c.ShouldBindJSON(req); err != nil {
-		klog.Errorf("SwitchStorage bind req json error, %s", err.Error())
+		blog.Errorf("SwitchStorage bind req json error, %s", err.Error())
 		return nil, err
 	}
 

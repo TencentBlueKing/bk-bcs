@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsclientset "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs/generated/clientset/versioned"
 	clusternet "github.com/clusternet/clusternet/pkg/generated/clientset/versioned"
 	"github.com/hashicorp/go-version"
@@ -25,7 +26,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
@@ -150,13 +150,13 @@ func GetK8SVersion(ctx context.Context, clusterId string) (*version.Version, err
 func K8SLessThan(ctx context.Context, clusterId, ver string) bool {
 	k8sV, err := GetK8SVersion(ctx, clusterId)
 	if err != nil {
-		klog.Warningf("GetK8SVersion error, %s, %s, %s", clusterId, err, err == nil)
+		blog.Warnf("GetK8SVersion error, %s, %s, %s", clusterId, err, err == nil)
 		return false
 	}
 
 	rawV, err := version.NewVersion(ver)
 	if err != nil {
-		klog.Warningf("parse raw version, %s, %s, %s", clusterId, ver, err)
+		blog.Warnf("parse raw version, %s, %s, %s", clusterId, ver, err)
 		return false
 	}
 
