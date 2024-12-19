@@ -23,11 +23,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/chonla/format"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
-	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -232,7 +232,7 @@ func QueryMultiValues(ctx context.Context, rawURL, bkBizID string, start int64, 
 
 			// 多个查询不报错, 有默认值
 			if err != nil {
-				klog.Warningf("query_multi_values %s error, %s", promql, err)
+				blog.Warnf("query_multi_values %s error, %s", promql, err)
 				resultMap[key] = defaultValue
 			} else {
 				resultMap[key] = GetFirstValue(resutl.Series)

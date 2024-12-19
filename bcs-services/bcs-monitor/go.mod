@@ -52,8 +52,6 @@ require (
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5
-	k8s.io/klog v1.0.0
-	k8s.io/klog/v2 v2.100.1
 )
 
 require (
@@ -108,6 +106,7 @@ require (
 	golang.org/x/arch v0.6.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
+	k8s.io/klog/v2 v2.100.1 // indirect
 	sigs.k8s.io/controller-runtime v0.11.2 // indirect
 )
 
@@ -279,6 +278,7 @@ require (
 )
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20241219085730-4f449aa4b355
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 	// from github.com/thanos-io/thanos
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.14.0

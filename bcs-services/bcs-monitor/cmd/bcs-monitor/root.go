@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -130,17 +129,7 @@ func initConfig() {
 	}
 
 	// blog初始化
-	blog.InitLogs(conf.LogConfig{
-		LogDir:          config.G.Logging.LogDir,
-		LogMaxSize:      config.G.Logging.LogMaxSize,
-		LogMaxNum:       config.G.Logging.LogMaxNum,
-		ToStdErr:        config.G.Logging.ToStdErr,
-		AlsoToStdErr:    config.G.Logging.AlsoToStdErr,
-		Verbosity:       config.G.Logging.Verbosity,
-		StdErrThreshold: config.G.Logging.StdErrThreshold,
-		VModule:         config.G.Logging.VModule,
-		TraceLocation:   config.G.Logging.TraceLocation,
-	})
+	blog.InitLogs(*config.G.Logging)
 
 	// 日志配置已经Ready, 后面都需要使用日志
 	blog.Infof("Using config file:%s", viper.ConfigFileUsed())

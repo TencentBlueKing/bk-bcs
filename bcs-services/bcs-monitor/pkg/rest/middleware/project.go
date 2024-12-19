@@ -13,8 +13,8 @@
 package middleware
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -37,7 +37,7 @@ func ProjectParse() gin.HandlerFunc {
 		}
 		project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectIDOrCode)
 		if err != nil {
-			klog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
+			blog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
 			rest.AbortWithBadRequestError(restContext, err)
 			return
 		}

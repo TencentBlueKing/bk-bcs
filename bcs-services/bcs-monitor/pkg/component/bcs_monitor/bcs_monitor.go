@@ -18,9 +18,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/chonla/format"
 	"github.com/prometheus/common/model"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 )
@@ -115,7 +115,7 @@ func QueryMultiValues(ctx context.Context, projectId string, promqlMap map[strin
 
 			// 多个查询不报错, 有默认值
 			if err != nil {
-				klog.Warningf("query_multi_values %s error, %s", promql, err)
+				blog.Warnf("query_multi_values %s error, %s", promql, err)
 				resultMap[key] = defaultValue
 			} else {
 				resultMap[key] = GetFirstValue(vector)
