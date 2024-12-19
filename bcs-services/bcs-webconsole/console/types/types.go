@@ -89,6 +89,7 @@ type Container struct {
 // PodContext xxx
 type PodContext struct {
 	ProjectId       string         `json:"project_id"`
+	ProjectCode     string         `json:"project_code"`
 	Username        string         `json:"username"`
 	Viewers         []string       `json:"viewers"`
 	AdminClusterId  string         `json:"admin_cluster_id"` // kubectld pod 所在集群Id, kubectl api 连接的集群
