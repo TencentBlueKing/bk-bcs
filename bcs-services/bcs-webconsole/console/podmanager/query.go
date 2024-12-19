@@ -110,15 +110,15 @@ func queryByClusterIdExternal(ctx context.Context,
 
 	authContext, ok := ctx.Value(AuthContextKey).(*route.AuthContext)
 	// 取不出来及空的情况下直接报错返回
-	if !ok || authContext.ProjectId == "" {
-		return nil, errors.New("project id is not set")
+	if !ok || authContext.BindProject.Code == "" {
+		return nil, errors.New("project code is not set")
 	}
 
-	projectID := authContext.ProjectId
+	projectCode := authContext.BindProject.Code
 
 	// kubeconfig cm 配置
-	configmapName := getConfigMapName(projectID, targetClusterId, username)
-	uid := getUid(projectID, targetClusterId, username)
+	configmapName := getConfigMapName(projectCode, targetClusterId, username)
+	uid := getUid(projectCode, targetClusterId, username)
 	if err = startupMgr.ensureConfigmap(namespace, configmapName, uid, kubeConfig); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func queryByClusterIdExternal(ctx context.Context,
 	image := config.G.WebConsole.KubectldImage + ":" + imageTag
 
 	// 确保 pod 配置正确
-	podName := GetPodName(projectID, targetClusterId, username)
+	podName := GetPodName(projectCode, targetClusterId, username)
 	// 外部集群, 默认 default 即可
 	serviceAccountName := "default"
 	podManifest := genPod(podName, image, configmapName, serviceAccountName, uid)
