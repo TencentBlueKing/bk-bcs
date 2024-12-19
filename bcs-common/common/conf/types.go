@@ -41,6 +41,7 @@ type LogConfig struct {
 	LogMaxSize uint64 `json:"log_max_size" value:"500" usage:"Max size (MB) per log file." mapstructure:"log_max_size" yaml:"log_max_size"`
 	LogMaxNum  int    `json:"log_max_num" value:"10" usage:"Max num of log file. The oldest will be removed if there is a extra file created." mapstructure:"log_max_num" yaml:"log_max_num"`
 
+	Level           string `json:"level" value:"info" usage:"log level: info、warning、error、fatal " mapstructure:"level" yaml:"level"`
 	ToStdErr        bool   `json:"logtostderr" value:"false" usage:"log to standard error instead of files" mapstructure:"logtostderr" yaml:"logtostderr"`
 	AlsoToStdErr    bool   `json:"alsologtostderr" value:"false" usage:"log to standard error as well as files" mapstructure:"alsologtostderr" yaml:"alsologtostderr"`
 	Verbosity       int32  `json:"v" value:"0" usage:"log level for V logs" mapstructure:"v" yaml:"v"`
