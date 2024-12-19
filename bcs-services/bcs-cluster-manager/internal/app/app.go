@@ -807,6 +807,12 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	return nil
 }
 
+func (cm *ClusterManager) initSharedClusterConf() {
+	if cm.opt.SharedCluster.AnnoKeyProjCode == "" {
+		cm.opt.SharedCluster.AnnoKeyProjCode = utils.ProjectCode
+	}
+}
+
 // initHTTPService init http service
 func (cm *ClusterManager) initHTTPService() error {
 	router := mux.NewRouter()
@@ -1106,6 +1112,8 @@ func (cm *ClusterManager) Init() error {
 		blog.Errorf("initCloudTemplateConfig failed: %v", err)
 	}
 
+	// init shared cluster config
+	cm.initSharedClusterConf()
 	// init metric, pprof
 	cm.initExtraModules()
 	// init system signal handler
