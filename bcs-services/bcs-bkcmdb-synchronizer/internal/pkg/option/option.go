@@ -17,12 +17,13 @@ import "github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
 // BkcmdbSynchronizerOption options for CostManager
 type BkcmdbSynchronizerOption struct {
-	Synchronizer SynchronizerConfig `json:"synchronizer" value:"synchronizer"`
-	Client       ClientConfig       `json:"client"`
-	Bcslog       conf.LogConfig     `json:"bcslog"`
-	Bcsapi       BcsapiConfig       `json:"bcsapi"`
-	RabbitMQ     RabbitMQConfig     `json:"rabbitmq"`
-	CMDB         CMDBConfig         `json:"cmdb"`
+	Synchronizer  SynchronizerConfig  `json:"synchronizer" value:"synchronizer"`
+	Client        ClientConfig        `json:"client"`
+	Bcslog        conf.LogConfig      `json:"bcslog"`
+	Bcsapi        BcsapiConfig        `json:"bcsapi"`
+	RabbitMQ      RabbitMQConfig      `json:"rabbitmq"`
+	CMDB          CMDBConfig          `json:"cmdb"`
+	SharedCluster SharedClusterConfig `json:"shared_cluster"`
 }
 
 // SynchronizerConfig synchronizer config
@@ -69,4 +70,9 @@ type CMDBConfig struct {
 	BKUserName string `json:"bk_username"`
 	Server     string `json:"server"`
 	Debug      bool   `json:"debug"`
+}
+
+// SharedClusterConfig shared cluster config
+type SharedClusterConfig struct {
+	AnnotationKeyProjCode string `json:"annotation_key_proj_code"`
 }
