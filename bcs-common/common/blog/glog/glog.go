@@ -97,6 +97,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/dustin/go-humanize"
 )
 
 // severity identifies the sort of log: info, warning etc. It also implements
@@ -694,9 +696,18 @@ func (l *loggingT) output(s severity, buf *buffer, file string, line int, alsoTo
 			buf.Write(stacks(false))
 		}
 	}
-	data := buf.Bytes()
+	body := buf.String()
+	// 最大打印 1024 个字符
+	if len(body) > 1024 {
+		body = fmt.Sprintf("%s...(Total %s)\n", body[:1024], humanize.Bytes(uint64(len(body))))
+	}
+	data := []byte(body)
+
 	if l.toStderr {
-		_, _ = os.Stderr.Write(data)
+		// print according to the configured log level
+		if l.stderrThreshold.get() <= s {
+			_, _ = os.Stderr.Write(data)
+		}
 	} else {
 		if alsoToStderr || l.alsoToStderr || s >= l.stderrThreshold.get() {
 			_, _ = os.Stderr.Write(data)
@@ -1276,7 +1287,7 @@ func (l LogKit) Log(keyvals ...interface{}) error {
 		logLevel = infoLog
 	}
 
-	logging.print(logLevel, keysAndValues...)
+	logging.printDepth(logLevel, 1, keysAndValues...)
 	return nil
 }
 

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -37,10 +38,14 @@ var once sync.Once
 
 // InitLogs initializes logs the way we want for blog.
 func InitLogs(logConfig conf.LogConfig) {
+	stdErrThreshold := logConfig.StdErrThreshold
+	if logConfig.Level != "" {
+		stdErrThreshold = strings.ToUpper(logConfig.Level)
+	}
 	glog.InitLogs(logConfig.ToStdErr,
 		logConfig.AlsoToStdErr,
 		logConfig.Verbosity,
-		logConfig.StdErrThreshold,
+		stdErrThreshold,
 		logConfig.VModule,
 		logConfig.TraceLocation,
 		logConfig.LogDir,
