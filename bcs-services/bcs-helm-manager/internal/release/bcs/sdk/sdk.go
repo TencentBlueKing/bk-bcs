@@ -164,6 +164,8 @@ func (c *client) List(_ context.Context, option release.ListOption) ([]*rspb.Rel
 
 	lister := action.NewList(conf)
 	lister.All = true
+	lister.StateMask = action.ListDeployed | action.ListUninstalled | action.ListUninstalling |
+		action.ListPendingInstall | action.ListPendingRollback | action.ListPendingUpgrade | action.ListFailed
 	if len(option.Namespace) == 0 {
 		lister.AllNamespaces = true
 	}
