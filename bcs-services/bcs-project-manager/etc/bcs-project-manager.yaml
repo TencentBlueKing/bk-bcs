@@ -88,3 +88,5 @@ bcscc:
 bcsGateway:
   host: ""
   token: ""
+sharedClusterConfig:
+  annoKeyProjCode: ""

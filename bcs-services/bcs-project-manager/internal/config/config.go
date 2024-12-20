@@ -172,6 +172,18 @@ type ListForIAMConfig struct {
 	All  bool     `yaml:"all" usage:"list all projects"`
 }
 
+// TaskConfig option for dispatch task broker & worker
+type TaskConfig struct {
+	QueueAddress string `yaml:"address"`
+	Exchange     string `yaml:"exchange"`
+	WorkerCnt    int    `yaml:"workerCnt"`
+}
+
+// SharedClusterConfig 共享集群相关配置
+type SharedClusterConfig struct {
+	AnnoKeyProjCode string `yaml:"annoKeyProjCode"`
+}
+
 // ProjectConfig 项目的配置信息
 type ProjectConfig struct {
 	Etcd                   EtcdConfig                   `yaml:"etcd"`
@@ -190,6 +202,7 @@ type ProjectConfig struct {
 	App                    AppConfig                    `yaml:"app"`
 	BcsGateway             BCSGatewayConfig             `yaml:"bcsGateway"`
 	ListForIAM             ListForIAMConfig             `yaml:"listForIAM"`
+	SharedClusterConfig    SharedClusterConfig          `yaml:"sharedClusterConfig"`
 }
 
 func (conf *ProjectConfig) initServerAddress() {
@@ -208,6 +221,9 @@ func (conf *ProjectConfig) initFromEnv() {
 	}
 	if conf.BcsGateway.Token == "" {
 		conf.BcsGateway.Token = envs.BCSGatewayToken
+	}
+	if conf.SharedClusterConfig.AnnoKeyProjCode == "" {
+		conf.SharedClusterConfig.AnnoKeyProjCode = envs.AnnotationKeyProjectCode
 	}
 }
 
