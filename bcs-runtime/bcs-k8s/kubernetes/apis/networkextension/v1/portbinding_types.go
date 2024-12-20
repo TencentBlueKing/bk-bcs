@@ -14,6 +14,8 @@
 package v1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -47,6 +49,7 @@ type PortBindingItem struct {
 	PoolNamespace         string                    `json:"poolNamespace"`
 	LoadBalancerIDs       []string                  `json:"loadBalancerIDs,omitempty"`
 	ListenerAttribute     *IngressListenerAttribute `json:"listenerAttribute,omitempty"`
+	UptimeCheck           *UptimeCheckConfig        `json:"uptimeCheck,omitempty"`
 	PoolItemLoadBalancers []*IngressLoadBalancer    `json:"poolItemLoadBalancers,omitempty"`
 	PoolItemName          string                    `json:"poolItemName"`
 	Protocol              string                    `json:"protocol"`
@@ -60,7 +63,17 @@ type PortBindingItem struct {
 
 // GetKey get port pool item key
 func (pbi *PortBindingItem) GetKey() string {
+	if pbi == nil {
+		return ""
+	}
 	return pbi.PoolItemName
+}
+
+func (pbi *PortBindingItem) GetFullKey() string {
+	if pbi == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s/%s", pbi.PoolNamespace, pbi.PoolName, pbi.PoolItemName)
 }
 
 // PortBindingSpec defines the desired state of PortBinding
@@ -68,6 +81,16 @@ type PortBindingSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	PortBindingList []*PortBindingItem `json:"portBindingList,omitempty"`
+}
+
+// HasEnableUptimeCheck check if has enable uptime check
+func (in *PortBindingSpec) HasEnableUptimeCheck() bool {
+	for _, item := range in.PortBindingList {
+		if item.UptimeCheck != nil && item.UptimeCheck.IsEnabled() {
+			return true
+		}
+	}
+	return false
 }
 
 // PortBindingStatusItem port binding item status
@@ -79,6 +102,15 @@ type PortBindingStatusItem struct {
 	EndPort       int    `json:"endPort"`
 	// Status is single pool item status
 	Status string `json:"status"`
+
+	UptimeCheckStatus *UptimeCheckTaskStatus `json:"uptimeCheckStatus,omitempty"`
+}
+
+func (in *PortBindingStatusItem) GetFullKey() string {
+	if in == nil {
+		return ""
+	}
+	return fmt.Sprintf("%s/%s/%s", in.PoolNamespace, in.PoolName, in.PoolItemName)
 }
 
 // PortBindingStatus defines the observed state of PortBinding

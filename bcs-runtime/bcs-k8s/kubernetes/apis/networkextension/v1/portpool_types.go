@@ -46,6 +46,7 @@ type PortPoolItem struct {
 	SegmentLength uint32                      `json:"segmentLength,omitempty"`
 	External      string                      `json:"external,omitempty"`
 	Certificate   *IngressListenerCertificate `json:"certificate,omitempty"`
+	UptimeCheck   *UptimeCheckConfig          `json:"uptimeCheck,omitempty"`
 }
 
 // GetKey get port pool item key

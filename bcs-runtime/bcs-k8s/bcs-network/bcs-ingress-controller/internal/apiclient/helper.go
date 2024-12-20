@@ -154,7 +154,7 @@ func (m *MonitorHelper) transUptimeCheckTask(ctx context.Context, listener *netw
 			RequestFormat:     uptimeCheckConfig.RequestFormat,
 			WaitEmptyResponse: true,
 		},
-		Name:        genUptimeCheckTaskName(listener, m.bcsClusterID),
+		Name:        m.genUptimeCheckTaskName(listener, m.bcsClusterID),
 		GroupIDList: []int64{},
 	}
 	if m.IndependentDataID {
@@ -363,7 +363,7 @@ func (m *MonitorHelper) compareUptimeCheckTask(cloudTask *UptimeCheckTask, creat
 	return false
 }
 
-func genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID string) string {
+func (m *MonitorHelper) genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID string) string {
 	port := listener.Spec.Port
 	if listener.Spec.ListenerAttribute.UptimeCheck.GetPortDefine() == networkextensionv1.PortDefineLast && listener.Spec.
 		EndPort != 0 {
@@ -375,7 +375,7 @@ func genUptimeCheckTaskName(listener *networkextensionv1.Listener, bcsClusterID 
 
 func (m *MonitorHelper) getCloudTask(ctx context.Context, listener *networkextensionv1.Listener) (*UptimeCheckTask, error) {
 	var cloudTask *UptimeCheckTask
-	taskName := genUptimeCheckTaskName(listener, m.bcsClusterID)
+	taskName := m.genUptimeCheckTaskName(listener, m.bcsClusterID)
 	if listener.GetUptimeCheckTaskStatus().ID != 0 {
 		taskResp, err := m.apiCli.ListUptimeCheckTask(ctx, &ListUptimeCheckRequest{Id: listener.
 			GetUptimeCheckTaskStatus().ID})

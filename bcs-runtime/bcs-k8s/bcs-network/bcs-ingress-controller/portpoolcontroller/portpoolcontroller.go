@@ -75,7 +75,17 @@ func NewPortPoolReconciler(
 }
 
 // Reconcile reconcile port pool
-func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+func (ppr *PortPoolReconciler) Reconcile(req ctrl.Request) (res ctrl.Result, lastErr error) {
+	defer func() {
+		if err := recover(); err != nil {
+			blog.Errorf("port pool reconcile panic: %v", err)
+			res = ctrl.Result{
+				Requeue:      true,
+				RequeueAfter: 3 * time.Second,
+			}
+		}
+	}()
+
 	blog.V(3).Infof("PortPool %+v triggered", req.NamespacedName)
 	if !ppr.isCacheSync {
 		if err := ppr.initPortPoolCache(); err != nil {

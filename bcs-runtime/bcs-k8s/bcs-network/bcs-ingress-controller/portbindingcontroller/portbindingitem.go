@@ -42,10 +42,10 @@ func newPortBindingItemHandler(ctx context.Context, k8sClient client.Client) *po
 func (pbih *portBindingItemHandler) ensureItem(
 	portBinding *networkextensionv1.PortBinding, tmpTargetGroup *networkextensionv1.ListenerTargetGroup,
 	item *networkextensionv1.PortBindingItem, itemStatus *networkextensionv1.
-PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
+		PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 	// when status is empty, just return initializing status
 	if itemStatus == nil {
-		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
+		return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusInitializing)
 	}
 	// update listener
 	portPool := &networkextensionv1.PortPool{}
@@ -54,7 +54,7 @@ PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 		Namespace: item.PoolNamespace,
 	}, portPool); err != nil {
 		blog.Warnf("failed to get port pool %s/%s failed, err %s", item.PoolName, item.PoolNamespace, err.Error())
-		return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
+		return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusInitializing)
 	}
 
 	countReady := 0
@@ -67,7 +67,7 @@ PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 			Namespace: item.PoolNamespace,
 		}, rawListener); err != nil {
 			blog.Warnf("failed to get listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
-			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
+			return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusInitializing)
 		}
 
 		// do not update informer cache directly
@@ -77,7 +77,7 @@ PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 			// listener has not synced
 			if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
 				blog.V(4).Infof("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
-				return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+				return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusNotReady)
 			}
 			// listener has targetGroup and targetGroup(include pod ip) has no changed
 			if reflect.DeepEqual(listener.Spec.TargetGroup, tmpTargetGroup) {
@@ -116,30 +116,36 @@ PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 			return nil
 		}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
-			return pbih.generateStatus(item, constant.PortBindingItemStatusInitializing)
+			return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusInitializing)
 		}
 		blog.V(3).Infof("update listener %s/%s successfully", listenerName, item.PoolNamespace)
 	}
 	if countReady == len(item.PoolItemLoadBalancers) && countReady != 0 {
-		return pbih.generateStatus(item, constant.PortBindingItemStatusReady)
+		return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusReady)
 	}
-	return pbih.generateStatus(item, constant.PortBindingItemStatusNotReady)
+	return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusNotReady)
 }
 
 func (pbih *portBindingItemHandler) generateStatus(
-	item *networkextensionv1.PortBindingItem, status string) *networkextensionv1.PortBindingStatusItem {
+	item *networkextensionv1.PortBindingItem, itemStatus *networkextensionv1.PortBindingStatusItem,
+	status string) *networkextensionv1.PortBindingStatusItem {
+	uptimeCheckStatus := &networkextensionv1.UptimeCheckTaskStatus{}
+	if itemStatus != nil {
+		uptimeCheckStatus = itemStatus.UptimeCheckStatus
+	}
 	return &networkextensionv1.PortBindingStatusItem{
-		PoolName:      item.PoolName,
-		PoolNamespace: item.PoolNamespace,
-		PoolItemName:  item.PoolItemName,
-		StartPort:     item.StartPort,
-		EndPort:       item.EndPort,
-		Status:        status,
+		PoolName:          item.PoolName,
+		PoolNamespace:     item.PoolNamespace,
+		PoolItemName:      item.PoolItemName,
+		StartPort:         item.StartPort,
+		EndPort:           item.EndPort,
+		Status:            status,
+		UptimeCheckStatus: uptimeCheckStatus,
 	}
 }
 
 func (pbih *portBindingItemHandler) deleteItem(
-	item *networkextensionv1.PortBindingItem) *networkextensionv1.PortBindingStatusItem {
+	item *networkextensionv1.PortBindingItem, itemStatus *networkextensionv1.PortBindingStatusItem) *networkextensionv1.PortBindingStatusItem {
 	for _, lbObj := range item.PoolItemLoadBalancers {
 		listenerName := common.GetListenerNameWithProtocol(
 			lbObj.LoadbalancerID, item.Protocol, item.StartPort, item.EndPort)
@@ -153,7 +159,7 @@ func (pbih *portBindingItemHandler) deleteItem(
 				continue
 			}
 			blog.Warnf("get listener %s/%s failed, err %s", listenerName, item.PoolNamespace, err.Error())
-			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)
+			return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusDeleting)
 		}
 		// do not update informer cache directly
 		cpListener := rawListener.DeepCopy()
@@ -163,7 +169,7 @@ func (pbih *portBindingItemHandler) deleteItem(
 				continue
 			}
 			blog.Warnf("listener %s/%s backend cleaned, but not synced", listenerName, item.PoolNamespace)
-			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)
+			return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusDeleting)
 		}
 		cpListener.Spec.TargetGroup = nil
 		cpListener.Status.Status = networkextensionv1.ListenerStatusNotSynced
@@ -173,8 +179,8 @@ func (pbih *portBindingItemHandler) deleteItem(
 		}
 		if err := pbih.k8sClient.Update(context.Background(), cpListener, &client.UpdateOptions{}); err != nil {
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
-			return pbih.generateStatus(item, constant.PortBindingItemStatusDeleting)
+			return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusDeleting)
 		}
 	}
-	return pbih.generateStatus(item, constant.PortBindingItemStatusCleaned)
+	return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusCleaned)
 }

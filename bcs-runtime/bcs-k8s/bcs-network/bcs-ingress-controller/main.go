@@ -200,7 +200,7 @@ func main() {
 		blog.Errorf("unable to create listener reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
-	listenerByPassReconciler := listenerctrl.NewListenerBypassReconciler(mgr.GetClient(), lbIDCache, opts)
+	listenerByPassReconciler := listenerctrl.NewListenerBypassReconciler(ctx, mgr.GetClient(), lbIDCache, opts)
 	if err = listenerByPassReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create listener-bypass reconciler, err %s", err.Error())
 		os.Exit(1)
@@ -219,6 +219,12 @@ func main() {
 		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts.NodePortBindingNs, nodeBindCache)
 	if err = portBindingReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port binding reconciler, err %s", err.Error())
+		os.Exit(1)
+	}
+	portBindingBypassReconciler := portbindingctrl.NewPortBindingByPassReconciler(
+		ctx, mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller"), opts)
+	if err = portBindingBypassReconciler.SetupWithManager(mgr); err != nil {
+		blog.Errorf("unable to create port binding bypass reconciler, err %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -355,7 +361,7 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 // initClient 根据使用云厂商的不同，返回对应云厂商的实现
 func initClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
 	eventWatcher eventer.WatchEventInterface) (cloud.
-	Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+Validater, cloud.LoadBalance, cloudnode.NodeClient) {
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
 	var nodeClient cloudnode.NodeClient

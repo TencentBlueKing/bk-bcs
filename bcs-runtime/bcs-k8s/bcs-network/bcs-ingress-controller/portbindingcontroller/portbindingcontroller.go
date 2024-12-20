@@ -71,60 +71,23 @@ func NewPortBindingReconciler(ctx context.Context, cleanInterval time.Duration, 
 // portbinding name is same with pod name
 // nolint  funlen
 func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	blog.V(3).Infof("PortBinding %+v triggered", req.NamespacedName)
-	portBinding := &networkextensionv1.PortBinding{}
-	isPortBindingFound := true
-	if err := pbr.k8sClient.Get(pbr.ctx, req.NamespacedName, portBinding); err != nil {
-		// nolint
-		if k8serrors.IsNotFound(err) {
-			isPortBindingFound = false
-		} else {
-			blog.Warnf("get portbinding %v failed, err %s, requeue it", req.NamespacedName, err.Error())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 3 * time.Second,
-			}, nil
-		}
-	}
+	blog.V(3).Infof("PortBinding %+v triggered", req.NamespacedName) // found same namespacedName pod & node
 
-	// found same namespacedName pod & node
-	isPodFound := true
-	isNodeFound := true
-	pod := &k8scorev1.Pod{}
-	if err := pbr.k8sClient.Get(pbr.ctx, req.NamespacedName, pod); err != nil {
-		// nolint
-		if k8serrors.IsNotFound(err) {
-			isPodFound = false
-		} else {
-			blog.Warnf("get pod %v failed, err %s", req.NamespacedName, err.Error())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 3 * time.Second,
-			}, nil
-		}
+	portBinding, pod, node, err := pbr.getResource(req.NamespacedName, req.Name)
+	if err != nil {
+		blog.Warnf("get pod %v or node %v failed, err %s, requeue it", req.NamespacedName, req.NamespacedName, err.Error())
+		return ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: 3 * time.Second,
+		}, nil
 	}
-	node := &k8scorev1.Node{}
-	if err := pbr.k8sClient.Get(pbr.ctx, k8stypes.NamespacedName{Name: req.Name}, node); err != nil {
-		// nolint
-		if k8serrors.IsNotFound(err) {
-			isNodeFound = false
-		} else {
-			blog.Warnf("get node %v failed, err %s", req.NamespacedName, err.Error())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 3 * time.Second,
-			}, nil
-		}
-	}
-	// node's namespace is empty, set to match node portbindings' namespace
-	node.SetNamespace(pbr.nodePortBindingNs)
 
 	var portBindingType string
-	if isPodFound && checkPortPoolAnnotation(pod.Annotations) {
+	if pod != nil && checkPortPoolAnnotation(pod.Annotations) {
 		portBindingType = networkextensionv1.PortBindingTypePod
-	} else if isNodeFound && checkPortPoolAnnotation(node.Annotations) {
+	} else if node != nil && checkPortPoolAnnotation(node.Annotations) {
 		portBindingType = networkextensionv1.PortBindingTypeNode
-	} else if isPortBindingFound {
+	} else if portBinding != nil {
 		// if entity not found and portbinding found, do clean portbinding
 		blog.V(3).Infof("clean portbinding %v", req.NamespacedName)
 		return pbr.cleanPortBinding(portBinding)
@@ -149,56 +112,21 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	switch portBindingType {
 	case networkextensionv1.PortBindingTypePod:
 		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), true)
-		if !isPortBindingFound {
-			if pod.Status.Phase == k8scorev1.PodFailed {
-				blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, no need to handle it", pod.GetNamespace(),
-					pod.GetName(), pod.Status.Reason, pod.Status.Message)
-				return ctrl.Result{}, nil
-			}
-
-			return pbr.createPortBinding(portBindingType, pod.GetNamespace(), pod.GetName(), pod.GetAnnotations())
-		}
-
-		// pod状态成为Failed后，需要删除对应PortBinding， 避免端口持续被占用无法释放
-		if pod.Status.Phase == k8scorev1.PodFailed {
-			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, so clean portbinding", pod.GetNamespace(),
-				pod.GetName(), pod.Status.Reason, pod.Status.Message)
-			return pbr.cleanPortBinding(portBinding)
-		}
-
-		if len(pod.Status.PodIP) == 0 {
-			blog.V(5).Infof("pod %s/%s has not pod ip, requeue it", pod.GetName(), pod.GetNamespace())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 300 * time.Millisecond,
-			}, nil
+		valid, res, err1 := pbr.podPortBindingPreCheck(portBindingType, portBinding, pod)
+		if !valid {
+			return res, err1
 		}
 
 		pbhandler = newPodPortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer, pod)
 	case networkextensionv1.PortBindingTypeNode:
-		if !pbr.isNodeValid(node) {
+		if !pbr.checkPortAllocate(node) {
 			return ctrl.Result{Requeue: true, RequeueAfter: time.Second * 10}, nil
 		}
 		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), true)
-		if !isPortBindingFound {
-			return pbr.createPortBinding(portBindingType, node.GetNamespace(), node.GetName(), node.GetAnnotations())
+		valid, res, err1 := pbr.nodePortBindingPreCheck(portBindingType, portBinding, node)
+		if !valid {
+			return res, err1
 		}
-
-		isNodeIPFound := false
-		for _, address := range node.Status.Addresses {
-			if address.Type == k8scorev1.NodeInternalIP && len(address.Address) != 0 {
-				isNodeIPFound = true
-				break
-			}
-		}
-		if !isNodeIPFound {
-			blog.Warnf("node %s/%s has not pod ip, requeue it", node.GetName(), node.GetNamespace())
-			return ctrl.Result{
-				Requeue:      true,
-				RequeueAfter: 300 * time.Millisecond,
-			}, nil
-		}
-
 		pbhandler = newNodePortBindingHandler(pbr.ctx, pbr.k8sClient, pbr.eventer, node, pbr.nodeBindCache)
 	default:
 		blog.Warnf("unknown portBindingType: %s", portBindingType)
@@ -228,6 +156,43 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	}
 	blog.Infof("ensure port binding %s/%s successfully", portBinding.GetName(), portBinding.GetNamespace())
 	return ctrl.Result{}, nil
+}
+
+func (pbr *PortBindingReconciler) getResource(namespacedName k8stypes.NamespacedName,
+	name string) (*networkextensionv1.PortBinding, *k8scorev1.Pod, *k8scorev1.Node, error) {
+	pb := &networkextensionv1.PortBinding{}
+	var portBinding *networkextensionv1.PortBinding = nil
+	if err := pbr.k8sClient.Get(pbr.ctx, namespacedName, pb); err != nil {
+		// nolint
+		if !k8serrors.IsNotFound(err) {
+			return nil, nil, nil, fmt.Errorf("get portbinding %v failed, err %s, requeue it", namespacedName, err.Error())
+		}
+	} else {
+		portBinding = pb.DeepCopy()
+	}
+	// found same namespacedName pod & node
+	pod := &k8scorev1.Pod{}
+	if err := pbr.k8sClient.Get(pbr.ctx, namespacedName, pod); err != nil {
+		// nolint
+		if !k8serrors.IsNotFound(err) {
+			return nil, nil, nil, fmt.Errorf("get pod %v failed, err %s", namespacedName, err.Error())
+		}
+	} else {
+		return portBinding, pod, nil, nil
+	}
+	node := &k8scorev1.Node{}
+	if err := pbr.k8sClient.Get(pbr.ctx, k8stypes.NamespacedName{Name: name}, node); err != nil {
+		// nolint
+		if !k8serrors.IsNotFound(err) {
+			return nil, nil, nil, fmt.Errorf("get node %v failed, err %s", name, err.Error())
+		}
+	} else {
+		// node's namespace is empty, set to match node portbindings' namespace
+		node.SetNamespace(pbr.nodePortBindingNs)
+		return portBinding, nil, node, nil
+	}
+
+	return portBinding, nil, nil, nil
 }
 
 func (pbr *PortBindingReconciler) createPortBinding(portBindingType, namespace, name string,
@@ -299,6 +264,14 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 			blog.Warnf("check port binding expire time failed, err %s", err.Error())
 		}
 		if portBinding.DeletionTimestamp != nil {
+			if len(portBinding.Finalizers) != 1 || portBinding.Finalizers[0] != constant.FinalizerNameBcsIngressController {
+				blog.Infof("finalizers of port binding %s/%s is not cleaned, skip clean port binding",
+					portBinding.GetNamespace(), portBinding.GetName())
+				return ctrl.Result{
+					Requeue:      true,
+					RequeueAfter: 3 * time.Second,
+				}, nil
+			}
 			blog.V(3).Infof("removing finalizer from port binding %s/%s",
 				portBinding.GetName(), portBinding.GetNamespace())
 			portBinding.Finalizers = bcsnetcommon.RemoveString(
@@ -389,6 +362,7 @@ func (pbr *PortBindingReconciler) getPortBindingPredicate() predicate.Predicate 
 			if !okNew || !okOld {
 				return true
 			}
+			// todo 确认status的比较是否需要？
 			if reflect.DeepEqual(newPoolBinding.Spec, oldPoolBinding.Spec) &&
 				reflect.DeepEqual(newPoolBinding.Status.PortBindingStatusList,
 					oldPoolBinding.Status.PortBindingStatusList) &&
@@ -427,7 +401,7 @@ func (pbr *PortBindingReconciler) getPortBindingPredicate() predicate.Predicate 
 	}
 }
 
-func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
+func (pbr *PortBindingReconciler) checkPortAllocate(node *k8scorev1.Node) bool {
 	// 节点和Pod的webhook策略不同。为了避免节点加入失败，即使端口分配失败，也允许节点变更
 	// 所以需要检查节点是否成功分配了端口
 	if _, ok := node.Annotations[constant.AnnotationForPortPoolBindings]; !ok {
@@ -457,4 +431,69 @@ func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
 		return false
 	}
 	return true
+}
+
+func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
+	isNodeIPFound := false
+	for _, address := range node.Status.Addresses {
+		if address.Type == k8scorev1.NodeInternalIP && len(address.Address) != 0 {
+			isNodeIPFound = true
+			break
+		}
+	}
+	if !isNodeIPFound {
+		blog.Warnf("node %s/%s has not pod ip, requeue it", node.GetName(), node.GetNamespace())
+		return false
+	}
+
+	return true
+
+}
+
+func (pbr *PortBindingReconciler) podPortBindingPreCheck(portBindingType string, portBinding *networkextensionv1.
+	PortBinding, pod *k8scorev1.Pod) (bool, ctrl.Result, error) {
+	if portBinding == nil {
+		if pod.Status.Phase == k8scorev1.PodFailed {
+			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, no need to handle it", pod.GetNamespace(),
+				pod.GetName(), pod.Status.Reason, pod.Status.Message)
+			return false, ctrl.Result{}, nil
+		}
+
+		res, err := pbr.createPortBinding(portBindingType, pod.GetNamespace(), pod.GetName(), pod.GetAnnotations())
+		return false, res, err
+	}
+
+	// pod状态成为Failed后，需要删除对应PortBinding， 避免端口持续被占用无法释放
+	if pod.Status.Phase == k8scorev1.PodFailed {
+		blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, so clean portbinding", pod.GetNamespace(),
+			pod.GetName(), pod.Status.Reason, pod.Status.Message)
+		res, err := pbr.cleanPortBinding(portBinding)
+		return false, res, err
+	}
+
+	if len(pod.Status.PodIP) == 0 {
+		blog.V(5).Infof("pod %s/%s has not pod ip, requeue it", pod.GetName(), pod.GetNamespace())
+		return false, ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: 3 * time.Second,
+		}, nil
+	}
+
+	return true, ctrl.Result{}, nil
+}
+
+func (pbr *PortBindingReconciler) nodePortBindingPreCheck(portBindingType string, portBinding *networkextensionv1.
+	PortBinding, node *k8scorev1.Node) (bool, ctrl.Result, error) {
+	if portBinding == nil {
+		res, err := pbr.createPortBinding(portBindingType, node.GetNamespace(), node.GetName(), node.GetAnnotations())
+		return false, res, err
+	}
+
+	if !pbr.isNodeValid(node) {
+		return false, ctrl.Result{
+			Requeue:      true,
+			RequeueAfter: 3 * time.Second,
+		}, nil
+	}
+	return true, ctrl.Result{}, nil
 }

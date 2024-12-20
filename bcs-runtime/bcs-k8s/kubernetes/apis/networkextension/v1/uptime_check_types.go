@@ -55,11 +55,21 @@ type UptimeCheckConfig struct {
 	PortDefine string `json:"port_define,omitempty"`
 }
 
+// GetPortDefine return port define
 func (u *UptimeCheckConfig) GetPortDefine() string {
 	if u.PortDefine != "" {
 		return u.PortDefine
 	}
 	return PortDefineFirst
+}
+
+// IsEnabled return enabled
+func (u *UptimeCheckConfig) IsEnabled() bool {
+	if u == nil {
+		return false
+	}
+
+	return u.Enabled
 }
 
 // Params http check params

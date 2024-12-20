@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -227,6 +228,10 @@ func (b *BkmApiClient) DeleteUptimeCheckTask(ctx context.Context, taskID int64) 
 
 	_, err := b.SendRequest(ctx, http.MethodPost, "/delete_uptime_check_task", param, &struct{}{})
 	if err != nil {
+		if strings.Contains(err.Error(), "No UptimeCheckTask matches the given query") {
+			blog.V(3).Infof("delete_uptime_check_task not found, req: %s", common.ToJsonString(req))
+			return nil
+		}
 		return fmt.Errorf("delete_uptime_check_task failed, req: %s, err: %v", common.ToJsonString(req), err)
 	}
 	blog.V(3).Infof("delete_uptime_check_task success, req: %s", common.ToJsonString(req))

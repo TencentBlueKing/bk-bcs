@@ -225,9 +225,13 @@ func (p *PodPortBindingHandler) ensurePod(pod *k8scorev1.Pod, portBinding *netwo
 			podPortBindingList[idx].PoolItemLoadBalancers = portBindingItem.PoolItemLoadBalancers
 			changed = true
 		}
+		if !reflect.DeepEqual(podPortBindingItem.UptimeCheck, portBindingItem.UptimeCheck) {
+			podPortBindingList[idx].UptimeCheck = portBindingItem.UptimeCheck
+			changed = true
+		}
 	}
 	if changed {
-		blog.Info("pod[%s/%s] PortBindingItem.External changed", pod.GetNamespace(), pod.GetName())
+		blog.Info("pod[%s/%s] PortBindingItem changed", pod.GetNamespace(), pod.GetName())
 		if err := p.patchPodBindingAnnotation(pod, podPortBindingList); err != nil {
 			return err
 		}

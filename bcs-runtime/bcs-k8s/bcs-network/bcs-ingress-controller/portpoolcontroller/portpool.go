@@ -266,6 +266,11 @@ func (pph *PortPoolHandler) ensurePortBinding(pool *networkextensionv1.PortPool)
 					cpPortBinding.Spec.PortBindingList[idx].PoolItemLoadBalancers = poolStatus.PoolItemLoadBalancers
 					changed = true
 				}
+				// 支持portBinding上附加拨测任务
+				if !reflect.DeepEqual(portBindingItem.UptimeCheck, poolItem.UptimeCheck) {
+					cpPortBinding.Spec.PortBindingList[idx].UptimeCheck = poolItem.UptimeCheck
+					changed = true
+				}
 			}
 
 			if changed {

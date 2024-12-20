@@ -160,12 +160,21 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 		return false, nil
 	}
 
-	portBinding.Status.PortBindingStatusList = nil
+	newPortBindingStatusList := make([]*networkextensionv1.PortBindingStatusItem, 0)
 	for _, item := range portBinding.Spec.PortBindingList {
+		var itemStatus *networkextensionv1.PortBindingStatusItem = nil
+		for _, status := range portBinding.Status.PortBindingStatusList {
+			if item.GetFullKey() == status.GetFullKey() {
+				itemStatus = status
+				break
+			}
+		}
 		// 将item对应监听器的targetGroup重新设置为空
-		itemStatus := pbh.itemHandler.deleteItem(item)
-		portBinding.Status.PortBindingStatusList = append(portBinding.Status.PortBindingStatusList, itemStatus)
+		itemStatus = pbh.itemHandler.deleteItem(item, itemStatus)
+		newPortBindingStatusList = append(newPortBindingStatusList, itemStatus)
 	}
+
+	portBinding.Status.PortBindingStatusList = newPortBindingStatusList
 	notCleanedNum := 0
 	for _, status := range portBinding.Status.PortBindingStatusList {
 		if status.Status != constant.PortBindingItemStatusCleaned {

@@ -352,6 +352,24 @@ func (s *Server) generatePortsAnnotationPatch(annotations map[string]string,
 			return PatchOperation{}, fmt.Errorf(
 				"parse pool key failed when generatePortsAnnotationPatch, err %s", err.Error())
 		}
+		portpool := &networkextensionv1.PortPool{}
+		if err1 := s.k8sClient.Get(context.Background(), k8stypes.NamespacedName{
+			Namespace: poolNamespace,
+			Name:      poolName,
+		}, portpool); err1 != nil {
+			return PatchOperation{}, fmt.Errorf("get port pool[%s/%s] failed, err %s", poolNamespace, poolName, err1.Error())
+		}
+		var poolItem *networkextensionv1.PortPoolItem = nil
+		for _, item := range portpool.Spec.PoolItems {
+			if item.ItemName == portPoolItemStatusList[index].ItemName {
+				poolItem = item
+				break
+			}
+		}
+		if poolItem == nil {
+			return PatchOperation{}, fmt.Errorf("port pool item[%s/%s/%s] not found", poolNamespace, poolName,
+				portPoolItemStatusList[index].ItemName)
+		}
 		for _, item := range portItemList[index] {
 			tmpPort := &networkextensionv1.PortBindingItem{
 				PoolName:              poolName,
@@ -365,6 +383,7 @@ func (s *Server) generatePortsAnnotationPatch(annotations map[string]string,
 				RsStartPort:           portEntry.Port,
 				HostPort:              portEntry.HostPort,
 				External:              portPoolItemStatusList[index].External,
+				UptimeCheck:           poolItem.UptimeCheck,
 			}
 			generatedPortList = append(generatedPortList, tmpPort)
 		}
