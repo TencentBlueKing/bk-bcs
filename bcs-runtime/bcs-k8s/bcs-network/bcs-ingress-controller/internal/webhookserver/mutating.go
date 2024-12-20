@@ -143,7 +143,13 @@ func (s *Server) checkExistedPortBinding(name, namespace string, portList []*por
 		return nil, errors.Errorf("portbinding %s/%s is deleting",
 			portBinding.GetName(), portBinding.GetNamespace())
 	}
+	if err := s.handlePortAnnotationChanged(portList, portBinding); err != nil {
+		return nil, err
+	}
+	return portBinding, nil
+}
 
+func (s *Server) handlePortAnnotationChanged(portList []*portEntry, portBinding *networkextensionv1.PortBinding) error {
 	portAnnotationChanged := false
 	rsPortMap := make(map[string]string)
 	for _, item := range portBinding.Spec.PortBindingList {
@@ -151,34 +157,51 @@ func (s *Server) checkExistedPortBinding(name, namespace string, portList []*por
 		rsPortMap[key] = item.PoolItemName
 	}
 	// 比较原有PortBinding(通过旧Pod创建)和新Pod注解（用户分配的端口）是否一致， 如果用户更新了分配端口/协议/item等，需要删除PortBinding重建。
+	lenPodPortList := 0
 	for _, port := range portList {
-		key := getPoolPortKey(port.PoolNamespace, port.PoolName, port.Protocol, port.Port)
-		// 如果key不存在， 或item名称不一致（用户可能未指定item）
-		if itemName, ok := rsPortMap[key]; !ok || (port.ItemName != "" && port.ItemName != itemName) {
-			portAnnotationChanged = true
-			break
+		if port.Protocol == constant.PortPoolPortProtocolTCPUDP {
+			lenPodPortList += 2
+			key := getPoolPortKey(port.PoolNamespace, port.PoolName, constant.ProtocolTCP, port.Port)
+			// 如果key不存在， 或item名称不一致（用户可能未指定item）
+			if itemName, ok := rsPortMap[key]; !ok || (port.ItemName != "" && port.ItemName != itemName) {
+				portAnnotationChanged = true
+				break
+			}
+
+			key = getPoolPortKey(port.PoolNamespace, port.PoolName, constant.ProtocolUDP, port.Port)
+			if itemName, ok := rsPortMap[key]; !ok || (port.ItemName != "" && port.ItemName != itemName) {
+				portAnnotationChanged = true
+				break
+			}
+		} else {
+			lenPodPortList++
+			key := getPoolPortKey(port.PoolNamespace, port.PoolName, port.Protocol, port.Port)
+			if itemName, ok := rsPortMap[key]; !ok || (port.ItemName != "" && port.ItemName != itemName) {
+				portAnnotationChanged = true
+				break
+			}
 		}
 	}
-	if len(portList) != len(portBinding.Spec.PortBindingList) {
+	if lenPodPortList != len(portBinding.Spec.PortBindingList) {
 		portAnnotationChanged = true
 	}
 
 	if portAnnotationChanged {
 		blog.Warnf("pod '%s/%s' annotation '%s' changed, need to recreate PortBinding. PortBinding: %s, pod: %s ",
-			namespace, name, constant.AnnotationForPortPoolPorts, common.ToJsonString(portBinding.Spec.
-				PortBindingList), common.ToJsonString(portList))
+			portBinding.GetNamespace(), portBinding.GetName(), constant.AnnotationForPortPoolPorts,
+			common.ToJsonString(portBinding.Spec.PortBindingList), common.ToJsonString(portList))
 		// 移除portBinding上的keepDuration注解，尽快删除
 		if err := s.removePortBindingAnnotation(portBinding); err != nil {
-			return nil, errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
+			return errors.Wrapf(err, "remove portbinding '%s/%s' annotations failed, err: %s",
 				portBinding.GetNamespace(), portBinding.GetName(), err.Error())
 		}
 		if err := s.k8sClient.Delete(context.Background(), portBinding, &client.DeleteOptions{}); err != nil {
-			return nil, errors.Wrapf(err, "delete portbinding '%s/%s' failed",
+			return errors.Wrapf(err, "delete portbinding '%s/%s' failed",
 				portBinding.GetName(), portBinding.GetNamespace())
 		}
-		return nil, nil
+		return nil
 	}
-	return portBinding, nil
+	return nil
 }
 
 // inject port pool item info into pod annotations and envs
