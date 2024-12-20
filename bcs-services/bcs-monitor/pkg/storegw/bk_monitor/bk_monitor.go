@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -27,7 +28,6 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
@@ -108,7 +108,7 @@ func (s *BKMonitorStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRe
 // LabelValues 返回 label values 列表
 func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse,
 	error) {
-	klog.InfoS(storepb.MatchersToString(r.Matchers...), "request_id", store.RequestIDValue(ctx))
+	blog.Infow(storepb.MatchersToString(r.Matchers...), "request_id", store.RequestIDValue(ctx))
 	values := []string{}
 	if r.Label != "__name__" {
 		return &storepb.LabelValuesResponse{Values: values}, nil
@@ -150,7 +150,7 @@ func (s *BKMonitorStore) LabelValues(ctx context.Context, r *storepb.LabelValues
 // Series 返回时序数据
 func (s *BKMonitorStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	ctx := srv.Context()
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
+	blog.Infow(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
 		r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// step 固定1分钟
@@ -266,12 +266,12 @@ func getMatcher(matchers []storepb.LabelMatcher, metricName string, cluster *bcs
 func (s *BKMonitorStore) getMatcherSeries(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer,
 	clusterID, bizID string) error {
 	ctx := srv.Context()
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "clusterID", clusterID)
+	blog.Infow(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "clusterID", clusterID)
 	series, err := bkmonitor_client.GetMetricsSeries(ctx, config.G.BKMonitor.MetadataURL, clusterID, bizID)
 	if err != nil {
 		return err
 	}
-	klog.InfoS("series", "request_id", store.RequestIDValue(ctx), "clusterID", clusterID, "len", len(series))
+	blog.Infow("series", "request_id", store.RequestIDValue(ctx), "clusterID", clusterID, "len", len(series))
 
 	metricsLabel := clientutil.GetLabelMatch("__name__", r.Matchers)
 	if metricsLabel == nil || metricsLabel.Value == "" {

@@ -25,12 +25,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/dustin/go-humanize"
 	resty "github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
@@ -128,17 +128,17 @@ func restyResponseToCurl(resp *resty.Response) string {
 }
 
 func restyErrHook(r *resty.Request, err error) {
-	klog.Infof("[%s] RESP: [err] %s", store.RequestIDValue(r.RawRequest.Context()), err)
+	blog.Infof("[%s] RESP: [err] %s", store.RequestIDValue(r.RawRequest.Context()), err)
 }
 
 func restyAfterResponseHook(c *resty.Client, r *resty.Response) error {
-	klog.Infof("[%s] [Traceparent: %s] RESP: %s", store.RequestIDValue(r.Request.Context()),
+	blog.Infof("[%s] [Traceparent: %s] RESP: %s", store.RequestIDValue(r.Request.Context()),
 		r.Request.RawRequest.Header.Get("Traceparent"), restyResponseToCurl(r))
 	return nil
 }
 
 func restyBeforeRequestHook(c *resty.Client, r *resty.Request) error {
-	klog.Infof("[%s] REQ: %s", store.RequestIDValue(r.Context()), restyReqToCurl(r))
+	blog.Infof("[%s] REQ: %s", store.RequestIDValue(r.Context()), restyReqToCurl(r))
 	tracing.SetRequestIDValue(r.RawRequest, store.RequestIDValue(r.Context()))
 	return nil
 }

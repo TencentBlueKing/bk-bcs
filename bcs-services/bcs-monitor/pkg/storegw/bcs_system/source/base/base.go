@@ -18,11 +18,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/prompb"
 	"github.com/thanos-io/thanos/pkg/store"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
@@ -262,7 +262,7 @@ func GetNodeInfoIngoreErr(ctx context.Context, clusterID, nodeName string) (*v1.
 	}
 	node, err := k8sclient.GetNodeInfo(ctx, clusterID, nodeName)
 	if err != nil {
-		klog.InfoS("get node info error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+		blog.Infow("get node info error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
 			"node", node, "err", err)
 		return nil, false
 	}
@@ -276,7 +276,7 @@ func GetNodeCRVersionByNameIngErr(ctx context.Context, clusterID, nodeName strin
 	}
 	version, err := GetNodeCRVersionByName(ctx, clusterID, nodeName)
 	if err != nil {
-		klog.InfoS("get node cr version error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+		blog.Infow("get node cr version error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
 			"node_name", nodeName, "err", err)
 		return "", false
 	}
@@ -290,7 +290,7 @@ func GetNodeMatchByNameIngErr(ctx context.Context, clusterID, nodeName string) (
 	}
 	ipReg, ip, err := GetNodeMatchByName(ctx, clusterID, nodeName)
 	if err != nil {
-		klog.InfoS("get cluster nodes error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+		blog.Infow("get cluster nodes error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
 			"err", err)
 		return "", "", false
 	}
@@ -304,7 +304,7 @@ func GetNodeMatchWithScaleIngErr(ctx context.Context, clusterID string, scale in
 	}
 	resslice, err := GetNodeMatchWithScale(ctx, clusterID, scale)
 	if err != nil {
-		klog.InfoS("get cluster nodes error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+		blog.Infow("get cluster nodes error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
 			"err", err)
 		return nil, false
 	}
