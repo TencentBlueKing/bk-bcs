@@ -114,7 +114,7 @@ crGlobal:
   sharedCluster:
     enabledCObjKinds: []
     enabledCRDs: []
-
+    annotationKeyProjectCode: ""
   # TRACING 相关配置
 tracing:
   tracingEnabled: false
