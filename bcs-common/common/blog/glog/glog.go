@@ -1276,7 +1276,7 @@ func (l LogKit) Log(keyvals ...interface{}) error {
 		logLevel = infoLog
 	}
 
-	logging.print(logLevel, keysAndValues...)
+	logging.printDepth(logLevel, 1, keysAndValues...)
 	return nil
 }
 
