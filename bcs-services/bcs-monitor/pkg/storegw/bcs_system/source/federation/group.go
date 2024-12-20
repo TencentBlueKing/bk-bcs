@@ -17,9 +17,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/prometheus/prometheus/prompb"
 	"golang.org/x/sync/errgroup"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
@@ -46,12 +46,12 @@ func (m *Federation) handleGroupMetric(ctx context.Context, projectID, clusterID
 			client, err := ClientFactory(ctx, clusterID, m.dispatch[clusterID].SourceType,
 				m.dispatch[clusterID].MetricsPrefix)
 			if err != nil {
-				klog.Warningf("get client in cluster %s error, %s", clusterID, err)
+				blog.Warnf("get client in cluster %s error, %s", clusterID, err)
 				return nil
 			}
 			s, err := fn(client, ctx, projectID, clusterID, group, start, end, step)
 			if err != nil {
-				klog.Warningf("handle group metrics in cluster %s error, %s", clusterID, err)
+				blog.Warnf("handle group metrics in cluster %s error, %s", clusterID, err)
 				return nil
 			}
 			mux.Lock()

@@ -16,8 +16,8 @@ package query
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/thanos-io/thanos/pkg/store"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
@@ -64,7 +64,7 @@ func GetMasterNodeMatch(ctx context.Context, clusterID string) (string, string, 
 func GetMasterNodeMatchIgnoreErr(ctx context.Context, clusterID string) (string, string, bool) {
 	nodeList, nodeNameList, err := GetMasterNodeMatch(ctx, clusterID)
 	if err != nil {
-		klog.InfoS("get node error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
+		blog.Infow("get node error", "request_id", store.RequestIDValue(ctx), "cluster_id", clusterID,
 			"err", err.Error())
 		return "", "", false
 	}

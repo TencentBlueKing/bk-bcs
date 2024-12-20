@@ -19,8 +19,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"k8s.io/klog/v2"
 
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -397,27 +397,27 @@ func getRuleIDByName(projectID, clusterID, ruleName string) (string, error) {
 
 // createBKlog create bklog
 func createBKLog(req *bklog.CreateBCSCollectorReq) {
-	klog.Infof("ready to create bklog, req: %s", req)
+	blog.Infof("ready to create bklog, req: %s", req)
 	ctx := context.Background()
 	store := storage.GlobalStorage
 	// get log rule
 	ruleID, err := getRuleIDByName(req.ProjectID, req.BCSClusterID, req.CollectorConfigNameEN)
 	if err != nil {
-		klog.Errorf("can't find log rules with rule_name %s", req.CollectorConfigNameEN)
+		blog.Errorf("can't find log rules with rule_name %s", req.CollectorConfigNameEN)
 		return
 	}
 
 	// create bk log
 	resp, err := bklog.CreateLogCollectors(ctx, req)
 	if err != nil {
-		klog.Errorf("create bklog error, %s", err.Error())
+		blog.Errorf("create bklog error, %s", err.Error())
 		// report fail status
 		err = store.UpdateLogRule(ctx, ruleID, entity.M{
 			entity.FieldKeyStatus:  entity.FailedStatus,
 			entity.FieldKeyMessage: err.Error(),
 		})
 		if err != nil {
-			klog.Errorf("UpdateLogRule error, %s", err.Error())
+			blog.Errorf("UpdateLogRule error, %s", err.Error())
 		}
 		return
 	}
@@ -433,27 +433,27 @@ func createBKLog(req *bklog.CreateBCSCollectorReq) {
 		entity.FieldKeyRuleStdIndexSetID:  resp.RuleSTDIndexSetID,
 	})
 	if err != nil {
-		klog.Errorf("UpdateLogRule error, %s", err.Error())
+		blog.Errorf("UpdateLogRule error, %s", err.Error())
 	}
 }
 
 // updateBKLog update bklog
 func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) {
-	klog.Infof("ready to update bklog, req: %s", req)
+	blog.Infof("ready to update bklog, req: %s", req)
 	ctx := context.Background()
 	store := storage.GlobalStorage
 
 	// update bk log
 	resp, err := bklog.UpdateLogCollectors(ctx, bkRuleID, req)
 	if err != nil {
-		klog.Errorf("update bklog error, %s", err.Error())
+		blog.Errorf("update bklog error, %s", err.Error())
 		// report fail status
 		err = store.UpdateLogRule(ctx, ruleID, entity.M{
 			entity.FieldKeyStatus:  entity.FailedStatus,
 			entity.FieldKeyMessage: err.Error(),
 		})
 		if err != nil {
-			klog.Errorf("UpdateLogRule error, %s", err.Error())
+			blog.Errorf("UpdateLogRule error, %s", err.Error())
 		}
 		return
 	}
@@ -468,7 +468,7 @@ func updateBKLog(ruleID string, bkRuleID int, req *bklog.UpdateBCSCollectorReq) 
 		entity.FieldKeyRuleStdIndexSetID:  resp.RuleSTDIndexSetID,
 	})
 	if err != nil {
-		klog.Errorf("UpdateLogRule error, %s", err.Error())
+		blog.Errorf("UpdateLogRule error, %s", err.Error())
 	}
 }
 
