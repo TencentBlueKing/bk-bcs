@@ -14,6 +14,7 @@
 package envs
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 )
 
@@ -28,4 +29,7 @@ var (
 	// BCSGatewayToken bcs gateway token
 	BCSGatewayToken    = stringx.GetEnv("gatewayToken", "")
 	BCSNamespacePrefix = stringx.GetEnv("BCS_NAMESPACE_PREFIX", "bcs")
+
+	// AnnotationKeyProjectCode shared cluster project code annotation key
+	AnnotationKeyProjectCode = stringx.GetEnv("annotationKeyProjectCode", constant.AnnotationKeyProjectCode)
 )
