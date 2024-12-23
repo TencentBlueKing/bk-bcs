@@ -272,6 +272,11 @@ type JobConfig struct {
 	JobTaskLink string `json:"jobTaskLink"`
 }
 
+// SharedClusterConfig config for shared cluster
+type SharedClusterConfig struct {
+	AnnoKeyProjCode string `json:"annoKeyProjCode"`
+}
+
 // ClusterManagerOptions options of cluster manager
 type ClusterManagerOptions struct {
 	Etcd               EtcdOption            `json:"etcd"`
@@ -303,6 +308,7 @@ type ClusterManagerOptions struct {
 	TagDepart          string                `json:"tagDepart"`
 	PrefixVcluster     string                `json:"prefixVcluster"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
+	SharedCluster      SharedClusterConfig   `json:"sharedCluster"`
 	ServerConfig
 	ClientConfig
 }
