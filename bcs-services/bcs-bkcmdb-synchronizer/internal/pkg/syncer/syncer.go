@@ -380,7 +380,7 @@ func (s *Syncer) SyncNamespaces(cluster *cmp.Cluster, bkCluster *bkcmdbkube.Clus
 
 	for k, v := range nsMap {
 		nsbizid := bkCluster.BizID
-		if projectCode, ok := v.Data.Annotations["io.tencent.bcs.projectcode"]; ok {
+		if projectCode, ok := v.Data.Annotations[s.BkcmdbSynchronizerOption.SharedCluster.AnnotationKeyProjCode]; ok {
 			bizid, errP := s.getBizidByProjectCode(projectCode)
 			if errP != nil {
 				blog.Errorf("get bizid by projectcode err: %v", errP)
