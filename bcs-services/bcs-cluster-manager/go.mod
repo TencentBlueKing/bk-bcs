@@ -46,7 +46,7 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.768
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1052
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tag v1.0.768
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.544
@@ -71,6 +71,8 @@ require (
 	k8s.io/kubectl v0.0.0-00010101000000-000000000000
 	sigs.k8s.io/aws-iam-authenticator v0.6.17
 )
+
+require github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cbs v1.0.1052
 
 require (
 	github.com/Azure/azure-sdk-for-go/profile/p20200901 v0.1.1
