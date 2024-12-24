@@ -96,22 +96,24 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 		return ctrl.Result{}, nil
 	}
 
-	// portBinding创建后， 标记使用的端口（checker会根据这个标记，释放泄漏的端口）
-	for _, portBindingItem := range portBinding.Spec.PortBindingList {
-		pbr.poolCache.SetPortBindingUsed(portBindingItem, portBindingType, portBinding.GetNamespace(),
-			portBinding.GetName())
-	}
+	if portBinding != nil {
+		// portBinding创建后， 标记使用的端口（checker会根据这个标记，释放泄漏的端口）
+		for _, portBindingItem := range portBinding.Spec.PortBindingList {
+			pbr.poolCache.SetPortBindingUsed(portBindingItem, portBindingType, portBinding.GetNamespace(),
+				portBinding.GetName())
+		}
 
-	// when statefulset pod is recreated, the old portbinding may be deleting
-	if portBinding.DeletionTimestamp != nil {
-		blog.V(3).Infof("found deleting portbinding, continue clean portbinding %v", req.NamespacedName)
-		return pbr.cleanPortBinding(portBinding)
+		// when statefulset pod is recreated, the old portbinding may be deleting
+		if portBinding.DeletionTimestamp != nil {
+			blog.V(3).Infof("found deleting portbinding, continue clean portbinding %v", req.NamespacedName)
+			return pbr.cleanPortBinding(portBinding)
+		}
 	}
 
 	var pbhandler iPortBindingHandler
 	switch portBindingType {
 	case networkextensionv1.PortBindingTypePod:
-		metrics.ReportPortAllocate(node.GetName(), node.GetNamespace(), true)
+		metrics.ReportPortAllocate(pod.GetName(), pod.GetNamespace(), true)
 		valid, res, err1 := pbr.podPortBindingPreCheck(portBindingType, portBinding, pod)
 		if !valid {
 			return res, err1

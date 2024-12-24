@@ -184,7 +184,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			RequeueAfter: 5 * time.Second,
 		}, nil
 	}
-	ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeNormal, "EnsureSuccess", "Ensure success")
+	ir.IngressEventer.Eventf(ingress, k8scorev1.EventTypeNormal, "EnsureSuccess", "Update Listener Finished")
 
 	return ctrl.Result{}, nil
 }

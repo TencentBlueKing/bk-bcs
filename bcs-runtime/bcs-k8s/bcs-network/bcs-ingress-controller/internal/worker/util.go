@@ -20,11 +20,12 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
-
 	k8scorev1 "k8s.io/api/core/v1"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 )
 
 const (
@@ -57,6 +58,53 @@ func (h *EventHandler) recordListenerEvent(lis *networkextensionv1.Listener, eTy
 	h.listenerEventer.Event(lis, eType, reason, msg)
 }
 
+func (h *EventHandler) recordListenerOwnerEvent(lis *networkextensionv1.Listener, eType, reason, msg string) {
+	if h.listenerEventer == nil {
+		return
+	}
+	ownerKind, ok := lis.Labels[networkextensionv1.LabelKeyForOwnerKind]
+	if !ok {
+		// 注解上没有记录所属资源类型,不记录事件
+		return
+	}
+
+	switch ownerKind {
+	case constant.KindIngress:
+		ownerName, lok := lis.Labels[networkextensionv1.LabelKeyForOwnerName]
+		if !lok {
+			// 注解上没有记录所属资源,不记录事件
+			return
+		}
+		ingress := &networkextensionv1.Ingress{}
+		if err := h.k8sCli.Get(context.Background(), k8stypes.NamespacedName{
+			Namespace: lis.GetNamespace(),
+			Name:      ownerName,
+		}, ingress); err != nil {
+			blog.Errorf("get ingress %s/%s from listener[%s/%s] failed, err: %s", lis.GetNamespace(), ownerName,
+				lis.GetNamespace(), lis.GetName(), err.Error())
+			return
+		}
+		h.listenerEventer.Eventf(ingress, eType, reason, "listener %s/%s failed, msg: %s", lis.GetNamespace(),
+			lis.GetName(), msg)
+	case constant.KindPortPool:
+		sourceName := lis.GetListenerSourceName()
+		sourceNamespace := lis.GetListenerSourceNamespace()
+		portBinding := &networkextensionv1.PortBinding{}
+		if err := h.k8sCli.Get(context.Background(), k8stypes.NamespacedName{
+			Namespace: sourceNamespace,
+			Name:      sourceName,
+		}, portBinding); err != nil {
+			blog.Errorf("get port binding %s/%s from listener[%s/%s] failed, err: %s", sourceNamespace,
+				sourceName, lis.GetNamespace(), lis.GetName(), err.Error())
+			return
+		}
+		// 事件打到PortBinding上而不是Pod （考虑NodePortBinding）
+		h.listenerEventer.Eventf(portBinding, k8scorev1.EventTypeWarning, reason, "listener %s/%s failed, msg: %s",
+			lis.GetNamespace(), lis.GetName(), msg)
+	}
+
+}
+
 func (h *EventHandler) recordListenerSuccessEvent(lis *networkextensionv1.Listener, lid string) {
 	h.recordListenerEvent(lis, k8scorev1.EventTypeNormal, ReasonEnsureListenerSuccess,
 		fmt.Sprintf(MsgEnsureListenerSuccess, lid))
@@ -65,6 +113,9 @@ func (h *EventHandler) recordListenerSuccessEvent(lis *networkextensionv1.Listen
 func (h *EventHandler) recordListenerFailedEvent(lis *networkextensionv1.Listener, err error) {
 	h.recordListenerEvent(lis, k8scorev1.EventTypeWarning, ReasonEnsureListenerFailed,
 		fmt.Sprintf(MsgEnsureListenerFailed, err.Error()))
+
+	h.recordListenerOwnerEvent(lis, k8scorev1.EventTypeWarning, ReasonEnsureListenerFailed, err.Error())
+
 }
 
 func (h *EventHandler) recordListenerDeleteSuccessEvent(lis *networkextensionv1.Listener, lid string) {

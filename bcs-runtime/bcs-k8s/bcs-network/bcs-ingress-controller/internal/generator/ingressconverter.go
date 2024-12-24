@@ -19,6 +19,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	gocache "github.com/patrickmn/go-cache"
 	"golang.org/x/sync/errgroup"
@@ -33,13 +35,10 @@ import (
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/listenercontroller"
-
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 const (
@@ -126,7 +125,7 @@ func (g *IngressConverter) getLoadBalancerByID(ns, regionIDPair, protocolLayer s
 			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, strs[0], "", protocolLayer)
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("found lb %s failed: %s", regionIDPair, err.Error())
 		}
 	} else if len(strs) == 2 {
 		// region and id
@@ -143,7 +142,7 @@ func (g *IngressConverter) getLoadBalancerByID(ns, regionIDPair, protocolLayer s
 			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], strs[1], "", protocolLayer)
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("found lb %s failed: %s", regionIDPair, err.Error())
 		}
 	} else {
 		// invalid format
@@ -199,7 +198,7 @@ func (g *IngressConverter) getLoadBalancerByName(ns, regionNamePair, protocolLay
 			lbObj, err = g.lbClient.DescribeLoadBalancer(g.defaultRegion, "", strs[0], protocolLayer)
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("found lb %s failed: %s", regionNamePair, err.Error())
 		}
 	} else if len(strs) == 2 {
 		// region and name
@@ -216,7 +215,7 @@ func (g *IngressConverter) getLoadBalancerByName(ns, regionNamePair, protocolLay
 			lbObj, err = g.lbClient.DescribeLoadBalancer(strs[0], "", strs[1], protocolLayer)
 		}
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("found lb %s failed: %s", regionNamePair, err.Error())
 		}
 	} else {
 		// invalid format
