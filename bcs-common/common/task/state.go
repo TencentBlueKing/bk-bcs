@@ -306,6 +306,12 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 	s.task.SetEndTime(endTime).
 		SetStatus(types.TaskStatusFailure).
 		SetMessage(taskFailMsg)
+
+	// callback
+	if s.cbExecutor != nil {
+		c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, s.step)
+		s.cbExecutor.Callback(c, stepErr)
+	}
 }
 
 func (s *State) isLastStep(step *types.Step) bool {
