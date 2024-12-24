@@ -22,14 +22,13 @@
     </bcs-popover>
     <!-- AI小鲸对话框 -->
     <Assistant
+      v-if="isShowAssistant"
       :loading="loading"
       :messages="messages"
       :position-limit="positionLimit"
       :prompts="prompts"
       :start-position="startPosition"
       :size-limit="sizeLimit"
-      v-if="isShowAssistant"
-      @choose-prompt="handleChoosePrompt"
       @clear="handleClear"
       @close="handleClose"
       @send="handleSend"
@@ -49,6 +48,7 @@ import $i18n from '@/i18n/i18n-setup';
 import AssistantIcon from '@/images/assistant.png';
 import AssistantSmallIcon from '@/images/assistant-small.svg';
 
+// 特性开关
 const { flagsMap } = useAppData();
 
 // AI小鲸
@@ -157,10 +157,10 @@ const handleSendMsg = debounce((msg: string) => {
 const handleClose = () => {
   isShowAssistant.value = false;
 };
-// 快捷prompt
-const handleChoosePrompt = (prompt) => {
-  console.log(prompt);
-};
+// 快捷prompt(暂时不启用改功能)
+// const handleChoosePrompt = (prompt) => {
+//   console.log(prompt);
+// };
 // 显示对话框
 const handleShowAssistant = () => {
   isShowAssistant.value = true;

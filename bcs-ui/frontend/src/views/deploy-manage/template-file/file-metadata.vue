@@ -35,8 +35,8 @@ import $i18n from '@/i18n/i18n-setup';
 type FormValue = Pick<ClusterResource.CreateTemplateMetadataReq, 'name'|'description'>;
 
 interface Props {
-  value?: Boolean
-  data?: FormValue
+  value?: Boolean // 是否显示详情
+  data?: FormValue// 表单数据
 }
 
 type Emits = (e: 'confirm'|'cancel', v: FormValue) => void;
@@ -50,7 +50,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emits = defineEmits<Emits>();
-
+// 表单数据
 const formKey = ref(0);
 const metaDataFormRef = ref();
 const formData = ref<FormValue>(cloneDeep(props.data));
@@ -63,11 +63,11 @@ const rules = ref({
     },
   ],
 });
-
+// 取消修改
 function cancel() {
   emits('cancel', formData.value);
 }
-
+// 确定修改元信息
 async function confirm() {
   const result = await metaDataFormRef.value?.validate().catch(() => false);
   if (!result) return;
@@ -77,7 +77,7 @@ async function confirm() {
 
 watch(() => props.value, () => {
   if (!props.value) {
-    // 重置校验状态
+    // 重置校验状态（hack 组件库限制，为提供reset方法）
     formKey.value = new Date().getTime();
     return;
   };

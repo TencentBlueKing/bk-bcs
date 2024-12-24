@@ -1,11 +1,13 @@
 <template>
   <div>
+    <!-- 版本搜索 -->
     <bcs-input
       right-icon="bk-icon icon-search"
       :placeholder="$t('templateFile.placeholder.searchVersion')"
       clearable
       v-model.trim="searchValue">
     </bcs-input>
+    <!-- 版本表格 -->
     <bcs-table
       class="mt-[16px]"
       v-bkloading="{ isLoading: loading }"
@@ -75,11 +77,13 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 
 const props = defineProps({
+  // 模板ID
   templateID: {
     type: String,
     default: '',
     required: true,
   },
+  // 空间
   templateSpace: {
     type: String,
     default: '',
@@ -221,6 +225,7 @@ async function deleteFile() {
 // 删除操作
 const handleDelete = (row: ITemplateVersionItem) => {
   if (!row.draft) {
+    // 非草稿时，直接删除
     deleteVersion(row);
   } else {
     // 只有一个版本且是草稿态时，直接删除模板文件

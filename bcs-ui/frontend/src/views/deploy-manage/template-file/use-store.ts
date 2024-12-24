@@ -11,9 +11,9 @@ export const store = reactive<{
   spaceLoading: boolean
   loadingSpaceIDs: string[]
   fileListMap: Record<string, IListTemplateMetadataItem[]>
-  editMode: 'yaml'|'form'|undefined
+  editMode?: 'yaml'|'form'
   isFormModeDisabled: boolean
-  varList: any[],
+  varList: string[],
   showDeployBtn: boolean,
 }>({
   spaceLoading: false, // 空间加载状态

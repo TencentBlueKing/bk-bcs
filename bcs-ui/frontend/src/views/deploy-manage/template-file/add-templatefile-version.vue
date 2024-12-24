@@ -1,5 +1,6 @@
 <template>
   <BcsContent :title="fileMetadata?.name" :padding="0" v-bkloading="{ isLoading }">
+    <!-- 自定义顶部标题 -->
     <template #title>
       <i class="bcs-icon bcs-icon-arrows-left back mr-[4px]" @click="back"></i>
       <span>{{ fileMetadata?.name }}</span>
@@ -24,6 +25,7 @@
         {{ fileMetadata?.updator }}
         {{ (fileMetadata?.updateAt && formatTime(fileMetadata.updateAt * 1000, 'yyyy-MM-dd hh:mm:ss')) || '--' }}</div>
     </template>
+    <!-- 表单模式 & 源码模式 -->
     <div
       :class="[
         'overflow-auto px-[24px] pt-[24px] h-[calc(100%-48px)]'
@@ -41,7 +43,7 @@
         @getUpgradeStatus="getUpgradeStatus"
         ref="yamlMode" />
     </div>
-    <!-- 转换异常提示 -->
+    <!-- 表单和yaml转换异常提示 -->
     <bcs-dialog :show-footer="false" v-model="showErrorTipsDialog">
       <div class="flex flex-col items-center justify-center">
         <i
@@ -88,7 +90,7 @@
       :data="fileMetadata"
       @cancel="showMetadataDialog = false"
       @confirm="setMetadata" />
-    <!-- diff -->
+    <!-- 确认时diff信息 -->
     <bcs-sideslider
       :is-show.sync="showDiffSlider"
       quick-close

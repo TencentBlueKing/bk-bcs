@@ -1,6 +1,7 @@
 <template>
   <div class="h-full overflow-auto">
     <div class="flex items-center px-[24px] mt-[24px]">
+      <!-- 基本信息 -->
       <span
         :class="[
           'inline-flex items-center justify-center h-[32px] bg-[#EAEBF0] px-[12px]',
@@ -11,18 +12,19 @@
           <i class="bcs-icon bcs-icon-angle-right font-black mx-[6px] text-[12px] text-[#c4c6cc]"></i>
           <span>{{ fileMetadata?.name }}</span>
         </div>
-        <i class="bcs-icon-btn ml-[10px] bk-icon icon-edit-line text-[#979ba5]" @click="showMetadataDialog = true"></i>
+        <i class="bcs-icon-btn ml-[10px] bk-icon icon-edit-line text-[#979ba5]" @click="handleShowMetaDataDialog"></i>
       </span>
-      <!-- 版本列表 -->
-      <version-selector
+      <!-- 版本切换选择器 -->
+      <VersionSelector
         ref="versionRef"
         class="w-[160px]"
         v-model="curVersionID"
         show-extension
         :id="id"
-        @change="handleChange"
+        @change="handleVersionChange"
         @link="showVersionList = true" />
     </div>
+    <!-- 表单模式 & yaml模式 -->
     <div class="px-[24px] mt-[16px] h-[calc(100%-72px)] overflow-auto" v-if="fileStore.editMode === 'form'">
       <FormMode
         is-edit
@@ -63,7 +65,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref, watch } from 'vue';
 
-import versionSelector from '../components/version-selector.vue';
+import VersionSelector from '../components/version-selector.vue';
 
 import FileMetadataDialog from './file-metadata.vue';
 import FormMode from './form-mode.vue';
@@ -95,7 +97,7 @@ async function getTemplateSpace() {
   loading.value = true;
   spaceDetail.value = await TemplateSetService.GetTemplateSpace({
     $id: props.templateSpace,
-  });
+  }).catch(() => ({}));
   loading.value = false;
 }
 
@@ -113,7 +115,10 @@ async function getTemplateMetadata() {
 
 // 元信息修改
 const showMetadataDialog = ref(false);
-const setMetadata = async (data: Pick<ClusterResource.UpdateTemplateMetadataReq, 'name'|'description'>) => {
+function handleShowMetaDataDialog() {
+  showMetadataDialog.value = true;
+}
+async function setMetadata(data: Pick<ClusterResource.UpdateTemplateMetadataReq, 'name'|'description'>) {
   const result = await TemplateSetService.UpdateTemplateMetadata({
     $id: props.id, // 模板文件元数据 ID
     name: data.name, // 模板文件元数据名称
@@ -140,12 +145,13 @@ const setMetadata = async (data: Pick<ClusterResource.UpdateTemplateMetadataReq,
 
 // 版本信息
 const curVersionID = ref(props.versionID);
-const versionRef = ref();
+const versionRef = ref<InstanceType<typeof VersionSelector>>();
 const curVersionData = ref<ITemplateVersionItem>();
 function refreshVersionList() {
   versionRef.value?.listTemplateVersion();
 }
-async function handleChange(versionData) {
+// 切换版本详情
+async function handleVersionChange(versionData) {
   curVersionData.value = versionData;
   if (!curVersionData.value?.content) return;
 
@@ -157,8 +163,8 @@ async function handleChange(versionData) {
   fileStore.isFormModeDisabled = !isCanTransform.value;// 设置表单禁用（详情的顶部模式切换在首页，这里用全局共享数据处理）
 }
 
-// 切换版本详情
-async function handleVersionChange() {
+// 更新路径上的版本ID参数
+async function handleUpdateRouteVersionID() {
   if (curVersionID.value === props.versionID) return;
   await $router.replace({
     query: {
@@ -204,7 +210,7 @@ watch(() => props.versionID, (val) => {
   curVersionID.value = props.versionID;
 });
 
-watch(curVersionID, handleVersionChange);
+watch(curVersionID, handleUpdateRouteVersionID);
 
 onBeforeMount(() => {
   getTemplateSpace();
