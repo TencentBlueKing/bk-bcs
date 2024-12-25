@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.23
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241216022845-076cdd3b1a75
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241225073847-71cfc38de294
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
@@ -52,8 +52,6 @@ require (
 	k8s.io/api v0.23.5
 	k8s.io/apimachinery v0.23.5
 	k8s.io/client-go v0.23.5
-	k8s.io/klog v1.0.0
-	k8s.io/klog/v2 v2.100.1
 )
 
 require (
@@ -108,6 +106,7 @@ require (
 	golang.org/x/arch v0.6.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
+	k8s.io/klog/v2 v2.100.1 // indirect
 	sigs.k8s.io/controller-runtime v0.11.2 // indirect
 )
 
@@ -284,7 +283,7 @@ replace (
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common => github.com/prometheus/common v0.34.0
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20230707020703-bac1f168813b
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20241225074038-6c952a25a4e7
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 	// from github.com/thanos-io/thanos
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
