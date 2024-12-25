@@ -1210,6 +1210,16 @@ service ClusterManager {
       summary : "查询Node机型"
     };
   }
+  rpc ListCloudDiskTypes(ListCloudDiskTypesRequest) returns (ListCloudDiskTypesResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/clouds/{cloudID}/disktypes"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "根据Node机型查询对应支持的磁盘类型列表"
+      summary : "查询磁盘类型"
+    };
+  }
   rpc GetMasterSuggestedMachines(GetMasterSuggestedMachinesRequest) returns (GetMasterSuggestedMachinesResponse) {
     option (google.api.http) = {
       get : "/clustermanager/v1/clouds/{cloudID}/regions/{region}/clusterlevels/{level}/instancetypes"
@@ -11634,6 +11644,63 @@ message InstanceType {
   string region = 15 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "region",
     description : "机型所在地域, 主要用于自建集群节点池可能存在其他地域的情况"
+  }];
+}
+
+message ListCloudDiskTypesRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListInstanceTypeRequest"
+      description : "根据Node机型查询对应支持的磁盘类型列表"
+    }
+  };
+
+  string cloudID = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cloudID",
+    description : "云信息"
+  },(validate.rules).string = {min_len : 2}];
+  string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID"
+  }];
+  string region = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "region",
+    description : "机型所在地域, 主要用于自建集群节点池可能存在其他地域的情况"
+  }];
+  repeated string instanceTypes = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "instanceTypes",
+    description : "机型类型"
+  }, (validate.rules).repeated = {min_items: 1}];
+  repeated string zones = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "zones",
+    description : "可用区"
+  }];
+}
+
+message ListCloudDiskTypesResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudDiskTypesResponse"
+      description : "查询磁盘类型列表返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  map<string, string> data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "获取到的信息"
   }];
 }
 

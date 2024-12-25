@@ -1431,6 +1431,47 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/disktypes": {
+      "post": {
+        "summary": "查询磁盘类型",
+        "description": "根据Node机型查询对应支持的磁盘类型列表",
+        "operationId": "ClusterManager_ListCloudDiskTypes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudDiskTypesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "云信息",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudDiskTypesRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/instances": {
       "get": {
         "summary": "查询Node列表",
@@ -14380,6 +14421,78 @@
       },
       "description": "查询云账号返回",
       "title": "ListCloudAccountResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudDiskTypesRequest": {
+      "type": "object",
+      "properties": {
+        "cloudID": {
+          "type": "string",
+          "description": "云信息",
+          "title": "cloudID"
+        },
+        "accountID": {
+          "type": "string",
+          "description": "云凭证ID",
+          "title": "accountID"
+        },
+        "region": {
+          "type": "string",
+          "description": "机型所在地域, 主要用于自建集群节点池可能存在其他地域的情况",
+          "title": "region"
+        },
+        "instanceTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "机型类型",
+          "title": "instanceTypes"
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用区",
+          "title": "zones"
+        }
+      },
+      "description": "根据Node机型查询对应支持的磁盘类型列表",
+      "title": "ListInstanceTypeRequest"
+    },
+    "clustermanagerListCloudDiskTypesResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "查询磁盘类型列表返回",
+      "title": "ListCloudDiskTypesResponse",
       "required": [
         "code",
         "message"

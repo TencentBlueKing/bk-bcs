@@ -93,4 +93,5 @@ taskConfig:
   address: ""
   exchange: ""
   workerCnt: ""
-
+sharedClusterConfig:
+  annoKeyProjCode: ""

@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
@@ -102,7 +103,8 @@ func GetOrCreateNS(namespace string) error {
 	if err != nil {
 		_ = mapx.SetItems(nsManifest4Test, "metadata.name", namespace)
 		if namespace == envs.TestSharedClusterNS {
-			_ = mapx.SetItems(nsManifest4Test, []string{"metadata", "annotations", cli.ProjCodeAnnoKey}, envs.TestProjectCode)
+			_ = mapx.SetItems(nsManifest4Test, []string{
+				"metadata", "annotations", conf.ProjectCodeAnnoKey}, envs.TestProjectCode)
 		}
 		_, err = nsCli.Create(ctx, nsManifest4Test, false, metav1.CreateOptions{})
 	}

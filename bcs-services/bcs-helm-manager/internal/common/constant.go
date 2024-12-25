@@ -51,3 +51,9 @@ const (
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
 )
+
+// shared cluster
+const (
+	// AnnotationKeyProjectCode namespace 的 projectcode 注解 key 默认值
+	AnnotationKeyProjectCode = "io.tencent.bcs.projectcode"
+)

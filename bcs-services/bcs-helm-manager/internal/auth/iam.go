@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 )
 
 var (
@@ -37,9 +38,6 @@ var (
 	ClusterIamClient *cluster.BCSClusterPerm
 	// NamespaceIamClient namespace iam client
 	NamespaceIamClient *namespace.BCSNamespacePerm
-
-	// ProjCodeAnnoKey 项目 Code 在命名空间 Annotations 中的 Key
-	ProjCodeAnnoKey = "io.tencent.bcs.projectcode"
 )
 
 // InitPermClient new a perm client
@@ -105,7 +103,7 @@ func ReleaseResourcePermCheck(projectCode, clusterID string, namespaceCreated, c
 		if err != nil {
 			return false, "", nil, err
 		}
-		if ns.Annotations[ProjCodeAnnoKey] != projectCode {
+		if ns.Annotations[options.GlobalOptions.SharedCluster.AnnotationKeyProjCode] != projectCode {
 			return false, "", nil, fmt.Errorf("命名空间 %s 在该共享集群中不属于指定项目", v)
 		}
 	}

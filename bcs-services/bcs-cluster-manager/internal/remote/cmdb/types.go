@@ -105,9 +105,9 @@ func (c Condition) String() string {
 }
 
 var (
-	and Condition = "AND"
-	or  Condition = "OR" // nolint
-	in  Condition = "IN" // nolint
+	and Condition = "AND" // nolint
+	or  Condition = "OR"  // nolint
+	in  Condition = "IN"  // nolint
 )
 
 // Page page
