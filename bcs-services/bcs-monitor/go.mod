@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.23
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241216022845-076cdd3b1a75
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241225073847-71cfc38de294
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
@@ -278,13 +278,12 @@ require (
 )
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20241220071902-4230129a6060
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 	// from github.com/thanos-io/thanos
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common => github.com/prometheus/common v0.34.0
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/LidolLxf/thanos v0.26.1-0.20241220085712-e9c8f8af2894
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20241225074038-6c952a25a4e7
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 	// from github.com/thanos-io/thanos
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
