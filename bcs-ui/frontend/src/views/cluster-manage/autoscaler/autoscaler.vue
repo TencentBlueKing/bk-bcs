@@ -666,7 +666,7 @@
             {{row.task ? row.task.end : '--'}}
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.execTime2')" width="180" show-overflow-tooltip>
+        <bcs-table-column :label="$t('generic.label.execTime2')" width="90" show-overflow-tooltip>
           <template #default="{ row }">
             {{row?.task?.executionTime ? takesTimeFormat(row.task.executionTime) : '--'}}
           </template>

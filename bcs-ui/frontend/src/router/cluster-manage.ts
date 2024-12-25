@@ -18,6 +18,8 @@ const CreateAWSCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/v
 const CreateAzureCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/azure-cloud/index.vue');
 // 创建谷歌云集群
 const CreateGoogleCloudCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/google-cloud/index.vue');
+// 创建联邦集群
+const createClusternetCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/clusternet.vue');
 
 // import模式
 const ImportCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/import/import-cluster.vue');
@@ -41,6 +43,8 @@ const InternalNodePoolDetail = () => import(/* webpackChunkName: 'cluster' */'@/
 const InternalEditNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/internal/edit-node-pool.vue');
 const PodDetail = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/workload/detail/index.vue');
 const CreateTKECluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/add/create/tencent-public-cloud/index.vue');
+const AddSubCluster = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/detail/sub-cluster/add-federation.vue');
+
 
 // google ca
 const GoogleNodePool = () => import(/* webpackChunkName: 'cluster' */'@/views/cluster-manage/autoscaler/google/node-pool.vue');
@@ -194,6 +198,16 @@ export default [
     path: 'clusters/k8s',
     name: 'createK8SCluster',
     component: CreateK8SCluster,
+    meta: {
+      menuId: 'CLUSTER',
+      hideMenu: true,
+    },
+  },
+  // 创建联邦集群
+  {
+    path: 'clusters/clusternet',
+    name: 'createClusternetCluster',
+    component: createClusternetCluster,
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,
@@ -595,6 +609,18 @@ export default [
     meta: {
       menuId: 'CLUSTER',
       hideMenu: true,
+    },
+  },
+  {
+    path: 'clusters/:clusterId/subCluster/add',
+    name: 'addSubCluster',
+    props: route => ({ ...route.query, ...route.params }),
+    component: AddSubCluster,
+    meta: {
+      title: window.i18n.t('cluster.create.federation.addSubCluster'),
+      menuId: 'CLUSTER',
+      hideMenu: true,
+      showClusterName: true,
     },
   },
 ] as RouteConfig[];

@@ -8,6 +8,8 @@ import {
   clusterDetail,
   createVCluster,
   deleteVCluster,
+  getFederalTask,
+  retryFederalTask,
   sharedclusters,
   taskSkip,
 } from '@/api/modules/cluster-manager';
@@ -23,12 +25,16 @@ import $store from '@/store';
  * @param ctx
  * @returns
  */
+export const isAdding = ref(false); // 异步添加轮询标识
 export function useClusterList() {
   const clusterList = computed<ICluster[]>(() => $store.state.cluster.clusterList);
   const curProjectId = computed(() => $store.getters.curProjectId);
   const clusterExtraInfo = ref({});
   const webAnnotations = ref({ perms: {} });
   // const clusterCurrentTaskDataMap = ref({});
+
+  // 联邦集群
+  const federationClusters = computed(() => clusterList.value.filter(item => item.clusterType === 'federation'));
 
   // const { taskList } = useTask();
   // 获取集群列表
@@ -57,10 +63,13 @@ export function useClusterList() {
     'INITIALIZATION',
     'DELETING'].includes(item.status)).map(item => item.cluster_id));
   watch(runningClusterIds, (newValue) => {
-    if (!newValue.length) {
+    if (!newValue.length && !isAdding.value) {
       stop();
     } else {
       start();
+      if (newValue.length && isAdding.value) {
+        isAdding.value = false;
+      }
     }
   });
 
@@ -69,6 +78,7 @@ export function useClusterList() {
     clusterList,
     curProjectId,
     clusterExtraInfo,
+    federationClusters,
     getClusterList,
   };
 }
@@ -187,6 +197,13 @@ export function useClusterOperate() {
     });
     return result;
   };
+  const retryFederal = async (cluster): Promise<boolean> => {
+    if (!cluster?.labels?.['federation.bkbcs.tencent.com/taskid']) return false;
+    const result = await retryFederalTask({
+      $taskId: cluster.labels['federation.bkbcs.tencent.com/taskid'],
+    });
+    return result;
+  };
   // 获取集群下面所有的节点
   const clusterNode = async (cluster) => {
     const data = await $store.dispatch('clustermanager/clusterNode', {
@@ -209,6 +226,7 @@ export function useClusterOperate() {
   return {
     deleteCluster,
     retryClusterTask,
+    retryFederal,
     clusterNode,
     getCloudNodes,
   };
@@ -222,11 +240,24 @@ export function useTask() {
   const user = computed(() => $store.state.user);
   // 查询任务列表
   const taskList = async (cluster) => {
-    const data = await $store.dispatch('clustermanager/taskList', {
-      clusterID: cluster.clusterID,
-      projectID: cluster.projectID,
-    });
-    return data;
+    // 统一数据格式
+    let result;
+    if (cluster?.labels?.['federation.bkbcs.tencent.com/taskid']) {
+      const taskID = cluster.labels['federation.bkbcs.tencent.com/taskid'];
+      const res = await getFederalTask({
+        $taskId: taskID,
+      }).catch(() => {});
+      result = {
+        data: [],
+        latestTask: res,
+      };
+    } else {
+      result = await $store.dispatch('clustermanager/taskList', {
+        clusterID: cluster.clusterID,
+        projectID: cluster.projectID,
+      });
+    }
+    return result;
   };
   // 跳过任务
   const skipTask = async (taskID: string) => {

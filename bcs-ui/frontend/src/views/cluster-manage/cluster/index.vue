@@ -91,9 +91,11 @@
         :cluster-id="activeClusterID"
         :active="activeTabName"
         :namespace="namespace"
+        :perms="webAnnotations.perms"
         v-if="activeClusterID"
         ref="clusterDetailRef"
-        @width-change="handleDetailWidthChange" />
+        @width-change="handleDetailWidthChange"
+        @active-row="handleChangeDetail" />
     </div>
     <!-- 集群日志 -->
     <bcs-sideslider
@@ -103,23 +105,22 @@
       quick-close
       @hidden="handleCloseLog">
       <template #content>
-        <TaskList
-          v-bkloading="{ isLoading: logLoading }"
-          class="px-[24px] py-[20px]"
-          :data="taskData"
-          @retry="handleRetry(curOperateCluster)"
-          @skip="handleSkip">
-        </TaskList>
-        <div class="bg-[#FAFBFD] h-[48px] flex items-center px-[24px] log-footer-border-top">
-          <!-- <bcs-button
-            class="w-[88px]"
-            theme="primary"
-            v-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(curOperateCluster.status)"
-            @click="handleRetry(curOperateCluster)">
-            {{ $t('cluster.ca.nodePool.records.action.retry') }}
-          </bcs-button> -->
-          <bcs-button class="w-[88px]" @click="showLogDialog = false">{{ $t('generic.button.close') }}</bcs-button>
-        </div>
+        <TaskLog
+          :data="logSideDialogConf.taskData"
+          :enable-auto-refresh="['INITIALIZATION', 'DELETING'].includes(logSideDialogConf.status)"
+          enable-statistics
+          type="multi-task"
+          :status="logSideDialogConf.status"
+          :title="curOperateCluster ? `${curOperateCluster.clusterName} (${curOperateCluster.clusterID})` : '--'"
+          :loading="logLoading"
+          :height="'calc(100vh - 92px)'"
+          :rolling-loading="false"
+          step-actions="FAILURE"
+          @refresh="handleShowLog(logSideDialogConf.row)"
+          @auto-refresh="handleAutoRefresh"
+          @download="getDownloadTaskRecords"
+          @retry="(data) => handleRetry(logSideDialogConf.row, data)"
+          @skip="handleSkip" />
       </template>
     </bcs-sideslider>
     <!-- 集群删除确认弹窗 -->
@@ -163,6 +164,8 @@
 import { throttle } from 'lodash';
 import { computed, defineComponent, onActivated, onMounted, ref, set, watch } from 'vue';
 
+import TaskLog from '@blueking/task-log/vue2';
+
 import ApplyHost from '../components/apply-host.vue';
 import ClusterDetail from '../detail/index.vue';
 
@@ -171,7 +174,8 @@ import SetAgentArea from './set-agent-area.vue';
 import SetConnectInfo from './set-connect-info.vue';
 import { useClusterList, useClusterOperate, useClusterOverview, useTask, useVCluster } from './use-cluster';
 
-import { clusterMeta } from '@/api/modules/cluster-manager';
+import { clusterMeta, clusterTaskRecords, getFederalTaskRecords, taskLogsDownloadURL } from '@/api/modules/cluster-manager';
+import { parseUrl } from '@/api/request';
 import $bkMessage from '@/common/bkmagic';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import ConfirmDialog from '@/components/comfirm-dialog.vue';
@@ -182,7 +186,6 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 import ClusterGuide from '@/views/app/cluster-guide.vue';
-import TaskList from '@/views/cluster-manage/components/task-list.vue';
 import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 
 export default defineComponent({
@@ -191,13 +194,13 @@ export default defineComponent({
     ApplyHost,
     ProjectConfig,
     ConfirmDialog,
-    TaskList,
     ClusterGuide,
     ListMode,
     ClusterDetail,
     SetConnectInfo,
     SetAgentArea,
     BcsContent,
+    TaskLog,
   },
   props: {
     clusterId: {
@@ -287,7 +290,7 @@ export default defineComponent({
     };
     // webconsole
     const { handleGotoConsole } = useCluster();
-    const { deleteCluster, retryClusterTask } = useClusterOperate();
+    const { deleteCluster, retryClusterTask, retryFederal } = useClusterOperate();
     const curOperateCluster = ref<any>(null);
     // 集群删除
     const showConfirmDialog = ref(false);
@@ -368,22 +371,66 @@ export default defineComponent({
       timeout: $i18n.t('generic.status.timeout'),
       notstarted: $i18n.t('generic.status.todo'),
     });
-    const taskData = computed(() => {
-      const steps = latestTask.value?.stepSequence || [];
-      return steps.map(step => latestTask.value?.steps[step]);
+    // 查看日志
+    const logSideDialogConf = ref({
+      taskID: '', // 最新任务ID
+      taskData: [],
+      row: null, // 当前节点
+      status: '',
     });
     const fetchLogData = async (cluster) => {
       const res = await taskList(cluster);
       latestTask.value = res.latestTask;
+      const { status, step } = await getTaskStepData(cluster.clusterType);
+      logSideDialogConf.value.taskData = step;
+      logSideDialogConf.value.status = status;
+      logSideDialogConf.value.row = cluster;
+
+      // 先清理当前定时器
+      taskTimer.value && clearTimeout(taskTimer.value);
+      taskTimer.value = null;
       if (['RUNNING', 'INITIALZING'].includes(latestTask.value?.status)) {
+        // 新开启一个定时器
         taskTimer.value = setTimeout(() => {
           fetchLogData(cluster);
+        }, 5000);
+      }
+    };
+    async function getTaskStepData(clusterType: string) {
+      let result;
+      if (clusterType === 'federation') {
+        result = await getFederalTaskRecords({
+          $taskId: latestTask.value.taskId,
+        }).catch(() => ({ status: '', step: [] }));
+      } else {
+        result = await clusterTaskRecords({
+          taskID: latestTask.value.taskID,
+        }).catch(() => ({ status: '', step: [] }));
+      }
+      return result;
+    }
+    function handleAutoRefresh(v: boolean) {
+      if (v) {
+        taskTimer.value = setTimeout(() => {
+          fetchLogData(logSideDialogConf.value.row);
         }, 5000);
       } else {
         clearTimeout(taskTimer.value);
         taskTimer.value = null;
       }
     };
+    // 下载集群操作日志
+    async function getDownloadTaskRecords() {
+      if (!props.clusterId) return;
+
+      const { url } = parseUrl('get', taskLogsDownloadURL, {
+        clusterID: props.clusterId,
+        limit: 10,
+        page: 1,
+        v2: true,
+      });
+      url && window.open(url);
+    }
     const handleShowLog = async (cluster) => {
       logLoading.value = true;
       showLogDialog.value = true;
@@ -392,6 +439,7 @@ export default defineComponent({
       logLoading.value = false;
     };
     const handleCloseLog = () => {
+      logSideDialogConf.value.row = null;
       curOperateCluster.value = null;
       clearTimeout(taskTimer.value);
     };
@@ -399,7 +447,14 @@ export default defineComponent({
     const showConnectCluster = ref(false);
     const showInstallGseAgent = ref(false);
     const curRow = ref<ICluster>();
-    const handleRetry = async (cluster) => {
+    const handleRetry = async (cluster, data?) => {
+      if (data && !data?.step?.allowRetry) {
+        $bkMessage({
+          theme: 'warning',
+          message: $i18n.t('cluster.title.allowRetry'),
+        });
+        return;
+      }
       isLoading.value = true;
       const { latestTask } = await taskList(cluster);
       isLoading.value = false;
@@ -422,9 +477,16 @@ export default defineComponent({
       }
     };
     // 重试任务
-    const handleRetryTask = async (clusterID: string) => {
+    const handleRetryTask = async (cluster: ICluster) => {
       isLoading.value = true;
-      const result = await retryClusterTask(clusterID);
+      let result;
+      // 联邦集群
+      if (cluster.clusterType === 'federation') {
+        result = await retryFederal(cluster);
+      } else {
+        // 非联邦集群
+        result = await retryClusterTask(cluster.clusterID);
+      }
       if (result) {
         $bkMessage({
           theme: 'success',
@@ -432,7 +494,7 @@ export default defineComponent({
         });
         handleGetClusterList();
         if (showLogDialog.value) {
-          fetchLogData(clusterData.value.find(item => item.clusterID === clusterID));
+          fetchLogData(clusterData.value.find(item => item.clusterID === cluster.clusterID));
         }
       }
       isLoading.value = false;
@@ -445,13 +507,20 @@ export default defineComponent({
         clsName: 'custom-info-confirm default-info',
         subTitle: cluster.clusterName,
         confirmFn: async () => {
-          await handleRetryTask(cluster.clusterID);
+          await handleRetryTask(cluster);
         },
       });
     };
 
     // 跳过任务
     const handleSkip = (row) => {
+      if (!row?.step?.allowSkip) {
+        $bkMessage({
+          theme: 'warning',
+          message: $i18n.t('cluster.title.cantSkip'),
+        });
+        return;
+      }
       $bkInfo({
         type: 'warning',
         title: $i18n.t('cluster.title.skipTask'),
@@ -595,7 +664,6 @@ export default defineComponent({
       handleDeleteCluster,
       showLogDialog,
       latestTask,
-      taskData,
       statusColorMap,
       taskStatusTextMap,
       logLoading,
@@ -620,6 +688,9 @@ export default defineComponent({
       hideSharedCluster,
       changeSharedClusterVisible,
       showInstallGseAgent,
+      logSideDialogConf,
+      handleAutoRefresh,
+      getDownloadTaskRecords,
     };
   },
 });

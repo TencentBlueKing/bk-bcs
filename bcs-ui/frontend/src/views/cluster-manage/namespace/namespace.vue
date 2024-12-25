@@ -6,6 +6,7 @@
         <bcs-button
           theme="primary"
           icon="plus"
+          :disabled="curCluster?.clusterType === 'federation'"
           v-authority="{
             clickable: true,
             actionId: 'namespace_create',
@@ -145,7 +146,7 @@
           <bk-button
             text
             class="mr-[10px]"
-            :disabled="applyMap(row.itsmTicketType).setQuota"
+            :disabled="curCluster?.clusterType === 'federation' || applyMap(row.itsmTicketType).setQuota"
             v-authority="{
               clickable: webAnnotations.perms[row.name]
                 && webAnnotations.perms[row.name].namespace_update,
@@ -486,6 +487,8 @@ export default defineComponent({
     const { clusterList } = useCluster();
     const isSharedCluster = computed(() => !!clusterList.value
       .find(item => item.clusterID === props.clusterId)?.is_shared);
+    const curCluster = computed(() => clusterList.value
+      .find(item => item.clusterID === props.clusterId));
 
     const keys = ref(['name']);
 
@@ -953,6 +956,7 @@ export default defineComponent({
       KEY_REGEXP,
       quotaRules,
       setQuotaForm,
+      curCluster,
       toggleShowQuota,
       unitConvert,
       applyMap,

@@ -371,6 +371,7 @@ generic:
     know: I Know
     confirmSave: Confirm save
     detail: Detail
+    remove: Remove
   label:
     basicConfig: Basic config
     key: Key
@@ -643,6 +644,7 @@ cluster:
   tips:
     highMetricData: Cluster indicator overload
     createK8SCluster: Create K8S native cluster
+    createClusternetCluster: Create Clusternet cluster
   labels:
     nameAndId: Cluster name/ID
     name: Name
@@ -725,6 +727,13 @@ cluster:
         desc: >-
           By executing bk-sops task on the control plane hosts, automatically
           install the agent in the cluster to manage external clusters.
+      Clusternet:
+        title: Clusternet
+        subTitle: Provides a unified management solution for multi-cluster environments
+        desc: >-
+          Supports resource scheduling and collaboration across Kubernetes
+          clusters, compatible with public clouds, private clouds, and hybrid
+          cloud environments, enabling easy global resource governance
     label:
       clusterVersion: Version
       desc: Description
@@ -861,6 +870,8 @@ cluster:
           If the number of controller plane nodes is less than three, high
           availability cannot be supported
       role: Service role
+      hostCluster: Create Host Cluster
+      existingClusters: Existing clusters
     msg:
       managedClusterInfo: >-
         Create a custody cluster must add at least one node to run the necessary
@@ -981,6 +992,14 @@ cluster:
         standard: >-
           You are responsible for managing the underlying infrastructure,
           including configuring the individual nodes.
+    federation:
+      addSubCluster: Add Sub Cluster
+      createSubCluster: Create Sub Cluster
+      title: Confirm Remove Sub Cluster
+      addClusterTitle: Confirm Add Sub Cluster
+      tips:
+        disabledHost: 'Has been designated as the control plane cluster for the cluster {0}'
+        disabledSub: 'Has been added to the cluster {0}'
   detail:
     title:
       overview: Overview
@@ -990,6 +1009,7 @@ cluster:
       quota: Quota
       nodeList: Nodes
       controlConfig: Control plane
+      subCluster: Sub Cluster
       disableVpcCNI:
         text: Confirm disable VPC-CNI
         p1: 'if it is disabled, you cannot create StatefulSet with fixed Pod IP.'

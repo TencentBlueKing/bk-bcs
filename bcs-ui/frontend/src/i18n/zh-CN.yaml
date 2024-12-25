@@ -346,6 +346,7 @@ generic:
     know: 我知道了
     confirmSave: 确定保存
     detail: 详情
+    remove: 移除
   label:
     key: 键
     value: 值
@@ -579,6 +580,7 @@ cluster:
   tips:
     highMetricData: 集群指标过载
     createK8SCluster: 新建 K8S 原生集群
+    createClusternetCluster: 新建联邦集群
   labels:
     hideSharedCluster: 隐藏共享集群
     nameAndId: 集群名称/ID
@@ -643,6 +645,10 @@ cluster:
         title: 控制面服务器导入
         subTitle: 在控制面主机上执行标准运维流程导入任意外部集群
         desc: 通过在控制面主机上执行标准运维流程，在集群中安装Agent以实现外部集群的纳管
+      Clusternet:
+        title: 联邦集群
+        subTitle: 为多集群环境提供统一管理解决方案
+        desc: 支持跨K8S集群资源调度与协同，适配公有云、私有云和混合云环境，轻松实现全局资源治理
     label:
       system: 操作系统
       containerRuntime: 运行时组件
@@ -746,6 +752,8 @@ cluster:
           IP（VIP）实现集群内组件到 APIserver 的反向代理，并自动发现控制面节点 IP 以维护 IPVS
           规则，确保部分控制面节点故障时集群正常运行。
       role: 集群服务角色
+      hostCluster: 创建Host集群
+      existingClusters: 已有集群
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:
@@ -823,6 +831,14 @@ cluster:
           集群中所有 pod 都会分配一个此范围的IP地址。请以 CIDR
           表示法输入网络范围内一个范围、掩码，此设置一经确定便无法更改，请谨慎评估后填写
         standard: 您负责管理底层基础架构，包括配置各个节点。
+    federation:
+      addSubCluster: 添加成员集群
+      createSubCluster: 创建成员集群
+      title: 确认移除成员
+      addClusterTitle: 确认添加成员
+      tips:
+        disabledHost: '已作为控制面集群组成联邦集群{0}'
+        disabledSub: '已被加入联邦集群{0}'
   detail:
     title:
       overview: 集群总览
@@ -832,6 +848,7 @@ cluster:
       quota: 配额管理
       nodeList: 节点列表
       controlConfig: 控制面配置
+      subCluster: 成员集群
       disableVpcCNI:
         text: 确定关闭VPC-CNI模式
         p1: 关闭后将不再支持创建固定 Pod IP 的 StatefulSet

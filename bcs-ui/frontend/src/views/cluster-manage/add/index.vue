@@ -28,7 +28,11 @@
             @click="handleAddCluster(item, card)">
             <div class="cluster-type-card-top">
               <div :style="{ filter: item.disabled ? 'grayscale(1)' : '' }">
-                <svg class="icon svg-icon" width="48px" height="48px">
+                <img
+                  v-if="item.type === 'createClusternet'"
+                  class="size-[44px] p-[2px]"
+                  :src="item.icon" alt="My Icon" />
+                <svg v-else class="icon svg-icon" width="48px" height="48px">
                   <use :xlink:href="`#${item.icon}`"></use>
                 </svg>
               </div>
@@ -77,6 +81,7 @@ import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import amazonLogo from '@/images/amazon.png';
 import azureLogo from '@/images/azure.png';
+import clusternetLogo from '@/images/clusternet.svg';
 import googleLogo from '@/images/google.png';
 import huaweiLogo from '@/images/huawei.png';
 import $router from '@/router';
@@ -90,6 +95,7 @@ type AddClusterType = '_tke'
 | 'createHuaweiCloud'
 | 'createK8S'
 | 'createVCluster'
+| 'createClusternet'
 | 'importPublicCloud'
 | 'importTencentCloud'
 | 'importAmazonCloud'
@@ -184,6 +190,15 @@ export default defineComponent({
         desc: $i18n.t('cluster.create.type.k8s.desc'),
         type: 'createK8S',
         disabled: !flagsMap.value.k8s,
+      },
+      // 创建联邦集群
+      {
+        icon: clusternetLogo,
+        title: $i18n.t('cluster.create.type.Clusternet.title'),
+        subTitle: $i18n.t('cluster.create.type.Clusternet.subTitle'),
+        desc: $i18n.t('cluster.create.type.Clusternet.desc'),
+        type: 'createClusternet',
+        disabled: !flagsMap.value.FEDERATION,
       },
       // vCluster集群
       {
@@ -291,6 +306,7 @@ export default defineComponent({
       createGoogleCloud: 'CreateGoogleCloudCluster',
       createK8S: 'createK8SCluster',
       createVCluster: 'createVCluster',
+      createClusternet: 'createClusternetCluster',
       // importKubeConfig: 'importCluster',
       // importTencentCloud: 'importCluster',
       importGoogleCloud: 'importGoogleCluster',

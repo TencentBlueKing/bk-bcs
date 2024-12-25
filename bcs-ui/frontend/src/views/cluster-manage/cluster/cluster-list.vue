@@ -36,7 +36,7 @@
       :filter-method="filterMethod">
       <template #default="{ row }">
         <div class="flex items-center">
-          <svg class="size-[20px] mr-[10px]">
+          <svg class="size-[20px] mr-[10px] flex-shrink-0">
             <use :xlink:href="providerNameMap[row.provider].className"></use>
           </svg>
           <span class="text-[12px] bcs-ellipsis">{{ providerNameMap[row.provider].label }}</span>
@@ -54,7 +54,7 @@
           :status-text-map="statusTextMap"
           :status="row.status"
           :message="failedStatusList.includes(row.status) ? row.message : ''"
-          :pending="['INITIALIZATION', 'DELETING'].includes(row.status)"
+          :pending="loadingStatusList.includes(row.status)"
           @click.native.stop="
             failedStatusList.includes(row.status)
               ? handleShowClusterLog(row)
@@ -77,11 +77,7 @@
       :filter-method="filterMethod"
       :key="clusterTypeKey">
       <template #default="{ row }">
-        <template v-if="row.is_shared">{{ $t('bcs.cluster.share') }}</template>
-        <template v-else-if="row.clusterType === 'virtual'">vCluster</template>
-        <template v-else>
-          {{ row.manageType === 'INDEPENDENT_CLUSTER' ? $t('bcs.cluster.selfDeployed') : $t('bcs.cluster.managed') }}
-        </template>
+        {{ getClusterTypeName(row) }}
       </template>
     </bk-table-column>
     <bk-table-column :label="$t('cluster.labels.nodeCounts')">
@@ -126,211 +122,23 @@
     <!-- 220: 兼容英文状态时大小 -->
     <bk-table-column :label="$t('generic.label.action')" prop="action" width="220">
       <template #default="{ row }">
-        <!-- 进行中 -->
-        <template v-if="['INITIALIZATION', 'DELETING'].includes(row.status)">
-          <bk-button
-            text
-            @click.stop="handleShowClusterLog(row)">
-            {{$t('generic.button.log')}}
-          </bk-button>
-        </template>
-        <!-- 失败状态 -->
-        <template v-else-if="['CREATE-FAILURE', 'DELETE-FAILURE'].includes(row.status)">
-          <bk-button
-            class="mr-[10px]"
-            text
-            @click.stop="handleRetry(row)">{{ $t('cluster.ca.nodePool.records.action.retry') }}</bk-button>
-          <bk-button
-            class="mr-[10px]"
-            text
-            @click.stop="handleShowClusterLog(row)">{{$t('generic.button.log')}}</bk-button>
-          <PopoverSelector offset="0, 10">
-            <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
-            <template #content>
-              <ul class="bg-[#fff]">
-                <li
-                  class="bcs-dropdown-item"
-                  @click.stop="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
-                <li
-                  class="bcs-dropdown-item"
-                  v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
-                  @click.stop="handleGotoClusterDetail(row, 'network')">
-                  {{ $t('cluster.detail.title.network') }}
-                </li>
-                <li
-                  class="bcs-dropdown-item"
-                  v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
-                  @click.stop="handleGotoClusterDetail(row, 'master')">
-                  {{ $t('cluster.detail.title.master') }}
-                </li>
-                <li
-                  class="bcs-dropdown-item"
-                  v-authority="{
-                    clickable: perms[row.clusterID]
-                      && perms[row.clusterID].cluster_delete,
-                    actionId: 'cluster_delete',
-                    resourceName: row.clusterName,
-                    disablePerms: true,
-                    permCtx: {
-                      project_id: curProject.projectID,
-                      cluster_id: row.clusterID
-                    }
-                  }"
-                  key="deleteCluster"
-                  @click.stop="handleDeleteCluster(row)">
-                  {{ $t('generic.button.delete') }}
-                </li>
-              </ul>
-            </template>
-          </PopoverSelector>
-        </template>
-        <!-- 正常状态 -->
-        <template v-else-if="normalStatusList.includes(row.status)">
-          <bk-button text class="mr10" @click.stop="handleGotoClusterDetail(row, 'namespace')">
-            {{ $t('k8s.namespace') }}
-          </bk-button>
-          <!-- 共享集群 -->
-          <!-- 托管集群 -->
-          <template v-if="row.is_shared || row.clusterType === 'virtual'">
-            <bk-button
-              text
-              class="mr10"
-              @click.stop="handleGotoDashborad(row)">
-              {{ $t('cluster.button.dashboard') }}
-            </bk-button>
-          </template>
-          <!-- 独立集群 -->
-          <template v-else>
-            <bk-button
-              text
-              class="mr10"
-              v-authority="{
-                clickable: perms[row.clusterID]
-                  && perms[row.clusterID].cluster_manage,
-                actionId: 'cluster_manage',
-                resourceName: row.clusterName,
-                disablePerms: true,
-                permCtx: {
-                  project_id: curProject.projectID,
-                  cluster_id: row.clusterID
-                }
-              }"
-              key="nodeList"
-              @click.stop="handleGotoClusterNode(row)">
-              {{ $t('cluster.detail.title.nodeList') }}
-            </bk-button>
-          </template>
-          <PopoverSelector offset="0, 10">
-            <span class="bcs-icon-more-btn"><i class="bcs-icon bcs-icon-more"></i></span>
-            <template #content>
-              <ul class="bg-[#fff]">
-                <li
-                  class="bcs-dropdown-item"
-                  v-if="!row.is_shared"
-                  @click.stop="handleGotoClusterOverview(row)">{{ $t('cluster.button.overview') }}</li>
-                <li
-                  class="bcs-dropdown-item"
-                  @click.stop="handleGotoClusterDetail(row, 'info')">{{ $t('generic.title.basicInfo1') }}</li>
-                <li
-                  class="bcs-dropdown-item"
-                  v-if="row.clusterType === 'virtual'"
-                  @click.stop="handleGotoClusterDetail(row, 'quota')">
-                  {{ $t('cluster.detail.title.quota') }}
-                </li>
-                <template v-else>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')"
-                    @click.stop="handleGotoClusterDetail(row, 'network')">
-                    {{ $t('cluster.detail.title.network') }}
-                  </li>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-if="!(row.clusterCategory === 'importer' && row.importCategory === 'kubeConfig')
-                      && !row.is_shared"
-                    @click.stop="handleGotoClusterDetail(row, 'master')">
-                    {{ $t('cluster.detail.title.master') }}
-                  </li>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-if="clusterExtraInfo
-                      && clusterExtraInfo[row.clusterID]
-                      && clusterExtraInfo[row.clusterID].autoScale
-                      && !row.is_shared"
-                    v-authority="{
-                      clickable: perms[row.clusterID]
-                        && perms[row.clusterID].cluster_manage,
-                      actionId: 'cluster_manage',
-                      resourceName: row.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.projectID,
-                        cluster_id: row.clusterID
-                      }
-                    }"
-                    key="ca"
-                    @click.stop="handleGotoClusterCA(row)">
-                    {{ $t('cluster.detail.title.autoScaler') }}
-                  </li>
-                </template>
-                <li class="bcs-dropdown-item" @click.stop="handleGotoToken">KubeConfig</li>
-                <template v-if="!row.is_shared">
-                  <li class="bcs-dropdown-item" @click.stop="handleGotoWebConsole(row)">WebConsole</li>
-                  <li
-                    class="bcs-dropdown-item"
-                    v-authority="{
-                      clickable: perms[row.clusterID]
-                        && perms[row.clusterID].cluster_delete,
-                      actionId: 'cluster_delete',
-                      resourceName: row.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.projectID,
-                        cluster_id: row.clusterID
-                      }
-                    }"
-                    key="deletevCluster"
-                    v-if="row.clusterType === 'virtual' || row.clusterCategory === 'importer'"
-                    @click.stop="handleDeleteCluster(row)">
-                    {{ $t('generic.button.delete') }}
-                  </li>
-                  <li
-                    :class="[
-                      'bcs-dropdown-item',
-                      { disabled: clusterNodesMap[row.clusterID] && clusterNodesMap[row.clusterID] > 0 }
-                    ]"
-                    v-authority="{
-                      clickable: perms[row.clusterID]
-                        && perms[row.clusterID].cluster_delete,
-                      actionId: 'cluster_delete',
-                      resourceName: row.clusterName,
-                      disablePerms: true,
-                      permCtx: {
-                        project_id: curProject.projectID,
-                        cluster_id: row.clusterID
-                      }
-                    }"
-                    key="deleteCluster"
-                    v-bk-tooltips="{
-                      content: $t('cluster.validate.exitNodes'),
-                      disabled: !clusterNodesMap[row.clusterID] || clusterNodesMap[row.clusterID] === 0,
-                      placement: 'right'
-                    }"
-                    v-else
-                    @click.stop="handleDeleteCluster(row)">
-                    {{ $t('generic.button.delete') }}
-                  </li>
-                </template>
-              </ul>
-            </template>
-          </PopoverSelector>
-        </template>
-        <bk-button
-          text
-          v-else-if="deletable(row) && row.status !== 'DELETING'"
-          @click.stop="handleDeleteCluster(row)">
-          {{ $t('generic.button.delete') }}
-        </bk-button>
+        <slot name="action" :row="row">
+          <tableCellAction
+            :row="row"
+            :perms="perms"
+            :cluster-extra-info="clusterExtraInfo"
+            :cluster-nodes-map="clusterNodesMap"
+            @show-cluster-log="handleShowClusterLog"
+            @retry="handleRetry"
+            @goto-cluster-detail="handleGotoClusterDetail"
+            @delete-cluster="handleDeleteCluster"
+            @goto-dashboard="handleGotoDashborad"
+            @goto-cluster-node="handleGotoClusterNode"
+            @goto-cluster-overview="handleGotoClusterOverview"
+            @goto-cluster-ca="handleGotoClusterCA"
+            @goto-token="handleGotoToken"
+            @goto-web-console="handleGotoWebConsole" />
+        </slot>
       </template>
     </bk-table-column>
     <template #empty>
@@ -339,22 +147,24 @@
   </bk-table>
 </template>
 <script lang="ts">
-import { computed, defineComponent, PropType, ref, toRefs } from 'vue';
+import { computed, defineComponent, PropType, toRefs } from 'vue';
+
+import tableCellAction from './table-cell-action.vue';
 
 import { CLUSTER_ENV } from '@/common/constant';
 import LoadingIcon from '@/components/loading-icon.vue';
-import PopoverSelector from '@/components/popover-selector.vue';
 import StatusIcon from '@/components/status-icon';
 import { ICluster, useProject } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import { getClusterTypeName } from '@/views/cluster-manage/cluster/use-cluster';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 import useCloud from '@/views/cluster-manage/use-cloud';
 
 export default defineComponent({
   name: 'ClusterList',
-  components: { StatusIcon, RingCell, PopoverSelector, LoadingIcon },
+  components: { StatusIcon, RingCell, tableCellAction, LoadingIcon },
   props: {
     clusterList: {
       type: Array as PropType<ICluster[]>,
@@ -388,24 +198,58 @@ export default defineComponent({
       type: String,
       default: '',
     },
+    // 集群状态文案
+    statusTextMap: {
+      type: Object as PropType<Record<string, string>>,
+      default: () => ({
+        INITIALIZATION: $i18n.t('generic.status.initializing'),
+        DELETING: $i18n.t('generic.status.deleting'),
+        'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
+        'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
+        'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
+        'CONNECT-FAILURE': $i18n.t('cluster.status.connectFailed'),
+        RUNNING: $i18n.t('generic.status.ready'),
+      }),
+    },
+    // 集群状态icon颜色
+    statusColorMap: {
+      type: Object as PropType<Record<string, string>>,
+      default: () => ({
+        'CREATE-FAILURE': 'red',
+        'DELETE-FAILURE': 'red',
+        'IMPORT-FAILURE': 'red',
+        'CONNECT-FAILURE': 'red',
+        RUNNING: 'green',
+      }),
+    },
+    // 异常状态
+    failedStatusList: {
+      type: Array as PropType<string[]>,
+      default: () => ['CREATE-FAILURE', 'DELETE-FAILURE', 'IMPORT-FAILURE'],
+    },
+    // 支持详情页展示的状态
+    supportDetailStatusList: {
+      type: Array as PropType<string[]>,
+      default: () => ['CREATE-FAILURE', 'DELETE-FAILURE', 'CONNECT-FAILURE', 'RUNNING'],
+    },
+    // 加载中的状态
+    loadingStatusList: {
+      type: Array as PropType<string[]>,
+      default: () => ['INITIALIZATION', 'DELETING'],
+    },
   },
   setup(props, ctx) {
     const { curProject } = useProject();
-    const { clusterExtraInfo, clusterList, highlightClusterId } = toRefs(props);
+    const {
+      clusterList,
+      highlightClusterId,
+      statusTextMap,
+      supportDetailStatusList } = toRefs(props);
     const sortClusterList = computed(() => clusterList.value.sort((cur) => {
       if (cur.clusterID === highlightClusterId.value) return -1;
 
       return 0;
     }));
-    const statusTextMap = ref({
-      INITIALIZATION: $i18n.t('generic.status.initializing'),
-      DELETING: $i18n.t('generic.status.deleting'),
-      'CREATE-FAILURE': $i18n.t('generic.status.createFailed'),
-      'DELETE-FAILURE': $i18n.t('generic.status.deleteFailed'),
-      'IMPORT-FAILURE': $i18n.t('cluster.status.importFailed'),
-      'CONNECT-FAILURE': $i18n.t('cluster.status.connectFailed'),
-      RUNNING: $i18n.t('generic.status.ready'),
-    });
     const statusList = computed(() => Object.keys(statusTextMap.value).map(status => ({
       text: statusTextMap.value[status],
       value: status,
@@ -415,19 +259,6 @@ export default defineComponent({
       text: providerNameMap[name].label,
       value: name,
     })));
-    const statusColorMap = ref({
-      'CREATE-FAILURE': 'red',
-      'DELETE-FAILURE': 'red',
-      'IMPORT-FAILURE': 'red',
-      'CONNECT-FAILURE': 'red',
-      RUNNING: 'green',
-    });
-    // 异常状态
-    const failedStatusList = ['CREATE-FAILURE', 'DELETE-FAILURE', 'IMPORT-FAILURE'];
-    // 支持详情页展示的状态
-    const supportDetailStatusList = ['CREATE-FAILURE', 'DELETE-FAILURE', 'CONNECT-FAILURE', 'RUNNING'];
-    // 正常状态
-    const normalStatusList = ['CONNECT-FAILURE', 'RUNNING'];
     const clusterEnvFilters = computed(() => clusterList.value
       .reduce<Array<{value: string, text: string}>>((pre, cluster) => {
       if (pre.find(item => item.value === cluster.environment)) return pre;
@@ -441,16 +272,19 @@ export default defineComponent({
     const hideSharedCluster = computed(() => $store.state.hideSharedCluster);
     const clusterTypeFilterList = computed(() => {
       const typeMap = clusterList.value.reduce<Record<string, string>>((pre, item) => {
+        const tempPre = pre;
         if (item.is_shared && !hideSharedCluster.value) {
-          pre.isShared = $i18n.t('bcs.cluster.share');
+          tempPre.isShared = $i18n.t('bcs.cluster.share');
         } else if (item.clusterType === 'virtual') {
-          pre.virtual = 'vCluster';
+          tempPre.virtual = 'vCluster';
+        } else if (item.clusterType === 'federation') {
+          tempPre.federation = $i18n.t('bcs.cluster.federation');
         } else if (item.manageType === 'INDEPENDENT_CLUSTER') {
-          pre.INDEPENDENT_CLUSTER = $i18n.t('bcs.cluster.selfDeployed');
+          tempPre.INDEPENDENT_CLUSTER = $i18n.t('bcs.cluster.selfDeployed');
         } else if (item.manageType === 'MANAGED_CLUSTER') {
-          pre.MANAGED_CLUSTER = $i18n.t('bcs.cluster.managed');
+          tempPre.MANAGED_CLUSTER = $i18n.t('bcs.cluster.managed');
         }
-        return pre;
+        return tempPre;
       }, {});
 
       return Object.keys(typeMap).map(key => ({
@@ -469,7 +303,10 @@ export default defineComponent({
         if (value === 'virtual') {
           return row.clusterType === 'virtual';
         }
-        return row[property] === value && !row.is_shared && row.clusterType !== 'virtual';
+        if (value === 'federation') {
+          return row.clusterType === 'federation';
+        }
+        return row[property] === value && !row.is_shared && !['virtual', 'federation'].includes(row.clusterType);
       }
       return row[property] === value;
     };
@@ -509,7 +346,6 @@ export default defineComponent({
     const handleGotoWebConsole = (cluster) => {
       ctx.emit('webconsole', cluster);
     };
-    const deletable = cluster => !!clusterExtraInfo.value[cluster.clusterID]?.canDeleted;
     // 清空搜索条件
     const handleClearSearch = () => {
       ctx.emit('clear');
@@ -527,7 +363,7 @@ export default defineComponent({
 
     // 行点击事件
     const handleRowClick = (row, e, col) => {
-      if (col.property === 'action' || !supportDetailStatusList.includes(row.status)) return;
+      if (col.property === 'action' || !supportDetailStatusList.value.includes(row.status)) return;
       handleChangeActiveRow(row);
     };
 
@@ -540,7 +376,7 @@ export default defineComponent({
       if (row.clusterID === props.activeClusterId) {
         classes += ' active-row';
       }
-      if (supportDetailStatusList.includes(row.status)) {
+      if (supportDetailStatusList.value.includes(row.status)) {
         classes += ' cluster-row-clickable';
       }
       if (row.clusterID === props.highlightClusterId) {
@@ -551,16 +387,11 @@ export default defineComponent({
 
     return {
       clusterTypeKey,
-      normalStatusList,
-      failedStatusList,
       sortClusterList,
-      supportDetailStatusList,
       CLUSTER_ENV,
       clusterEnvFilters,
       curProject,
       clusterTypeFilterList,
-      statusTextMap,
-      statusColorMap,
       statusList,
       providerNameList,
       providerNameMap,
@@ -572,7 +403,6 @@ export default defineComponent({
       handleDeleteCluster,
       handleShowClusterLog,
       handleRetry,
-      deletable,
       handleClearSearch,
       handleGotoToken,
       handleGotoWebConsole,
@@ -580,6 +410,7 @@ export default defineComponent({
       handleChangeActiveRow,
       rowClassName,
       handleRowClick,
+      getClusterTypeName,
     };
   },
 });

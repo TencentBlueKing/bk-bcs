@@ -58,7 +58,11 @@
         <template #label>
           {{ $t(tab.label) }}
         </template>
-        <component :is="tab.component" class="p-[20px]" v-bind="tab.componentConfig" />
+        <component
+          :is="tab.component"
+          class="p-[20px]"
+          v-bind="tab.componentConfig"
+          v-on="tab.eventHandlers" />
       </bcs-tab-panel>
     </bcs-tab>
   </div>
@@ -77,6 +81,7 @@ import TaskRecord from '@/views/cluster-manage/detail/cluster-record.vue';
 import Master from '@/views/cluster-manage/detail/master/index.vue';
 import Network from '@/views/cluster-manage/detail/network/index.vue';
 import Overview from '@/views/cluster-manage/detail/overview.vue';
+import SubCluster from '@/views/cluster-manage/detail/sub-cluster/index.vue';
 import VClusterQuota from '@/views/cluster-manage/detail/vcluster-quota.vue';
 import Namespace from '@/views/cluster-manage/namespace/namespace.vue';
 
@@ -98,9 +103,13 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  perms: {
+    type: Object,
+    default: () => ({}),
+  },
 });
 
-const emits = defineEmits(['width-change']);
+const emits = defineEmits(['width-change', 'active-row']);
 
 watch(() => props.active, () => {
   activeTabName.value = props.active;
@@ -139,16 +148,19 @@ const showAutoScaler = computed(() => !!curCluster.value?.autoScale);
 
 const tabs = computed(() => [
   {
+    // 集群总览
     name: 'overview', // 默认显示的tab
     label: 'cluster.detail.title.overview', // tab名称
     component: Overview, // tab对应的组件
     isShow: !curCluster.value?.is_shared
+      && curCluster.value.clusterType !== 'federation'
       && normalStatusList.value.includes(curCluster.value.status || ''), // 是否显示该tab
     componentConfig: {
       clusterId: props.clusterId,
     }, // tab对应的组件配置
   },
   {
+    // 命名空间
     name: 'namespace',
     label: 'k8s.namespace',
     component: Namespace,
@@ -160,6 +172,7 @@ const tabs = computed(() => [
     },
   },
   {
+    // 基本信息
     name: 'info',
     label: 'generic.title.basicInfo1',
     component: Info,
@@ -169,32 +182,37 @@ const tabs = computed(() => [
     },
   },
   {
+    // 网络配置
     name: 'network',
     label: 'cluster.detail.title.network',
     component: Network,
     isShow: (curCluster.value?.is_shared
-      || (curCluster.value.clusterType !== 'virtual' && !isKubeConfigImportCluster.value && !isKubeAgentImportCluster.value)),
+      || (!['virtual', 'federation'].includes(curCluster.value.clusterType || '')
+        && !isKubeConfigImportCluster.value
+        && !isKubeAgentImportCluster.value)),
     componentConfig: {
       clusterId: props.clusterId,
     },
   },
   {
+    // 控制面配置
     name: 'master',
     label: 'cluster.detail.title.controlConfig',
     component: Master,
     isShow: (!curCluster.value?.is_shared
-      && curCluster.value.clusterType !== 'virtual'
+      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')
       && !isKubeConfigImportCluster.value),
     componentConfig: {
       clusterId: props.clusterId,
     },
   },
   {
+    // 节点列表
     name: 'node',
     label: 'cluster.detail.title.nodeList',
     component: Node,
     isShow: (!curCluster.value?.is_shared
-      && curCluster.value.clusterType !== 'virtual'
+      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')
       && normalStatusList.value.includes(curCluster.value.status || '')),
     componentConfig: {
       clusterId: props.clusterId,
@@ -203,11 +221,12 @@ const tabs = computed(() => [
     },
   },
   {
+    // 自动扩缩容
     name: 'autoscaler',
     label: 'cluster.detail.title.autoScaler',
     component: AutoScaler,
     isShow: (!curCluster.value?.is_shared
-      && curCluster.value.clusterType !== 'virtual'
+      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')
       && normalStatusList.value.includes(curCluster.value.status || '')
       && showAutoScaler.value),
     componentConfig: {
@@ -215,11 +234,12 @@ const tabs = computed(() => [
     },
   },
   {
+    // 操作记录
     name: 'taskRecord',
     label: 'cluster.title.opRecord',
     component: TaskRecord,
     isShow: (!curCluster.value?.is_shared
-      && curCluster.value.clusterType !== 'virtual'
+      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')
       && normalStatusList.value.includes(curCluster.value.status || '')
       && curCluster.value.provider === 'tencentCloud'),
     componentConfig: {
@@ -227,6 +247,7 @@ const tabs = computed(() => [
     },
   },
   {
+    // 配额
     name: 'quota',
     label: 'cluster.detail.title.quota',
     component: VClusterQuota,
@@ -235,6 +256,20 @@ const tabs = computed(() => [
       && normalStatusList.value.includes(curCluster.value.status || '')),
     componentConfig: {
       clusterId: props.clusterId,
+    },
+  },
+  {
+    // 成员集群
+    name: 'subCluster',
+    label: 'cluster.detail.title.subCluster',
+    component: SubCluster,
+    isShow: (curCluster.value.clusterType === 'federation'),
+    componentConfig: {
+      clusterId: props.clusterId,
+      perms: props.perms,
+    },
+    eventHandlers: {
+      'active-row': clusterID => handleChangeActiveRow(clusterID),
     },
   },
 ]);
@@ -318,9 +353,10 @@ const hideDetailPanel = () => {
   emits('width-change', 0);
 };
 
-// onBeforeMount(() => {
-//   handleGetCloudDetail();
-// });
+// 当前active行
+const handleChangeActiveRow = (clusterID) => {
+  emits('active-row', clusterID);
+};
 
 onMounted(() => {
   setTimeout(() => {
@@ -419,6 +455,10 @@ defineExpose({
     height: calc(100% - 42px);
     overflow-y: auto;
     overflow-x: hidden;
+
+    .bk-tab-content {
+      height: 100%;
+    }
   }
 }
 </style>

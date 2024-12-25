@@ -115,3 +115,28 @@ export const clusterMeta = request('post', '/clusters/-/meta');
 export const clusterOperationLogs = request('get', '/operationlogs');
 export const clusterTaskRecords = request('get', '/taskrecords');
 export const taskLogsDownloadURL = `${process.env.NODE_ENV === 'development' ? '' : window.BCS_API_HOST}/bcsapi/v4/clustermanager/v1/common/downloadtaskrecords`;
+
+// 联邦集群
+const federalRequest = createRequest({
+  domain: window.BCS_API_HOST,
+  prefix: '/bcsapi/v4/federationmanager/v1',
+});
+
+// 获取项目下的所有联邦集群
+export const getAllFederalClusters = federalRequest('get', '/project/$projectId/clusters');
+// 获取单个联邦集群
+export const getFederalCluster = federalRequest('get', '/cluster/$federationClusterId');
+// 获取host集群关联的联邦集群ID
+export const getFederationClusterId = federalRequest('get', '/hostcluster/$hostClusterId');
+// 创建联邦集群
+export const createFederalCluster = federalRequest('post', '/cluster/$hostClusterId/install');
+// 添加联邦成员集群
+export const addFederalCluster = federalRequest('post', '/cluster/$fedClusterId/subcluster/$subClusterId/add');
+// 移除联邦成员集群
+export const deleteFederalCluster = federalRequest('delete', '/cluster/$fedClusterId/subcluster/$subClusterId/remove');
+// 获取任务
+export const getFederalTask = federalRequest('get', '/tasks/$taskId');
+// 获取任务记录
+export const getFederalTaskRecords = federalRequest('get', '/taskrecords/$taskId');
+// 重试任务
+export const retryFederalTask = federalRequest('post', '/tasks/$taskId/retry');
