@@ -25,7 +25,7 @@
             :value="clusterData.clusterName"
             :placeholder="$t('cluster.create.validate.name')"
             class="w-[300px]"
-            :disable-edit="clusterData.status !== 'RUNNING'"
+            :disable-edit="clusterData.status !== 'RUNNING' || clusterData.is_shared"
             @save="handleClusterNameChange" />
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.clusterType')">
@@ -53,7 +53,7 @@
             <span v-else>--</span>
             <span
               class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
-              v-if="clusterData.status === 'RUNNING'"
+              v-if="clusterData.status === 'RUNNING' && !clusterData.is_shared"
               @click="isEdit = true">
               <i class="bk-icon icon-edit-line"></i>
             </span>
@@ -98,7 +98,7 @@
             :value="clusterData.description"
             :placeholder="$t('cluster.placeholder.desc')"
             class="w-[300px]"
-            :disable-edit="clusterData.status !== 'RUNNING'"
+            :disable-edit="clusterData.status !== 'RUNNING' || clusterData.is_shared"
             @save="handleClusterDescChange" />
         </bk-form-item>
       </DescList>
@@ -160,6 +160,7 @@
               {{ nodemanArea || '--' }}
             </span>
             <span
+              v-if="clusterData.status === 'RUNNING' && !clusterData.is_shared"
               class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
               @click="handleEditNodemanArea">
               <i class="bk-icon icon-edit-line"></i>

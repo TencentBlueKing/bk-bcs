@@ -364,6 +364,7 @@ export function useCloud() {
 }
 
 export function getClusterTypeName(clusterData) {
+  if (clusterData.is_shared) return $i18n.t('bcs.cluster.share'); // 共享集群
   if (clusterData.clusterType === 'virtual') return 'vCluster'; // 虚拟集群
   if (clusterData.clusterType === 'federation') return $i18n.t('bcs.cluster.federation'); // 联邦集群
 
