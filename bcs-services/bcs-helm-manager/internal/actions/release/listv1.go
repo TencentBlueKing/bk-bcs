@@ -17,16 +17,19 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	authUtils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/sync/errgroup"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
@@ -103,7 +106,11 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 	}
 
 	if cluster.IsShared && len(option.Namespace) == 0 {
-		return l.mergeReleases(nil, dbReleases), nil
+		clusterReleases, errr := l.listReleaseByNamespaces()
+		if errr != nil {
+			return nil, errr
+		}
+		return l.mergeReleases(clusterReleases, dbReleases), nil
 	}
 
 	// get release from cluster
@@ -118,6 +125,44 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 
 	// merge release
 	return l.mergeReleases(clusterReleases, dbReleases), nil
+}
+
+// 共享集群支持查询集群下所有命名空间的release
+func (l *ListReleaseV1Action) listReleaseByNamespaces() ([]*helmmanager.Release, error) {
+	namespaces, err := project.ListNamespaces(l.req.GetProjectCode(), l.req.GetClusterID())
+	if err != nil {
+		return nil, err
+	}
+	clusterReleases := make([]*helmmanager.Release, 0)
+	eg := errgroup.Group{}
+	mux := sync.Mutex{}
+	eg.SetLimit(10)
+	for _, data := range namespaces {
+		nsData := data
+		eg.Go(func() error {
+
+			// get release from cluster
+			_, originReleases, errr := l.releaseHandler.Cluster(l.req.GetClusterID()).List(l.ctx, release.ListOption{
+				Namespace: nsData.Name,
+				Name:      "",
+			})
+			if errr != nil {
+				return fmt.Errorf("list release from cluster error, %s", errr.Error())
+			}
+			mux.Lock()
+			for _, item := range originReleases {
+				clusterReleases = append(clusterReleases, item.Transfer2Proto(contextx.GetProjectCodeFromCtx(l.ctx),
+					l.req.GetClusterID()))
+			}
+			mux.Unlock()
+			return nil
+		})
+	}
+	err = eg.Wait()
+	if err != nil {
+		return nil, err
+	}
+	return clusterReleases, nil
 }
 
 func (l *ListReleaseV1Action) mergeReleases(clusterReleases,

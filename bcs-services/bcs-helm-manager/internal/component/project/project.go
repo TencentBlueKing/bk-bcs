@@ -112,6 +112,31 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 	return p.Data, nil
 }
 
+// ListNamespaces list namespaces
+func ListNamespaces(projectCode, clusterID string) ([]*bcsproject.NamespaceData, error) {
+	cli, close, err := client.getProjectClient()
+	defer func() {
+		if close != nil {
+			close()
+		}
+	}()
+	if err != nil {
+		return nil, err
+	}
+	p, err := cli.Namespace.ListNamespaces(context.Background(), &bcsproject.ListNamespacesRequest{
+		ProjectCode: projectCode,
+		ClusterID:   clusterID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ListNamespaces error: %s", err)
+	}
+	if p.Code != 0 || p.Data == nil {
+		return nil, fmt.Errorf("ListNamespaces error, code: %d, message: %s, requestID: %s",
+			p.Code, p.GetMessage(), p.GetRequestID())
+	}
+	return p.Data, nil
+}
+
 // GetVariable get project from project code
 func GetVariable(projectCode, clusterID, namespace string) ([]*bcsproject.VariableValue, error) {
 	client, close, err := client.getProjectClient()
