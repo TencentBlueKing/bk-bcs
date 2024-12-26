@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/klog/v2"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -81,9 +81,9 @@ func CacheListClusters() {
 	go func() {
 		ListClusters()
 		for range time.Tick(time.Minute * 1) {
-			klog.Infof("list clusters running")
+			blog.Infof("list clusters running")
 			ListClusters()
-			klog.Infof("list clusters end")
+			blog.Infof("list clusters end")
 		}
 	}()
 }
@@ -99,13 +99,13 @@ func ListClusters() {
 		Get(url)
 
 	if err != nil {
-		klog.Errorf("list clusters error, %s", err.Error())
+		blog.Errorf("list clusters error, %s", err.Error())
 		return
 	}
 
 	var result []*Cluster
 	if err = component.UnmarshalBKResult(resp, &result); err != nil {
-		klog.Errorf("unmarshal clusters error, %s", err.Error())
+		blog.Errorf("unmarshal clusters error, %s", err.Error())
 		return
 	}
 
@@ -115,7 +115,7 @@ func ListClusters() {
 		if cls.IsVirtual() {
 			cls.VclusterInfo, err = parseVClusterInfo(cls.ExtraInfo.NamespaceInfo)
 			if err != nil {
-				klog.Errorf("parse clusters %s namespaceInfo %s error, %s", cls.ClusterID, cls.ExtraInfo.NamespaceInfo,
+				blog.Errorf("parse clusters %s namespaceInfo %s error, %s", cls.ClusterID, cls.ExtraInfo.NamespaceInfo,
 					err.Error())
 			}
 		}

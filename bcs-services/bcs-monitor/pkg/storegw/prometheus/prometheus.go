@@ -20,6 +20,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/component"
@@ -27,7 +28,6 @@ import (
 	"github.com/thanos-io/thanos/pkg/store/labelpb"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
 	"gopkg.in/yaml.v2"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
@@ -98,7 +98,7 @@ func (s *PromStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest
 // LabelValues 返回 label values 列表
 func (s *PromStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (*storepb.LabelValuesResponse,
 	error) {
-	klog.InfoS(storepb.MatchersToString(r.Matchers...), "request_id", store.RequestIDValue(ctx))
+	blog.Infow(storepb.MatchersToString(r.Matchers...), "request_id", store.RequestIDValue(ctx))
 	values, err := promclient.QueryLabelValues(ctx, s.promURL.String(), nil, r)
 	if err != nil {
 		return &storepb.LabelValuesResponse{Values: values}, err
@@ -110,7 +110,7 @@ func (s *PromStore) LabelValues(ctx context.Context, r *storepb.LabelValuesReque
 // Series 返回时序数据
 func (s *PromStore) Series(r *storepb.SeriesRequest, srv storepb.Store_SeriesServer) error {
 	ctx := srv.Context()
-	klog.InfoS(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
+	blog.Infow(clientutil.DumpPromQL(r), "request_id", store.RequestIDValue(ctx), "minTime", r.MinTime, "maxTime",
 		r.MaxTime, "step", r.QueryHints.StepMillis)
 
 	// step 固定1分钟

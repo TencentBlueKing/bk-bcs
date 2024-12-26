@@ -21,11 +21,11 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/entity"
@@ -44,12 +44,12 @@ var (
 // MigrateLogRule migrate log rule from saas db
 // 数据迁移分为两个部分，1.28 saas 对接 bklog 的规则数据和旧版本日志的索引集
 func MigrateLogRule() error {
-	klog.Info("start to migrate log rule")
+	blog.Info("start to migrate log rule")
 
 	// init mysql
 	mysqlDB, err := initDB()
 	if err != nil {
-		klog.Errorf("init mysql db failed, err %s", err.Error())
+		blog.Errorf("init mysql db failed, err %s", err.Error())
 		return err
 	}
 
@@ -69,7 +69,7 @@ func migrateLogRule(ctx context.Context, model storage.Storage, mysqlDB *gorm.DB
 	})
 	_, newRules, err := model.ListLogRules(ctx, cond, &utils.ListOption{})
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
-		klog.Fatalf("list rules failed, err %s", err.Error())
+		blog.Fatalf("list rules failed, err %s", err.Error())
 		return
 	}
 
@@ -100,11 +100,11 @@ func migrateLogRule(ctx context.Context, model storage.Storage, mysqlDB *gorm.DB
 			Status:    entity.SuccessStatus,
 		})
 		if err != nil {
-			klog.Fatalf("create rules failed, err %s", err.Error())
+			blog.Fatalf("create rules failed, err %s", err.Error())
 		}
 		count++
 	}
-	klog.Infof("migrate %d rules from saas db", count)
+	blog.Infof("migrate %d rules from saas db", count)
 }
 
 func migrateLogIndexSet(ctx context.Context, model storage.Storage, mysqlDB *gorm.DB) {
@@ -117,7 +117,7 @@ func migrateLogIndexSet(ctx context.Context, model storage.Storage, mysqlDB *gor
 		oldIndex, err := model.GetOldIndexSetID(ctx, indexs[i].ProjectID)
 		exist := true
 		if err != nil {
-			klog.Fatalf("get old index failed, err %s", err.Error())
+			blog.Fatalf("get old index failed, err %s", err.Error())
 		}
 		if oldIndex == nil {
 			exist = false
@@ -126,12 +126,12 @@ func migrateLogIndexSet(ctx context.Context, model storage.Storage, mysqlDB *gor
 		if !exist {
 			err = model.CreateOldIndexSetID(ctx, &indexs[i])
 			if err != nil {
-				klog.Fatalf("create index failed, err %s", err.Error())
+				blog.Fatalf("create index failed, err %s", err.Error())
 			}
 		}
 		count++
 	}
-	klog.Infof("migrate %d index sets from saas db", count)
+	blog.Infof("migrate %d index sets from saas db", count)
 }
 
 func loadOldLogRules(db *gorm.DB) []logCollectorMetadata {
@@ -140,15 +140,15 @@ func loadOldLogRules(db *gorm.DB) []logCollectorMetadata {
 		"config_name FROM log_collect_logcollectmetadata WHERE is_deleted=0").
 		Scan(&rules).Error
 	if err != nil {
-		klog.Fatalf("get old rules failed, err %s", err.Error())
+		blog.Fatalf("get old rules failed, err %s", err.Error())
 	}
-	klog.Infof("get %d rules from saas db", len(rules))
+	blog.Infof("get %d rules from saas db", len(rules))
 	return rules
 }
 
 func loadOldIndexSet(db *gorm.DB) []entity.LogIndex {
 	if !db.Migrator().HasTable(&entity.LogIndex{}) {
-		klog.Info("not found log index table")
+		blog.Info("not found log index table")
 		return nil
 	}
 	var indexs []entity.LogIndex
@@ -156,9 +156,9 @@ func loadOldIndexSet(db *gorm.DB) []entity.LogIndex {
 		"FROM datalog_datalogplan").
 		Scan(&indexs).Error
 	if err != nil {
-		klog.Fatalf("get indexs failed, err %s", err.Error())
+		blog.Fatalf("get indexs failed, err %s", err.Error())
 	}
-	klog.Infof("get %d indexs from saas db", len(indexs))
+	blog.Infof("get %d indexs from saas db", len(indexs))
 	return indexs
 }
 

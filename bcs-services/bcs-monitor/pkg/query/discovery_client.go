@@ -38,7 +38,6 @@ import (
 	"github.com/thanos-io/thanos/pkg/runutil"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
@@ -263,7 +262,7 @@ func NewHTTPSDClientGroup(ctx context.Context, logKit blog.GlogKit, reg *prometh
 		return runutil.Repeat(time.Second*30, ctx.Done(), func() error {
 			addrMap, err := c.parseURLHost(conf.URL)
 			if err != nil {
-				klog.ErrorS(err, "resolve http sd addresses failed", "url", conf.URL)
+				blog.Errorw(err, "resolve http sd addresses failed", "url", conf.URL)
 				return nil
 			}
 
@@ -275,7 +274,7 @@ func NewHTTPSDClientGroup(ctx context.Context, logKit blog.GlogKit, reg *prometh
 				}
 				s, err := NewHTTPSDClient(updateCtx, logKit, *conf, addr, *u, forceRefreshFunc)
 				if err != nil {
-					klog.ErrorS(err, "create http sd client failed", "url", conf.URL, "addr", addr)
+					blog.Errorw(err, "create http sd client failed", "url", conf.URL, "addr", addr)
 					continue
 				}
 				_ = s.Run()
