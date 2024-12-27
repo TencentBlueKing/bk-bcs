@@ -59,6 +59,7 @@ ruleConf:
                 path:
                   title: {{ i18n "路径" .lang }}
                   type: string
+                  default: /testpath
                   ui:rules:
                     - required
                     - maxLength128
@@ -67,11 +68,13 @@ ruleConf:
                 targetSVC:
                   title: {{ i18n "目标 Service" .lang }}
                   type: string
+                  default: test
                   ui:rules:
                     - required
                 port:
                   title: {{ i18n "端口" .lang }}
                   type: integer
+                  default: 80
                   ui:component:
                     props:
                       min: 1
@@ -136,6 +139,7 @@ network:
     existLBID:
       title: "CLB ID"
       type: string
+      default: lb-c5xxxxd6
       ui:component:
         props:
           placeholder: {{ i18n "例如：lb-c5xxxxd6" .lang | quote }}
@@ -337,6 +341,7 @@ portConf:
           port:
             title: {{ i18n "监听端口" .lang }}
             type: integer
+            default: 80
             ui:component:
               props:
                 min: 1
@@ -360,6 +365,7 @@ portConf:
           targetPort:
             title: {{ i18n "目标端口" .lang }}
             type: string
+            default: "80"
             ui:rules:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
@@ -399,10 +405,6 @@ portConf:
 selector:
   title: {{ i18n "选择器" .lang }}
   type: object
-  required:
-    - associatedResources
-    - associatedApplications
-    - labels
   properties:
     associatedResources:
       title: {{ i18n "关联资源" .lang }}
@@ -437,8 +439,6 @@ selector:
               value: ""
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"       
-      ui:rules:
-        - required
     labels:
       title: {{ i18n "标签选择器" .lang }}
       type: array
