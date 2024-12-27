@@ -34,8 +34,6 @@ import (
 const (
 	// DisFstype xxx
 	DisFstype = "ext[234]|btrfs|xfs|zfs" // 磁盘统计 允许的文件系统
-	// DiskMountPoint xxx
-	DiskMountPoint = "/data" // 磁盘统计 允许的挂载目录
 	// PROVIDER xxx
 	PROVIDER = `provider="BK_MONITOR"`
 
@@ -83,7 +81,7 @@ func HandleBKMonitorClusterMetric(ctx context.Context, projectID, clusterID stri
 				"node":       res.NodeNameMatch,
 				"instance":   res.NodeMatch,
 				"fstype":     DisFstype,
-				"mountpoint": DiskMountPoint,
+				"mountpoint": config.G.BKMonitor.MountPoint,
 				"provider":   provider,
 			}
 

@@ -21,14 +21,13 @@ import (
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 )
 
 const (
 	// DiskFstype xxx
 	DiskFstype = "ext[234]|btrfs|xfs|zfs" // 磁盘统计 允许的文件系统
-	// DiskMountpoint xxx
-	DiskMountpoint = "/data" // 磁盘统计 允许的挂载目录
 	// PROVIDER xxx 查询限制
 	PROVIDER = `prometheus=~"thanos/po-kube-prometheus-stack-prometheus|thanos/po-prometheus-operator-prometheus"`
 )
@@ -55,7 +54,7 @@ func (m *Prometheus) handleClusterMetric(ctx context.Context, projectID, cluster
 		"instance":   nodeMatch,
 		"node":       nodeNameMatch,
 		"fstype":     DiskFstype,
-		"mountpoint": DiskMountpoint,
+		"mountpoint": config.G.BKMonitor.MountPoint,
 		"provider":   PROVIDER,
 	}
 
