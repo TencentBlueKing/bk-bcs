@@ -305,6 +305,7 @@ func makeSlugName(projectCode, clusterID, username string) string {
 		username = username[:8]
 	}
 
+	projectCode = slug.Make(projectCode)
 	if len(projectCode) > 8 {
 		projectCode = projectCode[:8]
 	}
