@@ -133,6 +133,7 @@ export function useClusterOverview(clusterList: Ref<any[]>) {
   };
   // 集群指标信息
   const fetchClusterOverview = async (cluster) => {
+    if (!cluster.clusterID) return;
     const data = await $store.dispatch('metric/clusterOverview', {
       $projectCode: projectCode.value,
       $clusterId: cluster.clusterID,

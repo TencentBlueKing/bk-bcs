@@ -36,10 +36,10 @@
       :filter-method="filterMethod">
       <template #default="{ row }">
         <div class="flex items-center">
-          <svg class="size-[20px] mr-[10px] flex-shrink-0">
-            <use :xlink:href="providerNameMap[row.provider].className"></use>
+          <svg class="size-[20px] mr-[10px] flex-shrink-0" v-if="providerNameMap[row.provider]">
+            <use :xlink:href="providerNameMap[row.provider]?.className"></use>
           </svg>
-          <span class="text-[12px] bcs-ellipsis">{{ providerNameMap[row.provider].label }}</span>
+          <span class="text-[12px] bcs-ellipsis">{{ providerNameMap[row.provider]?.label || '--' }}</span>
         </div>
       </template>
     </bk-table-column>
