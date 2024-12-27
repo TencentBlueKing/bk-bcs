@@ -338,6 +338,7 @@ portConf:
             type: string
             ui:rules:
               - maxLength64
+              - rfc1123LabelRegex
           port:
             title: {{ i18n "监听端口" .lang }}
             type: integer
