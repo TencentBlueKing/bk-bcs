@@ -559,6 +559,10 @@ resource:
                         value: tke.cloud.tencent.com/eni-ip
                       - label: {{ i18n "算力-GPU" .lang }}
                         value: tencent.com/fgpu
+                      - label: nvidia.com/gpu
+                        value: nvidia.com/gpu
+                      - label: huawei.com/Ascend910
+                        value: huawei.com/Ascend910
                 ui:rules:
                   - required
                   - validator: "{{`{{`}} $self.widgetNode.parent.parent.children.every(node => node.children[0].instance === $self || node.children[0].instance.value !== $self.value) {{`}}`}}"
