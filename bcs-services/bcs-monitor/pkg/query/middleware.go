@@ -76,12 +76,14 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 		}
 
 		scopeClusteID := r.Header.Get("X-Scope-ClusterId")
+		partialResponse := r.Header.Get("X-Partial-Response")
 		requestID := tracing.RequestIDValue(r, true)
 		blog.Infow("handle request",
 			"request_id", requestID,
 			"handler_name", handlerName,
 			"label_matchers", fmt.Sprintf("%s", labelMatchers),
 			"X-Scope-ClusterId", scopeClusteID,
+			"X-Partial-Response", partialResponse,
 			"req", fmt.Sprintf("%s %s", r.Method, r.URL),
 			"query", r.Form.Get("query"),
 			"start", r.Form.Get("start"),
@@ -94,6 +96,7 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 
 		ctx := store.WithLabelMatchValue(r.Context(), labelMatchers)
 		ctx = store.WithScopeClusterIDValue(ctx, scopeClusteID)
+		ctx = store.WithPartialResponseValue(ctx, partialResponse)
 		ctx = store.WithRequestIDValue(ctx, requestID)
 		// Traceparent 透传给grpc
 		ctx = metadata.AppendToOutgoingContext(ctx, "Traceparent", r.Header.Get("traceparent"))
