@@ -50,6 +50,7 @@ ref:
     resName:
       title: {{ i18n "资源名称" .lang }}
       type: string
+      default: deployment-test
       ui:rules:
         - required
     minReplicas:

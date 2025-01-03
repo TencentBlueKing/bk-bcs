@@ -72,6 +72,8 @@
   en: "value required"
 - msgID: "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"
   en: "only lowercase letters, numbers and '-' are supported and must start and end with an alphanumeric"
+- msgID: "必须由小写字母数字字符或'-'组成，并且必须以字母数字字符开头和结尾"
+  en: "must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character"
 - msgID: 仅可包含数字字符与小数点
   en: "can only contain numeric characters and decimal points"
 - msgID: 超过长度限制（64）

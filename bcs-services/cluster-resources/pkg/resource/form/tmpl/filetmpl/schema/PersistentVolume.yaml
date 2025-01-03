@@ -80,6 +80,7 @@ properties:
       accessModes:
         title: {{ i18n "访问模式" .lang }}
         type: array
+        default: ["ReadWriteOnce"]
         items:
           type: string
         ui:component:
@@ -99,6 +100,7 @@ properties:
             message: {{ i18n "至少选择一个 AccessMode" .lang }}
       scName:
         title: {{ i18n "存储类名称" .lang }}
+        default: fast-storage
         type: string
       storageSize:
         title: {{ i18n "容量" .lang }}
@@ -113,6 +115,7 @@ properties:
       localPath:
         title: Path
         type: string
+        default: /tmp/data
         ui:rules:
           - validator: "{{`{{`}} $self.getValue('spec.type') !== 'local' || $self.value {{`}}`}}"
             message: {{ i18n "值不能为空" .lang }}

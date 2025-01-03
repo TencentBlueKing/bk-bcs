@@ -93,6 +93,7 @@ properties:
       accessModes:
         title: {{ i18n "访问模式" .lang }}
         type: array
+        default: ["ReadWriteOnce"]
         items:
           type: string
         ui:component:

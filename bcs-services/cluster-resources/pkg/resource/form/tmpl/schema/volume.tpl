@@ -11,7 +11,7 @@ pvc:
         ui:rules:
           - required
           - maxLength64
-          - nameRegex
+          - rfc1123LabelRegex
       pvcName:
         title: PersistentVolumeClaim
         type: string
@@ -59,7 +59,7 @@ hostPath:
         ui:rules:
           - required
           - maxLength128
-          - nameRegex
+          - rfc1123LabelRegex
       path:
         title: {{ i18n "路径或节点" .lang }}
         type: string
@@ -111,7 +111,7 @@ configMap:
         ui:rules:
           - required
           - maxLength128
-          - nameRegex
+          - rfc1123LabelRegex
       defaultMode:
         title: {{ i18n "默认模式" .lang }}
         type: string
@@ -189,7 +189,7 @@ secret:
         ui:rules:
           - required
           - maxLength128
-          - nameRegex
+          - rfc1123LabelRegex
       defaultMode:
         title: {{ i18n "默认模式" .lang }}
         type: string
@@ -264,7 +264,7 @@ emptyDir:
         ui:rules:
           - required
           - maxLength128
-          - nameRegex
+          - rfc1123LabelRegex
   ui:component:
     name: bfArray
   ui:props:
@@ -284,7 +284,7 @@ nfs:
         ui:rules:
           - required
           - maxLength128
-          - nameRegex
+          - rfc1123LabelRegex
       path:
         title: {{ i18n "路径" .lang }}
         type: string

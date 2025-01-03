@@ -169,6 +169,10 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"validator": "/^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*|{{.*}})$/",
 			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
 		},
+		"rfc1123LabelRegex": map[string]interface{}{
+			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/",
+			"message":   i18n.GetMsg(ctx, "必须由小写字母数字字符或'-'组成，并且必须以字母数字字符开头和结尾"),
+		},
 		"numberRegex": map[string]interface{}{
 			"validator": "/^[0-9]+(\\.[0-9])?[0-9]*$/",
 			"message":   i18n.GetMsg(ctx, "仅可包含数字字符与小数点"),
