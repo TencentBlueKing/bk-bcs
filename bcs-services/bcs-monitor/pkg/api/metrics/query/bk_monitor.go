@@ -58,7 +58,7 @@ func (h BKMonitorHandler) handleBKMonitorClusterMetric(c *rest.Context, promql s
 		"clusterID":  c.ClusterId,
 		"node":       nodeFormat,
 		"fstype":     utils.FSType,
-		"mountpoint": utils.MountPoint,
+		"mountpoint": config.G.BKMonitor.MountPoint,
 	})
 
 	result, err := bkmonitor.QueryByPromQLRaw(c.Request.Context(), h.url, h.bkBizID, queryTime.Start.Unix(),
@@ -90,7 +90,7 @@ func (h BKMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMe
 		"clusterID":  c.ClusterId,
 		"node":       nodeFormat,
 		"fstype":     utils.FSType,
-		"mountpoint": utils.MountPoint,
+		"mountpoint": config.G.BKMonitor.MountPoint,
 	}
 
 	promqlMap := map[string]string{

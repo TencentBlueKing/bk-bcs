@@ -23,8 +23,6 @@ import (
 const (
 	// FSType file system type
 	FSType = "ext[234]|btrfs|xfs|zfs"
-	// MountPoint mount point
-	MountPoint = "/data"
 )
 
 // JSONTime format time in json marshal
