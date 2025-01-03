@@ -164,6 +164,28 @@ func (t *Task) SetCallback(callBackName string) *Task {
 	return t
 }
 
+// GetCallbackResult get callback state
+func (t *Task) GetCallbackResult() string {
+	return t.CallbackResult
+}
+
+// SetCallbackResult set callback state
+func (t *Task) SetCallbackResult(status string) *Task {
+	t.CallbackResult = status
+	return t
+}
+
+// GetCallbackMessage get callback message
+func (t *Task) GetCallbackMessage() string {
+	return t.CallbackMessage
+}
+
+// SetCallbackMessage set callback message
+func (t *Task) SetCallbackMessage(msg string) *Task {
+	t.CallbackMessage = msg
+	return t
+}
+
 // GetCommonPayload unmarshal common payload to struct obj
 func (t *Task) GetCommonPayload(obj any) error {
 	if len(t.CommonPayload) == 0 {

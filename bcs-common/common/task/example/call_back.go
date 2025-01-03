@@ -26,13 +26,14 @@ const (
 type callBack struct{}
 
 // Callback 回调方法,根据任务成功状态更新实体对象状态
-func (cb *callBack) Callback(c *istep.Context, cbErr error) {
+func (cb *callBack) Callback(c *istep.Context, cbErr error) error {
 	if cbErr != nil {
-		fmt.Println("success")
-		return
+		fmt.Println("failure")
+		return nil
 	}
 
-	fmt.Println("failure")
+	fmt.Println("success")
+	return nil
 }
 
 func init() {

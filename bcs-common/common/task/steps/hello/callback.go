@@ -20,17 +20,19 @@ import (
 )
 
 // Callback ...
-func Callback(c *istep.Context, err error) {
+func Callback(c *istep.Context, err error) error {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }
 
 type callback struct {
 }
 
-func (cb *callback) Callback(c *istep.Context, err error) {
+func (cb *callback) Callback(c *istep.Context, err error) error {
 	if err != nil {
 		fmt.Println(err)
 	}
+	return nil
 }

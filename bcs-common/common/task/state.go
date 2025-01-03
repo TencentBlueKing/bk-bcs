@@ -47,7 +47,7 @@ func (m *TaskManager) getTaskState(taskId, stepName string) (*State, error) {
 	}
 	step, err := state.isReadyToStep(stepName)
 	if err != nil {
-		return nil, fmt.Errorf("task %s step %s is not ready, %w", taskId, stepName, err)
+		return nil, fmt.Errorf("task %s step %s is not ready, err %s", taskId, stepName, err.Error())
 	}
 
 	if step == nil {
@@ -183,17 +183,30 @@ func (s *State) isReadyToStep(stepName string) (*types.Step, error) {
 	return curStep, nil
 }
 
-// updateStepSuccess update step status to success
-func (s *State) updateStepSuccess(start time.Time) {
-	endTime := time.Now()
-
-	defer func() {
-		// update Task in storage
-		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
-			log.ERROR.Printf("task %s update step %s to success failed: %s", s.task.TaskID, s.step.GetName(), err.Error())
+// doCallback
+func (s *State) doCallback() error {
+	// last step
+	if s.isLastStep(s.step) {
+		// callback
+		if s.cbExecutor != nil {
+			c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, s.step)
+			if err := s.cbExecutor.Callback(c, nil); err != nil {
+				errMsg := fmt.Sprintf("callbackName[%s] of step[%s] failed, %s",
+					s.task.CallbackName, s.step.GetName(), err.Error())
+				s.task.SetCallbackResult(types.CallbackResultFailure)
+				s.task.SetCallbackMessage(errMsg)
+				return fmt.Errorf("%s", errMsg)
+			}
+			s.task.SetCallbackResult(types.CallbackResultSuccess)
+			return nil
 		}
-	}()
+	}
+	return nil
+}
 
+// updateStepSuccess update step status to success
+func (s *State) updateStepSuccess(start time.Time) error {
+	endTime := time.Now()
 	s.step.SetEndTime(endTime).
 		SetExecutionTime(start, endTime).
 		SetStatus(types.TaskStatusSuccess).
@@ -211,24 +224,22 @@ func (s *State) updateStepSuccess(start time.Time) {
 		s.task.SetEndTime(endTime).
 			SetStatus(types.TaskStatusSuccess).
 			SetMessage("task finished successfully")
-
-			// callback
-		if s.cbExecutor != nil {
-			c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, s.step)
-			s.cbExecutor.Callback(c, nil)
-		}
 	}
+
+	return s.saveTaskState()
+}
+
+func (s *State) saveTaskState() error {
+	// update Task in storage
+	if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
+		return fmt.Errorf(
+			"task %s update step %s to failure failed: %s", s.task.TaskID, s.step.GetName(), err.Error())
+	}
+	return nil
 }
 
 // updateStepFailure update step status to failure
-func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *taskEndStatus) {
-	defer func() {
-		// update Task in storage
-		if err := GetGlobalStorage().UpdateTask(context.Background(), s.task); err != nil {
-			log.ERROR.Printf("task %s update step %s to failure failed: %s", s.task.TaskID, s.step.GetName(), err.Error())
-		}
-	}()
-
+func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *taskEndStatus) error {
 	endTime := time.Now()
 
 	stepFailMsg := fmt.Sprintf("running failed, err=%s", stepErr)
@@ -258,20 +269,12 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 		s.task.SetEndTime(endTime).
 			SetStatus(taskStatus.status).
 			SetMessage(taskFailMsg)
-
-		// callback
-		if s.cbExecutor != nil {
-			c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, s.step)
-			s.cbExecutor.Callback(c, stepErr)
-		}
-		return
+		return s.saveTaskState()
 	}
 
 	// last step failed and skipOnFailed is true, update task status to success
 	if s.isLastStep(s.step) {
 		if s.step.GetSkipOnFailed() {
-			// ignore error
-			stepErr = nil
 			s.task.SetEndTime(endTime).
 				SetStatus(types.TaskStatusSuccess).
 				SetMessage("task finished successfully")
@@ -280,38 +283,27 @@ func (s *State) updateStepFailure(start time.Time, stepErr error, taskStatus *ta
 				SetStatus(types.TaskStatusFailure).
 				SetMessage(taskFailMsg)
 		}
-
-		// callback
-		if s.cbExecutor != nil {
-			c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, s.step)
-			s.cbExecutor.Callback(c, stepErr)
-		}
-		return
+		return s.saveTaskState()
 	}
 
 	// 重试流程中
 	if !errors.Is(stepErr, istep.ErrRevoked) && s.step.GetRetryCount() < s.step.MaxRetries {
 		s.task.SetStatus(types.TaskStatusRunning).SetMessage(taskFailMsg)
-		return
+		return s.saveTaskState()
 	}
 
 	// 忽略错误
 	if s.step.GetSkipOnFailed() {
 		msg := fmt.Sprintf("step %s running failed, with skip on failed", s.step.Name)
 		s.task.SetStatus(types.TaskStatusRunning).SetMessage(msg)
-		return
+		return s.saveTaskState()
 	}
 
 	// 重试次数用完且没有忽略错误
 	s.task.SetEndTime(endTime).
 		SetStatus(types.TaskStatusFailure).
 		SetMessage(taskFailMsg)
-
-	// callback
-	if s.cbExecutor != nil {
-		c := istep.NewContext(context.Background(), GetGlobalStorage(), s.task, s.step)
-		s.cbExecutor.Callback(c, stepErr)
-	}
+	return s.saveTaskState()
 }
 
 func (s *State) isLastStep(step *types.Step) bool {

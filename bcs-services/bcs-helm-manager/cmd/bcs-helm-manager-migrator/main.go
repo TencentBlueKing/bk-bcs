@@ -497,6 +497,7 @@ func migrateAddons(model store.HelmManagerModel, mysqlDB *gorm.DB) {
 // get saas addons from db
 func getSaasAddons(db *gorm.DB) []release {
 	var releases []release
+	// 执行SQL查询，将结果映射到releases切片中
 	err := db.Raw("SELECT addons.release_name AS name,addons.namespace,addons.project_id,addons.cluster_id," +
 		"'public-repo' AS repo,tool.chart_name,addons.chart_url AS version,addons.values AS valuefile,addons.creator," +
 		"addons.updator,addons.created,addons.updated,addons.status as string_status,addons.message AS message " +
@@ -504,6 +505,7 @@ func getSaasAddons(db *gorm.DB) []release {
 		"where addons.is_deleted=0").
 		Scan(&releases).Error
 	if err != nil {
+		// 如果查询出错，记录错误日志并终止程序
 		blog.Fatalf("get saas helm releases failed, err %s", err.Error())
 	}
 	// 组件库版本从 chart_url 中解析
@@ -516,6 +518,7 @@ func getSaasAddons(db *gorm.DB) []release {
 			continue
 		}
 		c := strings.ReplaceAll(names[len(names)-1], ".tgz", "")
+		// 清理ChartVersion，移除chart名称前缀
 		releases[i].ChartVersion = strings.ReplaceAll(c, fmt.Sprintf("%s-", releases[i].ChartName), "")
 	}
 	return releases

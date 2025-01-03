@@ -89,6 +89,20 @@ func (s *mysqlStore) CreateTask(ctx context.Context, task *types.Task) error {
 	})
 }
 
+// ListStepRecordByTaskIDs implement istore ListStepRecordByTaskIDs interface
+func (s *mysqlStore) ListStepRecordByTaskIDs(ctx context.Context, taskIDs []string) ([]*StepRecord, error) {
+	db := s.db.WithContext(ctx)
+
+	db = db.Where("task_id IN ?", taskIDs)
+
+	result := make([]*StepRecord, 0)
+	if err := db.Find(&result).Error; err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // ListTask implement istore ListTask interface
 func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
 	tx := s.db.WithContext(ctx)
@@ -121,9 +135,25 @@ func (s *mysqlStore) ListTask(ctx context.Context, opt *iface.ListOption) (*ifac
 		return nil, err
 	}
 
+	taskIDs := make([]string, 0, len(result))
+	for _, record := range result {
+		taskIDs = append(taskIDs, record.TaskID)
+	}
+	stepRecord, err := s.ListStepRecordByTaskIDs(ctx, taskIDs)
+	if err != nil {
+		return nil, err
+	}
+	taskStepsMap := make(map[string][]*StepRecord, 0)
+	for _, record := range stepRecord {
+		if _, ok := taskStepsMap[record.TaskID]; !ok {
+			taskStepsMap[record.TaskID] = make([]*StepRecord, 0)
+		}
+		taskStepsMap[record.TaskID] = append(taskStepsMap[record.TaskID], record)
+	}
+
 	items := make([]*types.Task, 0, len(result))
 	for _, record := range result {
-		items = append(items, toTask(record, []*StepRecord{}))
+		items = append(items, toTask(record, taskStepsMap[record.TaskID]))
 	}
 
 	return &iface.Pagination[types.Task]{
@@ -186,9 +216,4 @@ func (s *mysqlStore) GetTask(ctx context.Context, taskID string) (*types.Task, e
 		return nil, err
 	}
 	return toTask(&taskRecord, stepRecord), nil
-}
-
-// PatchTask implement istore PatchTask interface
-func (s *mysqlStore) PatchTask(ctx context.Context, opt *iface.PatchOption) error {
-	return types.ErrNotImplemented
 }
