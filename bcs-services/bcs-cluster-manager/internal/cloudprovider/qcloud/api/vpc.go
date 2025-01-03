@@ -60,15 +60,20 @@ func (v *VpcClient) DescribeSecurityGroups(securityGroupIds []string, filters []
 		utils.ToJSONString(filters))
 
 	req := vpc.NewDescribeSecurityGroupsRequest()
-	if securityGroupIds != nil {
+	req.Limit = common.StringPtr(strconv.Itoa(limit))
+
+	if len(securityGroupIds) > 0 {
 		req.SecurityGroupIds = common.StringPtrs(securityGroupIds)
 	}
-	req.Limit = common.StringPtr(strconv.Itoa(limit))
-	req.Filters = make([]*vpc.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &vpc.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+
+	if len(filters) > 0 {
+		req.Filters = make([]*vpc.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &vpc.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
 	}
+
 	got, total := 0, 0
 	first := true
 	sg := make([]*SecurityGroup, 0)
@@ -102,13 +107,18 @@ func (v *VpcClient) DescribeVpcs(vpcIds []string, filters []*Filter) (
 		utils.ToJSONString(filters))
 
 	req := vpc.NewDescribeVpcsRequest()
-	req.VpcIds = common.StringPtrs(vpcIds)
 	req.Limit = common.StringPtr(strconv.Itoa(limit))
 
-	req.Filters = make([]*vpc.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &vpc.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	if len(vpcIds) > 0 {
+		req.VpcIds = common.StringPtrs(vpcIds)
+	}
+
+	if len(filters) > 0 {
+		req.Filters = make([]*vpc.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &vpc.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
 	}
 
 	var (
@@ -145,14 +155,20 @@ func (v *VpcClient) DescribeSubnets(subnetIds []string, filters []*Filter) (
 		utils.ToJSONString(filters))
 
 	req := vpc.NewDescribeSubnetsRequest()
-	req.SubnetIds = common.StringPtrs(subnetIds)
 	req.Limit = common.StringPtr(strconv.Itoa(limit))
 
-	req.Filters = make([]*vpc.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &vpc.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	if len(subnetIds) > 0 {
+		req.SubnetIds = common.StringPtrs(subnetIds)
 	}
+
+	if len(filters) > 0 {
+		req.Filters = make([]*vpc.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &vpc.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
+	}
+
 	got, total := 0, 0
 	first := true
 	subnets := make([]*vpc.Subnet, 0)
@@ -184,13 +200,18 @@ func (v *VpcClient) DescribeBandwidthPackages(bwpIds []string, filters []*Filter
 		utils.ToJSONString(filters))
 
 	req := vpc.NewDescribeBandwidthPackagesRequest()
-	req.BandwidthPackageIds = common.StringPtrs(bwpIds)
 	req.Limit = common.Uint64Ptr(uint64(limit))
 
-	req.Filters = make([]*vpc.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &vpc.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	if len(bwpIds) > 0 {
+		req.BandwidthPackageIds = common.StringPtrs(bwpIds)
+	}
+
+	if len(filters) > 0 {
+		req.Filters = make([]*vpc.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &vpc.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
 	}
 
 	var (
@@ -231,13 +252,18 @@ func (v *VpcClient) DescribeAssistantCidr(vpcIds []string, filters []*Filter) (
 		utils.ToJSONString(filters))
 
 	req := vpc.NewDescribeAssistantCidrRequest()
-	req.VpcIds = common.StringPtrs(vpcIds)
 	req.Limit = common.Uint64Ptr(limit)
 
-	req.Filters = make([]*vpc.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &vpc.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	if len(vpcIds) > 0 {
+		req.VpcIds = common.StringPtrs(vpcIds)
+	}
+
+	if len(filters) > 0 {
+		req.Filters = make([]*vpc.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &vpc.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
 	}
 
 	var (
@@ -276,7 +302,10 @@ func (v *VpcClient) CheckAssistantCidr(vpcId string, news []string, olds []strin
 
 	req := vpc.NewCheckAssistantCidrRequest()
 	req.VpcId = common.StringPtr(vpcId)
-	req.NewCidrBlocks = common.StringPtrs(news)
+
+	if len(news) > 0 {
+		req.NewCidrBlocks = common.StringPtrs(news)
+	}
 	// req.OldCidrBlocks = common.StringPtrs(olds)
 
 	resp, err := v.client.CheckAssistantCidr(req)

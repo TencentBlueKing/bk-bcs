@@ -306,7 +306,10 @@ func (cli *TkeClient) QueryTkeClusterInstances(clusterReq *DescribeClusterInstan
 
 	req := tke.NewDescribeClusterInstancesRequest()
 	req.ClusterId = common.StringPtr(clusterReq.ClusterID)
-	req.InstanceIds = common.StringPtrs(clusterReq.InstanceIDs)
+
+	if len(clusterReq.InstanceIDs) > 0 {
+		req.InstanceIds = common.StringPtrs(clusterReq.InstanceIDs)
+	}
 
 	req.InstanceRole = common.StringPtr(WORKER.String())
 	if len(clusterReq.InstanceRole) > 0 {
@@ -360,8 +363,11 @@ func (cli *TkeClient) DeleteTkeClusterInstance(deleteReq *DeleteInstancesRequest
 	req := tke.NewDeleteClusterInstancesRequest()
 	req.ClusterId = common.StringPtr(deleteReq.ClusterID)
 	req.InstanceDeleteMode = common.StringPtr(deleteReq.DeleteMode.String())
-	req.InstanceIds = common.StringPtrs(deleteReq.Instances)
 	req.ForceDelete = common.BoolPtr(deleteReq.ForceDelete)
+
+	if len(deleteReq.Instances) > 0 {
+		req.InstanceIds = common.StringPtrs(deleteReq.Instances)
+	}
 
 	// tke DeleteClusterInstances
 	resp, err := cli.tke.DeleteClusterInstances(req)
@@ -474,7 +480,9 @@ func (cli *TkeClient) EnableTKEVpcCniMode(input *EnableVpcCniInput) error {
 	// 是否开启固定IP模式
 	req.EnableStaticIp = &input.EnableStaticIp
 	// 容器子网
-	req.Subnets = common.StringPtrs(input.SubnetsIDs)
+	if len(input.SubnetsIDs) > 0 {
+		req.Subnets = common.StringPtrs(input.SubnetsIDs)
+	}
 	// 固定IP模式下，Pod销毁后退还IP的时间，传参必须大于300；不传默认IP永不销毁。
 	if input.ExpiredSeconds >= 0 {
 		if input.ExpiredSeconds < 300 {
@@ -524,7 +532,9 @@ func (cli *TkeClient) AddVpcCniSubnets(input *AddVpcCniSubnetsInput) error {
 	req := tke.NewAddVpcCniSubnetsRequest()
 	req.ClusterId = &input.ClusterID
 	req.VpcId = &input.VpcID
-	req.SubnetIds = common.StringPtrs(input.SubnetIDs)
+	if len(input.SubnetIDs) > 0 {
+		req.SubnetIds = common.StringPtrs(input.SubnetIDs)
+	}
 
 	// tke AddVpcCniSubnets
 	resp, err := cli.tke.AddVpcCniSubnets(req)
@@ -559,7 +569,9 @@ func (cli *TkeClient) CloseVpcCniMode(clusterID string) error {
 func (cli *TkeClient) AddClusterCIDR(clusterId string, cidrs []string, ignore bool) error {
 	req := tke.NewAddClusterCIDRRequest()
 	req.ClusterId = common.StringPtr(clusterId)
-	req.ClusterCIDRs = common.StringPtrs(cidrs)
+	if len(cidrs) > 0 {
+		req.ClusterCIDRs = common.StringPtrs(cidrs)
+	}
 	req.IgnoreClusterCIDRConflict = common.BoolPtr(ignore)
 
 	resp, err := cli.tke.AddClusterCIDR(req)
@@ -846,10 +858,12 @@ func (cli *TkeClient) DescribeClusterNodePools(clusterID string, filters []*Filt
 	blog.Infof("DescribeClusterNodePools input: clusterID[%s], filters[%s]", clusterID, utils.ToJSONString(filters))
 	req := tke.NewDescribeClusterNodePoolsRequest()
 	req.ClusterId = common.StringPtr(clusterID)
-	req.Filters = make([]*tke.Filter, 0)
-	for _, v := range filters {
-		req.Filters = append(req.Filters, &tke.Filter{
-			Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+	if len(filters) > 0 {
+		req.Filters = make([]*tke.Filter, 0)
+		for _, v := range filters {
+			req.Filters = append(req.Filters, &tke.Filter{
+				Name: common.StringPtr(v.Name), Values: common.StringPtrs(v.Values)})
+		}
 	}
 
 	// tke DescribeClusterNodePools
@@ -912,7 +926,9 @@ func (cli *TkeClient) DeleteClusterNodePool(clusterID string, nodePoolIDs []stri
 		utils.ToJSONString(nodePoolIDs), keepInstance)
 	req := tke.NewDeleteClusterNodePoolRequest()
 	req.ClusterId = common.StringPtr(clusterID)
-	req.NodePoolIds = common.StringPtrs(nodePoolIDs)
+	if len(nodePoolIDs) > 0 {
+		req.NodePoolIds = common.StringPtrs(nodePoolIDs)
+	}
 	req.KeepInstance = common.BoolPtr(keepInstance)
 
 	// tke DeleteClusterNodePool
@@ -961,7 +977,9 @@ func (cli *TkeClient) ModifyNodePoolInstanceTypes(clusterID string, nodePoolID s
 	req := tke.NewModifyNodePoolInstanceTypesRequest()
 	req.ClusterId = common.StringPtr(clusterID)
 	req.NodePoolId = common.StringPtr(nodePoolID)
-	req.InstanceTypes = common.StringPtrs(instanceTypes)
+	if len(instanceTypes) > 0 {
+		req.InstanceTypes = common.StringPtrs(instanceTypes)
+	}
 
 	// tke ModifyNodePoolInstanceTypes
 	resp, err := cli.tke.ModifyNodePoolInstanceTypes(req)
@@ -1154,7 +1172,9 @@ func (cli *TkeClient) DeleteExternalNode(clusterID string, config DeleteExternal
 
 	req := NewDeleteExternalNodeRequest()
 	req.ClusterId = common.StringPtr(clusterID)
-	req.Names = common.StringPtrs(config.Names)
+	if len(config.Names) > 0 {
+		req.Names = common.StringPtrs(config.Names)
+	}
 	req.Force = common.BoolPtr(config.Force)
 
 	resp, err := cli.tkeCommon.DeleteExternalNode(req)
@@ -1182,7 +1202,9 @@ func (cli *TkeClient) DeleteExternalNodePool(clusterID string, config DeleteExte
 
 	req := NewDeleteExternalNodePoolRequest()
 	req.ClusterId = common.StringPtr(clusterID)
-	req.NodePoolIds = common.StringPtrs(config.NodePoolIds)
+	if len(config.NodePoolIds) > 0 {
+		req.NodePoolIds = common.StringPtrs(config.NodePoolIds)
+	}
 	req.Force = common.BoolPtr(config.Force)
 
 	resp, err := cli.tkeCommon.DeleteExternalNodePool(req)

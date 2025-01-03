@@ -51,7 +51,10 @@ type CBSClient struct {
 func (c *CBSClient) GetDiskTypes(instanceTypes []string, zones []string) (map[string]string, error) {
 	request := cbs.NewDescribeDiskConfigQuotaRequest()
 	request.InquiryType = common.StringPtr("INQUIRY_CVM_CONFIG")
-	request.InstanceFamilies = common.StringPtrs(instanceTypes)
+	if len(instanceTypes) > 0 {
+		request.InstanceFamilies = common.StringPtrs(instanceTypes)
+	}
+
 	if len(zones) > 0 {
 		request.Zones = common.StringPtrs(zones)
 	}

@@ -55,9 +55,12 @@ func (c *ASClient) DescribeAutoScalingInstances(asgID string) ([]*AutoScalingIns
 	blog.Infof("DescribeAutoScalingInstances input: %s", asgID)
 	req := as.NewDescribeAutoScalingInstancesRequest()
 	req.Limit = common.Int64Ptr(limit)
-	req.Filters = make([]*as.Filter, 0)
-	req.Filters = append(req.Filters, &as.Filter{
-		Name: common.StringPtr("auto-scaling-group-id"), Values: common.StringPtrs([]string{asgID})})
+	if asgID != "" {
+		req.Filters = make([]*as.Filter, 0)
+		req.Filters = append(req.Filters, &as.Filter{
+			Name: common.StringPtr("auto-scaling-group-id"), Values: common.StringPtrs([]string{asgID})})
+	}
+
 	got, total := 0, 0
 	first := true
 	ins := make([]*AutoScalingInstances, 0)
@@ -89,7 +92,9 @@ func (c *ASClient) RemoveInstances(asgID string, nodeIDs []string) (string, erro
 	blog.Infof("RemoveInstances input: %s, %v", asgID, nodeIDs)
 	req := as.NewRemoveInstancesRequest()
 	req.AutoScalingGroupId = &asgID
-	req.InstanceIds = common.StringPtrs(nodeIDs)
+	if len(nodeIDs) > 0 {
+		req.InstanceIds = common.StringPtrs(nodeIDs)
+	}
 	resp, err := c.as.RemoveInstances(req)
 	if err != nil {
 		blog.Errorf("RemoveInstances failed, err: %s", err.Error())
@@ -109,7 +114,9 @@ func (c *ASClient) DetachInstances(asgID string, nodeIDs []string) error {
 	blog.Infof("DetachInstances input: %s, %v", asgID, nodeIDs)
 	req := as.NewDetachInstancesRequest()
 	req.AutoScalingGroupId = &asgID
-	req.InstanceIds = common.StringPtrs(nodeIDs)
+	if len(nodeIDs) > 0 {
+		req.InstanceIds = common.StringPtrs(nodeIDs)
+	}
 	resp, err := c.as.DetachInstances(req)
 	if err != nil {
 		blog.Errorf("DetachInstances failed, err: %s", err.Error())
@@ -203,7 +210,10 @@ func (c *ASClient) DescribeLaunchConfigurations(ascIDs []string) ([]*as.LaunchCo
 	blog.Infof("DescribeLaunchConfigurations input: %s", ascIDs)
 	req := as.NewDescribeLaunchConfigurationsRequest()
 	req.Limit = common.Uint64Ptr(limit)
-	req.LaunchConfigurationIds = common.StringPtrs(ascIDs)
+	if len(ascIDs) > 0 {
+		req.LaunchConfigurationIds = common.StringPtrs(ascIDs)
+	}
+
 	got, total := 0, 0
 	first := true
 	ins := make([]*as.LaunchConfiguration, 0)
@@ -231,7 +241,9 @@ func (c *ASClient) DescribeLaunchConfigurations(ascIDs []string) ([]*as.LaunchCo
 func (c *ASClient) DescribeAutoScalingGroups(asgID string) (*as.AutoScalingGroup, error) {
 	blog.Infof("DescribeAutoScalingGroups input: %s", asgID)
 	req := as.NewDescribeAutoScalingGroupsRequest()
-	req.AutoScalingGroupIds = append(req.AutoScalingGroupIds, common.StringPtr(asgID))
+	if asgID != "" {
+		req.AutoScalingGroupIds = append(req.AutoScalingGroupIds, common.StringPtr(asgID))
+	}
 	resp, err := c.as.DescribeAutoScalingGroups(req)
 	if err != nil {
 		blog.Errorf("DescribeAutoScalingGroups failed, err: %s", err.Error())

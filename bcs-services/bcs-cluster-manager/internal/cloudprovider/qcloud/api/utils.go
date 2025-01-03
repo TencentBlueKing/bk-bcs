@@ -562,6 +562,10 @@ func generateClusterNodePool(nodePool *CreateNodePoolInput) *tke.CreateClusterNo
 }
 
 func generateLabel(labels []*Label) []*tke.Label {
+	if len(labels) == 0 {
+		return nil
+	}
+
 	result := make([]*tke.Label, 0)
 	for _, v := range labels {
 		result = append(result, &tke.Label{Name: v.Name, Value: v.Value})
@@ -570,6 +574,10 @@ func generateLabel(labels []*Label) []*tke.Label {
 }
 
 func generateTaint(taints []*Taint) []*tke.Taint {
+	if len(taints) == 0 {
+		return nil
+	}
+
 	result := make([]*tke.Taint, 0)
 	for _, v := range taints {
 		result = append(result, &tke.Taint{Key: v.Key, Value: v.Value, Effect: v.Effect})
@@ -578,6 +586,10 @@ func generateTaint(taints []*Taint) []*tke.Taint {
 }
 
 func generateTag(tags []*Tag) []*tke.Tag {
+	if len(tags) == 0 {
+		return nil
+	}
+
 	result := make([]*tke.Tag, 0)
 	for _, v := range tags {
 		result = append(result, &tke.Tag{Key: v.Key, Value: v.Value})
@@ -669,6 +681,10 @@ func MapToTags(tags map[string]string) []*Tag {
 
 // MapToCloudLabels converts a map of string-string to a slice of Label
 func MapToCloudLabels(labels map[string]string) []*tke.Label {
+	if len(labels) == 0 {
+		return nil
+	}
+
 	result := make([]*tke.Label, 0)
 	for k, v := range labels {
 		name := k
@@ -680,6 +696,10 @@ func MapToCloudLabels(labels map[string]string) []*tke.Label {
 
 // MapToCloudTaints converts a map of string-string to a slice of Taint
 func MapToCloudTaints(taints []*proto.Taint) []*tke.Taint {
+	if len(taints) == 0 {
+		return nil
+	}
+
 	result := make([]*tke.Taint, 0)
 	for _, v := range taints {
 		key := v.Key
@@ -692,6 +712,10 @@ func MapToCloudTaints(taints []*proto.Taint) []*tke.Taint {
 
 // MapToCloudTags converts a map of string-string to a slice of Tag
 func MapToCloudTags(tags map[string]string) []*tke.Tag {
+	if len(tags) == 0 {
+		return nil
+	}
+
 	result := make([]*tke.Tag, 0)
 	for k, v := range tags {
 		key := k

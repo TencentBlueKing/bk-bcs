@@ -219,7 +219,9 @@ func (nc *NodeClient) GetInstancesById(ids []string) ([]*cvm.Instance, error) {
 		idList = append(idList, common.StringPtr(id))
 	}
 	// instanceIDs max 100
-	req.InstanceIds = append(req.InstanceIds, idList...)
+	if len(idList) > 0 {
+		req.InstanceIds = append(req.InstanceIds, idList...)
+	}
 
 	// DescribeInstances
 	resp, err := nc.client.DescribeInstances(req)
@@ -260,10 +262,12 @@ func (nc *NodeClient) GetInstancesByIp(ips []string) ([]*cvm.Instance, error) {
 	}
 
 	// filters values max 5
-	req.Filters = append(req.Filters, &cvm.Filter{
-		Name:   common.StringPtr("private-ip-address"),
-		Values: ipList,
-	})
+	if len(ipList) > 0 {
+		req.Filters = append(req.Filters, &cvm.Filter{
+			Name:   common.StringPtr("private-ip-address"),
+			Values: ipList,
+		})
+	}
 
 	// DescribeInstances
 	resp, err := nc.client.DescribeInstances(req)
@@ -404,7 +408,9 @@ func (nc *NodeClient) DescribeImages(imageType string) ([]*cvm.Image, error) {
 // DescribeKeyPairsByID describe ssh keyPairs https://cloud.tencent.com/document/product/213/15699 (max 100)
 func (nc *NodeClient) DescribeKeyPairsByID(keyIDs []string) ([]*cvm.KeyPair, error) {
 	req := cvm.NewDescribeKeyPairsRequest()
-	req.KeyIds = common.StringPtrs(keyIDs)
+	if len(keyIDs) > 0 {
+		req.KeyIds = common.StringPtrs(keyIDs)
+	}
 	req.Limit = common.Int64Ptr(limit)
 
 	resp, err := nc.client.DescribeKeyPairs(req)
@@ -476,7 +482,9 @@ func (nc *NodeClient) ListKeyPairs() ([]*cvm.KeyPair, error) {
 // ModifyInstancesVpcAttribute 修改实例vpc属性(vpc必须存在对应可用区的子网)
 func (nc *NodeClient) ModifyInstancesVpcAttribute(vpcId string, subnet string, instanceIds []string) error {
 	req := cvm.NewModifyInstancesVpcAttributeRequest()
-	req.InstanceIds = common.StringPtrs(instanceIds)
+	if len(instanceIds) > 0 {
+		req.InstanceIds = common.StringPtrs(instanceIds)
+	}
 	req.ReserveHostName = common.BoolPtr(true)
 	req.VirtualPrivateCloud = &cvm.VirtualPrivateCloud{
 		VpcId:    common.StringPtr(vpcId),

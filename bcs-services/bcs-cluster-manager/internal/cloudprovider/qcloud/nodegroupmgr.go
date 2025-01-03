@@ -358,7 +358,9 @@ func (ng *NodeGroup) generateModifyAutoScalingGroupInput(group *proto.NodeGroup)
 	req.MaxSize = common.Uint64Ptr(uint64(group.AutoScaling.MaxSize))
 	req.MinSize = common.Uint64Ptr(uint64(group.AutoScaling.MinSize))
 	req.DefaultCooldown = common.Uint64Ptr(uint64(group.AutoScaling.DefaultCooldown))
-	req.SubnetIds = common.StringPtrs(group.AutoScaling.SubnetIDs)
+	if len(group.AutoScaling.SubnetIDs) > 0 {
+		req.SubnetIds = common.StringPtrs(group.AutoScaling.SubnetIDs)
+	}
 	req.RetryPolicy = common.StringPtr(group.AutoScaling.RetryPolicy)
 	req.MultiZoneSubnetPolicy = common.StringPtr(group.AutoScaling.MultiZoneSubnetPolicy)
 	req.ServiceSettings = &as.ServiceSettings{ScalingMode: &group.AutoScaling.ScalingMode,
@@ -379,7 +381,9 @@ func (ng *NodeGroup) generateUpgradeLaunchConfInput( // nolint
 	if group.LaunchTemplate.ImageInfo != nil && group.LaunchTemplate.ImageInfo.ImageID != "" {
 		req.ImageId = common.StringPtr(group.LaunchTemplate.ImageInfo.ImageID)
 	}
-	req.InstanceTypes = common.StringPtrs([]string{group.LaunchTemplate.InstanceType})
+	if group.LaunchTemplate.InstanceType != "" {
+		req.InstanceTypes = common.StringPtrs([]string{group.LaunchTemplate.InstanceType})
+	}
 	if group.LaunchTemplate.DataDisks != nil {
 		for i := range group.LaunchTemplate.DataDisks {
 			diskSize, _ := strconv.Atoi(group.LaunchTemplate.DataDisks[i].DiskSize)
@@ -410,7 +414,9 @@ func (ng *NodeGroup) generateUpgradeLaunchConfInput( // nolint
 	if err == nil {
 		req.ProjectId = common.Int64Ptr(int64(projectID))
 	}
-	req.SecurityGroupIds = common.StringPtrs(group.LaunchTemplate.SecurityGroupIDs)
+	if len(group.LaunchTemplate.SecurityGroupIDs) > 0 {
+		req.SecurityGroupIds = common.StringPtrs(group.LaunchTemplate.SecurityGroupIDs)
+	}
 	diskSize, _ := strconv.Atoi(group.LaunchTemplate.SystemDisk.GetDiskSize())
 	req.SystemDisk = &as.SystemDisk{
 		DiskType: common.StringPtr(group.LaunchTemplate.SystemDisk.GetDiskType()),
