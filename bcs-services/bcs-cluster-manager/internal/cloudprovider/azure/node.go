@@ -221,3 +221,36 @@ func (n *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, opt 
 	map[string]string, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// ListNodePublicPrefixs get public prefixs list
+func (n *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPrefixesOption) (
+	[]*proto.NodePublicPrefix, error) {
+	cli, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	if err != nil {
+		return nil, fmt.Errorf("ListKeyPairs create aks client failed, %v", err)
+	}
+
+	result, err := cli.ListPublicPrefixes(context.Background(), opt.ResourceGroupName)
+	if err != nil {
+		return nil, fmt.Errorf("ListSSHPublicKeys failed, %v", err)
+	}
+
+	prefixes := make([]*proto.NodePublicPrefix, 0)
+	for _, v := range result {
+		zones := make([]string, 0)
+		for _, z := range v.Zones {
+			if z != nil {
+				zones = append(zones, *z)
+			}
+		}
+
+		prefixes = append(prefixes, &proto.NodePublicPrefix{
+			Id:       *v.ID,
+			Name:     *v.Name,
+			IpPrefix: *v.Properties.IPPrefix,
+			Zones:    zones,
+		})
+	}
+
+	return prefixes, nil
+}

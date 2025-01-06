@@ -1717,6 +1717,53 @@
         ]
       }
     },
+    "/clustermanager/v1/clouds/{cloudID}/node/publicPrefix": {
+      "get": {
+        "summary": "获取云节点公网IP前缀列表",
+        "description": "获取云节点公网IP前缀列表",
+        "operationId": "ClusterManager_ListCloudNodePublicPrefix",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerListCloudNodePublicPrefixResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "cloudID",
+            "description": "BCS平台支持的云类型，英文字符串",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "accountID",
+            "description": "accountID. 云凭证ID, 通过指定的云账号信息获取",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "resourceGroupName",
+            "description": "resourceGroupName. Azure 资源组名称",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clouds/{cloudID}/osimage": {
       "get": {
         "summary": "查询Node操作系统镜像列表",
@@ -14071,6 +14118,11 @@
           },
           "description": "允许访问Kubernetes API Server的公网Ip cidr",
           "title": "publicAccessCidrs"
+        },
+        "nodePublicIPPrefixID": {
+          "type": "string",
+          "description": "节点公网ip前缀ID",
+          "title": "nodePublicIPPrefixID"
         }
       },
       "title": "InternetAccessible 公网带宽设置"
@@ -14622,6 +14674,42 @@
       },
       "description": "获取云组件参数返回",
       "title": "ListCloudModuleFlagResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "clustermanagerListCloudNodePublicPrefixResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerNodePublicPrefix"
+          },
+          "description": "返回数据信息",
+          "title": "data"
+        }
+      },
+      "description": "查询资源池的业务使用情况返回",
+      "title": "GetProviderResourceUsageResponse",
       "required": [
         "code",
         "message"
@@ -16644,6 +16732,34 @@
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "clustermanagerNodePublicPrefix": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "公网IP前缀ID",
+          "title": "id"
+        },
+        "name": {
+          "type": "string",
+          "description": "公网IP前缀名称",
+          "title": "name"
+        },
+        "ipPrefix": {
+          "type": "string",
+          "description": "公网IP前缀",
+          "title": "ipPrefix"
+        },
+        "zones": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "可用区域列表，表示为资源需求分配的IP来自何处",
+          "title": "zones"
         }
       }
     },

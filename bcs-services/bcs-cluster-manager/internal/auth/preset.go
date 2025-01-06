@@ -118,6 +118,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.VerifyCloudAccount",
 	"ClusterManager.CheckCidrConflictFromVpc",
 	"ClusterManager.GetMasterSuggestedMachines",
+	"ClusterManager.ListCloudNodePublicPrefix",
 }
 
 // ActionPermissions action 对应权限中心的权限

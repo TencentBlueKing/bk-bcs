@@ -11086,6 +11086,8 @@ func (m *InternetAccessible) validate(all bool) error {
 
 	// no validation rules for PublicIP
 
+	// no validation rules for NodePublicIPPrefixID
+
 	if len(errors) > 0 {
 		return InternetAccessibleMultiError(errors)
 	}
@@ -66724,3 +66726,365 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProjectAutoscalerQuotaValidationError{}
+
+// Validate checks the field values on ListCloudNodePublicPrefixRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *ListCloudNodePublicPrefixRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudNodePublicPrefixRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// ListCloudNodePublicPrefixRequestMultiError, or nil if none found.
+func (m *ListCloudNodePublicPrefixRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudNodePublicPrefixRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for CloudID
+
+	// no validation rules for AccountID
+
+	// no validation rules for ResourceGroupName
+
+	if len(errors) > 0 {
+		return ListCloudNodePublicPrefixRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudNodePublicPrefixRequestMultiError is an error wrapping multiple
+// validation errors returned by
+// ListCloudNodePublicPrefixRequest.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudNodePublicPrefixRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudNodePublicPrefixRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudNodePublicPrefixRequestMultiError) AllErrors() []error { return m }
+
+// ListCloudNodePublicPrefixRequestValidationError is the validation error
+// returned by ListCloudNodePublicPrefixRequest.Validate if the designated
+// constraints aren't met.
+type ListCloudNodePublicPrefixRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudNodePublicPrefixRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudNodePublicPrefixRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudNodePublicPrefixRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudNodePublicPrefixRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudNodePublicPrefixRequestValidationError) ErrorName() string {
+	return "ListCloudNodePublicPrefixRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudNodePublicPrefixRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudNodePublicPrefixRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudNodePublicPrefixRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudNodePublicPrefixRequestValidationError{}
+
+// Validate checks the field values on ListCloudNodePublicPrefixResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *ListCloudNodePublicPrefixResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListCloudNodePublicPrefixResponse
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// ListCloudNodePublicPrefixResponseMultiError, or nil if none found.
+func (m *ListCloudNodePublicPrefixResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListCloudNodePublicPrefixResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCloudNodePublicPrefixResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCloudNodePublicPrefixResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudNodePublicPrefixResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListCloudNodePublicPrefixResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListCloudNodePublicPrefixResponseMultiError is an error wrapping multiple
+// validation errors returned by
+// ListCloudNodePublicPrefixResponse.ValidateAll() if the designated
+// constraints aren't met.
+type ListCloudNodePublicPrefixResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListCloudNodePublicPrefixResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListCloudNodePublicPrefixResponseMultiError) AllErrors() []error { return m }
+
+// ListCloudNodePublicPrefixResponseValidationError is the validation error
+// returned by ListCloudNodePublicPrefixResponse.Validate if the designated
+// constraints aren't met.
+type ListCloudNodePublicPrefixResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListCloudNodePublicPrefixResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListCloudNodePublicPrefixResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListCloudNodePublicPrefixResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListCloudNodePublicPrefixResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListCloudNodePublicPrefixResponseValidationError) ErrorName() string {
+	return "ListCloudNodePublicPrefixResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListCloudNodePublicPrefixResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListCloudNodePublicPrefixResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListCloudNodePublicPrefixResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListCloudNodePublicPrefixResponseValidationError{}
+
+// Validate checks the field values on NodePublicPrefix with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *NodePublicPrefix) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NodePublicPrefix with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// NodePublicPrefixMultiError, or nil if none found.
+func (m *NodePublicPrefix) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NodePublicPrefix) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Id
+
+	// no validation rules for Name
+
+	// no validation rules for IpPrefix
+
+	if len(errors) > 0 {
+		return NodePublicPrefixMultiError(errors)
+	}
+
+	return nil
+}
+
+// NodePublicPrefixMultiError is an error wrapping multiple validation errors
+// returned by NodePublicPrefix.ValidateAll() if the designated constraints
+// aren't met.
+type NodePublicPrefixMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NodePublicPrefixMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NodePublicPrefixMultiError) AllErrors() []error { return m }
+
+// NodePublicPrefixValidationError is the validation error returned by
+// NodePublicPrefix.Validate if the designated constraints aren't met.
+type NodePublicPrefixValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodePublicPrefixValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodePublicPrefixValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodePublicPrefixValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodePublicPrefixValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodePublicPrefixValidationError) ErrorName() string { return "NodePublicPrefixValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodePublicPrefixValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodePublicPrefix.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodePublicPrefixValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodePublicPrefixValidationError{}

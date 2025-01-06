@@ -380,6 +380,8 @@ const (
 	CloudProjectId = "cloudProjectId"
 	// TagClusterResourceKey resource tag key
 	TagClusterResourceKey = "cluster"
+	// NodePublicIPPrefixID node public ip prefix id key
+	NodePublicIPPrefixID = "nodePublicIPPrefixID"
 
 	// StatusInitialization node/cluster/nodegroup/task status
 	StatusInitialization = "INITIALIZATION"
