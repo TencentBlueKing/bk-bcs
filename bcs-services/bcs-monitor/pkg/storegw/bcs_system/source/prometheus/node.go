@@ -19,6 +19,7 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storegw/bcs_system/source/base"
 )
 
@@ -36,7 +37,7 @@ func (m *Prometheus) handleNodeMetric(ctx context.Context, projectID, clusterID,
 		"ip":         nodeMatch,
 		"node":       nodeName,
 		"fstype":     DiskFstype,
-		"mountpoint": DiskMountpoint,
+		"mountpoint": config.G.BKMonitor.MountPoint,
 		"provider":   PROVIDER,
 	}
 
@@ -60,7 +61,7 @@ func (m *Prometheus) GetNodeInfo(ctx context.Context, projectID, clusterID, node
 		"ip":         nodeMatch,
 		"node":       nodeName,
 		"fstype":     DiskFstype,
-		"mountpoint": DiskMountpoint,
+		"mountpoint": config.G.BKMonitor.MountPoint,
 		"provider":   PROVIDER,
 	}
 

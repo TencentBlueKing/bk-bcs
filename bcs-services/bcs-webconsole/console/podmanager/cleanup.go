@@ -60,7 +60,7 @@ func (p *CleanUpManager) Heartbeat(podCtx *types.PodContext) error {
 	now := time.Now().Unix()
 
 	// 同步Pod信息
-	uid := getUid(podCtx.AdminClusterId, podCtx.Username)
+	uid := getUid(podCtx.ProjectCode, podCtx.AdminClusterId, podCtx.Username)
 	if err := p.redisClient.ZAdd(p.ctx, p.podKey, &redis.Z{Score: float64(now), Member: uid}).Err(); err != nil {
 		return err
 	}

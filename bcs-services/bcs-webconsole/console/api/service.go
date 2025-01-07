@@ -136,7 +136,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 			metrics.CollectPodReady(
 				podmanager.GetAdminClusterId(authCtx.ClusterId),
 				podmanager.GetNamespace(),
-				podmanager.GetPodName(authCtx.ClusterId, authCtx.Username),
+				podmanager.GetPodName(authCtx.ProjectCode, authCtx.ClusterId, authCtx.Username),
 				err,
 				podReadyDuration,
 			)
@@ -151,6 +151,7 @@ func (s *service) CreateWebConsoleSession(c *gin.Context) {
 	}
 
 	podCtx.ProjectId = authCtx.ProjectId
+	podCtx.ProjectCode = authCtx.ProjectCode
 	podCtx.Username = authCtx.Username
 	podCtx.Source = consoleQuery.Source
 	// 二次换取的 session 时间有效期24小时
