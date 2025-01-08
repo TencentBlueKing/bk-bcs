@@ -342,7 +342,7 @@ export default defineComponent({
         isEdit.value = false;
         return;
       }
-      await handleModifyCluster({ labels: labels.value });
+      await handleModifyCluster({ labels2: { values: labels.value } });
       isEdit.value = false;
     };
 
