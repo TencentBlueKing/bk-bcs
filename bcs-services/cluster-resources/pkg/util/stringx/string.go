@@ -106,3 +106,15 @@ func TrimStringToRuneCount(s string, maxRunes int) string {
 	}
 	return string(trimmed)
 }
+
+// GetIntOrDefault string转int，如果出现错误则返回0
+func GetIntOrDefault(s string) int {
+	if s == "" {
+		return 0
+	}
+	result, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return result
+}

@@ -15,14 +15,17 @@ package cmd
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,11 +33,14 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
+	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // SpaceNames model template space name
@@ -63,6 +69,9 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 	r.Use(httpx.AuthorizationMiddleware)
 	r.Use(httpx.AuditMiddleware)
 
+	// events接口反向代理，单独对cluster进行鉴权
+	r.Methods("GET").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/storage/events").
+		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs))))
 	// import template
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/import/template").
 		HandlerFunc(ImportTemplate(crs))
@@ -70,6 +79,56 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/export/template").
 		HandlerFunc(ExportTemplate(crs))
 	return r
+}
+
+// StorageEvents reverse proxy events
+func StorageEvents(crs *clusterResourcesService) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		targetURL := fmt.Sprintf("%s/bcsapi/v4/storage/events", config.G.BCSAPIGW.Host)
+
+		targetURLParse, err := url.Parse(targetURL)
+		if err != nil {
+			httpx.ResponseSystemError(w, r, err)
+			return
+		}
+		clusterID := contextx.GetClusterIDFromCtx(r.Context())
+
+		postData := paramToPostData(r.URL)
+		postData["clusterId"] = clusterID
+		b, err := json.Marshal(postData)
+		if err != nil {
+			httpx.ResponseSystemError(w, r, err)
+			return
+		}
+
+		proxy := httpUtil.NewHTTPReverseProxy(crs.clientTLSConfig, modifyRequest(targetURLParse, b))
+		proxy.ServeHTTP(w, r)
+	}
+}
+
+// GET参数转post data
+func paramToPostData(reqUrl *url.URL) map[string]interface{} {
+	query := reqUrl.Query()
+	postData := make(map[string]interface{})
+	for k := range query {
+		if k == "offset" || k == "length" {
+			postData[k] = stringx.GetIntOrDefault(query.Get(k))
+			continue
+		}
+		postData[k] = query.Get(k)
+	}
+	return postData
+}
+
+// 反向代理请求处理
+func modifyRequest(targetURL *url.URL, reqBody []byte) func(r *http.Request) {
+	return func(r *http.Request) {
+		r.URL = targetURL
+		r.Method = http.MethodPost
+		r.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+		r.Body = http.NoBody
+		r.Body = io.NopCloser(bytes.NewReader(reqBody))
+	}
 }
 
 // ImportTemplate import template
