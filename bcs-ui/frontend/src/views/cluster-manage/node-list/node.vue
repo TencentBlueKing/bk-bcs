@@ -718,6 +718,12 @@
             {{ $t('tke.label.retain') }}
           </bcs-checkbox>
         </div>
+        <div v-if="curSelectedCluster.provider === 'tencentCloud'">
+          <span>{{ $t('cluster.ca.nodePool.nodes.action.delete.article1') }}</span>
+          <div>{{ $t('cluster.ca.nodePool.nodes.action.delete.article2') }}</div>
+          <div>{{ $t('cluster.ca.nodePool.nodes.action.delete.article3') }}</div>
+          <div>{{ $t('cluster.ca.nodePool.nodes.action.delete.article4') }}</div>
+        </div>
       </DeleteNode>
     </bcs-dialog>
   </div>

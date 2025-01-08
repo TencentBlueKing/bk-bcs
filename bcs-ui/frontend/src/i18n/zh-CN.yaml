@@ -477,6 +477,7 @@ generic:
   subTitle:
     confirmConfig: '请确认以下配置:'
     deleteConfirm: 此操作无法撤回，请确认：
+    deleteConfirm1: 注意：此操作不可撤销，请仔细确认。
   log:
     button:
       latest: 返回最新日志
@@ -577,6 +578,9 @@ cluster:
       article5: 删除导入集群后蓝鲸容器管理平台会丧失对该集群的管理能力
       article6: 删除导入集群不会清理集群上的任何资源，删除集群后请视情况手工清理
       article8: 集群删除后服务器如不再使用请尽快回收，避免产生不必要的成本
+      tencentArticle1: '正在准备删除名为 {clusterName} 的 Kubernetes 集群'
+      tencentArticle2: 此操作将永久性删除集群及其所有内部资源，包括工作负载、服务和路由等，请务必谨慎操作。
+      tencentArticle3: 在集群删除完成后，若不再需要相关服务器（CVM）、云硬盘（CBS）等云资源，请及时释放以避免产生不必要的费用。
   tips:
     highMetricData: 集群指标过载
     createK8SCluster: 新建 K8S 原生集群
@@ -1200,6 +1204,10 @@ cluster:
             title: 确认删除节点
             subTitle: '确认删除节点 {ip}'
             tips: 请先停止调度
+            article1: 为了确保集群的稳定性和数据安全，请在执行节点删除操作前，确认以下事项：
+            article2: 1. 确保当前节点上运行的所有业务容器已成功迁移至其他可用节点，以避免服务中断。
+            article3: 2. 节点删除过程会清理kubelet、Pod及容器的相关数据目录，请确认这些目录中没有重要数据，以防止数据丢失。
+            article4: 3. 节点删除后，请及时回收不再使用的服务器及其关联的云资源，以避免产生不必要的费用。
         status:
           scaleFailed: 扩容节点失败
           downFailed: 缩容节点失败
