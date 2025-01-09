@@ -92,6 +92,7 @@ func (h *AnalysisExternalHandler) analysisProjects() {
 	h.cacheLock.Unlock()
 }
 
+// fillGroupLevel fill the group level
 func (h *AnalysisExternalHandler) fillGroupLevel(proj *AnalysisProject) error {
 	v, ok := h.bizDeptInfoCache.Load(proj.BizID)
 	if ok {
@@ -134,9 +135,18 @@ var (
 
 // GetAnalysisProjects return analysis projects data
 func (h *AnalysisExternalHandler) GetAnalysisProjects() []AnalysisProject {
-	return h.cache
+	h.cacheLock.Lock()
+	defer h.cacheLock.Unlock()
+
+	result := make([]AnalysisProject, 0, len(h.cache))
+	for i := range h.cache {
+		item := h.cache[i]
+		result = append(result, *(&item).DeepCopy())
+	}
+	return result
 }
 
+// getExternalRawData get the external raw data
 func (h *AnalysisExternalHandler) getExternalRawData() ([]AnalysisProject, error) {
 	req, err := http.NewRequest(http.MethodGet, h.op.ExternalAnalysisUrl+externalRawDataPath, nil)
 	if err != nil {

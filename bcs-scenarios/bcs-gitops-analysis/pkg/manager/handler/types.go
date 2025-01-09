@@ -12,6 +12,10 @@
 
 package handler
 
+import (
+	"encoding/json"
+)
+
 // AnalysisInterface defines the interface for analysis
 type AnalysisInterface interface {
 	Init() error
@@ -41,6 +45,14 @@ type AnalysisProject struct {
 	Repos           []*AnalysisRepo           `json:"repos"`
 	ActivityUsers   []*AnalysisActivityUser   `json:"activityUsers"`
 	Syncs           []*AnalysisSync           `json:"syncs"`
+}
+
+// DeepCopy object
+func (p *AnalysisProject) DeepCopy() *AnalysisProject {
+	bs, _ := json.Marshal(p) // nolint
+	np := new(AnalysisProject)
+	_ = json.Unmarshal(bs, np) // nolint
+	return np
 }
 
 // AnalysisCluster defines the cluster info

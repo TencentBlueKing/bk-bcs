@@ -80,7 +80,7 @@ func (plugin *ApplicationSetPlugin) Generate(r *http.Request) (*http.Request, *m
 	if err = json.Unmarshal(body, appset); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "unmarshal body failed"))
 	}
-	apps, statusCode, err := plugin.permitChecker.CheckAppSetCreate(r.Context(), appset)
+	apps, statusCode, err := plugin.permitChecker.CheckAppSetGenerate(r.Context(), appset)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
 	}
@@ -234,7 +234,8 @@ func (plugin *ApplicationSetPlugin) CreateOrUpdate(r *http.Request) (*http.Reque
 			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check create applicationset failed"))
 		}
 	} else {
-		if statusCode, err = plugin.permitChecker.CheckAppSetUpdate(r.Context(), argoAppSet); err != nil {
+		// just for check name prefix
+		if statusCode, err = plugin.permitChecker.CheckAppSetFormatWhenUpdate(r.Context(), argoAppSet); err != nil {
 			return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check update applicationset failed"))
 		}
 	}

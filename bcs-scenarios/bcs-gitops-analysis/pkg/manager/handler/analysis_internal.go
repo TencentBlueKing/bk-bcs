@@ -101,7 +101,15 @@ func (h *AnalysisHandler) Init() error {
 
 // GetAnalysisProjects return anlysis projects data
 func (h *AnalysisHandler) GetAnalysisProjects() []AnalysisProject {
-	return h.cache
+	h.cacheLock.Lock()
+	defer h.cacheLock.Unlock()
+
+	result := make([]AnalysisProject, 0, len(h.cache))
+	for i := range h.cache {
+		item := h.cache[i]
+		result = append(result, *(&item).DeepCopy())
+	}
+	return result
 }
 
 // GetResourceInfo return resource info data
@@ -120,6 +128,7 @@ func fillProjectDeptInfo(anaProj *AnalysisProject, bizDeptInfo *ccv3.BusinessDep
 	anaProj.GroupLevel5 = bizDeptInfo.Level5
 }
 
+// analysisProjects collect every projects analysis data
 func (h *AnalysisHandler) analysisProjects() {
 	ctx := context.Background()
 	projList, err := h.storage.ListProjectsWithoutAuth(ctx)
@@ -181,7 +190,7 @@ func (h *AnalysisHandler) analysisResourceInfos() {
 	blog.Infof("collect applications(%d) resource info success", len(apps))
 }
 
-// collectProjectAnalysis 计算对应项目的运营数据
+// collectProjectAnalysis 计算对应项目的运营数据, 获取项目下的所有数据
 // nolint
 func (h *AnalysisHandler) collectProjectAnalysis(ctx context.Context, argoProj *v1alpha1.AppProject) (
 	*AnalysisProject, error) {
@@ -250,6 +259,7 @@ func (h *AnalysisHandler) collectProjectAnalysis(ctx context.Context, argoProj *
 	return result, nil
 }
 
+// listApplicationSets list all applicationsets
 func (h *AnalysisHandler) listApplicationSets(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	applicationSets, err := h.storage.ListApplicationSets(ctx, &appsetpkg.ApplicationSetListQuery{
@@ -267,6 +277,7 @@ func (h *AnalysisHandler) listApplicationSets(ctx context.Context, result *Analy
 	return nil
 }
 
+// listApplications list all applications
 func (h *AnalysisHandler) listApplications(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	apps, err := h.storage.ListApplications(ctx, &appclient.ApplicationQuery{
@@ -286,6 +297,7 @@ func (h *AnalysisHandler) listApplications(ctx context.Context, result *Analysis
 	return nil
 }
 
+// listClusters list all clusters
 func (h *AnalysisHandler) listClusters(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	clusters, err := h.storage.ListClustersByProject(ctx, result.ProjectID)
@@ -303,6 +315,7 @@ func (h *AnalysisHandler) listClusters(ctx context.Context, result *AnalysisProj
 	return nil
 }
 
+// listSecrets list all secrets
 func (h *AnalysisHandler) listSecrets(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	projectSecrets, err := h.secretStore.ListProjectSecrets(ctx, argoProj.Name)
@@ -318,6 +331,7 @@ func (h *AnalysisHandler) listSecrets(ctx context.Context, result *AnalysisProje
 	return nil
 }
 
+// listRepos list all repos
 func (h *AnalysisHandler) listRepos(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	repos, err := h.storage.ListRepository(ctx, []string{argoProj.Name})
@@ -353,6 +367,7 @@ func (h *AnalysisHandler) listSyncs(ctx context.Context, result *AnalysisProject
 	return nil
 }
 
+// fillUserDeptInfo fill user's dept info
 func fillUserDeptInfo(user *AnalysisActivityUser, userDeptInfo *ccv3.UserDeptInfo) {
 	user.ChineseName = userDeptInfo.ChineseName
 	user.GroupLevel0 = userDeptInfo.Level0
@@ -452,6 +467,7 @@ func (h *AnalysisHandler) collectAppResourceInfo(ctx context.Context, app *v1alp
 	return nil
 }
 
+// cacheResourceInfoData cache the data for resource-info
 func (h *AnalysisHandler) cacheResourceInfoData() {
 	ris, err := h.db.ListResourceInfosByProject(nil)
 	if err != nil {
