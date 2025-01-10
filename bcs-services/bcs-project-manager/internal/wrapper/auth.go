@@ -43,7 +43,6 @@ var NoAuthEndpoints = []string{
 	"BCSProject.ListAuthorizedProjects",
 	"BCSProject.ListProjects",
 	"Business.ListBusiness",
-	"Namespace.ListNamespaces",
 	"Namespace.WithdrawNamespace",
 	"Namespace.SyncNamespace",
 }
