@@ -142,6 +142,7 @@ func (hm *HelmManager) Init() error {
 		hm.initRegistry,
 		hm.initJWTClient,
 		hm.initIAMClient,
+		hm.initSharedClusterConf,
 		hm.InitComponentConfig,
 		hm.initDiscovery,
 		hm.initMicro,
@@ -217,6 +218,7 @@ func (hm *HelmManager) initModel() error {
 	}
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(hm.opt.Mongo.Address, ","),
+		Replicaset:            hm.opt.Mongo.Replicaset,
 		ConnectTimeoutSeconds: int(hm.opt.Mongo.ConnectTimeout),
 		AuthDatabase:          hm.opt.Mongo.AuthDatabase,
 		Database:              hm.opt.Mongo.Database,
@@ -599,6 +601,14 @@ func (hm *HelmManager) initIAMClient() error {
 	auth.IAMClient = iamClient
 	auth.InitPermClient(iamClient)
 	blog.Info("init iam client successfully")
+	return nil
+}
+
+// initSharedClusterConf init conf value for shared cluster
+func (hm *HelmManager) initSharedClusterConf() error {
+	if hm.opt.SharedCluster.AnnotationKeyProjCode == "" {
+		hm.opt.SharedCluster.AnnotationKeyProjCode = common.AnnotationKeyProjectCode
+	}
 	return nil
 }
 

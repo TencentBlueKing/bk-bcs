@@ -22,6 +22,8 @@ const (
 	ProjectMgrServiceName = "project.bkbcs.tencent.com"
 	// ClusterMgrServiceName 集群管理服务名
 	ClusterMgrServiceName = "clustermanager.bkbcs.tencent.com"
+	// ProjectCodeAnnoKey 命名空间所属 projectcode 注解 key 的默认值
+	ProjectCodeAnnoKey = "io.tencent.bcs.projectcode"
 	// LangCookieName 语言版本 Cookie 名称
 	LangCookieName = "blueking_language"
 	// MaxGrpcMsgSize 单请求/响应体最大尺寸 64MB

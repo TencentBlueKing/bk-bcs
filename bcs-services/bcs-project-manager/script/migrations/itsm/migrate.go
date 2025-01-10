@@ -17,16 +17,14 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"text/template"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
-
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/itsm"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
 	cm "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/config"
 )
@@ -59,6 +57,7 @@ func initDB() error {
 	// mongo
 	store.InitMongo(&config.MongoConfig{
 		Address:        config.GlobalConf.Mongo.Address,
+		Replicaset:     config.GlobalConf.Mongo.Replicaset,
 		ConnectTimeout: config.GlobalConf.Mongo.ConnectTimeout,
 		Database:       config.GlobalConf.Mongo.Database,
 		Username:       config.GlobalConf.Mongo.Username,
@@ -144,16 +143,9 @@ func createITSMCatalog() (uint32, error) {
 func importCreateNamespaceService(catalogID uint32) error {
 	// check whether the service has been imported before
 	// if not, import it, else update it.
-
-	var imported bool
-	serviceIDStr, err := model.GetConfig(context.Background(), cm.ConfigKeyCreateNamespaceItsmServiceID)
-	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+	serviceID, err := getServiceIDByName(catalogID, cm.ConfigCreateNamespaceItsmServiceName)
+	if err != nil {
 		return err
-	}
-	if err == nil {
-		imported = true
-	} else {
-		imported = false
 	}
 	// 自定义模板分隔符为 [[ ]]，例如 [[ .Name ]]，避免和 ITSM 模板变量格式冲突
 	tmpl, err := template.New("create_shared_namespace.json.tpl").Delims("[[", "]]").
@@ -175,8 +167,8 @@ func importCreateNamespaceService(catalogID uint32) error {
 	}
 	importReq := itsm.ImportServiceReq{
 		Key:             "request",
-		Name:            "创建共享集群命名空间",
-		Desc:            "创建共享集群命名空间",
+		Name:            cm.ConfigCreateNamespaceItsmServiceName,
+		Desc:            cm.ConfigCreateNamespaceItsmServiceName,
 		CatelogID:       catalogID,
 		Owners:          "admin",
 		CanTicketAgency: false,
@@ -187,37 +179,33 @@ func importCreateNamespaceService(catalogID uint32) error {
 		ProjectKey:      "0",
 		Workflow:        mp,
 	}
-	var serviceID int
-	if !imported {
+	if serviceID == 0 {
+		logging.Info("service(name: %s) not found in itsm, creating", cm.ConfigCreateNamespaceItsmServiceName)
 		serviceID, err = itsm.ImportService(importReq)
 		if err != nil {
 			return err
 		}
-		return model.SetConfig(context.Background(), cm.ConfigKeyCreateNamespaceItsmServiceID,
-			strconv.Itoa(serviceID))
+	} else {
+		logging.Info("service(name: %s, id: %d) found in itsm, updating",
+			cm.ConfigCreateNamespaceItsmServiceName, serviceID)
+		err = itsm.UpdateService(itsm.UpdateServiceReq{
+			ID:               serviceID,
+			ImportServiceReq: importReq,
+		})
+		if err != nil {
+			return err
+		}
 	}
-	serviceID, err = strconv.Atoi(serviceIDStr)
-	if err != nil {
-		return err
-	}
-	return itsm.UpdateService(itsm.UpdateServiceReq{
-		ID:               serviceID,
-		ImportServiceReq: importReq,
-	})
+	return model.SetConfig(context.Background(), cm.ConfigKeyCreateNamespaceItsmServiceID,
+		strconv.Itoa(serviceID))
 }
 
 func importUpdateNamespaceService(catalogID uint32) error {
 	// check whether the service has been imported before
 	// if not, import it, else update it.
-	var imported bool
-	serviceIDStr, err := model.GetConfig(context.Background(), cm.ConfigKeyUpdateNamespaceItsmServiceID)
-	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+	serviceID, err := getServiceIDByName(catalogID, cm.ConfigUpdateNamespaceItsmServiceName)
+	if err != nil {
 		return err
-	}
-	if err == nil {
-		imported = true
-	} else {
-		imported = false
 	}
 	// 自定义模板分隔符为 [[ ]]，例如 [[ .Name ]]，避免和 ITSM 模板变量格式冲突
 	tmpl, err := template.New("update_shared_namespace.json.tpl").Delims("[[", "]]").
@@ -239,8 +227,8 @@ func importUpdateNamespaceService(catalogID uint32) error {
 	}
 	importReq := itsm.ImportServiceReq{
 		Key:             "request",
-		Name:            "更新共享集群命名空间",
-		Desc:            "更新共享集群命名空间",
+		Name:            cm.ConfigUpdateNamespaceItsmServiceName,
+		Desc:            cm.ConfigUpdateNamespaceItsmServiceName,
 		CatelogID:       catalogID,
 		Owners:          "admin",
 		CanTicketAgency: false,
@@ -251,37 +239,33 @@ func importUpdateNamespaceService(catalogID uint32) error {
 		ProjectKey:      "0",
 		Workflow:        mp,
 	}
-	var serviceID int
-	if !imported {
+	if serviceID == 0 {
+		logging.Info("service(name: %s) not found in itsm, creating", cm.ConfigUpdateNamespaceItsmServiceName)
 		serviceID, err = itsm.ImportService(importReq)
 		if err != nil {
 			return err
 		}
-		return model.SetConfig(context.Background(), cm.ConfigKeyUpdateNamespaceItsmServiceID,
-			strconv.Itoa(serviceID))
+	} else {
+		logging.Info("service(name: %s, id: %d) found in itsm, updating",
+			cm.ConfigUpdateNamespaceItsmServiceName, serviceID)
+		err = itsm.UpdateService(itsm.UpdateServiceReq{
+			ID:               serviceID,
+			ImportServiceReq: importReq,
+		})
+		if err != nil {
+			return err
+		}
 	}
-	serviceID, err = strconv.Atoi(serviceIDStr)
-	if err != nil {
-		return err
-	}
-	return itsm.UpdateService(itsm.UpdateServiceReq{
-		ID:               serviceID,
-		ImportServiceReq: importReq,
-	})
+	return model.SetConfig(context.Background(), cm.ConfigKeyUpdateNamespaceItsmServiceID,
+		strconv.Itoa(serviceID))
 }
 
 func importDeleteNamespaceService(catalogID uint32) error {
 	// check whether the service has been imported before
 	// if not, import it, else update it.
-	var imported bool
-	serviceIDStr, err := model.GetConfig(context.Background(), cm.ConfigKeyDeleteNamespaceItsmServiceID)
-	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
+	serviceID, err := getServiceIDByName(catalogID, cm.ConfigDeleteNamespaceItsmServiceName)
+	if err != nil {
 		return err
-	}
-	if err == nil {
-		imported = true
-	} else {
-		imported = false
 	}
 	// 自定义模板分隔符为 [[ ]]，例如 [[ .Name ]]，避免和 ITSM 模板变量格式冲突
 	tmpl, err := template.New("delete_shared_namespace.json.tpl").Delims("[[", "]]").
@@ -303,8 +287,8 @@ func importDeleteNamespaceService(catalogID uint32) error {
 	}
 	importReq := itsm.ImportServiceReq{
 		Key:             "request",
-		Name:            "删除共享集群命名空间",
-		Desc:            "删除共享集群命名空间",
+		Name:            cm.ConfigDeleteNamespaceItsmServiceName,
+		Desc:            cm.ConfigDeleteNamespaceItsmServiceName,
 		CatelogID:       catalogID,
 		Owners:          "admin",
 		CanTicketAgency: false,
@@ -315,21 +299,37 @@ func importDeleteNamespaceService(catalogID uint32) error {
 		ProjectKey:      "0",
 		Workflow:        mp,
 	}
-	var serviceID int
-	if !imported {
+
+	if serviceID == 0 {
+		logging.Info("service(name: %s) not found in itsm, creating", cm.ConfigDeleteNamespaceItsmServiceName)
 		serviceID, err = itsm.ImportService(importReq)
 		if err != nil {
 			return err
 		}
-		return model.SetConfig(context.Background(), cm.ConfigKeyDeleteNamespaceItsmServiceID,
-			strconv.Itoa(serviceID))
+	} else {
+		logging.Info("service(name: %s, id: %d) found in itsm, updating",
+			cm.ConfigDeleteNamespaceItsmServiceName, serviceID)
+		err = itsm.UpdateService(itsm.UpdateServiceReq{
+			ID:               serviceID,
+			ImportServiceReq: importReq,
+		})
+		if err != nil {
+			return err
+		}
 	}
-	serviceID, err = strconv.Atoi(serviceIDStr)
+	return model.SetConfig(context.Background(), cm.ConfigKeyDeleteNamespaceItsmServiceID,
+		strconv.Itoa(serviceID))
+}
+
+func getServiceIDByName(catalogID uint32, name string) (int, error) {
+	services, err := itsm.ListServices(catalogID)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return itsm.UpdateService(itsm.UpdateServiceReq{
-		ID:               serviceID,
-		ImportServiceReq: importReq,
-	})
+	for _, service := range services {
+		if service.Name == name {
+			return service.ID, nil
+		}
+	}
+	return 0, nil
 }

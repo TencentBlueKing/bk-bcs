@@ -26,6 +26,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 
+	constant "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/envs"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
@@ -66,6 +67,10 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		conf.Global.IAM.Host = envs.BKIAMHost
 	}
 
+	if conf.Global.SharedCluster.AnnotationKeyProjectCode == "" {
+		conf.Global.SharedCluster.AnnotationKeyProjectCode = constant.ProjectCodeAnnoKey
+	}
+
 	if conf.Redis.Password == "" {
 		conf.Redis.Password = envs.RedisPassword
 	}
@@ -73,6 +78,9 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 	// mongo env
 	if conf.Mongo.Address == "" {
 		conf.Mongo.Address = envs.MongoAddress
+	}
+	if conf.Mongo.Replicaset == "" {
+		conf.Mongo.Replicaset = envs.MongoReplicaset
 	}
 	if conf.Mongo.Username == "" {
 		conf.Mongo.Username = envs.MongoUsername
@@ -281,6 +289,7 @@ type RedisConf struct {
 // MongoConfig option for mongo
 type MongoConfig struct {
 	Address        string `json:"address" yaml:"address"`
+	Replicaset     string `json:"replicaset" yaml:"replicaset"`
 	ConnectTimeout uint   `json:"connectTimeout" yaml:"connectTimeout"`
 	AuthDatabase   string `json:"authDatabase" yaml:"authDatabase"`
 	Database       string `json:"database" yaml:"database"`
@@ -337,8 +346,9 @@ type IAMConf struct {
 
 // SharedClusterConf 共享集群相关配置
 type SharedClusterConf struct {
-	EnabledCObjKinds []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
-	EnabledCRDs      []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+	EnabledCObjKinds         []string `yaml:"enabledCObjKinds" usage:"共享集群中支持的自定义对象 Kind"`
+	EnabledCRDs              []string `yaml:"enabledCRDs" usage:"共享集群中支持的 CRD"` // nolint:tagliatelle
+	AnnotationKeyProjectCode string   `yaml:"annotationKeyProjectCode" usage:"共享集群ProjectCode注解的key"`
 }
 
 // MultiClusterConf 多集群相关配置

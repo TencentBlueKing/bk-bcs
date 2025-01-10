@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/registryv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 	trestful "github.com/Tencent/bk-bcs/bcs-common/pkg/tracing/restful"
 	"github.com/emicklei/go-restful"
 	"github.com/opentracing/opentracing-go"
@@ -50,7 +50,7 @@ type StorageServer struct {
 	// micro server
 	microServer *mserver.MicroServer
 	// etcd
-	etcdRegistry registryv4.Registry
+	etcdRegistry registry.Registry
 
 	// 证书
 	etcdTLSConfig *tls.Config
@@ -118,7 +118,7 @@ func (s *StorageServer) registerV1HttpServerToRegistry() {
 		}
 
 		// use go-micro v4 registry
-		eoption := &registryv4.Options{
+		eoption := &registry.Options{
 			Name:         constants.ServerName,
 			Version:      version.BcsVersion,
 			RegistryAddr: strings.Split(s.conf.Etcd.Address, ","),
@@ -127,7 +127,7 @@ func (s *StorageServer) registerV1HttpServerToRegistry() {
 			Meta:         meta,
 		}
 		blog.Infof("#############storage turn on etcd registry feature, options %+v ###############", eoption)
-		s.etcdRegistry = registryv4.NewEtcdRegistry(eoption)
+		s.etcdRegistry = registry.NewEtcdRegistry(eoption)
 	}
 
 }

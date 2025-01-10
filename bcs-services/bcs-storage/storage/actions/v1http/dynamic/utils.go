@@ -22,7 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/codec"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
-	msgqueue "github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueuev4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/msgqueue"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/emicklei/go-restful"

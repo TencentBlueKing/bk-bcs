@@ -240,6 +240,7 @@ func (cm *ClusterManager) initModel() error {
 	password := cm.opt.Mongo.Password
 	mongoOptions := &mongo.Options{
 		Hosts:                 strings.Split(cm.opt.Mongo.Address, ","),
+		Replicaset:            cm.opt.Mongo.Replicaset,
 		ConnectTimeoutSeconds: int(cm.opt.Mongo.ConnectTimeout),
 		Database:              cm.opt.Mongo.Database,
 		Username:              cm.opt.Mongo.Username,
@@ -806,6 +807,12 @@ func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	return nil
 }
 
+func (cm *ClusterManager) initSharedClusterConf() {
+	if cm.opt.SharedCluster.AnnoKeyProjCode == "" {
+		cm.opt.SharedCluster.AnnoKeyProjCode = utils.ProjectCode
+	}
+}
+
 // initHTTPService init http service
 func (cm *ClusterManager) initHTTPService() error {
 	router := mux.NewRouter()
@@ -1105,6 +1112,8 @@ func (cm *ClusterManager) Init() error {
 		blog.Errorf("initCloudTemplateConfig failed: %v", err)
 	}
 
+	// init shared cluster config
+	cm.initSharedClusterConf()
 	// init metric, pprof
 	cm.initExtraModules()
 	// init system signal handler

@@ -40,6 +40,7 @@ type Options struct {
 	MaxPoolSize           uint64
 	MinPoolSize           uint64
 	Hosts                 []string
+	Replicaset            string
 	Monitor               *event.CommandMonitor
 }
 
@@ -66,6 +67,9 @@ func NewDB(opt *Options) (*DB, error) {
 		Auth:    &credential,
 		Hosts:   opt.Hosts,
 		Monitor: opt.Monitor,
+	}
+	if opt.Replicaset != "" {
+		mCliOpt.ReplicaSet = &opt.Replicaset
 	}
 	if opt.MaxPoolSize != 0 {
 		mCliOpt.MaxPoolSize = &opt.MaxPoolSize

@@ -1,6 +1,7 @@
 {
     "mongo": {
         "address": "${bcsClusterManagerMongoAddress}",
+        "replicaset": "${bcsClusterManagerMongoReplicaset}",
         "connecttimeout": ${bcsClusterManagerMongoConnectTimeout},
         "database": "${bcsClusterManagerMongoDatabase}",
         "username": "${bcsClusterManagerMongoUsername}",
@@ -179,6 +180,9 @@
         "normal": {
             "priKey": "${bcsEncryptNormalPriKey}"
         }
+    },
+    "sharedCluster": {
+      "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}"
     },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",
