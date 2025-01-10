@@ -31,7 +31,7 @@ type ListDiskTypeAction struct {
 	model        store.ClusterManagerModel
 	req          *cmproto.ListCloudDiskTypesRequest
 	resp         *cmproto.ListCloudDiskTypesResponse
-	diskTypeList map[string]string
+	diskTypeList []*cmproto.DiskConfigSet
 }
 
 // NewListDiskTypeAction create list action for node type
@@ -91,7 +91,8 @@ func (la *ListDiskTypeAction) listCloudDisktypes() error {
 	cmOption.Region = la.req.Region
 
 	// get disk types list
-	diskTypes, err := nodeMgr.ListDiskTypes(la.req.InstanceTypes, la.req.Zones, cmOption)
+	diskTypes, err := nodeMgr.ListDiskTypes(la.req.InstanceFamilies, la.req.Zones, la.req.DiskChargeType,
+		la.req.Cpu, la.req.Memory, cmOption)
 	if err != nil {
 		return err
 	}

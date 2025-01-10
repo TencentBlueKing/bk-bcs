@@ -47666,10 +47666,43 @@ func (m *ListCloudDiskTypesRequest) validate(all bool) error {
 
 	// no validation rules for Region
 
-	if len(m.GetInstanceTypes()) < 1 {
+	if len(m.GetInstanceFamilies()) < 1 {
 		err := ListCloudDiskTypesRequestValidationError{
-			field:  "InstanceTypes",
+			field:  "InstanceFamilies",
 			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _ListCloudDiskTypesRequest_DiskChargeType_InLookup[m.GetDiskChargeType()]; !ok {
+		err := ListCloudDiskTypesRequestValidationError{
+			field:  "DiskChargeType",
+			reason: "value must be in list [PREPAID POSTPAID_BY_HOUR]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetCpu() <= 0 {
+		err := ListCloudDiskTypesRequestValidationError{
+			field:  "Cpu",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetMemory() <= 0 {
+		err := ListCloudDiskTypesRequestValidationError{
+			field:  "Memory",
+			reason: "value must be greater than 0",
 		}
 		if !all {
 			return err
@@ -47757,6 +47790,11 @@ var _ interface {
 	ErrorName() string
 } = ListCloudDiskTypesRequestValidationError{}
 
+var _ListCloudDiskTypesRequest_DiskChargeType_InLookup = map[string]struct{}{
+	"PREPAID":          {},
+	"POSTPAID_BY_HOUR": {},
+}
+
 // Validate checks the field values on ListCloudDiskTypesResponse with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -47785,7 +47823,39 @@ func (m *ListCloudDiskTypesResponse) validate(all bool) error {
 
 	// no validation rules for Result
 
-	// no validation rules for Data
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListCloudDiskTypesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListCloudDiskTypesResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListCloudDiskTypesResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
 
 	if len(errors) > 0 {
 		return ListCloudDiskTypesResponseMultiError(errors)
@@ -47866,6 +47936,118 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListCloudDiskTypesResponseValidationError{}
+
+// Validate checks the field values on DiskConfigSet with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *DiskConfigSet) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DiskConfigSet with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in DiskConfigSetMultiError, or
+// nil if none found.
+func (m *DiskConfigSet) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DiskConfigSet) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for DiskType
+
+	// no validation rules for DiskTypeName
+
+	// no validation rules for DiskUsage
+
+	// no validation rules for MinDiskSize
+
+	// no validation rules for MaxDiskSize
+
+	// no validation rules for StepSize
+
+	if len(errors) > 0 {
+		return DiskConfigSetMultiError(errors)
+	}
+
+	return nil
+}
+
+// DiskConfigSetMultiError is an error wrapping multiple validation errors
+// returned by DiskConfigSet.ValidateAll() if the designated constraints
+// aren't met.
+type DiskConfigSetMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DiskConfigSetMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DiskConfigSetMultiError) AllErrors() []error { return m }
+
+// DiskConfigSetValidationError is the validation error returned by
+// DiskConfigSet.Validate if the designated constraints aren't met.
+type DiskConfigSetValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DiskConfigSetValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DiskConfigSetValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DiskConfigSetValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DiskConfigSetValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DiskConfigSetValidationError) ErrorName() string { return "DiskConfigSetValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DiskConfigSetValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDiskConfigSet.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DiskConfigSetValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DiskConfigSetValidationError{}
 
 // Validate checks the field values on GetMasterSuggestedMachinesRequest with
 // the rules defined in the proto definition for this message. If any rules

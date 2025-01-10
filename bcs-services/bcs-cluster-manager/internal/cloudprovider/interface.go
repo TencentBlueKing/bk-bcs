@@ -257,7 +257,8 @@ type NodeManager interface {
 	// ListNodeInstanceType get node instance type list
 	ListNodeInstanceType(info InstanceInfo, opt *CommonOption) ([]*proto.InstanceType, error)
 	// ListDiskTypes get disk type list
-	ListDiskTypes(instanceTypes []string, zones []string, opt *CommonOption) (map[string]string, error)
+	ListDiskTypes(instanceTypes []string, zones []string, diskChargeType string, cpu, memory uint64,
+		opt *CommonOption) ([]*proto.DiskConfigSet, error)
 	// ListOsImage get osimage list
 	ListOsImage(provider string, opt *CommonOption) ([]*proto.OsImage, error)
 	// ListKeyPairs list ssh keyPairs
