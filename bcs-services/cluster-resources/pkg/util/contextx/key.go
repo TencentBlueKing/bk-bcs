@@ -26,6 +26,8 @@ const (
 	ProjectIDContextKey ContextKey = "projectID"
 	// ProjectCodeContextKey projectCode context key
 	ProjectCodeContextKey ContextKey = "projectCode"
+	// ClusterIDContextKey clusterID context key
+	ClusterIDContextKey ContextKey = "clusterID"
 	// LangContectKey lang context key
 	LangContectKey ContextKey = "lang"
 )
