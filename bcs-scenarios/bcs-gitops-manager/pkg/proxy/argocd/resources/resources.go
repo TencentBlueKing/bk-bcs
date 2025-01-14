@@ -15,7 +15,6 @@ package resources
 
 import (
 	"context"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
 
 // PodQuery query the pods resources from kubernetes cluster
@@ -56,13 +56,9 @@ func (p *PodQuery) Query(ctx context.Context, argoApp *v1alpha1.Application) ([]
 		}
 		managedPods++
 	}
-	t := strings.Split(argoApp.Spec.Destination.Server, "/")
-	if len(t) == 0 {
-		return nil, errors.Errorf("cluster '%s' format error", argoApp.Spec.Destination.Server)
-	}
-	clusterID := t[len(t)-1]
-	if !strings.HasPrefix(clusterID, "BCS-K8S-") {
-		return nil, errors.Errorf("cluster '%s' parse failed", argoApp.Spec.Destination.Server)
+	clusterID, err := utils.GetClusterID(argoApp.Spec.Destination.Server)
+	if err != nil {
+		return nil, err
 	}
 
 	result := make([]corev1.Pod, 0, managedPods)

@@ -92,6 +92,15 @@ func (m *AnalysisManager) ManagedResourceNew(writer http.ResponseWriter, request
 	})
 }
 
+// ProjectManagedResourceNew project managed resources
+func (m *AnalysisManager) ProjectManagedResourceNew(writer http.ResponseWriter, request *http.Request) {
+	rsInfos := m.returnAnalysisHandler(request).GetResourceInfo()
+	m.httpJson(writer, &AnalysisResponse{
+		Code: 0,
+		Data: rsInfos,
+	})
+}
+
 // AnalysisProjectOverview defines the project overview
 type AnalysisProjectOverview struct {
 	Activity1DayProjects  int `json:"activity1DayProjects"`

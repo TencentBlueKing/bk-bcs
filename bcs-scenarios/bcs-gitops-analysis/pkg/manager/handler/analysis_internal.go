@@ -46,7 +46,7 @@ type AnalysisHandler struct {
 
 	cacheLock         sync.Mutex
 	cache             []AnalysisProject
-	resourceInfo      []AnalysisProjectResourceInfo
+	resourceInfo      map[string]*AnalysisProjectResourceInfo
 	bizDeptInfoCache  *sync.Map
 	userDeptInfoCache *sync.Map
 }
@@ -84,8 +84,8 @@ func (h *AnalysisHandler) Init() error {
 		resourceTicker := time.NewTicker(15 * time.Minute)
 		defer resourceTicker.Stop()
 
-		h.analysisProjects()
 		h.analysisResourceInfos()
+		h.analysisProjects()
 		blog.Infof("analysis cache started")
 		for {
 			select {
@@ -114,7 +114,19 @@ func (h *AnalysisHandler) GetAnalysisProjects() []AnalysisProject {
 
 // GetResourceInfo return resource info data
 func (h *AnalysisHandler) GetResourceInfo() []AnalysisProjectResourceInfo {
-	return h.resourceInfo
+	h.cacheLock.Lock()
+	defer h.cacheLock.Unlock()
+
+	result := make([]AnalysisProjectResourceInfo, 0, len(h.resourceInfo))
+	for i := range h.cache {
+		item := h.cache[i]
+		if item.ResourceInfo == nil {
+			continue
+		}
+		ri := item.ResourceInfo.DeepCopy()
+		result = append(result, *ri)
+	}
+	return result
 }
 
 func fillProjectDeptInfo(anaProj *AnalysisProject, bizDeptInfo *ccv3.BusinessDeptInfo) {
@@ -241,21 +253,31 @@ func (h *AnalysisHandler) collectProjectAnalysis(ctx context.Context, argoProj *
 	if err := h.listActivityUsers(ctx, result, argoProj); err != nil {
 		return nil, errors.Wrapf(err, "list activity users failed")
 	}
+
 	v, ok := h.bizDeptInfoCache.Load(bizID)
 	if ok {
 		bizDeptInfo := v.(*ccv3.BusinessDeptInfo)
 		fillProjectDeptInfo(result, bizDeptInfo)
-		return result, nil
-	}
-	businessInfo, err := h.bkccClient.GetBizDeptInfo([]int64{bizID})
-	if err != nil {
-		blog.Warnf("get project '%s' business ‘%d’ dept-info failed: %s", argoProj.Name, bizID, err.Error())
 	} else {
-		if bizDeptInfo, ok := businessInfo[bizID]; ok {
-			h.bizDeptInfoCache.Store(bizID, bizDeptInfo)
-			fillProjectDeptInfo(result, bizDeptInfo)
+		businessInfo, err := h.bkccClient.GetBizDeptInfo([]int64{bizID})
+		if err != nil {
+			blog.Warnf("get project '%s' business ‘%d’ dept-info failed: %s", argoProj.Name, bizID, err.Error())
+		} else {
+			if bizDeptInfo, ok := businessInfo[bizID]; ok {
+				h.bizDeptInfoCache.Store(bizID, bizDeptInfo)
+				fillProjectDeptInfo(result, bizDeptInfo)
+			}
 		}
 	}
+
+	h.cacheLock.Lock()
+	resourceInfo, ok := h.resourceInfo[argoProj.Name]
+	if ok {
+		result.ResourceInfo = resourceInfo.DeepCopy()
+		result.ResourceInfo.Name = result.ProjectCode
+	}
+	h.cacheLock.Unlock()
+
 	return result, nil
 }
 
@@ -506,12 +528,8 @@ func (h *AnalysisHandler) cacheResourceInfoData() {
 			pri.Pod += m[ResourceInfoPod]
 		}
 	}
-	data := make([]AnalysisProjectResourceInfo, 0, len(result))
-	for _, pri := range result {
-		data = append(data, *pri)
-	}
 
 	h.cacheLock.Lock()
-	h.resourceInfo = data
+	h.resourceInfo = result
 	h.cacheLock.Unlock()
 }
