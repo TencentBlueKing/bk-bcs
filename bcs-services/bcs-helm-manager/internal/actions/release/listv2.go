@@ -119,7 +119,7 @@ func (l *ListReleaseV2Action) list() (*helmmanager.ReleaseListData, error) {
 
 // 共享集群支持查询集群下所有命名空间的release
 func (l *ListReleaseV2Action) listReleaseByNamespaces() ([]*helmmanager.Release, error) {
-	namespaces, err := project.ListNamespaces(l.req.GetProjectCode(), l.req.GetClusterID())
+	namespaces, err := project.ListNamespaces(l.ctx, l.req.GetProjectCode(), l.req.GetClusterID())
 	if err != nil {
 		return nil, err
 	}

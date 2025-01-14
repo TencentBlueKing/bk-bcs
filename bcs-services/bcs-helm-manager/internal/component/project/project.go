@@ -113,7 +113,7 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 }
 
 // ListNamespaces list namespaces
-func ListNamespaces(projectCode, clusterID string) ([]*bcsproject.NamespaceData, error) {
+func ListNamespaces(ctx context.Context, projectCode, clusterID string) ([]*bcsproject.NamespaceData, error) {
 	cli, close, err := client.getProjectClient()
 	defer func() {
 		if close != nil {
@@ -123,7 +123,7 @@ func ListNamespaces(projectCode, clusterID string) ([]*bcsproject.NamespaceData,
 	if err != nil {
 		return nil, err
 	}
-	p, err := cli.Namespace.ListNamespaces(context.Background(), &bcsproject.ListNamespacesRequest{
+	p, err := cli.Namespace.ListNamespaces(ctx, &bcsproject.ListNamespacesRequest{
 		ProjectCode: projectCode,
 		ClusterID:   clusterID,
 	})
