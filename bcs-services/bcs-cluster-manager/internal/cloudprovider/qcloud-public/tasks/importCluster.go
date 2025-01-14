@@ -136,15 +136,17 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
 	// 社区版本 TKE公有云导入获取集群kubeConfig并进行配置
-	err = registerTKEClusterEndpoint(ctx, basicInfo, api.ClusterEndpointConfig{
-		IsExtranet: func() bool {
-			importType, ok := basicInfo.Cluster.GetExtraInfo()[icommon.ImportType]
-			if !ok || importType == icommon.ExternalImport {
-				return true
-			}
+	isExtranet := func() bool {
+		importType, ok := basicInfo.Cluster.GetExtraInfo()[icommon.ImportType]
+		if !ok || importType == icommon.ExternalImport {
+			return true
+		}
 
-			return false
-		}(),
+		return false
+	}()
+
+	err = registerTKEClusterEndpoint(ctx, basicInfo, api.ClusterEndpointConfig{
+		IsExtranet: isExtranet,
 	}, false)
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: getTKEExternalClusterEndpoint failed: %v", taskID, err)
@@ -157,7 +159,7 @@ func RegisterClusterKubeConfigTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	err = importClusterCredential(ctx, basicInfo, true, true, "", "")
+	err = importClusterCredential(ctx, basicInfo, isExtranet, true, "", "")
 	if err != nil {
 		blog.Errorf("RegisterClusterKubeConfigTask[%s]: importClusterCredential failed: %v", taskID, err)
 		retErr := fmt.Errorf("importClusterCredential failed, %s", err.Error())
