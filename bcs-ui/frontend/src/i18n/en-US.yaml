@@ -593,6 +593,8 @@ cluster:
   tag:
     debug: Test
     prod: Prod
+    currentProject: Current
+    onlyCurrentProject: Current Only
   env:
     debug: Test env
     prod: Prod env
@@ -605,6 +607,7 @@ cluster:
     emptyClusterGuide: >-
       It is recommended to use shared clusters.You can add a new cluster if you
       need it
+    allProject: All
   title:
     clusterInfo: Cluster Info
     clusterConfig: Cluster Config
@@ -682,6 +685,7 @@ cluster:
     clusterLabel: Label
     hideSharedCluster: Hide shared cluster
     provider: Provider
+    visibleRange: Visible range
   status:
     unknown: Unknown cluster status
     importFailed: Import failed

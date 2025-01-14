@@ -542,6 +542,8 @@ cluster:
   tag:
     debug: 测试
     prod: 正式
+    currentProject: 当前项目
+    onlyCurrentProject: 仅当前项目
   env:
     debug: 测试环境
     prod: 正式环境
@@ -552,6 +554,7 @@ cluster:
   msg:
     emptyCluster: 暂无集群
     emptyClusterGuide: 推荐使用共享集群。如有需要也可添加新的集群
+    allProject: 全部项目
   title:
     clusterInfo: 集群信息
     clusterConfig: 集群配置
@@ -612,6 +615,7 @@ cluster:
     maxPodNum: Pod IP数量上限
     clusterLabel: 集群标签
     provider: 提供商
+    visibleRange: 可见范围
   status:
     unknown: 未知集群状态
     importFailed: 导入失败
