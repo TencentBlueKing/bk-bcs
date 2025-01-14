@@ -420,7 +420,7 @@ func (r *release) toEntity() (*entity.Release, error) {
 
 // get project code from project
 func (r *release) getProjectCode() string {
-	p, err := project.GetProjectByCode(r.ProjectID)
+	p, err := project.GetProjectByCode(context.Background(), r.ProjectID)
 	if err != nil {
 		blog.Errorf("get project for %s error, %s", r.ProjectID, err.Error())
 		return ""

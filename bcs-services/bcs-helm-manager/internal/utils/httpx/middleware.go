@@ -104,7 +104,7 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		pj, err := projectClient.GetProjectByCode(projectCode)
+		pj, err := projectClient.GetProjectByCode(r.Context(), projectCode)
 		if err != nil {
 			msg := fmt.Errorf("ParseProjectID get projectID error, projectCode: %s, err: %s", projectCode, err.Error())
 			ResponseSystemError(w, r, msg)
