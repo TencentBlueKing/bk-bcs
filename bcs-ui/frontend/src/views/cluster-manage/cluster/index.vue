@@ -115,7 +115,7 @@
           :loading="logLoading"
           :height="'calc(100vh - 92px)'"
           :rolling-loading="false"
-          step-actions="FAILURE"
+          step-actions="FAILED"
           @refresh="handleShowLog(logSideDialogConf.row)"
           @auto-refresh="handleAutoRefresh"
           @download="getDownloadTaskRecords"
