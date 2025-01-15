@@ -502,7 +502,7 @@
             <template v-else>--</template>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.action')" width="160" :resizable="false" fixed="right">
+        <bcs-table-column :label="$t('generic.label.action')" width="220" :resizable="false" fixed="right">
           <template #default="{ row }">
             <bk-button class="mr10" text v-if="row.status === 'APPLY-FAILURE'" @click="handleDeleteNode(row)">
               {{ $t('generic.button.delete') }}
@@ -686,7 +686,8 @@
             :loading="logSideDialogConf.loading"
             :height="'calc(100vh - 92px)'"
             :rolling-loading="false"
-            step-actions="FAILED"
+            :show-step-retry-fn="item => item?.step?.allowRetry"
+            :show-step-skip-fn="item => item?.step?.allowSkip"
             @refresh="handleShowLog(logSideDialogConf.row)"
             @auto-refresh="handleAutoRefresh"
             @download="getDownloadTaskRecords"
@@ -1907,6 +1908,7 @@ export default defineComponent({
       }).catch(() => ({ status: '', step: [] }));
       logSideDialogConf.value.taskData = step;
       logSideDialogConf.value.status = status;
+      logSideDialogConf.value.taskID = taskID;
     };
 
     const closeLog = () => {
