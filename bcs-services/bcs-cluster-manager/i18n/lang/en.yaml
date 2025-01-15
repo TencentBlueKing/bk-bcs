@@ -32,6 +32,7 @@ checkAgentStatus: "kubeAgent state detection"
 # 主机
 transferHostModule: "transfer host module"
 removeHostFromCmdb: "remove host"
+checkNodePods: "check business node pods"
 #AllocateSubnetTask
 ImportClusterNodesTask: "Import cluster nodes"
 RegisterClusterKubeConfigTask: "Register cluster kube config authentication"

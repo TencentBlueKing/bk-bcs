@@ -1076,8 +1076,10 @@ func (ua *UpdateDesiredNodeAction) injectVirtualNodeData(nodeNum uint32) {
 	var i uint32
 
 	for ; i < nodeNum; i++ {
+		nodeId := virtualNodeID()
+
 		err := ua.model.CreateNode(context.Background(), &cmproto.Node{
-			NodeID:      virtualNodeID(),
+			NodeID:      nodeId,
 			Status:      common.StatusResourceApplying,
 			ZoneID:      "",
 			NodeGroupID: ua.group.NodeGroupID,
@@ -1087,8 +1089,9 @@ func (ua *UpdateDesiredNodeAction) injectVirtualNodeData(nodeNum uint32) {
 			TaskID:      ua.task.GetTaskID(),
 		})
 		if err != nil {
-			blog.Errorf("UpdateDesiredNodeAction injectVirtualNodeData failed: %v", err)
+			blog.Errorf("UpdateDesiredNodeAction injectVirtualNodeData[%s] failed: %v", nodeId, err)
 		}
+		time.Sleep(time.Millisecond * 10)
 	}
 	blog.Infof("UpdateDesiredNodeAction injectVirtualNodeData success")
 }

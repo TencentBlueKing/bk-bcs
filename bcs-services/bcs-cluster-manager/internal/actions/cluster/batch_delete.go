@@ -318,6 +318,7 @@ func (ba *BatchDeleteClusterNodesAction) handleGroupNodes(ipList []string, group
 			Nodes:       ipList,
 			NodeGroupID: groupID,
 			Operator:    ba.req.Operator,
+			Manual:      true,
 		}
 		cleanNodesResp = &cmproto.CleanNodesInGroupResponse{}
 	)

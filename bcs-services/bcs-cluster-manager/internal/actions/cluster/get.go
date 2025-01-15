@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -73,6 +74,10 @@ func (ga *GetAction) getCluster() error {
 		}
 	}
 
+	if cluster.IsShared && ga.req.ProjectId == cluster.ProjectID {
+		cluster.IsShared = false
+	}
+
 	// append apiServer info
 	if cluster.ExtraInfo == nil {
 		cluster.ExtraInfo = make(map[string]string, 0)
@@ -81,6 +86,15 @@ func (ga *GetAction) getCluster() error {
 	if err == nil && exist {
 		cluster.ExtraInfo[common.ClusterApiServer] = credential.ServerAddress
 	}
+
+	// append project code
+	if len(cluster.GetProjectID()) > 0 {
+		pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(cluster.GetProjectID(), true)
+		if errLocal == nil {
+			cluster.ExtraInfo[common.ProjectCode] = pInfo.GetProjectCode()
+		}
+	}
+
 	// append module info
 	ga.appendModuleInfo()
 
