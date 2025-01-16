@@ -82,6 +82,7 @@ const handleNsChange = (nsList) => {
   }
 };
 
+// 组件使用的数据
 const nsList = ref<Array<INamespace>>([]);
 const nsLoading = ref(false);
 const { clusterList } = useCluster();

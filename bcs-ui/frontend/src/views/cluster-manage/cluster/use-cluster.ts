@@ -14,7 +14,7 @@ import {
   taskSkip,
 } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
-import { ICluster } from '@/composables/use-app';
+import { ICluster, IProject } from '@/composables/use-app';
 import useInterval from '@/composables/use-interval';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -281,11 +281,13 @@ export function useClusterInfo() {
   const clusterOS = computed(() => clusterData.value?.clusterBasicSettings?.OS);
   const clusterAdvanceSettings = computed(() => clusterData.value?.clusterAdvanceSettings || {});
   const extraInfo = computed(() => clusterData.value?.extraInfo || {});
+  const curProject = computed<IProject>(() => $store.state.curProject as any);
   const getClusterDetail = async ($clusterId: string, cloudInfo = false, loading = true) => {
     isLoading.value = loading;
     const res = await clusterDetail({
       $clusterId,
       cloudInfo,
+      projectId: curProject.value.projectID,
     }, { needRes: true }).catch(() => ({}));
     clusterData.value = {
       ...res.data,

@@ -42,8 +42,7 @@ func (plugin *ClusterPlugin) Init() error {
 
 	// requests by authorization, addinational URL managed by BCS
 	// GET /api/v1/clusters?project=bcs-project, list all projects,
-	plugin.Path("").Methods("GET").Queries("projects", "{projects}").
-		Handler(plugin.middleware.HttpWrapper(plugin.listClustersHandler))
+	plugin.Path("").Methods("GET").Handler(plugin.middleware.HttpWrapper(plugin.listClustersHandler))
 
 	// GET /api/v1/clusters/{name}, get specified cluster info
 	plugin.Path("/{name}").Methods("GET").
@@ -66,9 +65,6 @@ func (plugin *ClusterPlugin) forbidden(w http.ResponseWriter, r *http.Request) {
 // GET /api/v1/clusters
 func (plugin *ClusterPlugin) listClustersHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	projects := r.URL.Query()["projects"]
-	if len(projects) == 0 {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("lost projects query param"))
-	}
 	clusterList, statusCode, err := plugin.middleware.ListClusters(r.Context(), projects)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode,

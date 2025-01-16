@@ -25,6 +25,7 @@ import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
+import { isNSChanged } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({
   name: 'BaseLayout',
@@ -632,12 +633,18 @@ export default defineComponent({
     // 通过provide暴露方法
     provide('handleGetExtData', handleGetExtData);
 
-    onMounted(async () => {
-      isLoading.value = true;
+    // 命名空间真正改变时再发起请求
+    watch(isNSChanged, async () => {
+      if (!isNSChanged.value) return;
       await handleGetTableData();
       isLoading.value = false;
       // 轮询资源
       start();
+    }, { immediate: true });
+
+    // 切换集群时，命名空间还未更改，不在这里发起请求
+    onMounted(async () => {
+      isLoading.value = true;
     });
 
     onBeforeUnmount(() => {

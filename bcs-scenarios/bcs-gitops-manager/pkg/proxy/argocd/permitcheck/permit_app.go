@@ -14,9 +14,14 @@ package permitcheck
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
 	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -32,7 +37,7 @@ import (
 // CheckApplicationPermission check application permission
 func (c *checker) CheckApplicationPermission(ctx context.Context, app string, action RSAction) (
 	*v1alpha1.Application, int, error) {
-	objs, permits, statusCode, err := c.getMultiApplicationMultiActionPermission(ctx, "", []string{app})
+	objs, permits, statusCode, err := c.getMultiAppMultiActionPermission(ctx, "", []string{app})
 	if err != nil {
 		return nil, statusCode, errors.Wrapf(err, "get application '%s' permission failed", app)
 	}
@@ -50,6 +55,7 @@ func (c *checker) CheckApplicationPermission(ctx context.Context, app string, ac
 	return objs[0].(*v1alpha1.Application), http.StatusOK, nil
 }
 
+// filterApplications filter the applications belong project
 func (c *checker) filterApplications(ctx context.Context, project string, apps []string) ([]interface{},
 	map[string][]*v1alpha1.Application, int, error) {
 	resultApps := make([]interface{}, 0, len(apps))
@@ -88,7 +94,8 @@ func (c *checker) filterApplications(ctx context.Context, project string, apps [
 	return resultApps, projApps, http.StatusOK, nil
 }
 
-func (c *checker) getMultiApplicationMultiActionPermission(ctx context.Context, project string, apps []string) (
+// getMultiAppMultiActionPermission get multiple applications with multiple actions permission
+func (c *checker) getMultiAppMultiActionPermission(ctx context.Context, project string, apps []string) (
 	[]interface{}, *UserResourcePermission, int, error) {
 	resultApps, projApps, statusCode, err := c.filterApplications(ctx, project, apps)
 	if err != nil {
@@ -165,6 +172,7 @@ func (c *checker) getMultiApplicationMultiActionPermission(ctx context.Context, 
 	return resultApps, result, http.StatusOK, nil
 }
 
+// buildClusterNamespaceMap build cluster namespaces map
 func (c *checker) buildClusterNamespaceMap(ctx context.Context, argoApps []*v1alpha1.Application) (
 	map[string]map[string]struct{}, map[string]string, error) {
 	clusterServerNSMap := make(map[string]map[string]struct{})
@@ -199,6 +207,107 @@ func (c *checker) buildClusterNamespaceMap(ctx context.Context, argoApps []*v1al
 	return clusterNSMap, clusterServerNameMap, nil
 }
 
+var (
+	listClusterNamespaceUrl = "/bcsapi/v4/bcsproject/v1/projects/%s/clusters/%s/namespaces"
+)
+
+// listClusterNamespaces list the namespaces of cluster by project
+func (c *checker) listClusterNamespaces(project, cluster string) (*bcsproject.ListNamespacesResponse, error) {
+	// nolint
+	req, err := http.NewRequest(http.MethodGet, "https://"+c.option.APIGateway+
+		fmt.Sprintf(listClusterNamespaceUrl, project, cluster), nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "create list cluster-namespaces failed")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.option.APIGatewayToken)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrapf(err, "do request for list cluster-namespaces failed")
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "read response body failed when proxy send")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.Errorf("http response code not 200 but %d, resp: %s",
+			resp.StatusCode, string(respBody))
+	}
+	nsResp := new(bcsproject.ListNamespacesResponse)
+	if err = json.Unmarshal(respBody, nsResp); err != nil {
+		return nil, errors.Wrapf(err, "unmarshal response body '%s' failed", string(respBody))
+	}
+	return nsResp, err
+}
+
+// checkClusterWhenCreateApp check cluster permission when create application
+func (c *checker) checkClusterWhenCreateApp(ctx context.Context, app *v1alpha1.Application) (int, error) {
+	// 校验集群是否存在
+	clusterQuery := clusterclient.ClusterQuery{
+		Server: app.Spec.Destination.Server,
+		Name:   app.Spec.Destination.Name,
+	}
+	argoCluster, err := c.store.GetCluster(ctx, &clusterQuery)
+	if err != nil {
+		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
+	}
+	if argoCluster == nil {
+		return http.StatusBadRequest, errors.Errorf("cluster '%v' not found", clusterQuery)
+	}
+	// perhaps the cluster is a share-cluster, so we should list the cluster-namespaces by project, check
+	// the project have the namespace permission
+	if argoCluster.Project != app.Spec.Project {
+		clusterID := argoCluster.Name
+		var nsResp *bcsproject.ListNamespacesResponse
+		if nsResp, err = c.listClusterNamespaces(app.Spec.Project, clusterID); err != nil {
+			return http.StatusBadRequest, errors.Wrapf(err, "query namespaces for '%s/%s' failed",
+				clusterID, app.Spec.Project)
+		}
+		var exist bool
+		destNamespace := app.Spec.Destination.Namespace
+		for _, item := range nsResp.Data {
+			if destNamespace == item.Name {
+				exist = true
+				break
+			}
+		}
+		if !exist {
+			return http.StatusBadRequest, errors.Errorf("cluster '%s' not belong to project '%s'",
+				clusterQuery.Name, app.Spec.Project)
+		}
+		blog.Infof("RequestID[%s] create application '%s' for share-cluster namespace '%s/%s'",
+			ctxutils.RequestID(ctx), app.Name, clusterID, destNamespace)
+	}
+
+	// 校验用户是否具备创建权限
+	clusterName := argoCluster.Name
+	clusterNamespace := app.Spec.Destination.Namespace
+	var statusCode int
+	ctx, statusCode, err = c.createPermitContext(ctx, app.Spec.Project)
+	if err != nil {
+		return statusCode, err
+	}
+	permits, err := c.getBCSNamespaceScopedPermission(ctx, app.Spec.Project, contextGetProjID(ctx),
+		map[string]map[string]struct{}{
+			clusterName: {clusterNamespace: struct{}{}},
+		})
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	nsPM, ok := permits[authutils.CalcIAMNsID(clusterName, clusterNamespace)]
+	if !ok {
+		return http.StatusBadRequest, errors.Errorf("cluster-namespace '%s/%s' permission not found",
+			clusterName, clusterNamespace)
+	}
+	if !nsPM[string(iamnamespace.NameSpaceScopedCreate)] {
+		return http.StatusForbidden, errors.Errorf("user '%s' not have 'namespace_scoped_create' "+
+			"permission for '%s/%s'", ctxutils.User(ctx).GetUser(), clusterName, clusterNamespace)
+	}
+	return http.StatusOK, nil
+}
+
 // CheckApplicationCreate check application create permission
 func (c *checker) CheckApplicationCreate(ctx context.Context, app *v1alpha1.Application) (int, error) {
 	projectName := app.Spec.Project
@@ -226,46 +335,10 @@ func (c *checker) CheckApplicationCreate(ctx context.Context, app *v1alpha1.Appl
 		}
 	}
 
-	// 校验集群是否存在
-	clusterQuery := clusterclient.ClusterQuery{
-		Server: app.Spec.Destination.Server,
-		Name:   app.Spec.Destination.Name,
-	}
-	argoCluster, err := c.store.GetCluster(ctx, &clusterQuery)
-	if err != nil {
-		return http.StatusInternalServerError, errors.Wrapf(err, "get cluster '%v' failed", clusterQuery)
-	}
-	if argoCluster == nil {
-		return http.StatusBadRequest, errors.Errorf("cluster '%v' not found", clusterQuery)
-	}
-	if argoCluster.Project != app.Spec.Project {
-		return http.StatusBadRequest, errors.Errorf("cluster '%v' not belong to project '%s'",
-			clusterQuery, app.Spec.Project)
-	}
-
-	// 校验用户是否具备创建权限
-	clusterName := argoCluster.Name
-	clusterNamespace := app.Spec.Destination.Namespace
-	var statusCode int
-	ctx, statusCode, err = c.createPermitContext(ctx, app.Spec.Project)
+	// 校验集群权限
+	statusCode, err := c.checkClusterWhenCreateApp(ctx, app)
 	if err != nil {
 		return statusCode, err
-	}
-	permits, err := c.getBCSNamespaceScopedPermission(ctx, projectName, contextGetProjID(ctx),
-		map[string]map[string]struct{}{
-			clusterName: {clusterNamespace: struct{}{}},
-		})
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-	nsPM, ok := permits[authutils.CalcIAMNsID(clusterName, clusterNamespace)]
-	if !ok {
-		return http.StatusBadRequest, errors.Errorf("cluster-namespace '%s/%s' permission not found",
-			clusterName, clusterNamespace)
-	}
-	if !nsPM[string(iamnamespace.NameSpaceScopedCreate)] {
-		return http.StatusForbidden, errors.Errorf("user '%s' not have 'namespace_scoped_create' "+
-			"permission for '%s/%s'", ctxutils.User(ctx).GetUser(), clusterName, clusterNamespace)
 	}
 
 	// setting application name with project prefix

@@ -101,6 +101,14 @@
             :disable-edit="clusterData.status !== 'RUNNING' || clusterData.is_shared"
             @save="handleClusterDescChange" />
         </bk-form-item>
+        <bk-form-item :label="$t('cluster.labels.visibleRange')">
+          <ClusterVisibleRange
+            :editable="rangeEdit"
+            :value="clusterData?.sharedRanges?.projectIdOrCodes"
+            @edit="rangeEdit = true"
+            @cancel="rangeEdit = false"
+            @save="handleVisibleRangeChange" />
+        </bk-form-item>
       </DescList>
       <DescList :title="$t('cluster.title.clusterConfig')">
         <template v-if="clusterData.clusterType !== 'virtual'">
@@ -212,8 +220,10 @@ import { merge } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
 import { getClusterImportCategory, getClusterTypeName, useClusterInfo, useClusterList } from '../cluster/use-cluster';
+import ClusterVisibleRange from '../components/cluster-visible-range.vue';
 import EditFormItem from '../components/edit-form-item.vue';
 
+import { modifyCluster } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
 import { CLUSTER_ENV, LABEL_KEY_REGEXP } from '@/common/constant';
 import DescList from '@/components/desc-list.vue';
@@ -231,7 +241,15 @@ import useVariable from '@/views/deploy-manage/variable/use-variable';
 
 export default defineComponent({
   name: 'ClusterInfo',
-  components: { EditFormItem, LoadingIcon, KeyValue, KeyValue2, DescList, NodemanArea },
+  components: {
+    EditFormItem,
+    LoadingIcon,
+    KeyValue,
+    KeyValue2,
+    DescList,
+    NodemanArea,
+    ClusterVisibleRange,
+  },
   props: {
     clusterId: {
       type: String,
@@ -301,10 +319,11 @@ export default defineComponent({
     // 修改集群信息
     const handleModifyCluster = async (params  = {}) => {
       isLoading.value = true;
-      const result = await $store.dispatch('clustermanager/modifyCluster', {
+      const result = await modifyCluster({
         $clusterId: clusterData.value?.clusterID,
         ...params,
-      });
+      }).then(() => true)
+        .catch(() => false);
       result && $bkMessage({
         theme: 'success',
         message: $i18n.t('generic.msg.success.modify'),
@@ -342,8 +361,21 @@ export default defineComponent({
         isEdit.value = false;
         return;
       }
-      await handleModifyCluster({ labels: labels.value });
+      await handleModifyCluster({ labels2: { values: labels.value } });
       isEdit.value = false;
+    };
+    // 修改可见范围
+    const user = computed(() => $store.state.user);
+    const rangeEdit = ref(false);
+    async function handleVisibleRangeChange(val) {
+      const result = await handleModifyCluster({
+        is_shared: !val?.isOnlyCurrentPorject,
+        sharedRanges: !val?.isOnlyCurrentPorject ? {
+          projectIdOrCodes: val?.value,
+        } : {},
+        updator: user.value.username,
+      });
+      result && (rangeEdit.value = false);
     };
 
     // 集群kubeconfig
@@ -443,6 +475,8 @@ export default defineComponent({
       handleEditNodemanArea,
       handleAreaListChange,
       providerNameMap,
+      rangeEdit,
+      handleVisibleRangeChange,
     };
   },
 });

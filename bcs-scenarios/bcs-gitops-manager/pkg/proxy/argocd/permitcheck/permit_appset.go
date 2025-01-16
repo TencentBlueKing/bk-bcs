@@ -214,9 +214,20 @@ func (c *checker) getMultiAppSetMultiActionPermission(ctx context.Context, proje
 	return resultAppSets, result, http.StatusOK, nil
 }
 
+// CheckAppSetGenerate only need view permission for generate appSet
+func (c *checker) CheckAppSetGenerate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (
+	[]*v1alpha1.Application, int, error) {
+	return c.checkCreateOrGenerateAppSet(ctx, appSet, ProjectViewRSAction)
+}
+
 // CheckAppSetCreate check appset create permission, and set some default values
 func (c *checker) CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (
 	[]*v1alpha1.Application, int, error) {
+	return c.checkCreateOrGenerateAppSet(ctx, appSet, ProjectEditRSAction)
+}
+
+func (c *checker) checkCreateOrGenerateAppSet(ctx context.Context, appSet *v1alpha1.ApplicationSet,
+	projAction RSAction) ([]*v1alpha1.Application, int, error) {
 	projName := appSet.Spec.Template.Spec.Project
 	if !strings.HasPrefix(appSet.Name, projName) {
 		appSet.Name = projName + "-" + appSet.Name
@@ -224,7 +235,7 @@ func (c *checker) CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.Applic
 	if !strings.HasPrefix(appSet.Spec.Template.Name, projName) {
 		appSet.Spec.Template.Name = projName + "-" + appSet.Spec.Template.Name
 	}
-	argoProject, statusCode, err := c.CheckProjectPermission(ctx, projName, ProjectEditRSAction)
+	argoProject, statusCode, err := c.CheckProjectPermission(ctx, projName, projAction)
 	if err != nil {
 		return nil, statusCode, errors.Wrapf(err, "check project permission failed")
 	}
@@ -252,8 +263,8 @@ func (c *checker) CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.Applic
 	return results, 0, nil
 }
 
-// CheckAppSetUpdate check appset update, check appset which have some fields
-func (c *checker) CheckAppSetUpdate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (int, error) {
+// CheckAppSetFormatWhenUpdate check appset format when update
+func (c *checker) CheckAppSetFormatWhenUpdate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (int, error) {
 	projName := appSet.Spec.Template.Spec.Project
 	if !strings.HasPrefix(appSet.Name, projName+"-") {
 		return http.StatusBadRequest, errors.Errorf("appset name '%s' not have prefix '%s'",
@@ -263,7 +274,7 @@ func (c *checker) CheckAppSetUpdate(ctx context.Context, appSet *v1alpha1.Applic
 		return http.StatusBadRequest, errors.Errorf("appset '.spec.template.name' not have prefix '%s'",
 			projName+"-")
 	}
-	argoProject, statusCode, err := c.CheckProjectPermission(ctx, projName, ProjectEditRSAction)
+	argoProject, statusCode, err := c.CheckProjectPermission(ctx, projName, ProjectViewRSAction)
 	if err != nil {
 		return statusCode, errors.Wrapf(err, "check project permission failed")
 	}

@@ -29,6 +29,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
@@ -113,6 +114,38 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), contextx.ProjectCodeContextKey, pj.Code)
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ID)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// ParseClusterIDMiddleware parse clusterID
+func ParseClusterIDMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterID := vars["clusterID"]
+		if clusterID == "" {
+			blog.Warn("clusterID error: clusterID is empty")
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		cluster, err := cluster.GetClusterInfo(r.Context(), clusterID)
+		if err != nil {
+			msg := fmt.Errorf("ParseClusterID get clusterID error, clusterID: %s, err: %s", clusterID, err.Error())
+			ResponseSystemError(w, r, msg)
+			return
+		}
+
+		projectID := contextx.GetProjectIDFromCtx(r.Context())
+
+		if !cluster.IsShared && cluster.ProjID != projectID {
+			msg := fmt.Errorf("cluster is invalid")
+			ResponseSystemError(w, r, msg)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), contextx.ClusterIDContextKey, cluster.ID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})

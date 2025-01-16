@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"sort"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -29,7 +30,8 @@ import (
 	kubectlcmd "k8s.io/kubectl/pkg/cmd"
 	"k8s.io/kubectl/pkg/cmd/plugin"
 
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/clusterset"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/internal/clusterset"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/internal/selectui"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/httputils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/utils"
 )
@@ -52,7 +54,11 @@ func NewKubectlCmd() *KubectlCommand {
 		IOStreams:     genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr},
 	})
 	kc.Use = "k"
+	kc.AddCommand(projectCommand())
 	kc.AddCommand(clusterCommand())
+	kc.AddCommand(setCommand())
+	kc.AddCommand(setGlobalCommand())
+	kc.AddCommand(infoCommand())
 	return &KubectlCommand{
 		command: kc,
 		configs: defaultConfigFlags,
@@ -69,37 +75,12 @@ func (c *KubectlCommand) GetConfigs() *genericclioptions.ConfigFlags {
 	return c.configs
 }
 
-func clusterCommand() *cobra.Command {
+func projectCommand() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "cluster",
-		Short: color.YellowString("Extender feature. Managed the cluster context"),
-		Run:   func(cmd *cobra.Command, args []string) {},
-	}
-	c.AddCommand(clusterList())
-	c.AddCommand(clusterSet())
-	c.AddCommand(clusterInfo())
-	return c
-}
-
-type argoProject struct {
-	Name       string
-	AliaName   string
-	BusinessID string
-}
-
-type argoCluster struct {
-	Name     string
-	AliaName string
-	Status   string
-}
-
-func clusterList() *cobra.Command {
-	c := &cobra.Command{
-		Use:   "list",
-		Short: "Show the clusters that managed in gitops which user have permissions",
+		Use:   "projs",
+		Short: color.YellowString("Extender feature. List all projects which user have view permission"),
 		Run: func(cmd *cobra.Command, args []string) {
 			resultProjects := make([]*argoProject, 0)
-			resultClusters := make(map[string][]*argoCluster)
 			projects := listProjects(cmd.Context())
 			for i := range projects.Items {
 				proj := projects.Items[i]
@@ -108,39 +89,63 @@ func clusterList() *cobra.Command {
 					AliaName:   proj.Annotations[common.ProjectAliaName],
 					BusinessID: proj.Annotations[common.ProjectBusinessIDKey],
 				})
-
-				clusters := listClusters(cmd.Context(), proj.Name)
-				for j := range clusters.Items {
-					cluster := clusters.Items[j]
-					argoCls := &argoCluster{
-						Name:     cluster.Name,
-						AliaName: cluster.Annotations[common.ClusterAliaName],
-					}
-					if cluster.Info.ConnectionState.Status == "Failed" {
-						argoCls.Status = "Failed"
-					} else {
-						argoCls.Status = "Success"
-					}
-					resultClusters[proj.Name] = append(resultClusters[proj.Name], argoCls)
-				}
 			}
 
 			tw := utils.DefaultTableWriter()
 			tw.SetHeader(func() []string {
 				return []string{
-					"项目名称", "项目Code", "业务ID", "集群ID", "连接状态", "集群名称",
+					"项目名称", "项目Code", "业务ID",
 				}
 			}())
 			for _, pj := range resultProjects {
-				v, ok := resultClusters[pj.Name]
-				if !ok || len(v) == 0 {
+				tw.Append(func() []string {
+					return []string{
+						pj.AliaName, pj.Name, pj.BusinessID,
+					}
+				}())
+			}
+			tw.Render()
+		},
+	}
+	return c
+}
+
+func clusterCommand() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "clusters",
+		Short: color.YellowString("Extender feature. List projects' clusters which user have view permission"),
+		Run: func(cmd *cobra.Command, args []string) {
+			clusters := listClusters(cmd.Context(), "")
+			projClusters := make(map[string][]*v1alpha1.Cluster)
+			for i := range clusters.Items {
+				cls := clusters.Items[i]
+				projClusters[cls.Project] = append(projClusters[cls.Project], &cls)
+			}
+
+			tw := utils.DefaultTableWriter()
+			tw.SetHeader(func() []string {
+				return []string{
+					"集群ID", "连接状态", "集群名称", "项目名称",
+				}
+			}())
+			projects := listProjects(cmd.Context())
+			for i := range projects.Items {
+				proj := projects.Items[i]
+				projAliaName := proj.Annotations[common.ProjectAliaName]
+				clses, ok := projClusters[proj.Name]
+				if !ok {
 					continue
 				}
-				for ans := 0; ans < len(v); ans++ {
+				for _, cls := range clses {
+					var status string
+					if cls.Info.ConnectionState.Status == "Failed" {
+						status = "Failed"
+					} else {
+						status = "Success"
+					}
 					tw.Append(func() []string {
 						return []string{
-							pj.AliaName, pj.Name, pj.BusinessID,
-							v[ans].Name, v[ans].Status, v[ans].AliaName,
+							cls.Name, status, cls.Annotations[common.ClusterAliaName], projAliaName + "/" + proj.Name,
 						}
 					}())
 				}
@@ -151,43 +156,137 @@ func clusterList() *cobra.Command {
 	return c
 }
 
-func clusterSet() *cobra.Command {
+var switchCluster bool
+
+// setCluster set cluster common
+func setCluster(cmd *cobra.Command, args []string) *clusterset.ClusterInfo {
+	var clsInfo *clusterset.ClusterInfo
+	if !switchCluster {
+		var clusterID string
+		if len(args) != 0 {
+			clusterID = args[0]
+		}
+		if clusterID == "" {
+			utils.ExitError("must set cluster-id or use '--switch' param")
+		}
+		clsList := listClusters(cmd.Context(), "")
+		var existCls *v1alpha1.Cluster
+		for i := range clsList.Items {
+			cls := clsList.Items[i]
+			if cls.Name == clusterID {
+				existCls = &cls
+				break
+			}
+		}
+		clsInfo = &clusterset.ClusterInfo{ClusterID: clusterID}
+		if existCls != nil {
+			clsInfo.Project = existCls.Project
+			clsInfo.ClusterName = existCls.Annotations[common.ClusterAliaName]
+		}
+	} else {
+		clsList := listClusters(cmd.Context(), "")
+		selectClusters := make([]selectui.Needle, 0, len(clsList.Items))
+		for i := range clsList.Items {
+			cls := clsList.Items[i]
+			selectClusters = append(selectClusters, selectui.Needle{
+				Name:      cls.Annotations[common.ClusterAliaName],
+				Project:   cls.Project,
+				ClusterID: cls.Name,
+			})
+		}
+		sort.Slice(selectClusters, func(i, j int) bool {
+			if selectClusters[i].Project == selectClusters[j].Project {
+				return selectClusters[i].ClusterID < selectClusters[j].ClusterID
+			}
+			return selectClusters[i].Project < selectClusters[j].Project
+		})
+		index, err := selectui.SelectUI(selectClusters, "Select BCS Cluster:")
+		if err != nil {
+			utils.ExitError(fmt.Sprintf("select ui failed: %s", err.Error()))
+		}
+		item := selectClusters[index]
+		clsInfo = &clusterset.ClusterInfo{
+			ClusterID:   item.ClusterID,
+			ClusterName: item.Name,
+			Project:     item.Project,
+		}
+	}
+	return clsInfo
+}
+
+// setCommand set cluster for current session
+func setCommand() *cobra.Command {
 	c := &cobra.Command{
-		Use:   "set BCS-CLUSTER-ID",
-		Short: `Set the cluster for kubectl(Use "export CLUSTER=BCS-K8S-12345 for current shell session)"`,
+		Use:   "setc",
+		Short: color.YellowString("Extender feature. Set cluster-id for current session"),
 		Run: func(cmd *cobra.Command, args []string) {
-			var clusterID string
-			if len(args) != 0 {
-				clusterID = args[0]
+			clsInfo := setCluster(cmd, args)
+			setter := &clusterset.ClusterSetter{}
+			if err := setter.SetCluster(clsInfo); err != nil {
+				utils.ExitError(fmt.Sprintf("set cluster for current session failed: %s", err.Error()))
 			}
-			if clusterID == "" {
-				utils.ExitError("should set CLUSTER-ID")
-			}
-			setter := clusterset.Setter{}
-			if err := setter.SetCluster(clusterID); err != nil {
-				utils.ExitError(fmt.Sprintf("set global cluster '%s' failed: %s", clusterID, err.Error()))
-			}
+			fmt.Printf("cluster '%s' is set for current-session\n", clsInfo.ClusterID)
 		},
 	}
+	c.PersistentFlags().BoolVar(&switchCluster, "switch", false, "switch cluster with bash ui")
 	return c
 }
 
-func clusterInfo() *cobra.Command {
+// setGlobalCommand set cluster for global context
+func setGlobalCommand() *cobra.Command {
+	c := &cobra.Command{
+		Use:   "setg",
+		Short: color.YellowString("Extender feature. Set cluster-id for global context"),
+		Run: func(cmd *cobra.Command, args []string) {
+			clsInfo := setCluster(cmd, args)
+			setter := &clusterset.ClusterSetter{}
+			if err := setter.SetClusterGlobal(clsInfo); err != nil {
+				utils.ExitError(fmt.Sprintf("set cluster for current session failed: %s", err.Error()))
+			}
+			fmt.Printf("cluster '%s' is set for global context\n", clsInfo.ClusterID)
+		},
+	}
+	c.PersistentFlags().BoolVar(&switchCluster, "switch", false, "switch cluster with bash ui")
+	return c
+}
+
+// infoCommand return cluster info
+func infoCommand() *cobra.Command {
 	c := &cobra.Command{
 		Use:   "info",
-		Short: "Return the cluster had set",
+		Short: color.YellowString("Extender feature. Show the cluster set"),
 		Run: func(cmd *cobra.Command, args []string) {
-			setter := clusterset.Setter{}
-			clusterID, err := setter.GetCurrentCluster()
+			setter := &clusterset.ClusterSetter{}
+			clusters, err := setter.ReturnClusterInfo()
 			if err != nil {
-				utils.ExitError(fmt.Sprintf("get current cluster failed: %s", err.Error()))
+				utils.ExitError(fmt.Sprintf("get cluster-info failed: %s", err.Error()))
 			}
-			fmt.Println(clusterID)
+			tw := utils.DefaultTableWriter()
+			for i, cls := range clusters {
+				if i == 0 {
+					tw.Append(func() []string {
+						return []string{"*", color.YellowString(cls.Status), color.YellowString(cls.ClusterID),
+							color.YellowString(cls.ClusterName), color.YellowString(cls.Project)}
+					}())
+				} else {
+					tw.Append(func() []string {
+						return []string{"", cls.Status, cls.ClusterID, cls.ClusterName, cls.Project}
+					}())
+				}
+			}
+			tw.Render()
 		},
 	}
 	return c
 }
 
+type argoProject struct {
+	Name       string
+	AliaName   string
+	BusinessID string
+}
+
+// listProjects list projects
 func listProjects(ctx context.Context) *v1alpha1.AppProjectList {
 	projects := new(v1alpha1.AppProjectList)
 	body := httputils.DoRequest(ctx, &httputils.HTTPRequest{
@@ -200,15 +299,19 @@ func listProjects(ctx context.Context) *v1alpha1.AppProjectList {
 	return projects
 }
 
+// listClusters list clusters
 func listClusters(ctx context.Context, proj string) *v1alpha1.ClusterList {
-	clusters := new(v1alpha1.ClusterList)
-	body := httputils.DoRequest(ctx, &httputils.HTTPRequest{
+	req := &httputils.HTTPRequest{
 		Path:   "/api/v1/clusters",
 		Method: http.MethodGet,
-		QueryParams: map[string][]string{
+	}
+	if proj != "" {
+		req.QueryParams = map[string][]string{
 			"projects": {proj},
-		},
-	})
+		}
+	}
+	body := httputils.DoRequest(ctx, req)
+	clusters := new(v1alpha1.ClusterList)
 	if err := json.Unmarshal(body, clusters); err != nil {
 		utils.ExitError(fmt.Sprintf("unmarshal clusters failed: %s", err.Error()))
 	}

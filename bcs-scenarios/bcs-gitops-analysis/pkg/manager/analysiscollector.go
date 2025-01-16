@@ -13,7 +13,6 @@
 package manager
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
@@ -164,8 +163,22 @@ func (m *AnalysisManager) handleCollectAnalysis(target string, projects []handle
 				Timestamp: time.Now().UnixMilli(),
 			})
 		}
+		if proj.ResourceInfo != nil {
+			bkmMessage.Data = append(bkmMessage.Data, &bkm.BKMonitorMessageData{
+				Metrics: map[string]interface{}{
+					"resource_all":          proj.ResourceInfo.ResourceAll,
+					"resource_workload":     proj.ResourceInfo.Workload,
+					"resource_gameworkload": proj.ResourceInfo.GameWorkload,
+					"resource_pod":          proj.ResourceInfo.Pod,
+				},
+				Dimension: map[string]string{
+					"project": proj.ProjectName,
+				},
+				Target:    target,
+				Timestamp: time.Now().UnixMilli(),
+			})
+		}
 	}
-	uoBS, _ := json.Marshal(userOperate)
-	blog.Infof("collect analysis for '%s' success, userOperate: %s", target, string(uoBS))
+	blog.Infof("collect analysis for '%s' success", target)
 	m.bkmClient.Push(bkmMessage)
 }

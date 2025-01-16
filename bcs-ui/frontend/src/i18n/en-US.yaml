@@ -516,6 +516,7 @@ generic:
   subTitle:
     confirmConfig: 'Please confirm the following configuration:'
     deleteConfirm: 'This operation can''t be recalled, please confirm:'
+    deleteConfirm1: 'Note: This operation is irreversible, please confirm carefully.'
   log:
     button:
       latest: Return to the latest log
@@ -592,6 +593,8 @@ cluster:
   tag:
     debug: Test
     prod: Prod
+    currentProject: Current
+    onlyCurrentProject: Current Only
   env:
     debug: Test env
     prod: Prod env
@@ -604,6 +607,7 @@ cluster:
     emptyClusterGuide: >-
       It is recommended to use shared clusters.You can add a new cluster if you
       need it
+    allProject: All
   title:
     clusterInfo: Cluster Info
     clusterConfig: Cluster Config
@@ -641,6 +645,15 @@ cluster:
       article8: >-
         If the cluster is deleted, the server is recycled as soon as possible if
         it is not used to avoid unnecessary costs
+      tencentArticle1: 'Preparing to delete the Kubernetes cluster named {clusterName}.'
+      tencentArticle2: >-
+        This operation will permanently delete the cluster and all its internal
+        resources, including workloads, services, routes, etc. Please proceed
+        with caution.
+      tencentArticle3: >-
+        After the cluster deletion is complete, if the related cloud resources
+        such as servers (CVM), cloud disks (CBS), etc., are no longer needed,
+        please release them promptly to avoid incurring unnecessary costs.
   tips:
     highMetricData: Cluster indicator overload
     createK8SCluster: Create K8S native cluster
@@ -672,6 +685,7 @@ cluster:
     clusterLabel: Label
     hideSharedCluster: Hide shared cluster
     provider: Provider
+    visibleRange: Visible range
   status:
     unknown: Unknown cluster status
     importFailed: Import failed
@@ -1505,6 +1519,22 @@ cluster:
             title: Confirm delete node
             subTitle: 'Confirm the deletion node {ip}'
             tips: Please stop the scheduling first
+            article1: >-
+              To ensure the stability of the cluster and data security, please
+              confirm the following before performing the node deletion
+              operation:
+            article2: >-
+              1. Ensure that all business containers currently running on the
+              node have been successfully migrated to other available nodes to
+              avoid service interruption.
+            article3: >-
+              2. The node deletion process will clean up the data directories
+              related to kubelet, Pods, and containers. Please confirm that
+              there is no important data in these directories to prevent data
+              loss.
+            article4: >-
+              3. After the node is deleted, promptly reclaim any unused servers
+              and their associated cloud resources to avoid unnecessary costs.
         status:
           scaleFailed: Scale up failed
           downFailed: Scale down failed
