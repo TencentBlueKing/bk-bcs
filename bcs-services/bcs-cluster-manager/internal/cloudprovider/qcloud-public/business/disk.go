@@ -68,14 +68,21 @@ func ListAvailableDiskTypes(data []*cbs.DiskConfig) []*proto.DiskConfigSet {
 		if count == v {
 			for _, m := range dataMap {
 				if disk, ok := m[k]; ok {
+					var stepSize int32 = 0
+					if disk.StepSize != nil {
+						stepSize = int32(*disk.StepSize)
+					}
+
 					result = append(result, &proto.DiskConfigSet{
 						DiskType:     *disk.DiskType,
 						DiskTypeName: common.DiskType[k],
 						DiskUsage:    *disk.DiskUsage,
 						MinDiskSize:  int32(*disk.MinDiskSize),
 						MaxDiskSize:  int32(*disk.MaxDiskSize),
-						StepSize:     int32(*disk.StepSize),
+						StepSize:     stepSize,
 					})
+
+					break
 				}
 			}
 		}
@@ -98,6 +105,8 @@ func ListAvailableDiskTypes(data []*cbs.DiskConfig) []*proto.DiskConfigSet {
 						MaxDiskSize:  int32(*disk.MaxDiskSize),
 						StepSize:     stepSize,
 					})
+
+					break
 				}
 			}
 		}
