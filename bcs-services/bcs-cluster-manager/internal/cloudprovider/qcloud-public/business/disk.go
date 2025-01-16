@@ -27,7 +27,7 @@ func ListAvailableDiskTypes(data []*cbs.DiskConfig) []*proto.DiskConfigSet {
 	systemMap := make(map[string]map[string]*cbs.DiskConfig)
 	zoneMap := make(map[string]struct{})
 	for _, disk := range data {
-		if disk.Available == nil || *disk.Available == false {
+		if disk.Available == nil || !*disk.Available {
 			continue
 		}
 
