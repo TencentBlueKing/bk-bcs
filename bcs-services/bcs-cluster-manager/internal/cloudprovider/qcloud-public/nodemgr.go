@@ -24,7 +24,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud-public/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/api"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -491,25 +490,20 @@ func (nm *NodeManager) ListRuntimeInfo(opt *cloudprovider.ListRuntimeInfoOption)
 }
 
 // ListDiskTypes get disk type list
-func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, opt *cloudprovider.CommonOption) (
-	map[string]string, error) {
+func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, diskChargeType string, cpu,
+	memory uint64, opt *cloudprovider.CommonOption) (
+	[]*proto.DiskConfigSet, error) {
 	client, err := api.NewCBSClient(opt)
 	if err != nil {
 		blog.Errorf("create CBS client when ListDiskType failed: %v", err)
 		return nil, err
 	}
 
-	diskTypes, err := client.GetDiskTypes(instanceTypes, zones)
+	diskTypes, err := client.GetDiskTypes(instanceTypes, zones, diskChargeType, cpu, memory)
 	if err != nil {
 		blog.Errorf("ListDiskTypes failed: %v", err)
 		return nil, err
 	}
 
-	for k := range diskTypes {
-		if y, ok := common.DiskType[k]; ok {
-			diskTypes[k] = y
-		}
-	}
-
-	return diskTypes, nil
+	return business.ListAvailableDiskTypes(diskTypes), nil
 }
