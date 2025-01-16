@@ -92,6 +92,15 @@ func (m *AnalysisManager) ManagedResourceNew(writer http.ResponseWriter, request
 	})
 }
 
+// ProjectManagedResourceNew project managed resources
+func (m *AnalysisManager) ProjectManagedResourceNew(writer http.ResponseWriter, request *http.Request) {
+	rsInfos := m.returnAnalysisHandler(request).GetResourceInfo()
+	m.httpJson(writer, &AnalysisResponse{
+		Code: 0,
+		Data: rsInfos,
+	})
+}
+
 // AnalysisProjectOverview defines the project overview
 type AnalysisProjectOverview struct {
 	Activity1DayProjects  int `json:"activity1DayProjects"`
@@ -284,7 +293,7 @@ func (a projectDetailSort) Len() int { return len(a) }
 
 // Less return less for project detail
 func (a projectDetailSort) Less(i, j int) bool {
-	return a[i].Applications > a[j].Applications
+	return (a[i].ManageDeptUsers + a[i].NotManageDeptUsers) > (a[j].ManageDeptUsers + a[j].NotManageDeptUsers)
 }
 
 // Swap item

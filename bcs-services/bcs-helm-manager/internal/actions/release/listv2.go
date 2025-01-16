@@ -15,11 +15,14 @@ package release
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/release"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/utils"
@@ -93,7 +96,11 @@ func (l *ListReleaseV2Action) list() (*helmmanager.ReleaseListData, error) {
 	}
 
 	if cluster.IsShared && len(option.Namespace) == 0 {
-		return l.mergeReleases(nil, dbReleases), nil
+		clusterReleases, errr := l.listReleaseByNamespaces()
+		if errr != nil {
+			return nil, errr
+		}
+		return l.mergeReleases(clusterReleases, dbReleases), nil
 	}
 
 	// get release from cluster
@@ -108,4 +115,42 @@ func (l *ListReleaseV2Action) list() (*helmmanager.ReleaseListData, error) {
 
 	// merge release
 	return l.mergeReleases(clusterReleases, dbReleases), nil
+}
+
+// 共享集群支持查询集群下所有命名空间的release
+func (l *ListReleaseV2Action) listReleaseByNamespaces() ([]*helmmanager.Release, error) {
+	namespaces, err := project.ListNamespaces(l.ctx, l.req.GetProjectCode(), l.req.GetClusterID())
+	if err != nil {
+		return nil, err
+	}
+	clusterReleases := make([]*helmmanager.Release, 0)
+	eg := errgroup.Group{}
+	mux := sync.Mutex{}
+	eg.SetLimit(10)
+	for _, data := range namespaces {
+		nsData := data
+		eg.Go(func() error {
+
+			// get release from cluster
+			_, originReleases, errr := l.releaseHandler.Cluster(l.req.GetClusterID()).ListV2(l.ctx, release.ListOption{
+				Namespace: nsData.Name,
+				Name:      "",
+			})
+			if errr != nil {
+				return fmt.Errorf("list release from cluster error, %s", errr.Error())
+			}
+			mux.Lock()
+			for _, item := range originReleases {
+				clusterReleases = append(clusterReleases, item.Transfer2Proto(contextx.GetProjectCodeFromCtx(l.ctx),
+					l.req.GetClusterID()))
+			}
+			mux.Unlock()
+			return nil
+		})
+	}
+	err = eg.Wait()
+	if err != nil {
+		return nil, err
+	}
+	return clusterReleases, nil
 }

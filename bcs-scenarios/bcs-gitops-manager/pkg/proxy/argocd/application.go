@@ -685,6 +685,7 @@ func (plugin *AppPlugin) syncRefresh(r *http.Request) (*http.Request, *mw.HttpRe
 	r = plugin.setApplicationAudit(r, argoApp.Spec.Project, appName, ctxutils.ApplicationRefresh, ctxutils.EmptyData)
 
 	// refresh application
+	blog.Infof("RequestID[%s] refresh application", ctxutils.RequestID(r.Context()))
 	argoAppClient := plugin.storage.GetAppClient()
 	refreshType := string(v1alpha1.RefreshTypeNormal)
 	if _, err = argoAppClient.Get(r.Context(), &appclient.ApplicationQuery{
@@ -694,7 +695,9 @@ func (plugin *AppPlugin) syncRefresh(r *http.Request) (*http.Request, *mw.HttpRe
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, errors.Wrapf(err,
 			"refresh application '%s' failed", appName))
 	}
+
 	// get remote repo last-commit-id
+	blog.Infof("RequestID[%s] start get last-commit ids", ctxutils.RequestID(r.Context()))
 	lastCommitIDs, err := plugin.getApplicationLastCommitIDs(r.Context(), argoApp)
 	if err != nil {
 		// we cannot check without clone repo if targetRevision is just a commit-hash, just sleep 5 seconds
@@ -731,6 +734,8 @@ func (plugin *AppPlugin) syncRefresh(r *http.Request) (*http.Request, *mw.HttpRe
 					lastCommitIDs, revisions))
 			}
 			allMatch := true
+			blog.Infof("RequestID[%s] check match between app-revisions(%v) and last-commits(%v)",
+				revisions, lastCommitIDs)
 			for i := range lastCommitIDs {
 				if !strings.HasPrefix(revisions[i], lastCommitIDs[i]) {
 					allMatch = false

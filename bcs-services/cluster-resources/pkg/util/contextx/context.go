@@ -37,6 +37,12 @@ func GetProjectCodeFromCtx(ctx context.Context) string {
 	return id
 }
 
+// GetClusterIDFromCtx 通过 ctx 获取 clusterID
+func GetClusterIDFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(ClusterIDContextKey).(string)
+	return id
+}
+
 // GetSourceIPFromCtx 通过 ctx 获取 sourceIP
 func GetSourceIPFromCtx(ctx context.Context) string {
 	md, ok := metadata.FromContext(ctx)

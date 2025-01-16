@@ -58,6 +58,10 @@ export interface ICluster {
   networkType: string
   cloudAccountID: string
   labels: Record<string, string>
+  sharedRanges?: {
+    bizs: string[],
+    projectIdOrCodes: string[]
+  }
 
   // 从clusterExtraInfo中merge过来的
   autoScale: boolean

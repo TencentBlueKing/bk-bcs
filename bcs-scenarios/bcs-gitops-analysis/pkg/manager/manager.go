@@ -78,7 +78,7 @@ func (m *AnalysisManager) Init() error {
 		return errors.Wrapf(err, "create db driver failed")
 	}
 	if err = db.Init(); err != nil {
-		return errors.Wrapf(err, "INIT DB DRIVER FAILED")
+		return errors.Wrapf(err, "init db driver failed")
 	}
 	m.metricCollector = collect.NewMetricCollect()
 	if err = m.metricCollector.Init(); err != nil {
@@ -116,8 +116,10 @@ func (m *AnalysisManager) initHTTPServer() {
 			result := m.returnAnalysisHandler(request).GetAnalysisProjects()
 			m.httpJson(writer, result)
 		})
+
 	newSubRouter.Path("/overview").HandlerFunc(m.OverviewNew)
 	newSubRouter.Path("/managed_resources").HandlerFunc(m.ManagedResourceNew)
+	newSubRouter.Path("/managed_resources/projects").HandlerFunc(m.ProjectManagedResourceNew)
 	newSubRouter.Path("/projects/overview").HandlerFunc(
 		func(writer http.ResponseWriter, request *http.Request) {
 			m.httpJson(writer, &AnalysisResponse{

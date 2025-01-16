@@ -234,3 +234,7 @@
 .bk-form-checkbox.is-checked .bk-checkbox:after {
   box-sizing: content-box;
 }
+
+.bk-ip-selector-box.dialog.v-transfer-dom img {
+  display: inline-block;
+}

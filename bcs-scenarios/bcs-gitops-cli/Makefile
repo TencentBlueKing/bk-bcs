@@ -3,9 +3,9 @@ bcs_edition?=inner_edition
 
 # init the build information
 ifdef HASTAG
-	GITTAG=${HASTAG}
+        GITTAG=${HASTAG}
 else
-	GITTAG=$(shell git describe --always)
+        GITTAG=$(shell git describe --always)
 endif
 
 VERSION=${GITTAG}-$(shell date +%y.%m.%d)
@@ -19,11 +19,13 @@ LDFLAG=-ldflags "-s -w -X 'github.com/Tencent/bk-bcs/bcs-common/common/version.B
  -X 'github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITCOMMIT}' \
  -X 'github.com/Tencent/bk-bcs/bcs-common/common/version.GoVersion=${GOVERSION}'"
 
-.PHONY: bin
-bin:
+linux:
 	mkdir -p ./bin
-	go mod tidy && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o bin/bcs-gitops ./main.go
+	go mod tidy && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${LDFLAG} -o bin/powerapp-linux-amd64 ./main.go
 
-.PHONY: clean
+darwin:
+	mkdir -p ./bin
+	go mod tidy && CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${LDFLAG} -o bin/powerapp-darwin-arm64 ./main.go
+
 clean:
 	rm -rf ./bin

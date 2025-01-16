@@ -99,7 +99,8 @@ type PermissionInterface interface {
 	CheckApplicationCreate(ctx context.Context, app *v1alpha1.Application) (int, error)
 	CheckAppSetPermission(ctx context.Context, appSet string, action RSAction) (*v1alpha1.ApplicationSet, int, error)
 	CheckAppSetCreate(ctx context.Context, appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, int, error)
-	CheckAppSetUpdate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (int, error)
+	CheckAppSetGenerate(ctx context.Context, appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, int, error)
+	CheckAppSetFormatWhenUpdate(ctx context.Context, appSet *v1alpha1.ApplicationSet) (int, error)
 
 	UpdatePermissions(ctx context.Context, project string, resourceType RSType,
 		req *UpdatePermissionRequest) (int, error)

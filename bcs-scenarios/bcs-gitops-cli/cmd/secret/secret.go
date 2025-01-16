@@ -76,10 +76,10 @@ func create() *cobra.Command {
   bcs-gitops secret create test-secret -p test
 
   # Create secret with configuration file
-  bcs-gitops secret create test-secret -p test -f ./secret.properties
+  powerapp secret create test-secret -p test -f ./secret.properties
 
   # Create secret with key-value set in command params
-  bcs-gitops secret create test-secret -p test --with-kv key1="value1" key2="value2"
+  powerapp secret create test-secret -p test --with-kv key1="value1" key2="value2"
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			if project == "" {
@@ -196,7 +196,7 @@ func updateKeys() *cobra.Command {
 		Use:   "update-keys NAME",
 		Short: "Update secret with keys (update value when key exist, auto-create when key not exist)",
 		Example: `  # Update secret with specified keys
-  bcs-gitops secret -p test update-keys -d k1=t1 -d k2=t2`,
+  powerapp secret -p test update-keys -d k1=t1 -d k2=t2`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if project == "" {
 				utils.ExitError("'project' param must set")
