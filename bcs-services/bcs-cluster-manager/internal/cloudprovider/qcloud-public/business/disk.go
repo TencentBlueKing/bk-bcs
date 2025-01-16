@@ -68,7 +68,7 @@ func ListAvailableDiskTypes(data []*cbs.DiskConfig) []*proto.DiskConfigSet {
 		if count == v {
 			for _, m := range dataMap {
 				if disk, ok := m[k]; ok {
-					var stepSize int32 = 0
+					var stepSize int32
 					if disk.StepSize != nil {
 						stepSize = int32(*disk.StepSize)
 					}
@@ -92,7 +92,7 @@ func ListAvailableDiskTypes(data []*cbs.DiskConfig) []*proto.DiskConfigSet {
 		if count == v {
 			for _, m := range systemMap {
 				if disk, ok := m[k]; ok {
-					var stepSize int32 = 0
+					var stepSize int32
 					if disk.StepSize != nil {
 						stepSize = int32(*disk.StepSize)
 					}
