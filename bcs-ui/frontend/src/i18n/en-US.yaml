@@ -3873,6 +3873,8 @@ templateFile:
     helmdesc: >-
       The current file has been upgraded to a Helm template. After saving,
       switching back to a non-Helm template will no longer be supported.
+    spaceSubTitle: The template folder and its template files will be removed
+    noChanges: No changes
   tag:
     draft: draft
     baseOn: base on

@@ -686,8 +686,8 @@
             :loading="logSideDialogConf.loading"
             :height="'calc(100vh - 92px)'"
             :rolling-loading="false"
-            :show-step-retry-fn="item => item?.step?.allowRetry"
-            :show-step-skip-fn="item => item?.step?.allowSkip"
+            :show-step-retry-fn="handleStepRetry"
+            :show-step-skip-fn="handleStepSkip"
             @refresh="handleShowLog(logSideDialogConf.row)"
             @auto-refresh="handleAutoRefresh"
             @download="getDownloadTaskRecords"
@@ -1740,6 +1740,16 @@ export default defineComponent({
         },
       });
     };
+    // 重试按钮显示逻辑
+    function handleStepRetry(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowRetry;
+    }
+    // 跳过按钮显示逻辑
+    function handleStepSkip(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowSkip;
+    }
+
+
     // 批量允许调度
     const showBatchMenu = ref(false);
     const handleBatchEnableNodes = () => {
@@ -2157,6 +2167,8 @@ export default defineComponent({
       handleAutoRefresh,
       getDownloadTaskRecords,
       handleSkip,
+      handleStepRetry,
+      handleStepSkip,
     };
   },
 });
