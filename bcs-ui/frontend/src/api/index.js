@@ -213,7 +213,12 @@ function handleReject(error, config) {
     } if (status === 500) {
       message = window.i18n.t('generic.msg.error.system');
     } else if (status === 403) {
-      message = window.i18n.t('generic.msg.warning.403');
+      // 兼容新版无权限数据结构
+      if (data?.error?.code === 'IAM_NO_PERMISSION') {
+        bus.$emit('show-apply-perm-modal', { perms: data?.error?.data });
+      } else {
+        message = window.i18n.t('generic.msg.warning.403');
+      }
     } else if ([4005, 40300].includes(data?.code)) {
       bus.$emit('show-apply-perm-modal', data?.data);
     } else if (data?.code === 40403) {
