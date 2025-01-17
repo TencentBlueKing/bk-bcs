@@ -187,6 +187,12 @@ func ProjectViewFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	return rb
 }
 
+// ProjectEditFunc project edit filter
+func ProjectEditFunc(rb *restful.RouteBuilder) *restful.RouteBuilder {
+	rb.Filter(ProjectEditAuthorization)
+	return rb
+}
+
 // TokenAuthenticateV2Func token filter
 func TokenAuthenticateV2Func(rb *restful.RouteBuilder) *restful.RouteBuilder {
 	rb.Filter(TokenAuthenticateV2)
@@ -264,6 +270,17 @@ func ProjectViewAuthorization(request *restful.Request, response *restful.Respon
 	}
 	permCtx := &PermCtx{ResourceType: "project", ProjectID: project.ProjectID}
 	PermsAuthFunc("project_view", permCtx)(request, response, chain)
+}
+
+// ProjectEditAuthorization project edit authorization
+func ProjectEditAuthorization(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	project := utils.GetProjectFromAttribute(request)
+	if project == nil {
+		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
+		return
+	}
+	permCtx := &PermCtx{ResourceType: "project", ProjectID: project.ProjectID}
+	PermsAuthFunc("project_edit", permCtx)(request, response, chain)
 }
 
 // ManagerAuth manager token verification
