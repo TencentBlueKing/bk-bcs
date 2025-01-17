@@ -10,38 +10,27 @@
  * limitations under the License.
  */
 
-package i18n
+// Package http xxx
+package http
 
-const (
-	// DefaultLang 默认语言
-	DefaultLang = ZH
-	// ZH 中文
-	ZH = "zh"
-	// EN 英文
-	EN = "en"
-	// RU 俄语
-	// RU = "ru"
-	// JA 日语
-	// JA = "ja"
+import (
+	"crypto/tls"
+	"net/http"
+	"net/http/httputil"
+
+	"k8s.io/klog/v2"
 )
 
-// 语言版本简写映射表
-var langMap = map[string]string{
-	"zh":      ZH,
-	"zh-cn":   ZH,
-	"zh-hans": ZH,
-	"zh-hant": ZH,
-	"en":      EN,
-	"en-us":   EN,
-	"en-gb":   EN,
-	// "ru":      RU,
-	// "ru-RU":   RU,
-	// "ja":      JA,
-	// "ja-JP":   JA,
+// NewHTTPReverseProxy new http reverse proxy
+func NewHTTPReverseProxy(clientTLSConfig *tls.Config, f func(request *http.Request)) *httputil.ReverseProxy {
+	return &httputil.ReverseProxy{
+		Director: f,
+		ErrorHandler: func(rw http.ResponseWriter, req *http.Request, err error) {
+			klog.Errorf("new http reverse proxy request failed, err: %s", err.Error())
+			rw.WriteHeader(http.StatusInternalServerError)
+		},
+		Transport: &http.Transport{
+			TLSClientConfig: clientTLSConfig,
+		},
+	}
 }
-
-// MetadataCookiesKey 在 GoMicro Metadata 中，Cookie 的键名
-const MetadataCookiesKey = "Grpcgateway-Cookie"
-
-// LangCookieName 语言版本 Cookie 名称
-const LangCookieName = "blueking_language"

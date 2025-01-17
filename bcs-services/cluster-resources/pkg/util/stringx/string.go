@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // DefaultCharset 默认字符集（用于生成随机字符串）
@@ -84,4 +85,31 @@ func IsIPv6(s string) bool {
 // GetInt64 string转换成int64
 func GetInt64(s string) (int64, error) {
 	return strconv.ParseInt(s, 10, 64)
+}
+
+// TrimStringToRuneCount 裁剪字符串使其不超过指定的字符数（rune count）
+func TrimStringToRuneCount(s string, maxRunes int) string {
+	if utf8.RuneCountInString(s) <= maxRunes {
+		return s
+	}
+	trimmed := make([]rune, 0, maxRunes)
+	for i, r := range s {
+		if i >= maxRunes {
+			break
+		}
+		trimmed = append(trimmed, r)
+	}
+	return string(trimmed)
+}
+
+// GetIntOrDefault string转int，如果出现错误则返回0
+func GetIntOrDefault(s string) int {
+	if s == "" {
+		return 0
+	}
+	result, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return result
 }
