@@ -22591,6 +22591,8 @@ func (m *GetClusterReq) validate(all bool) error {
 
 	// no validation rules for CloudInfo
 
+	// no validation rules for ProjectId
+
 	if len(errors) > 0 {
 		return GetClusterReqMultiError(errors)
 	}
@@ -36377,6 +36379,8 @@ func (m *CleanNodesInGroupRequest) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for Manual
 
 	if len(errors) > 0 {
 		return CleanNodesInGroupRequestMultiError(errors)

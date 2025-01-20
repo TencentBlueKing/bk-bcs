@@ -617,6 +617,7 @@ func (da *CleanNodesAction) handleTask() error {
 		Cluster:  da.cluster,
 		AsOption: da.asOption,
 		Operator: da.req.Operator,
+		Manual:   da.req.GetManual(),
 	})
 	if err != nil {
 		blog.Errorf("build clean Node %v task from NodeGroup %s with cloudprovider %s failed, %s",

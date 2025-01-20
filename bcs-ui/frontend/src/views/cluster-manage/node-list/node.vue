@@ -502,7 +502,7 @@
             <template v-else>--</template>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.action')" width="160" :resizable="false" fixed="right">
+        <bcs-table-column :label="$t('generic.label.action')" width="220" :resizable="false" fixed="right">
           <template #default="{ row }">
             <bk-button class="mr10" text v-if="row.status === 'APPLY-FAILURE'" @click="handleDeleteNode(row)">
               {{ $t('generic.button.delete') }}
@@ -520,7 +520,7 @@
                   cluster_id: localClusterId
                 }
               }"
-              v-else-if="!['REMOVE-CA-FAILURE', 'APPLYING'].includes(row.status)">
+              v-else-if="!['APPLYING'].includes(row.status)">
               <bk-button
                 class="mr10"
                 text
@@ -528,18 +528,20 @@
                 v-if="row.status === 'RUNNING'">
                 {{ $t('generic.button.cordon.text') }}
               </bk-button>
-              <template v-else-if="row.status === 'REMOVABLE'">
-                <bk-button text class="mr10" @click="handleEnableNode(row)">
-                  {{ $t('generic.button.uncordon.text') }}
-                </bk-button>
-                <bk-button text class="mr10" @click="handleSchedulerNode(row)">
-                  {{ $t('generic.button.drain.text') }}
-                </bk-button>
-              </template>
+              <bk-button v-else-if="row.status === 'REMOVABLE'" text class="mr10" @click="handleEnableNode(row)">
+                {{ $t('generic.button.uncordon.text') }}
+              </bk-button>
+              <bk-button
+                text
+                v-if="['REMOVE-FAILURE', 'REMOVE-CA-FAILURE', 'REMOVABLE'].includes(row.status)"
+                class="mr10"
+                @click="handleSchedulerNode(row)">
+                {{ $t('generic.button.drain.text') }}
+              </bk-button>
               <bk-button
                 class="mr10"
                 text
-                v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE'].includes(row.status)"
+                v-if="['INITIALIZATION', 'DELETING', 'REMOVE-FAILURE', 'ADD-FAILURE', 'REMOVE-CA-FAILURE'].includes(row.status)"
                 :disabled="!row.inner_ip"
                 @click="handleShowLog(row)"
               >
@@ -556,9 +558,9 @@
                 placement="bottom"
                 theme="light dropdown"
                 :arrow="false"
-                :disabled="['INITIALIZATION', 'DELETING'].includes(row.status)"
+                :disabled="['INITIALIZATION', 'DELETING', 'REMOVE-CA-FAILURE'].includes(row.status)"
                 trigger="click">
-                <span :class="['bcs-icon-more-btn', { disabled: ['INITIALIZATION', 'DELETING'].includes(row.status) }]">
+                <span :class="['bcs-icon-more-btn', { disabled: ['INITIALIZATION', 'DELETING', 'REMOVE-CA-FAILURE'].includes(row.status) }]">
                   <i class="bcs-icon bcs-icon-more"></i>
                 </span>
                 <template #content>
@@ -684,7 +686,8 @@
             :loading="logSideDialogConf.loading"
             :height="'calc(100vh - 92px)'"
             :rolling-loading="false"
-            step-actions="FAILURE"
+            :show-step-retry-fn="handleStepRetry"
+            :show-step-skip-fn="handleStepSkip"
             @refresh="handleShowLog(logSideDialogConf.row)"
             @auto-refresh="handleAutoRefresh"
             @download="getDownloadTaskRecords"
@@ -717,6 +720,12 @@
             false-value="retain">
             {{ $t('tke.label.retain') }}
           </bcs-checkbox>
+        </div>
+        <div v-if="curSelectedCluster.provider === 'tencentCloud'">
+          <span>{{ $t('cluster.ca.nodePool.nodes.action.delete.article1') }}</span>
+          <div>{{ $t('cluster.ca.nodePool.nodes.action.delete.article2') }}</div>
+          <div>{{ $t('cluster.ca.nodePool.nodes.action.delete.article3') }}</div>
+          <div>{{ $t('cluster.ca.nodePool.nodes.action.delete.article4') }}</div>
         </div>
       </DeleteNode>
     </bcs-dialog>
@@ -1731,6 +1740,16 @@ export default defineComponent({
         },
       });
     };
+    // 重试按钮显示逻辑
+    function handleStepRetry(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowRetry;
+    }
+    // 跳过按钮显示逻辑
+    function handleStepSkip(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowSkip;
+    }
+
+
     // 批量允许调度
     const showBatchMenu = ref(false);
     const handleBatchEnableNodes = () => {
@@ -1899,6 +1918,7 @@ export default defineComponent({
       }).catch(() => ({ status: '', step: [] }));
       logSideDialogConf.value.taskData = step;
       logSideDialogConf.value.status = status;
+      logSideDialogConf.value.taskID = taskID;
     };
 
     const closeLog = () => {
@@ -1973,7 +1993,7 @@ export default defineComponent({
         start();
       }
     };
-    const podDisabled = computed(() => !selections.value.every(select => select.status === 'REMOVABLE'));
+    const podDisabled = computed(() => !selections.value.every(select => ['REMOVABLE', 'REMOVE-FAILURE', 'REMOVE-CA-FAILURE'].includes(select.status)));
 
     // 是否显示表头alert的后半段
     const isShowTableAlertAfter = computed(() => !['awsCloud', 'azureCloud', 'gcpCloud'].includes(clusterData.value.provider));
@@ -2147,6 +2167,8 @@ export default defineComponent({
       handleAutoRefresh,
       getDownloadTaskRecords,
       handleSkip,
+      handleStepRetry,
+      handleStepSkip,
     };
   },
 });

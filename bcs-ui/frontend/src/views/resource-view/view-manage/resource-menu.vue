@@ -208,6 +208,7 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import $router from '@/router';
 import $store from '@/store';
 import useMenu, { IMenu } from '@/views/app/use-menu';
+import { isNSChanged } from '@/views/cluster-manage/namespace/use-namespace';
 
 // 悬浮时展开菜单
 const isHover = ref(false);
@@ -446,14 +447,19 @@ watch(curViewData, (newValue, oldValue) => {
   handleGetMultiClusterResourcesCount();
 }, { deep: true });
 
+// 命名空间更改时再发起请求
+watch(isNSChanged, async () => {
+  if (!isNSChanged.value) return;
+  handleGetCustomResourceDefinition();
+  handleGetMultiClusterResourcesCount();
+}, { immediate: true });
+
 onBeforeMount(() => {
   bus.$on('set-resource-count', (kind: string, count: number) => {
     if (count === undefined) return;
 
     set(countMap.value, kind, count);
   });
-  handleGetCustomResourceDefinition();
-  handleGetMultiClusterResourcesCount();
 });
 
 onBeforeUnmount(() => {

@@ -112,6 +112,23 @@ const router = new VueRouter({
         ...ResourceView,
       ],
     },
+    // 没有项目code的路由，重定向到资源视图
+    {
+      path: `${SITE_URL}/clusters/:clusterId`,
+      name: 'noProject',
+      component: Entry,
+      meta: {
+        hideMenu: true,
+      },
+      children: [
+        {
+          path: '*',
+          redirect: {
+            name: 'noProject',
+          },
+        },
+      ],
+    },
     // 404
     {
       path: '*',

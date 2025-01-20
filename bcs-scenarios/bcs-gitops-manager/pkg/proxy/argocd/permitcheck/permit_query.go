@@ -56,7 +56,7 @@ func (c *checker) queryUserSingleTypePermission(ctx context.Context, project str
 	case RepoRSType:
 		resources, result, statusCode, err = c.getMultiRepoMultiActionPermission(ctx, project, rsNames)
 	case AppRSType:
-		resources, result, statusCode, err = c.getMultiApplicationMultiActionPermission(ctx, project, rsNames)
+		resources, result, statusCode, err = c.getMultiAppMultiActionPermission(ctx, project, rsNames)
 	case AppSetRSType:
 		resources, result, statusCode, err = c.getMultiAppSetMultiActionPermission(ctx, project, rsNames)
 	default:

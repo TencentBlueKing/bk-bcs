@@ -25,13 +25,16 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 
+	"github.com/pterm/pterm"
+
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/argocd"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/kubectl"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/secret"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/terraform"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/workflow"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/internal/clusterset"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/options"
-	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/clusterset"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/pkg/version"
 )
 
@@ -60,8 +63,9 @@ func ensureConfig() {
 // NewRootCommand returns the rootCmd instance
 func NewRootCommand() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:   "bcs-gitops",
-		Short: "bcs-gitops controls gitops service",
+		Use:   "powerapp",
+		Short: "powerapp controls gitops service",
+		Long:  printLogo(),
 	}
 	versionCmd := &cobra.Command{
 		Use:   "version",
@@ -103,10 +107,10 @@ func NewRootCommand() *cobra.Command {
 		// NOTE: dirty transfer used to make user to prod api
 		serverUrl = strings.ReplaceAll(serverUrl, "debug-bcs-api", "prod-bcs-api")
 
-		setter := clusterset.Setter{}
+		setter := clusterset.ClusterSetter{}
 		clusterID, err := setter.GetCurrentCluster()
 		if err != nil {
-			return errors.Wrapf(err, "no cluster set")
+			utils.ExitError(fmt.Sprintf("get current-cluster failed: %s", err.Error()))
 		}
 		apiServer := fmt.Sprintf("https://%s/clusters/%s/", serverUrl, clusterID)
 		bearerToken := options.GlobalOption().Token
@@ -128,4 +132,26 @@ func NewRootCommand() *cobra.Command {
 	rootCmd.PersistentFlags().IntVarP(&options.LogV, "verbose", "v", 2,
 		"Log level")
 	return rootCmd
+}
+
+// NOCC:tosa/indent(设计如此)
+func printLogo() string {
+	panel := pterm.DefaultHeader.WithMargin(8).
+		WithBackgroundStyle(pterm.NewStyle(pterm.BgLightBlue)).
+		WithTextStyle(pterm.NewStyle(pterm.FgLightWhite)).Sprint("Manage your gitops more easily.")
+	// nolint
+	logo := pterm.FgLightGreen.Sprint(`
+ ____                              _     ____   ____  
+|  _ \  ___ __      __ ___  _ __  / \   |  _ \ |  _ \ 
+| |_) |/ _ \\ \ /\ / // _ \| '__|/ _ \  | |_) || |_) |
+|  __/| (_) |\ V  V /|  __/| |  / ___ \ |  __/ |  __/ 
+|_|    \___/  \_/\_/  \___||_| /_/   \_\|_|    |_|    
+`)
+	pterm.Info.Prefix = pterm.Prefix{
+		Text:  "Tips",
+		Style: pterm.NewStyle(pterm.BgBlue, pterm.FgLightWhite),
+	}
+	return fmt.Sprintf(`
+%s%s
+`, panel, logo)
 }

@@ -115,7 +115,8 @@
           :loading="logLoading"
           :height="'calc(100vh - 92px)'"
           :rolling-loading="false"
-          step-actions="FAILURE"
+          :show-step-retry-fn="handleStepRetry"
+          :show-step-skip-fn="handleStepSkip"
           @refresh="handleShowLog(logSideDialogConf.row)"
           @auto-refresh="handleAutoRefresh"
           @download="getDownloadTaskRecords"
@@ -127,7 +128,8 @@
     <ConfirmDialog
       v-model="showConfirmDialog"
       :title="$t('cluster.button.delete.title')"
-      :sub-title="$t('generic.subTitle.deleteConfirm')"
+      :sub-title="curOperateCluster?.provider === 'tencentCloud' ?
+        $t('generic.subTitle.deleteConfirm1') : $t('generic.subTitle.deleteConfirm')"
       :tips="deleteClusterTips"
       :ok-text="$t('generic.button.delete')"
       :cancel-text="$t('generic.button.close')"
@@ -294,26 +296,48 @@ export default defineComponent({
     const curOperateCluster = ref<any>(null);
     // 集群删除
     const showConfirmDialog = ref(false);
+    const conditionMap = computed(() => ({
+      virtual: [
+        $i18n.t('cluster.button.delete.article1', {
+          clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})`,
+        }),
+        $i18n.t('cluster.button.delete.article2'),
+        $i18n.t('cluster.button.delete.article3'),
+      ],
+      importer: [
+        $i18n.t('cluster.button.delete.article1', {
+          clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})`,
+        }),
+        $i18n.t('cluster.button.delete.article4'),
+        $i18n.t('cluster.button.delete.article5'),
+        $i18n.t('cluster.button.delete.article6'),
+      ],
+      tencentCloud: [
+        $i18n.t('cluster.button.delete.tencentArticle1', {
+          clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})`,
+        }),
+        $i18n.t('cluster.button.delete.tencentArticle2'),
+        $i18n.t('cluster.button.delete.tencentArticle3'),
+      ],
+      default: [
+        $i18n.t('cluster.button.delete.article1', {
+          clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})`,
+        }),
+        $i18n.t('cluster.button.delete.article3'),
+        $i18n.t('cluster.button.delete.article8'),
+      ],
+    }));
     const deleteClusterTips = computed(() => {
       if (curOperateCluster.value?.clusterType === 'virtual') {
-        return [
-          $i18n.t('cluster.button.delete.article1', { clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})` }),
-          $i18n.t('cluster.button.delete.article2'),
-          $i18n.t('cluster.button.delete.article3'),
-        ];
+        return conditionMap.value.virtual;
       }
-      return curOperateCluster.value?.clusterCategory === 'importer'
-        ? [
-          $i18n.t('cluster.button.delete.article1', { clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})` }),
-          $i18n.t('cluster.button.delete.article4'),
-          $i18n.t('cluster.button.delete.article5'),
-          $i18n.t('cluster.button.delete.article6'),
-        ]
-        : [
-          $i18n.t('cluster.button.delete.article1', { clusterName: `${curOperateCluster.value?.clusterName}(${curOperateCluster.value?.clusterID})` }),
-          $i18n.t('cluster.button.delete.article3'),
-          $i18n.t('cluster.button.delete.article8'),
-        ];
+      if (curOperateCluster.value?.clusterCategory === 'importer') {
+        return conditionMap.value.importer;
+      }
+      if (curOperateCluster.value?.provider === 'tencentCloud') {
+        return conditionMap.value.tencentCloud;
+      }
+      return conditionMap.value.default;
     });
     const { handleDeleteVCluster } = useVCluster();
     const user = computed(() => $store.state.user);
@@ -541,6 +565,14 @@ export default defineComponent({
         },
       });
     };
+    // 重试按钮显示逻辑
+    function handleStepRetry(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowRetry;
+    }
+    // 跳过按钮显示逻辑
+    function handleStepSkip(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowSkip;
+    }
 
     // 集群节点数
     const clusterNodesMap = ref<Record<string, number>>({});
@@ -691,6 +723,8 @@ export default defineComponent({
       logSideDialogConf,
       handleAutoRefresh,
       getDownloadTaskRecords,
+      handleStepRetry,
+      handleStepSkip,
     };
   },
 });

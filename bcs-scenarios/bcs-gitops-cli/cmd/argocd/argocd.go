@@ -71,13 +71,13 @@ func applicationDryRun() *cobra.Command {
 		Short: color.YellowString("Extender feature. Dry-run specify application with revisions, " +
 			"or dry-run with application-manifest which not create yet."),
 		Example: `  # Dry-Run application without set revision(s)
-  bcs-gitops argocd app dry-run bcs-test
+  powerapp argocd app dry-run bcs-test
 
   # Dry-Run application with revision(s)
-  bcs-gitops argocd app dry-run bcs-test --revision ee1afa42
+  powerapp argocd app dry-run bcs-test --revision ee1afa42
 
   # Dry-Run application with application manifest file
-  bcs-gitops argocd app dry-run --manifests ./testapp.yaml`,
+  powerapp argocd app dry-run --manifests ./testapp.yaml`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 0 {
 				dryRunReq.Name = args[0]
@@ -127,10 +127,10 @@ func applicationDiff() *cobra.Command {
 		Use:   "diff-revision APPNAME",
 		Short: color.YellowString("Extender feature. Diff the specified revision with current live state"),
 		Example: `  ## Diff target revision with live state
-  bcs-gitops argocd app diff-revision bcs-test --revision 6e44efaf --show-details
+  powerapp argocd app diff-revision bcs-test --revision 6e44efaf --show-details
 
   ## Diff target revision and only show target manifests
-  bcs-gitops argocd app diff-revision bcs-test --revision 6e44efaf --show-target
+  powerapp argocd app diff-revision bcs-test --revision 6e44efaf --show-target
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 0 {

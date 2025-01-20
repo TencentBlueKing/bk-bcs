@@ -57,5 +57,4 @@ type Store interface {
 	GetTask(ctx context.Context, taskID string) (*types.Task, error)
 	DeleteTask(ctx context.Context, taskID string) error
 	UpdateTask(ctx context.Context, task *types.Task) error
-	// PatchTask(ctx context.Context, opt *PatchOption) error // Patcask 更新params/payload信息
 }

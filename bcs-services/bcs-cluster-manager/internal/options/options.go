@@ -292,9 +292,10 @@ type DaemonConfig struct {
 	EnableAllocateCidr bool `json:"enableAllocateCidr"`
 }
 
-// SharedClusterConfig config for shared cluster
-type SharedClusterConfig struct {
-	AnnoKeyProjCode string `json:"annoKeyProjCode"`
+// CommonConfig for platform common config
+type CommonConfig struct {
+	AnnoKeyProjCode  string `json:"annoKeyProjCode"`
+	SystemNameSpaces string `json:"systemNameSpaces"`
 }
 
 // ClusterManagerOptions options of cluster manager
@@ -331,7 +332,7 @@ type ClusterManagerOptions struct {
 	TracingConfig      conf.TracingConfig    `json:"tracingConfig"`
 	Encrypt            encryptv2.Config      `json:"encrypt"`
 	Daemon             DaemonConfig          `json:"daemon"`
-	SharedCluster      SharedClusterConfig   `json:"sharedCluster"`
+	CommonConfig       CommonConfig          `json:"commonConfig"`
 	ServerConfig
 	ClientConfig
 }

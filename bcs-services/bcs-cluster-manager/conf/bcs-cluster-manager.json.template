@@ -1,7 +1,7 @@
 {
     "mongo": {
         "address": "${bcsClusterManagerMongoAddress}",
-        "replicaset": "${bcsClusterManagerMongoReplicaset}"
+        "replicaset": "${bcsClusterManagerMongoReplicaset}",
         "connecttimeout": ${bcsClusterManagerMongoConnectTimeout},
         "database": "${bcsClusterManagerMongoDatabase}",
         "username": "${bcsClusterManagerMongoUsername}",
@@ -194,8 +194,9 @@
         "enableInsTypeUsage": ${enableInsTypeUsage},
         "enableAllocateCidr": ${enableAllocateCidr}
     },
-    "sharedCluster": {
-      "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}"
+    "commonConfig": {
+      "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",
+      "systemNameSpaces": "${systemNameSpaces}"
     },
     "tagDepart": "${tagDepart}",
     "prefixVcluster": "${prefixVcluster}",

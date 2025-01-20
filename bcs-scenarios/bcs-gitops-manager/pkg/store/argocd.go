@@ -77,6 +77,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/metric"
+	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/proxy/argocd/middleware/ctxutils"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/store/argoconn"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/utils"
 )
@@ -1158,6 +1159,7 @@ func (cd *argo) GetRepoLastCommitID(ctx context.Context, repoUrl, revision strin
 		Name: repoUrl,
 		URLs: []string{repoUrl},
 	})
+	blog.Infof("RequestID[%s] start ls-remote for '%s'", ctxutils.RequestID(ctx), repoUrl)
 	refs, err := remoteRepo.List(&git.ListOptions{
 		Auth: repoAuth,
 	})

@@ -38,7 +38,8 @@ type ApplicationHistoryManifestResponse struct {
 
 // HistoryManifestData defines the response data that queried by application history
 type HistoryManifestData struct {
-	Manifests []*HistoryManifest `json:"manifests"`
+	Manifests       []*HistoryManifest `json:"manifests"`
+	ApplicationYaml string             `json:"applicationYaml"`
 }
 
 // HistoryManifest defines the manifest item that history managed
@@ -110,7 +111,8 @@ func (plugin *AppPlugin) applicationHistoryState(r *http.Request) (*http.Request
 		Code:      0,
 		RequestID: ctxutils.RequestID(r.Context()),
 		Data: &HistoryManifestData{
-			Manifests: manifests,
+			Manifests:       manifests,
+			ApplicationYaml: hm.ApplicationYaml,
 		},
 	})
 }

@@ -32,8 +32,10 @@
       :data="list"
       :pagination="pagination"
       class="mt-[16px]"
+      ref="tableRef"
       @page-change="pageChange"
-      @page-limit-change="pageLimitChange">
+      @page-limit-change="pageLimitChange"
+      @header-dragend="handleHeaderDragend(tableRef)">
       <bk-table-column :label="$t('generic.label.time')" prop="createTime" width="170"></bk-table-column>
       <bk-table-column :label="$t('generic.label.resourceName')" prop="resourceName" show-overflow-tooltip>
         <template #default="{ row }">
@@ -115,6 +117,7 @@ import { parseUrl } from '@/api/request';
 import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
 import useInterval from '@/composables/use-interval';
+import { handleHeaderDragend, setTableColWByMemory } from '@/composables/use-table-col-w-memory';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
 
@@ -276,6 +279,9 @@ function  pageLimitChange(limit) {
   pagination.value.limit = limit;
   getOperationLogs();
 };
+
+const tableRef = ref();
+watch(tableRef, () => setTableColWByMemory(tableRef.value));
 
 // 显示任务详情
 const curRow = ref({});

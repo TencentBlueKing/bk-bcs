@@ -46,7 +46,7 @@ type AnalysisHandler struct {
 
 	cacheLock         sync.Mutex
 	cache             []AnalysisProject
-	resourceInfo      []AnalysisProjectResourceInfo
+	resourceInfo      map[string]*AnalysisProjectResourceInfo
 	bizDeptInfoCache  *sync.Map
 	userDeptInfoCache *sync.Map
 }
@@ -84,8 +84,8 @@ func (h *AnalysisHandler) Init() error {
 		resourceTicker := time.NewTicker(15 * time.Minute)
 		defer resourceTicker.Stop()
 
-		h.analysisProjects()
 		h.analysisResourceInfos()
+		h.analysisProjects()
 		blog.Infof("analysis cache started")
 		for {
 			select {
@@ -101,12 +101,32 @@ func (h *AnalysisHandler) Init() error {
 
 // GetAnalysisProjects return anlysis projects data
 func (h *AnalysisHandler) GetAnalysisProjects() []AnalysisProject {
-	return h.cache
+	h.cacheLock.Lock()
+	defer h.cacheLock.Unlock()
+
+	result := make([]AnalysisProject, 0, len(h.cache))
+	for i := range h.cache {
+		item := h.cache[i]
+		result = append(result, *(&item).DeepCopy())
+	}
+	return result
 }
 
 // GetResourceInfo return resource info data
 func (h *AnalysisHandler) GetResourceInfo() []AnalysisProjectResourceInfo {
-	return h.resourceInfo
+	h.cacheLock.Lock()
+	defer h.cacheLock.Unlock()
+
+	result := make([]AnalysisProjectResourceInfo, 0, len(h.resourceInfo))
+	for i := range h.cache {
+		item := h.cache[i]
+		if item.ResourceInfo == nil {
+			continue
+		}
+		ri := item.ResourceInfo.DeepCopy()
+		result = append(result, *ri)
+	}
+	return result
 }
 
 func fillProjectDeptInfo(anaProj *AnalysisProject, bizDeptInfo *ccv3.BusinessDeptInfo) {
@@ -120,6 +140,7 @@ func fillProjectDeptInfo(anaProj *AnalysisProject, bizDeptInfo *ccv3.BusinessDep
 	anaProj.GroupLevel5 = bizDeptInfo.Level5
 }
 
+// analysisProjects collect every projects analysis data
 func (h *AnalysisHandler) analysisProjects() {
 	ctx := context.Background()
 	projList, err := h.storage.ListProjectsWithoutAuth(ctx)
@@ -181,7 +202,7 @@ func (h *AnalysisHandler) analysisResourceInfos() {
 	blog.Infof("collect applications(%d) resource info success", len(apps))
 }
 
-// collectProjectAnalysis 计算对应项目的运营数据
+// collectProjectAnalysis 计算对应项目的运营数据, 获取项目下的所有数据
 // nolint
 func (h *AnalysisHandler) collectProjectAnalysis(ctx context.Context, argoProj *v1alpha1.AppProject) (
 	*AnalysisProject, error) {
@@ -232,24 +253,35 @@ func (h *AnalysisHandler) collectProjectAnalysis(ctx context.Context, argoProj *
 	if err := h.listActivityUsers(ctx, result, argoProj); err != nil {
 		return nil, errors.Wrapf(err, "list activity users failed")
 	}
+
 	v, ok := h.bizDeptInfoCache.Load(bizID)
 	if ok {
 		bizDeptInfo := v.(*ccv3.BusinessDeptInfo)
 		fillProjectDeptInfo(result, bizDeptInfo)
-		return result, nil
-	}
-	businessInfo, err := h.bkccClient.GetBizDeptInfo([]int64{bizID})
-	if err != nil {
-		blog.Warnf("get project '%s' business ‘%d’ dept-info failed: %s", argoProj.Name, bizID, err.Error())
 	} else {
-		if bizDeptInfo, ok := businessInfo[bizID]; ok {
-			h.bizDeptInfoCache.Store(bizID, bizDeptInfo)
-			fillProjectDeptInfo(result, bizDeptInfo)
+		businessInfo, err := h.bkccClient.GetBizDeptInfo([]int64{bizID})
+		if err != nil {
+			blog.Warnf("get project '%s' business ‘%d’ dept-info failed: %s", argoProj.Name, bizID, err.Error())
+		} else {
+			if bizDeptInfo, ok := businessInfo[bizID]; ok {
+				h.bizDeptInfoCache.Store(bizID, bizDeptInfo)
+				fillProjectDeptInfo(result, bizDeptInfo)
+			}
 		}
 	}
+
+	h.cacheLock.Lock()
+	resourceInfo, ok := h.resourceInfo[argoProj.Name]
+	if ok {
+		result.ResourceInfo = resourceInfo.DeepCopy()
+		result.ResourceInfo.Name = result.ProjectCode
+	}
+	h.cacheLock.Unlock()
+
 	return result, nil
 }
 
+// listApplicationSets list all applicationsets
 func (h *AnalysisHandler) listApplicationSets(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	applicationSets, err := h.storage.ListApplicationSets(ctx, &appsetpkg.ApplicationSetListQuery{
@@ -267,6 +299,7 @@ func (h *AnalysisHandler) listApplicationSets(ctx context.Context, result *Analy
 	return nil
 }
 
+// listApplications list all applications
 func (h *AnalysisHandler) listApplications(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	apps, err := h.storage.ListApplications(ctx, &appclient.ApplicationQuery{
@@ -286,6 +319,7 @@ func (h *AnalysisHandler) listApplications(ctx context.Context, result *Analysis
 	return nil
 }
 
+// listClusters list all clusters
 func (h *AnalysisHandler) listClusters(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	clusters, err := h.storage.ListClustersByProject(ctx, result.ProjectID)
@@ -303,6 +337,7 @@ func (h *AnalysisHandler) listClusters(ctx context.Context, result *AnalysisProj
 	return nil
 }
 
+// listSecrets list all secrets
 func (h *AnalysisHandler) listSecrets(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	projectSecrets, err := h.secretStore.ListProjectSecrets(ctx, argoProj.Name)
@@ -318,6 +353,7 @@ func (h *AnalysisHandler) listSecrets(ctx context.Context, result *AnalysisProje
 	return nil
 }
 
+// listRepos list all repos
 func (h *AnalysisHandler) listRepos(ctx context.Context, result *AnalysisProject,
 	argoProj *v1alpha1.AppProject) error {
 	repos, err := h.storage.ListRepository(ctx, []string{argoProj.Name})
@@ -353,6 +389,7 @@ func (h *AnalysisHandler) listSyncs(ctx context.Context, result *AnalysisProject
 	return nil
 }
 
+// fillUserDeptInfo fill user's dept info
 func fillUserDeptInfo(user *AnalysisActivityUser, userDeptInfo *ccv3.UserDeptInfo) {
 	user.ChineseName = userDeptInfo.ChineseName
 	user.GroupLevel0 = userDeptInfo.Level0
@@ -452,6 +489,7 @@ func (h *AnalysisHandler) collectAppResourceInfo(ctx context.Context, app *v1alp
 	return nil
 }
 
+// cacheResourceInfoData cache the data for resource-info
 func (h *AnalysisHandler) cacheResourceInfoData() {
 	ris, err := h.db.ListResourceInfosByProject(nil)
 	if err != nil {
@@ -490,12 +528,8 @@ func (h *AnalysisHandler) cacheResourceInfoData() {
 			pri.Pod += m[ResourceInfoPod]
 		}
 	}
-	data := make([]AnalysisProjectResourceInfo, 0, len(result))
-	for _, pri := range result {
-		data = append(data, *pri)
-	}
 
 	h.cacheLock.Lock()
-	h.resourceInfo = data
+	h.resourceInfo = result
 	h.cacheLock.Unlock()
 }

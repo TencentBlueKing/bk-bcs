@@ -458,6 +458,7 @@ type CleanNodesOption struct {
 	// AsOption for moduleInfo
 	AsOption *proto.ClusterAutoScalingOption
 	Operator string
+	Manual   bool
 }
 
 // CleanNodesResponse response for clean nodes in NodeGroup

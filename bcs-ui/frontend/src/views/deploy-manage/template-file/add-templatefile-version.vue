@@ -105,13 +105,20 @@
           :original-version="versionDetail.version"
           :is-draft="fileMetadata?.isDraft" />
         <div class="bcs-border-top flex items-center h-[48px] px-[24px] bg-[#FAFBFD]">
-          <bcs-button
-            theme="primary"
-            class="min-w-[88px]"
-            :disabled="versionDetail.content === originalContent && !fileMetadata?.isDraft && !upgrade"
-            @click="showVersionDialog = true">
-            {{ $t('generic.button.confirmSave') }}
-          </bcs-button>
+          <div
+            class="mr-[8px]"
+            v-bk-tooltips="{
+              content: $t('templateFile.tips.noChanges'),
+              disabled: !disabledSave
+            }">
+            <bcs-button
+              theme="primary"
+              class="min-w-[88px]"
+              :disabled="disabledSave"
+              @click="showVersionDialog = true">
+              {{ $t('generic.button.confirmSave') }}
+            </bcs-button>
+          </div>
           <bcs-button @click="showDiffSlider = false">{{ $t('generic.button.cancel') }}</bcs-button>
         </div>
       </template>
@@ -129,7 +136,7 @@
   </BcsContent>
 </template>
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue';
+import { computed, onBeforeMount, ref } from 'vue';
 
 import DiffYaml from './diff-yaml.vue';
 import FileMetadataDialog from './file-metadata.vue';
@@ -294,6 +301,9 @@ async function handleShowDiffSlider() {
 }
 
 // 是否升级为Helm 模板
+const disabledSave = computed(() => versionDetail.value.content === originalContent.value
+  && !fileMetadata.value?.isDraft
+  && !upgrade.value);
 const isHelm = ref(false);
 const upgrade = ref(false);
 function getUpgradeStatus(data) {

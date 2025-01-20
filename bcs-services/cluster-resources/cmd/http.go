@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,10 +31,12 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/parser"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
+	httpUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpx"
 )
 
@@ -63,6 +66,9 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 	r.Use(httpx.AuthorizationMiddleware)
 	r.Use(httpx.AuditMiddleware)
 
+	// events 接口代理
+	r.Methods("GET").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/events").
+		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs))))
 	// import template
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/import/template").
 		HandlerFunc(ImportTemplate(crs))
@@ -70,6 +76,29 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/export/template").
 		HandlerFunc(ExportTemplate(crs))
 	return r
+}
+
+// StorageEvents reverse proxy events
+func StorageEvents(crs *clusterResourcesService) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		targetURLPath := fmt.Sprintf("%s/bcsstorage/v1/events", config.G.Component.BCSStorageHost)
+
+		targetURL, err := url.Parse(targetURLPath)
+		if err != nil {
+			httpx.ResponseSystemError(w, r, err)
+			return
+		}
+		clusterID := contextx.GetClusterIDFromCtx(r.Context())
+		query := r.URL.Query()
+		query.Set("clusterId", clusterID)
+		targetURL.RawQuery = query.Encode()
+
+		proxy := httpUtil.NewHTTPReverseProxy(crs.clientTLSConfig, func(request *http.Request) {
+			request.URL = targetURL
+			request.Method = http.MethodGet
+		})
+		proxy.ServeHTTP(w, r)
+	}
 }
 
 // ImportTemplate import template

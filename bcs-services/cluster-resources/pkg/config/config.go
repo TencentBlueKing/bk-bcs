@@ -98,6 +98,7 @@ func LoadConf(filePath string) (*ClusterResourcesConf, error) {
 		conf.initJWTPubKey,
 		// 初始化 iam
 		conf.initIAM,
+		conf.initCompoment,
 	} {
 		if initErr := f(); initErr != nil {
 			return nil, initErr
@@ -223,6 +224,14 @@ func (c *ClusterResourcesConf) initIAM() error {
 	return nil
 }
 
+// initCompoment 初始化 compoment
+func (c *ClusterResourcesConf) initCompoment() error {
+	if c.Global.Component.BCSStorageHost == "" {
+		c.Global.Component.BCSStorageHost = "https://bcs-storage:50024"
+	}
+	return nil
+}
+
 // EtcdConf Etcd 相关配置
 type EtcdConf struct {
 	EtcdEndpoints string `yaml:"endpoints" usage:"Etcd Endpoints"`
@@ -307,9 +316,15 @@ type GlobalConf struct {
 	Auth          AuthConf          `yaml:"auth"`
 	Basic         BasicConf         `yaml:"basic"`
 	BCSAPIGW      BCSAPIGatewayConf `yaml:"bcsApiGW"` // nolint:tagliatelle
+	Component     ComponentConf     `yaml:"component"`
 	IAM           IAMConf           `yaml:"iam"`
 	SharedCluster SharedClusterConf `yaml:"sharedCluster"`
 	MultiCluster  MultiClusterConf  `yaml:"multiCluster"`
+}
+
+// ComponentConf 组件配置
+type ComponentConf struct {
+	BCSStorageHost string `yaml:"bcsStorageHost" usage:"BCS Storage Host"`
 }
 
 // AuthConf 认证相关配置

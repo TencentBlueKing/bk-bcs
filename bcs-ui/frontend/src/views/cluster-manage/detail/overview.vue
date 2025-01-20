@@ -9,14 +9,14 @@
           <div>
             <div class="flex justify-end items-center">
               <span class="text-[32px]">
-                {{ conversionPercentUsed(overviewData.cpu_usage.used, overviewData.cpu_usage.total) }}
+                {{ conversionPercentUsed(overviewData.cpu_usage?.used, overviewData.cpu_usage?.total) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ parseFloat(overviewData.cpu_usage.used || '0').toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage?.used || '0').toFixed(2) }}
               of
-              {{ parseFloat(overviewData.cpu_usage.total || '0').toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage?.total || '0').toFixed(2) }}
             </div>
           </div>
         </div>
@@ -34,14 +34,14 @@
           <div>
             <div class="flex justify-end items-center">
               <span class="text-[32px]">
-                {{ conversionPercentUsed(overviewData.memory_usage.used_bytes, overviewData.memory_usage.total_bytes) }}
+                {{ conversionPercentUsed(overviewData.memory_usage?.used_bytes, overviewData.memory_usage?.total_bytes) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3a84ff] text-[14px]">
-              {{ formatBytes(overviewData.memory_usage.used_bytes || 0) }}
+              {{ formatBytes(overviewData.memory_usage?.used_bytes || 0) }}
               of
-              {{ formatBytes(overviewData.memory_usage.total_bytes || 0) }}
+              {{ formatBytes(overviewData.memory_usage?.total_bytes || 0) }}
             </div>
           </div>
         </div>
@@ -59,14 +59,14 @@
           <div>
             <div class="flex justify-end items-center">
               <span class="text-[32px]">
-                {{ conversionPercentUsed(overviewData.disk_usage.used_bytes, overviewData.disk_usage.total_bytes) }}
+                {{ conversionPercentUsed(overviewData.disk_usage?.used_bytes, overviewData.disk_usage?.total_bytes) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#853cff] text-[14px]">
-              {{ formatBytes(overviewData.disk_usage.used_bytes || 0) }}
+              {{ formatBytes(overviewData.disk_usage?.used_bytes || 0) }}
               of
-              {{ formatBytes(overviewData.disk_usage.total_bytes || 0) }}
+              {{ formatBytes(overviewData.disk_usage?.total_bytes || 0) }}
             </div>
           </div>
         </div>
@@ -104,14 +104,14 @@
           <div>
             <div class="flex justify-end items-center">
               <span class="text-[32px]">
-                {{ conversionPercentUsed(overviewData.cpu_usage.request, overviewData.cpu_usage.total) }}
+                {{ conversionPercentUsed(overviewData.cpu_usage?.request, overviewData.cpu_usage?.total) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ parseFloat(overviewData.cpu_usage.request || '0').toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage?.request || '0').toFixed(2) }}
               of
-              {{ parseFloat(overviewData.cpu_usage.total || '0').toFixed(2) }}
+              {{ parseFloat(overviewData.cpu_usage?.total || '0').toFixed(2) }}
             </div>
           </div>
         </div>
@@ -149,17 +149,17 @@
               <span class="text-[32px]">
                 {{
                   conversionPercentUsed(
-                    overviewData.memory_usage.request_bytes,
-                    overviewData.memory_usage.total_bytes
+                    overviewData.memory_usage?.request_bytes,
+                    overviewData.memory_usage?.total_bytes
                   )
                 }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3a84ff] text-[14px]">
-              {{ formatBytes(overviewData.memory_usage.request_bytes || 0) }}
+              {{ formatBytes(overviewData.memory_usage?.request_bytes || 0) }}
               of
-              {{ formatBytes(overviewData.memory_usage.total_bytes || 0) }}
+              {{ formatBytes(overviewData.memory_usage?.total_bytes || 0) }}
             </div>
           </div>
         </div>
@@ -178,7 +178,7 @@
             <div class="flex justify-end items-center">
               <span class="text-[32px]">
                 {{ conversionPercentUsed(
-                  overviewData.diskio_usage.used, overviewData.diskio_usage.total) }}
+                  overviewData.diskio_usage?.used, overviewData.diskio_usage?.total) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
@@ -207,14 +207,14 @@
           <div>
             <div class="flex justify-end items-center">
               <span class="text-[32px]">
-                {{ conversionPercentUsed(overviewData.pod_usage.used, overviewData.pod_usage.total) }}
+                {{ conversionPercentUsed(overviewData.pod_usage?.used, overviewData.pod_usage?.total) }}
               </span>
               <sup class="text-[20px]">%</sup>
             </div>
             <div class="font-bold text-[#3ede78] text-[14px]">
-              {{ overviewData.pod_usage.used || '--' }}
+              {{ overviewData.pod_usage?.used || '--' }}
               of
-              {{ overviewData.pod_usage.total || '--' }}
+              {{ overviewData.pod_usage?.total || '--' }}
             </div>
           </div>
         </div>

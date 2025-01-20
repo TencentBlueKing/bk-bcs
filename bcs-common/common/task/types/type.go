@@ -45,6 +45,11 @@ const (
 	TaskStatusRevoked = "REVOKED"
 	// TaskStatusNotStarted force task terminate
 	TaskStatusNotStarted = "NOTSTARTED"
+
+	// CallbackResultSuccess callback success
+	CallbackResultSuccess = "SUCCESS"
+	// CallbackResultFailure callback failed
+	CallbackResultFailure = "FAILURE"
 )
 
 var (
@@ -62,6 +67,8 @@ type Task struct {
 	CurrentStep         string            `json:"currentStep"`
 	Steps               []*Step           `json:"steps"`
 	CallbackName        string            `json:"callbackName"`
+	CallbackResult      string            `json:"callbackResult"`
+	CallbackMessage     string            `json:"callbackMessage"`
 	CommonParams        map[string]string `json:"commonParams"`
 	CommonPayload       string            `json:"commonPayload"`
 	Status              string            `json:"status"`

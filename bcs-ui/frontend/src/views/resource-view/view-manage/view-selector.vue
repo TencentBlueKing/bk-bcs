@@ -209,7 +209,6 @@ const changeClusterView = async (clusterID: string) => {
   });
   // 清空自定义视图ID
   updateViewIDStore('');// 设置为集群视图
-  $store.commit('updateViewNsList', []);
   popoverSelectRef.value?.hide();
 };
 

@@ -18,6 +18,7 @@ type BKMonitorConf struct {
 	MetadataURL     string   `yaml:"metadata_url"`     // 元数据地址
 	DisableClusters []string `yaml:"disable_clusters"` // 集群黑名单，不使用蓝鲸监控
 	ClusterID       string   `yaml:"cluster_id"`       // bcs所在集群，nodegroup配置
+	MountPoint      string   `yaml:"mount_point"`      // 监控数据盘路径
 }
 
 // defaultBKMonitorConf 默认配置
@@ -27,6 +28,7 @@ func defaultBKMonitorConf() *BKMonitorConf {
 		MetadataURL:     "",
 		DisableClusters: []string{},
 		ClusterID:       "",
+		MountPoint:      "/data",
 	}
 	return c
 }

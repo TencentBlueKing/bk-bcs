@@ -219,10 +219,20 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 
 	// step0: cluster cordon nodes
 	cleanTask.BuildCordonNodesStep(task)
-	// step1: shield nodes alarm
+
+	// step1: check business node pods
+	common.BuildCheckNodePodsTaskStep(task, opt.Cluster.ClusterID, nodeIPs, func() []cloudprovider.StepOption {
+		if opt.Manual {
+			return []cloudprovider.StepOption{cloudprovider.WithStepAllowSkip(true)}
+		}
+
+		return []cloudprovider.StepOption{cloudprovider.WithStepSkipFailed(true)}
+	}())
+
+	// step2: shield nodes alarm
 	common.BuildShieldAlertTaskStep(task, opt.Cluster.GetClusterID())
 
-	// 业务自定义流程: 缩容前置流程支持 标准运维任务和执行业务job脚本
+	// step3: 业务自定义流程, 缩容前置流程支持标准运维任务和执行业务job脚本
 	if group.NodeTemplate != nil && len(group.NodeTemplate.ScaleInPreScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID:        opt.Cluster.ClusterID,
@@ -250,8 +260,12 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 		}
 	}
 
-	// platform clean sops task
-	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil && opt.Cloud.NodeGroupManagement.CleanNodesInGroup != nil {
+	// step4: cluster scale-in to clean nodes
+	cleanTask.BuildRemoveNodesStep(task)
+
+	// step5: platform clean sops task
+	if opt.Cloud != nil && opt.Cloud.NodeGroupManagement != nil &&
+		opt.Cloud.NodeGroupManagement.CleanNodesInGroup != nil {
 		err := template.BuildSopsFactory{
 			StepName: template.SystemInit,
 			Cluster:  opt.Cluster,
@@ -266,9 +280,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 		}
 	}
 
-	// step2: cluster scale-in to clean nodes
-	cleanTask.BuildRemoveNodesStep(task)
-	// step3: cluster return nodes
+	// step6: cluster return nodes
 	cleanTask.BuildReturnNodesStep(task)
 
 	if len(task.StepSequence) > 0 {
@@ -279,6 +291,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.CleanNodeGroupNodesJob.String()
 	task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(nodeIPs, ",")
 	task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(nodeIDs, ",")
+	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
 
 	return task, nil
 }
@@ -286,15 +299,9 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 // BuildUpdateDesiredNodesTask scale cluster nodes
 func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGroup, // nolint
 	opt *cloudprovider.UpdateDesiredNodeOption) (*proto.Task, error) {
-	// validate request params
-	if desired == 0 {
-		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask desired is zero")
-	}
-	if group == nil {
-		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask group info empty")
-	}
-	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
-		return nil, fmt.Errorf("BuildUpdateDesiredNodesTask TaskOptions is lost")
+	// Validate request params
+	if err := validateRequest(desired, group, opt); err != nil {
+		return nil, err
 	}
 
 	// init task information
@@ -431,6 +438,19 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	task.CommonParams[cloudprovider.ManualKey.String()] = strconv.FormatBool(opt.Manual)
 
 	return task, nil
+}
+
+func validateRequest(desired uint32, group *proto.NodeGroup, opt *cloudprovider.UpdateDesiredNodeOption) error {
+	if desired == 0 {
+		return fmt.Errorf("BuildUpdateDesiredNodesTask desired is zero")
+	}
+	if group == nil {
+		return fmt.Errorf("BuildUpdateDesiredNodesTask group info empty")
+	}
+	if opt == nil || len(opt.Operator) == 0 || opt.Cluster == nil {
+		return fmt.Errorf("BuildUpdateDesiredNodesTask TaskOptions is lost")
+	}
+	return nil
 }
 
 // BuildDeleteNodeGroupTask delete nodegroup

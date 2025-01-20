@@ -866,9 +866,9 @@ func (cm *ClusterManager) initCommonHandler(router *mux.Router) error {
 	return nil
 }
 
-func (cm *ClusterManager) initSharedClusterConf() {
-	if cm.opt.SharedCluster.AnnoKeyProjCode == "" {
-		cm.opt.SharedCluster.AnnoKeyProjCode = utils.ProjectCode
+func (cm *ClusterManager) initPlatformCommonConfig() {
+	if cm.opt.CommonConfig.AnnoKeyProjCode == "" {
+		cm.opt.CommonConfig.AnnoKeyProjCode = utils.ProjectCode
 	}
 }
 
@@ -1187,8 +1187,8 @@ func (cm *ClusterManager) Init() error {
 		blog.Errorf("initCloudTemplateConfig failed: %v", err)
 	}
 
-	// init shared cluster config
-	cm.initSharedClusterConf()
+	// init common config
+	cm.initPlatformCommonConfig()
 	// init metric, pprof
 	cm.initExtraModules()
 	// init system signal handler

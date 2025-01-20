@@ -12,6 +12,13 @@
 
 package handler
 
+import (
+	"bytes"
+	"encoding/gob"
+
+	"github.com/mohae/deepcopy"
+)
+
 // AnalysisInterface defines the interface for analysis
 type AnalysisInterface interface {
 	Init() error
@@ -34,13 +41,44 @@ type AnalysisProject struct {
 	GroupLevel4 string `json:"groupLevel4"`
 	GroupLevel5 string `json:"groupLevel5"`
 
-	Clusters        []*AnalysisCluster        `json:"clusters"`
-	ApplicationSets []*AnalysisApplicationSet `json:"applicationSets"`
-	Applications    []*AnalysisApplication    `json:"applications"`
-	Secrets         []*AnalysisSecret         `json:"secrets"`
-	Repos           []*AnalysisRepo           `json:"repos"`
-	ActivityUsers   []*AnalysisActivityUser   `json:"activityUsers"`
-	Syncs           []*AnalysisSync           `json:"syncs"`
+	Clusters        []*AnalysisCluster           `json:"clusters"`
+	ApplicationSets []*AnalysisApplicationSet    `json:"applicationSets"`
+	Applications    []*AnalysisApplication       `json:"applications"`
+	Secrets         []*AnalysisSecret            `json:"secrets"`
+	Repos           []*AnalysisRepo              `json:"repos"`
+	ActivityUsers   []*AnalysisActivityUser      `json:"activityUsers"`
+	Syncs           []*AnalysisSync              `json:"syncs"`
+	ResourceInfo    *AnalysisProjectResourceInfo `json:"resourceInfo"`
+}
+
+// DeepCopy object
+func (p *AnalysisProject) DeepCopy() *AnalysisProject {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	dec := gob.NewDecoder(&buf)
+
+	if err := enc.Encode(p); err != nil {
+		return &AnalysisProject{}
+	}
+	dst := new(AnalysisProject)
+	if err := dec.Decode(&dst); err != nil {
+		return &AnalysisProject{}
+	}
+	return dst
+}
+
+// AnalysisProjectResourceInfo defines the resource-info of project
+type AnalysisProjectResourceInfo struct {
+	Name         string `json:"name"`
+	ResourceAll  int64  `json:"resourceAll"`
+	GameWorkload int64  `json:"gameWorkload"`
+	Workload     int64  `json:"workload"`
+	Pod          int64  `json:"pod"`
+}
+
+// DeepCopy object
+func (ri *AnalysisProjectResourceInfo) DeepCopy() *AnalysisProjectResourceInfo {
+	return deepcopy.Copy(ri).(*AnalysisProjectResourceInfo)
 }
 
 // AnalysisCluster defines the cluster info
@@ -95,13 +133,4 @@ type AnalysisSync struct {
 	Cluster     string `json:"cluster"`
 	SyncTotal   int64  `json:"syncTotal"`
 	UpdateTime  string `json:"updateTime,omitempty"`
-}
-
-// AnalysisProjectResourceInfo defines the resource-info of project
-type AnalysisProjectResourceInfo struct {
-	Name         string `json:"name"`
-	ResourceAll  int64  `json:"resourceAll"`
-	GameWorkload int64  `json:"gameWorkload"`
-	Workload     int64  `json:"workload"`
-	Pod          int64  `json:"pod"`
 }

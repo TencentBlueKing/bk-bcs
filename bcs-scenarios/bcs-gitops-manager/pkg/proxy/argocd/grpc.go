@@ -383,17 +383,6 @@ func (plugin *GrpcPlugin) handleClusterList(r *http.Request) (*http.Request, *mw
 	return r, mw.ReturnGRPCResponse(clusters)
 }
 
-// parseClusterName will parse cluster name and check it
-// nolint unused
-func (plugin *GrpcPlugin) parseClusterName(server string) (string, error) {
-	arr := strings.Split(server, "/")
-	clusterID := arr[len(arr)-1]
-	if !strings.HasPrefix(clusterID, "BCS-K8S-") {
-		return "", errors.Errorf("parse cluster '%s' failed", server)
-	}
-	return clusterID, nil
-}
-
 // handleClusterGet will handle cluster get, return cluster details
 func (plugin *GrpcPlugin) handleClusterGet(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	query := &cluster.ClusterQuery{}

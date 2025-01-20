@@ -497,6 +497,7 @@ async function deleteSpace(space: ITemplateSpaceData) {
     type: 'warning',
     clsName: 'custom-info-confirm',
     title: $i18n.t('generic.title.confirmDelete1', { name: space.name }),
+    subTitle: $i18n.t('templateFile.tips.spaceSubTitle'),
     defaultInfo: true,
     okText: $i18n.t('generic.button.delete'),
     confirmFn: async () => {

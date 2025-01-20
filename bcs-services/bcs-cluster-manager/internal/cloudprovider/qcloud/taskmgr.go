@@ -794,10 +794,15 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		NodeIDs:    nodeIDs,
 	}
 
-	// step0: cordon nodes
+	// step1: cordon nodes
 	removeNodesTask.BuildCordonNodesStep(task)
 
-	// 业务自定义缩容流程: 支持 缩容节点前置脚本和前置标准运维流程
+	// step2: check business node pods
+	common.BuildCheckNodePodsTaskStep(task, cls.ClusterID, nodeIPs, []cloudprovider.StepOption{
+		cloudprovider.WithStepAllowSkip(true),
+	})
+
+	// step3: 业务自定义缩容流程: 支持 缩容节点前置脚本和前置标准运维流程
 	if opt.NodeTemplate != nil && len(opt.NodeTemplate.ScaleInPreScript) > 0 {
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID:        cls.ClusterID,
@@ -826,7 +831,12 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		}
 	}
 
-	// preAction platform sops task
+	// step4: removeNodesFromTKECluster remove nodes
+	removeNodesTask.BuildRemoveNodesFromClusterStep(task)
+	// step5: check cluster clean nodes
+	removeNodesTask.BuildCheckClusterCleanNodesStep(task)
+
+	// step6: platform system init sops task
 	if opt.Cloud != nil && opt.Cloud.ClusterManagement != nil &&
 		opt.Cloud.ClusterManagement.DeleteNodesFromCluster != nil {
 		err := template.BuildSopsFactory{
@@ -843,10 +853,7 @@ func (t *Task) BuildRemoveNodesFromClusterTask(cls *proto.Cluster, nodes []*prot
 		}
 	}
 
-	// step1: removeNodesFromTKECluster remove nodes
-	removeNodesTask.BuildRemoveNodesFromClusterStep(task)
-	removeNodesTask.BuildCheckClusterCleanNodesStep(task)
-	// step2: update node DB info
+	// step7: update node DB info
 	removeNodesTask.BuildUpdateRemoveNodeDBInfoStep(task)
 
 	// set current step

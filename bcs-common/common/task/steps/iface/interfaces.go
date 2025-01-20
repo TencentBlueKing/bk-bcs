@@ -40,18 +40,18 @@ func (f StepExecutorFunc) Execute(c *Context) error {
 
 // CallbackExecutor that callback client must implement
 type CallbackExecutor interface {
-	Callback(*Context, error)
+	Callback(*Context, error) error
 }
 
 // The CallbackExecutorFunc type is an adapter to allow the use of
 // ordinary functions as a Executor. If f is a function
 // with the appropriate signature, CallbackExecutorFunc(f) is a
 // Executor that calls f.
-type CallbackExecutorFunc func(*Context, error)
+type CallbackExecutorFunc func(*Context, error) error
 
 // Callback calls f(c, cbErr)
-func (f CallbackExecutorFunc) Callback(c *Context, cbErr error) {
-	f(c, cbErr)
+func (f CallbackExecutorFunc) Callback(c *Context, cbErr error) error {
+	return f(c, cbErr)
 }
 
 // KeyValue key-value paras
