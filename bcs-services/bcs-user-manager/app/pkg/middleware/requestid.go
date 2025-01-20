@@ -15,6 +15,7 @@ package middleware
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/emicklei/go-restful"
 	"github.com/google/uuid"
 
@@ -27,7 +28,9 @@ func RequestIDFilter(request *restful.Request, response *restful.Response, chain
 	if len(requestID) == 0 {
 		requestID = uuid.New().String()
 	}
-	ctx := context.WithValue(request.Request.Context(), utils.ContextValueKeyRequestID, requestID)
+	// 新增泳道特性
+	ctx := header.WithLaneIdCtx(request.Request.Context(), request.Request.Header)
+	ctx = context.WithValue(ctx, utils.ContextValueKeyRequestID, requestID)
 	request.Request = request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)
 }
