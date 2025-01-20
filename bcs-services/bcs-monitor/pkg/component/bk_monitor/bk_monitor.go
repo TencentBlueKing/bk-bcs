@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/chonla/format"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/prompb"
@@ -179,6 +180,7 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 		SetBody(body).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizID)). // 支持空间参数
+		SetHeaders(header.GetLaneIDByCtx(ctx)).                              // 泳道特性
 		Post(url)
 
 	if err != nil {
@@ -329,6 +331,7 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]Metri
 	url := fmt.Sprintf("%s/query_bcs_metrics", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(header.GetLaneIDByCtx(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetQueryParam("cluster_ids", clusterID).
 		SetQueryString(fmt.Sprintf("bk_biz_ids=0&bk_biz_ids=%s", bizID)).
