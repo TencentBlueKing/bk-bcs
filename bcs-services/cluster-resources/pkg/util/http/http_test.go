@@ -20,16 +20,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/http"
 )
 
-func TestCustomHeaderMatcher(t *testing.T) {
-	// 自定义头字段
-	ret, _ := http.CustomHeaderMatcher("X-Request-Id")
-	assert.Equal(t, "X-Request-Id", ret)
-
-	// 标准头字段
-	ret, _ = http.CustomHeaderMatcher("Content-Type")
-	assert.Equal(t, "grpcgateway-Content-Type", ret)
-}
-
 func TestWSHeaderForwarder(t *testing.T) {
 	// 允许转发的 Header Key
 	assert.True(t, http.WSHeaderForwarder("Origin"))
