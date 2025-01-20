@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/golang-jwt/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/auth"
@@ -42,7 +43,8 @@ type ContextValueKey string
 func NeedProjectAuthorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
+		// 新增泳道特性
+		ctx = header.WithLaneIdCtx(ctx, r.Header)
 		claims, err := decodeBCSJwtFromContext(ctx, r)
 		if err != nil {
 			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())
