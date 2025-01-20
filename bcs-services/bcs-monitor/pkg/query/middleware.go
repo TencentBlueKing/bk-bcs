@@ -18,6 +18,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/prometheus/prometheus/promql/parser"
@@ -100,6 +101,9 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 		ctx = store.WithRequestIDValue(ctx, requestID)
 		// Traceparent 透传给grpc
 		ctx = metadata.AppendToOutgoingContext(ctx, "Traceparent", r.Header.Get("traceparent"))
+		// X-Lane 透传给grpc
+		laneKey, laneValue := header.GetLaneIDByHeader(r.Header)
+		ctx = store.WithLaneValue(ctx, laneKey, laneValue)
 		r = r.WithContext(ctx)
 		handleFunc(w, r)
 	}
