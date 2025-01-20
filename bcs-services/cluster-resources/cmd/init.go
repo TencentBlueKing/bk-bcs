@@ -342,6 +342,7 @@ func (crSvc *clusterResourcesService) initHTTPService() error {
 	log.Info(crSvc.ctx, "register grpc service handler to path /")
 	originMux := http.NewServeMux()
 	originMux.Handle("/", router)
+	originMux.Handle("/clusterresources/api/v1/", NewAPIRouter(crSvc))
 
 	// 检查是否需要启用 swagger 服务
 	if crSvc.conf.Swagger.Enabled {
