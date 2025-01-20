@@ -925,6 +925,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListCloudNodePublicPrefix",
+			Path:    []string{"/clustermanager/v1/clouds/{cloudID}/node/publicPrefix"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.Health",
 			Path:    []string{"/clustermanager/v1/health"},
 			Method:  []string{"GET"},
@@ -1114,6 +1120,7 @@ type ClusterManagerService interface {
 	UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, opts ...client.CallOption) (*UpdateCloudModuleFlagResponse, error)
 	DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, opts ...client.CallOption) (*DeleteCloudModuleFlagResponse, error)
 	ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, opts ...client.CallOption) (*ListCloudModuleFlagResponse, error)
+	ListCloudNodePublicPrefix(ctx context.Context, in *ListCloudNodePublicPrefixRequest, opts ...client.CallOption) (*ListCloudNodePublicPrefixResponse, error)
 	// cluster manager health interface
 	Health(ctx context.Context, in *HealthRequest, opts ...client.CallOption) (*HealthResponse, error)
 }
@@ -2610,6 +2617,16 @@ func (c *clusterManagerService) ListCloudModuleFlag(ctx context.Context, in *Lis
 	return out, nil
 }
 
+func (c *clusterManagerService) ListCloudNodePublicPrefix(ctx context.Context, in *ListCloudNodePublicPrefixRequest, opts ...client.CallOption) (*ListCloudNodePublicPrefixResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListCloudNodePublicPrefix", in)
+	out := new(ListCloudNodePublicPrefixResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterManagerService) Health(ctx context.Context, in *HealthRequest, opts ...client.CallOption) (*HealthResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.Health", in)
 	out := new(HealthResponse)
@@ -2801,6 +2818,7 @@ type ClusterManagerHandler interface {
 	UpdateCloudModuleFlag(context.Context, *UpdateCloudModuleFlagRequest, *UpdateCloudModuleFlagResponse) error
 	DeleteCloudModuleFlag(context.Context, *DeleteCloudModuleFlagRequest, *DeleteCloudModuleFlagResponse) error
 	ListCloudModuleFlag(context.Context, *ListCloudModuleFlagRequest, *ListCloudModuleFlagResponse) error
+	ListCloudNodePublicPrefix(context.Context, *ListCloudNodePublicPrefixRequest, *ListCloudNodePublicPrefixResponse) error
 	// cluster manager health interface
 	Health(context.Context, *HealthRequest, *HealthResponse) error
 }
@@ -2955,6 +2973,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		UpdateCloudModuleFlag(ctx context.Context, in *UpdateCloudModuleFlagRequest, out *UpdateCloudModuleFlagResponse) error
 		DeleteCloudModuleFlag(ctx context.Context, in *DeleteCloudModuleFlagRequest, out *DeleteCloudModuleFlagResponse) error
 		ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, out *ListCloudModuleFlagResponse) error
+		ListCloudNodePublicPrefix(ctx context.Context, in *ListCloudNodePublicPrefixRequest, out *ListCloudNodePublicPrefixResponse) error
 		Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error
 	}
 	type ClusterManager struct {
@@ -3850,6 +3869,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListCloudNodePublicPrefix",
+		Path:    []string{"/clustermanager/v1/clouds/{cloudID}/node/publicPrefix"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.Health",
 		Path:    []string{"/clustermanager/v1/health"},
 		Method:  []string{"GET"},
@@ -4452,6 +4477,10 @@ func (h *clusterManagerHandler) DeleteCloudModuleFlag(ctx context.Context, in *D
 
 func (h *clusterManagerHandler) ListCloudModuleFlag(ctx context.Context, in *ListCloudModuleFlagRequest, out *ListCloudModuleFlagResponse) error {
 	return h.ClusterManagerHandler.ListCloudModuleFlag(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListCloudNodePublicPrefix(ctx context.Context, in *ListCloudNodePublicPrefixRequest, out *ListCloudNodePublicPrefixResponse) error {
+	return h.ClusterManagerHandler.ListCloudNodePublicPrefix(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) Health(ctx context.Context, in *HealthRequest, out *HealthResponse) error {
