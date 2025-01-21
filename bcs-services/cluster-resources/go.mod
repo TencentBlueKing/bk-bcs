@@ -70,7 +70,6 @@ require (
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.9.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802
-	go-micro.dev/v4 v4.10.2
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
 	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/trace v1.18.0
@@ -218,7 +217,7 @@ require (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230701022721-8cbd62252af8
+	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250116100852-64f4eaac950c
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6 // indirect
 )
 
@@ -227,6 +226,7 @@ require (
 	github.com/go-redis/redis/extra/redisotel/v8 v8.11.5
 	github.com/googleapis/gnostic v0.5.5
 	github.com/mitchellh/hashstructure/v2 v2.0.2
+	go-micro.dev/v4 v4.9.0
 	go.opentelemetry.io/contrib/instrumentation/go.mongodb.org/mongo-driver/mongo/otelmongo v0.44.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237
 	k8s.io/apiextensions-apiserver v0.23.1
@@ -254,7 +254,6 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
-	github.com/micro/go-micro/v2 v2.9.1 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/moby/term v0.5.0 // indirect
 	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
