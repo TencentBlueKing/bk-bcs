@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	jwtGo "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -104,15 +105,16 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		pj, err := projectClient.GetProjectInfo(r.Context(), projectCode)
+		// X-Lane往下透传
+		ctx := header.WithLaneIdCtx(r.Context(), r.Header)
+		pj, err := projectClient.GetProjectInfo(ctx, projectCode)
 		if err != nil {
 			msg := fmt.Errorf("ParseProjectID get projectID error, projectCode: %s, err: %s", projectCode, err.Error())
 			ResponseSystemError(w, r, msg)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextx.ProjectCodeContextKey, pj.Code)
+		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.Code)
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
