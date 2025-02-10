@@ -556,7 +556,7 @@ func generateNodeConfig(nodeGroup *proto.NodeGroup) *api.NodeConfig {
 }
 
 // generateNodeManagement generate node management
-func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) *api.NodeManagement {
+func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) *api.NodeManagement { // nolint
 	if nodeGroup.AutoScaling == nil {
 		return nil
 	}
