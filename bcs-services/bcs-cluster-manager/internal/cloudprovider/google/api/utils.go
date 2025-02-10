@@ -242,12 +242,13 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 			ImageType:  input.NodePool.Config.ImageType,
 		}
 	}
-	if input.NodePool.Management != nil {
-		nodePool.Management = &container.NodeManagement{
-			AutoRepair:  input.NodePool.Management.AutoRepair,
-			AutoUpgrade: input.NodePool.Management.AutoUpgrade,
-		}
+	// GKE节点池 默认关闭自动升级/修复功能
+	// if input.NodePool.Management != nil {
+	nodePool.Management = &container.NodeManagement{
+		AutoRepair:  false,
+		AutoUpgrade: false,
 	}
+	// }
 
 	return nodePool
 }
