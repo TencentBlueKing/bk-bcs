@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
@@ -233,14 +234,12 @@ func (c *nodeGroupToPool) setTaints() {
 		taints = make([]*proto.Taint, 0)
 	}
 
-	/*
-		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
-		taints = append(taints, &proto.Taint{
-			Key:    cutils.BCSNodeGroupTaintKey,
-			Value:  cutils.BCSNodeGroupTaintValue,
-			Effect: cutils.BCSNodeGroupAzureTaintEffect,
-		})
-	*/
+	// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+	taints = append(taints, &proto.Taint{
+		Key:    cutils.BCSNodeGroupTaintKey,
+		Value:  cutils.BCSNodeGroupTaintValue,
+		Effect: cutils.BCSNodeGroupAzureTaintEffect,
+	})
 
 	// key=value:NoSchedule NoExecute PreferNoSchedule
 	c.pool.Properties.NodeTaints = make([]*string, 0)
@@ -1520,14 +1519,13 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 		taints = make([]*proto.Taint, 0)
 	}
 
-	/*
-		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
-		taints = append(taints, &proto.Taint{
-			Key:    cutils.BCSNodeGroupTaintKey,
-			Value:  cutils.BCSNodeGroupTaintValue,
-			Effect: cutils.BCSNodeGroupAzureTaintEffect,
-		})
-	*/
+	// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+	taints = append(taints, &proto.Taint{
+		Key:    cutils.BCSNodeGroupTaintKey,
+		Value:  cutils.BCSNodeGroupTaintValue,
+		Effect: cutils.BCSNodeGroupAzureTaintEffect,
+	})
+
 	pool.Properties.NodeTaints = make([]*string, 0)
 	for _, taint := range taints {
 		pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,

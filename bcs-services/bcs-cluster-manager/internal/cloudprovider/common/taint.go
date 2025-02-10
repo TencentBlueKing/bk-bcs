@@ -31,6 +31,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+const (
+	cloudId             = "azureCloud"
+	validateWebhookName = "aks-node-validating-webhook"
+)
+
 var (
 	// NodeSetTaintsActionStep 节点设置污点任务
 	NodeSetTaintsActionStep = cloudprovider.StepInfo{
@@ -103,7 +108,7 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, nodeNames, removeTaints)
+	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, cloudID, nodeNames, removeTaints)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("remove cluster nodes taint failed [%s]", err))
@@ -125,7 +130,7 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	return nil
 }
 
-func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames, removeTaints []string) error {
+func removeClusterNodesTaint(ctx context.Context, clusterID, cloudID string, nodeNames, removeTaints []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
@@ -135,6 +140,17 @@ func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames, r
 	}
 
 	for _, ins := range nodeNames {
+
+		// attention: need to delete validate webhook when azureCloud update node taints
+		if cloudID == cloudId {
+			err = k8sOperator.DeleteValidatingWebhookConfig(ctx, clusterID, validateWebhookName)
+			if err != nil {
+				blog.Errorf("removeClusterNodesTaint[%s] deleteValidatingWebhookConfig nodeName[%s] failed: %v",
+					taskID, ins, err)
+				continue
+			}
+		}
+
 		node, errLocal := kubeCli.CoreV1().Nodes().Get(context.Background(), ins, metav1.GetOptions{})
 		if errLocal != nil {
 			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] failed: %v", taskID, ins, err)
