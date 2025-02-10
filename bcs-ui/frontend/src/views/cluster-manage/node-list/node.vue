@@ -502,7 +502,7 @@
             <template v-else>--</template>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.action')" width="160" :resizable="false" fixed="right">
+        <bcs-table-column :label="$t('generic.label.action')" width="220" :resizable="false" fixed="right">
           <template #default="{ row }">
             <bk-button class="mr10" text v-if="row.status === 'APPLY-FAILURE'" @click="handleDeleteNode(row)">
               {{ $t('generic.button.delete') }}
@@ -686,7 +686,8 @@
             :loading="logSideDialogConf.loading"
             :height="'calc(100vh - 92px)'"
             :rolling-loading="false"
-            step-actions="FAILED"
+            :show-step-retry-fn="handleStepRetry"
+            :show-step-skip-fn="handleStepSkip"
             @refresh="handleShowLog(logSideDialogConf.row)"
             @auto-refresh="handleAutoRefresh"
             @download="getDownloadTaskRecords"
@@ -1739,6 +1740,16 @@ export default defineComponent({
         },
       });
     };
+    // 重试按钮显示逻辑
+    function handleStepRetry(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowRetry;
+    }
+    // 跳过按钮显示逻辑
+    function handleStepSkip(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowSkip;
+    }
+
+
     // 批量允许调度
     const showBatchMenu = ref(false);
     const handleBatchEnableNodes = () => {
@@ -1907,6 +1918,7 @@ export default defineComponent({
       }).catch(() => ({ status: '', step: [] }));
       logSideDialogConf.value.taskData = step;
       logSideDialogConf.value.status = status;
+      logSideDialogConf.value.taskID = taskID;
     };
 
     const closeLog = () => {
@@ -2155,6 +2167,8 @@ export default defineComponent({
       handleAutoRefresh,
       getDownloadTaskRecords,
       handleSkip,
+      handleStepRetry,
+      handleStepSkip,
     };
   },
 });

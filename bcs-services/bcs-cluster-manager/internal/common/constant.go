@@ -219,6 +219,8 @@ const (
 	ClusterApiServer = "apiServer"
 	// RegionName regionName
 	RegionName = "regionName"
+	// ProjectCode project code
+	ProjectCode = "projectCode"
 
 	// ClusterCurNodeNum cluster current node num
 	ClusterCurNodeNum = "clusterCurNodeNum"

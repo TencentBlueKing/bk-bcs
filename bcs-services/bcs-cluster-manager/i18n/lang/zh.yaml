@@ -32,6 +32,7 @@ checkAgentStatus: "kubeAgent状态检测"
 # 主机
 transferHostModule: "转移主机模块"
 removeHostFromCmdb: "移除主机"
+checkNodePods: "检测业务节点Pod"
 #
 ImportClusterNodesTask: "导入集群节点"
 RegisterClusterKubeConfigTask: "注册集群kubeConfig认证"

@@ -45,6 +45,7 @@ var (
 		cloudprovider.TaskStatusFailure:     "FAILED",
 		cloudprovider.TaskStatusNotStarted:  "WAITING",
 		cloudprovider.TaskStatusTimeout:     "TERMINATE",
+		cloudprovider.TaskStatusSkip:        "SUCCESS",
 	}
 )
 
@@ -77,7 +78,7 @@ func (ua *TaskRecordsAction) fetchTaskRecords() error {
 	}
 
 	ua.resp.Data = &cmproto.TaskRecordsResponseData{
-		Status: task.Status,
+		Status: statusMap[task.Status],
 		Step:   []*cmproto.TaskRecordStep{},
 	}
 

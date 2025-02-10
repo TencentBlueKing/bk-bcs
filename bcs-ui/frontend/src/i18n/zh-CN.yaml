@@ -3093,6 +3093,8 @@ templateFile:
     uploadTips: '支持.tgz, .tar.gz类型压缩包，文件小于{0}M'
     createSpace: 新建文件夹
     helmdesc: 当前文件已升级为 Helm 模板，保存后将不再支持切换回非 Helm 模板。
+    spaceSubTitle: 模板文件夹及其中的模板文件将被删除
+    noChanges: 未变更
   tag:
     draft: 草稿
     baseOn: 基于

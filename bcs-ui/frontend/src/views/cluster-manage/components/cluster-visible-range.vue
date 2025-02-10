@@ -74,7 +74,18 @@
             v-for="option in projectList"
             :key="option.projectID"
             :id="option.projectID"
-            :name="option.name">
+            :name="option.name"
+            :disabled="!(perms[option.projectID] && perms[option.projectID].project_view)"
+            v-authority="{
+              clickable: perms[option.projectID]
+                && perms[option.projectID].project_view,
+              actionId: 'project_view',
+              resourceName: option.name,
+              disablePerms: true,
+              permCtx: {
+                project_id: option.projectID
+              }
+            }">
             <span class="flex items-center justify-between">
               <span class="flex items-center max-w-[90%]">
                 <span
@@ -182,7 +193,6 @@ export default defineComponent({
     const projectNameList = computed(() => innerValue.value.map(item => projectIDMap.value[item]?.name || item));
     const loading = ref(false);
     const params = ref({
-      all: false,
       offset: 0,
       limit: 20,
     });
@@ -248,8 +258,8 @@ export default defineComponent({
     // 选择项目
     function handleProjectChange(projects) {
       isSelectAll.value = false;
-      innerValue.value = projects;
-      ctx.emit('change', projects);
+      innerValue.value = [...projects];
+      ctx.emit('change', [...projects]);
     }
 
     // 选择全部
@@ -288,6 +298,7 @@ export default defineComponent({
       projectNameList,
       isSelectAll,
       isOnlyCurrentPorject,
+      perms,
       handleSave,
       handleEdit,
       handleChange,

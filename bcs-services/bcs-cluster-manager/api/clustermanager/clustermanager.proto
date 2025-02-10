@@ -6614,6 +6614,11 @@ message GetClusterReq {
       title : "cloudInfo",
       description : "集群关联的云集群信息, 默认从数据库获取数据"
     }];
+  string projectId = 4 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectId",
+      description : "共享集群在自身项目下应该标识为独立集群处理"
+    }];
 }
 
 message GetClusterResp {
@@ -9349,6 +9354,10 @@ message CleanNodesInGroupRequest {
     title : "operator", 
     description : "操作者"
   }, (validate.rules).string = {min_len : 2, max_len : 20}];
+  bool manual = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "manual",
+    description : "用户手动下架CA节点时，当失败时候支持用户跳过；自动下架时, 自动跳过失败步骤"
+  }];
 }
 
 message CleanNodesInGroupResponse {

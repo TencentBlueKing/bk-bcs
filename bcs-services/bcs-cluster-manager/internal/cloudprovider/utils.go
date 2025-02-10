@@ -82,6 +82,8 @@ const (
 	SetNodeLabelsAction = "nodeSetLabels"
 	// SetNodeTaintsAction 节点设置labels任务
 	SetNodeTaintsAction = "nodeSetTaints"
+	// CheckNodePodsAction 检测节点业务pod
+	CheckNodePodsAction = "checkNodePods"
 	// SetNodeAnnotationsAction 节点设置Annotations任务
 	SetNodeAnnotationsAction = "nodeSetAnnotations"
 	// CheckKubeAgentStatusAction 检测agent组件状态

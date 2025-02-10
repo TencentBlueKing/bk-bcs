@@ -115,7 +115,8 @@
           :loading="logLoading"
           :height="'calc(100vh - 92px)'"
           :rolling-loading="false"
-          step-actions="FAILED"
+          :show-step-retry-fn="handleStepRetry"
+          :show-step-skip-fn="handleStepSkip"
           @refresh="handleShowLog(logSideDialogConf.row)"
           @auto-refresh="handleAutoRefresh"
           @download="getDownloadTaskRecords"
@@ -564,6 +565,14 @@ export default defineComponent({
         },
       });
     };
+    // 重试按钮显示逻辑
+    function handleStepRetry(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowRetry;
+    }
+    // 跳过按钮显示逻辑
+    function handleStepSkip(item) {
+      return item?.step?.status === 'FAILED' && item?.step?.allowSkip;
+    }
 
     // 集群节点数
     const clusterNodesMap = ref<Record<string, number>>({});
@@ -714,6 +723,8 @@ export default defineComponent({
       logSideDialogConf,
       handleAutoRefresh,
       getDownloadTaskRecords,
+      handleStepRetry,
+      handleStepSkip,
     };
   },
 });

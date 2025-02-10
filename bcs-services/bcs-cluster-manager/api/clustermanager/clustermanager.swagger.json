@@ -3089,6 +3089,13 @@
             "required": false,
             "type": "boolean",
             "format": "boolean"
+          },
+          {
+            "name": "projectId",
+            "description": "projectId. 共享集群在自身项目下应该标识为独立集群处理",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -7670,6 +7677,12 @@
           "type": "string",
           "description": "操作者",
           "title": "operator"
+        },
+        "manual": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "用户手动下架CA节点时，当失败时候支持用户跳过；自动下架时, 自动跳过失败步骤",
+          "title": "manual"
         }
       },
       "description": "从节点池中清理回收指定IP节点",
