@@ -560,15 +560,18 @@ func generateNodeManagement(nodeGroup *proto.NodeGroup, cluster *proto.Cluster) 
 	if nodeGroup.AutoScaling == nil {
 		return nil
 	}
+
+	// GKE节点池 默认关闭自动升级/修复功能
 	nm := &api.NodeManagement{}
-	nm.AutoUpgrade = nodeGroup.AutoScaling.AutoUpgrade
-	nm.AutoRepair = nodeGroup.AutoScaling.ReplaceUnhealthy
-	if cluster.ExtraInfo != nil {
-		if cluster.ExtraInfo[api.GKEClusterReleaseChannel] != "" {
-			// when releaseChannel is set, autoUpgrade and autoRepair must be true
-			nm.AutoUpgrade = true
-			nm.AutoRepair = true
-		}
-	}
+	nm.AutoUpgrade = false
+	nm.AutoRepair = false
+	// if cluster.ExtraInfo != nil {
+	// 	if cluster.ExtraInfo[api.GKEClusterReleaseChannel] != "" {
+	// 		// when releaseChannel is set, autoUpgrade and autoRepair must be true
+	// 		nm.AutoUpgrade = true
+	// 		nm.AutoRepair = true
+	// 	}
+	// }
+
 	return nm
 }
