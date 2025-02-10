@@ -96,6 +96,8 @@ import NamespaceSelect from '@/components/namespace-selector/namespace-select.vu
 import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
+import $store from '@/store';
+import { IProject } from '@/composables/use-app';
 
 export default defineComponent({
   name: 'EventQuery',
@@ -384,6 +386,7 @@ export default defineComponent({
       count: 0,
       limit: 10,
     });
+    const curProject = computed<IProject>(() => $store.state.curProject as any);
     const handleGetEventList = async (loading = true) => {
       const { clusterId } = params.value;
       if (!clusterId) return;
@@ -393,9 +396,10 @@ export default defineComponent({
       eventLoading.value = loading;
       const [start, end] = params.value.date;
       const { data = [], total = 0 } = await storageEvents({
+        $projectCode: curProject.value?.projectCode,
+        $clusterID: clusterId,
         offset: (pagination.value.current - 1) * pagination.value.limit,
         length: pagination.value.limit,
-        clusterId,
         env: 'k8s',
         kind: parseSearchSelectValue.value.kinds.join(',') || (Array.isArray(kinds.value) ? kinds.value : [kinds.value]).join(','), // 对象
         'extraInfo.namespace': params.value.namespace, // 命名空间
