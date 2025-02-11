@@ -250,13 +250,24 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	var (
 		cluster     = info.Cluster
 		taskID      = cloudprovider.GetTaskIDFromContext(rootCtx)
-		ctx, cancel = context.WithTimeout(rootCtx, 20*time.Minute)
+		ctx, cancel = context.WithTimeout(rootCtx, 30*time.Minute)
 	)
 	defer cancel()
 
 	err := loop.LoopDoFunc(ctx, func() error {
-		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
-			cluster.SystemID, *targetPool.Name)
+		var (
+			err  error
+			pool *armcontainerservice.AgentPool
+		)
+		err = retry.Do(func() error {
+			pool, err = client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
+				cluster.SystemID, *targetPool.Name)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}, retry.Attempts(3))
 		// 扩容完成
 		if err == nil {
 			targetPool.Properties = pool.Properties
