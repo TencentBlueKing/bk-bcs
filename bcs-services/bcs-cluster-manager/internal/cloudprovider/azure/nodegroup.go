@@ -105,27 +105,21 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		return nil, err
 	}
 
-	// create aks client
-	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
+	// build task
+	mgr, err := cloudprovider.GetTaskManager(opt.Cloud.CloudProvider)
 	if err != nil {
-		blog.Errorf("create aks client failed, err: %s", err.Error())
+		blog.Errorf("get cloud %s TaskManager when BuildUpdateNodeGroupTask in NodeGroup %s failed, %s",
+			opt.Cloud.CloudProvider, group.NodeGroupID, err.Error(),
+		)
 		return nil, err
 	}
-	if group.NodeGroupID == "" || group.ClusterID == "" {
-		blog.Errorf("nodegroup id or cluster id is empty")
-		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
+
+	task, err := mgr.BuildUpdateNodeGroupTask(group, &opt.CommonOption)
+	if err != nil {
+		blog.Errorf("BuildUpdateNodeGroupTask failed: %v", err)
+		return nil, err
 	}
 
-	// update agent pool
-	if err = ng.updateAgentPoolProperties(client, cluster, group); err != nil {
-		return nil, errors.Wrapf(err, "UpdateNodeGroup: call updateAgentPoolProperties failed")
-	}
-	// update virtual machine scale set
-	if err = ng.updateVMSSProperties(client, group); err != nil {
-		return nil, errors.Wrapf(err, "UpdateNodeGroup: call updateVMSSProperties failed")
-	}
-
-	// update bkCloudName
 	if group.NodeTemplate != nil && group.NodeTemplate.Module != nil &&
 		len(group.NodeTemplate.Module.ScaleOutModuleID) != 0 {
 		bkBizID, _ := strconv.Atoi(cluster.BusinessID)
@@ -133,13 +127,7 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
 
-	// note:Azure不支持更换镜像
-	// update imageName
-	// if err = ng.updateImageInfo(group); err != nil {
-	//	return err
-	// }
-
-	return nil, nil
+	return task, nil
 }
 
 // RecommendNodeGroupConf recommends nodegroup configs
@@ -504,6 +492,7 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 	if err != nil {
 		return errors.Wrapf(err, "UpdateNodeGroup: call GetAgentPool api failed")
 	}
+
 	if err = checkPoolState(pool); err != nil { // 更新前检查节点池的状态
 		return errors.Wrapf(err, "nodeGroupID: %s unable to update agent pool", group.NodeGroupID)
 	}
@@ -524,6 +513,10 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 
 // updateVMSSProperties 更新虚拟机规模集 - update virtual machine scale set
 func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.NodeGroup) error {
+	if group.LaunchTemplate == nil || len(group.LaunchTemplate.UserData) == 0 {
+		return nil
+	}
+
 	asg := group.AutoScaling
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

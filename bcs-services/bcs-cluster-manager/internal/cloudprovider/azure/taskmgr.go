@@ -78,6 +78,9 @@ func newtask() *Task {
 
 	// move nodes to nodeGroup task
 
+	// update nodeGroup task
+	task.works[updateAKSNodeGroupStep.StepMethod] = tasks.UpdateAKSNodeGroupTask
+
 	return task
 }
 
@@ -880,7 +883,47 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 
 // BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
 func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroup),
+		TaskName:       cloudprovider.UpdateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+
+	// setting all steps details
+	updateNodeGroupTask := &UpdateNodeGroupTaskOption{NodeGroup: group}
+
+	// step0: createAKSCluster and return clusterID inject common paras
+	updateNodeGroupTask.BuildUpdateNodeGroupStep(task)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
+	return task, nil
 }
 
 // BuildSwitchClusterNetworkTask switch cluster network mode

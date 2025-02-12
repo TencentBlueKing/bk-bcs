@@ -131,6 +131,12 @@ var (
 		StepMethod: fmt.Sprintf("%s-CheckClusterNodesStatusTask", cloudName),
 		StepName:   "检测节点状态",
 	}
+
+	// update nodegroup task
+	updateAKSNodeGroupStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-updateCloudNodeGroupTask", cloudName),
+		StepName:   "更新节点池",
+	}
 )
 
 // CreateClusterTaskOption 创建集群构建step子任务
@@ -375,4 +381,20 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *pr
 
 	task.Steps[checkClusterNodesStatusStep.StepMethod] = checkClusterNodeStatusStep
 	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusStep.StepMethod)
+}
+
+// CreateClusterTaskOption 创建集群构建step子任务
+type UpdateNodeGroupTaskOption struct {
+	NodeGroup *proto.NodeGroup
+}
+
+// BuildUpdateNodeGroupStep 更新节点池
+func (cn *UpdateNodeGroupTaskOption) BuildUpdateNodeGroupStep(task *proto.Task) {
+	updateNodeGroupStep := cloudprovider.InitTaskStep(updateAKSNodeGroupStep)
+	updateNodeGroupStep.Params[cloudprovider.ClusterIDKey.String()] = cn.NodeGroup.ClusterID
+	updateNodeGroupStep.Params[cloudprovider.NodeGroupIDKey.String()] = cn.NodeGroup.NodeGroupID
+	updateNodeGroupStep.Params[cloudprovider.CloudIDKey.String()] = cn.NodeGroup.Provider
+
+	task.Steps[updateAKSNodeGroupStep.StepMethod] = updateNodeGroupStep
+	task.StepSequence = append(task.StepSequence, updateAKSNodeGroupStep.StepMethod)
 }
