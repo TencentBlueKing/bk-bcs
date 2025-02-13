@@ -191,7 +191,8 @@
     "daemon": {
         "enable": ${bcsDaemonEnable},
         "enableInsTypeUsage": ${enableInsTypeUsage},
-        "enableAllocateCidr": ${enableAllocateCidr}
+        "enableAllocateCidr": ${enableAllocateCidr},
+        "enableAzureTaint": ${enableAzureTaint}
     },
     "commonConfig": {
         "annoKeyProjCode": "${bcsSharedClusterAnnoKeyProjCode}",

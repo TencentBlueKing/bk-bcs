@@ -26,13 +26,16 @@ import (
 // Converter aks 与 bcs 内部结构转换器
 type Converter interface {
 	// AgentPoolToNodeGroup Azure代理节点池 转换 为BCS节点池
-	AgentPoolToNodeGroup(pool *armcontainerservice.AgentPool, group *proto.NodeGroup) error
-	// NodeGroupToAgentPool 为BCS节点池 转换 Azure代理节点池(仅用于创建)
-	NodeGroupToAgentPool(group *proto.NodeGroup, pool *armcontainerservice.AgentPool) error
+	AgentPoolToNodeGroup(pool *armcontainerservice.AgentPool, group *proto.NodeGroup,
+		opts *AgentPoolToNodeGroupOptions) error
 	// SetToNodeGroup Azure虚拟规模集 转换 为BCS节点池
 	SetToNodeGroup(set *armcompute.VirtualMachineScaleSet, group *proto.NodeGroup) error
+
+	// NodeGroupToAgentPool 为BCS节点池 转换 Azure代理节点池(仅用于创建)
+	NodeGroupToAgentPool(group *proto.NodeGroup, pool *armcontainerservice.AgentPool) error
 	// NodeGroupToSet 为BCS节点池 转换 Azure虚拟规模集(仅用于创建)
 	NodeGroupToSet(group *proto.NodeGroup, set *armcompute.VirtualMachineScaleSet) error
+
 	// VmToNode Azure节点 转换 为BCS节点
 	VmToNode(vm *armcompute.VirtualMachineScaleSetVM, node *proto.Node) error
 	// NodeToVm 为BCS节点 转换 Azure节点；(仅用于修改)
@@ -156,7 +159,7 @@ type ClusterService interface {
 type AgentPoolService interface {
 	// CreatePool 创建节点池.
 	CreatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-		resourceGroupName string) (*proto.NodeGroup, error)
+		resourceGroupName string, opts *AgentPoolToNodeGroupOptions) (*proto.NodeGroup, error)
 
 	// CreatePoolWithName 从名称创建节点池.
 	//
@@ -164,7 +167,7 @@ type AgentPoolService interface {
 	//
 	// resourceName - K8S名称(Cluster.SystemID).
 	CreatePoolWithName(ctx context.Context, pool *armcontainerservice.AgentPool, resourceGroupName string,
-		resourceName, poolName string, group *proto.NodeGroup) (*proto.NodeGroup, error)
+		resourceName, poolName string, group *proto.NodeGroup, opts *AgentPoolToNodeGroupOptions) (*proto.NodeGroup, error)
 
 	// CreatePoolAndReturn 从名称创建节点池.
 	// pool - 代理节点池.
@@ -276,6 +279,10 @@ type VirtualMachineScaleSetService interface {
 
 	// UpdateSet 修改虚拟机规模集.
 	UpdateSet(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) (*armcompute.VirtualMachineScaleSet, error)
+
+	// UpdateSetNodeNum 增量更新虚拟机规模集目标节点数目
+	UpdateSetNodeNum(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+		nodeNum int64) (*armcompute.VirtualMachineScaleSet, error)
 
 	// UpdateSetWithName 从名称修改虚拟机规模集.
 	//

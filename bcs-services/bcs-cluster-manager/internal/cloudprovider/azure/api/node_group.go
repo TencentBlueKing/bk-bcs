@@ -28,20 +28,21 @@ import (
 
 // CreatePool 创建节点池.
 func (aks *AksServiceImpl) CreatePool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
-	resourceGroupName string) (*proto.NodeGroup, error) {
+	resourceGroupName string, opts *AgentPoolToNodeGroupOptions) (*proto.NodeGroup, error) {
 	pool := new(armcontainerservice.AgentPool)
 	if err := aks.NodeGroupToAgentPool(info.NodeGroup, pool); err != nil {
 		return nil, errors.Wrapf(err, "bcs nodeGroup to azure agentPool failed")
 	}
 	return aks.CreatePoolWithName(ctx, pool, resourceGroupName, info.Cluster.SystemID,
-		info.NodeGroup.CloudNodeGroupID, info.NodeGroup)
+		info.NodeGroup.CloudNodeGroupID, info.NodeGroup, opts)
 }
 
 // CreatePoolWithName 从名称创建节点池.
 // pool - 代理节点池.
 // resourceName - K8S名称(Cluster.SystemID).
 func (aks *AksServiceImpl) CreatePoolWithName(ctx context.Context, pool *armcontainerservice.AgentPool,
-	resourceGroupName, resourceName, poolName string, group *proto.NodeGroup) (*proto.NodeGroup, error) {
+	resourceGroupName, resourceName, poolName string, group *proto.NodeGroup,
+	opts *AgentPoolToNodeGroupOptions) (*proto.NodeGroup, error) {
 	pool, err := aks.CreatePoolAndReturn(ctx, pool, resourceGroupName, resourceName, poolName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "call CreatePoolAndReturn failed")
@@ -49,7 +50,7 @@ func (aks *AksServiceImpl) CreatePoolWithName(ctx context.Context, pool *armcont
 	if group == nil {
 		group = new(proto.NodeGroup)
 	}
-	if err = aks.AgentPoolToNodeGroup(pool, group); err != nil {
+	if err = aks.AgentPoolToNodeGroup(pool, group, opts); err != nil {
 		return group, errors.Wrapf(err, "call AgentPoolToNodeGroup failed")
 	}
 	return group, nil
@@ -161,7 +162,7 @@ func (aks *AksServiceImpl) GetPoolWithName(ctx context.Context, resourceGroupNam
 	if group == nil {
 		group = new(proto.NodeGroup)
 	}
-	if err = aks.AgentPoolToNodeGroup(pool, group); err != nil {
+	if err = aks.AgentPoolToNodeGroup(pool, group, &AgentPoolToNodeGroupOptions{SetTaint: false}); err != nil {
 		return group, errors.Wrapf(err, "call AgentPoolToNodeGroup falied")
 	}
 	return group, nil
@@ -198,7 +199,7 @@ func (aks *AksServiceImpl) ListPoolWithName(ctx context.Context, resourceGroupNa
 	resp := make([]*proto.NodeGroup, len(pools))
 	for i, pool := range pools {
 		resp[i] = new(proto.NodeGroup)
-		if err = aks.AgentPoolToNodeGroup(pool, resp[i]); err != nil {
+		if err = aks.AgentPoolToNodeGroup(pool, resp[i], &AgentPoolToNodeGroupOptions{SetTaint: false}); err != nil {
 			return nil, errors.Wrapf(err, "bcs nodeGroup to azure agentPool failed")
 		}
 	}

@@ -74,3 +74,8 @@ var ImagePublishers = map[string]string{
 	"credativ":  "Debian",
 	"SUSE":      "SLES",
 }
+
+// AgentPoolToNodeGroupOptions options
+type AgentPoolToNodeGroupOptions struct {
+	SetTaint bool
+}

@@ -92,7 +92,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
-	err = applyInstanceMachines(ctx, dependInfo, int64(nodeNum))
+	err = applyInstanceMachinesByPool(ctx, dependInfo, int64(nodeNum))
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
 		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed")
@@ -135,7 +135,7 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	return nil
 }
 
-func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum int64) error {
+func applyInstanceMachinesByPool(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, nodeNum int64) error {
 	taskId := cloudprovider.GetTaskIDFromContext(ctx)
 
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption) // new client
@@ -145,7 +145,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 	}
 
 	// pre check agentPool & vmScaleSet
-	agentPool, err := preCheckAgentPool(ctx, client, info) // 前置检查
+	_, agentPool, err := preCheckAgentPool(ctx, client, info) // 前置检查
 	if err != nil {
 		blog.Errorf("applyInstanceMachines[%s] preCheckAgentPool failed: %v", taskId, err)
 		return err
@@ -201,11 +201,12 @@ func ScaleAgentPoolToDesiredSize(ctx context.Context, info *cloudprovider.CloudD
 
 // preCheckAgentPool 前置检查
 func preCheckAgentPool(rootCtx context.Context, client api.AksService, info *cloudprovider.CloudDependBasicInfo) (
-	*armcontainerservice.AgentPool, error) {
+	*armcompute.VirtualMachineScaleSet, *armcontainerservice.AgentPool, error) {
 	var (
 		group       = info.NodeGroup
 		asg         = group.AutoScaling
 		agentPool   *armcontainerservice.AgentPool
+		vmScaleSet  *armcompute.VirtualMachineScaleSet
 		taskID      = cloudprovider.GetTaskIDFromContext(rootCtx)
 		ctx, cancel = context.WithTimeout(rootCtx, 30*time.Second)
 	)
@@ -214,15 +215,18 @@ func preCheckAgentPool(rootCtx context.Context, client api.AksService, info *clo
 	// 检查 vmScaleSet 是否存在: vmScaleSet 的 AutoScalingName 资源组
 	err := retry.Do(
 		func() error {
-			if _, err := client.GetSetWithName(ctx, asg.AutoScalingName, asg.AutoScalingID); err != nil {
+			vmScaleSetLocal, err := client.GetSetWithName(ctx, asg.AutoScalingName, asg.AutoScalingID)
+			if err != nil {
 				return err
 			}
+
+			vmScaleSet = vmScaleSetLocal
 			return nil
 		},
 		retry.Context(ctx), retry.Attempts(3),
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "preCheckAgentPool[%s] GetSetWithName failed", taskID)
+		return nil, nil, errors.Wrapf(err, "preCheckAgentPool[%s] GetSetWithName failed", taskID)
 	}
 	// 检查 agentPool 是否存在
 	ctx, cancel = context.WithTimeout(rootCtx, 30*time.Second)
@@ -238,10 +242,10 @@ func preCheckAgentPool(rootCtx context.Context, client api.AksService, info *clo
 		retry.Context(ctx), retry.Attempts(3),
 	)
 	if err != nil {
-		return nil, errors.Wrapf(err, "preCheckAgentPool[%s] GetPoolAndReturn failed", taskID)
+		return nil, nil, errors.Wrapf(err, "preCheckAgentPool[%s] GetPoolAndReturn failed", taskID)
 	}
 
-	return agentPool, nil
+	return vmScaleSet, agentPool, nil
 }
 
 // scaleUpNodePool 扩容
