@@ -79,6 +79,7 @@ type bufferedAutoscalerProcessorCallbacks struct {
 	extraValues             map[string]interface{}
 }
 
+// newBufferedAutoscalerProcessorCallbacks TODO
 // NOCC:tosa/fn_length(设计如此)
 func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallbacks {
 	callbacks := &bufferedAutoscalerProcessorCallbacks{}
@@ -148,7 +149,7 @@ func NewBufferedAutoscaler(
 	switch opts.WebhookMode {
 	case WebMode:
 		webhook = NewWebScaler(client, opts.ConfigNamespace,
-			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount)
+			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount, opts.BatchScaleUpCount)
 		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
 	case ConfigMapMode:
 		webhook = NewConfigMapScaler(client, opts.ConfigNamespace,
@@ -233,9 +234,6 @@ func (b *BufferedAutoscaler) RunOnce(currentTime time.Time) errors.AutoscalerErr
 		daemonsets, contexts.PredicateChecker, b.ignoredTaints)
 	if autoscalerError != nil {
 		return autoscalerError.AddPrefix("failed to build node infos for node groups: ")
-	}
-	for ng, node := range nodeInfosForGroups {
-		klog.Infof("ng: %s, labels: %v", ng, node.Node().Labels)
 	}
 
 	typedErr = b.updateClusterState(allNodes, nodeInfosForGroups, currentTime)
@@ -403,6 +401,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	return nil
 }
 
+// doScaleDown TODO
 // nolint
 func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.AutoscalingContext,
 	currentTime time.Time, allNodes []*corev1.Node, scheduledPods []*corev1.Pod) (
@@ -553,6 +552,7 @@ func (b *BufferedAutoscaler) processNodes(autoscalingContext *context.Autoscalin
 	return scaleDownCandidates, podDestinations, temporaryNodes, nil
 }
 
+// doScaleUp TODO
 // nolint
 func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Context,
 	currentTime time.Time, allNodes []*corev1.Node, readyNodes []*corev1.Node,
@@ -598,12 +598,22 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
 			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
+			delete(pod.Spec.Containers[j].Resources.Requests, "bkbcs.tencent.com/cpuset")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/diskIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/disk")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/netIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/other")
 		}
 		for j := range pod.Spec.InitContainers {
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "ephemeral-storage")
+			delete(pod.Spec.Containers[j].Resources.Requests, "bkbcs.tencent.com/cpuset")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/diskIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/disk")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/netIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/other")
 		}
 		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
 	}
@@ -712,8 +722,23 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node
 						klog.Warningf("Error while get fresh node %v: %v", name, getErr)
 						return
 					}
-					// deleteNode 中会重新获取需驱逐 Pod 列表，此处直接传入 nil
-					result = b.scaleDown.deleteNode(freshNode, nil, nodeGroup)
+					// 重新获取需驱逐 Pod 列表
+					podList, listErr := b.ClientSet.CoreV1().Pods(metav1.NamespaceAll).List(metav1.ListOptions{
+						FieldSelector: fmt.Sprintf("spec.nodeName=%s", freshNode.Name),
+					})
+					if listErr != nil {
+						klog.Warningf("Error while list pods on node %v: %v", name, listErr)
+						return
+					}
+					toEvictPods := []*apiv1.Pod{}
+					for i := range podList.Items {
+						if podList.Items[i].DeletionTimestamp != nil {
+							continue
+						}
+						toEvictPods = append(toEvictPods, &podList.Items[i])
+					}
+					// deleteNode
+					result = b.scaleDown.deleteNode(freshNode, toEvictPods, nodeGroup)
 					if result.ResultType != status.NodeDeleteOk {
 						klog.Errorf("Failed to delete %s: %v", name, result.Err)
 						return

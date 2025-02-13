@@ -18,8 +18,6 @@ import (
 	"testing"
 	"time"
 
-	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
-
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +34,8 @@ import (
 	. "k8s.io/autoscaler/cluster-autoscaler/utils/test"
 	"k8s.io/client-go/kubernetes/fake"
 	schedulerframework "k8s.io/kubernetes/pkg/scheduler/framework"
+
+	contextinternal "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-cluster-autoscaler/context"
 )
 
 func TestGenerateAutoscalerRequest(t *testing.T) {
@@ -819,7 +819,7 @@ func TestExecuteScaleUp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := ExecuteScaleUp(tt.args.context, tt.args.clusterStateRegistry,
-				tt.args.options, 100); (err != nil) != tt.wantErr {
+				tt.args.options, 100, 100); (err != nil) != tt.wantErr {
 				t.Errorf("ExecuteScaleUp() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
