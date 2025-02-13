@@ -51,6 +51,11 @@ func (e *IAMPermError) Perms() (map[string]interface{}, error) {
 	}, nil
 }
 
+// ApplyURL xxx
+func (e *IAMPermError) ApplyURL() (string, error) {
+	return NewApplyURLGenerator().Gen(e.Username, e.ActionReqList)
+}
+
 // NewIAMPermErr xxx
 func NewIAMPermErr(username, msg string, actionReqList []ActionResourcesRequest) error {
 	return &IAMPermError{Code: errcode.NoIAMPerm, Username: username, Msg: msg, ActionReqList: actionReqList}
