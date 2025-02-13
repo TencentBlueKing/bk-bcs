@@ -256,29 +256,29 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 
 	err := loop.LoopDoFunc(ctx, func() error {
 		var (
-			err  error
-			pool *armcontainerservice.AgentPool
+			updateErr error
+			pool      *armcontainerservice.AgentPool
 		)
-		err = retry.Do(func() error {
-			pool, err = client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
+		retry.Do(func() error {
+			pool, updateErr = client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
 				cluster.SystemID, *targetPool.Name)
-			if err != nil {
-				return err
+			if updateErr != nil {
+				return updateErr
 			}
 
 			return nil
 		}, retry.Attempts(3))
 		// 扩容完成
-		if err == nil {
+		if updateErr == nil {
 			targetPool.Properties = pool.Properties
 			return loop.EndLoop
 		}
-		if strings.Contains(err.Error(), "missing error information") { // 如果节点池正在扩容中，此时再次扩容，则会失败
+		if strings.Contains(updateErr.Error(), "missing error information") { // 如果节点池正在扩容中，此时再次扩容，则会失败
 			return errors.Errorf("scaleUpNodePool[%s] continuous scale up fails", taskID)
 		}
 
 		// 扩容失败
-		return errors.Wrapf(err, "scaleUpNodePool[%s] UpdatePoolAndReturn failed(scale up)", taskID)
+		return errors.Wrapf(updateErr, "scaleUpNodePool[%s] UpdatePoolAndReturn failed(scale up)", taskID)
 	}, loop.LoopInterval(30*time.Second))
 
 	if err != nil {
