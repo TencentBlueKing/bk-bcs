@@ -36,6 +36,9 @@ export interface IEvent {
 export interface ISubscribeData {
   manifest: IManifest;
   manifestExt: IManifestExt;
+  perms?: {
+    applyURL: string
+  }
   total: number;
   webAnnotations?: any;
 }

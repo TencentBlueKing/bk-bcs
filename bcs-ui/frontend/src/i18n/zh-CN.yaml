@@ -2278,6 +2278,7 @@ dashboard:
     tips:
       containerMemoryWorkingSetBytesOom: container_memory_working_set_bytes，limit限制时oom判断依据
       inplaceUpdateNotSupportRestart: 原地升级策略不支持滚动重启操作
+      noPerms: 部分资源当前用户无查看权限，请点击此处{0}
     label:
       upgrade:
         maxSurg: '最大调度Pod数量（maxSurge）: {num}'
@@ -2288,6 +2289,7 @@ dashboard:
       yaml: 查看YAML配置
       restart: 滚动重启
       onDelete: 手动重启
+      applyURL: 申请访问
     container:
       title: 容器
       name: 容器名称

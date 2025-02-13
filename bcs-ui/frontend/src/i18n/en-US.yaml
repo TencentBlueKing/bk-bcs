@@ -2858,6 +2858,7 @@ dashboard:
         container_memory_working_Set_bytes, limit restrictions OOM judgment
         basis
       inplaceUpdateNotSupportRestart: InplaceUpdate not support restart pods
+      noPerms: The current user does not have permission to view some resources. Please click here{0}
     label:
       upgrade:
         maxSurg: 'Maximum scheduling pod quantity (MaxSurge): {num}'
@@ -2868,6 +2869,7 @@ dashboard:
       yaml: View yaml configuration
       restart: Restart
       onDelete: On-Delete
+      applyURL: Request access
     container:
       title: Container
       name: Container Name
