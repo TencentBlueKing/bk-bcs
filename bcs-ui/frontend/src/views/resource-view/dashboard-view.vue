@@ -47,6 +47,7 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { cloneDeep } from 'lodash';
 import { computed, onBeforeMount, onBeforeUnmount, provide, reactive, ref, toRef, watch } from 'vue';
 
 import ResourceMenu from './view-manage/resource-menu.vue';
@@ -101,7 +102,7 @@ const reload = () => {
   });
 };
 
-const { dashboardViewID, updateViewIDStore } = useViewConfig();
+const { dashboardViewID } = useViewConfig();
 
 // 集群列表页
 const isDashboardHome = computed(() => $router.currentRoute?.matched?.some(item => item.name === 'dashboardHome'));
@@ -185,7 +186,7 @@ const initClusterAndViewID = () => {
       },
     });
   }
-  updateViewIDStore(viewID);// 更新视图ID
+  $store.commit('updateDashboardViewID', viewID);// 更新当前视图ID
   $store.commit('updateCurCluster', cluster ?? clusterList.value.find(item => item.status === 'RUNNING'));
 };
 
@@ -198,12 +199,45 @@ const handleGetNsData = async () => {
   if (!exist) return;
   nsList.value = await getNamespaceData({ $clusterId: curClusterId.value });
 };
+// 解析并获取url参数
+const propertis = ['name', 'creator', 'source', 'templateName', 'templateVersion', 'chartName', 'labelSelector'];
+function handleGetQuery(query) {
+  // 从query中获取命名空间
+  query?.namespace && $store.commit('updateViewNsList', query.namespace.split(','));
+  // query中不存在propertis中的参数，不显示showViewConfig
+  if (!propertis.some(key => key in query)) return;
+
+  $store.commit('updateTmpViewData', {
+    filter: {
+      name: query?.name,
+      creator: query?.creator ? query?.creator.split(',') : [],
+      createSource: {
+        source: query?.source,
+        template: {
+          templateName: query?.templateName,
+          templateVersion: query?.templateVersion,
+        },
+        chart: {
+          chartName: query?.chartName,
+        },
+      },
+      labelSelector: query?.labelSelector ? JSON.parse(decodeURIComponent(query?.labelSelector)) : [],
+    },
+  });
+  // 自定义资源
+  $store.commit('updateCrdData', {
+    crd: query?.crd,
+    kind: query?.kind,
+    scope: query?.scope,
+  });
+  showViewConfig.value = true;
+}
 const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
 watch(curClusterId, async () => {
   isNSChanged.value = false;
   await handleGetNsData();
   // 首次加载
-  if (!isEntry.value && nsList.value[0]?.name) {
+  if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace) {
     // 不是从部署管理页面跳转过来，才默认命名空间
     if (currentRoute.value?.name !== 'dashboardWorkloadDetail') {
       $store.commit('updateViewNsList', [nsList.value[0].name]);
@@ -224,6 +258,19 @@ watch(curClusterId, async () => {
   isNSChanged.value = true;
 }, { immediate: true });
 
+// 同步命名空间到url
+watch(curNsList, () => {
+  const queryData = cloneDeep(currentRoute.value.query);
+  if (!curNsList.value?.length) {
+    delete queryData.namespace;
+  } else {
+    queryData.namespace = curNsList.value.join(',');
+  }
+  $router.replace({
+    query: queryData,
+  }).catch(() => {});
+});
+
 onBeforeMount(() => {
   bus.$on('toggle-show-view-config', () => {
     if (isViewEditable.value) return;
@@ -239,6 +286,19 @@ onBeforeUnmount(() => {
 provide('dashboard-view', {
   reload,
 });
+
+defineExpose({
+  handleGetQuery,
+});
+</script>
+<script lang="ts">
+export default {
+  beforeRouteEnter(to, from, next) {
+    next((vm) => {
+      (vm as any).handleGetQuery(to.query);
+    });
+  },
+};
 </script>
 <style lang="postcss">
 .bcs-dashboard-view {

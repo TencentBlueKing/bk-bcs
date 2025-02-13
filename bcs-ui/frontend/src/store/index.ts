@@ -84,6 +84,7 @@ const store = new Vuex.Store<{
   dashboardViewList: Array<IViewData>
   tmpViewData: IViewData | undefined // 非编辑态时临时视图数据
   editViewData: IViewData | undefined // 编辑态时视图数据
+  crdData: ICrdData | undefined
   viewNsList: string[] // 集群视图命名空间缓存
   globalPageSize: number
   hideSharedCluster: boolean
@@ -167,6 +168,7 @@ const store = new Vuex.Store<{
     dashboardViewList: [], // 视图列表
     tmpViewData: {},
     editViewData: {},
+    crdData: {},
     viewNsList: [],
     globalPageSize: 10,
     hideSharedCluster: true,
@@ -262,6 +264,9 @@ const store = new Vuex.Store<{
     },
     updateEditViewData(state, data) {
       state.editViewData = data;
+    },
+    updateCrdData(state, data) {
+      state.crdData = data;
     },
     updateViewEditable(state, data) {
       state.isViewEditable = data;

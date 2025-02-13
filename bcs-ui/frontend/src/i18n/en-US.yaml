@@ -3827,6 +3827,8 @@ templateFile:
     exportFolder: Export Folder
     upgrade: Upgrade to Helm template
     rollback: Rollback
+    toResourceView: Resource view
+    toFileList: File list
   placeholder:
     searchFile: Template File Name/Type/Category Tag/Version/Updater/Update Time
     searchVersion: Version Number/Version Log/Updater
@@ -3874,6 +3876,9 @@ templateFile:
       The current file has been upgraded to a Helm template. After saving,
       switching back to a non-Helm template will no longer be supported.
     spaceSubTitle: The template folder and its template files will be removed
+    emptyContent: The template file content cannot be empty
+    success: success
+    subTitle: 'Template file {templateFile} instance has been deployed to {cluster}'
     noChanges: No changes
   tag:
     draft: draft
