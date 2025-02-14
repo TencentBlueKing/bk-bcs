@@ -73,7 +73,10 @@ func (c *nodeGroupToPool) convert() {
 	// 是否分配公网IP
 	if c.group.LaunchTemplate.InternetAccess != nil {
 		properties.EnableNodePublicIP = to.Ptr(c.group.LaunchTemplate.InternetAccess.PublicIPAssigned)
-
+		// 是否开启publicPrefix
+		if c.group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID != "" {
+			properties.NodePublicIPPrefixID = to.Ptr(c.group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID)
+		}
 	}
 
 	// 以下为可选参数

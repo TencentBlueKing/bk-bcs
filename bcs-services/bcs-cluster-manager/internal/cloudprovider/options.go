@@ -532,6 +532,12 @@ type CheckConflictInVpcCidrOption struct {
 	ResourceGroupName string
 }
 
+// ListNodePublicPrefixesOption list node public prefixes option
+type ListNodePublicPrefixesOption struct {
+	CommonOption
+	ResourceGroupName string
+}
+
 // AddSubnetsToClusterOption add subnet to cluster option
 type AddSubnetsToClusterOption struct {
 	CommonOption
