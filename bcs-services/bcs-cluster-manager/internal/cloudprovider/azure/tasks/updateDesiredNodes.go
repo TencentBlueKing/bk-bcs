@@ -263,7 +263,7 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 			updateErr error
 			pool      *armcontainerservice.AgentPool
 		)
-		retry.Do(func() error {
+		_ = retry.Do(func() error {
 			pool, updateErr = client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
 				cluster.SystemID, *targetPool.Name)
 			if updateErr != nil {
