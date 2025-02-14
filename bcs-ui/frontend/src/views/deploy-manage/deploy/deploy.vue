@@ -175,6 +175,40 @@
         </div>
       </template>
     </bcs-sideslider>
+    <!-- 提示框 -->
+    <bcs-dialog
+      v-model="successDialog"
+      theme="primary"
+      width="420px"
+      :close-icon="false"
+      :draggable="false"
+      :show-footer="false">
+      <div class="flex justify-center h-[100px]">
+        <svg class="icon svg-icon w-[80px]">
+          <use xlink:href="#bcs-icon-color-dui"></use>
+        </svg>
+      </div>
+      <p class="text-center text-[20px] font-bold mt-[10px]">{{ $t('templateFile.tips.success') }}</p>
+      <div class="text-[16px] mt-[20px] text-center">
+        {{ $t('templateFile.tips.subTitle', {
+          templateFile: `${fileMetadata?.templateSpace}/${fileMetadata?.name}: ${curVersionData?.version}`,
+          cluster: `${curCluster?.clusterName}(${formData?.clusterID}) ${formData?.namespace}`
+        }) }}
+      </div>
+      <div class="flex justify-between mt-[20px] px-[30px]">
+        <bcs-button
+          theme="primary"
+          class="min-w-[88px]"
+          @click="handleGotoResourceView">
+          {{ $t('templateFile.button.toResourceView') }}
+        </bcs-button>
+        <bcs-button
+          class="min-w-[88px]"
+          @click="back()">
+          {{ $t('templateFile.button.toFileList') }}
+        </bcs-button>
+      </div>
+    </bcs-dialog>
   </BcsContent>
 </template>
 <script setup lang="ts">
@@ -190,6 +224,7 @@ import AiAssistant from '@/components/ai-assistant.vue';
 import FormGroup from '@/components/form-group.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import { ICluster, useCluster } from '@/composables/use-app';
 import useFullScreen from '@/composables/use-fullscreen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -236,6 +271,9 @@ const rules = ref({
     },
   ],
 });
+const { clusterList } = useCluster();
+const curCluster = computed<Partial<ICluster>>(() => clusterList.value
+  ?.find(item => item.clusterID === formData.value.clusterID) || {});
 const showPreviewSideslider = ref(false);
 const groupText = {
   readonly: $i18n.t('templateFile.label.otherParams'), // 其他变量
@@ -320,10 +358,11 @@ async function handleDeployTemplateFile() {
     templateVersions: Array.isArray(formData.value.templateVersions)
       ? formData.value.templateVersions
       : [formData.value.templateVersions],
-  }).catch(() => false);
+  }).then(() => true)
+    .catch(() => false);
   deploying.value = false;
   if (result) {
-    back();
+    successDialog.value = true;
   }
 }
 
@@ -361,6 +400,23 @@ const { contentRef, isFullscreen, switchFullScreen } = useFullScreen();
 // 返回
 function back() {
   $router.back();
+}
+
+const successDialog = ref(false);
+function handleGotoResourceView() {
+  successDialog.value = false;
+  $router.push({
+    name: 'dashboardWorkloadDeployments',
+    params: {
+      clusterId: formData.value?.clusterID,
+    },
+    query: {
+      source: 'Template',
+      namespace: formData.value.namespace,
+      templateName: fileMetadata.value?.name,
+      templateVersion: curVersionData.value?.version,
+    },
+  });
 }
 
 watch(

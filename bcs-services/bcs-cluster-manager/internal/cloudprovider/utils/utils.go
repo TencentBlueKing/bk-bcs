@@ -41,9 +41,9 @@ const (
 	// BCSNodeGroupTaintValue xxx
 	BCSNodeGroupTaintValue = "noSchedule"
 	// BCSNodeGroupGkeTaintEffect xxx
-	BCSNodeGroupGkeTaintEffect = "NO_EXECUTE"
+	BCSNodeGroupGkeTaintEffect = "NO_SCHEDULE"
 	// BCSNodeGroupAzureTaintEffect xxx
-	BCSNodeGroupAzureTaintEffect = "NoExecute"
+	BCSNodeGroupAzureTaintEffect = "NoSchedule"
 )
 
 // SyncClusterInfoToPassCC sync clusterInfo to pass-cc

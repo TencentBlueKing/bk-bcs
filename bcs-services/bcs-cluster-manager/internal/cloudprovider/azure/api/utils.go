@@ -28,6 +28,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	cutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 )
 
@@ -233,14 +234,12 @@ func (c *nodeGroupToPool) setTaints() {
 		taints = make([]*proto.Taint, 0)
 	}
 
-	/*
-		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
-		taints = append(taints, &proto.Taint{
-			Key:    cutils.BCSNodeGroupTaintKey,
-			Value:  cutils.BCSNodeGroupTaintValue,
-			Effect: cutils.BCSNodeGroupAzureTaintEffect,
-		})
-	*/
+	// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+	taints = append(taints, &proto.Taint{
+		Key:    cutils.BCSNodeGroupTaintKey,
+		Value:  cutils.BCSNodeGroupTaintValue,
+		Effect: cutils.BCSNodeGroupAzureTaintEffect,
+	})
 
 	// key=value:NoSchedule NoExecute PreferNoSchedule
 	c.pool.Properties.NodeTaints = make([]*string, 0)
@@ -309,10 +308,12 @@ type poolToNodeGroup struct {
 	group      *proto.NodeGroup
 	pool       *armcontainerservicev3.AgentPool
 	properties *armcontainerservicev3.ManagedClusterAgentPoolProfileProperties
+	opts       *AgentPoolToNodeGroupOptions
 }
 
 // newPoolToNodeGroupConverter create poolToNodeGroup
-func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *proto.NodeGroup) *poolToNodeGroup {
+func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *proto.NodeGroup,
+	opts *AgentPoolToNodeGroupOptions) *poolToNodeGroup {
 	if pool.Properties == nil {
 		pool.Properties = new(armcontainerservicev3.ManagedClusterAgentPoolProfileProperties)
 	}
@@ -320,6 +321,7 @@ func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *p
 		group:      group,
 		pool:       pool,
 		properties: pool.Properties,
+		opts:       opts,
 	}
 }
 
@@ -363,8 +365,11 @@ func (c *poolToNodeGroup) convert() {
 
 	// 设置labels
 	c.setLabels()
-	// 设置taints
-	c.setTaints()
+
+	if c.opts != nil && c.opts.SetTaint {
+		// 设置taints
+		c.setTaints()
+	}
 	// 设置k8s版本
 	// c.setCurrentOrchestratorVersion()
 }
@@ -1520,14 +1525,13 @@ func SetAgentPoolFromNodeGroup(group *proto.NodeGroup, pool *armcontainerservice
 		taints = make([]*proto.Taint, 0)
 	}
 
-	/*
-		// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
-		taints = append(taints, &proto.Taint{
-			Key:    cutils.BCSNodeGroupTaintKey,
-			Value:  cutils.BCSNodeGroupTaintValue,
-			Effect: cutils.BCSNodeGroupAzureTaintEffect,
-		})
-	*/
+	// attention: azure not support addNodes to set unScheduled nodes, thus realize this feature by taint
+	taints = append(taints, &proto.Taint{
+		Key:    cutils.BCSNodeGroupTaintKey,
+		Value:  cutils.BCSNodeGroupTaintValue,
+		Effect: cutils.BCSNodeGroupAzureTaintEffect,
+	})
+
 	pool.Properties.NodeTaints = make([]*string, 0)
 	for _, taint := range taints {
 		pool.Properties.NodeTaints = append(pool.Properties.NodeTaints,

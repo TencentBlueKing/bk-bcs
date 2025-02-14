@@ -66,6 +66,12 @@ interface IViewData {
   updateAt?: string
 }
 
+interface ICrdData {
+  crd?: string
+  kind?: string
+  scope?: string
+}
+
 type ViewFilterID = 'clusterNamespaces'|'creator'|'labelSelector'|'name'|'createSource.source';
 interface IFieldItem {
   title: string

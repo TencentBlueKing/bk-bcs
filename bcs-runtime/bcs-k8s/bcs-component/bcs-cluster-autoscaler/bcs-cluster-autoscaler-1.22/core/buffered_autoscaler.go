@@ -38,6 +38,7 @@ import (
 	"k8s.io/autoscaler/cluster-autoscaler/utils/backoff"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/deletetaint"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
+	pod_util "k8s.io/autoscaler/cluster-autoscaler/utils/pod"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/taints"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/tpu"
 	"k8s.io/klog/v2"
@@ -95,10 +96,12 @@ type bufferedAutoscalerProcessorCallbacks struct {
 	scaleDown               *ScaleDown
 }
 
+// ResetUnneededNodes TODO
 func (callbacks *bufferedAutoscalerProcessorCallbacks) ResetUnneededNodes() {
 	callbacks.scaleDown.CleanUpUnneededNodes()
 }
 
+// newBufferedAutoscalerProcessorCallbacks TODO
 // NOCC:tosa/fn_length(设计如此)
 func newBufferedAutoscalerProcessorCallbacks() *bufferedAutoscalerProcessorCallbacks {
 	callbacks := &bufferedAutoscalerProcessorCallbacks{}
@@ -170,7 +173,7 @@ func NewBufferedAutoscaler(
 	switch opts.WebhookMode {
 	case WebMode:
 		webhook = NewWebScaler(autoscalingContext.ClientSet, opts.ConfigNamespace,
-			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount)
+			opts.WebhookModeConfig, opts.WebhookModeToken, opts.MaxBulkScaleUpCount, opts.BatchScaleUpCount)
 		metricsinternal.RegisterWebhookParams("Web", opts.WebhookModeConfig)
 	case ConfigMapMode:
 		webhook = NewConfigMapScaler(autoscalingContext.ClientSet, opts.ConfigNamespace,
@@ -446,10 +449,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 		return true, nil
 	}
 
-	if b.deleteCreatedNodesWithErrors(allNodes) {
-		klog.V(0).Infof("Some nodes that failed to create were removed, skipping iteration")
-		return true, nil
-	}
+	b.deleteCreatedNodesWithErrors(allNodes)
 
 	// Check if there has been a constant difference between the number of nodes in k8s and
 	// the number of nodes on the cloud provider side.
@@ -466,6 +466,7 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 	return false, nil
 }
 
+// doScaleUp TODO
 // NOCC:golint/fnsize(设计如此)
 // nolint
 func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Context,
@@ -528,12 +529,22 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.Containers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
 			delete(pod.Spec.Containers[j].Resources.Requests, "ephemeral-storage")
+			delete(pod.Spec.Containers[j].Resources.Requests, "bkbcs.tencent.com/cpuset")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/diskIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/disk")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/netIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/other")
 		}
 		for j := range pod.Spec.InitContainers {
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "cloud.bkbcs.tencent.com/eip")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "ephemeral-storage")
+			delete(pod.Spec.Containers[j].Resources.Requests, "bkbcs.tencent.com/cpuset")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/diskIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/disk")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/netIO")
+			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/other")
 		}
 		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
 	}
@@ -592,6 +603,7 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 	return scaleUpStatus, scaleUpStatusProcessorAlreadyCalled, typedErr
 }
 
+// doScaleDown TODO
 // NOCC:golint/fnsize(设计如此)
 // nolint funlen
 func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.AutoscalingContext,
@@ -732,7 +744,7 @@ func (b *BufferedAutoscaler) processNodes(autoscalingContext *context.Autoscalin
 	return scaleDownCandidates, podDestinations, nil
 }
 
-func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node) bool {
+func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node) {
 	// We always schedule deleting of incoming errornous nodes
 	// DOTO[lukaszos] Consider adding logic to not retry delete every loop iteration
 	nodes := b.clusterStateRegistry.GetCreatedNodesWithErrors()
@@ -775,12 +787,31 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node
 						return
 					}
 					freshNode, getErr := b.ClientSet.CoreV1().Nodes().Get(ctx.TODO(), name, metav1.GetOptions{})
-					if err != nil || freshNode == nil {
+					if getErr != nil || freshNode == nil {
 						klog.Warningf("Error while get fresh node %v: %v", name, getErr)
 						return
 					}
-					// deleteNode 中会重新获取需驱逐 Pod 列表，此处直接传入 nil
-					result = b.scaleDown.deleteNode(freshNode, nil, nil, nodeGroup)
+					// 重新获取需驱逐 Pod 列表
+					podList, listErr := b.ClientSet.CoreV1().Pods(metav1.NamespaceAll).List(ctx.TODO(), metav1.ListOptions{
+						FieldSelector: fmt.Sprintf("spec.nodeName=%s", freshNode.Name),
+					})
+					if listErr != nil {
+						klog.Warningf("Error while list pods on node %v: %v", name, listErr)
+						return
+					}
+					toEvictPods, daemonsetPods := []*apiv1.Pod{}, []*apiv1.Pod{}
+					for i := range podList.Items {
+						if podList.Items[i].DeletionTimestamp != nil {
+							continue
+						}
+						if pod_util.IsDaemonSetPod(&podList.Items[i]) {
+							daemonsetPods = append(daemonsetPods, &podList.Items[i])
+							continue
+						}
+						toEvictPods = append(toEvictPods, &podList.Items[i])
+					}
+					// deleteNode
+					result = b.scaleDown.deleteNode(freshNode, toEvictPods, daemonsetPods, nodeGroup)
 					if result.ResultType != status.NodeDeleteOk {
 						klog.Errorf("Failed to delete %s: %v", name, result.Err)
 						return
@@ -795,7 +826,6 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node
 		deletedAny = deletedAny || err == nil
 		b.clusterStateRegistry.InvalidateNodeInstancesCacheEntry(nodeGroup)
 	}
-	return deletedAny
 }
 
 func findNameFromAllNodes(node *apiv1.Node, allNodes []*apiv1.Node) (string, bool) {
@@ -822,6 +852,7 @@ func (b *BufferedAutoscaler) nodeGroupsByID() map[string]cloudprovider.NodeGroup
 	return nodeGroups
 }
 
+// filterOutYoungPods TODO
 // don't consider pods newer than newPodScaleUpDelay seconds old as unschedulable
 func (b *BufferedAutoscaler) filterOutYoungPods(allUnschedulablePods []*corev1.Pod,
 	currentTime time.Time) []*corev1.Pod {
@@ -853,6 +884,7 @@ func (b *BufferedAutoscaler) ExitCleanUp() {
 	b.clusterStateRegistry.Stop()
 }
 
+// obtainNodeLists TODO
 // nolint
 func (b *BufferedAutoscaler) obtainNodeLists(cp cloudprovider.CloudProvider) ([]*corev1.Node, []*corev1.Node,
 	errors.AutoscalerError) {

@@ -31,6 +31,11 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
+const (
+	cloudId             = "azureCloud"
+	validateWebhookName = "aks-node-validating-webhook"
+)
+
 var (
 	// NodeSetTaintsActionStep 节点设置污点任务
 	NodeSetTaintsActionStep = cloudprovider.StepInfo{
@@ -103,7 +108,7 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
-	err = removeClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, nodeNames, removeTaints)
+	err = RemoveClusterNodesTaint(ctx, dependInfo.Cluster.ClusterID, cloudID, nodeNames, removeTaints)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("remove cluster nodes taint failed [%s]", err))
@@ -125,7 +130,8 @@ func RemoveClusterNodesInnerTaintTask(taskID string, stepName string) error {
 	return nil
 }
 
-func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames, removeTaints []string) error {
+// RemoveClusterNodesTaint remove cluster nodes platform taint
+func RemoveClusterNodesTaint(ctx context.Context, clusterID, cloudID string, nodeNames, removeTaints []string) error {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	k8sOperator := clusterops.NewK8SOperator(options.GetGlobalCMOptions(), cloudprovider.GetStorageModel())
@@ -135,27 +141,50 @@ func removeClusterNodesTaint(ctx context.Context, clusterID string, nodeNames, r
 	}
 
 	for _, ins := range nodeNames {
+
+		// attention: need to delete validate webhook when azureCloud update node taints
+		if cloudID == cloudId {
+			err = k8sOperator.DeleteValidatingWebhookConfig(ctx, clusterID, validateWebhookName)
+			if err != nil {
+				blog.Errorf("removeClusterNodesTaint[%s] deleteValidatingWebhookConfig nodeName[%s:%s] failed: %v",
+					taskID, clusterID, ins, err)
+				continue
+			}
+		}
+
 		node, errLocal := kubeCli.CoreV1().Nodes().Get(context.Background(), ins, metav1.GetOptions{})
 		if errLocal != nil {
-			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] failed: %v", taskID, ins, err)
+			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s:%s] failed: %v", taskID, clusterID, ins, err)
 			continue
 		}
 
-		newTaints := make([]corev1.Taint, 0)
+		var (
+			newTaints = make([]corev1.Taint, 0)
+			exist     bool
+		)
+
 		for _, taint := range node.Spec.Taints {
-			if !utils.SliceContainInString(removeTaints, taint.Key) && taint.Key != cutils.BCSNodeGroupTaintKey {
+			if utils.SliceContainInString(removeTaints, taint.Key) || taint.Key == cutils.BCSNodeGroupTaintKey {
+				exist = true
+			} else {
 				newTaints = append(newTaints, taint)
 			}
 		}
-		node.Spec.Taints = newTaints
-
-		_, errLocal = kubeCli.CoreV1().Nodes().Update(context.TODO(), node, metav1.UpdateOptions{})
-		if errLocal != nil {
-			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] failed: %v", taskID, ins, errLocal)
+		if !exist {
+			blog.Infof("removeClusterNodesTaint[%s] nodeName[%s:%s] not exist remove taints",
+				taskID, clusterID, ins)
 			continue
 		}
 
-		blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s] success", taskID, ins)
+		// 存在平台taint则更新
+		node.Spec.Taints = newTaints
+		_, errLocal = kubeCli.CoreV1().Nodes().Update(context.TODO(), node, metav1.UpdateOptions{})
+		if errLocal != nil {
+			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s:%s] failed: %v", taskID, clusterID, ins, errLocal)
+			continue
+		}
+
+		blog.Infof("removeClusterNodesTaint[%s] nodeName[%s:%s] success", taskID, clusterID, ins)
 	}
 
 	return nil

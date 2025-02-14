@@ -101,7 +101,8 @@ func createCastFile(podCtx *types.PodContext) (*castFile, error) {
 	}
 
 	namePrefix := time.Now().Format(dayTimeFormat)
-	name := fmt.Sprintf("%s_%s_%s_%s.cast", namePrefix, podCtx.ClusterId, podCtx.Username, podCtx.SessionId[:6])
+	name := fmt.Sprintf("%s_%s_%s_%s_%s.cast",
+		namePrefix, podCtx.ProjectCode, podCtx.ClusterId, podCtx.Username, podCtx.SessionId[:6])
 	c := castFile{
 		dir:      dir,
 		name:     name,

@@ -199,9 +199,8 @@ const tabs = computed(() => [
     name: 'master',
     label: 'cluster.detail.title.controlConfig',
     component: Master,
-    isShow: (!curCluster.value?.is_shared
-      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')
-      && !isKubeConfigImportCluster.value),
+    isShow: isKubeConfigImportCluster.value || (!curCluster.value?.is_shared
+      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')),
     componentConfig: {
       clusterId: props.clusterId,
     },

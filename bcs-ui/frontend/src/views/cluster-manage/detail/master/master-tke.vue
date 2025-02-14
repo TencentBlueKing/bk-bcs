@@ -8,33 +8,7 @@
         </span>
       </bk-form-item>
       <bk-form-item :label="$t('cluster.labels.masterInfo')">
-        <div class="flex max-w-[800px]">
-          <bk-table :data="masterData" v-bkloading="{ isLoading }">
-            <bk-table-column :label="$t('cluster.labels.hostName')">
-              <template #default="{ row }">
-                {{ row.nodeName || '--' }}
-              </template>
-            </bk-table-column>
-            <bk-table-column label="IPv4">
-              <template #default="{ row }">
-                {{ row.innerIP || '--' }}
-              </template>
-            </bk-table-column>
-            <bk-table-column label="IPv6">
-              <template #default="{ row }">
-                {{ row.innerIPv6 || '--' }}
-              </template>
-            </bk-table-column>
-            <template v-if="$INTERNAL">
-              <bk-table-column :label="$t('generic.ipSelector.label.idc')" prop="idc"></bk-table-column>
-              <bk-table-column :label="$t('cluster.labels.rack')" prop="rack"></bk-table-column>
-              <bk-table-column
-                :label="$t('generic.ipSelector.label.serverModel')"
-                prop="deviceClass">
-              </bk-table-column>
-            </template>
-          </bk-table>
-        </div>
+        <MasterInfo :cluster-id="clusterId" />
       </bk-form-item>
       <template v-if="['tencentPublicCloud', 'tencentCloud'].includes(curCluster.provider || '')">
         <bk-form-item
@@ -129,9 +103,10 @@ import { computed, defineComponent, onBeforeMount, ref } from 'vue';
 
 import ClusterConnect from '../components/cluster-connect.vue';
 
-import { masterList, setClusterModule } from '@/api/modules/cluster-manager';
+import MasterInfo from './master-info.vue';
+
+import { setClusterModule } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
-import { copyText } from '@/common/util';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import { ICluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
@@ -143,7 +118,7 @@ import useCloud from '@/views/cluster-manage/use-cloud';
 
 export default defineComponent({
   name: 'TKEMaster',
-  components: { ClusterConnect, TopoSelector },
+  components: { ClusterConnect, TopoSelector, MasterInfo },
   props: {
     clusterId: {
       type: String,
@@ -214,26 +189,6 @@ export default defineComponent({
       .find(item => item.level === clusterLevel.value)
       || { level: '', scale: { maxNodePodNum: 0, maxServiceNum: 0, cidrStep: 0 } });
 
-    // 独立集群Master信息
-    const isLoading = ref(false);
-    const masterData = ref<any[]>([]);
-    const handleGetMasterData = async () => {
-      isLoading.value = true;
-      masterData.value = await masterList({
-        $clusterId: props.clusterId,
-      }).catch(() => []);
-      isLoading.value = false;
-    };
-
-    // 复制IP
-    const handleCopyIPv4 = () => {
-      copyText(masterData.value.map(item => item.innerIP).join('\n'));
-      $bkMessage({
-        theme: 'success',
-        message: $i18n.t('generic.msg.success.copy'),
-      });
-    };
-
     const {
       securityGroups,
       handleGetSecurityGroups,
@@ -244,9 +199,6 @@ export default defineComponent({
     });
 
     onBeforeMount(() => {
-      if (Object.keys(curCluster.value.master || {}).length) {
-        handleGetMasterData();
-      }
       handleGetSecurityGroups({
         region: curCluster.value.region,
         cloudAccountID: curCluster.value.cloudAccountID,
@@ -256,16 +208,13 @@ export default defineComponent({
     });
 
     return {
-      isLoading,
       curCluster,
       clusterData, // 全量数据
       apiServer,
       clusterLevel,
       curClusterScale,
-      masterData,
       isAutoUpgradeClusterLevel,
       securityGroupName,
-      handleCopyIPv4,
       isEditModule,
       curModuleID,
       handleEditWorkerModule,

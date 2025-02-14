@@ -103,7 +103,7 @@ func (p *IAMPerm) makeResReq(ctx Ctx) ResRequest {
 func (p *IAMPerm) canAction(ctx Ctx, actionID string, useCache bool) (bool, error) {
 	if resID := ctx.GetResID(); resID != "" {
 		reqReq := p.makeResReq(ctx)
-		resources := reqReq.MakeResources([]string{resID})
+		resources := reqReq.MakeResources(strings.Split(resID, ","))
 		return p.Cli.ResInstAllowed(ctx.GetUsername(), actionID, resources, useCache)
 	}
 
@@ -149,7 +149,7 @@ func (p *IAMPerm) genIAMPermError(ctx Ctx, actionID string) error {
 	parentChain := []IAMRes{}
 
 	if resID := ctx.GetResID(); resID != "" {
-		resIDs = append(resIDs, resID)
+		resIDs = append(resIDs, strings.Split(resID, ",")...)
 		parentChain = ctx.GetParentChain()
 	} else if p.hasParentRes() {
 		resType = p.ParentResPerm.ResType
