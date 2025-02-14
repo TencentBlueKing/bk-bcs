@@ -25,6 +25,9 @@ export default function () {
   const viewList = computed<IViewData[]>(() => $store.state.dashboardViewList);
   const dashboardViewID = computed(() => $store.state.dashboardViewID);
 
+  // 自定义资源类型
+  const curCrdData = computed(() => $store.state.crdData);
+
   // 临时视图数据(集群视图只有临时数据)
   const curTmpViewData = computed(() => $store.state.tmpViewData);
   // 详情数据(原始数据、当前临时条件数据和编辑的数据)
@@ -194,6 +197,7 @@ export default function () {
     curViewName,
     curViewType,
     isViewEditable,
+    curCrdData,
     getViewConfigList,
     getViewConfigDetail,
     createViewConfig,

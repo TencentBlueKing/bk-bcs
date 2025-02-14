@@ -44,11 +44,12 @@ type WebScaler struct {
 	client              *http.Client
 	configmapLister     v1lister.ConfigMapNamespaceLister
 	maxBulkScaleUpCount int
+	batchScaleUpCount   int
 }
 
 // NewWebScaler initializes a WebScaler
 func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token string,
-	maxBulkScaleUpCount int) Webhook {
+	maxBulkScaleUpCount, batchScaleUpCount int) Webhook {
 	tr := &http.Transport{ // nolint
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 	}
@@ -59,7 +60,7 @@ func NewWebScaler(kubeClient kubeclient.Interface, configNamespace, url, token s
 	stopChannel := make(chan struct{})
 	lister := kubernetes.NewConfigMapListerForNamespace(kubeClient, stopChannel, configNamespace)
 	return &WebScaler{url: url, token: token, client: client, configmapLister: lister.ConfigMaps(configNamespace),
-		maxBulkScaleUpCount: maxBulkScaleUpCount}
+		maxBulkScaleUpCount: maxBulkScaleUpCount, batchScaleUpCount: batchScaleUpCount}
 }
 
 // DoWebhook get responses from webhook, then execute scale based on responses
@@ -75,10 +76,10 @@ func (w *WebScaler) DoWebhook(context *contextinternal.Context,
 			"failed to get response from web server: %v", err)
 	}
 
-	checkErr := checkResourcesLimits(context, nodes, options, candidates)
-	if checkErr != nil {
-		return checkErr
-	}
+	// checkErr := checkResourcesLimits(context, nodes, options, candidates)
+	// if checkErr != nil {
+	// 	return checkErr
+	// }
 
 	err = w.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
@@ -150,15 +151,15 @@ func (w *WebScaler) ExecuteScale(context *contextinternal.Context,
 	sd *ScaleDown, nodes []*corev1.Node, options ScaleUpOptions,
 	candidates ScaleDownCandidates,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo) error {
-	err := ExecuteScaleUp(context, clusterStateRegistry, options, w.maxBulkScaleUpCount)
+	err := ExecuteScaleUp(context, clusterStateRegistry, options, w.maxBulkScaleUpCount, w.batchScaleUpCount)
 	if err != nil {
 		return err
 	}
 
-	if len(options) > 0 {
-		klog.Infof("Scaling up node groups now, skip scaling down progress")
-		return nil
-	}
+	// if len(options) > 0 {
+	// 	klog.Infof("Scaling up node groups now, skip scaling down progress")
+	// 	return nil
+	// }
 
 	err = ExecuteScaleDown(context, sd, nodes, candidates, nodeNameToNodeInfo)
 	if err != nil {

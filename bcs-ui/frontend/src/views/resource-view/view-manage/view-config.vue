@@ -303,6 +303,8 @@
 import { cloneDeep, debounce } from 'lodash';
 import { computed, inject, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 
+import { MultiClusterResourcesType } from '../common/use-table-data';
+
 import useViewConfig from './use-view-config';
 import ViewField from './view-field.vue';
 import ViewForm from './view-form.vue';
@@ -313,7 +315,9 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import PopoverSelector from '@/components/popover-selector.vue';
 import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store';
+import { isNSChanged } from '@/views/cluster-manage/namespace/use-namespace';
 
 const emits = defineEmits(['close']);
 
@@ -364,6 +368,7 @@ const {
   curTmpViewData,
   curViewData,
   curViewName,
+  curCrdData,
   getViewConfigDetail,
   createViewConfig,
   deleteViewConfig,
@@ -613,8 +618,64 @@ const handleSaveAs = async (changeView = true) => {
   }
 };
 
+// 将查询参数同步到url
+const curNsList = computed(() => $store.state.viewNsList);
+function handleUpdateUrlQuery(data: Partial<MultiClusterResourcesType>|undefined) {
+  if (!curTmpViewData.value?.filter && isClusterMode.value) {
+    // 未传入数据
+    $router.replace({
+      query: {},
+    }).catch(() => {});
+    return;
+  };
+  if (!curTmpViewData.value?.filter && dashboardViewID.value) return;
+  // const clusterNamespaces = data?.clusterNamespaces?.length ?
+  //   encodeURIComponent(JSON.stringify(data.clusterNamespaces)) : '';
+  const viewID = data?.viewID; // 自定义视图
+  const namespace = curNsList.value.join(',');
+  const name = data?.name;
+  const source = data?.createSource?.source;
+  const templateName = data?.createSource?.template?.templateName;
+  const templateVersion = data?.createSource?.template?.templateVersion;
+  const chartName = data?.createSource?.chart?.chartName;
+  const creator = data?.creator?.join();
+  const labelSelector = data?.labelSelector?.length ? encodeURIComponent(JSON.stringify(data.labelSelector)) : '';
+  const params = {
+    crd: curCrdData.value?.crd,
+    kind: curCrdData.value?.kind,
+    scope: curCrdData.value?.scope, // 自定义资源
+    viewID,
+    namespace,
+    name,
+    source,
+    templateName,
+    templateVersion,
+    chartName,
+    creator,
+    labelSelector,
+    // clusterNamespaces,
+  };
+  // 删除值为空的参数
+  Object.keys(params).forEach((key) => {
+    if (!params[key]) {
+      delete params[key];
+    }
+  });
+  $router.replace({
+    query: {
+      ...params,
+    },
+  }).catch(() => {});
+}
+
 watch(dashboardViewID, () => {
-  viewChange(dashboardViewID.value);
+  // isNSChanged在这里作为页面初始化完毕标识，否则部署管理带过来的筛选条件会被清空
+  (isNSChanged.value && dashboardViewID.value) && viewChange(dashboardViewID.value);
+});
+
+watch(curViewData, (data: Partial<MultiClusterResourcesType>|undefined, oldVal) => {
+  if (JSON.stringify(data) === JSON.stringify(oldVal)) return;
+  data && handleUpdateUrlQuery(data);
 });
 
 // 高亮点击的字段

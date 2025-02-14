@@ -31,6 +31,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm"
 	clusterAuth "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/iam/perm/resource/cluster"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
@@ -68,8 +69,11 @@ func NewStorageQuery(ns []*clusterRes.ClusterNamespaces, queryFilter, viewFilter
 
 // Fetch fetches multicluster resources.
 func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error) {
-	var err error
-	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
+	var (
+		err      error
+		applyURL string
+	)
+	if q.ClusterdNamespaces, applyURL, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
 		return nil, err
 	}
 	log.Info(ctx, "fetch multi cluster resources, kind: %s, clusterdNamespaces: %v", kind, q.ClusterdNamespaces)
@@ -97,6 +101,7 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 	resources = q.QueryFilter.Page(resources)
 	resp := buildList(ctx, resources)
 	resp["total"] = total
+	resp["perms"] = map[string]interface{}{"applyURL": applyURL}
 	return resp, nil
 }
 
@@ -124,8 +129,11 @@ func NewAPIServerQuery(ns []*clusterRes.ClusterNamespaces, queryFilter, viewFilt
 
 // Fetch fetches multicluster resources.
 func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error) {
-	var err error
-	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
+	var (
+		err      error
+		applyURL string
+	)
+	if q.ClusterdNamespaces, applyURL, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
 		return nil, err
 	}
 	log.Info(ctx, "fetch multi cluster resources, kind: %s, clusterdNamespaces: %v", kind, q.ClusterdNamespaces)
@@ -144,13 +152,17 @@ func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (
 	resources = q.QueryFilter.Page(resources)
 	resp := buildList(ctx, resources)
 	resp["total"] = total
+	resp["perms"] = map[string]interface{}{"applyURL": applyURL}
 	return resp, nil
 }
 
 // FetchApiResources fetches api resources.
 func (q *APIServerQuery) FetchApiResources(ctx context.Context, kind string) (map[string]interface{}, error) {
-	var err error
-	if q.ClusterdNamespaces, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
+	var (
+		err      error
+		applyURL string
+	)
+	if q.ClusterdNamespaces, applyURL, err = checkMultiClusterAccess(ctx, kind, q.ClusterdNamespaces); err != nil {
 		return nil, err
 	}
 	log.Info(ctx, "fetch multi cluster resources, kind: %s, clusterdNamespaces: %v", kind, q.ClusterdNamespaces)
@@ -161,6 +173,7 @@ func (q *APIServerQuery) FetchApiResources(ctx context.Context, kind string) (ma
 	}
 	resp := make(map[string]interface{}, 0)
 	resp["resources"] = resources
+	resp["perms"] = map[string]interface{}{"applyURL": applyURL}
 	return resp, nil
 }
 
@@ -413,18 +426,18 @@ func buildList(ctx context.Context, resources []*storage.Resource) map[string]in
 // NOCC:CCN_threshold(设计如此)
 // nolint
 func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clusterRes.ClusterNamespaces) (
-	[]*clusterRes.ClusterNamespaces, error) {
+	[]*clusterRes.ClusterNamespaces, string, error) {
 	newClusters := []*clusterRes.ClusterNamespaces{}
 	projInfo, err := project.FromContext(ctx)
 	if err != nil {
-		return nil, errorx.New(errcode.General, i18n.GetMsg(ctx, "由 Context 获取项目信息失败"))
+		return nil, "", errorx.New(errcode.General, i18n.GetMsg(ctx, "由 Context 获取项目信息失败"))
 	}
 
 	// 共享集群过滤
 	for _, v := range clusters {
 		clusterInfo, err := cluster.GetClusterInfo(ctx, v.ClusterID)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		// 集群不存在或者不是运行状态，则忽略
 		if clusterInfo.Status != cluster.ClusterStatusRunning {
@@ -480,12 +493,13 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 	errGroups.SetLimit(10)
 	result := []*clusterRes.ClusterNamespaces{}
 	mux := sync.Mutex{}
+	username := ctx.Value(ctxkey.UsernameKey).(string)
+	clusterIDs := make([]string, 0)
 	for _, v := range newClusters {
 		cls := v
+		clusterIDs = append(clusterIDs, cls.ClusterID)
 		errGroups.Go(func() error {
-			permCtx := clusterAuth.NewPermCtx(
-				ctx.Value(ctxkey.UsernameKey).(string), projInfo.ID, cls.ClusterID,
-			)
+			permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, cls.ClusterID)
 			if allow, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
 				return nil
 			} else if !allow {
@@ -498,9 +512,18 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 		})
 	}
 	if err := errGroups.Wait(); err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return result, nil
+
+	// get apply url
+	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(clusterIDs, ","))
+	applyURL := ""
+	if _, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
+		if perr, ok := err.(*perm.IAMPermError); ok {
+			applyURL, _ = perr.ApplyURL()
+		}
+	}
+	return result, applyURL, nil
 }
 
 // getScopedByKind 根据资源类型获取作用域

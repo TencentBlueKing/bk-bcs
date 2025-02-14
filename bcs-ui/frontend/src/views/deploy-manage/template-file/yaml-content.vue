@@ -112,7 +112,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['updateUpgrade', 'setContentOrigin']);
+const emits = defineEmits(['updateUpgrade', 'setContentOrigin', 'change']);
 
 const assistantRef = ref<InstanceType<typeof AiAssistant>>();
 const codeEditorRef = ref<InstanceType<typeof CodeEditor>>();
@@ -202,6 +202,10 @@ watch([
     editorErr.value.message = '';
   }
 });
+
+watch(content, () => {
+  emits('change', content.value);
+}, { immediate: true });
 
 defineExpose({
   getData,

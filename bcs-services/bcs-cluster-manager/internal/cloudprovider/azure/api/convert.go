@@ -83,11 +83,12 @@ func (aks *AksServiceImpl) toPoolPreCheck(group *proto.NodeGroup, pool *armconta
 }
 
 // AgentPoolToNodeGroup Azure代理节点池 转换 为BCS节点池(仅用于创建)
-func (aks *AksServiceImpl) AgentPoolToNodeGroup(pool *armcontainerservice.AgentPool, group *proto.NodeGroup) error {
+func (aks *AksServiceImpl) AgentPoolToNodeGroup(pool *armcontainerservice.AgentPool, group *proto.NodeGroup,
+	opts *AgentPoolToNodeGroupOptions) error {
 	if group == nil || pool == nil {
 		return errors.New("AgentPoolToNodeGroup method group or pool cannot be empty")
 	}
-	converter := newPoolToNodeGroupConverter(pool, group)
+	converter := newPoolToNodeGroupConverter(pool, group, opts)
 	converter.convert()
 	return nil
 }

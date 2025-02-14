@@ -308,10 +308,12 @@ type poolToNodeGroup struct {
 	group      *proto.NodeGroup
 	pool       *armcontainerservicev3.AgentPool
 	properties *armcontainerservicev3.ManagedClusterAgentPoolProfileProperties
+	opts       *AgentPoolToNodeGroupOptions
 }
 
 // newPoolToNodeGroupConverter create poolToNodeGroup
-func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *proto.NodeGroup) *poolToNodeGroup {
+func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *proto.NodeGroup,
+	opts *AgentPoolToNodeGroupOptions) *poolToNodeGroup {
 	if pool.Properties == nil {
 		pool.Properties = new(armcontainerservicev3.ManagedClusterAgentPoolProfileProperties)
 	}
@@ -319,6 +321,7 @@ func newPoolToNodeGroupConverter(pool *armcontainerservicev3.AgentPool, group *p
 		group:      group,
 		pool:       pool,
 		properties: pool.Properties,
+		opts:       opts,
 	}
 }
 
@@ -362,8 +365,11 @@ func (c *poolToNodeGroup) convert() {
 
 	// 设置labels
 	c.setLabels()
-	// 设置taints
-	c.setTaints()
+
+	if c.opts != nil && c.opts.SetTaint {
+		// 设置taints
+		c.setTaints()
+	}
 	// 设置k8s版本
 	// c.setCurrentOrchestratorVersion()
 }

@@ -34,7 +34,8 @@
           :upgrade="upgrade"
           :content-origin="contentOrigin"
           @setContentOrigin="(val) => contentOrigin = val"
-          @updateUpgrade="(val) => upgrade = val" />
+          @updateUpgrade="(val) => upgrade = val"
+          @change="handleChange" />
       </div>
     </bcs-resize-layout>
     <yaml-content
@@ -47,7 +48,8 @@
       :upgrade="upgrade"
       :content-origin="contentOrigin"
       @setContentOrigin="(val) => contentOrigin = val"
-      @updateUpgrade="(val) => upgrade = val" />
+      @updateUpgrade="(val) => upgrade = val"
+      @change="handleChange" />
   </div>
 </template>
 <script setup lang="ts">
@@ -76,7 +78,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['getUpgradeStatus']);
+const emits = defineEmits(['getUpgradeStatus', 'change']);
 
 const upgrade  = ref(false);
 const content = ref('');
@@ -122,6 +124,10 @@ const isCollapse = ref(false);
 const handleCollapseChange = (value: boolean) => {
   isCollapse.value = value;
 };
+
+function handleChange(content) {
+  emits('change', content);
+}
 
 watch([
   () => upgrade.value,

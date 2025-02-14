@@ -196,7 +196,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { isEqual } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import { computed, onBeforeMount, onBeforeUnmount, reactive, ref, set, toRef, watch } from 'vue';
 
 import useTableData from '../common/use-table-data';
@@ -322,6 +322,11 @@ const resolveMenuLink = (item: IMenu) => {
 const handleChangeMenu = (item: IMenu) => {
   if (route.value.name === item.route) return;
 
+  $store.commit('updateCrdData', {});
+  const queryData = cloneDeep(route.value.query);
+  delete queryData.crd;
+  delete queryData.kind;
+  delete queryData.scope;
   $router.push({
     name: item.route || item.children?.[0]?.route || '404',
     params: {
@@ -330,6 +335,7 @@ const handleChangeMenu = (item: IMenu) => {
     },
     query: {
       viewID: dashboardViewID.value,
+      ...queryData,
     },
   });
 };
@@ -352,17 +358,19 @@ const resolveCRDLink = (item) => {
   return href;
 };
 const handleChangeCRD = async (item) => {
+  const queryData = cloneDeep(route.value.query);
+  queryData.crd = item.name;
+  queryData.kind = item.kind;
+  queryData.scope = item.scope;
+  // 自定义资源
+  $store.commit('updateCrdData', queryData);
   const routeData = {
     name: 'dashboardCustomObjects',
     params: {
       projectCode: $store.getters.curProjectCode,
       clusterId: route.value.params?.clusterId, // 保留之前的集群ID
     },
-    query: {
-      crd: item.name,
-      kind: item.kind,
-      scope: item.scope,
-    },
+    query: queryData,
   };
   const { resolved } = await $router.resolve(routeData);
   if (resolved?.fullPath === route.value.fullPath) return;

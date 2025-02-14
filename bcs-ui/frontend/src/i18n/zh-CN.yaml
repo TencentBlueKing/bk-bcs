@@ -2278,6 +2278,7 @@ dashboard:
     tips:
       containerMemoryWorkingSetBytesOom: container_memory_working_set_bytes，limit限制时oom判断依据
       inplaceUpdateNotSupportRestart: 原地升级策略不支持滚动重启操作
+      noPerms: 部分资源当前用户无查看权限，请点击此处{0}
     label:
       upgrade:
         maxSurg: '最大调度Pod数量（maxSurge）: {num}'
@@ -2288,6 +2289,7 @@ dashboard:
       yaml: 查看YAML配置
       restart: 滚动重启
       onDelete: 手动重启
+      applyURL: 申请访问
     container:
       title: 容器
       name: 容器名称
@@ -3053,6 +3055,8 @@ templateFile:
     exportFolder: 导出文件夹
     upgrade: 升级为 Helm 模板
     rollback: 撤销本次升级
+    toResourceView: 去资源视图查看
+    toFileList: 返回模板文件列表
   placeholder:
     searchFile: 模板文件名称/类型/版本/更新人
     searchVersion: 版本号/版本日志/更新人
@@ -3094,6 +3098,9 @@ templateFile:
     createSpace: 新建文件夹
     helmdesc: 当前文件已升级为 Helm 模板，保存后将不再支持切换回非 Helm 模板。
     spaceSubTitle: 模板文件夹及其中的模板文件将被删除
+    emptyContent: 模板文件内容不能为空
+    success: 部署成功
+    subTitle: '模板文件 {templateFile} 实例已部署至 {cluster}'
     noChanges: 未变更
   tag:
     draft: 草稿

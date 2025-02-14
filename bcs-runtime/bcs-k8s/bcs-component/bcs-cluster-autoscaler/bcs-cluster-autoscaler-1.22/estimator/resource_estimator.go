@@ -157,6 +157,9 @@ func (e *ClusterResourceEstimator) estimateAccordingToLoad(nodeTemplate *schedul
 		if node.Labels[nodeLabel.LabelNodeRoleControlPlane] == valueTrue {
 			continue
 		}
+		if node.Labels["node-role.kubernetes.io/master"] == "true" {
+			continue
+		}
 		sumResourcesList.Add(scheduler.ResourceToResourceList(nodeInfo.Allocatable))
 		leftResourcesList.Add(singleNodeResource(nodeInfo))
 	}

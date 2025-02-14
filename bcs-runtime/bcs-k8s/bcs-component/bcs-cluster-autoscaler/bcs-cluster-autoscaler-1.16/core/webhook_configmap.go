@@ -66,10 +66,10 @@ func (c *ConfigMapScaler) DoWebhook(context *contextinternal.Context,
 			"failed to get response from configmap: %v", err)
 	}
 
-	checkErr := checkResourcesLimits(context, nodes, options, candidates)
-	if checkErr != nil {
-		return checkErr
-	}
+	// checkErr := checkResourcesLimits(context, nodes, options, candidates)
+	// if checkErr != nil {
+	// 	return checkErr
+	// }
 
 	err = c.ExecuteScale(context, clusterStateRegistry, sd, nodes, options, candidates, nodeNameToNodeInfo)
 	if err != nil {
@@ -172,15 +172,15 @@ func (c *ConfigMapScaler) ExecuteScale(context *contextinternal.Context,
 	candidates ScaleDownCandidates,
 	nodeNameToNodeInfo map[string]*schedulernodeinfo.NodeInfo) error {
 
-	err := ExecuteScaleUp(context, clusterStateRegistry, options, c.maxBulkScaleUpCount)
+	err := ExecuteScaleUp(context, clusterStateRegistry, options, c.maxBulkScaleUpCount, c.maxBulkScaleUpCount)
 	if err != nil {
 		return err
 	}
 
-	if len(options) > 0 {
-		klog.Infof("Scaling up node groups now, skip scaling down progress")
-		return nil
-	}
+	// if len(options) > 0 {
+	// 	klog.Infof("Scaling up node groups now, skip scaling down progress")
+	// 	return nil
+	// }
 
 	err = ExecuteScaleDown(context, sd, nodes, candidates, nodeNameToNodeInfo)
 	if err != nil {

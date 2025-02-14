@@ -96,7 +96,7 @@ func (ko *K8SOperator) ListClusterNodes(ctx context.Context, clusterID string) (
 	}
 
 	var (
-		defaultTimeout int64 = 120
+		defaultTimeout int64 = 300
 		nodes          []*v1.Node
 	)
 	nodeList, err := clientInterface.CoreV1().Nodes().List(ctx, metav1.ListOptions{

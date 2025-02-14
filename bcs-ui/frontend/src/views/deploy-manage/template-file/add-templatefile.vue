@@ -33,7 +33,8 @@
         :value="formData.content"
         ref="yamlMode"
         render-mode="Simple"
-        @getUpgradeStatus="getUpgradeStatus" />
+        @getUpgradeStatus="getUpgradeStatus"
+        @change="handleChange" />
     </div>
     <!-- 转换异常提示 -->
     <bcs-dialog :show-footer="false" v-model="showErrorTipsDialog">
@@ -63,12 +64,20 @@
         'bcs-border-top',
         'flex items-center z-10 sticky bottom-0 h-[48px] px-[24px] bg-[#FAFBFD]',
       ]">
-      <bcs-button
-        theme="primary"
-        class="min-w-[88px]"
-        @click="handleSaveData">
-        {{ $t('generic.button.save') }}
-      </bcs-button>
+      <div
+        class="mr-[8px]"
+        v-bk-tooltips="{
+          content: $t('templateFile.tips.emptyContent'),
+          disabled: hasContent || editMode === 'form'
+        }">
+        <bcs-button
+          theme="primary"
+          class="min-w-[88px]"
+          :disabled="!hasContent && editMode === 'yaml'"
+          @click="handleSaveData">
+          {{ $t('generic.button.save') }}
+        </bcs-button>
+      </div>
       <bcs-button class="min-w-[88px]" @click="handleSaveDraft">{{$t('deploy.templateset.saveDraft')}}</bcs-button>
       <bcs-button
         class="min-w-[88px]"
@@ -281,6 +290,11 @@ async function getTemplateContent() {
     $id: props.versionID,
   }).catch(() => ({}));
   formData.content = data.content;
+}
+
+const hasContent = ref(false);
+function handleChange(content) {
+  hasContent.value = !!content.trim();
 }
 
 onBeforeMount(() => {

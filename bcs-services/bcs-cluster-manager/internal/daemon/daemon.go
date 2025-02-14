@@ -36,6 +36,7 @@ type DaemonOptions struct { // nolint
 	EnableDaemon             bool
 	EnableAllocateCidrDaemon bool
 	EnableInsTypeUsage       bool
+	EnableAzureTaint         bool
 }
 
 // DoFunc func() type
@@ -120,6 +121,12 @@ func (d *Daemon) InitDaemon(ctx context.Context) {
 		go d.simpleDaemon(ctx, &wg, func() {
 			d.autoAllocateTcClusterCidr(errChan)
 		}, 30)
+	}
+
+	if d.options.EnableAzureTaint {
+		go d.simpleDaemon(ctx, &wg, func() {
+			d.removeAzureClusterPlatformTaints(errChan)
+		}, 20)
 	}
 
 	wg.Wait()

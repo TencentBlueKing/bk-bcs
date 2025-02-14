@@ -15,6 +15,7 @@ package bcs
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -35,6 +36,7 @@ type NodeGroupCache struct {
 	lastUpdateTime         time.Time
 	getNodes               GetNodes
 	allGroups              []*NodeGroup
+	refreshInterval        time.Duration
 }
 
 const (
@@ -54,12 +56,22 @@ type CreationType string
 
 // NewNodeGroupCache news node group cache
 func NewNodeGroupCache(getNodes GetNodes) *NodeGroupCache {
+	interval := os.Getenv("CacheRefreshInterval")
+	if interval == "" {
+		interval = "3m"
+	}
+	refreshInterval, err := time.ParseDuration(interval)
+	if err != nil {
+		klog.V(3).Infof("Parse CacheRefreshInterval %s failed, use default value: 3m", interval)
+		refreshInterval = 3 * time.Minute
+	}
 	registry := &NodeGroupCache{
 		registeredGroups:       make([]*NodeGroup, 0),
 		instanceToGroup:        make(map[InstanceRef]*NodeGroup),
 		instanceToCreationType: make(map[InstanceRef]CreationType),
 		getNodes:               getNodes,
 		allGroups:              make([]*NodeGroup, 0),
+		refreshInterval:        refreshInterval,
 	}
 
 	return registry
@@ -134,7 +146,7 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 	m.registeredGroups = registeredGroups
 
 	now := time.Now()
-	if m.lastUpdateTime.Add(3 * time.Minute).After(time.Now()) {
+	if m.lastUpdateTime.Add(m.refreshInterval).After(time.Now()) {
 		klog.V(5).Infof("Refresh RegenerateCache latest updateTime %s, now %s, return",
 			m.lastUpdateTime.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"))
 		return nil
@@ -155,7 +167,7 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 		}
 
 		for _, instance := range ins {
-			klog.V(4).Infof("Instance %+v", instance.InnerIP)
+			klog.V(5).Infof("Instance %+v", instance.InnerIP)
 			if instance.NodeGroupID != groupID {
 				continue
 			}
@@ -172,7 +184,7 @@ func (m *NodeGroupCache) regenerateCacheForInternal() error {
 		if ngc == nil {
 			return fmt.Errorf("GetNodeConfig %v result is zore", groupID)
 		}
-		klog.V(4).Infof("AutoScaling info %+v", ngc)
+		klog.V(5).Infof("AutoScaling info %+v", ngc)
 
 		if ngc.MaxSize == 0 {
 			return fmt.Errorf("do m.client.Get response max size is 0, groupId %v", groupID)

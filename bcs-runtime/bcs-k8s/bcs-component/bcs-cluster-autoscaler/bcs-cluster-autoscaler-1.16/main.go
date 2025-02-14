@@ -267,7 +267,9 @@ var (
 	webhookMode       = flag.String("webhook-mode", "", "Webhook Mode. Available values: [ Web, ConfigMap ]")
 	webhookModeConfig = flag.String("webhook-mode-config", "", "Configuration of webhook mode."+
 		" It is a url for web, or namespace/name for configmap")
-	webhookModeToken = flag.String("webhook-mode-token", "", "Token for webhook mode")
+	webhookModeToken  = flag.String("webhook-mode-token", "", "Token for webhook mode")
+	batchScaleUpCount = flag.Int("batch-scale-up-count", 100,
+		"The number of nodes to scale up at a batch in webhook mode.")
 
 	evictLatest = flag.Bool("should-evict-latest", true, "If true, get latest pod lists when scale down node")
 )
@@ -354,6 +356,7 @@ func createAutoscalingOptions() scalingconfig.Options {
 		ScanInterval:              *scanInterval,
 		EvictLatest:               *evictLatest,
 		ScaleDownDelayAfterRemove: *scaleDownDelayAfterRemove,
+		BatchScaleUpCount:         *batchScaleUpCount,
 	}
 }
 
