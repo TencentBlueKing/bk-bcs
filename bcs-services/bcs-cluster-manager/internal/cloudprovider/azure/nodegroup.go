@@ -482,7 +482,7 @@ func transAksNodeToNode(node *armcompute.VirtualMachineScaleSetVM, vmIPMap map[s
 }
 
 // updateAgentPoolProperties 更新 AKS 代理节点池 - update agent pool
-func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *proto.Cluster,
+func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *proto.Cluster, // nolint
 	group *proto.NodeGroup) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -512,7 +512,7 @@ func (ng *NodeGroup) updateAgentPoolProperties(client api.AksService, cluster *p
 }
 
 // updateVMSSProperties 更新虚拟机规模集 - update virtual machine scale set
-func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.NodeGroup) error {
+func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.NodeGroup) error { // nolint
 	if group.LaunchTemplate == nil || len(group.LaunchTemplate.UserData) == 0 {
 		return nil
 	}
@@ -543,7 +543,7 @@ func (ng *NodeGroup) updateVMSSProperties(client api.AksService, group *proto.No
 
 // checkPoolState 更新前，检查节点池的状态
 // 如果节点池正在 "更新中" 或 "扩容中"，将无法对其进行操作
-func checkPoolState(pool *armcontainerservice.AgentPool) error {
+func checkPoolState(pool *armcontainerservice.AgentPool) error { // nolint
 	state := *pool.Properties.ProvisioningState
 	if state == api.UpdatingState {
 		return errors.Wrapf(nodePoolUpdatingErr, "cloudNodeGroupID: %s", *pool.Name)

@@ -385,7 +385,7 @@ func (ud *UpdateDesiredNodesTaskOption) BuildCheckClusterNodeStatusStep(task *pr
 	task.StepSequence = append(task.StepSequence, checkClusterNodesStatusStep.StepMethod)
 }
 
-// CreateClusterTaskOption 创建集群构建step子任务
+// UpdateNodeGroupTaskOption 创建集群构建step子任务
 type UpdateNodeGroupTaskOption struct {
 	NodeGroup *proto.NodeGroup
 }
