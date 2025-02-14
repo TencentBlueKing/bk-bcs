@@ -17,7 +17,6 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
