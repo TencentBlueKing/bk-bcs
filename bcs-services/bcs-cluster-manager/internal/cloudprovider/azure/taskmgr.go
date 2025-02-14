@@ -910,6 +910,13 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 		ForceTerminate: false,
 		NodeGroupID:    group.NodeGroupID,
 	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupTaskTemplate, group.ClusterID, group.NodeGroupID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
 
 	// setting all steps details
 	updateNodeGroupTask := &UpdateNodeGroupTaskOption{NodeGroup: group}

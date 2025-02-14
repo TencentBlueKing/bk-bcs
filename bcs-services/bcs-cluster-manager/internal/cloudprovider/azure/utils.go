@@ -38,6 +38,8 @@ const (
 	switchNodeGroupAutoScalingTaskTemplate = "aks-switch node group auto scaling: %s/%s"
 	// deleteNodeGroupTaskTemplate bk-sops add task template
 	deleteNodeGroupTaskTemplate = "aks-delete node group: %s/%s"
+	// updateNodeGroupTaskTemplate bk-sops add task template
+	updateNodeGroupTaskTemplate = "aks-update node group: %s/%s"
 	// updateNodeGroupDesiredNode bk-sops add task template
 	updateNodeGroupDesiredNodeTemplate = "aks-update node group desired node: %s/%s"
 	// updateAutoScalingOptionTemplate bk-sops add task template
