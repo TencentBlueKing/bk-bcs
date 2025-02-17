@@ -37,14 +37,14 @@ var (
 
 // Result 返回的标准结构
 type Result struct {
-	Code      int         `json:"code"`
-	Message   string      `json:"message"`
-	RequestId string      `json:"request_id"`
-	Data      interface{} `json:"data"`
+	Code      int    `json:"code"`
+	Message   string `json:"message"`
+	RequestId string `json:"request_id"`
+	Data      any    `json:"data"`
 }
 
 // HandlerFunc xxx
-type HandlerFunc func(*Context) (interface{}, error)
+type HandlerFunc[Out any] func(*Context) (Out, error)
 
 // StreamHandlerFunc xxx
 type StreamHandlerFunc func(*Context)
@@ -74,7 +74,7 @@ func AbortWithJSONError(c *Context, err error) {
 }
 
 // APIResponse 正常返回
-func APIResponse(c *Context, data interface{}) {
+func APIResponse(c *Context, data any) {
 	result := Result{Code: 0, Message: "OK", RequestId: c.RequestId, Data: data}
 	c.JSON(http.StatusOK, result)
 }
@@ -114,7 +114,7 @@ func GetRestContext(c *gin.Context) (*Context, error) {
 }
 
 // RestHandlerFunc rest handler
-func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc { // nolint
+func RestHandlerFunc[Out any](handler HandlerFunc[Out]) gin.HandlerFunc { // nolint
 	return func(c *gin.Context) {
 		startTime := time.Now()
 		// 需要在审计操作记录中对body进行解析
@@ -139,7 +139,7 @@ func RestHandlerFunc(handler HandlerFunc) gin.HandlerFunc { // nolint
 }
 
 // STDRestHandlerFunc 标准handler, 错误返回非200状态码
-func STDRestHandlerFunc(handler HandlerFunc) gin.HandlerFunc {
+func STDRestHandlerFunc[Out any](handler HandlerFunc[Out]) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext, err := GetRestContext(c)
 		if err != nil {
