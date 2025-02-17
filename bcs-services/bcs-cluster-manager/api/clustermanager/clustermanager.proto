@@ -11661,6 +11661,7 @@ message ListCloudDiskTypesRequest {
     json_schema : {
       title : "ListInstanceTypeRequest"
       description : "根据Node机型查询对应支持的磁盘类型列表"
+      required : [ "cloudID", "accountID", "instanceFamilies", "diskChargeType", "cpu", "memory" ]
     }
   };
 
@@ -11676,14 +11677,26 @@ message ListCloudDiskTypesRequest {
     title : "region",
     description : "机型所在地域, 主要用于自建集群节点池可能存在其他地域的情况"
   }];
-  repeated string instanceTypes = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "instanceTypes",
-    description : "机型类型"
+  repeated string instanceFamilies = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "instanceFamilies",
+    description : "实例机型系列,形如：S1、I1、M1等"
   }, (validate.rules).repeated = {min_items: 1}];
   repeated string zones = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "zones",
     description : "可用区"
   }];
+  string diskChargeType = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "diskChargeType",
+    description : "付费模式。取值范围：PREPAID：预付费; POSTPAID_BY_HOUR：后付费"
+  },(validate.rules).string = {in: [ "PREPAID", "POSTPAID_BY_HOUR"]}];
+  uint64 cpu = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "cpu",
+    description : "实例CPU核数"
+  }, (validate.rules).uint64 = {gt: 0}];
+  uint64 memory = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "memory",
+    description : "实例内存大小"
+  }, (validate.rules).uint64 = {gt: 0}];
 }
 
 message ListCloudDiskTypesResponse {
@@ -11707,10 +11720,19 @@ message ListCloudDiskTypesResponse {
     title : "result",
     description : "返回结果"
   }];
-  map<string, string> data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  repeated DiskConfigSet data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "获取到的信息"
   }];
+}
+
+message DiskConfigSet {
+  string diskType = 1;
+  string diskTypeName = 2;
+  string diskUsage = 3;
+  int32 minDiskSize = 4;
+  int32 maxDiskSize = 5;
+  int32 stepSize = 6;
 }
 
 message GetMasterSuggestedMachinesRequest {

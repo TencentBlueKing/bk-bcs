@@ -11854,6 +11854,32 @@
       "description": "关闭NodeGroup自动扩缩容返回结果",
       "title": "DisableNodeGroupAutoScaleResponse"
     },
+    "clustermanagerDiskConfigSet": {
+      "type": "object",
+      "properties": {
+        "diskType": {
+          "type": "string"
+        },
+        "diskTypeName": {
+          "type": "string"
+        },
+        "diskUsage": {
+          "type": "string"
+        },
+        "minDiskSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxDiskSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stepSize": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
     "clustermanagerDrainNodeRequest": {
       "type": "object",
       "properties": {
@@ -14457,13 +14483,13 @@
           "description": "机型所在地域, 主要用于自建集群节点池可能存在其他地域的情况",
           "title": "region"
         },
-        "instanceTypes": {
+        "instanceFamilies": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "机型类型",
-          "title": "instanceTypes"
+          "description": "实例机型系列,形如：S1、I1、M1等",
+          "title": "instanceFamilies"
         },
         "zones": {
           "type": "array",
@@ -14472,10 +14498,35 @@
           },
           "description": "可用区",
           "title": "zones"
+        },
+        "diskChargeType": {
+          "type": "string",
+          "description": "付费模式。取值范围：PREPAID：预付费; POSTPAID_BY_HOUR：后付费",
+          "title": "diskChargeType"
+        },
+        "cpu": {
+          "type": "string",
+          "format": "uint64",
+          "description": "实例CPU核数",
+          "title": "cpu"
+        },
+        "memory": {
+          "type": "string",
+          "format": "uint64",
+          "description": "实例内存大小",
+          "title": "memory"
         }
       },
       "description": "根据Node机型查询对应支持的磁盘类型列表",
-      "title": "ListInstanceTypeRequest"
+      "title": "ListInstanceTypeRequest",
+      "required": [
+        "cloudID",
+        "accountID",
+        "instanceFamilies",
+        "diskChargeType",
+        "cpu",
+        "memory"
+      ]
     },
     "clustermanagerListCloudDiskTypesResponse": {
       "type": "object",
@@ -14498,10 +14549,12 @@
           "title": "result"
         },
         "data": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerDiskConfigSet"
+          },
+          "description": "获取到的信息",
+          "title": "data"
         }
       },
       "description": "查询磁盘类型列表返回",
