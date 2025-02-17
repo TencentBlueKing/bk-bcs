@@ -14,6 +14,7 @@ package middleware
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/gin-gonic/gin"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
@@ -35,7 +36,10 @@ func ProjectParse() gin.HandlerFunc {
 		if len(restContext.ProjectCode) != 0 {
 			projectIDOrCode = restContext.ProjectCode
 		}
-		project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectIDOrCode)
+
+		ctx := header.WithLaneIdCtx(c.Request.Context(), c.Request.Header)
+		c.Request = c.Request.WithContext(ctx)
+		project, err := bcs.GetProject(ctx, config.G.BCS, projectIDOrCode)
 		if err != nil {
 			blog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
 			rest.AbortWithBadRequestError(restContext, err)

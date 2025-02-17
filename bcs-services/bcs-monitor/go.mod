@@ -76,6 +76,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.17.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.16.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -278,12 +279,13 @@ require (
 )
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20250120075906-fd5988c50f3f
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de
 	// from github.com/thanos-io/thanos
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common => github.com/prometheus/common v0.34.0
 	github.com/prometheus/prometheus => github.com/prometheus/prometheus v1.8.2-0.20220308163432-03831554a519
-	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20250102092401-8457964e42cb
+	github.com/thanos-io/thanos => github.com/LidolLxf/thanos v0.26.1-0.20250120075609-1676363bc0cc
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 	// from github.com/thanos-io/thanos
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
