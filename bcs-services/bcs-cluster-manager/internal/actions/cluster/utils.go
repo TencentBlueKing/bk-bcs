@@ -907,3 +907,39 @@ func getCmNodeIps(cmNodes []*proto.ClusterNode) []string {
 	}
 	return ips
 }
+
+var (
+	MasterNodeNumber = map[int]struct{}{
+		3: {},
+		5: {},
+	}
+)
+
+const MasterNodeMinimumZoneNumber = 3
+
+// checkHighAvailabilityMasterNodes for check master node number and zoneID
+func checkHighAvailabilityMasterNodes(nodes []*proto.Node) error {
+	if len(nodes) > 0 {
+		if _, ok := MasterNodeNumber[len(nodes)]; !ok {
+			errMsg := fmt.Errorf("master nodes number [%d] is invalid", len(nodes))
+			blog.Errorf(errMsg.Error())
+			return errMsg
+		}
+
+		zoneIDCountMap := make(map[string]struct{})
+		ZoneCount := 0
+		for _, node := range nodes {
+			if _, exists := zoneIDCountMap[node.ZoneID]; !exists {
+				zoneIDCountMap[node.ZoneID] = struct{}{}
+				ZoneCount++
+			}
+		}
+
+		if ZoneCount < MasterNodeMinimumZoneNumber {
+			errMsg := fmt.Errorf("master nodes zone number [%d] is less than minimum availability zone number", ZoneCount)
+			blog.Errorf(errMsg.Error())
+			return errMsg
+		}
+	}
+	return nil
+}

@@ -174,6 +174,12 @@ func (ca *CreateAction) checkClusterMasterNodes(cls *cmproto.Cluster) error {
 		return errMsg
 	}
 
+	if err := checkHighAvailabilityMasterNodes(nodes); err != nil {
+		errMsg := fmt.Errorf("createCluster checkHighAvailabilityMasterNodes[%v] failed: %v", ca.req.Master, err)
+		blog.Errorf(errMsg.Error())
+		return errMsg
+	}
+
 	for _, node := range nodes {
 		cls.Master[node.InnerIP] = node
 	}
