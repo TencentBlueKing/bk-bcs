@@ -423,11 +423,6 @@ func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("request application name cannot be empty"))
 	}
-	argoApp, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appName,
-		permitcheck.AppViewRSAction)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(statusCode, err)
-	}
 	revisions := r.URL.Query()["revisions"]
 	if len(revisions) == 0 {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest,
@@ -439,67 +434,40 @@ func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request
 				fmt.Errorf("query parameter 'revisions' has empty value"))
 		}
 	}
-	repos, err := plugin.checkRepos(argoApp, revisions)
-	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusBadRequest, err)
-	}
 
-	revisionsMetadata, err := plugin.storage.GetApplicationRevisionsMetadata(r.Context(), repos, revisions)
+	argoApp, statusCode, err := plugin.permitChecker.CheckApplicationPermission(r.Context(), appName,
+		permitcheck.AppViewRSAction)
 	if err != nil {
-		return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
-			fmt.Errorf("get application revisions metadata failed: %s", err.Error()))
+		return r, mw.ReturnErrorResponse(statusCode, err)
+	}
+	if sourceNum := len(argoApp.Spec.GetSources()); sourceNum != len(revisions) {
+		return r, mw.ReturnErrorResponse(http.StatusBadRequest, fmt.Errorf(
+			"application have '%d' source, but query param 'revisions' have '%d (%v)'",
+			sourceNum, len(revisions), revisions))
+	}
+	result := make([]*v1alpha1.RevisionMetadata, 0)
+	for i := range argoApp.Spec.GetSources() {
+		src := argoApp.Spec.GetSources()[i]
+		// no-need get revision metadata for helm chart
+		if src.IsHelm() {
+			result = append(result, &v1alpha1.RevisionMetadata{
+				Message: "Helm Chart",
+			})
+			continue
+		}
+		var metadata []*v1alpha1.RevisionMetadata
+		if metadata, err = plugin.storage.GetApplicationRevisionsMetadata(r.Context(), []string{src.RepoURL},
+			[]string{revisions[i]}); err != nil {
+			return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
+				fmt.Errorf("get application revisions metadata failed: %s", err.Error()))
+		}
+		result = append(result, metadata...)
 	}
 	return r, mw.ReturnJSONResponse(&ApplicationRevisionsMetadata{
 		Code:      0,
 		RequestID: ctxutils.RequestID(r.Context()),
-		Data:      revisionsMetadata,
+		Data:      result,
 	})
-}
-
-func (plugin *AppPlugin) checkRepos(argoApp *v1alpha1.Application, revisions []string) ([]string, error) {
-	repos := make([]string, 0)
-	if argoApp.Spec.HasMultipleSources() && len(argoApp.Spec.Sources) == len(revisions) {
-		for _, source := range argoApp.Spec.Sources {
-			repos = append(repos, source.RepoURL)
-		}
-		return repos, nil
-	}
-	if argoApp.Spec.HasMultipleSources() && len(argoApp.Spec.Sources) != len(revisions) {
-		// 兼容应用从 SingleSource 与 MultipleSource 互相转换的情况
-		found := false
-		for i := range argoApp.Status.History {
-			history := argoApp.Status.History[i]
-			if len(revisions) == 1 && history.Revision == revisions[0] {
-				repos = append(repos, history.Source.RepoURL)
-				found = true
-				break
-			}
-			if len(revisions) > 1 && len(revisions) == len(history.Revisions) {
-				for j := range revisions {
-					if revisions[j] != history.Revisions[j] {
-						break
-					}
-					if j == len(revisions)-1 {
-						repos = append(repos, history.Source.RepoURL)
-						found = true
-					}
-				}
-				if found {
-					break
-				}
-			}
-		}
-		if !found {
-			return nil, fmt.Errorf("application has multiple(%d) "+"sources, not same as query param 'revisions'",
-				len(argoApp.Spec.Sources))
-		}
-		return repos, nil
-	}
-	if len(revisions) != 1 {
-		return nil, fmt.Errorf("application has single source")
-	}
-	repos = append(repos, argoApp.Spec.Source.RepoURL)
-	return repos, nil
 }
 
 type parameterAction string
@@ -694,6 +662,11 @@ func (plugin *AppPlugin) syncRefresh(r *http.Request) (*http.Request, *mw.HttpRe
 	}); err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusInternalServerError, errors.Wrapf(err,
 			"refresh application '%s' failed", appName))
+	}
+	// just sleep to wait application refresh if application sync by-local
+	if len(argoApp.Status.Sync.Revisions) == 0 && argoApp.Status.Sync.Revision == "" {
+		time.Sleep(5 * time.Second)
+		return r, mw.ReturnJSONResponse(argoApp)
 	}
 
 	// get remote repo last-commit-id

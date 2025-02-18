@@ -17,15 +17,15 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
-
+	"github.com/pkg/errors"
 	"github.com/pterm/pterm"
+	"github.com/spf13/cobra"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/argocd"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-cli/cmd/kubectl"
@@ -102,6 +102,7 @@ func NewRootCommand() *cobra.Command {
 			return nil
 		}
 		ensureConfig()
+		setKLogLevel()
 		kubeCfg := kubeObj.GetConfigs()
 		serverUrl := options.GlobalOption().Server
 		// NOTE: dirty transfer used to make user to prod api
@@ -116,6 +117,8 @@ func NewRootCommand() *cobra.Command {
 		bearerToken := options.GlobalOption().Token
 		kubeCfg.APIServer = &apiServer
 		kubeCfg.BearerToken = &bearerToken
+		isInsecure := true
+		kubeCfg.Insecure = &isInsecure
 		return nil
 	}
 	rootCmd.AddCommand(kubeCmd)
@@ -132,6 +135,14 @@ func NewRootCommand() *cobra.Command {
 	rootCmd.PersistentFlags().IntVarP(&options.LogV, "verbose", "v", 2,
 		"Log level")
 	return rootCmd
+}
+
+func setKLogLevel() {
+	var t klog.Level
+	err := t.Set(strconv.Itoa(options.LogV))
+	if err != nil {
+		panic(err)
+	}
 }
 
 // NOCC:tosa/indent(设计如此)

@@ -50,8 +50,8 @@ func (t *TGitHandler) Transfer(ctx context.Context, body []byte) ([]byte, error)
 	if err := json.Unmarshal(body, hookEvent); err != nil {
 		return nil, errors.Wrapf(err, "unmarshal failed: %s", string(body))
 	}
-	blog.Infof("RequestID[%s] received '%s' webhook by user '%s'", ctxutils.RequestID(ctx),
-		hookEvent.ObjectKind, hookEvent.UserName)
+	blog.Infof("RequestID[%s] received '%s' webhook by user '%s': %s", ctxutils.RequestID(ctx),
+		hookEvent.ObjectKind, hookEvent.UserName, hookEvent.Repository.GitHTTPURL)
 	result := t.buildByPushHook(hookEvent)
 	bs, err := json.Marshal(result)
 	if err != nil {

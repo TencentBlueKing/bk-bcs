@@ -33,7 +33,6 @@ import (
 	v1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/utils/strings/slices"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/cmd/gitgenerator-webhook/options"
@@ -70,7 +69,7 @@ func (s *AdmissionWebhookServer) Init() error {
 		Service:       s.cfg.ArgoService,
 		User:          s.cfg.ArgoUser,
 		Pass:          s.cfg.ArgoPass,
-		Cache:         false,
+		Cache:         true,
 		CacheHistory:  false,
 		RepoServerUrl: s.cfg.ArgoRepoUrl,
 	})
@@ -101,14 +100,7 @@ func (s *AdmissionWebhookServer) Run() error {
 			Certificates: []tls.Certificate{pair},
 		},
 	}
-	go func() {
-		for {
-			time.Sleep(3 * time.Second)
-			if recoverErr := s.recoverApplicationOperation(); recoverErr != nil {
-				blog.Errorf("[recover] recover app operation failed: %s", recoverErr.Error())
-			}
-		}
-	}()
+	go s.recoverApplicationOperation()
 	blog.Infof("Server serving on: %s:%d", s.cfg.ListenAddr, s.cfg.ListenPort)
 	if err := srv.ListenAndServeTLS("", ""); err != nil {
 		return err
@@ -553,61 +545,46 @@ func (s *AdmissionWebhookServer) checkAppSetHasDynamicRevision(ctx context.Conte
 
 // recoverApplicationOperation 补偿 application.operation 被 argocd 未知删除问题
 // 通过检查应用是否仍在同步进程中（status.operationState.Phase == Running），如果应用在同步进程中
-// 但是 application.operation 是空的，通过 Patch 的方式恢复 application.operation
+// 但是 application.operation 是空的，通过触发同步的方式恢复 application.operation
 // refer to: https://github.com/argoproj/argo-cd/issues/17155
-func (s *AdmissionWebhookServer) recoverApplicationOperation() error {
-	argoK8SClient := s.argoStore.ReturnArgoK8SClient()
-	watchInter, err := argoK8SClient.Applications(s.cfg.AdminNamespace).Watch(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return errors.Wrapf(err, "create application watch failed")
-	}
-	defer watchInter.Stop()
+func (s *AdmissionWebhookServer) recoverApplicationOperation() {
 	var recoverProjects []string
-	if s.cfg.RecoverProjects != "" {
-		recoverProjects = strings.Split(s.cfg.RecoverProjects, ",")
+	if s.cfg.RecoverProjects == "" {
+		return
 	}
-	blog.Infof("[recover] create application watch success")
-	defer blog.Errorf("[recover] application watch channel closed")
-	for e := range watchInter.ResultChan() {
-		if e.Type != watch.Modified {
-			continue
-		}
-		if e.Object == nil {
-			continue
-		}
-		obj := e.Object.DeepCopyObject()
-		argoApp, ok := obj.(*v1alpha1.Application)
-		if !ok {
-			continue
-		}
-		if len(recoverProjects) != 0 && !slices.Contains(recoverProjects, argoApp.Spec.Project) {
-			continue
-		}
-		if argoApp.Operation != nil {
-			continue
-		}
-		if argoApp.Status.OperationState == nil {
-			continue
-		}
-		opState := argoApp.Status.OperationState
-		if opState.Phase != synccommon.OperationRunning {
-			continue
-		}
-		var patchJSON []byte
-		patchJSON, err = json.Marshal(opState.Operation)
+	recoverProjects = strings.Split(s.cfg.RecoverProjects, ",")
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+	for range ticker.C {
+		apps, err := s.argoStore.ListApplications(context.Background(), &applicationpkg.ApplicationQuery{
+			Projects: recoverProjects,
+		})
+		blog.Infof("[recover] recover is running, got applications: %d", len(apps.Items))
 		if err != nil {
-			blog.Errorf("[recover] app '%s' operation marshal failed: %s", argoApp.Name, err.Error())
+			blog.Errorf("[recover] list applications failed: %s", err.Error())
 			continue
 		}
-		resultPatch := fmt.Sprintf(`{"operation":%s}`, string(patchJSON))
-		blog.Infof("[recover] app '%s' patch app.operation: %s", argoApp.Name, resultPatch)
-		_, err = argoK8SClient.Applications(s.cfg.AdminNamespace).Patch(context.Background(), argoApp.Name,
-			types.MergePatchType, []byte(resultPatch), metav1.PatchOptions{})
-		if err != nil {
-			blog.Errorf("[recover] app '%s' patch app.operation failed: %s", argoApp.Name, err.Error())
-		} else {
-			blog.Infof("[recover] app '%s' patch app.operation success", argoApp.Name)
+		for i := range apps.Items {
+			app := apps.Items[i]
+			if app.Operation != nil {
+				continue
+			}
+			if app.Status.OperationState == nil {
+				continue
+			}
+			opState := app.Status.OperationState
+			if opState.Phase != synccommon.OperationRunning {
+				continue
+			}
+			blog.Infof("[recover] app '%s' lost options, need re-sync it", app.Name)
+			go func() {
+				if syncErr := s.argoStore.SyncApplication(context.Background(), app.Name); syncErr != nil {
+					blog.Errorf("[recover] app '%s' sync failed: %s", app.Name, syncErr.Error())
+				} else {
+					blog.Infof("[recover] app '%s' sync success", app.Name)
+				}
+			}()
 		}
 	}
-	return nil
 }
