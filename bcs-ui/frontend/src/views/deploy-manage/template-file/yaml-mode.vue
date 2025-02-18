@@ -140,7 +140,7 @@ watch([
 });
 
 watch(() => props.value, () => {
-  if (!props.value) return;
+  // if (!props.value) return;
   content.value = props.value;
   yamlRef.value?.setValue(props.value, '');
 }, { immediate: true });
