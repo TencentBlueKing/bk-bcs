@@ -22,7 +22,7 @@ import (
 // 磁盘相关接口
 
 // ListAvailableDiskTypes 列出可用的磁盘类型
-func ListAvailableDiskTypes(availableZone map[string]struct{}, data []*cbs.DiskConfig) []*proto.DiskConfigSet {
+func ListAvailableDiskTypes(availableZone map[string]struct{}, data []*cbs.DiskConfig) []*proto.DiskConfigSet { // nolint
 	dataMap := make(map[string]map[string]*cbs.DiskConfig)
 	systemMap := make(map[string]map[string]*cbs.DiskConfig)
 	zoneMap := make(map[string]struct{})
