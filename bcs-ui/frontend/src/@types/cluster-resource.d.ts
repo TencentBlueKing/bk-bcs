@@ -276,6 +276,7 @@ declare namespace ClusterResource {
   export interface GetMultiResFormSchemaReq {
     $projectCode?: string // 项目编码
     resourceTypes: FormResourceType[] // 资源类型
+    templateSpace: string // 模板空间
   }
   export interface GetResFormSchemaReq {
     $projectId?: string // 项目 ID

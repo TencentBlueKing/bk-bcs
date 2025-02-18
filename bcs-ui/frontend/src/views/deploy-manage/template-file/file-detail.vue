@@ -29,6 +29,7 @@
       <FormMode
         is-edit
         :value="curVersionData?.content"
+        :template-space="templateSpace"
         ref="formMode" />
     </div>
     <YamlMode

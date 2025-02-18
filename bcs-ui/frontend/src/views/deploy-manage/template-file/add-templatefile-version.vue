@@ -33,6 +33,7 @@
       ]">
       <FormMode
         :value="versionDetail.content"
+        :template-space="fileMetadata?.templateSpaceID"
         ref="formMode"
         v-if="editMode === 'form'" />
       <YamlMode
@@ -201,6 +202,7 @@ async function changeMode(type: 'yaml'|'form') {
     if (!result) return;
 
     versionDetail.value.content = await handleGetReqData();
+    if (!versionDetail.value.content) return;
   }
   editMode.value = type;
 }
@@ -307,6 +309,8 @@ async function handleShowDiffSlider() {
   if (!result) return;
 
   versionDetail.value.content = await handleGetReqData();
+  // 表单模式 并且 formToYaml 接口报错时不保存
+  if (editMode.value === 'form' && !versionDetail.value.content) return;
   showDiffSlider.value = true;
 }
 
@@ -366,6 +370,9 @@ async function handleSaveDraft() {
   if (!isValid) return;
 
   versionDetail.value.content = await handleGetReqData();
+  // 表单模式 并且 formToYaml 接口报错时不保存
+  if (editMode.value === 'form' && !versionDetail.value.content) return;
+
   const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.UpdateTemplateMetadata({
     $id: props.id, // 模板文件元数据 ID

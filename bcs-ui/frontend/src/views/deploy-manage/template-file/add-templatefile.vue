@@ -23,6 +23,7 @@
       ]">
       <FormMode
         :value="formData.content"
+        :template-space="templateSpace"
         ref="formMode"
         is-add
         v-if="editMode === 'form'" />
@@ -162,6 +163,7 @@ async function changeMode(type: 'yaml'|'form') {
     if (!result) return;
 
     formData.content = await handleGetReqData();
+    if (!formData.content) return;
   }
   editMode.value = type;
   formData.draftEditFormat = type;
@@ -224,6 +226,7 @@ async function handleCreateFile(versionData: Pick<ClusterResource.CreateTemplate
   formData.version = versionData.version;
   formData.versionDescription = versionData.versionDescription;
   const content = await handleGetReqData();
+  if (editMode.value === 'form' && !content) return;
 
   creating.value = true;
   const params = isHelm.value ? { renderMode: 'Helm' } : {};
@@ -251,6 +254,8 @@ async function handleCreateFile(versionData: Pick<ClusterResource.CreateTemplate
 async function handleSaveDraft() {
   formData.isDraft = true;
   formData.draftContent = await handleGetReqData();
+  // 表单模式 并且 formToYaml 接口报错时不保存
+  if (editMode.value === 'form' && !formData.draftContent) return;
 
   creating.value = true;
   const params = isHelm.value ? { renderMode: 'Helm' } : {};
