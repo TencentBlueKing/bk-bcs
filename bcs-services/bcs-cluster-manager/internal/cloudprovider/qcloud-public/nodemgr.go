@@ -505,5 +505,12 @@ func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, dis
 		return nil, err
 	}
 
-	return business.ListAvailableDiskTypes(diskTypes), nil
+	cvmClient, err := api.GetCVMClient(opt)
+	zoneInfo, err := cvmClient.DescribeZones()
+	availableZone := make(map[string]struct{})
+	for _, v := range zoneInfo {
+		availableZone[*v.Zone] = struct{}{}
+	}
+
+	return business.ListAvailableDiskTypes(availableZone, diskTypes), nil
 }
