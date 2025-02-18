@@ -42,7 +42,6 @@ import $store from '@/store';
 import ProjectGuide from '@/views/app/empty-project-guide.vue';
 import Terminal from '@/views/app/terminal.vue';
 import Unregistry from '@/views/app/unregistry.vue';
-import { useClusterInfo } from '@/views/cluster-manage/cluster/use-cluster';
 
 export default defineComponent({
   name: 'AppViews',
@@ -65,7 +64,6 @@ export default defineComponent({
       if (routeMeta.value?.keepAlive) return routeMeta.value?.keepAlive;
       return isDashboard.value ? 'dashboard' : currentRoute.value.path;
     });
-    const { clusterData, getClusterDetail } = useClusterInfo();
 
     // 设置项目缓存
     const handleSetProjectStorage = (data: IProject) => {
@@ -89,24 +87,7 @@ export default defineComponent({
     };
     // 校验项目Code
     const validateProjectCode = async () => {
-      let projectCode = currentRoute.value.params?.projectCode;
-      // 通过集群id获取项目Code
-      if (currentRoute.value.name === 'noProject') {
-        const clusterId = currentRoute.value.params?.clusterId;
-        clusterId && await getClusterDetail(clusterId, true);
-        projectCode = clusterData.value?.extraInfo?.projectCode;
-        if (!projectCode) {
-          $router.replace({ name: '404' });
-          return false;
-        }
-        $router.replace({
-          name: 'dashboardWorkloadDeployments',
-          params: {
-            projectCode,
-            clusterId,
-          },
-        });
-      }
+      const projectCode = currentRoute.value.params?.projectCode;
       // 路由中不存在项目Code, 重新设置projectCode
       if (!projectCode) {
         const { data, web_annotations } = await getProjectList();
