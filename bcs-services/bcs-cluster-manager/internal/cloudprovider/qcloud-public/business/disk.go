@@ -22,7 +22,7 @@ import (
 // 磁盘相关接口
 
 // ListAvailableDiskTypes 列出可用的磁盘类型
-func ListAvailableDiskTypes(availableZone map[string]struct{}, data []*cbs.DiskConfig) []*proto.DiskConfigSet { // nolint
+func ListAvailableDiskTypes(availableZone map[string]struct{}, data []*cbs.DiskConfig) []*proto.DiskConfigSet {
 	dataMap := make(map[string]map[string]*cbs.DiskConfig)
 	systemMap := make(map[string]map[string]*cbs.DiskConfig)
 	zoneMap := make(map[string]struct{})
@@ -68,29 +68,16 @@ func ListAvailableDiskTypes(availableZone map[string]struct{}, data []*cbs.DiskC
 
 	count := len(zoneMap)
 	result := make([]*proto.DiskConfigSet, 0)
-	for k, v := range dataDiskTypeMap {
-		if count == v {
-			for _, m := range dataMap {
-				if disk, ok := m[k]; ok {
-					var stepSize int32
-					if disk.StepSize != nil {
-						stepSize = int32(*disk.StepSize)
-					}
 
-					result = append(result, &proto.DiskConfigSet{
-						DiskType:     *disk.DiskType,
-						DiskTypeName: common.DiskType[k],
-						DiskUsage:    *disk.DiskUsage,
-						MinDiskSize:  int32(*disk.MinDiskSize),
-						MaxDiskSize:  int32(*disk.MaxDiskSize),
-						StepSize:     stepSize,
-					})
+	result = append(result, listDiskType(dataDiskTypeMap, dataMap, count)...)
+	result = append(result, listDiskType(systemDiskTypeMap, systemMap, count)...)
 
-					break
-				}
-			}
-		}
-	}
+	return result
+}
+
+func listDiskType(systemDiskTypeMap map[string]int, systemMap map[string]map[string]*cbs.DiskConfig,
+	count int) []*proto.DiskConfigSet {
+	result := make([]*proto.DiskConfigSet, 0)
 
 	for k, v := range systemDiskTypeMap {
 		if count == v {
