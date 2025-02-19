@@ -75,13 +75,13 @@ func ListAvailableDiskTypes(availableZone map[string]struct{}, data []*cbs.DiskC
 	return result
 }
 
-func listDiskType(systemDiskTypeMap map[string]int, systemMap map[string]map[string]*cbs.DiskConfig,
+func listDiskType(diskTypeMap map[string]int, diskMap map[string]map[string]*cbs.DiskConfig,
 	count int) []*proto.DiskConfigSet {
 	result := make([]*proto.DiskConfigSet, 0)
 
-	for k, v := range systemDiskTypeMap {
+	for k, v := range diskTypeMap {
 		if count == v {
-			for _, m := range systemMap {
+			for _, m := range diskMap {
 				if disk, ok := m[k]; ok {
 					var stepSize int32
 					if disk.StepSize != nil {
