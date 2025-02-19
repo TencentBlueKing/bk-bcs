@@ -991,6 +991,11 @@ func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
 	return cloudprovider.ErrCloudNotImplemented
 }
 
+// CheckHighAvailabilityMasterNodes check master nodes high availability
+func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error {
+	return nil
+}
+
 func getTkeClusterNetworkType(cluster *tke.Cluster) string {
 	property := *cluster.Property
 

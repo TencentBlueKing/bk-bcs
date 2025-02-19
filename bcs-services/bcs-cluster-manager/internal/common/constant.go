@@ -25,6 +25,32 @@ func (rt ResourceType) String() string {
 	return string(rt)
 }
 
+// EnvironmentLookup env type map
+var EnvironmentLookup = map[string]struct{}{
+	"test":  {},
+	"debug": {},
+	"prod":  {},
+}
+
+// EngineTypeLookup engine type map
+var EngineTypeLookup = map[string]struct{}{
+	"k8s":   {},
+	"mesos": {},
+}
+
+// ClusterTypeLookup cluster type map
+var ClusterTypeLookup = map[string]struct{}{
+	"federation": {},
+	"single":     {},
+}
+
+// ClusterEnvMap cluster env map
+var ClusterEnvMap = map[string]struct{}{
+	"stag":  {},
+	"debug": {},
+	"prod":  {},
+}
+
 var (
 	// Cluster type
 	Cluster ResourceType = "cluster"
@@ -148,6 +174,8 @@ const (
 var (
 	// Unschedulable set node unSchedulable
 	Unschedulable int64 = 1
+	// MasterNodeMinimumZoneNumber minimum master node number
+	MasterNodeMinimumZoneNumber = 3
 )
 
 // DefaultClusterConfig cluster default service config

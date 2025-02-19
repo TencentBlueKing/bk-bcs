@@ -92,6 +92,7 @@ CheckCleanDBDataTask: "清理库数据"
 ModifyInstancesVpcTask: "变更机器vpc"
 CheckInstanceStateTask: "检测机器状态"
 ReturnNodesToResourcePoolTask: "回收资源池节点"
+UpdateCloudNodeGroupTask: "更新节点组数据"
 #
 installGseAgent: "安装 GSE Agent"
 #

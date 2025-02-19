@@ -136,7 +136,7 @@ var (
 
 	// update nodegroup task
 	updateAKSNodeGroupStep = cloudprovider.StepInfo{
-		StepMethod: fmt.Sprintf("%s-updateCloudNodeGroupTask", cloudName),
+		StepMethod: fmt.Sprintf("%s-UpdateCloudNodeGroupTask", cloudName),
 		StepName:   "更新节点池",
 	}
 )

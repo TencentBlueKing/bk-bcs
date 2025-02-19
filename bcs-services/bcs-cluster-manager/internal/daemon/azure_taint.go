@@ -15,6 +15,7 @@ package daemon
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -84,21 +85,27 @@ func (d *Daemon) removeAzureClusterPlatformTaints(error chan<- error) {
 			}
 
 			// 过滤存在数据库 且 状态是RUNNING 的节点
+			daoNodes, errLocal := d.listClusterDaoRunningNodes(cls.ClusterID)
+			if errLocal != nil {
+				blog.Errorf("removeAzureClusterPlatformTaints ListClusterDaoRunningNodes[%s] failed: %v",
+					cls.ClusterID, errLocal)
+				error <- errLocal
+				return
+			}
+			daoNodeNames := make([]string, 0)
+			for _, n := range daoNodes {
+				daoNodeNames = append(daoNodeNames, strings.ToLower(n.NodeName))
+			}
+			blog.Infof("removeAzureClusterPlatformTaints cluster[%s] daoRunningNodeName[%v]",
+				cls.GetClusterID(), daoNodeNames)
+
 			nodeNames := make([]string, 0)
 			for _, n := range nodes {
-				daoNode, errGet := d.model.GetNodeByName(d.ctx, cls.ClusterID, n.GetName())
-				if errGet != nil {
-					blog.Errorf("removeAzureClusterPlatformTaints GetNodeByName[%s:%s] failed: %v",
-						cls.ClusterID, n.GetName(), errGet)
-					continue
-				}
-
-				if daoNode.Status == common.StatusRunning {
+				if utils.StringInSlice(n.GetName(), daoNodeNames) {
 					nodeNames = append(nodeNames, n.GetName())
 				}
 			}
-
-			blog.Infof("removeAzureClusterPlatformTaints nodeName[%v]", nodeNames)
+			blog.Infof("removeAzureClusterPlatformTaints cluster[%s] nodeName[%v]", cls.ClusterID, nodeNames)
 
 			// 移除平台taint
 			ctx := cloudprovider.WithTaskIDForContext(d.ctx,
@@ -109,4 +116,19 @@ func (d *Daemon) removeAzureClusterPlatformTaints(error chan<- error) {
 		}(azureClusterList[i])
 	}
 	concurency.Wait()
+}
+
+func (d *Daemon) listClusterDaoRunningNodes(clusterId string) ([]*cmproto.Node, error) {
+	condNode := operator.NewLeafCondition(operator.Eq, operator.M{
+		"clusterid": clusterId,
+		"status":    common.StatusRunning,
+	})
+
+	nodes, err := d.model.ListNode(d.ctx, condNode, &storeopt.ListOption{})
+	if err != nil {
+		blog.Errorf("removeAzureClusterPlatformTaints cluster[%s] ListNode failed, %s", clusterId, err.Error())
+		return nil, err
+	}
+
+	return nodes, nil
 }

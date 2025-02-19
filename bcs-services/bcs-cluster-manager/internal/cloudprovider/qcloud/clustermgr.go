@@ -1035,6 +1035,42 @@ func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
 	return nil
 }
 
+// CheckHighAvailabilityMasterNodes check master nodes high availability
+func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error {
+	// 独立集群且为生产环境
+	if cls.ManageType == icommon.ClusterManageTypeIndependent && cls.Environment == icommon.Prod && len(nodes) > 0 {
+
+		if len(nodes) < 3 || len(nodes)%2 == 0 {
+			errMsg := fmt.Errorf("master nodes number [%d] is invalid", len(nodes))
+			blog.Errorf(errMsg.Error())
+			return errMsg
+		}
+
+		var (
+			zoneIDCountMap = make(map[string]struct{})
+			zoneCount      = 0
+		)
+		for _, node := range nodes {
+			if _, exists := zoneIDCountMap[node.ZoneID]; !exists {
+				zoneIDCountMap[node.ZoneID] = struct{}{}
+				zoneCount++
+			}
+		}
+
+		blog.Infof("cloud[%s] CheckHighAvailabilityMasterNodes master nodes zone number [%d]",
+			cloudName, zoneCount)
+
+		if zoneCount < icommon.MasterNodeMinimumZoneNumber {
+			errMsg := fmt.Errorf("master nodes zone number [%d] is less than minimum availability zone number",
+				zoneCount)
+			blog.Errorf(errMsg.Error())
+			return errMsg
+		}
+	}
+
+	return nil
+}
+
 // getClusterCidrAvailableIPNum get global router ip num
 func getClusterCidrAvailableIPNum(clusterId, tkeId string, option *cloudprovider.CommonOption) (uint32, uint32, error) {
 	return business.GetClusterGrIPSurplus(option, clusterId, tkeId)

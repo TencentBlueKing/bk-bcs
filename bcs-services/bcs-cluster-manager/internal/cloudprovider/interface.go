@@ -356,6 +356,8 @@ type ClusterManager interface {
 		cls *proto.Cluster, subnet *proto.SubnetSource, opt *SwitchClusterNetworkOption) (*proto.Task, error)
 	// CheckClusterNetworkStatus check cluster network status
 	CheckClusterNetworkStatus(cloudID string, opt *CheckClusterNetworkStatusOption) (bool, error)
+	// CheckHighAvailabilityMasterNodes check master nodes high availability
+	CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error
 }
 
 // NodeGroupManager cloud interface for nodegroup management

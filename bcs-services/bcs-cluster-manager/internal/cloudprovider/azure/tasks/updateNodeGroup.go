@@ -47,10 +47,10 @@ func UpdateAKSNodeGroupTask(taskID string, stepName string) error {
 	}
 	// previous step successful when retry task
 	if step == nil {
-		blog.Infof("CreateAKSClusterTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		blog.Infof("UpdateAKSNodeGroupTask[%s]: current step[%s] successful and skip", taskID, stepName)
 		return nil
 	}
-	blog.Infof("CreateAKSClusterTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+	blog.Infof("UpdateAKSNodeGroupTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
 		taskID, taskID, stepName, step.System, step.Status, step.Params)
 
 	// get step paras

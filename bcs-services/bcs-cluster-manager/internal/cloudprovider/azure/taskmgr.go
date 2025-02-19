@@ -915,14 +915,13 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
 	// setting all steps details
-	// step1. ensure auto scaler
-	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
-
-	// setting all steps details
 	updateNodeGroupTask := &UpdateNodeGroupTaskOption{NodeGroup: group}
 
-	// step0: createAKSCluster and return clusterID inject common paras
+	// step0: update nodegroup
 	updateNodeGroupTask.BuildUpdateNodeGroupStep(task)
+
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {

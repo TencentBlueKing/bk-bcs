@@ -68,12 +68,12 @@ func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (str
 }
 
 func getClusterMaxNum(clusterType string, env string, model store.ClusterManagerModel) (int, error) {
-	_, ok := EngineTypeLookup[clusterType]
+	_, ok := common.EngineTypeLookup[clusterType]
 	if !ok {
 		return 0, fmt.Errorf("clusterType[%s] failed", clusterType)
 	}
 
-	_, ok = ClusterEnvMap[env]
+	_, ok = common.ClusterEnvMap[env]
 	if !ok {
 		return 0, fmt.Errorf("cluster env[%s] failed", env)
 	}
@@ -908,38 +908,14 @@ func getCmNodeIps(cmNodes []*proto.ClusterNode) []string {
 	return ips
 }
 
-var (
-	MasterNodeNumber = map[int]struct{}{
-		3: {},
-		5: {},
-	}
-)
-
-const MasterNodeMinimumZoneNumber = 3
-
 // checkHighAvailabilityMasterNodes for check master node number and zoneID
-func checkHighAvailabilityMasterNodes(nodes []*proto.Node) error {
-	if len(nodes) > 0 {
-		if _, ok := MasterNodeNumber[len(nodes)]; !ok {
-			errMsg := fmt.Errorf("master nodes number [%d] is invalid", len(nodes))
-			blog.Errorf(errMsg.Error())
-			return errMsg
-		}
+func checkHighAvailabilityMasterNodes(cls *proto.Cluster, cloud *proto.Cloud, nodes []*proto.Node) error {
 
-		zoneIDCountMap := make(map[string]struct{})
-		ZoneCount := 0
-		for _, node := range nodes {
-			if _, exists := zoneIDCountMap[node.ZoneID]; !exists {
-				zoneIDCountMap[node.ZoneID] = struct{}{}
-				ZoneCount++
-			}
-		}
-
-		if ZoneCount < MasterNodeMinimumZoneNumber {
-			errMsg := fmt.Errorf("master nodes zone number [%d] is less than minimum availability zone number", ZoneCount)
-			blog.Errorf(errMsg.Error())
-			return errMsg
-		}
+	clsMgr, err := cloudprovider.GetClusterMgr(cloud.GetCloudProvider())
+	if err != nil {
+		blog.Errorf("checkHighAvailabilityMasterNodes[%s] failed: %v", cls.ClusterID, err)
+		return err
 	}
-	return nil
+
+	return clsMgr.CheckHighAvailabilityMasterNodes(cls, nodes)
 }

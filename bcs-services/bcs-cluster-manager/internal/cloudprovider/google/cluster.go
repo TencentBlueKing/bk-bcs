@@ -352,3 +352,8 @@ func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
 	opt *cloudprovider.UpdateCloudKubeConfigOption) error {
 	return cloudprovider.ErrCloudNotImplemented
 }
+
+// CheckHighAvailabilityMasterNodes check master nodes high availability
+func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error {
+	return nil
+}

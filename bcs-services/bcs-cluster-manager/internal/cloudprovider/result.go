@@ -16,12 +16,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 )
 
 var (
@@ -97,6 +100,32 @@ type SyncJobResult struct {
 	Status      StatusResult
 }
 
+func printOperationLog(taskId, clusterId, groupId string, operation string, isSuccess bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	cls, err := GetStorageModel().GetCluster(ctx, clusterId)
+	if err != nil {
+		blog.Errorf("task[%s] printClusterOperation failed: %v", taskId, err)
+		return
+	}
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(cls.ProjectID, true)
+	if errLocal != nil {
+		blog.Errorf("task[%s] printClusterOperation GetProjectInfo[%s] failed: %v",
+			taskId, cls.ProjectID, errLocal)
+		return
+	}
+
+	result := common.TaskStatusSuccess
+	if !isSuccess {
+		result = common.TaskStatusFailure
+	}
+
+	blog.Infof("task %s operation %s for cluster %s nodegroup %s in project %s result: %v, Url: %v",
+		taskId, operation, clusterId, groupId, cls.ProjectID, result, fmt.Sprintf(
+			options.GetGlobalCMOptions().ComponentDeploy.BcsClusterUrl, proInfo.GetProjectCode(), clusterId))
+}
+
 // UpdateJobResultStatus update job status by result
 func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 	if sjr == nil {
@@ -105,6 +134,7 @@ func (sjr *SyncJobResult) UpdateJobResultStatus(isSuccess bool) error {
 
 	blog.Infof("task[%s] JobType[%s] isSuccess[%v] ClusterID[%s] nodeIPs[%v]",
 		sjr.TaskID, sjr.JobType, isSuccess, sjr.ClusterID, sjr.NodeIPs)
+	printOperationLog(sjr.TaskID, sjr.ClusterID, sjr.NodeGroupID, sjr.JobType.String(), isSuccess)
 
 	defer func() {
 		_ = SendUserNotifyByTemplates(sjr.ClusterID, sjr.NodeGroupID, sjr.TaskID, isSuccess)
