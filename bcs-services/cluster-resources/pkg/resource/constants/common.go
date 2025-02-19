@@ -110,6 +110,8 @@ const (
 const (
 	// EditModeAnnoKey 资源被编辑的模式，表单为 form，Key 不存在或 Manifest 则为 Yaml 模式
 	EditModeAnnoKey = "io.tencent.bcs.editFormat"
+	// LabelSelectedAnnoKey 标签选择器
+	LabelSelectedAnnoKey = "io.tencent.bcs.labelSelected"
 )
 
 const (

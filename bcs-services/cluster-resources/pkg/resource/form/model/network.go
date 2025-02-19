@@ -115,7 +115,11 @@ type SVCPort struct {
 
 // SVCSelector ...
 type SVCSelector struct {
-	Labels []LabelSelector `structs:"labels"`
+	Associate     bool              `structs:"associate"`
+	WorkloadType  string            `structs:"workloadType"`
+	WorkloadName  string            `structs:"workloadName"`
+	LabelSelected map[string]string `structs:"labelSelected"`
+	Labels        []LabelSelector   `structs:"labels"`
 }
 
 // SessionAffinity ...

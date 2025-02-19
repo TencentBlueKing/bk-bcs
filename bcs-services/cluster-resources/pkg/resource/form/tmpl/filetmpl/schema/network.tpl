@@ -336,6 +336,7 @@ portConf:
           name:
             title: {{ i18n "名称" .lang }}
             type: string
+            default: "http"
             ui:rules:
               - maxLength64
               - rfc1123LabelRegex
@@ -406,9 +407,52 @@ portConf:
 selector:
   title: {{ i18n "选择器" .lang }}
   type: object
+  ui:order:
+    - associate
+    - workloadType
+    - workloadName
+    - labelSelected
+    - labels
   properties:
-    associatedResources:
-      title: {{ i18n "关联资源" .lang }}
+    associate:
+      title: {{ i18n "关联应用" .lang }}
+      type: boolean
+      default: false
+      ui:reactions:
+      - target: "{{`{{`}} $widgetNode?.getSibling('workloadType')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('workloadName')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('labelSelected')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: true
+        else:
+          state:
+            visible: false
+      - target: "{{`{{`}} $widgetNode?.getSibling('labels')?.id {{`}}`}}"
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            visible: false
+        else:
+          state:
+            visible: true
+    workloadType:
+      title: {{ i18n "资源类型" .lang }}
       type: string
       default: Deployment
       ui:component:
@@ -420,26 +464,55 @@ selector:
               value: Deployment
             - label: StatefulSet
               value: StatefulSet
-    associatedApplications:
-      title: {{ i18n "关联应用" .lang }}
+    workloadName:
+      title: {{ i18n "资源名称" .lang }}
       type: string
+      default: deploy1
       ui:component:
         name: select
         props:
-           clearable: false
-           remoteConfig:
-             url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/${$context.versionID}/labels?kind=${$self.getValue('spec.selector.associatedResources')}` {{`}}`}}"
+          remoteConfig:
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/resources?kind=${$self.getValue('spec.selector.workloadType')}&templateSpace={{ .templateSpace }}` {{`}}`}}"
       ui:reactions:
         - lifetime: init
           then:
             actions:
               - "{{`{{`}} $loadDataSource {{`}}`}}"
-        - source: "spec.selector.associatedResources"
+        - source: "spec.selector.workloadType"
           then:
             state:
               value: ""
             actions:
-              - "{{`{{`}} $loadDataSource {{`}}`}}"       
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+    labelSelected:
+      title: {{ i18n "标签选择器" .lang }}
+      type: object
+      description: {{ i18n "若没有设置选择器，则不会自动创建 Endpoints，需要手动创建" .lang }}
+      items:
+        type: object
+        properties:
+          key:
+            title: {{ i18n "键" .lang }}
+            type: string
+          value:
+            title: {{ i18n "值" .lang }}
+            type: string
+      ui:component:
+        name: kvSelector
+        props:
+          remoteConfig:
+            url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/labels?kind=${$self.getValue('spec.selector.workloadType')}&templateSpace={{ .templateSpace }}&associateName=${$self.getValue('spec.selector.workloadName')}` {{`}}`}}"
+      ui:reactions:
+        - lifetime: init
+          then:
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
+        - source: "spec.selector.workloadName"
+          then:
+            state:
+              value: ""
+            actions:
+              - "{{`{{`}} $loadDataSource {{`}}`}}"
     labels:
       title: {{ i18n "标签选择器" .lang }}
       type: array

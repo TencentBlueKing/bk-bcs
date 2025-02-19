@@ -13,6 +13,8 @@
 package network
 
 import (
+	"encoding/json"
+
 	"github.com/fatih/structs"
 	"github.com/spf13/cast"
 
@@ -33,8 +35,13 @@ func ParseSVC(manifest map[string]interface{}) map[string]interface{} {
 // ParseSVCSpec ...
 func ParseSVCSpec(manifest map[string]interface{}, spec *model.SVCSpec) {
 	ParseSVCPortConf(manifest, &spec.PortConf)
+
 	// spec.Selector
-	if selector, _ := mapx.GetItems(manifest, "spec.selector"); selector != nil {
+	lb := mapx.GetStr(manifest, []string{"metadata", "annotations", resCsts.LabelSelectedAnnoKey})
+	jsonSelector := model.SVCSelector{}
+	if json.Unmarshal([]byte(lb), &jsonSelector) == nil && jsonSelector.Associate {
+		spec.Selector = jsonSelector
+	} else if selector, _ := mapx.GetItems(manifest, "spec.selector"); selector != nil {
 		for k, v := range selector.(map[string]interface{}) {
 			spec.Selector.Labels = append(spec.Selector.Labels, model.LabelSelector{
 				Key: k, Value: v.(string),

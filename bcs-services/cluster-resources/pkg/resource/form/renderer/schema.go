@@ -51,7 +51,7 @@ type SchemaRenderer struct {
 
 // NewSchemaRenderer xxx
 func NewSchemaRenderer(ctx context.Context, clusterID, apiVersion, kind, namespace, action string,
-	isTemplateFile bool) *SchemaRenderer {
+	isTemplateFile bool, templateSpace string) *SchemaRenderer {
 	// 若没有指定命名空间，则使用 default
 	if namespace == "" {
 		namespace = "default"
@@ -80,7 +80,8 @@ func NewSchemaRenderer(ctx context.Context, clusterID, apiVersion, kind, namespa
 			"lang":          i18n.GetLangFromContext(ctx),
 			"action":        action,
 			// 集群类型：目前可选值有 Single 独立集群，Shared 共享集群
-			"clusterType": clusterType,
+			"clusterType":   clusterType,
+			"templateSpace": templateSpace,
 		},
 	}
 }

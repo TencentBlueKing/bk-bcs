@@ -22,6 +22,9 @@ metadata:
     service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: {{ .spec.portConf.lb.subNetID | quote }}
     {{- end }}
     {{- end }}
+    {{- if .spec.selector.associate }}
+    "io.tencent.bcs.labelSelected": {{ .spec.selector | toJson | quote }}
+    {{- end }}
   {{- if .metadata.resVersion }}
   resourceVersion: {{ .metadata.resVersion | quote }}
   {{- end }}
@@ -42,9 +45,13 @@ spec:
   {{- end }}
   {{- end }}
   # selector
-  {{- if .spec.selector.labels }}
+  {{- if and (not .spec.selector.associate) .spec.selector.labels }}
   selector:
     {{- include "common.kvSlice2Map" .spec.selector.labels | indent 4 }}
+  {{- end }}
+  {{- if and .spec.selector.associate .spec.selector.labelSelected }}
+  selector:
+    {{- toYaml .spec.selector.labelSelected | nindent 4 }}
   {{- end }}
   # sessionAffinity
   sessionAffinity: {{ .spec.sessionAffinity.type }}

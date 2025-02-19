@@ -15,6 +15,7 @@ package parser
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -23,8 +24,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+)
+
+const (
+	// NameRegex 仅支持小写字母、数字、- 以及小写字母、数字组合
+	NameRegex = `^[a-z0-9]([-a-z0-9]*[a-z0-9])?$`
 )
 
 // GetResParseFunc 获取资源对应 Parser
@@ -78,10 +85,35 @@ type Metadata struct {
 // GetManifestMetadata 获取 Manifest metadata
 func GetManifestMetadata(manifest string) SimpleHead {
 	var entry SimpleHead
+
+	if strings.Contains(manifest, "{{") || strings.Contains(manifest, "}}") {
+		manifest = FilterLines(manifest)
+	}
+
 	if err := yaml.Unmarshal([]byte(manifest), &entry); err != nil {
 		return entry
 	}
 	return entry
+}
+
+// FilterLines 过滤文本中的行
+func FilterLines(text string) string {
+	// 按行分割文本
+	lines := strings.Split(text, "\n")
+
+	// 用于存储过滤后的行
+	var filteredLines []string
+
+	// 遍历每一行
+	for _, line := range lines {
+		// 如果行中不包含 {{ 和 }}，保留该行
+		if !strings.Contains(line, "{{") && !strings.Contains(line, "}}") {
+			filteredLines = append(filteredLines, line)
+		}
+	}
+
+	// 将过滤后的行重新组合为字符串
+	return strings.Join(filteredLines, "\n")
 }
 
 // GetResourceTypesFromManifest get resourceTypes from manifest
@@ -97,38 +129,56 @@ func GetResourceTypesFromManifest(manifest string) []string {
 	return slice.RemoveDuplicateValues(resourceType)
 }
 
-// GetLablesFromManifest get labels from manifest
-func GetLablesFromManifest(manifest string, kind, associateName string) map[string]interface{} {
+// ParseResourcesFromManifest parse resources from manifest
+func ParseResourcesFromManifest(versions []*entity.TemplateVersion, kind string) map[string]interface{} {
 	resp := make([]map[string]interface{}, 0)
-	manifests := SplitManifests(manifest)
-	for _, v := range manifests {
-		metadata := GetManifestMetadata(v)
-		if kind != metadata.Kind {
-			continue
-		}
-		// 筛选关联资源名称列表
-		if associateName == "" {
+	for _, ver := range versions {
+		manifests := SplitManifests(ver.Content)
+		for _, v := range manifests {
+			head := GetManifestMetadata(v)
+			name := head.Metadata.Name
+			if kind != head.Kind || !regexp.MustCompile(NameRegex).MatchString(name) {
+				continue
+			}
+
 			resp = append(resp, map[string]interface{}{
-				"label":    metadata.Metadata.Name,
-				"value":    metadata.Metadata.Name,
+				"label":    fmt.Sprintf("%s/%s", ver.TemplateName, name),
+				"value":    fmt.Sprintf("%s/%s", ver.TemplateName, name),
 				"disabled": false,
 				"tips":     "",
 			})
-			continue
-		}
-		// 筛选关联应用的labels
-		if associateName == metadata.Metadata.Name {
-			for kk, vv := range metadata.Metadata.Labels {
-				resp = append(resp, map[string]interface{}{
-					"key":   kk,
-					"value": vv,
-				})
-			}
 		}
 	}
 
-	if associateName != "" {
-		return map[string]interface{}{action.FormDataFormat: resp}
+	return map[string]interface{}{action.SelectItemsFormat: resp}
+}
+
+// ParseLablesFromManifest parse labels from manifest
+func ParseLablesFromManifest(versions []*entity.TemplateVersion, kind, name string) map[string]interface{} {
+	resp := make([]map[string]interface{}, 0)
+	for _, ver := range versions {
+		manifests := SplitManifests(ver.Content)
+		for _, v := range manifests {
+			metadata := GetManifestMetadata(v)
+			if kind != metadata.Kind {
+				continue
+			}
+			if name != metadata.Metadata.Name {
+				continue
+			}
+
+			// 筛选关联应用的labels
+			for kk, vv := range metadata.Metadata.Labels {
+				resp = append(resp, map[string]interface{}{
+					"label":    kk,
+					"value":    vv,
+					"disabled": false,
+					"tips":     "",
+				})
+			}
+			break
+		}
 	}
+
 	return map[string]interface{}{action.SelectItemsFormat: resp}
 }
