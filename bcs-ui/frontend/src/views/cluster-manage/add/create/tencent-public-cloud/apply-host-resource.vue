@@ -44,11 +44,11 @@
         class="inline-flex items-center h-[32px]"
         v-model="instanceCommonConfig.instanceChargeType"
         @change="handleChargeTypeChange">
-        <bk-radio value="PREPAID">
-          {{ $t('tke.label.chargeType.prepaid') }}
-        </bk-radio>
         <bk-radio value="POSTPAID_BY_HOUR">
           {{ $t('tke.label.chargeType.postpaid_by_hour') }}
+        </bk-radio>
+        <bk-radio value="PREPAID">
+          {{ $t('tke.label.chargeType.prepaid') }}
         </bk-radio>
         <bk-link
           theme="primary"
@@ -171,6 +171,7 @@
         :disable-data-disk="disableDataDisk"
         :disable-internet-access="disableInternetAccess"
         :max-nodes="maxNodes"
+        :instance-charge-type="instanceCommonConfig.instanceChargeType"
         slot="content"
         @cancel="showNodeConfig = false"
         @confirm="handleNodeConfigConfirm" />
@@ -180,8 +181,10 @@
 <script setup lang="ts">
 import { computed, defineProps, PropType, ref, watch } from 'vue';
 
-import ApplyNodeConfig from './apply-node-config.vue';
 import { IImageItem, IInstanceItem, IZoneItem } from '../../../types/types';
+
+import ApplyNodeConfig from './apply-node-config.vue';
+import { diskMap } from './use-disk';
 
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
@@ -244,11 +247,6 @@ const applyNum = computed(() => props.instances.reduce((pre, item) => {
   return pre;
 }, 0));
 
-const diskMap = ref({
-  CLOUD_PREMIUM: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.premium'),
-  CLOUD_SSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.ssd'),
-  CLOUD_HSSD: $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.diskType.hssd'),
-});
 const masterConfigSchema = ref([
   {
     id: 'L100',
@@ -294,7 +292,7 @@ const getZoneName = zone => zoneList.value.find(item => item.zone === zone)?.zon
 // 节点公共配置
 const instanceCommonConfig = ref<Partial<IInstanceItem>>({
   nodeRole: props.nodeRole, // MASTER_ETCD WORKER
-  instanceChargeType: '',
+  instanceChargeType: 'POSTPAID_BY_HOUR',
   securityGroupIDs: [],
   isSecurityService: true, // 默认true
   isMonitorService: true, // 默认true

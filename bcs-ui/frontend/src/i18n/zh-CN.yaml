@@ -1026,7 +1026,9 @@ cluster:
             dataDisks: '范围: 50~16380, 步长: 10'
             systemDisk: '范围: 50~1000, 步长: 10'
             repeatPath: 目录不能重复
-            maxDataDisks: 最多4个数据盘
+            maxDataDisks: '最多{0}个数据盘'
+            systemDiskType: 请选择系统盘
+            dataDiskType: 请选择数据盘
           button:
             addDataDisks: 添加数据盘
           publicIPAssigned:

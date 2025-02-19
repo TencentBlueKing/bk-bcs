@@ -1,52 +1,104 @@
 <template>
-  <div class="flex items-center">
-    <span class="prefix">{{ $t('tke.label.systemDisk') }}</span>
-    <bcs-select :clearable="false" class="ml-[-1px] w-[140px]" v-model="systemDisk.diskType">
-      <bcs-option
-        v-for="diskItem in diskEnum"
-        :key="diskItem.id"
-        :id="diskItem.id"
-        :name="diskItem.name">
-      </bcs-option>
-    </bcs-select>
-    <bcs-input
-      class="w-[88px] bg-[#fff] ml10"
-      type="number"
-      :min="50"
-      :max="1000"
-      v-model="systemDisk.diskSize">
-    </bcs-input>
-    <span class="suffix ml-[-1px]">GB</span>
-    <p
-      class="bcs-form-error-tip text-[12px] text-[#ea3636] ml-[6px]"
-      v-if="Number(systemDisk.diskSize || 0) % 10 !== 0">
-      {{$t('cluster.ca.nodePool.create.instanceTypeConfig.validate.systemDisk')}}
-    </p>
-  </div>
+  <Validate
+    :rules="rules"
+    :value="systemDisk"
+    error-display-type="normal"
+    ref="validateRef"
+    @validate="handleValidate">
+    <div class="flex items-center">
+      <span :class="['prefix', { disabled: isEdit }]">{{ $t('tke.label.systemDisk') }}</span>
+      <bcs-select
+        :clearable="false"
+        :disabled="isEdit"
+        class="ml-[-1px] w-[140px]"
+        :loading="loading"
+        v-model="systemDisk.diskType">
+        <bcs-option
+          v-for="diskItem in list"
+          :key="diskItem.id"
+          :id="diskItem.id"
+          :name="diskItem.name">
+        </bcs-option>
+      </bcs-select>
+      <bcs-input
+        class="w-[88px] bg-[#fff] ml10"
+        type="number"
+        :min="50"
+        :max="1000"
+        :disabled="isEdit"
+        v-model="systemDisk.diskSize">
+      </bcs-input>
+      <span class="suffix ml-[-1px]">GB</span>
+    </div>
+  </Validate>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, PropType, ref, watch } from 'vue';
 
 import { diskEnum } from '@/common/constant';
+import Validate from '@/components/validate.vue';
+import $i18n from '@/i18n/i18n-setup';
 
 const props = defineProps({
   value: {
     type: Object,
     default: () => ({}),
   },
+  list: {
+    type: Array as PropType<{id: string, name: string}[]>,
+    default: () => [...diskEnum],
+  },
+  firstTrigger: {
+    type: Boolean,
+    default: true,
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  isEdit: {
+    type: Boolean,
+    default: false,
+  },
 });
-const emits = defineEmits(['change']);
+const emits = defineEmits(['change', 'validate']);
 
 const systemDisk = ref({
-  diskType: 'CLOUD_PREMIUM',
+  diskType: '',
   diskSize: '50',
 });
+const validateRef = ref();
+
+// 校验系统盘
+const rules = computed<Array<{validator: () => boolean, message: string}>>(() => [
+  {
+    validator: validateSystemDisk,
+    message: !systemDisk.value.diskType
+      ? $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.validate.systemDiskType')
+      : $i18n.t('cluster.ca.nodePool.create.instanceTypeConfig.validate.systemDisk'),
+  },
+]);
+function validateSystemDisk() {
+  const diskSize = Number(systemDisk.value.diskSize);
+  return props.firstTrigger
+    || (!!systemDisk.value.diskType
+      && (diskSize % 10 === 0)
+      && (diskSize) >= 50);
+};
+
+async function validate() {
+  return await validateRef.value?.validate();
+}
+
+function handleValidate(result: boolean) {
+  emits('validate', result);
+}
 
 watch(() => props.value, (newValue, oldValue) => {
   if (JSON.stringify(newValue) === JSON.stringify(oldValue)) return;
 
   systemDisk.value = Object.assign({
-    diskType: 'CLOUD_PREMIUM',
+    diskType: '',
     diskSize: '50',
   }, props.value);
 }, { immediate: true });
@@ -57,6 +109,10 @@ watch(systemDisk, () => {
     diskSize: String(systemDisk.value.diskSize),
   });
 }, { deep: true });
+
+defineExpose({
+  validate,
+});
 </script>
 <style lang="postcss" scoped>
 >>> .prefix {

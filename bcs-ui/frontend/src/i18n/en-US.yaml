@@ -1269,7 +1269,9 @@ cluster:
             dataDisks: 'Scope: 50 ~ 16380, step: 10'
             systemDisk: 'Scope: 50 ~ 16380, step: 10'
             repeatPath: Directory cannot be repeated
-            maxDataDisks: Up to 4 data disks
+            maxDataDisks: 'Up to {0} data disks'
+            systemDiskType: Please select system disk type
+            dataDiskType: Please select data disk type
           button:
             addDataDisks: Add data disk
           publicIPAssigned:

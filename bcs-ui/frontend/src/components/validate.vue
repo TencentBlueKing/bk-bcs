@@ -6,13 +6,13 @@
     <slot :is-error="isError"></slot>
     <template v-if="isError">
       <span
-        class="error-tip"
+        class="error-tip is-error"
         v-if="errorDisplayType === 'tooltips'"
         v-bk-tooltips="errorMsg">
         <i class="bk-icon icon-exclamation-circle-shape"></i>
       </span>
       <div
-        class="text-[#ea3636] text-[12px] leading-[18px]"
+        class="text-[#ea3636] text-[12px] leading-[18px] is-error"
         v-else-if="errorDisplayType === 'normal'">
         {{ errorMsg }}
       </div>
@@ -154,7 +154,7 @@ position: relative;
 }
 
 &.input {
-  >>> input {
+  >>> input, .bk-select {
     border-color: #ff5656 !important;
     color: #ff5656 !important;
   }

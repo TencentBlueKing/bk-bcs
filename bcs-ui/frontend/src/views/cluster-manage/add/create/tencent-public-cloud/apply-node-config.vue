@@ -145,8 +145,13 @@
       <!-- 系统盘 -->
       <SystemDisk
         class="mt-[24px]"
+        :list="systemDisks"
         :value="instanceItem.systemDisk"
-        @change="(v) => instanceItem.systemDisk = v" />
+        :first-trigger="firstTrigger"
+        :loading="isLoading"
+        :ref="el => systemDiskRef = el"
+        @change="(v) => instanceItem.systemDisk = v"
+        @validate="firstTrigger = false" />
       <!-- 数据盘 -->
       <bk-form-item
         :label-width="0.1"
@@ -154,9 +159,14 @@
         error-display-type="normal">
         <DataDisk
           class="mt-[20px]"
+          :list="dataDisks"
           :value="instanceItem.cloudDataDisks"
           :disabled="disableDataDisk"
-          @change="(v) => instanceItem.cloudDataDisks = v" />
+          :first-trigger="firstTrigger"
+          :loading="isLoading"
+          :ref="el => dataDiskRef = el"
+          @change="(v) => instanceItem.cloudDataDisks = v"
+          @validate="firstTrigger = false" />
       </bk-form-item>
       <!-- 带宽包 -->
       <bk-form-item
@@ -197,12 +207,15 @@
 </template>
 <script setup lang="ts">
 import { merge } from 'lodash';
-import { computed, inject, PropType, ref, watch } from 'vue';
+import { computed, inject, onMounted, PropType, ref, watch } from 'vue';
 
 import { ClusterDataInjectKey, IInstanceItem, IInstanceType, ISubnet } from '../../../types/types';
 
+import { useDisk } from './use-disk';
+
 import { cloudInstanceTypes, cloudSubnets } from '@/api/modules/cluster-manager';
 import SelectExtension from '@/components/select-extension.vue';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import DataDisk from '@/views/cluster-manage/add/components/data-disk.vue';
@@ -249,6 +262,10 @@ const props = defineProps({
     type: Number,
     default: 5,
   },
+  instanceChargeType: {
+    type: String,
+    default: '',
+  },
 });
 const isEdit = computed(() => !!props.instance && !!Object.keys(props.instance).length);
 const emits = defineEmits(['cancel', 'confirm']);
@@ -267,13 +284,16 @@ const initData = ref({
   applyNum: 1,
   zone: '',
   instanceType: '',
+  instanceFamily: '',
+  cpu: 0,
+  memory: 0,
   systemDisk: {
-    diskType: 'CLOUD_PREMIUM',
+    diskType: '',
     diskSize: '50',
   },
   cloudDataDisks: [
     {
-      diskType: 'CLOUD_PREMIUM', // 类型
+      diskType: '', // 类型
       diskSize: '100', // 大小
       fileSystem: 'ext4', // 文件系统
       autoFormatAndMount: true, // 是否格式化
@@ -448,6 +468,9 @@ const instanceRowClass = ({ row }) => {
 const handleCheckInstanceType = (row) => {
   if (row.status === 'SOLD_OUT') return;
   instanceItem.value.instanceType = row.nodeType;
+  instanceItem.value.instanceFamily = row.nodeFamily;
+  instanceItem.value.cpu = row.cpu;
+  instanceItem.value.memory = row.memory;
 };
 
 // 取消
@@ -457,15 +480,18 @@ const handleCancel = () => {
 // 校验
 const firstTrigger = ref(true);
 const formRef = ref();
+const systemDiskRef = ref();
+const dataDiskRef = ref();
 const validate = async () => {
   firstTrigger.value = false;
   const result = await formRef.value?.validate().catch(() => false);
-  const validateSystemDiskSize = Number(instanceItem.value.systemDisk.diskSize) % 10 === 0;
-  const validateDataDiskSize = instanceItem.value.cloudDataDisks.every(item => Number(item.diskSize) % 10 === 0);
-  return result && !!instanceItem.value.instanceType && validateSystemDiskSize && validateDataDiskSize;
+  const validateSystemDisk = await systemDiskRef.value?.validate().catch(() => false);
+  const validateDataDisk = await dataDiskRef.value?.validate().catch(() => false);
+  return result && !!instanceItem.value.instanceType && validateSystemDisk && validateDataDisk;
 };
 // 确定
-const nodeConfigRef = ref();
+const nodeConfigRef = ref<HTMLElement | null>(null);
+let focusError: Function | null = null;
 const handleConfirm = async () => {
   const instance = instanceTypesList.value.find(item => item.nodeType === instanceItem.value.instanceType);
   const result = await validate();
@@ -486,13 +512,7 @@ const handleConfirm = async () => {
     });
   } else {
     // 自动滚动到第一个错误的位置
-    const errDom = nodeConfigRef.value?.querySelectorAll('.form-error-tip');
-    const bcsErrDom = nodeConfigRef.value?.querySelectorAll('.bcs-form-error-tip');
-    const firstErrDom = errDom[0] || bcsErrDom[0];
-    firstErrDom?.scrollIntoView({
-      block: 'center',
-      behavior: 'smooth',
-    });
+    focusError?.();
   }
 };
 
@@ -505,6 +525,37 @@ const handleValidateInstance = () => {
     }
   });
 };
+
+// 磁盘类型
+const { systemDisks, dataDisks, getDisks, isLoading } = useDisk();
+async function getDiskEnum() {
+  await getDisks({
+    cloudID,
+    accountID: props.accountId,
+    region: props.region,
+    zones: [instanceItem.value.zone],
+    instanceFamilies: [instanceItem.value.instanceFamily],
+    diskChargeType: props.instanceChargeType,
+    cpu: instanceItem.value.cpu,
+    memory: instanceItem.value.memory,
+  });
+  // 系统盘
+  const flag = systemDisks.value.some(item => item.id === instanceItem.value.systemDisk?.diskType)
+    && systemDisks.value?.length > 0;
+  if (!flag) {
+    // 新选中的机型没有对应磁盘类型，清空
+    instanceItem.value.systemDisk.diskType = '';
+  }
+  // 数据盘
+  instanceItem.value.cloudDataDisks.forEach((item) => {
+    const val = item;
+    const flag = dataDisks.value.some(v => v.id === val.diskType) && dataDisks.value?.length > 0;
+    if (!flag) {
+      // 新选中的机型没有对应磁盘类型，清空
+      val.diskType = '';
+    }
+  });
+}
 
 watch(
   [
@@ -549,7 +600,22 @@ watch(
 watch(() => instanceItem.value.zone, () => {
   instanceItem.value.subnetID = '';
   instanceItem.value.instanceType = '';
+  instanceItem.value.cpu = 0;
+  instanceItem.value.memory = 0;
   handleGetSubnets();
+});
+watch(() => instanceItem.value.instanceType, async () => {
+  if (!instanceItem.value.instanceType) {
+    systemDisks.value = [];
+    dataDisks.value = [];
+    return;
+  };
+  await getDiskEnum();
+}, { immediate: true });
+
+onMounted(() => {
+  const { focusOnErrorField } = useFocusOnErrorField(nodeConfigRef.value);
+  focusError = focusOnErrorField;
 });
 </script>
 <style lang="postcss" scoped>
