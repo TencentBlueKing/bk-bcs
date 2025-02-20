@@ -141,7 +141,7 @@ router.beforeEach(async (to, from, next) => {
     const match = to.fullPath?.match(clusterPathPattern);
     // 如果路径匹配 ${SITE_URL}/clusters/:clusterId
     const clusterId = match?.[1]; // 从匹配结果中获取 clusterId
-    if (clusterId) {
+    if (clusterId && clusterId !== '-') {
       // 查找clusterId对应的项目
       const data = await clusterDetail({
         $clusterId: clusterId,

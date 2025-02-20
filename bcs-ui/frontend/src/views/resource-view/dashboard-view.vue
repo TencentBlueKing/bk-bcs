@@ -164,7 +164,10 @@ const { clusterList, curClusterId } = useCluster();
 const initClusterAndViewID = () => {
   let cluster;
   let viewID = $router.currentRoute?.query?.viewID || dashboardViewID.value || '';
-  const pathClusterID = $router.currentRoute?.params?.clusterId;
+  let pathClusterID = $router.currentRoute?.params?.clusterId;
+  if (pathClusterID === '-') {
+    pathClusterID = '';
+  }
   if (pathClusterID) {
     // 路径上带有集群ID, 以路径集群ID为主
     cluster = clusterList.value.find(item => item.clusterID === pathClusterID);
