@@ -15,8 +15,9 @@ package tencentcloud
 import (
 	"fmt"
 
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
+
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 )
 
 // ClbValidater valiadater for clb parameters
@@ -51,28 +52,11 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 	if rule.Port <= 0 || rule.Port >= 65536 {
 		return false, fmt.Sprintf("invalid port %d, available [1-65535]", rule.Port)
 	}
-	if rule.Protocol == ClbProtocolHTTPS || rule.Protocol == ClbProtocolTCPSSL {
-		// sni off
-		if rule.ListenerAttribute == nil || rule.ListenerAttribute.SniSwitch == 0 {
-			if rule.Certificate == nil {
-				return false, fmt.Sprintf("certificate cannot be empty for protocol https")
-			}
-			if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
-				return false, msg
-			}
-		} else {
-			// sni open
-			for _, route := range rule.Routes {
-				if route.Certificate == nil {
-					return false, fmt.Sprintf("route certificate cannot be empty for protocol https with sni open")
-				}
-				if ok, msg := cv.validateCertificate(route.Certificate); !ok {
-					return false, msg
-				}
-			}
-		}
 
+	if ok, msg := cv.validateSSLProtocols(rule); !ok {
+		return false, msg
 	}
+
 	if rule.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(rule.ListenerAttribute); !ok {
 			return false, msg
@@ -92,17 +76,51 @@ func (cv *ClbValidater) validateIngressRule(rule *networkextensionv1.IngressRule
 			}
 		}
 	} else {
-		return false, fmt.Sprintf("invalid protocol %s, available [HTTP, HTTPS, TCP, UDP]", rule.Protocol)
+		return false, fmt.Sprintf("invalid protocol %s, available [HTTP, HTTPS, TCP, UDP, TCP_SSL, QUIC]",
+			rule.Protocol)
 	}
 	return true, ""
+}
+
+func (cv *ClbValidater) validateSSLProtocols(rule *networkextensionv1.IngressRule) (bool, string) {
+	if !isSSLProtocol(rule.Protocol) {
+		return true, ""
+	}
+
+	// sni off
+	if rule.ListenerAttribute == nil || rule.ListenerAttribute.SniSwitch == 0 {
+		if rule.Certificate == nil {
+			return false, fmt.Sprintf("certificate cannot be empty for protocol https")
+		}
+		if ok, msg := cv.validateCertificate(rule.Certificate); !ok {
+			return false, msg
+		}
+	} else {
+		// sni open
+		for _, route := range rule.Routes {
+			if route.Certificate == nil {
+				return false, fmt.Sprintf("route certificate cannot be empty for protocol https with sni open")
+			}
+			if ok, msg := cv.validateCertificate(route.Certificate); !ok {
+				return false, msg
+			}
+		}
+	}
+	return true, ""
+}
+
+func isSSLProtocol(protocol string) bool {
+	return protocol == ClbProtocolHTTPS ||
+		protocol == ClbProtocolTCPSSL ||
+		protocol == ClbProtocolQUIC
 }
 
 func (cv *ClbValidater) validateListenerRoute(r *networkextensionv1.Layer7Route) (bool, string) {
 	if len(r.Domain) == 0 {
 		return false, "domain cannot be empty for 7 layer listener"
 	}
-	if len(r.ForwardType) != 0 && r.ForwardType != ClbProtocolGRPC {
-		return false, "ForwardType only support grpc"
+	if len(r.ForwardType) != 0 && r.ForwardType != ClbProtocolGRPC && r.ForwardType != ClbProtocolQUIC {
+		return false, "ForwardType only support GRPC/QUIC"
 	}
 	if r.ListenerAttribute != nil {
 		if ok, msg := cv.validateListenerAttribute(r.ListenerAttribute); !ok {

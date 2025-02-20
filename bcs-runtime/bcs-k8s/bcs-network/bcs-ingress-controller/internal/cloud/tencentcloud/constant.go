@@ -23,6 +23,8 @@ const (
 	ClbProtocolUDP = "UDP"
 	// ClbProtocolTCPSSL clb tcp_ssl protocol
 	ClbProtocolTCPSSL = "TCP_SSL"
+	// ClbProtocolQUIC clb quic protocol
+	ClbProtocolQUIC = "QUIC"
 	// ClbProtocolGRPC clb grpc protocol
 	ClbProtocolGRPC = "GRPC"
 

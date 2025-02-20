@@ -15,7 +15,7 @@ package constant
 
 var (
 	// Layer4Protocol 四层协议
-	Layer4Protocol = []string{ProtocolTCP, ProtocolUDP, ProtocolTCPSSL}
+	Layer4Protocol = []string{ProtocolTCP, ProtocolUDP, ProtocolTCPSSL, ProtocolQUIC}
 
 	// Layer7Protocol 七层协议
 	Layer7Protocol = []string{ProtocolHTTP, ProtocolHTTPS}
@@ -32,6 +32,8 @@ const (
 	ProtocolHTTP = "HTTP"
 	// ProtocolTCPSSL protocol of TCP_SSL
 	ProtocolTCPSSL = "TCP_SSL"
+	// ProtocolQUIC protocol of QUIC
+	ProtocolQUIC = "QUIC"
 	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
