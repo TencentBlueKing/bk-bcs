@@ -10,6 +10,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/ggicci/httpin v0.19.0
+	github.com/gin-contrib/sse v0.1.0
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/render v1.0.3
 	github.com/go-kit/log v0.2.1

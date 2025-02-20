@@ -14,11 +14,14 @@ package pod
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/gin-contrib/sse"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -91,13 +94,20 @@ func PodLogStream(logQuery k8sclient.LogQuery, ss rest.StreamingServer) error { 
 			// id 是最后一个日志时间
 			id := base64.StdEncoding.EncodeToString([]byte(lastLogTime))
 			fmt.Println(id)
-			// c.Render(-1, sse.Event{
-			// 	Event: "message",
-			// 	Data:  logList,
-			// 	Id:    id,
-			// 	Retry: 5000, // 5 秒重试
-			// })
-			// ss.ResponseWriter.(http.Flusher).Flush()
+			_ = render.Render(ss, rctx.Request, &rest.Event{
+				HTTPCode: -1,
+				Event: sse.Event{
+					Event: "message",
+					Data:  logList,
+					Id:    id,
+					Retry: 5000, // 5 秒重试
+				},
+			})
+
+			err := ss.Flush()
+			if err != nil {
+				return errors.New("flush error: " + err.Error())
+			}
 
 			// 清空列表
 			logCount = 0

@@ -16,6 +16,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/go-chi/render"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -27,7 +28,7 @@ func ProjectParse(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		restContext, err := rest.GetRestContext(r.Context())
 		if err != nil {
-			rest.AbortWithBadRequestError(rest.InitRestContext(w, r), err)
+			_ = render.Render(w, r, rest.AbortWithBadRequestError(rest.InitRestContext(w, r), err))
 			return
 		}
 
@@ -39,7 +40,7 @@ func ProjectParse(next http.Handler) http.Handler {
 		project, err := bcs.GetProject(r.Context(), config.G.BCS, projectIDOrCode)
 		if err != nil {
 			blog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
-			rest.AbortWithBadRequestError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithBadRequestError(restContext, err))
 			return
 		}
 		restContext.ProjectId = project.ProjectId
@@ -48,7 +49,7 @@ func ProjectParse(next http.Handler) http.Handler {
 		// get cluster info
 		cls, err := bcs.GetCluster(restContext.ClusterId)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		restContext.SharedCluster = cls.IsShared

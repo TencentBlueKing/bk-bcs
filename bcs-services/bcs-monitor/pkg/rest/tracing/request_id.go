@@ -48,7 +48,7 @@ func RequestIdMiddleware(next http.Handler) http.Handler {
 		// Get id from request
 		rid := r.Header.Get(store.RequestIdHeaderKey())
 		if rid == "" {
-			rid = uuid.New().String()
+			rid = RequestIdGenerator()
 		}
 		// Set the id to ensure that the requestid is in the response
 		w.Header().Set(store.RequestIdHeaderKey(), rid)

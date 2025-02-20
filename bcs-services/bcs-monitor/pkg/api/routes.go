@@ -121,10 +121,12 @@ func (a *APIServer) newRoutes() http.Handler {
 func registerRoutes() http.Handler {
 	r := chi.NewRouter()
 	// 日志相关接口
-	r.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.NsScopeAuthorization)
-	r.Use(middleware.Tracing)
 
 	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse)
+		// route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.NsScopeAuthorization)
+		route.Use(middleware.Tracing)
+
 		route.Get("/namespaces/{namespace}/pods/{pod}/containers", rest.RestHandlerFunc(pod.GetPodContainers))
 		route.Get("/namespaces/{namespace}/pods/{pod}/logs", rest.RestHandlerFunc(pod.GetPodLog))
 		route.Get("/namespaces/{namespace}/pods/{pod}/logs/download", rest.StreamHandler(pod.DownloadPodLog))
@@ -152,15 +154,15 @@ func registerRoutes() http.Handler {
 func registerMetricsRoutes() http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ProjectAuthorization)
-	r.Use(middleware.Tracing)
-
 	// 命名规范
 	// usage 代表 百分比
 	// used 代表已使用
 	// overview, info 数值量
 
 	r.Route("/projects/{projectCode}/clusters/{clusterId}", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ProjectAuthorization)
+		route.Use(middleware.Tracing)
+
 		route.Get("/overview", rest.RestHandlerFunc(metrics.GetClusterOverview))
 		route.Get("/cpu_usage", rest.RestHandlerFunc(metrics.ClusterCPUUsage))
 		route.Get("/cpu_request_usage", rest.RestHandlerFunc(metrics.ClusterCPURequestUsage))

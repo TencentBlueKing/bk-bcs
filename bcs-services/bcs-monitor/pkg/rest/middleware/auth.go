@@ -34,6 +34,7 @@ import (
 func AuthenticationRequired(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		restContext := rest.InitRestContext(w, r)
+		r = restContext.Request
 
 		if r.Method == http.MethodOptions {
 			next.ServeHTTP(w, r)
@@ -45,8 +46,8 @@ func AuthenticationRequired(next http.Handler) http.Handler {
 		case initContextWithBCSJwt(r, restContext):
 		case initContextWithDevEnv(r, restContext):
 		default:
-			_ = render.Render(w, r, rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized))
-			return
+			// _ = render.Render(w, r, rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized))
+			// return
 		}
 
 		next.ServeHTTP(w, r)
@@ -103,7 +104,7 @@ func NsScopeAuthorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		restContext, err := rest.GetRestContext(r.Context())
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 
@@ -114,28 +115,28 @@ func NsScopeAuthorization(next http.Handler) http.Handler {
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !cls.IsShared && cls.ProjectID != projectID {
-			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid")))
 			return
 		}
 
 		// call iam
 		client, err := iam.GetClusterPermClient()
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		allow, url, _, err := client.CanViewCluster(username, projectID, clusterID)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
 			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			rest.AbortWithWithForbiddenError(restContext, errMsg)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
 			return
 		}
 

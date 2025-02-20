@@ -20,11 +20,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/ggicci/httpin"
+	"github.com/gin-contrib/sse"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/pkg/errors"
@@ -85,13 +88,25 @@ func APIResponse(c *Context, data any) render.Renderer {
 	return &Result{Code: 0, Message: "OK", RequestId: c.RequestId, Data: data, HTTPCode: http.StatusOK}
 }
 
+// Event sse event
+type Event struct {
+	HTTPCode int `json:"-"` // http response status code
+	sse.Event
+}
+
+// Render chi render interface implementation
+func (e *Event) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPCode)
+	return e.Event.Render(w)
+}
+
 // restContext
 type restCtx string
 
 type reqCtx string
 
 const (
-	RestContextKey restCtx = "rest_context"
+	restContextKey restCtx = "rest_context"
 	reqCtxKey      reqCtx  = "reqCtx"
 )
 
@@ -108,17 +123,22 @@ func InitRestContext(w http.ResponseWriter, r *http.Request) *Context {
 	}
 
 	ctx := r.Context()
-	ctx = context.WithValue(ctx, RestContextKey, restContext)
+	ctx = context.WithValue(ctx, restContextKey, restContext)
 
 	tracing.SetRequestIDValue(r, requestId)
 	ctx = store.WithRequestIDValue(ctx, requestId)
-	r = r.WithContext(ctx)
+	restContext.Request = r.WithContext(ctx)
 	return restContext
+}
+
+// SetRestContext 设置鉴权信息
+func SetRestContext(ctx context.Context, rctx *Context) context.Context {
+	return context.WithValue(ctx, restContextKey, rctx)
 }
 
 // GetRestContext 查询鉴权信息
 func GetRestContext(ctx context.Context) (*Context, error) {
-	restContext, ok := ctx.Value(RestContextKey).(*Context)
+	restContext, ok := ctx.Value(restContextKey).(*Context)
 	if !ok {
 		return nil, ErrorUnauthorized
 	}
@@ -214,6 +234,7 @@ type EmptyReq struct{}
 type StreamingServer interface {
 	http.ResponseWriter
 	Context() context.Context
+	Flush() error
 }
 
 type streamingServer struct {
@@ -225,6 +246,11 @@ type streamingServer struct {
 // Context return svr's context
 func (s *streamingServer) Context() context.Context {
 	return s.ctx
+}
+
+// Flush return svr's Flush
+func (s *streamingServer) Flush() error {
+	return s.ResponseController.Flush()
 }
 
 // StreamHandler 流式 Handler
@@ -296,7 +322,7 @@ func getResourceID(b []byte, ctx *Context) resource {
 }
 
 var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audit.Action){
-	"POST./projects/:projectId/clusters/:clusterId/log_collector/entrypoints": func(
+	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/entrypoints": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -304,7 +330,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "get_log_rule", ActivityType: audit.ActivityTypeView}
 	},
-	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules": func(
+	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		// resourceData解析
 		res := getResourceID(b, ctx)
@@ -313,7 +339,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "create_log_rule", ActivityType: audit.ActivityTypeCreate}
 	},
-	"GET./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
+	"GET./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -321,7 +347,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "get_log_rule", ActivityType: audit.ActivityTypeView}
 	},
-	"PUT./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
+	"PUT./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -329,7 +355,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "update_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"DELETE./projects/:projectId/clusters/:clusterId/log_collector/rules/:id": func(
+	"DELETE./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -337,7 +363,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "delete_log_rule", ActivityType: audit.ActivityTypeDelete}
 	},
-	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules/:id/retry": func(
+	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}/retry": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -345,7 +371,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "retry_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules/:id/enable": func(
+	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}/enable": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -353,7 +379,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 			ResourceData: res.toMap(),
 		}, audit.Action{ActionID: "enable_log_rule", ActivityType: audit.ActivityTypeUpdate}
 	},
-	"POST./projects/:projectId/clusters/:clusterId/log_collector/rules/:id/disable": func(
+	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}/disable": func(
 		b []byte, ctx *Context) (audit.Resource, audit.Action) {
 		res := getResourceID(b, ctx)
 		return audit.Resource{
@@ -366,7 +392,8 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 // 审计中心新增操作记录
 func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, message string) {
 	// get method audit func
-	fn, ok := auditFuncMap[ctx.Request.Method+"."+ctx.Request.RequestURI]
+	uri := chi.RouteContext(ctx.Request.Context()).RoutePatterns
+	fn, ok := auditFuncMap[ctx.Request.Method+"."+getCompleteRoutePatterns(uri)]
 	if !ok {
 		return
 	}
@@ -418,4 +445,9 @@ func getRequestBody(r *http.Request) []byte {
 	// 恢复请求体
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 	return body
+}
+
+// 获取完整原始uri
+func getCompleteRoutePatterns(s []string) string {
+	return strings.ReplaceAll(path.Join(s...), "/*", "")
 }
