@@ -13,8 +13,9 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/gin-gonic/gin"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -22,11 +23,11 @@ import (
 )
 
 // ProjectParse 解析 project
-func ProjectParse() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		restContext, err := rest.GetRestContext(c)
+func ProjectParse(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		restContext, err := rest.GetRestContext(r.Context())
 		if err != nil {
-			rest.AbortWithBadRequestError(rest.InitRestContext(c), err)
+			rest.AbortWithBadRequestError(rest.InitRestContext(w, r), err)
 			return
 		}
 
@@ -35,7 +36,7 @@ func ProjectParse() gin.HandlerFunc {
 		if len(restContext.ProjectCode) != 0 {
 			projectIDOrCode = restContext.ProjectCode
 		}
-		project, err := bcs.GetProject(c.Request.Context(), config.G.BCS, projectIDOrCode)
+		project, err := bcs.GetProject(r.Context(), config.G.BCS, projectIDOrCode)
 		if err != nil {
 			blog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
 			rest.AbortWithBadRequestError(restContext, err)
@@ -52,6 +53,6 @@ func ProjectParse() gin.HandlerFunc {
 		}
 		restContext.SharedCluster = cls.IsShared
 
-		c.Next()
-	}
+		next.ServeHTTP(w, r)
+	})
 }

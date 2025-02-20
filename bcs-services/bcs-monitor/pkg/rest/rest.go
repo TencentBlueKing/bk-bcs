@@ -15,14 +15,18 @@ package rest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
-	"github.com/gin-contrib/requestid"
-	"github.com/gin-gonic/gin"
+	"github.com/ggicci/httpin"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
@@ -41,71 +45,80 @@ type Result struct {
 	Message   string `json:"message"`
 	RequestId string `json:"request_id"`
 	Data      any    `json:"data"`
+	HTTPCode  int    `json:"-"` // http response status code
+}
+
+// Render chi render interface implementation
+func (e *Result) Render(w http.ResponseWriter, r *http.Request) error {
+	render.Status(r, e.HTTPCode)
+	return nil
 }
 
 // HandlerFunc xxx
-type HandlerFunc[Out any] func(*Context) (Out, error)
+type HandlerFunc[In, Out any] func(context.Context, In) (Out, error)
 
-// StreamHandlerFunc xxx
-type StreamHandlerFunc func(*Context)
+// StreamHandlerFunc  ServerStreaming or BidiStreaming handle function
+type StreamHandlerFunc[In any] func(In, StreamingServer) error
 
 // AbortWithBadRequestError 请求失败
-func AbortWithBadRequestError(c *Context, err error) {
-	result := Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId}
-	c.AbortWithStatusJSON(http.StatusBadRequest, result)
+func AbortWithBadRequestError(c *Context, err error) render.Renderer {
+	return &Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId, HTTPCode: http.StatusBadRequest}
 }
 
 // AbortWithUnauthorizedError 未登入
-func AbortWithUnauthorizedError(c *Context, err error) {
-	result := Result{Code: 1401, Message: err.Error(), RequestId: c.RequestId}
-	c.AbortWithStatusJSON(http.StatusUnauthorized, result)
+func AbortWithUnauthorizedError(c *Context, err error) render.Renderer {
+	return &Result{Code: 1401, Message: err.Error(), RequestId: c.RequestId, HTTPCode: http.StatusUnauthorized}
 }
 
 // AbortWithWithForbiddenError 没有权限
-func AbortWithWithForbiddenError(c *Context, err error) {
-	result := Result{Code: 1403, Message: err.Error(), RequestId: c.RequestId}
-	c.AbortWithStatusJSON(http.StatusForbidden, result)
+func AbortWithWithForbiddenError(c *Context, err error) render.Renderer {
+	return &Result{Code: 1403, Message: err.Error(), RequestId: c.RequestId, HTTPCode: http.StatusForbidden}
 }
 
 // AbortWithJSONError 目前的UI规范, 返回200状态码, 通过里面的code判断请求成功与否
-func AbortWithJSONError(c *Context, err error) {
-	result := Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId}
-	c.AbortWithStatusJSON(http.StatusOK, result)
+func AbortWithJSONError(c *Context, err error) render.Renderer {
+	return &Result{Code: 1400, Message: err.Error(), RequestId: c.RequestId, HTTPCode: http.StatusOK}
 }
 
 // APIResponse 正常返回
-func APIResponse(c *Context, data any) {
-	result := Result{Code: 0, Message: "OK", RequestId: c.RequestId, Data: data}
-	c.JSON(http.StatusOK, result)
+func APIResponse(c *Context, data any) render.Renderer {
+	return &Result{Code: 0, Message: "OK", RequestId: c.RequestId, Data: data, HTTPCode: http.StatusOK}
 }
 
+// restContext
+type restCtx string
+
+type reqCtx string
+
+const (
+	RestContextKey restCtx = "rest_context"
+	reqCtxKey      reqCtx  = "reqCtx"
+)
+
 // InitRestContext :
-func InitRestContext(c *gin.Context) *Context {
-	requestId := requestid.Get(c)
+func InitRestContext(w http.ResponseWriter, r *http.Request) *Context {
+	requestId := tracing.GetRequestIDResp(w)
 
 	restContext := &Context{
-		Context:     c,
+		Request:     r,
 		RequestId:   requestId,
-		ClusterId:   c.Param("clusterId"),
-		ProjectId:   c.Param("projectId"),
-		ProjectCode: c.Param("projectCode"),
+		ClusterId:   chi.URLParam(r, "clusterId"),
+		ProjectId:   chi.URLParam(r, "projectId"),
+		ProjectCode: chi.URLParam(r, "projectCode"),
 	}
-	c.Set("rest_context", restContext)
 
-	tracing.SetRequestIDValue(c.Request, requestId)
-	ctx := store.WithRequestIDValue(c.Request.Context(), requestId)
-	restContext.Request = restContext.Request.WithContext(ctx)
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, RestContextKey, restContext)
+
+	tracing.SetRequestIDValue(r, requestId)
+	ctx = store.WithRequestIDValue(ctx, requestId)
+	r = r.WithContext(ctx)
 	return restContext
 }
 
 // GetRestContext 查询鉴权信息
-func GetRestContext(c *gin.Context) (*Context, error) {
-	ctxObj, ok := c.Get("rest_context")
-	if !ok {
-		return nil, ErrorUnauthorized
-	}
-
-	restContext, ok := ctxObj.(*Context)
+func GetRestContext(ctx context.Context) (*Context, error) {
+	restContext, ok := ctx.Value(RestContextKey).(*Context)
 	if !ok {
 		return nil, ErrorUnauthorized
 	}
@@ -114,57 +127,131 @@ func GetRestContext(c *gin.Context) (*Context, error) {
 }
 
 // RestHandlerFunc rest handler
-func RestHandlerFunc[Out any](handler HandlerFunc[Out]) gin.HandlerFunc { // nolint
-	return func(c *gin.Context) {
+func RestHandlerFunc[In, Out any](handler HandlerFunc[In, Out]) http.HandlerFunc { // nolint
+	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
 		// 需要在审计操作记录中对body进行解析
-		reqBody := getRequestBody(c.Request)
-		restContext, err := GetRestContext(c)
+		reqBody := getRequestBody(r)
+		restContext, err := GetRestContext(r.Context())
 		if err != nil {
-			AbortWithUnauthorizedError(InitRestContext(c), err)
+			_ = render.Render(w, r, AbortWithUnauthorizedError(InitRestContext(w, r), err))
 			return
 		}
-		result, err := handler(restContext)
+
+		in, err := decodeReq[In](r)
+		if err != nil {
+			blog.Errorf("handle decode request failed, err: %s", err)
+			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), reqCtxKey, r)
+		result, err := handler(ctx, *in)
 		endTime := time.Now()
 		if err != nil {
 			// 添加审计中心操作记录
 			go addAudit(restContext, reqBody, startTime, endTime, 1400, err.Error())
-			AbortWithJSONError(restContext, err)
+			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
 			return
 		}
 		// 添加审计中心操作记录
 		go addAudit(restContext, reqBody, startTime, endTime, 0, "OK")
-		APIResponse(restContext, result)
+		_ = render.Render(w, r, APIResponse(restContext, result))
 	}
 }
 
-// STDRestHandlerFunc 标准handler, 错误返回非200状态码
-func STDRestHandlerFunc[Out any](handler HandlerFunc[Out]) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		restContext, err := GetRestContext(c)
-		if err != nil {
-			AbortWithUnauthorizedError(InitRestContext(c), err)
-			return
-		}
-		result, err := handler(restContext)
-		if err != nil {
-			AbortWithBadRequestError(restContext, err)
-			return
-		}
+// decodeReq ...
+func decodeReq[T any](r *http.Request) (*T, error) {
+	in := new(T)
+	var err error
 
-		APIResponse(restContext, result)
+	// http.Request 直接返回
+	if _, ok := any(in).(*http.Request); ok {
+		return any(r).(*T), nil
 	}
+
+	// 空值不需要反序列化
+	if _, ok := any(in).(*EmptyReq); ok {
+		return in, nil
+	}
+
+	in, err = httpin.Decode[T](r)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get/Delete 请求, 请求参数从url中获取
+	if r.Method == http.MethodGet || r.Method == http.MethodDelete {
+		return in, nil
+	}
+
+	// Post 请求等, 从body中获取
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = json.Unmarshal(body, in); err != nil {
+		return nil, fmt.Errorf("unmarshal json body: %s", err)
+	}
+	return in, nil
+}
+
+// ReqCtxValue get request by ctx
+func ReqCtxValue(ctx context.Context) *http.Request {
+	v, ok := ctx.Value(reqCtxKey).(*http.Request)
+	if !ok || v == nil {
+		return &http.Request{}
+	}
+
+	return v
+}
+
+// EmptyReq 空的请求
+type EmptyReq struct{}
+
+// StreamingServer server or bidi streaming server
+type StreamingServer interface {
+	http.ResponseWriter
+	Context() context.Context
+}
+
+type streamingServer struct {
+	http.ResponseWriter
+	*http.ResponseController
+	ctx context.Context
+}
+
+// Context return svr's context
+func (s *streamingServer) Context() context.Context {
+	return s.ctx
 }
 
 // StreamHandler 流式 Handler
-func StreamHandler(handler StreamHandlerFunc) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		restContext, err := GetRestContext(c)
+func StreamHandler[In any](handler StreamHandlerFunc[In]) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		restContext, err := GetRestContext(r.Context())
 		if err != nil {
-			AbortWithUnauthorizedError(InitRestContext(c), err)
+			_ = render.Render(w, r, AbortWithUnauthorizedError(InitRestContext(w, r), err))
 			return
 		}
-		handler(restContext)
+
+		in, err := decodeReq[In](r)
+		if err != nil {
+			blog.Errorf("handle decode request failed, err: %s", err)
+			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
+			return
+		}
+		ctx := context.WithValue(r.Context(), reqCtxKey, r)
+		svr := &streamingServer{
+			ResponseWriter:     w,
+			ResponseController: http.NewResponseController(w),
+			ctx:                ctx,
+		}
+		err = handler(*in, svr)
+		if err != nil {
+			_ = render.Render(w, r, AbortWithBadRequestError(restContext, err))
+		}
 	}
 }
 
@@ -204,7 +291,7 @@ func getResourceID(b []byte, ctx *Context) resource {
 	_ = json.Unmarshal(b, &resourceID)
 	resourceID.ClusterID = ctx.ClusterId
 	resourceID.ProjectID = ctx.ProjectId
-	resourceID.RuleID = ctx.Param("id")
+	resourceID.RuleID = chi.URLParam(ctx.Request, "id")
 	return resourceID
 }
 
@@ -279,7 +366,7 @@ var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audi
 // 审计中心新增操作记录
 func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, message string) {
 	// get method audit func
-	fn, ok := auditFuncMap[ctx.Request.Method+"."+ctx.FullPath()]
+	fn, ok := auditFuncMap[ctx.Request.Method+"."+ctx.Request.RequestURI]
 	if !ok {
 		return
 	}

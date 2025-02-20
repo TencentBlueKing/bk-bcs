@@ -14,11 +14,13 @@
 package servicemonitor
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	v1client "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/client/versioned/typed/monitoring/v1"
@@ -31,7 +33,7 @@ import (
 
 // GetMonitoringV1Client get monitoring client
 func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface, error) {
-	clusterId := c.Param("clusterId")
+	clusterId := chi.URLParam(c.Request, "clusterId")
 	bcsConf := k8sclient.GetBCSConf()
 	host := fmt.Sprintf("%s/clusters/%s", bcsConf.Host, clusterId)
 	k8sconfig := &k8srest.Config{
@@ -51,19 +53,23 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace [get]
-func ListServiceMonitors(c *rest.Context) (interface{}, error) {
+func ListServiceMonitors(c context.Context, e rest.EmptyReq) (interface{}, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
 	serviceMonitors := make([]*v1.ServiceMonitor, 0)
 	// 共享集群不展示列表
-	if c.SharedCluster {
+	if rctx.SharedCluster {
 		return serviceMonitors, nil
 	}
-	limit := c.Query("limit")
-	offset := c.Query("offset")
-	namespace := c.Query("namespace")
+	limit := rctx.Request.URL.Query().Get("limit")
+	offset := rctx.Request.URL.Query().Get("offset")
+	namespace := rctx.Request.URL.Query().Get("namespace")
 	if namespace == "" {
-		namespace = c.Param("namespace")
+		namespace = chi.URLParam(rctx.Request, "namespace")
 	}
-	client, err := GetMonitoringV1Client(c)
+	client, err := GetMonitoringV1Client(rctx)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +84,7 @@ func ListServiceMonitors(c *rest.Context) (interface{}, error) {
 		Limit:    int64(limitInt),
 		Continue: offset,
 	}
-	data, err := client.ServiceMonitors(namespace).List(c.Context, listOps)
+	data, err := client.ServiceMonitors(namespace).List(c, listOps)
 	if err != nil {
 		return nil, err
 	}
@@ -91,12 +97,12 @@ func ListServiceMonitors(c *rest.Context) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/create/namespaces/:namespace/servicemonitors/:name [post]
-func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
-	serviceMonitorReq := &CreateServiceMonitorReq{}
-	if err := c.ShouldBindJSON(serviceMonitorReq); err != nil {
+func CreateServiceMonitor(c context.Context, serviceMonitorReq CreateServiceMonitorReq) (interface{}, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
 		return nil, err
 	}
-	serviceMonitorReq.Namespace = c.Param("namespace")
+	serviceMonitorReq.Namespace = chi.URLParam(rctx.Request, "namespace")
 
 	flag := serviceMonitorReq.Validate()
 
@@ -104,7 +110,7 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 		return nil, errors.New("参数校验失败")
 	}
 
-	client, err := GetMonitoringV1Client(c)
+	client, err := GetMonitoringV1Client(rctx)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +148,7 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 		},
 	}
 
-	_, err = client.ServiceMonitors(serviceMonitorReq.Namespace).Create(c.Context, serviceMonitor, metav1.CreateOptions{})
+	_, err = client.ServiceMonitors(serviceMonitorReq.Namespace).Create(c, serviceMonitor, metav1.CreateOptions{})
 
 	if err != nil {
 		return nil, err
@@ -155,14 +161,18 @@ func CreateServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace/servicemonitors/:name [delete]
-func DeleteServiceMonitor(c *rest.Context) (interface{}, error) {
-	name := c.Param("name")
+func DeleteServiceMonitor(c context.Context, e rest.EmptyReq) (interface{}, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	name := chi.URLParam(rctx.Request, "name")
 	flag := validateName(name)
 	if !flag {
 		return nil, fmt.Errorf("校验name参数: %s 是否符合k8s资源名称格式并且长度不大于63位字符不通过", name)
 	}
-	namespace := c.Param("namespace")
-	client, err := GetMonitoringV1Client(c)
+	namespace := chi.URLParam(rctx.Request, "namespace")
+	client, err := GetMonitoringV1Client(rctx)
 	if err != nil {
 		return nil, err
 	}
@@ -178,16 +188,18 @@ func DeleteServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/batchdelete [delete]
-func BatchDeleteServiceMonitor(c *rest.Context) (interface{}, error) {
-	// 共享集群禁止批量删除
-	if c.SharedCluster {
-		return nil, fmt.Errorf("denied")
-	}
-	serviceMonitorDelReq := &BatchDeleteServiceMonitorReq{}
-	if err := c.ShouldBindJSON(serviceMonitorDelReq); err != nil {
+func BatchDeleteServiceMonitor(
+	c context.Context, serviceMonitorDelReq BatchDeleteServiceMonitorReq) (interface{}, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
 		return nil, err
 	}
-	client, err := GetMonitoringV1Client(c)
+	// 共享集群禁止批量删除
+	if rctx.SharedCluster {
+		return nil, fmt.Errorf("denied")
+	}
+
+	client, err := GetMonitoringV1Client(rctx)
 	if err != nil {
 		return nil, err
 	}
@@ -206,18 +218,22 @@ func BatchDeleteServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace/servicemonitors/:name [delete]
-func GetServiceMonitor(c *rest.Context) (interface{}, error) {
-	name := c.Param("name")
+func GetServiceMonitor(c context.Context, e rest.EmptyReq) (interface{}, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
+	name := chi.URLParam(rctx.Request, "name")
 	flag := validateName(name)
 	if !flag {
 		return nil, fmt.Errorf("校验name参数: %s 是否符合k8s资源名称格式并且长度不大于63位字符不通过", name)
 	}
-	namespace := c.Param("namespace")
-	client, err := GetMonitoringV1Client(c)
+	namespace := chi.URLParam(rctx.Request, "namespace")
+	client, err := GetMonitoringV1Client(rctx)
 	if err != nil {
 		return nil, err
 	}
-	result, err := client.ServiceMonitors(namespace).Get(c.Context, name, metav1.GetOptions{})
+	result, err := client.ServiceMonitors(namespace).Get(c, name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -229,13 +245,13 @@ func GetServiceMonitor(c *rest.Context) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/update/namespaces/:namespace/servicemonitors/:name [put]
-func UpdateServiceMonitor(c *rest.Context) (interface{}, error) {
-	serviceMonitorReq := &UpdateServiceMonitorReq{}
-	if err := c.ShouldBindJSON(serviceMonitorReq); err != nil {
+func UpdateServiceMonitor(c context.Context, serviceMonitorReq UpdateServiceMonitorReq) (interface{}, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
 		return nil, err
 	}
-	serviceMonitorReq.Name = c.Param("name")
-	serviceMonitorReq.Namespace = c.Param("namespace")
+	serviceMonitorReq.Name = chi.URLParam(rctx.Request, "name")
+	serviceMonitorReq.Namespace = chi.URLParam(rctx.Request, "namespace")
 
 	flag := serviceMonitorReq.Validate()
 
@@ -243,13 +259,13 @@ func UpdateServiceMonitor(c *rest.Context) (interface{}, error) {
 		return nil, errors.New("参数校验失败")
 	}
 
-	client, err := GetMonitoringV1Client(c)
+	client, err := GetMonitoringV1Client(rctx)
 	if err != nil {
 		return nil, err
 	}
 
 	exist, err := client.ServiceMonitors(serviceMonitorReq.Namespace).
-		Get(c.Context, serviceMonitorReq.Name, metav1.GetOptions{})
+		Get(c, serviceMonitorReq.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +298,7 @@ func UpdateServiceMonitor(c *rest.Context) (interface{}, error) {
 		},
 	}
 	serviceMonitorClient := client.ServiceMonitors(serviceMonitorReq.Namespace)
-	_, err = serviceMonitorClient.Update(c.Context, serviceMonitor, metav1.UpdateOptions{})
+	_, err = serviceMonitorClient.Update(c, serviceMonitor, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err
 	}
