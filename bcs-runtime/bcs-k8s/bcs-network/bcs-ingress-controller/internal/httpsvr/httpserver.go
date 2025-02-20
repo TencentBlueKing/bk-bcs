@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/aws"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/nodecache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
@@ -30,7 +31,8 @@ type HttpServerClient struct {
 	NodeCache         *nodecache.NodeCache
 	NodePortBindCache *portbindingcontroller.NodePortBindingCache
 
-	AgaSupporter *aws.AgaSupporter
+	IngressLiConverter *generator.IngressListenerConverter
+	AgaSupporter       *aws.AgaSupporter
 
 	Ops *option.ControllerOption
 }
@@ -45,5 +47,8 @@ func InitRouters(ws *restful.WebService, httpServerClient *HttpServerClient) {
 	ws.Route(ws.GET("/api/v1/node").To(httpServerClient.listNode))
 	ws.Route(ws.GET("/api/v1/aga_entrance").To(httpServerClient.getPodRelatedAgaEntrance))
 
+	ws.Route(ws.GET("/api/v1/check_bind_status").To(httpServerClient.CheckBindStatus))
+
 	ws.Route(ws.GET("/readiness_probe").To(httpServerClient.readinessProbe))
+
 }

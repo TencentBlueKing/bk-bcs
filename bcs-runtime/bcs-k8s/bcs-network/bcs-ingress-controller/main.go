@@ -29,7 +29,7 @@ import (
 	clbv1 "github.com/Tencent/bk-bcs/bcs-k8s/kubedeprecated/apis/clb/v1"
 	federationv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/federation/v1"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
-	"github.com/emicklei/go-restful"
+	restful "github.com/emicklei/go-restful"
 	gocache "github.com/patrickmn/go-cache"
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -342,6 +342,12 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 		NodeCache:         nodeCache,
 		Ops:               op,
 		NodePortBindCache: nodeBindCache,
+		IngressLiConverter: &generator.IngressListenerConverter{
+			Cli:               mgr.GetClient(),
+			IsNamespaced:      op.IsNamespaceScope,
+			IsTCPUDPPortReuse: op.IsTCPUDPPortReuse,
+			Eventer:           nil,
+		},
 	}
 	// aga supporter can only be init when use
 	if op.Cloud == constant.CloudAWS {
@@ -360,8 +366,7 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager, nodeCache 
 
 // initClient 根据使用云厂商的不同，返回对应云厂商的实现
 func initClient(ctx context.Context, opts *option.ControllerOption, cli client.Client,
-	eventWatcher eventer.WatchEventInterface) (cloud.
-Validater, cloud.LoadBalance, cloudnode.NodeClient) {
+	eventWatcher eventer.WatchEventInterface) (cloud.Validater, cloud.LoadBalance, cloudnode.NodeClient) {
 	var validater cloud.Validater
 	var lbClient cloud.LoadBalance
 	var nodeClient cloudnode.NodeClient

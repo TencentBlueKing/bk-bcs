@@ -114,6 +114,7 @@ func (ir *IngressReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	metrics.IncreaseEventCounter("ingress", metrics.EventTypeUnknown)
 
 	blog.V(3).Infof("ingress %+v triggered", req.NamespacedName)
+
 	ingress := &networkextensionv1.Ingress{}
 	if err := ir.Client.Get(ir.Ctx, req.NamespacedName, ingress); err != nil {
 		if k8serrors.IsNotFound(err) {

@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -78,6 +77,7 @@ type IngressConverter struct {
 	eventer record.EventRecorder
 
 	listenerHelper *listenercontroller.ListenerHelper
+	liConverter    *IngressListenerConverter
 }
 
 // NewIngressConverter create ingress generator
@@ -101,6 +101,13 @@ func NewIngressConverter(opt *IngressConverterOpt,
 		lbNameCache:    lbNameCache,
 		listenerHelper: listenerHelper,
 		eventer:        eventer,
+
+		liConverter: &IngressListenerConverter{
+			Cli:               cli,
+			IsNamespaced:      lbClient.IsNamespaced(),
+			IsTCPUDPPortReuse: opt.IsTCPUDPPortReuse,
+			Eventer:           eventer,
+		},
 	}, nil
 }
 
@@ -306,44 +313,13 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 		return warnings, err
 	}
 
-	var generatedListeners []networkextensionv1.Listener
-	var generatedSegListeners []networkextensionv1.Listener
-	for i, rule := range ingress.Spec.Rules {
-		ruleConverter := NewRuleConverter(g.cli, lbObjs, ingress, ingress.GetName(), ingress.GetNamespace(), &rule,
-			g.eventer)
-		ruleConverter.SetNamespaced(g.lbClient.IsNamespaced())
-		ruleConverter.SetTCPUDPPortReuse(g.isTCPUDPPortReuse)
-		listeners, inErr := ruleConverter.DoConvert()
-		if inErr != nil {
-			blog.Errorf("convert rule[%d] failed, err %s", i, inErr.Error())
-			return warnings, fmt.Errorf("convert rule %d failed, err %s", i, inErr.Error())
-		}
-		generatedListeners = append(generatedListeners, listeners...)
-	}
-	for i, mapping := range ingress.Spec.PortMappings {
-		mappingConverter := NewMappingConverter(g.cli, lbObjs, ingress.GetName(), ingress.GetNamespace(), &mapping)
-		mappingConverter.SetNamespaced(g.lbClient.IsNamespaced())
-		listeners, inErr := mappingConverter.DoConvert()
-		if inErr != nil {
-			blog.Errorf("convert mapping %d failed, err %s", i, inErr.Error())
-			return warnings, fmt.Errorf("convert mapping %d failed, err %s", i, inErr.Error())
-		}
-		// if ignore segment, disable segment feature;
-		// if segment length is not set or equals to 1, disable segment feature;
-		if mapping.IgnoreSegment || mapping.SegmentLength == 0 || mapping.SegmentLength == 1 {
-			generatedListeners = append(generatedListeners, listeners...)
-		} else {
-			generatedSegListeners = append(generatedSegListeners, listeners...)
-		}
-	}
-	sort.Sort(networkextensionv1.ListenerSlice(generatedListeners))
-	sort.Sort(networkextensionv1.ListenerSlice(generatedSegListeners))
-
-	existedListeners, err := g.getListeners(ingress.GetName(), ingress.GetNamespace())
+	generatedListeners, generatedSegListeners, err := g.liConverter.GenerateListeners(ingress, lbObjs)
 	if err != nil {
 		return warnings, err
 	}
-	existedSegListeners, err := g.getSegmentListeners(ingress.GetName(), ingress.GetNamespace())
+
+	existedListeners, existedSegListeners, err := g.liConverter.GetExistedListeners(ingress.GetName(),
+		ingress.GetNamespace())
 	if err != nil {
 		return warnings, err
 	}
@@ -355,6 +331,7 @@ func (g *IngressConverter) ProcessUpdateIngress(ingress *networkextensionv1.Ingr
 		return warnings, fmt.Errorf("syncListeners listener ingress %s/%s failed, err %s",
 			ingress.GetName(), ingress.GetNamespace(), err.Error())
 	}
+
 	if err = g.patchIngressStatus(ingress, lbObjs); err != nil {
 		blog.Errorf("update ingress vips failed, err %s", err.Error())
 		return warnings, fmt.Errorf("update ingress vips failed, err %s", err.Error())
@@ -403,18 +380,11 @@ func (g *IngressConverter) patchIngressStatus(ingress *networkextensionv1.Ingres
 
 // ProcessDeleteIngress  process deleted ingress
 func (g *IngressConverter) ProcessDeleteIngress(ingressName, ingressNamespace string) (bool, error) {
-	var listenerList, segListenerList []networkextensionv1.Listener
-	var err error
 	// get existed listeners
-	listenerList, err = g.getListeners(ingressName, ingressNamespace)
+	listenerList, segListenerList, err := g.liConverter.GetExistedListeners(ingressName, ingressNamespace)
 	if err != nil {
 		return true, fmt.Errorf("get listeners of ingress %s/%s failed, err %s", ingressName, ingressNamespace,
 			err.Error())
-	}
-	segListenerList, err = g.getSegmentListeners(ingressName, ingressNamespace)
-	if err != nil {
-		return true, fmt.Errorf("get segment listeners of ingress %s/%s failed, err %s",
-			ingressName, ingressNamespace, err.Error())
 	}
 	if len(listenerList) == 0 && len(segListenerList) == 0 {
 		blog.Infof("listeners of ingress %s/%s, ingress can be deleted", ingressName, ingressNamespace)
@@ -449,44 +419,6 @@ func (g *IngressConverter) deleteListeners(ingressName, ingressNamespace string)
 		return fmt.Errorf("delete listener by label selector %s, err %s", selector.String(), err.Error())
 	}
 	return nil
-}
-
-func (g *IngressConverter) getListeners(ingressName, ingressNamespace string) (
-	[]networkextensionv1.Listener, error) {
-	existedListenerList := &networkextensionv1.ListenerList{}
-	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName: networkextensionv1.LabelValueForIngressName,
-		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueFalse,
-	})))
-	err = g.cli.List(context.TODO(), existedListenerList, &client.ListOptions{
-		Namespace:     ingressNamespace,
-		LabelSelector: selector})
-	if err != nil {
-		blog.Errorf("list listeners ingress %s/%s failed, err %s",
-			ingressName, ingressNamespace, err.Error())
-		return nil, fmt.Errorf("list listeners ingress %s/%s failed, err %s",
-			ingressName, ingressNamespace, err.Error())
-	}
-	return existedListenerList.Items, nil
-}
-
-func (g *IngressConverter) getSegmentListeners(ingressName, ingressNamespace string) (
-	[]networkextensionv1.Listener, error) {
-	existedListenerList := &networkextensionv1.ListenerList{}
-	selector, err := k8smetav1.LabelSelectorAsSelector(k8smetav1.SetAsLabelSelector(k8slabels.Set(map[string]string{
-		ingressName: networkextensionv1.LabelValueForIngressName,
-		networkextensionv1.LabelKeyForIsSegmentListener: networkextensionv1.LabelValueTrue,
-	})))
-	err = g.cli.List(context.TODO(), existedListenerList, &client.ListOptions{
-		Namespace:     ingressNamespace,
-		LabelSelector: selector})
-	if err != nil {
-		blog.Errorf("list segment listeners ingress %s/%s failed, err %s",
-			ingressName, ingressNamespace, err.Error())
-		return nil, fmt.Errorf("list segment listeners ingress %s/%s failed, err %s",
-			ingressName, ingressNamespace, err.Error())
-	}
-	return existedListenerList.Items, nil
 }
 
 func (g *IngressConverter) syncListeners(ingressName, ingressNamespace string,
