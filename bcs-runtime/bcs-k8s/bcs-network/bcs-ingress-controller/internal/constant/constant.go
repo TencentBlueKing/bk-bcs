@@ -81,6 +81,9 @@ const (
 	// EnvNameBkAppSecret env name for bk_app_secret
 	EnvNameBkAppSecret = "BK_APP_SECRET"
 
+	// EnvNamePortLeakThresholdSeconds env name for port leak threshold seconds
+	EnvNamePortLeakThresholdSeconds = "PORT_LEAK_THRESHOLD_SECONDS"
+
 	// EnvNameListenerNameValidateMode env name for enable listener name validate
 	// option value:
 	// empty: default value, means disable validate

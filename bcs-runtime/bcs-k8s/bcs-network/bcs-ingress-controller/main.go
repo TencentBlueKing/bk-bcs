@@ -284,7 +284,7 @@ func main() {
 		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper), check.CheckPerMin).
 		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration),
 			check.CheckPerMin).
-		Register(check.NewPortLeakChecker(mgr.GetClient(), portPoolCache), check.CheckPer10Min).
+		Register(check.NewPortLeakChecker(mgr.GetClient(), portPoolCache, opts.PortLeakThresholdSecs), check.CheckPerMin).
 		Start()
 	blog.Infof("starting check runner")
 
