@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	pkgheader "github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/promql/parser"
@@ -84,6 +85,7 @@ func QueryInstant(ctx context.Context, rawURL string, header http.Header, promql
 	}
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgheader.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetFormData(data).
 		SetHeaderMultiValues(header).
 		Post(rawURL)
@@ -118,6 +120,7 @@ func QueryRange(ctx context.Context, rawURL string, header http.Header, promql s
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgheader.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetFormData(data).
 		SetHeaderMultiValues(header).
 		Post(rawURL)
@@ -222,6 +225,7 @@ func QueryLabels(ctx context.Context, rawURL string, header http.Header,
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgheader.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetQueryParams(query).
 		SetHeaderMultiValues(header).
 		Get(rawURL)
@@ -263,6 +267,7 @@ func QueryLabelValues(ctx context.Context, rawURL string, header http.Header,
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgheader.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetQueryParams(query).
 		SetHeaderMultiValues(header).
 		Get(rawURL)
