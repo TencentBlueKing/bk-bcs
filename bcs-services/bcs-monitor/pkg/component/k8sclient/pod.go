@@ -46,12 +46,24 @@ const (
 	InitContainers = "InitContainers"
 )
 
+// PodContainersReq pod containers request
+type PodContainersReq struct {
+	ProjectId string `in:"path=projectId;required"`
+	ClusterId string `in:"path=clusterId;required"`
+	Namespace string `in:"path=namespace;required"`
+	Pod       string `in:"path=pod;required"`
+}
+
 // LogQuery 日志查询参数， 精简后的 v1.PodLogOptions
 type LogQuery struct {
-	ContainerName string            `form:"container_name" binding:"required"` // 必填参数
-	Previous      bool              `form:"previous"`
-	StartedAt     string            `form:"started_at"`
-	FinishedAt    string            `form:"finished_at"`
+	ProjectId     string            `in:"path=projectId;required"`
+	ClusterId     string            `in:"path=clusterId;required"`
+	Namespace     string            `in:"path=namespace;required"`
+	Pod           string            `in:"path=pod;required"`
+	ContainerName string            `in:"query=container_name" form:"container_name" binding:"required"` // 必填参数
+	Previous      bool              `in:"query=previous" form:"previous"`
+	StartedAt     string            `in:"query=started_at" form:"started_at"`
+	FinishedAt    string            `in:"query=finished_at" form:"finished_at"`
 	TailLines     int64             `form:"-"`
 	LimitBytes    int64             `form:"-"`
 	podLogOptions *v1.PodLogOptions `form:"-"`

@@ -14,11 +14,13 @@ package pod
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-contrib/sse"
+	"github.com/go-chi/render"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/k8sclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
@@ -38,31 +40,28 @@ const (
 // @Produce text/event-stream
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pods/:pod/logs/stream [get]
-func PodLogStream(c *rest.Context) { // nolint
-	clusterId := c.Param("clusterId")
-	namespace := c.Param("namespace")
-	pod := c.Param("pod")
-
-	logQuery := &k8sclient.LogQuery{}
-	if err := c.ShouldBindQuery(logQuery); err != nil {
-		rest.AbortWithJSONError(c, err)
-		return
+func PodLogStream(logQuery k8sclient.LogQuery, ss rest.StreamingServer) error { // nolint
+	rctx, err := rest.GetRestContext(ss.Context())
+	if err != nil {
+		return err
 	}
+	clusterId := logQuery.ClusterId
+	namespace := logQuery.Namespace
+	pod := logQuery.Pod
 
 	// 重连时的Id
-	lastEventId := c.Request.Header.Get("Last-Event-ID")
+	lastEventId := rctx.Request.Header.Get("Last-Event-ID")
 	if lastEventId != "" {
-		sinceTime, err := base64.StdEncoding.DecodeString(lastEventId)
-		if err == nil {
+		sinceTime, errr := base64.StdEncoding.DecodeString(lastEventId)
+		if errr == nil {
 			blog.Infow("send log stream from Last-Event-ID", "Last-Event-ID", sinceTime)
 			logQuery.StartedAt = string(sinceTime)
 		}
 	}
 
-	logChan, err := k8sclient.GetPodLogStream(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	logChan, err := k8sclient.GetPodLogStream(ss.Context(), clusterId, namespace, pod, &logQuery)
 	if err != nil {
-		rest.AbortWithJSONError(c, err)
-		return
+		return err
 	}
 
 	var (
@@ -76,8 +75,8 @@ func PodLogStream(c *rest.Context) { // nolint
 
 	for {
 		select {
-		case <-c.Writer.CloseNotify():
-			return
+		case <-ss.Context().Done():
+			return nil
 		case <-tick.C:
 			if len(logList) == 0 {
 				continue
@@ -93,13 +92,20 @@ func PodLogStream(c *rest.Context) { // nolint
 
 			// id 是最后一个日志时间
 			id := base64.StdEncoding.EncodeToString([]byte(lastLogTime))
-			c.Render(-1, sse.Event{
-				Event: "message",
-				Data:  logList,
-				Id:    id,
-				Retry: 5000, // 5 秒重试
+			_ = render.Render(ss, rctx.Request, &rest.Event{
+				HTTPCode: -1,
+				Event: sse.Event{
+					Event: "message",
+					Data:  logList,
+					Id:    id,
+					Retry: 5000, // 5 秒重试
+				},
 			})
-			c.Writer.Flush()
+
+			err := ss.Flush()
+			if err != nil {
+				return errors.New("flush error: " + err.Error())
+			}
 
 			// 清空列表
 			logCount = 0
@@ -107,7 +113,7 @@ func PodLogStream(c *rest.Context) { // nolint
 		case log, ok := <-logChan:
 			// 服务端主动关闭
 			if !ok {
-				return
+				return nil
 			}
 
 			logCount++

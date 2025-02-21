@@ -36,6 +36,19 @@ const (
 	bkLogPrefix           = "bklog|"
 )
 
+// ListLogCollectorsReq list log collectors request
+type ListLogCollectorsReq struct {
+	ProjectId string `in:"path=projectId;required"`
+	ClusterId string `in:"path=clusterId;required"`
+}
+
+// GetLogRuleReq get log rule request
+type GetLogRuleReq struct {
+	ProjectId string `json:"-" in:"path=projectId;required"`
+	ClusterId string `json:"-" in:"path=clusterId;required"`
+	ID        string `in:"path=id;required"`
+}
+
 // GetLogRuleResp log rule resp
 type GetLogRuleResp struct {
 	ID                 string         `json:"id"`
@@ -104,6 +117,8 @@ func (l GetLogRuleRespSortByStatus) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // CreateLogRuleReq req
 type CreateLogRuleReq struct {
+	ProjectId   string        `json:"-" in:"path=projectId;required"`
+	ClusterId   string        `json:"-" in:"path=clusterId;required"`
 	DisplayName string        `json:"display_name" form:"display_name"`
 	Name        string        `json:"name" form:"name" binding:"required" validate:"max=30,min=5,regexp=^[A-Za-z0-9_]+$"`
 	RuleName    string        `json:"-" form:"-"`
@@ -158,6 +173,9 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 
 // UpdateLogRuleReq req
 type UpdateLogRuleReq struct {
+	ProjectId   string        `json:"-" in:"path=projectId;required"`
+	ClusterId   string        `json:"-" in:"path=clusterId;required"`
+	ID          string        `json:"-" in:"path=id;required"`
 	DisplayName string        `json:"display_name" form:"display_name"`
 	Description string        `json:"description"`
 	Rule        bklog.LogRule `json:"rule"`

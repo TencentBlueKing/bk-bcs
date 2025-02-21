@@ -10,32 +10,13 @@
  * limitations under the License.
  */
 
-package metrics
+// Package tracing xxx
+package tracing
 
 import (
-	"context"
-	"fmt"
-	"sync"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics/query"
+	"net/http"
 )
 
-func TestGetClusterOverview(t *testing.T) {
-
-	var wg sync.WaitGroup
-
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			vector, err := GetClusterOverview(context.Background(), query.GetClusterOverviewReq{})
-			assert.NoError(t, err)
-			fmt.Println(vector)
-		}()
-	}
-	wg.Wait()
-}
+// Filter is a predicate used to determine whether a given http.request should
+// be traced. A Filter must return true if the request should be traced.
+type Filter func(*http.Request) bool

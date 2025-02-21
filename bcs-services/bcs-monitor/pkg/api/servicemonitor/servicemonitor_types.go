@@ -18,17 +18,38 @@ const SampleLimitMax = 100000
 // SampleLimitMin xxx
 const SampleLimitMin = 1
 
+// ListServiceMonitorsReq xxx
+type ListServiceMonitorsReq struct {
+	ProjectCode   string `in:"path=projectCode;required"`
+	ClusterId     string `in:"path=clusterId;required"`
+	PathNamespace string `in:"path=namespace"`
+	Limit         string `in:"query=limit"`
+	Offset        string `in:"query=offset"`
+	Namespace     string `in:"query=namespace"`
+}
+
+// GetServiceMonitorReq xxx
+type GetServiceMonitorReq struct {
+	ProjectCode string `in:"path=projectCode;required"`
+	ClusterId   string `in:"path=clusterId;required"`
+	Name        string `in:"path=name;required"`
+	Namespace   string `in:"path=namespace;required"`
+}
+
 // CreateServiceMonitorReq create service monitor req
 type CreateServiceMonitorReq struct {
-	ServiceName string            `json:"service_name"`
-	Path        string            `json:"path"`
-	Selector    map[string]string `json:"selector"`
-	Interval    string            `json:"interval"`
-	Port        string            `json:"port"`
-	SampleLimit int               `json:"sample_limit"`
-	Namespace   string            `json:"namespace"`
-	Name        string            `json:"name"`
-	Params      map[string]string `json:"params"`
+	ProjectCode   string            `json:"-" in:"path=projectCode;required"`
+	ClusterId     string            `json:"-" in:"path=clusterId;required"`
+	PathNamespace string            `json:"-" in:"path=namespace;required"`
+	ServiceName   string            `json:"service_name"`
+	Path          string            `json:"path"`
+	Selector      map[string]string `json:"selector"`
+	Interval      string            `json:"interval"`
+	Port          string            `json:"port"`
+	SampleLimit   int               `json:"sample_limit"`
+	Namespace     string            `json:"namespace"`
+	Name          string            `json:"name"`
+	Params        map[string]string `json:"params"`
 }
 
 // Validate validate
@@ -41,6 +62,8 @@ func (r CreateServiceMonitorReq) Validate() bool {
 
 // BatchDeleteServiceMonitorReq batch delete service monitor req
 type BatchDeleteServiceMonitorReq struct {
+	ProjectCode     string           `json:"-" in:"path=projectCode;required"`
+	ClusterId       string           `json:"-" in:"path=clusterId;required"`
 	ServiceMonitors []ServiceMonitor `json:"service_monitors"`
 }
 
@@ -52,15 +75,19 @@ type ServiceMonitor struct {
 
 // UpdateServiceMonitorReq update service monitor req
 type UpdateServiceMonitorReq struct {
-	ServiceName string            `json:"service_name"`
-	Path        string            `json:"path"`
-	Selector    map[string]string `json:"selector"`
-	Interval    string            `json:"interval"`
-	Port        string            `json:"port"`
-	SampleLimit int               `json:"sample_limit"`
-	Namespace   string            `json:"namespace"`
-	Name        string            `json:"name"`
-	Params      map[string]string `json:"params"`
+	ProjectCode   string            `json:"-" in:"path=projectCode;required"`
+	ClusterId     string            `json:"-" in:"path=clusterId;required"`
+	PathNamespace string            `json:"-" in:"path=namespace;required"`
+	PathName      string            `json:"-" in:"path=name;required"`
+	ServiceName   string            `json:"service_name"`
+	Path          string            `json:"path"`
+	Selector      map[string]string `json:"selector"`
+	Interval      string            `json:"interval"`
+	Port          string            `json:"port"`
+	SampleLimit   int               `json:"sample_limit"`
+	Namespace     string            `json:"namespace"`
+	Name          string            `json:"name"`
+	Params        map[string]string `json:"params"`
 }
 
 // Validate 校验参数
@@ -69,4 +96,12 @@ func (r UpdateServiceMonitorReq) Validate() bool {
 		return true
 	}
 	return false
+}
+
+// DeleteServiceMonitorReq delete service monitor req
+type DeleteServiceMonitorReq struct {
+	ProjectCode string `in:"path=projectCode;required"`
+	ClusterId   string `in:"path=clusterId;required"`
+	Namespace   string `in:"path=namespace;required"`
+	Name        string `in:"path=name;required"`
 }
