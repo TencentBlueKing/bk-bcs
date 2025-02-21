@@ -18,17 +18,38 @@ const SampleLimitMax = 100000
 // SampleLimitMin xxx
 const SampleLimitMin = 1
 
+// ListPodMonitorsReq xxx
+type ListPodMonitorsReq struct {
+	ProjectCode   string `in:"path=projectCode;required"`
+	ClusterId     string `in:"path=clusterId;required"`
+	PathNamespace string `in:"path=namespace"`
+	Limit         string `in:"query=limit"`
+	Offset        string `in:"query=offset"`
+	Namespace     string `in:"query=namespace"`
+}
+
+// GetPodMonitorReq xxx
+type GetPodMonitorReq struct {
+	ProjectCode string `in:"path=projectCode;required"`
+	ClusterId   string `in:"path=clusterId;required"`
+	Namespace   string `in:"path=namespace;required"`
+	Name        string `in:"path=name;required"`
+}
+
 // CreatePodMonitorReq create pod monitor req
 type CreatePodMonitorReq struct {
-	ServiceName string            `json:"service_name"`
-	Path        string            `json:"path"`
-	Selector    map[string]string `json:"selector"`
-	Interval    string            `json:"interval"`
-	Port        string            `json:"port"`
-	SampleLimit int               `json:"sample_limit"`
-	Namespace   string            `json:"namespace"`
-	Name        string            `json:"name"`
-	Params      map[string]string `json:"params"`
+	ProjectCode   string            `json:"-" in:"path=projectCode;required"`
+	ClusterId     string            `json:"-" in:"path=clusterId;required"`
+	PathNamespace string            `json:"-" in:"path=namespace;required"`
+	ServiceName   string            `json:"service_name"`
+	Path          string            `json:"path"`
+	Selector      map[string]string `json:"selector"`
+	Interval      string            `json:"interval"`
+	Port          string            `json:"port"`
+	SampleLimit   int               `json:"sample_limit"`
+	Namespace     string            `json:"namespace"`
+	Name          string            `json:"name"`
+	Params        map[string]string `json:"params"`
 }
 
 // Validate validate
@@ -41,6 +62,8 @@ func (r CreatePodMonitorReq) Validate() bool {
 
 // BatchDeletePodMonitorReq batch delete pod monitor req
 type BatchDeletePodMonitorReq struct {
+	ProjectCode string       `json:"-" in:"path=projectCode;required"`
+	ClusterId   string       `json:"-" in:"path=clusterId;required"`
 	PodMonitors []PodMonitor `json:"pod_monitors"`
 }
 
@@ -52,15 +75,19 @@ type PodMonitor struct {
 
 // UpdatePodMonitorReq update pod monitor req
 type UpdatePodMonitorReq struct {
-	ServiceName string            `json:"service_name"`
-	Path        string            `json:"path"`
-	Selector    map[string]string `json:"selector"`
-	Interval    string            `json:"interval"`
-	Port        string            `json:"port"`
-	SampleLimit int               `json:"sample_limit"`
-	Namespace   string            `json:"namespace"`
-	Name        string            `json:"name"`
-	Params      map[string]string `json:"params"`
+	ProjectCode   string            `json:"-" in:"path=projectCode;required"`
+	ClusterId     string            `json:"-" in:"path=clusterId;required"`
+	PathNamespace string            `json:"-" in:"path=namespace;required"`
+	PathName      string            `json:"-" in:"path=name;required"`
+	ServiceName   string            `json:"service_name"`
+	Path          string            `json:"path"`
+	Selector      map[string]string `json:"selector"`
+	Interval      string            `json:"interval"`
+	Port          string            `json:"port"`
+	SampleLimit   int               `json:"sample_limit"`
+	Namespace     string            `json:"namespace"`
+	Name          string            `json:"name"`
+	Params        map[string]string `json:"params"`
 }
 
 // Validate 校验参数
@@ -69,4 +96,12 @@ func (r UpdatePodMonitorReq) Validate() bool {
 		return true
 	}
 	return false
+}
+
+// DeletePodMonitorReq delete pod monitor req
+type DeletePodMonitorReq struct {
+	ProjectCode string `in:"path=projectCode;required"`
+	ClusterId   string `in:"path=clusterId;required"`
+	Namespace   string `in:"path=namespace;required"`
+	Name        string `in:"path=name;required"`
 }
