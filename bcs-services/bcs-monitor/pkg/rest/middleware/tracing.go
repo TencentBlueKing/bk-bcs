@@ -22,7 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/utils"
 	"github.com/dustin/go-humanize"
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/render"
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	oteltrace "go.opentelemetry.io/otel/trace"
@@ -114,7 +114,10 @@ func Tracing(next http.Handler) http.Handler {
 		elapsedTime := time.Since(startTime)
 		span.SetAttributes(attribute.Key("elapsed_ime").String(elapsedTime.String()))
 
-		status := middleware.NewWrapResponseWriter(w, r.ProtoMajor).Status()
+		status := 200
+		if sc, ok := r.Context().Value(render.StatusCtxKey).(int); ok {
+			status = sc
+		}
 		attrs := semconv.HTTPAttributesFromHTTPStatusCode(status)
 		spanStatus, spanMessage := semconv.SpanStatusFromHTTPStatusCode(status)
 		span.SetAttributes(attrs...)
