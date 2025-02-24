@@ -241,6 +241,11 @@ func importNodeResourceGroup(info *cloudprovider.CloudDependBasicInfo) error {
 	for _, pool := range managedCluster.Properties.AgentPoolProfiles {
 		if *pool.Mode == common.CloudClusterNodeGroupTypeSystem {
 			sysPoolName = *pool.Name
+
+			// 获取节点池maxpods
+			if pool.MaxPods != nil && *pool.MaxPods > 0 {
+				cluster.NetworkSettings.MaxNodePodNum = uint32(*pool.MaxPods)
+			}
 		}
 	}
 	set, err := client.MatchNodeGroup(ctx, cluster.ExtraInfo[common.NodeResourceGroup], sysPoolName)

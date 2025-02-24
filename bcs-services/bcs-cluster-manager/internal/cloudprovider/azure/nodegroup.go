@@ -127,6 +127,12 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 		group.NodeTemplate.Module.ScaleOutModuleName = cloudprovider.GetModuleName(bkBizID, bkModuleID)
 	}
 
+	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(), group)
+	if err != nil {
+		blog.Errorf("BuildUpdateNodeGroupTask failed: %v", err)
+		return nil, err
+	}
+
 	return task, nil
 }
 

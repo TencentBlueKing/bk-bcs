@@ -161,10 +161,6 @@ func checkPoolState(pool *armcontainerservice.AgentPool) error {
 }
 
 func updateVMSSProperties(client api.AksService, group *proto.NodeGroup) error {
-	if group.LaunchTemplate == nil || len(group.LaunchTemplate.UserData) == 0 {
-		return nil
-	}
-
 	asg := group.AutoScaling
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
