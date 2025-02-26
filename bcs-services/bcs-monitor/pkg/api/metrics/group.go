@@ -13,17 +13,16 @@
 package metrics
 
 import (
+	"context"
+
 	bcsmonitor "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs_monitor"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/promclient"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
 
 // handleGroupMetric group 处理公共函数
-func handleGroupMetric(c *rest.Context, promql string) (interface{}, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return nil, err
-	}
+func handleGroupMetric(c *rest.Context, promql string, query *UsageQuery) (*promclient.ResultData, error) {
 
 	queryTime, err := query.GetQueryTime()
 	if err != nil {
@@ -32,7 +31,7 @@ func handleGroupMetric(c *rest.Context, promql string) (interface{}, error) {
 
 	params := map[string]interface{}{
 		"clusterId": config.G.BKMonitor.ClusterID,
-		"group":     c.Param("nodegroup"),
+		"group":     query.Nodegroup,
 		"provider":  PROVIDER,
 	}
 
@@ -41,7 +40,7 @@ func handleGroupMetric(c *rest.Context, promql string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return result.Data, nil
+	return &result.Data, nil
 }
 
 // ClusterGroupNodeNum 集群节点池数目
@@ -49,10 +48,14 @@ func handleGroupMetric(c *rest.Context, promql string) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /group/:group/node_num [get]
-func ClusterGroupNodeNum(c *rest.Context) (interface{}, error) {
+func ClusterGroupNodeNum(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
 	promql := `bcs:cluster:group:node_num{cluster_id="%<clusterId>s", group="%<group>s", %<provider>s}`
 
-	return handleGroupMetric(c, promql)
+	return handleGroupMetric(rctx, promql, req)
 }
 
 // ClusterGroupMaxNodeNum 集群最大节点池数目
@@ -60,8 +63,12 @@ func ClusterGroupNodeNum(c *rest.Context) (interface{}, error) {
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /group/:group/max_node_num [get]
-func ClusterGroupMaxNodeNum(c *rest.Context) (interface{}, error) {
+func ClusterGroupMaxNodeNum(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
+	rctx, err := rest.GetRestContext(c)
+	if err != nil {
+		return nil, err
+	}
 	promql := `bcs:cluster:group:max_node_num{cluster_id="%<clusterId>s", group="%<group>s", %<provider>s}`
 
-	return handleGroupMetric(c, promql)
+	return handleGroupMetric(rctx, promql, req)
 }
