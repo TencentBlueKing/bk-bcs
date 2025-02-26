@@ -412,6 +412,12 @@ type QueryLogResp struct {
 	} `json:"data"`
 }
 
+// GetStorageClustersReq xxx
+type GetStorageClustersReq struct {
+	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
+}
+
 // GetStorageClustersResp xxx
 type GetStorageClustersResp struct {
 	BaseResp
