@@ -28,7 +28,7 @@ import (
 // @Produce json
 // @Success 200 {array} k8sclient.Container
 // @Router  /namespaces/:namespace/pods/:pod/containers [get]
-func GetPodContainers(c context.Context, req k8sclient.PodContainersReq) ([]*k8sclient.Container, error) {
+func GetPodContainers(c context.Context, req *k8sclient.PodContainersReq) (*[]*k8sclient.Container, error) {
 	clusterId := req.ClusterId
 	namespace := req.Namespace
 	pod := req.Pod
@@ -37,7 +37,7 @@ func GetPodContainers(c context.Context, req k8sclient.PodContainersReq) ([]*k8s
 		return nil, err
 	}
 
-	return containers, nil
+	return &containers, nil
 }
 
 // GetPodLog 查询容器日志
@@ -48,17 +48,17 @@ func GetPodContainers(c context.Context, req k8sclient.PodContainersReq) ([]*k8s
 // @Produce json
 // @Success 200 {array} k8sclient.Log
 // @Router  /namespaces/:namespace/pods/:pod/logs [get]
-func GetPodLog(c context.Context, logQuery k8sclient.LogQuery) (*k8sclient.LogWithPreviousLink, error) {
-	projectId := logQuery.ProjectId
-	clusterId := logQuery.ClusterId
-	namespace := logQuery.Namespace
-	pod := logQuery.Pod
-	logs, err := k8sclient.GetPodLog(c, clusterId, namespace, pod, &logQuery)
+func GetPodLog(c context.Context, req *k8sclient.LogQuery) (*k8sclient.LogWithPreviousLink, error) {
+	projectId := req.ProjectId
+	clusterId := req.ClusterId
+	namespace := req.Namespace
+	pod := req.Pod
+	logs, err := k8sclient.GetPodLog(c, clusterId, namespace, pod, req)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := logs.MakePreviousLink(projectId, clusterId, namespace, pod, &logQuery); err != nil {
+	if err := logs.MakePreviousLink(projectId, clusterId, namespace, pod, req); err != nil {
 		return nil, err
 	}
 
@@ -73,22 +73,22 @@ func GetPodLog(c context.Context, logQuery k8sclient.LogQuery) (*k8sclient.LogWi
 // @Produce octet-stream
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pods/:pod/logs/download [get]
-func DownloadPodLog(logQuery k8sclient.LogQuery, ss rest.StreamingServer) error {
-	clusterId := logQuery.ClusterId
-	namespace := logQuery.Namespace
-	pod := logQuery.Pod
+func DownloadPodLog(req *k8sclient.LogQuery, ss rest.StreamingServer) error {
+	clusterId := req.ClusterId
+	namespace := req.Namespace
+	pod := req.Pod
 
 	// 下载参数
-	logQuery.TailLines = k8sclient.MAX_TAIL_LINES
-	logQuery.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
+	req.TailLines = k8sclient.MAX_TAIL_LINES
+	req.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
 
-	logs, err := k8sclient.GetPodLogByte(ss.Context(), clusterId, namespace, pod, &logQuery)
+	logs, err := k8sclient.GetPodLogByte(ss.Context(), clusterId, namespace, pod, req)
 	if err != nil {
 		return err
 	}
 
 	ts := time.Now().Format("20060102150405")
-	filename := fmt.Sprintf("%s-%s-%s.log", pod, logQuery.ContainerName, ts)
+	filename := fmt.Sprintf("%s-%s-%s.log", pod, req.ContainerName, ts)
 
 	rest.WriteAttachment(ss, logs, filename)
 	return nil

@@ -31,14 +31,14 @@ const (
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /overview [get]
-func GetClusterOverview(c context.Context, req query.GetClusterOverviewReq) (query.ClusterOverviewMetric, error) {
+func GetClusterOverview(c context.Context, req *query.GetClusterOverviewReq) (*query.ClusterOverviewMetric, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return query.ClusterOverviewMetric{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, req.ClusterId)
 	if err != nil {
-		return query.ClusterOverviewMetric{}, err
+		return nil, err
 	}
 	return handler.GetClusterOverview(rctx)
 }
@@ -48,16 +48,16 @@ func GetClusterOverview(c context.Context, req query.GetClusterOverviewReq) (que
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /pod_usage [get]
-func ClusterPodUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterPodUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterPodUsage(rctx, uQuery)
+	return handler.ClusterPodUsage(rctx, req)
 }
 
 // ClusterCPUUsage 集群 CPU 使用率
@@ -65,16 +65,16 @@ func ClusterPodUsage(c context.Context, uQuery query.UsageQuery) (promclient.Res
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /cpu_usage [get]
-func ClusterCPUUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterCPUUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterCPUUsage(rctx, uQuery)
+	return handler.ClusterCPUUsage(rctx, req)
 }
 
 // ClusterCPURequestUsage 集群 CPU 装箱率
@@ -82,16 +82,16 @@ func ClusterCPUUsage(c context.Context, uQuery query.UsageQuery) (promclient.Res
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /cpu_request_usage [get]
-func ClusterCPURequestUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterCPURequestUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterCPURequestUsage(rctx, uQuery)
+	return handler.ClusterCPURequestUsage(rctx, req)
 }
 
 // ClusterMemoryUsage 集群内存使用率
@@ -99,16 +99,16 @@ func ClusterCPURequestUsage(c context.Context, uQuery query.UsageQuery) (promcli
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /memory_usage [get]
-func ClusterMemoryUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterMemoryUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterMemoryUsage(rctx, uQuery)
+	return handler.ClusterMemoryUsage(rctx, req)
 }
 
 // ClusterMemoryRequestUsage 集群内存装箱率
@@ -116,16 +116,16 @@ func ClusterMemoryUsage(c context.Context, uQuery query.UsageQuery) (promclient.
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /memory_request_usage [get]
-func ClusterMemoryRequestUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterMemoryRequestUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterMemoryRequestUsage(rctx, uQuery)
+	return handler.ClusterMemoryRequestUsage(rctx, req)
 }
 
 // ClusterDiskUsage 集群磁盘使用率
@@ -133,16 +133,16 @@ func ClusterMemoryRequestUsage(c context.Context, uQuery query.UsageQuery) (prom
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /disk_usage [get]
-func ClusterDiskUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterDiskUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterDiskUsage(rctx, uQuery)
+	return handler.ClusterDiskUsage(rctx, req)
 }
 
 // ClusterDiskioUsage 集群磁盘IO使用率
@@ -150,14 +150,14 @@ func ClusterDiskUsage(c context.Context, uQuery query.UsageQuery) (promclient.Re
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /diskio_usage [get]
-func ClusterDiskioUsage(c context.Context, uQuery query.UsageQuery) (promclient.ResultData, error) {
+func ClusterDiskioUsage(c context.Context, req *query.UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	handler, err := query.HandlerFactory(c, rctx.ClusterId)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return handler.ClusterDiskioUsage(rctx, uQuery)
+	return handler.ClusterDiskioUsage(rctx, req)
 }
