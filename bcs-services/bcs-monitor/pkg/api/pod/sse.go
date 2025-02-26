@@ -40,14 +40,14 @@ const (
 // @Produce text/event-stream
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pods/:pod/logs/stream [get]
-func PodLogStream(logQuery k8sclient.LogQuery, ss rest.StreamingServer) error { // nolint
+func PodLogStream(req *k8sclient.LogQuery, ss rest.StreamingServer) error { // nolint
 	rctx, err := rest.GetRestContext(ss.Context())
 	if err != nil {
 		return err
 	}
-	clusterId := logQuery.ClusterId
-	namespace := logQuery.Namespace
-	pod := logQuery.Pod
+	clusterId := req.ClusterId
+	namespace := req.Namespace
+	pod := req.Pod
 
 	// 重连时的Id
 	lastEventId := rctx.Request.Header.Get("Last-Event-ID")
@@ -55,11 +55,11 @@ func PodLogStream(logQuery k8sclient.LogQuery, ss rest.StreamingServer) error { 
 		sinceTime, errr := base64.StdEncoding.DecodeString(lastEventId)
 		if errr == nil {
 			blog.Infow("send log stream from Last-Event-ID", "Last-Event-ID", sinceTime)
-			logQuery.StartedAt = string(sinceTime)
+			req.StartedAt = string(sinceTime)
 		}
 	}
 
-	logChan, err := k8sclient.GetPodLogStream(ss.Context(), clusterId, namespace, pod, &logQuery)
+	logChan, err := k8sclient.GetPodLogStream(ss.Context(), clusterId, namespace, pod, req)
 	if err != nil {
 		return err
 	}

@@ -32,7 +32,7 @@ func TestGetClusterOverview(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			vector, err := GetClusterOverview(context.Background(), query.GetClusterOverviewReq{})
+			vector, err := GetClusterOverview(context.Background(), &query.GetClusterOverviewReq{})
 			assert.NoError(t, err)
 			fmt.Println(vector)
 		}()

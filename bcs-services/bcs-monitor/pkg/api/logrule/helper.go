@@ -17,10 +17,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"github.com/pkg/errors"
 
 	bklog "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_log"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -38,15 +40,15 @@ const (
 
 // ListLogCollectorsReq list log collectors request
 type ListLogCollectorsReq struct {
-	ProjectId string `in:"path=projectId;required"`
-	ClusterId string `in:"path=clusterId;required"`
+	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
 }
 
 // GetLogRuleReq get log rule request
 type GetLogRuleReq struct {
-	ProjectId string `json:"-" in:"path=projectId;required"`
-	ClusterId string `json:"-" in:"path=clusterId;required"`
-	ID        string `in:"path=id;required"`
+	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	ID        string `json:"id" in:"path=id" validate:"required"`
 }
 
 // GetLogRuleResp log rule resp
@@ -117,14 +119,23 @@ func (l GetLogRuleRespSortByStatus) Swap(i, j int) { l[i], l[j] = l[j], l[i] }
 
 // CreateLogRuleReq req
 type CreateLogRuleReq struct {
-	ProjectId   string        `json:"-" in:"path=projectId;required"`
-	ClusterId   string        `json:"-" in:"path=clusterId;required"`
+	ProjectId   string        `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId   string        `json:"clusterId" in:"path=clusterId" validate:"required"`
 	DisplayName string        `json:"display_name" form:"display_name"`
-	Name        string        `json:"name" form:"name" binding:"required" validate:"max=30,min=5,regexp=^[A-Za-z0-9_]+$"`
+	Name        string        `json:"name" form:"name" binding:"required" validate:"required,max=30,min=5"`
 	RuleName    string        `json:"-" form:"-"`
 	Description string        `json:"description"`
 	Rule        bklog.LogRule `json:"rule"`
 	FromRule    string        `json:"from_rule"`
+}
+
+// Validate CreateLogRuleReq validate
+func (req *CreateLogRuleReq) Validate() error {
+	nameRegexp := regexp.MustCompile(`^[A-Za-z0-9_]+$`)
+	if !nameRegexp.MatchString(req.Name) {
+		return errors.New("name is invalid: " + req.Name)
+	}
+	return nil
 }
 
 // toEntity convert to entity.LogRule
@@ -173,9 +184,9 @@ func (req *CreateLogRuleReq) toBKLog(c *rest.Context) *bklog.CreateBCSCollectorR
 
 // UpdateLogRuleReq req
 type UpdateLogRuleReq struct {
-	ProjectId   string        `json:"-" in:"path=projectId;required"`
-	ClusterId   string        `json:"-" in:"path=clusterId;required"`
-	ID          string        `json:"-" in:"path=id;required"`
+	ProjectId   string        `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId   string        `json:"clusterId" in:"path=clusterId" validate:"required"`
+	ID          string        `json:"id" in:"path=id" validate:"required"`
 	DisplayName string        `json:"display_name" form:"display_name"`
 	Description string        `json:"description"`
 	Rule        bklog.LogRule `json:"rule"`
@@ -374,7 +385,7 @@ func getBkLogDeleteMessage(isFileDeleted, isSTDDeleted bool, originMessage strin
 }
 
 // getContainerQueryLogLinks get container query log links
-func getContainerQueryLogLinks(containerIDs []string, projectCode, clusterID string) map[string]Entrypoint {
+func getContainerQueryLogLinks(containerIDs []string, projectCode, clusterID string) *map[string]Entrypoint {
 	result := make(map[string]Entrypoint, 0)
 	type addition struct {
 		Field    string `json:"field"`
@@ -395,7 +406,7 @@ func getContainerQueryLogLinks(containerIDs []string, projectCode, clusterID str
 			FileLogURL: fmt.Sprintf("%s/#/retrieve/?%s", config.G.BKLog.Entrypoint, query.Encode()),
 		}
 	}
-	return result
+	return &result
 }
 
 // getRuleIDByNames get rule id by names

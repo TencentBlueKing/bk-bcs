@@ -20,34 +20,34 @@ const SampleLimitMin = 1
 
 // ListServiceMonitorsReq xxx
 type ListServiceMonitorsReq struct {
-	ProjectCode   string `in:"path=projectCode;required"`
-	ClusterId     string `in:"path=clusterId;required"`
-	PathNamespace string `in:"path=namespace"`
-	Limit         string `in:"query=limit"`
-	Offset        string `in:"query=offset"`
-	Namespace     string `in:"query=namespace"`
+	ProjectCode   string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId     string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	PathNamespace string `json:"namespace" in:"path=namespace"`
+	Limit         string `json:"limit" in:"query=limit"`
+	Offset        string `json:"offset" in:"query=offset"`
+	Namespace     string `json:"namespace" in:"query=namespace"` // nolint:govet
 }
 
 // GetServiceMonitorReq xxx
 type GetServiceMonitorReq struct {
-	ProjectCode string `in:"path=projectCode;required"`
-	ClusterId   string `in:"path=clusterId;required"`
-	Name        string `in:"path=name;required"`
-	Namespace   string `in:"path=namespace;required"`
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	Name        string `json:"name" in:"path=name" validate:"required"`
+	Namespace   string `json:"namespace" in:"path=namespace" validate:"required"`
 }
 
 // CreateServiceMonitorReq create service monitor req
 type CreateServiceMonitorReq struct {
-	ProjectCode   string            `json:"-" in:"path=projectCode;required"`
-	ClusterId     string            `json:"-" in:"path=clusterId;required"`
-	PathNamespace string            `json:"-" in:"path=namespace;required"`
+	ProjectCode   string            `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId     string            `json:"clusterId" in:"path=clusterId" validate:"required"`
+	PathNamespace string            `json:"namespace" in:"path=namespace" validate:"required"`
 	ServiceName   string            `json:"service_name"`
 	Path          string            `json:"path"`
 	Selector      map[string]string `json:"selector"`
 	Interval      string            `json:"interval"`
 	Port          string            `json:"port"`
 	SampleLimit   int               `json:"sample_limit"`
-	Namespace     string            `json:"namespace"`
+	Namespace     string            `json:"namespace"` // nolint:govet
 	Name          string            `json:"name"`
 	Params        map[string]string `json:"params"`
 }
@@ -62,8 +62,8 @@ func (r CreateServiceMonitorReq) Validate() bool {
 
 // BatchDeleteServiceMonitorReq batch delete service monitor req
 type BatchDeleteServiceMonitorReq struct {
-	ProjectCode     string           `json:"-" in:"path=projectCode;required"`
-	ClusterId       string           `json:"-" in:"path=clusterId;required"`
+	ProjectCode     string           `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId       string           `json:"clusterId" in:"path=clusterId" validate:"required"`
 	ServiceMonitors []ServiceMonitor `json:"service_monitors"`
 }
 
@@ -75,18 +75,18 @@ type ServiceMonitor struct {
 
 // UpdateServiceMonitorReq update service monitor req
 type UpdateServiceMonitorReq struct {
-	ProjectCode   string            `json:"-" in:"path=projectCode;required"`
-	ClusterId     string            `json:"-" in:"path=clusterId;required"`
-	PathNamespace string            `json:"-" in:"path=namespace;required"`
-	PathName      string            `json:"-" in:"path=name;required"`
+	ProjectCode   string            `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId     string            `json:"clusterId" in:"path=clusterId" validate:"required"`
+	PathNamespace string            `json:"namespace" in:"path=namespace" validate:"required"`
+	PathName      string            `json:"name" in:"path=name" validate:"required"`
 	ServiceName   string            `json:"service_name"`
 	Path          string            `json:"path"`
 	Selector      map[string]string `json:"selector"`
 	Interval      string            `json:"interval"`
 	Port          string            `json:"port"`
 	SampleLimit   int               `json:"sample_limit"`
-	Namespace     string            `json:"namespace"`
-	Name          string            `json:"name"`
+	Namespace     string            `json:"namespace"` // nolint:govet
+	Name          string            `json:"name"`      // nolint:govet
 	Params        map[string]string `json:"params"`
 }
 
@@ -100,8 +100,8 @@ func (r UpdateServiceMonitorReq) Validate() bool {
 
 // DeleteServiceMonitorReq delete service monitor req
 type DeleteServiceMonitorReq struct {
-	ProjectCode string `in:"path=projectCode;required"`
-	ClusterId   string `in:"path=clusterId;required"`
-	Namespace   string `in:"path=namespace;required"`
-	Name        string `in:"path=name;required"`
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	Namespace   string `json:"namespace" in:"path=namespace" validate:"required"`
+	Name        string `json:"name" in:"path=name" validate:"required"`
 }

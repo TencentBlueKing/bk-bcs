@@ -32,8 +32,8 @@ import (
 
 // GetEntrypointsReq params
 type GetEntrypointsReq struct {
-	ProjectId    string   `json:"-" in:"path=projectId;required"`
-	ClusterId    string   `json:"-" in:"path=clusterId;required"`
+	ProjectId    string   `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId    string   `json:"clusterId" in:"path=clusterId" validate:"required"`
 	ContainerIDs []string `json:"container_ids" form:"container_ids"`
 }
 
@@ -51,7 +51,7 @@ type Entrypoint struct {
 // @Produce json
 // @Success 200 {object} map[string]Entrypoint
 // @Router  /log_collector/entrypoints [post]
-func GetEntrypoints(c context.Context, req GetEntrypointsReq) (map[string]Entrypoint, error) {
+func GetEntrypoints(c context.Context, req *GetEntrypointsReq) (*map[string]Entrypoint, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func GetEntrypoints(c context.Context, req GetEntrypointsReq) (map[string]Entryp
 // @Produce json
 // @Success 200 {array} GetLogRuleResp
 // @Router  /log_collector/rules [get]
-func ListLogCollectors(c context.Context, req ListLogCollectorsReq) ([]*GetLogRuleResp, error) {
+func ListLogCollectors(c context.Context, req *ListLogCollectorsReq) (*[]*GetLogRuleResp, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,8 @@ func ListLogCollectors(c context.Context, req ListLogCollectorsReq) ([]*GetLogRu
 	}
 
 	sort.Sort(GetLogRuleRespSortByName(result))
-	return result, nil
+
+	return &result, nil
 }
 
 // GetLogRule 获取日志采集规则详情
@@ -113,7 +114,7 @@ func ListLogCollectors(c context.Context, req ListLogCollectorsReq) ([]*GetLogRu
 // @Produce json
 // @Success 200 object GetLogRuleResp
 // @Router  /log_collector/rules/:id [get]
-func GetLogRule(c context.Context, req GetLogRuleReq) (*GetLogRuleResp, error) {
+func GetLogRule(c context.Context, req *GetLogRuleReq) (*GetLogRuleResp, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -156,10 +157,14 @@ func GetLogRule(c context.Context, req GetLogRuleReq) (*GetLogRuleResp, error) {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/rules [post]
-func CreateLogRule(c context.Context, req CreateLogRuleReq) (string, error) {
+func CreateLogRule(c context.Context, req *CreateLogRuleReq) (*string, error) {
+	err := req.Validate()
+	if err != nil {
+		return nil, err
+	}
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.RuleName = fmt.Sprintf("%s_%s", req.Name, rand.String(5))
 
@@ -172,20 +177,20 @@ func CreateLogRule(c context.Context, req CreateLogRuleReq) (string, error) {
 	})
 	count, _, err := store.ListLogRules(c, cond, &utils.ListOption{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if count > 0 {
-		return "", errors.Errorf("%s is exist", req.Name)
+		return nil, errors.Errorf("%s is exist", req.Name)
 	}
 
 	id, err := store.CreateLogRule(c, req.toEntity(rctx))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// 创建 bklog 规则耗时比较长，异步调用
 	go createBKLog(req.toBKLog(rctx))
-	return id, nil
+	return &id, nil
 }
 
 // UpdateLogRule 更新日志采集规则
@@ -194,35 +199,35 @@ func CreateLogRule(c context.Context, req CreateLogRuleReq) (string, error) {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/rules/:id [put]
-func UpdateLogRule(c context.Context, req UpdateLogRuleReq) (string, error) {
+func UpdateLogRule(c context.Context, req *UpdateLogRuleReq) (*string, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	id := req.ID
 	if isBcsLogConfigID(id) || isBKLogID(id) {
-		return "", fmt.Errorf("id is invalid")
+		return nil, fmt.Errorf("id is invalid")
 	}
 
 	// check rule is exist
 	store := storage.GlobalStorage
 	rule, err := store.GetLogRule(c, id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if rule.RuleID == 0 {
-		return "", errors.Errorf("invalid rule id")
+		return nil, errors.Errorf("invalid rule id")
 	}
 
 	err = store.UpdateLogRule(c, id, req.toEntity(rctx.Username, rctx.ProjectCode, rule.Name))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// 更新 bklog 规则耗时比较长，异步调用
 	go updateBKLog(rule.ID.Hex(), rule.RuleID, req.toBKLog(rctx, rule.RuleName))
-	return id, nil
+	return &id, nil
 }
 
 // DeleteLogRule 删除日志采集规则
@@ -231,7 +236,7 @@ func UpdateLogRule(c context.Context, req UpdateLogRuleReq) (string, error) {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/rules/:id [delete]
-func DeleteLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
+func DeleteLogRule(c context.Context, req *GetLogRuleReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -271,7 +276,7 @@ func DeleteLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/rules/:id/retry [post]
-func RetryLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
+func RetryLogRule(c context.Context, req *GetLogRuleReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -345,7 +350,7 @@ func RetryLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/rules/:id/enable [post]
-func EnableLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
+func EnableLogRule(c context.Context, req *GetLogRuleReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -395,7 +400,7 @@ func EnableLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/rules/:id/disable [post]
-func DisableLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
+func DisableLogRule(c context.Context, req *GetLogRuleReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -446,7 +451,7 @@ func DisableLogRule(c context.Context, req GetLogRuleReq) (interface{}, error) {
 // @Success 200
 // @Router  /log_collector/storages/cluster_groups [get]
 func GetStorageClusters(
-	c context.Context, req bklog.GetStorageClustersReq) ([]bklog.GetStorageClustersRespData, error) {
+	c context.Context, req *bklog.GetStorageClustersReq) (*[]bklog.GetStorageClustersRespData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -465,13 +470,13 @@ func GetStorageClusters(
 		}
 	}
 
-	return data, nil
+	return &data, nil
 }
 
 // SwitchStorageReq 切换 ES 存储集群请求
 type SwitchStorageReq struct {
-	ProjectId        string `json:"-" in:"path=projectId;required"`
-	ClusterId        string `json:"-" in:"path=clusterId;required"`
+	ProjectId        string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId        string `json:"clusterId" in:"path=clusterId" validate:"required"`
 	StorageClusterID int    `json:"storage_cluster_id"`
 }
 
@@ -481,7 +486,7 @@ type SwitchStorageReq struct {
 // @Produce json
 // @Success 200
 // @Router  /log_collector/storages/switch_storage [post]
-func SwitchStorage(c context.Context, req SwitchStorageReq) (interface{}, error) {
+func SwitchStorage(c context.Context, req *SwitchStorageReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err

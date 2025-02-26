@@ -29,9 +29,9 @@ import (
 
 // GetNodeInfoReq xxx
 type GetNodeInfoReq struct {
-	ProjectCode string `in:"path=projectCode;required"`
-	ClusterId   string `in:"path=clusterId;required"`
-	Node        string `in:"path=node;required"`
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	Node        string `json:"node" in:"path=node" validate:"required"`
 }
 
 // NodeOveriewMetric 节点概览
@@ -57,21 +57,21 @@ type NodeOveriewMetric struct {
 
 // UsageQuery 节点查询
 type UsageQuery struct {
-	ProjectCode string `in:"path=projectCode;required"`
-	ClusterId   string `in:"path=clusterId;required"`
-	Nodegroup   string `in:"path=nodegroup"`
-	Node        string `in:"path=node"`
-	Namespace   string `in:"path=namespace"`
-	Pod         string `in:"path=pod"`
-	Container   string `in:"path=container"`
-	StartAt     string `in:"query=start_at" json:"start_at" form:"start_at"` // 必填参数`
-	EndAt       string `in:"query=end_at" json:"end_at" form:"end_at"`
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	Nodegroup   string `json:"nodegroup" in:"path=nodegroup"`
+	Node        string `json:"node" in:"path=node"`
+	Namespace   string `json:"namespace" in:"path=namespace"`
+	Pod         string `json:"pod" in:"path=pod"`
+	Container   string `json:"container" in:"path=container"`
+	StartAt     string `json:"start_at" in:"query=start_at" form:"start_at"` // 必填参数`
+	EndAt       string `json:"end_at" in:"query=end_at" form:"end_at"`
 }
 
 // Nodes 列表
 type Nodes struct {
-	ProjectCode string   `json:"-" in:"path=projectCode;required"`
-	ClusterId   string   `json:"-" in:"path=clusterId;required"`
+	ProjectCode string   `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string   `json:"clusterId" in:"path=clusterId" validate:"required"`
 	Node        []string `json:"node"`
 }
 
@@ -128,11 +128,11 @@ func (q *UsageQuery) GetQueryTime() (*clientutil.PromQueryTime, error) {
 }
 
 // handleNodeMetric Node 处理公共函数
-func handleNodeMetric(c *rest.Context, promql string, query *UsageQuery) (promclient.ResultData, error) {
+func handleNodeMetric(c *rest.Context, promql string, query *UsageQuery) (*promclient.ResultData, error) {
 
 	queryTime, err := query.GetQueryTime()
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 
 	params := map[string]interface{}{
@@ -144,9 +144,9 @@ func handleNodeMetric(c *rest.Context, promql string, query *UsageQuery) (promcl
 	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start,
 		queryTime.End, queryTime.Step)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return result.Data, nil
+	return &result.Data, nil
 }
 
 // GetNodeInfo 节点信息
@@ -154,7 +154,7 @@ func handleNodeMetric(c *rest.Context, promql string, query *UsageQuery) (promcl
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/info [get]
-func GetNodeInfo(c context.Context, req GetNodeInfoReq) (map[string]string, error) {
+func GetNodeInfo(c context.Context, req *GetNodeInfoReq) (*map[string]string, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func GetNodeInfo(c context.Context, req GetNodeInfoReq) (map[string]string, erro
 	if err != nil {
 		return nil, err
 	}
-	return labelSet, nil
+	return &labelSet, nil
 }
 
 // GetNodeOverview 查询节点概览
@@ -178,7 +178,7 @@ func GetNodeInfo(c context.Context, req GetNodeInfoReq) (map[string]string, erro
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/overview [get]
-func GetNodeOverview(c context.Context, req GetNodeInfoReq) (*NodeOveriewMetric, error) {
+func GetNodeOverview(c context.Context, req *GetNodeInfoReq) (*NodeOveriewMetric, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -243,7 +243,7 @@ func GetNodeOverview(c context.Context, req GetNodeInfoReq) (*NodeOveriewMetric,
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/overviews [post]
-func ListNodeOverviews(c context.Context, nodes Nodes) (map[string]*NodeOveriewMetric, error) {
+func ListNodeOverviews(c context.Context, nodes *Nodes) (*map[string]*NodeOveriewMetric, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -316,7 +316,7 @@ func ListNodeOverviews(c context.Context, nodes Nodes) (map[string]*NodeOveriewM
 	if err := wg.Wait(); err != nil {
 		return nil, err
 	}
-	return nodeOveriewMetrics, nil
+	return &nodeOveriewMetrics, nil
 }
 
 // GetNodeCPUUsage 查询 CPU 使用率
@@ -324,14 +324,14 @@ func ListNodeOverviews(c context.Context, nodes Nodes) (map[string]*NodeOveriewM
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/cpu_usage [get]
-func GetNodeCPUUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeCPUUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:cpu:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeCPURequestUsage 查询 CPU 装箱率
@@ -339,14 +339,14 @@ func GetNodeCPUUsage(c context.Context, query UsageQuery) (promclient.ResultData
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/cpu_request_usage [get]
-func GetNodeCPURequestUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeCPURequestUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:cpu_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeMemoryUsage 节点内存使用率
@@ -354,14 +354,14 @@ func GetNodeCPURequestUsage(c context.Context, query UsageQuery) (promclient.Res
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/memory_usage [get]
-func GetNodeMemoryUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeMemoryUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:memory:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeMemoryRequestUsage 节点内存装箱率
@@ -369,14 +369,14 @@ func GetNodeMemoryUsage(c context.Context, query UsageQuery) (promclient.ResultD
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/memory_request_usage [get]
-func GetNodeMemoryRequestUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeMemoryRequestUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:memory_request:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeNetworkTransmitUsage 节点网络发送
@@ -384,14 +384,14 @@ func GetNodeMemoryRequestUsage(c context.Context, query UsageQuery) (promclient.
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/network_receive [get]
-func GetNodeNetworkTransmitUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeNetworkTransmitUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:network_transmit{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeNetworkReceiveUsage 节点网络接收
@@ -399,14 +399,14 @@ func GetNodeNetworkTransmitUsage(c context.Context, query UsageQuery) (promclien
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/network_transmit [get]
-func GetNodeNetworkReceiveUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeNetworkReceiveUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:network_receive{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeDiskUsage 节点磁盘使用率
@@ -414,14 +414,14 @@ func GetNodeNetworkReceiveUsage(c context.Context, query UsageQuery) (promclient
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/disk_usage [get]
-func GetNodeDiskUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeDiskUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:disk:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }
 
 // GetNodeDiskioUsage 节点磁盘IO
@@ -429,12 +429,12 @@ func GetNodeDiskUsage(c context.Context, query UsageQuery) (promclient.ResultDat
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /nodes/:node/diskio_usage [get]
-func GetNodeDiskioUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func GetNodeDiskioUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql := `bcs:node:diskio:usage{cluster_id="%<clusterId>s", node="%<node>s", %<provider>s}`
 
-	return handleNodeMetric(rctx, promql, &query)
+	return handleNodeMetric(rctx, promql, req)
 }

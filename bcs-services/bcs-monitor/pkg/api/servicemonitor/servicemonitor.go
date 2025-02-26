@@ -52,7 +52,7 @@ func GetMonitoringV1Client(c *rest.Context) (monitoringv1.MonitoringV1Interface,
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace [get]
-func ListServiceMonitors(c context.Context, req ListServiceMonitorsReq) ([]*v1.ServiceMonitor, error) {
+func ListServiceMonitors(c context.Context, req *ListServiceMonitorsReq) (*[]*v1.ServiceMonitor, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func ListServiceMonitors(c context.Context, req ListServiceMonitorsReq) ([]*v1.S
 	serviceMonitors := make([]*v1.ServiceMonitor, 0)
 	// 共享集群不展示列表
 	if rctx.SharedCluster {
-		return serviceMonitors, nil
+		return &serviceMonitors, nil
 	}
 	limit := req.Limit
 	offset := req.Offset
@@ -88,7 +88,7 @@ func ListServiceMonitors(c context.Context, req ListServiceMonitorsReq) ([]*v1.S
 		return nil, err
 	}
 	serviceMonitors = append(serviceMonitors, data.Items...)
-	return serviceMonitors, nil
+	return &serviceMonitors, nil
 }
 
 // CreateServiceMonitor 创建ServiceMonitor
@@ -96,14 +96,14 @@ func ListServiceMonitors(c context.Context, req ListServiceMonitorsReq) ([]*v1.S
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/create/namespaces/:namespace/servicemonitors/:name [post]
-func CreateServiceMonitor(c context.Context, serviceMonitorReq CreateServiceMonitorReq) (*v1.ServiceMonitor, error) {
+func CreateServiceMonitor(c context.Context, req *CreateServiceMonitorReq) (*v1.ServiceMonitor, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
 	}
-	serviceMonitorReq.Namespace = serviceMonitorReq.PathNamespace
+	req.Namespace = req.PathNamespace
 
-	flag := serviceMonitorReq.Validate()
+	flag := req.Validate()
 
 	if !flag {
 		return nil, errors.New("参数校验失败")
@@ -114,7 +114,7 @@ func CreateServiceMonitor(c context.Context, serviceMonitorReq CreateServiceMoni
 		return nil, err
 	}
 	params := make(map[string][]string, 0)
-	for k, v := range serviceMonitorReq.Params {
+	for k, v := range req.Params {
 		params[k] = []string{v}
 	}
 
@@ -122,32 +122,32 @@ func CreateServiceMonitor(c context.Context, serviceMonitorReq CreateServiceMoni
 	labels := map[string]string{
 		"release":                     "po",
 		"io.tencent.paas.source_type": "bcs",
-		"io.tencent.bcs.service_name": serviceMonitorReq.ServiceName,
+		"io.tencent.bcs.service_name": req.ServiceName,
 	}
 
 	serviceMonitor.ObjectMeta = metav1.ObjectMeta{
 		Labels:    labels,
-		Name:      serviceMonitorReq.Name,
-		Namespace: serviceMonitorReq.Namespace,
+		Name:      req.Name,
+		Namespace: req.Namespace,
 	}
 	endpoints := make([]v1.Endpoint, 0)
 	initEndpoint := v1.Endpoint{
-		Port:     serviceMonitorReq.Port,
-		Path:     serviceMonitorReq.Path,
-		Interval: serviceMonitorReq.Interval,
+		Port:     req.Port,
+		Path:     req.Path,
+		Interval: req.Interval,
 		Params:   params,
 	}
 
 	endpoints = append(endpoints, initEndpoint)
 	serviceMonitor.Spec = v1.ServiceMonitorSpec{
 		Endpoints:   endpoints,
-		SampleLimit: uint64(serviceMonitorReq.SampleLimit),
+		SampleLimit: uint64(req.SampleLimit),
 		Selector: metav1.LabelSelector{
-			MatchLabels: serviceMonitorReq.Selector,
+			MatchLabels: req.Selector,
 		},
 	}
 
-	_, err = client.ServiceMonitors(serviceMonitorReq.Namespace).Create(c, serviceMonitor, metav1.CreateOptions{})
+	_, err = client.ServiceMonitors(req.Namespace).Create(c, serviceMonitor, metav1.CreateOptions{})
 
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func CreateServiceMonitor(c context.Context, serviceMonitorReq CreateServiceMoni
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace/servicemonitors/:name [delete]
-func DeleteServiceMonitor(c context.Context, req DeleteServiceMonitorReq) (interface{}, error) {
+func DeleteServiceMonitor(c context.Context, req *DeleteServiceMonitorReq) (*string, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -179,7 +179,9 @@ func DeleteServiceMonitor(c context.Context, req DeleteServiceMonitorReq) (inter
 	if err != nil {
 		return nil, err
 	}
-	return fmt.Sprintf("删除 Metrics: %s 成功", name), nil
+
+	resp := fmt.Sprintf("删除 Metrics: %s 成功", name)
+	return &resp, nil
 }
 
 // BatchDeleteServiceMonitor 批量删除ServiceMonitor
@@ -188,7 +190,7 @@ func DeleteServiceMonitor(c context.Context, req DeleteServiceMonitorReq) (inter
 // @Success 200 {string} string
 // @Router  /service_monitors/batchdelete [delete]
 func BatchDeleteServiceMonitor(
-	c context.Context, serviceMonitorDelReq BatchDeleteServiceMonitorReq) (interface{}, error) {
+	c context.Context, req *BatchDeleteServiceMonitorReq) (*string, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -202,14 +204,15 @@ func BatchDeleteServiceMonitor(
 	if err != nil {
 		return nil, err
 	}
-	for _, v := range serviceMonitorDelReq.ServiceMonitors {
+	for _, v := range req.ServiceMonitors {
 		err = client.ServiceMonitors(v.Namespace).Delete(c, v.Name, metav1.DeleteOptions{})
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return fmt.Sprintf("批量删除 Metrics: %s 成功", serviceMonitorDelReq), nil
+	resp := fmt.Sprintf("批量删除 Metrics: %s 成功", req)
+	return &resp, nil
 }
 
 // GetServiceMonitor 获取单个ServiceMonitor
@@ -217,7 +220,7 @@ func BatchDeleteServiceMonitor(
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/namespaces/:namespace/servicemonitors/:name [delete]
-func GetServiceMonitor(c context.Context, req GetServiceMonitorReq) (*v1.ServiceMonitor, error) {
+func GetServiceMonitor(c context.Context, req *GetServiceMonitorReq) (*v1.ServiceMonitor, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -244,15 +247,15 @@ func GetServiceMonitor(c context.Context, req GetServiceMonitorReq) (*v1.Service
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /service_monitors/update/namespaces/:namespace/servicemonitors/:name [put]
-func UpdateServiceMonitor(c context.Context, serviceMonitorReq UpdateServiceMonitorReq) (*v1.ServiceMonitor, error) {
+func UpdateServiceMonitor(c context.Context, req *UpdateServiceMonitorReq) (*v1.ServiceMonitor, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
 	}
-	serviceMonitorReq.Name = serviceMonitorReq.PathName
-	serviceMonitorReq.Namespace = serviceMonitorReq.PathNamespace
+	req.Name = req.PathName
+	req.Namespace = req.PathNamespace
 
-	flag := serviceMonitorReq.Validate()
+	flag := req.Validate()
 
 	if !flag {
 		return nil, errors.New("参数校验失败")
@@ -263,8 +266,8 @@ func UpdateServiceMonitor(c context.Context, serviceMonitorReq UpdateServiceMoni
 		return nil, err
 	}
 
-	exist, err := client.ServiceMonitors(serviceMonitorReq.Namespace).
-		Get(c, serviceMonitorReq.Name, metav1.GetOptions{})
+	exist, err := client.ServiceMonitors(req.Namespace).
+		Get(c, req.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -273,30 +276,30 @@ func UpdateServiceMonitor(c context.Context, serviceMonitorReq UpdateServiceMoni
 	labels := exist.Labels
 	labels["release"] = "po"
 	labels["io.tencent.paas.source_type"] = "bcs"
-	labels["io.tencent.bcs.service_name"] = serviceMonitorReq.ServiceName
+	labels["io.tencent.bcs.service_name"] = req.ServiceName
 
 	params := make(map[string][]string, 0)
-	for k, v := range serviceMonitorReq.Params {
+	for k, v := range req.Params {
 		params[k] = []string{v}
 	}
 	serviceMonitor.Labels = labels
 	endpoints := make([]v1.Endpoint, 0)
 	initEndpoint := v1.Endpoint{
-		Port:     serviceMonitorReq.Port,
-		Path:     serviceMonitorReq.Path,
-		Interval: serviceMonitorReq.Interval,
+		Port:     req.Port,
+		Path:     req.Path,
+		Interval: req.Interval,
 		Params:   params,
 	}
 
 	endpoints = append(endpoints, initEndpoint)
 	serviceMonitor.Spec = v1.ServiceMonitorSpec{
 		Endpoints:   endpoints,
-		SampleLimit: uint64(serviceMonitorReq.SampleLimit),
+		SampleLimit: uint64(req.SampleLimit),
 		Selector: metav1.LabelSelector{
-			MatchLabels: serviceMonitorReq.Selector,
+			MatchLabels: req.Selector,
 		},
 	}
-	serviceMonitorClient := client.ServiceMonitors(serviceMonitorReq.Namespace)
+	serviceMonitorClient := client.ServiceMonitors(req.Namespace)
 	_, err = serviceMonitorClient.Update(c, serviceMonitor, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err

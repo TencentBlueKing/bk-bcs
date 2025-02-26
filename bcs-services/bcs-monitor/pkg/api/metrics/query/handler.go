@@ -29,14 +29,14 @@ import (
 
 // Handler metric handler
 type Handler interface {
-	GetClusterOverview(c *rest.Context) (ClusterOverviewMetric, error)
-	ClusterPodUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
-	ClusterCPUUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
-	ClusterCPURequestUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
-	ClusterMemoryUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
-	ClusterMemoryRequestUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
-	ClusterDiskUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
-	ClusterDiskioUsage(c *rest.Context, query UsageQuery) (promclient.ResultData, error)
+	GetClusterOverview(c *rest.Context) (*ClusterOverviewMetric, error)
+	ClusterPodUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterCPUUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterCPURequestUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterMemoryUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterMemoryRequestUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterDiskUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
+	ClusterDiskioUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error)
 }
 
 // HandlerFactory 自动切换Prometheus/蓝鲸监控

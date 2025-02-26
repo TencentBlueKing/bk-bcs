@@ -32,7 +32,7 @@ import (
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pod_monitors [get]
-func ListPodMonitors(c context.Context, req ListPodMonitorsReq) ([]*v1.PodMonitor, error) {
+func ListPodMonitors(c context.Context, req *ListPodMonitorsReq) (*[]*v1.PodMonitor, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func ListPodMonitors(c context.Context, req ListPodMonitorsReq) ([]*v1.PodMonito
 	podMonitor := make([]*v1.PodMonitor, 0)
 	// 共享集群不展示列表
 	if rctx.SharedCluster {
-		return podMonitor, nil
+		return &podMonitor, nil
 	}
 	limit := req.Limit
 	offset := req.Offset
@@ -68,7 +68,7 @@ func ListPodMonitors(c context.Context, req ListPodMonitorsReq) ([]*v1.PodMonito
 		return nil, err
 	}
 	podMonitor = append(podMonitor, data.Items...)
-	return podMonitor, nil
+	return &podMonitor, nil
 }
 
 // CreatePodMonitor 创建PodMonitor
@@ -76,14 +76,14 @@ func ListPodMonitors(c context.Context, req ListPodMonitorsReq) ([]*v1.PodMonito
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pod_monitors [post]
-func CreatePodMonitor(c context.Context, podMonitorReq CreatePodMonitorReq) (interface{}, error) {
+func CreatePodMonitor(c context.Context, req *CreatePodMonitorReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
 	}
-	podMonitorReq.Namespace = podMonitorReq.PathNamespace
+	req.Namespace = req.PathNamespace
 
-	flag := podMonitorReq.Validate()
+	flag := req.Validate()
 
 	if !flag {
 		return nil, errors.New("参数校验失败")
@@ -94,7 +94,7 @@ func CreatePodMonitor(c context.Context, podMonitorReq CreatePodMonitorReq) (int
 		return nil, err
 	}
 	params := make(map[string][]string, 0)
-	for k, v := range podMonitorReq.Params {
+	for k, v := range req.Params {
 		params[k] = []string{v}
 	}
 
@@ -102,32 +102,32 @@ func CreatePodMonitor(c context.Context, podMonitorReq CreatePodMonitorReq) (int
 	labels := map[string]string{
 		"release":                     "po",
 		"io.tencent.paas.source_type": "bcs",
-		"io.tencent.bcs.service_name": podMonitorReq.ServiceName,
+		"io.tencent.bcs.service_name": req.ServiceName,
 	}
 
 	podMonitor.ObjectMeta = metav1.ObjectMeta{
 		Labels:    labels,
-		Name:      podMonitorReq.Name,
-		Namespace: podMonitorReq.Namespace,
+		Name:      req.Name,
+		Namespace: req.Namespace,
 	}
 	endpoints := make([]v1.PodMetricsEndpoint, 0)
 	initEndpoint := v1.PodMetricsEndpoint{
-		Port:     podMonitorReq.Port,
-		Path:     podMonitorReq.Path,
-		Interval: podMonitorReq.Interval,
+		Port:     req.Port,
+		Path:     req.Path,
+		Interval: req.Interval,
 		Params:   params,
 	}
 
 	endpoints = append(endpoints, initEndpoint)
 	podMonitor.Spec = v1.PodMonitorSpec{
 		PodMetricsEndpoints: endpoints,
-		SampleLimit:         uint64(podMonitorReq.SampleLimit),
+		SampleLimit:         uint64(req.SampleLimit),
 		Selector: metav1.LabelSelector{
-			MatchLabels: podMonitorReq.Selector,
+			MatchLabels: req.Selector,
 		},
 	}
 
-	_, err = client.PodMonitors(podMonitorReq.Namespace).Create(c, podMonitor, metav1.CreateOptions{})
+	_, err = client.PodMonitors(req.Namespace).Create(c, podMonitor, metav1.CreateOptions{})
 
 	if err != nil {
 		return nil, err
@@ -140,26 +140,27 @@ func CreatePodMonitor(c context.Context, podMonitorReq CreatePodMonitorReq) (int
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pod_monitors/:name [delete]
-func DeletePodMonitor(c context.Context, req DeletePodMonitorReq) (string, error) {
+func DeletePodMonitor(c context.Context, req *DeletePodMonitorReq) (*string, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	name := req.Name
 	flag := validateName(name)
 	if !flag {
-		return "", fmt.Errorf("校验name参数: %s 是否符合k8s资源名称格式并且长度不大于63位字符不通过", name)
+		return nil, fmt.Errorf("校验name参数: %s 是否符合k8s资源名称格式并且长度不大于63位字符不通过", name)
 	}
 	namespace := req.Namespace
 	client, err := servicemonitor.GetMonitoringV1Client(rctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	err = client.PodMonitors(namespace).Delete(c, name, metav1.DeleteOptions{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return fmt.Sprintf("删除 Metrics: %s 成功", name), nil
+	resp := fmt.Sprintf("删除 Metrics: %s 成功", name)
+	return &resp, nil
 }
 
 // BatchDeletePodMonitor 批量删除PodMonitor
@@ -167,28 +168,29 @@ func DeletePodMonitor(c context.Context, req DeletePodMonitorReq) (string, error
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /pod_monitors/batchdelete [post]
-func BatchDeletePodMonitor(c context.Context, podMonitorDelReq BatchDeletePodMonitorReq) (string, error) {
+func BatchDeletePodMonitor(c context.Context, req *BatchDeletePodMonitorReq) (*string, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// 共享集群禁止批量删除
 	if rctx.SharedCluster {
-		return "", fmt.Errorf("denied")
+		return nil, fmt.Errorf("denied")
 	}
 
 	client, err := servicemonitor.GetMonitoringV1Client(rctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	for _, v := range podMonitorDelReq.PodMonitors {
+	for _, v := range req.PodMonitors {
 		err = client.PodMonitors(v.Namespace).Delete(c, v.Name, metav1.DeleteOptions{})
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	return fmt.Sprintf("批量删除 Metrics: %s 成功", podMonitorDelReq), nil
+	resp := fmt.Sprintf("批量删除 Metrics: %s 成功", req)
+	return &resp, nil
 }
 
 // GetPodMonitor 获取单个PodMonitor
@@ -196,7 +198,7 @@ func BatchDeletePodMonitor(c context.Context, podMonitorDelReq BatchDeletePodMon
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pod_monitors/:name [get]
-func GetPodMonitor(c context.Context, req GetPodMonitorReq) (*v1.PodMonitor, error) {
+func GetPodMonitor(c context.Context, req *GetPodMonitorReq) (*v1.PodMonitor, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
@@ -223,15 +225,15 @@ func GetPodMonitor(c context.Context, req GetPodMonitorReq) (*v1.PodMonitor, err
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pod_monitors/:name [put]
-func UpdatePodMonitor(c context.Context, podMonitorReq UpdatePodMonitorReq) (interface{}, error) {
+func UpdatePodMonitor(c context.Context, req *UpdatePodMonitorReq) (*any, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
 		return nil, err
 	}
-	podMonitorReq.Name = podMonitorReq.PathName
-	podMonitorReq.Namespace = podMonitorReq.PathNamespace
+	req.Name = req.PathName
+	req.Namespace = req.PathNamespace
 
-	flag := podMonitorReq.Validate()
+	flag := req.Validate()
 
 	if !flag {
 		return nil, errors.New("参数校验失败")
@@ -242,8 +244,8 @@ func UpdatePodMonitor(c context.Context, podMonitorReq UpdatePodMonitorReq) (int
 		return nil, err
 	}
 
-	exist, err := client.PodMonitors(podMonitorReq.Namespace).
-		Get(c, podMonitorReq.Name, metav1.GetOptions{})
+	exist, err := client.PodMonitors(req.Namespace).
+		Get(c, req.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -252,30 +254,30 @@ func UpdatePodMonitor(c context.Context, podMonitorReq UpdatePodMonitorReq) (int
 	labels := exist.Labels
 	labels["release"] = "po"
 	labels["io.tencent.paas.source_type"] = "bcs"
-	labels["io.tencent.bcs.service_name"] = podMonitorReq.ServiceName
+	labels["io.tencent.bcs.service_name"] = req.ServiceName
 
 	params := make(map[string][]string, 0)
-	for k, v := range podMonitorReq.Params {
+	for k, v := range req.Params {
 		params[k] = []string{v}
 	}
 	podMonitor.Labels = labels
 	endpoints := make([]v1.PodMetricsEndpoint, 0)
 	initEndpoint := v1.PodMetricsEndpoint{
-		Port:     podMonitorReq.Port,
-		Path:     podMonitorReq.Path,
-		Interval: podMonitorReq.Interval,
+		Port:     req.Port,
+		Path:     req.Path,
+		Interval: req.Interval,
 		Params:   params,
 	}
 
 	endpoints = append(endpoints, initEndpoint)
 	podMonitor.Spec = v1.PodMonitorSpec{
 		PodMetricsEndpoints: endpoints,
-		SampleLimit:         uint64(podMonitorReq.SampleLimit),
+		SampleLimit:         uint64(req.SampleLimit),
 		Selector: metav1.LabelSelector{
-			MatchLabels: podMonitorReq.Selector,
+			MatchLabels: req.Selector,
 		},
 	}
-	podMonitorClient := client.PodMonitors(podMonitorReq.Namespace)
+	podMonitorClient := client.PodMonitors(req.Namespace)
 	_, err = podMonitorClient.Update(c, podMonitor, metav1.UpdateOptions{})
 	if err != nil {
 		return nil, err

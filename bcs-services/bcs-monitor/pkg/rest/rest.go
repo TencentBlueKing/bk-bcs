@@ -30,6 +30,7 @@ import (
 	"github.com/gin-contrib/sse"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
+	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
@@ -58,10 +59,10 @@ func (e *Result) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 // HandlerFunc xxx
-type HandlerFunc[In, Out any] func(context.Context, In) (Out, error)
+type HandlerFunc[In, Out any] func(context.Context, *In) (*Out, error)
 
 // StreamHandlerFunc  ServerStreaming or BidiStreaming handle function
-type StreamHandlerFunc[In any] func(In, StreamingServer) error
+type StreamHandlerFunc[In any] func(*In, StreamingServer) error
 
 // AbortWithBadRequestError 请求失败
 func AbortWithBadRequestError(c *Context, err error) render.Renderer {
@@ -143,8 +144,8 @@ func GetRestContext(ctx context.Context) (*Context, error) {
 	return restContext, nil
 }
 
-// Handler handler
-func Handler[In, Out any](handler HandlerFunc[In, Out]) http.HandlerFunc {
+// Handle generic handle
+func Handle[In, Out any](handle HandlerFunc[In, Out]) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
@@ -162,7 +163,15 @@ func Handler[In, Out any](handler HandlerFunc[In, Out]) http.HandlerFunc {
 			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
 			return
 		}
-		result, err := handler(r.Context(), *in)
+
+		err = Struct(r.Context(), in)
+		if err != nil {
+			blog.Errorf("valid request param failed, err: %s", err)
+			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
+			return
+		}
+
+		result, err := handle(r.Context(), in)
 		endTime := time.Now()
 		if err != nil {
 			// 添加审计中心操作记录
@@ -213,6 +222,13 @@ func decodeReq[T any](r *http.Request) (*T, error) {
 	return in, nil
 }
 
+var validate = validator.New()
+
+// Struct request validate
+func Struct(ctx context.Context, in any) error {
+	return validate.StructCtx(ctx, in)
+}
+
 // EmptyReq 空的请求
 type EmptyReq struct{}
 
@@ -239,8 +255,8 @@ func (s *streamingServer) Flush() error {
 	return s.ResponseController.Flush()
 }
 
-// StreamHandler 流式 Handler
-func StreamHandler[In any](handler StreamHandlerFunc[In]) func(w http.ResponseWriter, r *http.Request) {
+// Stream 流式 Handle
+func Stream[In any](handler StreamHandlerFunc[In]) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		restContext, err := GetRestContext(r.Context())
 		if err != nil {
@@ -259,7 +275,7 @@ func StreamHandler[In any](handler StreamHandlerFunc[In]) func(w http.ResponseWr
 			ResponseController: http.NewResponseController(w),
 			ctx:                r.Context(),
 		}
-		err = handler(*in, svr)
+		err = handler(in, svr)
 		if err != nil {
 			_ = render.Render(w, r, AbortWithBadRequestError(restContext, err))
 		}

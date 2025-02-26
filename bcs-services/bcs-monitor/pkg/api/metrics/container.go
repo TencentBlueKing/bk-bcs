@@ -29,27 +29,27 @@ type ContainerUsageQuery struct {
 }
 
 // handleContainerMetric Container 处理公共函数
-func handleContainerMetric(c *rest.Context, promql string, query *UsageQuery) (promclient.ResultData, error) {
-	queryTime, err := query.GetQueryTime()
+func handleContainerMetric(c *rest.Context, promql string, req *UsageQuery) (*promclient.ResultData, error) {
+	queryTime, err := req.GetQueryTime()
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 
 	params := map[string]interface{}{
 		"clusterId":     c.ClusterId,
-		"namespace":     query.Namespace,
-		"podName":       query.Pod,
-		"containerName": query.Container,
+		"namespace":     req.Namespace,
+		"podName":       req.Pod,
+		"containerName": req.Container,
 		"provider":      PROVIDER,
 	}
 
 	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start,
 		queryTime.End, queryTime.Step)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 
-	return result.Data, nil
+	return &result.Data, nil
 }
 
 // ContainerCPUUsage 容器 CPU 使用率
@@ -57,15 +57,15 @@ func handleContainerMetric(c *rest.Context, promql string, query *UsageQuery) (p
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/namespace/pods/:pod/containers/:container/cpu_usage [GET]
-func ContainerCPUUsage(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func ContainerCPUUsage(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql :=
 		`bcs:container:cpu_usage{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}` // nolint
 
-	return handleContainerMetric(rctx, promql, &query)
+	return handleContainerMetric(rctx, promql, req)
 
 }
 
@@ -74,15 +74,15 @@ func ContainerCPUUsage(c context.Context, query UsageQuery) (promclient.ResultDa
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/namespace/pods/:pod/containers/:container/memory_used [GET]
-func ContainerMemoryUsed(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func ContainerMemoryUsed(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql :=
 		`bcs:container:memory_used{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}` // nolint
 
-	return handleContainerMetric(rctx, promql, &query)
+	return handleContainerMetric(rctx, promql, req)
 }
 
 // ContainerCPULimit 容器 CPU 限制
@@ -90,15 +90,15 @@ func ContainerMemoryUsed(c context.Context, query UsageQuery) (promclient.Result
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/namespace/pods/:pod/containers/:container/cpu_limit [GET]
-func ContainerCPULimit(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func ContainerCPULimit(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql :=
 		`bcs:container:cpu_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}` // nolint
 
-	return handleContainerMetric(rctx, promql, &query)
+	return handleContainerMetric(rctx, promql, req)
 }
 
 // ContainerMemoryLimit 容器内存限制
@@ -106,15 +106,15 @@ func ContainerCPULimit(c context.Context, query UsageQuery) (promclient.ResultDa
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/namespace/pods/:pod/containers/:container/memory_limit [GET]
-func ContainerMemoryLimit(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func ContainerMemoryLimit(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql :=
 		`bcs:container:memory_limit{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}` // nolint
 
-	return handleContainerMetric(rctx, promql, &query)
+	return handleContainerMetric(rctx, promql, req)
 }
 
 // ContainerDiskReadTotal 容器磁盘读总量
@@ -122,15 +122,15 @@ func ContainerMemoryLimit(c context.Context, query UsageQuery) (promclient.Resul
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/namespace/pods/:pod/containers/:container/disk_read_total [GET]
-func ContainerDiskReadTotal(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func ContainerDiskReadTotal(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql :=
 		`bcs:container:disk_read_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}` // nolint
 
-	return handleContainerMetric(rctx, promql, &query)
+	return handleContainerMetric(rctx, promql, req)
 
 }
 
@@ -139,13 +139,13 @@ func ContainerDiskReadTotal(c context.Context, query UsageQuery) (promclient.Res
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /namespaces/namespace/pods/:pod/containers/:container/disk_write_total [GET]
-func ContainerDiskWriteTotal(c context.Context, query UsageQuery) (promclient.ResultData, error) {
+func ContainerDiskWriteTotal(c context.Context, req *UsageQuery) (*promclient.ResultData, error) {
 	rctx, err := rest.GetRestContext(c)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	promql :=
 		`bcs:container:disk_write_total{cluster_id="%<clusterId>s", namespace="%<namespace>s", pod_name=~"%<podName>s", container_name=~"%<containerName>s", %<provider>s}` // nolint
 
-	return handleContainerMetric(rctx, promql, &query)
+	return handleContainerMetric(rctx, promql, req)
 }
