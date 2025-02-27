@@ -163,11 +163,11 @@ func genSchemaRules(ctx context.Context) map[string]interface{} {
 			"message":   i18n.GetMsg(ctx, "值不能为空"),
 		},
 		"nameRegex": map[string]interface{}{
-			"validator": "/^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
-			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
+			"validator": "/^[a-z]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/",
+			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' '.' 且需以字母数字开头和结尾"),
 		},
 		"nameRegexWithVar": map[string]interface{}{
-			"validator": "/^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*|{{.*}})$/",
+			"validator": "/^([a-z]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*|{{.*}})$/",
 			"message":   i18n.GetMsg(ctx, "仅支持小写字母，数字及 '-' 且需以字母数字开头和结尾"),
 		},
 		"rfc1123LabelRegex": map[string]interface{}{
