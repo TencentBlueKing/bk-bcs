@@ -176,6 +176,16 @@ service ClusterManager {
     };
   }
 
+  rpc GetClusterSharedProject(GetClusterSharedProjectRequest) returns (GetClusterSharedProjectResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/cluster/{clusterID}/sharedprojects"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "查询指定ClusterID的集群共享信息"
+      summary : "查询Cluster集群共享信息"
+    };
+  }
+
   rpc ListProjectCluster(ListProjectClusterReq) returns (ListProjectClusterResp) {
     option (google.api.http) = {
       get : "/clustermanager/v1/projects/{projectID}/clusters"
@@ -14864,5 +14874,47 @@ message ProjectAutoscalerQuota {
   repeated string totalGroupIds = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "totalGroupIds",
     description : "机型在某个可用区的总额度的节点池"
+  }];
+}
+
+message GetClusterSharedProjectRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterSharedProjectRequest"
+      description : "查询集群共享给其他项目情况请求"
+      required : [ "clusterID" ]
+    }
+  };
+
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "clusterID",
+    description: "集群ID"
+  }];
+}
+
+message GetClusterSharedProjectResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetClusterSharedProjectResponse"
+      description : "查询集群共享给其他项目情况返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  google.protobuf.ListValue sharedProjects = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "sharedProject",
+    description : "集群信息的SharedProject"
   }];
 }

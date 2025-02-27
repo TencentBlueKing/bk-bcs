@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
+	spb "google.golang.org/protobuf/types/known/structpb"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -624,4 +625,133 @@ func (ga *GetClustersMetaDataAction) Handle(ctx context.Context, req *cmproto.Ge
 	ga.getClustersMeta()
 
 	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+// GetClusterSharedProjectAction action for get cluster project info
+type GetClusterSharedProjectAction struct {
+	ctx   context.Context
+	model store.ClusterManagerModel
+	req   *cmproto.GetClusterSharedProjectRequest
+	resp  *cmproto.GetClusterSharedProjectResponse
+}
+
+// NewGetClusterSharedProjectAction get clusters cluster info action
+func NewGetClusterSharedProjectAction(model store.ClusterManagerModel) *GetClusterSharedProjectAction {
+	return &GetClusterSharedProjectAction{
+		model: model,
+	}
+}
+
+func (ga *GetClusterSharedProjectAction) validate() error {
+	return ga.req.Validate()
+}
+
+func (ga *GetClusterSharedProjectAction) setResp(code uint32, msg string) {
+	ga.resp.Code = code
+	ga.resp.Message = msg
+	ga.resp.Result = (code == common.BcsErrClusterManagerSuccess)
+}
+
+// Handle get cluster shared project request
+func (ga *GetClusterSharedProjectAction) Handle(ctx context.Context, req *cmproto.GetClusterSharedProjectRequest,
+	resp *cmproto.GetClusterSharedProjectResponse) {
+	if req == nil || resp == nil {
+		blog.Errorf("get cluster project info failed, req or resp is empty")
+		return
+	}
+	ga.ctx = ctx
+	ga.req = req
+	ga.resp = resp
+
+	// check request parameter validate
+	err := ga.validate()
+	if err != nil {
+		ga.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
+		return
+	}
+
+	err = ga.getSharedProject()
+	if err != nil {
+		ga.setResp(common.BcsErrClusterManagerDBOperation, err.Error())
+		return
+	}
+
+	ga.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
+}
+
+func (ga *GetClusterSharedProjectAction) getSharedProject() error {
+	cluster, err := ga.model.GetCluster(ga.ctx, ga.req.ClusterID)
+	if err != nil {
+		return err
+	}
+
+	sharedRanges := cluster.GetSharedRanges()
+	var projectIDorCodes []string
+	if sharedRanges != nil {
+		projectIDorCodes = sharedRanges.GetProjectIdOrCodes()
+	}
+
+	ga.resp.SharedProjects = &spb.ListValue{
+		Values: make([]*spb.Value, 0),
+	}
+
+	// if projectIDorCodes is empty, use cluster's projectID for sharedproject
+	// only one value not use goroutine
+	if projectIDorCodes == nil || len(projectIDorCodes) == 0 {
+		projectID := cluster.GetProjectID()
+		if projectID != "" {
+			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectID, true)
+			if err != nil {
+				blog.Errorf("get project info by project manager client failed, %s", err.Error())
+				return err
+			}
+			result, err := utils.MarshalInterfaceToValue(pInfo)
+			if err != nil {
+				blog.Errorf("marshal projectGroupsQuotaData err, %s", err.Error())
+				return err
+			}
+			ga.resp.SharedProjects.Values = append(
+				ga.resp.SharedProjects.Values,
+				spb.NewStructValue(result),
+			)
+		}
+		return nil
+	}
+
+	var (
+		lock = sync.Mutex{}
+	)
+
+	// projectIDorCodes is not empty and have more than one value
+	barrier := utils.NewRoutinePool(20)
+	defer barrier.Close()
+
+	for i := range projectIDorCodes {
+		barrier.Add(1)
+		go func(projectIDorCode string) {
+			defer utils.RecoverPrintStack("GetClusterSharedProjectAction")
+			defer barrier.Done()
+
+			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectIDorCode, true)
+			if err != nil {
+				blog.Errorf("get project info by project manager client failed, %s", err.Error())
+				return
+			}
+			result, err := utils.MarshalInterfaceToValue(pInfo)
+			if err != nil {
+				blog.Errorf("marshal projectGroupsQuotaData err, %s", err.Error())
+				return
+			}
+
+			lock.Lock()
+			defer lock.Unlock()
+			ga.resp.SharedProjects.Values = append(
+				ga.resp.SharedProjects.Values,
+				spb.NewStructValue(result),
+			)
+		}(projectIDorCodes[i])
+	}
+	barrier.Wait()
+
+	return nil
 }

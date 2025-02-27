@@ -121,6 +121,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.GetClusterSharedProject",
+			Path:    []string{"/clustermanager/v1/cluster/{clusterID}/sharedprojects"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListProjectCluster",
 			Path:    []string{"/clustermanager/v1/projects/{projectID}/clusters"},
 			Method:  []string{"GET"},
@@ -951,6 +957,7 @@ type ClusterManagerService interface {
 	ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, opts ...client.CallOption) (*ListMastersInClusterResponse, error)
 	DeleteCluster(ctx context.Context, in *DeleteClusterReq, opts ...client.CallOption) (*DeleteClusterResp, error)
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error)
+	GetClusterSharedProject(ctx context.Context, in *GetClusterSharedProjectRequest, opts ...client.CallOption) (*GetClusterSharedProjectResponse, error)
 	ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...client.CallOption) (*ListProjectClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
@@ -1263,6 +1270,16 @@ func (c *clusterManagerService) DeleteCluster(ctx context.Context, in *DeleteClu
 func (c *clusterManagerService) GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.GetCluster", in)
 	out := new(GetClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) GetClusterSharedProject(ctx context.Context, in *GetClusterSharedProjectRequest, opts ...client.CallOption) (*GetClusterSharedProjectResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.GetClusterSharedProject", in)
+	out := new(GetClusterSharedProjectResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2638,6 +2655,7 @@ type ClusterManagerHandler interface {
 	ListMastersInCluster(context.Context, *ListMastersInClusterRequest, *ListMastersInClusterResponse) error
 	DeleteCluster(context.Context, *DeleteClusterReq, *DeleteClusterResp) error
 	GetCluster(context.Context, *GetClusterReq, *GetClusterResp) error
+	GetClusterSharedProject(context.Context, *GetClusterSharedProjectRequest, *GetClusterSharedProjectResponse) error
 	ListProjectCluster(context.Context, *ListProjectClusterReq, *ListProjectClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
@@ -2821,6 +2839,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		ListMastersInCluster(ctx context.Context, in *ListMastersInClusterRequest, out *ListMastersInClusterResponse) error
 		DeleteCluster(ctx context.Context, in *DeleteClusterReq, out *DeleteClusterResp) error
 		GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error
+		GetClusterSharedProject(ctx context.Context, in *GetClusterSharedProjectRequest, out *GetClusterSharedProjectResponse) error
 		ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, out *ListProjectClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
@@ -3042,6 +3061,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.GetCluster",
 		Path:    []string{"/clustermanager/v1/cluster/{clusterID}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.GetClusterSharedProject",
+		Path:    []string{"/clustermanager/v1/cluster/{clusterID}/sharedprojects"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -3916,6 +3941,10 @@ func (h *clusterManagerHandler) DeleteCluster(ctx context.Context, in *DeleteClu
 
 func (h *clusterManagerHandler) GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error {
 	return h.ClusterManagerHandler.GetCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) GetClusterSharedProject(ctx context.Context, in *GetClusterSharedProjectRequest, out *GetClusterSharedProjectResponse) error {
+	return h.ClusterManagerHandler.GetClusterSharedProject(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, out *ListProjectClusterResp) error {

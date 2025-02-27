@@ -66910,3 +66910,246 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ProjectAutoscalerQuotaValidationError{}
+
+// Validate checks the field values on GetClusterSharedProjectRequest with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClusterSharedProjectRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClusterSharedProjectRequest with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetClusterSharedProjectRequestMultiError, or nil if none found.
+func (m *GetClusterSharedProjectRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClusterSharedProjectRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	if len(errors) > 0 {
+		return GetClusterSharedProjectRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClusterSharedProjectRequestMultiError is an error wrapping multiple
+// validation errors returned by GetClusterSharedProjectRequest.ValidateAll()
+// if the designated constraints aren't met.
+type GetClusterSharedProjectRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClusterSharedProjectRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClusterSharedProjectRequestMultiError) AllErrors() []error { return m }
+
+// GetClusterSharedProjectRequestValidationError is the validation error
+// returned by GetClusterSharedProjectRequest.Validate if the designated
+// constraints aren't met.
+type GetClusterSharedProjectRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClusterSharedProjectRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClusterSharedProjectRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClusterSharedProjectRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClusterSharedProjectRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClusterSharedProjectRequestValidationError) ErrorName() string {
+	return "GetClusterSharedProjectRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClusterSharedProjectRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClusterSharedProjectRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClusterSharedProjectRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClusterSharedProjectRequestValidationError{}
+
+// Validate checks the field values on GetClusterSharedProjectResponse with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetClusterSharedProjectResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetClusterSharedProjectResponse with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the result is a list of violation errors wrapped in
+// GetClusterSharedProjectResponseMultiError, or nil if none found.
+func (m *GetClusterSharedProjectResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetClusterSharedProjectResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	if all {
+		switch v := interface{}(m.GetSharedProjects()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GetClusterSharedProjectResponseValidationError{
+					field:  "SharedProjects",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GetClusterSharedProjectResponseValidationError{
+					field:  "SharedProjects",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSharedProjects()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GetClusterSharedProjectResponseValidationError{
+				field:  "SharedProjects",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GetClusterSharedProjectResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetClusterSharedProjectResponseMultiError is an error wrapping multiple
+// validation errors returned by GetClusterSharedProjectResponse.ValidateAll()
+// if the designated constraints aren't met.
+type GetClusterSharedProjectResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetClusterSharedProjectResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetClusterSharedProjectResponseMultiError) AllErrors() []error { return m }
+
+// GetClusterSharedProjectResponseValidationError is the validation error
+// returned by GetClusterSharedProjectResponse.Validate if the designated
+// constraints aren't met.
+type GetClusterSharedProjectResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetClusterSharedProjectResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetClusterSharedProjectResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetClusterSharedProjectResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetClusterSharedProjectResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetClusterSharedProjectResponseValidationError) ErrorName() string {
+	return "GetClusterSharedProjectResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetClusterSharedProjectResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetClusterSharedProjectResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetClusterSharedProjectResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetClusterSharedProjectResponseValidationError{}
