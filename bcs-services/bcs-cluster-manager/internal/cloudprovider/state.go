@@ -371,7 +371,8 @@ func (stat *TaskState) UpdateStepRetryOrFailure(start time.Time, stepName string
 		return err
 	}
 
-	blog.Infof("task %s step %s running failure, set up to retry %d/%d", stat.Task.TaskID, stepName, step.Retry, step.MaxRetry)
+	blog.Infof("task %s step %s running failure, set up to retry %d/%d",
+		stat.Task.TaskID, stepName, step.Retry, step.MaxRetry)
 
 	return nil
 }
