@@ -475,3 +475,20 @@ func (cm *ClusterManager) SwitchClusterUnderlayNetwork(ctx context.Context,
 	blog.Infof("reqID: %s, action: SwitchClusterUnderlayNetwork, req %v, resp %v", reqID, req, resp)
 	return nil
 }
+
+// GetClusterSharedProject implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) GetClusterSharedProject(ctx context.Context,
+	req *cmproto.GetClusterSharedProjectRequest, resp *cmproto.GetClusterSharedProjectResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	na := clusterac.NewGetClusterSharedProjectAction(cm.model)
+	na.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("GetClusterSharedProject", "grpc",
+		strconv.Itoa(int(resp.Code)), start)
+
+	blog.Infof("reqID: %s, action: GetClusterSharedProject, req %v, resp %v", reqID, req, resp)
+	return nil
+}
