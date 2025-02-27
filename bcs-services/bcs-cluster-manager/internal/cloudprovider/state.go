@@ -170,11 +170,6 @@ func (stat *TaskState) IsReadyToStep(stepName string) (*proto.Step, error) {
 		return nil, fmt.Errorf("step %s don't turn to run, task already failed", stepName)
 	}
 
-	// refresh step status & task status
-	if curStep.Status == TaskStatusFailure {
-		curStep.Retry++
-	}
-
 	curStep.Start = time.Now().Format(time.RFC3339)
 	curStep.Status = TaskStatusRunning
 	curStep.Message = "step ready to run"
@@ -354,5 +349,29 @@ func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) 
 		return err
 	}
 	blog.Infof("task %s step %s running failed, but skip it", stat.Task.TaskID, stepName)
+	return nil
+}
+
+// UpdateStepRetryOrFailure update step retry
+func (stat *TaskState) UpdateStepRetryOrFailure(start time.Time, stepName string, err error) error {
+	step := stat.Task.Steps[stepName]
+	if step.Retry >= step.MaxRetry {
+		return stat.UpdateStepFailure(start, stepName, err)
+	}
+	step.Retry++
+	step.Status = TaskStatusRunning
+	step.Message = fmt.Sprintf("running failed, %s. retry %d/%d", err.Error(), step.Retry, step.MaxRetry)
+	if stat.TaskUrl != "" {
+		step.Params[BkSopsTaskUrlKey.String()] = stat.TaskUrl
+	}
+	stat.Task.Status = TaskStatusRunning
+	if err = GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
+		blog.Errorf("task %s fatal, update task step %s failure status failed, %s. required admin intervetion",
+			stat.Task.TaskID, stepName, err.Error())
+		return err
+	}
+
+	blog.Infof("task %s step %s running failure, set up to retry %d/%d", stat.Task.TaskID, stepName, step.Retry, step.MaxRetry)
+
 	return nil
 }

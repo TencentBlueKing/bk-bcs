@@ -5045,6 +5045,10 @@ message Step {
     title: "allowSkip",
     description: "标识该步骤失败时候是否允许用户手动跳过。当为true失败时候允许用户手动跳过, 为false失败时用户仅能通过重试解决"
   }];
+  uint32 maxRetry = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "maxRetry",
+    description: "该步骤最大重试次数"
+  }];
 }
 
 message TkeCidr {
