@@ -2880,6 +2880,14 @@ message ProjectQuota {
     title: "nodeGroups",
     description: "相关nodeGroups"
   }];
+  map<string, string> labels = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "资源quota的标签配置"
+  }];
+  map<string, string> annotations = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "资源quota的注解配置"
+  }];
 }
 
 message NodeGroup {
@@ -2995,7 +3003,8 @@ message DataDisk {
 message DeviceInfo {
   string deviceType = 1;
   string deviceQuota = 2;
-  map<string, string> attributes = 3;
+  string deviceQuotaUsed = 3;
+  map<string, string> attributes = 4;
 }
 
 message CreateProjectQuotaRequest {
@@ -3062,6 +3071,10 @@ message CreateProjectQuotaRequest {
     title: "labels",
     description: "资源quota的标签配置"
   }];
+  map<string, string> annotations = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "资源quota的注解配置"
+  }];
 }
 
 message GetProjectQuotaRequest {
@@ -3092,7 +3105,7 @@ message UpdateProjectQuotaRequest {
   string quotaId = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "quotaId",
     description: "资源quotaId"
-  }, (validate.rules).string = {len: 32, pattern: "^[0-9a-zA-Z-]+$"}];
+  }];
   string name = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "name",
     description: "项目中文名称, 长度不能超过64字符"
@@ -3104,6 +3117,14 @@ message UpdateProjectQuotaRequest {
   string updater = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "updater",
     description: "更新者"
+  }];
+  map<string, string> labels = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "资源quota的标签配置"
+  }];
+  map<string, string> annotations = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "资源quota的注解配置"
   }];
 }
 

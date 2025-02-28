@@ -24,7 +24,7 @@ $(SWAGGEROBJ):$(PROTO)
 	--grpc-gateway_out=allow_delete_body=true,logtostderr=true,register_func_suffix=Gw:. $<
 
 %.swagger.json: %.proto
-	protoc -I../../third_party --proto_path=. --swagger_out=allow_delete_body=true,logtostderr=true:. $<
+	protoc -I../../third_party --proto_path=. --openapiv2_out=allow_delete_body=true,logtostderr=true:. $<
 
 clean:
 	rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ) *.pb.micro.go *.pb.validate.go

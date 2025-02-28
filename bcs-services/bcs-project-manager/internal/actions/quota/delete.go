@@ -147,6 +147,11 @@ func (da *DeleteQuotaAction) Do(ctx context.Context,
 		return errorx.NewBuildTaskErr(err.Error())
 	}
 
+	t := getTaskWithSN(da.task.TaskID)
+	if t != nil {
+		da.task = t
+	}
+
 	// set resp data
 	task, err := convert.MarshalInterfaceToValue(da.task)
 	if err != nil {

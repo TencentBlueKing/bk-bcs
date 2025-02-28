@@ -130,6 +130,11 @@ func (sa *ScaleDownQuotaAction) Do(ctx context.Context,
 		return errorx.NewBuildTaskErr(err.Error())
 	}
 
+	t := getTaskWithSN(sa.task.TaskID)
+	if t != nil {
+		sa.task = t
+	}
+
 	// set resp data
 	task, err := convert.MarshalInterfaceToValue(sa.task)
 	if err != nil {

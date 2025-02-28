@@ -110,6 +110,7 @@ type ProjectQuota struct {
 	IsDeleted   bool                   `json:"isDeleted" bson:"isDeleted"`
 	Status      ProjectQuotaStatusType `json:"status" bson:"status"`
 	Labels      map[string]string      `json:"labels" bson:"labels"`
+	Annotations map[string]string      `json:"annotations" bson:"annotations"`
 }
 
 // QuotaResource quota resource type (包含整机资源类型 / 通用资源类型(按照匹配优先级确定项目维度、共享集群维度通用资源))
@@ -143,7 +144,8 @@ type DeviceDisk struct {
 
 // DeviceInfo device info, DeviceType 区分quota的类型(intel/amd), 为空则为通用的cpu核心数
 type DeviceInfo struct {
-	DeviceType  string            `json:"deviceType" bson:"deviceType"`
-	DeviceQuota string            `json:"deviceQuota" bson:"deviceQuota"`
-	Attributes  map[string]string `json:"attributes" bson:"attributes"`
+	DeviceType      string            `json:"deviceType" bson:"deviceType"`
+	DeviceQuota     string            `json:"deviceQuota" bson:"deviceQuota"`
+	DeviceQuotaUsed string            `json:"deviceQuotaUsed" bson:"deviceQuotaUsed"`
+	Attributes      map[string]string `json:"attributes" bson:"attributes"`
 }

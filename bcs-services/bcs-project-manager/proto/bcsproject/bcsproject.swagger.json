@@ -394,6 +394,22 @@
                   "type": "string",
                   "description": "更新者",
                   "title": "updater"
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "资源quota的标签配置",
+                  "title": "labels"
+                },
+                "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "资源quota的注解配置",
+                  "title": "annotations"
                 }
               },
               "description": "更新项目quota请求",
@@ -2228,9 +2244,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/runtimeError"
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -2261,9 +2277,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response",
+            "description": "An unexpected error response.",
             "schema": {
-              "$ref": "#/definitions/runtimeError"
+              "$ref": "#/definitions/rpcStatus"
             }
           }
         },
@@ -2613,6 +2629,14 @@
           },
           "description": "资源quota的标签配置",
           "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源quota的注解配置",
+          "title": "annotations"
         }
       },
       "description": "创建项目维度的quota资源配额",
@@ -2894,6 +2918,9 @@
           "type": "string"
         },
         "deviceQuota": {
+          "type": "string"
+        },
+        "deviceQuotaUsed": {
           "type": "string"
         },
         "attributes": {
@@ -4082,7 +4109,6 @@
       "properties": {
         "isActive": {
           "type": "boolean",
-          "format": "boolean",
           "description": "是否活跃",
           "title": "isActive"
         }
@@ -4198,6 +4224,22 @@
           },
           "description": "相关nodeGroups",
           "title": "nodeGroups"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源quota的标签配置",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源quota的注解配置",
+          "title": "annotations"
         }
       },
       "description": "项目配额信息(支持不同类型)",

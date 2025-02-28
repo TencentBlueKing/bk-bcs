@@ -118,6 +118,7 @@ func (ca *CreateQuotaAction) createProjectQuota() error {
 		IsDeleted:   false,
 		Status:      quota.Creating,
 		Labels:      ca.req.GetLabels(),
+		Annotations: ca.req.GetAnnotations(),
 	}
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
@@ -170,6 +171,11 @@ func (ca *CreateQuotaAction) Do(ctx context.Context,
 	}
 	if err := ca.dispatchTask(); err != nil {
 		return errorx.NewBuildTaskErr(err.Error())
+	}
+
+	t := getTaskWithSN(ca.task.TaskID)
+	if t != nil {
+		ca.task = t
 	}
 
 	// set resp data

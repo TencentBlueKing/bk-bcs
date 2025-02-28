@@ -16,8 +16,13 @@ package quota
 import (
 	"context"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
 )
 
@@ -45,45 +50,79 @@ func (la *ListQuotaAction) Do(ctx context.Context,
 	la.req = req
 	la.resp = resp
 
-	// 获取指定项目和提供商的资源使用情况
-	pqs, err := clustermanager.GetResourceUsage(req.ProjectID, req.Provider)
-
-	if err != nil {
-		return err
-	}
-
 	var PQ []*proto.ProjectQuota
 
-	// 遍历每个项目配额，构建响应数据
-	for _, pq := range pqs {
-		var NG []*proto.NodeGroup
-		// 获取每个节点组的详细信息
-		for _, gpid := range pq.TotalGroupIds {
-			ng, errG := clustermanager.GetNodeGroup(gpid)
-			if errG != nil {
-				return errG
-			}
-			NG = append(NG, &proto.NodeGroup{
-				NodeGroupId: ng.NodeGroupID,
-				ClusterId:   ng.ClusterID,
-				QuotaNum:    ng.AutoScaling.MaxSize,
-				QuotaUsed:   ng.AutoScaling.DesiredSize,
-			})
+	if req.ProjectID != "" {
+		// 获取指定项目和提供商的资源使用情况
+		pqs, err := clustermanager.GetResourceUsage(req.ProjectID, req.Provider)
+
+		if err != nil {
+			return err
 		}
 
-		// 构建项目配额信息
-		PQ = append(PQ, &proto.ProjectQuota{
-			Quota: &proto.QuotaResource{
-				ZoneResources: &proto.InstanceTypeConfig{
-					Region:       pq.Region,
-					InstanceType: pq.InstanceType,
-					ZoneName:     pq.Zone,
-					QuotaNum:     pq.Total,
-					QuotaUsed:    pq.Used,
+		// 遍历每个项目配额，构建响应数据
+		for _, pq := range pqs {
+			var NG []*proto.NodeGroup
+			// 获取每个节点组的详细信息
+			for _, gpid := range pq.TotalGroupIds {
+				ng, errG := clustermanager.GetNodeGroup(gpid)
+				if errG != nil {
+					return errG
+				}
+				NG = append(NG, &proto.NodeGroup{
+					NodeGroupId: ng.NodeGroupID,
+					ClusterId:   ng.ClusterID,
+					QuotaNum:    ng.AutoScaling.MaxSize,
+					QuotaUsed:   ng.AutoScaling.DesiredSize,
+				})
+			}
+
+			cpu, mem := GetCpuMemFromInstanceType(pq.InstanceType)
+
+			// 构建项目配额信息
+			PQ = append(PQ, &proto.ProjectQuota{
+				Quota: &proto.QuotaResource{
+					ZoneResources: &proto.InstanceTypeConfig{
+						Region:       pq.Region,
+						InstanceType: pq.InstanceType,
+						Cpu:          cpu,
+						Mem:          mem,
+						ZoneName:     pq.Zone,
+						QuotaNum:     pq.Total,
+						QuotaUsed:    pq.Used,
+					},
 				},
-			},
-			NodeGroups: NG,
-		})
+				NodeGroups: NG,
+				QuotaType:  string(quota.Host),
+				ProjectID:  req.ProjectID,
+				Status:     string(quota.Running),
+			})
+		}
+	}
+
+	var conds []*operator.Condition
+
+	conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+		"quotaType": quota.Federation,
+	}))
+
+	if req.ProjectID != "" {
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"projectId": la.req.GetProjectID(),
+		}))
+	}
+
+	cond := operator.NewBranchCondition(operator.And, conds...)
+
+	Quotas, _, err := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
+	if err != nil {
+		return errorx.NewDBErr(err.Error())
+	}
+
+	for _, q := range Quotas {
+		tmp := q
+		getQuotaUsage(&tmp)
+		PQ = append(PQ, quota.TransStore2ProtoQuota(&tmp))
 	}
 
 	// 设置响应数据

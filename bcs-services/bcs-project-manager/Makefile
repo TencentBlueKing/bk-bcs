@@ -16,12 +16,12 @@ proto:
 
 # build migration
 build-migration: tidy
-	go build -ldflags ${LDFLAGS} -o bcs-project-migration ./script/migrations/project/migrate.go
-	go build -ldflags ${LDFLAGS} -o bcs-variable-migration ./script/migrations/variable/migrate.go
+	@export CGO_ENABLED=0; GOOS=linux GOARCH=amd64 go build -ldflags ${LDFLAGS} -o bcs-project-migration ./script/migrations/project/migrate.go
+	@export CGO_ENABLED=0; GOOS=linux GOARCH=amd64 go build -ldflags ${LDFLAGS} -o bcs-variable-migration ./script/migrations/variable/migrate.go
 
 # build service
 build-main: tidy
-	go build -ldflags ${LDFLAGS} -o bcs-project-manager ./main.go
+	@export CGO_ENABLED=0; GOOS=linux GOARCH=amd64 go build -ldflags ${LDFLAGS} -o bcs-project-manager ./main.go
 
 build: build-migration build-main
 
