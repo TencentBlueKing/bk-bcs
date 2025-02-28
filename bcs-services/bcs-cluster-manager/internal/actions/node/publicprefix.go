@@ -24,7 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 )
 
-// ListCloudNodePublicPrefixAction action for update node public prefix
+// ListCloudNodePublicPrefixAction action for get node public ip prefix
 type ListCloudNodePublicPrefixAction struct {
 	ctx   context.Context
 	model store.ClusterManagerModel
@@ -38,7 +38,7 @@ type ListCloudNodePublicPrefixAction struct {
 	publicPrefixs []*cmproto.NodePublicPrefix
 }
 
-// NewListCloudNodePublicPrefixAction create update action
+// NewListCloudNodePublicPrefixAction create list action
 func NewListCloudNodePublicPrefixAction(model store.ClusterManagerModel) *ListCloudNodePublicPrefixAction {
 	return &ListCloudNodePublicPrefixAction{
 		model: model,
@@ -80,7 +80,7 @@ func (ua *ListCloudNodePublicPrefixAction) listPubilcPrefix() error { // nolint
 		return err
 	}
 
-	// create vpc client with cloudProvider
+	// create node client with cloudProvider
 	clsMgr, err := cloudprovider.GetNodeMgr(ua.cloud.CloudProvider)
 	if err != nil {
 		blog.Errorf("get cloudprovider %s VPCManager for list CloudBwpsResource failed, %s",
@@ -124,11 +124,11 @@ func (ua *ListCloudNodePublicPrefixAction) setResp(code uint32, msg string) {
 	ua.resp.Data = ua.publicPrefixs
 }
 
-// Handle handles update node taints
+// Handle handles list node public ip prefix
 func (ua *ListCloudNodePublicPrefixAction) Handle(ctx context.Context, req *cmproto.ListCloudNodePublicPrefixRequest,
 	resp *cmproto.ListCloudNodePublicPrefixResponse) {
 	if req == nil || resp == nil {
-		blog.Errorf("update node taints failed, req or resp is empty")
+		blog.Errorf("list node public ip prefix failed, req or resp is empty")
 		return
 	}
 	ua.ctx = ctx

@@ -414,7 +414,7 @@ func (aks *AksServiceImpl) ListSSHPublicKeysAll(ctx context.Context) ([]*armcomp
 	return result, nil
 }
 
-// ListSSHPublicKeysAll 获取订阅下所有SSH public keys
+// ListPublicPrefixes 获取订阅下所有public IP prefixes
 func (aks *AksServiceImpl) ListPublicPrefixes(ctx context.Context, resourceGroupName string) ([]*armnetwork.PublicIPPrefix, error) {
 	pager := aks.publicPrefixClient.NewListPager(resourceGroupName, nil)
 	result := make([]*armnetwork.PublicIPPrefix, 0)
