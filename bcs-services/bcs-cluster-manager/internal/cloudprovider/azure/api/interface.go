@@ -402,6 +402,9 @@ type SetInstanceService interface {
 
 	// ListSSHPublicKeys 获取SSH public keys
 	ListSSHPublicKeys(ctx context.Context, resourceGroupName string) ([]*armcompute.SSHPublicKeyResource, error)
+
+	// ListPublicPrefixes 获取Public Prefixes
+	ListPublicPrefixes(ctx context.Context, resourceGroupName string) ([]*armnetwork.PublicIPPrefix, error)
 }
 
 // NetworkInterfaceService 网络接口(Network Interface)

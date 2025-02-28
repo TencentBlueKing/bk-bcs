@@ -145,3 +145,9 @@ func (n *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, disk
 	[]*proto.DiskConfigSet, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
+
+// ListNodePublicPrefixs get public prefixs list
+func (n *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPrefixesOption) (
+	[]*proto.NodePublicPrefix, error) {
+	return nil, cloudprovider.ErrCloudNotImplemented
+}
