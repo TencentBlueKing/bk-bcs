@@ -14,6 +14,7 @@
 package pod
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -27,16 +28,16 @@ import (
 // @Produce json
 // @Success 200 {array} k8sclient.Container
 // @Router  /namespaces/:namespace/pods/:pod/containers [get]
-func GetPodContainers(c *rest.Context) (interface{}, error) {
-	clusterId := c.Param("clusterId")
-	namespace := c.Param("namespace")
-	pod := c.Param("pod")
-	containers, err := k8sclient.GetPodContainers(c.Request.Context(), clusterId, namespace, pod)
+func GetPodContainers(c context.Context, req *k8sclient.PodContainersReq) (*[]*k8sclient.Container, error) {
+	clusterId := req.ClusterId
+	namespace := req.Namespace
+	pod := req.Pod
+	containers, err := k8sclient.GetPodContainers(c, clusterId, namespace, pod)
 	if err != nil {
 		return nil, err
 	}
 
-	return containers, nil
+	return &containers, nil
 }
 
 // GetPodLog 查询容器日志
@@ -47,22 +48,17 @@ func GetPodContainers(c *rest.Context) (interface{}, error) {
 // @Produce json
 // @Success 200 {array} k8sclient.Log
 // @Router  /namespaces/:namespace/pods/:pod/logs [get]
-func GetPodLog(c *rest.Context) (interface{}, error) {
-	projectId := c.Param("projectId")
-	clusterId := c.Param("clusterId")
-	namespace := c.Param("namespace")
-	pod := c.Param("pod")
-	logQuery := &k8sclient.LogQuery{}
-	if err := c.ShouldBindQuery(logQuery); err != nil {
-		return nil, err
-	}
-
-	logs, err := k8sclient.GetPodLog(c.Request.Context(), clusterId, namespace, pod, logQuery)
+func GetPodLog(c context.Context, req *k8sclient.LogQuery) (*k8sclient.LogWithPreviousLink, error) {
+	projectId := req.ProjectId
+	clusterId := req.ClusterId
+	namespace := req.Namespace
+	pod := req.Pod
+	logs, err := k8sclient.GetPodLog(c, clusterId, namespace, pod, req)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := logs.MakePreviousLink(projectId, clusterId, namespace, pod, logQuery); err != nil {
+	if err := logs.MakePreviousLink(projectId, clusterId, namespace, pod, req); err != nil {
 		return nil, err
 	}
 
@@ -77,28 +73,23 @@ func GetPodLog(c *rest.Context) (interface{}, error) {
 // @Produce octet-stream
 // @Success 200 {string} string
 // @Router  /namespaces/:namespace/pods/:pod/logs/download [get]
-func DownloadPodLog(c *rest.Context) {
-	clusterId := c.Param("clusterId")
-	namespace := c.Param("namespace")
-	pod := c.Param("pod")
-	logQuery := &k8sclient.LogQuery{}
-	if err := c.ShouldBindQuery(logQuery); err != nil {
-		rest.AbortWithBadRequestError(c, err)
-		return
-	}
+func DownloadPodLog(req *k8sclient.LogQuery, ss rest.StreamingServer) error {
+	clusterId := req.ClusterId
+	namespace := req.Namespace
+	pod := req.Pod
 
 	// 下载参数
-	logQuery.TailLines = k8sclient.MAX_TAIL_LINES
-	logQuery.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
+	req.TailLines = k8sclient.MAX_TAIL_LINES
+	req.LimitBytes = int64(k8sclient.MAX_LIMIT_BYTES)
 
-	logs, err := k8sclient.GetPodLogByte(c.Request.Context(), clusterId, namespace, pod, logQuery)
+	logs, err := k8sclient.GetPodLogByte(ss.Context(), clusterId, namespace, pod, req)
 	if err != nil {
-		rest.AbortWithBadRequestError(c, err)
-		return
+		return err
 	}
 
 	ts := time.Now().Format("20060102150405")
-	filename := fmt.Sprintf("%s-%s-%s.log", pod, logQuery.ContainerName, ts)
+	filename := fmt.Sprintf("%s-%s-%s.log", pod, req.ContainerName, ts)
 
-	c.WriteAttachment(logs, filename)
+	rest.WriteAttachment(ss, logs, filename)
+	return nil
 }
