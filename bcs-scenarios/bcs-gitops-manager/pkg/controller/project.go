@@ -17,7 +17,7 @@ import (
 	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"

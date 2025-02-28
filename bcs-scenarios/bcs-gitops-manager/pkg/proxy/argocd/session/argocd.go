@@ -49,12 +49,27 @@ func NewArgoSession() *ArgoSession {
 	return s
 }
 
+var (
+	argoAllowedTypes = map[string]struct{}{
+		"application/json":           {},
+		"application/grpc-web+proto": {},
+	}
+)
+
 func (s *ArgoSession) initReverseProxy() {
 	s.reverseProxy = &httputil.ReverseProxy{
 		Director: func(request *http.Request) {
 			// setting login session token for pass through, for http 1.x
 			token := s.store.GetToken(request.Context())
 			request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			headerContentType := request.Header.Get("Content-Type")
+			if _, ok := argoAllowedTypes[headerContentType]; !ok {
+				if strings.Contains(request.RequestURI, "Service") {
+					request.Header.Set("Content-Type", "application/grpc-web+proto")
+				} else {
+					request.Header.Set("Content-Type", "application/json")
+				}
+			}
 			// for http 2
 			request.Header.Set("Token", token)
 		},

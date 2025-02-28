@@ -88,13 +88,13 @@ func (h *workflowHandler) Init() error {
 	}
 	h.gitopsworkflowFactory = workflowexternal.NewSharedInformerFactory(h.workflowDynamicClient, resyncPeriod)
 	h.workflowInformer = h.gitopsworkflowFactory.Gitopsworkflow().V1().Workflows()
-	h.workflowInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	h.workflowInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{ // nolint
 		AddFunc:    func(obj interface{}) {},
 		UpdateFunc: func(oldObj, newObj interface{}) {},
 		DeleteFunc: func(obj interface{}) {},
 	})
 	h.historyInformer = h.gitopsworkflowFactory.Gitopsworkflow().V1().WorkflowHistories()
-	h.historyInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
+	h.historyInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{ // nolint
 		AddFunc:    func(obj interface{}) {},
 		UpdateFunc: func(oldObj, newObj interface{}) {},
 		DeleteFunc: func(obj interface{}) {},

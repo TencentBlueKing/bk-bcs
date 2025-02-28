@@ -20,7 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/conf"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"

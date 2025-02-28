@@ -100,6 +100,7 @@ func (plugin *RepositoryPlugin) repositoryCreateHandler(r *http.Request) (*http.
 
 func (plugin *RepositoryPlugin) repoDeleteHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	rawRepo := mux.Vars(r)["repo"]
+	project := r.URL.Query().Get("appProject")
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse repo param failed"))
@@ -110,7 +111,7 @@ func (plugin *RepositoryPlugin) repoDeleteHandler(r *http.Request) (*http.Reques
 			"unescape repo '%s' failed", repo))
 	}
 
-	argoRepo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repo,
+	argoRepo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), project, repo,
 		permitcheck.RepoDeleteRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check delete repo '%s' permission failed",
@@ -122,6 +123,7 @@ func (plugin *RepositoryPlugin) repoDeleteHandler(r *http.Request) (*http.Reques
 
 func (plugin *RepositoryPlugin) repoUpdateHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	rawRepo := mux.Vars(r)["repo"]
+	project := r.URL.Query().Get("appProject")
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse repo param failed"))
@@ -132,7 +134,7 @@ func (plugin *RepositoryPlugin) repoUpdateHandler(r *http.Request) (*http.Reques
 			"unescape repo '%s' failed", repo))
 	}
 
-	argoRepo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repo,
+	argoRepo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), project, repo,
 		permitcheck.RepoUpdateRSAction)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check update repo '%s' permission failed",
@@ -144,6 +146,7 @@ func (plugin *RepositoryPlugin) repoUpdateHandler(r *http.Request) (*http.Reques
 
 func (plugin *RepositoryPlugin) repoHandler(r *http.Request) (*http.Request, *mw.HttpResponse) {
 	rawRepo := mux.Vars(r)["repo"]
+	project := r.URL.Query().Get("appProject")
 	repo, err := url.PathUnescape(rawRepo)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "parse repo param failed"))
@@ -161,7 +164,7 @@ func (plugin *RepositoryPlugin) repoHandler(r *http.Request) (*http.Request, *mw
 	case http.MethodPost:
 		action = permitcheck.RepoUpdateRSAction
 	}
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repo, action)
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), project, repo, action)
 	if err != nil {
 		return r, mw.ReturnErrorResponse(statusCode, errors.Wrapf(err, "check get repo '%s' permission failed",
 			repo))

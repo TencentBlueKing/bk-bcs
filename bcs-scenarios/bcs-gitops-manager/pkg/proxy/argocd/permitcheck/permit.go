@@ -93,7 +93,7 @@ type PermissionInterface interface {
 	CheckProjectPermission(ctx context.Context, project string, action RSAction) (*v1alpha1.AppProject, int, error)
 	CheckClusterPermission(ctx context.Context, query *cluster.ClusterQuery, action RSAction) (*v1alpha1.Cluster,
 		int, error)
-	CheckRepoPermission(ctx context.Context, repo string, action RSAction) (*v1alpha1.Repository, int, error)
+	CheckRepoPermission(ctx context.Context, project, repo string, action RSAction) (*v1alpha1.Repository, int, error)
 	CheckRepoCreate(ctx context.Context, repo *v1alpha1.Repository) (int, error)
 	CheckApplicationPermission(ctx context.Context, app string, action RSAction) (*v1alpha1.Application, int, error)
 	CheckApplicationCreate(ctx context.Context, app *v1alpha1.Application) (int, error)

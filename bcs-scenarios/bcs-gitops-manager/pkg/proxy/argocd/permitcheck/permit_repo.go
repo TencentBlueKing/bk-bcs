@@ -23,9 +23,9 @@ import (
 )
 
 // CheckRepoPermission check repo permission
-func (c *checker) CheckRepoPermission(ctx context.Context, repo string, action RSAction) (*v1alpha1.Repository,
+func (c *checker) CheckRepoPermission(ctx context.Context, project, repo string, action RSAction) (*v1alpha1.Repository,
 	int, error) {
-	objs, permits, statusCode, err := c.getMultiRepoMultiActionPermission(ctx, "", []string{repo})
+	objs, permits, statusCode, err := c.getMultiRepoMultiActionPermission(ctx, project, []string{repo})
 	if err != nil {
 		return nil, statusCode, errors.Wrapf(err, "get repository permission failed")
 	}
@@ -69,7 +69,7 @@ func (c *checker) getMultiRepoMultiActionPermission(ctx context.Context, project
 	} else {
 		for i := range repos {
 			repo := repos[i]
-			argoRepo, err := c.store.GetRepository(ctx, repo)
+			argoRepo, err := c.store.GetRepository(ctx, project, repo)
 			if err != nil {
 				return nil, nil, http.StatusInternalServerError, errors.Wrapf(err, "get repos failed")
 			}

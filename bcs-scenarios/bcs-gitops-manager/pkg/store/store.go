@@ -75,14 +75,15 @@ type Store interface {
 	DeleteCluster(ctx context.Context, name string) error
 
 	// Repository interface
-	GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error)
+	GetRepository(ctx context.Context, project, repo string) (*v1alpha1.Repository, error)
 	ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error)
 
 	AllApplications() []*v1alpha1.Application
 	SyncApplication(ctx context.Context, name string) error
 	GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error)
 	TerminateAppOperation(ctx context.Context, req *applicationpkg.OperationTerminateRequest) error
-	GetApplicationRevisionsMetadata(ctx context.Context, repo, revision []string) ([]*v1alpha1.RevisionMetadata, error)
+	GetApplicationRevisionsMetadata(ctx context.Context, project string, repo,
+		revision []string) ([]*v1alpha1.RevisionMetadata, error)
 	GetApplicationResourceTree(ctx context.Context, name string) (*v1alpha1.ApplicationTree, error)
 	ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (*v1alpha1.ApplicationList, error)
 	DeleteApplicationResource(ctx context.Context, application *v1alpha1.Application,
@@ -105,7 +106,7 @@ type Store interface {
 	DeleteApplicationSetOrphan(ctx context.Context, name string) error
 	ApplicationSetDryRun(appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, error)
 
-	GetRepoLastCommitID(ctx context.Context, repoUrl, revision string) (string, error)
+	GetRepoLastCommitID(ctx context.Context, project, repoUrl, revision string) (string, error)
 
 	// authentication token
 	GetToken(ctx context.Context) string

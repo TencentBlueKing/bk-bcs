@@ -30,25 +30,18 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
-	"github.com/argoproj/argo-cd/v2/applicationset/generators"
-	"github.com/argoproj/argo-cd/v2/applicationset/services"
-	appsetutils "github.com/argoproj/argo-cd/v2/applicationset/utils"
 	argocommon "github.com/argoproj/argo-cd/v2/common"
 	api "github.com/argoproj/argo-cd/v2/pkg/apiclient"
-	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	applicationpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	appsetpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/applicationset"
-	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
 	projectpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/project"
-	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argopkg "github.com/argoproj/argo-cd/v2/pkg/client/clientset/versioned/typed/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/reposerver/apiclient"
 	argoutil "github.com/argoproj/argo-cd/v2/util/argo"
-	utilargo "github.com/argoproj/argo-cd/v2/util/argo"
 	"github.com/argoproj/argo-cd/v2/util/argo/normalizers"
 	"github.com/argoproj/argo-cd/v2/util/db"
 	settings_util "github.com/argoproj/argo-cd/v2/util/settings"
@@ -68,11 +61,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/kubernetes/pkg/kubelet/util/sliceutils"
 	"k8s.io/utils/strings/slices"
+	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/internal/dao"
 	"github.com/Tencent/bk-bcs/bcs-scenarios/bcs-gitops-manager/pkg/common"
@@ -99,7 +94,9 @@ type argo struct {
 	projectClient projectpkg.ProjectServiceClient
 	clusterClient clusterpkg.ClusterServiceClient
 	historyStore  *appHistoryStore
+
 	argoK8SClient *argopkg.ArgoprojV1alpha1Client
+	runtimeClient crclient.Client
 
 	cacheSynced      atomic.Bool
 	cacheApplication *sync.Map
@@ -170,7 +167,7 @@ func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 	live *unstructured.Unstructured, hideData bool) error {
 	var err error
 	if hideData {
-		target, live, err = gitopsdiff.HideSecretData(target, live)
+		target, live, err = gitopsdiff.HideSecretData(target, live, map[string]bool{})
 		if err != nil {
 			return fmt.Errorf("error hiding secret data: %s", err)
 		}
@@ -180,7 +177,8 @@ func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 	if err != nil {
 		return fmt.Errorf("error getting resource overrides: %s", err)
 	}
-	ignoreNormalizer, err := normalizers.NewIgnoreNormalizer(app.Spec.IgnoreDifferences, resourceOverrides)
+	ignoreNormalizer, err := normalizers.NewIgnoreNormalizer(app.Spec.IgnoreDifferences, resourceOverrides,
+		normalizers.IgnoreNormalizerOpts{})
 	if err != nil {
 		return errors.Wrapf(err, "create ignore normalizer failed")
 	}
@@ -218,7 +216,7 @@ func (cd *argo) ApplicationNormalizeWhenDiff(app *v1alpha1.Application, target,
 
 // CreateProject interface
 func (cd *argo) CreateProject(ctx context.Context, pro *v1alpha1.AppProject) error {
-	proj, err := cd.projectClient.Create(ctx, &project.ProjectCreateRequest{Project: pro})
+	proj, err := cd.projectClient.Create(ctx, &projectpkg.ProjectCreateRequest{Project: pro})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("CreateProject").Inc()
@@ -256,7 +254,7 @@ func (cd *argo) GetProject(ctx context.Context, name string) (*v1alpha1.AppProje
 		}
 	}
 
-	pro, err := cd.projectClient.Get(ctx, &project.ProjectQuery{Name: name})
+	pro, err := cd.projectClient.Get(ctx, &projectpkg.ProjectQuery{Name: name})
 	if err != nil {
 		if utils.IsArgoResourceNotFound(err) {
 			return nil, nil
@@ -282,7 +280,7 @@ func (cd *argo) ListProjects(ctx context.Context) (*v1alpha1.AppProjectList, err
 		return &v1alpha1.AppProjectList{Items: items}, nil
 	}
 
-	pro, err := cd.projectClient.List(ctx, &project.ProjectQuery{})
+	pro, err := cd.projectClient.List(ctx, &projectpkg.ProjectQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("ListProjects").Inc()
@@ -313,7 +311,7 @@ func (cd *argo) ListProjectsWithoutAuth(ctx context.Context) (*v1alpha1.AppProje
 
 // CreateCluster interface
 func (cd *argo) CreateCluster(ctx context.Context, cls *v1alpha1.Cluster) error {
-	_, err := cd.clusterClient.Create(ctx, &cluster.ClusterCreateRequest{Cluster: cls})
+	_, err := cd.clusterClient.Create(ctx, &clusterpkg.ClusterCreateRequest{Cluster: cls})
 	if err != nil {
 		if !utils.IsContextCanceled(err) && !utils.IsPermissionDenied(err) && !utils.IsUnauthenticated(err) {
 			// ignore this metric
@@ -336,7 +334,7 @@ func (cd *argo) GetClusterFromDB(ctx context.Context, serverUrl string) (*v1alph
 
 // DeleteCluster delete cluster by clusterID
 func (cd *argo) DeleteCluster(ctx context.Context, name string) error {
-	if _, err := cd.clusterClient.Delete(ctx, &cluster.ClusterQuery{Name: name}); err != nil {
+	if _, err := cd.clusterClient.Delete(ctx, &clusterpkg.ClusterQuery{Name: name}); err != nil {
 		// argocd return 403(PermissionDenied) when cluster do not exist
 		// !make sure that gitops-manager has admin access
 		if strings.Contains(err.Error(), "code = PermissionDenied") {
@@ -352,7 +350,7 @@ func (cd *argo) DeleteCluster(ctx context.Context, name string) error {
 }
 
 // GetCluster interface
-func (cd *argo) GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v1alpha1.Cluster, error) {
+func (cd *argo) GetCluster(ctx context.Context, query *clusterpkg.ClusterQuery) (*v1alpha1.Cluster, error) {
 	cls, err := cd.clusterClient.Get(ctx, query)
 	if err != nil {
 		// argocd return 403(PermissionDenied) when cluster do not exist
@@ -375,7 +373,7 @@ func (cd *argo) GetCluster(ctx context.Context, query *cluster.ClusterQuery) (*v
 
 // UpdateCluster will update the annotation field
 func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster) error {
-	if _, err := cd.clusterClient.Update(ctx, &cluster.ClusterUpdateRequest{
+	if _, err := cd.clusterClient.Update(ctx, &clusterpkg.ClusterUpdateRequest{
 		Cluster:       argoCluster,
 		UpdatedFields: []string{"annotations"},
 	}); err != nil {
@@ -389,7 +387,7 @@ func (cd *argo) UpdateCluster(ctx context.Context, argoCluster *v1alpha1.Cluster
 
 // ListCluster interface
 func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) {
-	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
+	cls, err := cd.clusterClient.List(ctx, &clusterpkg.ClusterQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("ListCluster").Inc()
@@ -401,7 +399,7 @@ func (cd *argo) ListCluster(ctx context.Context) (*v1alpha1.ClusterList, error) 
 
 // ListClustersByProject will list clusters by project id
 func (cd *argo) ListClustersByProject(ctx context.Context, projID string) (*v1alpha1.ClusterList, error) {
-	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
+	cls, err := cd.clusterClient.List(ctx, &clusterpkg.ClusterQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("ListClustersByProject").Inc()
@@ -426,7 +424,7 @@ func (cd *argo) ListClustersByProject(ctx context.Context, projID string) (*v1al
 
 // ListClustersByProjectName will list clusters by project name
 func (cd *argo) ListClustersByProjectName(ctx context.Context, projectName string) (*v1alpha1.ClusterList, error) {
-	cls, err := cd.clusterClient.List(ctx, &cluster.ClusterQuery{})
+	cls, err := cd.clusterClient.List(ctx, &clusterpkg.ClusterQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("ListClustersByProject").Inc()
@@ -464,13 +462,13 @@ func (cd *argo) decodeRepoUrl(repo string) (string, error) {
 }
 
 // GetRepository interface
-func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error) {
+func (cd *argo) GetRepository(ctx context.Context, project, repo string) (*v1alpha1.Repository, error) {
 	var err error
 	repo, err = cd.decodeRepoUrl(repo)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repository failed with decode repo '%s'", repo)
 	}
-	repos, err := cd.repoClient.Get(ctx, &repository.RepoQuery{Repo: repo})
+	repos, err := cd.repoClient.Get(ctx, &repositorypkg.RepoQuery{Repo: repo, AppProject: project})
 	if err != nil {
 		if utils.IsArgoResourceNotFound(err) {
 			blog.Warnf("argocd get Repository %s warning, %s", repo, err.Error())
@@ -486,7 +484,7 @@ func (cd *argo) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repos
 
 // ListRepository list repository with project names
 func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alpha1.RepositoryList, error) {
-	repos, err := cd.repoClient.List(ctx, &repository.RepoQuery{})
+	repos, err := cd.repoClient.List(ctx, &repositorypkg.RepoQuery{})
 	if err != nil {
 		if !utils.IsContextCanceled(err) {
 			metric.ManagerArgoOperateFailed.WithLabelValues("ListRepository").Inc()
@@ -500,7 +498,7 @@ func (cd *argo) ListRepository(ctx context.Context, projNames []string) (*v1alph
 	// filter specified project
 	items := v1alpha1.Repositories{}
 	for _, repo := range repos.Items {
-		if sliceutils.StringInSlice(repo.Project, projNames) {
+		if slices.Contains(projNames, repo.Project) {
 			items = append(items, repo)
 		}
 	}
@@ -532,7 +530,7 @@ func (cd *argo) TerminateAppOperation(ctx context.Context, req *applicationpkg.O
 // GetApplication will return application by name
 func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Application, error) {
 	if !cd.cacheSynced.Load() {
-		app, err := cd.appClient.Get(ctx, &appclient.ApplicationQuery{Name: &name})
+		app, err := cd.appClient.Get(ctx, &applicationpkg.ApplicationQuery{Name: &name})
 		if err != nil {
 			if utils.IsArgoResourceNotFound(err) {
 				return nil, nil
@@ -565,8 +563,8 @@ func (cd *argo) GetApplication(ctx context.Context, name string) (*v1alpha1.Appl
 }
 
 // GetApplicationRevisionsMetadata get revisions metadata for repos, adapt to multiple sources
-func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
-	revisions []string) ([]*v1alpha1.RevisionMetadata, error) {
+func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, project string,
+	repos, revisions []string) ([]*v1alpha1.RevisionMetadata, error) {
 	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 300,
 		apiclient.TLSConfiguration{
 			DisableTLS:       false,
@@ -580,7 +578,7 @@ func (cd *argo) GetApplicationRevisionsMetadata(ctx context.Context, repos,
 
 	result := make([]*v1alpha1.RevisionMetadata, 0, len(repos))
 	for i, repo := range repos {
-		argoRepo, err := cd.argoDB.GetRepository(ctx, repo)
+		argoRepo, err := cd.argoDB.GetRepository(ctx, repo, project)
 		if err != nil {
 			return nil, errors.Wrapf(err, "get repo '%s' from db failed", repo)
 		}
@@ -621,7 +619,7 @@ func (cd *argo) GetApplicationResourceTree(ctx context.Context, name string) (*v
 // GetApplicationManifests returns the manifests result of application
 func (cd *argo) GetApplicationManifests(
 	ctx context.Context, name, revision string) (*apiclient.ManifestResponse, error) {
-	resp, err := cd.appClient.GetManifests(ctx, &appclient.ApplicationManifestQuery{
+	resp, err := cd.appClient.GetManifests(ctx, &applicationpkg.ApplicationManifestQuery{
 		Name:     &name,
 		Revision: &revision,
 	})
@@ -634,7 +632,7 @@ func (cd *argo) GetApplicationManifests(
 // PatchApplicationResource patch application resources
 func (cd *argo) PatchApplicationResource(ctx context.Context, appName string, resource *v1alpha1.ResourceStatus,
 	patch, patchType string) error {
-	_, err := cd.appClient.PatchResource(ctx, &appclient.ApplicationResourcePatchRequest{
+	_, err := cd.appClient.PatchResource(ctx, &applicationpkg.ApplicationResourcePatchRequest{
 		Name:         &appName,
 		Namespace:    &resource.Namespace,
 		ResourceName: &resource.Name,
@@ -676,7 +674,7 @@ func (cd *argo) PatchApplicationAnnotation(ctx context.Context, appName, namespa
 func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx context.Context,
 	application *v1alpha1.Application) ([]*apiclient.ManifestResponse, error) {
 	repoUrl := application.Spec.GetSource().RepoURL
-	repo, err := cd.argoDB.GetRepository(ctx, repoUrl)
+	repo, err := cd.argoDB.GetRepository(ctx, repoUrl, application.Spec.Project)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
 	}
@@ -695,7 +693,15 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 	defer repoCloser.Close()
 
 	// Store the map of all sources having ref field into a map for applications with sources field
-	refSources, err := utilargo.GetRefSources(context.Background(), application.Spec, cd.argoDB)
+	proj := application.Spec.Project
+	revisions := make([]string, 0)
+	for i := range application.Spec.GetSources() {
+		item := application.Spec.GetSources()[i]
+		revisions = append(revisions, item.TargetRevision)
+	}
+	// Store the map of all sources having ref field into a map for applications with sources field
+	refSources, err := argoutil.GetRefSources(ctx, application.Spec.GetSources(), proj, cd.argoDB.GetRepository,
+		revisions, false)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to get ref sources")
 	}
@@ -725,7 +731,7 @@ func (cd *argo) GetApplicationManifestsFromRepoServerWithMultiSources(ctx contex
 	return result, nil
 }
 
-func (cd *argo) checkAppMatchQuery(app *v1alpha1.Application, query *appclient.ApplicationQuery,
+func (cd *argo) checkAppMatchQuery(app *v1alpha1.Application, query *applicationpkg.ApplicationQuery,
 	selector labels.Selector) bool {
 	if query.Name != nil && (*query.Name != "" && *query.Name != app.Name) {
 		return false
@@ -758,7 +764,7 @@ func (cd *argo) checkAppMatchQuery(app *v1alpha1.Application, query *appclient.A
 }
 
 // ListApplications interface
-func (cd *argo) ListApplications(ctx context.Context, query *appclient.ApplicationQuery) (
+func (cd *argo) ListApplications(ctx context.Context, query *applicationpkg.ApplicationQuery) (
 	*v1alpha1.ApplicationList, error) {
 	if !cd.cacheSynced.Load() {
 		apps, err := cd.appClient.List(ctx, query)
@@ -907,7 +913,7 @@ func (cd *argo) handleDeleteAppResource(ctx context.Context, application *v1alph
 	newCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	needForce := true
-	_, err := cd.appClient.DeleteResource(newCtx, &appclient.ApplicationResourceDeleteRequest{
+	_, err := cd.appClient.DeleteResource(newCtx, &applicationpkg.ApplicationResourceDeleteRequest{
 		Name:         &application.Name,
 		Kind:         &resource.Kind,
 		Namespace:    &resource.Namespace,
@@ -1033,73 +1039,14 @@ func (cd *argo) AllApplicationSets() []*v1alpha1.ApplicationSet {
 	return result
 }
 
-var (
-	render = appsetutils.Render{}
-)
-
 func (cd *argo) ApplicationSetDryRun(appSet *v1alpha1.ApplicationSet) ([]*v1alpha1.Application, error) {
-	repoClientSet := apiclient.NewRepoServerClientset(cd.option.RepoServerUrl, 300,
-		apiclient.TLSConfiguration{
-			DisableTLS:       false,
-			StrictValidation: false,
-		})
-	argoCDService, _ := services.NewArgoCDService(cd.argoDB, true, repoClientSet, false)
-	// this will render the Applications by ApplicationSet's generators
-	// refer to:
-	// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L499
-	results := make([]*v1alpha1.Application, 0)
-	for i := range appSet.Spec.Generators {
-		generator := appSet.Spec.Generators[i]
-		if generator.List == nil && generator.Git == nil && generator.Matrix == nil && generator.Merge == nil {
-			continue
-		}
-		listGenerator := generators.NewListGenerator()
-		gitGenerator := generators.NewGitGenerator(argoCDService)
-		terminalGenerators := map[string]generators.Generator{
-			"List": listGenerator,
-			"Git":  gitGenerator,
-		}
-		tsResult, err := generators.Transform(generator, map[string]generators.Generator{
-			"List":   listGenerator,
-			"Git":    gitGenerator,
-			"Matrix": generators.NewMatrixGenerator(terminalGenerators),
-			"Merge":  generators.NewMergeGenerator(terminalGenerators),
-		}, appSet.Spec.Template, appSet, map[string]interface{}{})
-		if err != nil {
-			return nil, errors.Wrapf(err, "transform generator[%d] failed", i)
-		}
-		for j := range tsResult {
-			ts := tsResult[j]
-			tmplApplication := getTempApplication(ts.Template)
-			if tmplApplication.Labels == nil {
-				tmplApplication.Labels = make(map[string]string)
-			}
-			for _, p := range ts.Params {
-				var app *v1alpha1.Application
-				app, err = render.RenderTemplateParams(tmplApplication, appSet.Spec.SyncPolicy,
-					p, appSet.Spec.GoTemplate, nil)
-				if err != nil {
-					return nil, errors.Wrap(err, "error generating application from params")
-				}
-				results = append(results, app)
-			}
-		}
+	resp, err := cd.appsetClient.Generate(context.Background(), &appsetpkg.ApplicationSetGenerateRequest{
+		ApplicationSet: appSet,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "generate applicationset failed")
 	}
-	return results, nil
-}
-
-// refer to:
-// https://github.com/argoproj/argo-cd/blob/v2.8.2/applicationset/controllers/applicationset_controller.go#L487
-func getTempApplication(applicationSetTemplate v1alpha1.ApplicationSetTemplate) *v1alpha1.Application {
-	var tmplApplication v1alpha1.Application
-	tmplApplication.Annotations = applicationSetTemplate.Annotations
-	tmplApplication.Labels = applicationSetTemplate.Labels
-	tmplApplication.Namespace = applicationSetTemplate.Namespace
-	tmplApplication.Name = applicationSetTemplate.Name
-	tmplApplication.Spec = applicationSetTemplate.Spec
-	tmplApplication.Finalizers = applicationSetTemplate.Finalizers
-
-	return &tmplApplication
+	return resp.Applications, nil
 }
 
 // RefreshApplicationSet refresh appset trigger it to generate applications
@@ -1157,11 +1104,11 @@ func isCommitSHA(sha string) bool {
 }
 
 // GetRepoLastCommitID get the last commit-id
-func (cd *argo) GetRepoLastCommitID(ctx context.Context, repoUrl, revision string) (string, error) {
+func (cd *argo) GetRepoLastCommitID(ctx context.Context, projName, repoUrl, revision string) (string, error) {
 	if isCommitSHA(revision) {
 		return revision, nil
 	}
-	repoAuth, err := cd.buildRepoAuth(ctx, repoUrl)
+	repoAuth, err := cd.buildRepoAuth(ctx, projName, repoUrl)
 	if err != nil {
 		return "", err
 	}
@@ -1212,8 +1159,12 @@ func (cd *argo) GetRepoLastCommitID(ctx context.Context, repoUrl, revision strin
 	return "", errors.Errorf("unable to resolve '%s' to a commit SHA", revision)
 }
 
-func (cd *argo) buildRepoAuth(ctx context.Context, repoUrl string) (transport.AuthMethod, error) {
-	argoRepo, err := cd.argoDB.GetRepository(ctx, repoUrl)
+func (cd *argo) buildRepoAuth(ctx context.Context, projName, repoUrl string) (transport.AuthMethod, error) {
+	noAuthRepo, err := cd.GetRepository(ctx, projName, repoUrl)
+	if err != nil {
+		return nil, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
+	}
+	argoRepo, err := cd.argoDB.GetRepository(ctx, repoUrl, noAuthRepo.Project)
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repository '%s' from argo db failed", repoUrl)
 	}
@@ -1296,14 +1247,25 @@ func (cd *argo) initToken() error {
 }
 
 func (cd *argo) initArgoK8SClient() error {
-	config, err := rest.InClusterConfig()
+	inClusterCfg, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.Wrapf(err, "get k8s incluster config failed")
 	}
-	cd.argoK8SClient, err = argopkg.NewForConfig(config)
+	cd.argoK8SClient, err = argopkg.NewForConfig(inClusterCfg)
 	if err != nil {
 		return errors.Wrapf(err, "create argo k8s client failed")
 	}
+
+	scheme := runtime.NewScheme()
+	_ = clientgoscheme.AddToScheme(scheme)
+	_ = v1alpha1.AddToScheme(scheme)
+	runtimeClient, err := crclient.New(inClusterCfg, crclient.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "create runtime client failed")
+	}
+	cd.runtimeClient = runtimeClient
 	return nil
 }
 
@@ -1315,6 +1277,7 @@ func (cd *argo) initBasicClient() error {
 	cd.basicOpt = &api.ClientOptions{
 		ServerAddr: cd.option.Service,
 		AuthToken:  cd.token,
+		Insecure:   true,
 	}
 	if err = cd.connect(); err != nil {
 		return errors.Wrapf(err, "argocd connect grpc failed")

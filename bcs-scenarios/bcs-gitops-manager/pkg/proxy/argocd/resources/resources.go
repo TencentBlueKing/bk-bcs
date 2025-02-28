@@ -17,7 +17,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"

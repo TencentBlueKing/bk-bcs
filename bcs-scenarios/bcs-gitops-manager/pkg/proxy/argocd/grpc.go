@@ -213,7 +213,7 @@ func (plugin *GrpcPlugin) handleRepoGet(r *http.Request) (*http.Request, *mw.Htt
 	if err := plugin.readRequestBody(r, query); err != nil {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
-	repo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.Repo,
+	repo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.AppProject, query.Repo,
 		permitcheck.RepoViewRSAction)
 	if err != nil {
 		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err,
@@ -229,9 +229,10 @@ func (plugin *GrpcPlugin) handleRepoAccess(r *http.Request) (*http.Request, *mw.
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, err)
 	}
 	if repoAccess.Project == "" {
-		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("create repo request project cannot empty"))
+		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest,
+			fmt.Errorf("create repo request project cannot empty"))
 	}
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repoAccess.Repo,
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repoAccess.Project, repoAccess.Repo,
 		permitcheck.RepoViewRSAction)
 	if err != nil {
 		// fix repo not create yet
@@ -280,7 +281,7 @@ func (plugin *GrpcPlugin) handleRepoDelete(r *http.Request) (*http.Request, *mw.
 	if query.Repo == "" {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	argoRepo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.Repo,
+	argoRepo, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.AppProject, query.Repo,
 		permitcheck.RepoDeleteRSAction)
 	if err != nil {
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
@@ -307,7 +308,7 @@ func (plugin *GrpcPlugin) handleRepoListRefs(r *http.Request) (*http.Request, *m
 	if query.Repo == "" {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.Repo,
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.AppProject, query.Repo,
 		permitcheck.RepoViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
@@ -326,7 +327,7 @@ func (plugin *GrpcPlugin) handleRepoListApps(r *http.Request) (*http.Request, *m
 	if query.Repo == "" {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.Repo,
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.AppProject, query.Repo,
 		permitcheck.RepoViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
@@ -345,7 +346,7 @@ func (plugin *GrpcPlugin) handleRepoGetAppDetails(r *http.Request) (*http.Reques
 	if query.Source.RepoURL == "" {
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest, fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.Source.RepoURL,
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.AppProject, query.Source.RepoURL,
 		permitcheck.RepoViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
@@ -365,7 +366,7 @@ func (plugin *GrpcPlugin) handleRepoGetHelmCharts(r *http.Request) (*http.Reques
 		return r, mw.ReturnGRPCErrorResponse(http.StatusBadRequest,
 			fmt.Errorf("delete repo request repo cannot empty"))
 	}
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.Repo,
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), query.AppProject, query.Repo,
 		permitcheck.RepoViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnGRPCErrorResponse(statusCode, errors.Wrapf(err, "check repo '%s' permission failed",
@@ -451,6 +452,9 @@ func (plugin *GrpcPlugin) handleAppSetGet(r *http.Request) (*http.Request, *mw.H
 	argoAppSet, statusCode, err := plugin.permitChecker.CheckAppSetPermission(r.Context(), query.Name,
 		permitcheck.AppSetViewRSAction)
 	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return r, mw.ReturnArgoReverse()
+		}
 		return r, mw.ReturnGRPCErrorResponse(statusCode,
 			errors.Wrapf(err, "check applicationset '%s' failed", query.Name))
 	}

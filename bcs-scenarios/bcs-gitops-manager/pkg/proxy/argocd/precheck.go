@@ -66,8 +66,10 @@ func (plugin *PreCheckPlugin) preCheckViewHandler(r *http.Request) (*http.Reques
 	// repo := r.PathValue("repository")
 	queryValues := r.URL.Query()
 	repo := queryValues.Get("repository")
+	project := queryValues.Get("project")
 	// mrIID := r.PathValue("mrIID")
-	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), repo, permitcheck.RepoViewRSAction)
+	_, statusCode, err := plugin.permitChecker.CheckRepoPermission(r.Context(), project,
+		repo, permitcheck.RepoViewRSAction)
 	if statusCode != http.StatusOK {
 		return r, mw.ReturnErrorResponse(statusCode, fmt.Errorf("check repo '%s' permission failed: %v", repo,
 			err))

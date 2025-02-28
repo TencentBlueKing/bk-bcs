@@ -93,7 +93,7 @@ func (c *checker) getProjectMultiActionsPermission(ctx context.Context, project 
 
 // checkRepositoryBelongProject check repo belong to project
 func (c *checker) checkRepositoryBelongProject(ctx context.Context, repoUrl, project string) (bool, error) {
-	repo, err := c.store.GetRepository(ctx, repoUrl)
+	repo, err := c.store.GetRepository(ctx, project, repoUrl)
 	if err != nil {
 		return false, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
 	}

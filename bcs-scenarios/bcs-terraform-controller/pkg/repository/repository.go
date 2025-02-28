@@ -50,7 +50,8 @@ func NewRepositoryHandler(argoDB db.ArgoDB) Handler {
 }
 
 func (h *handler) buildRepoAuth(ctx context.Context, repoUrl string) (transport.AuthMethod, error) {
-	argoRepo, err := h.argoDB.GetRepository(ctx, repoUrl)
+	// NOTE: project cannot empty
+	argoRepo, err := h.argoDB.GetRepository(ctx, repoUrl, "")
 	if err != nil {
 		return nil, errors.Wrapf(err, "get repository '%s' from argo db failed", repoUrl)
 	}

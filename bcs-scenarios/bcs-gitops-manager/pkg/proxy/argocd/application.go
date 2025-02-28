@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"
@@ -325,9 +325,9 @@ func (plugin *AppPlugin) applicationDeleteResourcesHandler(r *http.Request) (*ht
 			errors.Errorf("request body 'resources' cannot be empty"))
 	}
 	for i, resource := range req.Resources {
-		if resource.ResourceName == "" || resource.Kind == "" || resource.Namespace == "" || resource.Version == "" {
+		if resource.ResourceName == "" || resource.Kind == "" || resource.Version == "" {
 			return r, mw.ReturnErrorResponse(http.StatusBadRequest, errors.Errorf("request 'resources[%d] "+
-				"have param empty, 'resourceName/kind/namespace/version' cannot be empty'", i))
+				"have param empty, 'resourceName/kind/version' cannot be empty'", i))
 		}
 	}
 	r = plugin.setApplicationAudit(r, argoApp.Spec.Project, argoApp.Name, ctxutils.ApplicationDelete, string(body))
@@ -455,9 +455,10 @@ func (plugin *AppPlugin) customRevisionsMetadata(r *http.Request) (*http.Request
 			})
 			continue
 		}
+
 		var metadata []*v1alpha1.RevisionMetadata
-		if metadata, err = plugin.storage.GetApplicationRevisionsMetadata(r.Context(), []string{src.RepoURL},
-			[]string{revisions[i]}); err != nil {
+		if metadata, err = plugin.storage.GetApplicationRevisionsMetadata(r.Context(), argoApp.Spec.Project,
+			[]string{src.RepoURL}, []string{revisions[i]}); err != nil {
 			return r, mw.ReturnErrorResponse(http.StatusInternalServerError,
 				fmt.Errorf("get application revisions metadata failed: %s", err.Error()))
 		}
@@ -729,7 +730,7 @@ func (plugin *AppPlugin) getApplicationLastCommitIDs(ctx context.Context, argoAp
 	if !argoApp.Spec.HasMultipleSources() {
 		repoURL := argoApp.Spec.Source.RepoURL
 		revision := argoApp.Spec.Source.TargetRevision
-		commitID, err := plugin.storage.GetRepoLastCommitID(ctx, repoURL, revision)
+		commitID, err := plugin.storage.GetRepoLastCommitID(ctx, argoApp.Spec.Project, repoURL, revision)
 		if err != nil {
 			return nil, err
 		}
@@ -740,7 +741,7 @@ func (plugin *AppPlugin) getApplicationLastCommitIDs(ctx context.Context, argoAp
 		source := argoApp.Spec.Sources[i]
 		repoURL := source.RepoURL
 		revision := source.TargetRevision
-		commitID, err := plugin.storage.GetRepoLastCommitID(ctx, repoURL, revision)
+		commitID, err := plugin.storage.GetRepoLastCommitID(ctx, argoApp.Spec.Project, repoURL, revision)
 		if err != nil {
 			return nil, err
 		}

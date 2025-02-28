@@ -27,7 +27,6 @@ import (
 	argoio "github.com/argoproj/argo-cd/v2/util/io"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -87,8 +86,13 @@ func NewConn(op *api.ClientOptions) (*grpc.ClientConn, io.Closer, error) {
 	dialOpts = append(dialOpts, grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(retryOpts...)))
 	dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(
 		grpc_middleware.ChainUnaryClient(grpc_retry.UnaryClientInterceptor(retryOpts...))))
-	dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(otelgrpc.UnaryClientInterceptor()))
-	dialOpts = append(dialOpts, grpc.WithStreamInterceptor(otelgrpc.StreamClientInterceptor()))
+	dialOpts = append(dialOpts, grpc.WithUnaryInterceptor(grpc_util.OTELUnaryClientInterceptor()))
+	dialOpts = append(dialOpts, grpc.WithStreamInterceptor(grpc_util.OTELStreamClientInterceptor()))
+	dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+		InsecureSkipVerify: true, // nolint
+		MinVersion:         tls.VersionTLS13,
+		NextProtos:         []string{"h2"}, // HTTP/2
+	})))
 
 	ctx := context.Background()
 
@@ -107,8 +111,7 @@ func NewConn(op *api.ClientOptions) (*grpc.ClientConn, io.Closer, error) {
 	return conn, argoio.NewCloser(func() error {
 		var firstErr error
 		for i := range closers {
-			err := closers[i].Close()
-			if err != nil {
+			if err = closers[i].Close(); err != nil {
 				firstErr = err
 			}
 		}

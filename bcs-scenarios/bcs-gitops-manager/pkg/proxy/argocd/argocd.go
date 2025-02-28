@@ -19,7 +19,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	githubpkg "gopkg.in/go-playground/webhooks.v5/github"

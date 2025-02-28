@@ -271,7 +271,7 @@ func (s *AdmissionWebhookServer) checkAppRepoBelongProject(ctx context.Context, 
 
 func (s *AdmissionWebhookServer) checkRepositoryBelongProject(ctx context.Context, repoUrl,
 	project string) (string, bool, error) {
-	repo, err := s.argoStore.GetRepository(ctx, repoUrl)
+	repo, err := s.argoStore.GetRepository(ctx, project, repoUrl)
 	if err != nil {
 		return "", false, errors.Wrapf(err, "get repo '%s' failed", repoUrl)
 	}
@@ -435,7 +435,7 @@ func (s *AdmissionWebhookServer) interceptApplicationSync(ctx context.Context, r
 			originalRevision = app.Status.Sync.Revision
 			operationRevision = app.Operation.Sync.Revision
 		}
-		if err = s.handleCompareApplicationSource(ctx, app.Name, originalRevision, operationRevision,
+		if err = s.handleCompareApplicationSource(ctx, app.Spec.Project, app.Name, originalRevision, operationRevision,
 			appSrc); err != nil {
 			if terminateErr := s.argoStore.TerminateAppOperation(ctx, &applicationpkg.OperationTerminateRequest{
 				Name:         &app.Name,
@@ -479,10 +479,10 @@ func (s *AdmissionWebhookServer) patchDeleteOperation(app *v1alpha1.Application)
 	return nil
 }
 
-func (s *AdmissionWebhookServer) handleCompareApplicationSource(ctx context.Context, appName, originalRevision,
+func (s *AdmissionWebhookServer) handleCompareApplicationSource(ctx context.Context, project, appName, originalRevision,
 	operationRevision string, generateSource *v1alpha1.ApplicationSource) error {
 	// generate-source perhaps not an actual commit-id
-	generateSourceRevision, err := s.argoStore.GetRepoLastCommitID(ctx, generateSource.RepoURL,
+	generateSourceRevision, err := s.argoStore.GetRepoLastCommitID(ctx, project, generateSource.RepoURL,
 		generateSource.TargetRevision)
 	if err != nil {
 		blog.Errorf("skip intercept application '%s' sync, get git revision failed for '%s, %s'",
@@ -529,7 +529,7 @@ func (s *AdmissionWebhookServer) checkAppSetHasDynamicRevision(ctx context.Conte
 	if staticSource != nil {
 		repo := staticSource.RepoURL
 		revision := staticSource.TargetRevision
-		lastCommitID, err := s.argoStore.GetRepoLastCommitID(ctx, repo, revision)
+		lastCommitID, err := s.argoStore.GetRepoLastCommitID(ctx, appSet.Spec.Template.Spec.Project, repo, revision)
 		if err != nil {
 			hasDynamicRevision = false
 			blog.Errorf("intercept application '%s' sync, get appset '%s' repo '%s/%s' last-commit failed: %s",

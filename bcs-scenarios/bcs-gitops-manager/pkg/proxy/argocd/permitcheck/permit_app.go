@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	appclient "github.com/argoproj/argo-cd/v2/pkg/apiclient/application"

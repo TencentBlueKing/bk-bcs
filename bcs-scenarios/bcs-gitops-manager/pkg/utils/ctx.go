@@ -94,7 +94,8 @@ func IsArgoResourceNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
-	return strings.Contains(err.Error(), "code = NotFound")
+	return strings.Contains(err.Error(), "code = NotFound") ||
+		strings.Contains(err.Error(), "code = PermissionDenied")
 }
 
 // IsNotFound defines is not found

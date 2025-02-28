@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4"
+	bcsapi "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	traceconst "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/gorilla/mux"

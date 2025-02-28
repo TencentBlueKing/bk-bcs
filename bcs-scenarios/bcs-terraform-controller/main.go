@@ -30,7 +30,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -153,9 +152,9 @@ func buildControllerManager(_ context.Context, op *option.ControllerOption,
 	tfServer *worker.TerraformServer, tfHandler tfhandler.TerraformHandler) (manager.Manager, error) {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(false)))
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		Port:                   op.Port,
-		MetricsBindAddress:     fmt.Sprintf("0.0.0.0:%d", op.MetricPort),
+		Scheme: scheme,
+		//Port:                   op.Port,
+		//MetricsBindAddress:     fmt.Sprintf("0.0.0.0:%d", op.MetricPort),
 		HealthProbeBindAddress: fmt.Sprintf("0.0.0.0:%d", op.HealthPort),
 		LeaderElection:         op.EnableLeaderElection,
 		LeaderElectionID:       "gitops-terraform.bkbcs.tencent.com",
@@ -170,8 +169,8 @@ func buildControllerManager(_ context.Context, op *option.ControllerOption,
 		// if you are doing or is intended to do any operation such as perform cleanups
 		// after the manager stops then its usage might be unsafe.
 		// LeaderElectionReleaseOnCancel: true,
-		NewClient: func(cache cache.Cache, config *rest.Config, options client.Options,
-			uncachedObjects ...client.Object) (client.Client, error) {
+
+		NewClient: func(config *rest.Config, options client.Options) (client.Client, error) {
 			config.QPS = float32(op.KubernetesQPS)
 			config.Burst = op.KubernetesBurst
 			// Create the Client for Write operations.

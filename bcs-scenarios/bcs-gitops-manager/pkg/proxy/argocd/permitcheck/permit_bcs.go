@@ -18,7 +18,7 @@ import (
 	"net/http"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
-	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapiv4/clustermanager"
+	cm "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	iamcluster "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/cluster"
 	iamnamespace "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth-v4/namespace"
 	"github.com/pkg/errors"
