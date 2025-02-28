@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager
 go 1.20
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20250114031541-4ba4876e5f78
 	// github.com/databus23/helm-diff/v3 limit by go 1.20
 	github.com/databus23/helm-diff/v3 => github.com/databus23/helm-diff/v3 v3.8.1
 	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.12.1-tx.5
