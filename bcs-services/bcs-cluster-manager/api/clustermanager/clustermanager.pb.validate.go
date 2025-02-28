@@ -11086,6 +11086,8 @@ func (m *InternetAccessible) validate(all bool) error {
 
 	// no validation rules for PublicIP
 
+	// no validation rules for NodePublicIPPrefixID
+
 	if len(errors) > 0 {
 		return InternetAccessibleMultiError(errors)
 	}
@@ -47865,10 +47867,6 @@ func (m *ListCloudDiskTypesResponse) validate(all bool) error {
 		return ListCloudDiskTypesResponseMultiError(errors)
 	}
 
-	if len(errors) > 0 {
-		return ListCloudDiskTypesResponseMultiError(errors)
-	}
-
 	return nil
 }
 
@@ -47985,6 +47983,8 @@ func (m *DiskConfigSet) validate(all bool) error {
 
 	return nil
 }
+
+// DiskConfigSetMultiError is an error wrapping multiple validation errors
 // returned by DiskConfigSet.ValidateAll() if the designated constraints
 // aren't met.
 type DiskConfigSetMultiError []error
@@ -48097,6 +48097,7 @@ func (m *GetMasterSuggestedMachinesRequest) validate(all bool) error {
 		if !all {
 			return err
 		}
+		errors = append(errors, err)
 	}
 
 	if _, ok := _GetMasterSuggestedMachinesRequest_Level_InLookup[m.GetLevel()]; !ok {
