@@ -40,6 +40,7 @@ type AksServiceImpl struct {
 	clustersClient       *armcontainerservice.ManagedClustersClient
 	securityGroupsClient *armnetwork.SecurityGroupsClient
 	sshPubKeyClient      *armcompute.SSHPublicKeysClient
+	publicPrefixClient   *armnetwork.PublicIPPrefixesClient
 }
 
 // NewAksServiceImplWithCommonOption 从 CommonOption 创建 AksService
@@ -130,6 +131,11 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret string) 
 		return nil, errors.Wrapf(err, "failed to create ssh public keys client,SubscriptionID:%s",
 			subscriptionID)
 	}
+	publicPrefixClient, err := armnetwork.NewPublicIPPrefixesClient(subscriptionID, cred, nil)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to create public IP prefixes client,SubscriptionID:%s",
+			subscriptionID)
+	}
 
 	return &AksServiceImpl{
 		vmClient:             vmClient,
@@ -144,6 +150,7 @@ func NewAKsServiceImpl(subscriptionID, tenantID, clientID, clientSecret string) 
 		subnetClient:         subnetClient,
 		securityGroupsClient: securityGroupsClient,
 		sshPubKeyClient:      sshPubKeyClient,
+		publicPrefixClient:   publicPrefixClient,
 	}, nil
 }
 
@@ -402,6 +409,28 @@ func (aks *AksServiceImpl) ListSSHPublicKeysAll(ctx context.Context) ([]*armcomp
 			return nil, errors.Wrapf(err, "failed to advance page")
 		}
 		result = append(result, next.Value...)
+	}
+
+	return result, nil
+}
+
+// ListPublicPrefixes 获取订阅下所有public IP prefixes
+func (aks *AksServiceImpl) ListPublicPrefixes(ctx context.Context, resourceGroupName string) ([]*armnetwork.PublicIPPrefix, error) {
+	pager := aks.publicPrefixClient.NewListPager(resourceGroupName, nil)
+	result := make([]*armnetwork.PublicIPPrefix, 0)
+	for pager.More() {
+		next, err := pager.NextPage(ctx)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to advance page")
+		}
+
+		for _, v := range next.Value {
+			if v.Properties != nil && v.Properties.ProvisioningState != nil {
+				if *v.Properties.ProvisioningState == armnetwork.ProvisioningStateSucceeded {
+					result = append(result, v)
+				}
+			}
+		}
 	}
 
 	return result, nil

@@ -269,6 +269,8 @@ type NodeManager interface {
 	ListRuntimeInfo(opt *ListRuntimeInfoOption) (map[string][]string, error)
 	// GetServiceRoles service roles list
 	GetServiceRoles(opt *CommonOption, roleType string) ([]*proto.ServiceRoleInfo, error)
+	// ListNodePublicPrefixs list node public prefix
+	ListNodePublicPrefixs(opt *ListNodePublicPrefixesOption) ([]*proto.NodePublicPrefix, error)
 }
 
 // CloudValidateManager validate interface for check cloud resourceInfo

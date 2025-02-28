@@ -1545,6 +1545,15 @@ service ClusterManager {
       summary : "查询云组件参数"
     };
   }
+  rpc ListCloudNodePublicPrefix(ListCloudNodePublicPrefixRequest) returns (ListCloudNodePublicPrefixResponse) {
+    option (google.api.http) = {
+      get : "/clustermanager/v1/clouds/{cloudID}/node/publicPrefix"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "获取云节点公网IP前缀列表"
+      summary : "获取云节点公网IP前缀列表"
+    };
+  }
 
   // cluster manager health interface
   rpc Health(HealthRequest) returns (HealthResponse) {
@@ -3798,6 +3807,10 @@ message InternetAccessible {
   repeated string publicAccessCidrs = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "publicAccessCidrs",
     description: "允许访问Kubernetes API Server的公网Ip cidr"
+  }];
+  string nodePublicIPPrefixID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodePublicIPPrefixID",
+    description: "节点公网ip前缀ID"
   }];
 }
 
@@ -14878,6 +14891,75 @@ message ProjectAutoscalerQuota {
   repeated string totalGroupIds = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "totalGroupIds",
     description : "机型在某个可用区的总额度的节点池"
+  }];
+}
+
+message ListCloudNodePublicPrefixRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListCloudNodePublicPrefixRequest"
+      description : "获取云节点公网IP前缀列表"
+      required : [ "cloudID", "accountID" ]
+    }
+  };
+
+  string cloudID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cloudID",
+    description: "BCS平台支持的云类型，英文字符串"
+  }];
+  string accountID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "accountID",
+    description : "云凭证ID, 通过指定的云账号信息获取"
+  }];
+  string resourceGroupName = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "resourceGroupName",
+    description: "Azure 资源组名称"
+  }];
+}
+
+message ListCloudNodePublicPrefixResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetProviderResourceUsageResponse"
+      description : "查询资源池的业务使用情况返回"
+      required : [ "code", "message" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated NodePublicPrefix data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回数据信息"
+  }];
+}
+
+message NodePublicPrefix {
+  string id = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "id",
+    description : "公网IP前缀ID"
+  }];
+  string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "name",
+    description : "公网IP前缀名称"
+  }];
+  string ipPrefix = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "ipPrefix",
+    description : "公网IP前缀"
+  }];
+  repeated string zones = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "zones",
+    description : "可用区域列表，表示为资源需求分配的IP来自何处"
   }];
 }
 

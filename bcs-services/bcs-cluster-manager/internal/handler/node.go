@@ -133,3 +133,19 @@ func (cm *ClusterManager) UpdateNodeTaints(ctx context.Context,
 		utils.ToJSONString(resp))
 	return nil
 }
+
+// ListCloudNodePublicPrefix implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListCloudNodePublicPrefix(ctx context.Context,
+	req *cmproto.ListCloudNodePublicPrefixRequest, resp *cmproto.ListCloudNodePublicPrefixResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := node.NewListCloudNodePublicPrefixAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListCloudNodePublicPrefix", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListCloudNodePublicPrefix, req %v, resp %v", reqID, utils.ToJSONString(req),
+		utils.ToJSONString(resp))
+	return nil
+}

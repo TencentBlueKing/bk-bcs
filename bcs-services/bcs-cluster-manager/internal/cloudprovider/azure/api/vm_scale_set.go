@@ -14,9 +14,12 @@ package api
 
 import (
 	"context"
+	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -95,10 +98,20 @@ func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, resourceG
 		vmIDs.InstanceIDs[i] = to.Ptr(instanceIDs[i])
 	}
 	// 删除
-	poller, err := aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
-	if err != nil {
-		return errors.Wrapf(err, "failed to finish the request")
-	}
+	var (
+		err    error
+		poller *runtime.Poller[armcompute.VirtualMachineScaleSetsClientDeleteInstancesResponse]
+	)
+
+	retry.Do(func() error {
+		poller, err = aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
+		if err != nil {
+			return errors.Wrapf(err, "failed to finish the request")
+		}
+
+		return err
+	}, retry.Attempts(3), retry.Delay(time.Second))
+
 	// 轮询
 	if _, err = poller.PollUntilDone(ctx, pollFrequency5); err != nil {
 		return errors.Wrapf(err, "failed to pull the result")
