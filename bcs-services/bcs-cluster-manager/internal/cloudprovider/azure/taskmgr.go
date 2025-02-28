@@ -670,7 +670,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 		Passwd:     passwd,
 		KeyInfo:    group.GetLaunchTemplate().GetKeyPair(),
 		Port:       "",
-	})
+	}, cloudprovider.WithStepRetry(2))
 	// transfer host module
 	moduleID := cloudprovider.GetTransModuleInfo(opt.Cluster, opt.AsOption, opt.NodeGroup)
 	if moduleID != "" {

@@ -863,6 +863,7 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 		System:       "api",
 		Params:       make(map[string]string),
 		Retry:        0,
+		MaxRetry:     defaultOptions.Retry,
 		SkipOnFailed: defaultOptions.SkipFailed,
 		Start:        nowStr,
 		Status:       TaskStatusNotStarted,

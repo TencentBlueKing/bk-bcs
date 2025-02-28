@@ -15666,6 +15666,8 @@ func (m *Step) validate(all bool) error {
 
 	// no validation rules for AllowSkip
 
+	// no validation rules for MaxRetry
+
 	if len(errors) > 0 {
 		return StepMultiError(errors)
 	}
