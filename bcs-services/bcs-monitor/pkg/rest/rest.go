@@ -270,6 +270,12 @@ func Stream[In any](handler StreamHandlerFunc[In]) func(w http.ResponseWriter, r
 			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
 			return
 		}
+		err = Struct(r.Context(), in)
+		if err != nil {
+			blog.Errorf("valid request param failed, err: %s", err)
+			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
+			return
+		}
 		svr := &streamingServer{
 			ResponseWriter:     w,
 			ResponseController: http.NewResponseController(w),
