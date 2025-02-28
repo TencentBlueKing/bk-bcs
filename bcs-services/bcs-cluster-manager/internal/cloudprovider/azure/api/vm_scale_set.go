@@ -99,18 +99,21 @@ func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, resourceG
 	}
 	// 删除
 	var (
-		err    error
 		poller *runtime.Poller[armcompute.VirtualMachineScaleSetsClientDeleteInstancesResponse]
 	)
 
-	retry.Do(func() error {
-		poller, err = aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
-		if err != nil {
-			return errors.Wrapf(err, "failed to finish the request")
+	err := retry.Do(func() error {
+		var delErr error
+		poller, delErr = aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
+		if delErr != nil {
+			return errors.Wrapf(delErr, "failed to finish the request")
 		}
 
-		return err
+		return delErr
 	}, retry.Attempts(3), retry.Delay(time.Second))
+	if err != nil {
+		return errors.Wrapf(err, "failed to finish the request")
+	}
 
 	// 轮询
 	if _, err = poller.PollUntilDone(ctx, pollFrequency5); err != nil {
