@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
@@ -82,6 +83,7 @@ func GetPod(ctx context.Context, clusterID, namespace, podname string) (*Workloa
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(header.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetAuthToken(config.G.BCS.Token).
 		Get(url)
 
@@ -114,6 +116,7 @@ func GetNamespaces(ctx context.Context, clusterID string) ([]string, error) {
 	url := fmt.Sprintf("%s/clusters/%s/api/v1/namespaces", config.G.BCS.Host, clusterID)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(header.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetAuthToken(config.G.BCS.Token).
 		Get(url)
 
