@@ -22,10 +22,10 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/parnurzeal/gorequest"
 	"go-micro.dev/v4/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 )
 
@@ -122,7 +122,7 @@ func NewUserManagerClient(opts *Options) *UserManagerClient {
 	}
 	userClient.ctx, userClient.cancel = context.WithCancel(context.Background())
 
-	if len(opts.GateWay) == 0 {
+	if !discovery.UseServiceDiscovery() {
 		userClient.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
 		err := userClient.discovery.Start()
 		if err != nil {
