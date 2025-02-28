@@ -41,3 +41,22 @@ func RequestIDValue(req *http.Request, autoGen bool) string {
 	}
 	return id
 }
+
+// RequestIdMiddleware middleware request id
+func RequestIdMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Get id from request
+		rid := r.Header.Get(store.RequestIdHeaderKey())
+		if rid == "" {
+			rid = RequestIdGenerator()
+		}
+		// Set the id to ensure that the requestid is in the response
+		w.Header().Set(store.RequestIdHeaderKey(), rid)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// GetRequestIDResp get request id by response
+func GetRequestIDResp(w http.ResponseWriter) string {
+	return w.Header().Get(store.RequestIdHeaderKey())
+}

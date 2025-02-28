@@ -19,7 +19,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/pkg/errors"
 
@@ -30,34 +31,35 @@ import (
 )
 
 // AuthenticationRequired API类型, 兼容多种认证模式
-func AuthenticationRequired() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		restContext := rest.InitRestContext(c)
+func AuthenticationRequired(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		restContext := rest.InitRestContext(w, r)
+		r = restContext.Request
 
-		if c.Request.Method == http.MethodOptions {
-			c.Next()
+		if r.Method == http.MethodOptions {
+			next.ServeHTTP(w, r)
 			return
 		}
 
 		switch {
-		case initContextWithAPIGW(restContext):
-		case initContextWithBCSJwt(restContext):
-		case initContextWithDevEnv(restContext):
+		case initContextWithAPIGW(r, restContext):
+		case initContextWithBCSJwt(r, restContext):
+		case initContextWithDevEnv(r, restContext):
 		default:
-			rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized)
+			_ = render.Render(w, r, rest.AbortWithUnauthorizedError(restContext, rest.ErrorUnauthorized))
 			return
 		}
 
-		c.Next()
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // ProjectAuthorization project 鉴权
-func ProjectAuthorization() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		restContext, err := rest.GetRestContext(c)
+func ProjectAuthorization(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		restContext, err := rest.GetRestContext(r.Context())
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 
@@ -68,41 +70,41 @@ func ProjectAuthorization() gin.HandlerFunc {
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !cls.IsShared && cls.ProjectID != projectID {
-			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid")))
 			return
 		}
 
 		// call iam
 		client, err := iam.GetProjectPermClient()
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		allow, url, _, err := client.CanViewProject(username, projectID)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
 			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			rest.AbortWithWithForbiddenError(restContext, errMsg)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
 			return
 		}
 
-		c.Next()
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // ClusterAuthorization 集群鉴权
-func ClusterAuthorization() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		restContext, err := rest.GetRestContext(c)
+func ClusterAuthorization(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		restContext, err := rest.GetRestContext(r.Context())
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 
@@ -113,37 +115,37 @@ func ClusterAuthorization() gin.HandlerFunc {
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !cls.IsShared && cls.ProjectID != projectID {
-			rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid"))
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, fmt.Errorf("cluster is invalid")))
 			return
 		}
 
 		// call iam
 		client, err := iam.GetClusterPermClient()
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		allow, url, _, err := client.CanViewCluster(username, projectID, clusterID)
 		if err != nil {
-			rest.AbortWithWithForbiddenError(restContext, err)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
 		if !allow {
 			errMsg := fmt.Errorf("permission denied, please apply permission with %s", url)
-			rest.AbortWithWithForbiddenError(restContext, errMsg)
+			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, errMsg))
 			return
 		}
 
-		c.Next()
-	}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // initContextWithDevEnv Dev环境, 可以设置环境变量
-func initContextWithDevEnv(c *rest.Context) bool {
+func initContextWithDevEnv(r *http.Request, c *rest.Context) bool {
 	if config.G.Base.RunEnv != config.DevEnv {
 		return false
 	}
@@ -156,7 +158,7 @@ func initContextWithDevEnv(c *rest.Context) bool {
 	}
 
 	// AppCode 认证
-	appCode := c.GetHeader("X-BKAPI-JWT-APPCODE")
+	appCode := r.Header.Get("X-BKAPI-JWT-APPCODE")
 	if appCode != "" {
 		c.BindAPIGW = &rest.APIGWToken{
 			App: &rest.APIGWApp{AppCode: appCode, Verified: true},
@@ -221,8 +223,8 @@ func BKAPIGWJWTDecode(jwtToken string) (*rest.APIGWToken, error) {
 }
 
 // initContextWithBCSJwt BCS APISix JWT 鉴权
-func initContextWithBCSJwt(c *rest.Context) bool {
-	tokenString := c.GetHeader("Authorization")
+func initContextWithBCSJwt(r *http.Request, c *rest.Context) bool {
+	tokenString := r.Header.Get("Authorization")
 	if len(tokenString) == 0 || !strings.HasPrefix(tokenString, "Bearer ") {
 		return false
 	}
@@ -238,9 +240,9 @@ func initContextWithBCSJwt(c *rest.Context) bool {
 	return true
 }
 
-func initContextWithAPIGW(c *rest.Context) bool {
+func initContextWithAPIGW(r *http.Request, c *rest.Context) bool {
 	// get jwt info from headers
-	tokenString := c.GetHeader("X-Bkapi-Jwt")
+	tokenString := r.Header.Get("X-Bkapi-Jwt")
 	if tokenString == "" {
 		return false
 	}
@@ -256,33 +258,33 @@ func initContextWithAPIGW(c *rest.Context) bool {
 }
 
 // GetProjectIdOrCode :
-func GetProjectIdOrCode(c *gin.Context) string {
-	if c.Param("projectId") != "" {
-		return c.Param("projectId")
+func GetProjectIdOrCode(r *http.Request) string {
+	if chi.URLParam(r, "projectId") != "" {
+		return chi.URLParam(r, "projectId")
 	}
 	return ""
 }
 
 // GetProjectCode 获取 projectCode 参数
-func GetProjectCode(c *gin.Context) string {
-	if c.Param("projectCode") != "" {
-		return c.Param("projectCode")
+func GetProjectCode(r *http.Request) string {
+	if chi.URLParam(r, "projectCode") != "" {
+		return chi.URLParam(r, "projectCode")
 	}
 	return ""
 }
 
 // GetClusterId :
-func GetClusterId(c *gin.Context) string {
-	if c.Param("clusterId") != "" {
-		return c.Param("clusterId")
+func GetClusterId(r *http.Request) string {
+	if chi.URLParam(r, "clusterId") != "" {
+		return chi.URLParam(r, "clusterId")
 	}
 	return ""
 }
 
 // GetSessionId :
-func GetSessionId(c *gin.Context) string {
-	if c.Param("sessionId") != "" {
-		return c.Param("sessionId")
+func GetSessionId(r *http.Request) string {
+	if chi.URLParam(r, "sessionId") != "" {
+		return chi.URLParam(r, "sessionId")
 	}
 	return ""
 }
