@@ -176,6 +176,10 @@ func (ua *RetryAction) validate() error {
 func (ua *RetryAction) distributeTask() error {
 	ua.task.Status = cloudprovider.TaskStatusRunning
 	ua.task.Message = "task retrying"
+	step, ok := ua.task.Steps[ua.task.CurrentStep]
+	if ok && step.MaxRetry > 0 {
+		step.Retry = 0
+	}
 
 	err := ua.model.UpdateTask(ua.ctx, ua.task)
 	if err != nil {

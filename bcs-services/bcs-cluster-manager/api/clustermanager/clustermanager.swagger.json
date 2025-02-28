@@ -18066,6 +18066,12 @@
           "format": "boolean",
           "description": "标识该步骤失败时候是否允许用户手动跳过。当为true失败时候允许用户手动跳过, 为false失败时用户仅能通过重试解决",
           "title": "allowSkip"
+        },
+        "maxRetry": {
+          "type": "integer",
+          "format": "int64",
+          "description": "该步骤最大重试次数",
+          "title": "maxRetry"
         }
       },
       "description": "任务执行的动作步骤，用于定义长时间运行的异步动作，例如机器重新初始化，插件安装等。",
