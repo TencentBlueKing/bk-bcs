@@ -125,6 +125,9 @@ type ControllerOption struct {
 	BcsClusterID string
 	// BkBizID blue king biz id, set from env
 	BkBizID string
+
+	// PortLeakThresholdSecs 检查端口泄漏的间隔，单位秒, 为0时不检查
+	PortLeakThresholdSecs int
 }
 
 // Conf 服务配置
@@ -197,6 +200,20 @@ func (op *ControllerOption) SetFromEnv() {
 	op.BkBizID = os.Getenv(constant.EnvNameBkBizID)
 	if len(op.BkBizID) == 0 {
 		blog.Fatalf("not set env %s", constant.EnvNameBkBizID)
+	}
+
+	portLeakThresholdSecsStr := os.Getenv(constant.EnvNamePortLeakThresholdSeconds)
+	if len(portLeakThresholdSecsStr) == 0 {
+		op.PortLeakThresholdSecs = 60 * 5 // 5min
+	} else {
+		portLeakCheckIntervalSecs, err := strconv.Atoi(portLeakThresholdSecsStr)
+		if err != nil {
+			blog.Errorf("parse port leak check interval %s failed, err %s",
+				portLeakThresholdSecsStr, err.Error())
+			op.PortLeakThresholdSecs = 60 * 5 // 5min
+		} else {
+			op.PortLeakThresholdSecs = portLeakCheckIntervalSecs
+		}
 	}
 }
 

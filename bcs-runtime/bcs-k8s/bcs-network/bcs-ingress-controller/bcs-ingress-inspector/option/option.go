@@ -62,6 +62,13 @@ type ControllerOption struct {
 	// NodeInfoExporterOpen 如果为true，将会记录集群中的节点信息
 	NodeInfoExporterOpen bool
 
+	// IsNamespaceScope if the ingress can only be associated with the service and workload in the same namespace
+	IsNamespaceScope bool
+
+	// IsTCPUDPReuse if the loadbalancer provider support tcp udp port reuse
+	// if enabled, we will find protocol info in 4 layer listener name
+	IsTCPUDPPortReuse bool
+
 	// Conf HttpServer conf
 	Conf Conf
 	// ServCert http server cert
@@ -123,6 +130,11 @@ func (op *ControllerOption) BindFromCommandLine() {
 		"bcs-ingress-controller will record node info in cluster")
 	flag.StringVar(&op.NodePortBindingNs, "node_portbinding_ns", "default",
 		"namespace that node portbinding will be created in ")
+
+	flag.BoolVar(&op.IsNamespaceScope, "is_namespace_scope", false,
+		"if the ingress can only be associated with the service and workload in the same namespace")
+	flag.BoolVar(&op.IsTCPUDPPortReuse, "is_tcp_udp_port_reuse", false,
+		"if reuse tcp/udp port for ingress")
 
 	flag.UintVar(&op.HttpServerPort, "http_svr_port", 8088, "port for ingress controller http server")
 	flag.Parse()

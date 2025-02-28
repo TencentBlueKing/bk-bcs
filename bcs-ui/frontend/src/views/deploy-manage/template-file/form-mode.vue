@@ -174,6 +174,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  templateSpace: {
+    type: String,
+    default: '',
+  },
 });
 
 const activeFormIndex = ref(0);
@@ -318,6 +322,7 @@ const handleChangeSchema = async (data: ClusterResource.FormResourceType[] = [])
   isLoading.value = true;
   const schemaDataList = await ResourceService.GetMultiResFormSchema({
     resourceTypes,
+    templateSpace: props.templateSpace,
   }).catch(() => ([]));
   isLoading.value = false;
 

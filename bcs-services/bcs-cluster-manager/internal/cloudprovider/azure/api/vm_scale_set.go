@@ -124,6 +124,25 @@ func (aks *AksServiceImpl) UpdateSet(ctx context.Context, info *cloudprovider.Cl
 	return aks.UpdateSetWithName(ctx, set, asg.AutoScalingName, asg.AutoScalingID)
 }
 
+// UpdateSetNodeNum 修改虚拟机规模集节点数量扩容
+func (aks *AksServiceImpl) UpdateSetNodeNum(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeNum int64) (*armcompute.VirtualMachineScaleSet, error) {
+
+	asg := info.NodeGroup.AutoScaling
+	nodeResourceGroup, ok := info.Cluster.ExtraInfo[common.NodeResourceGroup]
+	if !ok || len(nodeResourceGroup) == 0 {
+		return nil, errors.New("cluster extraInfo not nodeResourceGroup")
+	}
+
+	set, err := aks.GetSetWithName(ctx, nodeResourceGroup, info.NodeGroup.AutoScaling.AutoScalingID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "call GetSetWithName failed")
+	}
+	set.SKU.Capacity = to.Ptr(*set.SKU.Capacity + nodeNum)
+
+	return aks.UpdateSetWithName(ctx, set, asg.AutoScalingName, asg.AutoScalingID)
+}
+
 // UpdateSetWithName 从名称修改虚拟机规模集.
 // set - 虚拟机规模集.
 // resourceGroupName - 基础结构资源组(AutoScalingGroup.autoScalingName/Cluster.ExtraInfo["nodeResourceGroup"]).

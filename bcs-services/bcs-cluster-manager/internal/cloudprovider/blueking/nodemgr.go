@@ -232,8 +232,9 @@ func (nm *NodeManager) GetServiceRoles(opt *cloudprovider.CommonOption, roleType
 }
 
 // ListDiskTypes get disk type list
-func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, opt *cloudprovider.CommonOption) (
-	map[string]string, error) {
+func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, diskChargeType string, cpu,
+	memory uint64, opt *cloudprovider.CommonOption) (
+	[]*proto.DiskConfigSet, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

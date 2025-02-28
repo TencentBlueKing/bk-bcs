@@ -23,21 +23,29 @@ import (
 
 // PortLeakChecker 校验端口泄漏
 type PortLeakChecker struct {
-	cli       client.Client
-	poolCache *portpoolcache.Cache
+	cli           client.Client
+	poolCache     *portpoolcache.Cache
+	leakThreshold time.Duration
 }
 
 // NewPortLeakChecker return new port leakchecker
-func NewPortLeakChecker(cli client.Client, poolCache *portpoolcache.Cache) *PortLeakChecker {
+func NewPortLeakChecker(cli client.Client, poolCache *portpoolcache.Cache, leakThresholdSecs int) *PortLeakChecker {
 	return &PortLeakChecker{
-		cli:       cli,
-		poolCache: poolCache,
+		cli:           cli,
+		poolCache:     poolCache,
+		leakThreshold: time.Duration(leakThresholdSecs) * time.Second,
 	}
 }
 
 // Run start check
 func (p *PortLeakChecker) Run() {
 	st := time.Now()
+
+	// close leak check
+	if p.leakThreshold == 0 {
+		return
+	}
+
 	p.poolCache.Lock()
 	defer blog.Infof("port leak check cost: %f", time.Since(st).Seconds())
 	defer p.poolCache.Unlock()
@@ -49,7 +57,7 @@ func (p *PortLeakChecker) Run() {
 						// 端口被占用但是没有占用者信息， 可能发生了端口泄漏
 						// Ref是在PortBinding创建时被设置的， 可能存在Port被webhook分配但PortBinding还没来得及创建的情况。
 						if port.RefName == "" && port.RefNamespace == "" && port.RefType == "" {
-							if time.Since(port.RefStartTime) > time.Minute*30 {
+							if time.Since(port.RefStartTime) > p.leakThreshold {
 								// 超过一定时间没有占用者信息，认为已经发生了端口泄漏
 								blog.Warnf("pool cache leaked, port[%v] released", port)
 								p.poolCache.ReleasePortBinding(pool.PoolKey, item.ItemStatus.ItemName, list.Protocol,

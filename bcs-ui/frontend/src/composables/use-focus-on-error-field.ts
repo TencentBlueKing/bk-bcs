@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 
-export function useFocusOnErrorField() {
+export function useFocusOnErrorField(rootElement?: HTMLElement | null) {
+  const dom = rootElement || document;
   const errorClasses = ref(['form-error-tip', 'error-tips', 'is-error']);
 
   const focusOnErrorField = async () => {
@@ -14,7 +15,7 @@ export function useFocusOnErrorField() {
 
   const findFirstErrorElement = () => {
     for (const className of errorClasses.value) {
-      const elements = document.getElementsByClassName(className);
+      const elements = dom.getElementsByClassName(className);
       if (elements.length > 0) {
         return elements[0];
       }

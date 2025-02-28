@@ -68,7 +68,7 @@ func (la *ListAction) validate() error {
 
 	// env
 	if len(la.req.Environment) > 0 {
-		_, ok := EnvironmentLookup[la.req.Environment]
+		_, ok := common.EnvironmentLookup[la.req.Environment]
 		if !ok {
 			return fmt.Errorf("request Environment invalid, must be [test/debug/prod]")
 		}
@@ -76,7 +76,7 @@ func (la *ListAction) validate() error {
 
 	// engineType
 	if len(la.req.EngineType) > 0 {
-		_, ok := EngineTypeLookup[la.req.EngineType]
+		_, ok := common.EngineTypeLookup[la.req.EngineType]
 		if !ok {
 			return fmt.Errorf("request EngineType invalid, must be [k8s/mesos]")
 		}
@@ -84,7 +84,7 @@ func (la *ListAction) validate() error {
 
 	// clusterType
 	if len(la.req.ClusterType) > 0 {
-		_, ok := ClusterTypeLookup[la.req.ClusterType]
+		_, ok := common.ClusterTypeLookup[la.req.ClusterType]
 		if !ok {
 			return fmt.Errorf("request ClusterType invalid, must be [federation/signal]")
 		}

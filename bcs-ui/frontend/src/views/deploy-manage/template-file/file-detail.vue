@@ -29,6 +29,7 @@
       <FormMode
         is-edit
         :value="curVersionData?.content"
+        :template-space="templateSpace"
         ref="formMode" />
     </div>
     <YamlMode
@@ -153,12 +154,12 @@ function refreshVersionList() {
 // 切换版本详情
 async function handleVersionChange(versionData) {
   curVersionData.value = versionData;
-  if (!curVersionData.value?.content) return;
+  // if (!curVersionData.value?.content) return;
 
   // 更新部署按钮显示状态
   updateShowDeployBtn(!curVersionData.value?.draft);
 
-  isCanTransform.value = await canTransform(curVersionData.value?.content);
+  isCanTransform.value = await canTransform(curVersionData.value?.content || '');
   fileStore.editMode = curVersionData.value?.editFormat || 'yaml';
   fileStore.isFormModeDisabled = !isCanTransform.value;// 设置表单禁用（详情的顶部模式切换在首页，这里用全局共享数据处理）
 }

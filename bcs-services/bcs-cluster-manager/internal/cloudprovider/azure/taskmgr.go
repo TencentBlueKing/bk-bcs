@@ -78,6 +78,9 @@ func newtask() *Task {
 
 	// move nodes to nodeGroup task
 
+	// update nodeGroup task
+	task.works[updateAKSNodeGroupStep.StepMethod] = tasks.UpdateAKSNodeGroupTask
+
 	return task
 }
 
@@ -710,9 +713,8 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 	// step5: remove nodes inner taints
 	// azure not allow to remove nodePool taint
 	// admission webhook "aks-node-validating-webhook.azmk8s.io" denied the request:
-	// Taint delete request "bcs-cluster-manager=noSchedule:NoExecute" refused. User is attempting to delete a taint
-	// configured on aks node pool "hsboykuj".
-	// common.BuildRemoveInnerTaintTaskStep(task, group)
+	// Taint delete request "bcs-cluster-manager=noSchedule:NoExecute" refused.
+	common.BuildRemoveInnerTaintTaskStep(task, group.ClusterID, group.Provider)
 
 	// set current step
 	if len(task.StepSequence) == 0 {
@@ -881,7 +883,53 @@ func (t *Task) BuildDeleteExternalNodeFromCluster(group *proto.NodeGroup, nodes 
 
 // BuildUpdateNodeGroupTask when update nodegroup, we need to create background task,
 func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovider.CommonOption) (*proto.Task, error) {
-	return nil, cloudprovider.ErrCloudNotImplemented
+	// validate request params
+	if group == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask group info empty")
+	}
+	if opt == nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask TaskOptions is lost")
+	}
+
+	nowStr := time.Now().Format(time.RFC3339)
+	task := &proto.Task{
+		TaskID:         uuid.New().String(),
+		TaskType:       cloudprovider.GetTaskType(cloudName, cloudprovider.UpdateNodeGroup),
+		TaskName:       cloudprovider.UpdateNodeGroupTask.String(),
+		Status:         cloudprovider.TaskStatusInit,
+		Message:        "task initializing",
+		Start:          nowStr,
+		Steps:          make(map[string]*proto.Step),
+		StepSequence:   make([]string, 0),
+		ClusterID:      group.ClusterID,
+		ProjectID:      group.ProjectID,
+		Creator:        group.Creator,
+		Updater:        group.Updater,
+		LastUpdate:     nowStr,
+		CommonParams:   make(map[string]string),
+		ForceTerminate: false,
+		NodeGroupID:    group.NodeGroupID,
+	}
+	// generate taskName
+	taskName := fmt.Sprintf(updateNodeGroupTaskTemplate, group.ClusterID, group.NodeGroupID)
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+
+	// setting all steps details
+	updateNodeGroupTask := &UpdateNodeGroupTaskOption{NodeGroup: group}
+
+	// step0: update nodegroup
+	updateNodeGroupTask.BuildUpdateNodeGroupStep(task)
+
+	// step1. ensure auto scaler
+	common.BuildEnsureAutoScalerTaskStep(task, group.ClusterID, group.Provider)
+
+	// set current step
+	if len(task.StepSequence) == 0 {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask task StepSequence empty")
+	}
+	task.CurrentStep = task.StepSequence[0]
+	task.CommonParams[cloudprovider.JobTypeKey.String()] = cloudprovider.UpdateNodeGroupJob.String()
+	return task, nil
 }
 
 // BuildSwitchClusterNetworkTask switch cluster network mode

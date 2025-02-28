@@ -46,7 +46,7 @@ const UpdateRecord = () => import(/* webpackChunkName: 'dashboard' */'@/views/re
 
 export default [
   {
-    path: 'clusters/:clusterId?',
+    path: 'clusters/:clusterId',
     name: 'dashboardHome',
     component: DashboardView,
     redirect: {
@@ -64,6 +64,7 @@ export default [
           name: 'dashboardWorkloadDeployments',
           params: {
             projectCode: $store.getters.curProjectCode,
+            clusterId: '-',
           },
         },
       },

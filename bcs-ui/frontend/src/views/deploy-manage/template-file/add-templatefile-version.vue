@@ -15,6 +15,7 @@
     <template #header-right>
       <div class="bk-button-group absolute left-[50%] -translate-x-1/2">
         <bk-button
+          :disabled="!hasContent && editMode === 'yaml'"
           :class="editMode === 'form' ? 'is-selected' : ''"
           @click="changeMode('form')">{{ $t('templateFile.button.formMode') }}</bk-button>
         <bk-button
@@ -32,6 +33,7 @@
       ]">
       <FormMode
         :value="versionDetail.content"
+        :template-space="fileMetadata?.templateSpaceID"
         ref="formMode"
         v-if="editMode === 'form'" />
       <YamlMode
@@ -40,8 +42,9 @@
         :value="versionDetail.content"
         :version="versionID"
         :render-mode="versionDetail?.renderMode"
+        ref="yamlMode"
         @getUpgradeStatus="getUpgradeStatus"
-        ref="yamlMode" />
+        @change="handleChange" />
     </div>
     <!-- 表单和yaml转换异常提示 -->
     <bcs-dialog :show-footer="false" v-model="showErrorTipsDialog">
@@ -71,12 +74,20 @@
         'bcs-border-top',
         'flex items-center z-10 sticky bottom-0 h-[48px] px-[24px] bg-[#FAFBFD]'
       ]">
-      <bcs-button
-        theme="primary"
-        class="min-w-[88px]"
-        @click="handleShowDiffSlider">
-        {{ $t('generic.button.save') }}
-      </bcs-button>
+      <div
+        class="mr-[8px]"
+        v-bk-tooltips="{
+          content: $t('templateFile.tips.emptyContent'),
+          disabled: hasContent || editMode === 'form'
+        }">
+        <bcs-button
+          theme="primary"
+          class="min-w-[88px]"
+          :disabled="!hasContent && editMode === 'yaml'"
+          @click="handleShowDiffSlider">
+          {{ $t('generic.button.save') }}
+        </bcs-button>
+      </div>
       <bcs-button class="min-w-[88px]" @click="handleSaveDraft">{{$t('deploy.templateset.saveDraft')}}</bcs-button>
       <bcs-button
         class="min-w-[88px]"
@@ -191,6 +202,7 @@ async function changeMode(type: 'yaml'|'form') {
     if (!result) return;
 
     versionDetail.value.content = await handleGetReqData();
+    if (!versionDetail.value.content) return;
   }
   editMode.value = type;
 }
@@ -297,6 +309,8 @@ async function handleShowDiffSlider() {
   if (!result) return;
 
   versionDetail.value.content = await handleGetReqData();
+  // 表单模式 并且 formToYaml 接口报错时不保存
+  if (editMode.value === 'form' && !versionDetail.value.content) return;
   showDiffSlider.value = true;
 }
 
@@ -356,6 +370,9 @@ async function handleSaveDraft() {
   if (!isValid) return;
 
   versionDetail.value.content = await handleGetReqData();
+  // 表单模式 并且 formToYaml 接口报错时不保存
+  if (editMode.value === 'form' && !versionDetail.value.content) return;
+
   const params = isHelm.value ? { renderMode: 'Helm' } : {};
   const result = await TemplateSetService.UpdateTemplateMetadata({
     $id: props.id, // 模板文件元数据 ID
@@ -406,6 +423,12 @@ const hasChanged = async () => {
   isContentChanged.value = resultContent !== originalContent.value;
   return isContentChanged.value;
 };
+
+const hasContent = ref(false);
+function handleChange(content) {
+  hasContent.value = !!content.trim();
+}
+
 defineExpose({
   hasChanged,
 });

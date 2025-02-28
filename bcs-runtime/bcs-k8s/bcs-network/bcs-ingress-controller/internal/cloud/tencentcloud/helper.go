@@ -18,14 +18,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
+	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	qcloud "github.com/Tencent/bk-bcs/bcs-common/pkg/qcloud/clbv2"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
-	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
 // do create listener
@@ -585,6 +585,8 @@ IngressListenerAttribute, rule networkextensionv1.ListenerRule) error {
 		ruleInput.ForwardType = tcommon.StringPtr(ClbProtocolGRPC)
 		ruleInput.Http2 = tcommon.BoolPtr(true)
 		ruleInput.Quic = tcommon.BoolPtr(false)
+	} else if rule.TargetGroup.TargetGroupProtocol == ClbProtocolQUIC {
+		ruleInput.Quic = tcommon.BoolPtr(true)
 	}
 	if rule.ListenerAttribute != nil {
 		if rule.ListenerAttribute.SessionTime != 0 {

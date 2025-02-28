@@ -386,6 +386,9 @@ const handleDeleteField = (item: IFieldItem) => {
     const emptyValue = Array.isArray(get(viewData.value.filter, item.id)) ? [] : '';
     set(viewData.value.filter, item.id, emptyValue);
   }
+  if (item.id === 'createSource.source') {
+    handleSourceTypeChange();
+  };
 };
 
 // 来源类型变更时重置数据

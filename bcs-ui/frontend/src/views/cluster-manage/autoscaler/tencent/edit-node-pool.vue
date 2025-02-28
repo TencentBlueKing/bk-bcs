@@ -46,12 +46,12 @@ import NodePoolInfo from './node-pool-info.vue';
 
 import { mergeDeep } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
+import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
 import $store from '@/store/index';
 import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
 import HeaderNav from '@/views/cluster-manage/components/header-nav.vue';
-import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 
 export default defineComponent({
   components: {
@@ -140,7 +140,7 @@ export default defineComponent({
       const nodePoolInfoValidate = await nodePoolInfoRef.value?.validate();
       const nodePoolConfigValidate = await nodePoolConfigRef.value?.validate();
       if (!nodePoolConfigValidate) {
-        focusOnErrorField()
+        focusOnErrorField();
       }
       if (!nodePoolInfoValidate || !nodePoolConfigValidate) return;
 

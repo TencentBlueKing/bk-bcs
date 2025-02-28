@@ -950,6 +950,17 @@ func (cd *argo) handleDeleteAppResource(ctx context.Context, application *v1alph
 	return nil
 }
 
+// SyncApplication sync application
+func (cd *argo) SyncApplication(ctx context.Context, name string) error {
+	_, err := cd.appClient.Sync(ctx, &applicationpkg.ApplicationSyncRequest{
+		Name: &name,
+	})
+	if err != nil {
+		return errors.Wrapf(err, "sync application failed")
+	}
+	return nil
+}
+
 // GetApplicationSet query the ApplicationSet by name
 func (cd *argo) GetApplicationSet(ctx context.Context, name string) (*v1alpha1.ApplicationSet, error) {
 	if cd.cacheSynced.Load() {

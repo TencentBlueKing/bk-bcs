@@ -7050,6 +7050,8 @@ func (m *GetMultiResFormSchemaReq) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
+	// no validation rules for TemplateSpace
+
 	for idx, item := range m.GetResourceTypes() {
 		_, _ = idx, item
 
@@ -11378,6 +11380,123 @@ var _ interface {
 	ErrorName() string
 } = GetTemplateVersionReqValidationError{}
 
+// Validate checks the field values on GetTemplateResourcesReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetTemplateResourcesReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetTemplateResourcesReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetTemplateResourcesReqMultiError, or nil if none found.
+func (m *GetTemplateResourcesReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetTemplateResourcesReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetTemplateResourcesReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for TemplateSpace
+
+	// no validation rules for Kind
+
+	if len(errors) > 0 {
+		return GetTemplateResourcesReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetTemplateResourcesReqMultiError is an error wrapping multiple validation
+// errors returned by GetTemplateResourcesReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetTemplateResourcesReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetTemplateResourcesReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetTemplateResourcesReqMultiError) AllErrors() []error { return m }
+
+// GetTemplateResourcesReqValidationError is the validation error returned by
+// GetTemplateResourcesReq.Validate if the designated constraints aren't met.
+type GetTemplateResourcesReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTemplateResourcesReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTemplateResourcesReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTemplateResourcesReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTemplateResourcesReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTemplateResourcesReqValidationError) ErrorName() string {
+	return "GetTemplateResourcesReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTemplateResourcesReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTemplateResourcesReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTemplateResourcesReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTemplateResourcesReqValidationError{}
+
 // Validate checks the field values on GetTemplateAssociateLabelsReq with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -11400,18 +11519,6 @@ func (m *GetTemplateAssociateLabelsReq) validate(all bool) error {
 
 	var errors []error
 
-	if utf8.RuneCountInString(m.GetId()) != 24 {
-		err := GetTemplateAssociateLabelsReqValidationError{
-			field:  "Id",
-			reason: "value length must be 24 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-
-	}
-
 	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
 		err := GetTemplateAssociateLabelsReqValidationError{
 			field:  "ProjectCode",
@@ -11422,6 +11529,8 @@ func (m *GetTemplateAssociateLabelsReq) validate(all bool) error {
 		}
 		errors = append(errors, err)
 	}
+
+	// no validation rules for TemplateSpace
 
 	if utf8.RuneCountInString(m.GetKind()) < 1 {
 		err := GetTemplateAssociateLabelsReqValidationError{

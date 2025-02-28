@@ -97,16 +97,16 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 	}
 
 	if portBinding != nil {
-		// portBinding创建后， 标记使用的端口（checker会根据这个标记，释放泄漏的端口）
-		for _, portBindingItem := range portBinding.Spec.PortBindingList {
-			pbr.poolCache.SetPortBindingUsed(portBindingItem, portBindingType, portBinding.GetNamespace(),
-				portBinding.GetName())
-		}
-
 		// when statefulset pod is recreated, the old portbinding may be deleting
 		if portBinding.DeletionTimestamp != nil {
 			blog.V(3).Infof("found deleting portbinding, continue clean portbinding %v", req.NamespacedName)
 			return pbr.cleanPortBinding(portBinding)
+		}
+
+		// portBinding创建后， 标记使用的端口（定时checker认为没有标记的端口已经泄露， 等待一段时间后释放）
+		for _, portBindingItem := range portBinding.Spec.PortBindingList {
+			pbr.poolCache.SetPortBindingUsed(portBindingItem, portBindingType, portBinding.GetNamespace(),
+				portBinding.GetName())
 		}
 	}
 
@@ -453,7 +453,7 @@ func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
 }
 
 func (pbr *PortBindingReconciler) podPortBindingPreCheck(portBindingType string, portBinding *networkextensionv1.
-	PortBinding, pod *k8scorev1.Pod) (bool, ctrl.Result, error) {
+PortBinding, pod *k8scorev1.Pod) (bool, ctrl.Result, error) {
 	if portBinding == nil {
 		if pod.Status.Phase == k8scorev1.PodFailed {
 			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, no need to handle it", pod.GetNamespace(),
@@ -485,7 +485,7 @@ func (pbr *PortBindingReconciler) podPortBindingPreCheck(portBindingType string,
 }
 
 func (pbr *PortBindingReconciler) nodePortBindingPreCheck(portBindingType string, portBinding *networkextensionv1.
-	PortBinding, node *k8scorev1.Node) (bool, ctrl.Result, error) {
+PortBinding, node *k8scorev1.Node) (bool, ctrl.Result, error) {
 	if portBinding == nil {
 		res, err := pbr.createPortBinding(portBindingType, node.GetNamespace(), node.GetName(), node.GetAnnotations())
 		return false, res, err

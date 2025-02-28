@@ -79,8 +79,14 @@ func ThreeWayMergeMonitorRule(scenario string, original, current, modified []*v1
 			mergeRule.Labels = modifiedRule.Labels
 		} else {
 			blog.Infof("[%s]changed Rule..", originalRule.Name)
-			// 用户进行了修改， 不做变更
-			mergeRule = currentRule
+			if !reflect.DeepEqual(originalRule.Detect, currentRule.Detect) {
+				// 用户修改了探测条件， 不做变更
+				mergeRule = currentRule
+			} else {
+				// 目前只有可能是用户开关了告警规则， 保留开关， 但是更新内容
+				mergeRule = modifiedRule
+				mergeRule.Enabled = currentRule.Enabled
+			}
 			mergeRule.Notice = mergeNoticeGroup(currentRule.Notice, modifiedRule.Notice)
 			// label覆盖
 			mergeRule.Labels = modifiedRule.Labels

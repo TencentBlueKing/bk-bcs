@@ -782,7 +782,7 @@ func processVmss(ctx context.Context, cli api.AksService, pool *armcontainerserv
 	vmSet.SKU.Capacity = to.Ptr(int64(nodeGroup.AutoScaling.DesiredSize))
 
 	// 字段对齐
-	_ = cli.AgentPoolToNodeGroup(pool, nodeGroup)
+	_ = cli.AgentPoolToNodeGroup(pool, nodeGroup, &api.AgentPoolToNodeGroupOptions{SetTaint: false})
 
 	// updateVmss
 	finalVmss, err := updateVmss(ctx, cli, nodeGroup, vmSet, rg, crg, false)

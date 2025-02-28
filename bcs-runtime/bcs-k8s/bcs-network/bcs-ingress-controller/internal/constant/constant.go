@@ -15,7 +15,7 @@ package constant
 
 var (
 	// Layer4Protocol 四层协议
-	Layer4Protocol = []string{ProtocolTCP, ProtocolUDP, ProtocolTCPSSL}
+	Layer4Protocol = []string{ProtocolTCP, ProtocolUDP, ProtocolTCPSSL, ProtocolQUIC}
 
 	// Layer7Protocol 七层协议
 	Layer7Protocol = []string{ProtocolHTTP, ProtocolHTTPS}
@@ -32,6 +32,8 @@ const (
 	ProtocolHTTP = "HTTP"
 	// ProtocolTCPSSL protocol of TCP_SSL
 	ProtocolTCPSSL = "TCP_SSL"
+	// ProtocolQUIC protocol of QUIC
+	ProtocolQUIC = "QUIC"
 	// PortPoolPortProtocolTCPUDP protocol of port in pool is tcp&udp
 	PortPoolPortProtocolTCPUDP = "TCP_UDP"
 
@@ -78,6 +80,9 @@ const (
 	EnvNameBkAppCode = "BK_APP_CODE"
 	// EnvNameBkAppSecret env name for bk_app_secret
 	EnvNameBkAppSecret = "BK_APP_SECRET"
+
+	// EnvNamePortLeakThresholdSeconds env name for port leak threshold seconds
+	EnvNamePortLeakThresholdSeconds = "PORT_LEAK_THRESHOLD_SECONDS"
 
 	// EnvNameListenerNameValidateMode env name for enable listener name validate
 	// option value:

@@ -45,6 +45,7 @@ func newTmplFuncMap() template.FuncMap {
 	extra := template.FuncMap{
 		// 功能类方法
 		"toYaml":                 toYaml,
+		"toJson":                 toJson,
 		"filterMatchKVFormSlice": slice.FilterMatchKVFromSlice,
 		"matchKVInSlice":         slice.MatchKVInSlice,
 		"i18n":                   i18n.GetMsgWithLang,
@@ -83,6 +84,17 @@ func toYaml(v interface{}) string {
 		return ""
 	}
 	return strings.TrimSuffix(string(data), "\n")
+}
+
+// toJson takes an interface, marshals it to json, and returns a string. It will
+// always return a string, even on marshal error (empty string).
+func toJson(v interface{}) string {
+	data, err := json.Marshal(v)
+	if err != nil {
+		// Swallow errors inside a template.
+		return ""
+	}
+	return string(data)
 }
 
 // 模板初始化（含挂载 include 方法等）

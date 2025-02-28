@@ -68,12 +68,12 @@ func generateClusterID(cls *proto.Cluster, model store.ClusterManagerModel) (str
 }
 
 func getClusterMaxNum(clusterType string, env string, model store.ClusterManagerModel) (int, error) {
-	_, ok := EngineTypeLookup[clusterType]
+	_, ok := common.EngineTypeLookup[clusterType]
 	if !ok {
 		return 0, fmt.Errorf("clusterType[%s] failed", clusterType)
 	}
 
-	_, ok = ClusterEnvMap[env]
+	_, ok = common.ClusterEnvMap[env]
 	if !ok {
 		return 0, fmt.Errorf("cluster env[%s] failed", env)
 	}
@@ -906,4 +906,16 @@ func getCmNodeIps(cmNodes []*proto.ClusterNode) []string {
 		ips = append(ips, cmNodes[i].InnerIP)
 	}
 	return ips
+}
+
+// checkHighAvailabilityMasterNodes for check master node number and zoneID
+func checkHighAvailabilityMasterNodes(cls *proto.Cluster, cloud *proto.Cloud, nodes []*proto.Node) error {
+
+	clsMgr, err := cloudprovider.GetClusterMgr(cloud.GetCloudProvider())
+	if err != nil {
+		blog.Errorf("checkHighAvailabilityMasterNodes[%s] failed: %v", cls.ClusterID, err)
+		return err
+	}
+
+	return clsMgr.CheckHighAvailabilityMasterNodes(cls, nodes)
 }

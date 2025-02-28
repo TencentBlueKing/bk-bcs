@@ -4,6 +4,7 @@
     multiple
     :popover-min-width="360"
     searchable
+    :key="Date.now()"
     :clearable="false"
     :display-tag="displayTag"
     :placeholder="$t('view.labels.all')"

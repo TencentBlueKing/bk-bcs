@@ -48,7 +48,8 @@ type CBSClient struct {
 }
 
 // GetDiskTypes get available disk types for instance types and zones
-func (c *CBSClient) GetDiskTypes(instanceTypes []string, zones []string) (map[string]string, error) {
+func (c *CBSClient) GetDiskTypes(instanceTypes []string, zones []string, diskChargeType string, cpu, memory uint64) (
+	[]*cbs.DiskConfig, error) {
 	request := cbs.NewDescribeDiskConfigQuotaRequest()
 	request.InquiryType = common.StringPtr("INQUIRY_CVM_CONFIG")
 	if len(instanceTypes) > 0 {
@@ -59,17 +60,14 @@ func (c *CBSClient) GetDiskTypes(instanceTypes []string, zones []string) (map[st
 		request.Zones = common.StringPtrs(zones)
 	}
 
+	request.DiskChargeType = common.StringPtr(diskChargeType)
+	request.CPU = common.Uint64Ptr(cpu)
+	request.Memory = common.Uint64Ptr(memory)
+
 	rsp, err := c.cbs.DescribeDiskConfigQuota(request)
 	if err != nil {
 		return nil, err
 	}
 
-	diskTypes := make(map[string]string)
-	for _, disk := range rsp.Response.DiskConfigSet {
-		if *disk.Available {
-			diskTypes[*disk.DiskType] = ""
-		}
-	}
-
-	return diskTypes, nil
+	return rsp.Response.DiskConfigSet, nil
 }

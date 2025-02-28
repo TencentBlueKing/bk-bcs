@@ -29,12 +29,12 @@ export default defineComponent({
       required: true,
     },
     value: {
-      type: Object,
+      type: [Object, String],
       default: () => ({}),
       required: true,
     },
   },
-  emits: ['change'],
+  emits: ['change', 'input'],
   setup(props, { emit }) {
     const labels = computed(() => {
       if (Array.isArray(props.datasource)) {
@@ -54,10 +54,15 @@ export default defineComponent({
         labelValue.value[key] = value;
       }
       emit('change', labelValue.value);
+      emit('input', labelValue.value);
     };
 
     watch(() => props.value, (value) => {
-      labelValue.value = JSON.parse(JSON.stringify(value));
+      if (!value) {
+        // 临时修复form初始化object类型出错问题
+        emit('input', {});
+      }
+      labelValue.value = JSON.parse(JSON.stringify(value)) || {};
     }, { immediate: true });
 
     return {

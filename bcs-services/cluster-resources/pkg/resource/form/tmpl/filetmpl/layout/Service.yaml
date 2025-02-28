@@ -12,21 +12,14 @@
                 prop: ports
           prop: portConf
       - - group:
+            - [ "associate", "." ]
+            - [ "labels", "." ]
+            - [ "workloadType", "workloadName", "." ]
             - - group:
-                  - [ "."]
+                  - [ "labelSelected", "." ]
                 container:
                   grid-template-columns: "1fr auto"
-                prop: associatedResources
-            - - group:
-                  - [ "."]
-                container:
-                  grid-template-columns: "1fr auto"
-                prop: associatedApplications
-            - - group:
-                  - [ "key", "value", "." ]
-                container:
-                  grid-template-columns: "1fr 1fr auto"
-                prop: labels
+                prop: labelSelected
           prop: selector
       - - group:
             - [ "type", "." ]

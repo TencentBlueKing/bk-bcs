@@ -227,6 +227,7 @@ export default defineComponent({
       manifest: {},
       total: 0,
     });
+    const applyURL = computed(() => data.value.perms?.applyURL);
     const {
       isLoading,
       webAnnotations,
@@ -708,6 +709,7 @@ export default defineComponent({
       searchSelectKey,
       detailLoading,
       sourceTypeMap,
+      applyURL,
     };
   },
   render() {
@@ -798,6 +800,25 @@ export default defineComponent({
             }
           </div>
         </ContentHeader>
+        {
+          this.applyURL ? (
+            <bk-alert
+              class="mx-[24px] mb-[16px]"
+              type="warning"
+              {
+                ...{
+                  scopedSlots: {
+                    title: () => (<i18n path="dashboard.workload.tips.noPerms">
+                      <span class="text-[#3a84ff] ml-[2px] cursor-pointer" onClick={() => window.open(this.applyURL)}>
+                        {this.$t('dashboard.workload.button.applyURL')}
+                      </span>
+                    </i18n>),
+                  },
+                }
+              }>
+            </bk-alert>
+          ) : null
+        }
         <div class="dashboard-content flex-1 px-[24px] pb-[16px] overflow-auto">
           {
               this.$scopedSlots.default?.({

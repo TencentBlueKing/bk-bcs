@@ -42,6 +42,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/bcs-ingress-inspector/option"
 	portbindingctrl "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/bcs-ingress-inspector/portbindingcontroller"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/generator"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/httpsvr"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/portbindingcontroller"
 )
@@ -153,6 +154,12 @@ func initHttpServer(op *option.ControllerOption, mgr manager.Manager,
 		// NodeCache: nodeCache,
 		// Ops:               op,
 		NodePortBindCache: nodeBindCache,
+		IngressLiConverter: &generator.IngressListenerConverter{
+			Cli:               mgr.GetClient(),
+			IsNamespaced:      op.IsNamespaceScope,
+			IsTCPUDPPortReuse: op.IsTCPUDPPortReuse,
+			Eventer:           nil, // do not need to send event in inspector
+		},
 	}
 	httpsvr.InitRouters(ws, httpServerClient)
 

@@ -835,6 +835,59 @@
         ]
       }
     },
+    "/clusterresources/v1/projects/{projectCode}/template/labels": {
+      "get": {
+        "summary": "Get template associate labels",
+        "description": "获取模板文件关联labels",
+        "operationId": "TemplateSet_GetTemplateAssociateLabels",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateSpace",
+            "description": "模板文件文件夹名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "associateName",
+            "description": "关联资源名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
     "/clusterresources/v1/projects/{projectCode}/template/metadatas/{id}": {
       "get": {
         "summary": "Get template metadata detail",
@@ -986,6 +1039,52 @@
             "schema": {
               "$ref": "#/definitions/clusterresourcesDeployTemplateFileReq"
             }
+          }
+        ],
+        "tags": [
+          "TemplateSet"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectCode}/template/resources": {
+      "get": {
+        "summary": "Get template associate labels",
+        "description": "获取模板文件关联labels",
+        "operationId": "TemplateSet_GetTemplateResources",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "templateSpace",
+            "description": "模板文件文件夹名称.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "kind",
+            "description": "资源类型.",
+            "in": "query",
+            "required": false,
+            "type": "string"
           }
         ],
         "tags": [
@@ -1433,58 +1532,6 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "TemplateSet"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectCode}/template/{id}/labels": {
-      "get": {
-        "summary": "Get template associate labels",
-        "description": "获取模板文件关联labels",
-        "operationId": "TemplateSet_GetTemplateAssociateLabels",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectCode",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "kind",
-            "description": "资源类型.",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "associateName",
-            "description": "关联资源名称.",
-            "in": "query",
-            "required": false,
             "type": "string"
           }
         ],
@@ -10764,6 +10811,10 @@
         "projectCode": {
           "type": "string",
           "title": "项目编码"
+        },
+        "templateSpace": {
+          "type": "string",
+          "title": "模板空间"
         },
         "resourceTypes": {
           "type": "array",

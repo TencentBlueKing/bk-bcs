@@ -679,6 +679,7 @@ func (cm *ClusterManager) initDaemon() {
 		EnableDaemon:             cm.opt.Daemon.Enable,
 		EnableAllocateCidrDaemon: cm.opt.Daemon.EnableAllocateCidr,
 		EnableInsTypeUsage:       cm.opt.Daemon.EnableInsTypeUsage,
+		EnableAzureTaint:         cm.opt.Daemon.EnableAzureTaint,
 	})
 }
 

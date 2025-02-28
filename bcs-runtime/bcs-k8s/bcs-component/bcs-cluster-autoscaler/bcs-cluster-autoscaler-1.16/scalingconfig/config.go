@@ -32,4 +32,5 @@ type Options struct {
 	ScanInterval              time.Duration
 	EvictLatest               bool
 	ScaleDownDelayAfterRemove time.Duration
+	BatchScaleUpCount         int
 }

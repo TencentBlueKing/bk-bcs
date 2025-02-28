@@ -166,7 +166,6 @@ import $router from '@/router';
 import $store from '@/store';
 import SystemLog from '@/views/app/log.vue';
 import ProjectSelector from '@/views/app/project-selector.vue';
-import useViewConfig from '@/views/resource-view/view-manage/use-view-config';
 
 export default defineComponent({
   name: 'NewNavigation',
@@ -270,7 +269,6 @@ export default defineComponent({
       return href;
     };
     // 切换菜单
-    const { isClusterMode } = useViewConfig();
     const handleChangeMenu = (item: IMenu) => {
       const name = item.route || item.children?.[0]?.route || '404';
       if (route.value.name === name) return;
@@ -282,7 +280,7 @@ export default defineComponent({
         params: {
           projectCode: $store.getters.curProjectCode,
           // 资源视图集群视图时切换路由不能丢失集群ID，其余菜单默认不给
-          clusterId: (item.id === 'CLUSTERRESOURCE' && isClusterMode.value) ? $router.currentRoute?.params?.clusterId : '',
+          clusterId: (item.id === 'CLUSTERRESOURCE') ? ($router.currentRoute?.params?.clusterId || '-') : '',
         },
       }).catch(err => console.warn(err));
     };

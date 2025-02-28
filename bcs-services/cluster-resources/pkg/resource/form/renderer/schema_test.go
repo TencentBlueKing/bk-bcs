@@ -35,7 +35,8 @@ func TestSchemaRenderer(t *testing.T) {
 
 	// 默认版本（中文）
 	for kind := range validator.FormSupportedResAPIVersion {
-		result, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, "", kind, "default", "", false).Render()
+		result, err := NewSchemaRenderer(context.TODO(), envs.TestClusterID, "", kind, "default", "", false, "").
+			Render()
 		assert.Nil(t, err)
 
 		// 验证 schema 的合法性
@@ -58,14 +59,14 @@ func TestSchemaRenderer(t *testing.T) {
 	// 英文版本
 	ctx := context.WithValue(context.TODO(), ctxkey.LangKey, i18n.EN)
 	for kind := range validator.FormSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, "", kind, "default", "", false).Render()
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, "", kind, "default", "", false, "").Render()
 		assert.Nil(t, err)
 	}
 
 	// 中文版本
 	ctx = context.WithValue(context.TODO(), ctxkey.LangKey, i18n.ZH)
 	for kind := range validator.FormSupportedResAPIVersion {
-		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, "", kind, "default", "", false).Render()
+		_, err := NewSchemaRenderer(ctx, envs.TestClusterID, "", kind, "default", "", false, "").Render()
 		assert.Nil(t, err)
 	}
 }
@@ -112,9 +113,9 @@ func TestGenSchemaRulesScheduleValid(t *testing.T) {
 		"* * * * 1-2/1,2",
 		"* * * * SUN-2/1,2",
 		"* * * * SAT-2/1,SUN",
-		
+
 		"1-2/1,2 23/1,2 ?/1,2 JAN/1,DEC SUN/0,SAT",
-		
+
 		// invalid schudule cron
 		"1/1-2 * * * *",
 		"* * L * *",

@@ -15,10 +15,9 @@ package templateversion
 
 import (
 	"context"
-	"errors"
 	"sort"
+	"strings"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/coreos/go-semver/semver"
 
@@ -129,6 +128,56 @@ func (t *TemplateVersionAction) GetContent(ctx context.Context, templateSpace, t
 	return templateVersion[0].ToMap(), nil
 }
 
+// GetTemplateResources xxx
+func (t *TemplateVersionAction) GetTemplateResources(
+	ctx context.Context, in *clusterRes.GetTemplateResourcesReq) (map[string]interface{}, error) {
+
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if in.TemplateSpace == "" {
+		return parser.ParseResourcesFromManifest(nil, in.Kind), nil
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, in.TemplateSpace)
+	if err != nil {
+		return parser.ParseLablesFromManifest(nil, in.Kind, ""), nil
+	}
+
+	templates, err := t.model.ListTemplate(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	versions := make([]*entity.TemplateVersion, 0)
+	for _, v := range templates {
+		version, err := t.model.ListTemplateVersion(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+			entity.FieldKeyProjectCode:   p.Code,
+			entity.FieldKeyTemplateSpace: v.TemplateSpace,
+			entity.FieldKeyTemplateName:  v.Name,
+			entity.FieldKeyVersion:       v.Version,
+		}))
+		if err != nil {
+			continue
+		}
+		if len(version) == 0 {
+			continue
+		}
+		versions = append(versions, version[0])
+	}
+
+	return parser.ParseResourcesFromManifest(versions, in.Kind), nil
+}
+
 // GetTemplateAssociateLabels xxx
 func (t *TemplateVersionAction) GetTemplateAssociateLabels(
 	ctx context.Context, in *clusterRes.GetTemplateAssociateLabelsReq) (map[string]interface{}, error) {
@@ -142,20 +191,29 @@ func (t *TemplateVersionAction) GetTemplateAssociateLabels(
 		return nil, err
 	}
 
-	templateVersion, err := t.model.GetTemplateVersion(ctx, in.Id)
+	//  associateName 格式为 templateName/workloadName
+	names := strings.SplitN(in.AssociateName, "/", 2)
+	if len(names) != 2 {
+		return parser.ParseLablesFromManifest(nil, in.Kind, ""), nil
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, in.TemplateSpace)
 	if err != nil {
-		if errors.Is(err, drivers.ErrTableRecordNotFound) {
-			return map[string]interface{}{}, nil
-		}
+		return parser.ParseLablesFromManifest(nil, in.Kind, ""), nil
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+		entity.FieldKeyTemplateName:  names[0],
+	})
+
+	templateVersions, err := t.model.ListTemplateVersion(ctx, cond)
+	if err != nil {
 		return nil, err
 	}
 
-	// 只能查看当前项目的版本
-	if templateVersion.ProjectCode != p.Code {
-		return nil, errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "无权限访问"))
-	}
-
-	return parser.GetLablesFromManifest(templateVersion.Content, in.Kind, in.AssociateName), nil
+	return parser.ParseLablesFromManifest(templateVersions, in.Kind, names[1]), nil
 }
 
 // List xxx

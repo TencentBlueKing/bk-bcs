@@ -68,6 +68,8 @@ export const cloudCidrconflict = request('get', '/clouds/$cloudId/vpcs/$vpc/cidr
 export const addSubnets = request('post', '/clusters/$clusterId/subnets');
 export const cloudRoles = request('get', '/clouds/$cloudId/serviceroles');
 export const recommendNodeGroupConf = request('get', '/cloud/$cloudId/recommendNodeGroupConf');
+// 获取磁盘类型 tencentPublicCloud
+export const getDisktypes = request('post', '/clouds/tencentPublicCloud/disktypes');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');

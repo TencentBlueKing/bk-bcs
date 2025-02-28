@@ -32,6 +32,7 @@ import PluginManage from './plugin-manage';
 import ProjectManage from './project-manage';
 import ResourceView from './resource-view';// todo 有循环依赖
 
+import { clusterDetail } from '@/api/modules/cluster-manager';
 import cancelRequest from '@/common/cancel-request';
 import $store from '@/store';
 import useMenu from '@/views/app/use-menu';
@@ -112,23 +113,6 @@ const router = new VueRouter({
         ...ResourceView,
       ],
     },
-    // 没有项目code的路由，重定向到资源视图
-    {
-      path: `${SITE_URL}/clusters/:clusterId`,
-      name: 'noProject',
-      component: Entry,
-      meta: {
-        hideMenu: true,
-      },
-      children: [
-        {
-          path: '*',
-          redirect: {
-            name: 'noProject',
-          },
-        },
-      ],
-    },
     // 404
     {
       path: '*',
@@ -149,7 +133,31 @@ VueRouter.prototype.back = () => {
   }
 };
 
+const clusterPathPattern = new RegExp(`^${SITE_URL}/clusters/([^/]+)`); // 匹配 ${SITE_URL}/clusters/:clusterId
+
 router.beforeEach(async (to, from, next) => {
+  // 资源视图兼容无projectCode的路径
+  if (!to.name || to.name === '404') {
+    const match = to.fullPath?.match(clusterPathPattern);
+    // 如果路径匹配 ${SITE_URL}/clusters/:clusterId
+    const clusterId = match?.[1]; // 从匹配结果中获取 clusterId
+    if (clusterId && clusterId !== '-') {
+      // 查找clusterId对应的项目
+      const data = await clusterDetail({
+        $clusterId: clusterId,
+      });
+      const projectCode = data?.extraInfo?.projectCode;
+
+      if (projectCode) {
+        // 如果路径匹配 ${SITE_URL}/clusters/:clusterId
+        const newPath = `${SITE_URL}/projects/${projectCode}${to.fullPath?.replace(SITE_URL, '')}`;
+        // 重定向到新路径
+        next(newPath);
+        return;
+      }
+    }
+  }
+
   // 设置必填路由参数
   if (!to.params.projectId && $store.getters.curProjectId) {
     to.params.projectId = $store.getters.curProjectId;
@@ -157,7 +165,9 @@ router.beforeEach(async (to, from, next) => {
   if (!to.params.projectCode && $store.getters.curProjectCode) {
     to.params.projectCode = $store.getters.curProjectCode;
   }
+  // 取消上一个页面的请求
   await cancelRequest();
+  // 校验路由是否开启
   const { validateRouteEnable, getNavByRoute } = useMenu();
   const result = await validateRouteEnable(to);
   if (!result) {

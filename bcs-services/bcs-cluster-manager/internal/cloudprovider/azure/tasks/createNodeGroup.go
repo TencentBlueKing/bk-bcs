@@ -399,7 +399,7 @@ func cloudDataToNodeGroup(rootCtx context.Context, pool *armcontainerservice.Age
 	}
 	// 字段对齐
 	_ = client.SetToNodeGroup(set, group)
-	_ = client.AgentPoolToNodeGroup(pool, group)
+	_ = client.AgentPoolToNodeGroup(pool, group, &api.AgentPoolToNodeGroupOptions{SetTaint: false})
 	syncSku(rootCtx, client, group)
 	setModuleInfo(group, cluster.BusinessID)
 	group.ClusterID = cluster.ClusterID

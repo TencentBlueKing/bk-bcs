@@ -27,13 +27,11 @@ import (
 	apitypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/autoscaler/cluster-autoscaler/cloudprovider"
 	"k8s.io/autoscaler/cluster-autoscaler/clusterstate"
-	core_utils "k8s.io/autoscaler/cluster-autoscaler/core/utils"
 	priority_util "k8s.io/autoscaler/cluster-autoscaler/expander/priority"
 	"k8s.io/autoscaler/cluster-autoscaler/metrics"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/nodegroupset"
 	"k8s.io/autoscaler/cluster-autoscaler/processors/status"
 	simulator "k8s.io/autoscaler/cluster-autoscaler/simulator"
-	"k8s.io/autoscaler/cluster-autoscaler/utils/errors"
 	"k8s.io/autoscaler/cluster-autoscaler/utils/gpu"
 	v1lister "k8s.io/client-go/listers/core/v1"
 	klog "k8s.io/klog/v2"
@@ -123,7 +121,7 @@ func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 	var err error
 
 	if review.Response != nil && review.Response.ScaleUps != nil {
-		options, err = handleScaleUpResponse(review.Request, review.Response.ScaleUps)
+		options = handleScaleUpResponse(review.Request, review.Response.ScaleUps)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -141,10 +139,10 @@ func HandleResponse(review ClusterAutoscalerReview, nodes []*corev1.Node,
 }
 
 // handleScaleUpResponse abstracts options of scale up from response
-func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (ScaleUpOptions, error) {
+func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) ScaleUpOptions {
 	options := make(ScaleUpOptions, 0)
 	if len(policies) == 0 {
-		return options, nil
+		return options
 	}
 	for _, policy := range policies {
 		if policy == nil {
@@ -153,7 +151,8 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (S
 		metricsinternal.UpdateWebhookScaleUpResponse(policy.NodeGroupID, policy.DesiredSize)
 		multiOptions, err := processMultiNodeGroupWithPriority(req, policy)
 		if err != nil {
-			return nil, err
+			klog.Warning(err.Error())
+			continue
 		}
 		if multiOptions == nil {
 			continue
@@ -163,7 +162,7 @@ func handleScaleUpResponse(req *AutoscalerRequest, policies []*ScaleUpPolicy) (S
 		}
 	}
 	klog.Infof("Scale-up options: %v", options)
-	return options, nil
+	return options
 }
 
 // handleScaleDownResponse abstracts candidates of scale down from response
@@ -190,20 +189,23 @@ func handleScaleDownResponse(req *AutoscalerRequest, policies []*ScaleDownPolicy
 				continue
 			}
 			if policy.NodeNum > originNodeGroup.DesiredSize {
-				return nil, fmt.Errorf("In scale down policy of nodegroup %v, node num %d should not greater than desired num %d",
+				klog.Warningf("In scale down policy of nodegroup %v, node num %d should not greater than desired num %d",
 					policy.NodeGroupID, policy.NodeNum, originNodeGroup.DesiredSize)
+				continue
 			}
 			// 节点缩容时有短暂时间获取不到 InternalIP，但此时 desiredSize 还没变小，因此以 NodeIPs 长度为准 double check
 			if policy.NodeNum == len(originNodeGroup.NodeIPs) {
 				continue
 			}
 			if policy.NodeNum > len(originNodeGroup.NodeIPs) {
-				return nil, fmt.Errorf("In scale down policy of nodegroup %v, node num %d should not greater than len(NodeIPs) %v",
+				klog.Warningf("In scale down policy of nodegroup %v, node num %d should not greater than len(NodeIPs) %v",
 					policy.NodeGroupID, policy.NodeNum, len(originNodeGroup.NodeIPs))
+				continue
 			}
 			ips, err := sortNodesWithCostAndUtilization(nodes, filteredIPs, nodeNameToNodeInfo, sd)
 			if err != nil {
-				return nil, fmt.Errorf("Sort nodes with cost and utilization failed: %v", err)
+				klog.Warningf("Sort nodes with cost and utilization failed: %v", err)
+				continue
 			}
 			// 缩容中的节点可能出现不在 NodeIPs，但在 DeletionsInProgress 的情况，所以可能这一逻辑周期会少缩，但下一周期会继续处理缩容，此处保守处理
 			scaleDownNum := len(originNodeGroup.NodeIPs) - policy.NodeNum -
@@ -287,7 +289,7 @@ func sortNodesWithCostAndUtilization(nodes []*corev1.Node, candidates []string,
 
 // ExecuteScaleUp execute scale up with scale up options
 func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	options ScaleUpOptions, maxBulkScaleUpCount int) error {
+	options ScaleUpOptions, maxBulkScaleUpCount, batchScaleUpCount int) error {
 	nodegroups := context.CloudProvider.NodeGroups()
 	for _, ng := range nodegroups {
 		desired, ok := options[ng.Id()]
@@ -304,17 +306,35 @@ func ExecuteScaleUp(context *contextinternal.Context, clusterStateRegistry *clus
 				desired-target, maxBulkScaleUpCount)
 			desired = target + maxBulkScaleUpCount
 		}
-		info := nodegroupset.ScaleUpInfo{
-			Group:       ng,
-			CurrentSize: target,
-			NewSize:     desired,
-			MaxSize:     ng.MaxSize(),
+		ticker := time.NewTicker(time.Second * 1)
+		defer ticker.Stop()
+		for range ticker.C {
+			current, err := ng.TargetSize()
+			if err != nil {
+				return fmt.Errorf("Cannot get target size of nodegroup %v, err: %v", ng.Id(), err)
+			}
+			klog.Infof("current: %d, desired: %d, maxBulkScaleUpCount: %d, batchScaleUpCount: %d",
+				current, desired, maxBulkScaleUpCount, batchScaleUpCount)
+			if current >= desired {
+				break
+			}
+			target := current + batchScaleUpCount
+			if target >= desired {
+				target = desired
+			}
+			info := nodegroupset.ScaleUpInfo{
+				Group:       ng,
+				CurrentSize: current,
+				NewSize:     target,
+				MaxSize:     ng.MaxSize(),
+			}
+			err = executeScaleUp(context.AutoscalingContext, clusterStateRegistry, info, "", time.Now())
+			if err != nil {
+				klog.Warningf("Failed to scale up nodegroup %v to %v: %v", ng.Id(), target, err)
+				continue
+			}
+			klog.Infof("Successfully scale up, setting nodegroup %v size to %v", ng.Id(), target)
 		}
-		err = executeScaleUp(context.AutoscalingContext, clusterStateRegistry, info, "", time.Now())
-		if err != nil {
-			return fmt.Errorf("Failed to scale up nodegroup %v to %v: %v", ng.Id(), desired, err)
-		}
-		klog.Infof("Successfully scale up , setting nodegroup %v size to %v", ng.Id(), desired)
 	}
 	clusterStateRegistry.Recalculate()
 
@@ -541,154 +561,154 @@ func processMultiNodeGroupWithPriority(req *AutoscalerRequest, policy *ScaleUpPo
 	return options, nil
 }
 
-// checkResourcesLimits checks the resources limitation of scale up option and scale down candidates
-func checkResourcesLimits(
-	context *contextinternal.Context,
-	nodes []*corev1.Node,
-	options ScaleUpOptions,
-	candidates ScaleDownCandidates) errors.AutoscalerError {
+// // checkResourcesLimits checks the resources limitation of scale up option and scale down candidates
+// func checkResourcesLimits(
+// 	context *contextinternal.Context,
+// 	nodes []*corev1.Node,
+// 	options ScaleUpOptions,
+// 	candidates ScaleDownCandidates) errors.AutoscalerError {
 
-	resourceLimiter, err := context.CloudProvider.GetResourceLimiter()
-	if err != nil {
-		return errors.ToAutoscalerError(
-			errors.CloudProviderError, err)
-	}
+// 	resourceLimiter, err := context.CloudProvider.GetResourceLimiter()
+// 	if err != nil {
+// 		return errors.ToAutoscalerError(
+// 			errors.CloudProviderError, err)
+// 	}
 
-	upErr := checkScaleUpResourcesLimits(options, nodes,
-		context.CloudProvider, resourceLimiter)
-	if upErr != nil {
-		return upErr
-	}
+// 	upErr := checkScaleUpResourcesLimits(options, nodes,
+// 		context.CloudProvider, resourceLimiter)
+// 	if upErr != nil {
+// 		return upErr
+// 	}
 
-	downErr := checkScaleDownResourcesLimits(candidates, nodes,
-		context.CloudProvider, resourceLimiter)
-	if downErr != nil {
-		return downErr
-	}
+// 	downErr := checkScaleDownResourcesLimits(candidates, nodes,
+// 		context.CloudProvider, resourceLimiter)
+// 	if downErr != nil {
+// 		return downErr
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// checkScaleUpResourcesLimits checks the resources limitation of scale up option
-func checkScaleUpResourcesLimits(options ScaleUpOptions,
-	nodes []*corev1.Node,
-	cp cloudprovider.CloudProvider,
-	resourceLimiter *cloudprovider.ResourceLimiter) errors.AutoscalerError {
-	if len(options) == 0 {
-		return nil
-	}
+// // checkScaleUpResourcesLimits checks the resources limitation of scale up option
+// func checkScaleUpResourcesLimits(options ScaleUpOptions,
+// 	nodes []*corev1.Node,
+// 	cp cloudprovider.CloudProvider,
+// 	resourceLimiter *cloudprovider.ResourceLimiter) errors.AutoscalerError {
+// 	if len(options) == 0 {
+// 		return nil
+// 	}
 
-	totalCores, totalMem, err := calculateWebhookScaleUpCoresMemoryTotal(options, nodes, cp)
-	if err != nil {
-		return err
-	}
+// 	totalCores, totalMem, err := calculateWebhookScaleUpCoresMemoryTotal(options, nodes, cp)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	coresLimit := resourceLimiter.GetMax(cloudprovider.ResourceNameCores)
-	if coresLimit < totalCores {
-		klog.Warningf("total cores of node groups %v cannot exceed limits %v",
-			totalCores, coresLimit)
-		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
-			"cannot create any node; max limit for resource %s reached",
-			cloudprovider.ResourceNameCores)
-	}
-	memLimit := resourceLimiter.GetMax(cloudprovider.ResourceNameMemory)
-	if memLimit < totalMem {
-		klog.Warningf("total memory of node groups %v cannot exceed limits %v",
-			totalMem, memLimit)
-		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
-			"cannot create any node; max limit for resource %s reached",
-			cloudprovider.ResourceNameMemory)
-	}
-	return nil
-}
+// 	coresLimit := resourceLimiter.GetMax(cloudprovider.ResourceNameCores)
+// 	if coresLimit < totalCores {
+// 		klog.Warningf("total cores of node groups %v cannot exceed limits %v",
+// 			totalCores, coresLimit)
+// 		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
+// 			"cannot create any node; max limit for resource %s reached",
+// 			cloudprovider.ResourceNameCores)
+// 	}
+// 	memLimit := resourceLimiter.GetMax(cloudprovider.ResourceNameMemory)
+// 	if memLimit < totalMem {
+// 		klog.Warningf("total memory of node groups %v cannot exceed limits %v",
+// 			totalMem, memLimit)
+// 		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
+// 			"cannot create any node; max limit for resource %s reached",
+// 			cloudprovider.ResourceNameMemory)
+// 	}
+// 	return nil
+// }
 
-// calculateWebhookScaleUpCoresMemoryTotal return the total resources after scaling up
-// NOCC:tosa/fn_length(设计如此)
-func calculateWebhookScaleUpCoresMemoryTotal(options ScaleUpOptions,
-	nodes []*corev1.Node,
-	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
-	var coresTotal int64
-	var memoryTotal int64
+// // calculateWebhookScaleUpCoresMemoryTotal return the total resources after scaling up
+// // NOCC:tosa/fn_length(设计如此)
+// func calculateWebhookScaleUpCoresMemoryTotal(options ScaleUpOptions,
+// 	nodes []*corev1.Node,
+// 	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
+// 	var coresTotal int64
+// 	var memoryTotal int64
 
-	for _, nodeGroup := range cp.NodeGroups() {
-		template, err := nodeGroup.TemplateNodeInfo()
-		if err != nil {
-			return 0, 0, errors.ToAutoscalerError(errors.CloudProviderError, err).AddPrefix(
-				"Failed to get node template of %v: %v", nodeGroup.Id(), err)
-		}
-		nodes := int64(options[nodeGroup.Id()])
-		coresTotal += template.Allocatable.MilliCPU / 1000 * nodes
-		memoryTotal += template.Allocatable.Memory * nodes
-	}
+// 	for _, nodeGroup := range cp.NodeGroups() {
+// 		template, err := nodeGroup.TemplateNodeInfo()
+// 		if err != nil {
+// 			return 0, 0, errors.ToAutoscalerError(errors.CloudProviderError, err).AddPrefix(
+// 				"Failed to get node template of %v: %v", nodeGroup.Id(), err)
+// 		}
+// 		nodes := int64(options[nodeGroup.Id()])
+// 		coresTotal += template.Allocatable.MilliCPU / 1000 * nodes
+// 		memoryTotal += template.Allocatable.Memory * nodes
+// 	}
 
-	// nodes from not autoscaled group
-	for _, node := range nodes {
-		nodeGroup, err := cp.NodeGroupForNode(node)
-		if err != nil {
-			klog.Warningf("failed to get node group for %v: %v", node.Name, err)
-			continue
-		}
-		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
-			cores, memory := getNodeCoresAndMemory(node)
-			coresTotal += cores
-			memoryTotal += memory
-		}
-	}
+// 	// nodes from not autoscaled group
+// 	for _, node := range nodes {
+// 		nodeGroup, err := cp.NodeGroupForNode(node)
+// 		if err != nil {
+// 			klog.Warningf("failed to get node group for %v: %v", node.Name, err)
+// 			continue
+// 		}
+// 		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
+// 			cores, memory := getNodeCoresAndMemory(node)
+// 			coresTotal += cores
+// 			memoryTotal += memory
+// 		}
+// 	}
 
-	return coresTotal, memoryTotal, nil
-}
+// 	return coresTotal, memoryTotal, nil
+// }
 
-// checkScaleDownResourcesLimits checks the resources limitation of scale down candidates
-func checkScaleDownResourcesLimits(candidates ScaleDownCandidates,
-	nodes []*corev1.Node, cp cloudprovider.CloudProvider,
-	resourceLimiter *cloudprovider.ResourceLimiter) errors.AutoscalerError {
-	if len(candidates) == 0 {
-		return nil
-	}
+// // checkScaleDownResourcesLimits checks the resources limitation of scale down candidates
+// func checkScaleDownResourcesLimits(candidates ScaleDownCandidates,
+// 	nodes []*corev1.Node, cp cloudprovider.CloudProvider,
+// 	resourceLimiter *cloudprovider.ResourceLimiter) errors.AutoscalerError {
+// 	if len(candidates) == 0 {
+// 		return nil
+// 	}
 
-	totalCores, totalMem, err := calculateWebhookScaleDownCoresMemoryTotal(
-		candidates, nodes, cp)
-	if err != nil {
-		return err
-	}
+// 	totalCores, totalMem, err := calculateWebhookScaleDownCoresMemoryTotal(
+// 		candidates, nodes, cp)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	coresLimit := resourceLimiter.GetMin(cloudprovider.ResourceNameCores)
-	if coresLimit > totalCores {
-		klog.Warningf("total cores of node groups %v cannot exceed limits %v",
-			totalCores, coresLimit)
-		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
-			"cannot create any node; min limit for resource %s reached",
-			cloudprovider.ResourceNameCores)
-	}
-	memLimit := resourceLimiter.GetMin(cloudprovider.ResourceNameMemory)
-	if memLimit > totalMem {
-		klog.Warningf("total memory of node groups %v cannot exceed limits %v",
-			totalMem, memLimit)
-		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
-			"cannot create any node; min limit for resource %s reached",
-			cloudprovider.ResourceNameMemory)
-	}
-	return nil
-}
+// 	coresLimit := resourceLimiter.GetMin(cloudprovider.ResourceNameCores)
+// 	if coresLimit > totalCores {
+// 		klog.Warningf("total cores of node groups %v cannot exceed limits %v",
+// 			totalCores, coresLimit)
+// 		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
+// 			"cannot create any node; min limit for resource %s reached",
+// 			cloudprovider.ResourceNameCores)
+// 	}
+// 	memLimit := resourceLimiter.GetMin(cloudprovider.ResourceNameMemory)
+// 	if memLimit > totalMem {
+// 		klog.Warningf("total memory of node groups %v cannot exceed limits %v",
+// 			totalMem, memLimit)
+// 		return errors.ToAutoscalerError(errors.InternalError, err).AddPrefix(
+// 			"cannot create any node; min limit for resource %s reached",
+// 			cloudprovider.ResourceNameMemory)
+// 	}
+// 	return nil
+// }
 
-// calculateWebhookScaleDownCoresMemoryTotal return the total resources after scaling down
-// NOCC:tosa/fn_length(设计如此)
-// nolint
-func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, nodes []*corev1.Node,
-	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
-	timestamp := time.Now()
-	var coresTotal, memoryTotal int64
-	for _, node := range nodes {
-		if isNodeBeingDeleted(node, timestamp) {
-			// Nodes being deleted do not count towards total cluster resources
-			continue
-		}
-		cores, memory := core_utils.GetNodeCoresAndMemory(node)
-		coresTotal += cores
-		memoryTotal += memory
-	}
-	return coresTotal, memoryTotal, nil
-}
+// // calculateWebhookScaleDownCoresMemoryTotal return the total resources after scaling down
+// // NOCC:tosa/fn_length(设计如此)
+// // nolint
+// func calculateWebhookScaleDownCoresMemoryTotal(candidates ScaleDownCandidates, nodes []*corev1.Node,
+// 	cp cloudprovider.CloudProvider) (int64, int64, errors.AutoscalerError) {
+// 	timestamp := time.Now()
+// 	var coresTotal, memoryTotal int64
+// 	for _, node := range nodes {
+// 		if isNodeBeingDeleted(node, timestamp) {
+// 			// Nodes being deleted do not count towards total cluster resources
+// 			continue
+// 		}
+// 		cores, memory := core_utils.GetNodeCoresAndMemory(node)
+// 		coresTotal += cores
+// 		memoryTotal += memory
+// 	}
+// 	return coresTotal, memoryTotal, nil
+// }
 
 // filteroutInitializingNodes filter out initializing nodes
 func filteroutInitializingNodes(nodes []*corev1.Node, ips []string, delayTime time.Duration) []string {

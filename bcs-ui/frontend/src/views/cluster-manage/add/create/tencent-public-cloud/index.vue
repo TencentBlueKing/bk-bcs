@@ -105,11 +105,12 @@
 import { merge } from 'lodash';
 import { computed, provide, ref, watch } from 'vue';
 
+import { ClusterDataInjectKey, DeepPartial, IClusterData, IInstanceItem  } from '../../../types/types';
+
 import BasicInfo from './basic.vue';
 import Master from './master.vue';
 import Network from './network.vue';
 import Nodes from './nodes.vue';
-import { ClusterDataInjectKey, DeepPartial, IClusterData, IInstanceItem  } from '../../../types/types';
 
 import { createCluster } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
