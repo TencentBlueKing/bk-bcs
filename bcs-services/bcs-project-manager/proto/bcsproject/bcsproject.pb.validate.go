@@ -12267,6 +12267,10 @@ func (m *ProjectQuota) validate(all bool) error {
 
 	}
 
+	// no validation rules for Labels
+
+	// no validation rules for Annotations
+
 	if len(errors) > 0 {
 		return ProjectQuotaMultiError(errors)
 	}
@@ -13104,6 +13108,8 @@ func (m *DeviceInfo) validate(all bool) error {
 
 	// no validation rules for DeviceQuota
 
+	// no validation rules for DeviceQuotaUsed
+
 	// no validation rules for Attributes
 
 	if len(errors) > 0 {
@@ -13265,6 +13271,8 @@ func (m *CreateProjectQuotaRequest) validate(all bool) error {
 	}
 
 	// no validation rules for Labels
+
+	// no validation rules for Annotations
 
 	if len(errors) > 0 {
 		return CreateProjectQuotaRequestMultiError(errors)
@@ -13470,28 +13478,7 @@ func (m *UpdateProjectQuotaRequest) validate(all bool) error {
 
 	var errors []error
 
-	if utf8.RuneCountInString(m.GetQuotaId()) != 32 {
-		err := UpdateProjectQuotaRequestValidationError{
-			field:  "QuotaId",
-			reason: "value length must be 32 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-
-	}
-
-	if !_UpdateProjectQuotaRequest_QuotaId_Pattern.MatchString(m.GetQuotaId()) {
-		err := UpdateProjectQuotaRequestValidationError{
-			field:  "QuotaId",
-			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for QuotaId
 
 	if utf8.RuneCountInString(m.GetName()) > 64 {
 		err := UpdateProjectQuotaRequestValidationError{
@@ -13534,6 +13521,10 @@ func (m *UpdateProjectQuotaRequest) validate(all bool) error {
 	}
 
 	// no validation rules for Updater
+
+	// no validation rules for Labels
+
+	// no validation rules for Annotations
 
 	if len(errors) > 0 {
 		return UpdateProjectQuotaRequestMultiError(errors)
@@ -13613,8 +13604,6 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UpdateProjectQuotaRequestValidationError{}
-
-var _UpdateProjectQuotaRequest_QuotaId_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
 
 // Validate checks the field values on DeleteProjectQuotaRequest with the rules
 // defined in the proto definition for this message. If any rules are

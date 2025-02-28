@@ -114,3 +114,11 @@ func GetAuthHeader() map[string]string {
 			config.GlobalConf.App.Code, config.GlobalConf.App.Secret, config.GlobalConf.App.BkUsername),
 	}
 }
+
+// GetBcsGatewayAuthHeader 获取BCS网关认证header
+func GetBcsGatewayAuthHeader() map[string]string {
+	return map[string]string{
+		"Accept":        "application/json",
+		"Authorization": fmt.Sprintf(`Bearer %s`, config.GlobalConf.BcsGateway.Token),
+	}
+}

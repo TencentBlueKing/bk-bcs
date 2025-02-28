@@ -97,8 +97,8 @@ func ProjectAuthorization() gin.HandlerFunc {
 	}
 }
 
-// NsScopeAuthorization 命名空间域资源鉴权
-func NsScopeAuthorization() gin.HandlerFunc {
+// ClusterAuthorization 集群鉴权
+func ClusterAuthorization() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		restContext, err := rest.GetRestContext(c)
 		if err != nil {

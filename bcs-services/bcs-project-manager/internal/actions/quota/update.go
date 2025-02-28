@@ -84,6 +84,14 @@ func (ua *UpdateQuotaAction) updateProjectQuota() error {
 		ua.sQuota.Quota = quota.TransPorto2StoreQuota(ua.req.Quota)
 	}
 
+	if ua.req.Labels != nil {
+		ua.sQuota.Labels = ua.req.Labels
+	}
+
+	if ua.req.Annotations != nil {
+		ua.sQuota.Annotations = ua.req.Annotations
+	}
+
 	err := ua.model.UpdateProjectQuota(ua.ctx, ua.sQuota)
 	if err != nil {
 		return errorx.NewDBErr(err.Error())

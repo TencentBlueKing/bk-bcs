@@ -129,7 +129,7 @@ func (a *APIServer) newRoutes(engine *gin.Engine) {
 
 func registerRoutes(engine *gin.RouterGroup) {
 	// 日志相关接口
-	engine.Use(middleware.AuthenticationRequired(), middleware.ProjectParse(), middleware.NsScopeAuthorization())
+	engine.Use(middleware.AuthenticationRequired(), middleware.ProjectParse(), middleware.ClusterAuthorization())
 	engine.Use(ginTracing.Middleware("bcs-monitor-api"))
 
 	route := engine.Group("/projects/:projectId/clusters/:clusterId")
@@ -239,6 +239,8 @@ func registerMetricsRoutes(engine *gin.RouterGroup) {
 			rest.RestHandlerFunc(podmonitor.ListPodMonitors))
 		route.POST("/pod_monitors/batchdelete",
 			rest.RestHandlerFunc(podmonitor.BatchDeletePodMonitor))
+
+		route.GET("/event_data_id", rest.RestHandlerFunc(metrics.GetClusterEventDataId))
 	}
 }
 

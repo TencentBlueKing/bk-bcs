@@ -40,6 +40,8 @@ func TransStore2ProtoQuota(pQuota *ProjectQuota) *proto.ProjectQuota {
 		Creator:      pQuota.Creator,
 		Updater:      pQuota.Updater,
 		Provider:     pQuota.Provider,
+		Labels:       pQuota.Labels,
+		Annotations:  pQuota.Annotations,
 	}
 }
 
@@ -146,25 +148,28 @@ func TransStore2ProtoQuotaResource(quota *QuotaResource) *proto.QuotaResource {
 
 	if quota.Cpu != nil {
 		protoQuotaResource.Cpu = &proto.DeviceInfo{
-			DeviceType:  quota.Cpu.DeviceType,
-			DeviceQuota: quota.Cpu.DeviceQuota,
-			Attributes:  quota.Cpu.Attributes,
+			DeviceType:      quota.Cpu.DeviceType,
+			DeviceQuota:     quota.Cpu.DeviceQuota,
+			DeviceQuotaUsed: quota.Cpu.DeviceQuotaUsed,
+			Attributes:      quota.Cpu.Attributes,
 		}
 	}
 
 	if quota.Mem != nil {
 		protoQuotaResource.Mem = &proto.DeviceInfo{
-			DeviceType:  quota.Mem.DeviceType,
-			DeviceQuota: quota.Mem.DeviceQuota,
-			Attributes:  quota.Mem.Attributes,
+			DeviceType:      quota.Mem.DeviceType,
+			DeviceQuota:     quota.Mem.DeviceQuota,
+			DeviceQuotaUsed: quota.Mem.DeviceQuotaUsed,
+			Attributes:      quota.Mem.Attributes,
 		}
 	}
 
 	if quota.Gpu != nil {
 		protoQuotaResource.Gpu = &proto.DeviceInfo{
-			DeviceType:  quota.Gpu.DeviceType,
-			DeviceQuota: quota.Gpu.DeviceQuota,
-			Attributes:  quota.Gpu.Attributes,
+			DeviceType:      quota.Gpu.DeviceType,
+			DeviceQuota:     quota.Gpu.DeviceQuota,
+			DeviceQuotaUsed: quota.Gpu.DeviceQuotaUsed,
+			Attributes:      quota.Gpu.Attributes,
 		}
 	}
 

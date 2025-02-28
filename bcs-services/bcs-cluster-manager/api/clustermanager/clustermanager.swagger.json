@@ -3601,6 +3601,39 @@
         ]
       }
     },
+    "/clustermanager/v1/cluster/{clusterID}/sharedprojects": {
+      "get": {
+        "summary": "查询Cluster集群共享信息",
+        "description": "查询指定ClusterID的集群共享信息",
+        "operationId": "ClusterManager_GetClusterSharedProject",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerGetClusterSharedProjectResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/clustercredential": {
       "get": {
         "summary": "查询ClusterCredential列表",
@@ -12582,6 +12615,42 @@
         "data"
       ]
     },
+    "clustermanagerGetClusterSharedProjectResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "sharedProjects": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          },
+          "description": "集群信息的SharedProject",
+          "title": "sharedProject"
+        }
+      },
+      "description": "查询集群共享给其他项目情况返回",
+      "title": "GetClusterSharedProjectResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
     "clustermanagerGetClustersMetaDataRequest": {
       "type": "object",
       "properties": {
@@ -18113,6 +18182,12 @@
           "format": "boolean",
           "description": "标识该步骤失败时候是否允许用户手动跳过。当为true失败时候允许用户手动跳过, 为false失败时用户仅能通过重试解决",
           "title": "allowSkip"
+        },
+        "maxRetry": {
+          "type": "integer",
+          "format": "int64",
+          "description": "该步骤最大重试次数",
+          "title": "maxRetry"
         }
       },
       "description": "任务执行的动作步骤，用于定义长时间运行的异步动作，例如机器重新初始化，插件安装等。",

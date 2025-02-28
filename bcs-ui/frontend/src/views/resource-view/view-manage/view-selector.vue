@@ -85,7 +85,8 @@
           :selectable="isDefaultView"
           :is-show="!isHide"
           v-show="viewMode === 'cluster'"
-          @click="changeClusterView" />
+          @click="changeClusterView"
+          @change="changeClusterView" />
         <!-- 自定义视图 -->
         <ViewList v-show="viewMode === 'custom'" @change="changeCustomView" @edit="editCustomView" />
       </div>

@@ -11,7 +11,7 @@ metadata:
   {{- end }}
   annotations:
     {{- range .metadata.annotations }}
-    {{- if and (ne .key "service.kubernetes.io/tke-existed-lbid") (ne .key "service.kubernetes.io/qcloud-loadbalancer-internal-subnetid") }}
+    {{- if and (ne .key "service.kubernetes.io/tke-existed-lbid") (ne .key "service.kubernetes.io/qcloud-loadbalancer-internal-subnetid") (ne .key "io.tencent.bcs.labelSelected") }}
     {{ .key | quote }}: {{ .value | default "" | quote }}
     {{- end }}
     {{- end }}

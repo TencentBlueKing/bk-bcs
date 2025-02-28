@@ -256,8 +256,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("install gse agent job failed [%s]", err))
 		blog.Errorf("InstallGSEAgentTask %s install gse agent job error, %s", taskID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("install gse agent job error, %s", err.Error()))
-		return nil
+		_ = state.UpdateStepRetryOrFailure(start, stepName,
+			fmt.Errorf("install gse agent job error, %s", err.Error()))
+		return fmt.Errorf("install gse agent job failed [%s]", err)
 	}
 	blog.Infof("InstallGSEAgentTask %s install gse agent job(%d) url %s", taskID, job.JobID, job.JobURL)
 
@@ -292,9 +293,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 			step.Params[cloudprovider.InstallGseAgentKey.String()] = icommon.True
 		}
 
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("check gse "+
+		_ = state.UpdateStepRetryOrFailure(start, stepName, fmt.Errorf("check gse "+
 			"agent install job status err: %s", err.Error()))
-		return nil
+		return err
 	}
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,

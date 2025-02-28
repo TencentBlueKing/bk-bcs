@@ -355,3 +355,48 @@ func GetMetricsSeries(ctx context.Context, host, clusterID, bizID string) ([]*pr
 	}
 	return MetricListSlice(metrics).ToSeries(), nil
 }
+
+// ClusterDataIDResult 集群数据ID结果
+type ClusterDataIDResult struct {
+	BaseResponse
+	Data map[string]*ClusterDataID `json:"data"`
+}
+
+// ClusterDataID 集群数据ID
+type ClusterDataID struct {
+	BkDataID        int    `json:"bk_data_id"`
+	DataName        string `json:"data_name"`
+	ResultTableID   string `json:"result_table_id"`
+	VmResultTableID string `json:"vm_result_table_id"`
+}
+
+// GetClusterEventDataID 获取集群事件数据ID
+func GetClusterEventDataID(ctx context.Context, host, clusterID string) (*ClusterDataID, error) {
+	authInfo, err := component.GetBKAPIAuthorization("")
+	if err != nil {
+		return nil, err
+	}
+
+	url := fmt.Sprintf("%s/metadata_query_bcs_related_data_link_info", host)
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetQueryParam("bcs_cluster_id", clusterID).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != http.StatusOK {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+	result := new(ClusterDataIDResult)
+	if err := json.Unmarshal(resp.Body(), result); err != nil {
+		return nil, err
+	}
+
+	if len(result.Data) == 0 || result.Data["K8SEvent"] == nil {
+		return nil, errors.New("no data")
+	}
+
+	return result.Data["K8SEvent"], nil
+}
