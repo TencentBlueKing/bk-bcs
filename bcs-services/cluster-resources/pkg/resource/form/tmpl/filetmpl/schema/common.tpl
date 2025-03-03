@@ -15,6 +15,7 @@ metadata:
     labels:
       title: {{ i18n "标签" .lang }}
       type: array
+      default: {{ .selectorLabel }}
       items:
         properties:
           key:
@@ -24,6 +25,22 @@ metadata:
               - required
               - maxLength128
               - labelKeyRegexWithVar
+            ui:reactions:
+              - if: "{{`{{`}} $self.value === 'workload.bcs.tencent.io/workloadSelector' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
+              - target: "{{`{{`}} $widgetNode?.getSibling('value')?.id {{`}}`}}"
+                if: "{{`{{`}} $self.value === 'workload.bcs.tencent.io/workloadSelector' {{`}}`}}"
+                then:
+                  state:
+                    disabled: true
+                else:
+                  state:
+                    disabled: false
           value:
             title: {{ i18n "值" .lang }}
             type: string
