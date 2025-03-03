@@ -70,6 +70,7 @@ export const cloudRoles = request('get', '/clouds/$cloudId/serviceroles');
 export const recommendNodeGroupConf = request('get', '/cloud/$cloudId/recommendNodeGroupConf');
 // 获取磁盘类型 tencentPublicCloud
 export const getDisktypes = request('post', '/clouds/tencentPublicCloud/disktypes');
+export const getSharedprojects = request('get', '/cluster/$clusterId/sharedprojects');
 
 // node 操作
 export const getK8sNodes = request('get', '/cluster/$clusterId/node');
