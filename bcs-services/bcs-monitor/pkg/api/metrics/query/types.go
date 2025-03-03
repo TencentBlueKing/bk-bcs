@@ -35,6 +35,12 @@ type UsageByte struct {
 	TotalByte   string `json:"total_bytes"`
 }
 
+// GetClusterOverviewReq 集群概览接口
+type GetClusterOverviewReq struct {
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+}
+
 // ClusterOverviewMetric 集群概览接口
 type ClusterOverviewMetric struct {
 	CPUUsage    *Usage     `json:"cpu_usage"`
@@ -46,8 +52,10 @@ type ClusterOverviewMetric struct {
 
 // UsageQuery 节点查询
 type UsageQuery struct {
-	StartAt string `json:"start_at" form:"start_at"` // 必填参数`
-	EndAt   string `json:"end_at" form:"end_at"`
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	StartAt     string `json:"start_at" in:"query=start_at" form:"start_at"` // 必填参数`
+	EndAt       string `json:"end_at" in:"query=end_at" form:"end_at"`
 }
 
 // parseTime 兼容前端多个格式

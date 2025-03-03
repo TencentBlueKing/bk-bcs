@@ -46,12 +46,24 @@ const (
 	InitContainers = "InitContainers"
 )
 
+// PodContainersReq pod containers request
+type PodContainersReq struct {
+	ProjectId string `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId string `json:"clusterId" in:"path=clusterId" validate:"required"`
+	Namespace string `json:"namespace" in:"path=namespace" validate:"required"`
+	Pod       string `json:"pod" in:"path=pod" validate:"required"`
+}
+
 // LogQuery 日志查询参数， 精简后的 v1.PodLogOptions
 type LogQuery struct {
-	ContainerName string            `form:"container_name" binding:"required"` // 必填参数
-	Previous      bool              `form:"previous"`
-	StartedAt     string            `form:"started_at"`
-	FinishedAt    string            `form:"finished_at"`
+	ProjectId     string            `json:"projectId" in:"path=projectId" validate:"required"`
+	ClusterId     string            `json:"clusterId" in:"path=clusterId" validate:"required"`
+	Namespace     string            `json:"namespace" in:"path=namespace" validate:"required"`
+	Pod           string            `json:"pod" in:"path=pod" validate:"required"`
+	ContainerName string            `json:"container_name" in:"query=container_name" form:"container_name" binding:"required" validate:"required"` // nolint 必填参数
+	Previous      bool              `json:"previous" in:"query=previous" form:"previous"`
+	StartedAt     string            `json:"started_at" in:"query=started_at" form:"started_at"`
+	FinishedAt    string            `json:"finished_at" in:"query=finished_at" form:"finished_at"`
 	TailLines     int64             `form:"-"`
 	LimitBytes    int64             `form:"-"`
 	podLogOptions *v1.PodLogOptions `form:"-"`

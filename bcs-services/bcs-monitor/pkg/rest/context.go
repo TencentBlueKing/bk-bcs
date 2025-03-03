@@ -15,17 +15,23 @@ package rest
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	httpin_integration "github.com/ggicci/httpin/integration"
+	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v4"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 )
 
+func init() {
+	httpin_integration.UseGochiURLParam("path", chi.URLParam)
+}
+
 // Context xxx
 type Context struct {
-	*gin.Context
+	*http.Request
 	RequestId     string          `json:"request_id"`
 	StartTime     time.Time       `json:"start_time"`
 	Operator      string          `json:"operator"`
@@ -42,11 +48,11 @@ type Context struct {
 }
 
 // WriteAttachment 提供附件下载能力
-func (c *Context) WriteAttachment(data []byte, filename string) {
-	c.Writer.Header().Set("Content-Type", "application/octet-stream")
+func WriteAttachment(w http.ResponseWriter, data []byte, filename string) {
+	w.Header().Set("Content-Type", "application/octet-stream")
 	attachment := fmt.Sprintf("attachment; filename=%s", filename)
-	c.Writer.Header().Set("Content-Disposition", attachment)
-	c.Writer.Write(data)
+	w.Header().Set("Content-Disposition", attachment)
+	w.Write(data)
 }
 
 // EnvToken xxx
