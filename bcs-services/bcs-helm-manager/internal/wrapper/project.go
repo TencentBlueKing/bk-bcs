@@ -53,7 +53,7 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 			blog.Warn("ParseProjectIDWrapper error: projectCode is empty")
 			return fn(ctx, req, rsp)
 		}
-		pj, err := projectClient.GetProjectByCode(project.ProjectCode)
+		pj, err := projectClient.GetProjectByCode(ctx, project.ProjectCode)
 		if err != nil {
 			return fmt.Errorf("ParseProjectIDWrapper get projectID error, projectCode: %s, err: %s",
 				project.ProjectCode, err.Error())
@@ -61,7 +61,7 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 
 		// check cluster
 		if project.ClusterID != "" {
-			cls, err := clusterClient.GetCluster(project.ClusterID)
+			cls, err := clusterClient.GetCluster(ctx, project.ClusterID)
 			if err != nil {
 				return fmt.Errorf("get cluster error, clusterID: %s, err: %s",
 					project.ClusterID, err.Error())

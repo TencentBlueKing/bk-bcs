@@ -90,7 +90,7 @@ func (l *ListReleaseV1Action) list() (*helmmanager.ReleaseListData, error) {
 	option := l.getOption()
 
 	// if cluster is shared, return release form database only
-	cluster, err := clustermanager.GetCluster(clusterID)
+	cluster, err := clustermanager.GetCluster(l.ctx, clusterID)
 	if err != nil {
 		return nil, fmt.Errorf("get cluster info error, %s", err.Error())
 	}
