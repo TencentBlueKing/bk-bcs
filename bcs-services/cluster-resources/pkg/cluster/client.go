@@ -18,6 +18,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
@@ -96,6 +97,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (*Clu
 
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(header.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 

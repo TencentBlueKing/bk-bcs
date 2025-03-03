@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 go 1.23
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20250120075906-fd5988c50f3f
 	github.com/chai2010/gettext-go => github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5
 	k8s.io/api => k8s.io/api v0.23.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.1
