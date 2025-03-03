@@ -453,6 +453,14 @@ func getChartFile(f *release.File) (*chart.Chart, error) {
 		return nil, err
 	}
 
+	// 忽略 values.schema.json
+	for i, f := range bufferedFile {
+		if f.Name == "values.schema.json" {
+			bufferedFile = append(bufferedFile[:i], bufferedFile[i+1:]...)
+			break
+		}
+	}
+
 	return loader.LoadFiles(bufferedFile)
 }
 
