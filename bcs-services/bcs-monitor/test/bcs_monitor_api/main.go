@@ -21,6 +21,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics/query"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
@@ -50,7 +52,8 @@ func main() {
 			defer wg.Done()
 			for {
 				atomic.AddInt64(&count, 1)
-				resp, err := component.GetClient().R().SetContext(ctx).SetAuthToken(config.G.BCS.Token).Get(rawURL)
+				resp, err := component.GetClient().R().SetContext(ctx).SetHeaders(header.GetLaneIDByCtx(ctx)).
+					SetAuthToken(config.G.BCS.Token).Get(rawURL)
 				if err != nil || resp.StatusCode() != http.StatusOK {
 					atomic.AddInt64(&errCount, 1)
 					atomic.AddInt64(&respErrCount, 1)
