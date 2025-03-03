@@ -124,7 +124,7 @@ func registerRoutes() http.Handler {
 
 	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
 		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ClusterAuthorization)
-		route.Use(middleware.Tracing)
+		route.Use(middleware.Tracing, middleware.Audit)
 
 		route.Get("/namespaces/{namespace}/pods/{pod}/containers", rest.Handle(pod.GetPodContainers))
 		route.Get("/namespaces/{namespace}/pods/{pod}/logs", rest.Handle(pod.GetPodLog))
