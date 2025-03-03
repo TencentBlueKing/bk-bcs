@@ -113,7 +113,7 @@
           <div class="bcs-ellipsis" v-bk-overflow-tips>
             <span>{{ (cpuRateData.cupRate * 10000 / 100).toFixed(2) }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.cpuMsg1', { sum: cpuRateData.cupSum, used: cpuRateData.cupUsed }) }}
+              {{ $t('projects.quota.cpuMsgA', { sum: cpuRateData.cupSum, used: cpuRateData.cupUsed }) }}
             </span>
           </div>
           <bcs-progress
@@ -129,7 +129,7 @@
           <div class="bcs-ellipsis" v-bk-overflow-tips>
             <span>{{ (memRateData.memRate * 10000 / 100).toFixed(2) }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.memMsg1', { sum: memRateData.memSum, used: memRateData.memUsed }) }}
+              {{ $t('projects.quota.memMsgA', { sum: memRateData.memSum, used: memRateData.memUsed }) }}
             </span>
           </div>
           <bcs-progress
@@ -147,7 +147,7 @@
           <div class="bcs-ellipsis" v-bk-overflow-tips>
             <span>{{ (gpuRateData.gpuRate * 10000 / 100).toFixed(2) }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.memMsg1', { sum: gpuRateData.gpuSum, used: gpuRateData.gpuUsed }) }}
+              {{ $t('projects.quota.gpuMsgA', { sum: gpuRateData.gpuSum, used: gpuRateData.gpuUsed }) }}
             </span>
           </div>
           <bcs-progress
@@ -200,7 +200,7 @@
           v-if="isColumnRender('zoneName')" />
         <bk-table-column
           sortable
-          :label="$t('projects.quota.label.Num')"
+          :label="$t('projects.quota.label.num')"
           prop="quotaNum"
           v-if="isColumnRender('quotaNum')" />
         <bk-table-column
@@ -220,7 +220,7 @@
       </template>
       <template v-else>
         <bk-table-column
-          :label="$t('资源包')"
+          :label="$t('projects.quota.label.resource')"
           filter-searchable
           column-key="quotaName"
           fixed
@@ -229,7 +229,7 @@
           show-overflow-tooltip
           v-if="isColumnRender('quotaName')" />
         <bk-table-column
-          :label="$t('集群/ID')"
+          :label="$t('projects.quota.label.clusterID')"
           column-key="clusterId"
           fixed
           width="150px"
@@ -241,7 +241,7 @@
           </template>
         </bk-table-column>
         <bk-table-column
-          :label="$t('命名空间')"
+          :label="$t('projects.quota.label.namespace')"
           column-key="nameSpace"
           fixed
           width="120px"
@@ -324,7 +324,7 @@
           @setting-change="handleSettingChange">
         </bcs-table-setting-content>
       </bk-table-column>
-      <!-- <bk-table-column :label="$t('projects.quota.label.AssociatedNodePool')">
+      <!-- <bk-table-column label="">
         <template #default="{ row }">
           <div
             v-for="item in row.nodeGroups"
@@ -406,17 +406,17 @@ export default defineComponent({
     const fields = computed(() => [
       {
         id: 'quotaName',
-        label: $i18n.t('资源包'),
+        label: $i18n.t('projects.quota.label.resource'),
         disabled: statisticsType.value === 'host',
       },
       {
         id: 'clusterId',
-        label: $i18n.t('集群/ID'),
+        label: $i18n.t('projects.quota.label.clusterID'),
         disabled: statisticsType.value === 'host',
       },
       {
         id: 'nameSpace',
-        label: $i18n.t('命名空间'),
+        label: $i18n.t('projects.quota.label.namespace'),
         disabled: statisticsType.value === 'host',
       },
       {
@@ -436,7 +436,7 @@ export default defineComponent({
       },
       {
         id: 'quotaNum',
-        label: $i18n.t('projects.quota.label.Num'),
+        label: $i18n.t('projects.quota.label.num'),
         disabled: statisticsType.value !== 'host',
       },
       {
@@ -533,12 +533,11 @@ export default defineComponent({
             : cur.quota.cpu?.deviceQuota - cur.quota.cpu?.deviceQuotaUsed);
 
         obj.memNum = isHost ? (zoneResources.mem || 0) * (obj.quotaNum || 0) // mem 总量
-          : Number(cur.quota.mem?.deviceQuota?.match(/\d+/g).join('') || 0);
+          : extractNumber(cur.quota.mem?.deviceQuota);
         obj.memUsed = isHost ? (zoneResources.mem || 0) * (obj.quotaUsed || 0) // mem 已用
-          : Number(cur.quota.mem?.deviceQuotaUsed || 0);
+          : extractNumber(cur.quota.mem?.deviceQuotaUsed);
         obj.memAvailable = isHost ? (zoneResources.mem || 0) * (obj.quotaAvailable || 0) // mem 剩余
-          : Number(isNaN(cur.quota.mem?.deviceQuota?.match(/\d+/g).join('') - cur.quota.mem?.deviceQuotaUsed) ? 0
-            : cur.quota.mem?.deviceQuota?.match(/\d+/g).join('') - cur.quota.mem?.deviceQuotaUsed);
+          : Math.max(extractNumber(cur.quota.mem?.deviceQuota) - extractNumber(cur.quota.mem?.deviceQuotaUsed), 0);
 
         obj.gpuNum = Number(cur.quota.gpu?.deviceQuota || 0); // gpu 总量
         obj.gpuUsed = Number(cur.quota.gpu?.deviceQuotaUsed || 0); // gpu 已用
@@ -560,6 +559,10 @@ export default defineComponent({
       getChartData();
       isLoading.value = false;
     }
+    const extractNumber = (str) => { // str = '40GiB'
+      const digits = str?.match(/\d+/g)?.join('') || '0'; // 安全处理空值
+      return parseInt(digits, 10) || 0; // 转换为整数，失败则返回0
+    };
     const parseSearchSelectValue = computed(() => {
       const searchValues: { id: string; value: string[] }[] = [];
       searchSelectValue.value.forEach((item) => {
@@ -671,10 +674,14 @@ export default defineComponent({
     const padAngleValue1 = computed(() => (cpuData.value.filter(item => item.value > 0).length === 1 ? 0 : 5));
 
     function cpuLabelFormatter(params) {
-      const str = params.dataIndex < 2 ? 'projects.quota.cpuMsg2' : 'projects.quota.cpuMsg3';
+      if (params.dataIndex < 2) {
+        return `${params.name}<br />
+        <span style="display: inline-block; width: 12px; height: 12px;background-color: ${params.color}"></span>
+        ${$i18n.t('projects.quota.cpuMsgB', { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
+      }
       return `${params.name}<br />
       <span style="display: inline-block; width: 12px; height: 12px;background-color: ${params.color}"></span>
-      ${$i18n.t(str, { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
+      ${$i18n.t('projects.quota.cpuMsgC', { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
     };
     // CPU 配置
     const cpuOptions = computed(() => {
@@ -695,10 +702,14 @@ export default defineComponent({
     ]);
     const padAngleValue2 = computed(() => (memData.value.filter(item => item.value > 0).length === 1 ? 0 : 5));
     function memLabelFormatter(params) {
-      const str = params.dataIndex < 2 ? 'projects.quota.memMsg2' : 'projects.quota.memMsg3';
+      if (params.dataIndex < 2) {
+        return `${params.name}<br />
+        <span style="display: inline-block; width: 12px; height: 12px;background-color: ${params.color}"></span>
+        ${$i18n.t('projects.quota.memMsgB', { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
+      }
       return `${params.name}<br />
       <span style="display: inline-block; width: 12px; height: 12px;background-color: ${params.color}"></span>
-      ${$i18n.t(str, { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
+      ${$i18n.t('projects.quota.memMsgC', { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
     };
     const memOptions = computed(() => {
       const temp = cloneDeep(options);
@@ -718,10 +729,14 @@ export default defineComponent({
     ]);
     const padAngleValue3 = computed(() => (gpuData.value.filter(item => item.value > 0).length === 1 ? 0 : 5));
     function gpuLabelFormatter(params) {
-      const str = params.dataIndex < 2 ? 'projects.quota.gpuMsg2' : 'projects.quota.gpuMsg3';
+      if (params.dataIndex < 2) {
+        return `${params.name}<br />
+        <span style="display: inline-block; width: 12px; height: 12px;background-color: ${params.color}"></span>
+        ${$i18n.t('projects.quota.gpuMsgB', { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
+      }
       return `${params.name}<br />
       <span style="display: inline-block; width: 12px; height: 12px;background-color: ${params.color}"></span>
-      ${$i18n.t(str, { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
+      ${$i18n.t('projects.quota.gpuMsgC', { percent: (Number(params.percent) * 100 / 100).toFixed(2), counts: params.data.value })}`;
     };
     const gpuOptions = computed(() => {
       const temp = cloneDeep(options);

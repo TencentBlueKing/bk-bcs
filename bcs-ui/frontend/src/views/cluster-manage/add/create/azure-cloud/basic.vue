@@ -131,7 +131,7 @@
         </bk-form-item>
       </DescList>
       <!-- <DescList class="mt-[24px]" size="middle" :title="$t('cluster.title.clusterConfig')">
-        <bk-form-item :label="$t('cluster.create.azure.chargingModel')"></bk-form-item>
+        <bk-form-item label=""></bk-form-item>
       </DescList> -->
     </div>
     <div class="flex items-center h-[48px] bg-[#FAFBFD] px-[24px] fixed bottom-0 left-0 w-full bcs-border-top">

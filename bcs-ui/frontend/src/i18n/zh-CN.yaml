@@ -2214,7 +2214,10 @@ projects:
       region: 城市
       zone: 可用区
       instance: 实例规格
-      Num: 总量
+      resource: 资源包
+      clusterID: 集群/ID
+      namespace: 命名空间
+      num: 总量
       used: 已用
       available: 可用
       gpuNum: 总 GPU(卡)
@@ -2236,19 +2239,19 @@ projects:
     federationAvailable: 弹性算力 ( 剩余 )
     cpuResource: CPU 资源 ( 核 )
     cpuMsg: '已用 {used} 核，可用 {available} 核'
-    cpuMsg1: '(共 {sum} 核，已用 {used} 核)'
-    cpuMsg2: '{percent}%，已用 {counts} 核'
-    cpuMsg3: '{percent}%，可用 {counts} 核'
+    cpuMsgA: '(共 {sum} 核，已用 {used} 核)'
+    cpuMsgB: '{percent}%，已用 {counts} 核'
+    cpuMsgC: '{percent}%，可用 {counts} 核'
     memResource: MEM 资源 ( GiB )
     memMsg: '已用 {used} GiB，可用 {available} GiB'
-    memMsg1: '(共 {sum} GiB，已用 {used} GiB)'
-    memMsg2: '{percent}%，已用 {counts} GiB'
-    memMsg3: '{percent}%，可用 {counts} GiB'
+    memMsgA: '(共 {sum} GiB，已用 {used} GiB)'
+    memMsgB: '{percent}%，已用 {counts} GiB'
+    memMsgC: '{percent}%，可用 {counts} GiB'
     gpuResource: GPU 资源 ( 卡 )
     gpuMsg: '已用 {used} 卡，可用 {available} 卡'
-    gpuMsg1: '(共 {sum} 卡，已用 {used} 卡)'
-    gpuMsg2: '{percent}%，已用 {counts} 卡'
-    gpuMsg3: '{percent}%，可用 {counts} 卡'
+    gpuMsgA: '(共 {sum} 卡，已用 {used} 卡)'
+    gpuMsgB: '{percent}%，已用 {counts} 卡'
+    gpuMsgC: '{percent}%，可用 {counts} 卡'
     sum: (总)
     placeholder: 搜索实例规格，城市，可用区
     usage: 配额使用情况

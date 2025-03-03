@@ -2783,7 +2783,10 @@ projects:
       region: Region
       zone: Zone
       instance: Instance
-      Num: Totle
+      resource: Resource Bundle
+      clusterID: Cluster/ID
+      namespace: Namespace
+      num: Total
       used: Used
       available: Available
       gpuNum: Total GPUs (Cards)
@@ -2805,21 +2808,21 @@ projects:
     federationAvailable: Federation (Remaining)
     cpuResource: CPU Resources (Cores)
     cpuMsg: '{used} cores used, {available} cores available'
-    cpuMsg1: '(Total {sum} cores, {used} cores used)'
-    cpuMsg2: '{percent}%, {counts} cores used'
-    cpuMsg3: '{percent}%, {counts} cores available'
+    cpuMsgA: '(Total {sum} cores, {used} cores used)'
+    cpuMsgB: '{percent}%, {counts} cores used'
+    cpuMsgC: '{percent}%, {counts} cores available'
     memResource: MEM Resources ( GiB )
     memMsg: '{used} GiB used, {available} GiB available'
-    memMsg1: '(Total {sum} GiB, {used} GiB used)'
-    memMsg2: '{percent}%, {counts} GiB used'
-    memMsg3: '{percent}%, {counts} GiB available'
+    memMsgA: '(Total {sum} GiB, {used} GiB used)'
+    memMsgB: '{percent}%, {counts} GiB used'
+    memMsgC: '{percent}%, {counts} GiB available'
     gpuResource: GPU Resources (Cards)
     gpuMsg: '{used} cards used, {available} cards available'
-    gpuMsg1: '(Total {sum} cards, {used} cards used)'
-    gpuMsg2: '{percent}%, {counts} cards used'
-    gpuMsg3: '{percent}%, {counts} cards available'
+    gpuMsgA: '(Total {sum} cards, {used} cards used)'
+    gpuMsgB: '{percent}%, {counts} cards used'
+    gpuMsgC: '{percent}%, {counts} cards available'
     sum: (Total)
-    placeholder: Search instance specifications, city, zone
+    placeholder: 'Search instance specifications, city, zone'
     usage: Quota Utilization
 dashboard:
   title:
