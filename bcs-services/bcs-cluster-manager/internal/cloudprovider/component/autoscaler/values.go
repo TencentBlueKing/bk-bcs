@@ -93,8 +93,6 @@ env:
   operator: "bcs"
   encryption: "{{.Encryption}}"
 
-nodeSelector: null
-
 resources: 
   requests:
     cpu: 1 

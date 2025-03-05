@@ -41,4 +41,8 @@ var (
 	DefaultCmdFlag = []map[string]interface{}{{"--insecure-skip-tls-verify": ""}, {"--wait": true}}
 	// DefaultArgsFlag xxx
 	DefaultArgsFlag = []string{"--insecure-skip-tls-verify", "--wait"}
+	// InstallDefaultArgsFlag xxx
+	InstallDefaultArgsFlag = []string{"--insecure-skip-tls-verify", "--wait"}
+	// UpgradeDefaultArgsFlag xxx
+	UpgradeDefaultArgsFlag = append(DefaultArgsFlag, "--reuse-values")
 )

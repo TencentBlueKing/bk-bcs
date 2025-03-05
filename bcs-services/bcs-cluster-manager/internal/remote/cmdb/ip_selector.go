@@ -97,11 +97,17 @@ func GetBizHostDetailedData(cmdb *Client, gseCli gse.Interface, // nolint
 		return nil, err
 	}
 
-	// filter module info
-	hostFilterResult := make([]HostTopoRelation, 0)
+	// filter module info and remove duplicates
+	var (
+		hostFilterResult = make([]HostTopoRelation, 0)
+		hostIDMap        = make(map[int]struct{})
+	)
 	for _, hTopo := range hostTopos {
 		if HostTopoInHostModule(hTopo, module) {
-			hostFilterResult = append(hostFilterResult, hTopo)
+			if _, exists := hostIDMap[hTopo.BkHostID]; !exists {
+				hostFilterResult = append(hostFilterResult, hTopo)
+				hostIDMap[hTopo.BkHostID] = struct{}{}
+			}
 		}
 	}
 

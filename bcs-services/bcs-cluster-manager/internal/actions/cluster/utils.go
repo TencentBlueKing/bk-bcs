@@ -917,5 +917,5 @@ func checkHighAvailabilityMasterNodes(cls *proto.Cluster, cloud *proto.Cloud, no
 		return err
 	}
 
-	return clsMgr.CheckHighAvailabilityMasterNodes(cls, nodes)
+	return clsMgr.CheckHighAvailabilityMasterNodes(cls, nodes, &cloudprovider.CheckHaMasterNodesOption{Cloud: cloud})
 }

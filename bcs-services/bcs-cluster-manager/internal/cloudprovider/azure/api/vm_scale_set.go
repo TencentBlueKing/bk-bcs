@@ -97,24 +97,28 @@ func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, resourceG
 	for i := range instanceIDs {
 		vmIDs.InstanceIDs[i] = to.Ptr(instanceIDs[i])
 	}
-	// 删除
+
+	// attention: azure delete instance conflict on a concurrent request.
 	var (
 		err    error
-		poller *runtime.Poller[armcompute.VirtualMachineScaleSetsClientDeleteInstancesResponse]
+		poller *runtime.Poller[armcompute.VirtualMachineScaleSetsClientDeleteInstancesResponse] // nolint NOCC:gas/tls(设计如此)
 	)
-
-	retry.Do(func() error {
-		poller, err = aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
-		if err != nil {
+	err = retry.Do(func() error {
+		var errLocal error
+		poller, errLocal = aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
+		if errLocal != nil {
 			return errors.Wrapf(err, "failed to finish the request")
 		}
 
-		return err
-	}, retry.Attempts(3), retry.Delay(time.Second))
+		return nil
+	}, retry.Attempts(10), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second))
+	if err != nil {
+		return errors.Wrapf(err, "BatchDeleteVMsWithName failed")
+	}
 
 	// 轮询
-	if _, err = poller.PollUntilDone(ctx, pollFrequency5); err != nil {
-		return errors.Wrapf(err, "failed to pull the result")
+	if _, errLocal := poller.PollUntilDone(ctx, pollFrequency5); errLocal != nil {
+		return errors.Wrapf(errLocal, "failed to pull the result")
 	}
 	return nil
 }

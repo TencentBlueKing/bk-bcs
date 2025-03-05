@@ -21,12 +21,13 @@ import (
 
 func GetGseTestClient() *gse.Client {
 	cli, err := gse.NewGseClient(gse.Options{
-		Enable:     true,
-		AppCode:    "xxx",
-		AppSecret:  "xxx",
-		EsbServer:  "xxx",
-		BKUserName: "admin",
-		Debug:      true,
+		Enable:        true,
+		AppCode:       "xxx",
+		AppSecret:     "xxx",
+		EsbServer:     "xxx",
+		GatewayServer: "xxx",
+		BKUserName:    "xxx",
+		Debug:         true,
 	})
 	if err != nil {
 		return nil
@@ -77,10 +78,10 @@ func TestGetBizHostDetailedData(t *testing.T) {
 	gseCli = GetGseTestClient()
 
 	current := time.Now()
-	hostInfo, err := GetBizHostDetailedData(cmdb, gseCli, 2, []HostModuleInfo{
+	hostInfo, err := GetBizHostDetailedData(cmdb, gseCli, 100275, []HostModuleInfo{
 		{
 			ObjectID:   "biz",
-			InstanceID: 2,
+			InstanceID: 100275,
 		},
 	})
 	if err != nil {

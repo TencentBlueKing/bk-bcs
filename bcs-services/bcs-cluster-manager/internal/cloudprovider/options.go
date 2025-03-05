@@ -566,6 +566,11 @@ type CheckClusterNetworkStatusOption struct {
 	ClaimExpiredSeconds uint32
 }
 
+// CheckHaMasterNodesOption xxx
+type CheckHaMasterNodesOption struct {
+	Cloud *proto.Cloud
+}
+
 // GetMasterSuggestedMachinesOption master suggested machine
 type GetMasterSuggestedMachinesOption struct {
 	CommonOption

@@ -359,7 +359,7 @@ type ClusterManager interface {
 	// CheckClusterNetworkStatus check cluster network status
 	CheckClusterNetworkStatus(cloudID string, opt *CheckClusterNetworkStatusOption) (bool, error)
 	// CheckHighAvailabilityMasterNodes check master nodes high availability
-	CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error
+	CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node, opt *CheckHaMasterNodesOption) error
 }
 
 // NodeGroupManager cloud interface for nodegroup management

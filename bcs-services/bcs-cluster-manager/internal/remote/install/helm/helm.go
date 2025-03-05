@@ -174,7 +174,7 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 		Chart:       h.chartName,
 		Version:     version,
 		Values:      []string{values},
-		Args:        install.DefaultArgsFlag,
+		Args:        install.InstallDefaultArgsFlag,
 	}
 
 	resp := &helmmanager.InstallReleaseV1Resp{}
@@ -243,7 +243,7 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 		Chart:       h.chartName,
 		//Version:     version,
 		Values: []string{values},
-		Args:   install.DefaultArgsFlag,
+		Args:   install.UpgradeDefaultArgsFlag,
 	}
 
 	start := time.Now()
