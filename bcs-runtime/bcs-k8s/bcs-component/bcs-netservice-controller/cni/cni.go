@@ -26,6 +26,7 @@ import (
 	"github.com/containernetworking/plugins/pkg/ip"
 	"github.com/containernetworking/plugins/pkg/ipam"
 	"github.com/containernetworking/plugins/pkg/ns"
+	"github.com/containernetworking/plugins/pkg/utils/hwaddr"
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
 
@@ -37,9 +38,10 @@ import (
 type NetConf struct {
 	types.NetConf
 
-	LogFile     string `json:"logFile"`
-	LogLevel    string `json:"logLevel"`
-	LogToStderr bool   `json:"logToStderr,omitempty"`
+	GenerateStaticVethHostMac bool   `json:"generateStaticVethHostMac,omitempty"` // 针对kubevirt bridge 网络模式下，veth host端是否生成固定mac地址
+	LogFile                   string `json:"logFile"`
+	LogLevel                  string `json:"logLevel"`
+	LogToStderr               bool   `json:"logToStderr,omitempty"`
 }
 
 func init() {
@@ -105,11 +107,26 @@ func setupVeth(netns ns.NetNS, ifName string) (*current.Interface, *current.Inte
 	return hostIface, contIface, nil
 }
 
-func configIface(netns ns.NetNS, hostIface *current.Interface, contIface *current.Interface, ipv4Addr net.IP) error {
+func configIface(netns ns.NetNS, hostIface *current.Interface, contIface *current.Interface, ipv4Addr net.IP, generateStaticVethHostMac bool) error {
 	hostVeth, err := netlink.LinkByName(hostIface.Name)
 	if err != nil {
 		return errors.Wrapf(err, "failed get link %s", hostIface.Name)
 	}
+
+	if generateStaticVethHostMac {
+		var hwAddr net.HardwareAddr
+		// 根据ip 设置一个固定mac地址(kubevirt bridge 网络模式下需要)
+		hwAddr, err = hwaddr.GenerateHardwareAddr4(ipv4Addr, hwaddr.PrivateMACPrefix)
+		if err != nil {
+			return err
+		}
+		hostVeth.Attrs().HardwareAddr = hwAddr
+		err = ip.SetHWAddrByIP(hostIface.Name, ipv4Addr, nil)
+		if err != nil {
+			return errors.Wrapf(err, "failed to set MAC address for %q", contIface.Name)
+		}
+	}
+
 	if err = netlink.LinkSetUp(hostVeth); err != nil {
 		return errors.Wrapf(err, "failed to set link %q up", hostIface.Name)
 	}
@@ -231,7 +248,7 @@ func cmdAdd(args *skel.CmdArgs) (retErr error) {
 		return errors.New("no ipv4 address from ipam")
 	}
 
-	if err := configIface(netns, hostIface, contIface, ipv4Addr); err != nil {
+	if err := configIface(netns, hostIface, contIface, ipv4Addr, conf.GenerateStaticVethHostMac); err != nil {
 		return err
 	}
 
