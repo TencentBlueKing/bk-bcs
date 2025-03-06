@@ -36,6 +36,7 @@ import (
 	providerutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // CreateAKSClusterTask call azure interface to create cluster
@@ -202,6 +203,17 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 	// keys := make([]*armcontainerservice.SSHPublicKey, 0)
 	// keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
 
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
+	if err != nil {
+		return nil, fmt.Errorf("create AksService failed")
+	}
+
+	ipPrefixs, err := client.ListPublicPrefixes(context.Background(),
+		info.Cluster.ExtraInfo[common.ClusterResourceGroup])
+	if err != nil {
+		return nil, fmt.Errorf("get ip prefix failed, %s", err)
+	}
+
 	// managed cluster request
 	req := &armcontainerservice.ManagedCluster{
 		Location: to.Ptr(cluster.Region),                     // nolint
@@ -217,15 +229,33 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
 				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet), // nolint
 				AuthorizedIPRanges: func() []*string {
-					ipRanges := make([]*string, 0)
-					if cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet {
-						for _, ip := range cluster.ClusterAdvanceSettings.ClusterConnectSetting.
-							Internet.PublicAccessCidrs {
-							ipRanges = append(ipRanges, to.Ptr(ip)) // nolint
+					ipRanges := make([]string, 0)
+					clusterConnect := cluster.ClusterAdvanceSettings.ClusterConnectSetting
+					if clusterConnect.IsExtranet {
+						ipRanges = append(ipRanges, clusterConnect.Internet.PublicAccessCidrs...)
+						for _, ng := range groups {
+							ia := ng.LaunchTemplate.InternetAccess
+							if ia.NodePublicIPPrefixID != "" {
+								// 把前端传过来的ipprefixid转换成cidr并添加到白名单中
+								for _, ipPrefix := range ipPrefixs {
+									if ipPrefix.ID != nil && *ipPrefix.ID == ia.NodePublicIPPrefixID {
+										if !utils.StringInSlice(*ipPrefix.Properties.IPPrefix, ipRanges) {
+											ipRanges = append(ipRanges, *ipPrefix.Properties.IPPrefix)
+											clusterConnect.Internet.PublicAccessCidrs =
+												append(clusterConnect.Internet.PublicAccessCidrs, *ipPrefix.Properties.IPPrefix)
+										}
+									}
+								}
+							}
 						}
 					}
 
-					return ipRanges
+					result := make([]*string, 0)
+					for _, ip := range ipRanges {
+						result = append(result, to.Ptr(ip))
+					}
+
+					return result
 				}(),
 			},
 			AgentPoolProfiles: agentPools,
@@ -330,6 +360,13 @@ func genAgentPoolReq(ng *proto.NodeGroup, info *cloudprovider.CloudDependBasicIn
 			}
 			return false
 		}(ng)),
+		NodePublicIPPrefixID: func(group *proto.NodeGroup) *string {
+			ia := group.LaunchTemplate.InternetAccess
+			if ia != nil && ia.NodePublicIPPrefixID != "" {
+				return to.Ptr(group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID)
+			}
+			return nil
+		}(ng),
 		Mode:          to.Ptr(armcontainerservice.AgentPoolMode(ng.NodeGroupType)),
 		MaxPods:       to.Ptr(int32(podNum)),
 		Name:          to.Ptr(getCloudNodeGroupID(ng)),

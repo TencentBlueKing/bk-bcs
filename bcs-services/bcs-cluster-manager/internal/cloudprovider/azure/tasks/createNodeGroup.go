@@ -69,6 +69,15 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	// update cluster 如果节点池有选择公网IP前缀，更新集群白名单
+	if err = updateCluster(ctx, dependInfo); err != nil {
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: call createAgentPool[%s] api in task %s step %s failed, %s",
+			taskID, nodeGroupID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("call updateCluster[%s] api err, %s", nodeGroupID, err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
 	// create Agent Pool(代理节点池)
 	if err = createAgentPool(ctx, dependInfo); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call createAgentPool[%s] api in task %s step %s failed, %s",
@@ -186,6 +195,82 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 			stepName)
 		return err
 	}
+	return nil
+}
+
+// updateCluster 更新集群白名单
+func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
+	group := info.NodeGroup
+	cluster := info.Cluster
+
+	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
+
+	ia := group.LaunchTemplate.InternetAccess
+	if ia == nil || ia.NodePublicIPPrefixID == "" {
+		return nil
+	}
+
+	// new Azure client
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
+	if err != nil {
+		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
+	}
+
+	rgn := cloudprovider.GetClusterResourceGroup(info.Cluster)
+	ipPrefixs, err := client.ListPublicPrefixes(context.Background(), rgn)
+	if err != nil {
+		return errors.Wrapf(err, "updateCluster[%s]: call ListPublicPrefixes failed", taskID)
+	}
+
+	ipcidr := ""
+	for _, ipPrefix := range ipPrefixs {
+		if ia.NodePublicIPPrefixID == *ipPrefix.ID {
+			ipcidr = *ipPrefix.Properties.IPPrefix
+		}
+	}
+
+	if ipcidr == "" {
+		return errors.Wrapf(err, "updateCluster[%s]: ipprefix not found", taskID)
+	}
+
+	cloudCluster, err := client.GetCluster(rootCtx, info, cloudprovider.GetClusterResourceGroup(cluster))
+	if err != nil {
+		return errors.Wrapf(err, "updateCluster[%s]: call GetCluster failed", taskID)
+	}
+
+	isExit := false
+	for _, v := range cloudCluster.Properties.APIServerAccessProfile.AuthorizedIPRanges {
+		if *v == ipcidr {
+			isExit = true
+		}
+	}
+
+	// 如果白名单已存在则不需要更新
+	if isExit {
+		return nil
+	}
+
+	ipRange := make([]*string, 0)
+	ipRange = append(ipRange, cloudCluster.Properties.APIServerAccessProfile.AuthorizedIPRanges...)
+	ipRange = append(ipRange, &ipcidr)
+	err = client.UpdateClusterAuthorizedIPRange(rootCtx, info.Cluster.Region, rgn, info.Cluster.SystemID, ipRange)
+	if err != nil {
+		return errors.Wrapf(err, "updateCluster[%s]: call UpdateClusterAuthorizedIPRange failed", taskID)
+	}
+
+	if cluster.ClusterAdvanceSettings.ClusterConnectSetting == nil {
+		cluster.ClusterAdvanceSettings.ClusterConnectSetting = &proto.ClusterConnectSetting{
+			Internet: &proto.InternetAccessible{},
+		}
+	}
+
+	internet := cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet
+	internet.PublicAccessCidrs = append(internet.PublicAccessCidrs, ipcidr)
+	err = cloudprovider.UpdateCluster(cluster)
+	if err != nil {
+		return errors.Wrapf(err, "updateCluster[%s]: call Updateluster failed", taskID)
+	}
+
 	return nil
 }
 
