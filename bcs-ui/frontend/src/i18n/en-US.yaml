@@ -2806,17 +2806,17 @@ projects:
     caAvailable: Host (Remaining)
     federationUsed: Federation (Used)
     federationAvailable: Federation (Remaining)
-    cpuResource: CPU Resources (Cores)
+    cpuResource: CPU Resources (Cores) Rate
     cpuMsg: '{used} cores used, {available} cores available'
     cpuMsgA: '(Total {sum} cores, {used} cores used)'
     cpuMsgB: '{percent}%, {counts} cores used'
     cpuMsgC: '{percent}%, {counts} cores available'
-    memResource: MEM Resources ( GiB )
+    memResource: MEM Resources ( GiB ) Rate
     memMsg: '{used} GiB used, {available} GiB available'
     memMsgA: '(Total {sum} GiB, {used} GiB used)'
     memMsgB: '{percent}%, {counts} GiB used'
     memMsgC: '{percent}%, {counts} GiB available'
-    gpuResource: GPU Resources (Cards)
+    gpuResource: GPU Resources (Cards) Rate
     gpuMsg: '{used} cards used, {available} cards available'
     gpuMsgA: '(Total {sum} cards, {used} cards used)'
     gpuMsgB: '{percent}%, {counts} cards used'

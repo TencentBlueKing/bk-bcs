@@ -36,7 +36,7 @@
             </div>
           </div>
           <ECharts
-            class="!size-[100px]"
+            :class="['!size-[100px]', cpuSum === 0 ? 'grayscale' : '']"
             :options="cpuOptions"
             v-bkloading="{ isLoading: echartsLoading }"
             ref="chartRef">
@@ -57,7 +57,7 @@
             </div>
           </div>
           <ECharts
-            class="!size-[100px]"
+            :class="['!size-[100px]', memSum === 0 ? 'grayscale' : '']"
             :options="memOptions"
             v-bkloading="{ isLoading: echartsLoading }"
             ref="chartRef">
@@ -78,7 +78,7 @@
             </div>
           </div>
           <ECharts
-            class="!size-[100px]"
+            :class="['!size-[100px]', gpuSum === 0 ? 'grayscale' : '']"
             :options="gpuOptions"
             v-bkloading="{ isLoading: echartsLoading }"
             ref="chartRef">
@@ -236,8 +236,8 @@
           prop="clusterId"
           v-if="isColumnRender('clusterId')">
           <template #default="{ row }">
-            <div>{{ row.clusterName }}</div>
-            <div>{{ row.clusterId }}</div>
+            <div class="overflow-hidden text-nowrap text-ellipsis">{{ clusterMap[row.clusterId] || '--' }}</div>
+            <div class="overflow-hidden text-nowrap text-ellipsis">{{ row.clusterId }}</div>
           </template>
         </bk-table-column>
         <bk-table-column
@@ -367,6 +367,7 @@ import useTableSearchSelect, { ISearchSelectData }  from '@/composables/use-tabl
 import useTableSetting from '@/composables/use-table-setting';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
+import { useClusterList } from '@/views/cluster-manage/cluster/use-cluster';
 import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 
 interface Iquota {
@@ -503,7 +504,6 @@ export default defineComponent({
     async function handleGetProjectQuotas() {
       if (!curProject.value.projectID) return;
 
-      isLoading.value = true;
       const res = await fetchProjectQuotas({
         projectID: curProject.value.projectID,
         provider: 'selfProvisionCloud',
@@ -557,7 +557,6 @@ export default defineComponent({
       }, []);
       // 整理饼图数据
       getChartData();
-      isLoading.value = false;
     }
     const extractNumber = (str) => { // str = '40GiB'
       const digits = str?.match(/\d+/g)?.join('') || '0'; // 安全处理空值
@@ -648,6 +647,7 @@ export default defineComponent({
             height: 60,
             backgroundColor: '#f5f7fa',
             borderRadius: 60,
+            silent: true, // 阻止label触发鼠标事件
           },
           emphasis: {
             disabled: false,
@@ -824,17 +824,27 @@ export default defineComponent({
       cpuOptions.value.series[0].data[1].value = cpu.value.federationUsed;
       cpuOptions.value.series[0].data[2].value = cpu.value.hostSum - cpu.value.hostUsed;
       cpuOptions.value.series[0].data[3].value = cpu.value.federationSum - cpu.value.federationUsed;
+      const cupUsed = cpu.value.hostUsed + cpu.value.federationUsed;
+      cpuOptions.value.series[0].label.formatter = calculatePercentage(cupUsed, cpuSum.value);
 
       memOptions.value.series[0].data[0].value = mem.value.hostUsed;
       memOptions.value.series[0].data[1].value = mem.value.federationUsed;
       memOptions.value.series[0].data[2].value = mem.value.hostSum - mem.value.hostUsed;
       memOptions.value.series[0].data[3].value = mem.value.federationSum - mem.value.federationUsed;
+      const memUsed = mem.value.hostUsed + mem.value.federationUsed;
+      memOptions.value.series[0].label.formatter = calculatePercentage(memUsed, memSum.value);
 
       gpuOptions.value.series[0].data[0].value = gpu.value.hostUsed;
       gpuOptions.value.series[0].data[1].value = gpu.value.federationUsed;
       gpuOptions.value.series[0].data[2].value = gpu.value.hostSum - gpu.value.hostUsed;
       gpuOptions.value.series[0].data[3].value = gpu.value.federationSum - gpu.value.federationUsed;
+      const gupUsed = gpu.value.hostUsed + gpu.value.federationUsed;
+      gpuOptions.value.series[0].label.formatter = calculatePercentage(gupUsed, gpuSum.value);
     }
+    const calculatePercentage = (num, den) => {
+      if (den === 0) return '0.00%';
+      return `${((num / den) * 100).toFixed(2)}%`;
+    };
 
     // 统计类型
     function getColor(percent) {
@@ -946,6 +956,17 @@ export default defineComponent({
       searchSelectKey.value += 1;
     };
 
+    // 集群列表
+    const {
+      clusterList,
+      getClusterList,
+    } = useClusterList();
+    const clusterMap = computed(() => clusterList.value.reduce((pre, cur) => {
+      // eslint-disable-next-line no-param-reassign
+      pre[cur.clusterID] = cur.clusterName;
+      return pre;
+    }, {}));
+
     watch(statisticsType, () => {
       // 重置页码
       pageConf.current = 1;
@@ -955,8 +976,13 @@ export default defineComponent({
       tableKey.value = new Date().getTime();
     });
 
-    onBeforeMount(() => {
-      handleGetProjectQuotas();
+    onBeforeMount(async () => {
+      isLoading.value = true;
+      // 获取集群列表
+      await getClusterList();
+      // 获取项目配额
+      await handleGetProjectQuotas();
+      isLoading.value = false;
     });
 
     return {
@@ -989,6 +1015,7 @@ export default defineComponent({
       cpu,
       mem,
       gpu,
+      clusterMap,
       handleGotoDetail,
       getColor,
       searchSelectChange,

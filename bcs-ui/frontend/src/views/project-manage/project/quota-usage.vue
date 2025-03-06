@@ -3,7 +3,7 @@
     <bk-table :data="data.nodeGroups || []" :outer-border="false">
       <bk-table-column :label="$t('generic.label.cluster')" prop="clusterId">
         <template #default="{ row }">
-          <bk-button :disabled="!data.projectCode" text @click="handleCluster(row.clusterId)">
+          <bk-button :disabled="!projectCode" text @click="handleCluster(row.clusterId)">
             {{ row.clusterId }}
           </bk-button>
         </template>
@@ -15,17 +15,21 @@
   </div>
 </template>
 <script lang="ts" setup>
-const props = defineProps({
+import { computed } from 'vue';
+
+import $store from '@/store';
+
+defineProps({
   data: {
     type: Object,
     default: () => ({}),
   },
 });
 
-function handleCluster(clusterId: string) {
-  const { projectCode } = props.data;
+const projectCode = computed(() => $store.getters.curProjectCode);
 
-  const url = new URL(`/projects/${projectCode}/clusters/${clusterId}/workloads/deployments`, window.location.origin);
+function handleCluster(clusterId: string) {
+  const url = new URL(`/projects/${projectCode.value}/clusters/${clusterId}/workloads/deployments`, window.location.origin);
   window.open(url.toString(), '_blank');
 }
 </script>

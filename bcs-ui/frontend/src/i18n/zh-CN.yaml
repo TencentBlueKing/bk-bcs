@@ -2237,17 +2237,17 @@ projects:
     caAvailable: CA 主机 ( 剩余 )
     federationUsed: 弹性算力 ( 已用 )
     federationAvailable: 弹性算力 ( 剩余 )
-    cpuResource: CPU 资源 ( 核 )
+    cpuResource: CPU 资源 ( 核 ) 利用率
     cpuMsg: '已用 {used} 核，可用 {available} 核'
     cpuMsgA: '(共 {sum} 核，已用 {used} 核)'
     cpuMsgB: '{percent}%，已用 {counts} 核'
     cpuMsgC: '{percent}%，可用 {counts} 核'
-    memResource: MEM 资源 ( GiB )
+    memResource: MEM 资源 ( GiB ) 利用率
     memMsg: '已用 {used} GiB，可用 {available} GiB'
     memMsgA: '(共 {sum} GiB，已用 {used} GiB)'
     memMsgB: '{percent}%，已用 {counts} GiB'
     memMsgC: '{percent}%，可用 {counts} GiB'
-    gpuResource: GPU 资源 ( 卡 )
+    gpuResource: GPU 资源 ( 卡 ) 利用率
     gpuMsg: '已用 {used} 卡，可用 {available} 卡'
     gpuMsgA: '(共 {sum} 卡，已用 {used} 卡)'
     gpuMsgB: '{percent}%，已用 {counts} 卡'
