@@ -318,9 +318,13 @@ func (p *PodStatusParser) Parse() string {
 
 // updateStatusByInitContainerStatuses 根据 pod.Status.InitContainerStatuses 更新 总状态
 func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPodStatus) {
+	isAlways := p.restartPolicyAlways()
 	for i := range podStatus.InitContainerStatuses {
 		container := podStatus.InitContainerStatuses[i]
-		if container.State.Terminated != nil { // nolint:nestif
+		// initContainer如果是 Always且是运行中，则跳过判断 initContainer 状态
+		if isAlways[container.Name] && container.State.Running != nil {
+			continue
+		} else if container.State.Terminated != nil { // nolint:nestif
 			if container.State.Terminated.ExitCode == 0 {
 				continue
 			}
@@ -344,6 +348,20 @@ func (p *PodStatusParser) updateStatusByInitContainerStatuses(podStatus *LightPo
 		}
 		break
 	}
+}
+
+// 只取initContainer restartPolicy是Always的内容
+func (p *PodStatusParser) restartPolicyAlways() map[string]bool {
+	initContainers := mapx.GetList(p.Manifest, "spec.initContainers")
+	result := make(map[string]bool, len(initContainers))
+	for _, data := range initContainers {
+		if v, ok := data.(map[string]interface{}); ok {
+			if mapx.GetStr(v, "restartPolicy") == "Always" {
+				result[mapx.GetStr(v, "name")] = true
+			}
+		}
+	}
+	return result
 }
 
 // updateStatusByContainerStatuses 根据 pod.Status.ContainerStatuses 更新 总状态
