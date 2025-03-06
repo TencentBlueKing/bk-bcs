@@ -71,7 +71,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 
 	// update cluster 如果节点池有选择公网IP前缀，更新集群白名单
 	if err = updateCluster(ctx, dependInfo); err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: call createAgentPool[%s] api in task %s step %s failed, %s",
+		blog.Errorf("CreateCloudNodeGroupTask[%s]: call updateCluster[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call updateCluster[%s] api err, %s", nodeGroupID, err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
@@ -213,7 +213,7 @@ func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasic
 	// new Azure client
 	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
 	if err != nil {
-		return errors.Wrapf(err, "call NewAgentPoolClientWithOpt[%s] falied", taskID)
+		return errors.Wrapf(err, "call NewAksServiceImplWithCommonOption[%s] falied", taskID)
 	}
 
 	rgn := cloudprovider.GetClusterResourceGroup(info.Cluster)

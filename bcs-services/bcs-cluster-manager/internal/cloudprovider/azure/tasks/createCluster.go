@@ -176,8 +176,20 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		return nil, fmt.Errorf("generateCreateClusterRequest empty NetworkSettings for cluster %s", cluster.ClusterID)
 	}
 
+	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
+	if err != nil {
+		return nil, fmt.Errorf("create AksService failed")
+	}
+
+	ipPrefixs, err := client.ListPublicPrefixes(context.Background(),
+		info.Cluster.ExtraInfo[common.ClusterResourceGroup])
+	if err != nil {
+		return nil, fmt.Errorf("get ip prefixs failed, %s", err)
+	}
+
 	// var adminUserName, publicKey string
 	agentPools := make([]*armcontainerservice.ManagedClusterAgentPoolProfile, 0)
+	clusterConnect := cluster.ClusterAdvanceSettings.ClusterConnectSetting
 
 	// handle agent pools
 	for _, ng := range groups {
@@ -199,20 +211,24 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			return nil, fmt.Errorf("generateCreateClusterRequest nodegroup[%s] subnetIDs is empty", ng.NodeGroupID)
 		}
 		info.Cluster.ClusterBasicSettings.SubnetID = ng.AutoScaling.SubnetIDs[0]
+
+		// 判断公网IP前缀是否在白名单中，如果不在则添加到白名单中
+		if clusterConnect.IsExtranet && ng.LaunchTemplate.InternetAccess.NodePublicIPPrefixID != "" {
+			for _, ipPrefix := range ipPrefixs {
+				if ipPrefix.ID == nil || *ipPrefix.ID != ng.LaunchTemplate.InternetAccess.NodePublicIPPrefixID {
+					continue
+				}
+
+				if !utils.StringInSlice(*ipPrefix.Properties.IPPrefix, clusterConnect.Internet.PublicAccessCidrs) {
+					clusterConnect.Internet.PublicAccessCidrs =
+						append(clusterConnect.Internet.PublicAccessCidrs, *ipPrefix.Properties.IPPrefix)
+					blog.Infof("add public ip prefix %s to white list", *ipPrefix.Properties.IPPrefix)
+				}
+			}
+		}
 	}
 	// keys := make([]*armcontainerservice.SSHPublicKey, 0)
 	// keys = append(keys, &armcontainerservice.SSHPublicKey{KeyData: to.Ptr(publicKey)})
-
-	client, err := api.NewAksServiceImplWithCommonOption(info.CmOption)
-	if err != nil {
-		return nil, fmt.Errorf("create AksService failed")
-	}
-
-	ipPrefixs, err := client.ListPublicPrefixes(context.Background(),
-		info.Cluster.ExtraInfo[common.ClusterResourceGroup])
-	if err != nil {
-		return nil, fmt.Errorf("get ip prefix failed, %s", err)
-	}
 
 	// managed cluster request
 	req := &armcontainerservice.ManagedCluster{
@@ -229,33 +245,14 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 			APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
 				EnablePrivateCluster: to.Ptr(!cluster.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet), // nolint
 				AuthorizedIPRanges: func() []*string {
-					ipRanges := make([]string, 0)
-					clusterConnect := cluster.ClusterAdvanceSettings.ClusterConnectSetting
+					ipRanges := make([]*string, 0)
 					if clusterConnect.IsExtranet {
-						ipRanges = append(ipRanges, clusterConnect.Internet.PublicAccessCidrs...)
-						for _, ng := range groups {
-							ia := ng.LaunchTemplate.InternetAccess
-							if ia.NodePublicIPPrefixID != "" {
-								// 把前端传过来的ipprefixid转换成cidr并添加到白名单中
-								for _, ipPrefix := range ipPrefixs {
-									if ipPrefix.ID != nil && *ipPrefix.ID == ia.NodePublicIPPrefixID {
-										if !utils.StringInSlice(*ipPrefix.Properties.IPPrefix, ipRanges) {
-											ipRanges = append(ipRanges, *ipPrefix.Properties.IPPrefix)
-											clusterConnect.Internet.PublicAccessCidrs =
-												append(clusterConnect.Internet.PublicAccessCidrs, *ipPrefix.Properties.IPPrefix)
-										}
-									}
-								}
-							}
+						for _, ip := range clusterConnect.Internet.PublicAccessCidrs {
+							ipRanges = append(ipRanges, to.Ptr(ip))
 						}
 					}
 
-					result := make([]*string, 0)
-					for _, ip := range ipRanges {
-						result = append(result, to.Ptr(ip))
-					}
-
-					return result
+					return ipRanges
 				}(),
 			},
 			AgentPoolProfiles: agentPools,
