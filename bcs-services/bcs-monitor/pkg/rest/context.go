@@ -40,6 +40,7 @@ type Context struct {
 	ProjectCode   string          `json:"project_code"`
 	ClusterId     string          `json:"cluster_id"`
 	SharedCluster bool            `json:"shared_cluster"`
+	HandleName    string          `json:"handle_name"`
 	BindEnv       *EnvToken       `json:"bind_env"`
 	BindBCS       *UserClaimsInfo `json:"bind_bcs"`
 	BindAPIGW     *APIGWToken     `json:"bind_apigw"`
