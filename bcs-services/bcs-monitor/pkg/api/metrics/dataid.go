@@ -13,16 +13,23 @@
 package metrics
 
 import (
+	"context"
+
 	bkmonitor_client "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bk_monitor"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
 )
+
+// GetClusterEventDataIdReq xxx
+type GetClusterEventDataIdReq struct {
+	ProjectCode string `json:"projectCode" in:"path=projectCode" validate:"required"`
+	ClusterId   string `json:"clusterId" in:"path=clusterId" validate:"required"`
+}
 
 // GetClusterEventDataId 获取集群事件数据ID
 // @Summary 获取集群事件数据ID
 // @Tags    Metrics
 // @Success 200 {string} string
 // @Router  /event_data_id [GET]
-func GetClusterEventDataId(c *rest.Context) (interface{}, error) {
-	return bkmonitor_client.GetClusterEventDataID(c.Request.Context(), config.G.BKMonitor.MetadataURL, c.ClusterId)
+func GetClusterEventDataId(c context.Context, req *GetClusterEventDataIdReq) (*bkmonitor_client.ClusterDataID, error) {
+	return bkmonitor_client.GetClusterEventDataID(c, config.G.BKMonitor.MetadataURL, req.ClusterId)
 }

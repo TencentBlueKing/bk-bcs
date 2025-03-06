@@ -29,15 +29,11 @@ type BCSMonitorHandler struct {
 }
 
 // handleClusterMetric Cluster 处理公共函数
-func handleClusterMetric(c *rest.Context, promql string) (promclient.ResultData, error) {
-	query := &UsageQuery{}
-	if err := c.ShouldBindQuery(query); err != nil {
-		return promclient.ResultData{}, err
-	}
+func handleClusterMetric(c *rest.Context, promql string, query *UsageQuery) (*promclient.ResultData, error) {
 
 	queryTime, err := query.GetQueryTime()
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
@@ -47,13 +43,13 @@ func handleClusterMetric(c *rest.Context, promql string) (promclient.ResultData,
 	result, err := bcsmonitor.QueryRange(c.Request.Context(), c.ProjectCode, promql, params, queryTime.Start,
 		queryTime.End, queryTime.Step)
 	if err != nil {
-		return promclient.ResultData{}, err
+		return nil, err
 	}
-	return result.Data, nil
+	return &result.Data, nil
 }
 
 // GetClusterOverview 获取集群概览
-func (h BCSMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewMetric, error) {
+func (h BCSMonitorHandler) GetClusterOverview(c *rest.Context) (*ClusterOverviewMetric, error) {
 	params := map[string]interface{}{
 		"clusterId": c.ClusterId,
 		"provider":  PROVIDER,
@@ -77,7 +73,7 @@ func (h BCSMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewM
 	result, err := bcsmonitor.QueryMultiValues(c.Request.Context(), c.ProjectId, promqlMap, params,
 		utils.GetNowQueryTime())
 	if err != nil {
-		return ClusterOverviewMetric{}, err
+		return nil, err
 	}
 
 	m := ClusterOverviewMetric{
@@ -105,55 +101,55 @@ func (h BCSMonitorHandler) GetClusterOverview(c *rest.Context) (ClusterOverviewM
 		},
 	}
 
-	return m, nil
+	return &m, nil
 }
 
 // ClusterPodUsage implements Handler.
-func (BCSMonitorHandler) ClusterPodUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterPodUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:pod:usage{cluster_id="%<clusterId>s", %<provider>s}`
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // ClusterCPUUsage implements Handler.
-func (BCSMonitorHandler) ClusterCPUUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterCPUUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:cpu:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // ClusterCPURequestUsage implements Handler.
-func (BCSMonitorHandler) ClusterCPURequestUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterCPURequestUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:cpu_request:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // ClusterMemoryUsage implements Handler.
-func (BCSMonitorHandler) ClusterMemoryUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterMemoryUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:memory:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // ClusterMemoryRequestUsage implements Handler.
-func (BCSMonitorHandler) ClusterMemoryRequestUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterMemoryRequestUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:memory_request:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // ClusterDiskUsage implements Handler.
-func (BCSMonitorHandler) ClusterDiskUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterDiskUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:disk:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // ClusterDiskioUsage implements Handler.
-func (BCSMonitorHandler) ClusterDiskioUsage(c *rest.Context) (promclient.ResultData, error) {
+func (BCSMonitorHandler) ClusterDiskioUsage(c *rest.Context, query *UsageQuery) (*promclient.ResultData, error) {
 	promql := `bcs:cluster:diskio:usage{cluster_id="%<clusterId>s", %<provider>s}`
 
-	return handleClusterMetric(c, promql)
+	return handleClusterMetric(c, promql, query)
 }
 
 // NewBCSMonitorHandler new handler
