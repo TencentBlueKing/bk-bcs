@@ -30,7 +30,7 @@ const (
 	// TableName task table name
 	TableName = "task"
 	// TableUniqueKey task unique key
-	TableUniqueKey = "taskId"
+	TableUniqueKey = "taskID"
 	// TableCustomIndex task custom index
 	TableCustomIndex = "index"
 	// DefaultTaskListLength default task list length
@@ -95,13 +95,15 @@ func (m *ModelTask) EnsureTable(ctx context.Context, dst ...any) error {
 // CreateTask create Task
 func (m *ModelTask) CreateTask(ctx context.Context, task *types.Task) error {
 	if task == nil {
-		return fmt.Errorf("task to be created cannot be empty")
+		return fmt.Errorf("task cannot be empty")
 	}
 	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
 
-	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{task}); err != nil {
+	record := toMongoTask(task)
+
+	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{record}); err != nil {
 		return err
 	}
 	return nil
@@ -109,23 +111,36 @@ func (m *ModelTask) CreateTask(ctx context.Context, task *types.Task) error {
 
 // UpdateTask update task
 func (m *ModelTask) UpdateTask(ctx context.Context, task *types.Task) error {
+	if task == nil {
+		return fmt.Errorf("task cannot be empty")
+	}
+
 	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
+
+	record := toMongoTask(task)
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
-		TableUniqueKey: task.GetTaskID(),
+		TableUniqueKey: record.TaskID,
 	})
+
 	//! object all field update, make sure that task
 	//! all fields are setting, otherwise some fields
 	//! will be override with nil value
-	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": task})
+	return m.db.Table(m.tableName).Upsert(ctx, cond, operator.M{"$set": record})
 }
 
 // DeleteTask delete task
 func (m *ModelTask) DeleteTask(ctx context.Context, taskID string) error {
+	if taskID == "" {
+		return fmt.Errorf("task id cannot be empty")
+	}
+
 	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
+
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		TableUniqueKey: taskID,
 	})
@@ -138,40 +153,108 @@ func (m *ModelTask) DeleteTask(ctx context.Context, taskID string) error {
 
 // GetTask get task
 func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, error) {
+	if taskID == "" {
+		return nil, fmt.Errorf("task id cannot be empty")
+	}
 	if err := m.EnsureTable(ctx); err != nil {
 		return nil, err
 	}
 	cond := operator.NewLeafCondition(operator.Eq, operator.M{
 		TableUniqueKey: taskID,
 	})
-	task := &types.Task{}
-	if err := m.db.Table(m.tableName).Find(cond).One(ctx, task); err != nil {
+	record := &Task{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, record); err != nil {
 		return nil, err
 	}
-	return task, nil
+	return toTask(record), nil
 }
 
-// ListTask list clusters
+// ListTask list task
 func (m *ModelTask) ListTask(ctx context.Context, opt *iface.ListOption) (*iface.Pagination[types.Task], error) {
-	taskList := make([]*types.Task, 0)
-	finder := m.db.Table(m.tableName).Find(operator.EmptyCondition)
-	if len(opt.Sort) != 0 {
-		finder = finder.WithSort(MapInt2MapIf(opt.Sort))
-	}
-	if opt.Offset != 0 {
-		finder = finder.WithStart(opt.Offset)
-	}
-	if opt.Limit == 0 {
-		finder = finder.WithLimit(DefaultTaskListLength)
-	} else {
-		finder = finder.WithLimit(opt.Limit)
-	}
-	if err := finder.All(ctx, &taskList); err != nil {
+	if err := m.EnsureTable(ctx); err != nil {
 		return nil, err
 	}
-	result := &iface.Pagination[types.Task]{
-		Count: int64(len(taskList)),
-		Items: taskList,
+
+	conditions := []*operator.Condition{operator.EmptyCondition}
+
+	if opt.TaskID != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
+			"taskID": opt.TaskID,
+		}))
 	}
-	return result, nil
+	if opt.TaskType != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
+			"taskType": opt.TaskType,
+		}))
+	}
+	if opt.TaskName != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
+			"taskName": opt.TaskName,
+		}))
+	}
+	if opt.Status != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
+			"status": opt.Status,
+		}))
+	}
+	if opt.Creator != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
+			"creator": opt.Creator,
+		}))
+	}
+
+	if opt.CreatedGte != nil || opt.CreatedLte != nil {
+		timeRange := make(operator.M)
+		if opt.CreatedGte != nil {
+			timeRange["$gte"] = *opt.CreatedGte
+		}
+		if opt.CreatedLte != nil {
+			timeRange["$lte"] = *opt.CreatedLte
+		}
+		conditions = append(conditions, operator.NewLeafCondition(operator.And, operator.M{
+			"start": timeRange,
+		}))
+	}
+
+	condition := operator.NewBranchCondition(operator.And, conditions...)
+
+	count, err := m.db.Table(m.tableName).Find(condition).Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("count tasks failed: %v", err)
+	}
+
+	finder := m.db.Table(m.tableName).Find(condition)
+
+	if len(opt.Sort) != 0 {
+		finder = finder.WithSort(MapInt2MapIf(opt.Sort))
+	} else {
+		finder = finder.WithSort(operator.M{"start": -1})
+	}
+
+	if opt.Offset > 0 {
+		finder = finder.WithStart(opt.Offset)
+	}
+
+	if opt.Limit > 0 && opt.Limit <= DefaultTaskListLength {
+		finder = finder.WithLimit(opt.Limit)
+	} else {
+		finder = finder.WithLimit(DefaultTaskListLength)
+	}
+
+	records := make([]*Task, 0)
+	if err := finder.All(ctx, &records); err != nil {
+		return nil, fmt.Errorf("find tasks failed: %v", err)
+	}
+
+	tasks := make([]*types.Task, 0, len(records))
+	for _, record := range records {
+		if task := toTask(record); task != nil {
+			tasks = append(tasks, task)
+		}
+	}
+
+	return &iface.Pagination[types.Task]{
+		Count: count,
+		Items: tasks,
+	}, nil
 }
