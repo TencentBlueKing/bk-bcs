@@ -8,6 +8,8 @@ import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/wrappers.proto";
 
+option go_package = ".;clustermanager";
+
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info : {
     title : "Cluster Manager API Doc" 
@@ -15004,8 +15006,8 @@ message GetClusterSharedProjectResponse {
     title : "result",
     description : "返回结果"
   }];
-  google.protobuf.ListValue sharedProjects = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "sharedProject",
+  google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
     description : "集群信息的SharedProject"
   }];
 }

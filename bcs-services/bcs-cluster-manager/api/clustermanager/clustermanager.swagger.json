@@ -12643,13 +12643,13 @@
           "description": "返回结果",
           "title": "result"
         },
-        "sharedProjects": {
+        "data": {
           "type": "array",
           "items": {
             "type": "object"
           },
           "description": "集群信息的SharedProject",
-          "title": "sharedProject"
+          "title": "data"
         }
       },
       "description": "查询集群共享给其他项目情况返回",

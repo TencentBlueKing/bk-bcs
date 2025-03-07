@@ -691,7 +691,7 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 		projectIDorCodes = sharedRanges.GetProjectIdOrCodes()
 	}
 
-	ga.resp.SharedProjects = &spb.ListValue{
+	ga.resp.Data = &spb.ListValue{
 		Values: make([]*spb.Value, 0),
 	}
 
@@ -710,8 +710,8 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 				blog.Errorf("marshal projectGroupsQuotaData err, %s", err.Error())
 				return err
 			}
-			ga.resp.SharedProjects.Values = append(
-				ga.resp.SharedProjects.Values,
+			ga.resp.Data.Values = append(
+				ga.resp.Data.Values,
 				spb.NewStructValue(result),
 			)
 		}
@@ -745,8 +745,8 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 
 			lock.Lock()
 			defer lock.Unlock()
-			ga.resp.SharedProjects.Values = append(
-				ga.resp.SharedProjects.Values,
+			ga.resp.Data.Values = append(
+				ga.resp.Data.Values,
 				spb.NewStructValue(result),
 			)
 		}(projectIDorCodes[i])
