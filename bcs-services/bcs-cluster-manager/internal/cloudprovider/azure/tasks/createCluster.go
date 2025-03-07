@@ -213,16 +213,18 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, grou
 		info.Cluster.ClusterBasicSettings.SubnetID = ng.AutoScaling.SubnetIDs[0]
 
 		// 判断公网IP前缀是否在白名单中，如果不在则添加到白名单中
-		if clusterConnect.IsExtranet && ng.LaunchTemplate.InternetAccess.NodePublicIPPrefixID != "" {
-			for _, ipPrefix := range ipPrefixs {
-				if ipPrefix.ID == nil || *ipPrefix.ID != ng.LaunchTemplate.InternetAccess.NodePublicIPPrefixID {
-					continue
-				}
+		if ng.LaunchTemplate.InternetAccess.PublicIPAssigned {
+			if clusterConnect.IsExtranet && ng.LaunchTemplate.InternetAccess.NodePublicIPPrefixID != "" {
+				for _, ipPrefix := range ipPrefixs {
+					if ipPrefix.ID == nil || *ipPrefix.ID != ng.LaunchTemplate.InternetAccess.NodePublicIPPrefixID {
+						continue
+					}
 
-				if !utils.StringInSlice(*ipPrefix.Properties.IPPrefix, clusterConnect.Internet.PublicAccessCidrs) {
-					clusterConnect.Internet.PublicAccessCidrs =
-						append(clusterConnect.Internet.PublicAccessCidrs, *ipPrefix.Properties.IPPrefix)
-					blog.Infof("add public ip prefix %s to white list", *ipPrefix.Properties.IPPrefix)
+					if !utils.StringInSlice(*ipPrefix.Properties.IPPrefix, clusterConnect.Internet.PublicAccessCidrs) {
+						clusterConnect.Internet.PublicAccessCidrs =
+							append(clusterConnect.Internet.PublicAccessCidrs, *ipPrefix.Properties.IPPrefix)
+						blog.Infof("add public ip prefix %s to white list", *ipPrefix.Properties.IPPrefix)
+					}
 				}
 			}
 		}
@@ -359,7 +361,7 @@ func genAgentPoolReq(ng *proto.NodeGroup, info *cloudprovider.CloudDependBasicIn
 		}(ng)),
 		NodePublicIPPrefixID: func(group *proto.NodeGroup) *string {
 			ia := group.LaunchTemplate.InternetAccess
-			if ia != nil && ia.NodePublicIPPrefixID != "" {
+			if ia != nil && ia.PublicIPAssigned && ia.NodePublicIPPrefixID != "" {
 				return to.Ptr(group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID)
 			}
 			return nil
