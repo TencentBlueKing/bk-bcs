@@ -697,7 +697,7 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 
 	// if projectIDorCodes is empty, use cluster's projectID for sharedproject
 	// only one value not use goroutine
-	if projectIDorCodes == nil || len(projectIDorCodes) == 0 {
+	if len(projectIDorCodes) == 0 {
 		projectID := cluster.GetProjectID()
 		if projectID != "" {
 			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectID, true)
