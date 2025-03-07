@@ -67045,11 +67045,11 @@ func (m *GetClusterSharedProjectResponse) validate(all bool) error {
 	// no validation rules for Result
 
 	if all {
-		switch v := interface{}(m.GetSharedProjects()).(type) {
+		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, GetClusterSharedProjectResponseValidationError{
-					field:  "SharedProjects",
+					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -67057,16 +67057,16 @@ func (m *GetClusterSharedProjectResponse) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, GetClusterSharedProjectResponseValidationError{
-					field:  "SharedProjects",
+					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetSharedProjects()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return GetClusterSharedProjectResponseValidationError{
-				field:  "SharedProjects",
+				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
