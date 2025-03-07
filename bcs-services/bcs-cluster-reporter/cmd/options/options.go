@@ -98,7 +98,7 @@ func NewNodeAgentOptions() *NodeAgentOptions {
 
 // AddFlags xxx
 func (brro *NodeAgentOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&brro.Plugins, "plugins", "dnscheck,containercheck,hwcheck,processcheck,diskcheck,netcheck,timecheck,nodeinfocheck,uploader", "plugins")
+	fs.StringVar(&brro.Plugins, "plugins", "dnscheck,configfilecheck,hwcheck,processcheck,diskcheck,netcheck,timecheck,nodeinfocheck,containercheck,uploader", "plugins")
 	fs.StringVar(&brro.KubeConfigPath, "kubeconfigPath", "/root/.kube/config", "if incluster failed, use this kubeconfig path")
 
 	fs.StringVar(&brro.HostPath, "hostPath", "/", "set here or set HOST_PATH env")

@@ -196,7 +196,7 @@ func (p *Plugin) Check() {
 				ItemTarget: nodeName,
 				Level:      pluginmanager.RISKLevel,
 				Normal:     false,
-				Detail:     fmt.Sprintf("pod cluster dns failed: %s", err.Error()),
+				Detail:     fmt.Sprintf("host cluster dns failed: %s", err.Error()),
 				Status:     status,
 			})
 			klog.Errorf("host dns check failed: %s %s", status, err.Error())
@@ -208,7 +208,7 @@ func (p *Plugin) Check() {
 			Level:      pluginmanager.RISKLevel,
 			Normal:     true,
 			Status:     pluginmanager.NormalStatus,
-			Detail:     fmt.Sprintf("pod cluster dns resolv %v normally", p.opt.CheckDomain),
+			Detail:     fmt.Sprintf("host cluster dns resolv %v normally", p.opt.CheckDomain),
 		})
 		klog.Infof("host dns check ok")
 	}

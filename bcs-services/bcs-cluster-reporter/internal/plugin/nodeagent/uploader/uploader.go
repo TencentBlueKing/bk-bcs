@@ -14,6 +14,7 @@
 package uploader
 
 import (
+	"k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"sort"
 	"strconv"
@@ -115,13 +116,13 @@ func (p *Plugin) Check() {
 
 	nodeName := os.Getenv("NODE_NAME")
 	if nodeName == "" {
-		klog.Errorf("env NODE_NAME must be set, skip upload")
+		klog.Fatalf("env NODE_NAME must be set, skip upload")
 		return
 	}
 
 	restConfig, err := k8s.GetRestConfig()
 	if err != nil {
-		klog.Errorf(err.Error())
+		klog.Fatalf(err.Error())
 		return
 	}
 
@@ -134,57 +135,187 @@ func (p *Plugin) Check() {
 	if p.opt.Type == "k8s" {
 		ctx := util.GetCtx(time.Second * 10)
 
-		cmList, err := cs.CoreV1().ConfigMaps(p.opt.Namespace).List(ctx, v1.ListOptions{
-			ResourceVersion: "0", LabelSelector: "nodeagent=" + nodeName})
-		if err != nil {
-			klog.Errorf(err.Error())
-			return
-		}
-
-		sort.Slice(cmList.Items, func(i, j int) bool {
-			return cmList.Items[i].Name > cmList.Items[j].Name
-		})
-
-		// 获取当前所有的configmap
-		versionCMList := make(map[int]corev1.ConfigMap)
-		for _, cm := range cmList.Items {
-			if !strings.Contains(cm.Name, nodeName+"-v") {
-				continue
-			}
-
-			if len(strings.Split(cm.Name, nodeName+"-v")) != 2 {
-				continue
-			}
-
-			version, err := strconv.Atoi(strings.Split(cm.Name, nodeName+"-v")[1])
-			if err != nil {
+		if p.opt.CopyNum == 1 {
+			cm, err := cs.CoreV1().ConfigMaps(p.opt.Namespace).Get(ctx, nodeName+"v1", v1.GetOptions{
+				ResourceVersion: "0"})
+			if err != nil && !errors.IsNotFound(err) {
 				klog.Errorf(err.Error())
 				return
 			}
 
-			if version > p.opt.CopyNum {
+			// 如果**-v1不存在则创建
+			if errors.IsNotFound(err) {
+				// 新建configmap
+				newCm := corev1.ConfigMap{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      nodeName + "-v1",
+						Namespace: p.opt.Namespace,
+						Labels: map[string]string{
+							"nodeagent": nodeName,
+						},
+					},
+				}
+
+				newCm.Data = map[string]string{
+					"nodeinfo":   string(nodeinfoData),
+					"updateTime": time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"),
+					"nodename":   nodeName,
+				}
+
 				ctx = util.GetCtx(time.Second * 10)
-				err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Delete(ctx, cm.Name, v1.DeleteOptions{})
+				_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
+				if err != nil {
+					klog.Errorf(err.Error())
+					return
+				}
+			} else {
+				// 存在则直接patch
+				//apiVersion := "v1"
+				//kind := "ConfigMap"
+				cm.Data = map[string]string{
+					"nodeinfo":   string(nodeinfoData),
+					"updateTime": time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"),
+					"nodename":   nodeName,
+				}
+
+				ctx = util.GetCtx(time.Second * 10)
+				_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Update(ctx, cm, v1.UpdateOptions{})
 				if err != nil {
 					klog.Errorf(err.Error())
 					return
 				}
 
+				if err != nil {
+					klog.Errorf(err.Error())
+					return
+				}
 			}
-			versionCMList[version] = cm
-		}
 
-		for version, cm := range versionCMList {
-			if version == p.opt.CopyNum {
-				//版本最大的configmap无需处理
-				continue
+		} else {
+			cmList, err := cs.CoreV1().ConfigMaps(p.opt.Namespace).List(ctx, v1.ListOptions{
+				ResourceVersion: "0", LabelSelector: "nodeagent=" + nodeName})
+			if err != nil {
+				klog.Errorf(err.Error())
+				return
 			}
-			//滚动当前configmap的内容
-			if targetCM, ok := versionCMList[version+1]; ok {
+
+			sort.Slice(cmList.Items, func(i, j int) bool {
+				return cmList.Items[i].Name > cmList.Items[j].Name
+			})
+
+			// 获取当前所有的configmap
+			versionCMList := make(map[int]corev1.ConfigMap)
+			for _, cm := range cmList.Items {
+				if !strings.Contains(cm.Name, nodeName+"-v") {
+					continue
+				}
+
+				if len(strings.Split(cm.Name, nodeName+"-v")) != 2 {
+					continue
+				}
+
+				version, err := strconv.Atoi(strings.Split(cm.Name, nodeName+"-v")[1])
+				if err != nil {
+					klog.Errorf(err.Error())
+					return
+				}
+
+				if version > p.opt.CopyNum {
+					ctx = util.GetCtx(time.Second * 10)
+					err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Delete(ctx, cm.Name, v1.DeleteOptions{})
+					if err != nil {
+						klog.Errorf(err.Error())
+						return
+					}
+
+				}
+				versionCMList[version] = cm
+			}
+
+			for version, cm := range versionCMList {
+				if version == p.opt.CopyNum {
+					//版本最大的configmap无需处理
+					continue
+				}
+				//滚动当前configmap的内容
+				if targetCM, ok := versionCMList[version+1]; ok {
+					//apiVersion := "v1"
+					//kind := "ConfigMap"
+
+					targetCM.Data = cm.Data
+
+					ctx = util.GetCtx(time.Second * 10)
+					_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Update(ctx, &targetCM, v1.UpdateOptions{})
+					if err != nil {
+						klog.Errorf(err.Error())
+						return
+					}
+
+					if err != nil {
+						klog.Errorf(err.Error())
+						return
+					}
+
+				} else {
+					newCm := corev1.ConfigMap{
+						ObjectMeta: v1.ObjectMeta{
+							Name:      nodeName + "-v" + strconv.Itoa(version+1),
+							Namespace: p.opt.Namespace,
+							Labels: map[string]string{
+								"nodeagent": nodeName,
+							},
+						},
+						Data: cm.Data,
+					}
+
+					ctx = util.GetCtx(time.Second * 10)
+					_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
+					if err != nil {
+						klog.Errorf(err.Error())
+						return
+					}
+				}
+
+			}
+
+			_, ok := versionCMList[1]
+
+			// 如果**-v1不存在则创建
+			if len(versionCMList) == 0 || !ok {
+				// 新建configmap
+				newCm := corev1.ConfigMap{
+					ObjectMeta: v1.ObjectMeta{
+						Name:      nodeName + "-v1",
+						Namespace: p.opt.Namespace,
+						Labels: map[string]string{
+							"nodeagent": nodeName,
+						},
+					},
+				}
+
+				newCm.Data = map[string]string{
+					"nodeinfo":   string(nodeinfoData),
+					"updateTime": time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"),
+					"nodename":   nodeName,
+				}
+
+				ctx = util.GetCtx(time.Second * 10)
+				_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
+				if err != nil {
+					klog.Errorf(err.Error())
+					return
+				}
+			} else {
+				// 存在则直接patch
 				//apiVersion := "v1"
 				//kind := "ConfigMap"
+				targetCM := versionCMList[1]
 
-				targetCM.Data = cm.Data
+				targetCM.Data = map[string]string{
+					"nodeinfo":   string(nodeinfoData),
+					"updateTime": time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"),
+					"nodename":   nodeName,
+				}
 
 				ctx = util.GetCtx(time.Second * 10)
 				_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Update(ctx, &targetCM, v1.UpdateOptions{})
@@ -197,80 +328,9 @@ func (p *Plugin) Check() {
 					klog.Errorf(err.Error())
 					return
 				}
-
-			} else {
-				newCm := corev1.ConfigMap{
-					ObjectMeta: v1.ObjectMeta{
-						Name:      nodeName + "-v" + strconv.Itoa(version+1),
-						Namespace: p.opt.Namespace,
-						Labels: map[string]string{
-							"nodeagent": nodeName,
-						},
-					},
-					Data: cm.Data,
-				}
-
-				ctx = util.GetCtx(time.Second * 10)
-				_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
-				if err != nil {
-					klog.Errorf(err.Error())
-					return
-				}
-			}
-
-		}
-
-		_, ok := versionCMList[1]
-
-		// 如果**-v1不存在则创建
-		if len(versionCMList) == 0 || !ok {
-			// 新建configmap
-			newCm := corev1.ConfigMap{
-				ObjectMeta: v1.ObjectMeta{
-					Name:      nodeName + "-v1",
-					Namespace: p.opt.Namespace,
-					Labels: map[string]string{
-						"nodeagent": nodeName,
-					},
-				},
-			}
-
-			newCm.Data = map[string]string{
-				"nodeinfo":   string(nodeinfoData),
-				"updateTime": time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"),
-				"nodename":   nodeName,
-			}
-
-			ctx = util.GetCtx(time.Second * 10)
-			_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Create(ctx, &newCm, v1.CreateOptions{})
-			if err != nil {
-				klog.Errorf(err.Error())
-				return
-			}
-		} else {
-			// 存在则直接patch
-			//apiVersion := "v1"
-			//kind := "ConfigMap"
-			targetCM := versionCMList[1]
-
-			targetCM.Data = map[string]string{
-				"nodeinfo":   string(nodeinfoData),
-				"updateTime": time.Now().Format("2006-01-02 15:04:05.999999999 -0700 MST"),
-				"nodename":   nodeName,
-			}
-
-			ctx = util.GetCtx(time.Second * 10)
-			_, err = cs.CoreV1().ConfigMaps(p.opt.Namespace).Update(ctx, &targetCM, v1.UpdateOptions{})
-			if err != nil {
-				klog.Errorf(err.Error())
-				return
-			}
-
-			if err != nil {
-				klog.Errorf(err.Error())
-				return
 			}
 		}
+
 	}
 }
 

@@ -139,10 +139,13 @@ func (p *Plugin) Check() {
 
 	// 遍历所有集群
 	for _, cluster := range clusterConfigs {
+		if !pluginmanager.Pm.Ready("systemappcheck,nodecheck", cluster.ClusterID) {
+			continue
+		}
+
 		wg.Add(1)
 		routinePool.Add(1)
 
-		pluginmanager.Pm.Ready("systemappcheck,nodecheck", cluster.ClusterID)
 		go func(cluster *pluginmanager.ClusterConfig) {
 			cluster.Lock()
 			klog.Infof("start capacitycheck for %s", cluster.ClusterID)
@@ -366,7 +369,9 @@ func GetMasterCheckResult(clusterInfo *pluginmanager.ClusterConfig) ([]pluginman
 		Level:      pluginmanager.WARNLevel,
 		Tags:       nil,
 	}
-	if len(clusterInfo.Master) < 3 {
+
+	// master数量为0 说明为特殊部署方式
+	if len(clusterInfo.Master) < 3 && len(clusterInfo.Master) > 0 {
 		checkItem.Status = MasterNumHAErrorStatus
 		checkItem.Detail = fmt.Sprintf(StringMap[MasterNumDetailFormart], len(clusterInfo.Master))
 		gvsList = append(gvsList, &metricmanager.GaugeVecSet{

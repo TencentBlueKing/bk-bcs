@@ -17,6 +17,7 @@ const (
 	pluginName              = "containercheck"
 	Normalstatus            = "ok"
 	runtimeTarget           = "runtime"
+	wrongRootDirStatus      = "rootdir wrong"
 	initContent             = `interval: 600`
 	readFileFailStatus      = "read file failed"
 	dnsInconsistencyStatus  = "dns inconsistency"
@@ -30,13 +31,31 @@ const (
 
 var (
 	ChinenseStringMap = map[string]string{
-		pluginName:   "容器检查",
-		Normalstatus: "正常",
+		pluginName:              "容器检查",
+		Normalstatus:            "正常",
+		wrongRootDirStatus:      wrongRootDirStatus,
+		readFileFailStatus:      readFileFailStatus,
+		dnsInconsistencyStatus:  dnsInconsistencyStatus,
+		inconsistentStatus:      inconsistentStatus,
+		getProcessFailStatus:    getProcessFailStatus,
+		runtimeErrorStatus:      runtimeErrorStatus,
+		processNotExistStatus:   processNotExistStatus,
+		containerNotFoundStatus: containerNotFoundStatus,
+		inspectCoantainerError:  inspectCoantainerError,
 	}
 
 	EnglishStringMap = map[string]string{
-		pluginName:   pluginName,
-		Normalstatus: Normalstatus,
+		pluginName:              pluginName,
+		Normalstatus:            Normalstatus,
+		wrongRootDirStatus:      wrongRootDirStatus,
+		readFileFailStatus:      readFileFailStatus,
+		dnsInconsistencyStatus:  dnsInconsistencyStatus,
+		inconsistentStatus:      inconsistentStatus,
+		getProcessFailStatus:    getProcessFailStatus,
+		runtimeErrorStatus:      runtimeErrorStatus,
+		processNotExistStatus:   processNotExistStatus,
+		containerNotFoundStatus: containerNotFoundStatus,
+		inspectCoantainerError:  inspectCoantainerError,
 	}
 
 	StringMap = ChinenseStringMap

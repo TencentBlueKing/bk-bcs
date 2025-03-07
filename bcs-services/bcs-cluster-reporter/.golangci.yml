@@ -30,27 +30,27 @@ issues:
 linters:
   disable-all: true
   enable:
-#    - errcheck
-#    - gosimple
-#    - govet
-#    - ineffassign
+    #    - errcheck
+    #    - gosimple
+    #    - govet
+    #    - ineffassign
     - staticcheck
-#    - unused
-#    - funlen
-#    - gci
-#    - goconst
-#    - gocritic
-#    - gocyclo
-#    - gofmt
-#    - goheader
-#    - goimports
-#    - gosec
-#    - lll
-#    - misspell
-#    - nakedret
-#    - revive
-#    - unconvert
-#    - unparam
+    #    - unused
+    #    - funlen
+    #    - gci
+    #    - goconst
+    #    - gocritic
+    #    - gocyclo
+    #    - gofmt
+    #    - goheader
+    #    - goimports
+    #    - gosec
+    #    - lll
+    #    - misspell
+    #    - nakedret
+    #    - revive
+    #    - unconvert
+    #    - unparam
 linters-settings:
   errcheck:
     exclude-functions:

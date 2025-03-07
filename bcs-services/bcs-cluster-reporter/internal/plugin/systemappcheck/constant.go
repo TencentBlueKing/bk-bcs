@@ -35,6 +35,7 @@ const (
 	APPNotfoundAppStatus     = "appnotfound"
 
 	ConfigErrorStatus         = "configerr"
+	SVCConfigErrorStatus      = "svc configerr"
 	ConfigInconsistencyStatus = "configinconsistency "
 	NolabelStatus             = "no labels"
 	ConfigOtherErrorStatus    = "ConfigOtherErrorStatus"
@@ -62,13 +63,15 @@ const (
 
 var (
 	ChinenseStringMap = map[string]string{
-		pluginName:            "系统应用检查",
-		NormalStatus:          "正常",
-		StaticPodConfigTarget: "静态pod配置检查",
-		SystemAppConfigTarget: "系统应用配置检查",
-		ServiceConfigTarget:   "service配置检查",
+		pluginName:              "系统应用检查",
+		NormalStatus:            "正常",
+		StaticPodConfigTarget:   "静态pod配置检查",
+		SystemAppConfigTarget:   "系统应用配置检查",
+		ServiceConfigTarget:     "service配置检查",
+		AppStatusNotReadyStatus: AppStatusNotReadyStatus,
 
 		ConfigErrorStatus:         "配置错误",
+		SVCConfigErrorStatus:      "svc配置错误",
 		ConfigInconsistencyStatus: "配置不一致",
 		ConfigNotFoundStatus:      "配置不存在",
 		ConfigOtherErrorStatus:    "其它问题",
@@ -95,13 +98,15 @@ var (
 	}
 
 	EnglishStringMap = map[string]string{
-		pluginName:            pluginName,
-		NormalStatus:          NormalStatus,
-		StaticPodConfigTarget: "staic pod config check",
-		SystemAppConfigTarget: "system app config check",
-		ServiceConfigTarget:   "service config check",
+		pluginName:              pluginName,
+		NormalStatus:            NormalStatus,
+		StaticPodConfigTarget:   "staic pod config check",
+		SystemAppConfigTarget:   "system app config check",
+		ServiceConfigTarget:     "service config check",
+		AppStatusNotReadyStatus: AppStatusNotReadyStatus,
 
 		ConfigErrorStatus:         ConfigErrorStatus,
+		SVCConfigErrorStatus:      SVCConfigErrorStatus,
 		ConfigInconsistencyStatus: ConfigInconsistencyStatus,
 		ConfigNotFoundStatus:      ConfigNotFoundStatus,
 		ConfigOtherErrorStatus:    "other err",

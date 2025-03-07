@@ -16,10 +16,12 @@ package nodecheck
 import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/containercheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/diskcheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/netcheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/nodeinfocheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/timecheck"
+	v12 "k8s.io/api/core/v1"
 	"strings"
 	"sync"
 	"time"
@@ -29,7 +31,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/dnscheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/hwcheck"
@@ -143,7 +144,6 @@ func (p *Plugin) Check() {
 			p.ReadyMap[cluster.ClusterID] = false
 			p.WriteLock.Unlock()
 
-			config := cluster.Config
 			clusterId := cluster.ClusterID
 			clusterbiz := cluster.BusinessID
 
@@ -160,7 +160,14 @@ func (p *Plugin) Check() {
 				Items: make([]pluginmanager.CheckItem, 0, 0),
 			}
 
-			clientSet, _ := k8s.GetClientsetByConfig(config)
+			// 获取节点信息
+			clientSet := cluster.ClientSet
+			nodeMap, err := getClusterNodeInfo(cluster)
+			if err != nil {
+				klog.Errorf("get node from cluster %s failed: %s", clusterId, err.Error())
+				return
+			}
+
 			cmList, err := clientSet.CoreV1().ConfigMaps(nodeagentNamespace).List(util.GetCtx(10*time.Second), v1.ListOptions{
 				ResourceVersion: "0",
 			})
@@ -172,6 +179,8 @@ func (p *Plugin) Check() {
 			nodeAvailabilityGVSMap := make(map[string][]*metricmanager.GaugeVecSet)
 			//遍历该集群的nodeagent configmap
 			klog.Infof("%s nodeagent configmap num: %d", clusterId, len(cmList.Items))
+			nodeNum := 0
+
 			for _, configmap := range cmList.Items {
 				if !strings.HasSuffix(configmap.Name, "-v1") {
 					continue
@@ -181,14 +190,20 @@ func (p *Plugin) Check() {
 				}
 
 				// 检查更新时间
-				if _, err := time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", configmap.Data["updateTime"]); err == nil {
-					//if time.Now().Sub(updateTime) > time.Hour*24 {
-					//	continue
-					//}
+				if updateTime, err1 := time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", configmap.Data["updateTime"]); err1 == nil {
+					if time.Now().Sub(updateTime) > time.Hour*24*7 {
+						klog.Info("delete cm %s %s %s", clusterId, configmap.Name, configmap.Data["updateTime"])
+						err = clientSet.CoreV1().ConfigMaps(nodeagentNamespace).Delete(util.GetCtx(10*time.Second), configmap.Name, v1.DeleteOptions{})
+						if err != nil {
+							klog.Errorf("%s delete nodeagent cm %s failed: %s", clusterId, configmap.Name, err.Error())
+						}
+						continue
+					}
 				} else {
 					continue
 				}
 				nodeName := strings.TrimSuffix(configmap.Name, "-v1")
+				nodeNum = nodeNum + 1
 
 				nodeinfo := make(map[string]pluginmanager.PluginInfo)
 				err = yaml.Unmarshal([]byte(configmap.Data["nodeinfo"]), nodeinfo)
@@ -215,8 +230,9 @@ func (p *Plugin) Check() {
 					}
 					nodeAvailabilityGVSMap[key] = append(nodeAvailabilityGVSMap[key], nodeGVSList...)
 				}
-
 				cluster.NodeInfo[nodeName] = nodeInfo
+
+				delete(nodeMap, nodeName)
 			}
 
 			nodeAvailabilityGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
@@ -231,6 +247,16 @@ func (p *Plugin) Check() {
 						nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, gaugeVecSet)
 					}
 				}
+			}
+
+			// 当前检测只涵盖linux节点
+			if len(nodeMap)-cluster.EkletNum-cluster.WindowsNum-cluster.VnodeNum > 0 {
+				klog.Infof("%s cluster num is %d, checked nodenum is %d, eklet nodenum is %d, vnode num is %d, windows num is %d, uncheck num is %d",
+					clusterId, cluster.NodeNum, nodeNum, cluster.EkletNum, cluster.VnodeNum, cluster.WindowsNum, len(nodeMap))
+				nodeAvailabilityGaugeVecSetList = append(nodeAvailabilityGaugeVecSetList, &metricmanager.GaugeVecSet{
+					Labels: []string{clusterId, clusterbiz, "numcheck", "node", UncheckedStatus},
+					Value:  float64(len(nodeMap) - cluster.EkletNum - cluster.WindowsNum - cluster.VnodeNum),
+				})
 			}
 
 			p.WriteLock.Lock()
@@ -256,6 +282,78 @@ func (p *Plugin) Check() {
 	}
 }
 
+// getClusterNodeInfo 获取分类后的节点信息
+func getClusterNodeInfo(cluster *pluginmanager.ClusterConfig) (map[string]v12.Node, error) {
+	nodeMap := make(map[string]v12.Node)
+	clientSet := cluster.ClientSet
+	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), v1.ListOptions{ResourceVersion: "0"})
+	masterList := make([]string, 0, 0)
+	nodeNum := 0
+	ekletNum := 0
+	vnodeNum := 0
+	windowsNum := 0
+	nodeInfo := make(map[string]plugin.NodeInfo)
+	if err != nil {
+		// 获取节点失败可能由于集群已经出问题了，所以需要继续将此集群加入集群列表，以进行检查
+		return nil, err
+	} else {
+		nodeNum = len(nodeList.Items)
+		for _, node := range nodeList.Items {
+			// 基于节点标签和节点名对节点进行分类
+			nodeMap[node.Name] = node
+			if node.Name == "vcluster-vnode" {
+				vnodeNum = vnodeNum + 1
+				nodeInfo[node.Name] = plugin.NodeInfo{
+					Region: "vnode",
+					Zone:   "vnode",
+					Type:   "vnode",
+				}
+				continue
+			}
+
+			for key, val := range node.Labels {
+				if key == "node.kubernetes.io/instance-type" && val == "eklet" {
+					ekletNum = ekletNum + 1
+					zone := node.Labels["eks.tke.cloud.tencent.com/zone-name"]
+					region := zone
+					if zone != "" {
+						region = region[:strings.LastIndex(zone, "-")]
+					}
+					nodeInfo[node.Name] = plugin.NodeInfo{
+						Region: node.Labels["eks.tke.cloud.tencent.com/zone-name"],
+						Zone:   region,
+						Type:   "eklet",
+					}
+				} else if key == "node-role.kubernetes.io/master" && (val == "true" || val == "") {
+					for _, address := range node.Status.Addresses {
+						if address.Type == v12.NodeInternalIP {
+							masterList = append(masterList, address.Address)
+						}
+					}
+				} else if key == "kubernetes.io/os" && val == "windows" {
+					windowsNum = windowsNum + 1
+					nodeInfo[node.Name] = plugin.NodeInfo{
+						Region: "windows",
+						Zone:   "windows",
+						Type:   "windows",
+					}
+				}
+			}
+		}
+	}
+
+	// 计入各类节点数量
+	cluster.WindowsNum = windowsNum
+	cluster.NodeNum = nodeNum
+	cluster.EkletNum = ekletNum
+	cluster.VnodeNum = vnodeNum
+	// 判断集群是否只有超级节点
+	cluster.ALLEKLET = ekletNum == nodeNum
+	cluster.Master = masterList
+
+	return nodeMap, nil
+}
+
 // checkNodePluginResult 解析node check PluginInfo
 func checkNodePluginResult(nodeinfo map[string]pluginmanager.PluginInfo, nodeName string, clusterId, clusterbiz string, nodeInfo *plugin.NodeInfo) ([]pluginmanager.CheckItem, []pluginmanager.InfoItem, map[string][]*metricmanager.GaugeVecSet) {
 	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
@@ -275,6 +373,7 @@ func checkNodePluginResult(nodeinfo map[string]pluginmanager.PluginInfo, nodeNam
 			})
 		}
 
+		// 各类检测结果执行不同的合入逻辑
 		switch name {
 		case "processcheck":
 			pluginCheckItemList, gvsList, err := getProcessCheckResult(pluginInfo, nodeName, clusterId, clusterbiz)
@@ -284,7 +383,12 @@ func checkNodePluginResult(nodeinfo map[string]pluginmanager.PluginInfo, nodeNam
 			}
 			checkItemList = append(checkItemList, pluginCheckItemList...)
 			nodeGVSMap[processConfigCheckItem] = gvsList
-
+		case "containercheck":
+			for _, checkItem := range pluginInfo.Result.Items {
+				checkItem.ItemName = containercheck.StringMap[checkItem.ItemName]
+				checkItem.Status = containercheck.StringMap[checkItem.Status]
+				checkItemList = append(checkItemList, checkItem)
+			}
 		case "dnscheck":
 			for _, checkItem := range pluginInfo.Result.Items {
 				checkItem.ItemName = dnscheck.StringMap[checkItem.ItemName]
@@ -323,6 +427,7 @@ func checkNodePluginResult(nodeinfo map[string]pluginmanager.PluginInfo, nodeNam
 	return checkItemList, infoItemList, nodeGVSMap
 }
 
+// getProcessCheckResult 检测节点进程
 func getProcessCheckResult(pluginInfo pluginmanager.PluginInfo, nodeName, clusterId, clusterbiz string) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
 	checkItemList := make([]pluginmanager.CheckItem, 0)
 	nodeGVSMap := make([]*metricmanager.GaugeVecSet, 0)
@@ -342,7 +447,7 @@ func getProcessCheckResult(pluginInfo pluginmanager.PluginInfo, nodeName, cluste
 		return checkItemList, nodeGVSMap, err
 	}
 
-	// 检查进程配置，生成checkitem
+	// 针对kubelet和docker， 单独检查进程配置，生成checkitem
 	processResult := checkProcess(detail, nodeName)
 	checkItemList = append(checkItemList, processResult...)
 
@@ -360,6 +465,7 @@ func getProcessCheckResult(pluginInfo pluginmanager.PluginInfo, nodeName, cluste
 	return checkItemList, nodeGVSMap, nil
 }
 
+// getNodeinfoCheckResult 检测节点信息结果
 func getNodeinfoCheckResult(pluginInfo pluginmanager.PluginInfo, nodeInfo *plugin.NodeInfo) []pluginmanager.CheckItem {
 	checkItemList := make([]pluginmanager.CheckItem, 0)
 

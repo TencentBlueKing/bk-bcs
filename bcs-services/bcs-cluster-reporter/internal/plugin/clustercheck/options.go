@@ -19,7 +19,40 @@ import (
 )
 
 const (
-	namespace = "bkmonitor-operator"
+	namespace   = "bkmonitor-operator"
+	defaultYaml = `
+apiVersion: batch/v1
+kind: Job
+metadata:
+	name: bcs-blackbox-job
+	namespace: bcs-blackbox-job
+spec:
+	backoffLimit: 1
+	template:
+		metadata:
+			labels:
+				test-yaml: test-yaml
+		spec:
+			automountServiceAccountToken: false
+			containers:
+			- image: hub.bktencent.com/library/hello-world:latest
+				imagePullPolicy: Always
+				name: blackbox
+				resources:
+					limits:
+						cpu: 100m
+						memory: 100Mi
+					requests:
+						cpu: 100m
+						memory: 100Mi
+			nodeSelector:
+				kubernetes.io/os: linux
+				kubernetes.io/arch: amd64
+			restartPolicy: Never
+			tolerations:
+			- effect: NoSchedule
+				operator: Exists
+`
 )
 
 // Options bcs log options
@@ -36,40 +69,12 @@ func (o *Options) Validate() error {
 		o.Namespace = namespace
 	}
 
+	if o.Interval == 0 {
+		o.Interval = 300
+	}
+
 	if o.TestYaml == nil {
-		yamlStr := `
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: bcs-blackbox-job
-  namespace: bcs-blackbox-job
-spec:
-  backoffLimit: 1
-  template:
-    metadata:
-      labels:
-        test-yaml: test-yaml
-    spec:
-      automountServiceAccountToken: false
-      containers:
-      - image: hub.bktencent.com/library/hello-world:latest
-        imagePullPolicy: Always
-        name: blackbox
-        resources:
-          limits:
-            cpu: 100m
-            memory: 100Mi
-          requests:
-            cpu: 100m
-            memory: 100Mi
-      nodeSelector:
-        kubernetes.io/os: linux
-        kubernetes.io/arch: amd64
-      restartPolicy: Never
-      tolerations:
-      - effect: NoSchedule
-        operator: Exists
-`
+		yamlStr := defaultYaml
 		o.TestYaml = make(map[string]interface{})
 		err := yaml.Unmarshal([]byte(yamlStr), o.TestYaml)
 		if err != nil {

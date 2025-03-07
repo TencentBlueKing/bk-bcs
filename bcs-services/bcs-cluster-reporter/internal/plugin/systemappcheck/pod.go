@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"k8s.io/klog"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -70,6 +71,7 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 	newStaticPodNameList := make([]string, 0, 0)
 
 	etcdPodList := make([]*v1.Pod, 0, 0)
+	apiserverPodList := make([]*v1.Pod, 0, 0)
 	for _, pod := range podList {
 		if len(pod.OwnerReferences) == 0 {
 			continue
@@ -85,7 +87,7 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 		}
 
 		if strings.HasPrefix(pod.Name, "kube-apiserver") {
-			checkItemList = append(checkItemList, CheckApiserver(&pod, cluster)...)
+			apiserverPodList = append(apiserverPodList, &pod)
 		}
 		if strings.HasPrefix(pod.Name, "etcd") {
 			etcdPodList = append(etcdPodList, &pod)
@@ -98,6 +100,7 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 		checkItemList = append(checkItemList, CheckLabel(&pod)...)
 	}
 	checkItemList = append(checkItemList, CheckETCD(etcdPodList, cluster)...)
+	checkItemList = append(checkItemList, CheckApiserver(apiserverPodList, cluster)...)
 
 	if !ok {
 		// 缓存集群当前static pod信息，避免频繁list pod
@@ -173,16 +176,16 @@ func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []plugin
 	checkItemList := make([]pluginmanager.CheckItem, 0)
 	podParamList := make([][]string, 0)
 
-	for _, pod := range podList {
-		// 检查参数
-		floatFlagList := []plugin.FloatFlag{
-			{Name: "--heartbeat-interval",
-				CompareType: "ge",
-				Value:       1000,
-				Needed:      true,
-			},
-		}
+	// 检查参数
+	floatFlagList := []plugin.FloatFlag{
+		{Name: "--heartbeat-interval",
+			CompareType: "ge",
+			Value:       1000,
+			Needed:      true,
+		},
+	}
 
+	for _, pod := range podList {
 		for _, floatFlag := range floatFlagList {
 			detail := plugin.CheckFlag(append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...), floatFlag)
 			if detail != "" {
@@ -232,20 +235,18 @@ func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []plugin
 	}
 
 	// 检查etcd参数是否一致
-	for _, param := range []string{"heartbeat-interval", "election-timeout"} {
-		err := checkParamConsistency(podParamList, param)
-		if err != nil {
-			klog.Errorf("%s checkParamConsistency failed: %s", cluster.ClusterID, err.Error())
-			checkItemList = append(checkItemList, pluginmanager.CheckItem{
-				ItemName:   SystemAppConfigCheckItem,
-				ItemTarget: "etcd",
-				Status:     ConfigInconsistencyStatus,
-				Normal:     false,
-				Detail:     err.Error(),
-				Tags:       nil,
-				Level:      pluginmanager.WARNLevel,
-			})
-		}
+	err := checkParamConsistency(podParamList, nil)
+	if err != nil {
+		klog.Errorf("%s checkParamConsistency failed: %s", cluster.ClusterID, err.Error())
+		checkItemList = append(checkItemList, pluginmanager.CheckItem{
+			ItemName:   SystemAppConfigCheckItem,
+			ItemTarget: "etcd",
+			Status:     ConfigInconsistencyStatus,
+			Normal:     false,
+			Detail:     err.Error(),
+			Tags:       nil,
+			Level:      pluginmanager.WARNLevel,
+		})
 	}
 
 	// 检查状态
@@ -253,51 +254,30 @@ func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []plugin
 }
 
 // CheckApiserver check apiserver config
-func CheckApiserver(pod *v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
+func CheckApiserver(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
 	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	podParamList := make([][]string, 0)
 
-	setFlagList := []string{"--goaway-chance", "--audit-policy-file"}
-
-	for _, arg := range append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...) {
-		for index, flag := range setFlagList {
-			if strings.Contains(arg, flag) && flag != "" {
-				checkItemList = append(checkItemList, pluginmanager.CheckItem{
-					ItemName:   SystemAppConfigCheckItem,
-					ItemTarget: pod.Name,
-					Status:     pluginmanager.NormalStatus,
-					Normal:     true,
-					Detail:     "",
-					Tags:       nil,
-					Level:      pluginmanager.WARNLevel,
-				})
-				setFlagList[index] = ""
-			}
-		}
-
-		if strings.HasPrefix(arg, "--service-cluster-ip-range") {
-			cluster.ServiceCidr = strings.SplitN(arg, "=", 2)[1]
-		}
+	for _, pod := range podList {
+		podParamList = append(podParamList, append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...))
 	}
 
-	for _, setFlag := range setFlagList {
-		if setFlag != "" {
-			checkItemList = append(checkItemList, pluginmanager.CheckItem{
-				ItemName:   SystemAppConfigCheckItem,
-				ItemTarget: pod.Name,
-				Status:     ConfigNotFoundStatus,
-				Normal:     false,
-				Detail:     fmt.Sprintf(StringMap[FlagUnsetDetailFormat], setFlag),
-				Tags:       nil,
-				Level:      pluginmanager.WARNLevel,
-			})
-			return checkItemList
-		}
+	// 检查etcd参数是否一致
+	err := checkParamConsistency(podParamList, []string{"--goaway-chance", "--audit-policy-file"})
+	if err != nil {
+		klog.Errorf("%s checkParamConsistency failed: %s", cluster.ClusterID, err.Error())
+		checkItemList = append(checkItemList, pluginmanager.CheckItem{
+			ItemName:   SystemAppConfigCheckItem,
+			ItemTarget: "etcd",
+			Status:     ConfigInconsistencyStatus,
+			Normal:     false,
+			Detail:     err.Error(),
+			Tags:       nil,
+			Level:      pluginmanager.WARNLevel,
+		})
 	}
 
 	return checkItemList
-
-	// 检查参数
-	// 检查状态
 }
 
 // CheckLabel xxx
@@ -439,26 +419,66 @@ func CheckKubeProxy(clientSet *kubernetes.Clientset) []pluginmanager.CheckItem {
 	return result
 }
 
-// checkParamConsistency param format --XXXXX=XXXXXX
-func checkParamConsistency(podsParamList [][]string, checkParam string) error {
-	value := ""
+func checkParamConsistency(podsParamList [][]string, mustContain []string) error {
+	if len(podsParamList) < 1 {
+		return nil
+	}
+
+	paramMap := make(map[string]string)
+
+	for _, param := range podsParamList[0] {
+		// 只检查键值对类型的参数
+		if !strings.Contains(param, "=") {
+			return nil
+		}
+
+		if strings.HasPrefix(param, "--") {
+			param = strings.TrimPrefix(param, "--")
+		}
+
+		paramName, paramValue := strings.SplitN(param, "=", 2)[0], strings.SplitN(param, "=", 2)[1]
+		paramMap[paramName] = paramValue
+	}
+
+	podsParamList = podsParamList[1:]
+
 	for _, paramList := range podsParamList {
 		for _, param := range paramList {
+			// 只检查键值对类型的参数
 			if !strings.Contains(param, "=") {
 				return nil
 			}
 
-			if strings.HasPrefix(param, "--"+checkParam) {
-				if value == "" {
-					value = strings.SplitN(param, "=", 2)[1]
-				} else {
-					if value != strings.SplitN(param, "=", 2)[1] {
-						return fmt.Errorf("check param %s is %s and %s, inconsistency", checkParam, value, strings.SplitN(param, "=", 2)[1])
-					}
-				}
+			if strings.HasPrefix(param, "--") {
+				param = strings.TrimPrefix(param, "--")
+			}
+
+			// 不校验包含IP的参数
+			if containsIP(param) {
+				continue
+			}
+
+			paramName, paramValue := strings.SplitN(param, "=", 2)[0], strings.SplitN(param, "=", 2)[1]
+			if value, ok := paramMap[paramName]; !ok {
+				return fmt.Errorf("check param %s doesn't exist in all pod, inconsistency", paramName)
+			} else if value != paramValue {
+				return fmt.Errorf("check param %s is %s and %s, inconsistency", paramName, value, paramValue)
+			}
+		}
+	}
+
+	if mustContain != nil {
+		for _, param := range mustContain {
+			if _, ok := paramMap[param]; !ok {
+				return fmt.Errorf("check param %s doesn't exist", param)
 			}
 		}
 	}
 	return nil
+}
 
+func containsIP(s string) bool {
+	ipRegex := `\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`
+	match, _ := regexp.MatchString(ipRegex, s)
+	return match
 }

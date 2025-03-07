@@ -20,6 +20,7 @@ const (
 	configErrorStatus    = "config error"
 	ConfigNotFoundStatus = "confignotfound"
 	ConfigFileDetail     = "%s config file"
+	UncheckedStatus      = "unchecked"
 
 	normalStatus = "ok"
 
@@ -38,6 +39,7 @@ var (
 		normalStatus:           "正常",
 		pluginName:             "节点检查",
 		ConfigFileDetail:       "%s 配置文件",
+		UncheckedStatus:        UncheckedStatus,
 	}
 
 	EnglishStringMap = map[string]string{
@@ -48,6 +50,7 @@ var (
 		normalStatus:           normalStatus,
 		pluginName:             pluginName,
 		ConfigFileDetail:       ConfigFileDetail,
+		UncheckedStatus:        UncheckedStatus,
 	}
 
 	StringMap = ChinenseStringMap
