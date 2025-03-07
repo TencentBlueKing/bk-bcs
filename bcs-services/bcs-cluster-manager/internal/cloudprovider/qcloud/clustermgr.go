@@ -1036,8 +1036,17 @@ func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
 }
 
 // CheckHighAvailabilityMasterNodes check master nodes high availability
-func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error {
-	// 独立集群且为生产环境
+func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.CheckHaMasterNodesOption) error {
+
+	// 白名单地域
+	if opt.Cloud != nil && opt.Cloud.GetConfInfo().GetRegionHaWhiteList() != nil &&
+		utils.StringContainInSlice(cls.Region, opt.Cloud.GetConfInfo().GetRegionHaWhiteList()) {
+		blog.Infof("cloud[%s] CheckHighAvailabilityMasterNodes region[%s] in white list", cloudName, cls.Region)
+		return nil
+	}
+
+	// 独立集群 & 生产环境
 	if cls.ManageType == icommon.ClusterManageTypeIndependent && cls.Environment == icommon.Prod && len(nodes) > 0 {
 
 		if len(nodes) < 3 || len(nodes)%2 == 0 {

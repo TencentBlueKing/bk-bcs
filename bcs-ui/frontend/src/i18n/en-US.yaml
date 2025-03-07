@@ -991,7 +991,6 @@ cluster:
         nodeSubnet: >-
           Azure CNI Node Subnet：Each Pod will receive an IP address from the
           subnet and can communicate directly with other Pods and services.
-      chargingModel: ''
     google:
       labels:
         areaType: Area Type
@@ -1209,6 +1208,7 @@ cluster:
         nodeCountsMaxSize: The number of Node count cannot be greater than the Node quota
         minNodes: The number of Node count must be greater than 0
       label:
+        ID: Node pool ID
         nameAndID: Node pool name (ID)
         nodeQuota: Node quota
         nodeCounts: Node count
@@ -2763,13 +2763,6 @@ projects:
       binding CMDB Business,  please delete the existing cluster first.
     label:
       project: Project
-      region: Region
-      zone: Zone
-      instance: InstanceType
-      Num: Total
-      used: Used
-      available: Available
-      AssociatedNodePool: Associated Node Pools
     edit: Edit
     engName: Project code
     intro: Description
@@ -2785,6 +2778,52 @@ projects:
       Please enter the lowercase letters, numbers, and mid-line lines of 2-32
       characters, and start with a lowercase letter
     projectName2: Please enter the project name of 2-64 characters
+  quota:
+    label:
+      region: Region
+      zone: Zone
+      instance: Instance
+      resource: Resource Bundle
+      clusterID: Cluster/ID
+      namespace: Namespace
+      num: Total
+      used: Used
+      available: Available
+      gpuNum: Total GPUs (Cards)
+      gpuUsed: Used GPUs (Cards)
+      gpuAvailable: Available GPUs (Cards)
+      cpuNum: Total CPU (Cores)
+      cpuUsed: USed CPU (Cores)
+      cpuAvailable: Available CPU (Cores)
+      memNum: Total MEM (GiB)
+      memUsed: Used MEM (GiB)
+      memAvailable: Available MEM (GiB)
+      usage: Utilization Rate
+    projectStatistics: Project Statistics
+    CA: Host
+    federation: Federation
+    caUsed: Host (Used)
+    caAvailable: Host (Remaining)
+    federationUsed: Federation (Used)
+    federationAvailable: Federation (Remaining)
+    cpuResource: CPU Resources (Cores) Rate
+    cpuMsg: '{used} cores used, {available} cores available'
+    cpuMsgA: '(Total {sum} cores, {used} cores used)'
+    cpuMsgB: '{percent}%, {counts} cores used'
+    cpuMsgC: '{percent}%, {counts} cores available'
+    memResource: MEM Resources ( GiB ) Rate
+    memMsg: '{used} GiB used, {available} GiB available'
+    memMsgA: '(Total {sum} GiB, {used} GiB used)'
+    memMsgB: '{percent}%, {counts} GiB used'
+    memMsgC: '{percent}%, {counts} GiB available'
+    gpuResource: GPU Resources (Cards) Rate
+    gpuMsg: '{used} cards used, {available} cards available'
+    gpuMsgA: '(Total {sum} cards, {used} cards used)'
+    gpuMsgB: '{percent}%, {counts} cards used'
+    gpuMsgC: '{percent}%, {counts} cards available'
+    sum: (Total)
+    placeholder: 'Search instance specifications, city, zone'
+    usage: Quota Utilization
 dashboard:
   title:
     confirmDelete: Confirm to delete the resource
@@ -3374,7 +3413,7 @@ amazonCloud:
       and maintained by the AWS team, and cluster administrators do not need to
       concern themselves with the management and maintenance of the cluster
       Master.
-    cluster: ''
+    cluster: Cluster
 importAmazonCloud:
   title: Import a public cloud cluster - AWS
   label:

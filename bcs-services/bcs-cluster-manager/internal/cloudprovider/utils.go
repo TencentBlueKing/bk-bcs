@@ -808,19 +808,19 @@ func GetClusterMasterIPList(cluster *proto.Cluster) []string {
 
 // StepOptions xxx
 type StepOptions struct {
-	Retry      uint32
 	SkipFailed bool
 	Translate  string
 	AllowSkip  bool
+	MaxRetry   uint32
 }
 
 // StepOption xxx
 type StepOption func(opt *StepOptions)
 
-// WithStepRetry xxx
-func WithStepRetry(retry uint32) StepOption {
+// WithStepMaxRetry 单子任务最大重试次数
+func WithStepMaxRetry(maxRetry uint32) StepOption {
 	return func(opt *StepOptions) {
-		opt.Retry = retry
+		opt.MaxRetry = maxRetry
 	}
 }
 
@@ -848,10 +848,10 @@ func WithStepTranslate(translate string) StepOption {
 // InitTaskStep init task step
 func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 	defaultOptions := &StepOptions{
-		Retry:      0,
 		SkipFailed: false,
 		Translate:  "",
 		AllowSkip:  false,
+		MaxRetry:   0,
 	}
 	for _, opt := range opts {
 		opt(defaultOptions)
@@ -859,11 +859,12 @@ func InitTaskStep(stepInfo StepInfo, opts ...StepOption) *proto.Step {
 
 	nowStr := time.Now().Format(time.RFC3339)
 	return &proto.Step{
-		Name:         stepInfo.StepMethod,
-		System:       "api",
-		Params:       make(map[string]string),
-		Retry:        0,
-		MaxRetry:     defaultOptions.Retry,
+		Name:   stepInfo.StepMethod,
+		System: "api",
+		Params: make(map[string]string),
+		Retry:  0,
+		// 最大重试次数
+		MaxRetry:     defaultOptions.MaxRetry,
 		SkipOnFailed: defaultOptions.SkipFailed,
 		Start:        nowStr,
 		Status:       TaskStatusNotStarted,

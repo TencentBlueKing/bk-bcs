@@ -11,11 +11,12 @@ export interface IField {
 }
 // 表格设置功能
 export default function useTableSetting(fieldsData: Array<IField>) {
+  const fieldsDataClone = ref(fieldsData);
   const storageFields = JSON.parse(localStorage.getItem(CLUSTER_NODE_TABLE_COL) || '{}');
   const tableSetting = ref({
     size: 'medium',
-    fields: fieldsData,
-    selectedFields: fieldsData.filter((item) => {
+    fields: fieldsDataClone,
+    selectedFields: fieldsDataClone.value.filter((item) => {
       if (item.disabled) return true;
       if (item.id in storageFields) return storageFields[item.id];
       return !!item.defaultChecked;
@@ -25,7 +26,7 @@ export default function useTableSetting(fieldsData: Array<IField>) {
   const handleSettingChange = ({ size, fields }) => {
     tableSetting.value.size = size;
     tableSetting.value.selectedFields = fields;
-    const storageData = fieldsData.reduce((pre, cur) => {
+    const storageData = fieldsDataClone.value.reduce((pre, cur) => {
       pre[cur.id] = fields.some(item => item.id === cur.id);
       return pre;
     }, {});
@@ -33,6 +34,7 @@ export default function useTableSetting(fieldsData: Array<IField>) {
   };
   return {
     tableSetting,
+    fieldsDataClone,
     isColumnRender,
     handleSettingChange,
   };

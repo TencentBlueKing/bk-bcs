@@ -752,6 +752,9 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-zy-resource:before {
 	content: "\e1f3";
 }
+.bcs-icon-pie-chart-fill:before {
+	content: "\e24a";
+}
 .bcs-icon-crd:before {
 	content: "\e1f4";
 }

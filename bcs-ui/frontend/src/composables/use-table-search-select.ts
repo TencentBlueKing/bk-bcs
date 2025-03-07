@@ -27,11 +27,13 @@ export default function useTableSearchSelect({
   // 刷新表格
   const tableKey = ref(new Date().getTime());
   const handleFilterChange = (filtersData) => {
+    // 表格筛选项同步到searchSelect上
+    filteredValue.value = { ...filteredValue.value, ...filtersData };
     Object.keys(filtersData).forEach((prop) => {
       const data = searchSelectDataSource.value.find(data => data.id === prop);
       const index = searchSelectValue.value.findIndex(item => item.id === prop);
       const values = data?.children?.filter(v => filtersData[prop].includes(v.id));
-      searchSelectValue.value.splice(index, 1);
+      index > -1 && searchSelectValue.value.splice(index, 1);
       if (values?.length) {
         searchSelectValue.value.push({
           id: data?.id,

@@ -104,7 +104,10 @@
         <bk-form-item :label="$t('cluster.labels.visibleRange')">
           <ClusterVisibleRange
             :editable="rangeEdit"
-            :value="clusterData?.sharedRanges?.projectIdOrCodes"
+            :value="clusterData?.sharedRanges?.projectIdOrCodes || []"
+            :is-shared="clusterData?.is_shared"
+            :loading="isLoading"
+            :cluster-id="clusterData.clusterID"
             @edit="rangeEdit = true"
             @cancel="rangeEdit = false"
             @save="handleVisibleRangeChange" />
@@ -370,7 +373,7 @@ export default defineComponent({
     async function handleVisibleRangeChange(val) {
       const result = await handleModifyCluster({
         is_shared: !val?.isOnlyCurrentPorject,
-        sharedRanges: !val?.isOnlyCurrentPorject ? {
+        sharedRanges: !val?.isOnlyCurrentPorject && !val?.isAll ? {
           projectIdOrCodes: val?.value,
         } : {},
         updator: user.value.username,

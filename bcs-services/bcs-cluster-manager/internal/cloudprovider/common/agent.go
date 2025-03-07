@@ -122,8 +122,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 
 	if len(nodeIPs) == 0 {
 		blog.Infof("InstallGSEAgentTask %s skip, cause of empty node", taskID)
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("empty node ip"))
-		return nil
+		retErr := fmt.Errorf("empty node ip")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
@@ -132,8 +133,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	})
 	if err != nil {
 		blog.Infof("InstallGSEAgentTask GetClusterDependBasicInfo failed: %v", taskID, err)
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("installAgent getDependInfo failed"))
-		return nil
+		retErr := fmt.Errorf("installAgent getDependInfo failed")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 	if bkBizIDString == "" {
 		bkBizIDString = dependInfo.Cluster.GetBusinessID()
@@ -149,21 +151,24 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	bkCloudID, err := strconv.Atoi(cloudAreaID)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s failed, invalid bkCloudID, err %s", taskID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid bkCloudID, err %s", err.Error()))
-		return nil
+		retErr := fmt.Errorf("invalid bkCloudID, err %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 	bkBizID, err := strconv.Atoi(bkBizIDString)
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s failed, invalid bkBizID, err %s", taskID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("invalid bkBizID, err %s", err.Error()))
-		return nil
+		retErr := fmt.Errorf("invalid bkBizID, err %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 
 	nodeManClient := nodeman.GetNodeManClient()
 	if nodeManClient == nil {
-		blog.Errorf("nodeman client is not init")
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("nodeman client is not init"))
-		return nil
+		retErr := fmt.Errorf("nodeman client is not init")
+		blog.Errorf("InstallGSEAgentTask %s failed: %s", taskID, retErr.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
@@ -172,8 +177,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	clouds, err := nodeManClient.CloudList(context.Background())
 	if err != nil {
 		blog.Errorf("InstallGSEAgentTask %s get cloud list error, %s", taskID, err.Error())
-		_ = state.UpdateStepFailure(start, stepName, fmt.Errorf("get cloud list error, %s", err.Error()))
-		return nil
+		retErr := fmt.Errorf("get cloud list error, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
 	}
 	apID := getAPID(bkCloudID, clouds)
 
@@ -256,9 +262,9 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("install gse agent job failed [%s]", err))
 		blog.Errorf("InstallGSEAgentTask %s install gse agent job error, %s", taskID, err.Error())
-		_ = state.UpdateStepRetryOrFailure(start, stepName,
-			fmt.Errorf("install gse agent job error, %s", err.Error()))
-		return fmt.Errorf("install gse agent job failed [%s]", err)
+		retErr := fmt.Errorf("install gse agent job failed [%s]", err)
+		_ = state.UpdateStepRetryOrFailure(start, stepName, retErr)
+		return retErr
 	}
 	blog.Infof("InstallGSEAgentTask %s install gse agent job(%d) url %s", taskID, job.JobID, job.JobURL)
 
@@ -266,11 +272,10 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Minute)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		var err error // nolint
-		detail, err := nodeManClient.JobDetails(job.JobID)
-		if err != nil {
-			blog.Errorf("InstallGSEAgentTask %s failed, get job detail err %s", taskID, err.Error())
-			return err
+		detail, errLocal := nodeManClient.JobDetails(job.JobID)
+		if errLocal != nil {
+			blog.Errorf("InstallGSEAgentTask %s failed, get job detail err %s", taskID, errLocal.Error())
+			return errLocal
 		}
 		switch detail.Status {
 		case nodeman.JobRunning:

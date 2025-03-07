@@ -313,6 +313,7 @@ func (c *Cluster) UpdateCloudKubeConfig(kubeConfig string,
 }
 
 // CheckHighAvailabilityMasterNodes check master nodes high availability
-func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node) error {
+func (c *Cluster) CheckHighAvailabilityMasterNodes(cls *proto.Cluster, nodes []*proto.Node,
+	opt *cloudprovider.CheckHaMasterNodesOption) error {
 	return nil
 }

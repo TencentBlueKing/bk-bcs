@@ -828,7 +828,6 @@ cluster:
       tips:
         overlay: Azure CNI Overlay：群集节点将部署到 Azure 虚拟网络 (VNet) 子网中。
         nodeSubnet: Azure CNI Node Subnet：每个 Pod 将接收 IP 子网中的 IP 地址，并且可以直接与其他 Pod 和服务通信。
-      chargingModel: cluster.create.azure.chargingModel
     google:
       labels:
         areaType: 位置类型
@@ -975,6 +974,7 @@ cluster:
         nodeCountsMaxSize: 节点数量不能大于节点配额
         minNodes: 节点数要大于0
       label:
+        ID: 节点池ID
         nameAndID: 节点池名称 (ID)
         nodeQuota: 节点配额
         nodeCounts: 节点数量
@@ -2198,13 +2198,6 @@ projects:
     bizTips: 该项目下已有集群信息，如需更改绑定业务信息，请先删除已有集群
     label:
       project: 项目
-      region: 城市
-      zone: 可用区
-      instance: 实例规格
-      Num: 总量
-      used: 已使用
-      available: 可用
-      AssociatedNodePool: 关联节点池
     edit: 编辑项目
     engName: 项目英文名
     intro: 项目说明
@@ -2216,6 +2209,52 @@ projects:
     projectName: '请输入2-64字符，不能包含`~!@#$%^&*()+<>?:"{},./;\''''[]字符和空格'
     projectName1: 请输入2-32字符的小写字母、数字、中划线，以小写字母开头
     projectName2: 请输入2-64字符的项目名称
+  quota:
+    label:
+      region: 城市
+      zone: 可用区
+      instance: 实例规格
+      resource: 资源包
+      clusterID: 集群/ID
+      namespace: 命名空间
+      num: 总量
+      used: 已用
+      available: 可用
+      gpuNum: 总 GPU(卡)
+      gpuUsed: 已用 GPU(卡)
+      gpuAvailable: 可用 GPU(卡)
+      cpuNum: 总 CPU(核)
+      cpuUsed: 已用 CPU(核)
+      cpuAvailable: 可用 CPU(核)
+      memNum: 总 MEM(GB)
+      memUsed: 已用 MEM(GB)
+      memAvailable: 可用 MEM(GB)
+      usage: 使用率
+    projectStatistics: 项目统计
+    CA: CA 主机
+    federation: 弹性算力
+    caUsed: CA 主机 ( 已用 )
+    caAvailable: CA 主机 ( 剩余 )
+    federationUsed: 弹性算力 ( 已用 )
+    federationAvailable: 弹性算力 ( 剩余 )
+    cpuResource: CPU 资源 ( 核 ) 利用率
+    cpuMsg: '已用 {used} 核，可用 {available} 核'
+    cpuMsgA: '(共 {sum} 核，已用 {used} 核)'
+    cpuMsgB: '{percent}%，已用 {counts} 核'
+    cpuMsgC: '{percent}%，可用 {counts} 核'
+    memResource: MEM 资源 ( GiB ) 利用率
+    memMsg: '已用 {used} GiB，可用 {available} GiB'
+    memMsgA: '(共 {sum} GiB，已用 {used} GiB)'
+    memMsgB: '{percent}%，已用 {counts} GiB'
+    memMsgC: '{percent}%，可用 {counts} GiB'
+    gpuResource: GPU 资源 ( 卡 ) 利用率
+    gpuMsg: '已用 {used} 卡，可用 {available} 卡'
+    gpuMsgA: '(共 {sum} 卡，已用 {used} 卡)'
+    gpuMsgB: '{percent}%，已用 {counts} 卡'
+    gpuMsgC: '{percent}%，可用 {counts} 卡'
+    sum: (总)
+    placeholder: 搜索实例规格，城市，可用区
+    usage: 配额使用情况
 dashboard:
   title:
     confirmDelete: 确认删除当前资源

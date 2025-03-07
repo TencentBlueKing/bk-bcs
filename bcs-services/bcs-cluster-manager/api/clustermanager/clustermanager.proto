@@ -3469,6 +3469,11 @@ message CloudConfigInfo {
       title: "disableCheckGroupResource",
       description: "cloud是否关闭节点池资源quota校验开关"
     }];
+  repeated string regionHaWhiteList = 9 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "regionHaWhiteList",
+      description: "region高可用配置白名单, 某些region可能不存在3个及以上高可用区"
+    }];
 }
 
 // CloudNetworkInfo storage for cloud network info

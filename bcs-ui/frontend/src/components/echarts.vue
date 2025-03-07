@@ -14,8 +14,11 @@ export default {
     },
   },
   watch: {
-    options(newValue) {
-      this.chart?.setOption(newValue);
+    options: {
+      handler(newValue) {
+        this.chart?.setOption(newValue);
+      },
+      deep: true,
     },
   },
   mounted() {

@@ -115,8 +115,12 @@ func (ts *TaskServer) Dispatch(task *proto.Task) error {
 			// two parameters: taskID, stepName
 			Args:                        []tasks.Arg{{Type: "string", Value: task.TaskID}, {Type: "string", Value: stepName}},
 			IgnoreWhenTaskNotRegistered: true,
-			RetryCount:                  int(step.MaxRetry),
 		}
+
+		if step.GetMaxRetry() > 0 {
+			signature.RetryCount = int(step.GetMaxRetry())
+		}
+
 		signatures = append(signatures, signature)
 	}
 	ts.lock.Lock()
