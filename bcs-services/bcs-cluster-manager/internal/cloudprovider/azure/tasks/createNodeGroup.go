@@ -31,6 +31,7 @@ import (
 
 // CreateCloudNodeGroupTask 创建节点池 - create cloud node group task
 func CreateCloudNodeGroupTask(taskID string, stepName string) error {
+
 	start := time.Now()
 	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName) // get task and task current step
 	if err != nil {
