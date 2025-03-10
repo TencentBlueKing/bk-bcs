@@ -1,10 +1,13 @@
 FROM golang:1.20 AS builder
 
-ARG PROTOC_GEN_GO_VERSION=1.3.2
+ARG PROTOC_GEN_GO_VERSION=1.5.2
 ARG PROTOC_GEN_MICRO_VERSION=latest
 ARG PROTOC_GEN_GRPC_GATEWAY_VERSION=1.14.6
 ARG PROTOC_GEN_SWAGGER_VERSION=1.14.6
 ARG PROTOC_GEN_VALIDATE_VERSION=0.6.7
+
+RUN go env -w GO111MODULE=on
+RUN go env -w GOPROXY=https://goproxy.cn,direct
 
 # Install protoc-gen-go
 RUN go install github.com/golang/protobuf/protoc-gen-go@v${PROTOC_GEN_GO_VERSION}
@@ -25,7 +28,7 @@ FROM ubuntu:24.04
 
 WORKDIR /proto
 
-ARG PROTOC_VERSION=3.12.3
+ARG PROTOC_VERSION=3.12.0
 
 RUN apt-get update
 
