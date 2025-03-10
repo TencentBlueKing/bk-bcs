@@ -186,6 +186,38 @@ func (aks *AksServiceImpl) GetCluster(ctx context.Context, info *cloudprovider.C
 	return aks.GetClusterWithName(ctx, resourceGroupName, info.Cluster.SystemID)
 }
 
+// UpdateClusterAuthorizedIPRange 更新集群白名单
+//
+// location - 区域
+//
+// resourceGroupName - 资源组名称(Account.resourceGroupName)
+//
+// clusterName - 集群名称
+//
+// ipRange - ip cidr白名单列表.
+func (aks *AksServiceImpl) UpdateClusterAuthorizedIPRange(ctx context.Context,
+	location, resourceGroupName, clusterName string, ipRange []*string) error {
+	poller, err := aks.clustersClient.BeginCreateOrUpdate(ctx, resourceGroupName, clusterName,
+		armcontainerservice.ManagedCluster{
+			Location: &location,
+			Properties: &armcontainerservice.ManagedClusterProperties{
+				APIServerAccessProfile: &armcontainerservice.ManagedClusterAPIServerAccessProfile{
+					AuthorizedIPRanges: ipRange,
+				},
+			},
+		}, nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to update cluster")
+	}
+
+	if _, err = poller.PollUntilDone(ctx, pollFrequency4); err != nil {
+		return errors.Wrapf(err, "failed to finish the request, resourcesGroupName: %s, cluster name: %s",
+			resourceGroupName, clusterName)
+	}
+
+	return nil
+}
+
 // GetClusterWithName 查询集群
 //
 // resourceGroupName - 资源组名称(Account.resourceGroupName)
@@ -415,7 +447,8 @@ func (aks *AksServiceImpl) ListSSHPublicKeysAll(ctx context.Context) ([]*armcomp
 }
 
 // ListPublicPrefixes 获取订阅下所有public IP prefixes
-func (aks *AksServiceImpl) ListPublicPrefixes(ctx context.Context, resourceGroupName string) ([]*armnetwork.PublicIPPrefix, error) {
+func (aks *AksServiceImpl) ListPublicPrefixes(ctx context.Context,
+	resourceGroupName string) ([]*armnetwork.PublicIPPrefix, error) {
 	pager := aks.publicPrefixClient.NewListPager(resourceGroupName, nil)
 	result := make([]*armnetwork.PublicIPPrefix, 0)
 	for pager.More() {
