@@ -125,7 +125,7 @@
               ]">
               <span class="text-[#C4C6CC] text-[14px]"></span>
               <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
-                <AiAssistant ref="assistantRef" />
+                <AiAssistant ref="assistantRef" preset="KubernetesProfessor" />
                 <i
                   :class="[
                     'hover:text-[#699df4] cursor-pointer',

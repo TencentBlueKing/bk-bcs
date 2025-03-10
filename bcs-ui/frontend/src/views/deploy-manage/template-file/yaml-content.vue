@@ -28,7 +28,7 @@
       </div>
       <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
         <!-- <i class="bk-icon icon-upload-cloud text-[14px] hover:text-[#699df4] cursor-pointer"></i> -->
-        <AiAssistant ref="assistantRef" />
+        <AiAssistant ref="assistantRef" preset="KubernetesProfessor" />
         <i
           :class="[
             'hover:text-[#699df4] cursor-pointer',
