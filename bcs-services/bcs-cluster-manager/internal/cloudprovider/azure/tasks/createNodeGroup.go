@@ -206,7 +206,7 @@ func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasic
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
 
 	ia := group.LaunchTemplate.InternetAccess
-	if ia == nil || ia.NodePublicIPPrefixID == "" {
+	if ia == nil || !ia.PublicIPAssigned || ia.NodePublicIPPrefixID == "" {
 		return nil
 	}
 
