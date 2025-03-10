@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
@@ -82,7 +83,9 @@ func WebAuthRequired() gin.HandlerFunc {
 		}
 		c.Set("auth_context", authCtx)
 
-		c.Request = c.Request.WithContext(components.WithRequestIDValue(c.Request.Context(), authCtx.RequestId))
+		// 新增泳道特性
+		ctx := header.WithLaneIdCtx(c.Request.Context(), c.Request.Header)
+		c.Request = c.Request.WithContext(components.WithRequestIDValue(ctx, authCtx.RequestId))
 
 		c.Next()
 	}
@@ -97,7 +100,9 @@ func APIAuthRequired() gin.HandlerFunc {
 		}
 		c.Set("auth_context", authCtx)
 
-		c.Request = c.Request.WithContext(components.WithRequestIDValue(c.Request.Context(), authCtx.RequestId))
+		// 新增泳道特性
+		ctx := header.WithLaneIdCtx(c.Request.Context(), c.Request.Header)
+		c.Request = c.Request.WithContext(components.WithRequestIDValue(ctx, authCtx.RequestId))
 
 		if c.Request.Method == http.MethodOptions {
 			c.Next()
