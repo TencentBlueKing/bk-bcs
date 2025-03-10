@@ -95,14 +95,13 @@ func (m *ModelTask) EnsureTable(ctx context.Context, dst ...any) error {
 // CreateTask create Task
 func (m *ModelTask) CreateTask(ctx context.Context, task *types.Task) error {
 	if task == nil {
-		return fmt.Errorf("task cannot be empty")
+		return fmt.Errorf("task to be created cannot be empty")
 	}
 	if err := m.EnsureTable(ctx); err != nil {
 		return err
 	}
 
 	record := toMongoTask(task)
-
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{record}); err != nil {
 		return err
 	}
