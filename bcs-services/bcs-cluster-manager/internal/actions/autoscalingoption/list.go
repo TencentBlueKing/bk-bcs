@@ -61,9 +61,7 @@ func (la *ListAction) listAutoScalingOption() error {
 	if err != nil {
 		return err
 	}
-	for i := range options {
-		la.optionList = append(la.optionList, &options[i])
-	}
+	la.optionList = append(la.optionList, options...)
 	return nil
 }
 

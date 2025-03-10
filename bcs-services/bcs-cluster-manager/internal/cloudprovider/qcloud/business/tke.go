@@ -124,7 +124,7 @@ type ZoneSubnetRatio struct {
 }
 
 // GetClusterCurrentVpcCniSubnets get tke cluster subnets
-func GetClusterCurrentVpcCniSubnets(cls proto.Cluster, extraIp bool) (map[string]*ZoneSubnetRatio,
+func GetClusterCurrentVpcCniSubnets(cls *proto.Cluster, extraIp bool) (map[string]*ZoneSubnetRatio,
 	float64, []string, error) {
 	cmOption, err := cloudprovider.GetCloudCmOptionByCluster(cls)
 	if err != nil {

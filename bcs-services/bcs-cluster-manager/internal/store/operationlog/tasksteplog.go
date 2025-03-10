@@ -166,9 +166,9 @@ func (m *ModelTaskStepLog) CountTaskStepLog(ctx context.Context, cond *operator.
 
 // ListTaskStepLog list logs
 func (m *ModelTaskStepLog) ListTaskStepLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.TaskStepLog, error) {
+	[]*types.TaskStepLog, error) {
 
-	logList := make([]types.TaskStepLog, 0)
+	logList := make([]*types.TaskStepLog, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

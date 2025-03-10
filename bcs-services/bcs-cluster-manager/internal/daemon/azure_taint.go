@@ -64,7 +64,7 @@ func (d *Daemon) removeAzureClusterPlatformTaints(error chan<- error) {
 
 	for i := range azureClusterList {
 		concurency.Add(1)
-		go func(cls cmproto.Cluster) {
+		go func(cls *cmproto.Cluster) {
 			defer concurency.Done()
 
 			connect := ConnectToCluster(d.model, cls.ClusterID)

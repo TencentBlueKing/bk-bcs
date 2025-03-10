@@ -280,7 +280,7 @@ func transInstancesToNode(ctx context.Context, instances []model.Node, info *clo
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	for _, v := range instances {
-		node := proto.Node{}
+		node := &proto.Node{}
 		node.NodeID = *v.Metadata.Uid
 		node.InstanceType = v.Spec.Flavor
 		node.Region = info.CmOption.Region
@@ -294,7 +294,7 @@ func transInstancesToNode(ctx context.Context, instances []model.Node, info *clo
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node: %#v", node)
 		blog.Infof("ApplyInstanceMachinesTask[%s]: call transInstancesToNode successful. node.server: %#v", *v.Status)
 
-		err = cloudprovider.SaveNodeInfoToDB(ctx, &node, false)
+		err = cloudprovider.SaveNodeInfoToDB(ctx, node, false)
 		if err != nil {
 			blog.Errorf("transInstancesToNode[%s] SaveNodeInfoToDB[%s] failed: %v", taskID, node.InnerIP, err)
 		}

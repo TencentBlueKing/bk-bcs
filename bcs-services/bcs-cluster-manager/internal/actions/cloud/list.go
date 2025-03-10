@@ -70,7 +70,7 @@ func (la *ListAction) listCloud() error {
 			continue
 		}
 
-		la.cloudList = append(la.cloudList, &clouds[i])
+		la.cloudList = append(la.cloudList, clouds[i])
 	}
 	return nil
 }
