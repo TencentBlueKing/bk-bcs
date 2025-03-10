@@ -107,7 +107,7 @@ func getClusterMaxNum(clusterType string, env string, model store.ClusterManager
 }
 
 // getClusterList get all cm clusters
-func getClusterList(model store.ClusterManagerModel) ([]proto.Cluster, error) {
+func getClusterList(model store.ClusterManagerModel) ([]*proto.Cluster, error) {
 	clusterStatus := []string{common.StatusInitialization, common.StatusRunning, common.StatusDeleting}
 	condStatus := operator.NewLeafCondition(operator.In, operator.M{"status": clusterStatus})
 
@@ -135,7 +135,7 @@ func selectVclusterHostCluster(model store.ClusterManagerModel, filter VClusterH
 		"provider": filter.Provider,
 	})
 
-	filterHostClusters := make([]proto.Cluster, 0)
+	filterHostClusters := make([]*proto.Cluster, 0)
 
 	condStatus := operator.NewLeafCondition(operator.Ne, operator.M{"status": common.StatusDeleted})
 	branchCond := operator.NewBranchCondition(operator.And, condCluster, condStatus)
@@ -714,7 +714,7 @@ func asyncDeleteImportedClusterInfo(ctx context.Context, store store.ClusterMana
 }
 
 // IsSupportAutoScale support autoscale feat
-func IsSupportAutoScale(store store.ClusterManagerModel, cls proto.Cluster) bool {
+func IsSupportAutoScale(store store.ClusterManagerModel, cls *proto.Cluster) bool {
 	cloudId := cls.GetProvider()
 	if cloudId == "" {
 		return false

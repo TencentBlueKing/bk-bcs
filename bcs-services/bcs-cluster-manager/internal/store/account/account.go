@@ -175,8 +175,8 @@ func (m *ModelCloudAccount) GetCloudAccount(ctx context.Context,
 
 // ListCloudAccount list cloudAccount
 func (m *ModelCloudAccount) ListCloudAccount(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.CloudAccount, error) {
-	cloudAccountList := make([]types.CloudAccount, 0)
+	[]*types.CloudAccount, error) {
+	cloudAccountList := make([]*types.CloudAccount, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

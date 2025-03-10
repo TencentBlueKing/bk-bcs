@@ -94,7 +94,7 @@ func (la *ListAction) listCloudAccount() error {
 		cloudAccounts[i].UpdateTime = utils.TransTimeFormat(cloudAccounts[i].UpdateTime)
 
 		cloudAccountInfo := &cmproto.CloudAccountInfo{
-			Account:  &cloudAccounts[i],
+			Account:  cloudAccounts[i],
 			Clusters: clusterIDs,
 		}
 		accountList = append(accountList, cloudAccounts[i].AccountID)
@@ -245,7 +245,7 @@ func (la *ListPermDataAction) listCloudAccount() error {
 		}
 		cloudAccounts[i].Account.SecretKey = ""
 		cloudAccounts[i].Account.SecretID = ""
-		la.cloudAccountList = append(la.cloudAccountList, &cloudAccounts[i])
+		la.cloudAccountList = append(la.cloudAccountList, cloudAccounts[i])
 	}
 	return nil
 }

@@ -162,8 +162,8 @@ func (m *ModelTask) GetTask(ctx context.Context, taskID string) (*types.Task, er
 
 // ListTask list clusters
 func (m *ModelTask) ListTask(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.Task, error) {
-	taskList := make([]types.Task, 0)
+	[]*types.Task, error) {
+	taskList := make([]*types.Task, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

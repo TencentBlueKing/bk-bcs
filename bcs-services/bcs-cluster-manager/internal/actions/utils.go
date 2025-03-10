@@ -99,7 +99,7 @@ func GetAsOptionByClusterID(
 
 // GetProjectClusters get project cluster list
 func GetProjectClusters(ctx context.Context, model store.ClusterManagerModel, projectID string) (
-	[]proto.Cluster, error) {
+	[]*proto.Cluster, error) {
 	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
 		"projectid": projectID,
 	})
@@ -118,7 +118,7 @@ func GetProjectClusters(ctx context.Context, model store.ClusterManagerModel, pr
 
 // GetCloudClusters get project cluster list
 func GetCloudClusters(ctx context.Context, model store.ClusterManagerModel, cloudID, accountID, vpcID string) (
-	[]proto.Cluster, error) {
+	[]*proto.Cluster, error) {
 	condCluster := operator.NewLeafCondition(operator.Eq, operator.M{
 		"provider":       cloudID,
 		"cloudaccountid": accountID,

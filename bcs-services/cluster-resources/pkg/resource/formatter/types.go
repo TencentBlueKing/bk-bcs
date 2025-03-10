@@ -51,6 +51,7 @@ type LightContainerState struct {
 type LightContainerStatus struct {
 	State LightContainerState
 	Ready bool
+	Name  string
 }
 
 // LightPodStatus 轻量化的 PodStatus，主要用于解析 Pod Status 信息

@@ -150,8 +150,8 @@ func (m *ModelNamespace) GetNamespace(ctx context.Context, name, federationClust
 
 // ListNamespace list clusters
 func (m *ModelNamespace) ListNamespace(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.Namespace, error) {
-	retNsList := make([]types.Namespace, 0)
+	[]*types.Namespace, error) {
+	retNsList := make([]*types.Namespace, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
