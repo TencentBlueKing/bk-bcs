@@ -14,12 +14,9 @@ package api
 
 import (
 	"context"
-	"time"
-
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
-	"github.com/avast/retry-go"
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -98,28 +95,20 @@ func (aks *AksServiceImpl) BatchDeleteVMsWithName(ctx context.Context, resourceG
 		vmIDs.InstanceIDs[i] = to.Ptr(instanceIDs[i])
 	}
 
-	// attention: azure delete instance conflict on a concurrent request.
-	var (
-		err    error
-		poller *runtime.Poller[armcompute.VirtualMachineScaleSetsClientDeleteInstancesResponse] // nolint NOCC:gas/tls(设计如此)
-	)
-	err = retry.Do(func() error {
-		var errLocal error
-		poller, errLocal = aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
-		if errLocal != nil {
-			return errors.Wrapf(err, "failed to finish the request")
-		}
-
-		return nil
-	}, retry.Attempts(10), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second))
+	// 删除
+	poller, err := aks.setClient.BeginDeleteInstances(ctx, resourceGroupName, setName, vmIDs, nil)
 	if err != nil {
-		return errors.Wrapf(err, "BatchDeleteVMsWithName failed")
+		return errors.Wrapf(err, "failed to finish the request")
+	}
+	// 轮询
+	if poller != nil {
+		if _, err = poller.PollUntilDone(ctx, pollFrequency5); err != nil {
+			return errors.Wrapf(err, "failed to pull the result")
+		}
+	} else {
+		blog.Infof("BatchDeleteVMsWithName poller is nil")
 	}
 
-	// 轮询
-	if _, errLocal := poller.PollUntilDone(ctx, pollFrequency5); errLocal != nil {
-		return errors.Wrapf(errLocal, "failed to pull the result")
-	}
 	return nil
 }
 

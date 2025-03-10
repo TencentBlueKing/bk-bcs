@@ -725,7 +725,7 @@ func getVmStatus(k8sOperator *clusterops.K8SOperator, info *cloudprovider.CloudD
 
 	for _, ins := range instanceList {
 		id := api.VmIDToNodeID(ins)
-		n, ok := k8sNodeMap[*ins.Properties.OSProfile.ComputerName]
+		n, ok := k8sNodeMap[strings.ToLower(*ins.Properties.OSProfile.ComputerName)]
 		if ok && cmutils.CheckNodeIfReady(n) {
 			running = append(running, id)
 		} else {

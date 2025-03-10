@@ -16,6 +16,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"github.com/avast/retry-go"
 	"strings"
 	"time"
 
@@ -127,13 +128,21 @@ func removeVMSSsInstances(rootCtx context.Context, info *cloudprovider.CloudDepe
 		return nil
 	}
 
-	// delete instances
-	ctx, cancel = context.WithTimeout(rootCtx, 10*time.Minute)
-	defer cancel()
 	blog.Infof("removeVMSSsInstances[%s] validateInstances[%v]", taskID, validateInstances)
-	if err = client.BatchDeleteVMs(ctx, info, validateInstances); err != nil {
-		return errors.Wrapf(err, "removeVMSSsInstances[%s] BatchDeleteVMs failed", taskID)
+
+	err = retry.Do(func() error {
+		ctxLocal, cancelLocal := context.WithTimeout(rootCtx, 10*time.Minute)
+		defer cancelLocal()
+
+		if errLocal := client.BatchDeleteVMs(ctxLocal, info, validateInstances); errLocal != nil {
+			return errors.Wrapf(errLocal, "removeVMSSsInstances[%s] BatchDeleteVMs failed", taskID)
+		}
+		return nil
+	}, retry.Attempts(10), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second))
+	if err != nil {
+		return errors.Wrapf(err, "removeVMSSsInstances failed")
 	}
+
 	blog.Infof("removeVMSSsInstances[%s] BatchDeleteVMs[%v] successful[%s]", taskID, nodeIDs, group.Name)
 
 	return nil

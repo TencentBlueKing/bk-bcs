@@ -255,6 +255,7 @@ func InstallGSEAgentTask(taskID string, stepName string) error { // nolint
 				}
 				return ""
 			}(),
+			ForceUpdateAgentId: true,
 		})
 	}
 	job, err := nodeManClient.JobInstall(nodeman.InstallAgentJob, hosts)
