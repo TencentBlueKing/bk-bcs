@@ -146,8 +146,8 @@ func (m *ModelCluster) GetCluster(ctx context.Context, clusterID string) (*types
 
 // ListCluster list clusters
 func (m *ModelCluster) ListCluster(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.Cluster, error) {
-	retClusterList := make([]types.Cluster, 0)
+	[]*types.Cluster, error) {
+	retClusterList := make([]*types.Cluster, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

@@ -26,7 +26,7 @@ import (
 
 // getAllNotifyTemplates list all notifyTemplates
 func getAllNotifyTemplates(
-	ctx context.Context, model store.ClusterManagerModel, projectID string) ([]proto.NotifyTemplate, error) {
+	ctx context.Context, model store.ClusterManagerModel, projectID string) ([]*proto.NotifyTemplate, error) {
 	condM := make(operator.M)
 	condM[nodetemplate.ProjectIDKey] = projectID
 	cond := operator.NewLeafCondition(operator.Eq, condM)

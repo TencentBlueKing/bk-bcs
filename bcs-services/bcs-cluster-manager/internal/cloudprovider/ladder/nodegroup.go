@@ -371,12 +371,12 @@ func (ng *NodeGroup) SwitchAutoScalingOptionStatus(scalingOption *proto.ClusterA
 }
 
 // GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // nolint
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup, // nolint
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 
 	// 仅统计CA云梯资源 & 获取项目下所有节点池的资源使用情况 & 资源quota情况
 
-	filterGroups := make([]proto.NodeGroup, 0)
+	filterGroups := make([]*proto.NodeGroup, 0)
 	// filter yunti ca nodeGroup
 	for i := range groups {
 		if !utils.StringInSlice(groups[i].GetNodeGroupType(), []string{common.Normal.String(), ""}) {
@@ -409,7 +409,7 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // noli
 	for i := range filterGroups {
 		barrier.Add(1)
 
-		go func(group proto.NodeGroup) {
+		go func(group *proto.NodeGroup) {
 			defer barrier.Done()
 
 			// 地域-机型 维度的 资源池 和 可用区列表
@@ -496,7 +496,7 @@ func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup, // noli
 	return projectQuotas, nil
 }
 
-func matchProjectAutoscalerQuotaByGroup(groups []proto.NodeGroup, projectQuota *proto.ProjectAutoscalerQuota) {
+func matchProjectAutoscalerQuotaByGroup(groups []*proto.NodeGroup, projectQuota *proto.ProjectAutoscalerQuota) {
 	if projectQuota.GetTotalGroupIds() == nil {
 		projectQuota.TotalGroupIds = make([]string, 0)
 	}

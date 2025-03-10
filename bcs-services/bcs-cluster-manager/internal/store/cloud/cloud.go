@@ -184,8 +184,8 @@ func (m *ModelCloud) GetCloudByProvider(ctx context.Context, provider string) (*
 
 // ListCloud list clusters
 func (m *ModelCloud) ListCloud(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.Cloud, error) {
-	cloudList := make([]types.Cloud, 0)
+	[]*types.Cloud, error) {
+	cloudList := make([]*types.Cloud, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

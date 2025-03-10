@@ -87,7 +87,7 @@ func (la *ListAction) listCloudVPC() error {
 
 		barrier.Add(1)
 		// query available vpc
-		go func(vpc cmproto.CloudVPC) {
+		go func(vpc *cmproto.CloudVPC) {
 			defer func() {
 				barrier.Done()
 			}()
@@ -132,7 +132,7 @@ func (la *ListAction) listCloudVPC() error {
 	return nil
 }
 
-func getAvailableIPNumByVpc(model store.ClusterManagerModel, ipType string, vpc cmproto.CloudVPC) (uint32, error) {
+func getAvailableIPNumByVpc(model store.ClusterManagerModel, ipType string, vpc *cmproto.CloudVPC) (uint32, error) {
 	cloud, err := actions.GetCloudByCloudID(model, vpc.CloudID)
 	if err != nil {
 		blog.Errorf("getAvailableIPNumByVpc[%s:%s] failed: %v", vpc.Region, vpc.VpcID, err)

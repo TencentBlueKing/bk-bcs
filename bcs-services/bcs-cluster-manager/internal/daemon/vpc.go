@@ -33,7 +33,7 @@ const (
 	ratio  = "ratio"
 )
 
-func getIpUsageByVpc(model store.ClusterManagerModel, ipType string, vpc cmproto.CloudVPC) (uint32, uint32, error) {
+func getIpUsageByVpc(model store.ClusterManagerModel, ipType string, vpc *cmproto.CloudVPC) (uint32, uint32, error) {
 	cloud, err := actions.GetCloudByCloudID(model, vpc.CloudID)
 	if err != nil {
 		blog.Errorf("getIpUsageByVpc[%s:%s] failed: %v", vpc.Region, vpc.VpcID, err)
@@ -61,7 +61,7 @@ func getIpUsageByVpc(model store.ClusterManagerModel, ipType string, vpc cmproto
 	return vpcMgr.GetVpcIpUsage(vpc.VpcID, ipType, nil, cmOption)
 }
 
-func getIpUsageByCluster(model store.ClusterManagerModel, ipType string, cluster cmproto.Cluster) (uint32,
+func getIpUsageByCluster(model store.ClusterManagerModel, ipType string, cluster *cmproto.Cluster) (uint32,
 	uint32, error) {
 	cloud, err := actions.GetCloudByCloudID(model, cluster.GetProvider())
 	if err != nil {
@@ -103,7 +103,7 @@ func (d *Daemon) reportVpcIpResourceUsage(error chan<- error) {
 
 	for i := range cloudVPCs {
 		concurency.Add(1)
-		go func(vpc cmproto.CloudVPC) {
+		go func(vpc *cmproto.CloudVPC) {
 			defer concurency.Done()
 
 			overlayTotal, overlaySurplus, errGet := getIpUsageByVpc(d.model, common.ClusterOverlayNetwork, vpc)

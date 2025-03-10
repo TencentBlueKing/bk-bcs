@@ -147,8 +147,8 @@ func (m *ModelAutoScalingOption) GetAutoScalingOption(
 // ListAutoScalingOption list cluster autoscaling option according search condition
 func (m *ModelAutoScalingOption) ListAutoScalingOption(
 	ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.ClusterAutoScalingOption, error) {
-	optionList := make([]types.ClusterAutoScalingOption, 0)
+	[]*types.ClusterAutoScalingOption, error) {
+	optionList := make([]*types.ClusterAutoScalingOption, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

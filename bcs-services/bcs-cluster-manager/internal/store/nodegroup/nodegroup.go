@@ -159,8 +159,8 @@ func (m *ModelNodeGroup) GetNodeGroup(ctx context.Context, nodeGroupID string) (
 
 // ListNodeGroup list clusters
 func (m *ModelNodeGroup) ListNodeGroup(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.NodeGroup, error) {
-	groups := make([]types.NodeGroup, 0)
+	[]*types.NodeGroup, error) {
+	groups := make([]*types.NodeGroup, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

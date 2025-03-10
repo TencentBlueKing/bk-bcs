@@ -172,9 +172,9 @@ func (m *ModelResourceQuota) GetQuota(ctx context.Context, namespace, federation
 
 // ListQuota list clusters
 func (m *ModelResourceQuota) ListQuota(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.ResourceQuota, error) {
+	[]*types.ResourceQuota, error) {
 
-	retNsQuotaList := make([]types.ResourceQuota, 0)
+	retNsQuotaList := make([]*types.ResourceQuota, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

@@ -64,7 +64,7 @@ func listNodeGroupByConds(model store.ClusterManagerModel, options filterNodeGro
 		return nil, err
 	}
 	for i := range groups {
-		groupList = append(groupList, removeSensitiveInfo(&groups[i]))
+		groupList = append(groupList, removeSensitiveInfo(groups[i]))
 	}
 	return groupList, nil
 }
