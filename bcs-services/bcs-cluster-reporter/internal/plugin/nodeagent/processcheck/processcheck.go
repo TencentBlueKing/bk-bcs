@@ -146,6 +146,14 @@ func (p *Plugin) Check() {
 
 	nodeconfig := pluginmanager.Pm.GetConfig().NodeConfig
 	nodeName := nodeconfig.NodeName
+	config := pluginmanager.Pm.GetConfig()
+
+	if strings.Contains(nodeconfig.Node.Status.NodeInfo.ContainerRuntimeVersion, "containerd") {
+		p.opt.Processes = append(p.opt.Processes, ProcessCheckConfig{Name: "containerd", ConfigFile: "/etc/containerd/config.toml"})
+	} else {
+		p.opt.Processes = append(p.opt.Processes, ProcessCheckConfig{Name: "dockerd", ConfigFile: "/etc/docker/daemon.json"})
+	}
+	p.opt.Processes = removeDuplicates(p.opt.Processes)
 
 	processInfoList := make([]process.ProcessInfo, 0, 0)
 	processGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
@@ -159,9 +167,11 @@ func (p *Plugin) Check() {
 	newAbnormalProcessStatusMap := make(map[int32]process.ProcessStatus)
 	abnormalProcessStatusList := make([]process.ProcessStatus, 0, 0)
 	processCPUGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
+
+	// 找到状态异常的进程
 	for _, pstatus := range processStatusList {
 		if pstatus.Status == "D" || pstatus.Status == "Z" {
-			klog.Infof("status of process %s %s is %s", pstatus.Pid, pstatus.Name, pstatus.Status)
+			klog.Infof("status of process %d %s is %s", pstatus.Pid, pstatus.Name, pstatus.Status)
 			// 避免如正常的等待IO被计入D状态进程
 			newAbnormalProcessStatusMap[pstatus.Pid] = pstatus
 			if abnormalProcessStatus, ok := abnormalProcessStatusMap[pstatus.Pid]; ok && pstatus.Status == "D" {
@@ -198,6 +208,7 @@ func (p *Plugin) Check() {
 		}
 	}
 
+	// 进程cpu采点记录
 	RecordProcessCpu([]string{"kswapd"}, processStatusList)
 
 	if processCPUCheckFlag {
@@ -243,49 +254,10 @@ func (p *Plugin) Check() {
 	// status中只记录异常的进程状态
 	p.Detail.ProcessStatus = abnormalProcessStatusList
 
-	// 检测opt中指定的进程，记录进程详细信息
-	for _, pcc := range p.opt.Processes {
-		checkItem.ItemTarget = nodeName
-		processInfo, processErr := process.GetProcessInfo(pcc.Name, 0)
-		if processErr != nil {
-			klog.Errorf("Get process %s info failed: %s", pcc.Name, processErr.Error())
-			checkItem.Detail = fmt.Sprintf("Get process %s info failed: %s", pcc.Name, processErr.Error())
-			checkItem.Normal = false
-			checkItem.Status = processOtherErrorStatus
-
-			result = append(result, checkItem)
-
-			processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
-				Labels: []string{pcc.Name, processOtherErrorStatus, nodeName}, Value: float64(1),
-			})
-
-			continue
-		}
-
-		if pcc.ConfigFile != "" {
-			configFile, configFileErr := getConfigFile(pcc)
-			if configFileErr != nil {
-				klog.Errorf(configFileErr.Error())
-
-				checkItem.Normal = false
-				checkItem.Detail = fmt.Sprintf("Get process %s info failed: %s", pcc.Name, configFileErr.Error())
-				checkItem.ItemTarget = nodeName
-				checkItem.Status = processOtherErrorStatus
-
-				result = append(result, checkItem)
-
-				processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
-					Labels: []string{pcc.Name, processOtherErrorStatus, nodeName}, Value: float64(1),
-				})
-			} else if pcc.ConfigFile != "" {
-				processInfo.ConfigFiles[pcc.ConfigFile] = configFile
-			}
-		}
-
-		if processInfo != nil {
-			processInfoList = append(processInfoList, *processInfo)
-		}
-	}
+	result1, processGaugeVecSetList1, processInfoList1 := p.checkProcess(config)
+	result = append(result, result1...)
+	processGaugeVecSetList = append(processGaugeVecSetList, processGaugeVecSetList1...)
+	processInfoList = append(processInfoList, processInfoList1...)
 
 	if len(processGaugeVecSetList) == 0 {
 		checkItem.ItemTarget = nodeName
@@ -306,9 +278,85 @@ func (p *Plugin) Check() {
 	if !p.ready {
 		p.ready = true
 	}
-
 	// return result
 	metricmanager.RefreshMetric(processStatus, processGaugeVecSetList)
+}
+
+func (p *Plugin) checkProcess(config *pluginmanager.Config) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, []process.ProcessInfo) {
+	result := make([]pluginmanager.CheckItem, 0, 0)
+	processGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0)
+	processInfoList := make([]process.ProcessInfo, 0)
+
+	checkItem := pluginmanager.CheckItem{
+		ItemName: pluginName,
+		Normal:   true,
+		Detail:   "",
+		Level:    pluginmanager.WARNLevel,
+		Status:   NormalStatus,
+	}
+
+	// 检测opt中指定的进程，记录进程详细信息
+	for _, pcc := range p.opt.Processes {
+		checkItem.ItemTarget = config.NodeConfig.NodeName
+		processInfo, processErr := process.GetProcessInfo(pcc.Name, 0)
+		if processErr != nil {
+			klog.Errorf("Get process %s info failed: %s", pcc.Name, processErr.Error())
+			checkItem.Detail = fmt.Sprintf("Get process %s info failed: %s", pcc.Name, processErr.Error())
+			checkItem.Normal = false
+			checkItem.Status = processOtherErrorStatus
+
+			result = append(result, checkItem)
+
+			processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
+				Labels: []string{pcc.Name, processOtherErrorStatus, config.NodeConfig.NodeName}, Value: float64(1),
+			})
+
+			continue
+		}
+
+		if pcc.Name == "kubelet" {
+			kubeletParams := make(map[string]string)
+			for _, param := range processInfo.Params {
+				if strings.HasPrefix(param, "--") && strings.Contains(param, "=") {
+					param = strings.TrimPrefix(param, "--")
+					key := strings.SplitN(param, "=", 2)[0]
+					value := strings.SplitN(param, "=", 2)[1]
+					kubeletParams[key] = value
+				} else {
+					param = strings.TrimPrefix(param, "--")
+					kubeletParams[param] = ""
+				}
+				config.NodeConfig.KubeletParams = kubeletParams
+				pluginmanager.Pm.SetConfig(config)
+			}
+		}
+
+		if pcc.ConfigFile != "" {
+			configFile, configFileErr := getConfigFile(pcc)
+			if configFileErr != nil {
+				klog.Errorf(configFileErr.Error())
+
+				checkItem.Normal = false
+				checkItem.Detail = fmt.Sprintf("Get process %s info failed: %s", pcc.Name, configFileErr.Error())
+				checkItem.ItemTarget = config.NodeConfig.NodeName
+				checkItem.Status = processOtherErrorStatus
+
+				result = append(result, checkItem)
+
+				processGaugeVecSetList = append(processGaugeVecSetList, &metricmanager.GaugeVecSet{
+					Labels: []string{pcc.Name, processOtherErrorStatus, config.NodeConfig.NodeName}, Value: float64(1),
+				})
+			} else if pcc.ConfigFile != "" {
+				processInfo.ConfigFiles[pcc.ConfigFile] = configFile
+			}
+		}
+
+		if processInfo != nil {
+			processInfoList = append(processInfoList, *processInfo)
+		}
+	}
+
+	return result, processGaugeVecSetList, processInfoList
 }
 
 // RecordProcessCpu xxx

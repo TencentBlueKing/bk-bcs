@@ -14,18 +14,16 @@
 package rest
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"path"
+	"reflect"
+	"runtime"
 	"strings"
-	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/audit"
 	"github.com/ggicci/httpin"
 	"github.com/gin-contrib/sse"
 	"github.com/go-chi/chi/v5"
@@ -34,7 +32,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/thanos-io/thanos/pkg/store"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
 )
 
@@ -146,16 +143,14 @@ func GetRestContext(ctx context.Context) (*Context, error) {
 
 // Handle generic handle
 func Handle[In, Out any](handle HandlerFunc[In, Out]) http.HandlerFunc {
-
+	handleName := getHandleName(handle)
 	return func(w http.ResponseWriter, r *http.Request) {
-		startTime := time.Now()
-		// 需要在审计操作记录中对body进行解析
-		reqBody := getRequestBody(r)
 		restContext, err := GetRestContext(r.Context())
 		if err != nil {
 			_ = render.Render(w, r, AbortWithUnauthorizedError(InitRestContext(w, r), err))
 			return
 		}
+		restContext.HandleName = handleName
 
 		in, err := decodeReq[In](r)
 		if err != nil {
@@ -172,17 +167,25 @@ func Handle[In, Out any](handle HandlerFunc[In, Out]) http.HandlerFunc {
 		}
 
 		result, err := handle(r.Context(), in)
-		endTime := time.Now()
 		if err != nil {
-			// 添加审计中心操作记录
-			go addAudit(restContext, reqBody, startTime, endTime, 1400, err.Error())
 			_ = render.Render(w, r, AbortWithJSONError(restContext, err))
 			return
 		}
-		// 添加审计中心操作记录
-		go addAudit(restContext, reqBody, startTime, endTime, 0, "OK")
 		_ = render.Render(w, r, APIResponse(restContext, result))
 	}
+}
+
+// getHandleName 获取FuncHandle/StreamHandle函数名
+func getHandleName(fn any) string {
+	fullName := runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
+	if fullName == "" {
+		panic("get func name is empty")
+	}
+
+	parts := strings.Split(fullName, ".")
+	lastPart := parts[len(parts)-1]
+	name := strings.TrimSuffix(lastPart, "-fm")
+	return name
 }
 
 // decodeReq ...
@@ -286,175 +289,4 @@ func Stream[In any](handler StreamHandlerFunc[In]) func(w http.ResponseWriter, r
 			_ = render.Render(w, r, AbortWithBadRequestError(restContext, err))
 		}
 	}
-}
-
-type resource struct {
-	ClusterID string `json:"cluster_id" yaml:"cluster_id"`
-	ProjectID string `json:"project_id" yaml:"project_id"`
-	Name      string `json:"name" yaml:"name"`
-	RuleID    string `json:"-" yaml:"-"`
-}
-
-// resource to map
-func (r resource) toMap() map[string]any {
-	result := make(map[string]any, 0)
-
-	if r.ClusterID != "" {
-		result["ClusterID"] = r.ClusterID
-	}
-
-	if r.ProjectID != "" {
-		result["ProjectID"] = r.ProjectID
-	}
-
-	if r.Name != "" {
-		result["Name"] = r.Name
-	}
-
-	if r.RuleID != "" {
-		result["RuleID"] = r.RuleID
-	}
-
-	return result
-}
-
-// 获取resourceData 的资源
-func getResourceID(b []byte, ctx *Context) resource {
-	resourceID := resource{}
-	_ = json.Unmarshal(b, &resourceID)
-	resourceID.ClusterID = ctx.ClusterId
-	resourceID.ProjectID = ctx.ProjectId
-	resourceID.RuleID = chi.URLParam(ctx.Request, "id")
-	return resourceID
-}
-
-var auditFuncMap = map[string]func(b []byte, ctx *Context) (audit.Resource, audit.Action){
-	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/entrypoints": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.ClusterID, ResourceName: res.ClusterID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "get_log_rule", ActivityType: audit.ActivityTypeView}
-	},
-	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		// resourceData解析
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.Name, ResourceName: res.Name,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "create_log_rule", ActivityType: audit.ActivityTypeCreate}
-	},
-	"GET./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "get_log_rule", ActivityType: audit.ActivityTypeView}
-	},
-	"PUT./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "update_log_rule", ActivityType: audit.ActivityTypeUpdate}
-	},
-	"DELETE./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "delete_log_rule", ActivityType: audit.ActivityTypeDelete}
-	},
-	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}/retry": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "retry_log_rule", ActivityType: audit.ActivityTypeUpdate}
-	},
-	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}/enable": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "enable_log_rule", ActivityType: audit.ActivityTypeUpdate}
-	},
-	"POST./projects/{projectId}/clusters/{clusterId}/log_collector/rules/{id}/disable": func(
-		b []byte, ctx *Context) (audit.Resource, audit.Action) {
-		res := getResourceID(b, ctx)
-		return audit.Resource{
-			ResourceType: audit.ResourceTypeLogRule, ResourceID: res.RuleID, ResourceName: res.RuleID,
-			ResourceData: res.toMap(),
-		}, audit.Action{ActionID: "disable_log_rule", ActivityType: audit.ActivityTypeUpdate}
-	},
-}
-
-// 审计中心新增操作记录
-func addAudit(ctx *Context, b []byte, startTime, endTime time.Time, code int, message string) {
-	// get method audit func
-	uri := chi.RouteContext(ctx.Request.Context()).RoutePatterns
-	fn, ok := auditFuncMap[ctx.Request.Method+"."+getCompleteRoutePatterns(uri)]
-	if !ok {
-		return
-	}
-
-	res, act := fn(b, ctx)
-
-	auditCtx := audit.RecorderContext{
-		Username:  ctx.Username,
-		RequestID: ctx.RequestId,
-		StartTime: startTime,
-		EndTime:   endTime,
-	}
-	resource := audit.Resource{
-		ProjectCode:  ctx.ProjectCode,
-		ResourceType: res.ResourceType,
-		ResourceID:   res.ResourceID,
-		ResourceName: res.ResourceName,
-		ResourceData: res.ResourceData,
-	}
-	action := audit.Action{
-		ActionID:     act.ActionID,
-		ActivityType: act.ActivityType,
-	}
-
-	result := audit.ActionResult{
-		Status:        audit.ActivityStatusSuccess,
-		ResultCode:    code,
-		ResultContent: message,
-	}
-
-	// code不为0的情况则为失败
-	if code != 0 {
-		result.Status = audit.ActivityStatusFailed
-	}
-
-	// add audit
-	auditAction := component.GetAuditClient().R()
-	// 查看类型不用记录activity
-	if act.ActivityType == audit.ActivityTypeView {
-		auditAction.DisableActivity()
-	}
-	_ = auditAction.SetContext(auditCtx).SetResource(resource).SetAction(action).SetResult(result).Do()
-}
-
-// 获取请求体
-func getRequestBody(r *http.Request) []byte {
-	// 读取请求体
-	body, _ := io.ReadAll(r.Body)
-	// 恢复请求体
-	r.Body = io.NopCloser(bytes.NewBuffer(body))
-	return body
-}
-
-// 获取完整原始uri
-func getCompleteRoutePatterns(s []string) string {
-	return strings.ReplaceAll(path.Join(s...), "/*", "")
 }

@@ -10,24 +10,11 @@
  * limitations under the License.
  */
 
-// Package netcheck xxx
-package netcheck
+// Package configfilecheck xxx
+package configfilecheck
 
-// Options bcs log options
-type Options struct {
-	Interval      int    `json:"interval" yaml:"interval"`
-	LabelSelector string `json:"labelSelector" yaml:"labelSelector"`
-	CheckCert     bool   `json:"checkCert" yaml:"checkCert"`
-}
+import "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
-// Validate validate options
-func (o *Options) Validate() error {
-	if o.LabelSelector == "" {
-		o.LabelSelector = "name=nodeagent"
-	}
-
-	if o.Interval == 0 {
-		o.Interval = 60
-	}
-	return nil
+func init() {
+	pluginmanager.Register(&Plugin{})
 }

@@ -122,6 +122,12 @@ func (pm *PluginManager) SetupPlugin(plugins string, pluginDir string, runMode s
 			}(plugin)
 		}
 	}
+
+	for plugin, _ := range pm.plugins {
+		if !strings.Contains(plugins, plugin) {
+			delete(pm.plugins, plugin)
+		}
+	}
 	wg.Wait()
 	return nil
 }
@@ -163,9 +169,8 @@ func (pm *PluginManager) StopPlugin(plugins string) error {
 
 // NewPluginManager xxx
 func NewPluginManager() *PluginManager {
-
 	return &PluginManager{
-		routinePool:       util.NewRoutinePool(50),
+		routinePool:       util.NewRoutinePool(80),
 		plugins:           make(map[string]Plugin),
 		clusterReportList: make(map[string]map[string]string),
 	}
@@ -182,8 +187,17 @@ func (pm *PluginManager) Ready(pluginStr string, targetID string) bool {
 			if p.Ready(targetID) {
 				break
 			}
-			klog.Infof("%s for %s is not ready", plugin, targetID)
+
 			time.Sleep(5 * time.Second)
+			if targetID != "" && targetID != "node" {
+				klog.Infof("%s for %s is not ready", plugin, targetID)
+				if _, ok := pm.GetConfig().ClusterConfigs[targetID]; !ok {
+					return false
+				}
+			} else {
+				klog.Infof("%s is not ready", plugin)
+			}
+
 		}
 	}
 	return true

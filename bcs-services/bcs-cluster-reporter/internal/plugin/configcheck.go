@@ -42,7 +42,7 @@ func CheckFlag(flagList []string, floatFlag FloatFlag) string {
 				}
 
 				if floatFlag.CompareType == "ge" {
-					if floatFlag.Value > value {
+					if floatFlag.Value >= value {
 						return fmt.Sprintf(StringMap[CheckFlagLeDetailFormat], floatFlag.Name, strList[1], floatFlag.Value)
 					}
 				}

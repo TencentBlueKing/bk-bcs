@@ -23,5 +23,9 @@ type Options struct {
 // Validate validate options
 func (o *Options) Validate() error {
 
+	if o.CheckDomain == nil || len(o.CheckDomain) == 0 {
+		o.CheckDomain = []string{"www.qq.com"}
+	}
+
 	return nil
 }

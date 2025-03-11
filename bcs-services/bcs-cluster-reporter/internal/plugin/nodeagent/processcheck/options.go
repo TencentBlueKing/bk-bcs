@@ -30,9 +30,9 @@ func (o *Options) Validate() error {
 	if o.Processes == nil {
 		o.Processes = []ProcessCheckConfig{
 			{Name: "kubelet"},
-			{Name: "containerd", ConfigFile: "/etc/containerd/config.toml"},
-			{Name: "dockerd", ConfigFile: "/etc/docker/daemon.json"},
 		}
+	} else {
+		o.Processes = append(o.Processes, ProcessCheckConfig{Name: "kubelet"})
 	}
 
 	o.Processes = removeDuplicates(o.Processes)

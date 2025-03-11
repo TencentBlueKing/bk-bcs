@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/configfilecheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/containercheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/diskcheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/dnscheck"
@@ -93,14 +94,9 @@ func init() {
 
 // Run main process
 func Run() error {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		if cmdOptions.KubeConfigPath != "" {
-			config, err = k8s.GetRestConfigByConfig(cmdOptions.KubeConfigPath)
-			if err != nil {
-				klog.Fatalf("Error: %s", err.Error())
-			}
-		}
+	config := getConfig(cmdOptions.ConfigPath)
+	if config == nil {
+		klog.Fatalf("get kubeconfig failed.")
 	}
 
 	clientSet, err := k8s.GetClientsetByConfig(config)
@@ -111,6 +107,7 @@ func Run() error {
 	nodeName := util.GetNodeName()
 	node, err := clientSet.CoreV1().Nodes().Get(util.GetCtx(10*time.Second), nodeName, v1.GetOptions{ResourceVersion: "0"})
 	if err != nil {
+
 		klog.Fatalf("Error: %s", err.Error())
 	}
 
@@ -118,13 +115,22 @@ func Run() error {
 	if hostPath == "/" {
 		hostPath = util.GetHostPath()
 	}
+
+	kubernetesSvc, err := clientSet.CoreV1().Services("default").Get(util.GetCtx(10*time.Second), "kubernetes", v1.GetOptions{
+		ResourceVersion: "0",
+	})
+	if err != nil {
+		klog.Fatalf("get kubernetes svc failed: %s", err.Error())
+	}
+
 	pluginmanager.Pm.SetConfig(&pluginmanager.Config{
 		NodeConfig: pluginmanager.NodeConfig{
-			Config:    config,
-			ClientSet: clientSet,
-			NodeName:  nodeName,
-			Node:      node,
-			HostPath:  hostPath,
+			Config:        config,
+			ClientSet:     clientSet,
+			NodeName:      nodeName,
+			Node:          node,
+			HostPath:      hostPath,
+			KubernetesSvc: kubernetesSvc.Spec.ClusterIP,
 		},
 	})
 
@@ -168,6 +174,40 @@ func Run() error {
 		fmt.Println(string(data))
 		data, _ = json.Marshal(infoItemList)
 		fmt.Println(string(data))
+	}
+
+	return nil
+}
+
+func getConfig(kubeconfigPath string) *rest.Config {
+	configList := make([]*rest.Config, 0, 0)
+	config, err := rest.InClusterConfig()
+	if err == nil {
+		configList = append(configList, config)
+	}
+
+	kubeconfigPathList := []string{kubeconfigPath, "/root/.kube/config", "/etc/kubernetes/kubelet-kubeconfig"}
+	for _, configPath := range kubeconfigPathList {
+		config, err = k8s.GetRestConfigByConfig(configPath)
+		if err == nil {
+			configList = append(configList, config)
+		}
+	}
+
+	for _, config = range configList {
+		clientSet, err := k8s.GetClientsetByConfig(config)
+		if err != nil {
+			klog.Errorf("Error: %s", err.Error())
+		}
+
+		nodeName := util.GetNodeName()
+		_, err = clientSet.CoreV1().Nodes().Get(util.GetCtx(10*time.Second), nodeName, v1.GetOptions{ResourceVersion: "0"})
+		if err != nil {
+			klog.Errorf("Error: %s", err.Error())
+			continue
+		} else {
+			return config
+		}
 	}
 
 	return nil

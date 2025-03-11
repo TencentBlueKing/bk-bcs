@@ -207,7 +207,7 @@ const changeClusterView = async (clusterID: string) => {
     params: {
       clusterId: clusterID,
     },
-  });
+  }).catch(() => {});
   // 清空自定义视图ID
   updateViewIDStore('');// 设置为集群视图
   $store.commit('updateCrdData', {});

@@ -56,7 +56,7 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 	}
 
 	// 聚合同地域同vpc集群列表
-	regionVpcClusters := make(map[string][]cmproto.Cluster, 0)
+	regionVpcClusters := make(map[string][]*cmproto.Cluster, 0)
 
 	for i := range clusterList {
 		err = checkClusterAutoScaleCidrValidate(clusterList[i])
@@ -68,7 +68,7 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 		regionVpc := fmt.Sprintf("%s:%s", clusterList[i].Region, clusterList[i].GetVpcID())
 
 		if regionVpcClusters[regionVpc] == nil {
-			regionVpcClusters[regionVpc] = make([]cmproto.Cluster, 0)
+			regionVpcClusters[regionVpc] = make([]*cmproto.Cluster, 0)
 		}
 
 		regionVpcClusters[regionVpc] = append(regionVpcClusters[regionVpc], clusterList[i])
@@ -79,7 +79,7 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 
 	for _, clusters := range regionVpcClusters {
 		concurency.Add(1)
-		go func(clusters []cmproto.Cluster) {
+		go func(clusters []*cmproto.Cluster) {
 			defer concurency.Done()
 			for i := range clusters {
 				errLocal := checkClusterAutoScaleCidrValidate(clusters[i])
@@ -105,7 +105,7 @@ func (d *Daemon) autoAllocateTcClusterCidr(error chan<- error) {
 	concurency.Wait()
 }
 
-func checkClusterAutoScaleCidrValidate(cluster cmproto.Cluster) error {
+func checkClusterAutoScaleCidrValidate(cluster *cmproto.Cluster) error {
 	errStr := "autoAllocateTcClusterCidr checkClusterAutoScaleCidrValidate"
 	if cluster.GetRegion() == "" || cluster.GetVpcID() == "" {
 		return fmt.Errorf("%s cluster[%s] region or vpc empty", errStr, cluster.GetClusterID())
@@ -131,7 +131,7 @@ func checkClusterAutoScaleCidrValidate(cluster cmproto.Cluster) error {
 	return nil
 }
 
-func checkClusterNeedToScaleSubnet(cls cmproto.Cluster) (map[string]uint64, []string, bool, error) {
+func checkClusterNeedToScaleSubnet(cls *cmproto.Cluster) (map[string]uint64, []string, bool, error) {
 	needAllocateSubnets, curSubnetIds, err := getClusterNeedAllocateSubnets(cls)
 	if err != nil {
 		return nil, nil, false, err
@@ -151,7 +151,7 @@ func checkClusterNeedToScaleSubnet(cls cmproto.Cluster) (map[string]uint64, []st
 	return needAllocateSubnets, curSubnetIds, true, nil
 }
 
-func getClusterNeedAllocateSubnets(cls cmproto.Cluster) (map[string]uint64, []string, error) {
+func getClusterNeedAllocateSubnets(cls *cmproto.Cluster) (map[string]uint64, []string, error) {
 	if len(cls.GetNetworkSettings().GetSubnetSource().GetNew()) == 0 {
 		return nil, nil, fmt.Errorf("autoAllocateTcClusterCidr getClusterNeedAllocateSubnets[%s:%s:%s] "+
 			"subnetSource empty", cls.GetRegion(), cls.GetVpcID(), cls.GetClusterID())
@@ -196,7 +196,7 @@ func getClusterNeedAllocateSubnets(cls cmproto.Cluster) (map[string]uint64, []st
 }
 
 // getClusterAllocatedEmptySubnets 获取集群已分配未使用的子网列表(通过step分类)
-func getClusterAllocatedEmptySubnets(cls cmproto.Cluster, subnetIds []string) (
+func getClusterAllocatedEmptySubnets(cls *cmproto.Cluster, subnetIds []string) (
 	map[string]uint64, map[string][]string, error) {
 	cmOption, err := cloudprovider.GetCloudCmOptionByCluster(cls)
 	if err != nil {
@@ -232,7 +232,7 @@ func getClusterAllocatedEmptySubnets(cls cmproto.Cluster, subnetIds []string) (
 	return allocatedZoneSubnetNum, allocatedSubnetsIds, nil
 }
 
-func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerModel, cls cmproto.Cluster) error { // nolint
+func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerModel, cls *cmproto.Cluster) error { // nolint
 	cloud, err := model.GetCloud(ctx, cls.GetProvider())
 	if err != nil {
 		blog.Errorf("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] GetCloud failed: %v",
@@ -347,5 +347,5 @@ func allocateSubnetsToCluster(ctx context.Context, model store.ClusterManagerMod
 	blog.Infof("autoAllocateTcClusterCidr allocateSubnetsToCluster[%s:%s:%s] newSubnetIds %v",
 		cls.GetRegion(), cls.GetVpcID(), cls.GetClusterID(), newSubnetIds)
 
-	return business.AddSubnetsToCluster(&cls, newSubnetIds, cmOption)
+	return business.AddSubnetsToCluster(cls, newSubnetIds, cmOption)
 }

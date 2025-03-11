@@ -120,19 +120,20 @@ const (
 
 // JobInstallHost job install host
 type JobInstallHost struct {
-	BKCloudID int      `json:"bk_cloud_id"`
-	APID      int      `json:"ap_id"`
-	BKBizID   int      `json:"bk_biz_id"`
-	OSType    OSType   `json:"os_type"`
-	InnerIP   string   `json:"inner_ip"`
-	OuterIP   string   `json:"outer_ip"`
-	LoginIP   string   `json:"login_ip"`
-	DataIP    string   `json:"data_ip"`
-	Account   string   `json:"account"`
-	Port      int      `json:"port"`
-	AuthType  AuthType `json:"auth_type"`
-	Password  string   `json:"password"`
-	Key       string   `json:"key"`
+	BKCloudID          int      `json:"bk_cloud_id"`
+	APID               int      `json:"ap_id"`
+	BKBizID            int      `json:"bk_biz_id"`
+	OSType             OSType   `json:"os_type"`
+	InnerIP            string   `json:"inner_ip"`
+	OuterIP            string   `json:"outer_ip"`
+	LoginIP            string   `json:"login_ip"`
+	DataIP             string   `json:"data_ip"`
+	Account            string   `json:"account"`
+	Port               int      `json:"port"`
+	AuthType           AuthType `json:"auth_type"`
+	Password           string   `json:"password"`
+	Key                string   `json:"key"`
+	ForceUpdateAgentId bool     `json:"force_update_agent_id"`
 }
 
 // JobInstallRequest job install request

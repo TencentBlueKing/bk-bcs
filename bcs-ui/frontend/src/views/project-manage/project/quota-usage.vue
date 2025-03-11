@@ -29,7 +29,7 @@ defineProps({
 const projectCode = computed(() => $store.getters.curProjectCode);
 
 function handleCluster(clusterId: string) {
-  const url = new URL(`/projects/${projectCode.value}/clusters/${clusterId}/workloads/deployments`, window.location.origin);
+  const url = new URL(`${SITE_URL}/projects/${projectCode.value}/clusters/${clusterId}/workloads/deployments`, window.location.origin);
   window.open(url.toString(), '_blank');
 }
 </script>

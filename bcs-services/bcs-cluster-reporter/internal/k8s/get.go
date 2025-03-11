@@ -29,17 +29,15 @@ func GetK8sVersion(clientSet *kubernetes.Clientset) (string, error) {
 	var versionError error
 	var versionInfo *version.Info
 
-	ctx, cancel := context.WithTimeout(context.Background(), 11*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	go func() {
 		versionInfo, versionError = clientSet.ServerVersion()
-		if ctx.Err() != nil {
-			return
-		}
 		cancel()
 	}()
 
 	select {
 	case <-time.After(10 * time.Second):
+		cancel()
 		return "", fmt.Errorf("get k8s version timeout")
 
 	case <-ctx.Done():

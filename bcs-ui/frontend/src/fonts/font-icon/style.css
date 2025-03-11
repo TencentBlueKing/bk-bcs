@@ -959,3 +959,6 @@ url("@/fonts/font-icon/fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .bcs-icon-client:before {
 	content: "\e249";
 }
+.bcs-icon-all:before {
+	content: "\e24b";
+}

@@ -56,10 +56,13 @@ type ClusterConfig struct {
 	ServiceMaxNum int
 	ServiceNum    int
 
-	// node
-	NodeNum  int
-	NodeInfo map[string]plugin.NodeInfo
-	ALLEKLET bool
+	// node 集群总pod数，包含master
+	NodeNum    int
+	EkletNum   int
+	VnodeNum   int
+	WindowsNum int
+	NodeInfo   map[string]plugin.NodeInfo
+	ALLEKLET   bool
 
 	// mutex
 	sync.Mutex
@@ -67,11 +70,13 @@ type ClusterConfig struct {
 
 // NodeConfig xxx
 type NodeConfig struct {
-	Config    *rest.Config
-	ClientSet *kubernetes.Clientset
-	NodeName  string
-	Node      *v1.Node
-	HostPath  string
+	Config        *rest.Config
+	ClientSet     *kubernetes.Clientset
+	NodeName      string
+	Node          *v1.Node
+	HostPath      string
+	KubernetesSvc string
+	KubeletParams map[string]string
 }
 
 // Validate validate options

@@ -107,7 +107,7 @@ func run(ctx context.Context) {
 			break
 		default:
 			for {
-				time.Sleep(time.Minute * 30)
+				time.Sleep(time.Minute * 10)
 				getClusters()
 			}
 		}
@@ -308,11 +308,16 @@ func getClusters() {
 			klog.Fatalf("Error: %s", err.Error())
 			return
 		}
-		clusterConfigList[bcro.ClusterID] = &pluginmanager.ClusterConfig{BusinessID: bcro.BizID,
-			ClusterID: bcro.ClusterID, Config: config}
+		clusterConfigList[bcro.ClusterID] = &pluginmanager.ClusterConfig{
+			BusinessID: bcro.BizID,
+			ClusterID:  bcro.ClusterID,
+			Config:     config}
 		pluginmanager.Pm.SetConfig(&pluginmanager.Config{
-			ClusterConfigs:  clusterConfigList,
-			InClusterConfig: pluginmanager.ClusterConfig{BusinessID: bcro.BizID, ClusterID: bcro.ClusterID, Config: config},
+			ClusterConfigs: clusterConfigList,
+			InClusterConfig: pluginmanager.ClusterConfig{
+				BusinessID: bcro.BizID,
+				ClusterID:  bcro.ClusterID,
+				Config:     config},
 		})
 	} else {
 		// 集中化模式
@@ -353,27 +358,29 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 		for _, cluster := range clusterList {
 			if cluster.IsShared == true || cluster.Status != "RUNNING" || cluster.EngineType != "k8s" || (cluster.Environment == bcro.BcsClusterType && bcro.BcsClusterType != "") {
 				continue // 跳过公共集群的记录 跳过未就绪集群 跳过非K8S集群 以及匹配对应参数的集群
-			} else {
-				// 跳过master ip不正常的集群
-				if len(cluster.Master) > 0 {
-					for masterName, _ := range cluster.Master {
-						if strings.Contains(masterName, "127.0.0") {
-							// 跳过算力集群
-							continue clusterloop
-						}
-					}
-				}
+			}
 
-				if cluster.CreateTime != "" {
-					createTime, err := time.Parse(time.RFC3339, cluster.CreateTime)
-					if err != nil {
-						klog.Errorf("parse cluster %s createtime failed %s", cluster.ClusterID, err.Error())
-						continue
-					}
-					// 创建时间超过10分钟才进行巡检
-					if (time.Now().Unix() - createTime.Unix()) > 60*30 {
-						filteredClusterList = append(filteredClusterList, cluster)
-					}
+			// 跳过master ip不正常的集群
+			for masterName, _ := range cluster.Master {
+				if strings.Contains(masterName, "127.0.0") {
+					// 跳过算力集群
+					continue clusterloop
+				}
+			}
+
+			if strings.Contains(cluster.ClusterName, "联邦") {
+				continue
+			}
+
+			if cluster.CreateTime != "" {
+				createTime, err := time.Parse(time.RFC3339, cluster.CreateTime)
+				if err != nil {
+					klog.Errorf("parse cluster %s createtime failed %s", cluster.ClusterID, err.Error())
+					continue
+				}
+				// 创建时间超过60分钟才进行巡检
+				if (time.Now().Unix() - createTime.Unix()) > 60*60 {
+					filteredClusterList = append(filteredClusterList, cluster)
 				}
 			}
 		}
@@ -409,7 +416,6 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 			clusterConfig.ClusterID = cluster.ClusterID
 			clusterConfig.BusinessID = cluster.BusinessID
 			clusterConfig.BCSCluster = cluster
-			clusterConfig.NodeInfo = make(map[string]plugin.NodeInfo)
 
 			if strings.HasPrefix(cluster.SystemID, "cls") {
 				clusterConfig.ClusterType = pluginmanager.TKECluster
@@ -479,7 +485,6 @@ func GetClusterInfo(kubeConfigDir string, existClusterConfigList map[string]*plu
 
 		clusterConfig.ClusterID = filename
 		clusterConfig.BusinessID = "0"
-		clusterConfig.NodeInfo = make(map[string]plugin.NodeInfo)
 
 		//  读取配置文件时没配置bizid
 		clusterConfigList[filename] = clusterConfig
@@ -544,36 +549,33 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 		}
 	}
 
-	// 跳过work node为0的集群
-	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), v1.ListOptions{ResourceVersion: "0"})
-	masterList := make([]string, 0, 0)
 	nodeNum := 0
-	ekletNum := 0
+	masterList := make([]string, 0, 0)
+	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), v1.ListOptions{ResourceVersion: "0"})
 	if err != nil {
+		// 获取节点失败可能由于集群已经出问题了，所以需要继续将此集群加入集群列表，以进行检查
 		klog.Errorf("get %s node failed: %s", clusterID, err.Error())
-	} else {
-		nodeNum = len(nodeList.Items)
+	}
 
-		for _, node := range nodeList.Items {
-			for key, val := range node.Labels {
-				if key == "node-role.kubernetes.io/master" && (val == "true" || val == "") {
-					nodeNum = nodeNum - 1
-					for _, address := range node.Status.Addresses {
-						if address.Type == v12.NodeInternalIP {
-							masterList = append(masterList, address.Address)
-						}
-					}
-				} else if key == "node.kubernetes.io/instance-type" && val == "eklet" {
-					ekletNum = ekletNum + 1
-				}
+	for _, node := range nodeList.Items {
+		for key, _ := range node.Labels {
+			if key == "node-role.kubernetes.io/master" {
+				masterList = append(masterList, getIP(&node))
 			}
 		}
 
-		// 排除没有任何工作节点的集群
-		if nodeNum == 0 && strings.Contains(clusterID, "BCS-K8S-4") {
-			return nil, fmt.Errorf("a cluster without any work nodes, skip")
+		if checkNodeReady(node) {
+			nodeNum = nodeNum + 1
 		}
 	}
+
+	nodeNum = nodeNum - len(masterList)
+	// 排除没有任何正常工作节点的集群
+	if nodeNum <= 0 && strings.Contains(clusterID, "BCS-K8S-4") {
+		return nil, fmt.Errorf("a cluster without any work nodes, skip")
+	}
+
+	nodeInfo := make(map[string]plugin.NodeInfo)
 
 	clusterConfig = &pluginmanager.ClusterConfig{
 		ClusterID: clusterID,
@@ -581,9 +583,7 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 		ClientSet: clientSet,
 		MetricSet: metricsClient,
 		Master:    masterList,
-		NodeNum:   nodeNum,
-		// 判断集群是否只有超级节点
-		ALLEKLET: ekletNum == nodeNum,
+		NodeInfo:  nodeInfo,
 	}
 
 	// 检测集群得metricAPI是否可用，不可用置为nil
@@ -594,6 +594,27 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 	}
 
 	return clusterConfig, nil
+}
+
+func checkNodeReady(node v12.Node) bool {
+	//if node.Status.Phase == v12.NodeRunning {
+	for _, condition := range node.Status.Conditions {
+		if condition.Type == v12.NodeReady && condition.Status == v12.ConditionTrue {
+			return true
+		}
+	}
+	//}
+	return false
+}
+
+func getIP(node *v12.Node) string {
+	for _, address := range node.Status.Addresses {
+		if address.Type != v12.NodeInternalIP {
+			continue
+		}
+		return address.Address
+	}
+	return ""
 }
 
 func main() {

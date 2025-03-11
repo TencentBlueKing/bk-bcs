@@ -104,7 +104,7 @@
         <bk-form-item :label="$t('cluster.labels.visibleRange')">
           <ClusterVisibleRange
             :editable="rangeEdit"
-            :value="clusterData?.sharedRanges?.projectIdOrCodes || []"
+            :value="clusterData?.sharedRanges?.projectIdOrCodes"
             :is-shared="clusterData?.is_shared"
             :loading="isLoading"
             :cluster-id="clusterData.clusterID"

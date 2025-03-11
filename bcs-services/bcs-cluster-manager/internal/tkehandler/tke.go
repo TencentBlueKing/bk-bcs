@@ -182,7 +182,7 @@ func (h *Handler) getOneTkeCidr(ctx context.Context, vpc string, ipNumber uint32
 		blog.Warnf("get one tke cidr failed, returned more than one cidr, %+v", tkeCidrs)
 		return nil, fmt.Errorf("get one tke cidr failed, returned more than one cidr")
 	}
-	return &tkeCidrs[0], nil
+	return tkeCidrs[0], nil
 }
 
 // ApplyTkeCidr assign an cidr to client

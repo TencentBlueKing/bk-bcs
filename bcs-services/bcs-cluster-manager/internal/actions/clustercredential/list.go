@@ -67,9 +67,7 @@ func (la *ListAction) listClusterCredential() error {
 	if err != nil {
 		return err
 	}
-	for i := range clusterCredentialList {
-		la.clusterCredentialList = append(la.clusterCredentialList, &clusterCredentialList[i])
-	}
+	la.clusterCredentialList = append(la.clusterCredentialList, clusterCredentialList...)
 	return nil
 }
 

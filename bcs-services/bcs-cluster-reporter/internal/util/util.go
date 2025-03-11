@@ -23,6 +23,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -181,4 +182,17 @@ func GetNodeName() string {
 	}
 
 	return name
+}
+
+// ExecCommand xxx
+func ExecCommand(cmd []string) string {
+	c := exec.Command(cmd[0], cmd[1:]...)
+	output, err := c.CombinedOutput()
+
+	if err != nil {
+		fmt.Printf("exec command failed: %s", err.Error())
+		return string(output)
+	}
+
+	return string(output)
 }

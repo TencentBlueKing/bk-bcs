@@ -22,13 +22,14 @@
     </bcs-popover>
     <!-- AI小鲸对话框 -->
     <Assistant
-      v-if="isShowAssistant"
+      :is-show.sync="isShowAssistant"
       :loading="loading"
       :messages="messages"
       :position-limit="positionLimit"
       :prompts="prompts"
       :start-position="startPosition"
       :size-limit="sizeLimit"
+      enable-popup
       @clear="handleClear"
       @close="handleClose"
       @send="handleSend"
@@ -39,7 +40,7 @@
 import { debounce } from 'lodash';
 import { ref } from 'vue';
 
-import Assistant, { ChatHelper, IMessage, IStartPosition, MessageStatus, RoleType } from '@blueking/ai-blueking/vue2';
+import Assistant, { ChatHelper, IMessage, ISendData, IStartPosition, MessageStatus, RoleType } from '@blueking/ai-blueking/vue2';
 
 import '@blueking/ai-blueking/dist/vue2/style.css';
 import { BCS_UI_PREFIX } from '@/common/constant';
@@ -47,6 +48,14 @@ import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import AssistantIcon from '@/images/assistant.png';
 import AssistantSmallIcon from '@/images/assistant-small.svg';
+
+// 属性配置
+const props = defineProps({
+  preset: {
+    type: String,
+    default: '',
+  },
+});
 
 // 特性开关
 const { flagsMap } = useAppData();
@@ -76,7 +85,7 @@ const startPosition = ref<IStartPosition>({
 });
 // 清空消息
 const handleClear = () => {
-  messages.value = [];
+  messages.value.splice(0);
 };
 
 // 聊天开始
@@ -90,7 +99,7 @@ const handleStart = () => {
 };
 
 // 接收消息
-const handleReceiveMessage = (msg: string) => {
+const handleReceiveMessage = (msg: string, id: number | string, cover?: boolean) => {
   const currentMessage = messages.value.at(-1);
   if (!currentMessage) return;
 
@@ -100,7 +109,7 @@ const handleReceiveMessage = (msg: string) => {
     currentMessage.status = MessageStatus.Success;
   } else if (currentMessage.status === 'success') {
     // 如果是后续消息，就追加消息
-    currentMessage.content += msg;
+    currentMessage.content = cover ? msg : currentMessage.content + msg;
   }
 };
 
@@ -130,27 +139,39 @@ const handleError = (msg: string) => {
   currentMessage.content = msg;
   loading.value = false;
 };
-const chatHelper = new ChatHelper(`${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError);
+const chatHelper = new ChatHelper(`${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError, messages.value);
 // 发送消息
-const handleSend = async (msg: string) => {
-  if (!flagsMap.value.BKAI) return;
-  // 终止上一个聊天信息
-  await handleStop();
-  // 添加一条消息
+const handleSend = async (args: ISendData) => {
+  if (!flagsMap.value.BKAI || !props.preset) return;
+
+  // 记录当前消息记录
+  const chatHistory = [...messages.value];
+
+  // 添加用户消息
   messages.value.push({
     role: RoleType.User,
-    content: msg,
+    content: args.content,
+    cite: args.cite,
   });
+  // 根据参数构造输入内容
+  // eslint-disable-next-line no-nested-ternary
+  const input = args.prompt
+    ? args.prompt                           // 如果有 prompt，直接使用
+    : args.cite
+      ? `${args.content}: ${args.cite}`     // 如果有 cite，拼接 content 和 cite
+      : args.content;                       // 否则只使用 content
   // ai 消息，id是唯一标识当前流，调用 chatHelper.stop 的时候需要传入
   chatHelper.stream({
-    role: 'KubernetesProfessor',
-    input: msg,
-    stream: true,
+    inputs: {
+      input,
+      chat_history: chatHistory,
+      preset: props.preset,
+    },
   }, streamID.value);
 };
 // 发送消息防抖(外部调用)
 const handleSendMsg = debounce((msg: string) => {
-  handleSend(msg);
+  handleSend({ content: msg });
 }, 1000);
 
 // 关闭对话框

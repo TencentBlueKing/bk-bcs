@@ -29,8 +29,8 @@ import (
 )
 
 // GetNodeGroups get cluster node groups && check yunti groups
-func GetNodeGroups(model store.ClusterManagerModel) ([]cmproto.NodeGroup,
-	[]cmproto.NodeGroup, []cmproto.NodeGroup, error) {
+func GetNodeGroups(model store.ClusterManagerModel) ([]*cmproto.NodeGroup,
+	[]*cmproto.NodeGroup, []*cmproto.NodeGroup, error) {
 	condGroup := operator.NewLeafCondition(operator.Eq, operator.M{
 		"status": common.StatusRunning,
 	})
@@ -40,8 +40,8 @@ func GetNodeGroups(model store.ClusterManagerModel) ([]cmproto.NodeGroup,
 		return nil, nil, nil, err
 	}
 
-	var normalYunti, normalSelf, crSelf, external = make([]cmproto.NodeGroup, 0), make([]cmproto.NodeGroup, 0),
-		make([]cmproto.NodeGroup, 0), make([]cmproto.NodeGroup, 0)
+	var normalYunti, normalSelf, crSelf, external = make([]*cmproto.NodeGroup, 0), make([]*cmproto.NodeGroup, 0),
+		make([]*cmproto.NodeGroup, 0), make([]*cmproto.NodeGroup, 0)
 
 	for _, group := range groupList {
 		switch group.NodeGroupType {
@@ -90,13 +90,13 @@ func GetNodeGroups(model store.ClusterManagerModel) ([]cmproto.NodeGroup,
 
 // FilterGroupsByRegionInsType filter region instanceType nodeGroup
 func FilterGroupsByRegionInsType(model store.ClusterManagerModel, region,
-	instanceType string) ([]cmproto.NodeGroup, error) {
+	instanceType string) ([]*cmproto.NodeGroup, error) {
 	normalYunti, _, _, err := GetNodeGroups(model)
 	if err != nil {
 		return nil, err
 	}
 
-	filterGroups := make([]cmproto.NodeGroup, 0)
+	filterGroups := make([]*cmproto.NodeGroup, 0)
 	for _, group := range normalYunti {
 		if group.Region == region && group.GetLaunchTemplate().GetInstanceType() == instanceType {
 			filterGroups = append(filterGroups, group)

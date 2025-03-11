@@ -14,6 +14,7 @@
 package containercheck
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
@@ -139,7 +140,47 @@ func (p *Plugin) Check() {
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 
-	node := pluginmanager.Pm.GetConfig().NodeConfig
+	p.ready = false
+
+	// 需要processcheck提供的kubelet参数
+	if !strings.Contains(pluginmanager.Pm.GetPluginstr(), "processcheck") {
+		config := pluginmanager.Pm.GetConfig()
+
+		kubeletParams := make(map[string]string)
+		processInfo, err := process.GetProcessInfo("kubelet", 0)
+		if err != nil {
+			klog.Errorf(err.Error())
+			checkItem := pluginmanager.CheckItem{
+				ItemName:   pluginName,
+				ItemTarget: config.NodeConfig.NodeName,
+				Detail:     fmt.Sprintf("check %s failed: %s", runtimeTarget, getProcessFailStatus),
+				Normal:     false,
+				Status:     getProcessFailStatus,
+			}
+			checkItem.Detail = fmt.Sprintf("containercheck error: %s", getProcessFailStatus)
+			result = append(result, checkItem)
+			return
+		}
+
+		for _, param := range processInfo.Params {
+			if strings.HasPrefix(param, "--") && strings.Contains(param, "=") {
+				param = strings.TrimPrefix(param, "--")
+				key := strings.SplitN(param, "=", 2)[0]
+				value := strings.SplitN(param, "=", 2)[1]
+				kubeletParams[key] = value
+			} else {
+				param = strings.TrimPrefix(param, "--")
+				kubeletParams[param] = ""
+			}
+			config.NodeConfig.KubeletParams = kubeletParams
+			pluginmanager.Pm.SetConfig(config)
+		}
+	} else {
+		pluginmanager.Pm.Ready("processcheck", "")
+	}
+
+	config := pluginmanager.Pm.GetConfig()
+	node := config.NodeConfig
 	nodeName := node.NodeName
 
 	var runtimeErr error
@@ -147,8 +188,6 @@ func (p *Plugin) Check() {
 	containerStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	containerPidStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
 	runtimeStatusGaugeVecSetList := make([]*metricmanager.GaugeVecSet, 0, 0)
-
-	p.ready = false
 
 	defer func() {
 		p.CheckLock.Unlock()
@@ -259,6 +298,12 @@ func dockerCheck(socketPath string, node pluginmanager.NodeConfig) ([]pluginmana
 		return nil, nil, err
 	}
 
+	// 确认检查相关的参数
+	rootDir := "/var/lib/kubelet"
+	if value, ok := node.KubeletParams["root-dir"]; ok {
+		rootDir = value
+	}
+
 	// check container status
 	for _, container := range containerList {
 		klog.Infof("start check for docker container %s", container.Names)
@@ -283,15 +328,47 @@ func dockerCheck(socketPath string, node pluginmanager.NodeConfig) ([]pluginmana
 			continue
 		}
 
+		// TODO 检测容器参数配置 需要开启特权模式
+		//CheckContainerSystemParam(containerInfo.State.Pid)
+
 		// 验证dns pod中的resolv内容正确
-		checkItem, status, err := CheckDNSContainer(containerInfo.Name, containerInfo.ResolvConfPath, nodeName, node.HostPath)
-		if err != nil {
-			klog.Errorf("check container %s failed: %s", container.Names, err.Error())
-			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
-				Labels: []string{container.ID, strings.Join(container.Names, "_"), nodeName, status}, Value: float64(1),
-			})
-			checkItemList = append(checkItemList, *checkItem)
+		// k8s_POD 排除pause镜像
+		if strings.Contains(containerInfo.Name, "kube-system") && (strings.Contains(containerInfo.Name, "coredns") ||
+			strings.Contains(containerInfo.Name, "kube-dns")) && !strings.Contains(containerInfo.Name, "k8s_POD") {
+			checkItem, status, err := CheckDNSContainer(containerInfo.Name, containerInfo.ResolvConfPath, nodeName, node.HostPath)
+			if err != nil {
+				klog.Errorf("check container %s failed: %s", container.Names, err.Error())
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+					Labels: []string{container.ID, containerInfo.Name, nodeName, status}, Value: float64(1),
+				})
+				checkItemList = append(checkItemList, *checkItem)
+			}
 		}
+
+		// 判断root-dir是否正确
+		if _, ok := containerInfo.Config.Labels["io.kubernetes.container.name"]; ok && !strings.Contains(containerInfo.Name, "k8s_POD") {
+			rootDirFlag := false
+			for _, bindPath := range containerInfo.HostConfig.Binds {
+				if strings.Contains(bindPath, rootDir) {
+					rootDirFlag = true
+					break
+				}
+			}
+
+			if !rootDirFlag {
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+					Labels: []string{container.ID, containerInfo.Name, nodeName, wrongRootDirStatus}, Value: float64(1),
+				})
+				checkItemList = append(checkItemList, pluginmanager.CheckItem{
+					ItemName:   pluginName,
+					ItemTarget: nodeName,
+					Normal:     false,
+					Detail:     fmt.Sprintf("container %s root-dir is not %s", containerInfo.Name, rootDir),
+					Status:     wrongRootDirStatus,
+				})
+			}
+		}
+
 	}
 
 	return checkItemList, gvsList, nil
@@ -319,6 +396,13 @@ func containerdCheck(socketPath string, node pluginmanager.NodeConfig) ([]plugin
 		return nil, nil, err
 	}
 
+	// 确认检查相关的参数
+	rootDir := "/var/lib/kubelet"
+	klog.Info(node.KubeletParams)
+	if value, ok := node.KubeletParams["root-dir"]; ok {
+		rootDir = value
+	}
+
 	// check container status
 	for _, container := range containerList {
 		klog.Infof("start check for containerd container %s", container.ID())
@@ -342,26 +426,57 @@ func containerdCheck(socketPath string, node pluginmanager.NodeConfig) ([]plugin
 		}
 
 		// 验证dns pod中的resolv内容正确
+		// k8s_POD 排除pause镜像
 		spec, err := container.Spec(ctx)
 		if err != nil {
 			klog.Errorf("check container %s failed: %s", podName, err.Error())
 			continue
 		}
-		resolvConfPath := ""
-		for _, mount := range spec.Mounts {
-			if mount.Destination == "/etc/resolv.conf" {
-				resolvConfPath = mount.Source
+
+		if strings.Contains(podName, "kube-system") && (strings.Contains(podName, "coredns") ||
+			strings.Contains(podName, "kube-dns")) && !strings.Contains(podName, "k8s_POD") {
+			resolvConfPath := ""
+			for _, mount := range spec.Mounts {
+				if mount.Destination == "/etc/resolv.conf" {
+					resolvConfPath = mount.Source
+				}
+			}
+			// 验证dns pod中的resolv内容正确
+			checkItem, status, err := CheckDNSContainer(podName, resolvConfPath, nodeName, node.HostPath)
+			if err != nil {
+				klog.Errorf("check container %s failed: %s", podName, err.Error())
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+					Labels: []string{container.ID(), podName, nodeName, status}, Value: float64(1),
+				})
+				checkItemList = append(checkItemList, *checkItem)
+			}
+
+		}
+
+		// 判断root-dir是否正确
+		if _, ok := spec.Annotations["io.kubernetes.cri.container-name"]; ok {
+			rootDirFlag := false
+			for _, bindPath := range spec.Mounts {
+				if strings.Contains(bindPath.Source, rootDir) {
+					rootDirFlag = true
+					break
+				}
+			}
+
+			if !rootDirFlag {
+				gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+					Labels: []string{container.ID(), podName, nodeName, wrongRootDirStatus}, Value: float64(1),
+				})
+				checkItemList = append(checkItemList, pluginmanager.CheckItem{
+					ItemName:   pluginName,
+					ItemTarget: nodeName,
+					Normal:     false,
+					Detail:     fmt.Sprintf("container %s root-dir is not %s", podName, rootDir),
+					Status:     wrongRootDirStatus,
+				})
 			}
 		}
-		// 验证dns pod中的resolv内容正确
-		checkItem, status, err := CheckDNSContainer(podName, resolvConfPath, nodeName, node.HostPath)
-		if err != nil {
-			klog.Errorf("check container %s failed: %s", podName, err.Error())
-			gvsList = append(gvsList, &metricmanager.GaugeVecSet{
-				Labels: []string{container.ID(), podName, nodeName, status}, Value: float64(1),
-			})
-			checkItemList = append(checkItemList, *checkItem)
-		}
+
 	}
 
 	return checkItemList, gvsList, nil
@@ -437,66 +552,64 @@ func CheckDNSContainer(name string, resolvConfPath string, nodeName string, host
 	}
 
 	// 判断该容器是否为kube-system下的 dns 容器
-	if strings.Contains(name, "kube-system") && (strings.Contains(name, "coredns") || strings.Contains(name, "kube-dns")) && !strings.Contains(name, "k8s_POD") {
-		klog.Infof("check dns pod %s %s", name, resolvConfPath)
+	klog.Infof("check dns pod %s %s", name, resolvConfPath)
 
-		containerPath := path.Join(hostPath, resolvConfPath)
-		dnsResolv, err := os.ReadFile(containerPath)
+	containerPath := path.Join(hostPath, resolvConfPath)
+	dnsResolv, err := os.ReadFile(containerPath)
+	if err != nil {
+		checkItem.Normal = false
+		checkItem.Detail = fmt.Sprintf("dns container %s read %s failed: %s", name, containerPath, err.Error())
+		checkItem.Status = readFileFailStatus
+		return checkItem, readFileFailStatus, err
+	}
+
+	hostResolv, err := os.ReadFile(path.Join(hostPath, "/etc/resolv.conf"))
+	if err != nil {
+		checkItem.Detail = fmt.Sprintf("read %s failed: %s", hostPath, err.Error())
+		checkItem.Status = readFileFailStatus
 		if err != nil {
-			checkItem.Normal = false
-			checkItem.Detail = fmt.Sprintf("dns container %s read %s failed: %s", name, containerPath, err.Error())
-			checkItem.Status = readFileFailStatus
 			return checkItem, readFileFailStatus, err
 		}
+	}
 
-		hostResolv, err := os.ReadFile(path.Join(hostPath, "/etc/resolv.conf"))
-		if err != nil {
-			checkItem.Detail = fmt.Sprintf("read %s failed: %s", hostPath, err.Error())
-			checkItem.Status = readFileFailStatus
-			if err != nil {
-				return checkItem, readFileFailStatus, err
+	dnsLines := make([]string, 0, 0)
+	for _, dnsLine := range strings.Split(string(dnsResolv), "\n") {
+		if !strings.HasPrefix(dnsLine, "nameserver") {
+			continue
+		}
+		dnsLines = append(dnsLines, dnsLine)
+	}
+
+	hostLines := make([]string, 0, 0)
+	for _, hostLine := range strings.Split(string(hostResolv), "\n") {
+		if !strings.HasPrefix(hostLine, "nameserver") {
+			continue
+		}
+		hostLines = append(hostLines, hostLine)
+	}
+
+	sort.Strings(dnsLines)
+	sort.Strings(hostLines)
+
+	// 判断容器内的resolv文件中的nameserver配置和母机上的是否一致
+	equal := true
+	if len(dnsLines) != len(hostLines) {
+		equal = false
+	} else {
+		for i, item := range dnsLines {
+			if hostLines[i] != item {
+				equal = false
+				break
 			}
 		}
+	}
 
-		dnsLines := make([]string, 0, 0)
-		for _, dnsLine := range strings.Split(string(dnsResolv), "\n") {
-			if !strings.HasPrefix(dnsLine, "nameserver") {
-				continue
-			}
-			dnsLines = append(dnsLines, dnsLine)
-		}
-
-		hostLines := make([]string, 0, 0)
-		for _, hostLine := range strings.Split(string(hostResolv), "\n") {
-			if !strings.HasPrefix(hostLine, "nameserver") {
-				continue
-			}
-			hostLines = append(hostLines, hostLine)
-		}
-
-		sort.Strings(dnsLines)
-		sort.Strings(hostLines)
-
-		// 判断容器内的resolv文件中的nameserver配置和母机上的是否一致
-		equal := true
-		if len(dnsLines) != len(hostLines) {
-			equal = false
-		} else {
-			for i, item := range dnsLines {
-				if hostLines[i] != item {
-					equal = false
-					break
-				}
-			}
-		}
-
-		if !equal {
-			err = fmt.Errorf("content of dns %s is %s, different from %s ", containerPath, dnsLines, hostPath)
-			checkItem.Normal = false
-			checkItem.Detail = err.Error()
-			checkItem.Status = Normalstatus
-			return checkItem, dnsInconsistencyStatus, err
-		}
+	if !equal {
+		err = fmt.Errorf("content of dns %s is %s, different from %s ", containerPath, dnsLines, hostPath)
+		checkItem.Normal = false
+		checkItem.Detail = err.Error()
+		checkItem.Status = Normalstatus
+		return checkItem, dnsInconsistencyStatus, err
 	}
 
 	return nil, Normalstatus, nil
@@ -524,6 +637,34 @@ func GetContainerPIDStatus(pid int) (string, error) {
 	} else {
 		return processInfo.Status()
 	}
+}
+
+// CheckContainerSystemParam 容器内核参数检查
+func CheckContainerSystemParam(pid int) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	result := util.ExecCommand([]string{"nsenter", "-n", "-t", fmt.Sprintf("%d", pid), "sysctl", "-a"})
+
+	reader := strings.NewReader(result)
+	scanner := bufio.NewScanner(reader)
+
+	systemParams := make(map[string]string)
+	for scanner.Scan() {
+		line := scanner.Text()
+		klog.Infof(line)
+		if !strings.Contains(line, "=") {
+			continue
+		}
+		line = strings.Replace(line, " ", "", -1)
+
+		lineStrs := strings.Split(line, "=")
+		if len(lineStrs) == 2 {
+			systemParams[lineStrs[0]] = lineStrs[1]
+		}
+
+	}
+
+	klog.Info(systemParams)
+
+	return nil, nil, nil
 }
 
 // Ready xxx

@@ -55,6 +55,11 @@ var (
 		Name: "net_availability",
 		Help: "net_availability, 1 means OK",
 	}, netAvailabilityLabels)
+	clusterApiserverCertificateExpirationLabels = []string{"type"}
+	clusterApiserverCertificateExpiration       = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: ClusterApiserverCertExpirationMetricName,
+		Help: ClusterApiserverCertExpirationMetricName,
+	}, clusterApiserverCertificateExpirationLabels)
 )
 
 func init() {
@@ -74,9 +79,9 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 	}
 
 	p.StopChan = make(chan int)
-	interval := p.opt.Interval
-	if interval == 0 {
-		interval = 60
+
+	if p.opt.CheckCert {
+		metricmanager.Register(clusterApiserverCertificateExpiration)
 	}
 
 	// run as daemon
@@ -93,7 +98,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 				case result := <-p.StopChan:
 					klog.Infof("stop plugin %s by signal %d", p.Name(), result)
 					return
-				case <-time.After(time.Duration(interval) * time.Second):
+				case <-time.After(time.Duration(p.opt.Interval) * time.Second):
 					continue
 				}
 			}
@@ -157,24 +162,27 @@ func (p *Plugin) Check() {
 			break
 		}
 	}
-	// 检测网卡配置
-	devStatus, err := CheckDevIP(cidr)
-	if err != nil {
-		klog.Errorf(err.Error())
-		result = append(result, pluginmanager.CheckItem{
-			ItemName:   pluginName,
-			ItemTarget: nodeName,
-			Level:      pluginmanager.RISKLevel,
-			Normal:     false,
-			Detail:     fmt.Sprintf("check interface failed: %s", err.Error()),
-			Status:     devStatus,
-		})
 
-		gaugeVecSetList = append(gaugeVecSetList, &metricmanager.GaugeVecSet{
-			Labels: []string{nodeconfig.NodeName, nodeconfig.NodeName, devStatus},
-			Value:  float64(1),
-		})
-		return
+	// 检测网卡配置
+	if cidr != "" {
+		devStatus, err := CheckDevIP(cidr)
+		if err != nil {
+			klog.Errorf(err.Error())
+			result = append(result, pluginmanager.CheckItem{
+				ItemName:   pluginName,
+				ItemTarget: nodeName,
+				Level:      pluginmanager.RISKLevel,
+				Normal:     false,
+				Detail:     fmt.Sprintf("check interface failed: %s", err.Error()),
+				Status:     devStatus,
+			})
+
+			gaugeVecSetList = append(gaugeVecSetList, &metricmanager.GaugeVecSet{
+				Labels: []string{nodeconfig.NodeName, nodeconfig.NodeName, devStatus},
+				Value:  float64(1),
+			})
+			return
+		}
 	}
 
 	// 检查节点的容器网络
@@ -201,6 +209,17 @@ func (p *Plugin) Check() {
 		Labels: []string{nodeconfig.NodeName, nodeconfig.NodeName, status},
 		Value:  float64(1),
 	})
+
+	// 检查apiserver证书
+	if p.opt.CheckCert {
+		checkItemList, gvsList, err := getApiserverCert(nodeconfig.KubernetesSvc)
+		if err != nil {
+			klog.Errorf("check apiserver cert expiration failed: %s", err.Error())
+		} else {
+			result = append(result, checkItemList...)
+			metricmanager.RefreshMetric(clusterApiserverCertificateExpiration, gvsList)
+		}
+	}
 }
 
 // CheckOverLay xxx
@@ -330,6 +349,75 @@ func GetLinkIp(deviceType string) (net.IP, net.IPMask, string, error) {
 	}
 
 	return nil, nil, "", fmt.Errorf("not found")
+}
+
+// getApiserverCert get apsierver cert expiration through api port
+func getApiserverCert(svcIP string) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
+	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
+	// 检查自签证书
+	expiration, err := util.GetServerCert("apiserver-loopback-client", svcIP, "443")
+	if err != nil {
+		klog.Errorf("check apiserver self-signed cert expiration failed: %s", err.Error())
+		return checkItemList, gvsList, err
+	}
+
+	checkItem := pluginmanager.CheckItem{
+		ItemName:   ClusterApiserverCertExpirationCheckItem,
+		ItemTarget: ApiserverTarget,
+		Normal:     true,
+		Status:     NormalStatus,
+		Detail:     fmt.Sprintf(StringMap[AboutToExpireDetail], "self signed", expiration.Sub(time.Now())/time.Second),
+		Level:      pluginmanager.WARNLevel,
+		Tags:       nil,
+	}
+
+	// 时间在1周以内则返回异常
+	if expiration.Sub(time.Now()) < 604800*time.Second {
+		checkItem.Normal = false
+		checkItem.Status = AboutToExpireStatus
+		checkItem.SetDetail(fmt.Sprintf(StringMap[AboutToExpireDetail], "self signed", expiration.Sub(time.Now())/time.Second))
+	}
+
+	checkItemList = append(checkItemList, checkItem)
+
+	gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+		Labels: []string{"self signed"},
+		Value:  float64(expiration.Sub(time.Now()) / time.Second),
+	})
+
+	// 检查apiserver证书
+	expiration, err = util.GetServerCert("kubernetes.default.svc.cluster.local", svcIP, "443")
+	if err != nil {
+		klog.Errorf("check apiserver cert expiration failed: %s", err.Error())
+		return checkItemList, gvsList, err
+	}
+
+	checkItem = pluginmanager.CheckItem{
+		ItemName:   ClusterApiserverCertExpirationCheckItem,
+		ItemTarget: ApiserverTarget,
+		Normal:     true,
+		Status:     NormalStatus,
+		Detail:     fmt.Sprintf(StringMap[AboutToExpireDetail], "apiserver", expiration.Sub(time.Now())/time.Second),
+		Level:      pluginmanager.WARNLevel,
+		Tags:       nil,
+	}
+
+	// 时间在1周以内则返回异常
+	if expiration.Sub(time.Now()) < 604800*time.Second {
+		checkItem.Normal = false
+		checkItem.Status = AboutToExpireStatus
+		checkItem.SetDetail(fmt.Sprintf(StringMap[AboutToExpireDetail], "apiserver", expiration.Sub(time.Now())/time.Second))
+	}
+
+	checkItemList = append(checkItemList, checkItem)
+
+	gvsList = append(gvsList, &metricmanager.GaugeVecSet{
+		Labels: []string{"apiserver"},
+		Value:  float64(expiration.Sub(time.Now()) / time.Second),
+	})
+
+	return checkItemList, gvsList, err
 }
 
 // Ready xxx

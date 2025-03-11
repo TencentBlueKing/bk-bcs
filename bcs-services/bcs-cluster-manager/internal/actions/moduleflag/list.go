@@ -80,14 +80,14 @@ func (la *ListAction) listCloudModuleFlag() error {
 
 	for i := range cloudModuleFlags {
 		cloudModuleFlags[i].FlagDesc = i18n.T(la.ctx, cloudModuleFlags[i].FlagDesc)
-		la.moduleFlagListList = append(la.moduleFlagListList, &cloudModuleFlags[i])
+		la.moduleFlagListList = append(la.moduleFlagListList, cloudModuleFlags[i])
 	}
 
 	return nil
 }
 
 func getCommonModuleFlags(model store.ClusterManagerModel, cloudID, moduleID string) (
-	[]cmproto.CloudModuleFlag, error) {
+	[]*cmproto.CloudModuleFlag, error) {
 	condM := make(operator.M)
 	condM["cloudid"] = cloudID
 	condM["moduleid"] = moduleID

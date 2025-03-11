@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/samber/lo"
 	"github.com/spf13/pflag"
 	yaml3 "gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
@@ -452,6 +453,11 @@ func getChartFile(f *release.File) (*chart.Chart, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// 忽略 values.schema.json
+	bufferedFile = lo.Reject(bufferedFile, func(v *loader.BufferedFile, _ int) bool {
+		return v.Name == "values.schema.json"
+	})
 
 	return loader.LoadFiles(bufferedFile)
 }

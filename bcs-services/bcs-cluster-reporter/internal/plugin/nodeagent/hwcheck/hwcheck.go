@@ -180,7 +180,6 @@ func (p *Plugin) Check() {
 		if err != nil {
 			klog.Errorf(err.Error())
 		} else {
-
 			for _, key := range logFileConfig.KeyWordList {
 				count := 0
 				for _, line := range logList {

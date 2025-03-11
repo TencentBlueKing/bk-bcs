@@ -19,6 +19,9 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
 	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/tools/cache"
 	"math/rand"
 	"os"
 	"runtime/debug"
@@ -36,7 +39,6 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/restmapper"
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
@@ -79,6 +81,8 @@ var (
 	clusterCheckDurationGaugeVecSetList = make(map[string][]*metricmanager.GaugeVecSet)
 	certificateExpirationGVSList        = make(map[string][]*metricmanager.GaugeVecSet)
 	clusterVersionGaugeVecSetList       = make(map[string][]*metricmanager.GaugeVecSet)
+
+	gvr schema.GroupVersionResource
 )
 
 func init() {
@@ -121,16 +125,17 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		job.ObjectMeta.Namespace = p.opt.Namespace
 		objMap, _ := runtime.DefaultUnstructuredConverter.ToUnstructured(job)
 		unstructuredObj.SetUnstructuredContent(objMap)
+		gvr.Group = "batch"
+		gvr.Version = "v1"
+		gvr.Resource = "jobs"
 	default:
 		klog.Fatalf("workload %s type is %s, not supported, please use job, deployment, replicaset",
 			unstructuredObj.GetName(), gKV.Kind)
 	}
 
 	interval := p.opt.Interval
-	if interval == 0 {
-		interval = 300
-	}
 
+	// 运行模式
 	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
@@ -340,7 +345,7 @@ func (p *Plugin) Check() {
 func getApiserverCert(clusterConfig *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
 	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 	gvsList := make([]*metricmanager.GaugeVecSet, 0, 0)
-	// 检查自签证书
+	// 检查apiserver自签证书，可能无法在cluster-reporter直通
 	index := rand.Intn(len(clusterConfig.Master))
 	expiration, err := util.GetServerCert("apiserver-loopback-client", clusterConfig.Master[index], "60002")
 	if err != nil {
@@ -351,6 +356,7 @@ func getApiserverCert(clusterConfig *pluginmanager.ClusterConfig) ([]pluginmanag
 		}
 	}
 
+	// 证书检查结果
 	checkItem := pluginmanager.CheckItem{
 		ItemName:   ClusterApiserverCertExpirationCheckItem,
 		ItemTarget: ApiserverTarget,
@@ -375,7 +381,7 @@ func getApiserverCert(clusterConfig *pluginmanager.ClusterConfig) ([]pluginmanag
 		Value:  float64(expiration.Sub(time.Now()) / time.Second),
 	})
 
-	// 检查apiserver证书
+	// 检查apiserver证书，可能无法在cluster-reporter直通
 	expiration, err = util.GetServerCert(clusterConfig.Master[index], clusterConfig.Master[index], "60002")
 	if err != nil {
 		expiration, err = util.GetServerCert(clusterConfig.Master[index], clusterConfig.Master[index], "6443")
@@ -426,7 +432,7 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 
 	clusterUnstructuredObj := unstructuredObj.DeepCopy()
 	// 随机workload名，避免重复导致的问题
-	clusterUnstructuredObj.SetName("bcs-blackbox-job-" + time.Now().Format("150405"))
+	clusterUnstructuredObj.SetName("bcs-blackbox-job-" + time.Now().Format("2006150405"))
 	var status string
 
 	checkItem := pluginmanager.CheckItem{
@@ -546,7 +552,6 @@ func testClusterByCreateUnstructuredObj(unstructuredObj *unstructured.Unstructur
 
 // getResourceInterface get dynamic resource interface
 func getResourceInterface(clusterConfig *pluginmanager.ClusterConfig, clusterUnstructuredObj *unstructured.Unstructured, status *string) (dynamic.ResourceInterface, error) {
-	clusterGVK := clusterUnstructuredObj.GroupVersionKind()
 	ctx := util.GetCtx(10 * time.Second)
 
 	_, err := clusterConfig.ClientSet.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{ResourceVersion: "0"})
@@ -570,18 +575,6 @@ func getResourceInterface(clusterConfig *pluginmanager.ClusterConfig, clusterUns
 		*status = AvailabilityConfigFailStatus
 		return nil, fmt.Errorf("Get discoveryInterface failed %s", err.Error())
 	}
-	// discoveryInterface.ServerGroupsAndResources()
-	groupResource, err := restmapper.GetAPIGroupResources(discoveryInterface)
-	if err != nil {
-		*status = AvailabilityConfigFailStatus
-		return nil, fmt.Errorf("GetAPIGroupResources failed %s", err.Error())
-	}
-	mapper := restmapper.NewDiscoveryRESTMapper(groupResource)
-	mapping, err := mapper.RESTMapping(clusterGVK.GroupKind(), clusterGVK.Version)
-	if err != nil {
-		*status = AvailabilityConfigFailStatus
-		return nil, fmt.Errorf("RESTMapping failed %s", err.Error())
-	}
 
 	dynamicConfig, err := dynamic.NewForConfig(clusterConfig.Config)
 	if err != nil {
@@ -589,46 +582,112 @@ func getResourceInterface(clusterConfig *pluginmanager.ClusterConfig, clusterUns
 		return nil, fmt.Errorf("%s Create dynamicConfig %s", clusterConfig.ClusterID, err.Error())
 	}
 
-	dri := dynamicConfig.Resource(mapping.Resource).Namespace(namespace)
+	dri := dynamicConfig.Resource(gvr).Namespace(namespace)
 	return dri, nil
 }
 
 // getWatchStatus get pod status of the workload, and return it.
-func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *unstructured.Unstructured,
+func getWatchStatus(config kubernetes.Interface, clusterUnstructuredObj *unstructured.Unstructured,
 	dri dynamic.ResourceInterface, namespace string, clusterID string) (status string,
 	workloadToScheduleCost, workloadToPodCost, worloadToRunningCost time.Duration, err error) {
 	startTime := time.Now()
 
-	ctx := util.GetCtx(30 * time.Second)
-	// 测试集群的timeout时间缩短到10s
-	if strings.Contains(clusterID, "BCS-K8S-2") {
-		ctx = util.GetCtx(10 * time.Second)
-	}
-
 	defer func() {
 		klog.Infof("%s getWatchStatus duration %.2f s", clusterID, float64(time.Now().Sub(startTime)/time.Second))
 	}()
-	// 启动watch，观察对应label的pod的所有事件
-	watchInterface, err := clientSet.CoreV1().Pods(namespace).Watch(ctx, metav1.ListOptions{ResourceVersion: "0",
-		LabelSelector: "bcs-cluster-reporter=bcs-cluster-reporter", TimeoutSeconds: int64Ptr(30)})
-	if err != nil {
-		status = AvailabilityWatchErrorStatus
-		err = fmt.Errorf("%s start watch failed %s", clusterID, err.Error())
-		return
-	}
+
+	createPodFlag := false
+	var createStartTime time.Time
+
+	// 启动watch，观察对应任务的pod的所有事件
+	factory := informers.NewSharedInformerFactoryWithOptions(config, 0, informers.WithNamespace(namespace))
+	informer := factory.Core().V1().Pods().Informer()
+	stopchan := make(chan struct{})
+	closed := false
+	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			pod := obj.(*v1.Pod)
+			if strings.Contains(pod.Name, clusterUnstructuredObj.GetName()) {
+				if !createPodFlag {
+					klog.Infof("cluster %s create pod successful", clusterID)
+					// pod创建成功时间
+					workloadToPodCost = pod.CreationTimestamp.Sub(createStartTime)
+					createPodFlag = true
+				}
+				if pod.Spec.NodeName != "" {
+					if !closed {
+						status = NormalStatus
+						// pod调度成功耗时，调度成功直接返回
+						klog.Infof("cluster %s schedule pod successful", clusterID)
+						workloadToScheduleCost, worloadToRunningCost = getPodLifeCycleTimePoint(pod, createStartTime)
+
+						closed = true
+						close(stopchan)
+					}
+				} else {
+					// 判断是否因为没有可供调度的node，是则返回没有node，区分未调度
+					for _, condition := range pod.Status.Conditions {
+						if strings.Contains(condition.Message, "nodes are available") {
+							if !closed {
+								status = AvailabilityNoNodeErrorStatus
+								klog.Infof("%s scheduled pod failed: %s", clusterID, condition.Message)
+								closed = true
+								close(stopchan)
+							}
+						}
+					}
+				}
+			}
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			pod := newObj.(*v1.Pod)
+			if strings.Contains(pod.Name, clusterUnstructuredObj.GetName()) {
+				if pod.Spec.NodeName != "" {
+					if !closed {
+						status = NormalStatus
+						// pod调度成功耗时，调度成功直接返回
+						klog.Infof("cluster %s schedule pod successful", clusterID)
+						workloadToScheduleCost, worloadToRunningCost = getPodLifeCycleTimePoint(pod, createStartTime)
+
+						closed = true
+						close(stopchan)
+					}
+				} else {
+					// 判断是否因为没有可供调度的node，是则返回没有node，区分未调度
+					for _, condition := range pod.Status.Conditions {
+						if strings.Contains(condition.Message, "nodes are available") {
+							if !closed {
+								status = AvailabilityNoNodeErrorStatus
+								klog.Infof("%s scheduled pod failed: %s", clusterID, condition.Message)
+								closed = true
+								close(stopchan)
+							}
+						}
+					}
+				}
+			}
+
+		},
+		DeleteFunc: func(obj interface{}) {
+		},
+	})
+
+	klog.Infof("%s start informer", clusterID)
+	go informer.Run(stopchan)
 
 	defer func() {
-		go func() {
-			if watchInterface != nil {
-				watchInterface.Stop()
-			}
-		}()
+		// 关闭informer
+		if !closed {
+			closed = true
+			close(stopchan)
+		}
 	}()
 
 	// 记录发起创建workload的时间
-	createStartTime := time.Now()
-
+	createStartTime = time.Now()
 	// 创建workload
+	ctx := util.GetCtx(90 * time.Second)
+	klog.Infof("%s start create workload", clusterID)
 	testObj, err := dri.Create(ctx, clusterUnstructuredObj, metav1.CreateOptions{})
 	if err != nil {
 		klog.Errorf("%s Create failed %s", clusterID, err.Error())
@@ -644,58 +703,40 @@ func getWatchStatus(clientSet *kubernetes.Clientset, clusterUnstructuredObj *uns
 	// 校验testObj创建时间，以检测apiserver时间是否有偏差
 	createTS := testObj.GetCreationTimestamp()
 	if createStartTime.Sub(createTS.Local()) > time.Second*5 || createStartTime.Sub(createTS.Local()) < 0-time.Second*5 {
+		klog.Errorf("%s createtime %s, workload createtime %s", clusterID, createStartTime, createTS)
 		status = AvailabilityTimeOffsetStatus
 		return
 	}
 
-	createPodFlag := false
+	klog.Infof("%s start wait for pod status", clusterID)
+	// 创建workload后等待100s或观察到pod调度成功
+	ctx = util.GetCtx(100 * time.Second)
 	for {
 		select {
-		// 等待watch返回
-		case e, ok := <-watchInterface.ResultChan():
-			if !ok {
-				// watch异常结束
-				klog.Errorf("%s watch failed", clusterID)
-				watchInterface.Stop()
-				status = AvailabilityWatchErrorStatus
-				err = fmt.Errorf("%s watch failed %s", clusterID, err.Error())
-				return
-			} else if pod, ok := e.Object.(*v1.Pod); ok {
-				// 获取到对应pod的事件
-				if !createPodFlag {
-					workloadToPodCost = pod.CreationTimestamp.Sub(createStartTime)
-					createPodFlag = true
-				}
-
-				// 判断pod是否已经成功调度
-				if strings.Contains(pod.Name, clusterUnstructuredObj.GetName()) {
-					if pod.Spec.NodeName != "" {
-						status = NormalStatus
-						// pod调度成功耗时，调度成功直接返回
-						klog.Infof("cluster %s schedule pod successful", clusterID)
-						workloadToScheduleCost, worloadToRunningCost = getPodLifeCycleTimePoint(pod, createStartTime)
-						return
-					}
-
-					// 判断是否为调度失败的事件
-					for _, condition := range pod.Status.Conditions {
-						if strings.Contains(condition.Message, "nodes are available") {
-							status = AvailabilityNoNodeErrorStatus
-							return
-						}
-					}
-				}
-			} else {
-				klog.Errorf(clusterID, e)
-			}
+		// 状态未调度或创建超时
 		case <-ctx.Done():
-			// 时间到期时判断当前已获得的pod状态并返回
-			if !createPodFlag {
-				status = AvailabilityCreatePodTimeoutStatus
-				klog.Errorf("%s create pod timeout", clusterID)
-			} else {
-				status = AvailabilitySchedulePodTimeoutStatus
-				klog.Errorf("%s wait scheduled watch event timeout", clusterID)
+			klog.Infof("%s context timeout", clusterID)
+			if status != NormalStatus && status != AvailabilityNoNodeErrorStatus {
+				if !createPodFlag {
+					status = AvailabilityCreatePodTimeoutStatus
+					klog.Errorf("%s create pod timeout", clusterID)
+				} else {
+					status = AvailabilitySchedulePodTimeoutStatus
+					klog.Errorf("%s wait scheduled watch event timeout", clusterID)
+				}
+			}
+			return
+
+		case <-stopchan:
+			klog.Infof("%s informer stopped", clusterID)
+			if status != NormalStatus && status != AvailabilityNoNodeErrorStatus {
+				if !createPodFlag {
+					status = AvailabilityCreatePodTimeoutStatus
+					klog.Errorf("%s create pod timeout", clusterID)
+				} else {
+					status = AvailabilitySchedulePodTimeoutStatus
+					klog.Errorf("%s wait scheduled watch event timeout", clusterID)
+				}
 			}
 			return
 		}
