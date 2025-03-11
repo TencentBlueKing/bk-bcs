@@ -45,9 +45,14 @@ func (s *WebServer) GetCurrentAnnouncements(w http.ResponseWriter, r *http.Reque
 
 // AssistantRequest assistant request
 type AssistantRequest struct {
-	Role   string `json:"role"`
-	Input  string `json:"input"`
-	Stream bool   `json:"stream"`
+	Inputs Input `json:"inputs"`
+}
+
+// Input assistant input
+type Input struct {
+	Preset      string                   `json:"preset"`
+	ChatHistory []map[string]interface{} `json:"chat_history"`
+	Input       string                   `json:"input"`
 }
 
 // Bind request
@@ -73,7 +78,8 @@ func (s *WebServer) Assistant(w http.ResponseWriter, r *http.Request) {
 	bk_ticket := middleware.MustGetBKTicketFromContext(r.Context())
 	user := middleware.MustGetUserFromContext(r.Context())
 
-	out, err := aiagent.Assistant(r.Context(), bk_ticket, req.Role, req.Input, user.UserName, req.Stream)
+	out, err := aiagent.Assistant(r.Context(), bk_ticket, req.Inputs.Preset, req.Inputs.Input, user.UserName,
+		req.Inputs.ChatHistory)
 	if err != nil {
 		resp.Code = http.StatusBadRequest
 		resp.Message = err.Error()
@@ -81,28 +87,21 @@ func (s *WebServer) Assistant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Stream {
-		body := out.(io.ReadCloser)
-		scanner := bufio.NewScanner(body)
-		scanner.Split(bufio.ScanLines)
+	body := out.(io.ReadCloser)
+	scanner := bufio.NewScanner(body)
+	scanner.Split(bufio.ScanLines)
 
-		w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache")
-		w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
 
-		for scanner.Scan() {
-			// stream  类型返回需要加上 \n 换行符
-			fmt.Fprintf(w, "%s\n", scanner.Bytes())
-			// 立即 flush 到客户端
-			flusher, ok := w.(http.Flusher)
-			if ok {
-				flusher.Flush()
-			}
+	for scanner.Scan() {
+		// stream  类型返回需要加上 \n 换行符
+		fmt.Fprintf(w, "%s\n", scanner.Bytes())
+		// 立即 flush 到客户端
+		flusher, ok := w.(http.Flusher)
+		if ok {
+			flusher.Flush()
 		}
-		return
 	}
-	resp.Data = map[string]interface{}{
-		"output": out,
-	}
-	render.JSON(w, r, resp)
 }

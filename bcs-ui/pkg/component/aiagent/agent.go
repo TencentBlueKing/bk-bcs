@@ -45,16 +45,19 @@ type AssistantResponseData struct {
 }
 
 // Assistant ai assistant
-func Assistant(ctx context.Context, bk_ticket, role, input, username string, stream bool) (interface{}, error) {
+func Assistant(ctx context.Context, bk_ticket, role, input, username string, chatHistory []map[string]interface{}) (
+	interface{}, error) {
 	if !config.G.BKAIAgent.Enable {
 		return "", errors.New("assistant is not enabled")
 	}
 	for _, v := range config.G.BKAIAgent.Assistants {
 		if v.Role == role {
-			if stream {
-				return BKAssistantStream(ctx, bk_ticket, v.Prompt, input, username)
-			}
-			return BKAssistant(ctx, bk_ticket, v.Prompt, input, username)
+			chatHistory = append([]map[string]interface{}{
+				{"role": "user", "content": v.Prompt},
+				// hunyuan 必须要有一对对话，因此这里加一条历史记录
+				{"role": "assistant", "content": "ok"},
+			}, chatHistory...)
+			return BKAssistantStream(ctx, bk_ticket, input, username, chatHistory)
 		}
 	}
 	return "", errors.New("assistant not found")
@@ -104,19 +107,16 @@ func BKAssistant(ctx context.Context, bk_ticket, prompt, input, username string)
 }
 
 // BKAssistantStream ai assistant stream
-func BKAssistantStream(ctx context.Context, bk_ticket, prompt, input, username string) (io.ReadCloser, error) {
+func BKAssistantStream(ctx context.Context, bk_ticket, input, username string, chatHistory []map[string]interface{}) (
+	io.ReadCloser, error) {
 
 	url := fmt.Sprintf("%s/%s", strings.TrimRight(config.G.BKAIAgent.Host, "/"),
 		strings.TrimLeft(config.G.BKAIAgent.StreamPath, "/"))
 
 	body := map[string]interface{}{
 		"inputs": map[string]interface{}{
-			"input": input,
-			"chat_history": []map[string]interface{}{
-				{"role": "user", "content": prompt},
-				// hunyuan 必须要有一对对话，因此这里加一条历史记录
-				{"role": "assistant", "content": "ok"},
-			},
+			"input":        input,
+			"chat_history": chatHistory,
 		},
 		"context": map[string]interface{}{
 			"executor": username,
