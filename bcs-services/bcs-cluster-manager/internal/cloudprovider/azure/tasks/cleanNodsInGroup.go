@@ -16,11 +16,11 @@ package tasks
 import (
 	"context"
 	"fmt"
-	"github.com/avast/retry-go"
 	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
