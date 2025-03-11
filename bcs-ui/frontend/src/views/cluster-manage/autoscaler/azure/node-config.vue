@@ -37,6 +37,10 @@
                 selected-style="checkbox"
                 @change="handleSpecifiedZoneChange">
                 <bcs-option
+                  key="none"
+                  id="none"
+                  :name="$t('generic.label.none')" />
+                <bcs-option
                   v-for="zone in zoneList"
                   :key="zone.zone"
                   :id="zone.zone"
@@ -121,7 +125,7 @@
                 </template>
               </bcs-table-column>
             </bcs-table>
-            <p class="text-[12px] text-[#ea3636]" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('generic.validate.required') }}</p>
+            <p class="text-[12px] text-[#ea3636] is-error" v-if="!nodePoolConfig.launchTemplate.instanceType">{{ $t('generic.validate.required') }}</p>
             <div class="mt25" style="display:flex;align-items:center;">
               <div class="prefix-select">
                 <span :class="['prefix', { disabled: isEdit }]">{{$t('cluster.ca.nodePool.create.instanceTypeConfig.disk.system')}}</span>
@@ -197,6 +201,22 @@
                 {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
               </bk-checkbox>
             </span>
+            <div v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned" class="flex items-center mt15">
+              <span class="pr-[6px]">{{ $t('cluster.create.label.IPPrefix') }}</span>
+              <bcs-select
+                class="flex-1"
+                v-model="nodePoolConfig.launchTemplate.internetAccess.nodePublicIPPrefixID"
+                searchable
+                :loading="prefixLoading"
+                :disabled="isEdit"
+                :clearable="false">
+                <bcs-option
+                  v-for="prefix in prefixList"
+                  :key="prefix.id"
+                  :id="prefix.id"
+                  :name="prefix.ipPrefix" />
+              </bcs-select>
+            </div>
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.create.loginType.text')">
             <bk-radio-group v-model="loginType" @change="handleLoginTypeChange">
@@ -341,10 +361,10 @@
   </div>
 </template>
 <script lang="ts">
-import { sortBy } from 'lodash';
+import { cloneDeep, sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
-import { cloudsZones } from '@/api/modules/cluster-manager';
+import { cloudsPublicPrefix, cloudsZones } from '@/api/modules/cluster-manager';
 import FormGroup from '@/components/form-group.vue';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import usePage from '@/composables/use-page';
@@ -418,7 +438,7 @@ export default defineComponent({
       name: defaultValues.value.name || '', // 节点名称
       autoScaling: {
         vpcID: '', // todo 放在basic-pool-info组件比较合适
-        zones: defaultValues.value.autoScaling?.zones || [],
+        zones: defaultValues.value.autoScaling?.zones?.length ? defaultValues.value.autoScaling.zones : ['none'], // 编辑节点池回显
         subnetIDs: defaultValues.value.autoScaling.subnetIDs || [], // 支持子网
       },
       nodeOS: defaultValues.value.launchTemplate?.imageInfo?.imageName, // 操作系统类型
@@ -439,6 +459,7 @@ export default defineComponent({
           internetMaxBandwidth: defaultValues.value.launchTemplate?.internetAccess?.internetMaxBandwidth, // 购买带宽
           publicIPAssigned: defaultValues.value.launchTemplate?.internetAccess?.publicIPAssigned, // 分配免费公网IP
           bandwidthPackageId: defaultValues.value.launchTemplate?.internetAccess?.bandwidthPackageId, // 带宽包ID
+          nodePublicIPPrefixID: defaultValues.value.launchTemplate?.internetAccess?.nodePublicIPPrefixID, // 公网IP前缀
         },
         initLoginUsername: defaultValues.value.launchTemplate?.initLoginUsername || defaultUser || '', // 登录用户
         // 密钥信息
@@ -600,7 +621,10 @@ export default defineComponent({
     const instanceTypesLoading = ref(false);
     const instanceData = ref<any[]>([]);
     const instanceTypesList = computed(() => {
-      const zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
+      let zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
+      if (zoneList.length === 1 && zoneList[0] === 'none') {
+        zoneList = [];
+      }
       const cacheInstanceMap = {};
       // 先过滤可用区, 再过滤同类型机型
       return instanceData.value
@@ -616,7 +640,15 @@ export default defineComponent({
         .filter(instance => (!CPU.value || instance.cpu === CPU.value)
         && (!Mem.value || instance.memory === Mem.value));
     });
+    let timer: any = null;
     watch(() => instanceTypesList.value.length, () => {
+      // eslint-disable-next-line max-len
+      let index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
+      if (index === -1) index = 0;
+      timer && clearTimeout(timer);
+      timer = setTimeout(() => {
+        pageChange(Math.ceil((index + 1) / pagination.value.limit));
+      }, 100);
       handleResetPage();
     });
     // eslint-disable-next-line max-len
@@ -646,6 +678,12 @@ export default defineComponent({
       Mem.value,
       nodePoolConfig.value.autoScaling.zones,
     ], () => {
+      const zoneArr = nodePoolConfig.value.autoScaling.zones;
+      if (zoneArr.length > 1 && zoneArr[zoneArr.length - 1] === 'none') {
+        nodePoolConfig.value.autoScaling.zones = ['none'];
+      } else if (zoneArr.length > 1 && zoneArr[0] === 'none') {
+        nodePoolConfig.value.autoScaling.zones.shift();
+      }
       // 重置机型
       nodePoolConfig.value.launchTemplate.instanceType = '';
       handleSetDefaultInstance();
@@ -729,7 +767,26 @@ export default defineComponent({
     // 免费分配公网IP
     watch(() => nodePoolConfig.value.launchTemplate.internetAccess.publicIPAssigned, (publicIPAssigned) => {
       nodePoolConfig.value.launchTemplate.internetAccess.internetMaxBandwidth = publicIPAssigned ? '10' : '0';
+
+      if (!publicIPAssigned) {
+        nodePoolConfig.value.launchTemplate.internetAccess.nodePublicIPPrefixID = '';
+      }
     });
+    const prefixList = ref<{
+      id: string
+      name: string
+      ipPrefix: string
+      zones: string[]
+    }[]>([]);
+    const prefixLoading = ref(false);
+    async function getPublicPrefix() {
+      prefixLoading.value = true;
+      prefixList.value = await cloudsPublicPrefix({
+        $cloudId: cluster.value.provider,
+        accountID: cluster.value.cloudAccountID,
+        resourceGroupName: cluster.value.extraInfo.clusterResourceGroup,
+      }).finally(() => prefixLoading.value = false);
+    }
 
     // 登录方式
     const loginType = ref<'ssh'|'password'>(nodePoolConfig.value.launchTemplate.keyPair.keyPublic
@@ -820,7 +877,13 @@ export default defineComponent({
       nodePoolConfig.value.launchTemplate.CPU = curInstanceItem.value.cpu;
       nodePoolConfig.value.launchTemplate.Mem = curInstanceItem.value.memory;
       nodePoolConfig.value.nodeOS = nodePoolConfig.value.launchTemplate.imageInfo.imageName;
-      return nodePoolConfig.value;
+      // 可用区选了 无
+      // 此处使用深克隆，直接改变 nodePoolConfig.value.autoScaling.zones = [] 会触发监听
+      const data = cloneDeep(nodePoolConfig.value);
+      if (data.autoScaling.zones?.length === 1 && data.autoScaling.zones[0] === 'none') {
+        data.autoScaling.zones = [];
+      }
+      return data;
     };
     const validate = async () => {
       const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);;
@@ -885,6 +948,8 @@ export default defineComponent({
       handleGetZoneList();
       // 子网
       handleGetSubnets();
+      // 公网ip前缀
+      getPublicPrefix();
     });
 
     return {
@@ -897,6 +962,8 @@ export default defineComponent({
       clusterOS,
       zoneListLoading,
       zoneList,
+      prefixLoading,
+      prefixList,
       handleSetDefaultInstance,
       nodeConfigRef,
       formRef,

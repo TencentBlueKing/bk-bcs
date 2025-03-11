@@ -402,6 +402,7 @@ generic:
     batchSetting: '批量设置 {0}'
     resourceName: 资源名称
     resourceID: 资源ID
+    none: 无
   status:
     part_failure: 部分失败
     support: 支持
@@ -762,6 +763,7 @@ cluster:
       role: 集群服务角色
       hostCluster: 创建Host集群
       existingClusters: 已有集群
+      IPPrefix: 公网IP前缀
     msg:
       managedClusterInfo: 创建托管集群必须添加至少一个节点，以运行必要的服务
       independentClusterInfo:

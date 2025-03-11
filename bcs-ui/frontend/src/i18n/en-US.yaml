@@ -427,6 +427,7 @@ generic:
     batchSetting: 'Batch setting {0}'
     resourceName: Resource name
     resourceID: Resource ID
+    none: None
   status:
     part_failure: Part failure
     support: Support
@@ -886,6 +887,7 @@ cluster:
       role: Service role
       hostCluster: Create Host Cluster
       existingClusters: Existing clusters
+      IPPrefix: IP Prefix
     msg:
       managedClusterInfo: >-
         Create a custody cluster must add at least one node to run the necessary

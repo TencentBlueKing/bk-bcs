@@ -88,6 +88,7 @@ export const clusterAutoScalingLogsV2 = request('get', '/operationlogs');
 export const cloudsZones = request('get', '/clouds/$cloudId/zones');
 export const updateClusterAutoScalingProviders = request('put', '/autoscalingoption/$clusterId/providers/$provider');
 export const cloudsRuntimeInfo = request('get', '/clouds/$cloudId/runtimeinfo');
+export const cloudsPublicPrefix = request('get', '/clouds/$cloudId/node/publicPrefix');
 
 // vCluster
 export const sharedclusters = request('get', '/sharedclusters');

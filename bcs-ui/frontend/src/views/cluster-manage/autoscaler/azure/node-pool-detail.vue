@@ -79,7 +79,7 @@
           </bk-form-item>
           <bk-form-item :label="$t('cluster.ca.nodePool.create.az.title')" :desc="$t('cluster.ca.nodePool.create.az.desc')">
             <LoadingIcon v-if="zoneLoading">{{ $t('generic.status.loading') }}...</LoadingIcon>
-            <span v-else>{{ zoneNames.join(',') || $t('cluster.ca.nodePool.create.az.random') }}</span>
+            <span v-else>{{ zoneNames.join(',') || $t('generic.label.none') }}</span>
           </bk-form-item>
           <bk-form-item :label="$t('generic.ipSelector.label.serverModel')">
             {{nodePoolData.launchTemplate.instanceType}}

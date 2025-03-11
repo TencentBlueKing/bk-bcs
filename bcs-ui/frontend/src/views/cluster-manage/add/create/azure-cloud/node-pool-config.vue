@@ -53,6 +53,10 @@
               selected-style="checkbox"
               @change="handleSpecifiedZoneChange">
               <bcs-option
+                key="none"
+                id="none"
+                :name="$t('generic.label.none')" />
+              <bcs-option
                 v-for="zone in zoneList"
                 :key="zone.zone"
                 :id="zone.zone"
@@ -213,6 +217,22 @@
               {{$t('cluster.ca.nodePool.create.instanceTypeConfig.publicIPAssigned.text')}}
             </bk-checkbox>
           </span>
+          <div v-if="nodePoolConfig.launchTemplate.internetAccess.publicIPAssigned" class="flex items-center mt15">
+            <span class="pr-[6px]">{{ $t('cluster.create.label.IPPrefix') }}</span>
+            <bcs-select
+              class="flex-1"
+              v-model="nodePoolConfig.launchTemplate.internetAccess.nodePublicIPPrefixID"
+              searchable
+              :loading="prefixLoading"
+              :disabled="isEdit"
+              :clearable="false">
+              <bcs-option
+                v-for="prefix in prefixList"
+                :key="prefix.id"
+                :id="prefix.id"
+                :name="prefix.ipPrefix" />
+            </bcs-select>
+          </div>
         </bk-form-item>
         <bk-form-item
           :label="$t('cluster.ca.nodePool.create.subnet.title')"
@@ -245,10 +265,10 @@
   </div>
 </template>
 <script lang="ts">
-import { sortBy } from 'lodash';
+import { cloneDeep, sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
-import { cloudSubnets, cloudsZones } from '@/api/modules/cluster-manager';
+import { cloudsPublicPrefix, cloudSubnets, cloudsZones } from '@/api/modules/cluster-manager';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
@@ -335,7 +355,7 @@ export default defineComponent({
       autoScaling: {
         vpcID: '', // todo 放在basic-pool-info组件比较合适
         subnetIDs: defaultValues.value.autoScaling.subnetIDs || [], // 支持子网
-        zones: defaultValues.value.autoScaling.zones || [], // 可用区
+        zones: defaultValues.value.autoScaling?.zones?.length ? defaultValues.value.autoScaling.zones : ['none'], // 可用区
       },
       launchTemplate: {
         imageInfo: {
@@ -352,6 +372,7 @@ export default defineComponent({
         },
         internetAccess: {
           publicIPAssigned: defaultValues.value.launchTemplate?.internetAccess?.publicIPAssigned, // 分配免费公网IP
+          nodePublicIPPrefixID: defaultValues.value.launchTemplate?.internetAccess?.nodePublicIPPrefixID, // 公网IP前缀
         },
         // 密钥信息
         keyPair: {
@@ -421,6 +442,10 @@ export default defineComponent({
     // 不再需要切换可用区类型
     // 指定可用区
     const handleSpecifiedZoneChange = () => {
+      if (nodePoolConfig.value.autoScaling.zones.length === 1 && nodePoolConfig.value.autoScaling.zones[0] === 'none') {
+        // 选择 无 可用区，不需要重置机型
+        return;
+      }
       nodePoolConfig.value.launchTemplate.instanceType = '';
     };
 
@@ -452,7 +477,10 @@ export default defineComponent({
     const instanceTypesLoading = ref(false);
     const instanceData = ref<any[]>([]);
     const instanceTypesList = computed(() => {
-      const zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
+      let zoneList: string[] = nodePoolConfig.value.autoScaling?.zones || [];
+      if (zoneList.length === 1 && zoneList[0] === 'none') {
+        zoneList = [];
+      }
       const cacheInstanceMap = {};
       // 先过滤可用区, 再过滤同类型机型
       return instanceData.value
@@ -507,6 +535,15 @@ export default defineComponent({
       Mem.value,
       nodePoolConfig.value.autoScaling.zones,
     ], () => {
+      const zoneArr = nodePoolConfig.value.autoScaling.zones;
+      if (zoneArr.length > 1 && zoneArr[zoneArr.length - 1] === 'none') {
+        nodePoolConfig.value.autoScaling.zones = ['none'];
+      } else if (zoneArr.length > 1 && zoneArr[0] === 'none') {
+        nodePoolConfig.value.autoScaling.zones.shift();
+      } else if (zoneArr.length === 1 && zoneArr[0] === 'none') {
+        // 选择 无 可用区，不需要重置机型
+        return;
+      }
       // 重置机型
       nodePoolConfig.value.launchTemplate.instanceType = '';
       handleSetDefaultInstance();
@@ -589,6 +626,28 @@ export default defineComponent({
       nodePoolConfig.value.nodeTemplate.dataDisks.push(JSON.parse(JSON.stringify(defaultDiskItem)));
     };
 
+    // 免费分配公网IP
+    watch(() => nodePoolConfig.value.launchTemplate.internetAccess.publicIPAssigned, (publicIPAssigned) => {
+      if (!publicIPAssigned) {
+        nodePoolConfig.value.launchTemplate.internetAccess.nodePublicIPPrefixID = '';
+      }
+    });
+    const prefixList = ref<{
+      id: string
+      name: string
+      ipPrefix: string
+      zones: string[]
+    }[]>([]);
+    const prefixLoading = ref(false);
+    async function getPublicPrefix() {
+      prefixLoading.value = true;
+      prefixList.value = await cloudsPublicPrefix({
+        $cloudId: props.cloudID,
+        accountID: props.cloudAccountID,
+        resourceGroupName: props.resourceGroupName,
+      }).finally(() => prefixLoading.value = false);
+    }
+
     // VPC子网
     const isShowTip = ref(true);
     const subnetsLoading = ref(false);
@@ -646,7 +705,13 @@ export default defineComponent({
       // CPU和mem信息从机型获取
       nodePoolConfig.value.launchTemplate.CPU = curInstanceItem.value.cpu;
       nodePoolConfig.value.launchTemplate.Mem = curInstanceItem.value.memory;
-      return nodePoolConfig.value;
+      // 可用区选了 无
+      // 此处使用深克隆，直接改变 nodePoolConfig.value.autoScaling.zones = [] 会触发监听
+      const data = cloneDeep(nodePoolConfig.value);
+      if (data.autoScaling.zones?.length === 1 && data.autoScaling.zones[0] === 'none') {
+        data.autoScaling.zones = [];
+      }
+      return data;
     };
     const validate = async () => {
       // const basicFormValidate = await basicFormRef.value?.validate().catch(() => false);
@@ -699,6 +764,8 @@ export default defineComponent({
       handleGetZoneList();
       // 子网
       handleGetSubnets();
+      // 公网ip前缀
+      getPublicPrefix();
     });
 
     return {
@@ -744,6 +811,8 @@ export default defineComponent({
       handleCheckSubnets,
       zoneList,
       zoneListLoading,
+      prefixLoading,
+      prefixList,
       handleSpecifiedZoneChange,
     };
   },
