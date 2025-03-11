@@ -216,6 +216,18 @@ func updateClusterAuthorizedIPRange(rootCtx context.Context, info *cloudprovider
 		return errors.Wrapf(err, "call NewAksServiceImplWithCommonOption[%s] falied", taskID)
 	}
 
+	cloudCluster, err := client.GetCluster(rootCtx, info, cloudprovider.GetClusterResourceGroup(cluster))
+	if err != nil {
+		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: call GetCluster failed", taskID)
+	}
+
+	// 如果集群没有设置白名单则不需要更新
+	if cloudCluster.Properties.APIServerAccessProfile == nil ||
+		cloudCluster.Properties.APIServerAccessProfile.AuthorizedIPRanges == nil ||
+		len(cloudCluster.Properties.APIServerAccessProfile.AuthorizedIPRanges) == 0 {
+		return nil
+	}
+
 	rgn := cloudprovider.GetClusterResourceGroup(info.Cluster)
 	ipPrefixs, err := client.ListPublicPrefixes(context.Background(), rgn)
 	if err != nil {
@@ -231,11 +243,6 @@ func updateClusterAuthorizedIPRange(rootCtx context.Context, info *cloudprovider
 
 	if ipcidr == "" {
 		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: ipprefix not found", taskID)
-	}
-
-	cloudCluster, err := client.GetCluster(rootCtx, info, cloudprovider.GetClusterResourceGroup(cluster))
-	if err != nil {
-		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: call GetCluster failed", taskID)
 	}
 
 	isExit := false
