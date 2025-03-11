@@ -70,7 +70,7 @@ func CreateCloudNodeGroupTask(taskID string, stepName string) error {
 	}
 
 	// update cluster 如果节点池有选择公网IP前缀，更新集群白名单
-	if err = updateCluster(ctx, dependInfo); err != nil {
+	if err = updateClusterAuthorizedIPRange(ctx, dependInfo); err != nil {
 		blog.Errorf("CreateCloudNodeGroupTask[%s]: call updateCluster[%s] api in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call updateCluster[%s] api err, %s", nodeGroupID, err.Error())
@@ -198,15 +198,15 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error {
 	return nil
 }
 
-// updateCluster 更新集群白名单
-func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
+// updateClusterAuthorizedIPRange 更新集群白名单
+func updateClusterAuthorizedIPRange(rootCtx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
 	group := info.NodeGroup
 	cluster := info.Cluster
 
 	taskID := cloudprovider.GetTaskIDFromContext(rootCtx)
 
 	ia := group.LaunchTemplate.InternetAccess
-	if ia == nil || ia.NodePublicIPPrefixID == "" {
+	if ia == nil || !ia.PublicIPAssigned || ia.NodePublicIPPrefixID == "" {
 		return nil
 	}
 
@@ -219,7 +219,7 @@ func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasic
 	rgn := cloudprovider.GetClusterResourceGroup(info.Cluster)
 	ipPrefixs, err := client.ListPublicPrefixes(context.Background(), rgn)
 	if err != nil {
-		return errors.Wrapf(err, "updateCluster[%s]: call ListPublicPrefixes failed", taskID)
+		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: call ListPublicPrefixes failed", taskID)
 	}
 
 	ipcidr := ""
@@ -230,12 +230,12 @@ func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasic
 	}
 
 	if ipcidr == "" {
-		return errors.Wrapf(err, "updateCluster[%s]: ipprefix not found", taskID)
+		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: ipprefix not found", taskID)
 	}
 
 	cloudCluster, err := client.GetCluster(rootCtx, info, cloudprovider.GetClusterResourceGroup(cluster))
 	if err != nil {
-		return errors.Wrapf(err, "updateCluster[%s]: call GetCluster failed", taskID)
+		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: call GetCluster failed", taskID)
 	}
 
 	isExit := false
@@ -255,7 +255,8 @@ func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasic
 	ipRange = append(ipRange, &ipcidr)
 	err = client.UpdateClusterAuthorizedIPRange(rootCtx, info.Cluster.Region, rgn, info.Cluster.SystemID, ipRange)
 	if err != nil {
-		return errors.Wrapf(err, "updateCluster[%s]: call UpdateClusterAuthorizedIPRange failed", taskID)
+		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: call UpdateClusterAuthorizedIPRange failed",
+			taskID)
 	}
 
 	if cluster.ClusterAdvanceSettings.ClusterConnectSetting == nil {
@@ -268,7 +269,7 @@ func updateCluster(rootCtx context.Context, info *cloudprovider.CloudDependBasic
 	internet.PublicAccessCidrs = append(internet.PublicAccessCidrs, ipcidr)
 	err = cloudprovider.UpdateCluster(cluster)
 	if err != nil {
-		return errors.Wrapf(err, "updateCluster[%s]: call Updateluster failed", taskID)
+		return errors.Wrapf(err, "updateClusterAuthorizedIPRange[%s]: call Updateluster failed", taskID)
 	}
 
 	return nil

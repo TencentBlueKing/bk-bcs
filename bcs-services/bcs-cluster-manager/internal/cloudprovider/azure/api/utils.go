@@ -74,7 +74,8 @@ func (c *nodeGroupToPool) convert() {
 	if c.group.LaunchTemplate.InternetAccess != nil {
 		properties.EnableNodePublicIP = to.Ptr(c.group.LaunchTemplate.InternetAccess.PublicIPAssigned)
 		// 是否开启publicPrefix
-		if c.group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID != "" {
+		if c.group.LaunchTemplate.InternetAccess.PublicIPAssigned &&
+			c.group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID != "" {
 			properties.NodePublicIPPrefixID = to.Ptr(c.group.LaunchTemplate.InternetAccess.NodePublicIPPrefixID)
 		}
 	}
