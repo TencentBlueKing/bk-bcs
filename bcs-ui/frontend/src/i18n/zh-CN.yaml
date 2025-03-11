@@ -2219,6 +2219,7 @@ projects:
       resource: 资源包
       clusterID: 集群/ID
       namespace: 命名空间
+      annotations: 注解标签
       num: 总量
       used: 已用
       available: 可用

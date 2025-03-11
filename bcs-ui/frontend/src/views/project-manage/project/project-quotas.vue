@@ -30,8 +30,9 @@
             </div>
             <div class="text-[12px] text-[#b7bac0]">
               {{ $t('projects.quota.cpuMsg', {
-                used: cpu.hostUsed + cpu.federationUsed,
-                available: (cpu.hostSum + cpu.federationSum) - (cpu.hostUsed + cpu.federationUsed) })
+                used: truncateToTwoDecimals(cpu.hostUsed + cpu.federationUsed),
+                available: truncateToTwoDecimals((cpu.hostSum + cpu.federationSum)
+                  - (cpu.hostUsed + cpu.federationUsed)) })
               }}
             </div>
           </div>
@@ -51,8 +52,9 @@
             </div>
             <div class="text-[12px] text-[#b7bac0]">
               {{ $t('projects.quota.memMsg', {
-                used: mem.hostUsed + mem.federationUsed,
-                available: (mem.hostSum + mem.federationSum) - (mem.hostUsed + mem.federationUsed) })
+                used: truncateToTwoDecimals(mem.hostUsed + mem.federationUsed),
+                available: truncateToTwoDecimals((mem.hostSum + mem.federationSum)
+                  - (mem.hostUsed + mem.federationUsed)) })
               }}
             </div>
           </div>
@@ -72,8 +74,9 @@
             </div>
             <div class="text-[12px] text-[#b7bac0]">
               {{ $t('projects.quota.gpuMsg', {
-                used: gpu.hostUsed + gpu.federationUsed,
-                available: (gpu.hostSum + gpu.federationSum) - (gpu.hostUsed + gpu.federationUsed) })
+                used: truncateToTwoDecimals(gpu.hostUsed + gpu.federationUsed),
+                available: truncateToTwoDecimals((gpu.hostSum + gpu.federationSum)
+                  - (gpu.hostUsed + gpu.federationUsed)) })
               }}
             </div>
           </div>
@@ -113,7 +116,9 @@
           <div class="bcs-ellipsis" v-bk-overflow-tips>
             <span>{{ (cpuRateData.cupRate * 10000 / 100).toFixed(2) }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.cpuMsgA', { sum: cpuRateData.cupSum, used: cpuRateData.cupUsed }) }}
+              {{ $t('projects.quota.cpuMsgA', {
+                sum: truncateToTwoDecimals(cpuRateData.cupSum),
+                used: truncateToTwoDecimals(cpuRateData.cupUsed) }) }}
             </span>
           </div>
           <bcs-progress
@@ -129,7 +134,9 @@
           <div class="bcs-ellipsis" v-bk-overflow-tips>
             <span>{{ (memRateData.memRate * 10000 / 100).toFixed(2) }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.memMsgA', { sum: memRateData.memSum, used: memRateData.memUsed }) }}
+              {{ $t('projects.quota.memMsgA', {
+                sum: truncateToTwoDecimals(memRateData.memSum),
+                used: truncateToTwoDecimals(memRateData.memUsed) }) }}
             </span>
           </div>
           <bcs-progress
@@ -147,7 +154,9 @@
           <div class="bcs-ellipsis" v-bk-overflow-tips>
             <span>{{ (gpuRateData.gpuRate * 10000 / 100).toFixed(2) }}%</span>
             <span class="font-[400]">
-              {{ $t('projects.quota.gpuMsgA', { sum: gpuRateData.gpuSum, used: gpuRateData.gpuUsed }) }}
+              {{ $t('projects.quota.gpuMsgA', {
+                sum: truncateToTwoDecimals(gpuRateData.gpuSum),
+                used: truncateToTwoDecimals(gpuRateData.gpuUsed) }) }}
             </span>
           </div>
           <bcs-progress
@@ -247,6 +256,34 @@
           width="120px"
           prop="nameSpace"
           v-if="isColumnRender('nameSpace')" />
+        <!-- <bk-table-column
+          :label="$t('projects.quota.label.annotations')"
+          column-key="annotations"
+          width="120px"
+          prop="annotations"
+          v-if="isColumnRender('annotations')">
+          <template #default="{ row }">
+            <div
+              v-if="Object.keys(row?.annotations || {}).length"
+              v-bk-tooltips="{
+                content: row.annotations,
+                disabled: Object.keys(row?.annotations || {}).length <= 3
+              }"
+              class="py-[15px] overflow-auto flex flex-wrap">
+              <bk-tag
+                class="overflow-hidden"
+                v-for="(value, index) in getProperties(row, 3)"
+                :key="value + index">
+                {{ `${value}:${row.annotations?.[value]}` }}
+              </bk-tag>
+              <bk-tag
+                v-if="Object.keys(row?.annotations || {}).length > 3">
+                +{{ Object.keys(row?.annotations || {}).length - 3 }}
+              </bk-tag>
+            </div>
+            <div v-else>--</div>
+          </template>
+        </bk-table-column> -->
         <bk-table-column
           sortable
           width="130px"
@@ -376,6 +413,7 @@ interface Iquota {
   clusterId?: string;
   clusterName?: string;
   nameSpace?: string;
+  annotations?: Record<string, string>;
   instanceType?: string;
   region?: string;
   zoneName?: string;
@@ -420,6 +458,11 @@ export default defineComponent({
         label: $i18n.t('projects.quota.label.namespace'),
         disabled: statisticsType.value === 'host',
       },
+      // {
+      //   id: 'annotations',
+      //   label: $i18n.t('projects.quota.label.annotations'),
+      //   disabled: statisticsType.value === 'host',
+      // },
       {
         id: 'instanceType',
         label: $i18n.t('projects.quota.label.instance'),
@@ -521,6 +564,7 @@ export default defineComponent({
         obj.clusterId = cur?.clusterId || '--';
         obj.clusterName = cur?.clusterName || '--';
         obj.nameSpace = cur?.nameSpace || '--';
+        // obj.annotations = cur?.annotations || {};
         obj.quotaNum = zoneResources.quotaNum || 0;
         obj.quotaUsed = zoneResources.quotaUsed || 0;
         obj.quotaAvailable = (zoneResources.quotaNum || 0) - (obj.quotaUsed || 0);
@@ -559,8 +603,8 @@ export default defineComponent({
       getChartData();
     }
     const extractNumber = (str) => { // str = '40GiB'
-      const digits = str?.match(/\d+/g)?.join('') || '0'; // 安全处理空值
-      return parseInt(digits, 10) || 0; // 转换为整数，失败则返回0
+      const digits = str?.match(/\d+\.?\d*/)?.[0]; // 安全处理空值
+      return digits ? parseFloat(digits) : 0;
     };
     const parseSearchSelectValue = computed(() => {
       const searchValues: { id: string; value: string[] }[] = [];
@@ -820,24 +864,27 @@ export default defineComponent({
       memSum.value = mem.value.hostSum + mem.value.federationSum; // 总和
       gpuSum.value = gpu.value.hostSum + gpu.value.federationSum; // 总和
 
-      cpuOptions.value.series[0].data[0].value = cpu.value.hostUsed;
-      cpuOptions.value.series[0].data[1].value = cpu.value.federationUsed;
-      cpuOptions.value.series[0].data[2].value = cpu.value.hostSum - cpu.value.hostUsed;
-      cpuOptions.value.series[0].data[3].value = cpu.value.federationSum - cpu.value.federationUsed;
+      cpuOptions.value.series[0].data[0].value = truncateToTwoDecimals(cpu.value.hostUsed);
+      cpuOptions.value.series[0].data[1].value = truncateToTwoDecimals(cpu.value.federationUsed);
+      cpuOptions.value.series[0].data[2].value = truncateToTwoDecimals(cpu.value.hostSum - cpu.value.hostUsed);
+      cpuOptions.value.series[0].data[3].value = truncateToTwoDecimals(cpu.value.federationSum
+        - cpu.value.federationUsed);
       const cupUsed = cpu.value.hostUsed + cpu.value.federationUsed;
       cpuOptions.value.series[0].label.formatter = calculatePercentage(cupUsed, cpuSum.value);
 
-      memOptions.value.series[0].data[0].value = mem.value.hostUsed;
-      memOptions.value.series[0].data[1].value = mem.value.federationUsed;
-      memOptions.value.series[0].data[2].value = mem.value.hostSum - mem.value.hostUsed;
-      memOptions.value.series[0].data[3].value = mem.value.federationSum - mem.value.federationUsed;
+      memOptions.value.series[0].data[0].value = truncateToTwoDecimals(mem.value.hostUsed);
+      memOptions.value.series[0].data[1].value = truncateToTwoDecimals(mem.value.federationUsed);
+      memOptions.value.series[0].data[2].value = truncateToTwoDecimals(mem.value.hostSum - mem.value.hostUsed);
+      memOptions.value.series[0].data[3].value = truncateToTwoDecimals(mem.value.federationSum
+        - mem.value.federationUsed);
       const memUsed = mem.value.hostUsed + mem.value.federationUsed;
       memOptions.value.series[0].label.formatter = calculatePercentage(memUsed, memSum.value);
 
-      gpuOptions.value.series[0].data[0].value = gpu.value.hostUsed;
-      gpuOptions.value.series[0].data[1].value = gpu.value.federationUsed;
-      gpuOptions.value.series[0].data[2].value = gpu.value.hostSum - gpu.value.hostUsed;
-      gpuOptions.value.series[0].data[3].value = gpu.value.federationSum - gpu.value.federationUsed;
+      gpuOptions.value.series[0].data[0].value = truncateToTwoDecimals(gpu.value.hostUsed);
+      gpuOptions.value.series[0].data[1].value = truncateToTwoDecimals(gpu.value.federationUsed);
+      gpuOptions.value.series[0].data[2].value = truncateToTwoDecimals(gpu.value.hostSum - gpu.value.hostUsed);
+      gpuOptions.value.series[0].data[3].value = truncateToTwoDecimals(gpu.value.federationSum
+        - gpu.value.federationUsed);
       const gupUsed = gpu.value.hostUsed + gpu.value.federationUsed;
       gpuOptions.value.series[0].label.formatter = calculatePercentage(gupUsed, gpuSum.value);
     }
@@ -956,6 +1003,20 @@ export default defineComponent({
       searchSelectKey.value += 1;
     };
 
+    // 保留两位小数
+    function truncateToTwoDecimals(value) {
+      const num = typeof value === 'string' ? parseFloat(value) : value;
+      // 截断到两位小数（不四舍五入）
+      return Math.trunc(num * 100) / 100;
+    }
+
+    // 获取对象前三个属性的数组
+    function getProperties(row, num) {
+      const obj = row?.annotations || {};
+      if (Object.keys(obj).length === 0) return [];
+      return Object.keys(obj)?.slice(0, num);
+    }
+
     // 集群列表
     const {
       clusterList,
@@ -1027,6 +1088,8 @@ export default defineComponent({
       handleSettingChange,
       isColumnRender,
       handleFilter,
+      truncateToTwoDecimals,
+      getProperties,
     };
   },
 });

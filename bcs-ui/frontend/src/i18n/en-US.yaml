@@ -2788,6 +2788,7 @@ projects:
       resource: Resource Bundle
       clusterID: Cluster/ID
       namespace: Namespace
+      annotations: Annotations
       num: Total
       used: Used
       available: Available
