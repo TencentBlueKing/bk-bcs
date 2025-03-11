@@ -152,6 +152,17 @@ type ClusterService interface {
 	// resourceName - K8S名称(Cluster.SystemID).
 	GetClusterMonitorUserCredWithName(ctx context.Context, resourceGroupName, resourceName string) (
 		[]*armcontainerservice.CredentialResult, error)
+	// UpdateClusterAuthorizedIPRange 更新集群白名单
+	//
+	// location - 区域
+	//
+	// resourceGroupName - 资源组名称(Account.resourceGroupName)
+	//
+	// clusterName - 集群名称
+	//
+	// ipRange - ip cidr白名单列表.
+	UpdateClusterAuthorizedIPRange(ctx context.Context, location, resourceGroupName, clusterName string,
+		ipRange []*string) error
 }
 
 // AgentPoolService ...	Agent Pool Service 代理节点池
