@@ -39,6 +39,21 @@ export LDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.Zo
  -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
  -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition}"
 
+export GATEWAYERRORLDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientUser=${bcs_zk_client_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ZookeeperClientPwd=${bcs_zk_client_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.EncryptionKey=${bcs_encryption_key} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ServerCertPwd=${bcs_server_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.ClientCertPwd=${bcs_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.LicenseServerClientCertPwd=${bcs_license_server_client_cert_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultUser=${bcs_registry_default_user} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/static.BcsDefaultPasswd=${bcs_registry_default_pwd} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsVersion=${VERSION} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsBuildTime=${BUILDTIME} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsGitHash=${GITHASH} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsTag=${GITTAG} \
+ -X github.com/Tencent/bk-bcs/bcs-common/common/version.BcsEdition=${bcs_edition} \
+ -X google.golang.org/protobuf/reflect/protoregistry.conflictPolicy=warn"
+
 # build path config
 export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
@@ -76,7 +91,7 @@ bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager powertrading
+	helm-manager project-manager nodegroup-manager federation-manager powertrading
 
 bcs-scenarios: kourse gitops
 
@@ -328,6 +343,11 @@ data-manager:pre
 	cp -R ${BCS_SERVICES_PATH}/bcs-data-manager/third_party/swagger-ui/* ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/
 	cp ${BCS_SERVICES_PATH}/bcs-data-manager/proto/bcs-data-manager/bcs-data-manager.swagger.json  ${PACKAGEPATH}/bcs-services/bcs-data-manager/swagger/bcs-data-manager.swagger.json
 	cd bcs-services/bcs-data-manager/ && go mod tidy && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-data-manager/bcs-data-manager ./main.go
+
+federation-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-federation-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-federation-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-federation-manager/ && go mod tidy && go build ${GATEWAYERRORLDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-federation-manager/bcs-federation-manager ./main.go
 
 helm-manager:pre tongsuo
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-helm-manager

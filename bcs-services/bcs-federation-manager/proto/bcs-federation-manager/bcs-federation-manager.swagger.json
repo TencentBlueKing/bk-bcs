@@ -1,0 +1,2817 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Federation Manager API Doc",
+    "version": "0.1.0"
+  },
+  "tags": [
+    {
+      "name": "FederationManager"
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/federationmanager/v1/cluster/{clusterId}": {
+      "get": {
+        "summary": "查询联邦集群",
+        "description": "查询联邦集群",
+        "operationId": "FederationManager_GetFederationCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerGetFederationClusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/install": {
+      "post": {
+        "summary": "为独立集群安装联邦",
+        "description": "为独立集群安装联邦",
+        "operationId": "FederationManager_InstallFederation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerInstallFederationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "creator": {
+                  "type": "string",
+                  "description": "创建者",
+                  "title": "creator",
+                  "minLength": 1
+                },
+                "userToken": {
+                  "type": "string",
+                  "description": "用户token，用于构建bcs-unified-apiserver，不指定则使用创建者的token",
+                  "title": "userToken",
+                  "minLength": 1
+                },
+                "loadBalancerId": {
+                  "type": "string",
+                  "description": "loadBalancerId, 用于构建bcs-unified-apiserver的service, 支持lbId和子网Id, 不指定则使用集群的子网id进行分配",
+                  "title": "loadBalancerId"
+                },
+                "federationProjectId": {
+                  "type": "string",
+                  "description": "联邦集群所属项目的项目Id",
+                  "title": "federationProjectId",
+                  "minLength": 1
+                },
+                "federationProjectCode": {
+                  "type": "string",
+                  "description": "联邦集群所属项目的项目Code",
+                  "title": "federationProjectCode",
+                  "minLength": 1
+                },
+                "federationClusterName": {
+                  "type": "string",
+                  "description": "联邦代理集群集群名",
+                  "title": "federationClusterName",
+                  "minLength": 1
+                },
+                "federationBusinessId": {
+                  "type": "string",
+                  "description": "联邦集群所属业务Id",
+                  "title": "federationBusinessId",
+                  "minLength": 1
+                },
+                "federationClusterEnv": {
+                  "type": "string",
+                  "description": "联邦集群所属环境",
+                  "title": "federationClusterEnv",
+                  "minLength": 1
+                },
+                "federationClusterDescription": {
+                  "type": "string",
+                  "description": "联邦集群集群简要描述",
+                  "title": "federationClusterDescription"
+                },
+                "federationClusterLabels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "联邦集群的labels，用于携带额外的信息，最大不得超过19个",
+                  "title": "federationClusterLabels"
+                }
+              },
+              "description": "安装联邦请求",
+              "title": "InstallFederationRequest",
+              "required": [
+                "creator"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/namespace": {
+      "post": {
+        "summary": "为联邦集群创建命名空间",
+        "description": "为联邦集群创建命名空间",
+        "operationId": "FederationManager_CreateFederationClusterNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerCreateFederationClusterNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "namespace": {
+                  "type": "string",
+                  "description": "联邦集群命名空间名字",
+                  "title": "namespace"
+                },
+                "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "联邦集群命名空间注解",
+                  "title": "annotations"
+                },
+                "clusterAffinity": {
+                  "$ref": "#/definitions/federationmanagerNamespaceSubClusterAffinity",
+                  "description": "联邦集群命名空间亲和性",
+                  "title": "clusterAffinity"
+                },
+                "quotaList": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/federationmanagerQuota"
+                  },
+                  "description": "联邦集群命名空间配额",
+                  "title": "quotaList"
+                },
+                "creator": {
+                  "type": "string",
+                  "description": "creator",
+                  "title": "creator"
+                }
+              },
+              "description": "创建联邦集群命名空间请求",
+              "title": "CreateFederationClusterNamespaceRequest",
+              "required": [
+                "namespace"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}": {
+      "get": {
+        "summary": "获取联邦集群命名空间",
+        "description": "获取联邦集群命名空间",
+        "operationId": "FederationManager_GetFederationClusterNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerGetFederationClusterNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "联邦命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除联邦集群命名空间",
+        "description": "删除联邦集群命名空间",
+        "operationId": "FederationManager_DeleteFederationClusterNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerDeleteFederationClusterNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "联邦命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "operator",
+            "description": "operator. 操作人",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      },
+      "put": {
+        "summary": "更新联邦集群命名空间",
+        "description": "更新联邦集群命名空间",
+        "operationId": "FederationManager_UpdateFederationClusterNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerUpdateFederationClusterNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "联邦命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "联邦集群命名空间注解",
+                  "title": "annotations"
+                },
+                "clusterAffinity": {
+                  "$ref": "#/definitions/federationmanagerNamespaceSubClusterAffinity",
+                  "description": "联邦集群命名空间亲和性",
+                  "title": "clusterAffinity"
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "operator",
+                  "title": "operator"
+                }
+              },
+              "description": "更新联邦命名空间请求",
+              "title": "UpdateFederationClusterNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quota": {
+      "post": {
+        "summary": "为联邦集群命名空间创建quota",
+        "description": "为联邦集群命名空间创建quota",
+        "operationId": "FederationManager_CreateFederationClusterNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerCreateFederationClusterNamespaceQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "quotaList": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/federationmanagerQuota"
+                  },
+                  "description": "配额列表",
+                  "title": "quotaList"
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "operator",
+                  "title": "operator"
+                }
+              },
+              "description": "创建联邦命名空间Quota请求",
+              "title": "CreateFederationClusterNamespaceQuotaRequest",
+              "required": [
+                "quotaList"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quota/{name}": {
+      "get": {
+        "summary": "获取联邦集群命名空间quota",
+        "description": "获取联邦集群命名空间quota",
+        "operationId": "FederationManager_GetFederationClusterNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerGetFederationClusterNamespaceQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "配额名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      },
+      "delete": {
+        "summary": "删除联邦集群命名空间quota",
+        "description": "删除联邦集群命名空间quota",
+        "operationId": "FederationManager_DeleteFederationClusterNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerDeleteFederationClusterNamespaceQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "配额名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      },
+      "put": {
+        "summary": "更新联邦集群命名空间quota",
+        "description": "更新联邦集群命名空间quota",
+        "operationId": "FederationManager_UpdateFederationClusterNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerUpdateFederationClusterNamespaceQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "配额名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "quota": {
+                  "$ref": "#/definitions/federationmanagerQuota",
+                  "description": "配额",
+                  "title": "quota"
+                },
+                "operator": {
+                  "type": "string",
+                  "description": "operator",
+                  "title": "operator"
+                }
+              },
+              "description": "更新联邦命名空间Quota请求",
+              "title": "UpdateFederationClusterNamespaceQuotaRequest",
+              "required": [
+                "quota"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quotas": {
+      "post": {
+        "summary": "获取联邦集群命名空间quota列表",
+        "description": "获取联邦集群命名空间quota列表",
+        "operationId": "FederationManager_ListFederationClusterNamespaceQuota",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListFederationClusterNamespaceQuotaResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "description": "命名空间",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "description": "获取联邦命名空间Quota列表请求",
+              "title": "ListFederationClusterNamespaceQuotaRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/namespaces": {
+      "post": {
+        "summary": "获取联邦集群命名空间列表",
+        "description": "获取联邦集群命名空间列表",
+        "operationId": "FederationManager_ListFederationClusterNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListFederationClusterNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "联邦集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "description": "获取联邦命名空间列表请求",
+              "title": "ListFederationClusterNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/subcluster/{subclusterId}/add": {
+      "post": {
+        "summary": "为联邦集群注册子集群",
+        "description": "为联邦集群注册子集群",
+        "operationId": "FederationManager_RegisterSubcluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerRegisterSubclusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "subclusterId",
+            "description": "子集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "creator": {
+                  "type": "string",
+                  "description": "创建者",
+                  "title": "creator",
+                  "minLength": 1
+                },
+                "userToken": {
+                  "type": "string",
+                  "description": "用户token，用于构建bcs-unified-apiserver，不指定则使用创建者的Token",
+                  "title": "userToken",
+                  "minLength": 1
+                }
+              },
+              "description": "注册子集群请求",
+              "title": "RegisterSubclusterRequest",
+              "required": [
+                "creator"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/subcluster/{subclusterId}/remove": {
+      "delete": {
+        "summary": "为联邦集群移除子集群",
+        "description": "为联邦集群移除子集群",
+        "operationId": "FederationManager_RemoveSubcluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerRemoveSubclusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "subclusterId",
+            "description": "子集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "user",
+            "description": "user. 用户，需要与creator相同",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/cluster/{clusterId}/uninstall": {
+      "post": {
+        "summary": "卸载目标联邦集群",
+        "description": "卸载目标联邦集群",
+        "operationId": "FederationManager_UnInstallFederation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerUnInstallFederationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "operator": {
+                  "type": "string",
+                  "description": "创建者",
+                  "title": "operator",
+                  "minLength": 1
+                }
+              },
+              "description": "安装联邦请求",
+              "title": "InstallFederationRequest",
+              "required": [
+                "creator"
+              ]
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/clusters/all/namespaces": {
+      "post": {
+        "summary": "查询联邦集群列表及其命名空间",
+        "description": "查询联邦集群列表及其命名空间",
+        "operationId": "FederationManager_ListFederationClusterWithNamespace",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListFederationClusterWithNamespaceResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListFederationClusterWithNamespaceRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/clusters/all/sub_clusters": {
+      "post": {
+        "summary": "查询联邦集群列表及子集群",
+        "description": "查询联邦集群列表及子集群",
+        "operationId": "FederationManager_ListFederationClusterWithSubcluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListFederationClusterWithSubclusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListFederationClusterWithSubclusterRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/hostcluster/{clusterId}": {
+      "get": {
+        "summary": "请暂勿使用，查询Host集群关联的联邦集群，如果联邦集群不存在，则会查找创建任务，如果任务存在，则会构造一个集群，并同时返回关联的任务",
+        "description": "查询Host集群关联的联邦集群",
+        "operationId": "FederationManager_GetFederationByHostCluster",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerGetFederationByHostClusterResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterId",
+            "description": "Host集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/project/{projectId}/clusters": {
+      "get": {
+        "summary": "查询Host集群关联的联邦集群",
+        "description": "查询Host集群关联的联邦集群",
+        "operationId": "FederationManager_ListProjectFederation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListProjectFederationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/project/{projectId}/installing_clusters": {
+      "get": {
+        "summary": "请暂勿使用，从创建任务中查找未完流程的任务，查询Host集群关联的联邦集群，并同时返回关联的任务",
+        "description": "查询Host集群关联的联邦集群",
+        "operationId": "FederationManager_ListProjectInstallingFederation",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListProjectInstallingFederationResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectId",
+            "description": "项目ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/taskrecords/{taskId}": {
+      "get": {
+        "summary": "查询任务记录",
+        "description": "查询任务记录",
+        "operationId": "FederationManager_GetTaskRecord",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerGetTaskRecordResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskId",
+            "description": "任务ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/tasks": {
+      "post": {
+        "summary": "查询任务列表",
+        "description": "查询任务列表",
+        "operationId": "FederationManager_ListTasks",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListTasksResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/federationmanagerListTasksRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/tasks/{taskId}": {
+      "get": {
+        "summary": "查询任务",
+        "description": "查询任务",
+        "operationId": "FederationManager_GetTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerGetTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskId",
+            "description": "任务ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    },
+    "/federationmanager/v1/tasks/{taskId}/retry": {
+      "post": {
+        "summary": "重试任务",
+        "description": "重试任务",
+        "operationId": "FederationManager_RetryTask",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/federationmanagerRetryTaskResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "taskId",
+            "description": "任务ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "beginStepName": {
+                  "type": "string",
+                  "description": "重试起始步骤",
+                  "title": "beginStepName"
+                }
+              },
+              "description": "重试任务请求",
+              "title": "RetryTaskRequest"
+            }
+          }
+        ],
+        "tags": [
+          "FederationManager"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "federationmanagerCreateFederationClusterNamespaceQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "创建联邦集群命名空间配额返回",
+      "title": "CreateFederationClusterNamespaceQuotaResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerCreateFederationClusterNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "创建联邦命名空间返回",
+      "title": "CreateFederationClusterNamespaceResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerDeleteFederationClusterNamespaceQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "删除联邦集群命名空间配额返回",
+      "title": "DeleteFederationClusterNamespaceQuotaResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerDeleteFederationClusterNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "删除联邦命名空间返回",
+      "title": "DeleteFederationClusterNamespaceResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerFederationCluster": {
+      "type": "object",
+      "properties": {
+        "federation_cluster_id": {
+          "type": "string",
+          "description": "联邦集群ID",
+          "title": "federation_cluster_id"
+        },
+        "federation_cluster_name": {
+          "type": "string",
+          "description": "联邦集群名字",
+          "title": "federation_cluster_name"
+        },
+        "host_cluster_id": {
+          "type": "string",
+          "description": "联邦Host集群ID",
+          "title": "host_cluster_id"
+        },
+        "project_code": {
+          "type": "string",
+          "description": "项目Code",
+          "title": "project_code"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "created_time": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "created_time"
+        },
+        "updated_time": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updated_time"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态",
+          "title": "status"
+        },
+        "sub_clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationSubCluster"
+          },
+          "description": "子集群列表",
+          "title": "sub_clusters"
+        },
+        "federation_namespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationNamespace"
+          },
+          "description": "联邦命名空间列表",
+          "title": "federation_namespaces"
+        }
+      },
+      "description": "联邦集群",
+      "title": "FederationCluster"
+    },
+    "federationmanagerFederationClusterNamespaceData": {
+      "type": "object",
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "联邦集群ID",
+          "title": "clusterId"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "联邦命名空间",
+          "title": "namespace"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "联邦集群命名空间注解",
+          "title": "annotations"
+        },
+        "clusterAffinity": {
+          "$ref": "#/definitions/federationmanagerNamespaceSubClusterAffinity",
+          "description": "联邦集群命名空间亲和性",
+          "title": "clusterAffinity"
+        },
+        "state": {
+          "type": "string",
+          "description": "联邦集群命名空间状态",
+          "title": "state"
+        },
+        "createTime": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "originK8sData": {
+          "type": "string",
+          "description": "原始数据",
+          "title": "originK8sData"
+        }
+      },
+      "description": "联邦集群命名空间数据",
+      "title": "FederationClusterNamespaceData"
+    },
+    "federationmanagerFederationClusterWithNamespace": {
+      "type": "object",
+      "properties": {
+        "federation_cluster_id": {
+          "type": "string",
+          "description": "联邦集群ID",
+          "title": "federation_cluster_id"
+        },
+        "federation_cluster_name": {
+          "type": "string",
+          "description": "联邦集群名字",
+          "title": "federation_cluster_name"
+        },
+        "host_cluster_id": {
+          "type": "string",
+          "description": "联邦Host集群ID",
+          "title": "host_cluster_id"
+        },
+        "project_code": {
+          "type": "string",
+          "description": "项目Code",
+          "title": "project_code"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "created_time": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "created_time"
+        },
+        "updated_time": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updated_time"
+        },
+        "federation_namespaces": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationNamespace"
+          },
+          "description": "联邦命名空间列表",
+          "title": "federation_namespaces"
+        }
+      },
+      "description": "联邦集群包含子集群列表",
+      "title": "FederationClusterWithSubcluster"
+    },
+    "federationmanagerFederationClusterWithSubcluster": {
+      "type": "object",
+      "properties": {
+        "project_code": {
+          "type": "string",
+          "description": "项目Code",
+          "title": "project_code"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "federation_cluster_id": {
+          "type": "string",
+          "description": "联邦集群ID",
+          "title": "federation_cluster_id"
+        },
+        "federation_cluster_name": {
+          "type": "string",
+          "description": "联邦集群名字",
+          "title": "federation_cluster_name"
+        },
+        "host_cluster_id": {
+          "type": "string",
+          "description": "联邦Host集群ID",
+          "title": "host_cluster_id"
+        },
+        "created_time": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "created_time"
+        },
+        "updated_time": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updated_time"
+        },
+        "sub_clusters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationSubCluster"
+          },
+          "description": "子集群列表",
+          "title": "sub_clusters"
+        }
+      },
+      "description": "联邦集群包含子集群列表",
+      "title": "FederationClusterWithSubcluster"
+    },
+    "federationmanagerFederationClusterWithTask": {
+      "type": "object",
+      "properties": {
+        "cluster": {
+          "$ref": "#/definitions/federationmanagerFederationCluster",
+          "description": "集群信息",
+          "title": "cluster"
+        },
+        "task": {
+          "$ref": "#/definitions/federationmanagerTask",
+          "description": "联邦关联的任务",
+          "title": "task"
+        }
+      }
+    },
+    "federationmanagerFederationNamespace": {
+      "type": "object",
+      "properties": {
+        "project_code": {
+          "type": "string",
+          "description": "项目Code",
+          "title": "project_code"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "federation_namespace": {
+          "type": "string",
+          "description": "联邦命名空间名字",
+          "title": "federation_namespace"
+        },
+        "federation_cluster_id": {
+          "type": "string",
+          "description": "联邦集群ID",
+          "title": "federation_cluster_id"
+        },
+        "host_cluster_id": {
+          "type": "string",
+          "description": "联邦Host集群ID",
+          "title": "host_cluster_id"
+        },
+        "created_time": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "created_time"
+        },
+        "sub_clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "命名空间可调度的子集群范围",
+          "title": "sub_clusters"
+        }
+      },
+      "description": "联邦子集群",
+      "title": "FederationNamespace"
+    },
+    "federationmanagerFederationSubCluster": {
+      "type": "object",
+      "properties": {
+        "project_code": {
+          "type": "string",
+          "description": "项目Code",
+          "title": "project_code"
+        },
+        "project_id": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "project_id"
+        },
+        "sub_cluster_id": {
+          "type": "string",
+          "description": "子集群ID",
+          "title": "sub_cluster_id"
+        },
+        "sub_cluster_name": {
+          "type": "string",
+          "description": "子集群名字",
+          "title": "sub_cluster_name"
+        },
+        "federation_cluster_id": {
+          "type": "string",
+          "description": "所属的联邦集群ID",
+          "title": "federation_cluster_id"
+        },
+        "host_cluster_id": {
+          "type": "string",
+          "description": "所属的联邦Host集群ID",
+          "title": "host_cluster_id"
+        },
+        "clusternet_cluster_name": {
+          "type": "string",
+          "description": "Clusternet集群名，通常是小写的bcsID",
+          "title": "clusternet_cluster_name"
+        },
+        "clusternet_cluster_namespace": {
+          "type": "string",
+          "description": "Clusternet命名空间",
+          "title": "clusternet_cluster_namespace"
+        },
+        "created_time": {
+          "type": "string",
+          "description": "创建时间",
+          "title": "created_time"
+        },
+        "updated_time": {
+          "type": "string",
+          "description": "更新时间",
+          "title": "updated_time"
+        },
+        "status": {
+          "type": "string",
+          "description": "子集群状态",
+          "title": "status"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "子集群标签",
+          "title": "labels"
+        },
+        "federation_namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "联邦命名空间列表",
+          "title": "federation_namespaces"
+        }
+      },
+      "description": "联邦子集群",
+      "title": "SubCluster"
+    },
+    "federationmanagerGetFederationByHostClusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerFederationClusterWithTask",
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "据host集群获取联邦集群响应",
+      "title": "GetFederationByHostClusterResponse"
+    },
+    "federationmanagerGetFederationClusterNamespaceQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerQuota",
+          "description": "返回数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取联邦集群命名空间配额返回",
+      "title": "GetFederationClusterNamespaceQuotaResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "federationmanagerGetFederationClusterNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerFederationClusterNamespaceData",
+          "description": "联邦集群命名空间",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取特定联邦命名空间数据返回",
+      "title": "GetFederationClusterNamespaceResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerGetFederationClusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerFederationCluster",
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取联邦集群",
+      "title": "GetFederationClusterResponse"
+    },
+    "federationmanagerGetTaskRecordResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTaskRecord",
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取任务记录响应",
+      "title": "TaskRecordsResponse"
+    },
+    "federationmanagerGetTaskResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTask",
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取任务状态响应",
+      "title": "GetTaskResponse"
+    },
+    "federationmanagerInstallFederationResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTaskDistributeResponseData",
+          "description": "返回数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询联邦集群列表返回",
+      "title": "GetFederationClusterListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "federationmanagerK8SResource": {
+      "type": "object",
+      "properties": {
+        "resourceName": {
+          "type": "string",
+          "description": "资源名称",
+          "title": "resourceName"
+        },
+        "resourceQuantity": {
+          "type": "string",
+          "description": "资源数量",
+          "title": "resourceQuantity"
+        }
+      }
+    },
+    "federationmanagerLabelSelector": {
+      "type": "object",
+      "properties": {
+        "matchLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "匹配标签",
+          "title": "matchLabels"
+        },
+        "matchExpressions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerLabelSelectorRequirement"
+          },
+          "description": "匹配表达式",
+          "title": "matchExpressions"
+        }
+      }
+    },
+    "federationmanagerLabelSelectorRequirement": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "标签键",
+          "title": "key"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作符, In: 包含, NotIn: 不包含, Exists: 存在, DoesNotExist: 不存在, Gt: 大于, Lt: 小于",
+          "title": "operator"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "federationmanagerListFederationClusterNamespaceQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerQuota"
+          },
+          "description": "返回数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取联邦集群命名空间配额返回",
+      "title": "ListFederationClusterNamespaceQuotaResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "federationmanagerListFederationClusterNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationClusterNamespaceData"
+          },
+          "description": "联邦集群命名空间列表",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取联邦集群命名空间列表返回",
+      "title": "ListFederationClusterNamespaceResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerListFederationClusterWithNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "查询条件",
+          "title": "conditions"
+        },
+        "subConditions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "子集群查询条件",
+          "title": "sub_conditions"
+        }
+      },
+      "description": "查询联邦集群列表请求，二级目录为联邦命名空间",
+      "title": "GetFederationClusterListRequest"
+    },
+    "federationmanagerListFederationClusterWithNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationClusterWithNamespace"
+          },
+          "description": "返回数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询联邦集群列表返回",
+      "title": "GetFederationClusterListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "federationmanagerListFederationClusterWithSubclusterRequest": {
+      "type": "object",
+      "properties": {
+        "conditions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "查询条件",
+          "title": "conditions"
+        },
+        "subConditions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "子集群查询条件",
+          "title": "sub_conditions"
+        }
+      },
+      "description": "查询联邦集群列表请求，二级目录为联邦子集群",
+      "title": "GetFederationClusterListRequest"
+    },
+    "federationmanagerListFederationClusterWithSubclusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationClusterWithSubcluster"
+          },
+          "description": "返回数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询联邦集群列表返回",
+      "title": "GetFederationClusterListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "federationmanagerListProjectFederationResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationCluster"
+          },
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "列出项目联邦集群",
+      "title": "ListProjectFederationResponse"
+    },
+    "federationmanagerListProjectInstallingFederationResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerFederationClusterWithTask"
+          },
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "列出项目安装中的联邦集群",
+      "title": "ListProjectInstallingFederationResponse"
+    },
+    "federationmanagerListTasksRequest": {
+      "type": "object",
+      "properties": {
+        "taskType": {
+          "type": "string",
+          "description": "任务类型",
+          "title": "taskType"
+        },
+        "taskIndex": {
+          "type": "string",
+          "description": "任务索引，如集群ID",
+          "title": "taskIndex"
+        },
+        "offset": {
+          "type": "integer",
+          "format": "int32",
+          "description": "偏移量",
+          "title": "offset"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32",
+          "description": "限制量",
+          "title": "limit"
+        }
+      },
+      "description": "获取任务列表请求",
+      "title": "ListTasksRequest",
+      "required": [
+        "taskType",
+        "taskIndex",
+        "offset",
+        "limit"
+      ]
+    },
+    "federationmanagerListTasksResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerTask"
+          },
+          "description": "响应数据，任务列表",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "获取任务列表响应",
+      "title": "ListTasksResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerNamespaceSubClusterAffinity": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "亲和模式, all: 全部, partial: 标签亲和, none: 不关联子集群",
+          "title": "mode"
+        },
+        "labelSelector": {
+          "$ref": "#/definitions/federationmanagerLabelSelector",
+          "description": "亲和标签选择器",
+          "title": "labelSelector"
+        }
+      }
+    },
+    "federationmanagerQuota": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "quota名称",
+          "title": "name"
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "资源属性",
+          "title": "attributes"
+        },
+        "resourceList": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerK8SResource"
+          },
+          "description": "资源列表",
+          "title": "resourceList"
+        },
+        "originK8sData": {
+          "type": "string",
+          "description": "原始k8s数据",
+          "title": "originK8sData"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "联邦集群命名空间注解",
+          "title": "annotations"
+        }
+      }
+    },
+    "federationmanagerRegisterSubclusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTaskDistributeResponseData",
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "注册子集群响应",
+      "title": "RegisterSubclusterResponse"
+    },
+    "federationmanagerRemoveSubclusterResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTaskDistributeResponseData",
+          "description": "响应数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "移除子集群响应",
+      "title": "RemoveSubclusterResponse"
+    },
+    "federationmanagerRetryTaskResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTaskDistributeResponseData",
+          "description": "响应数据，任务列表",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "重试任务响应",
+      "title": "RetryTaskResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerStep": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "步骤名称",
+          "title": "name"
+        },
+        "alias": {
+          "type": "string",
+          "description": "步骤别名",
+          "title": "alias"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "步骤参数",
+          "title": "params"
+        },
+        "extras": {
+          "type": "string",
+          "description": "步骤额外信息",
+          "title": "extras"
+        },
+        "status": {
+          "type": "string",
+          "description": "步骤状态",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "步骤消息",
+          "title": "message"
+        },
+        "skipOnFailed": {
+          "type": "boolean",
+          "description": "在失败时跳过",
+          "title": "skipOnFailed"
+        },
+        "retryCount": {
+          "type": "integer",
+          "format": "int64",
+          "description": "重试次数",
+          "title": "retryCount"
+        },
+        "start": {
+          "type": "string",
+          "description": "开始时间",
+          "title": "start"
+        },
+        "end": {
+          "type": "string",
+          "description": "结束时间",
+          "title": "end"
+        },
+        "executionTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "执行时间",
+          "title": "executionTime"
+        },
+        "maxExecutionSeconds": {
+          "type": "integer",
+          "format": "int64",
+          "description": "最大执行秒数",
+          "title": "maxExecutionSeconds"
+        },
+        "lastUpdate": {
+          "type": "string",
+          "description": "最后更新时间",
+          "title": "lastUpdate"
+        }
+      },
+      "description": "步骤定义",
+      "title": "Step"
+    },
+    "federationmanagerTask": {
+      "type": "object",
+      "properties": {
+        "taskIndex": {
+          "type": "string",
+          "description": "任务索引，客户端设置此字段",
+          "title": "taskIndex"
+        },
+        "taskId": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskId"
+        },
+        "taskType": {
+          "type": "string",
+          "description": "任务类型",
+          "title": "taskType"
+        },
+        "taskName": {
+          "type": "string",
+          "description": "任务名称",
+          "title": "taskName"
+        },
+        "currentStep": {
+          "type": "string",
+          "description": "当前步骤",
+          "title": "currentStep"
+        },
+        "stepSequence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "步骤序列",
+          "title": "stepSequence"
+        },
+        "steps": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/federationmanagerStep"
+          },
+          "description": "步骤定义",
+          "title": "steps"
+        },
+        "callBackFuncName": {
+          "type": "string",
+          "description": "回调函数名称",
+          "title": "callBackFuncName"
+        },
+        "commonParams": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "通用参数",
+          "title": "commonParams"
+        },
+        "extraJson": {
+          "type": "string",
+          "description": "额外的JSON数据",
+          "title": "extraJson"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态",
+          "title": "status"
+        },
+        "message": {
+          "type": "string",
+          "description": "消息",
+          "title": "message"
+        },
+        "forceTerminate": {
+          "type": "boolean",
+          "description": "强制终止",
+          "title": "forceTerminate"
+        },
+        "start": {
+          "type": "string",
+          "description": "开始时间",
+          "title": "start"
+        },
+        "end": {
+          "type": "string",
+          "description": "结束时间",
+          "title": "end"
+        },
+        "executionTime": {
+          "type": "integer",
+          "format": "int64",
+          "description": "执行时间",
+          "title": "executionTime"
+        },
+        "maxExecutionSeconds": {
+          "type": "integer",
+          "format": "int64",
+          "description": "最大执行秒数",
+          "title": "maxExecutionSeconds"
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建者",
+          "title": "creator"
+        },
+        "lastUpdate": {
+          "type": "string",
+          "description": "最后更新时间",
+          "title": "lastUpdate"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        }
+      },
+      "description": "任务定义",
+      "title": "Task"
+    },
+    "federationmanagerTaskDistributeResponseData": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "type": "string",
+          "description": "任务ID",
+          "title": "taskId"
+        }
+      }
+    },
+    "federationmanagerTaskRecord": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "任务日志状态",
+          "title": "status"
+        },
+        "step": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerTaskRecordStep"
+          },
+          "description": "任务日志详情步骤",
+          "title": "step"
+        }
+      }
+    },
+    "federationmanagerTaskRecordStep": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "任务名称",
+          "title": "name"
+        },
+        "status": {
+          "type": "string",
+          "description": "任务步骤状态(同上)",
+          "title": "status"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务开始时间戳",
+          "title": "startTime"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/federationmanagerTaskRecordStepData"
+          },
+          "description": "任务结束时间戳",
+          "title": "endTime"
+        },
+        "allowSkip": {
+          "type": "boolean",
+          "description": "当前步骤失败是否允许跳过,系统内置",
+          "title": "allowSkip"
+        },
+        "allowRetry": {
+          "type": "boolean",
+          "description": "当前步骤失败是否允许重试(默认都可以重试),系统内置",
+          "title": "allowRetry"
+        }
+      }
+    },
+    "federationmanagerTaskRecordStepData": {
+      "type": "object",
+      "properties": {
+        "log": {
+          "type": "string",
+          "description": "当前行内容",
+          "title": "log"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "int64",
+          "description": "时间戳",
+          "title": "timestamp"
+        },
+        "level": {
+          "type": "string",
+          "description": "日志等级(INFO, WARN, ERROR)",
+          "title": "level"
+        }
+      }
+    },
+    "federationmanagerUnInstallFederationResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "data": {
+          "$ref": "#/definitions/federationmanagerTaskDistributeResponseData",
+          "description": "返回数据",
+          "title": "data"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "查询联邦集群列表返回",
+      "title": "GetFederationClusterListResponse",
+      "required": [
+        "code",
+        "message",
+        "data"
+      ]
+    },
+    "federationmanagerUpdateFederationClusterNamespaceQuotaResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "更新联邦集群命名空间配额返回",
+      "title": "UpdateFederationClusterNamespaceQuotaResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerUpdateFederationClusterNamespaceResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/federationmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "更新联邦命名空间返回",
+      "title": "UpdateFederationClusterNamespaceResponse",
+      "required": [
+        "code",
+        "message"
+      ]
+    },
+    "federationmanagerWebAnnotations": {
+      "type": "object",
+      "properties": {
+        "perms": {
+          "type": "object",
+          "description": "权限信息",
+          "title": "perms"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

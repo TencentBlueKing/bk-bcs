@@ -1,0 +1,23 @@
+{{- if and .Values.global.serviceMonitor.enabled .Values.serviceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "bcs-federation-manager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "bcs-federation-manager.labels" . | nindent 4 }}
+    release: "po"
+spec:
+  selector:
+    matchLabels:
+      {{- include "bcs-federation-manager.selectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  endpoints:
+    - interval: 30s
+      params: {}
+      path: /metrics
+      port: metric
+  sampleLimit: 100000
+  {{- end -}}

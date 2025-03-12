@@ -1,0 +1,168 @@
+# Default values for bcs-federation-manager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  imageRegistry: ""
+  busybox:
+    #image registry information
+    registry: "hub.bktencent.com"
+    repository: blueking/bcs-busybox
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v1.21.3"
+  pullPolicy: Always
+  imagePullSecrets: []
+  env:
+    #common env parameters
+    BK_BCS_also_log_to_stderr: "true"
+    BK_BCS_log_level: 3
+    BK_BCS_CONFIG_TYPE: "render"
+    BK_BCS_gatewayToken: ""
+    BK_BCS_clusterId: "BCS-K8S-00000"
+  storage:
+    etcd:
+      endpoints: []
+    mongodb:
+      endpoint: ""
+      username: ""
+      # password: ""
+      # passwordEncrypted: ""
+    messageQueue:
+      enabled: true
+      kind: "rabbitmq"
+      endpoint: ""
+      username: "bcs"
+      # password: ""
+      # passwordEncrypted: ""
+    zookeeper:
+      endpoints: []
+  secret:
+    autoGenerate: true
+    #bcs server cert
+    bcsServerCerts: bcs-server-certs
+    #bcs client cert
+    bcsClientCerts: bcs-client-certs
+    #bcs client cert without encrypted
+    bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+    #etcd registry cert
+    etcdCerts: bcs-etcd-certs
+    #gateway https cert
+    bcsGatewayCerts: bcs-gateway-certs
+  serviceMonitor:
+    enabled: true
+  storageClass: "standard"
+  hostAliases: []
+  assemblyInstall: false
+
+replicaCount: 1
+
+image:
+  registry: ""
+  repository: "bcs/bcs-federation-manager"
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.29.1-alpha.194-tencent"
+
+env:
+  # bcs server configuration render flag, when setting render,
+  # we will render server configuration file by Env
+  # it's common env, global value comes first
+  BK_BCS_CONFIG_TYPE: "render"
+  # cluster manager http server port
+  BK_BCS_bcsFederationManagerHTTPPort: 8080
+  # cluster manager grpc server port
+  BK_BCS_bcsFederationManagerPort: 8081
+  # cluster manager metric server port
+  BK_BCS_bcsFederationManagerMetricPort: 8082
+  # pprof option
+  BK_BCS_bcsFederationManagerDebug: false
+  # whether log to std err, it's common env, global value comes first
+  BK_BCS_also_log_to_stderr: "true"
+  # log level, it's common env, global value comes first
+  BK_BCS_log_level: 3
+  
+  # mongo options
+  BK_BCS_bcsFederationManagerMongoDatabase: "federationmanager"
+
+  # bcs api conf
+  BK_BCS_bcsApiGwUrl: ""
+  BK_BCS_adminToken: ""
+
+secret:
+  autoGenerate: true
+  #bcs server cert
+  bcsServerCerts: bcs-server-certs
+  #bcs client cert
+  bcsClientCerts: bcs-client-certs
+  #bcs client cert without encrypted
+  bcsClientCertsWithoutEncrypted: bcs-client-certs-without-encrypted
+  #etcd registry cert
+  etcdCerts: bcs-etcd-certs
+  #gateway https cert
+  bcsGatewayCerts: bcs-gateway-certs
+
+storage:
+  etcd:
+    endpoints: []
+  mongodb:
+    endpoint: ""
+    username: "root"
+    password: ""
+  messageQueue:
+    enabled: true
+    kind: "rabbitmq"
+    endpoint: ""
+    username: "bcs"
+    password: ""
+
+service:
+  type: ClusterIP
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "bcs-federation-manager"
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+
+
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+hostAliases: []
+
+affinity: {}
+
+serviceMonitor:
+  enabled: true

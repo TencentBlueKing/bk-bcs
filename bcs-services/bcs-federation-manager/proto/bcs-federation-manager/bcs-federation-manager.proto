@@ -1,0 +1,2637 @@
+syntax = "proto3";
+package federationmanager;
+
+
+option go_package = "./proto/bcs-federation-manager;federationmanager";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "validate/validate.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
+
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "Federation Manager API Doc"
+    version: "0.1.0"
+  };
+  schemes : HTTP
+  consumes : "application/json"
+  produces : "application/json"
+};
+
+service FederationManager {
+  // 联邦拓扑查询接口
+  rpc ListFederationClusterWithSubcluster(ListFederationClusterWithSubclusterRequest) returns (ListFederationClusterWithSubclusterResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/clusters/all/sub_clusters"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询联邦集群列表及子集群"
+      summary : "查询联邦集群列表及子集群"
+    };
+  }
+  rpc ListFederationClusterWithNamespace(ListFederationClusterWithNamespaceRequest) returns (ListFederationClusterWithNamespaceResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/clusters/all/namespaces"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询联邦集群列表及其命名空间"
+      summary : "查询联邦集群列表及其命名空间"
+    };
+  }
+  // 任务查询接口
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/tasks/{taskId}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询任务"
+      summary : "查询任务"
+    };
+  }
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/tasks"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询任务列表"
+      summary : "查询任务列表"
+    };
+  }
+  rpc RetryTask(RetryTaskRequest) returns (RetryTaskResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/tasks/{taskId}/retry"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "重试任务"
+      summary : "重试任务"
+    };
+  }
+  rpc GetTaskRecord(GetTaskRecordRequest) returns (GetTaskRecordResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/taskrecords/{taskId}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询任务记录"
+      summary : "查询任务记录"
+    };
+  }
+  // 联邦管理接口
+  rpc InstallFederation(InstallFederationRequest) returns (InstallFederationResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/install"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "为独立集群安装联邦"
+      summary : "为独立集群安装联邦"
+    };
+  }
+  rpc UnInstallFederation(UnInstallFederationRequest) returns (UnInstallFederationResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/uninstall"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "卸载目标联邦集群"
+      summary : "卸载目标联邦集群"
+    };
+  }
+  rpc RegisterSubcluster(RegisterSubclusterRequest) returns (RegisterSubclusterResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/subcluster/{subclusterId}/add"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "为联邦集群注册子集群"
+      summary : "为联邦集群注册子集群"
+    };
+  }
+  rpc RemoveSubcluster(RemoveSubclusterRequest) returns (RemoveSubclusterResponse) {
+    option (google.api.http) = {
+      delete: "/federationmanager/v1/cluster/{clusterId}/subcluster/{subclusterId}/remove"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "为联邦集群移除子集群"
+      summary : "为联邦集群移除子集群"
+    };
+  }
+  // 联邦集群查询
+  rpc GetFederationCluster(GetFederationClusterRequest) returns (GetFederationClusterResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/cluster/{clusterId}"
+      };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+        description : "查询联邦集群"
+        summary : "查询联邦集群"
+      };
+  }
+  rpc GetFederationByHostCluster(GetFederationByHostClusterRequest) returns (GetFederationByHostClusterResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/hostcluster/{clusterId}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询Host集群关联的联邦集群"
+      summary : "请暂勿使用，查询Host集群关联的联邦集群，如果联邦集群不存在，则会查找创建任务，如果任务存在，则会构造一个集群，并同时返回关联的任务"
+    };
+  }
+  rpc ListProjectInstallingFederation(ListProjectInstallingFederationRequest) returns (ListProjectInstallingFederationResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/project/{projectId}/installing_clusters"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询Host集群关联的联邦集群"
+      summary : "请暂勿使用，从创建任务中查找未完流程的任务，查询Host集群关联的联邦集群，并同时返回关联的任务"
+    };
+  }
+  rpc ListProjectFederation(ListProjectFederationRequest) returns (ListProjectFederationResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/project/{projectId}/clusters"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description : "查询Host集群关联的联邦集群"
+      summary : "查询Host集群关联的联邦集群"
+    };
+  }
+  
+
+  // 联邦命名空间操作相关接口
+  rpc CreateFederationClusterNamespace(CreateFederationClusterNamespaceRequest) returns (CreateFederationClusterNamespaceResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/namespace"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "为联邦集群创建命名空间"
+      summary: "为联邦集群创建命名空间"
+    };
+  }
+  rpc UpdateFederationClusterNamespace(UpdateFederationClusterNamespaceRequest) returns (UpdateFederationClusterNamespaceResponse) {
+    option (google.api.http) = {
+      put: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "更新联邦集群命名空间"
+      summary: "更新联邦集群命名空间"
+    };
+  }
+  rpc DeleteFederationClusterNamespace(DeleteFederationClusterNamespaceRequest) returns (DeleteFederationClusterNamespaceResponse) {
+    option (google.api.http) = {
+      delete: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "删除联邦集群命名空间"
+      summary: "删除联邦集群命名空间"
+    };
+  }
+  rpc GetFederationClusterNamespace(GetFederationClusterNamespaceRequest) returns (GetFederationClusterNamespaceResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "获取联邦集群命名空间"
+      summary: "获取联邦集群命名空间"
+    };
+  }
+  rpc ListFederationClusterNamespace(ListFederationClusterNamespaceRequest) returns (ListFederationClusterNamespaceResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/namespaces"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "获取联邦集群命名空间列表"
+      summary: "获取联邦集群命名空间列表"
+    };
+  }
+
+  // 联邦命名空间quota相关操作接口
+  rpc CreateFederationClusterNamespaceQuota(CreateFederationClusterNamespaceQuotaRequest) returns (CreateFederationClusterNamespaceQuotaResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quota"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "为联邦集群命名空间创建quota"
+      summary: "为联邦集群命名空间创建quota"
+    };
+  }
+  rpc UpdateFederationClusterNamespaceQuota(UpdateFederationClusterNamespaceQuotaRequest) returns (UpdateFederationClusterNamespaceQuotaResponse) {
+    option (google.api.http) = {
+      put: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quota/{name}"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "更新联邦集群命名空间quota"
+      summary: "更新联邦集群命名空间quota"
+    };
+  }
+  rpc DeleteFederationClusterNamespaceQuota(DeleteFederationClusterNamespaceQuotaRequest) returns (DeleteFederationClusterNamespaceQuotaResponse) {
+    option (google.api.http) = {
+      delete: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quota/{name}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "删除联邦集群命名空间quota"
+      summary: "删除联邦集群命名空间quota"
+    };
+  }
+  rpc GetFederationClusterNamespaceQuota(GetFederationClusterNamespaceQuotaRequest) returns (GetFederationClusterNamespaceQuotaResponse) {
+    option (google.api.http) = {
+      get: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quota/{name}"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "获取联邦集群命名空间quota"
+      summary: "获取联邦集群命名空间quota"
+    };
+  }
+  rpc ListFederationClusterNamespaceQuota(ListFederationClusterNamespaceQuotaRequest) returns (ListFederationClusterNamespaceQuotaResponse) {
+    option (google.api.http) = {
+      post: "/federationmanager/v1/cluster/{clusterId}/namespace/{namespace}/quotas"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      description: "获取联邦集群命名空间quota列表"
+      summary: "获取联邦集群命名空间quota列表"
+    };
+  }
+}
+
+message CreateFederationClusterNamespaceRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateFederationClusterNamespaceRequest"
+      description: "创建联邦集群命名空间请求"
+      required: ["clusterId", "namespace"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "联邦集群命名空间名字"
+    }
+  ];
+  map<string, string> annotations = 3 [
+    json_name = "annotations",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "annotations"
+      description: "联邦集群命名空间注解"
+    }
+  ];
+  NamespaceSubClusterAffinity clusterAffinity = 4 [
+    json_name = "clusterAffinity",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterAffinity"
+      description: "联邦集群命名空间亲和性"
+    }
+  ];
+  repeated Quota quotaList = 5 [
+    json_name = "quotaList",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "quotaList"
+      description: "联邦集群命名空间配额"
+    }
+  ];
+  string  creator = 6 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "creator"
+    }
+  ];
+}
+
+message NamespaceSubClusterAffinity {
+  string mode = 1 [
+    json_name = "mode",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "mode"
+      description: "亲和模式, all: 全部, partial: 标签亲和, none: 不关联子集群"
+    }
+  ];
+  optional LabelSelector labelSelector = 2 [
+    json_name = "labelSelector",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "labelSelector"
+      description: "亲和标签选择器"
+    }
+  ];
+}
+
+message LabelSelector {
+  map<string, string> matchLabels = 1 [
+    json_name = "matchLabels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "matchLabels"
+      description: "匹配标签"
+    }
+  ];
+
+  repeated LabelSelectorRequirement matchExpressions = 2 [
+    json_name = "matchExpressions",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "matchExpressions"
+      description: "匹配表达式"
+    }
+  ];
+}
+
+message LabelSelectorRequirement {
+  string key = 1 [
+    json_name = "key",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "key"
+      description: "标签键"
+    }
+  ];
+
+  string operator = 2 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "操作符, In: 包含, NotIn: 不包含, Exists: 存在, DoesNotExist: 不存在, Gt: 大于, Lt: 小于"
+    }
+  ];
+
+  repeated string values = 3;
+}
+
+message K8SResource {
+  string ResourceName = 1 [
+    json_name = "resourceName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "resourceName"
+      description: "资源名称"
+    }
+  ];
+
+  string ResourceQuantity = 2 [
+    json_name = "resourceQuantity",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "resourceQuantity"
+      description: "资源数量"
+    }
+  ];
+}
+
+message Quota {
+  string name = 1 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "quota名称"
+    }
+  ];
+
+  map<string, string> Attributes = 2 [
+    json_name = "attributes",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "attributes"
+      description: "资源属性"
+    }
+  ];
+
+  repeated K8SResource ResourceList = 3 [
+    json_name = "resourceList",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "resourceList"
+      description: "资源列表"
+    }
+  ];
+
+  optional string originK8sData = 4 [
+    json_name = "originK8sData",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "originK8sData"
+      description: "原始k8s数据"
+    }
+  ];
+
+  map<string, string> annotations = 5 [
+    json_name = "annotations",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "annotations"
+      description: "联邦集群命名空间注解"
+    }
+  ];
+}
+
+message CreateFederationClusterNamespaceResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateFederationClusterNamespaceResponse"
+      description: "创建联邦命名空间返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+    WebAnnotations web_annotations = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "web_annotations",
+      description : "权限信息"
+  }];
+}
+
+message UpdateFederationClusterNamespaceRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateFederationClusterNamespaceRequest"
+      description: "更新联邦命名空间请求"
+      required: ["clusterId", "namespace"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "联邦命名空间"
+    }
+  ];
+  map<string, string> annotations = 3 [
+    json_name = "annotations",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "annotations"
+      description: "联邦集群命名空间注解"
+    }
+  ];
+  NamespaceSubClusterAffinity clusterAffinity = 4 [
+    json_name = "clusterAffinity",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterAffinity"
+      description: "联邦集群命名空间亲和性"
+    }
+  ];
+  string  operator = 5 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "operator"
+    }
+  ];
+}
+
+message UpdateFederationClusterNamespaceResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateFederationClusterNamespaceResponse"
+      description: "更新联邦命名空间返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  WebAnnotations web_annotations = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "web_annotations",
+      description : "权限信息"
+  }];
+}
+
+message DeleteFederationClusterNamespaceRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "DeleteFederationClusterNamespaceRequest"
+      description: "删除联邦命名空间请求"
+      required: ["clusterId", "namespace"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "联邦命名空间"
+    }
+  ];
+  string operator = 3 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "操作人"
+    }
+  ];
+}
+
+message DeleteFederationClusterNamespaceResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "DeleteFederationClusterNamespaceResponse"
+      description: "删除联邦命名空间返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  WebAnnotations web_annotations = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "web_annotations",
+      description : "权限信息"
+  }];
+}
+
+message FederationClusterNamespaceData {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "FederationClusterNamespaceData"
+      description: "联邦集群命名空间数据"
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "联邦命名空间"
+    }
+  ];
+  map<string, string> annotations = 3 [
+    json_name = "annotations",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "annotations"
+      description: "联邦集群命名空间注解"
+    }
+  ];
+  NamespaceSubClusterAffinity clusterAffinity = 4 [
+    json_name = "clusterAffinity",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterAffinity"
+      description: "联邦集群命名空间亲和性"
+    }
+  ];
+  string state = 5 [
+    json_name = "state",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "state"
+      description: "联邦集群命名空间状态"
+    }
+  ];
+  string createTime = 6 [
+    json_name = "createTime",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "createTime"
+      description: "创建时间"
+    }
+  ];
+  string updateTime = 7 [
+    json_name = "updateTime",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "updateTime"
+      description: "更新时间"
+    }
+  ];
+  optional string originK8sData = 8 [
+    json_name = "originK8sData",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "originK8sData"
+      description: "原始数据"
+    }
+  ];
+}
+
+message GetFederationClusterNamespaceRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetFederationClusterNamespaceRequest"
+      description: "获取联邦命名空间请求"
+      required: ["clusterId", "namespace"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "联邦命名空间"
+    }
+  ];
+}
+
+message GetFederationClusterNamespaceResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetFederationClusterNamespaceResponse"
+      description: "获取特定联邦命名空间数据返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  FederationClusterNamespaceData data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "联邦集群命名空间"
+    }
+  ];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ListFederationClusterNamespaceRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "ListFederationClusterNamespaceRequest"
+      description: "获取联邦命名空间列表请求"
+      required: ["clusterId"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+}
+
+message ListFederationClusterNamespaceResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "ListFederationClusterNamespaceResponse"
+      description: "获取联邦集群命名空间列表返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  repeated FederationClusterNamespaceData data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "联邦集群命名空间列表"
+    }
+  ];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message CreateFederationClusterNamespaceQuotaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateFederationClusterNamespaceQuotaRequest"
+      description: "创建联邦命名空间Quota请求"
+      required: ["clusterId", "namespace", "quotaList"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间"
+    }
+  ];
+  repeated Quota quotaList = 3 [
+    json_name = "quotaList",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "quotaList"
+      description: "配额列表"
+    }
+  ];
+  string  operator = 4 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "operator"
+    }
+  ];
+}
+
+message CreateFederationClusterNamespaceQuotaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "CreateFederationClusterNamespaceQuotaResponse"
+      description: "创建联邦集群命名空间配额返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  WebAnnotations web_annotations = 3 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message UpdateFederationClusterNamespaceQuotaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateFederationClusterNamespaceQuotaRequest"
+      description: "更新联邦命名空间Quota请求"
+      required: ["clusterId", "namespace", "name", "quota"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间"
+    }
+  ];
+  string name = 3 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "配额名称"
+    }
+  ];
+  Quota quota = 4 [
+    json_name = "quota",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "quota"
+      description: "配额"
+    }
+  ];
+  string operator = 5 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "operator"
+    }
+  ];
+}
+
+message UpdateFederationClusterNamespaceQuotaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "UpdateFederationClusterNamespaceQuotaResponse"
+      description: "更新联邦集群命名空间配额返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message DeleteFederationClusterNamespaceQuotaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "DeleteFederationClusterNamespaceQuotaRequest"
+      description: "删除联邦命名空间Quota请求"
+      required: ["clusterId", "namespace", "name"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间"
+    }
+  ];
+  string name = 3 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "配额名称"
+    }
+  ];
+}
+
+message DeleteFederationClusterNamespaceQuotaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "DeleteFederationClusterNamespaceQuotaResponse"
+      description: "删除联邦集群命名空间配额返回"
+      required: ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message GetFederationClusterNamespaceQuotaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetFederationClusterNamespaceQuotaRequest"
+      description: "获取联邦命名空间Quota请求"
+      required: ["clusterId", "namespace", "name"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间"
+    }
+  ];
+  string name = 3 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "配额名称"
+    }
+  ];
+}
+
+message GetFederationClusterNamespaceQuotaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "GetFederationClusterNamespaceQuotaResponse"
+      description: "获取联邦集群命名空间配额返回"
+      required: ["code", "message", "data"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  Quota data = 3 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "返回数据"
+    }];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ListFederationClusterNamespaceQuotaRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "ListFederationClusterNamespaceQuotaRequest"
+      description: "获取联邦命名空间Quota列表请求"
+      required: ["clusterId", "namespace"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    }
+  ];
+  string namespace = 2 [
+    json_name = "namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "namespace"
+      description: "命名空间"
+    }
+  ];
+}
+
+message ListFederationClusterNamespaceQuotaResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema: {
+      title: "ListFederationClusterNamespaceQuotaResponse"
+      description: "获取联邦集群命名空间配额返回"
+      required: ["code", "message", "data"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "code",
+      description: "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message",
+      description: "返回错误信息"
+    }];
+  repeated Quota data = 3 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data",
+      description: "返回数据"
+    }];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message WebAnnotations {
+  google.protobuf.Struct perms = 1[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title: "perms",
+    description: "权限信息"
+  }];
+}
+
+message ListFederationClusterWithSubclusterRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterListRequest"
+      description : "查询联邦集群列表请求，二级目录为联邦子集群"
+      required : []
+    }
+  };
+  map<string, string> conditions = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "conditions",
+      description: "查询条件"
+    }
+  ];
+  map<string, string> sub_conditions = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_conditions",
+      description: "子集群查询条件"
+    }
+  ];
+}
+
+message ListFederationClusterWithSubclusterResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterListResponse"
+      description : "查询联邦集群列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated FederationClusterWithSubcluster data = 3 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "data",
+      description : "返回数据"
+    }];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message FederationClusterWithSubcluster {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "FederationClusterWithSubcluster"
+      description : "联邦集群包含子集群列表"
+    }
+  };
+  string project_code = 1 [
+    json_name = "project_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_code"
+      description: "项目Code"
+    }
+  ];
+  string project_id = 2 [
+    json_name = "project_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_id"
+      description: "项目ID"
+    }
+  ];
+  string federation_cluster_id = 3 [
+    json_name = "federation_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_id"
+      description: "联邦集群ID"
+    }
+  ];
+  string federation_cluster_name = 4 [
+    json_name = "federation_cluster_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_name"
+      description: "联邦集群名字"
+    }
+  ];
+  string host_cluster_id = 5 [
+    json_name = "host_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "host_cluster_id"
+      description: "联邦Host集群ID"
+    }
+  ];
+  string created_time = 6 [
+    json_name = "created_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "created_time"
+      description: "创建时间"
+    }
+  ];
+  string updated_time = 7 [
+    json_name = "updated_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "updated_time"
+      description: "更新时间"
+    }
+  ];
+  repeated FederationSubCluster sub_clusters = 8 [
+    json_name = "sub_clusters",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "sub_clusters",
+      description : "子集群列表"
+    }
+  ];
+
+}
+
+message FederationSubCluster {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "SubCluster"
+      description : "联邦子集群"
+    }
+  };
+  string project_code = 1 [
+    json_name = "project_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_code"
+      description: "项目Code"
+    }
+  ];
+  string project_id = 2 [
+    json_name = "project_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_id"
+      description: "项目ID"
+    }
+  ];
+  string sub_cluster_id = 3 [
+    json_name = "sub_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_cluster_id"
+      description: "子集群ID"
+    }
+  ];
+  string sub_cluster_name = 4 [
+    json_name = "sub_cluster_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_cluster_name"
+      description: "子集群名字"
+    }
+  ];
+  string federation_cluster_id = 5 [
+    json_name = "federation_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_id"
+      description: "所属的联邦集群ID"
+    }
+  ];
+  string host_cluster_id = 6 [
+    json_name = "host_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "host_cluster_id"
+      description: "所属的联邦Host集群ID"
+    }
+  ];
+  string clusternet_cluster_name = 7 [
+    json_name = "clusternet_cluster_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusternet_cluster_name"
+      description: "Clusternet集群名，通常是小写的bcsID"
+    }
+  ];
+  string clusternet_cluster_namespace = 8 [
+    json_name = "clusternet_cluster_namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusternet_cluster_namespace"
+      description: "Clusternet命名空间"
+    }
+  ];
+  string created_time = 9 [
+    json_name = "created_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "created_time"
+      description: "创建时间"
+    }
+  ];
+  string updated_time = 10 [
+    json_name = "updated_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "updated_time"
+      description: "更新时间"
+    }
+  ];
+  string status = 11 [
+    json_name = "status",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "status"
+      description: "子集群状态"
+    }
+  ];
+  map<string, string> labels = 12 [
+    json_name = "labels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "labels"
+      description: "子集群标签"
+    }
+  ];
+  repeated string federation_namespaces = 13 [
+    json_name = "federation_namespaces",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_namespaces"
+      description: "联邦命名空间列表"
+    }
+  ];
+}
+
+message ListFederationClusterWithNamespaceRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterListRequest"
+      description : "查询联邦集群列表请求，二级目录为联邦命名空间"
+      required : []
+    }
+  };
+  map<string, string> conditions = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "conditions",
+      description: "查询条件"
+    }
+  ];
+  map<string, string> sub_conditions = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_conditions",
+      description: "子集群查询条件"
+    }
+  ];
+}
+
+message ListFederationClusterWithNamespaceResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterListResponse"
+      description : "查询联邦集群列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated FederationClusterWithNamespace data = 3 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "data",
+      description : "返回数据"
+    }];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message FederationClusterWithNamespace {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "FederationClusterWithSubcluster"
+      description : "联邦集群包含子集群列表"
+    }
+  };
+  string federation_cluster_id = 1 [
+    json_name = "federation_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_id"
+      description: "联邦集群ID"
+    }
+  ];
+  string federation_cluster_name = 2 [
+    json_name = "federation_cluster_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_name"
+      description: "联邦集群名字"
+    }
+  ];
+  string host_cluster_id = 3 [
+    json_name = "host_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "host_cluster_id"
+      description: "联邦Host集群ID"
+    }
+  ];
+  string project_code = 4 [
+    json_name = "project_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_code"
+      description: "项目Code"
+    }
+  ];
+  string project_id = 5 [
+    json_name = "project_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_id"
+      description: "项目ID"
+    }
+  ];
+  string created_time = 6 [
+    json_name = "created_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "created_time"
+      description: "创建时间"
+    }
+  ];
+  string updated_time = 7 [
+    json_name = "updated_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "updated_time"
+      description: "更新时间"
+    }
+  ];
+  repeated FederationNamespace federation_namespaces = 8 [
+    json_name = "federation_namespaces",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "federation_namespaces",
+      description : "联邦命名空间列表"
+    }
+  ];
+
+}
+message FederationNamespace {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "FederationNamespace"
+      description : "联邦子集群"
+    }
+  };
+  string project_code = 1 [
+    json_name = "project_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_code"
+      description: "项目Code"
+    }
+  ];
+  string project_id = 2 [
+    json_name = "project_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_id"
+      description: "项目ID"
+    }
+  ];
+  string federation_namespace = 3 [
+    json_name = "federation_namespace",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_namespace"
+      description: "联邦命名空间名字"
+    }
+  ];
+  string federation_cluster_id = 4 [
+    json_name = "federation_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_id"
+      description: "联邦集群ID"
+    }
+  ];
+  string host_cluster_id = 5 [
+    json_name = "host_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "host_cluster_id"
+      description: "联邦Host集群ID"
+    }
+  ];
+  string created_time = 6 [
+    json_name = "created_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "created_time"
+      description: "创建时间"
+    }
+  ];
+  repeated string sub_clusters = 7 [
+    json_name = "sub_clusters",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "sub_clusters"
+      description: "命名空间可调度的子集群范围"
+    }
+  ];
+}
+
+message GetTaskRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetTaskRequest"
+      description : "获取任务状态请求"
+    }
+  };
+  string taskId = 1 [
+    json_name = "taskId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskId"
+      description: "任务ID"
+    }
+  ];
+}
+
+message GetTaskResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetTaskResponse"
+      description : "获取任务状态响应"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  Task data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ListTasksRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListTasksRequest"
+      description : "获取任务列表请求"
+      required : ["taskType", "taskIndex", "offset", "limit"]
+    }
+  };
+  string taskType = 1 [
+    json_name = "taskType",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskType"
+      description: "任务类型"
+    },
+    (validate.rules).string = {
+      min_len: 1
+    }
+  ];
+  string taskIndex = 2 [
+    json_name = "taskIndex",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskIndex"
+      description: "任务索引，如集群ID"
+    },
+    (validate.rules).string = {
+      min_len: 1
+    }
+  ];
+  int32 offset = 3 [
+    json_name = "offset",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "offset"
+      description: "偏移量"
+    }
+  ];
+  int32 limit = 4 [
+    json_name = "limit",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "limit"
+      description: "限制量"
+    }
+  ];
+}
+
+message ListTasksResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListTasksResponse"
+      description : "获取任务列表响应"
+      required : ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated Task data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据，任务列表"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message RetryTaskRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RetryTaskRequest"
+      description : "重试任务请求"
+    }
+  };
+  string taskId = 1 [
+    json_name = "taskId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskId"
+      description: "任务ID"
+    }
+  ];
+  string begin_step_name = 2 [
+    json_name = "beginStepName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "beginStepName"
+      description: "重试起始步骤"
+    }
+  ];
+}
+
+
+message RetryTaskResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RetryTaskResponse"
+      description : "重试任务响应"
+      required : ["code", "message"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  TaskDistributeResponseData data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据，任务列表"
+    }
+  ];
+  WebAnnotations web_annotations = 4 [(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message Task {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Task"
+      description : "任务定义"
+    }
+  };
+
+  string task_index = 1 [
+    json_name = "taskIndex",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskIndex"
+      description: "任务索引，客户端设置此字段"
+    }
+  ];
+
+  string task_id = 2 [
+    json_name = "taskId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskId"
+      description: "任务ID"
+    }
+  ];
+
+  string task_type = 3 [
+    json_name = "taskType",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskType"
+      description: "任务类型"
+    }
+  ];
+
+  string task_name = 4 [
+    json_name = "taskName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskName"
+      description: "任务名称"
+    }
+  ];
+
+  string current_step = 5 [
+    json_name = "currentStep",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "currentStep"
+      description: "当前步骤"
+    }
+  ];
+
+  repeated string step_sequence = 6 [
+    json_name = "stepSequence",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "stepSequence"
+      description: "步骤序列"
+    }
+  ];
+
+  map<string, Step> steps = 7 [
+    json_name = "steps",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "steps"
+      description: "步骤定义"
+    }
+  ];
+
+  string call_back_func_name = 8 [
+    json_name = "callBackFuncName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "callBackFuncName"
+      description: "回调函数名称"
+    }
+  ];
+
+  map<string, string> common_params = 9 [
+    json_name = "commonParams",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "commonParams"
+      description: "通用参数"
+    }
+  ];
+
+  string extra_json = 10 [
+    json_name = "extraJson",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "extraJson"
+      description: "额外的JSON数据"
+    }
+  ];
+
+  string status = 11 [
+    json_name = "status",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "status"
+      description: "状态"
+    }
+  ];
+
+  string message = 12 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "消息"
+    }
+  ];
+
+  bool force_terminate = 13 [
+    json_name = "forceTerminate",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "forceTerminate"
+      description: "强制终止"
+    }
+  ];
+
+  string start = 14 [
+    json_name = "start",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "start"
+      description: "开始时间"
+    }
+  ];
+
+  string end = 15 [
+    json_name = "end",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "end"
+      description: "结束时间"
+    }
+  ];
+
+  uint32 execution_time = 16 [
+    json_name = "executionTime",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "executionTime"
+      description: "执行时间"
+    }
+  ];
+
+  uint32 max_execution_seconds = 17 [
+    json_name = "maxExecutionSeconds",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "maxExecutionSeconds"
+      description: "最大执行秒数"
+    }
+  ];
+
+  string creator = 18 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "创建者"
+    }
+  ];
+
+  string last_update = 19 [
+    json_name = "lastUpdate",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "lastUpdate"
+      description: "最后更新时间"
+    }
+  ];
+
+  string updater = 20 [
+    json_name = "updater",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "updater"
+      description: "更新者"
+    }
+  ];
+}
+
+message Step {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "Step"
+      description : "步骤定义"
+    }
+  };
+
+  string name = 1 [
+    json_name = "name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "name"
+      description: "步骤名称"
+    }
+  ];
+
+  string alias = 2 [
+    json_name = "alias",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "alias"
+      description: "步骤别名"
+    }
+  ];
+
+  map<string, string> params = 3 [
+    json_name = "params",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "params"
+      description: "步骤参数"
+    }
+  ];
+
+  string extras = 4 [
+    json_name = "extras",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "extras"
+      description: "步骤额外信息"
+    }
+  ];
+
+  string status = 5 [
+    json_name = "status",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "status"
+      description: "步骤状态"
+    }
+  ];
+
+  string message = 6 [
+    json_name = "message",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "message"
+      description: "步骤消息"
+    }
+  ];
+
+  bool skip_on_failed = 7 [
+    json_name = "skipOnFailed",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "skipOnFailed"
+      description: "在失败时跳过"
+    }
+  ];
+
+  uint32 retry_count = 8 [
+    json_name = "retryCount",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "retryCount"
+      description: "重试次数"
+    }
+  ];
+
+  string start = 9 [
+    json_name = "start",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "start"
+      description: "开始时间"
+    }
+  ];
+
+  string end = 10 [
+    json_name = "end",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "end"
+      description: "结束时间"
+    }
+  ];
+
+  uint32 execution_time = 11 [
+    json_name = "executionTime",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "executionTime"
+      description: "执行时间"
+    }
+  ];
+
+  uint32 max_execution_seconds = 12 [
+    json_name = "maxExecutionSeconds",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "maxExecutionSeconds"
+      description: "最大执行秒数"
+    }
+  ];
+
+  string last_update = 13 [
+    json_name = "lastUpdate",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "lastUpdate"
+      description: "最后更新时间"
+    }
+  ];
+}
+
+message GetTaskRecordRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetTaskRecordRequest"
+      description : "获取任务记录请求"
+    }
+  };
+  string taskId = 1 [
+    json_name = "taskId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskId"
+      description: "任务ID"
+    }
+  ];
+}
+
+message GetTaskRecordResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "TaskRecordsResponse"
+      description : "获取任务记录响应"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  TaskRecord data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message TaskRecord {
+  string status = 1[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "status",
+    description : "任务日志状态"
+  }];
+  repeated TaskRecordStep step = 2[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "step",
+    description : "任务日志详情步骤"
+  }];
+}
+
+message TaskRecordStep {
+  string name = 2[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "name",
+    description : "任务名称"
+  }];
+  string status = 3[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "status",
+    description : "任务步骤状态(同上)"
+  }];
+  int64 startTime = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "startTime",
+    description : "任务开始时间戳"
+  }];
+  int64 endTime = 5[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "endTime",
+    description : "任务结束时间戳"
+  }];
+  repeated TaskRecordStepData data = 6[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "endTime",
+    description : "任务结束时间戳"
+  }];
+  google.protobuf.BoolValue allowSkip = 7[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "allowSkip",
+    description : "当前步骤失败是否允许跳过,系统内置"
+  }];
+  google.protobuf.BoolValue allowRetry = 8[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "allowRetry",
+    description : "当前步骤失败是否允许重试(默认都可以重试),系统内置"
+  }];
+}
+
+message TaskRecordStepData {
+  string log = 1[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "log",
+    description : "当前行内容"
+  }];
+  int64 timestamp = 2[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "timestamp",
+    description : "时间戳"
+  }];
+  string level = 3[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "level",
+    description : "日志等级(INFO, WARN, ERROR)"
+  }];
+}
+
+message InstallFederationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstallFederationRequest"
+      description : "安装联邦请求"
+      required : ["clusterId", "creator"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "集群ID"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string creator = 2 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "创建者"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string userToken = 3 [
+    json_name = "userToken",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "userToken"
+      description: "用户token，用于构建bcs-unified-apiserver，不指定则使用创建者的token"
+      min_length: 1
+    }
+  ];
+  string loadBalancerId = 4 [
+    json_name = "loadBalancerId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "loadBalancerId"
+      description: "loadBalancerId, 用于构建bcs-unified-apiserver的service, 支持lbId和子网Id, 不指定则使用集群的子网id进行分配"
+    }
+  ];
+  string federationProjectId = 5 [
+    json_name = "federationProjectId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationProjectId"
+      description: "联邦集群所属项目的项目Id"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string federationProjectCode = 6 [
+    json_name = "federationProjectCode",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationProjectCode"
+      description: "联邦集群所属项目的项目Code"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string federationClusterName = 7 [
+    json_name = "federationClusterName",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationClusterName"
+      description: "联邦代理集群集群名"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string federationBusinessId = 8 [
+    json_name = "federationBusinessId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationBusinessId"
+      description: "联邦集群所属业务Id"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string federationClusterEnv = 9 [
+    json_name = "federationClusterEnv",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationClusterEnv"
+      description: "联邦集群所属环境"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string federationClusterDescription = 10 [
+    json_name = "federationClusterDescription",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationClusterDescription"
+      description: "联邦集群集群简要描述"
+    },
+    (validate.rules).string = {min_len : 0, max_len : 1024}
+  ];
+  map<string, string> federationClusterLabels = 11 [
+    json_name = "federationClusterLabels",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federationClusterLabels"
+      description: "联邦集群的labels，用于携带额外的信息，最大不得超过19个"
+    },
+    (validate.rules).map.max_pairs = 19
+  ];
+}
+
+message InstallFederationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterListResponse"
+      description : "查询联邦集群列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  TaskDistributeResponseData data = 3 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "data",
+      description : "返回数据"
+    }];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+
+message UnInstallFederationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstallFederationRequest"
+      description : "安装联邦请求"
+      required : ["clusterId", "creator"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "集群ID"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string operator = 2 [
+    json_name = "operator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "operator"
+      description: "创建者"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+}
+
+message UnInstallFederationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterListResponse"
+      description : "查询联邦集群列表返回"
+      required : ["code", "message", "data"]
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  TaskDistributeResponseData data = 3 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "data",
+      description : "返回数据"
+    }];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message TaskDistributeResponseData {
+  string taskId = 1 [
+    json_name = "taskId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "taskId"
+      description: "任务ID"
+    }
+  ];
+}
+
+message RegisterSubclusterRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RegisterSubclusterRequest"
+      description : "注册子集群请求"
+      required : ["clusterId", "creator", "subclusterId"]
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "集群ID"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string creator = 2 [
+    json_name = "creator",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "creator"
+      description: "创建者"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string userToken = 3 [
+    json_name = "userToken",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "userToken"
+      description: "用户token，用于构建bcs-unified-apiserver，不指定则使用创建者的Token"
+      min_length: 1
+    }
+  ];
+  string subclusterId = 4 [
+    json_name = "subclusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subclusterId"
+      description: "子集群ID"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+}
+
+message RegisterSubclusterResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RegisterSubclusterResponse"
+      description : "注册子集群响应"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  TaskDistributeResponseData data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message RemoveSubclusterRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RemoveSubclusterRequest"
+      description : "移除子集群请求"
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "集群ID"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string subclusterId = 2 [
+    json_name = "subclusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "subclusterId"
+      description: "子集群ID"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+  string user = 3 [
+    json_name = "user",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "user"
+      description: "用户，需要与creator相同"
+      min_length: 1
+    },
+    (validate.rules).string = {min_len : 1, max_len : 100}
+  ];
+}
+
+message RemoveSubclusterResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "RemoveSubclusterResponse"
+      description : "移除子集群响应"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  TaskDistributeResponseData data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message GetFederationClusterRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterRequest"
+      description : "获取联邦集群请求"
+      }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "联邦集群ID"
+    },
+    (validate.rules).string = {
+      min_len: 1
+    }
+  ];
+}
+
+message GetFederationClusterResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationClusterResponse"
+      description : "获取联邦集群"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  FederationCluster data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message GetFederationByHostClusterRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationByHostClusterRequest"
+      description : "根据host集群获取联邦集群请求，如果集群在安装中则会同时返回关联的任务"
+    }
+  };
+  string clusterId = 1 [
+    json_name = "clusterId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "clusterId"
+      description: "Host集群ID"
+    },
+    (validate.rules).string = {
+      min_len: 1
+    }
+  ];
+}
+
+message GetFederationByHostClusterResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "GetFederationByHostClusterResponse"
+      description : "据host集群获取联邦集群响应"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  FederationClusterWithTask data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ListProjectInstallingFederationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectInstallingFederationRequest"
+      description : "联邦集群安装中列表请求"
+    }
+  };
+  string projectId = 1 [
+    json_name = "projectId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "projectId"
+      description: "项目ID"
+    },
+    (validate.rules).string = {
+      min_len: 1
+    }
+  ];
+}
+
+message ListProjectInstallingFederationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectInstallingFederationResponse"
+      description : "列出项目安装中的联邦集群"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated FederationClusterWithTask data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message ListProjectFederationRequest {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectFederationRequest"
+      description : "联邦集群列表请求"
+    }
+  };
+  string projectId = 1 [
+    json_name = "projectId",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "projectId"
+      description: "项目ID"
+    },
+    (validate.rules).string = {
+      min_len: 1
+    }
+  ];
+}
+
+message ListProjectFederationResponse {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListProjectFederationResponse"
+      description : "列出项目联邦集群"
+    }
+  };
+  optional uint32 code = 1 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "code",
+      description : "返回错误码"
+    }];
+  string message = 2 [
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "message",
+      description : "返回错误信息"
+    }];
+  repeated FederationCluster data = 3 [
+    json_name = "data",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "data"
+      description: "响应数据"
+    }
+  ];
+  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  }];
+}
+
+message FederationClusterWithTask {
+  FederationCluster cluster = 1 [
+    json_name = "cluster",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "cluster"
+      description: "集群信息"
+    }
+  ];
+  Task task = 2 [
+    json_name = "task",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "task"
+      description: "联邦关联的任务"
+    }
+  ];
+}
+
+message FederationCluster {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_schema) = {
+    json_schema : {
+      title : "FederationCluster"
+      description : "联邦集群"
+    }
+  };
+  string federation_cluster_id = 1 [
+    json_name = "federation_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_id"
+      description: "联邦集群ID"
+    }
+  ];
+  string federation_cluster_name = 2 [
+    json_name = "federation_cluster_name",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "federation_cluster_name"
+      description: "联邦集群名字"
+    }
+  ];
+  string host_cluster_id = 3 [
+    json_name = "host_cluster_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "host_cluster_id"
+      description: "联邦Host集群ID"
+    }
+  ];
+  string project_code = 4 [
+    json_name = "project_code",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_code"
+      description: "项目Code"
+    }
+  ];
+  string project_id = 5 [
+    json_name = "project_id",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "project_id"
+      description: "项目ID"
+    }
+  ];
+  string created_time = 6 [
+    json_name = "created_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "created_time"
+      description: "创建时间"
+    }
+  ];
+  string updated_time = 7 [
+    json_name = "updated_time",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "updated_time"
+      description: "更新时间"
+    }
+  ];
+  string status = 8 [
+    json_name = "status",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title: "status"
+      description: "状态"
+    }
+  ];
+  repeated FederationSubCluster sub_clusters = 9 [
+    json_name = "sub_clusters",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "sub_clusters",
+      description : "子集群列表"
+    }
+  ];
+  repeated FederationNamespace federation_namespaces = 10 [
+    json_name = "federation_namespaces",
+    (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_field) = {
+      title : "federation_namespaces",
+      description : "联邦命名空间列表"
+    }
+  ];
+}

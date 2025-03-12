@@ -1,0 +1,103 @@
+{
+    "log_dir": "${log_dir}",
+    "v":${bcsFederationManagerVerbosity},
+    "alsologtostderr": true,
+    "log_max_size": 500,
+    "log_max_num": 10,
+    "logtostderr": false,
+    "stderrthreshold": "2",
+    "mongo":{
+        "endpoints":"${bcsFederationManagerMongo}",
+        "database":"${bcsFederationManagerMongoDB}",
+        "username":"${bcsFederationManagerMongoUser}",
+        "password":"${bcsFederationManagerMongoPassword}"
+    },
+    "etcd": {
+        "endpoints": "${bcsEtcdHost}",
+        "cert": "${bcsEtcdCertFile}",
+        "key": "${bcsEtcdKeyFile}",
+        "ca": "${bcsEtcdCAFile}"
+    },
+    "gateway": {
+      "endpoint": "${bcsGatewayEndpoint}",
+      "token": "${bcsGatewayToken}"
+    },
+    "broker": {
+      "address": "$queueAddress",
+      "exchange": "$exchange"
+    },
+    "address": "${localIp}",
+    "port": ${bcsFederationManagerPort},
+    "httpport": ${bcsFederationManagerHTTPPort},
+    "metricport": ${bcsFederationManagerMetricPort},
+    "serverca": "${caFile}",
+    "servercert": "${serverCertFile}",
+    "serverkey": "${serverKeyFile}",
+    "clientca": "${caFile}",
+    "clientcert": "${clientCertFile}",
+    "clientkey": "${clientKeyFile}",
+    "debug": ${bcsFederationManagerDebug},
+    "iam": {
+        "systemID": "${bcsIAMSystemID}",
+        "appCode": "${bcsIAMAppCode}",
+        "appSecret": "${bcsIAMAppSecret}",
+        "external": ${bcsIAMExternal},
+        "gateWayServer": "${bcsIAMGateWayHost}",
+        "iamServer": "${bcsIAMHost}",
+        "bkiIamServer": "${bcsIAMbkiHost}",
+        "metric": ${bcsIAMMetric},
+        "debug": ${bcsIAMDebug},
+        "applyPermAddress": "${bcsIAMApplyPermAddress}"
+    },
+    "auth": {
+        "enable": ${bcsAuthEnable},
+        "publicKeyFile": "${bcsAuthPublicKeyFile}",
+        "privateKeyFile": "${bcsAuthPrivateKeyFile}",
+        "clientPermissions": "${bcsAuthClientPermissions}",
+        "noAuthMethod": "${bcsAuthNoAuthMethod}"
+    },
+    "deploy": {
+        "clusternethub": {
+            "chartVersion": "${clusternethubChartVersion}",
+            "chartName": "${clusternethubChartName}",
+            "releaseName": "${clusternethubReleaseName}",
+            "releaseNamespace": "${clusternethubReleaseNamespace}",
+            "values": "${clusternethubValues}"
+        },
+        "scheduler": {
+            "chartVersion": "${schedulerChartVersion}",
+            "chartName": "${schedulerChartName}",
+            "releaseName": "${schedulerReleaseName}",
+            "releaseNamespace": "${schedulerReleaseNamespace}",
+            "values": "${schedulerValues}"
+        },
+        "controller": {
+            "chartVersion": "${controllerChartVersion}",
+            "chartName": "${controllerChartName}",
+            "releaseName": "${controllerReleaseName}",
+            "releaseNamespace": "${controllerReleaseNamespace}",
+            "values": "${controllerValues}"
+        },
+        "apiserver": {
+            "chartVersion": "${apiserverChartVersion}",
+            "chartName": "${apiserverChartName}",
+            "releaseName": "${apiserverReleaseName}",
+            "releaseNamespace": "${apiserverReleaseNamespace}",
+            "values": "${apiserverValues}"
+        },
+        "clusternetagent": {
+            "chartVersion": "${clusternetagentChartVersion}",
+            "chartName": "${clusternetagentChartName}",
+            "releaseName": "${clusternetagentReleaseName}",
+            "releaseNamespace": "${clusternetagentReleaseNamespace}",
+            "values": "${clusternetagentValues}"
+        },
+        "estimatoragent": {
+            "chartVersion": "${estimatoragentVersion}",
+            "chartName": "${estimatoragentChartName}",
+            "releaseName": "${estimatoragentReleaseName}",
+            "releaseNamespace": "${estimatoragentReleaseNamespace}",
+            "values": "${estimatoragentValues}"
+        }
+    }
+}
