@@ -820,10 +820,10 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.Node
 		// check status
 		ok, errCheck := installer.CheckAppStatus(as.ClusterID, time.Minute*10, false)
 		if errCheck != nil {
-			return fmt.Errorf("check app status failed, err %s", err)
+			return fmt.Errorf("check app status failed, err %s", errCheck)
 		}
 		if !ok {
-			return fmt.Errorf("app install failed, err %s", err)
+			return fmt.Errorf("app install failed")
 		}
 
 		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(),

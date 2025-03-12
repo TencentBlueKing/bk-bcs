@@ -14,6 +14,7 @@ package azure
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -914,8 +915,14 @@ func (t *Task) BuildUpdateNodeGroupTask(group *proto.NodeGroup, opt *cloudprovid
 	taskName := fmt.Sprintf(updateNodeGroupTaskTemplate, group.ClusterID, group.NodeGroupID)
 	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
 
+	// 异步任务需要序列化传递避免获取到旧的nodegroup信息
+	NodeGroupInfo, err := json.Marshal(group)
+	if err != nil {
+		return nil, fmt.Errorf("BuildUpdateNodeGroupTask nodegroup info json marshal failed: %v", err)
+	}
+
 	// setting all steps details
-	updateNodeGroupTask := &UpdateNodeGroupTaskOption{NodeGroup: group}
+	updateNodeGroupTask := &UpdateNodeGroupTaskOption{NodeGroup: group, NodeGroupInfo: string(NodeGroupInfo)}
 
 	// step0: update nodegroup
 	updateNodeGroupTask.BuildUpdateNodeGroupStep(task)

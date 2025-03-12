@@ -167,6 +167,8 @@ var (
 	HostClusterIDKey ParamKey = "hostClusterID"
 	// NodeGroupIDKey xxx
 	NodeGroupIDKey ParamKey = "nodeGroupID"
+	// NodeGroupInfoKey xxx
+	NodeGroupInfoKey ParamKey = "nodeGroupInfo"
 	// DeviceRecordIDKey deviceRecord key
 	DeviceRecordIDKey ParamKey = "deviceRecordKey"
 	// ManualKey xxx
