@@ -107,6 +107,7 @@ const { dashboardViewID } = useViewConfig();
 // 集群列表页
 const isDashboardHome = computed(() => $router.currentRoute?.matched?.some(item => item.name === 'dashboardHome'));
 
+// 切换集群视图和自定义视图时更改路径参数
 watch(
   dashboardViewID,
   (newVal, oldVal) => {
@@ -129,7 +130,9 @@ watch(
       // 自定义视图时清空集群ID参数
       $router.replace({
         name: $router.currentRoute?.name,
-        params: {},
+        params: {
+          clusterId: '-',
+        },
         query: {
           viewID: dashboardViewID.value,
         },

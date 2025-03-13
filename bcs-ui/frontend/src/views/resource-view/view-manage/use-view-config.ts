@@ -20,7 +20,12 @@ import $store from '@/store';
 
 export default function () {
   const { clusterNameMap } = useCluster();
-  const clusterID = computed(() => $router.currentRoute?.params?.clusterId);
+  const clusterID = computed(() => {
+    // 兼容自定义视图场景无集群ID问题(vue router路径中间不能有可选参数，临时用 - 代替)
+    if ($router.currentRoute?.params?.clusterId === '-') return '';
+
+    return $router.currentRoute?.params?.clusterId;
+  });
   const isViewEditable = computed(() => $store.state.isViewEditable);
   const viewList = computed<IViewData[]>(() => $store.state.dashboardViewList);
   const dashboardViewID = computed(() => $store.state.dashboardViewID);
