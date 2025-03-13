@@ -81,7 +81,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	// cluster cloud basic setting
 	clusterBasicSettingByAzure(cls, cluster, opt)
 	// cluster cloud advance setting
-	clusterAdvanceSettingByAzure(cls, cluster, opt)
+	clusterAdvanceSettingByAzure(cls, cluster)
 	// cluster cloud network setting
 	err = clusterNetworkSettingByAzure(cls, cluster)
 	if err != nil {
@@ -131,8 +131,7 @@ func clusterBasicSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice
 }
 
 // clusterAdvanceSettingByAzure 同步集群高级设置
-func clusterAdvanceSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster,
-	opt *cloudprovider.SyncClusterCloudInfoOption) {
+func clusterAdvanceSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
 	if cls.ClusterAdvanceSettings == nil {
 		cls.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
 			ClusterConnectSetting: &proto.ClusterConnectSetting{
