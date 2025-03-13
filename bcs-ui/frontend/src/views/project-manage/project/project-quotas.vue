@@ -256,34 +256,54 @@
           width="120px"
           prop="nameSpace"
           v-if="isColumnRender('nameSpace')" />
-        <!-- <bk-table-column
+        <bk-table-column
           :label="$t('projects.quota.label.annotations')"
+          :show-overflow-tooltip="false"
           column-key="annotations"
           width="120px"
           prop="annotations"
           v-if="isColumnRender('annotations')">
           <template #default="{ row }">
-            <div
-              v-if="Object.keys(row?.annotations || {}).length"
-              v-bk-tooltips="{
-                content: row.annotations,
-                disabled: Object.keys(row?.annotations || {}).length <= 3
-              }"
+            <!-- 多标签展示 -->
+            <!-- <div
+              v-if="row?.annotations.length"
               class="py-[15px] overflow-auto flex flex-wrap">
-              <bk-tag
-                class="overflow-hidden"
-                v-for="(value, index) in getProperties(row, 3)"
-                :key="value + index">
-                {{ `${value}:${row.annotations?.[value]}` }}
-              </bk-tag>
-              <bk-tag
-                v-if="Object.keys(row?.annotations || {}).length > 3">
-                +{{ Object.keys(row?.annotations || {}).length - 3 }}
-              </bk-tag>
+              <bcs-tag
+                class="bcs-ellipsis"
+                v-bk-overflow-tips
+                v-for="item in row?.annotations?.slice(0, 2)"
+                :key="item.key">
+                {{ `${item.key}=${item.value}` }}
+              </bcs-tag>
+              <bcs-tag
+                v-if="row?.annotations.length > 2"
+                v-bk-tooltips="{
+                  allowHTML: true,
+                  content: '#more-annotations',
+                  duration: 300
+                }">
+                +{{ row?.annotations.length - 2 }}
+              </bcs-tag>
+              <div id="more-annotations">
+                <div v-for="item in row?.annotations?.slice(2)" :key="item.key">
+                  {{ `${item.key}=${item.value}` }}
+                </div>
+              </div>
+            </div> -->
+            <!-- 定制标签展示 -->
+            <div class="flex items-center" v-if="row?.annotations?.[IS_EXCLUSIVE]">
+              <bcs-tag
+                class="bcs-ellipsis"
+                v-bk-overflow-tips>
+                {{ row?.annotations?.[IS_EXCLUSIVE] === 'true' ?
+                  $t('projects.quota.tags.reserve')
+                  : $t('projects.quota.tags.demande')
+                }}
+              </bcs-tag>
             </div>
             <div v-else>--</div>
           </template>
-        </bk-table-column> -->
+        </bk-table-column>
         <bk-table-column
           sortable
           width="130px"
@@ -361,18 +381,6 @@
           @setting-change="handleSettingChange">
         </bcs-table-setting-content>
       </bk-table-column>
-      <!-- <bk-table-column label="">
-        <template #default="{ row }">
-          <div
-            v-for="item in row.nodeGroups"
-            :key="item.nodeGroupId"
-            class="bk-primary bk-button-normal bk-button-text"
-            @click="handleGotoDetail(item)">
-            {{ item.nodeGroupId }}
-          </div>
-          <span v-if="!row.nodeGroups?.length">--</span>
-        </template>
-      </bk-table-column> -->
     </bk-table>
     <!-- 配额使用情况 -->
     <bcs-sideslider
@@ -438,6 +446,8 @@ export default defineComponent({
   setup() {
     const { curProject } = useProject();
 
+    const IS_EXCLUSIVE = 'bkbcs.tencent.com/is-exclusive';
+
     const sourceData = ref<any[]>([]);
     const tableData = computed(() => sourceData.value.filter(item => item.current.quotaType === statisticsType.value));
     const isLoading = ref(false);
@@ -458,11 +468,11 @@ export default defineComponent({
         label: $i18n.t('projects.quota.label.namespace'),
         disabled: statisticsType.value === 'host',
       },
-      // {
-      //   id: 'annotations',
-      //   label: $i18n.t('projects.quota.label.annotations'),
-      //   disabled: statisticsType.value === 'host',
-      // },
+      {
+        id: 'annotations',
+        label: $i18n.t('projects.quota.label.annotations'),
+        disabled: statisticsType.value === 'host',
+      },
       {
         id: 'instanceType',
         label: $i18n.t('projects.quota.label.instance'),
@@ -564,7 +574,12 @@ export default defineComponent({
         obj.clusterId = cur?.clusterId || '--';
         obj.clusterName = cur?.clusterName || '--';
         obj.nameSpace = cur?.nameSpace || '--';
-        // obj.annotations = cur?.annotations || {};
+        obj.annotations = cur?.annotations || {};
+        // 多标签展示
+        // const annotationsObj = cur?.annotations || {};
+        // obj.annotations = Object.entries(annotationsObj).map(([key, value]) => ({ key, value }));
+
+
         obj.quotaNum = zoneResources.quotaNum || 0;
         obj.quotaUsed = zoneResources.quotaUsed || 0;
         obj.quotaAvailable = (zoneResources.quotaNum || 0) - (obj.quotaUsed || 0);
@@ -1077,6 +1092,7 @@ export default defineComponent({
       mem,
       gpu,
       clusterMap,
+      IS_EXCLUSIVE,
       handleGotoDetail,
       getColor,
       searchSelectChange,

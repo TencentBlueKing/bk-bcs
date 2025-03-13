@@ -9,8 +9,8 @@
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('cluster.ca.nodePool.label.ID')" prop="nodeGroupId" />
-      <bk-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" prop="quotaUsed" />
-      <bk-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" prop="quotaNum" />
+      <bk-table-column :label="$t('cluster.ca.nodePool.label.nodeQuota')" prop="quotaNum" />
+      <bk-table-column :label="$t('cluster.ca.nodePool.label.nodeCounts')" prop="quotaUsed" />
     </bk-table>
   </div>
 </template>

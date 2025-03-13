@@ -2258,6 +2258,9 @@ projects:
     sum: (总)
     placeholder: 搜索实例规格，城市，可用区
     usage: 配额使用情况
+    tags:
+      reserve: 预留资源
+      demande: 按需资源
 dashboard:
   title:
     confirmDelete: 确认删除当前资源
