@@ -24,6 +24,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/azure/api"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 )
 
 var cloudInfoMgr sync.Once
@@ -79,6 +80,8 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *proto.Cluster,
 	cls.SystemID = *cluster.Name
 	// cluster cloud basic setting
 	clusterBasicSettingByAzure(cls, cluster, opt)
+	// cluster cloud advance setting
+	clusterAdvanceSettingByAzure(cls, cluster)
 	// cluster cloud network setting
 	err = clusterNetworkSettingByAzure(cls, cluster)
 	if err != nil {
@@ -124,6 +127,48 @@ func clusterBasicSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice
 		Version:     *cluster.Properties.CurrentKubernetesVersion,
 		VersionName: *cluster.Properties.CurrentKubernetesVersion,
 		Area:        opt.Area,
+	}
+}
+
+// clusterAdvanceSettingByAzure 同步集群高级设置
+func clusterAdvanceSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
+	cls.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+		ClusterConnectSetting: &proto.ClusterConnectSetting{
+			Internet: &proto.InternetAccessible{},
+		},
+	}
+
+	profile := cluster.Properties.APIServerAccessProfile
+	if profile != nil {
+		internet := cls.ClusterAdvanceSettings.ClusterConnectSetting.Internet
+		// 同步集群白名单
+		if len(profile.AuthorizedIPRanges) > 0 {
+			for _, cidr := range profile.AuthorizedIPRanges {
+				internet.PublicAccessCidrs = append(internet.PublicAccessCidrs, *cidr)
+			}
+		}
+
+		// 同步集群是否为公网集群
+		if profile.EnablePrivateCluster == nil {
+			cls.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet = true
+		} else if *profile.EnablePrivateCluster {
+			cls.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet = true
+		}
+	} else {
+		cls.ClusterAdvanceSettings.ClusterConnectSetting.IsExtranet = true
+	}
+
+	// 同步集群网络插件
+	networkProfile := cluster.Properties.NetworkProfile
+	if networkProfile != nil {
+		if networkProfile.NetworkPluginMode != nil &&
+			*networkProfile.NetworkPluginMode == common.ClusterOverlayNetwork {
+			cls.ClusterAdvanceSettings.NetworkType = common.AzureCniOverlay
+			cls.NetworkType = common.ClusterOverlayNetwork
+		} else {
+			cls.ClusterAdvanceSettings.NetworkType = common.AzureCniNodeSubnet
+			cls.NetworkType = common.ClusterUnderlayNetwork
+		}
 	}
 }
 
