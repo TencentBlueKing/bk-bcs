@@ -132,12 +132,10 @@ func clusterBasicSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice
 
 // clusterAdvanceSettingByAzure 同步集群高级设置
 func clusterAdvanceSettingByAzure(cls *proto.Cluster, cluster *armcontainerservice.ManagedCluster) {
-	if cls.ClusterAdvanceSettings == nil {
-		cls.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
-			ClusterConnectSetting: &proto.ClusterConnectSetting{
-				Internet: &proto.InternetAccessible{},
-			},
-		}
+	cls.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+		ClusterConnectSetting: &proto.ClusterConnectSetting{
+			Internet: &proto.InternetAccessible{},
+		},
 	}
 
 	profile := cluster.Properties.APIServerAccessProfile
