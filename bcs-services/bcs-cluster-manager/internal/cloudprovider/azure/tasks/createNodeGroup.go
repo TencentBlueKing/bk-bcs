@@ -266,7 +266,13 @@ func updateClusterAuthorizedIPRange(rootCtx context.Context, info *cloudprovider
 			taskID)
 	}
 
-	if cluster.ClusterAdvanceSettings.ClusterConnectSetting == nil {
+	if cluster.ClusterAdvanceSettings == nil {
+		cluster.ClusterAdvanceSettings = &proto.ClusterAdvanceSetting{
+			ClusterConnectSetting: &proto.ClusterConnectSetting{
+				Internet: &proto.InternetAccessible{},
+			},
+		}
+	} else if cluster.ClusterAdvanceSettings.ClusterConnectSetting == nil {
 		cluster.ClusterAdvanceSettings.ClusterConnectSetting = &proto.ClusterConnectSetting{
 			Internet: &proto.InternetAccessible{},
 		}
