@@ -24,6 +24,8 @@ import (
 // cluster add-ons is similar of helm, but more simply.
 type Addons struct {
 	Name             string
+	ReleaseName      string `yaml:"releaseName"`
+	DisplayName      string `yaml:"displayName"`
 	ChartName        string `yaml:"chartName"`
 	Description      string
 	DocsLink         string `yaml:"docsLink"`
@@ -64,13 +66,26 @@ func (a Addons) ToAddonsProto() *helmmanager.Addons {
 		Status:           common.GetStringP(""),
 		Message:          common.GetStringP(""),
 		SupportedActions: a.SupportedActions,
-		ReleaseName:      common.GetStringP(a.ReleaseName()),
+		ReleaseName:      common.GetStringP(a.AssociationName(a.ReleaseName)),
+		DisplayName:      common.GetStringP(a.DefaultDisplayName()),
 	}
 }
 
-// ReleaseName return release name
-func (a Addons) ReleaseName() string {
-	return strings.ToLower(a.Name)
+// AssociationName return association lower name, if null, return addons name
+func (a Addons) AssociationName(name string) string {
+	if name == "" {
+		return strings.ToLower(a.Name)
+	}
+
+	return strings.ToLower(name)
+}
+
+// DefaultDisplayName return display name, if null, return addons name
+func (a Addons) DefaultDisplayName() string {
+	if a.DisplayName == "" {
+		return a.Name
+	}
+	return a.DisplayName
 }
 
 // CanStop check addons can stop

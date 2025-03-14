@@ -1963,6 +1963,11 @@
           "type": "string",
           "description": "组件在集群中的 release name",
           "title": "releaseName"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "组件在集群中的别名",
+          "title": "displayName"
         }
       },
       "description": "集群组件",
@@ -3567,6 +3572,16 @@
           "type": "string",
           "description": "value 文件，上一次更新使用的文件",
           "title": "valueFile"
+        },
+        "releaseName": {
+          "type": "string",
+          "description": "chart release名称",
+          "title": "releaseName"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "release别名",
+          "title": "displayName"
         }
       }
     },

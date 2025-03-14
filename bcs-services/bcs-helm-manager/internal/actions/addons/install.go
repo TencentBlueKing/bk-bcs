@@ -73,7 +73,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := i.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
+	if err := i.saveDB(ctx, addons.Namespace, addons.ChartName, addons); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
 		return nil
@@ -93,7 +93,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      i.req.GetClusterID(),
-		Name:           addons.ReleaseName(),
+		Name:           addons.AssociationName(addons.ReleaseName),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
@@ -111,8 +111,8 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error {
-	if err := i.model.DeleteRelease(ctx, i.req.GetClusterID(), ns, releaseName); err != nil {
+func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName string, addons *release.Addons) error {
+	if err := i.model.DeleteRelease(ctx, i.req.GetClusterID(), ns, addons.AssociationName(addons.Name)); err != nil {
 		return err
 	}
 	createBy := auth.GetUserFromCtx(ctx)
@@ -122,7 +122,7 @@ func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		status = helmrelease.StatusDeployed.String()
 	}
 	if err := i.model.CreateRelease(ctx, &entity.Release{
-		Name:         releaseName,
+		Name:         addons.AssociationName(addons.Name),
 		ProjectCode:  contextx.GetProjectCodeFromCtx(ctx),
 		Namespace:    ns,
 		ClusterID:    i.req.GetClusterID(),
@@ -133,6 +133,8 @@ func (i *InstallAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		Args:         defaultArgs,
 		CreateBy:     createBy,
 		Status:       status,
+		ReleaseName:  addons.AssociationName(addons.ReleaseName),
+		DisplayName:  addons.DefaultDisplayName(),
 	}); err != nil {
 		return err
 	}

@@ -82,7 +82,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := u.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
+	if err := u.saveDB(ctx, addons.Namespace, addons.ChartName, addons); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
 		return nil
@@ -96,7 +96,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      u.req.GetClusterID(),
-		Name:           addons.ReleaseName(),
+		Name:           addons.AssociationName(addons.ReleaseName),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
@@ -115,9 +115,9 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 	return nil
 }
 
-func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, releaseName string) error {
+func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName string, addons *release.Addons) error {
 	create := false
-	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, releaseName)
+	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), ns, addons.AssociationName(addons.Name))
 	if err != nil {
 		if !errors.Is(err, drivers.ErrTableRecordNotFound) {
 			return err
@@ -135,7 +135,7 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 		u.createBy = createBy
 		u.updateBy = createBy
 		if err := u.model.CreateRelease(ctx, &entity.Release{
-			Name:         releaseName,
+			Name:         addons.AssociationName(addons.Name),
 			ProjectCode:  contextx.GetProjectCodeFromCtx(ctx),
 			Namespace:    ns,
 			ClusterID:    u.req.GetClusterID(),
@@ -146,6 +146,8 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 			Args:         defaultArgs,
 			CreateBy:     createBy,
 			Status:       status,
+			ReleaseName:  addons.AssociationName(addons.ReleaseName),
+			DisplayName:  addons.DefaultDisplayName(),
 		}); err != nil {
 			return err
 		}
@@ -167,8 +169,11 @@ func (u *UpgradeAddonsAction) saveDB(ctx context.Context, ns, chartName, release
 			entity.FieldKeyUpdateBy:     createBy,
 			entity.FieldKeyStatus:       status,
 			entity.FieldKeyMessage:      "",
+			entity.FieldKeyReleaseName:  addons.AssociationName(addons.ReleaseName),
+			entity.FieldKeyDisplayName:  addons.DefaultDisplayName(),
 		}
-		if err := u.model.UpdateRelease(ctx, u.req.GetClusterID(), ns, releaseName, rl); err != nil {
+		if err := u.model.UpdateRelease(
+			ctx, u.req.GetClusterID(), ns, addons.AssociationName(addons.Name), rl); err != nil {
 			return err
 		}
 	}

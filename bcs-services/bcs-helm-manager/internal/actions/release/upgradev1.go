@@ -153,6 +153,8 @@ func (u *UpgradeReleaseV1Action) saveDB() error {
 			CreateBy:     createBy,
 			Status:       helmrelease.StatusPendingUpgrade.String(),
 			Env:          u.req.GetEnv(),
+			ReleaseName:  u.req.GetName(),
+			DisplayName:  u.req.GetName(),
 		}); err != nil {
 			return err
 		}

@@ -41,6 +41,8 @@ type Release struct {
 	Status       string   `json:"status" bson:"status"`
 	Message      string   `json:"message" bson:"message"`
 	Env          string   `json:"env" bson:"env"`
+	ReleaseName  string   `json:"releaseName" bson:"releaseName"`
+	DisplayName  string   `json:"displayName" bson:"displayName"`
 }
 
 // Transfer2DetailProto transfer the data into detail protobuf struct
@@ -62,13 +64,15 @@ func (r *Release) Transfer2DetailProto() *helmmanager.ReleaseDetail {
 		Description:  common.GetStringP(""),
 		Repo:         common.GetStringP(r.Repo),
 		ValueFile:    common.GetStringP(r.ValueFile),
+		ReleaseName:  common.GetStringP(r.ReleaseName),
+		DisplayName:  common.GetStringP(r.DisplayName),
 	}
 }
 
 // Transfer2Proto transfer the data into release protobuf struct
 func (r *Release) Transfer2Proto() *helmmanager.Release {
 	return &helmmanager.Release{
-		Name:           common.GetStringP(r.Name),
+		Name:           common.GetStringP(r.ReleaseName),
 		Namespace:      common.GetStringP(r.Namespace),
 		Revision:       common.GetUint32P(uint32(r.Revision)),
 		Chart:          common.GetStringP(r.ChartName),

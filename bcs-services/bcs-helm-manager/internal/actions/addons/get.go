@@ -79,7 +79,7 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 	clusterAddons.Version = &version
 
 	// get current status
-	rl, err := g.model.GetRelease(ctx, g.req.GetClusterID(), addons.Namespace, addons.ReleaseName())
+	rl, err := g.model.GetRelease(ctx, g.req.GetClusterID(), addons.Namespace, addons.AssociationName(addons.Name))
 	if err != nil && !errors.Is(err, drivers.ErrTableRecordNotFound) {
 		blog.Errorf("get addons status failed, %s", err.Error())
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
@@ -91,7 +91,8 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 		clusterAddons.CurrentVersion = &rl.ChartVersion
 		clusterAddons.Status = &rl.Status
 		clusterAddons.Message = &rl.Message
-		clusterAddons.ReleaseName = &rl.Name
+		clusterAddons.ReleaseName = &rl.ReleaseName
+		clusterAddons.DisplayName = &rl.DisplayName
 		if len(rl.Values) > 0 {
 			clusterAddons.CurrentValues = &rl.Values[len(rl.Values)-1]
 		}
@@ -99,10 +100,10 @@ func (g *GetAddonsDetailAction) Handle(ctx context.Context,
 
 	// 读取集群状态
 	clusterRelease, err := g.releaseHandler.Cluster(g.req.GetClusterID()).
-		Get(ctx, release.GetOption{Namespace: addons.Namespace, Name: addons.ReleaseName()})
+		Get(ctx, release.GetOption{Namespace: addons.Namespace, Name: addons.AssociationName(addons.ReleaseName)})
 	if err != nil && !errors.Is(err, driver.ErrReleaseNotFound) {
 		blog.Warnf("releaseHandler get release detail failed, %s, clusterID: %s namespace: %s, name: %s",
-			err.Error(), g.req.GetClusterID(), addons.Namespace, addons.ReleaseName())
+			err.Error(), g.req.GetClusterID(), addons.Namespace, addons.AssociationName(addons.ReleaseName))
 		g.setResp(common.ErrHelmManagerGetActionFailed, err.Error(), nil)
 		return nil
 	}

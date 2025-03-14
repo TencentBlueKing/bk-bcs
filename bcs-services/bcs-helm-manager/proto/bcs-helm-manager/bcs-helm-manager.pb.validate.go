@@ -6467,6 +6467,10 @@ func (m *ReleaseDetail) validate(all bool) error {
 
 	// no validation rules for ValueFile
 
+	// no validation rules for ReleaseName
+
+	// no validation rules for DisplayName
+
 	if len(errors) > 0 {
 		return ReleaseDetailMultiError(errors)
 	}
@@ -10421,6 +10425,8 @@ func (m *Addons) validate(all bool) error {
 	// no validation rules for Message
 
 	// no validation rules for ReleaseName
+
+	// no validation rules for DisplayName
 
 	if len(errors) > 0 {
 		return AddonsMultiError(errors)
