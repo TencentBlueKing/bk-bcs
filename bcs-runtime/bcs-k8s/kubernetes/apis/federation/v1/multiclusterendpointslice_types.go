@@ -22,6 +22,7 @@ import (
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 const (
 	LabelKeyEpsRelatedServiceNamespace = "federation.bkbcs.tencent.com/multi-cluster-service-namespace"
+	LabelKeyEpsRelatedServiceName      = "federation.bkbcs.tencent.com/multi-cluster-service-name"
 	LabelKeyEpsRelatedClusterName      = "federation.bkbcs.tencent.com/cluster-name"
 )
 
@@ -189,6 +190,20 @@ func (in *MultiClusterEndpointSlice) GetRelatedServiceNameSpace() string {
 	}
 
 	return namespace
+}
+
+// GetRelatedServiceName return related multi-cluster service name from label
+func (in *MultiClusterEndpointSlice) GetRelatedServiceName() string {
+	if in.Labels == nil {
+		return in.Name
+	}
+
+	name, ok := in.Labels[LabelKeyEpsRelatedServiceName]
+	if !ok {
+		return ""
+	}
+
+	return name
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

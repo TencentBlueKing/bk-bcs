@@ -349,11 +349,7 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 	}
 
 	// set namespace when namespaced flag is set
-	svcNamespace := svcRoute.ServiceNamespace
-	// use ingressNS as default
-	if rc.isNamespaced || svcNamespace == "" {
-		svcNamespace = rc.ingressNamespace
-	}
+	svcNamespace := rc.getServiceNamespace(svcRoute)
 
 	multiClusterService := &federationv1.MultiClusterService{}
 	if err := rc.cli.Get(context.TODO(), k8stypes.NamespacedName{
@@ -368,6 +364,7 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 		return nil, fmt.Errorf("get multiClusterService %s/%s failed, err %s",
 			svcNamespace, svcRoute.ServiceName, err.Error())
 	}
+
 	var svcPort *k8scorev1.ServicePort
 	for _, port := range multiClusterService.Spec.Ports {
 		if port.Port == int32(svcRoute.ServicePort) {
@@ -383,17 +380,35 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 		return nil, fmt.Errorf("list multiClusterEndpoints failed, err %s", err.Error())
 	}
 	for _, mEps := range multiClusterEndpointsList.Items {
-		if mEps.GetRelatedServiceNameSpace() == svcNamespace && mEps.GetName() == svcRoute.ServiceName {
+		if mEps.GetRelatedServiceNameSpace() == svcNamespace && mEps.GetRelatedServiceName() == svcRoute.ServiceName {
 			matchedMultiClusterEpsList = append(matchedMultiClusterEpsList, mEps)
 		}
 	}
 
-	var retBackends []networkextensionv1.ListenerBackend
-	for _, mEps := range matchedMultiClusterEpsList {
+	if len(matchedMultiClusterEpsList) == 0 {
+		blog.Warnf("multiClusterService %s/%s not found related multiClusterEndpoints",
+			svcNamespace, svcRoute.ServiceName)
+		rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+			fmt.Sprintf("multiClusterService %s/%s not found related multiClusterEndpoints",
+				svcNamespace, svcRoute.ServiceName))
+		return nil, nil
+	}
+
+	retBackends := rc.generateBackends(matchedMultiClusterEpsList, svcPort, svcRoute)
+
+	return retBackends, nil
+}
+
+func (rc *RuleConverter) isPortMatch(port federationv1.EndpointPort, svcPort *k8scorev1.ServicePort) bool {
+	return (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.Protocol
+}
+
+func (rc *RuleConverter) generateBackends(matchedEps []federationv1.MultiClusterEndpointSlice, svcPort *k8scorev1.ServicePort, svcRoute *networkextensionv1.ServiceRoute) []networkextensionv1.ListenerBackend {
+	var backends []networkextensionv1.ListenerBackend
+	for _, mEps := range matchedEps {
 		for _, ep := range mEps.Spec.Endpoints {
 			for _, port := range ep.Ports {
-				if (*port.Name == svcPort.TargetPort.String() || int(*port.Port) == svcPort.TargetPort.IntValue()) && *port.Protocol == svcPort.Protocol {
-					// 这里默认都是直通模式
+				if rc.isPortMatch(port, svcPort) {
 					if svcRoute.HostPort {
 						if port.HostPort == nil {
 							blog.Warnf("hostPort is true, but not found related definition in port [%s]",
@@ -403,13 +418,13 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 									*port.Name))
 							continue
 						}
-						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+						backends = append(backends, networkextensionv1.ListenerBackend{
 							IP:     ep.NodeAddresses[0],
 							Port:   int(*port.HostPort),
 							Weight: svcRoute.GetWeight(),
 						})
 					} else {
-						retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+						backends = append(backends, networkextensionv1.ListenerBackend{
 							IP:     ep.Addresses[0],
 							Port:   int(*port.Port),
 							Weight: svcRoute.GetWeight(),
@@ -419,7 +434,14 @@ func (rc *RuleConverter) generateMcsBackendList(svcRoute *networkextensionv1.Ser
 			}
 		}
 	}
-	return retBackends, nil
+	return backends
+}
+
+func (rc *RuleConverter) getServiceNamespace(svcRoute *networkextensionv1.ServiceRoute) string {
+	if rc.isNamespaced || svcRoute.ServiceNamespace == "" {
+		return rc.ingressNamespace
+	}
+	return svcRoute.ServiceNamespace
 }
 
 func mergeBackendList(
