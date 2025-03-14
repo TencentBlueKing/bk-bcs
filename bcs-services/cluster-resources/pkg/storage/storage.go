@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
@@ -90,6 +91,7 @@ func ListMultiClusterResources(ctx context.Context, req ListMultiClusterResource
 
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(header.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		SetBody(req).
 		Post(url)
