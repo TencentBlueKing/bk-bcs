@@ -82,7 +82,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := u.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
+	if err := u.saveDB(ctx, addons.Namespace, addons.ChartName, addons.GetReleaseName()); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		u.setResp(common.ErrHelmManagerUpgradeActionFailed, err.Error())
 		return nil
@@ -96,7 +96,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      u.req.GetClusterID(),
-		Name:           addons.ReleaseName(),
+		Name:           addons.GetReleaseName(),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,

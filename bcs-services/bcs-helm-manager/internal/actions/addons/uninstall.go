@@ -73,15 +73,15 @@ func (u *UninstallAddonsAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	if err := u.uninstall(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
+	if err := u.uninstall(ctx, addons.Namespace, addons.ChartName, addons.GetReleaseName()); err != nil {
 		blog.Errorf("uninstall addons %s failed, clusterID: %s, namespace: %s, error: %s",
-			addons.ReleaseName(), u.req.GetClusterID(), addons.Namespace, err.Error())
+			addons.GetReleaseName(), u.req.GetClusterID(), addons.Namespace, err.Error())
 		u.setResp(common.ErrHelmManagerUninstallActionFailed, err.Error())
 		return nil
 	}
 
 	blog.Infof("dispatch release successfully, projectCode: %s, clusterID: %s, namespace: %s, name: %s, operator: %s",
-		u.req.GetProjectCode(), u.req.GetClusterID(), addons.Namespace, addons.ReleaseName(), auth.GetUserFromCtx(ctx))
+		u.req.GetProjectCode(), u.req.GetClusterID(), addons.Namespace, addons.GetReleaseName(), auth.GetUserFromCtx(ctx))
 	u.setResp(common.ErrHelmManagerSuccess, "ok")
 	return nil
 }
