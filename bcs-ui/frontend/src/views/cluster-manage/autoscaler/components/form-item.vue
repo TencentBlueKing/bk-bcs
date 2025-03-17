@@ -72,8 +72,11 @@ export default defineComponent({
       type: String,
       default: '50%',
     },
+    clusterId: {
+      type: String,
+    },
   },
-  setup() {
+  setup(props) {
     // 获取自动扩缩容配置
     const scalerStatusMap = { // 自动扩缩容状态
       NORMAL: $i18n.t('generic.status.ready'),
@@ -91,6 +94,9 @@ export default defineComponent({
       // todo 记录集群信息
       $router.push({
         name: 'releaseList',
+        query: {
+          clusterId: props.clusterId,
+        },
       });
     };
     return {

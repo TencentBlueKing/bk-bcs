@@ -59,7 +59,6 @@ import { bus } from '@/common/bus';
 import { useCluster } from '@/composables/use-app';
 import $router from '@/router';
 import $store from '@/store';
-import { INamespace, isEntry, isNSChanged, useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 const openSideMenu = computed(() => $store.state.openSideMenu);
 
@@ -196,15 +195,7 @@ const initClusterAndViewID = () => {
   $store.commit('updateCurCluster', cluster ?? clusterList.value.find(item => item.status === 'RUNNING'));
 };
 
-// 命名空间逻辑
-const { getNamespaceData } = useNamespace();
-const nsList = ref<Array<INamespace>>([]);
 const curNsList = computed(() => $store.state.viewNsList);
-const handleGetNsData = async () => {
-  const exist = clusterList.value.find(item => item.clusterID === curClusterId.value);
-  if (!exist) return;
-  nsList.value = await getNamespaceData({ $clusterId: curClusterId.value });
-};
 // 解析并获取url参数
 const propertis = ['name', 'creator', 'source', 'templateName', 'templateVersion', 'chartName', 'labelSelector'];
 function handleGetQuery(query) {
@@ -239,30 +230,6 @@ function handleGetQuery(query) {
   showViewConfig.value = true;
 }
 const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
-watch(curClusterId, async () => {
-  isNSChanged.value = false;
-  await handleGetNsData();
-  // 首次加载
-  if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace) {
-    // 不是从部署管理页面跳转过来，才默认命名空间
-    if (currentRoute.value?.name !== 'dashboardWorkloadDetail') {
-      $store.commit('updateViewNsList', [nsList.value[0].name]);
-    };
-    isEntry.value = true;
-  } else {
-    // 切换集群，判断当前选中的命名空间是否在新的命名空间列表中
-    const newNs = curNsList.value?.reduce<string[]>((acc, cur) => {
-      const ns = nsList.value.find(item => item.name === cur);
-      if (ns) {
-        acc.push(cur);
-      }
-      return acc;
-    }, []);
-    $store.commit('updateViewNsList', newNs);
-  }
-  // 命名空间真正变化后才可以发起请求
-  isNSChanged.value = true;
-}, { immediate: true });
 
 // 同步命名空间到url
 watch(curNsList, () => {

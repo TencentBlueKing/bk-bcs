@@ -2,7 +2,7 @@
 import yamljs from 'js-yaml';
 import jp from 'jsonpath';
 import { isEqual } from 'lodash';
-import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, provide, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, PropType, provide, reactive, ref, toRef, toRefs, watch } from 'vue';
 
 import NSSelect from '../view-manage/ns-select.vue';
 import useViewConfig from '../view-manage/use-view-config';
@@ -25,7 +25,7 @@ import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import { isNSChanged } from '@/views/cluster-manage/namespace/use-namespace';
+import { INamespace, isEntry, useNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({
   name: 'BaseLayout',
@@ -634,22 +634,48 @@ export default defineComponent({
     // 通过provide暴露方法
     provide('handleGetExtData', handleGetExtData);
 
-    // 命名空间真正改变时再发起请求
-    watch(isNSChanged, async () => {
-      if (!isNSChanged.value) return;
+    // 命名空间逻辑
+    const { clusterList, curClusterId } = useCluster();
+    const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
+    const { getNamespaceData } = useNamespace();
+    const nsList = ref<Array<INamespace>>([]);
+    const handleGetNsData = async () => {
+      const exist = clusterList.value.find(item => item.clusterID === curClusterId.value);
+      if (!exist) return;
+      nsList.value = await getNamespaceData({ $clusterId: curClusterId.value });
+    };
+    watch(curClusterId, async () => {
+      await handleGetNsData();
+      // 首次加载
+      if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace) {
+        $store.commit('updateViewNsList', [nsList.value[0].name]);
+        isEntry.value = true;
+      } else {
+        // 切换集群，判断当前选中的命名空间是否在新的命名空间列表中
+        const newNs = curNsList.value?.reduce<string[]>((acc, cur) => {
+          const ns = nsList.value.find(item => item.name === cur);
+          if (ns) {
+            acc.push(cur);
+          }
+          return acc;
+        }, []);
+        $store.commit('updateViewNsList', newNs);
+      }
+
+      if (isClosed.value) {
+        return;
+      }
+      isLoading.value = true;
       await handleGetTableData();
       isLoading.value = false;
-      // 轮询资源
+      // 轮询资源，频繁切换资源，即使页面卸载，这个回调也会执行，导致存在多个定时器，使用isClosed来控制
       start();
     }, { immediate: true });
 
-    // 切换集群时，命名空间还未更改，不在这里发起请求
-    onMounted(async () => {
-      isLoading.value = true;
-    });
-
+    const isClosed = ref(false);
     onBeforeUnmount(() => {
       stop();
+      isClosed.value = true;
     });
 
     return {

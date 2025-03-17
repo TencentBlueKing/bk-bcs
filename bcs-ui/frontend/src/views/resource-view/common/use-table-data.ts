@@ -146,7 +146,7 @@ export default function useTableData() {
   const getMultiClusterResourcesCount = async (params: Omit<MultiClusterResourcesType, 'limit'|'offset'>) => {
     const data = await multiClusterResourcesCount(
       params,
-      { cancelPrevious: true },
+      { cancelPrevious: true, cancelWhenRouteChange: false },
     ).catch(() => ({}));
     return data as Record<string, number>;
   };

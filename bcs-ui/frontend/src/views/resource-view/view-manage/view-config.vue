@@ -317,7 +317,6 @@ import { useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
-import { isNSChanged } from '@/views/cluster-manage/namespace/use-namespace';
 
 const emits = defineEmits(['close']);
 
@@ -601,7 +600,7 @@ const handleShowSaveAsDialog = () => {
 const handleSaveAs = async (changeView = true) => {
   saving.value = true;
   const result = await createViewConfig({
-    ...curViewData.value,
+    ...curTmpViewData.value,
     name: viewName.value,
   });
   if (result?.id) {
@@ -669,8 +668,7 @@ function handleUpdateUrlQuery(data: Partial<MultiClusterResourcesType>|undefined
 }
 
 watch(dashboardViewID, () => {
-  // isNSChanged在这里作为页面初始化完毕标识，否则部署管理带过来的筛选条件会被清空
-  (isNSChanged.value && dashboardViewID.value) && viewChange(dashboardViewID.value);
+  viewChange(dashboardViewID.value);
 });
 
 watch(curViewData, (data: Partial<MultiClusterResourcesType>|undefined, oldVal) => {

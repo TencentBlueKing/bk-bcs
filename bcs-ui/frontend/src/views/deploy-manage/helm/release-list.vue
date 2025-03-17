@@ -527,7 +527,8 @@ export default defineComponent({
 
     const { clusterList } = useCluster();
     const { projectID } = useProject();
-    const clusterID = ref($store.getters.curClusterId);
+    const { currentRoute } = $router;
+    const clusterID = ref(currentRoute.query.clusterId || $store.getters.curClusterId);
     const clusterName = computed(() => clusterList.value.find(item => item.clusterID === clusterID.value)?.clusterName);
     const ns = ref<string>(props.namespace || $store.state.curNamespace);
     const searchName = useDebouncedRef<string>(props.name, 360);
