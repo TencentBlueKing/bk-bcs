@@ -73,7 +73,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 	}
 
 	// save db
-	if err := i.saveDB(ctx, addons.Namespace, addons.ChartName, addons.ReleaseName()); err != nil {
+	if err := i.saveDB(ctx, addons.Namespace, addons.ChartName, addons.GetReleaseName()); err != nil {
 		blog.Errorf("save addons failed, %s", err.Error())
 		i.setResp(common.ErrHelmManagerInstallActionFailed, err.Error())
 		return nil
@@ -93,7 +93,7 @@ func (i *InstallAddonsAction) Handle(ctx context.Context,
 		ProjectCode:    contextx.GetProjectCodeFromCtx(ctx),
 		ProjectID:      contextx.GetProjectIDFromCtx(ctx),
 		ClusterID:      i.req.GetClusterID(),
-		Name:           addons.ReleaseName(),
+		Name:           addons.GetReleaseName(),
 		Namespace:      addons.Namespace,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
