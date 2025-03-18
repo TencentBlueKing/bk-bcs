@@ -481,7 +481,7 @@ func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNo
 
 // AddNodesToCluster add new node to cluster according cloudprovider
 func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
-	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+	opt *cloudprovider.AddNodesOption) ([]*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster is empty")
 	}
@@ -506,16 +506,35 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
 		return nil, err
 	}
 
-	// build add nodes to cluster task
-	task, err := mgr.BuildAddNodesToClusterTask(cls, nodes, opt)
-	if err != nil {
-		blog.Errorf("build AddNodesToCluster task for cluster %s with cloudprovider %s failed, %s",
-			cls.ClusterName, cls.Provider, err.Error(),
-		)
-		return nil, err
+	nodeChunks := splitNodeChunk(nodes, icommon.ClusterAddNodesLimit)
+	addNodeTasks := make([]*proto.Task, 0)
+
+	for _, nodeChunk := range nodeChunks {
+		// build add nodes to cluster task
+		task, err := mgr.BuildAddNodesToClusterTask(cls, nodeChunk, opt)
+		if err != nil {
+			blog.Errorf("build AddNodesToCluster task for cluster %s with cloudprovider %s failed, %s",
+				cls.ClusterName, cls.Provider, err.Error(),
+			)
+			return nil, err
+		}
+		addNodeTasks = append(addNodeTasks, task)
 	}
 
-	return task, nil
+	return addNodeTasks, nil
+}
+
+// splitNodeChunk split nodes into chunks of specified size
+func splitNodeChunk(nodes []*proto.Node, chunkSize int) [][]*proto.Node {
+	var chunks [][]*proto.Node
+	for i := 0; i < len(nodes); i += chunkSize {
+		end := i + chunkSize
+		if end > len(nodes) {
+			end = len(nodes)
+		}
+		chunks = append(chunks, nodes[i:end])
+	}
+	return chunks
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider

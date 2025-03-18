@@ -313,7 +313,7 @@ func (c *CloudValidate) ListCloudOsImageValidate(req *proto.ListCloudOsImageRequ
 }
 
 // AddNodesToClusterValidate xxx
-func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *cloudprovider.CommonOption) error {
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesV2Request, opt *cloudprovider.CommonOption) error {
 	return cloudprovider.ErrCloudNotImplemented
 }
 

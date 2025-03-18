@@ -451,12 +451,12 @@ func (ua *UpdateNodeAction) Handle(ctx context.Context, req *cmproto.UpdateNodeR
 type AddNodesAction struct {
 	ctx            context.Context
 	model          store.ClusterManagerModel
-	req            *cmproto.AddNodesRequest
-	resp           *cmproto.AddNodesResponse
+	req            *cmproto.AddNodesV2Request
+	resp           *cmproto.AddNodesV2Response
 	cluster        *cmproto.Cluster
 	nodes          []*cmproto.Node
 	cloud          *cmproto.Cloud
-	task           *cmproto.Task
+	task           []*cmproto.Task
 	option         *cloudprovider.CommonOption
 	nodeGroup      *cmproto.NodeGroup
 	nodeTemplate   *cmproto.NodeTemplate
@@ -527,11 +527,11 @@ func (ua *AddNodesAction) addExternalNodesToCluster() error {
 		return err
 	}
 
-	ua.task = task
+	ua.task = append(ua.task, task)
 	blog.Infof("add nodes %v to cluster %s with cloudprovider %s processing, task info: %v",
 		ua.req.Nodes, ua.req.ClusterID, groupCloud.CloudProvider, task,
 	)
-	ua.resp.Data = task
+	ua.resp.Data = append(ua.resp.Data, task)
 
 	return ua.saveNodesToStorage(common.StatusInitialization)
 }
@@ -564,7 +564,7 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 	}
 
 	// default reinstall system when add node to cluster
-	task, err := clusterMgr.AddNodesToCluster(ua.cluster, ua.nodes, &cloudprovider.AddNodesOption{
+	tasks, err := clusterMgr.AddNodesToCluster(ua.cluster, ua.nodes, &cloudprovider.AddNodesOption{
 		CommonOption: *ua.option,
 		Login: func() *cmproto.NodeLoginInfo {
 			loginInfo := &cmproto.NodeLoginInfo{
@@ -596,29 +596,35 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 		return err
 	}
 
-	// create task
-	if err = ua.model.CreateTask(ua.ctx, task); err != nil {
-		blog.Errorf("save addNodesToCluster cluster task for cluster %s failed, %s",
-			ua.cluster.ClusterID, err.Error(),
+	for _, task := range tasks {
+		// create task
+		if err = ua.model.CreateTask(ua.ctx, task); err != nil {
+			blog.Errorf("save addNodesToCluster cluster task for cluster %s failed, %s",
+				ua.cluster.ClusterID, err.Error(),
+			)
+			return err
+		}
+
+		// dispatch task
+		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
+			blog.Errorf("dispatch addNodesToCLuster cluster task for cluster %s failed, %s",
+				ua.cluster.ClusterName, err.Error(),
+			)
+			return err
+		}
+
+		utils.HandleTaskStepData(ua.ctx, task)
+		blog.Infof("add nodes %v to cluster %s with cloudprovider %s processing, task info: %v",
+			ua.req.Nodes, ua.req.ClusterID, ua.cloud.CloudProvider, task,
 		)
-		return err
+		ua.task = append(ua.task, task)
+		ua.resp.Data = append(ua.resp.Data, task)
+		if err = ua.saveNodesToStorage(common.StatusInitialization); err != nil {
+			return err
+		}
 	}
 
-	// dispatch task
-	if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
-		blog.Errorf("dispatch addNodesToCLuster cluster task for cluster %s failed, %s",
-			ua.cluster.ClusterName, err.Error(),
-		)
-		return err
-	}
-
-	utils.HandleTaskStepData(ua.ctx, task)
-	blog.Infof("add nodes %v to cluster %s with cloudprovider %s processing, task info: %v",
-		ua.req.Nodes, ua.req.ClusterID, ua.cloud.CloudProvider, task,
-	)
-	ua.task = task
-	ua.resp.Data = task
-	return ua.saveNodesToStorage(common.StatusInitialization)
+	return nil
 }
 
 // saveNodesToStorage save nodes to db
@@ -784,7 +790,6 @@ func (ua *AddNodesAction) transCloudNodeToDNodes() error {
 	cmOption.Region = ua.cluster.Region
 
 	ua.option = cmOption
-	ua.option.Region = ua.cluster.Region
 
 	nodeList, err := ua.getClusterNodesByIPs(nodeMgr, cmOption)
 	if err != nil {
@@ -876,9 +881,9 @@ func (ua *AddNodesAction) validate() error {
 	}
 
 	// cluster add nodes limit at a time
-	if len(ua.req.Nodes) > common.ClusterAddNodesLimit {
-		errMsg := fmt.Errorf("add nodes failed: cluster[%s] add NodesLimit exceed %d",
-			ua.cluster.ClusterID, common.ClusterAddNodesLimit)
+	if len(ua.req.Nodes) > int(ua.cloud.ConfInfo.MaxNodeCount) {
+		errMsg := fmt.Errorf("add nodes failed: cluster[%s] add NodesLimit exceed CloudMaxNodeLimit: %d",
+			ua.cluster.ClusterID, ua.cloud.ConfInfo.MaxNodeCount)
 		blog.Errorf(errMsg.Error())
 		return errMsg
 	}
@@ -909,7 +914,7 @@ func (ua *AddNodesAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles update cluster request
-func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesRequest, resp *cmproto.AddNodesResponse) {
+func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesV2Request, resp *cmproto.AddNodesV2Response) {
 	if req == nil || resp == nil {
 		blog.Errorf("add cluster nodes failed, req or resp is empty")
 		return
@@ -971,19 +976,25 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesReque
 		req.Nodes, req.ClusterID,
 	)
 
-	err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
-		ResourceType: common.Cluster.String(),
-		ResourceID:   ua.cluster.ClusterID,
-		TaskID:       ua.task.TaskID,
-		Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
-		OpUser:       req.Operator,
-		CreateTime:   time.Now().Format(time.RFC3339),
-		ClusterID:    ua.cluster.ClusterID,
-		ProjectID:    ua.cluster.ProjectID,
-		ResourceName: ua.cluster.ClusterName,
-	})
-	if err != nil {
-		blog.Errorf("AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
+	taskIDs := make([]string, 0, len(ua.task))
+	for _, task := range ua.task {
+		taskIDs = append(taskIDs, task.TaskID)
+
+		err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
+			ResourceType: common.Cluster.String(),
+			ResourceID:   ua.cluster.ClusterID,
+			TaskID:       task.TaskID,
+			Message:      fmt.Sprintf("集群%s添加节点", ua.cluster.ClusterID),
+			OpUser:       req.Operator,
+			CreateTime:   time.Now().Format(time.RFC3339),
+			ClusterID:    ua.cluster.ClusterID,
+			ProjectID:    ua.cluster.ProjectID,
+			ResourceName: ua.cluster.ClusterName,
+		})
+		if err != nil {
+			blog.Errorf("AddNodesToCluster[%s] CreateOperationLog failed: %v", ua.cluster.ClusterID, err)
+		}
 	}
+
 	ua.setResp(common.BcsErrClusterManagerSuccess, common.BcsErrClusterManagerSuccessStr)
 }

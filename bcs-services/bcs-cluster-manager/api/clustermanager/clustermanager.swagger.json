@@ -6956,6 +6956,47 @@
         ]
       }
     },
+    "/clustermanager/v2/cluster/{clusterID}/node": {
+      "post": {
+        "summary": "上架集群节点",
+        "description": "指定IP，给集群增加节点(云CVM节点和IDC第三方节点)，会触发相关自动化流程",
+        "operationId": "ClusterManager_AddNodesToClusterV2",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerAddNodesV2Response"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterID",
+            "description": "扩容的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerAddNodesV2Request"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v2/nodegroup/{nodeGroupID}/groupnode": {
       "delete": {
         "summary": "回收节点组中的节点，使用query参数指定需要清理的节点",
@@ -7277,6 +7318,108 @@
       },
       "description": "增加集群节点返回，主要是反馈相关自动化过程的任务信息，便于查阅状态",
       "title": "AddNodesResponse",
+      "required": [
+        "code",
+        "data"
+      ]
+    },
+    "clustermanagerAddNodesV2Request": {
+      "type": "object",
+      "properties": {
+        "clusterID": {
+          "type": "string",
+          "description": "扩容的集群ID",
+          "title": "clusterID"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "扩容的集群节点IP地址",
+          "title": "nodes"
+        },
+        "initLoginPassword": {
+          "type": "string",
+          "description": "重装时的初始密码, 可为空",
+          "title": "initLoginPassword"
+        },
+        "nodeGroupID": {
+          "type": "string",
+          "description": "扩容节点如果需要加入NodeGroup，需要填写关联ID",
+          "title": "nodeGroupID"
+        },
+        "onlyCreateInfo": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "仅写入节点信息，默认是false。仅写入节点信息时，会通过cluster所属cloudprovider查询节点信息，并设置为RUNNING。",
+          "title": "onlyCreateInfo"
+        },
+        "operator": {
+          "type": "string",
+          "description": "操作者",
+          "title": "operator"
+        },
+        "nodeTemplateID": {
+          "type": "string",
+          "description": "关联的节点模板ID",
+          "title": "nodeTemplateID"
+        },
+        "isExternalNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "上架第三方节点需置为true, 且必须关联nodeGroupID",
+          "title": "是否是第三方节点(IDC节点)"
+        },
+        "login": {
+          "$ref": "#/definitions/clustermanagerNodeLoginInfo",
+          "description": "上架节点重装系统时设置节点密码，不同云可兼容处理",
+          "title": "login"
+        }
+      },
+      "description": "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器",
+      "title": "AddNodesRequestV2",
+      "required": [
+        "clusterID",
+        "nodes"
+      ]
+    },
+    "clustermanagerAddNodesV2Response": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerTask"
+          },
+          "description": "节点添加任务信息",
+          "title": "data"
+        },
+        "web_annotations": {
+          "$ref": "#/definitions/clustermanagerWebAnnotationsV2",
+          "description": "用户所属集群权限",
+          "title": "web_annotations"
+        }
+      },
+      "description": "增加集群节点返回，主要是反馈相关自动化过程的任务信息，便于查阅状态，V2版本返回任务列表",
+      "title": "AddNodesResponseV2",
       "required": [
         "code",
         "data"
@@ -8169,6 +8312,12 @@
           },
           "description": "region高可用配置白名单, 某些region可能不存在3个及以上高可用区",
           "title": "regionHaWhiteList"
+        },
+        "maxNodeCount": {
+          "type": "integer",
+          "format": "int64",
+          "description": "cloud最大节点数",
+          "title": "maxNodeCount"
         }
       },
       "description": "用于记录云公共配置信息",

@@ -458,7 +458,7 @@ func (c *Cluster) GetNodesInCluster(cls *proto.Cluster, opt *cloudprovider.GetNo
 
 // AddNodesToCluster add new node to cluster according cloudprovider
 func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
-	opt *cloudprovider.AddNodesOption) (*proto.Task, error) {
+	opt *cloudprovider.AddNodesOption) ([]*proto.Task, error) {
 	if cls == nil {
 		return nil, fmt.Errorf("qcloud AddNodesToCluster cluster is empty")
 	}
@@ -492,7 +492,7 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
 		return nil, err
 	}
 
-	return task, nil
+	return []*proto.Task{task}, nil
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider

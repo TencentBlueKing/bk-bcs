@@ -280,7 +280,7 @@ type CloudValidateManager interface {
 	// ImportClusterValidate import cluster validate
 	ImportClusterValidate(req *proto.ImportClusterReq, opt *CommonOption) error
 	// AddNodesToClusterValidate validate
-	AddNodesToClusterValidate(req *proto.AddNodesRequest, opt *CommonOption) error
+	AddNodesToClusterValidate(req *proto.AddNodesV2Request, opt *CommonOption) error
 	// DeleteNodesFromClusterValidate validate
 	DeleteNodesFromClusterValidate(req *proto.DeleteNodesRequest, opt *CommonOption) error
 	// CreateCloudAccountValidate create cloud account validate
@@ -330,7 +330,7 @@ type ClusterManager interface {
 	// GetNodesInCluster get all nodes belong to cluster according cloudprovider
 	GetNodesInCluster(cls *proto.Cluster, opt *GetNodesOption) ([]*proto.Node, error)
 	// AddNodesToCluster add new node to cluster according cloudprovider
-	AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *AddNodesOption) (*proto.Task, error)
+	AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node, opt *AddNodesOption) ([]*proto.Task, error)
 	// DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
 	DeleteNodesFromCluster(cls *proto.Cluster, nodes []*proto.Node, opt *DeleteNodesOption) (*proto.Task, error)
 	// EnableExternalNodeSupport enable cluster support external node

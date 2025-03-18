@@ -290,7 +290,7 @@ func (c *CloudValidate) CreateClusterValidate(req *proto.CreateClusterReq,
 }
 
 // AddNodesToClusterValidate addNodes validate
-func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesRequest,
+func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesV2Request,
 	opt *cloudprovider.CommonOption) error {
 	return cloudprovider.ErrCloudNotImplemented
 }

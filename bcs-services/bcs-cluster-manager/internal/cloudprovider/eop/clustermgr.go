@@ -143,7 +143,7 @@ func (c *Cluster) GetNodesInCluster(cls *cmproto.Cluster, opt *cloudprovider.Get
 
 // AddNodesToCluster add new node to cluster according cloudprovider
 func (c *Cluster) AddNodesToCluster(cls *cmproto.Cluster, nodes []*cmproto.Node,
-	opt *cloudprovider.AddNodesOption) (*cmproto.Task, error) {
+	opt *cloudprovider.AddNodesOption) ([]*cmproto.Task, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 

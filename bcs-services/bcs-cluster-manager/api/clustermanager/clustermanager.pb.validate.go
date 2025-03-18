@@ -9693,6 +9693,8 @@ func (m *CloudConfigInfo) validate(all bool) error {
 
 	// no validation rules for DisableCheckGroupResource
 
+	// no validation rules for MaxNodeCount
+
 	if len(errors) > 0 {
 		return CloudConfigInfoMultiError(errors)
 	}
@@ -34767,6 +34769,396 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = AddNodesResponseValidationError{}
+
+// Validate checks the field values on AddNodesV2Request with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *AddNodesV2Request) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AddNodesV2Request with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// AddNodesV2RequestMultiError, or nil if none found.
+func (m *AddNodesV2Request) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AddNodesV2Request) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 1 || l > 100 {
+		err := AddNodesV2RequestValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 1 and 100 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !strings.HasPrefix(m.GetClusterID(), "BCS-") {
+		err := AddNodesV2RequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not have prefix \"BCS-\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if !_AddNodesV2Request_ClusterID_Pattern.MatchString(m.GetClusterID()) {
+		err := AddNodesV2RequestValidationError{
+			field:  "ClusterID",
+			reason: "value does not match regex pattern \"^[0-9a-zA-Z-]+$\"",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetNodes()) < 1 {
+		err := AddNodesV2RequestValidationError{
+			field:  "Nodes",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	_AddNodesV2Request_Nodes_Unique := make(map[string]struct{}, len(m.GetNodes()))
+
+	for idx, item := range m.GetNodes() {
+		_, _ = idx, item
+
+		if _, exists := _AddNodesV2Request_Nodes_Unique[item]; exists {
+			err := AddNodesV2RequestValidationError{
+				field:  fmt.Sprintf("Nodes[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		} else {
+			_AddNodesV2Request_Nodes_Unique[item] = struct{}{}
+		}
+
+		// no validation rules for Nodes[idx]
+	}
+
+	// no validation rules for InitLoginPassword
+
+	// no validation rules for NodeGroupID
+
+	// no validation rules for OnlyCreateInfo
+
+	if l := utf8.RuneCountInString(m.GetOperator()); l < 2 || l > 20 {
+		err := AddNodesV2RequestValidationError{
+			field:  "Operator",
+			reason: "value length must be between 2 and 20 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for NodeTemplateID
+
+	// no validation rules for IsExternalNode
+
+	if all {
+		switch v := interface{}(m.GetLogin()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AddNodesV2RequestValidationError{
+					field:  "Login",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AddNodesV2RequestValidationError{
+					field:  "Login",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLogin()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AddNodesV2RequestValidationError{
+				field:  "Login",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return AddNodesV2RequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// AddNodesV2RequestMultiError is an error wrapping multiple validation errors
+// returned by AddNodesV2Request.ValidateAll() if the designated constraints
+// aren't met.
+type AddNodesV2RequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AddNodesV2RequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AddNodesV2RequestMultiError) AllErrors() []error { return m }
+
+// AddNodesV2RequestValidationError is the validation error returned by
+// AddNodesV2Request.Validate if the designated constraints aren't met.
+type AddNodesV2RequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AddNodesV2RequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AddNodesV2RequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AddNodesV2RequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AddNodesV2RequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AddNodesV2RequestValidationError) ErrorName() string {
+	return "AddNodesV2RequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AddNodesV2RequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAddNodesV2Request.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AddNodesV2RequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AddNodesV2RequestValidationError{}
+
+var _AddNodesV2Request_ClusterID_Pattern = regexp.MustCompile("^[0-9a-zA-Z-]+$")
+
+// Validate checks the field values on AddNodesV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *AddNodesV2Response) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on AddNodesV2Response with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// AddNodesV2ResponseMultiError, or nil if none found.
+func (m *AddNodesV2Response) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *AddNodesV2Response) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, AddNodesV2ResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, AddNodesV2ResponseValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return AddNodesV2ResponseValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if all {
+		switch v := interface{}(m.GetWebAnnotations()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AddNodesV2ResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AddNodesV2ResponseValidationError{
+					field:  "WebAnnotations",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AddNodesV2ResponseValidationError{
+				field:  "WebAnnotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return AddNodesV2ResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// AddNodesV2ResponseMultiError is an error wrapping multiple validation errors
+// returned by AddNodesV2Response.ValidateAll() if the designated constraints
+// aren't met.
+type AddNodesV2ResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m AddNodesV2ResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m AddNodesV2ResponseMultiError) AllErrors() []error { return m }
+
+// AddNodesV2ResponseValidationError is the validation error returned by
+// AddNodesV2Response.Validate if the designated constraints aren't met.
+type AddNodesV2ResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e AddNodesV2ResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e AddNodesV2ResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e AddNodesV2ResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e AddNodesV2ResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e AddNodesV2ResponseValidationError) ErrorName() string {
+	return "AddNodesV2ResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e AddNodesV2ResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sAddNodesV2Response.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = AddNodesV2ResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = AddNodesV2ResponseValidationError{}
 
 // Validate checks the field values on BatchDeleteClusterNodesRequest with the
 // rules defined in the proto definition for this message. If any rules are

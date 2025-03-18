@@ -155,9 +155,43 @@ func (cm *ClusterManager) AddNodesToCluster(ctx context.Context,
 	}
 	start := time.Now()
 	ca := clusterac.NewAddNodesAction(cm.model)
-	ca.Handle(ctx, req, resp)
+	// 新的接口请求内容不变，直接复用；V1 版本仍然保持返回任务作为 Data，V2 版本返回任务列表作为 Data
+	newReq := &cmproto.AddNodesV2Request{
+		ClusterID:         req.ClusterID,
+		Nodes:             req.Nodes,
+		InitLoginPassword: req.InitLoginPassword,
+		NodeGroupID:       req.NodeGroupID,
+		OnlyCreateInfo:    req.OnlyCreateInfo,
+		Operator:          req.Operator,
+		NodeTemplateID:    req.NodeTemplateID,
+		IsExternalNode:    req.IsExternalNode,
+		Login:             req.Login,
+	}
+	newResp := &cmproto.AddNodesV2Response{}
+	ca.Handle(ctx, newReq, newResp)
+	resp.Code = newResp.Code
+	if len(newResp.Data) > 0 {
+		resp.Data = newResp.Data[0]
+	}
+	resp.Message = newResp.Message
+	resp.Result = newResp.Result
 	metrics.ReportAPIRequestMetric("AddNodesToCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
 	blog.Infof("reqID: %s, action: AddNodesToCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// AddNodesToClusterV2 implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) AddNodesToClusterV2(ctx context.Context,
+	req *cmproto.AddNodesV2Request, resp *cmproto.AddNodesV2Response) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewAddNodesAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("AddNodesToClusterV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: AddNodesToClusterV2, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

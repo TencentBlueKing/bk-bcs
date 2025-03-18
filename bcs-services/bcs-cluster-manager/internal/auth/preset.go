@@ -137,6 +137,7 @@ var ActionPermissions = map[string]string{
 
 	// node
 	"ClusterManager.AddNodesToCluster":           cluster.CanManageClusterOperation,
+	"ClusterManager.AddNodesToClusterV2":         cluster.CanManageClusterOperation,
 	"ClusterManager.DeleteNodesFromCluster":      cluster.CanManageClusterOperation,
 	"ClusterManager.BatchDeleteNodesFromCluster": cluster.CanManageClusterOperation,
 	"ClusterManager.ListNodesInCluster":          cluster.CanViewClusterOperation,

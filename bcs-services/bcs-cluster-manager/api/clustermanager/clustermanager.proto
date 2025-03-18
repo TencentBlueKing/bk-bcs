@@ -108,6 +108,16 @@ service ClusterManager {
       summary : "上架集群节点"
     };
   }
+  rpc AddNodesToClusterV2(AddNodesV2Request) returns (AddNodesV2Response) {
+    option (google.api.http) = {
+      post : "/clustermanager/v2/cluster/{clusterID}/node"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "指定IP，给集群增加节点(云CVM节点和IDC第三方节点)，会触发相关自动化流程"
+      summary : "上架集群节点"
+    };
+  }
   rpc DeleteNodesFromCluster(DeleteNodesRequest) returns (DeleteNodesResponse) {
     option (google.api.http) = {
       delete : "/clustermanager/v1/cluster/{clusterID}/node"
@@ -3471,10 +3481,16 @@ message CloudConfigInfo {
       title: "disableCheckGroupResource",
       description: "cloud是否关闭节点池资源quota校验开关"
     }];
+
   repeated string regionHaWhiteList = 9 [
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title: "regionHaWhiteList",
       description: "region高可用配置白名单, 某些region可能不存在3个及以上高可用区"
+    }];
+  uint32 maxNodeCount = 10[
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "maxNodeCount",
+      description: "cloud最大节点数"
     }];
 }
 
@@ -9090,6 +9106,87 @@ message AddNodesResponse {
   }];
   Task data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data", 
+    description : "节点添加任务信息"
+  }];
+  WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "用户所属集群权限"
+  }];
+}
+
+message AddNodesV2Request {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AddNodesRequestV2"
+      description : "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器"
+      required : [ "clusterID", "nodes" ]
+    }
+  };
+
+  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "clusterID",
+    description : "扩容的集群ID"
+  }, (validate.rules).string = {min_len : 1, max_len : 100, pattern : "^[0-9a-zA-Z-]+$", prefix: "BCS-"}
+  ];
+  repeated string nodes = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodes",
+    description : "扩容的集群节点IP地址"
+  }, (validate.rules).repeated = {min_items: 1, unique: true}
+  ];
+  string initLoginPassword = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "initLoginPassword",
+    description : "重装时的初始密码, 可为空"
+  }];
+  string nodeGroupID = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeGroupID",
+    description : "扩容节点如果需要加入NodeGroup，需要填写关联ID"
+  }];
+  bool onlyCreateInfo = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "onlyCreateInfo",
+    description : "仅写入节点信息，默认是false。仅写入节点信息时，会通过cluster所属cloudprovider查询节点信息，"
+        "并设置为RUNNING。"
+  }];
+  string operator = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "operator",
+    description : "操作者"
+  }, (validate.rules).string = {min_len : 2, max_len : 20}];
+  string nodeTemplateID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "nodeTemplateID",
+    description : "关联的节点模板ID"
+  }];
+  bool isExternalNode = 8 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "是否是第三方节点(IDC节点)",
+    description : "上架第三方节点需置为true, 且必须关联nodeGroupID"
+  }];
+  NodeLoginInfo login = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "login",
+    description : "上架节点重装系统时设置节点密码，不同云可兼容处理"
+  }];
+}
+
+message AddNodesV2Response {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "AddNodesResponseV2"
+      description : "增加集群节点返回，主要是反馈相关自动化过程的任务信息，便于查阅状态，V2版本返回任务列表"
+      required : [ "code", "data" ]
+    }
+  };
+
+  uint32 code = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"
+  }];
+  repeated Task data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
     description : "节点添加任务信息"
   }];
   WebAnnotationsV2 web_annotations = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
