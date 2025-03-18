@@ -678,5 +678,5 @@ func (rc *RuleConverter) eventf(object runtime.Object, eventtype, reason, messag
 	if rc.eventer == nil {
 		return
 	}
-	rc.eventf(object, eventtype, reason, messageFmt, args...)
+	rc.eventer.Eventf(object, eventtype, reason, messageFmt, args...)
 }
