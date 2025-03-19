@@ -23,14 +23,15 @@ import (
 // Addons define cluster add-ons struct,
 // cluster add-ons is similar of helm, but more simply.
 type Addons struct {
-	Name             string
-	ChartName        string `yaml:"chartName"`
-	Description      string
-	DocsLink         string `yaml:"docsLink"`
-	Namespace        string
-	DefaultValues    string   `yaml:"defaultValues"`
-	StopValues       string   `yaml:"stopValues"`
-	SupportedActions []string `yaml:"supportedActions"`
+	Name                string
+	ChartName           string `yaml:"chartName"`
+	Description         string
+	DocsLink            string `yaml:"docsLink"`
+	Namespace           string
+	DefaultValues       string   `yaml:"defaultValues"`
+	StopValues          string   `yaml:"stopValues"`
+	IgnoreDefaultValues bool     `yaml:"ignoreDefaultValues"`
+	SupportedActions    []string `yaml:"supportedActions"`
 }
 
 // AddonsSlice add-ons slice

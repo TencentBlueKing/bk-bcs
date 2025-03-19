@@ -3356,7 +3356,7 @@ message GetTemplateAssociateLabelsReq {
 	}];
 	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "资源类型"
-	}, (validate.rules).string = {min_len: 1}];
+	}];
 	string associateName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "关联资源名称"
 	}, (validate.rules).string = {max_len: 256}];

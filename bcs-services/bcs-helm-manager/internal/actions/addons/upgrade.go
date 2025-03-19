@@ -88,6 +88,11 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 		return nil
 	}
 
+	values := []string{addons.DefaultValues, u.req.GetValues()}
+	if addons.IgnoreDefaultValues {
+		values = []string{u.req.GetValues()}
+	}
+
 	// dispatch release
 	options := &actions.ReleaseUpgradeActionOption{
 		Model:          u.model,
@@ -101,7 +106,7 @@ func (u *UpgradeAddonsAction) Handle(ctx context.Context,
 		RepoName:       common.PublicRepoName,
 		ChartName:      addons.ChartName,
 		Version:        u.req.GetVersion(),
-		Values:         []string{addons.DefaultValues, u.req.GetValues()},
+		Values:         values,
 		Args:           defaultArgs,
 		CreateBy:       u.createBy,
 		UpdateBy:       u.updateBy,

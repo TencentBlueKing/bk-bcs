@@ -11532,16 +11532,7 @@ func (m *GetTemplateAssociateLabelsReq) validate(all bool) error {
 
 	// no validation rules for TemplateSpace
 
-	if utf8.RuneCountInString(m.GetKind()) < 1 {
-		err := GetTemplateAssociateLabelsReqValidationError{
-			field:  "Kind",
-			reason: "value length must be at least 1 runes",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
+	// no validation rules for Kind
 
 	if utf8.RuneCountInString(m.GetAssociateName()) > 256 {
 		err := GetTemplateAssociateLabelsReqValidationError{
