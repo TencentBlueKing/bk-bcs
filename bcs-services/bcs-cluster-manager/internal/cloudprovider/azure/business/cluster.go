@@ -39,6 +39,10 @@ func SyncClusterInfo(opt *cloudprovider.GetClusterOption) error {
 		opt.Cluster.ClusterAdvanceSettings.ClusterConnectSetting.Internet = &proto.InternetAccessible{}
 	}
 
+	if opt.Cluster.NetworkSettings == nil {
+		opt.Cluster.NetworkSettings = &proto.NetworkSetting{}
+	}
+
 	client, err := api.NewAksServiceImplWithCommonOption(&opt.CommonOption)
 	if err != nil {
 		return fmt.Errorf("init AksService failed, %v", err)
@@ -77,6 +81,17 @@ func SyncClusterInfo(opt *cloudprovider.GetClusterOption) error {
 		} else {
 			opt.Cluster.ClusterAdvanceSettings.NetworkType = common.AzureCniNodeSubnet
 			opt.Cluster.NetworkType = common.ClusterUnderlayNetwork
+		}
+	}
+
+	// 同步单节点Pod数量上限
+	if len(cloudCluster.Properties.AgentPoolProfiles) > 0 {
+		for _, pool := range cloudCluster.Properties.AgentPoolProfiles {
+			if pool != nil && pool.Mode != nil && *pool.Mode == common.CloudClusterNodeGroupTypeSystem {
+				if pool.MaxPods != nil && *pool.MaxPods > 0 {
+					opt.Cluster.NetworkSettings.MaxNodePodNum = uint32(*pool.MaxPods)
+				}
+			}
 		}
 	}
 
