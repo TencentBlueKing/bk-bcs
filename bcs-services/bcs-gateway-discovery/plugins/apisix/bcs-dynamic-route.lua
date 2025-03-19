@@ -182,6 +182,54 @@ local function check_tcp_node_health(host, port)
     end
 end
 
+local function check_apiserver_version(host, port)
+    -- 创建HTTP客户端实例
+    local httpc = http.new()
+
+    -- 配置客户端参数
+    httpc:set_timeout(5000)  -- 总超时5秒（连接+发送+接收）
+
+    -- 发起HTTPS请求
+    local uri = string.format("https://%s:%s/version", host, port)
+    local ok, err = httpc:connect({
+        scheme = "https",
+        host = host,
+        port = port,
+        ssl_verify = false,  -- 跳过证书验证
+        ssl_server_name = host  -- SNI支持
+    })
+
+    if not ok then
+        core.log.error("HTTPS failed to connect to ", host, ":", port, " - ", err)
+        return false
+    end
+
+    -- 发送HTTP请求
+    local res, err = httpc:request({
+        method = "GET",
+        path = "/version",
+        headers = {
+            ["Host"] = host,
+            ["Connection"] = "close"
+        }
+    })
+
+    -- 清理连接
+    httpc:close()
+
+    -- 处理响应
+    if not res then
+        core.log.error("Failed to connect to ", host, ":", port, " - ", err)
+        return false
+    end
+
+    if res.status ~= 200 then
+        core.log.error("Failed to connect to ", host, ":", port, " - ", err)
+        return false
+    else
+        return true
+    end
+end
 
 local function set_upstream(upstream_info, ctx, conf)
     local nodes = upstream_info.nodes
@@ -336,14 +384,13 @@ local function periodly_sync_cluster_credentials_in_master()
             end
         end
 
-        -- 检查cluster_credential中的clientModule是否为空
-        if cluster_credential["clientModule"] == "" then
-            -- 如果为空，则创建一个空表来存储健康节点
+        -- 定义一个通用的节点健康检查函数
+        local function check_nodes_health(upstream_nodes, check_func, cluster_credential)
             local healthy_nodes = {}
             -- 遍历upstream_nodes中的每个节点
             for _, node in ipairs(upstream_nodes) do
-                -- 调用check_tcp_node_health函数检查节点的健康状态
-                local is_healthy = check_tcp_node_health(node.host, node.port)
+                -- 调用指定的检查函数检查节点的健康状态
+                local is_healthy = check_func(node.host, node.port)
                 -- 如果节点健康，则将其添加到healthy_nodes表中
                 if is_healthy then
                     table_insert(healthy_nodes, node)
@@ -352,8 +399,14 @@ local function periodly_sync_cluster_credentials_in_master()
                     core.log.warn("Cluster ", cluster_credential["clusterID"], " Node ", node.host, ":", node.port, " is unhealthy")
                 end
             end
-            -- 将upstream_nodes更新为只包含健康节点的列表
-            upstream_nodes = healthy_nodes
+            return healthy_nodes
+        end
+
+        -- 根据clientModule的值选择不同的健康检查方式
+        if cluster_credential["clientModule"] == "" then
+            upstream_nodes = check_nodes_health(upstream_nodes, check_tcp_node_health, cluster_credential)
+        elseif cluster_credential["clientModule"] == "apiserver-version" then
+            upstream_nodes = check_nodes_health(upstream_nodes, check_apiserver_version, cluster_credential)
         end
 
 
