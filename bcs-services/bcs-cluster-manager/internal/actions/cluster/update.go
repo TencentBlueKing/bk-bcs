@@ -844,7 +844,11 @@ func (ua *AddNodesAction) cloudCheckValidate() error {
 		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
 		return err
 	}
-	err = validate.AddNodesToClusterValidate(ua.req, nil)
+	err = validate.AddNodesToClusterValidate(ua.req,
+		&cloudprovider.CommonOption{
+			CommonConf: cloudprovider.CloudConf{
+				MaxNodeCount: ua.cloud.GetConfInfo().GetMaxNodeCount(),
+			}})
 	if err != nil {
 		blog.Errorf("AddNodesAction cloudCheckValidate failed: %v", err)
 		return err
@@ -876,14 +880,6 @@ func (ua *AddNodesAction) validate() error {
 	if !canUse {
 		errMsg := fmt.Errorf("add nodes failed: user[%s] no perm to use nodes[%v] in bizID[%s]",
 			ua.req.Operator, ua.req.Nodes, ua.cluster.BusinessID)
-		blog.Errorf(errMsg.Error())
-		return errMsg
-	}
-
-	// cluster add nodes limit at a time
-	if len(ua.req.Nodes) > int(ua.cloud.ConfInfo.MaxNodeCount) {
-		errMsg := fmt.Errorf("add nodes failed: cluster[%s] add NodesLimit exceed CloudMaxNodeLimit: %d",
-			ua.cluster.ClusterID, ua.cloud.ConfInfo.MaxNodeCount)
 		blog.Errorf(errMsg.Error())
 		return errMsg
 	}

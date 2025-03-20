@@ -111,6 +111,8 @@ type CloudConf struct {
 	MachineDomain string
 	// VpcDomain for vpc domain
 	VpcDomain string
+	// MaxNodeCount for max node count
+	MaxNodeCount uint32
 }
 
 // InitClusterConfigOption init cluster default cloud config

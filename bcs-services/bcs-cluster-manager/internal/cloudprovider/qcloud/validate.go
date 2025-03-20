@@ -384,6 +384,21 @@ func (c *CloudValidate) AddNodesToClusterValidate(req *proto.AddNodesV2Request, 
 		return fmt.Errorf("%s AddNodesToClusterValidate must be depent NodeGroup", cloudName)
 	}
 
+	maxNodeCount := func() uint32 {
+		if opt == nil || opt.CommonConf.MaxNodeCount == 0 {
+			return common.ClusterAddNodesLimit
+		}
+
+		return opt.CommonConf.MaxNodeCount
+	}()
+	// cluster add nodes limit at a time
+	if len(req.Nodes) > int(maxNodeCount) {
+		errMsg := fmt.Errorf("cluster[%s] add NodesLimit exceed CloudMaxNodeLimit: %d",
+			req.ClusterID, opt.CommonConf.MaxNodeCount)
+		blog.Errorf(errMsg.Error())
+		return errMsg
+	}
+
 	return nil
 }
 

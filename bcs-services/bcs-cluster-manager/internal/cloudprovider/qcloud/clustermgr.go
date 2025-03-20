@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/avast/retry-go"
+	"github.com/kirito41dd/xslice"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
@@ -511,12 +512,12 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
 
 	for _, nodeChunk := range nodeChunks {
 		// build add nodes to cluster task
-		task, err := mgr.BuildAddNodesToClusterTask(cls, nodeChunk, opt)
-		if err != nil {
+		task, errLocal := mgr.BuildAddNodesToClusterTask(cls, nodeChunk, opt)
+		if errLocal != nil {
 			blog.Errorf("build AddNodesToCluster task for cluster %s with cloudprovider %s failed, %s",
-				cls.ClusterName, cls.Provider, err.Error(),
+				cls.ClusterName, cls.Provider, errLocal.Error(),
 			)
-			return nil, err
+			return nil, errLocal
 		}
 		addNodeTasks = append(addNodeTasks, task)
 	}
@@ -526,15 +527,16 @@ func (c *Cluster) AddNodesToCluster(cls *proto.Cluster, nodes []*proto.Node,
 
 // splitNodeChunk split nodes into chunks of specified size
 func splitNodeChunk(nodes []*proto.Node, chunkSize int) [][]*proto.Node {
-	var chunks [][]*proto.Node
-	for i := 0; i < len(nodes); i += chunkSize {
-		end := i + chunkSize
-		if end > len(nodes) {
-			end = len(nodes)
-		}
-		chunks = append(chunks, nodes[i:end])
+	if len(nodes) == 0 {
+		return nil
 	}
-	return chunks
+	i := xslice.SplitToChunks(nodes, chunkSize)
+	ss, ok := i.([][]*proto.Node)
+	if !ok {
+		return nil
+	}
+
+	return ss
 }
 
 // DeleteNodesFromCluster delete specified nodes from cluster according cloudprovider
