@@ -1,7 +1,8 @@
-import { computed, ref } from 'vue';
+import { computed, InjectionKey, ref } from 'vue';
 
 import { featureFlags as featureFlagsApi } from '@/api/modules/project';
 import { userInfo } from '@/api/modules/user-manager';
+import { Preset } from '@/components/assistant/use-assistant-store';
 import $store from '@/store';
 
 // todo 完善类型
@@ -178,3 +179,6 @@ export function useAppData() {
     getFeatureFlags,
   };
 }
+
+// inject key
+export const AiSendMsgFnInjectKey: InjectionKey<(msg: string, preset?: Preset) => void> = Symbol('ai-send-message');

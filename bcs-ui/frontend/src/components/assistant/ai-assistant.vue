@@ -1,25 +1,5 @@
 <template>
   <span v-if="flagsMap.BKAI">
-    <!-- AI小鲸按钮 -->
-    <bcs-popover theme="ai-assistant light" placement="bottom" trigger="manual" offset="0, 10" ref="popoverRef">
-      <span
-        class="relative top-[2px] flex items-center justify-center w-[18px] h-[18px] text-[14px] cursor-pointer"
-        v-bk-tooltips="$t('blueking.aiScriptsAssistant.desc')"
-        @click="handleShowAssistant">
-        <img :src="AssistantSmallIcon" />
-      </span>
-      <template #content>
-        <div
-          :class="[
-            'bg-[#fff] px-[16px]',
-            'flex items-center h-[40px]  rounded-[20px]',
-            'shadow-[0_2px_6px_0_rgba(0,0,0,0.16)] hover:shadow-[0_2px_8px_0_rgba(0,0,0,0.2)]'
-          ]">
-          <img :src="AssistantIcon" />
-          {{ $t('blueking.aiScriptsAssistant.errTips') }}
-        </div>
-      </template>
-    </bcs-popover>
     <!-- AI小鲸对话框 -->
     <Assistant
       :is-show.sync="isShowAssistant"
@@ -42,28 +22,29 @@ import { ref } from 'vue';
 
 import Assistant, { ChatHelper, IMessage, ISendData, IStartPosition, MessageStatus, RoleType } from '@blueking/ai-blueking/vue2';
 
+import useAssistantStore from './use-assistant-store';
+
 import '@blueking/ai-blueking/dist/vue2/style.css';
 import { BCS_UI_PREFIX } from '@/common/constant';
+import { Preset } from '@/components/assistant/use-assistant-store';
 import { useAppData } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
-import AssistantIcon from '@/images/assistant.png';
-import AssistantSmallIcon from '@/images/assistant-small.svg';
 
-// 属性配置
-const props = defineProps({
-  preset: {
-    type: String,
-    default: '',
-  },
-});
+
+interface ISendConfig extends ISendData {
+  preset: Preset
+}
+
+const {
+  isShowAssistant,
+  toggleAssistant,
+} = useAssistantStore();
 
 // 特性开关
 const { flagsMap } = useAppData();
 
 // AI小鲸
 const streamID = ref(1);
-const popoverRef = ref();
-const isShowAssistant = ref(false);
 const loading = ref(false);
 const messages = ref<IMessage[]>([]);
 const prompts = ref([]);
@@ -141,8 +122,8 @@ const handleError = (msg: string) => {
 };
 const chatHelper = new ChatHelper(`${BCS_UI_PREFIX}/assistant`, handleStart, handleReceiveMessage, handleEnd, handleError, messages.value);
 // 发送消息
-const handleSend = async (args: ISendData) => {
-  if (!flagsMap.value.BKAI || !props.preset) return;
+const handleSend = async (args: ISendConfig) => {
+  if (!flagsMap.value.BKAI) return;
 
   // 记录当前消息记录
   const chatHistory = [...messages.value];
@@ -165,36 +146,26 @@ const handleSend = async (args: ISendData) => {
     inputs: {
       input,
       chat_history: chatHistory,
-      preset: props.preset,
+      preset: args.preset || 'QA',
     },
   }, streamID.value);
 };
 // 发送消息防抖(外部调用)
-const handleSendMsg = debounce((msg: string) => {
-  handleSend({ content: msg });
+const handleSendMsg = debounce((msg: string, pre: Preset = 'QA') => {
+  handleSend({ content: msg, preset: pre });
 }, 1000);
 
 // 关闭对话框
 const handleClose = () => {
-  isShowAssistant.value = false;
+  toggleAssistant(false);
 };
 // 快捷prompt(暂时不启用改功能)
 // const handleChoosePrompt = (prompt) => {
 //   console.log(prompt);
 // };
-// 显示对话框
-const handleShowAssistant = () => {
-  isShowAssistant.value = true;
-};
-// 消息提示
-const showAITips = () => {
-  if (!flagsMap.value.BKAI) return;
-  popoverRef.value?.showHandler();
-};
 
 defineExpose({
   handleSendMsg,
-  showAITips,
 });
 </script>
 <style lang="postcss">
@@ -202,5 +173,9 @@ defineExpose({
   padding: 0!important;
   box-shadow: unset !important;
   background: transparent;
+}
+
+.ai-modal, .ai-blueking-render-popup {
+  z-index: 9999 !important;
 }
 </style>

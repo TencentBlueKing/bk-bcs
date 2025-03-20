@@ -28,7 +28,7 @@
       </div>
       <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
         <!-- <i class="bk-icon icon-upload-cloud text-[14px] hover:text-[#699df4] cursor-pointer"></i> -->
-        <AiAssistant ref="assistantRef" preset="KubernetesProfessor" />
+        <AiAssistantBtn ref="assistantBtnRef" />
         <i
           :class="[
             'hover:text-[#699df4] cursor-pointer',
@@ -77,11 +77,12 @@
 <script setup lang="ts">
 import { throttle } from 'lodash';
 import * as monaco from 'monaco-editor';
-import { computed, ref, watch } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
-import AiAssistant from '@/components/ai-assistant.vue';
+import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
+import { AiSendMsgFnInjectKey } from '@/composables/use-app';
 import useFullScreen from '@/composables/use-fullscreen';
 import EditorStatus from '@/views/resource-view/resource-update/editor-status.vue';
 
@@ -114,7 +115,9 @@ const props = defineProps({
 
 const emits = defineEmits(['updateUpgrade', 'setContentOrigin', 'change']);
 
-const assistantRef = ref<InstanceType<typeof AiAssistant>>();
+const preset = 'KubernetesProfessor';
+
+const assistantBtnRef = ref<InstanceType<typeof AiAssistantBtn>>();
 const codeEditorRef = ref<InstanceType<typeof CodeEditor>>();
 const content = ref('');
 const opt = computed<monaco.editor.IStandaloneEditorConstructionOptions>(() => {
@@ -148,9 +151,10 @@ const validate = async () => !editorErr.value.message;
 // 全屏
 const { contentRef, isFullscreen, switchFullScreen } = useFullScreen();
 // 调用AI
+const handleSendMsg = inject(AiSendMsgFnInjectKey);
 const explainK8sIssue = throttle(() => {
-  assistantRef.value?.handleSendMsg(editorErr.value.message);
-  assistantRef.value?.showAITips();
+  handleSendMsg?.(editorErr.value.message, preset);
+  assistantBtnRef.value?.showAITips();
 }, 300);
 
 // 升级为helm

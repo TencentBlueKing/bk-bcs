@@ -25,22 +25,27 @@
       <p class="text-[14px] leading-[21px] !text-left">{{ $t('bcs.newVersion.p1') }}</p>
       <p class="text-[14px] leading-[21px] !text-left mt-[10px]">{{ $t('bcs.newVersion.p2') }}</p>
     </bcs-dialog>
+    <!-- AI小鲸 -->
+    <AiAssistant ref="AiAssistantRef" />
   </div>
 </template>
 <script lang="ts" setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { onBeforeUnmount, onMounted, provide, ref } from 'vue';
 
 import NoticeComponent from '@blueking/notice-component-vue2';
 
 import '@blueking/notice-component-vue2/dist/style.css';
 import { bus } from '@/common/bus';
 import { BCS_UI_PREFIX } from '@/common/constant';
-import { useAppData } from '@/composables/use-app';
+import AiAssistant from '@/components/assistant/ai-assistant.vue';
+import { Preset } from '@/components/assistant/use-assistant-store';
+import { AiSendMsgFnInjectKey, useAppData } from '@/composables/use-app';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
 import PermDialog from '@/views/app/apply-perm.vue';
 import BkPaaSLogin from '@/views/app/login.vue';
 import Navigation from '@/views/app/navigation.vue';
+
 
 const { getUserInfo } = useAppData();
 const { config, getPlatformInfo, setDocumentTitle, setShortcutIcon } = usePlatform();
@@ -118,6 +123,13 @@ const validateResourceVersion = () => {
 const reloadPage = () => {
   window.location.reload();
 };
+
+// ai 小鲸
+const AiAssistantRef = ref<InstanceType<typeof AiAssistant>>();
+function handleAI(message: string, pre?: Preset) {
+  AiAssistantRef.value?.handleSendMsg(message, pre);
+}
+provide(AiSendMsgFnInjectKey, handleAI);
 
 // observer noticeRef
 let observer: MutationObserver;

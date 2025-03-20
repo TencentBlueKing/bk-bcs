@@ -82,7 +82,7 @@
         <!-- 项目切换 -->
         <ProjectSelector class="ml-auto w-[240px] mr-[18px]"></ProjectSelector>
         <!-- AI小鲸 -->
-        <AiAssistant preset="QA" class="relative top-[-1px] mr-[8px]" />
+        <AiAssistantBtn class="relative top-[-1px] mr-[8px]" />
         <!-- 语言切换 -->
         <PopoverSelector class="mr-[8px]" ref="langRef">
           <span class="header-icon text-[18px]">
@@ -159,7 +159,7 @@ import useMenu, { IMenu } from './use-menu';
 
 import { releaseNote } from '@/api/modules/project';
 import { setCookie } from '@/common/util';
-import AiAssistant from '@/components/ai-assistant.vue';
+import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
 import BcsMd from '@/components/bcs-md/index.vue';
 import useCalcHeight from '@/composables/use-calc-height';
 import usePlatform from '@/composables/use-platform';
@@ -177,7 +177,7 @@ export default defineComponent({
     BcsMd,
     ProjectSelector,
     PopoverSelector,
-    AiAssistant,
+    AiAssistantBtn,
   },
   setup() {
     const { init } = useCalcHeight([

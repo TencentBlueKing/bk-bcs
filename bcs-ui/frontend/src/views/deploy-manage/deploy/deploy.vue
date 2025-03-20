@@ -125,7 +125,7 @@
               ]">
               <span class="text-[#C4C6CC] text-[14px]"></span>
               <span class="flex items-center text-[12px] gap-[20px] text-[#979BA5]">
-                <AiAssistant ref="assistantRef" preset="KubernetesProfessor" />
+                <AiAssistantBtn ref="assistantBtnRef" />
                 <i
                   :class="[
                     'hover:text-[#699df4] cursor-pointer',
@@ -212,7 +212,7 @@
   </BcsContent>
 </template>
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from 'vue';
+import { computed, inject, onBeforeMount, ref, watch } from 'vue';
 
 import versionSelector from '../components/version-selector.vue';
 
@@ -220,11 +220,11 @@ import Namespace from './namespace-v2.vue';
 
 import { IListTemplateMetadataItem, IPreviewItem, ITemplateVersionItem, IVarItem } from '@/@types/cluster-resource-patch';
 import { TemplateSetService  } from '@/api/modules/new-cluster-resource';
-import AiAssistant from '@/components/ai-assistant.vue';
+import AiAssistantBtn from '@/components/assistant/ai-assistant-btn.vue';
 import FormGroup from '@/components/form-group.vue';
 import BcsContent from '@/components/layout/Content.vue';
 import CodeEditor from '@/components/monaco-editor/new-editor.vue';
-import { ICluster, useCluster } from '@/composables/use-app';
+import { AiSendMsgFnInjectKey, ICluster, useCluster } from '@/composables/use-app';
 import useFullScreen from '@/composables/use-fullscreen';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -240,7 +240,9 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const assistantRef = ref<InstanceType<typeof AiAssistant>>();
+const preset = 'KubernetesProfessor';
+
+const assistantBtnRef = ref<InstanceType<typeof AiAssistantBtn>>();
 const editorErrMsg = ref('');
 const deploying = ref(false);
 const loading = ref(false);
@@ -367,6 +369,7 @@ async function handleDeployTemplateFile() {
 }
 
 // 预览
+const handleSendMsg = inject(AiSendMsgFnInjectKey);
 async function handlePreviewData() {
   const validate = await formRef.value?.validate().catch(() => false);
   if (!validate) return;
@@ -383,8 +386,8 @@ async function handlePreviewData() {
   curPreviewName.value = previewData.value.at(0)?.name || '';
   if (error) {
     editorErrMsg.value = error;
-    assistantRef.value?.handleSendMsg(editorErrMsg.value);
-    assistantRef.value?.showAITips();// 弹出提示
+    handleSendMsg?.(editorErrMsg.value, preset);
+    assistantBtnRef.value?.showAITips();// 弹出提示
   } else {
     editorErrMsg.value = '';
   }
@@ -433,6 +436,7 @@ watch(
 onBeforeMount(() => {
   getTemplateMetadata();
 });
+
 </script>
 <style scoped lang="postcss">
 >>> .sideslider-full-content .bk-sideslider-content {
