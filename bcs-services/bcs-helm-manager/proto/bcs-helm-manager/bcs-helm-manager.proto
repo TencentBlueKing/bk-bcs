@@ -1815,6 +1815,14 @@ message ReleaseDetail {
         title: "valueFile",
         description: "value 文件，上一次更新使用的文件"
     }];
+    optional string releaseName = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "releaseName",
+        description: "chart release名称"
+    }];
+    optional string displayName = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "displayName",
+        description: "release别名"
+    }];
 }
 
 message ListReleaseV1Req {
@@ -2713,6 +2721,10 @@ message Addons {
     optional string releaseName = 14[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title: "releaseName",
         description: "组件在集群中的 release name"
+    }];
+    optional string displayName = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "displayName",
+        description: "组件在集群中的别名"
     }];
 }
 
