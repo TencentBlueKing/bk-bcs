@@ -152,5 +152,12 @@ func (ua *UpdateAction) updateProject(p *pm.Project) error {
 	if ua.req.Creator != "" {
 		p.Creator = req.Creator
 	}
+	if ua.req.Labels != nil {
+		p.Labels = req.Labels
+	}
+	if ua.req.Annotations != nil {
+		p.Annotations = req.Annotations
+	}
+
 	return ua.model.UpdateProject(ua.ctx, p)
 }

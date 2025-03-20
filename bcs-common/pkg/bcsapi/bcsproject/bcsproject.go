@@ -32,6 +32,7 @@ type ProjectClient struct {
 	Project   BCSProjectClient
 	Namespace NamespaceClient
 	Variable  VariableClient
+	Quota     BCSProjectQuotaClient
 }
 
 // NewProjectManagerClient create ProjectManager SDK implementation
@@ -92,6 +93,7 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 		Project:   NewBCSProjectClient(conn),
 		Namespace: NewNamespaceClient(conn),
 		Variable:  NewVariableClient(conn),
+		Quota:     NewBCSProjectQuotaClient(conn),
 	}
 	return c, func() { _ = conn.Close() }
 }

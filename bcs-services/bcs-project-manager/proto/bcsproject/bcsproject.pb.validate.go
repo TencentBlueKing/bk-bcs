@@ -84,6 +84,10 @@ func (m *Project) validate(all bool) error {
 
 	// no validation rules for BusinessName
 
+	// no validation rules for Labels
+
+	// no validation rules for Annotations
+
 	if len(errors) > 0 {
 		return ProjectMultiError(errors)
 	}
@@ -255,6 +259,10 @@ func (m *CreateProjectRequest) validate(all bool) error {
 	// no validation rules for CenterID
 
 	// no validation rules for CenterName
+
+	// no validation rules for Labels
+
+	// no validation rules for Annotations
 
 	if len(errors) > 0 {
 		return CreateProjectRequestMultiError(errors)
@@ -575,6 +583,10 @@ func (m *UpdateProjectRequest) validate(all bool) error {
 	// no validation rules for Managers
 
 	// no validation rules for Creator
+
+	// no validation rules for Labels
+
+	// no validation rules for Annotations
 
 	if len(errors) > 0 {
 		return UpdateProjectRequestMultiError(errors)

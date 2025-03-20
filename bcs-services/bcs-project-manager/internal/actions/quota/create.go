@@ -15,11 +15,14 @@ package quota
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/manager"
@@ -120,6 +123,29 @@ func (ca *CreateQuotaAction) createProjectQuota() error {
 		Labels:      ca.req.GetLabels(),
 		Annotations: ca.req.GetAnnotations(),
 	}
+
+	if ca.req.GetQuotaType() == string(quota.Host) && ca.req.Quota != nil {
+		var conds []*operator.Condition
+
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"projectCode":                      ca.req.GetProjectCode(),
+			"quota.hostResources.zoneName":     ca.req.GetQuota().GetZoneResources().GetZoneName(),
+			"quota.hostResources.instanceType": ca.req.GetQuota().GetZoneResources().GetInstanceType(),
+		}))
+
+		cond := operator.NewBranchCondition(operator.And, conds...)
+
+		Quotas, _, err := ca.model.ListProjectQuotas(ca.ctx, cond, &page.Pagination{All: true})
+		if err != nil {
+			return errorx.NewDBErr(err.Error())
+		}
+		if len(Quotas) > 0 {
+			return fmt.Errorf("quota already exist, quotaName: %s, quotaId: %s zoneName: %s, instanceType: %s",
+				Quotas[0].QuotaName, Quotas[0].QuotaId, Quotas[0].Quota.HostResources.ZoneName,
+				Quotas[0].Quota.HostResources.InstanceType)
+		}
+	}
+
 	// 从 context 中获取 username
 	if authUser, err := middleware.GetUserFromContext(ca.ctx); err == nil {
 		pQuota.Creator = authUser.GetUsername()

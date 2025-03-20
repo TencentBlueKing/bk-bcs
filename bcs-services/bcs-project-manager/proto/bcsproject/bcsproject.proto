@@ -198,6 +198,14 @@ message Project {
     title: "businessName", 
     description: "项目绑定的蓝鲸CMDB中业务名称"
   }];
+  map<string, string> labels = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "project的标签配置"
+  }];
+  map<string, string> annotations = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "project的注解配置"
+  }];
 }
 
 message CreateProjectRequest {
@@ -289,6 +297,14 @@ message CreateProjectRequest {
     title: "centerName", 
     description: "中心名称, 保留字段, 默认为空"
   }];
+  map<string, string> labels = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "project的标签配置"
+  }];
+  map<string, string> annotations = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "project的注解配置"
+  }];
 }
 
 message GetProjectRequest {
@@ -355,6 +371,14 @@ message UpdateProjectRequest {
   string creator = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "creator", 
     description: "创建人"
+  }];
+  map<string, string> labels = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "labels",
+    description: "project的标签配置"
+  }];
+  map<string, string> annotations = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "annotations",
+    description: "project的注解配置"
   }];
 }
 

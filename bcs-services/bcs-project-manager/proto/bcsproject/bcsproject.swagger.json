@@ -2452,6 +2452,22 @@
                   "type": "string",
                   "description": "创建人",
                   "title": "creator"
+                },
+                "labels": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "project的标签配置",
+                  "title": "labels"
+                },
+                "annotations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "description": "project的注解配置",
+                  "title": "annotations"
                 }
               },
               "description": "更新项目请求",
@@ -2745,6 +2761,22 @@
           "type": "string",
           "description": "中心名称, 保留字段, 默认为空",
           "title": "centerName"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "project的标签配置",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "project的注解配置",
+          "title": "annotations"
         }
       },
       "description": "创建项目",
@@ -4099,6 +4131,22 @@
           "type": "string",
           "description": "项目绑定的蓝鲸CMDB中业务名称",
           "title": "businessName"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "project的标签配置",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "project的注解配置",
+          "title": "annotations"
         }
       },
       "description": "项目的基本信息",

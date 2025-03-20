@@ -97,6 +97,8 @@ func (ca *CreateAction) createProject() error {
 		CenterID:    ca.req.CenterID,
 		CenterName:  ca.req.CenterName,
 		IsSecret:    ca.req.IsSecret,
+		Labels:      ca.req.Labels,
+		Annotations: ca.req.Annotations,
 		CreateTime:  time.Now().Format(time.RFC3339),
 		UpdateTime:  time.Now().Format(time.RFC3339),
 	}

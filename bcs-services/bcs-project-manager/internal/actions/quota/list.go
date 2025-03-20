@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store/quota"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/errorx"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/proto/bcsproject"
@@ -42,45 +43,94 @@ func NewListQuotaAction(model store.ProjectModel) *ListQuotaAction {
 	}
 }
 
-// Do list projectquotas
-// Do 方法处理获取项目配额列表的请求
-func (la *ListQuotaAction) Do(ctx context.Context,
-	req *proto.ListProjectQuotasRequest, resp *proto.ListProjectQuotasResponse) error {
-	la.ctx = ctx
-	la.req = req
-	la.resp = resp
+func (la *ListQuotaAction) doHost(req *proto.ListProjectQuotasRequest,
+	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
+	p, err := la.model.GetProject(la.ctx, req.ProjectID)
+	if err != nil {
+		return pquota, errorx.NewDBErr(err.Error())
+	}
 
-	var PQ []*proto.ProjectQuota
+	if p == nil {
+		return pquota, errorx.NewReadableErr(errorx.ParamErr, "project not found")
+	}
 
-	if req.ProjectID != "" {
-		// 获取指定项目和提供商的资源使用情况
-		pqs, err := clustermanager.GetResourceUsage(req.ProjectID, req.Provider)
+	if quotaGray, ok := p.Labels["quota-gray"]; ok && quotaGray == "true" {
+		var conds []*operator.Condition
 
-		if err != nil {
-			return err
+		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+			"quotaType": quota.Host,
+		}))
+
+		if req.ProjectID != "" {
+			conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
+				"projectId": la.req.GetProjectID(),
+			}))
 		}
 
-		// 遍历每个项目配额，构建响应数据
-		for _, pq := range pqs {
-			var NG []*proto.NodeGroup
-			// 获取每个节点组的详细信息
-			for _, gpid := range pq.TotalGroupIds {
-				ng, errG := clustermanager.GetNodeGroup(gpid)
-				if errG != nil {
-					return errG
-				}
-				NG = append(NG, &proto.NodeGroup{
-					NodeGroupId: ng.NodeGroupID,
-					ClusterId:   ng.ClusterID,
-					QuotaNum:    ng.AutoScaling.MaxSize,
-					QuotaUsed:   ng.AutoScaling.DesiredSize,
-				})
+		cond := operator.NewBranchCondition(operator.And, conds...)
+
+		quotas, _, errQ := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
+		if err != nil {
+			return pquota, errorx.NewDBErr(errQ.Error())
+		}
+
+		for _, q := range quotas {
+			tmp := q
+			pquota = append(pquota, quota.TransStore2ProtoQuota(&tmp))
+		}
+	}
+
+	pq, errU := la.doHostUsage(req, pquota, p)
+	if errU != nil {
+		return pquota, errU
+	}
+	pquota = pq
+
+	return pquota, nil
+}
+
+func (la *ListQuotaAction) doHostUsage(req *proto.ListProjectQuotasRequest,
+	pquota []*proto.ProjectQuota, p *project.Project) ([]*proto.ProjectQuota, error) {
+	// 获取指定项目和提供商的资源使用情况
+	pqs, errC := clustermanager.GetResourceUsage(req.ProjectID, req.Provider)
+
+	if errC != nil {
+		return pquota, errC
+	}
+
+	// 遍历每个项目配额，构建响应数据
+	for _, pq := range pqs {
+		var NG []*proto.NodeGroup
+		// 获取每个节点组的详细信息
+		for _, gpid := range pq.TotalGroupIds {
+			ng, errG := clustermanager.GetNodeGroup(gpid)
+			if errG != nil {
+				return pquota, errG
 			}
+			NG = append(NG, &proto.NodeGroup{
+				NodeGroupId: ng.NodeGroupID,
+				ClusterId:   ng.ClusterID,
+				QuotaNum:    ng.AutoScaling.MaxSize,
+				QuotaUsed:   ng.AutoScaling.DesiredSize,
+			})
+		}
 
-			cpu, mem := GetCpuMemFromInstanceType(pq.InstanceType)
+		cpu, mem := GetCpuMemFromInstanceType(pq.InstanceType)
 
+		if quotaGray, ok := p.Labels["quota-gray"]; ok && quotaGray == "true" {
+			for _, pqpq := range pquota {
+				if pqpq.Quota.ZoneResources.ZoneName == pq.Zone &&
+					pqpq.Quota.ZoneResources.InstanceType == pq.InstanceType &&
+					pqpq.Status == string(quota.Running) {
+					pqpq.Quota.ZoneResources.Cpu = cpu
+					pqpq.Quota.ZoneResources.Mem = mem
+					pqpq.Quota.ZoneResources.QuotaUsed = pq.Used
+					pqpq.NodeGroups = NG
+				}
+			}
+		} else {
 			// 构建项目配额信息
-			PQ = append(PQ, &proto.ProjectQuota{
+			pquota = append(pquota, &proto.ProjectQuota{
 				Quota: &proto.QuotaResource{
 					ZoneResources: &proto.InstanceTypeConfig{
 						Region:       pq.Region,
@@ -99,7 +149,11 @@ func (la *ListQuotaAction) Do(ctx context.Context,
 			})
 		}
 	}
+	return pquota, nil
+}
 
+func (la *ListQuotaAction) doFed(req *proto.ListProjectQuotasRequest,
+	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
 	var conds []*operator.Condition
 
 	conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
@@ -116,13 +170,41 @@ func (la *ListQuotaAction) Do(ctx context.Context,
 
 	Quotas, _, err := la.model.ListProjectQuotas(la.ctx, cond, &page.Pagination{All: true})
 	if err != nil {
-		return errorx.NewDBErr(err.Error())
+		return pquota, errorx.NewDBErr(err.Error())
 	}
 
 	for _, q := range Quotas {
 		tmp := q
 		getQuotaUsage(&tmp)
-		PQ = append(PQ, quota.TransStore2ProtoQuota(&tmp))
+		pquota = append(pquota, quota.TransStore2ProtoQuota(&tmp))
+	}
+	return pquota, nil
+}
+
+// Do list projectquotas
+// Do 方法处理获取项目配额列表的请求
+func (la *ListQuotaAction) Do(ctx context.Context,
+	req *proto.ListProjectQuotasRequest, resp *proto.ListProjectQuotasResponse) error {
+	la.ctx = ctx
+	la.req = req
+	la.resp = resp
+
+	var PQ []*proto.ProjectQuota
+
+	if req.ProjectID != "" && req.GetQuotaType() != string(quota.Federation) {
+		pq, err := la.doHost(req, PQ)
+		if err != nil {
+			return err
+		}
+		PQ = pq
+	}
+
+	if req.GetQuotaType() != string(quota.Host) {
+		pq, err := la.doFed(req, PQ)
+		if err != nil {
+			return err
+		}
+		PQ = pq
 	}
 
 	// 设置响应数据

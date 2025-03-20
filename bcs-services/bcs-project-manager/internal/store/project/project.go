@@ -76,28 +76,30 @@ var (
 
 // Project xxx
 type Project struct {
-	CreateTime  string `json:"createTime" bson:"createTime"`
-	UpdateTime  string `json:"updateTime" bson:"updateTime"`
-	Creator     string `json:"creator" bson:"creator"`
-	Updater     string `json:"updater" bson:"updater"`
-	Managers    string `json:"managers" bson:"managers"`
-	ProjectID   string `json:"projectID" bson:"projectID"`
-	Name        string `json:"name" bson:"name"`
-	ProjectCode string `json:"projectCode" bson:"projectCode"`
-	UseBKRes    bool   `json:"useBKRes" bson:"useBKRes"`
-	Description string `json:"description" bson:"description"`
-	IsOffline   bool   `json:"isOffline" bson:"isOffline"`
-	Kind        string `json:"kind" bson:"kind"`
-	BusinessID  string `json:"businessID" bson:"businessID"`
-	IsSecret    bool   `json:"isSecret" bson:"isSecret"`
-	ProjectType uint32 `json:"projectType" bson:"projectType"`
-	DeployType  uint32 `json:"deployType" bson:"deployType"`
-	BGID        string `json:"bgID" bson:"bgID"`
-	BGName      string `json:"bgName" bson:"bgName"`
-	DeptID      string `json:"deptID" bson:"deptID"`
-	DeptName    string `json:"deptName" bson:"deptName"`
-	CenterID    string `json:"centerID" bson:"centerID"`
-	CenterName  string `json:"centerName" bson:"centerName"`
+	CreateTime  string            `json:"createTime" bson:"createTime"`
+	UpdateTime  string            `json:"updateTime" bson:"updateTime"`
+	Creator     string            `json:"creator" bson:"creator"`
+	Updater     string            `json:"updater" bson:"updater"`
+	Managers    string            `json:"managers" bson:"managers"`
+	ProjectID   string            `json:"projectID" bson:"projectID"`
+	Name        string            `json:"name" bson:"name"`
+	ProjectCode string            `json:"projectCode" bson:"projectCode"`
+	UseBKRes    bool              `json:"useBKRes" bson:"useBKRes"`
+	Description string            `json:"description" bson:"description"`
+	IsOffline   bool              `json:"isOffline" bson:"isOffline"`
+	Kind        string            `json:"kind" bson:"kind"`
+	BusinessID  string            `json:"businessID" bson:"businessID"`
+	IsSecret    bool              `json:"isSecret" bson:"isSecret"`
+	ProjectType uint32            `json:"projectType" bson:"projectType"`
+	DeployType  uint32            `json:"deployType" bson:"deployType"`
+	BGID        string            `json:"bgID" bson:"bgID"`
+	BGName      string            `json:"bgName" bson:"bgName"`
+	DeptID      string            `json:"deptID" bson:"deptID"`
+	DeptName    string            `json:"deptName" bson:"deptName"`
+	CenterID    string            `json:"centerID" bson:"centerID"`
+	CenterName  string            `json:"centerName" bson:"centerName"`
+	Labels      map[string]string `json:"labels" bson:"labels"`
+	Annotations map[string]string `json:"annotations" bson:"annotations"`
 }
 
 // ModelProject provide project db
