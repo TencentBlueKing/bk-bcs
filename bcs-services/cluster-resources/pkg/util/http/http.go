@@ -16,28 +16,8 @@ package http
 import (
 	"strings"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 )
-
-// CustomHeaderMatcher 自定义 HTTP Header Matcher
-func CustomHeaderMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	case "Traceparent":
-		// http -> grpc Traceparent
-		return "Traceparent", true
-	case ctxkey.CustomUsernameHeaderKey:
-		return ctxkey.CustomUsernameHeaderKey, true
-	case ctxkey.InnerClientHeaderKey:
-		return ctxkey.CustomUsernameHeaderKey, true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
-}
 
 // 会在 websocket 连接中被转发的 Header Key（可按需添加）
 var wsHeadersToForward = []string{"origin", "referer", "authorization", "cookie"}

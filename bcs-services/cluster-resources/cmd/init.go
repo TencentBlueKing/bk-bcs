@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/ssl"
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
 	microGrpc "github.com/go-micro/plugins/v4/server/grpc"
@@ -306,7 +307,7 @@ func (crSvc *clusterResourcesService) initTLSConfig() error {
 // initHTTPService 初始化 HTTP 服务
 func (crSvc *clusterResourcesService) initHTTPService() error {
 	rmMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(httpUtil.CustomHeaderMatcher),
+		runtime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
 	)
 
