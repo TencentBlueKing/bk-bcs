@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -29,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
@@ -232,19 +234,38 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 
-	targetTypes, err := tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
-		info.Region, resource.InstanceSpec{
-			BizID:        info.BizID,
-			Cpu:          info.Cpu,
-			Mem:          info.Memory,
-			Provider:     info.Provider,
-			ResourceType: info.ResourceType,
-		})
+	isQuoteGray, err := project.GetProjectManagerClient().GetProjectQuotaGrayLabel(info.ProjectID)
 	if err != nil {
-		blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)
+		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
+			info.ProjectID, err)
 		return nil, err
 	}
-	blog.Infof("getInnerInstanceTypes successful[%+v]", targetTypes)
+
+	var targetTypes []resource.InstanceType
+	// 如果 isQuoteGray 为 true 则通过 project 获取信息，否则通过 resource 获取信息
+	if isQuoteGray {
+		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region)
+		if err != nil {
+			blog.Errorf("GetProjectManagerClient GetNodeGroupAndZoneResourceQuotas[%s:%s] failed: %v",
+				info.ProjectID, info.Region, err)
+		}
+
+		blog.Infof("GetNodeGroupAndZoneResourceQuotas successful[%+v]", targetTypes)
+	} else {
+		targetTypes, err = tresource.GetResourceManagerClient().GetInstanceTypes(context.Background(),
+			info.Region, resource.InstanceSpec{
+				BizID:        info.BizID,
+				Cpu:          info.Cpu,
+				Mem:          info.Memory,
+				Provider:     info.Provider,
+				ResourceType: info.ResourceType,
+			})
+		if err != nil {
+			blog.Errorf("resourceManager ListNodeInstanceType failed: %v", err)
+			return nil, err
+		}
+		blog.Infof("getInnerInstanceTypes successful[%+v]", targetTypes)
+	}
 
 	var instanceTypes = make([]*proto.InstanceType, 0)
 	for _, t := range targetTypes {
@@ -324,6 +345,54 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 		}(i)
 	}
 	barrier.Wait()
+
+	return instanceTypes, nil
+}
+
+// GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
+func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(projectId, region string) ([]resource.InstanceType, error) {
+	listProjectQuotasData, err := project.GetProjectManagerClient().GetListProjectQuotas(projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider)
+	if err != nil {
+		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider, err)
+		return nil, err
+	}
+
+	instanceTypes := make([]resource.InstanceType, 0)
+	projectQuotaLists := listProjectQuotasData.GetResults()
+	for _, projectQuota := range projectQuotaLists {
+		zoneResources := projectQuota.GetQuota().GetZoneResources()
+		if region != "" && region != zoneResources.GetRegion() {
+			continue
+		}
+
+		avaliableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
+		// instanceType sell status
+		status := icommon.InstanceSell
+		if avaliableQuota <= 0 {
+			status = icommon.InstanceSoldOut
+		}
+
+		instanceTypes = append(instanceTypes, resource.InstanceType{
+			NodeType:       zoneResources.GetInstanceType(),
+			Cpu:            zoneResources.GetCpu(),
+			Memory:         zoneResources.GetMem(),
+			Gpu:            zoneResources.GetCpu(),
+			Status:         status,
+			Zones:          []string{zoneResources.GetZoneName()},
+			Provider:       projectQuota.GetProvider(),
+			ResourcePoolID: projectQuota.GetQuotaId(),
+			SystemDisk: func() *resource.DataDisk {
+				systemDisks := nm.ConvertDataDisk([]*bcsproject.DataDisk{zoneResources.GetSystemDisk()})
+				if len(systemDisks) > 0 {
+					return systemDisks[0]
+				}
+				return nil
+			}(),
+			DataDisks:         nm.ConvertDataDisk(zoneResources.GetDataDisks()),
+			OversoldAvailable: int32(avaliableQuota),
+			Region:            zoneResources.GetRegion(),
+		})
+	}
 
 	return instanceTypes, nil
 }
@@ -581,4 +650,19 @@ func (nm *NodeManager) ListDiskTypes(instanceTypes []string, zones []string, dis
 func (nm *NodeManager) ListNodePublicPrefixs(opt *cloudprovider.ListNodePublicPrefixesOption) (
 	[]*proto.NodePublicPrefix, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
+}
+
+// ConvertDataDisk convert project pb data disk to resource pb data disk
+func (nm *NodeManager) ConvertDataDisk(srcDataDisks []*bcsproject.DataDisk) []*resource.DataDisk {
+	if srcDataDisks == nil {
+		return nil
+	}
+	protoDataDisk := make([]*resource.DataDisk, 0)
+	for _, dataDisk := range srcDataDisks {
+		protoDataDisk = append(protoDataDisk, &resource.DataDisk{
+			DiskType: dataDisk.DiskType,
+			DiskSize: dataDisk.DiskSize,
+		})
+	}
+	return protoDataDisk
 }

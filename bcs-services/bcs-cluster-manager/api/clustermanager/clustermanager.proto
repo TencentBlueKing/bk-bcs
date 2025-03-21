@@ -11688,6 +11688,10 @@ message ListCloudInstanceTypeRequest {
     title : "resourceType",
     description : "当provider为self时, resourceType资源类型(online/offline)"
   },(validate.rules).string = {in: ["", "online", "offline"]}];
+  string projectID = 11 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "projectID",
+    description : "项目 ID"
+  }];
 }
 
 message ListCloudInstanceTypeResponse {

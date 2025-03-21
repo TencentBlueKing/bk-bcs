@@ -38,6 +38,11 @@ const (
 	cacheProjectKeyPrefix = "project_%s"
 )
 
+const (
+	ListProjectQuotaType     = "host"
+	ListProjectQuotaProvider = "selfProvisionCloud"
+)
+
 // Options for rm client
 type Options struct {
 	// Module module name
@@ -150,4 +155,55 @@ func (pm *ProManClient) GetProjectInfo(projectIdOrCode string, isCache bool) (*b
 	}
 
 	return resp.GetData(), nil
+}
+
+// GetListProjectQuotas get project quota list info
+func (pm *ProManClient) GetListProjectQuotas(projectId, quotaType, provider string) (*bcsproject.ListProjectQuotasData, error) {
+	if pm == nil {
+		return nil, rutils.ErrServerNotInit
+	}
+
+	cli, closeCon, errGet := pm.getProjectManagerClient()
+	if errGet != nil {
+		blog.Errorf("GetProjectInfo[%s] getProjectManagerClient failed: %v", projectId, errGet)
+		return nil, errGet
+	}
+	defer func() {
+		if closeCon != nil {
+			closeCon()
+		}
+	}()
+
+	start := time.Now()
+	resp, err := cli.Quota.ListProjectQuotas(context.Background(),
+		&bcsproject.ListProjectQuotasRequest{ProjectID: projectId, QuotaType: quotaType, Provider: provider})
+	if err != nil {
+		metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusErr, start)
+		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectId, err)
+		return nil, err
+	}
+	metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusOK, start)
+
+	if resp.Code != 0 {
+		blog.Errorf("GetProjectInfo[%s] GetProject err: %v", projectId, resp.GetMessage())
+		return nil, errors.New(resp.Message)
+	}
+
+	return resp.GetData(), nil
+}
+
+// GetProjectQuotaGrayLabel get project is has quota-gray label
+func (pm *ProManClient) GetProjectQuotaGrayLabel(projectId string) (isQuotaGray bool, err error) {
+	projInfo, err := ProjectClient.GetProjectInfo(projectId, true)
+	if err != nil {
+		blog.Errorf("GetProjectInfo[%s] failed: %v",
+			projectId, err)
+		return false, err
+	}
+	for key := range projInfo.GetLabels() {
+		if key == "quota-gray" {
+			return true, nil
+		}
+	}
+	return false, nil
 }

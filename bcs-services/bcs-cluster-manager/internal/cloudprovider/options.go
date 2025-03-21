@@ -597,6 +597,7 @@ type InstanceInfo struct {
 	BizID        string
 	Provider     string
 	ResourceType string
+	ProjectID    string
 }
 
 // MachineConfig instance config

@@ -17,6 +17,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
+	"strings"
 	"sync"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -539,6 +541,67 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 		return nil
 	}
 
+	isQuoteGray, err := project.GetProjectManagerClient().GetProjectQuotaGrayLabel(group.GetProjectID())
+	if err != nil {
+		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
+			group.GetProjectID(), err)
+		return err
+	}
+
+	anyZone := func() bool {
+		if group.GetAutoScaling().GetZones() == nil {
+			return true
+		}
+
+		if len(group.GetAutoScaling().GetZones()) == 1 && group.GetAutoScaling().GetZones()[0] == "" {
+			return true
+		}
+
+		return false
+	}()
+
+	// 如果 isQuoteGray 为 true 则通过 project 获取信息，否则通过 resource 获取信息
+	if isQuoteGray {
+		pools, err := ng.GetResourcePoolByProjectQuotaList(group.GetProjectID(), group.GetRegion(), group.GetLaunchTemplate().GetInstanceType())
+		if err != nil {
+			blog.Errorf("GetProjectManagerClient GetResourcePoolByProjectQuotaList[%s:%s] failed: %v",
+				group.GetProjectID(), group.GetNodeGroupID(), err)
+			return err
+		}
+		var (
+			poolTotal int32
+		)
+
+		// 用户选择任意可用区后，则节点池的上线配额不能超过该机型项目维度的整体配额数量
+		if anyZone {
+			for i := range pools {
+				poolTotal += pools[i].Total
+			}
+			if int32(scaleUpNum) > poolTotal {
+				return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
+					group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
+			}
+
+			return nil
+		}
+
+		// 用户选择指定可用区后，则节点池的上线配额不能超过 该机型项目维度的指定可用区整体配额数量
+		selectedZones := group.GetAutoScaling().GetZones()
+		for i := range pools {
+			if utils.SliceContainInString(selectedZones, pools[i].Zone) {
+				poolTotal += pools[i].Total
+			}
+		}
+
+		if int32(scaleUpNum) > poolTotal {
+			return errors.New(fmt.Sprintf("region[%s] zone[%s] instanceType[%s]",
+				group.GetRegion(), strings.Join(group.GetAutoScaling().GetZones(), ","),
+				group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
+		}
+
+		return nil
+	}
+
 	// 获取当前资源池的使用情况 & 超卖情况
 	pools, err := daemon.GetRegionDevicePoolDetail(cloudprovider.GetStorageModel(), group.GetRegion(),
 		group.GetLaunchTemplate().GetInstanceType(), nil)
@@ -557,18 +620,6 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 		resourceZones = append(resourceZones, pool.Zone)
 	}
 
-	anyZone := func() bool {
-		if group.GetAutoScaling().GetZones() == nil {
-			return true
-		}
-
-		if len(group.GetAutoScaling().GetZones()) == 1 && group.GetAutoScaling().GetZones()[0] == "" {
-			return true
-		}
-
-		return false
-	}()
-
 	// nodegroup config any zone
 	if anyZone {
 		var (
@@ -578,16 +629,15 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 		for i := range pools {
 			poolTotal += pools[i].OversoldTotal
 			groupQuota += int32(pools[i].GroupQuota)
+
+			blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] anyZone poolTotal[%v] groupQuota[%v] scaleUpNum[%v]",
+				cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
+
+			if groupQuota+int32(scaleUpNum) > poolTotal {
+				return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
+					group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
+			}
 		}
-
-		blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] anyZone poolTotal[%v] groupQuota[%v] scaleUpNum[%v]",
-			cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
-
-		if groupQuota+int32(scaleUpNum) > poolTotal {
-			return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
-				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
-		}
-
 		return nil
 	}
 
@@ -606,10 +656,44 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 				group.GetRegion(), pools[i].Zone, group.GetLaunchTemplate().GetInstanceType()))
 		}
 	}
+
 	if mulErrors.HasErrors() {
 		mulErrors.Append(poolInsufficientQuotaMessage)
 		return mulErrors
 	}
 
 	return nil
+}
+
+// GetResourcePoolByProjectQuotaList get resource quota from zoneResource by project quota list info
+func (ng *NodeGroup) GetResourcePoolByProjectQuotaList(projectId, region, instanceType string) ([]*resource.DevicePoolInfo, error) {
+	listProjectQuotasData, err := project.GetProjectManagerClient().GetListProjectQuotas(projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider)
+	if err != nil {
+		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider, err)
+		return nil, err
+	}
+
+	resourcePools := make([]*resource.DevicePoolInfo, 0)
+	projectQuotaLists := listProjectQuotasData.GetResults()
+	for _, projectQuota := range projectQuotaLists {
+		zoneResources := projectQuota.GetQuota().GetZoneResources()
+		if (region != "" && zoneResources.GetRegion() != region) ||
+			(instanceType != "" && zoneResources.GetInstanceType() != instanceType) {
+			continue
+		}
+		zonePool := &resource.DevicePoolInfo{
+			PoolId:       projectQuota.GetQuotaId(),
+			PoolName:     projectQuota.GetQuotaName(),
+			Region:       zoneResources.GetRegion(),
+			Zone:         zoneResources.GetZoneName(),
+			InstanceType: zoneResources.GetInstanceType(),
+			Total:        int32(zoneResources.GetQuotaNum()),
+			Used:         int32(zoneResources.GetQuotaUsed()),
+			Available:    int32(zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()),
+			Status:       projectQuota.GetStatus(),
+		}
+
+		resourcePools = append(resourcePools, zonePool)
+	}
+	return resourcePools, nil
 }
