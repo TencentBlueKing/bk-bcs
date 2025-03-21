@@ -98,7 +98,7 @@ func (i *InstallReleaseV1Action) install() error {
 		return fmt.Errorf("db error, %s", err.Error())
 	}
 
-	cls, err := clustermanager.GetCluster(i.req.GetClusterID())
+	cls, err := clustermanager.GetCluster(i.ctx, i.req.GetClusterID())
 	if err != nil {
 		return err
 	}

@@ -45,7 +45,7 @@ func (r *mockAction) Name() string {
 }
 
 // Validate xxx
-func (r *mockAction) Validate() error {
+func (r *mockAction) Validate(ctx context.Context) error {
 	if r.validateError {
 		return fmt.Errorf("validate error")
 	}
