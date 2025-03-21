@@ -99,9 +99,13 @@
           :enable-statistics="true"
           :rolling-loading="false"
           :enable-rolling-loading="false"
+          :show-step-retry-fn="handleShowStepRetry"
+          :show-step-skip-fn="handleShowStepSkip"
           @refresh="showTaskDetail(curRow)"
           @auto-refresh="handleAutoRefresh"
-          @download="getDownloadTaskRecords" />
+          @download="getDownloadTaskRecords"
+          @retry="handleRetry"
+          @skip="handleSkip" />
       </template>
     </bcs-sideslider>
   </div>
@@ -111,9 +115,13 @@ import { computed, onBeforeMount, onBeforeUnmount, ref, watch } from 'vue';
 
 import TaskLog from '@blueking/task-log/vue2';
 
+import { useTask } from '../cluster/use-cluster';
+
 import '@blueking/task-log/vue2/vue2.css';
 import { clusterOperationLogs, clusterTaskRecords, taskLogsDownloadURL, taskRetry } from '@/api/modules/cluster-manager';
 import { parseUrl } from '@/api/request';
+import $bkMessage from '@/common/bkmagic';
+import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import StatusIcon from '@/components/status-icon';
 import useInterval from '@/composables/use-interval';
@@ -284,7 +292,7 @@ const tableRef = ref();
 watch(tableRef, () => setTableColWByMemory(tableRef.value));
 
 // 显示任务详情
-const curRow = ref({});
+const curRow = ref<Record<string, any>>({});
 const isShowTaskDetail = ref(false);
 const taskConfig = ref({
   loading: false,
@@ -297,12 +305,18 @@ async function showTaskDetail(row, loading = true) {
   isShowTaskDetail.value = true;
   taskConfig.value.loading = loading;
   taskConfig.value.title = row.message;
+  await handleGetStepGroupData(row);
+  taskConfig.value.loading = false;
+}
+// 获取任务详情数据
+async function handleGetStepGroupData(row) {
+  if (!row.taskID) return;
+
   const { status, step } = await clusterTaskRecords({
     taskID: row.taskID,
   }).catch(() => ({ status: '', step: [] }));
   taskConfig.value.data = step;
   taskConfig.value.status = status;
-  taskConfig.value.loading = false;
 }
 
 // 任务重试
@@ -324,6 +338,66 @@ function handleAutoRefresh(v: boolean) {
   } else {
     stop();
   }
+}
+
+const { skipTask, retryTask } = useTask();
+
+// 任务重试
+function handleShowStepRetry(item) {
+  return item?.step?.status === 'FAILED' && item?.step?.allowRetry;
+}
+function handleRetry(data) {
+  if (!data?.step?.allowRetry || !curRow.value.taskID) {
+    $bkMessage({
+      theme: 'warning',
+      message: $i18n.t('cluster.title.allowRetry'),
+    });
+    return;
+  }
+  $bkInfo({
+    type: 'warning',
+    title: $i18n.t('cluster.title.retryTask'),
+    clsName: 'custom-info-confirm default-info',
+    subTitle: data?.step?.name,
+    confirmFn: async () => {
+      taskConfig.value.loading = true;
+      const result = await retryTask(curRow.value.taskID);
+      if (result) {
+        handleGetStepGroupData(curRow.value);
+        getOperationLogs();
+      }
+      taskConfig.value.loading = false;
+    },
+  });
+}
+
+// 任务跳过
+function handleShowStepSkip(item) {
+  return item?.step?.status === 'FAILED' && item?.step?.allowSkip;
+}
+function handleSkip(data) {
+  if (!data?.step?.allowSkip || !curRow.value.taskID) {
+    $bkMessage({
+      theme: 'warning',
+      message: $i18n.t('cluster.title.cantSkip'),
+    });
+    return;
+  }
+  $bkInfo({
+    type: 'warning',
+    title: $i18n.t('cluster.title.skipTask'),
+    clsName: 'custom-info-confirm default-info',
+    subTitle: data?.step?.name,
+    confirmFn: async () => {
+      taskConfig.value.loading = true;
+      const result = await skipTask(curRow.value.taskID);
+      if (result) {
+        handleGetStepGroupData(curRow.value);
+        getOperationLogs();
+      }
+      taskConfig.value.loading = false;
+    },
+  });
 }
 
 watch(

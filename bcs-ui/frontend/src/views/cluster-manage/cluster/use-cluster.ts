@@ -11,6 +11,7 @@ import {
   getFederalTask,
   retryFederalTask,
   sharedclusters,
+  taskRetry,
   taskSkip,
 } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
@@ -269,9 +270,20 @@ export function useTask() {
       .catch(() => false);
     return result;
   };
+  // 重试任务
+  const retryTask = async (taskID: string) =>  {
+    const result = await taskRetry({
+      $taskId: taskID,
+      updater: user.value.username,
+    }).then(() => true)
+      .catch(() => false);
+    return result;
+  };
+
   return {
     taskList,
     skipTask,
+    retryTask,
   };
 }
 
