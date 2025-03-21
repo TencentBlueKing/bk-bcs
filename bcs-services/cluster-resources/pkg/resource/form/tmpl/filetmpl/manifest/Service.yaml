@@ -38,7 +38,12 @@ spec:
     name: {{ .name }}
     {{- end }}
     port: {{ .port }}
+    {{- if and (not $.spec.selector.associate) .targetPort }}
     targetPort: {{ .targetPort }}
+    {{- end }}
+    {{- if and $.spec.selector.associate .targetSelectPort }}
+    targetPort: {{ .targetSelectPort }}
+    {{- end }}
     {{- if and (ne $.spec.portConf.type "ClusterIP") .nodePort }}
     nodePort: {{ .nodePort }}
     {{- end }}

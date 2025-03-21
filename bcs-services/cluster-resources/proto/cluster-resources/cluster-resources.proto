@@ -1792,6 +1792,17 @@ service TemplateSet {
 		};
 	}
 
+	// 获取模板文件关联ports
+	rpc GetTemplateAssociatePorts(GetTemplateAssociatePortsReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/template/ports"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取模板文件关联ports"
+			summary: "Get template associate ports"
+		};
+	}
+
 	// 获取模板文件详情
 	rpc GetTemplateContent(GetTemplateContentReq) returns (CommonResp) {
 		option (google.api.http) = {
@@ -3360,6 +3371,27 @@ message GetTemplateAssociateLabelsReq {
 	string associateName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "关联资源名称"
 	}, (validate.rules).string = {max_len: 256}];
+}
+
+message GetTemplateAssociatePortsReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetTemplateAssociatePortsReq", description: "获取模板文件关联ports"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len : 1, max_len : 32}];
+	string templateSpace = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "模板文件文件夹名称"
+	}];
+	string kind = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}];
+	string associateName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "关联资源名称"
+	}, (validate.rules).string = {max_len: 256}];
+	string protocol = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "目标协议"
+	}];
 }
 
 message GetTemplateContentReq {
