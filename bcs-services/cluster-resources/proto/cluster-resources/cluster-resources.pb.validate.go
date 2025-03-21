@@ -11626,6 +11626,137 @@ var _ interface {
 	ErrorName() string
 } = GetTemplateAssociateLabelsReqValidationError{}
 
+// Validate checks the field values on GetTemplateAssociatePortsReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetTemplateAssociatePortsReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetTemplateAssociatePortsReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetTemplateAssociatePortsReqMultiError, or nil if none found.
+func (m *GetTemplateAssociatePortsReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetTemplateAssociatePortsReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 32 {
+		err := GetTemplateAssociatePortsReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for TemplateSpace
+
+	// no validation rules for Kind
+
+	if utf8.RuneCountInString(m.GetAssociateName()) > 256 {
+		err := GetTemplateAssociatePortsReqValidationError{
+			field:  "AssociateName",
+			reason: "value length must be at most 256 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Protocol
+
+	if len(errors) > 0 {
+		return GetTemplateAssociatePortsReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetTemplateAssociatePortsReqMultiError is an error wrapping multiple
+// validation errors returned by GetTemplateAssociatePortsReq.ValidateAll() if
+// the designated constraints aren't met.
+type GetTemplateAssociatePortsReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetTemplateAssociatePortsReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetTemplateAssociatePortsReqMultiError) AllErrors() []error { return m }
+
+// GetTemplateAssociatePortsReqValidationError is the validation error returned
+// by GetTemplateAssociatePortsReq.Validate if the designated constraints
+// aren't met.
+type GetTemplateAssociatePortsReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetTemplateAssociatePortsReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetTemplateAssociatePortsReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetTemplateAssociatePortsReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetTemplateAssociatePortsReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetTemplateAssociatePortsReqValidationError) ErrorName() string {
+	return "GetTemplateAssociatePortsReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetTemplateAssociatePortsReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetTemplateAssociatePortsReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetTemplateAssociatePortsReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetTemplateAssociatePortsReqValidationError{}
+
 // Validate checks the field values on GetTemplateContentReq with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.

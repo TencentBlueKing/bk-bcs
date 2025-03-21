@@ -371,6 +371,46 @@ portConf:
             ui:rules:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
+            ui:reactions:
+              - if: "{{`{{`}} !$self.getValue('spec.selector.associate') {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+                    value: "80"
+          targetSelectPort:
+            title: {{ i18n "目标端口" .lang }}
+            type: string
+            default: "80"
+            ui:rules:
+              - validator: "{{`{{`}} $self.value {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}  
+            ui:component:
+              name: select
+              props:
+                remoteConfig:
+                  url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/ports?kind=${$self.getValue('spec.selector.workloadType')}&templateSpace={{ .templateSpace }}&associateName=${$self.getValue('spec.selector.workloadName')}` {{`}}`}}"
+            ui:reactions:
+              - if: "{{`{{`}} $self.getValue('spec.selector.associate') {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+                    value: "80"
+              - lifetime: init
+                then:
+                  actions:
+                    - "{{`{{`}} $loadDataSource {{`}}`}}"
+              - source: "spec.selector.workloadName"
+                then:
+                  state:
+                    value: ""
+                  actions:
+                    - "{{`{{`}} $loadDataSource {{`}}`}}"
           nodePort:
             title: {{ i18n "节点端口" .lang }}
             type: integer
@@ -451,6 +491,16 @@ selector:
         else:
           state:
             visible: true
+      - target: spec.portConf.ports
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            value: [{"name":"http","port":80,"protocol":"TCP","targetSelectPort":""}] 
+      - target: spec.portConf.ports
+        if: "{{`{{`}} !$self.value {{`}}`}}"
+        then:
+          state:    
+            value: [{"name":"http","port":80,"protocol":"TCP","targetPort":""}]    
     workloadType:
       title: {{ i18n "资源类型" .lang }}
       type: string
