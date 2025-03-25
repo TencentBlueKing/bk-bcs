@@ -340,6 +340,8 @@ portConf:
             ui:rules:
               - maxLength64
               - rfc1123LabelRegex
+            ui:props:
+              showTitle: true
           port:
             title: {{ i18n "监听端口" .lang }}
             type: integer
@@ -351,6 +353,8 @@ portConf:
             ui:rules:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
+            ui:props:
+              showTitle: true                
           protocol:
             title: {{ i18n "协议" .lang }}
             type: string
@@ -364,6 +368,8 @@ portConf:
                     value: TCP
                   - label: UDP
                     value: UDP
+            ui:props:
+              showTitle: true                    
           targetPort:
             title: {{ i18n "目标端口" .lang }}
             type: string
@@ -380,6 +386,8 @@ portConf:
                   state:
                     visible: false
                     value: "80"
+            ui:props:
+              showTitle: true                  
           targetSelectPort:
             title: {{ i18n "目标端口" .lang }}
             type: string
@@ -411,6 +419,8 @@ portConf:
                     value: ""
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
+            ui:props:
+              showTitle: true                    
           nodePort:
             title: {{ i18n "节点端口" .lang }}
             type: integer
@@ -437,6 +447,8 @@ portConf:
                 else:
                   state:
                     disabled: false
+            ui:props:
+              showTitle: true                    
       ui:component:
         name: bfArray
       ui:props:
@@ -495,12 +507,12 @@ selector:
         if: "{{`{{`}} $self.value {{`}}`}}"
         then:
           state:
-            value: [{"name":"http","port":80,"protocol":"TCP","targetSelectPort":""}] 
+            value: [{"name":"http","port":80,"protocol":"TCP","targetSelectPort":"", nodePort:0}] 
       - target: spec.portConf.ports
         if: "{{`{{`}} !$self.value {{`}}`}}"
         then:
           state:    
-            value: [{"name":"http","port":80,"protocol":"TCP","targetPort":""}]    
+            value: [{"name":"http","port":80,"protocol":"TCP","targetPort":"", nodePort:0}]    
     workloadType:
       title: {{ i18n "资源类型" .lang }}
       type: string
