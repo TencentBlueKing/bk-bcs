@@ -234,7 +234,7 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 
-	isQuoteGray, err := project.GetProjectManagerClient().GetProjectQuotaGrayLabel(info.ProjectID)
+	quoteGrayMode, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(info.ProjectID)
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
 			info.ProjectID, err)
@@ -242,12 +242,14 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 	}
 
 	var targetTypes []resource.InstanceType
-	// 如果 isQuoteGray 为 true 则通过 project 获取信息，否则通过 resource 获取信息
-	if isQuoteGray {
-		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region)
+
+	if utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) &&
+		info.Provider != resource.SelfPool {
+		targetTypes, err = nm.GetInstanceTypeByProjectQuotaList(info.ProjectID, info.Region, info.Provider)
 		if err != nil {
 			blog.Errorf("GetProjectManagerClient GetNodeGroupAndZoneResourceQuotas[%s:%s] failed: %v",
 				info.ProjectID, info.Region, err)
+			return nil, err
 		}
 
 		blog.Infof("GetNodeGroupAndZoneResourceQuotas successful[%+v]", targetTypes)
@@ -273,6 +275,7 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 			NodeType:       t.NodeType,
 			TypeName:       t.TypeName,
 			NodeFamily:     t.NodeFamily,
+			Region:         t.Region,
 			Cpu:            t.Cpu,
 			Memory:         t.Memory,
 			Gpu:            t.Gpu,
@@ -307,7 +310,8 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 
 	blog.Infof("getInnerInstanceTypes successful[%+v]", instanceTypes)
 
-	if info.Provider == resource.SelfPool || info.Provider == resource.CrPool {
+	if info.Provider == resource.SelfPool || info.Provider == resource.CrPool ||
+		utils.StringInSlice(quoteGrayMode, []string{project.QuotaGrayOverMode, project.QuotaGrayNormalMode}) {
 		return instanceTypes, nil
 	}
 
@@ -320,7 +324,7 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 
 	for i := range instanceTypes {
 		barrier.Add(1)
-		// query available vpc
+
 		go func(i int) {
 			defer func() {
 				barrier.Done()
@@ -350,25 +354,34 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 }
 
 // GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
-func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(projectId, region string) ([]resource.InstanceType, error) {
-	listProjectQuotasData, err := project.GetProjectManagerClient().GetListProjectQuotas(projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider)
+func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(projectId, region string, provider string) ([]resource.InstanceType, error) {
+	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
+		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
 	if err != nil {
-		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider, err)
+		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId,
+			project.ProjectQuotaHostType, project.ProjectQuotaProvider, err)
 		return nil, err
 	}
 
-	instanceTypes := make([]resource.InstanceType, 0)
-	projectQuotaLists := listProjectQuotasData.GetResults()
+	var (
+		instanceTypes     = make([]resource.InstanceType, 0)
+		projectQuotaLists = listProjectQuotasData.GetResults()
+	)
+
 	for _, projectQuota := range projectQuotaLists {
 		zoneResources := projectQuota.GetQuota().GetZoneResources()
 		if region != "" && region != zoneResources.GetRegion() {
 			continue
 		}
 
-		avaliableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
+		if projectQuota.GetStatus() != icommon.StatusRunning {
+			continue
+		}
+
+		availableQuota := zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()
 		// instanceType sell status
 		status := icommon.InstanceSell
-		if avaliableQuota <= 0 {
+		if availableQuota <= 0 {
 			status = icommon.InstanceSoldOut
 		}
 
@@ -379,7 +392,7 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(projectId, region strin
 			Gpu:            zoneResources.GetCpu(),
 			Status:         status,
 			Zones:          []string{zoneResources.GetZoneName()},
-			Provider:       projectQuota.GetProvider(),
+			Provider:       provider,
 			ResourcePoolID: projectQuota.GetQuotaId(),
 			SystemDisk: func() *resource.DataDisk {
 				systemDisks := nm.ConvertDataDisk([]*bcsproject.DataDisk{zoneResources.GetSystemDisk()})
@@ -389,7 +402,7 @@ func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(projectId, region strin
 				return nil
 			}(),
 			DataDisks:         nm.ConvertDataDisk(zoneResources.GetDataDisks()),
-			OversoldAvailable: int32(avaliableQuota),
+			OversoldAvailable: int32(availableQuota),
 			Region:            zoneResources.GetRegion(),
 		})
 	}

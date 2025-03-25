@@ -150,11 +150,14 @@ func RemoveClusterNodesTaint(ctx context.Context, clusterID, cloudID string, nod
 					taskID, clusterID, ins, err)
 				continue
 			}
+
+			ins = strings.ToLower(ins)
 		}
 
 		node, errLocal := kubeCli.CoreV1().Nodes().Get(context.Background(), ins, metav1.GetOptions{})
 		if errLocal != nil {
-			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s:%s] failed: %v", taskID, clusterID, ins, err)
+			blog.Errorf("removeClusterNodesTaint[%s] nodeName[%s:%s] failed: %v",
+				taskID, clusterID, ins, errLocal)
 			continue
 		}
 

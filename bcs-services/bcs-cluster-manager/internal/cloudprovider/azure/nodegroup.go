@@ -555,7 +555,7 @@ func checkPoolState(pool *armcontainerservice.AgentPool) error { // nolint
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
 	return nil
 }
 

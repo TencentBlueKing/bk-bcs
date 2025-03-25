@@ -17,7 +17,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"strings"
 	"sync"
 
@@ -27,8 +26,10 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource/tresource"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -522,7 +523,7 @@ func matchProjectAutoscalerQuotaByGroup(groups []*proto.NodeGroup, projectQuota 
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error { // nolint
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error { // nolint
 	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
 	if err == nil && cloud.GetConfInfo().GetDisableCheckGroupResource() {
 		return nil
@@ -541,13 +542,7 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 		return nil
 	}
 
-	isQuoteGray, err := project.GetProjectManagerClient().GetProjectQuotaGrayLabel(group.GetProjectID())
-	if err != nil {
-		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
-			group.GetProjectID(), err)
-		return err
-	}
-
+	// 节点池配置任意可用区
 	anyZone := func() bool {
 		if group.GetAutoScaling().GetZones() == nil {
 			return true
@@ -560,48 +555,144 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 		return false
 	}()
 
-	// 如果 isQuoteGray 为 true 则通过 project 获取信息，否则通过 resource 获取信息
-	if isQuoteGray {
-		pools, err := ng.GetResourcePoolByProjectQuotaList(group.GetProjectID(), group.GetRegion(), group.GetLaunchTemplate().GetInstanceType())
-		if err != nil {
-			blog.Errorf("GetProjectManagerClient GetResourcePoolByProjectQuotaList[%s:%s] failed: %v",
-				group.GetProjectID(), group.GetNodeGroupID(), err)
-			return err
+	quotaGrayValue, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(group.GetProjectID())
+	if err != nil {
+		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
+			group.GetProjectID(), err)
+		return err
+	}
+
+	switch quotaGrayValue {
+	case project.QuotaGrayOverMode:
+		if operation != "" {
+			scaleUpNum = group.GetAutoScaling().GetMaxSize() + scaleUpNum
 		}
-		var (
-			poolTotal int32
-		)
+		return ng.checkRpqByPjModeOversold(group, scaleUpNum, anyZone)
+	case project.QuotaGrayNormalMode:
+		return ng.checkRpqByPjModeNormal(group, scaleUpNum, anyZone)
+	default:
+	}
 
-		// 用户选择任意可用区后，则节点池的上线配额不能超过该机型项目维度的整体配额数量
-		if anyZone {
-			for i := range pools {
-				poolTotal += pools[i].Total
-			}
-			if int32(scaleUpNum) > poolTotal {
-				return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
-					group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
-			}
+	return ng.checkRpqByRm(group, scaleUpNum, anyZone)
+}
 
-			return nil
-		}
+func (ng *NodeGroup) checkRpqByPjModeOversold(group *proto.NodeGroup, scaleUpNum uint32, anyZone bool) error {
+	pools, err := ng.getResourcePoolByProjectQuotaList(group.GetProjectID(), group.GetRegion(),
+		group.GetLaunchTemplate().GetInstanceType())
+	if err != nil {
+		blog.Errorf("GetProjectManagerClient GetResourcePoolByProjectQuotaList[%s:%s] failed: %v",
+			group.GetProjectID(), group.GetNodeGroupID(), err)
+		return err
+	}
+	var (
+		poolTotal int32
+	)
 
-		// 用户选择指定可用区后，则节点池的上线配额不能超过 该机型项目维度的指定可用区整体配额数量
-		selectedZones := group.GetAutoScaling().GetZones()
+	// 任意可用区
+	if anyZone {
 		for i := range pools {
-			if utils.SliceContainInString(selectedZones, pools[i].Zone) {
-				poolTotal += pools[i].Total
-			}
+			poolTotal += pools[i].Total
 		}
+
+		blog.Infof("cloud[%s] checkResourcePoolQuotaByPjModeOversold region[%s] zone[%s] instanceType[%s] "+
+			"poolTotal[%v] scaleUpNum[%v]", cloudName, group.Region, "anyZone",
+			group.GetLaunchTemplate().GetInstanceType(), poolTotal, scaleUpNum)
 
 		if int32(scaleUpNum) > poolTotal {
-			return errors.New(fmt.Sprintf("region[%s] zone[%s] instanceType[%s]",
-				group.GetRegion(), strings.Join(group.GetAutoScaling().GetZones(), ","),
-				group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
+			return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
+				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
 		}
 
 		return nil
 	}
 
+	// 指定可用区
+	selectedZones := group.GetAutoScaling().GetZones()
+	for i := range pools {
+		if utils.StringInSlice(pools[i].Zone, selectedZones) {
+			poolTotal += pools[i].Total
+		}
+	}
+
+	blog.Infof("cloud[%s] checkResourcePoolQuotaByPjModeOversold[%s] zones[%+v] poolTotal[%v] scaleUpNum[%v]",
+		cloudName, group.GetNodeGroupID(), selectedZones, poolTotal, scaleUpNum)
+
+	if int32(scaleUpNum) > poolTotal {
+		return errors.New(fmt.Sprintf("region[%s] zone[%s] instanceType[%s]",
+			group.GetRegion(), strings.Join(group.GetAutoScaling().GetZones(), ","),
+			group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
+	}
+
+	return nil
+}
+
+func (ng *NodeGroup) checkRpqByPjModeNormal(group *proto.NodeGroup, scaleUpNum uint32, anyZone bool) error {
+
+	// 项目维度的 地域-机型 资源池配置
+	resourcePoolZones, resourceZones, err := ng.getPoolsZonesByProjectQuotaList(group.GetProjectID(), group.GetRegion(),
+		group.GetLaunchTemplate().GetInstanceType())
+	if err != nil {
+		blog.Errorf("checkResourcePoolQuotaByPjModeNormal GetResourcePoolByProjectQuotaList[%s:%s] failed: %v",
+			group.GetProjectID(), group.GetNodeGroupID(), err)
+		return err
+	}
+
+	// 项目下所有节点池的资源使用情况
+	pools, err := ng.getProjectRegionDevicePoolDetail(group.GetProjectID(), group.GetRegion(),
+		group.GetLaunchTemplate().GetInstanceType(), resourcePoolZones, resourceZones)
+	if err != nil {
+		blog.Errorf("checkResourcePoolQuotaByPjModeNormal getProjectRegionDevicePoolDetail[%s:%s:%s] failed: %v",
+			group.GetProjectID(), group.GetRegion(), group.GetLaunchTemplate().GetInstanceType(), err)
+		return err
+	}
+
+	// nodegroup config any zone
+	if anyZone {
+		var (
+			poolTotal  int32
+			groupQuota int32
+		)
+		for i := range pools {
+			poolTotal += pools[i].Total
+			groupQuota += int32(pools[i].GroupQuota)
+		}
+
+		blog.Infof("cloud[%s] checkResourcePoolQuotaByPjModeNormal[%s] anyZone poolTotal[%v] "+
+			"groupQuota[%v] scaleUpNum[%v]", cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
+
+		if groupQuota+int32(scaleUpNum) > poolTotal {
+			return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
+				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
+		}
+		return nil
+	}
+
+	// 指定可用区域时进行预测分配, 每个资源域分配资源多少
+	zoneNum := daemon.AllocateZoneResource(group.GetNodeGroupID(), group.GetRegion(),
+		group.GetLaunchTemplate().GetInstanceType(), group.GetAutoScaling().GetZones(), resourceZones, int(scaleUpNum))
+
+	blog.Infof("cloud[%s] checkResourcePoolQuotaByPjModeNormal[%s] zoneNum[%+v]",
+		cloudName, group.GetNodeGroupID(), zoneNum)
+
+	mulErrors := utils.NewMultiError()
+	// 检验配额是否充足
+	for i := range pools {
+		num, ok := zoneNum[pools[i].Zone]
+		if ok && num > 0 && (pools[i].GroupQuota+num) > int(pools[i].Total) {
+			mulErrors.Append(fmt.Errorf("region[%s] zone[%s] instanceType[%s]",
+				group.GetRegion(), pools[i].Zone, group.GetLaunchTemplate().GetInstanceType()))
+		}
+	}
+
+	if mulErrors.HasErrors() {
+		mulErrors.Append(poolInsufficientQuotaMessage)
+		return mulErrors
+	}
+
+	return nil
+}
+
+func (ng *NodeGroup) checkRpqByRm(group *proto.NodeGroup, scaleUpNum uint32, anyZone bool) error {
 	// 获取当前资源池的使用情况 & 超卖情况
 	pools, err := daemon.GetRegionDevicePoolDetail(cloudprovider.GetStorageModel(), group.GetRegion(),
 		group.GetLaunchTemplate().GetInstanceType(), nil)
@@ -610,9 +701,10 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 			group.GetRegion(), group.GetLaunchTemplate().GetInstanceType(), err.Error())
 	}
 
+	// 机型资源所在的可用区
 	resourceZones := make([]string, 0)
 	for _, pool := range pools {
-		blog.Infof("cloud[%s] CheckResourcePoolQuota pool[%s] region[%s] zone[%s] instanceType[%s] "+
+		blog.Infof("cloud[%s] checkResourcePoolQuotaByRm pool[%s] region[%s] zone[%s] instanceType[%s] "+
 			"poolTotal[%v] poolAvailable[%v] poolOversoldTotal[%v] poolOversoldAvailable[%v] groupQuota[%v] "+
 			"groupUsed[%v]", cloudName, pool.PoolId, pool.Region, pool.Zone, pool.InstanceType,
 			pool.Total, pool.Available, pool.OversoldTotal, pool.OversoldAvailable, pool.GroupQuota, pool.GroupUsed)
@@ -629,23 +721,23 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 		for i := range pools {
 			poolTotal += pools[i].OversoldTotal
 			groupQuota += int32(pools[i].GroupQuota)
+		}
 
-			blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] anyZone poolTotal[%v] groupQuota[%v] scaleUpNum[%v]",
-				cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
+		blog.Infof("cloud[%s] checkResourcePoolQuotaByRm[%s] anyZone poolTotal[%v] groupQuota[%v] scaleUpNum[%v]",
+			cloudName, group.GetNodeGroupID(), poolTotal, groupQuota, scaleUpNum)
 
-			if groupQuota+int32(scaleUpNum) > poolTotal {
-				return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
-					group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
-			}
+		if groupQuota+int32(scaleUpNum) > poolTotal {
+			return errors.New(fmt.Sprintf("anyZone region[%s] instanceType[%s] ",
+				group.GetRegion(), group.GetLaunchTemplate().GetInstanceType()) + poolInsufficientQuotaMessage.Error())
 		}
 		return nil
 	}
 
-	// 预测分配
+	// 指定可用区域时进行预测分配, 每个资源域分配资源多少
 	zoneNum := daemon.AllocateZoneResource(group.GetNodeGroupID(), group.GetRegion(),
 		group.GetLaunchTemplate().GetInstanceType(), group.GetAutoScaling().GetZones(), resourceZones, int(scaleUpNum))
 
-	blog.Infof("cloud[%s] CheckResourcePoolQuota[%s] zoneNum[%+v]", cloudName, group.GetNodeGroupID(), zoneNum)
+	blog.Infof("cloud[%s] checkResourcePoolQuotaByRm[%s] zoneNum[%+v]", cloudName, group.GetNodeGroupID(), zoneNum)
 
 	mulErrors := utils.NewMultiError()
 	// 检验配额是否充足
@@ -665,22 +757,33 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 	return nil
 }
 
-// GetResourcePoolByProjectQuotaList get resource quota from zoneResource by project quota list info
-func (ng *NodeGroup) GetResourcePoolByProjectQuotaList(projectId, region, instanceType string) ([]*resource.DevicePoolInfo, error) {
-	listProjectQuotasData, err := project.GetProjectManagerClient().GetListProjectQuotas(projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider)
+// getResourcePoolByProjectQuotaList get resource quota from zoneResource by project quota list info
+func (ng *NodeGroup) getResourcePoolByProjectQuotaList(projectId, region, instanceType string) (
+	[]*resource.DevicePoolInfo, error) {
+
+	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
+		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
 	if err != nil {
-		blog.Errorf("GetProjectManagerClient GetListProjectQuotas[%s:%s:%s] failed: %v", projectId, project.ListProjectQuotaType, project.ListProjectQuotaProvider, err)
+		blog.Errorf("GetProjectManagerClient ListProjectQuotas[%s:%s:%s] failed: %v",
+			projectId, project.ProjectQuotaHostType, project.ProjectQuotaProvider, err)
 		return nil, err
 	}
 
 	resourcePools := make([]*resource.DevicePoolInfo, 0)
 	projectQuotaLists := listProjectQuotasData.GetResults()
+
 	for _, projectQuota := range projectQuotaLists {
 		zoneResources := projectQuota.GetQuota().GetZoneResources()
+
 		if (region != "" && zoneResources.GetRegion() != region) ||
 			(instanceType != "" && zoneResources.GetInstanceType() != instanceType) {
 			continue
 		}
+
+		if projectQuota.GetStatus() != common.StatusRunning {
+			continue
+		}
+
 		zonePool := &resource.DevicePoolInfo{
 			PoolId:       projectQuota.GetQuotaId(),
 			PoolName:     projectQuota.GetQuotaName(),
@@ -688,12 +791,126 @@ func (ng *NodeGroup) GetResourcePoolByProjectQuotaList(projectId, region, instan
 			Zone:         zoneResources.GetZoneName(),
 			InstanceType: zoneResources.GetInstanceType(),
 			Total:        int32(zoneResources.GetQuotaNum()),
-			Used:         int32(zoneResources.GetQuotaUsed()),
-			Available:    int32(zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()),
-			Status:       projectQuota.GetStatus(),
+			// 每个可用区实际使用的资源数
+			Used:      int32(zoneResources.GetQuotaUsed()),
+			Available: int32(zoneResources.GetQuotaNum() - zoneResources.GetQuotaUsed()),
+
+			Status: projectQuota.GetStatus(),
 		}
 
 		resourcePools = append(resourcePools, zonePool)
 	}
 	return resourcePools, nil
+}
+
+func (ng *NodeGroup) getPoolsZonesByProjectQuotaList(projectId, region, instanceType string) (
+	map[string]*resource.DevicePoolInfo, []string, error) {
+
+	// 项目维度的 地域-机型 资源池配置
+	pools, err := ng.getResourcePoolByProjectQuotaList(projectId, region, instanceType)
+	if err != nil {
+		blog.Errorf("getPoolsZonesByProjectQuotaList[%s:%s:%s] failed: %v",
+			projectId, region, instanceType, err)
+		return nil, nil, err
+	}
+
+	var (
+		// zone级别资源池
+		resourcePoolZones = make(map[string]*resource.DevicePoolInfo, 0)
+		// 资源所在可用区
+		resourceZones = make([]string, 0)
+	)
+	for _, pool := range pools {
+		blog.Infof("getPoolsZonesByProjectQuotaList pool[%s] region[%s] zone[%s] instanceType[%s] "+
+			"poolTotal[%v] poolAvailable[%v] poolUsed[%v]", pool.PoolId, pool.Region, pool.Zone,
+			pool.InstanceType, pool.Total, pool.Available, pool.Used)
+
+		resourcePoolZones[pool.Zone] = pool
+		resourceZones = append(resourceZones, pool.Zone)
+	}
+
+	return resourcePoolZones, resourceZones, nil
+}
+
+// filterProjectGroupsByRegionInsType filter region instanceType nodeGroup in project
+func filterProjectGroupsByRegionInsType(model store.ClusterManagerModel, projectId, region,
+	instanceType string) ([]*proto.NodeGroup, error) {
+	normalYunti, _, _, err := daemon.GetNodeGroups(model)
+	if err != nil {
+		return nil, err
+	}
+
+	filterGroups := make([]*proto.NodeGroup, 0)
+	for _, group := range normalYunti {
+		if group.ProjectID == projectId && group.Region == region &&
+			group.GetLaunchTemplate().GetInstanceType() == instanceType {
+			filterGroups = append(filterGroups, group)
+		}
+	}
+
+	return filterGroups, nil
+}
+
+// getProjectRegionDevicePoolDetail get region device pool detail
+func (ng *NodeGroup) getProjectRegionDevicePoolDetail(projectId, region string, instanceType string,
+	zonePools map[string]*resource.DevicePoolInfo, resourceZones []string) ([]*resource.DevicePoolInfo, error) {
+
+	// 过滤项目下的yunti节点池列表
+	filterGroups, err := filterProjectGroupsByRegionInsType(cloudprovider.GetStorageModel(),
+		projectId, region, instanceType)
+	if err != nil {
+		blog.Errorf("GetProjectRegionDevicePoolDetail[%s:%s] FilterGroupsByRegionInsType failed: %v",
+			region, instanceType, err)
+		return nil, err
+	}
+
+	// 项目-地域-机型 维度的 资源池 和 资源可用区列表
+	if len(resourceZones) == 0 || len(zonePools) == 0 {
+		blog.Errorf("GetProjectRegionDevicePoolDetail region[%s] instanceType[%s] 无可用区机型",
+			region, instanceType)
+		return nil, fmt.Errorf("GetProjectRegionDevicePoolDetail region[%s] instanceType[%s] 无可用区机型",
+			region, instanceType)
+	}
+
+	// 当前需要如何分配 (只要机器足够即可，机器不够的情况，简单按照平均即可)
+	for _, group := range filterGroups {
+		// 获取当前已存在节点池资源分布情况 (包括当前已经分配 & 预测分配)
+		nodesDistribution, curDistribution, _, errLocal := daemon.GetGroupCurAndPredictNodes(
+			cloudprovider.GetStorageModel(), group.NodeGroupID, resourceZones)
+		if errLocal != nil {
+			blog.Errorf("nodeGroup[%s] GetProjectRegionDevicePoolDetail[%s:%s] GetGroupCurAndPredictNodes "+
+				"failed: %v", group.GetNodeGroupID(), region, instanceType, errLocal)
+			continue
+		}
+
+		blog.Infof("GetProjectRegionDevicePoolDetail GetGroupCurAndPredictNodes[%v] %+v %+v", group.NodeGroupID,
+			nodesDistribution, curDistribution)
+
+		for zone := range nodesDistribution {
+			_, ok := zonePools[zone]
+			if ok {
+				zonePools[zone].GroupQuota += nodesDistribution[zone]
+			}
+		}
+
+		for zone := range curDistribution {
+			_, ok := zonePools[zone]
+			if ok {
+				zonePools[zone].GroupUsed += curDistribution[zone]
+			}
+		}
+	}
+
+	pools := make([]*resource.DevicePoolInfo, 0)
+
+	for i := range zonePools {
+		blog.Infof("GetProjectRegionDevicePoolDetail region[%s] zone[%s] instanceType[%s] pool[%s] "+
+			"poolTotal[%v] poolAvailable[%v] poolOversoldTotal[%v] poolOversoldAvailable[%v] poolUsed[%v] "+
+			"groupQuota[%v] groupUsed[%v]", region, zonePools[i].Zone, instanceType, zonePools[i].PoolId,
+			zonePools[i].Total, zonePools[i].Available, zonePools[i].OversoldTotal, zonePools[i].OversoldAvailable,
+			zonePools[i].Used, zonePools[i].GroupQuota, zonePools[i].GroupUsed)
+		pools = append(pools, zonePools[i])
+	}
+
+	return pools, nil
 }

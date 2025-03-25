@@ -395,7 +395,7 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
 	return nil
 }
 

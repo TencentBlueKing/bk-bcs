@@ -488,6 +488,13 @@ const (
 )
 
 const (
+	// OperationCreate create operation
+	OperationCreate = "CREATE"
+	// OperationUpdate update operation
+	OperationUpdate = "UPDATE"
+)
+
+const (
 	// BcsErrClusterManagerSuccess success code
 	BcsErrClusterManagerSuccess = 0
 	// BcsErrClusterManagerSuccessStr success string

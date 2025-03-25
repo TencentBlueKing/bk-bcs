@@ -15,7 +15,6 @@ package daemon
 
 import (
 	"context"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
@@ -128,7 +127,9 @@ func GetNodeGroupAndNodes(model store.ClusterManagerModel,
 
 	// filter not running
 	for i := range nodes {
-		if nodes[i].Status == common.StatusRunning {
+		if nodes[i].Status == common.StatusRunning || nodes[i].Status == common.StatusRemoveCANodesFailed ||
+			nodes[i].Status == common.StatusAddNodesFailed ||
+			(nodes[i].Status == common.StatusInitialization && nodes[i].GetZoneID() != "") {
 			groupNodes = append(groupNodes, nodes[i])
 		}
 	}

@@ -156,7 +156,7 @@ func TestClient_GetBusinessTemplateInfo(t *testing.T) {
 	path := &TemplateDetailPathPara{
 		BkBizID:    "xx",
 		TemplateID: "xx",
-		Operator:   "",
+		Operator:   "xx",
 	}
 	req := &TemplateRequest{}
 
