@@ -54,7 +54,7 @@ func (la *ListQuotaAction) doHost(req *proto.ListProjectQuotasRequest,
 		return pquota, errorx.NewReadableErr(errorx.ParamErr, "project not found")
 	}
 
-	if quotaGray, ok := p.Labels["quota-gray"]; ok && quotaGray == "true" {
+	if _, ok := p.Labels["quota-gray"]; ok {
 		var conds []*operator.Condition
 
 		conds = append(conds, operator.NewLeafCondition(operator.Eq, operator.M{
@@ -117,7 +117,7 @@ func (la *ListQuotaAction) doHostUsage(req *proto.ListProjectQuotasRequest,
 
 		cpu, mem := GetCpuMemFromInstanceType(pq.InstanceType)
 
-		if quotaGray, ok := p.Labels["quota-gray"]; ok && quotaGray == "true" {
+		if _, ok := p.Labels["quota-gray"]; ok {
 			for _, pqpq := range pquota {
 				if pqpq.Quota.ZoneResources.ZoneName == pq.Zone &&
 					pqpq.Quota.ZoneResources.InstanceType == pq.InstanceType &&
