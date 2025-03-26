@@ -31,6 +31,12 @@ const (
 	CustomUsernameHeaderKey = "X-Bcs-Username"
 )
 
+// UserInfo is the user info
+type UserInfo struct {
+	TenantId string
+	Username string
+}
+
 // ContextValueKey is the key for context value
 type ContextValueKey string
 
