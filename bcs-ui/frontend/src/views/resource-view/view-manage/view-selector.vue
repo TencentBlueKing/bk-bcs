@@ -85,8 +85,7 @@
           :selectable="isDefaultView"
           :is-show="!isHide"
           v-show="viewMode === 'cluster'"
-          @click="changeClusterView"
-          @change="changeClusterView" />
+          @click="changeClusterView" />
         <!-- 自定义视图 -->
         <ViewList v-show="viewMode === 'custom'" @change="changeCustomView" @edit="editCustomView" />
       </div>
@@ -207,7 +206,7 @@ const changeClusterView = async (clusterID: string) => {
     params: {
       clusterId: clusterID,
     },
-  }).catch(() => {});
+  });
   // 清空自定义视图ID
   updateViewIDStore('');// 设置为集群视图
   $store.commit('updateCrdData', {});

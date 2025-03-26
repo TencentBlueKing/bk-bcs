@@ -36,7 +36,8 @@
       @page-change="pageChange"
       @page-limit-change="pageLimitChange"
       @header-dragend="handleHeaderDragend(tableRef)">
-      <bk-table-column :label="$t('generic.label.time')" prop="createTime" width="170"></bk-table-column>
+      <bk-table-column :label="$t('generic.label.time')" prop="createTime" width="170" fixed :resizable="false">
+      </bk-table-column>
       <bk-table-column :label="$t('generic.label.resourceName')" prop="resourceName" show-overflow-tooltip>
         <template #default="{ row }">
           {{ row.resourceName || '--' }}
@@ -57,7 +58,7 @@
       </bk-table-column>
       <bk-table-column :label="$t('cluster.create.label.desc')" prop="message" show-overflow-tooltip min-width="160">
       </bk-table-column>
-      <bcs-table-column :label="$t('generic.label.action')" width="100">
+      <bcs-table-column :label="$t('generic.label.action')" width="100" fixed="right" :resizable="false">
         <template #default="{ row }">
           <template v-if="row.taskID">
             <bcs-button

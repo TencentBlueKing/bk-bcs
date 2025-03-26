@@ -47,8 +47,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { cloneDeep } from 'lodash';
-import { computed, onBeforeMount, onBeforeUnmount, provide, reactive, ref, toRef, watch } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, provide, ref, watch } from 'vue';
 
 import ResourceMenu from './view-manage/resource-menu.vue';
 import useViewConfig from './view-manage/use-view-config';
@@ -195,7 +194,6 @@ const initClusterAndViewID = () => {
   $store.commit('updateCurCluster', cluster ?? clusterList.value.find(item => item.status === 'RUNNING'));
 };
 
-const curNsList = computed(() => $store.state.viewNsList);
 // 解析并获取url参数
 const propertis = ['name', 'creator', 'source', 'templateName', 'templateVersion', 'chartName', 'labelSelector'];
 function handleGetQuery(query) {
@@ -229,20 +227,6 @@ function handleGetQuery(query) {
   });
   showViewConfig.value = true;
 }
-const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
-
-// 同步命名空间到url
-watch(curNsList, () => {
-  const queryData = cloneDeep(currentRoute.value.query);
-  if (!curNsList.value?.length) {
-    delete queryData.namespace;
-  } else {
-    queryData.namespace = curNsList.value.join(',');
-  }
-  $router.replace({
-    query: queryData,
-  }).catch(() => {});
-});
 
 onBeforeMount(() => {
   bus.$on('toggle-show-view-config', () => {
