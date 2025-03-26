@@ -910,7 +910,8 @@ func (ua *AddNodesAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles update cluster request
-func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesV2Request, resp *cmproto.AddNodesV2Response) {
+func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesV2Request,
+	resp *cmproto.AddNodesV2Response) {
 	if req == nil || resp == nil {
 		blog.Errorf("add cluster nodes failed, req or resp is empty")
 		return
@@ -974,7 +975,7 @@ func (ua *AddNodesAction) Handle(ctx context.Context, req *cmproto.AddNodesV2Req
 
 	taskIDs := make([]string, 0, len(ua.task))
 	for _, task := range ua.task {
-		taskIDs = append(taskIDs, task.TaskID)
+		taskIDs = append(taskIDs, task.TaskID) // nolint
 
 		err := ua.model.CreateOperationLog(ua.ctx, &cmproto.OperationLog{
 			ResourceType: common.Cluster.String(),
