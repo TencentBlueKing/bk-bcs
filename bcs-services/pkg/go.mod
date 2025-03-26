@@ -2,6 +2,10 @@ module github.com/Tencent/bk-bcs/bcs-services/pkg
 
 go 1.20
 
+replace (
+	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
+)
+
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418095107-1d05d2d5c43c
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6

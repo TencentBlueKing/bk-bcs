@@ -16,6 +16,8 @@ package middleware
 import (
 	"context"
 	"errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 const (
@@ -37,6 +39,7 @@ type AuthUser struct {
 	InnerClient string
 	ClientName  string
 	Username    string
+	TenantId    string
 }
 
 // IsInner returns true if the user is inner client
@@ -53,6 +56,14 @@ func (u AuthUser) GetUsername() string {
 		return u.ClientName
 	}
 	return u.InnerClient
+}
+
+func (u AuthUser) GetTanantId() string {
+	if u.TenantId == "" {
+		return utils.DefaultTenantId
+	}
+
+	return u.TenantId
 }
 
 // GetUserFromContext returns the user info in context

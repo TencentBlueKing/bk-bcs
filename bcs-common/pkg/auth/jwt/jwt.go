@@ -55,6 +55,7 @@ var (
 type UserInfo struct {
 	SubType      string
 	UserName     string
+	TenantId     string
 	ClientName   string
 	ClientSecret string
 	Issuer       string
@@ -89,6 +90,7 @@ func (user *UserInfo) validate() error {
 type UserClaimsInfo struct {
 	SubType      string `json:"sub_type"`
 	UserName     string `json:"username"`
+	TenantId     string `json:"tenant_id"`
 	BKAppCode    string `json:"bk_app_code"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
@@ -202,6 +204,7 @@ func (jc *JWTClient) JWTSign(user *UserInfo) (string, error) {
 	claimsPayload := &UserClaimsInfo{
 		SubType:      user.SubType,
 		UserName:     user.UserName,
+		TenantId:     user.TenantId,
 		ClientID:     user.ClientName,
 		ClientSecret: user.ClientSecret,
 		StandardClaims: &jwt.StandardClaims{ // nolint

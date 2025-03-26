@@ -90,6 +90,9 @@ func (g *GoMicroAuth) AuthenticationFunc(fn server.HandlerFunc) server.HandlerFu
 			if len(u.BKAppCode) != 0 {
 				authUser.ClientName = u.BKAppCode
 			}
+			if len(u.TenantId) != 0 {
+				authUser.TenantId = u.TenantId
+			}
 		}
 
 		// If and only if client name from jwt token is not empty, we will check username in header
