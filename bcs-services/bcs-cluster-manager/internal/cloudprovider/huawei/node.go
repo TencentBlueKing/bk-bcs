@@ -167,7 +167,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 
 	instanceTypes := make([]*proto.InstanceType, 0)
 	for _, v := range *flavors {
-		if v.OsExtraSpecs.Condoperationaz == nil {
+		if v.OsExtraSpecs.Condoperationaz == nil || *v.OsExtraSpecs.Condoperationaz == "" {
 			continue
 		}
 
@@ -215,7 +215,7 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 		res := strings.Split(*v.OsExtraSpecs.Condoperationaz, ",")
 		for _, y := range res {
 			zone := strings.Split(y, "(")
-			if len(zone) > 0 {
+			if len(zone) > 1 {
 				if zone[1] == "normal)" || zone[1] == "promotion)" {
 					status = common.InstanceSell
 					zones = append(zones, zone[0])
