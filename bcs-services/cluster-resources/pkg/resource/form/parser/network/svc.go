@@ -86,11 +86,12 @@ func ParseSVCPortConf(manifest map[string]interface{}, portConf *model.SVCPortCo
 	for _, port := range mapx.GetList(manifest, "spec.ports") {
 		p := port.(map[string]interface{})
 		portConf.Ports = append(portConf.Ports, model.SVCPort{
-			Name:       mapx.GetStr(p, "name"),
-			Port:       mapx.GetInt64(p, "port"),
-			Protocol:   mapx.GetStr(p, "protocol"),
-			TargetPort: cast.ToString(mapx.Get(p, "targetPort", "")),
-			NodePort:   mapx.GetInt64(p, "nodePort"),
+			Name:             mapx.GetStr(p, "name"),
+			Port:             mapx.GetInt64(p, "port"),
+			Protocol:         mapx.GetStr(p, "protocol"),
+			TargetPort:       cast.ToString(mapx.Get(p, "targetPort", "")),
+			TargetSelectPort: cast.ToString(mapx.Get(p, "targetPort", "")),
+			NodePort:         mapx.GetInt64(p, "nodePort"),
 		})
 	}
 }

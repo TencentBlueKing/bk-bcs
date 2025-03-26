@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/samber/lo"
 	"gopkg.in/yaml.v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action"
@@ -74,6 +75,33 @@ type SimpleHead struct {
 	Version  string   `yaml:"apiVersion"`
 	Kind     string   `yaml:"kind,omitempty"`
 	Metadata Metadata `yaml:"metadata"`
+	Spec     Spec     `yaml:"spec"`
+}
+
+// Spec defines what the structure of the Spec of a manifest file
+type Spec struct {
+	Template Template `yaml:"template"`
+}
+
+// Template defines what the structure of the Template of a manifest file
+type Template struct {
+	Spec TemplateSpec `yaml:"spec"`
+}
+
+// TemplateSpec defines what the structure of the TemplateSpec of a manifest file
+type TemplateSpec struct {
+	Containers []Containers `yaml:"containers"`
+}
+
+// Containers defines what the structure of the Containers of a manifest file
+type Containers struct {
+	Ports []Ports `yaml:"ports"`
+}
+
+// Ports defines what the structure of the Ports of a manifest file
+type Ports struct {
+	Protocol      string `yaml:"protocol"`
+	ContainerPort string `yaml:"containerPort"`
 }
 
 // Metadata defines what the structure of the metadata of a manifest file
@@ -181,4 +209,57 @@ func ParseLablesFromManifest(versions []*entity.TemplateVersion, kind, name stri
 	}
 
 	return map[string]interface{}{action.SelectItemsFormat: resp}
+}
+
+// ParsePortsFromManifest parse ports from manifest
+func ParsePortsFromManifest(versions []*entity.TemplateVersion, kind, name, protocol string) map[string]interface{} {
+	resp := make([]map[string]interface{}, 0)
+	for _, ver := range versions {
+		manifests := SplitManifests(ver.Content)
+		for _, v := range manifests {
+			metadata := GetManifestMetadata(v)
+			if kind != metadata.Kind {
+				continue
+			}
+			if name != metadata.Metadata.Name {
+				continue
+			}
+
+			resp = append(resp, getPortsValue(protocol, metadata.Spec.Template.Spec.Containers)...)
+		}
+	}
+
+	// 去重
+	resp = lo.UniqBy(resp, func(item map[string]any) string {
+		return item["label"].(string)
+	})
+
+	return map[string]interface{}{action.SelectItemsFormat: resp}
+}
+
+// 筛选关联应用的ports
+func getPortsValue(protocol string, containers []Containers) []map[string]interface{} {
+	if protocol != "TCP" && protocol != "UDP" {
+		protocol = ""
+	}
+	resp := make([]map[string]interface{}, 0)
+	for _, v := range containers {
+		for _, port := range v.Ports {
+			// 默认tcp
+			if port.Protocol == "" {
+				port.Protocol = "TCP"
+			}
+			// protocol没给默认返回所有端口
+			if port.Protocol == protocol || protocol == "" {
+				resp = append(resp, map[string]interface{}{
+					"label":    port.ContainerPort,
+					"value":    port.ContainerPort,
+					"disabled": false,
+					"tips":     "",
+				})
+			}
+		}
+
+	}
+	return resp
 }
