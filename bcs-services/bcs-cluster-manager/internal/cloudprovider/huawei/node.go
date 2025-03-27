@@ -155,6 +155,10 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 // ListNodeInstanceType list node type by zone and node family
 func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
+	var (
+		usableAZ = []string{"normal", "promotion"}
+	)
+
 	client, err := api.NewEcsClient(opt)
 	if err != nil {
 		return nil, err
@@ -214,11 +218,12 @@ func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt
 		zones := make([]string, 0)
 		res := strings.Split(*v.OsExtraSpecs.Condoperationaz, ",")
 		for _, y := range res {
-			zone := strings.Split(y, "(")
-			if len(zone) > 1 {
-				if zone[1] == "normal)" || zone[1] == "promotion)" {
+			part := strings.TrimSpace(y)
+			for _, az := range usableAZ {
+				if strings.HasSuffix(part, fmt.Sprintf("(%s)", az)) {
+					zone := strings.TrimSuffix(part, fmt.Sprintf("(%s)", az))
+					zones = append(zones, strings.TrimSpace(zone))
 					status = common.InstanceSell
-					zones = append(zones, zone[0])
 				}
 			}
 		}
