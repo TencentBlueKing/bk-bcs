@@ -40,7 +40,9 @@ _yum_containerd() {
       | sed "s#https://download.docker.com#${MIRROR_URL}/docker-ce#g" \
       | tee "${repo_file}"
     if [[ -f /etc/tlinux-release ]];then
-      if grep -i "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
+      if grep -i "TencentOS Server 4.[0-9]*" /etc/tlinux-release;then
+        sed -i "s/\$releasever/9/g" "$ROOT_DIR/docker-ce.repo"
+      elif grep -i "TencentOS Server 3.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/8/g" "$ROOT_DIR/docker-ce.repo"
       elif grep -i "TencentOS Server 2.[0-9]*" /etc/tlinux-release;then
         sed -i "s/\$releasever/7/g" "$ROOT_DIR/docker-ce.repo"
@@ -59,7 +61,11 @@ _yum_containerd() {
   [[ ! -f /etc/yum.repos.d/tlinux-docker-ce.repo ]] \
     || mv /etc/yum.repos.d/tlinux-docker-ce.repo /etc/yum.repos.d/tlinux-docker-ce.repo.bak
 
-  yum install -y -q yum-utils
+  if grep -i "TencentOS Server 4.[0-9]*" /etc/tlinux-release;then
+    yum install -y -q dnf-utils
+  else
+    yum install -y -q yum-utils
+  fi
   yum-config-manager --add-repo "${repo_file}"
   yum clean all
   yum makecache fast 2>/dev/null|| yum makecache
