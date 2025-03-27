@@ -55,7 +55,7 @@
     "prettier": "^3.0.3",
     "rollup-plugin-visualizer": "^5.12.0",
     "typescript": "^4.6.4",
-    "vite": "^3.2.5",
+    "vite": "^4.5.10",
     "vite-plugin-compression": "^0.5.1",
     "vite-plugin-eslint": "^1.8.1",
     "vue-eslint-parser": "^9.3.1",
