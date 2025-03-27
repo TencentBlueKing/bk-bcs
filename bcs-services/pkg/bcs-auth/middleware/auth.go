@@ -58,7 +58,8 @@ func (u AuthUser) GetUsername() string {
 	return u.InnerClient
 }
 
-func (u AuthUser) GetTanantId() string {
+// GetTenantId returns the tenant id
+func (u AuthUser) GetTenantId() string {
 	if u.TenantId == "" {
 		return utils.DefaultTenantId
 	}
