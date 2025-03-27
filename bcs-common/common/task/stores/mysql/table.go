@@ -32,6 +32,23 @@ var (
 	// UnixZeroTime mysql 8.0 版本以上不能写入, 使用unix 0时作为zero time
 	// https://dev.mysql.com/doc/refman/8.0/en/datetime.html
 	UnixZeroTime = time.Unix(0, 0)
+	// SortableFields 可排序字段
+	SortableFields = []string{
+		"id",
+		"task_id",
+		"task_type",
+		"task_index",
+		"task_index_type",
+		"task_name",
+		"current_step",
+		"callback_name",
+		"execution_time",
+		"max_execution_seconds",
+		"start",
+		"end",
+		"creator",
+		"updater",
+	}
 )
 
 // BaseModel 添加 CreatedAt 索引
