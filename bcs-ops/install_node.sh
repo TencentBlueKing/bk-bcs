@@ -106,7 +106,13 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 "${ROOT_DIR}"/system/check_host.sh -c all
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
-"${ROOT_DIR}"/system/config_system.sh -c dns sysctl
+
+safe_source "${ROOT_DIR}/env/bcs.env"
+if [[ "${ENABLE_CONFIG_SYSTEM}" == "true" ]];then
+  "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
+else
+  "${ROOT_DIR}"/system/config_system.sh -c dns
+fi
 "${ROOT_DIR}"/tools/install_tools.sh jq yq
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools

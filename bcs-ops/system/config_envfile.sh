@@ -53,7 +53,6 @@ init_env() {
   LAN_IP=${LAN_IP:-}
   LAN_DEV=${LAN_DEV:-}
   LAN_IPv6=${LAN_IPv6:-}
-  BCS_SYSCTL=${BCS_SYSCTL:=1}
   if [[ -z ${LAN_IP} ]] && [[ ${K8S_IPv6_STATUS,,} != "singlestack" ]]; then
     LAN_IP="$("${ROOT_DIR}"/system/get_lan_ip -4 ${LAN_DEV})"
   fi
@@ -151,6 +150,9 @@ init_env() {
   EXTERNAL_HOST=${EXTERNAL_HOST:-}
   ## multus
   ENABLE_MULTUS_HA=${ENABLE_MULTUS_HA:-"true"}
+
+  ## ENABLE_CONFIG_SYSTEM
+  ENABLE_CONFIG_SYSTEM=${ENABLE_CONFIG_SYSTEM:-"true"}
 }
 
 source_cluster_env() {
@@ -254,7 +256,6 @@ $(
     [[ ${K8S_IPv6_STATUS,,} == "dualstack" ]] \
       && echo LAN_IPv6=\""${LAN_IPv6}"\"
   )
-BCS_SYSCTL=${BCS_SYSCTL:=1}
 K8S_IPv6_STATUS="${K8S_IPv6_STATUS}"
 BCS_OFFLINE="${BCS_OFFLINE}"
 INSTALL_METHOD="${INSTALL_METHOD}"
@@ -358,6 +359,8 @@ EXTERNAL_VIP="${EXTERNAL_VIP}"
 EXTERNAL_HOST="${EXTERNAL_HOST}"
 ## multus
 ENABLE_MULTUS_HA="${ENABLE_MULTUS_HA}"
+## ENABLE_CONFIG_SYSTEM
+ENABLE_CONFIG_SYSTEM=${ENABLE_CONFIG_SYSTEM}
 # bcs config end
 EOF
 }
