@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // Cluster clusterInfo
@@ -33,6 +34,8 @@ type Cluster struct {
 	ClusterID string
 	// ClusterName name
 	ClusterName string
+	// TenantId id
+	TenantId string
 }
 
 // BuildScopePerm build cluster level perm scope
@@ -56,6 +59,14 @@ func (c *Cluster) validate() error {
 	}
 
 	return nil
+}
+
+func (c *Cluster) getTenantId() string {
+	if c == nil || c.TenantId == "" {
+		return utils.DefaultTenantId
+	}
+
+	return c.TenantId
 }
 
 func (c *Cluster) buildClusterCreateScope() iam.AuthorizationScope {
