@@ -27,6 +27,8 @@ import (
 	"golang.org/x/sync/errgroup"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
+	"k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -107,6 +109,20 @@ func (c *CRDClient) List(ctx context.Context, opts metav1.ListOptions) (map[stri
 		return nil, err
 	}
 	return ret.UnstructuredContent(), nil
+}
+
+// ListCrdResources xxx
+func ListCrdResources(
+	ctx context.Context, clusterID string, opts metav1.ListOptions) (*v1.CustomResourceDefinitionList, error) {
+
+	clusterConf := res.NewClusterConf(clusterID)
+	crdClient, err := clientset.NewForConfig(clusterConf.Rest)
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取 CRD 资源
+	return crdClient.ApiextensionsV1().CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
 }
 
 // Get xxx
