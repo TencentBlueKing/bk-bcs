@@ -80,7 +80,7 @@ func (r *ReleaseRollbackAction) Prepare(ctx context.Context) error {
 }
 
 // Validate xxx
-func (r *ReleaseRollbackAction) Validate() error {
+func (r *ReleaseRollbackAction) Validate(ctx context.Context) error {
 	return nil
 }
 
