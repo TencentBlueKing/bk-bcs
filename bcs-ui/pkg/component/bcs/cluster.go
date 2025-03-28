@@ -17,6 +17,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
+
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
 )
@@ -45,6 +47,7 @@ func GetCluster(ctx context.Context, clusterID string) (*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterID)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(header.GetLaneIDByCtx(ctx)).
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 
