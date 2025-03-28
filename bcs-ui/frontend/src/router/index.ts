@@ -151,8 +151,23 @@ router.beforeEach(async (to, from, next) => {
       if (projectCode) {
         // 如果路径匹配 ${SITE_URL}/clusters/:clusterId
         const newPath = `${SITE_URL}/projects/${projectCode}${to.fullPath?.replace(SITE_URL, '')}`;
+        let name;
+        try {
+          const newPathRoute = router.resolve(newPath);
+          name = newPathRoute.route.matched?.[newPathRoute.route.matched.length - 1]?.name;
+        } catch (err) {
+          console.warn(err);
+          name = '404';
+        }
+
         // 重定向到新路径
-        next(newPath);
+        next({
+          name,
+          params: { // 防止被路由规则的 params 覆盖
+            projectCode,
+            clusterId,
+          },
+        });
         return;
       }
     }

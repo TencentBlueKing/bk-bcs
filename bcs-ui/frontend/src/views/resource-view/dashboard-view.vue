@@ -183,14 +183,21 @@ const initClusterAndViewID = () => {
     // 路径上没有集群ID, 也没有视图ID, 就默认跳转到一个集群中
     cluster = clusterList.value.find(item => item.clusterID === curClusterId.value)
       || clusterList.value.find(item => item.status === 'RUNNING');
+    // $router.replace({
+    //   name: $router.currentRoute?.name,
+    //   params: {
+    //     clusterId: cluster?.clusterID,
+    //   },
+    // });
+  } else if (!$router.currentRoute?.query?.viewID && dashboardViewID.value) {
+    // 内存中有视图ID, 路径上没有，同步到路径上
     $router.replace({
-      name: $router.currentRoute?.name,
-      params: {
-        clusterId: cluster?.clusterID,
+      query: {
+        viewID,
       },
     });
   }
-  $store.commit('updateDashboardViewID', viewID);// 更新当前视图ID
+  $store.commit('updateDashboardViewID', viewID);// 更新当前视图ID，触发watch初始化视图
   $store.commit('updateCurCluster', cluster ?? clusterList.value.find(item => item.status === 'RUNNING'));
 };
 

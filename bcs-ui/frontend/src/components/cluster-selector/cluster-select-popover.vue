@@ -109,7 +109,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['change', 'click']);
+const emits = defineEmits(['change', 'click', 'init']);
 
 const normalStatusList = ['RUNNING'];
 
