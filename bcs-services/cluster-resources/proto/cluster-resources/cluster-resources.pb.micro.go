@@ -5000,6 +5000,12 @@ func NewTemplateSetEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "TemplateSet.GetTemplateAssociatePorts",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/ports"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "TemplateSet.GetTemplateContent",
 			Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/detail"},
 			Method:  []string{"POST"},
@@ -5127,6 +5133,8 @@ type TemplateSetService interface {
 	GetTemplateResources(ctx context.Context, in *GetTemplateResourcesReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件关联labels
 	GetTemplateAssociateLabels(ctx context.Context, in *GetTemplateAssociateLabelsReq, opts ...client.CallOption) (*CommonResp, error)
+	// 获取模板文件关联ports
+	GetTemplateAssociatePorts(ctx context.Context, in *GetTemplateAssociatePortsReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件详情
 	GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, opts ...client.CallOption) (*CommonResp, error)
 	// 获取模板文件版本列表
@@ -5331,6 +5339,16 @@ func (c *templateSetService) GetTemplateAssociateLabels(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *templateSetService) GetTemplateAssociatePorts(ctx context.Context, in *GetTemplateAssociatePortsReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "TemplateSet.GetTemplateAssociatePorts", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *templateSetService) GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "TemplateSet.GetTemplateContent", in)
 	out := new(CommonResp)
@@ -5516,6 +5534,8 @@ type TemplateSetHandler interface {
 	GetTemplateResources(context.Context, *GetTemplateResourcesReq, *CommonResp) error
 	// 获取模板文件关联labels
 	GetTemplateAssociateLabels(context.Context, *GetTemplateAssociateLabelsReq, *CommonResp) error
+	// 获取模板文件关联ports
+	GetTemplateAssociatePorts(context.Context, *GetTemplateAssociatePortsReq, *CommonResp) error
 	// 获取模板文件详情
 	GetTemplateContent(context.Context, *GetTemplateContentReq, *CommonResp) error
 	// 获取模板文件版本列表
@@ -5566,6 +5586,7 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 		GetTemplateVersion(ctx context.Context, in *GetTemplateVersionReq, out *CommonResp) error
 		GetTemplateResources(ctx context.Context, in *GetTemplateResourcesReq, out *CommonResp) error
 		GetTemplateAssociateLabels(ctx context.Context, in *GetTemplateAssociateLabelsReq, out *CommonResp) error
+		GetTemplateAssociatePorts(ctx context.Context, in *GetTemplateAssociatePortsReq, out *CommonResp) error
 		GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, out *CommonResp) error
 		ListTemplateVersion(ctx context.Context, in *ListTemplateVersionReq, out *CommonListResp) error
 		CreateTemplateVersion(ctx context.Context, in *CreateTemplateVersionReq, out *CommonResp) error
@@ -5679,6 +5700,12 @@ func RegisterTemplateSetHandler(s server.Server, hdlr TemplateSetHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "TemplateSet.GetTemplateAssociateLabels",
 		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/labels"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "TemplateSet.GetTemplateAssociatePorts",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/template/ports"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -5841,6 +5868,10 @@ func (h *templateSetHandler) GetTemplateResources(ctx context.Context, in *GetTe
 
 func (h *templateSetHandler) GetTemplateAssociateLabels(ctx context.Context, in *GetTemplateAssociateLabelsReq, out *CommonResp) error {
 	return h.TemplateSetHandler.GetTemplateAssociateLabels(ctx, in, out)
+}
+
+func (h *templateSetHandler) GetTemplateAssociatePorts(ctx context.Context, in *GetTemplateAssociatePortsReq, out *CommonResp) error {
+	return h.TemplateSetHandler.GetTemplateAssociatePorts(ctx, in, out)
 }
 
 func (h *templateSetHandler) GetTemplateContent(ctx context.Context, in *GetTemplateContentReq, out *CommonResp) error {
