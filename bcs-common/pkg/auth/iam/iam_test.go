@@ -128,7 +128,7 @@ func TestIamClient_DeleteUserGroup(t *testing.T) {
 		t.Fatalf("newIAMClient failed: %v", err)
 	}
 
-	err = cli.DeleteUserGroup(context.Background(), 710)
+	err = cli.DeleteUserGroup(context.Background(), "default", 710)
 	if err != nil {
 		t.Fatal(err)
 	}
