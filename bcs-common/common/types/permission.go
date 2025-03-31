@@ -27,6 +27,7 @@ type BcsPermissionSpec struct {
 
 // Permission xxx
 type Permission struct {
+	TenantId     string `json:"tenant_id"`
 	UserName     string `json:"user_name"`
 	ResourceType string `json:"resource_type"`
 	Resource     string `json:"resource"`
