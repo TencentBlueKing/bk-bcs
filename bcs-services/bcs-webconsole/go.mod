@@ -27,7 +27,7 @@ require (
 	github.com/prometheus/prometheus v1.8.2-0.20200811193703-869f1bc587e6
 	github.com/samber/lo v1.47.0
 	github.com/stretchr/testify v1.9.0
-	github.com/tencentyun/cos-go-sdk-v5 v0.7.43
+	github.com/tencentyun/cos-go-sdk-v5 v0.7.64
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/xakep666/asciinema-player/v3 v3.0.0
 	go-micro.dev/v4 v4.10.2
