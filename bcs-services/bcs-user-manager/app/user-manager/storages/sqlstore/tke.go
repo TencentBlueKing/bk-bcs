@@ -13,6 +13,9 @@
 package sqlstore
 
 import (
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
@@ -35,16 +38,19 @@ type CidrCount struct {
 
 // QueryTkeCidr query tke cidr info
 func QueryTkeCidr(tkeCidr *models.TkeCidr) *models.TkeCidr {
+	start := time.Now()
 	result := models.TkeCidr{}
 	GCoreDB.Where(tkeCidr).First(&result)
 	if result.ID != 0 {
 		return &result
 	}
+	metrics.ReportMysqlSlowQueryMetrics("QueryTkeCidr", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // SaveTkeCidr save tke cidr
 func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error {
+	start := time.Now()
 	tkeCidr := &models.TkeCidr{
 		Vpc:      vpc,
 		Cidr:     cidr,
@@ -54,19 +60,32 @@ func SaveTkeCidr(vpc, cidr string, ipNumber uint, status, cluster string) error 
 	}
 
 	err := GCoreDB.Create(tkeCidr).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("SaveTkeCidr", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("SaveTkeCidr", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // UpdateTkeCidr update tke cidr
 func UpdateTkeCidr(tkeCidr, updatedTkeCidr *models.TkeCidr) error {
+	start := time.Now()
 	err := GCoreDB.Model(tkeCidr).Updates(*updatedTkeCidr).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("UpdateTkeCidr", metrics.Update, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("UpdateTkeCidr", metrics.Update, metrics.SucStatus, start)
+	return nil
 }
 
 // CountTkeCidr count tke cidr
 func CountTkeCidr() []CidrCount {
+	start := time.Now()
 	var cidrCounts []CidrCount
 	GCoreDB.Table("tke_cidrs").Select("count(*) as count, vpc, ip_number, status").Group("vpc, ip_number, status").
 		Scan(&cidrCounts)
+	metrics.ReportMysqlSlowQueryMetrics("CountTkeCidr", metrics.Query, metrics.SucStatus, start)
 	return cidrCounts
 }

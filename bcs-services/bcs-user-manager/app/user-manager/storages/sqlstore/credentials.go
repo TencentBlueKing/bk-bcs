@@ -13,21 +13,27 @@
 package sqlstore
 
 import (
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // GetCredentials query for clusterCredentials by clusterId
 func GetCredentials(clusterID string) *models.BcsClusterCredential {
+	start := time.Now()
 	credential := models.BcsClusterCredential{}
 	GCoreDB.Where(&models.BcsClusterCredential{ClusterId: clusterID}).First(&credential)
 	if credential.ID != 0 {
 		return &credential
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetCredentials", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // SaveCredentials saves the current cluster credentials
 func SaveCredentials(clusterID, serverAddresses, caCertData, userToken, clusterDomain string) error {
+	start := time.Now()
 	var credentials models.BcsClusterCredential
 	// Create or update, source: https://github.com/jinzhu/gorm/issues/1307
 	dbScoped := GCoreDB.Where(models.BcsClusterCredential{ClusterId: clusterID}).Assign(
@@ -38,19 +44,22 @@ func SaveCredentials(clusterID, serverAddresses, caCertData, userToken, clusterD
 			ClusterDomain:   clusterDomain,
 		},
 	).FirstOrCreate(&credentials)
+	metrics.ReportMysqlSlowQueryMetrics("SaveCredentials", metrics.Create, metrics.SucStatus, start)
 	return dbScoped.Error
 }
 
 // ListCredentials list cluster credentials
 func ListCredentials() []models.BcsClusterCredential {
+	start := time.Now()
 	var credentials []models.BcsClusterCredential
 	GCoreDB.Find(&credentials)
-
+	metrics.ReportMysqlSlowQueryMetrics("ListCredentials", metrics.Query, metrics.SucStatus, start)
 	return credentials
 }
 
 // SaveWsCredentials saves the credentials of cluster registered by websocket
 func SaveWsCredentials(serverKey, clientModule, serverAddress, caCertData, userToken string) error {
+	start := time.Now()
 	var credentials models.BcsWsClusterCredentials
 	// Create or update, source: https://github.com/jinzhu/gorm/issues/1307
 	dbScoped := GCoreDB.Where(models.BcsWsClusterCredentials{ServerKey: serverKey}).Assign(
@@ -61,29 +70,36 @@ func SaveWsCredentials(serverKey, clientModule, serverAddress, caCertData, userT
 			UserToken:     userToken,
 		},
 	).FirstOrCreate(&credentials)
+	metrics.ReportMysqlSlowQueryMetrics("SaveWsCredentials", metrics.Create, metrics.SucStatus, start)
 	return dbScoped.Error
 }
 
 // GetWsCredentials query for clusterCredentials of cluster registered by websocket
 func GetWsCredentials(serverKey string) *models.BcsWsClusterCredentials {
+	start := time.Now()
 	credentials := models.BcsWsClusterCredentials{}
 	GCoreDB.Where(&models.BcsWsClusterCredentials{ServerKey: serverKey}).First(&credentials)
 	if credentials.ID != 0 {
 		return &credentials
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetWsCredentials", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // DelWsCredentials delete ws credentials
 func DelWsCredentials(serverKey string) {
+	start := time.Now()
 	credentials := models.BcsWsClusterCredentials{}
 	GCoreDB.Where(&models.BcsWsClusterCredentials{ServerKey: serverKey}).Delete(&credentials)
+	metrics.ReportMysqlSlowQueryMetrics("DelWsCredentials", metrics.Delete, metrics.SucStatus, start)
 }
 
 // GetWsCredentialsByClusterId get ws credential by clusterID
 func GetWsCredentialsByClusterId(clusterID string) []*models.BcsWsClusterCredentials {
+	start := time.Now()
 	var credentials []*models.BcsWsClusterCredentials
 	query := clusterID + "-%"
 	GCoreDB.Where("server_key LIKE ?", query).Find(&credentials)
+	metrics.ReportMysqlSlowQueryMetrics("GetWsCredentialsByClusterId", metrics.Query, metrics.SucStatus, start)
 	return credentials
 }
