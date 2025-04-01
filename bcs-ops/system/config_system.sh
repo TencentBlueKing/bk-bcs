@@ -53,7 +53,6 @@ add_kernel_para() {
     echo "br_netfilter" >> /etc/modules-load.d/k8s.conf
   fi
 
-  [[ ${BCS_SYSCTL} == "1" ]] || return 0
   utils::log "INFO" "Adding kernel parameter"
   local total_mem page_size thread_size ipv6_status
   ipv6_status=${K8S_IPv6_STATUS:-"Disable"}
@@ -143,7 +142,6 @@ EOF
 # ulimit concurrently open file descriptors
 #######################################
 add_limits() {
-  [[ ${BCS_SYSCTL} == "1" ]] || return 0
   utils::log "INFO" "Adding limits config"
   cat >/etc/security/limits.d/99-bcs.conf <<EOF
 # bcs config begin

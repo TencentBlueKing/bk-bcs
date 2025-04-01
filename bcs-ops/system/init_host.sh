@@ -23,11 +23,14 @@ BASE_EPEL_LINK="http://mirrors.cloud.tencent.com/repo/epel-7.repo"
 BACKUPTIME=$(date +%Y%m%d_%H%M)
 RPM_LIST=(ntpdate chrony screen pssh parallel zip unzip rsync gawk curl lsof tar sed iproute uuid psmisc wget rsync jq expect uuid bash-completion lsof openssl-devel readline-devel libcurl-devel libxml2-devel glibc-devel zlib-devel iproute procps-ng bind-utils)
 NTP_SEVER="cn.pool.ntp.org"
-if [[ -n ${BCS_OFFLINE:-} ]]; then
-    SET_LIST=(set_kernel_params set_ulimit set_hostname set_selinux close_swap stop_firewalld install_tools)
-
+if [[ "${ENABLE_CONFIG_SYSTEM}" == "true" ]];then
+  if [[ -n ${BCS_OFFLINE:-} ]]; then
+      SET_LIST=(set_kernel_params set_ulimit set_hostname set_selinux close_swap stop_firewalld install_tools)
+  else
+      SET_LIST=(set_kernel_params set_ulimit set_hostname set_selinux close_swap stop_firewalld set_yum_repo install_tools set_time_sync)
+  fi
 else
-    SET_LIST=(set_kernel_params set_ulimit set_hostname set_selinux close_swap stop_firewalld set_yum_repo install_tools set_time_sync)
+  SET_LIST=()
 fi
 
 log() {
