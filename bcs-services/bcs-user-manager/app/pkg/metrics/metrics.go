@@ -31,6 +31,15 @@ const (
 	ErrStatus = "failure"
 	// SucStatus for failure status
 	SucStatus = "success"
+
+	// Query for mysql query
+	Query = "query"
+	// Create for mysql create
+	Create = "create"
+	// Delete for mysql delete
+	Delete = "delete"
+	// Update for mysql update
+	Update = "update"
 )
 
 const (
@@ -55,6 +64,19 @@ var (
 		Buckets:   timeBuckets,
 		Help:      "Histogram of the time (in seconds) each request took.",
 	}, []string{"handler", "method", "status"})
+
+	mysqlSlowQueryCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Namespace: BkBcsUserManager,
+		Name:      "mysq_slow_query_total_num",
+		Help:      "Counter of mysql slow query to bcs-user-manager.",
+	}, []string{"handler", "method", "status"})
+
+	mysqlSlowQueryLatency = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Namespace: BkBcsUserManager,
+		Name:      "mysq_slow_query_latency_time",
+		Buckets:   []float64{10, 30, 60},
+		Help:      "Histogram of the time (in seconds) each mysql slow query.",
+	}, []string{"handler", "method", "status"})
 )
 
 // RunMetric metric entrypoint
@@ -64,6 +86,8 @@ func RunMetric(conf *config.UserMgrConfig) {
 	// prometheus register collector
 	prometheus.MustRegister(requestCount)
 	prometheus.MustRegister(requestLatency)
+	prometheus.MustRegister(mysqlSlowQueryCount)
+	prometheus.MustRegister(mysqlSlowQueryLatency)
 
 	// prometheus metrics server
 	metricMux := http.NewServeMux()
@@ -85,4 +109,14 @@ func RunMetric(conf *config.UserMgrConfig) {
 func ReportRequestAPIMetrics(handler, method, status string, started time.Time) {
 	requestCount.WithLabelValues(handler, method, status).Inc()
 	requestLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
+}
+
+// ReportMysqlSlowQueryMetrics report mysql slow query metrics
+func ReportMysqlSlowQueryMetrics(handler, method, status string, started time.Time) {
+	// 记录大于10秒的慢查询
+	latency := time.Since(started).Seconds()
+	if latency > 10 {
+		mysqlSlowQueryCount.WithLabelValues(handler, method, status).Inc()
+		mysqlSlowQueryLatency.WithLabelValues(handler, method, status).Observe(latency)
+	}
 }

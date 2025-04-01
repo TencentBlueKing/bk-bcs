@@ -15,32 +15,48 @@ package sqlstore
 import (
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // ListOperationLogByClusterID get operationLogs by clusterID
 func ListOperationLogByClusterID(clusterID string) []models.BcsOperationLog {
+	start := time.Now()
 	var operationLogs []models.BcsOperationLog
 	GCoreDB.Where("cluster_id = ?", clusterID).Find(&operationLogs)
+	metrics.ReportMysqlSlowQueryMetrics("ListOperationLogByClusterID", metrics.Query, metrics.SucStatus, start)
 	return operationLogs
 }
 
 // ListOperationLogByUserClusterID get operationLogs by user and clusterID
 func ListOperationLogByUserClusterID(clusterID string, user string) []models.BcsOperationLog {
+	start := time.Now()
 	var operationLogs []models.BcsOperationLog
 	GCoreDB.Where("cluster_id = ? AND op_user = ?", clusterID, user).Find(&operationLogs)
+	metrics.ReportMysqlSlowQueryMetrics("ListOperationLogByUserClusterID", metrics.Query, metrics.SucStatus, start)
 	return operationLogs
 }
 
 // CreateOperationLog create operation log
 func CreateOperationLog(log *models.BcsOperationLog) error {
+	start := time.Now()
 	err := GCoreDB.Create(log).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateOperationLog", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateOperationLog", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // DeleteOperationLogByTime delete operationLogs between start and end time
 func DeleteOperationLogByTime(start time.Time, end time.Time) error {
+	startTime := time.Now()
 	err := GCoreDB.Where("created_at BETWEEN ? AND ?", start, end).Delete(&models.BcsOperationLog{}).Error
-
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("DeleteOperationLogByTime", metrics.Delete, metrics.ErrStatus, startTime)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("DeleteOperationLogByTime", metrics.Delete, metrics.SucStatus, startTime)
+	return nil
 }
