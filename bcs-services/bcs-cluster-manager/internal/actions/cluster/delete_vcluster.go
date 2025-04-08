@@ -99,7 +99,7 @@ func (da *DeleteVirtualAction) getClusterInfo() error {
 
 func (da *DeleteVirtualAction) cleanLocalInformation() error {
 	// async delete cluster dependency info
-	go asyncDeleteImportedClusterInfo(context.Background(), da.model, da.cluster)
+	go asyncDeleteImportedClusterInfo(da.ctx, da.model, da.cluster)
 
 	// finally clean cluster
 	da.cluster.Status = common.StatusDeleted

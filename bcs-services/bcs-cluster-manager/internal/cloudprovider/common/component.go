@@ -146,7 +146,7 @@ func InstallWatchComponentByHelm(ctx context.Context, projectID,
 		blog.Errorf("InstallWatchComponentByHelm[%s] GetWatchInstaller failed: %v", taskID, err)
 		return err
 	}
-	err = installer.Install(clusterID, values)
+	err = installer.Install(ctx, clusterID, values)
 	if err != nil {
 		blog.Errorf("InstallWatchComponentByHelm[%s] Install failed: %v", taskID, err)
 		return err
@@ -166,7 +166,7 @@ func DeleteWatchComponentByHelm(ctx context.Context, projectID,
 		blog.Errorf("DeleteWatchComponentByHelm[%s] GetWatchInstaller failed: %v", traceID, err)
 		return err
 	}
-	err = install.Uninstall(clusterID)
+	err = install.Uninstall(ctx, clusterID)
 	if err != nil {
 		blog.Errorf("DeleteWatchComponentByHelm[%s] Uninstall failed: %v", traceID, err)
 		return err
@@ -178,7 +178,7 @@ func DeleteWatchComponentByHelm(ctx context.Context, projectID,
 
 	err = loop.LoopDoFunc(timeContext, func() error {
 		var exist bool
-		exist, err = install.IsInstalled(clusterID)
+		exist, err = install.IsInstalled(ctx, clusterID)
 		if err != nil {
 			blog.Errorf("DeleteWatchComponentByHelm[%s] failed[%s:%s]: %v", traceID, projectID, clusterID, err)
 			return nil
@@ -260,7 +260,7 @@ func InstallImagePullSecretByAddon(ctx context.Context, projectID, clusterID str
 		blog.Errorf("InstallImagePullSecretByAddon[%s] GetAddonInstaller failed: %v", taskID, err)
 		return err
 	}
-	err = installer.Install(clusterID, "")
+	err = installer.Install(ctx, clusterID, "")
 	if err != nil {
 		blog.Errorf("InstallImagePullSecretByAddon[%s] Install failed: %v", taskID, err)
 		return err
@@ -280,7 +280,7 @@ func DeleteImagePullSecretByAddon(ctx context.Context, projectID,
 		blog.Errorf("DeleteImagePullSecretByAddon[%s] GetAddonInstaller failed: %v", traceID, err)
 		return err
 	}
-	err = install.Uninstall(clusterID)
+	err = install.Uninstall(ctx, clusterID)
 	if err != nil {
 		blog.Errorf("DeleteImagePullSecretByAddon[%s] Uninstall failed: %v", traceID, err)
 		return err
@@ -474,7 +474,7 @@ func ensureVclusterWithInstaller(ctx context.Context, info *VclusterInfo) error 
 		blog.Errorf("ensureVclusterWithInstaller[%s] GetVclusterInstaller failed: %v", taskID, err)
 		return err
 	}
-	installed, err := installer.IsInstalled(info.SrcClusterID)
+	installed, err := installer.IsInstalled(ctx, info.SrcClusterID)
 	if err != nil {
 		blog.Errorf("ensureVclusterWithInstaller[%s] IsInstalled failed: %v", taskID, err)
 		return err
@@ -498,17 +498,17 @@ func ensureVclusterWithInstaller(ctx context.Context, info *VclusterInfo) error 
 
 	// install or upgrade
 	if installed {
-		if errUpgrade := installer.Upgrade(info.SrcClusterID, values); errUpgrade != nil {
+		if errUpgrade := installer.Upgrade(ctx, info.SrcClusterID, values); errUpgrade != nil {
 			return fmt.Errorf("upgrade app failed, err %s", errUpgrade)
 		}
 	} else {
-		if errInstall := installer.Install(info.SrcClusterID, values); errInstall != nil {
+		if errInstall := installer.Install(ctx, info.SrcClusterID, values); errInstall != nil {
 			return fmt.Errorf("install app failed, err %s", errInstall)
 		}
 	}
 
 	// check status
-	ok, err := installer.CheckAppStatus(info.SrcClusterID, time.Minute*10, false)
+	ok, err := installer.CheckAppStatus(ctx, info.SrcClusterID, time.Minute*10, false)
 	if err != nil {
 		return fmt.Errorf("check app status failed, err %s", err)
 	}
@@ -596,7 +596,7 @@ func DeleteVclusterComponentByHelm(ctx context.Context, info *VclusterInfo) erro
 		blog.Errorf("DeleteVclusterComponentByHelm[%s] GetVclusterInstaller failed: %v", taskID, err)
 		return err
 	}
-	err = install.Uninstall(info.SrcClusterID)
+	err = install.Uninstall(ctx, info.SrcClusterID)
 	if err != nil {
 		blog.Errorf("DeleteVclusterComponentByHelm[%s] Uninstall failed: %v", taskID, err)
 		return err
@@ -607,7 +607,7 @@ func DeleteVclusterComponentByHelm(ctx context.Context, info *VclusterInfo) erro
 	defer cancel()
 
 	err = loop.LoopDoFunc(timeContext, func() error {
-		exist, errInstall := install.IsInstalled(info.SrcClusterID)
+		exist, errInstall := install.IsInstalled(ctx, info.SrcClusterID)
 		if errInstall != nil {
 			blog.Errorf("DeleteVclusterComponentByHelm[%s] failed[%s:%s]: %v", taskID, info.ProjectID,
 				info.SrcClusterID, errInstall)
@@ -749,7 +749,7 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.Node
 		blog.Errorf("ensureAutoScalerWithInstaller[%s] CreateClusterNamespace failed: %v", taskID, err)
 	}
 
-	installed, err := installer.IsInstalled(as.ClusterID)
+	installed, err := installer.IsInstalled(ctx, as.ClusterID)
 	if err != nil {
 		blog.Errorf("ensureAutoScalerWithInstaller IsInstalled failed: %v", err)
 		return err
@@ -776,14 +776,14 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.Node
 		}
 		// install or upgrade
 		if installed {
-			if err = installer.Upgrade(as.ClusterID, values); err != nil {
+			if err = installer.Upgrade(ctx, as.ClusterID, values); err != nil {
 				return fmt.Errorf("upgrade app failed, err %s", err)
 			}
 
 			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(),
 				taskID, stepName, "upgrade app successful")
 		} else {
-			if err = installer.Install(as.ClusterID, values); err != nil {
+			if err = installer.Install(ctx, as.ClusterID, values); err != nil {
 				return fmt.Errorf("install app failed, err %s", err)
 			}
 
@@ -793,7 +793,7 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.Node
 
 		// check status
 		var ok bool
-		ok, err = installer.CheckAppStatus(as.ClusterID, time.Minute*10, false)
+		ok, err = installer.CheckAppStatus(ctx, as.ClusterID, time.Minute*10, false)
 		if err != nil {
 			return fmt.Errorf("check app status failed, err %s", err)
 		}
@@ -814,11 +814,11 @@ func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.Node
 			return fmt.Errorf("transAutoScalingOptionToValues failed, err: %s", err)
 		}
 
-		if err = installer.Upgrade(as.ClusterID, values); err != nil {
+		if err = installer.Upgrade(ctx, as.ClusterID, values); err != nil {
 			return fmt.Errorf("upgrade app failed, err %s", err)
 		}
 		// check status
-		ok, errCheck := installer.CheckAppStatus(as.ClusterID, time.Minute*10, false)
+		ok, errCheck := installer.CheckAppStatus(ctx, as.ClusterID, time.Minute*10, false)
 		if errCheck != nil {
 			return fmt.Errorf("check app status failed, err %s", err)
 		}
