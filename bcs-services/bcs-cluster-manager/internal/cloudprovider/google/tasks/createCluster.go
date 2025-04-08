@@ -303,8 +303,10 @@ func generateCreateClusterRequest(info *cloudprovider.CloudDependBasicInfo, // n
 // generateCreateClusterNodePoolInput generate create node pool input
 func generateCreateClusterNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
 	if group.NodeTemplate.MaxPodsPerNode == 0 {
-		group.NodeTemplate.MaxPodsPerNode = 110
+		// 节点池不指定最大 Pods 限制时，使用集群默认值
+		group.NodeTemplate.MaxPodsPerNode = cluster.NetworkSettings.MaxNodePodNum
 	}
+
 	return &api.CreateNodePoolRequest{
 		NodePool: &api.NodePool{
 			// gke nodePool名称中不允许有大写字母
