@@ -18,6 +18,8 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
@@ -91,6 +93,58 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 	return err
 }
 
+// FetchMultiClusterResourcePreferred Fetch multi cluster resource
+func (h *Handler) FetchMultiClusterResourcePreferred(ctx context.Context,
+	req *clusterRes.FetchMultiClusterResourcePreferredReq, resp *clusterRes.CommonResp) (err error) {
+	// 获取视图信息
+	view := &entity.View{}
+	if req.GetViewID() != "" {
+		view, err = h.model.GetView(ctx, req.GetViewID())
+		if err != nil {
+			return err
+		}
+	}
+	filter := QueryFilter{
+		Creator:       req.GetCreator(),
+		Name:          req.GetName(),
+		CreateSource:  req.GetCreateSource(),
+		LabelSelector: req.GetLabelSelector(),
+		IP:            req.GetIp(),
+		Status:        req.GetStatus(),
+		SortBy:        SortBy(req.GetSortBy()),
+		Order:         Order(req.GetOrder()),
+		Limit:         int(req.GetLimit()),
+		Offset:        int(req.GetOffset()),
+	}
+
+	nsScope := apiextensions.ClusterScoped
+	if req.Namespaced {
+		nsScope = apiextensions.NamespaceScoped
+	}
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(nsScope))
+
+	// from api server
+	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
+
+	var data map[string]interface{}
+	data, err = query.FetchPreferred(ctx, req.GetKind(), &schema.GroupVersionResource{
+		Group:    req.GetGroup(),
+		Version:  req.GetVersion(),
+		Resource: req.GetResource(),
+	})
+	if err != nil {
+		return err
+	}
+	resp.Data, err = pbstruct.Map2pbStruct(data)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
+	return err
+}
+
 // FetchMultiClusterApiResources Fetch multi cluster api resources
 func (h *Handler) FetchMultiClusterApiResources(ctx context.Context, req *clusterRes.FetchMultiClusterApiResourcesReq,
 	resp *clusterRes.CommonResp) (err error) {
@@ -117,6 +171,27 @@ func (h *Handler) FetchMultiClusterApiResources(ctx context.Context, req *cluste
 
 	var data map[string]interface{}
 	data, err = query.FetchApiResources(ctx, kind)
+	if err != nil {
+		return err
+	}
+
+	resp.Data, err = pbstruct.Map2pbStruct(data)
+	if err != nil {
+		return err
+	}
+
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
+	return err
+}
+
+// FetchMultiClusterApiResourcesPreferred Fetch multi cluster api resources
+func (h *Handler) FetchMultiClusterApiResourcesPreferred(ctx context.Context,
+	req *clusterRes.FetchMultiClusterApiResourcesPreferredReq, resp *clusterRes.CommonResp) (err error) {
+
+	var data map[string]interface{}
+	data, err = FetchApiResourcesPreferred(ctx, req.OnlyCrd, req.ResourceName, req.ClusterIDs)
 	if err != nil {
 		return err
 	}
