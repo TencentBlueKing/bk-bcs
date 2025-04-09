@@ -15,6 +15,7 @@ package sqlstore
 import (
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
@@ -27,22 +28,36 @@ const (
 
 // GetUserByCondition Query user by condition
 func GetUserByCondition(cond *models.BcsUser) *models.BcsUser {
+	start := time.Now()
 	user := models.BcsUser{}
 	GCoreDB.Where(cond).First(&user)
 	if user.ID != 0 {
 		return &user
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetUserByCondition", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // CreateUser create new user
 func CreateUser(user *models.BcsUser) error {
+	start := time.Now()
 	err := GCoreDB.Create(user).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateUser", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateUser", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // UpdateUser update user information
 func UpdateUser(user, updatedUser *models.BcsUser) error {
+	start := time.Now()
 	err := GCoreDB.Model(user).Updates(*updatedUser).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("UpdateUser", metrics.Update, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("UpdateUser", metrics.Update, metrics.SucStatus, start)
+	return nil
 }

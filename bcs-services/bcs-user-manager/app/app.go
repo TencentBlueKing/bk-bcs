@@ -106,6 +106,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.Encrypt = op.Encrypt
 	userMgrConfig.Activity = op.Activity
 	userMgrConfig.EnableTokenSync = op.EnableTokenSync
+	userMgrConfig.MysqlSlowRecord = op.MysqlSlowRecord
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))
@@ -170,6 +171,11 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 			blog.Errorf("initClientTLSConfig failed: %v", err)
 			return nil, err
 		}
+	}
+
+	// default 200ms
+	if userMgrConfig.MysqlSlowRecord == 0 {
+		userMgrConfig.MysqlSlowRecord = 200
 	}
 
 	userMgrConfig.EtcdConfig = op.Etcd
