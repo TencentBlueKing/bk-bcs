@@ -99,6 +99,7 @@ type UserMgrConfig struct {
 	VerifyClientTLS bool
 
 	DSN             string
+	MysqlSlowRecord uint
 	RedisDSN        string
 	RedisConfig     RedisConfig
 	EnableTokenSync bool
