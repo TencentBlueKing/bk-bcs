@@ -56,6 +56,15 @@ func (ah *AddonsHandler) UpgradeAddons(ctx context.Context,
 	return action.Handle(ctx, req, resp)
 }
 
+// PreviewAddons provide the actions to do preview addons
+func (ah *AddonsHandler) PreviewAddons(ctx context.Context,
+	req *helmmanager.PreviewAddonsReq, resp *helmmanager.ReleasePreviewResp) error {
+
+	defer recorder(ctx, "PreviewAddons", req, resp)()
+	action := addons.NewPreviewAddonsAction(ah.model, *ah.addons, ah.platform, ah.releaseHandler)
+	return action.Handle(ctx, req, resp)
+}
+
 // StopAddons provide the actions to do stop addons
 func (ah *AddonsHandler) StopAddons(ctx context.Context,
 	req *helmmanager.StopAddonsReq, resp *helmmanager.StopAddonsResp) error {
