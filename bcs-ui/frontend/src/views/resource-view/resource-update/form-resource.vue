@@ -270,10 +270,9 @@ export default {
         ...original,
       };
     }
-    await Promise.all([
-      this.handleGetFormSchemaData(),
-      this.handleGetDetail(),
-    ]);
+    // 确保表单schema先完成，再获取详情数据，避免数据不一致
+    await this.handleGetFormSchemaData();
+    await this.handleGetDetail();
     this.isLoading = false;
   },
   mounted() {

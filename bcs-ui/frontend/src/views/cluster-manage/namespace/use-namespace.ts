@@ -15,8 +15,6 @@ import $store from '@/store';
 
 // 是否为首次进入资源管理页面
 export const isEntry = ref(false);
-// 是否已更新命名空间
-export const isNSChanged = ref(false);
 
 export function useNamespace() {
   const namespaceData = ref<any[]>([]);

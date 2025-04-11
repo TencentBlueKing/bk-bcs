@@ -52,21 +52,30 @@
               :disabled="isClusterDisabled(item, cluster)"
               class="!mt-[0px]">
               <div
-                class="flex flex-col justify-center h-[50px] px-[12px]"
+                class="flex items-center justify-between px-[12px]"
                 @mouseenter="hoverClusterID = cluster.clusterID"
                 @mouseleave="hoverClusterID = ''">
-                <span class="leading-[20px] bcs-ellipsis" v-bk-overflow-tips>{{ cluster.clusterName }}</span>
-                <span
-                  :class="[
-                    'leading-[20px]',
-                    {
-                      'text-[#979BA5]': !isClusterDisabled(item, cluster),
-                      '!text-[#699DF4]': !isClusterDisabled(item, cluster)
-                        && (hoverClusterID === cluster.clusterID || item.clusterID === cluster.clusterID),
-                    }
-                  ]">
-                  ({{ cluster.clusterID }})
-                </span>
+                <div class="flex-1 flex flex-col justify-center h-[50px]">
+                  <span class="leading-[20px] bcs-ellipsis" v-bk-overflow-tips="{ interactive: false }">
+                    {{ cluster.clusterName }}
+                  </span>
+                  <span
+                    :class="[
+                      'leading-[20px]',
+                      {
+                        'text-[#979BA5]': !isClusterDisabled(item, cluster),
+                        '!text-[#699DF4]': !isClusterDisabled(item, cluster)
+                          && (hoverClusterID === cluster.clusterID || item.clusterID === cluster.clusterID),
+                      }
+                    ]">
+                    ({{ cluster.clusterID }})
+                  </span>
+                </div>
+                <bcs-tag
+                  theme="danger"
+                  v-if="!normalStatusList.includes(cluster.status || '')">
+                  {{ $t('generic.label.abnormal') }}
+                </bcs-tag>
               </div>
             </bcs-option>
           </bcs-option-group>
@@ -213,6 +222,8 @@ const props = defineProps({
 });
 const emits = defineEmits(['change', 'field-status-change']);
 
+const normalStatusList = ['RUNNING'];
+
 // 用户管理API
 const userSelectorAPI = `${window.BK_USER_HOST}/api/c/compapi/v2/usermanage/fs_list_users/?app_code=bk-magicbox&page_size=100&page=1&callback=USER_LIST_CALLBACK_0`;
 // popoverRef
@@ -324,8 +335,9 @@ const handleBatchAddCluster = (clusters: string[]) => {
 };
 
 // 当前集群是否能选择（一个集群只能选一次）
-const isClusterDisabled = (item, cluster) => viewData.value.clusterNamespaces
-  .some(data => data.clusterID === cluster.clusterID) && item.clusterID !== cluster.clusterID;
+const isClusterDisabled = (item, cluster) => (viewData.value.clusterNamespaces
+  .some(data => data.clusterID === cluster.clusterID) && item.clusterID !== cluster.clusterID)
+  || !normalStatusList.includes(cluster.status || '');
 // 添加集群和命名空间
 const disabledAddBtn = computed(() => viewData.value.clusterNamespaces?.length === clusterList.value.length
   || !clusterList.value.find(item => !clusterNsMap.value[item.clusterID])?.clusterID);

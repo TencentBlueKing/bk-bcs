@@ -208,7 +208,6 @@ import LoadingIcon from '@/components/loading-icon.vue';
 import $router from '@/router';
 import $store from '@/store';
 import useMenu, { IMenu } from '@/views/app/use-menu';
-import { isNSChanged } from '@/views/cluster-manage/namespace/use-namespace';
 
 // 悬浮时展开菜单
 const isHover = ref(false);
@@ -323,10 +322,14 @@ const handleChangeMenu = (item: IMenu) => {
   if (route.value.name === item.route) return;
 
   $store.commit('updateCrdData', {});
-  const queryData = cloneDeep(route.value.query);
+  const queryData = cloneDeep({
+    ...route.value.query,
+    viewID: dashboardViewID.value,
+  });
   delete queryData.crd;
   delete queryData.kind;
   delete queryData.scope;
+  !dashboardViewID.value && (delete queryData.viewID);
   $router.push({
     name: item.route || item.children?.[0]?.route || '404',
     params: {
@@ -334,7 +337,6 @@ const handleChangeMenu = (item: IMenu) => {
       clusterId: route.value.params?.clusterId,
     },
     query: {
-      viewID: dashboardViewID.value,
       ...queryData,
     },
   });
@@ -455,19 +457,17 @@ watch(curViewData, (newValue, oldValue) => {
   handleGetMultiClusterResourcesCount();
 }, { deep: true });
 
-// 命名空间更改时再发起请求
-watch(isNSChanged, async () => {
-  if (!isNSChanged.value) return;
-  handleGetCustomResourceDefinition();
-  handleGetMultiClusterResourcesCount();
-}, { immediate: true });
-
 onBeforeMount(() => {
   bus.$on('set-resource-count', (kind: string, count: number) => {
     if (count === undefined) return;
 
     set(countMap.value, kind, count);
   });
+  if (curViewData.value?.clusterNamespaces?.some(item => item?.clusterID === '-')) {
+    return;
+  }
+  handleGetCustomResourceDefinition();
+  handleGetMultiClusterResourcesCount();
 });
 
 onBeforeUnmount(() => {

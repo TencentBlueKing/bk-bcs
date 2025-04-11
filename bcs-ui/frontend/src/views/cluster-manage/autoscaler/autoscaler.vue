@@ -31,6 +31,7 @@
           <AutoScalerFormItem
             :list="basicScalerConfig"
             :autoscaler-data="autoscalerData"
+            :cluster-id="clusterId"
             width="100%">
           </AutoScalerFormItem>
         </LayoutGroup>

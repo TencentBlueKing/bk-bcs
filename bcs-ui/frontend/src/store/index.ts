@@ -146,7 +146,7 @@ const store = new Vuex.Store<{
           effect: (state, $store) => {
             const exist = state.dashboardViewList.find(item => item.id === state.dashboardViewID);
             if (!exist) {
-              $store.commit('updateDashboardViewID', undefined);
+              $store.commit('updateDashboardViewID', '');
             }
           },
         },

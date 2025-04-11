@@ -97,8 +97,8 @@ export default defineComponent({
     // 子标题
     const subTitleMap = {
       Deployment: 'Deploy',
-      StatefulSet: 'DS',
-      DaemonSet: 'STS',
+      StatefulSet: 'STS',
+      DaemonSet: 'DS',
       CronJob: 'CJ',
       Job: 'Job',
       Pod: 'Pod',
