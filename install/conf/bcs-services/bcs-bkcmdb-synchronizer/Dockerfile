@@ -1,11 +1,12 @@
-FROM centos:7
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+FROM ubuntu:22.04
 
-#for command envsubst
-RUN yum install -y gettext
+# Update package lists and install gettext
+RUN apt-get update && apt-get install -y gettext sqlite3 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /data/bcs/logs/bcs /data/bcs/cert
-RUN mkdir -p /data/bcs/bcs-bkcmdb-synchronizer
+RUN mkdir -p /data/bcs/bcs-bkcmdb-synchronizer/db
 
 ADD bcs-bkcmdb-synchronizer /data/bcs/bcs-bkcmdb-synchronizer/
 ADD bcs-bkcmdb-synchronizer.json.template /data/bcs/bcs-bkcmdb-synchronizer/
