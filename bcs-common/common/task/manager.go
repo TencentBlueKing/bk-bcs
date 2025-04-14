@@ -390,58 +390,43 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 		log.INFO.Printf("task %s step %s exec done, duration=%s, err=%v",
 			taskID, stepName, time.Since(start), stepErr)
 
-		cbErr := state.doCallback()
-		// update task & step status
-		if stepErr == nil && cbErr == nil {
-			if err := state.updateStepSuccess(start); err != nil {
-				msg := fmt.Sprintf("task %s step %s update step success failed, err=%v", taskID, stepName, err)
+		if stepErr == nil {
+			// step成功处理流程
+			// 先更新state状态
+			state.updateStepSuccess(start)
+			if state.isLastStep(step) {
+				state.tryCallback(nil)
+				// 在所有步骤都成功时，但是callback失败了，把callback失败信息作为task失败信息
+				if state.task.GetCallbackResult() == types.CallbackResultFailure {
+					state.task.SetStatus(types.TaskStatusFailure).
+						SetMessage(state.task.GetCallbackMessage())
+				}
+			}
+			if saveErr := state.saveTaskState(); saveErr != nil {
+				msg := fmt.Sprintf("save task %s step %s update step success failed, err=%v", taskID, stepName, err)
 				log.INFO.Println(msg)
 				return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 			}
 			return nil
 		}
-		if stepErr == nil && cbErr != nil {
-			log.ERROR.Println(cbErr.Error())
-			stepErr = cbErr
-		}
-		if err := state.updateStepFailure(start, stepErr, nil); err != nil {
-			msg := fmt.Sprintf("task %s step %s update step failure failed, err=%v", taskID, stepName, err)
-			log.INFO.Println(msg)
-			return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
-		}
-
-		// 单步骤主动revoke或者没有重试次数时, 不再重试
-		if !errors.Is(stepErr, istep.ErrRevoked) && step.GetRetryCount() < step.MaxRetries {
-			retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
-			log.INFO.Printf("retry task %s step %s, err=%s, retried=%d, maxRetries=%d, retryIn=%s",
-				taskID, stepName, stepErr, step.GetRetryCount(), step.MaxRetries, retryIn)
-			return tasks.NewErrRetryTaskLater(stepErr.Error(), retryIn)
-		}
-
-		if step.GetSkipOnFailed() {
-			return nil
-		}
-
-		retErr := fmt.Errorf("task %s step %s running failed, err=%w", taskID, stepName, stepErr)
-		return retErr
+		return m.dealWithStepFailure(state, start, taskID, stepName, stepErr)
 
 	case <-stepCtx.Done():
-		if cbErr := state.doCallback(); cbErr != nil {
-			log.ERROR.Println(cbErr.Error())
-		}
-		return m.dealWithStepTimeout(state, start, taskID, stepName)
+		// step timeout
+		stepErr := fmt.Errorf("step exec timeout")
+		return m.dealWithStepFailure(state, start, taskID, stepName, stepErr)
 
 	case <-revokeCtx.Done():
-		if cbErr := state.doCallback(); cbErr != nil {
-			log.ERROR.Println(cbErr.Error())
-		}
-		return m.dealWithTaskRevoke(state, start, taskID, stepName)
+		// task revoke
+		stepErr := fmt.Errorf("task has been revoked")
+		state.tryCallback(stepErr)
+		return m.dealWithTaskRevoke(state, start, taskID, stepName, stepErr)
 
 	case <-taskCtx.Done():
-		if cbErr := state.doCallback(); cbErr != nil {
-			log.ERROR.Println(cbErr.Error())
-		}
-		return m.dealWithTaskTimeout(state, start, taskID, stepName)
+		// task timeout
+		stepErr := fmt.Errorf("task exec timeout")
+		state.tryCallback(stepErr)
+		return m.dealWithTaskTimeout(state, start, taskID, stepName, stepErr)
 
 	case <-m.ctx.Done():
 		// task manager stop, try later
@@ -450,17 +435,29 @@ func (m *TaskManager) doWork(taskID string, stepName string) error { // nolint
 	}
 }
 
-func (m *TaskManager) dealWithStepTimeout(state *State, start time.Time, taskID, stepName string) error {
+func (m *TaskManager) dealWithStepFailure(
+	state *State, start time.Time, taskID, stepName string, stepErr error) error {
+
 	step := state.step
-	// step timeout
-	stepErr := fmt.Errorf("step exec timeout")
-	if err := state.updateStepFailure(start, stepErr, nil); err != nil {
-		msg := fmt.Sprintf("task %s step %s update step failure failed, err=%v", taskID, stepName, err)
+	// 先更新state状态
+	state.updateStepFailure(start, stepErr, nil)
+	// case1: 当步骤执行失败时，并且没有重试次数时，执行callback
+	// case2: 当跳过失败步骤跳过，并且是最后一步时，执行callback
+	// case3: 当前步骤是主动取消时，执行callback
+	if step.GetRetryCount() >= step.MaxRetries ||
+		(step.GetSkipOnFailed() && state.isLastStep(step)) ||
+		errors.Is(stepErr, istep.ErrRevoked) {
+
+		state.tryCallback(stepErr)
+	}
+	if err := state.saveTaskState(); err != nil {
+		msg := fmt.Sprintf("savetask %s step %s update step failure failed, err=%v", taskID, stepName, err)
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
 
-	if step.GetRetryCount() < step.MaxRetries {
+	// 单步骤不是主动revoke，且在重试次数内, 则重试
+	if !errors.Is(stepErr, istep.ErrRevoked) && step.GetRetryCount() < step.MaxRetries {
 		retryIn := time.Second * time.Duration(retryNext(int(step.GetRetryCount())))
 		log.INFO.Printf("retry task %s step %s, err=%s, retried=%d, maxRetries=%d, retryIn=%s",
 			taskID, stepName, stepErr, step.GetRetryCount(), step.MaxRetries, retryIn)
@@ -475,11 +472,12 @@ func (m *TaskManager) dealWithStepTimeout(state *State, start time.Time, taskID,
 	return retErr
 }
 
-func (m *TaskManager) dealWithTaskRevoke(state *State, start time.Time, taskID, stepName string) error {
-	// task revoke
-	stepErr := fmt.Errorf("task has been revoked")
-	if err := state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusRevoked}); err != nil {
-		msg := fmt.Sprintf("task %s step %s update step failure failed, err=%v", taskID, stepName, err)
+func (m *TaskManager) dealWithTaskRevoke(
+	state *State, start time.Time, taskID, stepName string, stepErr error) error {
+
+	state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusRevoked})
+	if err := state.saveTaskState(); err != nil {
+		msg := fmt.Sprintf("save task %s step %s update step failure failed, err=%v", taskID, stepName, err)
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
 	}
@@ -488,10 +486,11 @@ func (m *TaskManager) dealWithTaskRevoke(state *State, start time.Time, taskID, 
 	return retErr
 }
 
-func (m *TaskManager) dealWithTaskTimeout(state *State, start time.Time, taskID, stepName string) error {
-	// task timeout
-	stepErr := fmt.Errorf("task exec timeout")
-	if err := state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusTimeout}); err != nil {
+func (m *TaskManager) dealWithTaskTimeout(
+	state *State, start time.Time, taskID, stepName string, stepErr error) error {
+
+	state.updateStepFailure(start, stepErr, &taskEndStatus{status: types.TaskStatusTimeout})
+	if err := state.saveTaskState(); err != nil {
 		msg := fmt.Sprintf("task %s step %s update step failure failed, err=%v", taskID, stepName, err)
 		log.INFO.Println(msg)
 		return tasks.NewErrRetryTaskLater(msg, DefaultMaxRetryDuration)
