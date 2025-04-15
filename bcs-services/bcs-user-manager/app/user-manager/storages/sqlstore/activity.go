@@ -48,11 +48,11 @@ func SearchActivities(projectCode, resourceType, activityType string, status mod
 	}
 	count := 0
 	if err := query.Count(&count).Error; err != nil {
-		metrics.ReportMysqlSlowQueryMetrics("SearchActivities", metrics.Query, metrics.ErrStatus, start)
+		metrics.ReportMysqlSlowQueryMetrics("SearchActivities_Count", metrics.Query, metrics.ErrStatus, start)
 		return nil, 0, err
 	}
 	if err := query.Offset(offset).Limit(limit).Order("created_at desc").Find(&activities).Error; err != nil {
-		metrics.ReportMysqlSlowQueryMetrics("SearchActivities", metrics.Query, metrics.ErrStatus, start)
+		metrics.ReportMysqlSlowQueryMetrics("SearchActivities_Find", metrics.Query, metrics.ErrStatus, start)
 		return nil, 0, err
 	}
 	metrics.ReportMysqlSlowQueryMetrics("SearchActivities", metrics.Query, metrics.SucStatus, start)

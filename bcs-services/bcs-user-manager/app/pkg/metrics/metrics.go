@@ -116,8 +116,8 @@ func ReportRequestAPIMetrics(handler, method, status string, started time.Time) 
 func ReportMysqlSlowQueryMetrics(handler, method, status string, started time.Time) {
 	// 记录大于200ms的慢查询
 	latency := time.Since(started).Milliseconds()
-	if latency > int64(config.GetGlobalConfig().MysqlSlowRecord) {
-		klog.Infof("slow query handler: %s, method: %s, latency: %dms", handler, method, latency)
+	if latency > int64(config.GetGlobalConfig().SlowSQLLatency) {
+		klog.Warningf("slow query handler: %s, method: %s, latency: %dms", handler, method, latency)
 	}
 	mysqlSlowQueryCount.WithLabelValues(handler, method, status).Inc()
 	mysqlSlowQueryLatency.WithLabelValues(handler, method, status).Observe(time.Since(started).Seconds())
