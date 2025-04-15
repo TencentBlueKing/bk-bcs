@@ -14137,6 +14137,330 @@ var _FetchMultiClusterResourceReq_Order_InLookup = map[string]struct{}{
 	"desc": {},
 }
 
+// Validate checks the field values on FetchMultiClusterResourcePreferredReq
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the first error encountered is returned, or nil if
+// there are no violations.
+func (m *FetchMultiClusterResourcePreferredReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FetchMultiClusterResourcePreferredReq
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// FetchMultiClusterResourcePreferredReqMultiError, or nil if none found.
+func (m *FetchMultiClusterResourcePreferredReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FetchMultiClusterResourcePreferredReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetClusterNamespaces()) < 1 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "ClusterNamespaces",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	for idx, item := range m.GetClusterNamespaces() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FetchMultiClusterResourcePreferredReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FetchMultiClusterResourcePreferredReqValidationError{
+						field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FetchMultiClusterResourcePreferredReqValidationError{
+					field:  fmt.Sprintf("ClusterNamespaces[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) < 1 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ViewID
+
+	for idx, item := range m.GetLabelSelector() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, FetchMultiClusterResourcePreferredReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, FetchMultiClusterResourcePreferredReqValidationError{
+						field:  fmt.Sprintf("LabelSelector[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return FetchMultiClusterResourcePreferredReqValidationError{
+					field:  fmt.Sprintf("LabelSelector[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	// no validation rules for Name
+
+	// no validation rules for Ip
+
+	if _, ok := _FetchMultiClusterResourcePreferredReq_SortBy_InLookup[m.GetSortBy()]; !ok {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "SortBy",
+			reason: "value must be in list [ name namespace age]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _FetchMultiClusterResourcePreferredReq_Order_InLookup[m.GetOrder()]; !ok {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "Order",
+			reason: "value must be in list [ asc desc]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if val := m.GetLimit(); val < 1 || val > 1000 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "Limit",
+			reason: "value must be inside range [1, 1000]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetOffset() < 0 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "Offset",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetCreateSource()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, FetchMultiClusterResourcePreferredReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, FetchMultiClusterResourcePreferredReqValidationError{
+					field:  "CreateSource",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCreateSource()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return FetchMultiClusterResourcePreferredReqValidationError{
+				field:  "CreateSource",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if utf8.RuneCountInString(m.GetVersion()) < 1 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "Version",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Group
+
+	// no validation rules for Namespaced
+
+	if utf8.RuneCountInString(m.GetResource()) < 1 {
+		err := FetchMultiClusterResourcePreferredReqValidationError{
+			field:  "Resource",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return FetchMultiClusterResourcePreferredReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// FetchMultiClusterResourcePreferredReqMultiError is an error wrapping
+// multiple validation errors returned by
+// FetchMultiClusterResourcePreferredReq.ValidateAll() if the designated
+// constraints aren't met.
+type FetchMultiClusterResourcePreferredReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FetchMultiClusterResourcePreferredReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FetchMultiClusterResourcePreferredReqMultiError) AllErrors() []error { return m }
+
+// FetchMultiClusterResourcePreferredReqValidationError is the validation error
+// returned by FetchMultiClusterResourcePreferredReq.Validate if the
+// designated constraints aren't met.
+type FetchMultiClusterResourcePreferredReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FetchMultiClusterResourcePreferredReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FetchMultiClusterResourcePreferredReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FetchMultiClusterResourcePreferredReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FetchMultiClusterResourcePreferredReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FetchMultiClusterResourcePreferredReqValidationError) ErrorName() string {
+	return "FetchMultiClusterResourcePreferredReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FetchMultiClusterResourcePreferredReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFetchMultiClusterResourcePreferredReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FetchMultiClusterResourcePreferredReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FetchMultiClusterResourcePreferredReqValidationError{}
+
+var _FetchMultiClusterResourcePreferredReq_SortBy_InLookup = map[string]struct{}{
+	"":          {},
+	"name":      {},
+	"namespace": {},
+	"age":       {},
+}
+
+var _FetchMultiClusterResourcePreferredReq_Order_InLookup = map[string]struct{}{
+	"":     {},
+	"asc":  {},
+	"desc": {},
+}
+
 // Validate checks the field values on FetchMultiClusterApiResourcesReq with
 // the rules defined in the proto definition for this message. If any rules
 // are violated, the first error encountered is returned, or nil if there are
@@ -14335,6 +14659,138 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = FetchMultiClusterApiResourcesReqValidationError{}
+
+// Validate checks the field values on
+// FetchMultiClusterApiResourcesPreferredReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FetchMultiClusterApiResourcesPreferredReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// FetchMultiClusterApiResourcesPreferredReq with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in
+// FetchMultiClusterApiResourcesPreferredReqMultiError, or nil if none found.
+func (m *FetchMultiClusterApiResourcesPreferredReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FetchMultiClusterApiResourcesPreferredReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := FetchMultiClusterApiResourcesPreferredReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetClusterIDs()) < 1 {
+		err := FetchMultiClusterApiResourcesPreferredReqValidationError{
+			field:  "ClusterIDs",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for OnlyCrd
+
+	// no validation rules for ResourceName
+
+	if len(errors) > 0 {
+		return FetchMultiClusterApiResourcesPreferredReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// FetchMultiClusterApiResourcesPreferredReqMultiError is an error wrapping
+// multiple validation errors returned by
+// FetchMultiClusterApiResourcesPreferredReq.ValidateAll() if the designated
+// constraints aren't met.
+type FetchMultiClusterApiResourcesPreferredReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FetchMultiClusterApiResourcesPreferredReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FetchMultiClusterApiResourcesPreferredReqMultiError) AllErrors() []error { return m }
+
+// FetchMultiClusterApiResourcesPreferredReqValidationError is the validation
+// error returned by FetchMultiClusterApiResourcesPreferredReq.Validate if the
+// designated constraints aren't met.
+type FetchMultiClusterApiResourcesPreferredReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FetchMultiClusterApiResourcesPreferredReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FetchMultiClusterApiResourcesPreferredReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FetchMultiClusterApiResourcesPreferredReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FetchMultiClusterApiResourcesPreferredReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FetchMultiClusterApiResourcesPreferredReqValidationError) ErrorName() string {
+	return "FetchMultiClusterApiResourcesPreferredReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e FetchMultiClusterApiResourcesPreferredReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFetchMultiClusterApiResourcesPreferredReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FetchMultiClusterApiResourcesPreferredReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FetchMultiClusterApiResourcesPreferredReqValidationError{}
 
 // Validate checks the field values on FetchMultiClusterCustomResourceReq with
 // the rules defined in the proto definition for this message. If any rules
