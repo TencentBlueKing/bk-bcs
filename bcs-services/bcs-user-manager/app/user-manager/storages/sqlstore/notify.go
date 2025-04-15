@@ -17,6 +17,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
@@ -38,8 +39,14 @@ type realTokenNotifyStore struct {
 
 // CreateTokenNotify create a new token notify
 func (t *realTokenNotifyStore) CreateTokenNotify(notify *models.BcsTokenNotify) error {
+	start := time.Now()
 	err := t.db.Create(notify).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateTokenNotify", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateTokenNotify", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // ExpireToken specify the response of token
@@ -51,13 +58,21 @@ type ExpireToken struct {
 
 // GetTokenNotifyByCondition get token that has expired and not notified
 func (t *realTokenNotifyStore) GetTokenNotifyByCondition(cond *models.BcsTokenNotify) []models.BcsTokenNotify {
+	start := time.Now()
 	token := make([]models.BcsTokenNotify, 0)
 	t.db.Where(cond).Find(&token)
+	metrics.ReportMysqlSlowQueryMetrics("GetTokenNotifyByCondition", metrics.Query, metrics.SucStatus, start)
 	return token
 }
 
 // DeleteTokenNotify delete token notify
 func (t *realTokenNotifyStore) DeleteTokenNotify(token string) error {
+	start := time.Now()
 	err := t.db.Where("token = ?", token).Delete(&models.BcsTokenNotify{}).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("DeleteTokenNotify", metrics.Delete, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("DeleteTokenNotify", metrics.Delete, metrics.SucStatus, start)
+	return nil
 }

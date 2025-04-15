@@ -36,6 +36,7 @@ type UserManagerOptions struct {
 	RedisDSN        string          `json:"redis_dsn" value:"" usage:"dsn for connect to redis"`
 	RedisConfig     RedisConfig     `json:"redis_config" value:"" usage:"redis config for connect to redis"`
 	DSN             string          `json:"mysql_dsn" value:"" usage:"dsn for connect to mysql"`
+	SlowSQLLatency  uint            `json:"slow_sql_latency" value:"" usage:"slow sql latency for log, unit:ms"`
 	BootStrapUsers  []BootStrapUser `json:"bootstrap_users"`
 	TKE             TKEOptions      `json:"tke"`
 	PeerToken       string          `json:"peer_token" value:"" usage:"peer token to authorize with each other, only used to websocket peer"`

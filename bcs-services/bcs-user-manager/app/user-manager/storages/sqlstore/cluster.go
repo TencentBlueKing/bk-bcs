@@ -13,21 +13,32 @@
 package sqlstore
 
 import (
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // GetCluster get clusterInfo by clusterID
 func GetCluster(clusterId string) *models.BcsCluster {
+	start := time.Now()
 	cluster := models.BcsCluster{}
 	GCoreDB.Where(&models.BcsCluster{ID: clusterId}).First(&cluster)
 	if cluster.ID != "" {
 		return &cluster
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetCluster", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // CreateCluster create cluster
 func CreateCluster(cluster *models.BcsCluster) error {
+	start := time.Now()
 	err := GCoreDB.Create(cluster).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateCluster", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateCluster", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
