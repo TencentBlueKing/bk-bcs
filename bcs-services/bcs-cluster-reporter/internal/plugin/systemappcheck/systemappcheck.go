@@ -432,7 +432,7 @@ func CheckRelease(namespaceList []string, getter *k8s.RESTClientGetter, cluster 
 
 				// 生成release状态指标
 				relStatusGvsList = append(relStatusGvsList, &metricmanager.GaugeVecSet{
-					Labels: []string{cluster.ClusterID, cluster.BusinessID, namespace, rel.Chart.Name(), rel.Chart.AppVersion(), rel.Info.Status.String(), rel.Name},
+					Labels: []string{cluster.ClusterID, cluster.BusinessID, namespace, rel.Chart.Name(), rel.Chart.Metadata.Version, rel.Info.Status.String(), rel.Name},
 					Value:  1,
 				})
 				syncLock.Unlock()
