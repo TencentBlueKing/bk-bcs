@@ -259,16 +259,13 @@
           </bcs-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')" render-directive="if">
-          <EventQueryTable
-            class="min-h-[360px]"
-            hide-cluster-and-namespace
+          <EventTable
             :kinds="kind === 'Deployment' ? [kind,'ReplicaSet', 'Pod'] : [kind, 'Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"
             :name="kindsNames"
-            :reset-page-when-name-change="false"
             v-if="!loading">
-          </EventQueryTable>
+          </EventTable>
         </bcs-tab-panel>
         <bcs-tab-panel name="label" :label="$t('k8s.label')" render-directive="if">
           <bk-table :data="labels">
@@ -338,6 +335,7 @@
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
 
+import EventTable from './bk-monitor-event.vue';
 import detailBasicList from './detail-basic';
 import useDetail from './use-detail';
 
@@ -355,7 +353,6 @@ import useTableSort from '@/composables/use-table-sort';
 import fullScreen from '@/directives/full-screen';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store';
-import EventQueryTable from '@/views/project-manage/event-query/event-query-table.vue';
 
 export interface IDetail {
   manifest: any;
@@ -369,7 +366,7 @@ export default defineComponent({
     Metric,
     CodeEditor,
     BcsLog,
-    EventQueryTable,
+    EventTable,
   },
   directives: {
     bkOverflowTips,

@@ -93,11 +93,10 @@ import { storageEvents } from '@/api/modules/storage';
 import { formatDate } from '@/common/util';
 import ClusterSelect from '@/components/cluster-selector/cluster-select.vue';
 import NamespaceSelect from '@/components/namespace-selector/namespace-select.vue';
-import { useCluster } from '@/composables/use-app';
+import { IProject, useCluster  } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
-import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 import $store from '@/store';
-import { IProject } from '@/composables/use-app';
+import { useSelectItemsNamespace } from '@/views/cluster-manage/namespace/use-namespace';
 
 export default defineComponent({
   name: 'EventQuery',
