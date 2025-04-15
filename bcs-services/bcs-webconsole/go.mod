@@ -12,7 +12,7 @@ require (
 	github.com/go-micro/plugins/v4/config/encoder/yaml v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/http v1.1.1
-	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.12.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -169,6 +169,8 @@ require (
 )
 
 replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250331101000-7262cffb8954
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250331101000-7262cffb8954
 	// 修复 IPv6 单栈 Bug
 	github.com/go-micro/plugins/v4/server/http => github.com/ifooth/go-micro-plugins/v4/server/http v0.0.0-20230207124152-a253b0517244
 	github.com/go-resty/resty/v2 => github.com/ifooth/resty/v2 v2.0.0-20230223083514-3015979960de

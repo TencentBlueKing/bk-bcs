@@ -24,6 +24,8 @@ const (
 	RequestIDKey = types.ContextKey("requestID")
 	// UsernameKey xxx
 	UsernameKey = types.ContextKey("username")
+	// UserinfoKey xxx
+	UserinfoKey = types.ContextKey("userinfo")
 	// ProjKey xxx
 	ProjKey = types.ContextKey("project")
 	// ClusterKey xxx
@@ -40,6 +42,8 @@ const (
 	AuthorizationHeaderKey = "Authorization"
 	// CustomUsernameHeaderKey is the key for custom username in header
 	CustomUsernameHeaderKey = "X-Bcs-Username"
+	// TenantIdHeaderKey is the key for tenant id in header
+	TenantIdHeaderKey = "X-Bk-Tenant-Id"
 )
 
 // GetUsernameFromCtx 通过 ctx 获取 username
