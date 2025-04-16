@@ -290,8 +290,32 @@ export default defineComponent({
     };
 
     // 跳转详情界面
-    const gotoDetail = (row) => {
-      $router.push({
+    const gotoDetail = ($event, url, row) => {
+      if (isViewEditable.value) return;
+      // 检测是否按下了 Ctrl 键
+      if ($event.ctrlKey || $event.metaKey) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        $router.push({
+          name: 'dashboardWorkloadDetail',
+          params: {
+            category: category.value,
+            name: row.metadata.name,
+            namespace: row.metadata.namespace,
+            clusterId: handleGetExtData(row.metadata.uid, 'clusterID'),
+          },
+          query: {
+            kind: kind.value,
+            crd: crd.value,
+            viewID: dashboardViewID.value,
+          },
+        });
+      }
+    };
+
+    const resolveLink = (row) => {
+      if (isViewEditable.value) return 'javascript:void(0)';
+      const { href } = $router.resolve({
         name: 'dashboardWorkloadDetail',
         params: {
           category: category.value,
@@ -305,6 +329,7 @@ export default defineComponent({
           viewID: dashboardViewID.value,
         },
       });
+      return href;
     };
 
     // 跳转命名空间
@@ -738,6 +763,7 @@ export default defineComponent({
       detailLoading,
       sourceTypeMap,
       applyURL,
+      resolveLink,
     };
   },
   render() {
@@ -879,6 +905,7 @@ export default defineComponent({
                 isViewEditable: this.isViewEditable,
                 isClusterMode: this.isClusterMode,
                 sourceTypeMap: this.sourceTypeMap,
+                resolveLink: this.resolveLink,
               })
           }
         </div>
