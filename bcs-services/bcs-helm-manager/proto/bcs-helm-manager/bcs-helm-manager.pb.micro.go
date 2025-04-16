@@ -955,6 +955,12 @@ func NewClusterAddonsEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterAddons.PreviewAddons",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/preview"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterAddons.StopAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop"},
 			Method:  []string{"PUT"},
@@ -976,6 +982,7 @@ type ClusterAddonsService interface {
 	GetAddonsDetail(ctx context.Context, in *GetAddonsDetailReq, opts ...client.CallOption) (*GetAddonsDetailResp, error)
 	InstallAddons(ctx context.Context, in *InstallAddonsReq, opts ...client.CallOption) (*InstallAddonsResp, error)
 	UpgradeAddons(ctx context.Context, in *UpgradeAddonsReq, opts ...client.CallOption) (*UpgradeAddonsResp, error)
+	PreviewAddons(ctx context.Context, in *PreviewAddonsReq, opts ...client.CallOption) (*ReleasePreviewResp, error)
 	StopAddons(ctx context.Context, in *StopAddonsReq, opts ...client.CallOption) (*StopAddonsResp, error)
 	UninstallAddons(ctx context.Context, in *UninstallAddonsReq, opts ...client.CallOption) (*UninstallAddonsResp, error)
 }
@@ -1032,6 +1039,16 @@ func (c *clusterAddonsService) UpgradeAddons(ctx context.Context, in *UpgradeAdd
 	return out, nil
 }
 
+func (c *clusterAddonsService) PreviewAddons(ctx context.Context, in *PreviewAddonsReq, opts ...client.CallOption) (*ReleasePreviewResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterAddons.PreviewAddons", in)
+	out := new(ReleasePreviewResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterAddonsService) StopAddons(ctx context.Context, in *StopAddonsReq, opts ...client.CallOption) (*StopAddonsResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterAddons.StopAddons", in)
 	out := new(StopAddonsResp)
@@ -1059,6 +1076,7 @@ type ClusterAddonsHandler interface {
 	GetAddonsDetail(context.Context, *GetAddonsDetailReq, *GetAddonsDetailResp) error
 	InstallAddons(context.Context, *InstallAddonsReq, *InstallAddonsResp) error
 	UpgradeAddons(context.Context, *UpgradeAddonsReq, *UpgradeAddonsResp) error
+	PreviewAddons(context.Context, *PreviewAddonsReq, *ReleasePreviewResp) error
 	StopAddons(context.Context, *StopAddonsReq, *StopAddonsResp) error
 	UninstallAddons(context.Context, *UninstallAddonsReq, *UninstallAddonsResp) error
 }
@@ -1069,6 +1087,7 @@ func RegisterClusterAddonsHandler(s server.Server, hdlr ClusterAddonsHandler, op
 		GetAddonsDetail(ctx context.Context, in *GetAddonsDetailReq, out *GetAddonsDetailResp) error
 		InstallAddons(ctx context.Context, in *InstallAddonsReq, out *InstallAddonsResp) error
 		UpgradeAddons(ctx context.Context, in *UpgradeAddonsReq, out *UpgradeAddonsResp) error
+		PreviewAddons(ctx context.Context, in *PreviewAddonsReq, out *ReleasePreviewResp) error
 		StopAddons(ctx context.Context, in *StopAddonsReq, out *StopAddonsResp) error
 		UninstallAddons(ctx context.Context, in *UninstallAddonsReq, out *UninstallAddonsResp) error
 	}
@@ -1098,6 +1117,12 @@ func RegisterClusterAddonsHandler(s server.Server, hdlr ClusterAddonsHandler, op
 		Name:    "ClusterAddons.UpgradeAddons",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterAddons.PreviewAddons",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/preview"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -1133,6 +1158,10 @@ func (h *clusterAddonsHandler) InstallAddons(ctx context.Context, in *InstallAdd
 
 func (h *clusterAddonsHandler) UpgradeAddons(ctx context.Context, in *UpgradeAddonsReq, out *UpgradeAddonsResp) error {
 	return h.ClusterAddonsHandler.UpgradeAddons(ctx, in, out)
+}
+
+func (h *clusterAddonsHandler) PreviewAddons(ctx context.Context, in *PreviewAddonsReq, out *ReleasePreviewResp) error {
+	return h.ClusterAddonsHandler.PreviewAddons(ctx, in, out)
 }
 
 func (h *clusterAddonsHandler) StopAddons(ctx context.Context, in *StopAddonsReq, out *StopAddonsResp) error {

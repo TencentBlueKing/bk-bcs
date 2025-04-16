@@ -13,43 +13,68 @@
 package sqlstore
 
 import (
+	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // GetRole get bcsRole by roleName
 func GetRole(roleName string) *models.BcsRole {
+	start := time.Now()
 	role := models.BcsRole{}
 	GCoreDB.Where(&models.BcsRole{Name: roleName}).First(&role)
 	if role.Name != "" {
 		return &role
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetRole", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // CreateRole create role
 func CreateRole(role *models.BcsRole) error {
+	start := time.Now()
 	err := GCoreDB.Create(role).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateRole", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateRole", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // GetUrrByCondition Query BcsUserResourceRole by condition
 func GetUrrByCondition(cond *models.BcsUserResourceRole) *models.BcsUserResourceRole {
+	start := time.Now()
 	urr := models.BcsUserResourceRole{}
 	GCoreDB.Where(cond).First(&urr)
 	if urr.ID != 0 {
 		return &urr
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetUrrByCondition", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // CreateUserResourceRole create user-resource-role
 func CreateUserResourceRole(urr *models.BcsUserResourceRole) error {
+	start := time.Now()
 	err := GCoreDB.Create(urr).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateUserResourceRole", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateUserResourceRole", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // DeleteUserResourceRole delete user-resource-role
 func DeleteUserResourceRole(urr *models.BcsUserResourceRole) error {
+	start := time.Now()
 	err := GCoreDB.Delete(urr).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("DeleteUserResourceRole", metrics.Delete, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("DeleteUserResourceRole", metrics.Delete, metrics.SucStatus, start)
+	return nil
 }

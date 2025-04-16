@@ -20,6 +20,7 @@ import (
 	"github.com/jinzhu/gorm"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
@@ -55,6 +56,7 @@ type realTokenStore struct {
 // GetTokenByCondition Query token by condition
 func (u *realTokenStore) GetTokenByCondition(cond *models.BcsUser) *models.BcsUser {
 	var err error
+	start := time.Now()
 	token := models.BcsUser{}
 	if cond.UserToken != "" {
 		cond.UserToken, err = u.encryptToken(cond.UserToken)
@@ -68,11 +70,14 @@ func (u *realTokenStore) GetTokenByCondition(cond *models.BcsUser) *models.BcsUs
 	if token.ID != 0 {
 		token.UserToken, err = u.decryptToken(token.UserToken)
 		if err != nil {
+			metrics.ReportMysqlSlowQueryMetrics("GetTokenByCondition", metrics.Query, metrics.ErrStatus, start)
 			blog.Errorf("decrypt token failed, err %s", err.Error())
 			return nil
 		}
+		metrics.ReportMysqlSlowQueryMetrics("GetTokenByCondition", metrics.Query, metrics.SucStatus, start)
 		return &token
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetTokenByCondition", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
@@ -80,6 +85,7 @@ func (u *realTokenStore) GetTokenByCondition(cond *models.BcsUser) *models.BcsUs
 func (u *realTokenStore) GetUserTokensByName(name string) []models.BcsUser {
 	var err error
 	var tokens []models.BcsUser
+	start := time.Now()
 	u.db.Where(&models.BcsUser{Name: name}).Find(&tokens)
 	for k, v := range tokens {
 		tokens[k].UserToken, err = u.decryptToken(v.UserToken)
@@ -88,23 +94,28 @@ func (u *realTokenStore) GetUserTokensByName(name string) []models.BcsUser {
 			continue
 		}
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetUserTokensByName", metrics.Query, metrics.SucStatus, start)
 	return tokens
 }
 
 // CreateToken create new token
 func (u *realTokenStore) CreateToken(token *models.BcsUser) error {
 	var err error
+	start := time.Now()
 	token.UserToken, err = u.encryptToken(token.UserToken)
 	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateToken", metrics.Create, metrics.ErrStatus, start)
 		return err
 	}
 	err = u.db.Create(token).Error
+	metrics.ReportMysqlSlowQueryMetrics("CreateToken", metrics.Create, metrics.SucStatus, start)
 	return err
 }
 
 // UpdateToken update token information
 func (u *realTokenStore) UpdateToken(token, updatedToken *models.BcsUser) error {
 	var err error
+	start := time.Now()
 	token.UserToken, err = u.encryptToken(token.UserToken)
 	if err != nil {
 		return err
@@ -114,36 +125,54 @@ func (u *realTokenStore) UpdateToken(token, updatedToken *models.BcsUser) error 
 		return err
 	}
 	err = u.db.Model(token).Updates(*updatedToken).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("UpdateToken", metrics.Update, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("UpdateToken", metrics.Update, metrics.SucStatus, start)
+	return nil
 }
 
 // DeleteToken delete user token
 func (u *realTokenStore) DeleteToken(token string) error {
 	var err error
+	start := time.Now()
 	token, err = u.encryptToken(token)
 	if err != nil {
 		return err
 	}
 	cond := &models.BcsUser{UserToken: token}
 	err = u.db.Where(cond).Delete(&models.BcsUser{}).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("DeleteToken", metrics.Delete, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("DeleteToken", metrics.Delete, metrics.SucStatus, start)
+	return nil
 }
 
 // CreateTemporaryToken create new temporary token
 func (u *realTokenStore) CreateTemporaryToken(token *models.BcsTempToken) error {
 	var err error
+	start := time.Now()
 	token.Token, err = u.encryptToken(token.Token)
 	if err != nil {
 		return err
 	}
 	err = u.db.Create(token).Error
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateTemporaryToken", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateTemporaryToken", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 // GetTempTokenByCondition Query temp user by condition
 func (u *realTokenStore) GetTempTokenByCondition(cond *models.BcsTempToken) *models.BcsTempToken {
 	tempUser := models.BcsTempToken{}
 	var err error
+	start := time.Now()
 	if cond.Token != "" {
 		cond.Token, err = u.encryptToken(cond.Token)
 		if err != nil {
@@ -160,12 +189,14 @@ func (u *realTokenStore) GetTempTokenByCondition(cond *models.BcsTempToken) *mod
 		}
 		return &tempUser
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetTempTokenByCondition", metrics.Query, metrics.SucStatus, start)
 	return nil
 }
 
 // GetAllNotExpiredTokens get available user
 func (u *realTokenStore) GetAllNotExpiredTokens() []models.BcsUser {
 	var tokens []models.BcsUser
+	start := time.Now()
 	u.db.Where("expires_at > ?", time.Now()).Find(&tokens)
 	for k, v := range tokens {
 		token, err := u.decryptToken(v.UserToken)
@@ -175,12 +206,14 @@ func (u *realTokenStore) GetAllNotExpiredTokens() []models.BcsUser {
 		}
 		tokens[k].UserToken = token
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetAllNotExpiredTokens", metrics.Query, metrics.SucStatus, start)
 	return tokens
 }
 
 // GetAllTokens get all tokens
 func (u *realTokenStore) GetAllTokens() []models.BcsUser {
 	var tokens []models.BcsUser
+	start := time.Now()
 	u.db.Find(&tokens)
 	for k, v := range tokens {
 		token, err := u.decryptToken(v.UserToken)
@@ -190,6 +223,7 @@ func (u *realTokenStore) GetAllTokens() []models.BcsUser {
 		}
 		tokens[k].UserToken = token
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetAllTokens", metrics.Query, metrics.SucStatus, start)
 	return tokens
 }
 
@@ -214,6 +248,7 @@ func (u *realTokenStore) decryptToken(token string) (string, error) {
 func (u *realTokenStore) GetAllClients() []models.BcsClientUser {
 	var err error
 	var tokens []models.BcsClientUser
+	start := time.Now()
 	// nolint goconst
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
@@ -226,12 +261,14 @@ func (u *realTokenStore) GetAllClients() []models.BcsClientUser {
 			continue
 		}
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetAllClients", metrics.Query, metrics.SucStatus, start)
 	return tokens
 }
 
 func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClientUser {
 	var err error
 	var tokens []models.BcsClientUser
+	start := time.Now()
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ?`, models.PlainUser, projectCode).
@@ -243,20 +280,24 @@ func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClien
 			continue
 		}
 	}
+	metrics.ReportMysqlSlowQueryMetrics("GetProjectClients", metrics.Query, metrics.SucStatus, start)
 	return tokens
 }
 
 func (u *realTokenStore) GetClient(projectCode, name string) *models.BcsClientUser {
 	var client models.BcsClientUser
+	start := time.Now()
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
 		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ? AND c.name = ?`,
 		models.PlainUser, projectCode, name).Scan(&client)
+	metrics.ReportMysqlSlowQueryMetrics("GetClient", metrics.Query, metrics.SucStatus, start)
 	return &client
 }
 
 func (u *realTokenStore) CreateClientToken(clientUser *models.BcsClientUser) error {
 	var err error
+	start := time.Now()
 	clientUser.UserToken, err = u.encryptToken(clientUser.UserToken)
 	if err != nil {
 		return err
@@ -293,16 +334,29 @@ func (u *realTokenStore) CreateClientToken(clientUser *models.BcsClientUser) err
 		}
 		return nil
 	})
-	return err
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("CreateClientToken", metrics.Create, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateClientToken", metrics.Create, metrics.SucStatus, start)
+	return nil
 }
 
 func (u *realTokenStore) UpdateClientToken(projectCode, name string, updatedClient *models.BcsClient) error {
-	return u.db.Model(models.BcsClient{}).Where("project_code = ? and name = ?", projectCode, name).
+	start := time.Now()
+	err := u.db.Model(models.BcsClient{}).Where("project_code = ? and name = ?", projectCode, name).
 		Updates(*updatedClient).Error
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("UpdateClientToken", metrics.Update, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("UpdateClientToken", metrics.Update, metrics.SucStatus, start)
+	return nil
 }
 
 func (u *realTokenStore) DeleteProjectClient(projectCode, name string) error {
-	return u.db.Transaction(func(tx *gorm.DB) error {
+	start := time.Now()
+	err := u.db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Where(&models.BcsUser{Name: name}).Delete(&models.BcsUser{}).Error; err != nil {
 			return err
 		}
@@ -312,4 +366,11 @@ func (u *realTokenStore) DeleteProjectClient(projectCode, name string) error {
 		}
 		return nil
 	})
+
+	if err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("DeleteProjectClient", metrics.Delete, metrics.ErrStatus, start)
+		return err
+	}
+	metrics.ReportMysqlSlowQueryMetrics("DeleteProjectClient", metrics.Delete, metrics.SucStatus, start)
+	return nil
 }
