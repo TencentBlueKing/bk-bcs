@@ -346,9 +346,10 @@ type BasicConf struct {
 
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
-	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
-	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
+	Host                  string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken             string `yaml:"authToken" usage:"网关 AuthToken"`
+	EnableMultiTenantMode bool   `yaml:"enableMultiTenantMode" usage:"多租户模式"`
+	ReadAuthTokenFromEnv  bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置

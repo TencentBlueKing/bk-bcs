@@ -65,6 +65,7 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 	r.Use(httpx.ParseProjectIDMiddleware)
 	r.Use(httpx.AuthorizationMiddleware)
 	r.Use(httpx.AuditMiddleware)
+	r.Use(httpx.TenantMiddleware)
 
 	// events 接口代理
 	r.Methods("GET").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/events").
