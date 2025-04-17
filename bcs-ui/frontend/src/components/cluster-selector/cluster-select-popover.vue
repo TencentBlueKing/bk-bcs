@@ -109,7 +109,7 @@ const props = defineProps({
   },
 });
 
-const emits = defineEmits(['change', 'click']);
+const emits = defineEmits(['change', 'click', 'init']);
 
 const normalStatusList = ['RUNNING'];
 
@@ -137,7 +137,7 @@ watch(() => props.isShow, (val) => {
     // 如果已选择集群，滚动到活动项目
     const selectedClusterId = localValue.value;
     if (selectedClusterId) {
-      clusterIdRef.value?.find(item => item.id === selectedClusterId).scrollIntoView({ behavior: 'auto', block: 'center' });
+      clusterIdRef.value?.find(item => item.id === selectedClusterId)?.scrollIntoView({ behavior: 'auto', block: 'center' });
     }
   }
 });

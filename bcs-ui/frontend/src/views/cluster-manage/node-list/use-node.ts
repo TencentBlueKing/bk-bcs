@@ -1,6 +1,7 @@
 import Vue, { computed } from 'vue';
 
 import {
+  addClusterNode,
   batchDeleteNodes as batchDeleteNodesAPI,
   cordonNodes,
   getK8sNodes,
@@ -89,13 +90,13 @@ export default function useNode() {
       console.warn('clusterId or is nodes is empty');
       return;
     }
-    const result = await store.dispatch('clustermanager/addClusterNode', {
+    const result = await addClusterNode({
       $clusterId: clusterId,
       nodes: nodeIps,
       nodeTemplateID,
       login,
       operator: store.state.user?.username,
-    });
+    }).catch(() => false);
     result && $bkMessage({
       theme: 'success',
       message: window.i18n.t('generic.msg.success.deliveryTask'),

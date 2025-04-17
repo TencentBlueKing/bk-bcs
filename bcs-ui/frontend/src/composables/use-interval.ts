@@ -1,4 +1,4 @@
-import { onBeforeUnmount, onDeactivated, onUnmounted, Ref, ref } from 'vue';
+import { getCurrentInstance, onBeforeUnmount, onDeactivated, onUnmounted, Ref, ref } from 'vue';
 
 export type Fn = () => void;
 
@@ -25,6 +25,8 @@ export default function useIntervalFn(
 
   const timer = ref<number | null>(null);
 
+  const instance = getCurrentInstance();
+
   function clear() {
     if (timer.value) {
       clearTimeout(timer.value);
@@ -39,6 +41,8 @@ export default function useIntervalFn(
   }
 
   function start(...args: unknown[]) {
+    // 若此时组件已卸载，不开启轮询(异步调用场景)
+    if (instance?.proxy && (instance.proxy as any)._isDestroyed) return;
     clear();
     if (!interval) return;
 

@@ -85,7 +85,8 @@
           :selectable="isDefaultView"
           :is-show="!isHide"
           v-show="viewMode === 'cluster'"
-          @click="changeClusterView" />
+          @click="changeClusterView"
+          @init="changeClusterView" />
         <!-- 自定义视图 -->
         <ViewList v-show="viewMode === 'custom'" @change="changeCustomView" @edit="editCustomView" />
       </div>
@@ -134,7 +135,13 @@ const onShow = () => {
 };
 
 // 集群ID
-const clusterID = computed(() => $router.currentRoute?.params?.clusterId);
+const clusterID = computed(() => {
+  let pathClusterID = $router.currentRoute?.params?.clusterId;
+  if (pathClusterID === '-') {
+    pathClusterID = '';
+  }
+  return pathClusterID;
+});
 
 // 菜单折叠状态
 const openSideMenu = computed(() => $store.state.openSideMenu);

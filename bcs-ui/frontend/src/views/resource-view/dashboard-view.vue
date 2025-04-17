@@ -47,8 +47,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { cloneDeep } from 'lodash';
-import { computed, onBeforeMount, onBeforeUnmount, provide, reactive, ref, toRef, watch } from 'vue';
+import { computed, onBeforeMount, onBeforeUnmount, provide, ref, watch } from 'vue';
 
 import ResourceMenu from './view-manage/resource-menu.vue';
 import useViewConfig from './view-manage/use-view-config';
@@ -106,6 +105,7 @@ const { dashboardViewID } = useViewConfig();
 // 集群列表页
 const isDashboardHome = computed(() => $router.currentRoute?.matched?.some(item => item.name === 'dashboardHome'));
 
+// 切换集群视图和自定义视图时更改路径参数
 watch(
   dashboardViewID,
   (newVal, oldVal) => {
@@ -124,16 +124,22 @@ watch(
       return;
     }
 
-    if (dashboardViewID.value && $router.currentRoute?.params?.clusterId) {
+    let pathClusterID = $router.currentRoute?.params?.clusterId;
+    if (pathClusterID === '-') {
+      pathClusterID = '';
+    }
+    if (dashboardViewID.value && pathClusterID) {
       // 自定义视图时清空集群ID参数
       $router.replace({
         name: $router.currentRoute?.name,
-        params: {},
+        params: {
+          clusterId: '-',
+        },
         query: {
           viewID: dashboardViewID.value,
         },
       });
-    } else if (!dashboardViewID.value && !$router.currentRoute?.params?.clusterId) {
+    } else if (!dashboardViewID.value && !pathClusterID) {
       // 没有集群ID, 也没有视图ID, 就默认回显一个集群
       const cluster = clusterList.value.find(item => item.status === 'RUNNING');
       $router.replace({
@@ -181,18 +187,18 @@ const initClusterAndViewID = () => {
     // 路径上没有集群ID, 也没有视图ID, 就默认跳转到一个集群中
     cluster = clusterList.value.find(item => item.clusterID === curClusterId.value)
       || clusterList.value.find(item => item.status === 'RUNNING');
+  } else if (!$router.currentRoute?.query?.viewID && dashboardViewID.value) {
+    // 内存中有视图ID, 路径上没有，同步到路径上
     $router.replace({
-      name: $router.currentRoute?.name,
-      params: {
-        clusterId: cluster?.clusterID,
+      query: {
+        viewID,
       },
     });
   }
-  $store.commit('updateDashboardViewID', viewID);// 更新当前视图ID
+  $store.commit('updateDashboardViewID', viewID);// 更新当前视图ID，触发watch初始化视图
   $store.commit('updateCurCluster', cluster ?? clusterList.value.find(item => item.status === 'RUNNING'));
 };
 
-const curNsList = computed(() => $store.state.viewNsList);
 // 解析并获取url参数
 const propertis = ['name', 'creator', 'source', 'templateName', 'templateVersion', 'chartName', 'labelSelector'];
 function handleGetQuery(query) {
@@ -226,20 +232,6 @@ function handleGetQuery(query) {
   });
   showViewConfig.value = true;
 }
-const currentRoute = computed(() => toRef(reactive($router), 'currentRoute').value);
-
-// 同步命名空间到url
-watch(curNsList, () => {
-  const queryData = cloneDeep(currentRoute.value.query);
-  if (!curNsList.value?.length) {
-    delete queryData.namespace;
-  } else {
-    queryData.namespace = curNsList.value.join(',');
-  }
-  $router.replace({
-    query: queryData,
-  }).catch(() => {});
-});
 
 onBeforeMount(() => {
   bus.$on('toggle-show-view-config', () => {

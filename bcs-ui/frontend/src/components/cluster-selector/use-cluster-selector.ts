@@ -2,7 +2,9 @@ import { computed, onBeforeMount, ref } from 'vue';
 
 import { ICluster, useCluster } from '@/composables/use-app';
 import $i18n from '@/i18n/i18n-setup';
+import $router from '@/router';
 import $store from '@/store';
+import useViewConfig from '@/views/resource-view/view-manage/use-view-config';
 
 export type ClusterType = 'independent' | 'managed' |'virtual' | 'shared' | 'all';
 export default function useClusterSelector(
@@ -97,14 +99,23 @@ export default function useClusterSelector(
     emits('change', clusterId);
   };
 
+  const { dashboardViewID } = useViewConfig();
+  const viewID = $router.currentRoute?.query?.viewID || dashboardViewID.value || '';
   const handleValidateClusterID = () => {
     if (!clusterList.value.length) return;// 资源视图的左侧菜单是单独routerview，如果clusterList为空就不重置当前集群ID
     // 判断当前集群ID在当前场景中是否能使用（当前场景下，不能从全量数据中判断）
     const data = clusterData.value.find(data => data.list.some(item => item.clusterID === localValue.value));
+    let clusterID;
     if (!data) {
       handleClusterChange(clusterData.value[0]?.list?.[0]?.clusterID);
+      clusterID = clusterData.value[0]?.list?.[0]?.clusterID;
     } else if (localValue.value !== defaultClusterID) {
       handleClusterChange(localValue.value);
+      clusterID = localValue.value;
+    }
+    // 首页初始化集群模式id，视图模式下在 dashboard-view.vue 中初始化
+    if (!viewID && clusterID) {
+      clusterID && emits('init', clusterID);
     }
   };
 

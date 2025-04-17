@@ -576,8 +576,8 @@ const handleDeleteView = () => {
           theme: 'success',
           message: $i18n.t('generic.msg.success.delete'),
         });
-        await viewChange('');
         await getViewConfigList();
+        await viewChange('');
       }
     },
   });

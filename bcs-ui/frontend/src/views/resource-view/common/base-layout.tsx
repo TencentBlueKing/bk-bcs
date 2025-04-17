@@ -645,6 +645,7 @@ export default defineComponent({
       nsList.value = await getNamespaceData({ $clusterId: curClusterId.value });
     };
     watch(curClusterId, async () => {
+      isLoading.value = true;
       await handleGetNsData();
       // 首次加载
       if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace) {
@@ -662,20 +663,14 @@ export default defineComponent({
         $store.commit('updateViewNsList', newNs);
       }
 
-      if (isClosed.value) {
-        return;
-      }
-      isLoading.value = true;
       await handleGetTableData();
       isLoading.value = false;
-      // 轮询资源，频繁切换资源，即使页面卸载，这个回调也会执行，导致存在多个定时器，使用isClosed来控制
+      // 轮询资源
       start();
     }, { immediate: true });
 
-    const isClosed = ref(false);
     onBeforeUnmount(() => {
       stop();
-      isClosed.value = true;
     });
 
     return {
