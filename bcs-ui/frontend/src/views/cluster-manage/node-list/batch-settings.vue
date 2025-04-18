@@ -889,9 +889,10 @@ const gotIt = () => {
 const handleGetNodeData = async () => {
   if (!props.clusterId) return;
   isLoading.value = true;
+  const list = (props.nodeNameList?.split(',') ?? []).filter(v => !!v);
   const nodeList = await getNodeList(props.clusterId);
-  const filterNodeList =  props.nodeNameList?.length
-    ? nodeList.filter(row => row.nodeName && props.nodeNameList?.includes(row.nodeName))
+  const filterNodeList =  list.length
+    ? nodeList.filter(row => row.nodeName && list.includes(row.nodeName))
     : nodeList;
   initData(filterNodeList);
   // 初始化勾选列
