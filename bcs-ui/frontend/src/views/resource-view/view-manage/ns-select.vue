@@ -10,7 +10,8 @@
     selected-style="checkbox"
     v-model="nsData"
     @toggle="handleToggle"
-    @selected="handleNsChange">
+    @selected="handleNsChange"
+    @tab-remove="handleRemove">
     <!-- <bcs-option key="all" id="" :name="$t('view.labels.all')">
       <bcs-checkbox :value="nsData.includes('')">
         <span class="text-[12px]">{{ $t('view.labels.all') }}</span>
@@ -80,11 +81,22 @@ const handleNsChange = (nsList) => {
 };
 
 // 失去焦点才触发
+const isToggle = ref(false);
 function handleToggle(val: boolean) {
-  if (!val) {
+  isToggle.value = val;
+  if (!isToggle.value) {
     emits('change', curNsData.value);
     emits('input', curNsData.value);
   }
+}
+
+// 清除
+function handleRemove({ name }) {
+  const index = nsData.value.findIndex(v => v === name);
+  nsData.value.splice(index, 1);
+  if (isToggle.value) return;
+  emits('change', curNsData.value);
+  emits('input', curNsData.value);
 }
 
 // 组件使用的数据
