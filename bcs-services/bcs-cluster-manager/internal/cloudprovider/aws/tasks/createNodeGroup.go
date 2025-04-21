@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -340,10 +341,21 @@ func CheckCloudNodeGroupStatusTask(taskID string, stepName string) error { // no
 	err = cloudprovider.GetStorageModel().UpdateNodeGroup(context.Background(),
 		generateNodeGroupFromAsgAndLtv(dependInfo.NodeGroup, asgInfo, ltvInfo))
 	if err != nil {
-		blog.Errorf("CreateCloudNodeGroupTask[%s]: UpdateNodeGroup[%s] in task %s step %s failed, %s",
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: UpdateNodeGroup[%s] in task %s step %s failed, %s",
 			taskID, nodeGroupID, taskID, stepName, err.Error())
 		retErr := fmt.Errorf("call CreateCloudNodeGroupTask UpdateNodeGroup[%s] api err, %s", nodeGroupID,
 			err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	// delete nodegroup auto scaling group lifecycle hook
+	// 由于创建节点池后会自动创建了生命周期钩子，导致缩容删除节点池最后一个节点的时候会很慢，因此这里先删除生命周期钩子
+	// https://docs.aws.amazon.com/zh_cn/autoscaling/ec2/userguide/lifecycle-hooks.html
+	err = deleteNodegroupLifecycleHook(ctx, dependInfo, asgInfo)
+	if err != nil {
+		blog.Errorf("CheckCloudNodeGroupStatusTask[%s]: deleteNodegroupLifecycleHook failed: %v", taskID, err)
+		retErr := fmt.Errorf("deleteNodegroupLifecycleHook failed, %s", err.Error())
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
@@ -430,6 +442,49 @@ func checkNodegroupStatus(rootCtx context.Context, dependInfo *cloudprovider.Clo
 	}
 
 	return asgInfo[0], ltvInfo, nil
+}
+
+func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider.CloudDependBasicInfo,
+	asInfo *autoscaling.Group) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.NewAutoScalingClient(dependInfo.CmOption)
+	if err != nil {
+		blog.Errorf("taskID[%s] checkNodegroupStatus get aws clientSet failed, %s", taskID, err.Error())
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
+	defer cancel()
+	err = loop.LoopDoFunc(ctx, func() error {
+		hooks, err := client.DescribeLifecycleHooks(asInfo.AutoScalingGroupName)
+		if err != nil {
+			blog.Errorf("taskID[%s] deleteAsLifecycleHooks failed: %v", taskID, err)
+			return err
+		}
+
+		if len(hooks) == 0 {
+			return nil
+		}
+
+		data := make([]string, 0)
+		for _, hook := range hooks {
+			data = append(data, *hook.LifecycleHookName)
+		}
+
+		err = client.DeleteLifecycleHooks(asInfo.AutoScalingGroupName, data)
+		if err != nil {
+			return err
+		}
+
+		return loop.EndLoop
+	}, loop.LoopInterval(5*time.Second))
+
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+
+	return nil
 }
 
 // get Asg And Ltv
