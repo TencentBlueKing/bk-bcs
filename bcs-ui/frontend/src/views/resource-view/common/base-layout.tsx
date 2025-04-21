@@ -673,7 +673,7 @@ export default defineComponent({
       isLoading.value = true;
       await handleGetNsData();
       // 首次加载
-      if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace) {
+      if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace && !curNsList.value.length) {
         $store.commit('updateViewNsList', [nsList.value[0].name]);
         isEntry.value = true;
       } else {
@@ -698,6 +698,30 @@ export default defineComponent({
       // 轮询资源，频繁切换资源，即使页面卸载，这个回调也会执行，导致存在多个定时器，使用isClosed来控制
       start();
     }, { immediate: true });
+
+    // 同步命名空间到query
+    watch(curNsList, () => {
+      const urlQuery = $router.currentRoute?.query || {};
+      // 不是集群模式 / 命名空间未改变 / 清空命名空间，直接返回
+      if (!isClusterMode.value
+        || urlQuery.namespace === curNsList.value.join(',')
+        || (!urlQuery.namespace && !curNsList.value.join(','))) return;
+      const data = {
+        ...urlQuery,
+        namespace: curNsList.value.join(','),
+      };
+      // 删除值为空的参数
+      Object.keys(data).forEach((key) => {
+        if (!data[key]) {
+          delete data[key];
+        }
+      });
+      $router.replace({
+        query: {
+          ...data,
+        },
+      });
+    });
 
     const isClosed = ref(false);
     onBeforeUnmount(() => {
