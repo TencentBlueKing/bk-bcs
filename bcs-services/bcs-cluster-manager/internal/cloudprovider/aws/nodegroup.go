@@ -157,9 +157,7 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, 
 		}
 	} else if len(cloudNg.Taints) > 0 {
 		input.Taints = &eks.UpdateTaintsPayload{}
-		for _, v := range cloudNg.Taints {
-			input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, v)
-		}
+		input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, cloudNg.Taints...)
 	}
 
 	if group.AutoScaling != nil {

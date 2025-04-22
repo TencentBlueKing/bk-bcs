@@ -457,10 +457,10 @@ func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider
 	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Minute)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
-		hooks, err := client.DescribeLifecycleHooks(asInfo.AutoScalingGroupName)
-		if err != nil {
-			blog.Errorf("taskID[%s] deleteAsLifecycleHooks failed: %v", taskID, err)
-			return err
+		hooks, dErr := client.DescribeLifecycleHooks(asInfo.AutoScalingGroupName)
+		if dErr != nil {
+			blog.Errorf("taskID[%s] deleteAsLifecycleHooks failed: %v", taskID, dErr)
+			return dErr
 		}
 
 		if len(hooks) == 0 {
@@ -472,9 +472,9 @@ func deleteNodegroupLifecycleHook(ctx context.Context, dependInfo *cloudprovider
 			data = append(data, *hook.LifecycleHookName)
 		}
 
-		err = client.DeleteLifecycleHooks(asInfo.AutoScalingGroupName, data)
-		if err != nil {
-			return err
+		dErr = client.DeleteLifecycleHooks(asInfo.AutoScalingGroupName, data)
+		if dErr != nil {
+			return dErr
 		}
 
 		return loop.EndLoop
