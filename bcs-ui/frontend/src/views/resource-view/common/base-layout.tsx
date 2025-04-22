@@ -675,7 +675,6 @@ export default defineComponent({
       // 首次加载
       if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace && !curNsList.value.length) {
         $store.commit('updateViewNsList', [nsList.value[0].name]);
-        isEntry.value = true;
       } else {
         // 切换集群，判断当前选中的命名空间是否在新的命名空间列表中
         const newNs = curNsList.value?.reduce<string[]>((acc, cur) => {
@@ -687,6 +686,7 @@ export default defineComponent({
         }, []);
         $store.commit('updateViewNsList', newNs);
       }
+      isEntry.value = true;
 
       if (isClosed.value) {
         isLoading.value = false;

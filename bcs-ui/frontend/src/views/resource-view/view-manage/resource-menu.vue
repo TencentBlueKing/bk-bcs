@@ -390,7 +390,7 @@ const expandMenu = () => {
 
 // 更多资源
 const { getMultiClusterCustomResourceDefinition, getMultiClusterResourcesCount } = useTableData();
-const { curViewData, dashboardViewID, isClusterMode } = useViewConfig();
+const { curViewData, dashboardViewID } = useViewConfig();
 const isLoading = ref(false);
 const crdData = ref<Record<string, any[]>>({});
 const searchCRData = computed(() => {
@@ -463,8 +463,7 @@ onBeforeMount(() => {
 
     set(countMap.value, kind, count);
   });
-  // 集群模式初始化时，通过监听curViewData.value 来获取
-  if (isClusterMode.value || curViewData.value?.clusterNamespaces?.some(item => item?.clusterID === '-')) {
+  if (curViewData.value?.clusterNamespaces?.some(item => item?.clusterID === '-')) {
     return;
   }
   handleGetCustomResourceDefinition();

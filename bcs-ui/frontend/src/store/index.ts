@@ -130,6 +130,7 @@ const store = new Vuex.Store<{
         'globalPageSize',
         'dashboardViewID',
         'hideSharedCluster',
+        'viewNsList',
       ],
       mutationEffect: [
         {
