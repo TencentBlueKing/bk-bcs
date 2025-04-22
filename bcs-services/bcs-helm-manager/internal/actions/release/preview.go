@@ -100,7 +100,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 		if err != nil {
 			return nil, fmt.Errorf("get release revision %d failed, err %s", r.req.GetRevision(), err.Error())
 		}
-		return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release())
+		return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease.Transfer2Release())
 	}
 
 	// helm template, get new manifest
@@ -121,7 +121,7 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	}
 	newRelease := result.Release
 
-	return r.generateReleasePreview(currentRelease.Transfer2Release(), newRelease)
+	return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease)
 }
 
 // 过滤掉不支持的参数
@@ -143,7 +143,8 @@ func filtArgs(args []string) []string {
 	return result
 }
 
-func (r *ReleasePreviewAction) generateReleasePreview(oldRelease,
+// GenerateReleasePreview generate release preview
+func (r *ReleasePreviewAction) GenerateReleasePreview(oldRelease,
 	newRelease *helmrelease.Release) (*helmmanager.ReleasePreview, error) {
 	preview := &helmmanager.ReleasePreview{
 		NewContent: common.GetStringP(""),

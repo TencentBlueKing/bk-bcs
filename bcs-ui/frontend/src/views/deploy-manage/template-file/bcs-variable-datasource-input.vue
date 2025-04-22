@@ -54,7 +54,7 @@ function handleInput(v: string) {
     value = Number(v);
   }
   emits('input', value);
-  if (v.indexOf('{{') === 0) {
+  if (typeof v === 'string' && v.indexOf('{{') === 0) {
     popoverRef.value?.show();
   }
 }

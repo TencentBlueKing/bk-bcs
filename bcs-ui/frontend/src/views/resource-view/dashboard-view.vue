@@ -124,7 +124,11 @@ watch(
       return;
     }
 
-    if (dashboardViewID.value && $router.currentRoute?.params?.clusterId) {
+    let pathClusterID = $router.currentRoute?.params?.clusterId;
+    if (pathClusterID === '-') {
+      pathClusterID = '';
+    }
+    if (dashboardViewID.value && pathClusterID) {
       // 自定义视图时清空集群ID参数
       $router.replace({
         name: $router.currentRoute?.name,
@@ -135,7 +139,7 @@ watch(
           viewID: dashboardViewID.value,
         },
       });
-    } else if (!dashboardViewID.value && !$router.currentRoute?.params?.clusterId) {
+    } else if (!dashboardViewID.value && !pathClusterID) {
       // 没有集群ID, 也没有视图ID, 就默认回显一个集群
       const cluster = clusterList.value.find(item => item.status === 'RUNNING');
       $router.replace({
@@ -183,12 +187,6 @@ const initClusterAndViewID = () => {
     // 路径上没有集群ID, 也没有视图ID, 就默认跳转到一个集群中
     cluster = clusterList.value.find(item => item.clusterID === curClusterId.value)
       || clusterList.value.find(item => item.status === 'RUNNING');
-    // $router.replace({
-    //   name: $router.currentRoute?.name,
-    //   params: {
-    //     clusterId: cluster?.clusterID,
-    //   },
-    // });
   } else if (!$router.currentRoute?.query?.viewID && dashboardViewID.value) {
     // 内存中有视图ID, 路径上没有，同步到路径上
     $router.replace({

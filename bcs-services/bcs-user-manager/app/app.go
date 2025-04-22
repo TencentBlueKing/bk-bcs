@@ -87,6 +87,7 @@ func Run(op *options.UserManagerOptions) {
 }
 
 // parseConfig parse the option to config
+// nolint:funlen
 func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) {
 	userMgrConfig := config.NewUserMgrConfig()
 
@@ -106,6 +107,7 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 	userMgrConfig.Encrypt = op.Encrypt
 	userMgrConfig.Activity = op.Activity
 	userMgrConfig.EnableTokenSync = op.EnableTokenSync
+	userMgrConfig.SlowSQLLatency = op.SlowSQLLatency
 
 	config.Tke = op.TKE
 	secretID, err := encrypt.DesDecryptFromBase([]byte(config.Tke.SecretID))
@@ -170,6 +172,11 @@ func parseConfig(op *options.UserManagerOptions) (*config.UserMgrConfig, error) 
 			blog.Errorf("initClientTLSConfig failed: %v", err)
 			return nil, err
 		}
+	}
+
+	// default 200ms
+	if userMgrConfig.SlowSQLLatency == 0 {
+		userMgrConfig.SlowSQLLatency = 200
 	}
 
 	userMgrConfig.EtcdConfig = op.Etcd

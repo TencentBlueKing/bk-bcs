@@ -57,7 +57,7 @@
             <bcs-button
               theme="primary"
               class="ml-[8px]"
-              :disabled="!rollbackReversion"
+              :disabled="tableData?.length === 1 || !rollbackReversion"
               v-if="rollback"
               @click="handleRollback">{{ $t('updateRecord.button.rolloutThisVersion') }}</bcs-button>
           </div>

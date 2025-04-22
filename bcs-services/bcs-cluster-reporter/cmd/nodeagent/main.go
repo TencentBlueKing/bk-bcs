@@ -94,7 +94,7 @@ func init() {
 
 // Run main process
 func Run() error {
-	config := getConfig(cmdOptions.ConfigPath)
+	config := getConfig(cmdOptions.KubeConfigPath)
 	if config == nil {
 		klog.Fatalf("get kubeconfig failed.")
 	}

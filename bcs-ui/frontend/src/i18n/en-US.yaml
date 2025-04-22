@@ -623,7 +623,6 @@ cluster:
     useSharedCluster: Use shared cluster
     addCluster: Add
     dashboard: Dashboard
-    applyMaster: Apply for master node
     applyRecord: Check the application record
     overview: Overview
     delete:
@@ -3409,7 +3408,6 @@ amazonCloud:
     search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
   tips:
     nameRegex: 'Only support English, numbers and characters (-)'
-    secretKeyRegex: 'Only support English, numbers and characters (- or /)'
   label:
     create: Create
     clusterType: Cluster type

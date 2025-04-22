@@ -30,7 +30,6 @@
                   {{$t('cluster.button.addCluster')}}
                 </bk-button>
               </span>
-              <ApplyHost :title="$t('cluster.button.applyMaster')" class="ml10" v-if="$INTERNAL" />
               <bk-button
                 class="ml-[10px]"
                 v-if="flagsMap['NODETEMPLATE']"
@@ -168,7 +167,6 @@ import { computed, defineComponent, onActivated, onMounted, ref, set, watch } fr
 
 import TaskLog from '@blueking/task-log/vue2';
 
-import ApplyHost from '../components/apply-host.vue';
 import ClusterDetail from '../detail/index.vue';
 
 import ListMode from './cluster-list.vue';
@@ -193,7 +191,6 @@ import ProjectConfig from '@/views/project-manage/project/project-config.vue';
 export default defineComponent({
   name: 'ClusterMain',
   components: {
-    ApplyHost,
     ProjectConfig,
     ConfirmDialog,
     ClusterGuide,

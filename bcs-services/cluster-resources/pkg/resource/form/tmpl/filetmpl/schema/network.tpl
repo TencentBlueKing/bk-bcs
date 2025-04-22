@@ -341,7 +341,7 @@ portConf:
               - maxLength64
               - rfc1123LabelRegex
             ui:props:
-              showTitle: true
+              showTitle: false
           port:
             title: {{ i18n "监听端口" .lang }}
             type: integer
@@ -354,7 +354,7 @@ portConf:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
             ui:props:
-              showTitle: true                
+              showTitle: false                
           protocol:
             title: {{ i18n "协议" .lang }}
             type: string
@@ -369,7 +369,7 @@ portConf:
                   - label: UDP
                     value: UDP
             ui:props:
-              showTitle: true                    
+              showTitle: false                    
           targetPort:
             title: {{ i18n "目标端口" .lang }}
             type: string
@@ -387,7 +387,7 @@ portConf:
                     visible: false
                     value: "80"
             ui:props:
-              showTitle: true                  
+              showTitle: false                  
           targetSelectPort:
             title: {{ i18n "目标端口" .lang }}
             type: string
@@ -420,7 +420,7 @@ portConf:
                   actions:
                     - "{{`{{`}} $loadDataSource {{`}}`}}"
             ui:props:
-              showTitle: true                    
+              showTitle: false                    
           nodePort:
             title: {{ i18n "节点端口" .lang }}
             type: integer
@@ -447,12 +447,14 @@ portConf:
                 else:
                   state:
                     disabled: false
+                    visible: true
             ui:props:
-              showTitle: true                    
+              showTitle: false                    
       ui:component:
         name: bfArray
       ui:props:
         showTitle: false
+        showTableHead: true
 {{- end }}
 
 {{- define "network.svcSelector" }}
