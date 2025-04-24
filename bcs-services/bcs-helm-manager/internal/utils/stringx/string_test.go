@@ -55,3 +55,22 @@ func TestJoinStringBySeparator(t *testing.T) {
 	joinedStr = JoinStringBySeparator(srcList, "yyy", true)
 	assert.Equal(t, "yyyayyybyyyc", joinedStr)
 }
+
+func TestReplaceIllegalChars(t *testing.T) {
+	users := map[string]string{
+		"admin@123":   "admin_123",
+		"admin.123":   "admin.123",
+		"admin_123":   "admin_123",
+		"admin-123":   "admin-123",
+		"a&dmin@123":  "a_dmin_123",
+		"a/dmin@123":  "a_dmin_123",
+		"a+dmin@123":  "a_dmin_123",
+		"ad`min@123":  "ad_min_123",
+		"_ad`min@123": "_ad_min_123",
+	}
+
+	for key, data := range users {
+		user := ReplaceIllegalChars(key)
+		assert.Equal(t, data, user)
+	}
+}
