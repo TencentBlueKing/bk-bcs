@@ -125,54 +125,6 @@
         ]
       }
     },
-    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/preview": {
-      "post": {
-        "summary": "预览更新集群组件",
-        "description": "预览更新集群组件",
-        "operationId": "ClusterAddons_PreviewAddons",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/helmmanagerReleasePreviewResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectCode",
-            "description": "项目代码",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clusterID",
-            "description": "所在的集群ID",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/helmmanagerPreviewAddonsReq"
-            }
-          }
-        ],
-        "tags": [
-          "ClusterAddons"
-        ]
-      }
-    },
     "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}": {
       "get": {
         "summary": "获取集群组件详情",
@@ -318,6 +270,61 @@
             "required": true,
             "schema": {
               "$ref": "#/definitions/helmmanagerUpgradeAddonsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      }
+    },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview": {
+      "post": {
+        "summary": "预览更新集群组件",
+        "description": "预览更新集群组件",
+        "operationId": "ClusterAddons_PreviewAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerReleasePreviewResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "组件名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerPreviewAddonsReq"
             }
           }
         ],
@@ -3467,11 +3474,6 @@
           "type": "string",
           "description": "values",
           "title": "values"
-        },
-        "namespace": {
-          "type": "string",
-          "description": "namespace",
-          "title": "namespace"
         }
       },
       "title": "PreviewAddonsReq"

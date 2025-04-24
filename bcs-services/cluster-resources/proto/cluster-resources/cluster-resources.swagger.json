@@ -503,10 +503,10 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/api/resources": {
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/fetch/api_resources": {
       "post": {
-        "summary": "Get multi cluster resources",
-        "description": "获取多集群原生资源列表",
+        "summary": "Get multi cluster api resources",
+        "description": "获取多集群原生api resources资源列表",
         "operationId": "MultiCluster_FetchMultiClusterApiResources",
         "responses": {
           "200": {
@@ -543,51 +543,11 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/preferred/api/resources": {
-      "post": {
-        "summary": "Get multi cluster api resources",
-        "description": "获取多集群原生api resources资源列表",
-        "operationId": "MultiCluster_FetchMultiClusterApiResourcesPreferred",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonResp"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/runtimeError"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "projectCode",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/clusterresourcesFetchMultiClusterApiResourcesPreferredReq"
-            }
-          }
-        ],
-        "tags": [
-          "MultiCluster"
-        ]
-      }
-    },
-    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/preferred/{kind}": {
+    "/clusterresources/v1/projects/{projectCode}/multi_cluster_resources/fetch/custom_resources": {
       "post": {
         "summary": "Get multi cluster resources",
         "description": "获取多集群指定group、version原生资源列表",
-        "operationId": "MultiCluster_FetchMultiClusterResourcePreferred",
+        "operationId": "MultiCluster_FetchMultiClusterCustomResources",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -610,17 +570,11 @@
             "type": "string"
           },
           {
-            "name": "kind",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/clusterresourcesFetchMultiClusterResourcePreferredReq"
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterCustomResourcesReq"
             }
           }
         ],
@@ -633,7 +587,7 @@
       "post": {
         "summary": "Get multi cluster custom resources",
         "description": "获取多集群自定义资源列表",
-        "operationId": "MultiCluster_FetchMultiClusterCustomResource",
+        "operationId": "MultiCluster_FetchMultiClusterCustomObject",
         "responses": {
           "200": {
             "description": "A successful response.",
@@ -666,7 +620,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/clusterresourcesFetchMultiClusterCustomResourceReq"
+              "$ref": "#/definitions/clusterresourcesFetchMultiClusterCustomObjectReq"
             }
           }
         ],
@@ -10689,7 +10643,7 @@
       "description": "Echo API 响应",
       "title": "EchoResp"
     },
-    "clusterresourcesFetchMultiClusterApiResourcesPreferredReq": {
+    "clusterresourcesFetchMultiClusterApiResourcesReq": {
       "type": "object",
       "properties": {
         "projectCode": {
@@ -10713,42 +10667,9 @@
         }
       },
       "description": "获取多集群api资源请求体",
-      "title": "FetchMultiClusterApiResourcesPreferredReq"
-    },
-    "clusterresourcesFetchMultiClusterApiResourcesReq": {
-      "type": "object",
-      "properties": {
-        "projectCode": {
-          "type": "string",
-          "title": "项目编码"
-        },
-        "clusterNamespaces": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterresourcesClusterNamespaces"
-          },
-          "title": "集群和命名空间"
-        },
-        "onlyCrd": {
-          "type": "boolean",
-          "title": "是否只列出crd资源"
-        },
-        "viewID": {
-          "type": "string",
-          "title": "viewID"
-        },
-        "labelSelector": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clusterresourcesLabelSelector"
-          },
-          "title": "标签选择器"
-        }
-      },
-      "description": "获取多集群api资源请求体",
       "title": "FetchMultiClusterApiResourcesReq"
     },
-    "clusterresourcesFetchMultiClusterCustomResourceReq": {
+    "clusterresourcesFetchMultiClusterCustomObjectReq": {
       "type": "object",
       "properties": {
         "projectCode": {
@@ -10823,9 +10744,9 @@
         }
       },
       "description": "获取多集群自定义资源请求体",
-      "title": "FetchMultiClusterCustomResourceReq"
+      "title": "FetchMultiClusterCustomObjectReq"
     },
-    "clusterresourcesFetchMultiClusterResourcePreferredReq": {
+    "clusterresourcesFetchMultiClusterCustomResourcesReq": {
       "type": "object",
       "properties": {
         "projectCode": {
@@ -10839,9 +10760,9 @@
           },
           "title": "集群和命名空间"
         },
-        "kind": {
-          "type": "string",
-          "title": "资源类型"
+        "namespaced": {
+          "type": "boolean",
+          "title": "namespaced"
         },
         "viewID": {
           "type": "string",
@@ -10865,17 +10786,6 @@
           "type": "string",
           "title": "name"
         },
-        "ip": {
-          "type": "string",
-          "title": "ip"
-        },
-        "status": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "status"
-        },
         "sortBy": {
           "type": "string",
           "title": "sortBy"
@@ -10898,25 +10808,21 @@
           "$ref": "#/definitions/clusterresourcesCreateSource",
           "title": "createSource"
         },
-        "version": {
-          "type": "string",
-          "title": "version"
-        },
         "group": {
           "type": "string",
           "title": "group"
         },
-        "namespaced": {
-          "type": "boolean",
-          "title": "namespaced"
+        "version": {
+          "type": "string",
+          "title": "version"
         },
         "resource": {
           "type": "string",
           "title": "resource"
         }
       },
-      "description": "获取多集群资源请求体",
-      "title": "FetchMultiClusterResourcePreferredReq"
+      "description": "获取多集群自定义资源请求体",
+      "title": "FetchMultiClusterCustomResourcesReq"
     },
     "clusterresourcesFetchMultiClusterResourceReq": {
       "type": "object",

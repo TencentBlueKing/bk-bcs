@@ -79,7 +79,7 @@ func (u *PreviewAddonsAction) Handle(ctx context.Context,
 		return nil
 	}
 
-	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), u.req.GetNamespace(), addons.GetReleaseName())
+	old, err := u.model.GetRelease(ctx, u.req.GetClusterID(), addons.Namespace, addons.GetReleaseName())
 	if err != nil {
 		blog.Errorf("get release failed, %s", err.Error())
 		u.setResp(common.ErrHelmManagerGetActionFailed, "get release failed", nil)
@@ -104,7 +104,7 @@ func (u *PreviewAddonsAction) getReleasePreview(
 	ctx context.Context, addon *release.Addons) (*helmmanager.ReleasePreview, error) {
 	// get manifest from helm
 	currentRelease, err := u.releaseHandler.Cluster(u.req.GetClusterID()).Get(ctx, release.GetOption{
-		Namespace: u.req.GetNamespace(), Name: u.req.GetName()})
+		Namespace: addon.Namespace, Name: addon.GetReleaseName()})
 	if err != nil && !errors.Is(err, driver.ErrReleaseNotFound) {
 		return nil, fmt.Errorf("get current releasefailed, err %s", err.Error())
 	}

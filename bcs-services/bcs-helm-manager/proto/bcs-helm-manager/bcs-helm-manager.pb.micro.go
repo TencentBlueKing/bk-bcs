@@ -956,7 +956,7 @@ func NewClusterAddonsEndpoints() []*api.Endpoint {
 		},
 		{
 			Name:    "ClusterAddons.PreviewAddons",
-			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/preview"},
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
@@ -1121,7 +1121,7 @@ func RegisterClusterAddonsHandler(s server.Server, hdlr ClusterAddonsHandler, op
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterAddons.PreviewAddons",
-		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/preview"},
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))

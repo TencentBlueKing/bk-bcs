@@ -51,8 +51,7 @@ import (
 type Query interface {
 	Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error)
 	FetchPreferred(
-		ctx context.Context, kind string, k8sRes *schema.GroupVersionResource) (map[string]interface{}, error)
-	FetchApiResources(ctx context.Context, kind string) (map[string]interface{}, error)
+		ctx context.Context, gvr *schema.GroupVersionResource) (map[string]interface{}, error)
 }
 
 // StorageQuery represents a query for multicluster resources.
@@ -111,13 +110,7 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 
 // FetchPreferred fetches multicluster resources.
 func (q *StorageQuery) FetchPreferred(
-	ctx context.Context, kind string, k8sRes *schema.GroupVersionResource) (map[string]interface{}, error) {
-	// 目前仅仅只是添加此方法，暂时不做实现
-	return map[string]interface{}{}, nil
-}
-
-// FetchApiResources fetches multicluster api resources.
-func (q *StorageQuery) FetchApiResources(ctx context.Context, kind string) (map[string]interface{}, error) {
+	ctx context.Context, gvr *schema.GroupVersionResource) (map[string]interface{}, error) {
 	// 目前仅仅只是添加此方法，暂时不做实现
 	return map[string]interface{}{}, nil
 }
@@ -169,7 +162,7 @@ func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (
 
 // FetchPreferred fetches multicluster resources.
 func (q *APIServerQuery) FetchPreferred(
-	ctx context.Context, kind string, k8sRes *schema.GroupVersionResource) (map[string]interface{}, error) {
+	ctx context.Context, gvr *schema.GroupVersionResource) (map[string]interface{}, error) {
 	var (
 		err      error
 		applyURL string
@@ -178,8 +171,8 @@ func (q *APIServerQuery) FetchPreferred(
 	if q.ClusterdNamespaces, applyURL, err = checkMultiClusterAccess(ctx, "", q.ClusterdNamespaces); err != nil {
 		return nil, err
 	}
-	log.Info(ctx, "fetch multi cluster resources, kind: %s, clusterdNamespaces: %v", kind, q.ClusterdNamespaces)
-	resources, err := listResourcePreferred(ctx, q.ClusterdNamespaces, kind, k8sRes, metav1.ListOptions{
+	log.Info(ctx, "fetch multi cluster resources, gvr: %s, clusterdNamespaces: %v", gvr, q.ClusterdNamespaces)
+	resources, err := listResourcePreferred(ctx, q.ClusterdNamespaces, gvr, metav1.ListOptions{
 		LabelSelector: q.ViewFilter.LabelSelectorString()})
 	if err != nil {
 		return nil, err
@@ -274,8 +267,8 @@ func listResource(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterN
 }
 
 // listResourcePreferred 列出多集群资源
-func listResourcePreferred(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterNamespaces, kind string,
-	k8sRes *schema.GroupVersionResource, opts metav1.ListOptions) ([]*storage.Resource, error) {
+func listResourcePreferred(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterNamespaces,
+	gvr *schema.GroupVersionResource, opts metav1.ListOptions) ([]*storage.Resource, error) {
 	errGroups := errgroup.Group{}
 	errGroups.SetLimit(10)
 	result := []*storage.Resource{}
@@ -283,7 +276,7 @@ func listResourcePreferred(ctx context.Context, clusterdNamespaces []*clusterRes
 	for _, v := range clusterdNamespaces {
 		ns := v
 		errGroups.Go(func() error {
-			resources, err := listNamespaceResourcesPreferred(ctx, ns.Namespaces, ns.ClusterID, kind, k8sRes, opts)
+			resources, err := listNamespaceResourcesPreferred(ctx, ns.Namespaces, ns.ClusterID, gvr, opts)
 			if err != nil {
 				return err
 			}
@@ -455,7 +448,7 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 
 // listNamespaceResourcesPreferred 列出某个集群下某些命名空间的资源
 func listNamespaceResourcesPreferred(ctx context.Context, namespaces []string,
-	clusterID, kind string, k8sRes *schema.GroupVersionResource, opts metav1.ListOptions) ([]*storage.Resource, error) {
+	clusterID string, gvr *schema.GroupVersionResource, opts metav1.ListOptions) ([]*storage.Resource, error) {
 
 	clusterConf := res.NewClusterConf(clusterID)
 
@@ -472,7 +465,7 @@ func listNamespaceResourcesPreferred(ctx context.Context, namespaces []string,
 	for _, v := range filterNamespace {
 		ns := v
 		errGroups.Go(func() error {
-			ret, innerErr := cli.NewResClient(clusterConf, *k8sRes).ListAllWithoutPermPreferred(ctx, ns, opts)
+			ret, innerErr := cli.NewResClient(clusterConf, *gvr).ListAllWithoutPermPreferred(ctx, ns, opts)
 			if innerErr != nil {
 				return innerErr
 			}
@@ -484,8 +477,7 @@ func listNamespaceResourcesPreferred(ctx context.Context, namespaces []string,
 			for _, item := range ret {
 				// 过滤命名空间，如果命名空间为空，则表示查询全部命名空间或者集群域资源，这种直接通过。其他情况则筛选命名空间
 				if len(namespaces) == 0 || slice.StringInSlice(item.GetNamespace(), namespaces) {
-					result = append(result, &storage.Resource{ClusterID: clusterID, ResourceType: kind,
-						Data: item.UnstructuredContent()})
+					result = append(result, &storage.Resource{ClusterID: clusterID, Data: item.UnstructuredContent()})
 				}
 			}
 			return nil

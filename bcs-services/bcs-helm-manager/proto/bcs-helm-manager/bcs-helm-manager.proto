@@ -360,7 +360,7 @@ service ClusterAddons {
     }
     rpc PreviewAddons(PreviewAddonsReq) returns (ReleasePreviewResp) {
         option (google.api.http) = {
-            post: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/preview"
+            post: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview"
             body: "*"
         };
         option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
@@ -2935,10 +2935,6 @@ message PreviewAddonsReq {
         title: "values",
         description: "values"
     }];
-    optional string namespace = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title: "namespace",
-        description: "namespace"
-    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
 }
 
 message StopAddonsReq {

@@ -11428,17 +11428,6 @@ func (m *PreviewAddonsReq) validate(all bool) error {
 
 	// no validation rules for Values
 
-	if l := utf8.RuneCountInString(m.GetNamespace()); l < 1 || l > 64 {
-		err := PreviewAddonsReqValidationError{
-			field:  "Namespace",
-			reason: "value length must be between 1 and 64 runes, inclusive",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if len(errors) > 0 {
 		return PreviewAddonsReqMultiError(errors)
 	}

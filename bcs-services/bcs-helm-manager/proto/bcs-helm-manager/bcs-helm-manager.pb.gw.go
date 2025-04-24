@@ -3586,6 +3586,17 @@ func request_ClusterAddons_PreviewAddons_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
 	}
 
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
 	msg, err := client.PreviewAddons(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -3630,6 +3641,17 @@ func local_request_ClusterAddons_PreviewAddons_0(ctx context.Context, marshaler 
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := server.PreviewAddons(ctx, &protoReq)
@@ -5532,7 +5554,7 @@ var (
 
 	pattern_ClusterAddons_UpgradeAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_ClusterAddons_PreviewAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "preview"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_ClusterAddons_PreviewAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name", "preview"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterAddons_StopAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name", "stop"}, "", runtime.AssumeColonVerbOpt(true)))
 
