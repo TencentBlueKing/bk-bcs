@@ -37,6 +37,7 @@ import (
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
@@ -87,8 +88,9 @@ func (h *Hooker) Init(configFilePath string) error {
 		return fmt.Errorf("read db privilege config file %s failed, err %s", configFilePath, err.Error())
 	}
 	h.opt = &DbPrivOptions{}
+	blog.Errorf("decode db privilege config, fileBytes %s", string(fileBytes))
 	if err = json.Unmarshal(fileBytes, h.opt); err != nil {
-		blog.Errorf("decode db privilege config failed, err %s", err.Error())
+		blog.Errorf("decode db privilege config failed, fileBytes %s, err %s", string(fileBytes), err.Error())
 		return fmt.Errorf("decode db privilege config failed, err %s", err.Error())
 	}
 	if err = h.opt.Validate(); err != nil {
@@ -127,7 +129,6 @@ func (h *Hooker) createBcsDbPrivCrd(clientset apiextensionsclient.Interface) (bo
 	if err != nil {
 		return false, fmt.Errorf("get kubernetes capabilities failed, err %s", err.Error())
 	}
-	blog.Infof("kubernetes capabilities %+v", capabilities.APIVersions)
 	if !capabilities.APIVersions.Has("apiextensions.k8s.io/v1beta1") {
 		blog.Infof("kubernetes doesn't support apiextensions.k8s.io/v1beta1, use v1 instead")
 		crd := &apiextensionsv1.CustomResourceDefinition{
@@ -376,91 +377,149 @@ func (h *Hooker) generateInitContainer(configs []*bcsv1.BcsDbPrivConfig) (corev1
 	} else if h.opt.NetworkType == NetworkTypeUnderlay {
 		fieldPath = "status.podIP"
 	}
-	return h.getContainer(fieldPath, envstr), nil
+	return h.getContainer(fieldPath, envstr)
 }
 
 // getContainer
-func (h *Hooker) getContainer(fieldPath string, envstr []byte) corev1.Container {
+func (h *Hooker) getContainer(fieldPath string, envstr []byte) (corev1.Container, error) {
+
 	initContainer := corev1.Container{
 		Name:  "db-privilege",
 		Image: h.opt.InitContainerImage,
-		Env: []corev1.EnvVar{
-			{
-				Name: "io_tencent_bcs_privilege_ip",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: fieldPath,
-					},
-				},
-			},
-			{
-				Name: "io_tencent_bcs_pod_ip",
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-			{
-				Name:  "external_sys_type",
-				Value: h.opt.ExternalSysType,
-			},
-			{
-				Name:  "external_sys_config",
-				Value: h.opt.ExternalSysConfig,
-			},
-			{
-				Name:  "io_tencent_bcs_app_code",
-				Value: string(h.dbPrivSecret.Data["sdk-appCode"]),
-			},
-			{
-				Name:  "io_tencent_bcs_app_secret",
-				Value: string(h.dbPrivSecret.Data["sdk-appSecret"]),
-			},
-			{
-				Name:  "io_tencent_bcs_app_operator",
-				Value: string(h.dbPrivSecret.Data["sdk-operator"]),
-			},
-			{
-				Name:  "io_tencent_bcs_db_privilege_env",
-				Value: string(envstr),
-			},
-		},
+		Env:   h.buildEnvParam(fieldPath, string(envstr)),
 	}
-	if h.opt.DbmOptimizeEnabled {
-		env := []corev1.EnvVar{
-			{
-				Name: BcsPodName,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "metadata.name",
-					},
-				},
-			},
-			{
-				Name: BcsPodNamespace,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "metadata.namespace",
-					},
-				},
-			},
-			{
-				Name:  BcsPrivilegeServiceURL,
-				Value: fmt.Sprintf(BcsPrivilegeHost, h.opt.ServiceName, h.opt.ServiceNamespace, h.opt.ServiceServerPort),
-			},
-			{
-				Name:  BcsPrivilegeDbmOptimizeEnabled,
-				Value: "true",
-			},
-			{
-				Name:  BcsPrivilegeServiceTicketTimer,
-				Value: strconv.Itoa(h.opt.TicketTimer),
-			},
+
+	if h.opt.InitContainerResources != nil {
+		resources, err := buildContainerResources(h.opt.InitContainerResources)
+		if err != nil {
+			blog.Errorf("build container resources failed %s", err.Error())
+			return corev1.Container{}, err
 		}
+		initContainer.Resources = resources
+	}
+
+	if h.opt.DbmOptimizeEnabled {
+		env := buildContainerEnvVar(h.opt.ServiceName, h.opt.ServiceNamespace, h.opt.ServiceServerPort, h.opt.TicketTimer)
 		initContainer.Env = append(initContainer.Env, env...)
 	}
-	return initContainer
+
+	return initContainer, nil
+}
+
+func buildContainerEnvVar(serviceName, serviceNamespace string, serviceServerPort, ticketTimer int) []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{
+			Name: BcsPodName,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		{
+			Name: BcsPodNamespace,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+		{
+			Name:  BcsPrivilegeServiceURL,
+			Value: fmt.Sprintf(BcsPrivilegeHost, serviceName, serviceNamespace, serviceServerPort),
+		},
+		{
+			Name:  BcsPrivilegeDbmOptimizeEnabled,
+			Value: "true",
+		},
+		{
+			Name:  BcsPrivilegeServiceTicketTimer,
+			Value: strconv.Itoa(ticketTimer),
+		},
+	}
+}
+
+func buildContainerResources(containerResources *InitContainerResources) (corev1.ResourceRequirements, error) {
+
+	if containerResources.CpuRequest == "" || containerResources.CpuRequest == "0" ||
+		containerResources.MemRequest == "" || containerResources.MemRequest == "0" ||
+		containerResources.MemLimit == "" || containerResources.MemLimit == "0" ||
+		containerResources.CpuLimit == "" || containerResources.CpuLimit == "0" {
+		return corev1.ResourceRequirements{}, fmt.Errorf("initContainerResources failed, Requests or Limits are empty")
+	}
+
+	cpuLimit, err := resource.ParseQuantity(containerResources.CpuLimit)
+	if err != nil {
+		return corev1.ResourceRequirements{}, fmt.Errorf("invalid CPU limit: %v", err)
+	}
+	memLimit, err := resource.ParseQuantity(containerResources.MemLimit)
+	if err != nil {
+		return corev1.ResourceRequirements{}, fmt.Errorf("invalid Mem limit: %v", err)
+	}
+	cpuRequest, err := resource.ParseQuantity(containerResources.CpuRequest)
+	if err != nil {
+		return corev1.ResourceRequirements{}, fmt.Errorf("invalid CPU Requests: %v", err)
+	}
+	memRequest, err := resource.ParseQuantity(containerResources.MemRequest)
+	if err != nil {
+		return corev1.ResourceRequirements{}, fmt.Errorf("invalid Mem Requests: %v", err)
+	}
+
+	return corev1.ResourceRequirements{
+		Limits: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuLimit,
+			corev1.ResourceMemory: memLimit,
+		},
+		Requests: corev1.ResourceList{
+			corev1.ResourceCPU:    cpuRequest,
+			corev1.ResourceMemory: memRequest,
+		}}, nil
+}
+
+func (h *Hooker) buildEnvParam(fieldPath, envstr string) []corev1.EnvVar {
+
+	return []corev1.EnvVar{
+		{
+			Name: "io_tencent_bcs_privilege_ip",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: fieldPath,
+				},
+			},
+		},
+		{
+			Name: "io_tencent_bcs_pod_ip",
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.podIP",
+				},
+			},
+		},
+		{
+			Name:  "external_sys_type",
+			Value: h.opt.ExternalSysType,
+		},
+		{
+			Name:  "external_sys_config",
+			Value: h.opt.ExternalSysConfig,
+		},
+		{
+			Name:  "io_tencent_bcs_app_code",
+			Value: string(h.dbPrivSecret.Data["sdk-appCode"]),
+		},
+		{
+			Name:  "io_tencent_bcs_app_secret",
+			Value: string(h.dbPrivSecret.Data["sdk-appSecret"]),
+		},
+		{
+			Name:  "io_tencent_bcs_app_operator",
+			Value: string(h.dbPrivSecret.Data["sdk-operator"]),
+		},
+		{
+			Name:  "io_tencent_bcs_db_privilege_env",
+			Value: envstr,
+		},
+	}
 }
 
 // Close implements plugin interface
