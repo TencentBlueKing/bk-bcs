@@ -1,0 +1,33 @@
+apiVersion: {{ .metadata.apiVersion }}
+kind: BscpConfig
+{{ include "common.metadata" .metadata }}
+spec:
+  provider: 
+    feedAddr: {{ .spec.provider.feedAddr | quote}}
+    biz: {{ .spec.provider.biz}}
+    token: {{ .spec.provider.token | quote}}
+    app: {{ .spec.provider.app | quote}}
+  {{- if and .spec.configSyncer (gt (len .spec.configSyncer) 0) }}
+  configSyncer:
+    {{- range .spec.configSyncer }}
+    {{- if eq .resourceType "configmap" }}
+    - configmapName: {{ .configmapName | quote }}
+    {{- end }}
+    {{- if eq .resourceType "secret" }}
+    - secretName: {{ .secretName | quote}}
+      type: {{ .secretType | quote }}
+    {{- end }}
+    {{- if and .configData (gt (len .configData) 0) }}
+      data: {{- range .configData }}
+        - key: {{ .key | quote }}
+          refConfig: {{ .refConfig | quote }}
+      {{- end }}
+    {{- end }}
+    {{- if and .matchConfigs (gt (len .matchConfigs) 0) }}
+      matchConfigs: {{- range .matchConfigs }}
+        - {{ .value | quote }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+
