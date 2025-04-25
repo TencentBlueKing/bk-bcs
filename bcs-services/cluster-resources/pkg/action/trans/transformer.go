@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // New 根据 Format 类型，生成不同的 Manifest 转换器
@@ -71,7 +72,7 @@ func (t *DummyTransformer) ToManifest() (map[string]interface{}, error) {
 		delete(t.manifest["metadata"].(map[string]interface{}), "resourceVersion")
 	}
 
-	username := t.ctx.Value(ctxkey.UsernameKey).(string)
+	username := stringx.ReplaceIllegalChars(t.ctx.Value(ctxkey.UsernameKey).(string))
 	creatorPaths := []string{"metadata", "annotations", resCsts.CreatorAnnoKey}
 	creatorLabelPaths := []string{"metadata", "labels", resCsts.CreatorAnnoKey}
 	updaterPaths := []string{"metadata", "annotations", resCsts.UpdaterAnnoKey}
