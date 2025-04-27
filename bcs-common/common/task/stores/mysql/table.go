@@ -35,6 +35,9 @@ var (
 	// SortableFields 可排序字段
 	SortableFields = []string{
 		"id",
+		"created_at",
+		"updated_at",
+		"deleted_at",
 		"task_id",
 		"task_type",
 		"task_index",
