@@ -397,6 +397,7 @@ export default defineComponent({
       const { data = [], total = 0 } = await storageEvents({
         $projectCode: curProject.value?.projectCode,
         $clusterID: clusterId,
+        clusterId, // 换成post请求后, body上也需要
         offset: (pagination.value.current - 1) * pagination.value.limit,
         length: pagination.value.limit,
         env: 'k8s',
