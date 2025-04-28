@@ -100,3 +100,22 @@ func TestIsIPv6(t *testing.T) {
 	assert.Equal(t, false, stringx.IsIPv6("127.0.0.1"))
 	assert.Equal(t, true, stringx.IsIPv6("fe80::4ae:1ff:fe2e:94f8"))
 }
+
+func TestReplaceIllegalChars(t *testing.T) {
+	users := map[string]string{
+		"admin@123":  "admin_123",
+		"admin.123":  "admin.123",
+		"admin_123":  "admin_123",
+		"admin-123":  "admin-123",
+		"a&dmin@123": "a_dmin_123",
+		"a/dmin@123": "a_dmin_123",
+		"a+dmin@123": "a_dmin_123",
+		"ad`min@123": "ad_min_123",
+		"_ad`min@123": "_ad_min_123",
+	}
+
+	for key, data := range users {
+		user := stringx.ReplaceIllegalChars(key)
+		assert.Equal(t, data, user)
+	}
+}

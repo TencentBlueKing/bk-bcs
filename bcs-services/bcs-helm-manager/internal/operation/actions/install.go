@@ -29,6 +29,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/repo"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 )
 
 // ReleaseInstallAction release install action
@@ -219,8 +220,8 @@ func (r *ReleaseInstallAction) Execute(ctx context.Context) error {
 				common.PTKProjectID: r.projectID,
 				common.PTKClusterID: r.clusterID,
 				common.PTKNamespace: r.namespace,
-				common.PTKCreator:   r.username,
-				common.PTKUpdator:   r.username,
+				common.PTKCreator:   stringx.ReplaceIllegalChars(r.username),
+				common.PTKUpdator:   stringx.ReplaceIllegalChars(r.username),
 				common.PTKVersion:   r.version,
 				common.PTKName:      r.name,
 			},
