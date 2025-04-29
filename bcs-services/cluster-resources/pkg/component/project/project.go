@@ -28,6 +28,7 @@ type Project struct {
 	ID         string `json:"projectID"`
 	Code       string `json:"projectCode"`
 	BusinessID string `json:"businessID"`
+	TenantID   string `json:"tenantID"`
 }
 
 // Namespace BCS 命名空间

@@ -14,9 +14,9 @@
 package route
 
 import (
+	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/gin-gonic/gin"
@@ -26,13 +26,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/i18n"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
-)
-
-const (
-	// HeaderTenantId header tenant id
-	HeaderTenantId = "X-Bk-Tenant-Id"
-	// DefaultTenantId default tenant id
-	DefaultTenantId = "default"
 )
 
 // TenantHandler 租户校验中间件
@@ -45,7 +38,7 @@ func TenantHandler() gin.HandlerFunc {
 
 		var (
 			tenantId       string
-			headerTenantId = c.GetHeader(HeaderTenantId)
+			headerTenantId = c.GetHeader(types.HeaderTenantId)
 			authCtx        = MustGetAuthContext(c)
 			user           = MustGetAuthContext(c).BindBCS
 		)
@@ -57,12 +50,6 @@ func TenantHandler() gin.HandlerFunc {
 
 		// skip method tenant validation
 		if SkipMethod(c) {
-			c.Next()
-			return
-		}
-
-		// exempt client
-		if SkipTenantValidation(c, user.ClientID) {
 			c.Next()
 			return
 		}
@@ -98,6 +85,8 @@ func TenantHandler() gin.HandlerFunc {
 			})
 			return
 		}
+		reqCtx := context.WithValue(c.Request.Context(), types.TenantIdCtxKey, tenantId)
+		c.Request = c.Request.WithContext(reqCtx)
 		c.Next()
 	}
 }
@@ -122,19 +111,6 @@ func SkipMethod(c *gin.Context) bool {
 	return false
 }
 
-// SkipTenantValidation skip tenant validation
-func SkipTenantValidation(c *gin.Context, client string) bool {
-	if len(client) == 0 {
-		return false
-	}
-	for _, v := range TenantClientWhiteList[client] {
-		if strings.HasPrefix(v, "*") || v == c.FullPath() {
-			return true
-		}
-	}
-	return false
-}
-
 // getTenantld get tenant id
 func getTenantld(c *gin.Context) (string, error) {
 
@@ -152,5 +128,5 @@ func getTenantld(c *gin.Context) (string, error) {
 		return "", err
 	}
 
-	return project.Code, nil
+	return project.TenantID, nil
 }

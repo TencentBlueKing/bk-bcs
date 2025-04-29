@@ -16,7 +16,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	bcsJwt "github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
@@ -40,7 +39,6 @@ func NewTenantWrapper() server.HandlerWrapper {
 				tenantId       string
 				headerTenantId = GetHeaderTenantIdFromCtx(ctx)
 				user           *bcsJwt.UserClaimsInfo
-				username       = ctx.Value(ctxkey.UsernameKey).(string)
 			)
 			if v, ok := ctx.Value(ctxkey.UserinfoKey).(*bcsJwt.UserClaimsInfo); ok {
 				user = v
@@ -52,11 +50,6 @@ func NewTenantWrapper() server.HandlerWrapper {
 
 			// skip method tenant validation
 			if SkipMethod(req) {
-				return fn(ctx, req, rsp)
-			}
-
-			// exempt client
-			if SkipTenantValidation(req, username) {
 				return fn(ctx, req, rsp)
 			}
 
@@ -98,19 +91,6 @@ func SkipMethod(req server.Request) bool {
 	return false
 }
 
-// SkipTenantValidation skip tenant validation
-func SkipTenantValidation(req server.Request, client string) bool {
-	if len(client) == 0 {
-		return false
-	}
-	for _, v := range TenantClientWhiteList[client] {
-		if strings.HasPrefix(v, "*") || v == req.Method() {
-			return true
-		}
-	}
-	return false
-}
-
 // resource id
 type resourceID struct {
 	ProjectID string
@@ -137,7 +117,7 @@ func getTenantldByResource(ctx context.Context, resource *resourceID) (string, e
 		return "", err
 	}
 
-	return project.Code, nil
+	return project.TenantID, nil
 }
 
 // GetHeaderTenantIdFromCtx get header tenant id from ctx

@@ -15,7 +15,6 @@ package httpx
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -48,12 +47,6 @@ func TenantMiddleware(next http.Handler) http.Handler {
 
 		// skip method tenant validation
 		if SkipMethod(r) {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		// exempt client
-		if SkipTenantValidation(r, user.ClientName) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -105,25 +98,6 @@ func SkipMethod(req *http.Request) bool {
 	return false
 }
 
-// SkipTenantValidation skip tenant validation
-func SkipTenantValidation(req *http.Request, client string) bool {
-	if len(client) == 0 {
-		return false
-	}
-	for _, v := range TenantClientWhiteList[client] {
-		// 获取原始uri
-		path, err := mux.CurrentRoute(req).GetPathTemplate()
-		if err != nil {
-			klog.Errorf("get path template err: %s", err)
-			return false
-		}
-		if strings.HasPrefix(v, "*") || v == path {
-			return true
-		}
-	}
-	return false
-}
-
 // getTenantldByResource get tenant id by resource
 func getTenantldByResource(req *http.Request) (string, error) {
 	vars := mux.Vars(req)
@@ -133,5 +107,5 @@ func getTenantldByResource(req *http.Request) (string, error) {
 		return "", err
 	}
 
-	return project.Code, nil
+	return project.TenantID, nil
 }
