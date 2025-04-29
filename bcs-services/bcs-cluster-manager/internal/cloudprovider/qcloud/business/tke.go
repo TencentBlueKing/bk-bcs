@@ -760,7 +760,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			})
 		}
 	}
-	if len(nodeTemplate.Taints) > 0 {
+	if len(nodeTemplate.Taints) > 0 && cls.GetManageType() != common.ClusterManageTypeManaged {
 		for _, t := range nodeTemplate.Taints {
 			advanceInfo.TaintList = append(advanceInfo.TaintList, &api.Taint{
 				Key:    qcommon.StringPtr(t.Key),
