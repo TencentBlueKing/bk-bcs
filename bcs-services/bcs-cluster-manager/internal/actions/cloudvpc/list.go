@@ -59,7 +59,7 @@ func (la *ListAction) listCloudVPC() error {
 	if len(la.req.VpcID) != 0 {
 		condM["vpcid"] = la.req.VpcID
 	}
-	if len(la.req.NetworkType) != 0 {
+	if len(la.req.NetworkType) != 0 && la.req.NetworkType != common.ClusterAllNetwork {
 		condM["networktype"] = la.req.NetworkType
 	}
 
@@ -76,7 +76,7 @@ func (la *ListAction) listCloudVPC() error {
 	defer barrier.Close()
 
 	for i := range cloudVPCs {
-		if cloudVPCs[i].Available == "false" {
+		if cloudVPCs[i].Available == common.False {
 			continue
 		}
 
@@ -93,7 +93,7 @@ func (la *ListAction) listCloudVPC() error {
 			}()
 
 			var surPlusIPNum uint32
-			ipNum, err := getAvailableIPNumByVpc(la.model, common.ClusterOverlayNetwork, vpc)
+			ipNum, err := getAvailableIPNumByVpc(la.model, vpc.NetworkType, vpc)
 			if err != nil {
 				blog.Errorf("listCloudVPC getAvailableIPNumByVpc failed: %v", err)
 			} else {

@@ -3147,7 +3147,7 @@ message ListCloudVPCRequest {
   string networkType = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "networkType",
     description: "networkType网络类型(overlay/underlay)"
-  }, (validate.rules).string = {in: ["overlay", "underlay"]}];
+  }, (validate.rules).string = {in: ["overlay", "underlay", "all"]}];
   string businessID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "businessID",
     description: "业务ID, 过滤业务私有的vpc"

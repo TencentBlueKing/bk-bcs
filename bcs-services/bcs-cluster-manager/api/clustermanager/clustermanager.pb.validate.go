@@ -7999,7 +7999,7 @@ func (m *ListCloudVPCRequest) validate(all bool) error {
 	if _, ok := _ListCloudVPCRequest_NetworkType_InLookup[m.GetNetworkType()]; !ok {
 		err := ListCloudVPCRequestValidationError{
 			field:  "NetworkType",
-			reason: "value must be in list [overlay underlay]",
+			reason: "value must be in list [overlay underlay all]",
 		}
 		if !all {
 			return err
@@ -8092,6 +8092,7 @@ var _ interface {
 var _ListCloudVPCRequest_NetworkType_InLookup = map[string]struct{}{
 	"overlay":  {},
 	"underlay": {},
+	"all":      {},
 }
 
 // Validate checks the field values on ListCloudVPCResponse with the rules

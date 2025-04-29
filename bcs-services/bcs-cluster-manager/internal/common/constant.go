@@ -317,6 +317,8 @@ const (
 	ClusterOverlayNetwork = "overlay"
 	// ClusterUnderlayNetwork underlay
 	ClusterUnderlayNetwork = "underlay"
+	// ClusterAllNetwork all
+	ClusterAllNetwork = "all"
 
 	// Flannel network plugin
 	Flannel = "flannel"
