@@ -19,6 +19,8 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"gopkg.in/yaml.v2"
+	"helm.sh/helm/v3/pkg/chartutil"
 	helmrelease "helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
@@ -111,8 +113,14 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	if err != nil {
 		return nil, fmt.Errorf("get release preview, get contents failed, %s", err.Error())
 	}
-	// 过滤掉不支持的参数
-	r.req.Args = filtArgs(r.req.GetArgs())
+	var reuse bool
+	// 过滤掉不支持的参数并判断是否需要--reuse-values
+	reuse, r.req.Args = filtArgs(r.req.GetArgs())
+	// 支持--reuse-values参数
+	r.req.Values, err = reuseValues(reuse, currentRelease, r.req.GetValues())
+	if err != nil {
+		return nil, fmt.Errorf("reuse values failed, %s", err.Error())
+	}
 	result, err := release.InstallRelease(r.releaseHandler, contextx.GetProjectIDFromCtx(r.ctx), projectCode,
 		r.req.GetClusterID(), r.req.GetName(), r.req.GetNamespace(), r.req.GetChart(), r.req.GetVersion(),
 		r.createBy, username, r.req.GetArgs(), nil, contents, r.req.GetValues(), true, true, true)
@@ -124,15 +132,20 @@ func (r *ReleasePreviewAction) getReleasePreview() (*helmmanager.ReleasePreview,
 	return r.GenerateReleasePreview(currentRelease.Transfer2Release(), newRelease)
 }
 
-// 过滤掉不支持的参数
-func filtArgs(args []string) []string {
+// 过滤掉不支持的参数并判断是否需要--reuse-values
+func filtArgs(args []string) (bool, []string) {
+	var reuse bool
 	// 黑名单参数
 	filtContent := map[string]struct{}{
-		"--force": {},
+		"--force":        {},
+		"--reuse-values": {},
 	}
 	result := []string{}
 	for _, value := range args {
 		s := strings.Split(value, "=")
+		if value == "--reuse-values" {
+			reuse = true
+		}
 		if len(s) > 0 {
 			if _, ok := filtContent[s[0]]; ok {
 				continue
@@ -140,7 +153,7 @@ func filtArgs(args []string) []string {
 			result = append(result, value)
 		}
 	}
-	return result
+	return reuse, result
 }
 
 // GenerateReleasePreview generate release preview
@@ -187,4 +200,40 @@ func (r *ReleasePreviewAction) setResp(err common.HelmManagerError, message stri
 	r.resp.Message = &msg
 	r.resp.Result = err.OK()
 	r.resp.Data = rp
+}
+
+// reuseValues copies values from the current release to a new release
+// if there is a new value, overwrite the current value
+func reuseValues(reuseValues bool, release *release.Release, values []string) ([]string, error) {
+	if release == nil {
+		return values, nil
+	}
+
+	if reuseValues {
+		// old value
+		var oldVar map[string]interface{}
+		err := yaml.Unmarshal([]byte(release.Values), &oldVar)
+		if err != nil {
+			return nil, err
+		}
+
+		// new value, if there is a new value, overwrite the current value
+		newVar := make(map[string]interface{}, 0)
+		for _, data := range values {
+			var temp map[string]interface{}
+			err = yaml.Unmarshal([]byte(data), &temp)
+			if err != nil {
+				return nil, err
+			}
+			newVar = chartutil.CoalesceTables(temp, newVar)
+		}
+		// if there is a new value, overwrite the current value
+		newVar = chartutil.CoalesceTables(newVar, oldVar)
+		b, err := yaml.Marshal(newVar)
+		if err != nil {
+			return nil, err
+		}
+		return []string{string(b)}, nil
+	}
+	return values, nil
 }
