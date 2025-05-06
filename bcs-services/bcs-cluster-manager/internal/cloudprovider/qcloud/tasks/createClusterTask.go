@@ -45,8 +45,10 @@ import (
 // as far as possible to keep every operation unit simple
 
 // generateClusterCIDRInfo cidr info
-func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster,
+func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster, nodeIPs []string,
 	opt *cloudprovider.CommonOption) (*api.ClusterCIDRSettings, error) {
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+
 	cidrInfo := &api.ClusterCIDRSettings{
 		ClusterCIDR:          cluster.NetworkSettings.ClusterIPv4CIDR,
 		MaxNodePodNum:        uint64(cluster.NetworkSettings.MaxNodePodNum),
@@ -54,28 +56,69 @@ func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster,
 		ServiceCIDR:          cluster.NetworkSettings.ServiceIPv4CIDR,
 	}
 
+	clusterTotalIPNums := calculateClusterTotalIPNums(cluster, nodeIPs)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("calculate cidr TotalIpNum[%v]", clusterTotalIPNums))
+
 	// cluster.NetworkSettings.ClusterIPv4CIDR is empty, auto allocate cidr when create cluster
 	if cluster.NetworkSettings.ClusterIPv4CIDR == "" {
-
-		cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
-			cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
-		defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey(
-			cluster.Provider, cluster.Region, cluster.VpcID))
-
-		mask := utils.CalMaskLen(float64(cluster.NetworkSettings.CidrStep))
-		subnet, err := business.AllocateGrCidrSubnet(ctx, opt, cluster.GetProvider(),
-			cluster.VpcID, int(mask), nil)
+		subnetID, err := allocateOverlaySubnet(ctx, cluster, clusterTotalIPNums, opt)
 		if err != nil {
 			return nil, err
 		}
-		cidrInfo.ClusterCIDR = subnet.ID
-		cluster.NetworkSettings.ClusterIPv4CIDR = subnet.ID
-
-		// update cluster cidr info
-		_ = cloudprovider.UpdateCluster(cluster)
+		cidrInfo.ClusterCIDR = subnetID
 	}
 
 	return cidrInfo, nil
+}
+
+// allocateOverlaySubnet auto allocate overlay subnet
+func allocateOverlaySubnet(ctx context.Context, cluster *proto.Cluster, totalIPNums uint32,
+	opt *cloudprovider.CommonOption) (string, error) {
+	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
+	cidrStep := cluster.GetNetworkSettings().GetCidrStep()
+
+	cloudprovider.GetDistributeLock().Lock(utils.BuildAllocateVpcCidrLockKey(
+		cluster.Provider, cluster.Region, cluster.VpcID), []lock.LockOption{lock.LockTTL(time.Second * 5)}...)
+	defer cloudprovider.GetDistributeLock().Unlock(utils.BuildAllocateVpcCidrLockKey(
+		cluster.Provider, cluster.Region, cluster.VpcID))
+
+	// totalIPNums more than cidrStep, auto allocate bigger subnet
+	var mask uint32
+	if totalIPNums > cidrStep {
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("calculate TotalIpNum[%v] is more than default cidrstep[%v]", totalIPNums, cidrStep))
+		mask = utils.CalMaskLen(float64(totalIPNums))
+	} else {
+		mask = utils.CalMaskLen(float64(cluster.NetworkSettings.CidrStep))
+	}
+
+	subnet, err := business.AllocateGrCidrSubnet(ctx, opt, cluster.GetProvider(),
+		cluster.VpcID, int(mask), nil)
+	if err != nil {
+		return "", err
+	}
+
+	cluster.NetworkSettings.ClusterIPv4CIDR = subnet.ID
+
+	// update cluster cidr info
+	_ = cloudprovider.UpdateCluster(cluster)
+
+	return subnet.ID, nil
+}
+
+// calculateClusterTotalIPNums calculate cidr ip num
+func calculateClusterTotalIPNums(cluster *proto.Cluster, nodeIPs []string) uint32 {
+	switch cluster.ManageType {
+	case icommon.ClusterManageTypeIndependent:
+		return cluster.GetNetworkSettings().GetMaxNodePodNum()*uint32(len(cluster.GetMaster())+len(nodeIPs)) +
+			cluster.GetNetworkSettings().GetMaxServiceNum()
+	case icommon.ClusterManageTypeManaged:
+		return cluster.GetNetworkSettings().GetMaxNodePodNum()*uint32(len(nodeIPs)) +
+			cluster.GetNetworkSettings().GetMaxServiceNum()
+	default:
+		return 0
+	}
 }
 
 // generateTags tags info
@@ -581,7 +624,7 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		}
 	}
 
-	clusterCidr, err := generateClusterCIDRInfo(ctx, info.Cluster, info.CmOption)
+	clusterCidr, err := generateClusterCIDRInfo(ctx, info.Cluster, nodeIDs, info.CmOption)
 	if err != nil {
 		return nil, err
 	}
@@ -733,7 +776,7 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	}
 
 	// inject taskID
-	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
 	// create cluster task
 	cls, err := createTkeCluster(ctx, dependInfo, nodeIPs, passwd, operator)
