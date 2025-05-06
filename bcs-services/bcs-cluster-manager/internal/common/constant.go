@@ -593,6 +593,8 @@ const (
 	PrivateImageProvider = "PRIVATE_IMAGE"
 	// MarketImageProvider 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
+	// BCSImageProvider BCS镜像
+	BCSImageProvider = "BCS_IMAGE"
 	// AllImageProvider 所有镜像
 	AllImageProvider = "ALL"
 )

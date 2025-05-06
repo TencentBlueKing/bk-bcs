@@ -617,7 +617,8 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 	if err != nil {
 		return nil, err
 	}
-	cloudImages, err := cli.DescribeOsImages(provider, opt)
+
+	cloudImages, err := cli.DescribeOsImages(provider, nil, opt)
 	if err != nil {
 		return nil, err
 	}
