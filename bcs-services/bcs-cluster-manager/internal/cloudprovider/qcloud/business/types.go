@@ -25,7 +25,8 @@ import (
 
 // NodeAdvancedOptions node advanced options
 type NodeAdvancedOptions struct {
-	NodeScheduler bool
+	NodeScheduler         bool
+	SetPreStartUserScript bool
 }
 
 // ClusterCommonLabels cluster common labels

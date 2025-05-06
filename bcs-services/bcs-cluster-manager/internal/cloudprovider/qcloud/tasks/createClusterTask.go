@@ -351,7 +351,10 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 				IPList:   strings.Join(nodeIPs, ","),
 				Operator: operator,
 				Render:   true,
-			}, &business.NodeAdvancedOptions{NodeScheduler: true}),
+			}, &business.NodeAdvancedOptions{
+				NodeScheduler:         true,
+				SetPreStartUserScript: true,
+			}),
 		},
 	}
 
@@ -362,7 +365,10 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 			IPList:   strings.Join(nodeIPs, ","),
 			Operator: operator,
 			Render:   true,
-		}, &business.NodeAdvancedOptions{NodeScheduler: true})
+		}, &business.NodeAdvancedOptions{
+			NodeScheduler:         true,
+			SetPreStartUserScript: true,
+		})
 
 	if manyDisk {
 		existedInstance.InstanceAdvancedSettingsOverride.DataDisks =
@@ -593,7 +599,10 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			IPList:   strings.Join(nodeIPs, ","),
 			Operator: operator,
 			Render:   true,
-		}, &business.NodeAdvancedOptions{NodeScheduler: true}),
+		}, &business.NodeAdvancedOptions{
+			NodeScheduler:         true,
+			SetPreStartUserScript: false,
+		}),
 		ExistedInstancesForNode: nil,
 		RunInstancesForNode:     nil,
 	}

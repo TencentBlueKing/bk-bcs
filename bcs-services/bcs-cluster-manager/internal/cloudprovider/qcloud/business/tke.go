@@ -802,7 +802,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		advanceInfo.ExtraArgs.Kubelet = kubeletParams
 	}
 
-	if len(nodeTemplate.PreStartUserScript) > 0 {
+	if len(nodeTemplate.PreStartUserScript) > 0 && options.SetPreStartUserScript {
 		script, err := template.GetNodeTemplateScript(vars, nodeTemplate.PreStartUserScript)
 		if err != nil {
 			blog.Errorf("generateInstanceAdvanceInfoFromNp getNodeTemplateScript failed: %v", err)
