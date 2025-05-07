@@ -1642,7 +1642,6 @@ cluster:
     button:
       selectPage: Selected on this page
       selectAcrossPage: Cross page
-      applyNode: Apply for node node
       batch: Batch
       retry: Failure to retry
       setLabel: Set label

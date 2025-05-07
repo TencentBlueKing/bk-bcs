@@ -1303,7 +1303,6 @@ cluster:
     button:
       selectPage: 本页全选
       selectAcrossPage: 跨页全选
-      applyNode: 申请Node节点
       batch: 批量
       retry: 失败重试
       setLabel: 设置标签
