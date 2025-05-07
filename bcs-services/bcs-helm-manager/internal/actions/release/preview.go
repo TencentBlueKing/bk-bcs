@@ -142,10 +142,10 @@ func filtArgs(args []string) (bool, []string) {
 	}
 	result := []string{}
 	for _, value := range args {
-		s := strings.Split(value, "=")
-		if value == "--reuse-values" {
+		if value == "--reuse-values" || value == "--reuse-values=true" {
 			reuse = true
 		}
+		s := strings.Split(value, "=")
 		if len(s) > 0 {
 			if _, ok := filtContent[s[0]]; ok {
 				continue
@@ -209,31 +209,32 @@ func reuseValues(reuseValues bool, release *release.Release, values []string) ([
 		return values, nil
 	}
 
-	if reuseValues {
-		// old value
-		var oldVar map[string]interface{}
-		err := yaml.Unmarshal([]byte(release.Values), &oldVar)
-		if err != nil {
-			return nil, err
-		}
-
-		// new value, if there is a new value, overwrite the current value
-		newVar := make(map[string]interface{}, 0)
-		for _, data := range values {
-			var temp map[string]interface{}
-			err = yaml.Unmarshal([]byte(data), &temp)
-			if err != nil {
-				return nil, err
-			}
-			newVar = chartutil.CoalesceTables(temp, newVar)
-		}
-		// if there is a new value, overwrite the current value
-		newVar = chartutil.CoalesceTables(newVar, oldVar)
-		b, err := yaml.Marshal(newVar)
-		if err != nil {
-			return nil, err
-		}
-		return []string{string(b)}, nil
+	if !reuseValues {
+		return values, nil
 	}
-	return values, nil
+
+	// old value
+	var oldVar map[string]interface{}
+	err := yaml.Unmarshal([]byte(release.Values), &oldVar)
+	if err != nil {
+		return nil, err
+	}
+
+	// new value, if there is a new value, overwrite the current value
+	newVar := make(map[string]interface{}, 0)
+	for _, data := range values {
+		var temp map[string]interface{}
+		err = yaml.Unmarshal([]byte(data), &temp)
+		if err != nil {
+			return nil, err
+		}
+		newVar = chartutil.CoalesceTables(temp, newVar)
+	}
+	// if there is a new value, overwrite the current value
+	newVar = chartutil.CoalesceTables(newVar, oldVar)
+	b, err := yaml.Marshal(newVar)
+	if err != nil {
+		return nil, err
+	}
+	return []string{string(b)}, nil
 }
