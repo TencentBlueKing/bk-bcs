@@ -308,6 +308,8 @@ type AddNodesOption struct {
 	NodeGroupID string
 	// node scheduler status
 	NodeSchedule bool
+	// Advance for node advanced info
+	Advance *proto.NodeAdvancedInfo
 }
 
 // DeleteNodesOption create cluster option

@@ -56,7 +56,7 @@ func generateClusterCIDRInfo(ctx context.Context, cluster *proto.Cluster, nodeIP
 		ServiceCIDR:          cluster.NetworkSettings.ServiceIPv4CIDR,
 	}
 
-	clusterTotalIPNums := calculateClusterTotalIPNums(cluster, nodeIPs)
+	clusterTotalIPNums := calculateClusterNodeTotalIpNum(cluster, nodeIPs)
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		fmt.Sprintf("calculate cidr TotalIpNum[%v]", clusterTotalIPNums))
 
@@ -107,8 +107,8 @@ func allocateOverlaySubnet(ctx context.Context, cluster *proto.Cluster, totalIPN
 	return subnet.ID, nil
 }
 
-// calculateClusterTotalIPNums calculate cidr ip num
-func calculateClusterTotalIPNums(cluster *proto.Cluster, nodeIPs []string) uint32 {
+// calculateClusterNodeTotalIpNum calculate cluster nodes cidr ip num
+func calculateClusterNodeTotalIpNum(cluster *proto.Cluster, nodeIPs []string) uint32 {
 	switch cluster.ManageType {
 	case icommon.ClusterManageTypeIndependent:
 		return cluster.GetNetworkSettings().GetMaxNodePodNum()*uint32(len(cluster.GetMaster())+len(nodeIPs)) +
@@ -396,6 +396,7 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 				Render:   true,
 			}, &business.NodeAdvancedOptions{
 				NodeScheduler:         true,
+				CreateCluster:         true,
 				SetPreStartUserScript: true,
 			}),
 		},
@@ -410,6 +411,7 @@ func generateWorkerExistedInstance(info *cloudprovider.CloudDependBasicInfo, nod
 			Render:   true,
 		}, &business.NodeAdvancedOptions{
 			NodeScheduler:         true,
+			CreateCluster:         true,
 			SetPreStartUserScript: true,
 		})
 
@@ -644,6 +646,7 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 			Render:   true,
 		}, &business.NodeAdvancedOptions{
 			NodeScheduler:         true,
+			CreateCluster:         true,
 			SetPreStartUserScript: false,
 		}),
 		ExistedInstancesForNode: nil,

@@ -16,12 +16,16 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gocache "github.com/patrickmn/go-cache"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -206,6 +210,10 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 			req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
 				generateInstanceAdvancedSetting(addReq.InstanceAdvancedSettingsOverrides[i]))
 		}
+	}
+
+	if len(addReq.ImageId) > 0 {
+		req.ImageId = common.StringPtr(addReq.ImageId)
 	}
 
 	return req
@@ -741,4 +749,47 @@ func convertASGInstance(ins *as.Instance) *AutoScalingInstances {
 		VersionNumber:           ins.VersionNumber,
 		AutoScalingGroupName:    ins.AutoScalingGroupName,
 	}
+}
+
+const (
+	cacheImageNameToImage = "cached_image_name"
+)
+
+func buildCacheName(keyPrefix string, region, name string) string {
+	return fmt.Sprintf("%s_%v_%v", keyPrefix, region, name)
+}
+
+// setImageNameCacheData set image cache
+func setImageNameCacheData(region, name string, imageData *cvm.Image) error {
+	cacheName := buildCacheName(cacheImageNameToImage, region, name)
+
+	var err error
+
+	image, exist := cache.GetCache().Get(cacheName)
+	if exist {
+		blog.Infof("SetImageNameCacheData cacheName:%s, cache exist %+v", cacheName, image)
+		err = cache.GetCache().Replace(cacheName, imageData, gocache.DefaultExpiration)
+	} else {
+		err = cache.GetCache().Add(cacheName, imageData, gocache.DefaultExpiration)
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// getImageNameCacheData get image name data
+func getImageNameCacheData(region, name string) (*cvm.Image, bool) {
+	cacheName := buildCacheName(cacheImageNameToImage, region, name)
+
+	val, ok := cache.GetCache().Get(cacheName)
+	if ok && val != nil {
+		blog.Infof("GetImageNameCacheData cacheName:%s, cache exist %+v", cacheName, val)
+		if image, ok1 := val.(*cvm.Image); ok1 {
+			return image, true
+		}
+	}
+
+	return nil, false
 }

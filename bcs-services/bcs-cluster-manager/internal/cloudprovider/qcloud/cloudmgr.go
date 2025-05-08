@@ -376,9 +376,11 @@ func clusterCloudDefaultNodeSetting(cls *cmproto.Cluster, defaultNodeConfig bool
 
 func clusterCloudDefaultBasicSetting(cls *cmproto.Cluster, cloud *cmproto.Cloud, version string) {
 	defaultOSImage := common.DefaultImageName
+	// platform default image name
 	if len(cloud.OsManagement.AvailableVersion) > 0 {
 		defaultOSImage = cloud.OsManagement.AvailableVersion[0]
 	}
+
 	if version == "" {
 		version = cloud.ClusterManagement.AvailableVersion[0]
 	}

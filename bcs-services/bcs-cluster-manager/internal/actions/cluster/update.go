@@ -583,6 +583,7 @@ func (ua *AddNodesAction) addNodesToCluster() error {
 			}
 			return loginInfo
 		}(),
+		Advance:      ua.req.GetAdvance(),
 		Cloud:        ua.cloud,
 		NodeTemplate: ua.nodeTemplate,
 		NodeGroupID:  ua.req.NodeGroupID,

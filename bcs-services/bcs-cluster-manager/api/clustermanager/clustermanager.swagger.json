@@ -7283,6 +7283,11 @@
           "$ref": "#/definitions/clustermanagerNodeLoginInfo",
           "description": "上架节点重装系统时设置节点密码，不同云可兼容处理",
           "title": "login"
+        },
+        "advance": {
+          "$ref": "#/definitions/clustermanagerNodeAdvancedInfo",
+          "description": "上架节点高级设置信息,例如使用自定义镜像",
+          "title": "advance"
         }
       },
       "description": "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器",
@@ -7382,6 +7387,11 @@
           "$ref": "#/definitions/clustermanagerNodeLoginInfo",
           "description": "上架节点重装系统时设置节点密码，不同云可兼容处理",
           "title": "login"
+        },
+        "advance": {
+          "$ref": "#/definitions/clustermanagerNodeAdvancedInfo",
+          "description": "上架节点高级设置信息,例如使用自定义镜像",
+          "title": "advance"
         }
       },
       "description": "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器",
@@ -13863,8 +13873,13 @@
         },
         "imageType": {
           "type": "string",
-          "description": "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE)",
+          "description": "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE/BCS_IMAGE)",
           "title": "imageType"
+        },
+        "imageOs": {
+          "type": "string",
+          "description": "镜像系统",
+          "title": "imageOs"
         }
       },
       "title": "ImageInfo 创建cvm实例的镜像信息"
@@ -16571,6 +16586,16 @@
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
       "title": "Node"
     },
+    "clustermanagerNodeAdvancedInfo": {
+      "type": "object",
+      "properties": {
+        "nodeOs": {
+          "type": "string",
+          "description": "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像",
+          "title": "nodeOs"
+        }
+      }
+    },
     "clustermanagerNodeAnnotation": {
       "type": "object",
       "properties": {
@@ -17349,6 +17374,11 @@
           "format": "boolean",
           "description": "缩容失败时是否允许跳过流程, 默认不允许跳过",
           "title": "skipSystemInit"
+        },
+        "image": {
+          "$ref": "#/definitions/clustermanagerImageInfo",
+          "description": "节点模版镜像信息",
+          "title": "image"
         }
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",

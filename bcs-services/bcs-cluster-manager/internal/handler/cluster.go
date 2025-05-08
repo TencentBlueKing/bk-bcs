@@ -166,6 +166,7 @@ func (cm *ClusterManager) AddNodesToCluster(ctx context.Context,
 		NodeTemplateID:    req.NodeTemplateID,
 		IsExternalNode:    req.IsExternalNode,
 		Login:             req.Login,
+		Advance:           req.Advance,
 	}
 	newResp := &cmproto.AddNodesV2Response{}
 	ca.Handle(ctx, newReq, newResp)

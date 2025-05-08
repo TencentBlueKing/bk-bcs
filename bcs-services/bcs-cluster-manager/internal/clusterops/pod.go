@@ -36,6 +36,7 @@ type GetNodePodsOption struct {
 	ClusterID        string
 	NodeName         string
 	FilterNamespaces []string
+	FilterKinds      []string
 }
 
 // GetNodePods get node pods
@@ -73,7 +74,19 @@ func (ko *K8SOperator) GetNodePods(ctx context.Context, option GetNodePodsOption
 			continue
 		}
 
-		pods = append(pods, &podList.Items[i])
+		filterKindResult := false
+		if len(option.FilterKinds) > 0 {
+			for _, item := range podList.Items[i].GetOwnerReferences() {
+				if stringInSlice(item.Kind, option.FilterKinds) {
+					filterKindResult = true
+					break
+				}
+			}
+		}
+
+		if !filterKindResult {
+			pods = append(pods, &podList.Items[i])
+		}
 	}
 
 	return pods, nil

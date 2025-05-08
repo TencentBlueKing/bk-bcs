@@ -27,6 +27,8 @@ import (
 type NodeAdvancedOptions struct {
 	NodeScheduler         bool
 	SetPreStartUserScript bool
+	CreateCluster         bool
+	Advance               *proto.NodeAdvancedInfo
 }
 
 // ClusterCommonLabels cluster common labels

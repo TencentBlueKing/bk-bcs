@@ -653,4 +653,6 @@ const (
 const (
 	// GcpCloudProvider gcp cloud provider
 	GcpCloudProvider = "gcpCloud"
+	// KindDaemonSet kind daemonset
+	KindDaemonSet = "DaemonSet"
 )

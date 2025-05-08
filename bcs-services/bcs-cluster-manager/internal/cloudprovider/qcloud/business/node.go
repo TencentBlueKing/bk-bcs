@@ -42,27 +42,7 @@ func GetCVMImageIDByImageName(imageName string, opt *cloudprovider.CommonOption)
 		return "", err
 	}
 
-	cloudImages, err := client.ListImages()
-	if err != nil {
-		blog.Errorf("GetCVMImageIDByImageName cvm ListImages %s failed, %s", imageName, err.Error())
-		return "", err
-	}
-
-	var (
-		imageIDList = make([]string, 0)
-	)
-	for _, image := range cloudImages {
-		if *image.ImageName == imageName {
-			imageIDList = append(imageIDList, *image.ImageId)
-		}
-	}
-	blog.Infof("GetCVMImageIDByImageName successful %v", imageIDList)
-
-	if len(imageIDList) == 0 {
-		return "", fmt.Errorf("GetCVMImageIDByImageName[%s] failed: imageIDList empty", imageName)
-	}
-
-	return imageIDList[0], nil
+	return client.GetImageIDByImageName(imageName, opt)
 }
 
 // GetCloudRegions get cloud regions

@@ -59,7 +59,7 @@ func (la *ListAction) listCloudVPC() error {
 	if len(la.req.VpcID) != 0 {
 		condM["vpcid"] = la.req.VpcID
 	}
-	if len(la.req.NetworkType) != 0 && la.req.NetworkType != common.ClusterAllNetwork {
+	if len(la.req.NetworkType) != 0 {
 		condM["networktype"] = la.req.NetworkType
 	}
 
@@ -92,18 +92,29 @@ func (la *ListAction) listCloudVPC() error {
 				barrier.Done()
 			}()
 
-			var surPlusIPNum uint32
-			ipNum, err := getAvailableIPNumByVpc(la.model, vpc.NetworkType, vpc)
-			if err != nil {
-				blog.Errorf("listCloudVPC getAvailableIPNumByVpc failed: %v", err)
+			// overlay && underlay
+			var (
+				overlaySurPlusIPNum uint32
+				unerlaySurPlusIPNum uint32
+				errorLocal          error
+			)
+			ipNum, errorLocal := getAvailableIPNumByVpc(la.model, common.ClusterOverlayNetwork, vpc)
+			if errorLocal != nil {
+				blog.Errorf("listCloudVPC getAvailableIPNumByVpc overlay failed: %v", errorLocal)
 			} else {
-				blog.Infof("region[%s] vpc[%s] availableIPNum[%v]", vpc.Region, vpc.VpcID, ipNum)
+				blog.Infof("region[%s] vpc[%s] overlay availableIPNum[%v]", vpc.Region, vpc.VpcID, ipNum)
+			}
+			if ipNum <= vpc.ReservedIPNum {
+				overlaySurPlusIPNum = 0
+			} else {
+				overlaySurPlusIPNum = ipNum - vpc.ReservedIPNum
 			}
 
-			if ipNum <= vpc.ReservedIPNum {
-				surPlusIPNum = 0
+			unerlaySurPlusIPNum, errorLocal = getAvailableIPNumByVpc(la.model, common.ClusterUnderlayNetwork, vpc)
+			if errorLocal != nil {
+				blog.Errorf("listCloudVPC getAvailableIPNumByVpc underlay failed: %v", errorLocal)
 			} else {
-				surPlusIPNum = ipNum - vpc.ReservedIPNum
+				blog.Infof("region[%s] vpc[%s] underlay availableIPNum[%v]", vpc.Region, vpc.VpcID, ipNum)
 			}
 
 			cloud := &cmproto.CloudVPCResp{
@@ -116,8 +127,15 @@ func (la *ListAction) listCloudVPC() error {
 				Available:      vpc.Available,
 				Extra:          vpc.Extra,
 				ReservedIPNum:  vpc.ReservedIPNum,
-				AvailableIPNum: surPlusIPNum,
+				AvailableIPNum: overlaySurPlusIPNum,
 				BusinessID:     vpc.GetBusinessID(),
+				Overlay: &cmproto.CidrDetailInfo{
+					ReservedIPNum:  vpc.ReservedIPNum,
+					AvailableIPNum: overlaySurPlusIPNum,
+				},
+				Underlay: &cmproto.CidrDetailInfo{
+					AvailableIPNum: unerlaySurPlusIPNum,
+				},
 			}
 			lock.Lock()
 			la.cloudVPCList = append(la.cloudVPCList, cloud)

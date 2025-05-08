@@ -16,7 +16,7 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
@@ -103,7 +103,8 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 
 	switch la.req.Provider {
 	case common.AllImageProvider:
-		providers := []string{common.PublicImageProvider, common.MarketImageProvider, common.PrivateImageProvider, common.BCSImageProvider}
+		providers := []string{common.PublicImageProvider, common.MarketImageProvider,
+			common.PrivateImageProvider, common.BCSImageProvider}
 		for i := range providers {
 			images, errLocal := clsMgr.ListOsImage(providers[i], cmOption)
 			if errLocal != nil {

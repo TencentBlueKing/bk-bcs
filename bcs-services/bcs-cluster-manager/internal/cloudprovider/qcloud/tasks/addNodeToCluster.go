@@ -14,6 +14,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -273,6 +275,13 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	// parse node schedule status
 	schedule, _ := strconv.ParseBool(scheduleStr)
 
+	// get node advance info
+	advancedInfo := &proto.NodeAdvancedInfo{}
+	advance, exist := step.Params[cloudprovider.NodeAdvanceKey.String()]
+	if exist {
+		_ = json.Unmarshal([]byte(advance), advancedInfo)
+	}
+
 	// get nodes IDs and IPs
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
 		cloudprovider.NodeIPsKey.String(), ",")
@@ -327,8 +336,8 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{ // nolint
 			NodeScheduler:         schedule,
 			SetPreStartUserScript: true,
-		},
-			notExistedInstance, initPasswd, false, idToIPMap, operator)
+			Advance:               advancedInfo,
+		}, notExistedInstance, initPasswd, false, idToIPMap, operator)
 		if err != nil {
 			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 				fmt.Sprintf("add nodes to cluster failed [%s]", err))

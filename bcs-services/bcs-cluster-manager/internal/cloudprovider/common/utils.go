@@ -644,6 +644,10 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	}
 
 	for _, node := range nodeNames {
+
+		blog.Infof("updateClusterNodesLabels[%s] node[%s] ip[%s] before labels: %v",
+			taskID, node.NodeName, node.NodeIP, node.NodeLabels)
+
 		// user defined labels
 		labels := data.Labels
 		if labels == nil {
@@ -681,6 +685,10 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 				labels[k] = v
 			}
 		}
+
+		blog.Infof("updateClusterNodesLabels[%s] node[%s] ip[%s] after labels: %v",
+			taskID, node.NodeName, node.NodeIP, labels)
+
 		err := k8sOperator.UpdateNodeLabels(ctx, data.ClusterID, node.NodeName, labels)
 		if err != nil {
 			blog.Errorf("updateClusterNodesLabels[%s] ip[%s] failed: %v", taskID, node.NodeName, err)

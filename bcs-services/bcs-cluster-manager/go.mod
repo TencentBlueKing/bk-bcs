@@ -46,10 +46,10 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as v1.0.398
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1052
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common v1.0.1133
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm v1.0.376
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tag v1.0.768
-	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.544
+	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke v1.0.1133
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.714
 	go-micro.dev/v4 v4.9.0
 	go.etcd.io/etcd/client/v3 v3.5.5

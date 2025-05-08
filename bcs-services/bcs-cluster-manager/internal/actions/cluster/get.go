@@ -111,6 +111,10 @@ func (ga *GetAction) sortSharedRangeProjectIDorCodes() {
 		return
 	}
 
+	if len(sharedRanges.GetProjectIdOrCodes()) == 0 {
+		return
+	}
+
 	projectIDorCodes := sharedRanges.GetProjectIdOrCodes()
 	currentProjectID := ga.cluster.GetProjectID()
 

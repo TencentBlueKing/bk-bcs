@@ -445,6 +445,11 @@ func getCvmImageByImageName(imageName string, opt *cloudprovider.CommonOption) (
 		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetCVMClient failed: %v", imageName, err)
 	}
 
+	image, exist := getImageNameCacheData(opt.Region, imageName)
+	if exist {
+		return image, nil
+	}
+
 	imageID, err := cli.GetImageIDByImageName(imageName, opt)
 	if err != nil {
 		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageIDByImageName failed: %v", imageName, err)
@@ -453,6 +458,11 @@ func getCvmImageByImageName(imageName string, opt *cloudprovider.CommonOption) (
 	cvmImage, err := cli.GetImageByImageID(imageID)
 	if err != nil {
 		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageByImageID failed: %v", imageID, err)
+	}
+
+	err = setImageNameCacheData(opt.Region, imageName, cvmImage)
+	if err != nil {
+		blog.Errorf("getCvmImageByImageName[%s] setImageNameCacheData failed: %v", imageName, err)
 	}
 
 	return cvmImage, nil
@@ -465,7 +475,6 @@ func (nc *NodeClient) GetImageIDByImageName(imageName string, opt *cloudprovider
 		blog.Errorf("getCVMImageIDByImageName cvm ListImages %s failed, %s", imageName, err.Error())
 		return "", err
 	}
-
 	var (
 		imageIDList = make([]string, 0)
 	)

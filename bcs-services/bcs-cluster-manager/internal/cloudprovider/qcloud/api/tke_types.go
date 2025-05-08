@@ -310,7 +310,9 @@ type AddExistedInstanceReq struct {
 	SkipValidateOptions []string `json:"skipValidateOptions"`
 	// InstanceAdvancedSettingsOverrides 参数InstanceAdvancedSettingsOverride数组的长度应与InstanceIds数组一致；
 	// 当长度大于InstanceIds数组长度时将报错；当长度小于InstanceIds数组时，没有对应配置的instace将使用默认配置。
-	InstanceAdvancedSettingsOverrides []*InstanceAdvancedSettings
+	InstanceAdvancedSettingsOverrides []*InstanceAdvancedSettings `json:"instanceAdvancedSettingsOverrides"`
+	// ImageId 节点镜像ID
+	ImageId string `json:"imageId"`
 }
 
 func (aei *AddExistedInstanceReq) validate() error {

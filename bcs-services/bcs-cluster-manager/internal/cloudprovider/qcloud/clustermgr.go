@@ -693,15 +693,11 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 		return nil, err
 	}
 
-	cloud, err := cloudprovider.GetCloudByProvider(provider)
+	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
 	if err != nil {
 		return nil, err
 	}
-
-	var bcsImageNameList []string
-	if cloud != nil && cloud.GetOsManagement() != nil {
-		bcsImageNameList = cloud.GetOsManagement().GetAvailableVersion()
-	}
+	bcsImageNameList := cloud.GetOsManagement().GetAvailableVersion()
 
 	cloudImages, err := cli.DescribeOsImages(provider, bcsImageNameList, opt)
 	if err != nil {
