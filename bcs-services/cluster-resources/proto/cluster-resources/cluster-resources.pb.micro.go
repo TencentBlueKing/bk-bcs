@@ -609,6 +609,12 @@ func NewWorkloadEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "Workload.ListPoLabelsByNode",
+			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods/labels"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "Workload.GetPo",
 			Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 			Method:  []string{"GET"},
@@ -725,6 +731,7 @@ type WorkloadService interface {
 	DeleteJob(ctx context.Context, in *ResDeleteReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPo(ctx context.Context, in *ResListReq, opts ...client.CallOption) (*CommonResp, error)
 	ListPoByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonListResp, error)
+	ListPoLabelsByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonResp, error)
 	GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error)
 	CreatePo(ctx context.Context, in *ResCreateReq, opts ...client.CallOption) (*CommonResp, error)
 	UpdatePo(ctx context.Context, in *ResUpdateReq, opts ...client.CallOption) (*CommonResp, error)
@@ -1200,6 +1207,16 @@ func (c *workloadService) ListPoByNode(ctx context.Context, in *ListPoByNodeReq,
 	return out, nil
 }
 
+func (c *workloadService) ListPoLabelsByNode(ctx context.Context, in *ListPoByNodeReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "Workload.ListPoLabelsByNode", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *workloadService) GetPo(ctx context.Context, in *ResGetReq, opts ...client.CallOption) (*CommonResp, error) {
 	req := c.c.NewRequest(c.name, "Workload.GetPo", in)
 	out := new(CommonResp)
@@ -1358,6 +1375,7 @@ type WorkloadHandler interface {
 	DeleteJob(context.Context, *ResDeleteReq, *CommonResp) error
 	ListPo(context.Context, *ResListReq, *CommonResp) error
 	ListPoByNode(context.Context, *ListPoByNodeReq, *CommonListResp) error
+	ListPoLabelsByNode(context.Context, *ListPoByNodeReq, *CommonResp) error
 	GetPo(context.Context, *ResGetReq, *CommonResp) error
 	CreatePo(context.Context, *ResCreateReq, *CommonResp) error
 	UpdatePo(context.Context, *ResUpdateReq, *CommonResp) error
@@ -1418,6 +1436,7 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		DeleteJob(ctx context.Context, in *ResDeleteReq, out *CommonResp) error
 		ListPo(ctx context.Context, in *ResListReq, out *CommonResp) error
 		ListPoByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonListResp) error
+		ListPoLabelsByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonResp) error
 		GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error
 		CreatePo(ctx context.Context, in *ResCreateReq, out *CommonResp) error
 		UpdatePo(ctx context.Context, in *ResUpdateReq, out *CommonResp) error
@@ -1705,6 +1724,12 @@ func RegisterWorkloadHandler(s server.Server, hdlr WorkloadHandler, opts ...serv
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Workload.ListPoLabelsByNode",
+		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods/labels"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "Workload.GetPo",
 		Path:    []string{"/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"},
 		Method:  []string{"GET"},
@@ -1955,6 +1980,10 @@ func (h *workloadHandler) ListPo(ctx context.Context, in *ResListReq, out *Commo
 
 func (h *workloadHandler) ListPoByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonListResp) error {
 	return h.WorkloadHandler.ListPoByNode(ctx, in, out)
+}
+
+func (h *workloadHandler) ListPoLabelsByNode(ctx context.Context, in *ListPoByNodeReq, out *CommonResp) error {
+	return h.WorkloadHandler.ListPoLabelsByNode(ctx, in, out)
 }
 
 func (h *workloadHandler) GetPo(ctx context.Context, in *ResGetReq, out *CommonResp) error {

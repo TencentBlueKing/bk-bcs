@@ -576,6 +576,16 @@ service Workload {
 		};
 	}
 
+	rpc ListPoLabelsByNode(ListPoByNodeReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods/labels"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "通过节点名称获取 Pod labels 列表"
+			summary: "ListPoLabelsByNode API"
+		};
+	}
+
 	rpc GetPo(ResGetReq) returns (CommonResp) {
 		option (google.api.http) = {
 			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/namespaces/{namespace}/workloads/pods/{name}"
