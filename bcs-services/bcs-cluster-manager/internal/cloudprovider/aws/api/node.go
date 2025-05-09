@@ -257,6 +257,14 @@ func (nm *NodeManager) transInstanceIDsToNodes(ids []string, opt *cloudprovider.
 	nodeMap := make(map[string]*proto.Node)
 	var nodes []*proto.Node
 	for _, inst := range instances {
+		if inst == nil {
+			return nil, fmt.Errorf("transInstanceIDsToNodes instance is nil")
+		}
+		if inst.InstanceId == nil || inst.PrivateDnsName == nil || inst.InstanceType == nil ||
+			inst.VpcId == nil || inst.Placement.AvailabilityZone == nil {
+			return nil, fmt.Errorf("transInstanceIDsToNodes instance missing field")
+		}
+
 		node := InstanceToNode(inst)
 		// clean duplicated Node if user input multiple ip that
 		// belong to one cvm instance
