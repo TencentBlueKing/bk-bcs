@@ -46,7 +46,7 @@ func NewListAction(model store.ClusterManagerModel) *ListAction {
 	}
 }
 
-func (la *ListAction) listCloudVPC() error {
+func (la *ListAction) listCloudVPC() error { // nolint
 	condM := make(operator.M)
 	//! we don't setting bson tag in proto file
 	//! all fields are in lowcase
