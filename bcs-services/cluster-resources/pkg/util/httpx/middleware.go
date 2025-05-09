@@ -76,6 +76,7 @@ func AuthenticationMiddleware(next http.Handler) http.Handler {
 			if len(u.BKAppCode) != 0 {
 				authUser.ClientName = u.BKAppCode
 			}
+			authUser.TenantId = u.TenantId
 		}
 
 		// If and only if client name from jwt token is not empty, we will check username in header

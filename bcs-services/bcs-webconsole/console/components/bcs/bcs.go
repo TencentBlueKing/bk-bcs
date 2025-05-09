@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 const (
@@ -121,6 +122,11 @@ func CreateTempToken(ctx context.Context, username, clusterId string) (*Token, e
 		userType = GeneralUser
 	}
 
+	tenantId, ok := ctx.Value(types.TenantIdCtxKey).(string)
+	if !ok {
+		tenantId = types.DefaultTenantId
+	}
+
 	data := map[string]interface{}{
 		"usertype":   userType,
 		"username":   username,
@@ -129,6 +135,7 @@ func CreateTempToken(ctx context.Context, username, clusterId string) (*Token, e
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
 		SetAuthToken(config.G.BCS.Token).
+		SetHeader(types.HeaderTenantId, tenantId).
 		SetBody(data).
 		Post(url)
 
