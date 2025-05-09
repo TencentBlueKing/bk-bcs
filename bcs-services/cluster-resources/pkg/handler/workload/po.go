@@ -14,6 +14,7 @@ package workload
 
 import (
 	"context"
+	"sort"
 
 	"github.com/TencentBlueKing/gopkg/collection/set"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,6 +32,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -229,4 +231,41 @@ func (h *Handler) ListPoByNode(
 		ctx, podList, req.ProjectID, req.ClusterID, namespaces.ToSlice(),
 	)
 	return err
+}
+
+// ListPoLabelsByNode 获取指定集群运行于某 Node 上的 Pod labels
+// 注意，该接口权限为 "集群查看" 权限，而非命名空间域资源查看权限，返回的数据也不是 manifest，仅包含列表展示需要的数据
+// 返回仅 pod 部分数据，不需要集群管理权限，很多用户只有集群查看权限，没有集群管理权限
+func (h *Handler) ListPoLabelsByNode(
+	ctx context.Context, req *clusterRes.ListPoByNodeReq, resp *clusterRes.CommonResp,
+) error {
+	podCli := cli.NewPodCliByClusterID(ctx, req.ClusterID)
+	ret, err := podCli.ListAllPods(
+		ctx, req.ProjectID, req.ClusterID, metav1.ListOptions{FieldSelector: "spec.nodeName=" + req.NodeName},
+	)
+	if err != nil {
+		return err
+	}
+
+	labels := parseResourceLabels(mapx.GetList(ret, "items"))
+
+	labels = slice.RemoveDuplicateValues(labels)
+	sort.Strings(labels)
+
+	if resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"values": labels}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 根据集群命名空间查询资源标签
+func parseResourceLabels(items []interface{}) []string {
+	labels := make([]string, 0)
+	for _, item := range items {
+		v := item.(map[string]interface{})
+		for k := range mapx.GetMap(v, "metadata.labels") {
+			labels = append(labels, k)
+		}
+	}
+	return labels
 }
