@@ -358,29 +358,29 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 		for _, cluster := range clusterList {
 			if cluster.IsShared == true || cluster.Status != "RUNNING" || cluster.EngineType != "k8s" || (cluster.Environment == bcro.BcsClusterType && bcro.BcsClusterType != "") {
 				continue // 跳过公共集群的记录 跳过未就绪集群 跳过非K8S集群 以及匹配对应参数的集群
-			}
+			} else {
+				// 跳过master ip不正常的集群
+				for masterName, _ := range cluster.Master {
+					if strings.Contains(masterName, "127.0.0") {
+						// 跳过算力集群
+						continue clusterloop
+					}
+				}
 
-			// 跳过master ip不正常的集群
-			for masterName, _ := range cluster.Master {
-				if strings.Contains(masterName, "127.0.0") {
-					// 跳过算力集群
+				if strings.Contains(cluster.ClusterName, "联邦") {
 					continue clusterloop
 				}
-			}
 
-			if strings.Contains(cluster.ClusterName, "联邦") {
-				continue
-			}
-
-			if cluster.CreateTime != "" {
-				createTime, err := time.Parse(time.RFC3339, cluster.CreateTime)
-				if err != nil {
-					klog.Errorf("parse cluster %s createtime failed %s", cluster.ClusterID, err.Error())
-					continue
-				}
-				// 创建时间超过60分钟才进行巡检
-				if (time.Now().Unix() - createTime.Unix()) > 60*60 {
-					filteredClusterList = append(filteredClusterList, cluster)
+				if cluster.CreateTime != "" {
+					createTime, err := time.Parse(time.RFC3339, cluster.CreateTime)
+					if err != nil {
+						klog.Errorf("parse cluster %s createtime failed %s", cluster.ClusterID, err.Error())
+						continue
+					}
+					// 创建时间超过10分钟才进行巡检
+					if (time.Now().Unix() - createTime.Unix()) > 60*30 {
+						filteredClusterList = append(filteredClusterList, cluster)
+					}
 				}
 			}
 		}
@@ -549,12 +549,18 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 		}
 	}
 
-	nodeNum := 0
+	// 跳过work node为0的集群
 	masterList := make([]string, 0, 0)
 	nodeList, err := clientSet.CoreV1().Nodes().List(util.GetCtx(time.Second*10), v1.ListOptions{ResourceVersion: "0"})
 	if err != nil {
 		// 获取节点失败可能由于集群已经出问题了，所以需要继续将此集群加入集群列表，以进行检查
 		klog.Errorf("get %s node failed: %s", clusterID, err.Error())
+	} else {
+		nodeNum := len(nodeList.Items)
+		// 排除没有任何工作节点的集群
+		if nodeNum == 0 && strings.Contains(clusterID, "BCS-K8S-4") {
+			return nil, fmt.Errorf("a cluster without any work nodes, skip")
+		}
 	}
 
 	for _, node := range nodeList.Items {
@@ -563,16 +569,6 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 				masterList = append(masterList, getIP(&node))
 			}
 		}
-
-		if checkNodeReady(node) {
-			nodeNum = nodeNum + 1
-		}
-	}
-
-	nodeNum = nodeNum - len(masterList)
-	// 排除没有任何正常工作节点的集群
-	if nodeNum <= 0 && strings.Contains(clusterID, "BCS-K8S-4") {
-		return nil, fmt.Errorf("a cluster without any work nodes, skip")
 	}
 
 	nodeInfo := make(map[string]plugin.NodeInfo)
@@ -594,17 +590,6 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 	}
 
 	return clusterConfig, nil
-}
-
-func checkNodeReady(node v12.Node) bool {
-	//if node.Status.Phase == v12.NodeRunning {
-	for _, condition := range node.Status.Conditions {
-		if condition.Type == v12.NodeReady && condition.Status == v12.ConditionTrue {
-			return true
-		}
-	}
-	//}
-	return false
 }
 
 func getIP(node *v12.Node) string {

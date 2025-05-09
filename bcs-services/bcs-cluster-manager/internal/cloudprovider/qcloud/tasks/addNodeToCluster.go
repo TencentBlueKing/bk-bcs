@@ -14,6 +14,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -174,6 +176,7 @@ func CheckInstanceStateTask(taskID string, stepName string) error {
 	return nil
 }
 
+// handleTaskData handle task data
 func handleTaskData(state *cloudprovider.TaskState, failedIds []string) {
 	// again inject nodeIds/nodeIps
 	nodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
@@ -206,6 +209,7 @@ func handleTaskData(state *cloudprovider.TaskState, failedIds []string) {
 	state.Task.CommonParams[cloudprovider.FailedTransVpcNodeIDsKey.String()] = strings.Join(failedIds, ",")
 }
 
+// handleAddNodesData handle add nodes data
 func handleAddNodesData(ctx context.Context, clusterId string, nodes *business.InstanceList) ([]string, []string) {
 	var (
 		failedNodeIds  = make([]string, 0)
@@ -271,6 +275,13 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	// parse node schedule status
 	schedule, _ := strconv.ParseBool(scheduleStr)
 
+	// get node advance info
+	advancedInfo := &proto.NodeAdvancedInfo{}
+	advance, exist := step.Params[cloudprovider.NodeAdvanceKey.String()]
+	if exist {
+		_ = json.Unmarshal([]byte(advance), advancedInfo)
+	}
+
 	// get nodes IDs and IPs
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
 		cloudprovider.NodeIPsKey.String(), ",")
@@ -321,8 +332,12 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	successNodes = append(successNodes, existedInstance...)
 
 	if len(notExistedInstance) > 0 {
-		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
-			notExistedInstance, initPasswd, false, idToIPMap, operator)
+		// if node template exists, set user script for new node
+		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{ // nolint
+			NodeScheduler:         schedule,
+			SetPreStartUserScript: true,
+			Advance:               advancedInfo,
+		}, notExistedInstance, initPasswd, false, idToIPMap, operator)
 		if err != nil {
 			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 				fmt.Sprintf("add nodes to cluster failed [%s]", err))
@@ -445,9 +460,11 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 		_ = updateFailedNodeStatusByNodeID(ctx, insInfos, common.StatusAddNodesFailed)
 	}
 
+	// if successNodes empty
 	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
 		retErr := fmt.Errorf("上架节点超时/失败, 请联系管理员")
+		// update step
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}

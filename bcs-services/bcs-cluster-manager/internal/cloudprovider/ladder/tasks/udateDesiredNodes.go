@@ -458,7 +458,7 @@ func SyncClusterNodesToCMDBTask(taskID string, stepName string) error {
 		blog.Errorf("SyncClusterNodesToCMDBTask[%s] SyncIpsInfoToCmdb failed: %v", taskID, err)
 		// not handle err only print record because it does not affect the results
 		_ = state.UpdateStepSucc(start, stepName)
-		return err
+		return nil
 	}
 	blog.Infof("SyncClusterNodesToCMDBTask %s successful", taskID)
 

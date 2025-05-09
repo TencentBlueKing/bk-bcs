@@ -25,7 +25,10 @@ import (
 
 // NodeAdvancedOptions node advanced options
 type NodeAdvancedOptions struct {
-	NodeScheduler bool
+	NodeScheduler         bool
+	SetPreStartUserScript bool
+	CreateCluster         bool
+	Advance               *proto.NodeAdvancedInfo
 }
 
 // ClusterCommonLabels cluster common labels

@@ -96,10 +96,39 @@ func (ga *GetAction) getCluster() error {
 		}
 	}
 
+	// sort cluster shared range, current project first
+	ga.sortSharedRangeProjectIDorCodes()
+
 	// append module info
 	ga.appendModuleInfo()
 
 	return nil
+}
+
+func (ga *GetAction) sortSharedRangeProjectIDorCodes() {
+	sharedRanges := ga.cluster.GetSharedRanges()
+	if sharedRanges == nil {
+		return
+	}
+
+	if len(sharedRanges.GetProjectIdOrCodes()) == 0 {
+		return
+	}
+
+	projectIDorCodes := sharedRanges.GetProjectIdOrCodes()
+	currentProjectID := ga.cluster.GetProjectID()
+
+	remainProjectIDorCodes := make([]string, 0, len(projectIDorCodes))
+	for _, id := range projectIDorCodes {
+		if id != currentProjectID {
+			remainProjectIDorCodes = append(remainProjectIDorCodes, id)
+		}
+	}
+
+	sorted := make([]string, 0, 1+len(remainProjectIDorCodes))
+	sorted = append(sorted, append([]string{currentProjectID}, remainProjectIDorCodes...)...)
+
+	ga.cluster.SharedRanges.ProjectIdOrCodes = sorted
 }
 
 func (ga *GetAction) appendModuleInfo() {

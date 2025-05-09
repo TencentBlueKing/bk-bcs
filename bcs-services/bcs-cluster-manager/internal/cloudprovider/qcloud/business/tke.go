@@ -486,6 +486,10 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 		SkipValidateOptions: skipValidateOption(info.Cluster),
 	}
 
+	if options != nil && options.Advance != nil && options.Advance.GetNodeOs() != "" {
+		req.ImageId = options.Advance.GetNodeOs()
+	}
+
 	// 未使用节点模板 或者 节点模板未配置磁盘格式化
 	if info.NodeTemplate == nil || len(info.NodeTemplate.DataDisks) == 0 {
 		// 使用默认配置, 主要解决CVM多盘挂载问题
@@ -618,6 +622,10 @@ func GenerateNGAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 		}, options),
 		LoginSetting:        &api.LoginSettings{Password: passwd},
 		SkipValidateOptions: skipValidateOption(info.Cluster),
+	}
+
+	if info.NodeGroup.GetNodeTemplate().GetImage().GetImageID() != "" {
+		req.ImageId = info.NodeGroup.GetNodeTemplate().GetImage().GetImageID()
 	}
 
 	return req
@@ -760,7 +768,8 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			})
 		}
 	}
-	if len(nodeTemplate.Taints) > 0 {
+
+	if len(nodeTemplate.Taints) > 0 && (options == nil || !options.CreateCluster) {
 		for _, t := range nodeTemplate.Taints {
 			advanceInfo.TaintList = append(advanceInfo.TaintList, &api.Taint{
 				Key:    qcommon.StringPtr(t.Key),
@@ -802,7 +811,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		advanceInfo.ExtraArgs.Kubelet = kubeletParams
 	}
 
-	if len(nodeTemplate.PreStartUserScript) > 0 {
+	if len(nodeTemplate.PreStartUserScript) > 0 && (options == nil || options.SetPreStartUserScript) {
 		script, err := template.GetNodeTemplateScript(vars, nodeTemplate.PreStartUserScript)
 		if err != nil {
 			blog.Errorf("generateInstanceAdvanceInfoFromNp getNodeTemplateScript failed: %v", err)

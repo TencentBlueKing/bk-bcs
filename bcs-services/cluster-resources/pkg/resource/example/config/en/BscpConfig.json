@@ -1,0 +1,13 @@
+{
+  "kind": "BscpConfig",
+  "class": "config",
+  "references": null,
+  "items": [
+    {
+      "name": "simple_bscpconfig",
+      "alias": "BscpConfig simple demo",
+      "description": "A simple bscpconfig demo with only basic configuration",
+      "manifest": null
+    }
+  ]
+}

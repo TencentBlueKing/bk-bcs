@@ -27,6 +27,7 @@ import (
 	"k8s.io/cli-runtime/pkg/resource"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/stringx"
 	helmmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/proto/bcs-helm-manager"
 )
 
@@ -346,8 +347,8 @@ func InstallRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 				common.PTKProjectID: projectID,
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   creator,
-				common.PTKUpdator:   updator,
+				common.PTKCreator:   stringx.ReplaceIllegalChars(creator),
+				common.PTKUpdator:   stringx.ReplaceIllegalChars(updator),
 				common.PTKVersion:   version,
 				common.PTKName:      releaseName,
 			},
@@ -382,8 +383,8 @@ func UpgradeRelease(releaseHandler Handler, projectID, projectCode, clusterID, r
 				common.PTKProjectID: projectID,
 				common.PTKClusterID: clusterID,
 				common.PTKNamespace: releaseNamespace,
-				common.PTKCreator:   creator,
-				common.PTKUpdator:   updator,
+				common.PTKCreator:   stringx.ReplaceIllegalChars(creator),
+				common.PTKUpdator:   stringx.ReplaceIllegalChars(updator),
 				common.PTKVersion:   version,
 				common.PTKName:      releaseName,
 			},

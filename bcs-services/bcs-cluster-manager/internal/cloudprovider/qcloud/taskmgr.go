@@ -635,6 +635,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		PassWd:         passwd,
 		Operator:       opt.Operator,
 		NodeSchedule:   opt.NodeSchedule,
+		Advance:        opt.Advance,
 	}
 	// step1: modify nodes vpc if need
 	addNodesTask.BuildModifyInstancesVpcStep(task)

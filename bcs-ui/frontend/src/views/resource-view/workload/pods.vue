@@ -60,7 +60,8 @@
           handleFilterChange,
           isViewEditable,
           isClusterMode,
-          sourceTypeMap
+          sourceTypeMap,
+          resolveLink,
         }">
         <bk-table
           :data="curPageData"
@@ -74,8 +75,11 @@
               <bk-button
                 class="bcs-button-ellipsis"
                 text
-                :disabled="isViewEditable"
-                @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
+                :disabled="isViewEditable">
+                <a :href="resolveLink(row)" @click.prevent="gotoDetail($event, resolveLink(row), row)">
+                  {{ row.metadata.name }}
+                </a>
+              </bk-button>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('cluster.labels.nameAndId')" min-width="160" v-if="!isClusterMode">

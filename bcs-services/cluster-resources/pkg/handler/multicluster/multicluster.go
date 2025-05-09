@@ -18,13 +18,14 @@ import (
 	"sync"
 
 	"golang.org/x/sync/errgroup"
+	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
-	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
@@ -91,9 +92,9 @@ func (h *Handler) FetchMultiClusterResource(ctx context.Context, req *clusterRes
 	return err
 }
 
-// FetchMultiClusterApiResources Fetch multi cluster api resources
-func (h *Handler) FetchMultiClusterApiResources(ctx context.Context, req *clusterRes.FetchMultiClusterApiResourcesReq,
-	resp *clusterRes.CommonResp) (err error) {
+// FetchMultiClusterCustomResources Fetch multi cluster resource
+func (h *Handler) FetchMultiClusterCustomResources(ctx context.Context,
+	req *clusterRes.FetchMultiClusterCustomResourcesReq, resp *clusterRes.CommonResp) (err error) {
 	// 获取视图信息
 	view := &entity.View{}
 	if req.GetViewID() != "" {
@@ -103,20 +104,50 @@ func (h *Handler) FetchMultiClusterApiResources(ctx context.Context, req *cluste
 		}
 	}
 	filter := QueryFilter{
+		Creator:       req.GetCreator(),
+		Name:          req.GetName(),
+		CreateSource:  req.GetCreateSource(),
 		LabelSelector: req.GetLabelSelector(),
+		SortBy:        SortBy(req.GetSortBy()),
+		Order:         Order(req.GetOrder()),
+		Limit:         int(req.GetLimit()),
+		Offset:        int(req.GetOffset()),
 	}
-	// 是否仅获取crd资源
-	kind := ""
-	if req.GetOnlyCrd() {
-		kind = constants.CRD
+
+	nsScope := apiextensions.ClusterScoped
+	if req.Namespaced {
+		nsScope = apiextensions.NamespaceScoped
 	}
-	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(getScopedByKind(kind)))
+	clusterNS := filterClusteredNamespace(req.GetClusterNamespaces(), string(nsScope))
 
 	// from api server
 	var query = NewAPIServerQuery(clusterNS, filter, viewQueryToQueryFilter(view.Filter))
 
 	var data map[string]interface{}
-	data, err = query.FetchApiResources(ctx, kind)
+	data, err = query.FetchPreferred(ctx, &schema.GroupVersionResource{
+		Group:    req.GetGroup(),
+		Version:  req.GetVersion(),
+		Resource: req.GetResource(),
+	})
+	if err != nil {
+		return err
+	}
+	resp.Data, err = pbstruct.Map2pbStruct(data)
+	if err != nil {
+		return err
+	}
+	resp.WebAnnotations, err = web.NewAnnos(
+		web.NewFeatureFlag(featureflag.FormCreate, true),
+	).ToPbStruct()
+	return err
+}
+
+// FetchMultiClusterApiResources Fetch multi cluster api resources
+func (h *Handler) FetchMultiClusterApiResources(ctx context.Context,
+	req *clusterRes.FetchMultiClusterApiResourcesReq, resp *clusterRes.CommonResp) (err error) {
+
+	var data map[string]interface{}
+	data, err = FetchApiResourcesPreferred(ctx, req.OnlyCrd, req.ResourceName, req.ClusterIDs)
 	if err != nil {
 		return err
 	}
@@ -132,9 +163,9 @@ func (h *Handler) FetchMultiClusterApiResources(ctx context.Context, req *cluste
 	return err
 }
 
-// FetchMultiClusterCustomResource Fetch multi cluster custom resource
-func (h *Handler) FetchMultiClusterCustomResource(ctx context.Context,
-	req *clusterRes.FetchMultiClusterCustomResourceReq,
+// FetchMultiClusterCustomObject Fetch multi cluster custom object
+func (h *Handler) FetchMultiClusterCustomObject(ctx context.Context,
+	req *clusterRes.FetchMultiClusterCustomObjectReq,
 	resp *clusterRes.CommonResp) (err error) {
 	// 获取视图信息
 	view := &entity.View{}

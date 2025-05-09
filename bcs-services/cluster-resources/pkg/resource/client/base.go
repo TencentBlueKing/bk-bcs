@@ -113,6 +113,29 @@ func (c *ResClient) ListAllWithoutPerm(
 	return result, c.handleErr(ctx, nil)
 }
 
+// ListAllWithoutPermPreferred 获取全部资源列表，不做权限校验，没有数据不报错
+func (c *ResClient) ListAllWithoutPermPreferred(
+	ctx context.Context, namespace string, opts metav1.ListOptions) ([]unstructured.Unstructured, error) {
+	result := make([]unstructured.Unstructured, 0)
+	opts.Limit = int64(defaultLimit)
+	opts.Continue = ""
+	for {
+		ret, err := c.cli.Resource(c.res).Namespace(namespace).List(ctx, opts)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return []unstructured.Unstructured{}, nil
+			}
+			return nil, c.handleErr(ctx, err)
+		}
+		result = append(result, ret.Items...)
+		if ret.GetContinue() == "" {
+			break
+		}
+		opts.Continue = ret.GetContinue()
+	}
+	return result, c.handleErr(ctx, nil)
+}
+
 // Get 获取单个资源
 func (c *ResClient) Get(
 	ctx context.Context, namespace, name string, opts metav1.GetOptions,

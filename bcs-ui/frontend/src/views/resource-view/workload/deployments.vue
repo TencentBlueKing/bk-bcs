@@ -6,7 +6,7 @@
         handleGetExtData, handleSortChange, gotoDetail, handleUpdateResource, handleDeleteResource,
         handleEnlargeCapacity, statusFilters, handleShowViewConfig, handleFilterChange,
         handleGotoUpdateRecord, handleRestart, handleRollback, clusterNameMap, goNamespace, isViewEditable,
-        isClusterMode, sourceTypeMap
+        isClusterMode, sourceTypeMap, resolveLink,
       }">
       <bk-table
         :data="curPageData"
@@ -25,8 +25,11 @@
             <bk-button
               :disabled="isViewEditable"
               class="bcs-button-ellipsis"
-              text
-              @click="gotoDetail(row)">{{ row.metadata.name }}</bk-button>
+              text>
+              <a :href="resolveLink(row)" @click.prevent="gotoDetail($event, resolveLink(row), row)">
+                {{ row.metadata.name }}
+              </a>
+            </bk-button>
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('cluster.labels.nameAndId')" v-if="!isClusterMode">

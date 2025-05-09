@@ -88,6 +88,7 @@ import useDebouncedRef from '@/composables/use-debounce';
 import $router from '@/router';
 import $store from '@/store';
 import ProjectCreate from '@/views/project-manage/project/project-create.vue';
+import useViewConfig from '@/views/resource-view/view-manage/use-view-config';
 
 export default defineComponent({
   name: 'ProjectSelector',
@@ -174,6 +175,10 @@ export default defineComponent({
     const handleCreateProject = () => {
       showCreateDialog.value = true;
     };
+
+    const {
+      updateViewIDStore,
+    } = useViewConfig();
     // 切换项目
     const handleProjectChange = async (projectCode) => {
       const { currentRoute } = $router;
@@ -194,6 +199,7 @@ export default defineComponent({
         // query: currentRoute.query,
       });
       await cancelRequest();
+      updateViewIDStore(''); // 设置为集群视图
       // 设置项目cookie，防止第一次请求还是之前的cookie
       setCookie('X-BCS-Project-Code', projectCode, window.BK_DOMAIN);
       window.location.href = href;

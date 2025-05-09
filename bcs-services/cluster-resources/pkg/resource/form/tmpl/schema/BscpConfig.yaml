@@ -1,0 +1,5 @@
+title: bscpconfig
+type: object
+properties:
+  {{- include "common.metadata" . | indent 2 }}
+  {{- include "bscpconfig.Data" . | indent 2 }}

@@ -91,13 +91,6 @@
             </bcs-button>
           </span>
         </template>
-        <template v-if="$INTERNAL && curSelectedCluster.providerType === 'tke' && fromCluster">
-          <apply-host
-            class="mr10"
-            :title="$t('cluster.nodeList.button.applyNode')"
-            :cluster-id="localClusterId"
-            :is-backfill="true" />
-        </template>
         <bcs-dropdown-menu
           :disabled="!selections.length"
           :class="['mr10', { 'from-cluster': fromCluster }]"
@@ -767,7 +760,6 @@ import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store';
 import TopoSelector from '@/views/cluster-manage/autoscaler/components/topo-select-tree.vue';
-import ApplyHost from '@/views/cluster-manage/components/apply-host.vue';
 import RingCell from '@/views/cluster-manage/components/ring-cell.vue';
 
 interface IMetricData {
@@ -801,7 +793,6 @@ export default defineComponent({
     RingCell,
     KeyValue,
     TaintContent,
-    ApplyHost,
     TaskLog,
     BcsCascade,
     TopoSelector,

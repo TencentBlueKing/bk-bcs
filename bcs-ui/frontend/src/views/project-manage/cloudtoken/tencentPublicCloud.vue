@@ -215,13 +215,6 @@ export default defineComponent({
           message: $i18n.t('generic.validate.required'),
           trigger: 'blur',
         },
-        {
-          message: $i18n.t('projects.cloudToken.nameRegex'),
-          trigger: 'blur',
-          validator(val) {
-            return /^[0-9a-zA-Z-]+$/g.test(val);
-          },
-        },
       ],
     });
     const webAnnotations = ref({ perms: {} });

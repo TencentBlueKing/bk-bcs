@@ -259,6 +259,13 @@
           </bcs-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')" render-directive="if">
+          <EventTable
+            :kinds="kind === 'Deployment' ? [kind,'ReplicaSet', 'Pod'] : [kind, 'Pod']"
+            :cluster-id="clusterId"
+            :namespace="namespace"
+            :name="kindsNames"
+            v-if="!loading && !clusterMap[clusterId]?.is_shared">
+          </EventTable>
           <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
@@ -267,7 +274,7 @@
             :namespace="namespace"
             :name="kindsNames"
             :reset-page-when-name-change="false"
-            v-if="!loading">
+            v-else-if="!loading && !!clusterMap[clusterId]?.is_shared">
           </EventQueryTable>
         </bcs-tab-panel>
         <bcs-tab-panel name="label" :label="$t('k8s.label')" render-directive="if">
@@ -338,6 +345,7 @@
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
 
+import EventTable from './bk-monitor-event.vue';
 import detailBasicList from './detail-basic';
 import useDetail from './use-detail';
 
@@ -369,6 +377,7 @@ export default defineComponent({
     Metric,
     CodeEditor,
     BcsLog,
+    EventTable,
     EventQueryTable,
   },
   directives: {
@@ -417,7 +426,7 @@ export default defineComponent({
   },
   setup(props, ctx) {
     const { clusterId } = toRefs(props);
-    const { clusterNameMap } = useCluster();
+    const { clusterNameMap, clusterMap } = useCluster();
     const updateStrategyMap = ref({
       RollingUpdate: $i18n.t('k8s.updateStrategy.rollingUpdate'),
       InplaceUpdate: $i18n.t('k8s.updateStrategy.inplaceUpdate'),
@@ -799,6 +808,7 @@ export default defineComponent({
       handleShowLog,
       handleSortChange,
       getReadinessGates,
+      clusterMap,
       clusterNameMap,
       podStatusFilters,
       handleFilterChange,

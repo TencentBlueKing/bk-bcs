@@ -589,8 +589,16 @@ export default defineComponent({
       pagination.value.current = 1;
       handleGetList();
     };
-    const handleClusterChange = () => {
+    const handleClusterChange = async (val) => {
       ns.value = '';
+      if (val) {
+        await $router.replace({
+          query: {
+            ...currentRoute.query,
+            clusterId: val,
+          },
+        });
+      }
       handleResetList();
     };
 

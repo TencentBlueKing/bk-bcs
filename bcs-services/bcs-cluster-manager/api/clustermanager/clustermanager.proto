@@ -2143,6 +2143,13 @@ message NodeLoginInfo {
   }];
 }
 
+message NodeAdvancedInfo {
+  string nodeOs = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeOs",
+    description: "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像"
+  }];
+}
+
 message ClusterCredential {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -4066,7 +4073,11 @@ message ImageInfo {
   }];
   string imageType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "imageType",
-    description: "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE)"
+    description: "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE/BCS_IMAGE)"
+  }];
+  string imageOs = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "imageOs",
+    description: "镜像系统"
   }];
 }
 
@@ -4390,6 +4401,10 @@ message NodeTemplate {
   bool allowSkipScaleInWhenFailed = 32 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "skipSystemInit",
     description: "缩容失败时是否允许跳过流程, 默认不允许跳过"
+  }];
+  ImageInfo image = 33 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "image",
+    description: "节点模版镜像信息"
   }];
 }
 
@@ -9081,6 +9096,10 @@ message AddNodesRequest {
     title : "login",
     description : "上架节点重装系统时设置节点密码，不同云可兼容处理"
   }];
+  NodeAdvancedInfo advance = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "advance",
+    description : "上架节点高级设置信息,例如使用自定义镜像"
+  }];
 }
 
 message AddNodesResponse {
@@ -9161,6 +9180,10 @@ message AddNodesV2Request {
   NodeLoginInfo login = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "login",
     description : "上架节点重装系统时设置节点密码，不同云可兼容处理"
+  }];
+  NodeAdvancedInfo advance = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "advance",
+    description : "上架节点高级设置信息,例如使用自定义镜像"
   }];
 }
 

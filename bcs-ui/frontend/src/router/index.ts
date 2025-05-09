@@ -136,23 +136,45 @@ VueRouter.prototype.back = () => {
 const clusterPathPattern = new RegExp(`^${SITE_URL}/clusters/([^/]+)`); // 匹配 ${SITE_URL}/clusters/:clusterId
 
 router.beforeEach(async (to, from, next) => {
-  // 资源视图兼容无projectCode的路径
-  if (!to.name || to.name === '404') {
+  const redirectPath = typeof to?.redirectedFrom === 'string' ? to?.redirectedFrom : '';
+  // 兼容无projectCode的路径
+  if (!to.name || to.name === '404' || redirectPath) {
     const match = to.fullPath?.match(clusterPathPattern);
-    // 如果路径匹配 ${SITE_URL}/clusters/:clusterId
-    const clusterId = match?.[1]; // 从匹配结果中获取 clusterId
+    const clusterId = match?.[1] || to?.query?.clusterId; // 从匹配结果或者query中获取 clusterId
     if (clusterId && clusterId !== '-') {
       // 查找clusterId对应的项目
       const data = await clusterDetail({
         $clusterId: clusterId,
-      });
+      }).catch(() => ({ extraInfo: {} }));
       const projectCode = data?.extraInfo?.projectCode;
 
       if (projectCode) {
         // 如果路径匹配 ${SITE_URL}/clusters/:clusterId
-        const newPath = `${SITE_URL}/projects/${projectCode}${to.fullPath?.replace(SITE_URL, '')}`;
+        let newPath = `${SITE_URL}/projects/${projectCode}${to.fullPath?.replace(SITE_URL, '')}`;
+        if (redirectPath) {
+          // 如果发生了重定向
+          newPath = `${SITE_URL}/projects/${projectCode}${redirectPath?.replace(SITE_URL, '')}`;
+        }
+        let name;
+        try {
+          const newPathRoute = router.resolve(newPath);
+          name = newPathRoute.route.matched?.[newPathRoute.route.matched.length - 1]?.name;
+        } catch (err) {
+          console.warn(err);
+          name = '404';
+        }
+
         // 重定向到新路径
-        next(newPath);
+        next({
+          name,
+          params: { // 防止被路由规则的 params 覆盖
+            projectCode,
+            clusterId,
+          },
+          query: {
+            ...(to.query || {}),
+          },
+        });
         return;
       }
     }

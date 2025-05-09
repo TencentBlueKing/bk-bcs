@@ -46,6 +46,7 @@ import NodePoolInfo from './node-pool-info.vue';
 
 import { mergeDeep } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
+import { useAppData } from '@/composables/use-app';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router/index';
@@ -134,7 +135,8 @@ export default defineComponent({
     const { focusOnErrorField } = useFocusOnErrorField();
 
     // 保存
-    const user = computed(() => $store.state.user);
+    const user = computed(() => $store.getters.user);
+    const { getUserInfo } = useAppData();
     const saveLoading = ref(false);
     const handleEditNodePool = async () => {
       const nodePoolInfoValidate = await nodePoolInfoRef.value?.validate();
@@ -145,6 +147,11 @@ export default defineComponent({
       if (!nodePoolInfoValidate || !nodePoolConfigValidate) return;
 
       saveLoading.value = true;
+      if (!user.value.username) {
+        // 偶现获取用户信息失败问题
+        console.warn('user not login, get user info', user.value);
+        await getUserInfo();
+      }
       const nodePoolData = nodePoolInfoRef.value?.getNodePoolData();
       const nodeConfigData = nodePoolConfigRef.value?.getNodePoolData();
       const data = {

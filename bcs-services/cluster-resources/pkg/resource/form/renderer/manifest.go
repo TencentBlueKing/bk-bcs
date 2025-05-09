@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/form/validator"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // ManifestRenderer 渲染并加载资源配置模板
@@ -157,7 +158,7 @@ func (r *ManifestRenderer) setEditMode() error {
 
 // setUserInfo 在注解中添加用户信息
 func (r *ManifestRenderer) setUserInfo() error {
-	username := r.ctx.Value(ctxkey.UsernameKey).(string)
+	username := stringx.ReplaceIllegalChars(r.ctx.Value(ctxkey.UsernameKey).(string))
 
 	// 若 annotations 中有 用户信息相关的 key，则按条件刷新值
 	annotations := mapx.GetList(r.formData, "metadata.annotations")

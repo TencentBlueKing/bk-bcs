@@ -401,7 +401,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		for _, ins := range instanceNames {
 			n, ok := nodeNameMap[ins]
 			if ok && utils.CheckNodeIfReady(n) {
-				blog.Infof("checkClusterInstanceStatus[%s] node[%s] ready", taskID, ins)
+				blog.Infof("checkClusterInstanceStatus[%s] node[%s] labels[%v] ready", taskID, ins, n.Labels)
 				running = append(running, ins)
 			}
 		}
@@ -438,6 +438,7 @@ func checkClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 		for _, ins := range instanceNames {
 			n, ok := nodeNameMap[ins]
 			if ok && utils.CheckNodeIfReady(n) {
+				blog.Infof("checkClusterInstanceStatus[%s] node[%s] labels[%v] ready", taskID, ins, n.Labels)
 				running = append(running, ins)
 			} else {
 				failure = append(failure, ins)

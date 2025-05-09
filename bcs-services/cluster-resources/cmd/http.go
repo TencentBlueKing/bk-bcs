@@ -69,6 +69,8 @@ func NewAPIRouter(crs *clusterResourcesService) *mux.Router {
 	// events 接口代理
 	r.Methods("GET").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/events").
 		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs))))
+	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/clusters/{clusterID}/events").
+		Handler(httpx.ParseClusterIDMiddleware(http.HandlerFunc(StorageEvents(crs))))
 	// import template
 	r.Methods("POST").Path("/clusterresources/api/v1/projects/{projectCode}/import/template").
 		HandlerFunc(ImportTemplate(crs))
@@ -95,7 +97,8 @@ func StorageEvents(crs *clusterResourcesService) func(w http.ResponseWriter, r *
 
 		proxy := httpUtil.NewHTTPReverseProxy(crs.clientTLSConfig, func(request *http.Request) {
 			request.URL = targetURL
-			request.Method = http.MethodGet
+			request.Method = r.Method
+			request.Body = r.Body
 		})
 		proxy.ServeHTTP(w, r)
 	}

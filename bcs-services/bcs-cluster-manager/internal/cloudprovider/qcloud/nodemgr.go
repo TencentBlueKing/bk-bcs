@@ -354,8 +354,8 @@ func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( 
 }
 
 // GetInstanceTypeByProjectQuotaList get instanceType from zoneResource by project quota list info
-func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(projectId, region string,
-	provider string) ([]resource.InstanceType, error) {
+func (nm *NodeManager) GetInstanceTypeByProjectQuotaList(
+	projectId, region string, provider string) ([]resource.InstanceType, error) {
 	listProjectQuotasData, err := project.GetProjectManagerClient().ListProjectQuotas(projectId,
 		project.ProjectQuotaHostType, project.ProjectQuotaProvider)
 	if err != nil {

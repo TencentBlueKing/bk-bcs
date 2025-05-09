@@ -13,6 +13,7 @@
 package qcloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -628,6 +629,8 @@ type AddNodesToClusterTaskOption struct {
 	PassWd       string
 	Operator     string
 	NodeSchedule bool
+
+	Advance *proto.NodeAdvancedInfo
 }
 
 // BuildModifyInstancesVpcStep 节点转移vpc任务
@@ -678,10 +681,16 @@ func (ac *AddNodesToClusterTaskOption) BuildAddNodesToClusterStep(task *proto.Ta
 	if ac.NodeTemplate != nil {
 		templateID = ac.NodeTemplate.GetNodeTemplateID()
 	}
+
 	addStep.Params[cloudprovider.NodeTemplateIDKey.String()] = templateID
 	addStep.Params[cloudprovider.PasswordKey.String()] = ac.PassWd
 	addStep.Params[cloudprovider.OperatorKey.String()] = ac.Operator
 	addStep.Params[cloudprovider.NodeSchedule.String()] = strconv.FormatBool(ac.NodeSchedule)
+
+	if ac.Advance != nil {
+		advanceBytes, _ := json.Marshal(ac.Advance)
+		addStep.Params[cloudprovider.NodeAdvanceKey.String()] = string(advanceBytes)
+	}
 
 	task.Steps[addNodesToClusterStep.StepMethod] = addStep
 	task.StepSequence = append(task.StepSequence, addNodesToClusterStep.StepMethod)

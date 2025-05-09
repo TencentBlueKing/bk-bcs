@@ -570,7 +570,6 @@ cluster:
     useSharedCluster: 使用共享集群
     addCluster: 添加集群
     dashboard: 资源视图
-    applyMaster: 申请Master节点
     applyRecord: 查看申请记录
     overview: 集群总览
     delete:
@@ -1304,7 +1303,6 @@ cluster:
     button:
       selectPage: 本页全选
       selectAcrossPage: 跨页全选
-      applyNode: 申请Node节点
       batch: 批量
       retry: 失败重试
       setLabel: 设置标签
@@ -2760,7 +2758,6 @@ amazonCloud:
     search: 搜索名称/SecretID/集群ID
   tips:
     nameRegex: 仅支持英文、数字和字符(-)
-    secretKeyRegex: 仅支持英文、数字和字符(-或/)
   label:
     clusterType: 集群类型
     managed: 托管集群

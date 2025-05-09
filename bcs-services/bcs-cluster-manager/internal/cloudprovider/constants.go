@@ -243,6 +243,8 @@ var (
 	WorkerNodeIPsKey ParamKey = "workerIPs"
 	// VpcKey vpcId
 	VpcKey ParamKey = "vpc"
+	// NodeAdvanceKey node advanced info
+	NodeAdvanceKey ParamKey = "nodeAdvance"
 
 	// TerminateChargeNodes terminate nodes
 	TerminateChargeNodes ParamKey = "terminateChargeNodes"

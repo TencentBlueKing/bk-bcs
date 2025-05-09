@@ -19496,8 +19496,8 @@ func local_request_MultiCluster_FetchMultiClusterApiResources_0(ctx context.Cont
 
 }
 
-func request_MultiCluster_FetchMultiClusterCustomResource_0(ctx context.Context, marshaler runtime.Marshaler, client MultiClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FetchMultiClusterCustomResourceReq
+func request_MultiCluster_FetchMultiClusterCustomResources_0(ctx context.Context, marshaler runtime.Marshaler, client MultiClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FetchMultiClusterCustomResourcesReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -19526,24 +19526,48 @@ func request_MultiCluster_FetchMultiClusterCustomResource_0(ctx context.Context,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
 	}
 
-	val, ok = pathParams["crd"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crd")
-	}
-
-	protoReq.Crd, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crd", err)
-	}
-
-	msg, err := client.FetchMultiClusterCustomResource(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.FetchMultiClusterCustomResources(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_MultiCluster_FetchMultiClusterCustomResource_0(ctx context.Context, marshaler runtime.Marshaler, server MultiClusterServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq FetchMultiClusterCustomResourceReq
+func local_request_MultiCluster_FetchMultiClusterCustomResources_0(ctx context.Context, marshaler runtime.Marshaler, server MultiClusterServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FetchMultiClusterCustomResourcesReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	msg, err := server.FetchMultiClusterCustomResources(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_MultiCluster_FetchMultiClusterCustomObject_0(ctx context.Context, marshaler runtime.Marshaler, client MultiClusterClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FetchMultiClusterCustomObjectReq
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -19583,7 +19607,53 @@ func local_request_MultiCluster_FetchMultiClusterCustomResource_0(ctx context.Co
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crd", err)
 	}
 
-	msg, err := server.FetchMultiClusterCustomResource(ctx, &protoReq)
+	msg, err := client.FetchMultiClusterCustomObject(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_MultiCluster_FetchMultiClusterCustomObject_0(ctx context.Context, marshaler runtime.Marshaler, server MultiClusterServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq FetchMultiClusterCustomObjectReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["crd"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "crd")
+	}
+
+	protoReq.Crd, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "crd", err)
+	}
+
+	msg, err := server.FetchMultiClusterCustomObject(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -23928,7 +23998,7 @@ func RegisterMultiClusterGwServer(ctx context.Context, mux *runtime.ServeMux, se
 
 	})
 
-	mux.Handle("POST", pattern_MultiCluster_FetchMultiClusterCustomResource_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_MultiCluster_FetchMultiClusterCustomResources_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -23939,7 +24009,7 @@ func RegisterMultiClusterGwServer(ctx context.Context, mux *runtime.ServeMux, se
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_MultiCluster_FetchMultiClusterCustomResource_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_MultiCluster_FetchMultiClusterCustomResources_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -23947,7 +24017,30 @@ func RegisterMultiClusterGwServer(ctx context.Context, mux *runtime.ServeMux, se
 			return
 		}
 
-		forward_MultiCluster_FetchMultiClusterCustomResource_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MultiCluster_FetchMultiClusterCustomResources_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_MultiCluster_FetchMultiClusterCustomObject_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_MultiCluster_FetchMultiClusterCustomObject_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MultiCluster_FetchMultiClusterCustomObject_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -28936,7 +29029,7 @@ func RegisterMultiClusterGwClient(ctx context.Context, mux *runtime.ServeMux, cl
 
 	})
 
-	mux.Handle("POST", pattern_MultiCluster_FetchMultiClusterCustomResource_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_MultiCluster_FetchMultiClusterCustomResources_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -28945,14 +29038,34 @@ func RegisterMultiClusterGwClient(ctx context.Context, mux *runtime.ServeMux, cl
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_MultiCluster_FetchMultiClusterCustomResource_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_MultiCluster_FetchMultiClusterCustomResources_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MultiCluster_FetchMultiClusterCustomResource_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MultiCluster_FetchMultiClusterCustomResources_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_MultiCluster_FetchMultiClusterCustomObject_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_MultiCluster_FetchMultiClusterCustomObject_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_MultiCluster_FetchMultiClusterCustomObject_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -28982,9 +29095,11 @@ func RegisterMultiClusterGwClient(ctx context.Context, mux *runtime.ServeMux, cl
 var (
 	pattern_MultiCluster_FetchMultiClusterResource_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources", "kind"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_MultiCluster_FetchMultiClusterApiResources_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources", "api", "resources"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_MultiCluster_FetchMultiClusterApiResources_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources", "fetch", "api_resources"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_MultiCluster_FetchMultiClusterCustomResource_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources", "crd", "custom_objects"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_MultiCluster_FetchMultiClusterCustomResources_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources", "fetch", "custom_resources"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_MultiCluster_FetchMultiClusterCustomObject_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources", "crd", "custom_objects"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_MultiCluster_MultiClusterResourceCount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"clusterresources", "v1", "projects", "projectCode", "multi_cluster_resources_count"}, "", runtime.AssumeColonVerbOpt(true)))
 )
@@ -28994,7 +29109,9 @@ var (
 
 	forward_MultiCluster_FetchMultiClusterApiResources_0 = runtime.ForwardResponseMessage
 
-	forward_MultiCluster_FetchMultiClusterCustomResource_0 = runtime.ForwardResponseMessage
+	forward_MultiCluster_FetchMultiClusterCustomResources_0 = runtime.ForwardResponseMessage
+
+	forward_MultiCluster_FetchMultiClusterCustomObject_0 = runtime.ForwardResponseMessage
 
 	forward_MultiCluster_MultiClusterResourceCount_0 = runtime.ForwardResponseMessage
 )

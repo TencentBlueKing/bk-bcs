@@ -37,6 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 )
 
 // ResMgr k8s 资源管理器，包含命名空间校验，集群操作下发，构建响应内容等功能
@@ -222,6 +223,7 @@ func (m *ResMgr) Restart(
 	ctx context.Context, namespace, name string, generation int64, opts metav1.PatchOptions,
 ) (*structpb.Struct, error) {
 	username := ctxkey.GetUsernameFromCtx(ctx)
+	username = stringx.ReplaceIllegalChars(username)
 	patchByte := fmt.Sprintf(
 		`{"metadata":{"annotations":{"%s":"%s"}},"spec":{"template":{"metadata":{"annotations":{"%s":"%s","%s":"%d"}}}}}`,
 		resCsts.UpdaterAnnoKey, username,

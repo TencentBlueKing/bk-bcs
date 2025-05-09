@@ -255,6 +255,8 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 			return cluster.GetBusinessID(), nil
 		}
 		return extra.BusinessID, nil
+	case clusterBizCCID:
+		return extra.BusinessID, nil
 	case clusterModuleID:
 		return extra.ModuleID, nil
 	case clusterExtraID:

@@ -223,13 +223,6 @@ const formRules = ref({
       message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
     },
-    {
-      message: $i18n.t('huaweiCloud.tips.nameRegex'),
-      trigger: 'blur',
-      validator(val) {
-        return new RegExp(NAME_REGEX, 'g').test(val);
-      },
-    },
   ],
 });
 const webAnnotations = ref({ perms: {} });
