@@ -24,6 +24,10 @@
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
+        ref="tableRef"
+        v-bk-column-memory="{
+          instance: tableRef
+        }"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange"
@@ -178,6 +182,7 @@ const handleFilterChange = (data) => {
   handleGetTableData();
 };
 
+const tableRef = ref(null);
 // 表格数据
 const data = ref<ISubscribeData>({
   manifestExt: {},

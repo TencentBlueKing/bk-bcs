@@ -59,8 +59,11 @@
             <div class="relative">
               <div
                 :title="projectNameList.join()"
-                class="pr-[36px] pl-[10px] overflow-hidden text-ellipsis text-nowrap">
+                class="pr-[36px] pl-[10px] overflow-hidden text-ellipsis text-nowrap min-h-[30px]">
                 {{ isSelectAll ? $t('generic.label.total') : projectNameList.join() }}
+                <span class="text-[#979BA5] select-none" v-if="!isSelectAll && !projectNameList?.length">
+                  {{ $t('generic.placeholder.select') }}
+                </span>
               </div>
               <i
                 :class="[

@@ -108,6 +108,7 @@
             :is-shared="clusterData?.is_shared"
             :loading="isLoading"
             :cluster-id="clusterData.clusterID"
+            :disable-edit="clusterData.status !== 'RUNNING' || clusterData.is_shared"
             @edit="rangeEdit = true"
             @cancel="rangeEdit = false"
             @save="handleVisibleRangeChange" />

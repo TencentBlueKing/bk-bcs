@@ -23,6 +23,10 @@
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
+        ref="tableRef"
+        v-bk-column-memory="{
+          instance: tableRef
+        }"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
@@ -134,7 +138,7 @@
   </BaseLayout>
 </template>
 <script>
-import { defineComponent } from 'vue';
+import { defineComponent, ref } from 'vue';
 
 import sourceTableCell from '../common/source-table-cell.vue';
 
@@ -156,6 +160,12 @@ export default defineComponent({
       type: String,
       default: '',
     },
+  },
+  setup() {
+    const tableRef = ref(null);
+    return {
+      tableRef,
+    };
   },
 });
 </script>

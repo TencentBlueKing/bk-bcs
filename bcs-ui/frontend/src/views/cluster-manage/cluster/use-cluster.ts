@@ -140,7 +140,7 @@ export function useClusterOverview(clusterList: Ref<any[]>) {
       $clusterId: cluster.clusterID,
     }).catch(() => ({ data: {} }));
     // 计算百分比
-    Object.keys(data).forEach((metric) => {
+    Object.keys(data || {}).forEach((metric) => {
       data[metric] = {
         ...data[metric],
         percent: getMetricPercent(data, metric),

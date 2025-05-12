@@ -219,6 +219,9 @@
         ref="tableRef"
         ext-cls="empty-center"
         empty-block-class-name="bcs-table-empty-dynamic-width"
+        v-bk-column-memory="{
+          instance: tableRef
+        }"
         :key="tableKey"
         :pagination="pagination"
         :row-key="(row) => row.nodeName"
@@ -1167,6 +1170,7 @@ export default defineComponent({
       getAllNodeOverview,
     } = useNode();
 
+    const tableRef = ref(null);
     const tableLoading = ref(false);
     const localClusterId = ref(props.clusterId);
     const { clusterList } = useClusterList();
@@ -2076,6 +2080,7 @@ export default defineComponent({
       searchSelectData,
       searchSelectValue,
       tableKey,
+      tableRef,
       filtersDataSource,
       filteredValue,
       selectType,
