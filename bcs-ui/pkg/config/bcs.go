@@ -20,12 +20,13 @@ import (
 
 // BCSConf :
 type BCSConf struct {
-	Host            string         `yaml:"host"`
-	Token           string         `yaml:"token"`
-	Verify          bool           `yaml:"verify"`
-	NamespacePrefix string         `yaml:"namespace_prefix"`
-	JWTPubKey       string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj    *rsa.PublicKey `yaml:"-"`
+	Host                  string         `yaml:"host"`
+	Token                 string         `yaml:"token"`
+	Verify                bool           `yaml:"verify"`
+	EnableMultiTenantMode bool           `yaml:"enable_multi_tenant_mode"`
+	NamespacePrefix       string         `yaml:"namespace_prefix"`
+	JWTPubKey             string         `yaml:"jwt_public_key"`
+	JWTPubKeyObj          *rsa.PublicKey `yaml:"-"`
 }
 
 // Init :
@@ -36,6 +37,7 @@ func (c *BCSConf) Init() error {
 	c.JWTPubKey = ""
 	c.JWTPubKeyObj = nil
 	c.Verify = false
+	c.EnableMultiTenantMode = false
 	return nil
 }
 

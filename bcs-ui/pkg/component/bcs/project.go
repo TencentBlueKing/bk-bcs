@@ -18,12 +18,14 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
 
 // Project 项目信息
 type Project struct {
 	Name        string `json:"name"`
 	ProjectID   string `json:"projectID"`
+	TenantID    string `json:"tenantID"`
 	ProjectCode string `json:"projectCode"`
 	BusinessID  string `json:"businessID"`
 	Creator     string `json:"creator"`
@@ -44,6 +46,7 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetHeader(constants.HeaderTenantId, ctx.Value(constants.TenantIdCtxKey).(string)).
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 

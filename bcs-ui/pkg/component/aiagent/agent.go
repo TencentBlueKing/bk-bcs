@@ -27,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
 
 // AssistantResponse resp
@@ -134,6 +135,7 @@ func BKAssistantStream(ctx context.Context, bk_ticket, input, username string, c
 		return nil, err
 	}
 	req.Header.Set("X-Bkapi-Authorization", authHeader)
+	req.Header.Set(constants.HeaderTenantId, ctx.Value(constants.TenantIdCtxKey).(string))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("X-Accel-Buffering", "no")

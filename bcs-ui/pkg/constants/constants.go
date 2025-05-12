@@ -31,6 +31,14 @@ const (
 	// ClaimsKey claims key
 	ClaimsKey = "bcs-claims"
 
+	// HeaderTenantId header tenant id
+	HeaderTenantId = "X-Bk-Tenant-Id"
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
+
+	// TenantIdCtxKey ctx key tenant id
+	TenantIdCtxKey contextKey = "tenant_id_context"
+
 	// BluekingLanguage switch cookies constant
 	BluekingLanguage = "blueking_language"
 )

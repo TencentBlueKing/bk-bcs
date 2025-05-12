@@ -132,6 +132,7 @@ func (w *WebServer) newRouter() http.Handler {
 func (w *WebServer) subRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.Tracing)
+	r.Use(middleware.TenantHandler)
 
 	r.Get("/favicon.ico", w.embedWebServer.FaviconHandler)
 

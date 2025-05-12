@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
 
 // Announcement 通知中心公告
@@ -72,6 +73,7 @@ func GetCurrentAnnouncements(ctx context.Context, lang string) ([]Announcement, 
 		config.G.Base.AppCode, config.G.Base.AppSecret)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader(constants.HeaderTenantId, ctx.Value(constants.TenantIdCtxKey).(string)).
 		SetHeader("X-Bkapi-Authorization", authHeader).
 		Get(url)
 

@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 )
 
 // Cluster 集群信息
@@ -45,6 +46,7 @@ func GetCluster(ctx context.Context, clusterID string) (*Cluster, error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/clustermanager/v1/cluster/%s", bcsConf.Host, clusterID)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader(constants.HeaderTenantId, ctx.Value(constants.TenantIdCtxKey).(string)).
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 

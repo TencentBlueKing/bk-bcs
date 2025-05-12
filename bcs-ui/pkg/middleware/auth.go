@@ -16,15 +16,19 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt"
+	"k8s.io/klog/v2"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/auth"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/constants"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/rest"
 )
 
@@ -63,6 +67,12 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		ctx, err = validTenant(ctx, claims.UserName, claims.TenantID, project.TenantID)
+		if err != nil {
+			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())
+			return
+		}
 		// iam 鉴权，先校验 cluster_view 权限，因为 cluster_view 权限包含 project_view 权限，
 		// 避免用户申请 project_view 之后还要再单独申请 cluster_view 权限
 		// 如果有 clusterID 参数，先校验 cluster_view 权限
@@ -74,7 +84,10 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 				return
 			}
 			client, _ := iam.GetClusterPermClient()
-			allow, url, actionList, clusterErr := client.CanViewCluster(claims.UserName, project.ProjectID, clusterID)
+			allow, url, actionList, clusterErr := client.CanViewCluster(utils.UserInfo{
+				BkUserName: claims.UserName,
+				TenantId:   claims.TenantID,
+			}, project.ProjectID, clusterID)
 			if clusterErr != nil {
 				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, clusterErr.Error())
 				return
@@ -93,7 +106,10 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
-		allow, url, actionList, err := client.CanViewProject(claims.UserName, project.ProjectID)
+		allow, url, actionList, err := client.CanViewProject(utils.UserInfo{
+			BkUserName: claims.UserName,
+			TenantId:   claims.TenantID,
+		}, project.ProjectID)
 		if err != nil {
 			rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
 			return
@@ -111,6 +127,33 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 	})
+}
+
+// valid tenant
+func validTenant(ctx context.Context, username, userTenantId, resourceTenantId string) (context.Context, error) {
+	if !config.G.BCS.EnableMultiTenantMode {
+		return ctx, nil
+	}
+	var tenantId string
+	headerTenantId, ok := ctx.Value(constants.TenantIdCtxKey).(string)
+	if ok {
+		tenantId = headerTenantId
+	}
+	// get tenant id
+	if tenantId == "" || tenantId != userTenantId {
+		tenantId = userTenantId
+	}
+
+	klog.Infof("validTenant headerTenantId[%s] userTenantId[%s] tenantId[%s] resourceTenantId[%s]",
+		headerTenantId, userTenantId, tenantId, resourceTenantId)
+
+	if tenantId != resourceTenantId {
+		return ctx, fmt.Errorf("user[%s] tenant[%s] not match resource tenant[%s]",
+			username, tenantId, resourceTenantId)
+	}
+	// 保证传到下游的tenant id是最准确的，会覆盖中间件传进来的header tenant id
+	ctx = context.WithValue(ctx, constants.TenantIdCtxKey, tenantId)
+	return ctx, nil
 }
 
 func decodeBCSJwtFromContext(_ context.Context, r *http.Request) (*auth.UserClaimsInfo, error) {
@@ -174,6 +217,12 @@ func Authentication(next http.Handler) http.Handler {
 
 		// set auth user to context
 		ctx := context.WithValue(r.Context(), AuthUserKey, claims)
+		// 没有project tenant id，则不校验，直接将user tenant id传下游
+		ctx, err = validTenant(ctx, claims.UserName, claims.TenantID, claims.TenantID)
+		if err != nil {
+			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())
+			return
+		}
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
