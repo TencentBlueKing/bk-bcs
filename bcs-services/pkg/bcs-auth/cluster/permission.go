@@ -31,7 +31,7 @@ func NewBCSClusterPermClient(cli iam.PermClient) *BCSClusterPerm {
 }
 
 // CanCreateCluster check user createCluster perm
-func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool, string,
+func (bcp *BCSClusterPerm) CanCreateCluster(user utils.UserInfo, projectID string) (bool, string,
 	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
@@ -46,7 +46,8 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{ClusterCreate.String(), project.ProjectView.String()}
 	clusterNode := ClusterResourceNode{
@@ -66,7 +67,7 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanCreateClusterOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -98,7 +99,7 @@ func (bcp *BCSClusterPerm) CanCreateCluster(user string, projectID string) (bool
 }
 
 // CanManageCluster check user manageCluster perm
-func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clusterID string) (bool, string,
+func (bcp *BCSClusterPerm) CanManageCluster(user utils.UserInfo, projectID string, clusterID string) (bool, string,
 	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
@@ -114,7 +115,8 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{ClusterManage.String(), project.ProjectView.String(), ClusterView.String()}
 	clusterNode := ClusterResourceNode{
@@ -132,7 +134,7 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanManageClusterOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -161,7 +163,7 @@ func (bcp *BCSClusterPerm) CanManageCluster(user string, projectID string, clust
 }
 
 // CanDeleteCluster check user deleteCluster perm
-func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clusterID string) (bool, string,
+func (bcp *BCSClusterPerm) CanDeleteCluster(user utils.UserInfo, projectID string, clusterID string) (bool, string,
 	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
@@ -177,7 +179,8 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{ClusterDelete.String(), project.ProjectView.String(), ClusterView.String()}
 	clusterNode := ClusterResourceNode{
@@ -195,7 +198,7 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanDeleteClusterOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 
 	if err != nil {
@@ -225,7 +228,7 @@ func (bcp *BCSClusterPerm) CanDeleteCluster(user string, projectID string, clust
 }
 
 // CanViewCluster check user viewCluster perm
-func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, clusterID string) (bool, string,
+func (bcp *BCSClusterPerm) CanViewCluster(user utils.UserInfo, projectID string, clusterID string) (bool, string,
 	[]utils.ResourceAction, error) {
 	if bcp == nil {
 		return false, "", nil, utils.ErrServerNotInited
@@ -240,7 +243,8 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{ClusterView.String(), project.ProjectView.String()}
 	clusterNode := ClusterResourceNode{
@@ -258,7 +262,7 @@ func (bcp *BCSClusterPerm) CanViewCluster(user string, projectID string, cluster
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanViewClusterOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 
 	if err != nil {
@@ -305,7 +309,7 @@ func (bcp *BCSClusterPerm) GenerateIAMApplicationURL(systemID string, applicatio
 }
 
 // GetClusterMultiActionPermission only support same instanceSelection
-func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user, projectID, clusterID string,
+func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user utils.UserInfo, projectID, clusterID string,
 	actionIDs []string) (map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
@@ -317,11 +321,12 @@ func (bcp *BCSClusterPerm) GetClusterMultiActionPermission(user, projectID, clus
 
 	return bcp.iamClient.ResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user}, clusterNode)
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId()}, clusterNode)
 }
 
 // GetMultiClusterMultiActionPerm only support same instanceSelection
-func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPerm(user, projectID string, clusterIDs []string,
+func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPerm(user utils.UserInfo, projectID string, clusterIDs []string,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
@@ -337,11 +342,12 @@ func (bcp *BCSClusterPerm) GetMultiClusterMultiActionPerm(user, projectID string
 
 	return bcp.iamClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user}, resourceNodes)
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId()}, resourceNodes)
 }
 
 // CanCreateClusterScopedResource check user createClusterScopedResource perm
-func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clusterID string) (bool,
+func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user utils.UserInfo, projectID, clusterID string) (bool,
 	string, []utils.ResourceAction, error) {
 	// related actions
 	resources := []utils.ResourceAction{
@@ -353,7 +359,8 @@ func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clust
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedCreate.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -370,13 +377,14 @@ func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clust
 	if err != nil {
 		return false, "", nil, err
 	}
-	blog.V(4).Infof("BCSClusterPerm CanCreateClusterScopedResource user[%s] %+v", user, perms)
+	blog.V(4).Infof("BCSClusterPerm CanCreateClusterScopedResource user[%s] %+v",
+		user, perms)
 
 	// check namespace resource perms
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanCreateClusterScopedResourceOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -411,7 +419,7 @@ func (bcp *BCSClusterPerm) CanCreateClusterScopedResource(user, projectID, clust
 }
 
 // CanViewClusterScopedResource check user viewClusterScopedResource perm
-func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, clusterID string) (bool,
+func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user utils.UserInfo, projectID, clusterID string) (bool,
 	string, []utils.ResourceAction, error) {
 	// related actions
 	resources := []utils.ResourceAction{
@@ -423,7 +431,8 @@ func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, cluster
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedView.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -446,7 +455,7 @@ func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, cluster
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanViewClusterScopedResourceOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -481,7 +490,7 @@ func (bcp *BCSClusterPerm) CanViewClusterScopedResource(user, projectID, cluster
 }
 
 // CanUpdateClusterScopedResource check user updateClusterScopedResource perm
-func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clusterID string) (bool,
+func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user utils.UserInfo, projectID, clusterID string) (bool,
 	string, []utils.ResourceAction, error) {
 	// related actions
 	resources := []utils.ResourceAction{
@@ -493,7 +502,8 @@ func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clust
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedUpdate.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -516,7 +526,7 @@ func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clust
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanUpdateClusterScopedResourceOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -551,7 +561,7 @@ func (bcp *BCSClusterPerm) CanUpdateClusterScopedResource(user, projectID, clust
 }
 
 // CanDeleteClusterScopedResource check user deleteClusterScopedResource perm
-func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user, projectID, clusterID string) (bool,
+func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user utils.UserInfo, projectID, clusterID string) (bool,
 	string, []utils.ResourceAction, error) {
 	// related actions
 	resources := []utils.ResourceAction{
@@ -563,7 +573,8 @@ func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user, projectID, clust
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user,
+		UserName: user.GetBKUserName(),
+		TenantId: user.GetTenantId(),
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), ClusterView.String(), ClusterScopedDelete.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -586,7 +597,7 @@ func (bcp *BCSClusterPerm) CanDeleteClusterScopedResource(user, projectID, clust
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSClusterModule,
 		Operation: CanDeleteClusterScopedResourceOperation,
-		User:      user,
+		User:      user.GetBKUserName(),
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err

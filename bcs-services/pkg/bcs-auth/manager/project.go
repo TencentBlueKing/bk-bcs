@@ -22,6 +22,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/templateset"
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 )
 
 // AuthorizationScopeInterface authorization scope interface
@@ -40,6 +41,8 @@ type Project struct {
 	ProjectCode string
 	// Name projectName
 	Name string
+	// TenantId tenantID
+	TenantId string
 }
 
 // BuildScopePerm build project level perm scope
@@ -66,6 +69,14 @@ func (p *Project) validate() error {
 	}
 
 	return nil
+}
+
+func (p *Project) getTenantId() string {
+	if p == nil || p.TenantId == "" {
+		return utils.DefaultTenantId
+	}
+
+	return p.TenantId
 }
 
 func (p *Project) buildProjectCreateScopePerm() iam.AuthorizationScope {
