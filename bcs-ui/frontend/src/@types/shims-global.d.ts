@@ -64,3 +64,5 @@ declare const BK_BCS_VERSION: string;
 declare const SITE_URL: string;
 
 declare const DEVOPS_BCS_API_URL: string;
+
+declare const BK_BCS_ENV_ID: string;

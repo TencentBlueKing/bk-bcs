@@ -815,3 +815,61 @@ export function isDeepEmpty(obj) {
   // 使用 lodash 的 isEmpty 来检查其他类型
   return isEmpty(obj);
 }
+
+/**
+ * 判断PC客户端是否安装某个软件的方法(适用于当前窗口打开)
+ * url 打开客户端的url
+ */
+export function openUriWithInputTimeoutHack(url) {
+  return new Promise((resolve, reject) => {
+    const target = document.createElement('input');
+    target.style.width = '0';
+    target.style.height = '0';
+    target.style.position = 'fixed';
+    target.style.top = '0';
+    target.style.left = '0';
+    document.body.appendChild(target);
+
+    target.focus();
+    const handler = registerEvent(target, 'blur', onBlur);
+
+    function onBlur() {
+      resolve(true);
+      handler.remove();
+      clearTimeout(timeout);
+      document.body.removeChild(target);
+    };
+
+    location.href = url;
+
+    const timeout = setTimeout(() => {
+      reject(false);
+      handler.remove();
+      document.body.removeChild(target);
+    }, 1000);
+  });
+};
+
+/**
+ * 给dom注册事件
+ * @param target
+ * @param eventType
+ * @param cb
+ * @returns { remove() }
+ */
+export function registerEvent(target, eventType, cb) {
+  if (target.addEventListener) {
+    target.addEventListener(eventType, cb);
+    return {
+      remove() {
+        target.removeEventListener(eventType, cb);
+      },
+    };
+  }
+  target.attachEvent(eventType, cb);
+  return {
+    remove() {
+      target.detachEvent(eventType, cb);
+    },
+  };
+}

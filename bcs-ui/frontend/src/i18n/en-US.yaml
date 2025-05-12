@@ -2973,6 +2973,9 @@ dashboard:
       zoomOut: Zoom out
       zoomIn: Zoom in
       copy: Copy
+    weterm:
+      login: Login
+      debug: Debug
   storage:
     usedBy: Mount
   button:

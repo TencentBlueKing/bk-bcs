@@ -243,10 +243,33 @@
                 <span>{{handleGetExtData(row.metadata.uid, 'age')}}</span>
               </template>
             </bcs-table-column>
-            <bcs-table-column :label="$t('generic.label.action')" width="140" fixed="right">
+            <bcs-table-column :label="$t('generic.label.action')" width="200" fixed="right">
               <template #default="{ row }">
+                <bk-popover
+                  placement="bottom"
+                  theme="light dropdown"
+                  :arrow="false"
+                  trigger="click">
+                  <bk-button style="cursor: default;" text>WeTERM</bk-button>
+                  <div slot="content">
+                    <ul>
+                      <a
+                        :href="resolveLink('login', row.metadata.name)"
+                        target="_blank"
+                        class="dropdown-item">
+                        {{ $t('dashboard.workload.weterm.login') }}
+                      </a>
+                      <a
+                        :href="resolveLink('debug', row.metadata.name)"
+                        target="_blank"
+                        class="dropdown-item">
+                        {{ $t('dashboard.workload.weterm.debug') }}
+                      </a>
+                    </ul>
+                  </div>
+                </bk-popover>
                 <bk-button
-                  text :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
+                  class="ml10" text :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
                   @click="handleShowLog(row)">{{ $t('generic.button.log1') }}</bk-button>
                 <bk-button
                   class="ml10" :disabled="handleGetExtData(row.metadata.uid, 'status') === 'Terminating'"
@@ -732,6 +755,11 @@ export default defineComponent({
       });
     };
 
+
+    function resolveLink(type: 'login' | 'debug', pod: string) {
+      return `weterm://session/open/bcs?ns=${props.namespace}&pod=${pod}&container=${metadata.value.name}&type=${type}&clusterId=${clusterId.value}&envId=${BK_BCS_ENV_ID}`;
+    }
+
     const loading = ref(true);
     onMounted(async () => {
       loading.value = true;
@@ -812,6 +840,7 @@ export default defineComponent({
       clusterNameMap,
       podStatusFilters,
       handleFilterChange,
+      resolveLink,
     };
   },
 });
