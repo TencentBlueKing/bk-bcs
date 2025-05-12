@@ -83,14 +83,14 @@ func (a *AddonsInstaller) IsInstalled(clusterID string) (bool, error) {
 		return false, err
 	}
 	// not found addon
-	if resp.Code != 0 {
-		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, code: %d, message: %s", resp.Code, resp.Message)
+	if resp.Code != nil && *resp.Code != 0 {
+		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, code: %d, message: %s", *resp.Code, *resp.Message)
 		return false, nil
 	}
 	blog.Infof("[AddonsInstaller] [%s:%s] GetAddonsDetail success[%s:%s] status: %s",
-		a.projectID, a.clusterID, resp.Data.Namespace, resp.Data.Name, resp.Data.Status)
+		a.projectID, a.clusterID, *resp.Data.Namespace, *resp.Data.Name, *resp.Data.Status)
 
-	if resp.Data.Status == "" {
+	if resp.Data.Status == nil || *resp.Data.Status == "" {
 		return false, nil
 	}
 
@@ -100,9 +100,9 @@ func (a *AddonsInstaller) IsInstalled(clusterID string) (bool, error) {
 func (a *AddonsInstaller) getAddonDetail(clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
 	start := time.Now()
 	resp, err := a.client.GetAddonsDetail(context.Background(), &helmmanager.GetAddonsDetailReq{
-		ProjectCode: a.projectID,
-		ClusterID:   clusterId,
-		Name:        a.addonName,
+		ProjectCode: &a.projectID,
+		ClusterID:   &clusterId,
+		Name:        &a.addonName,
 	})
 	if err != nil {
 		metrics.ReportLibRequestMetric("addons", "GetAddonsDetail", "grpc", metrics.LibCallStatusErr, start)
@@ -126,15 +126,15 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 	}
 
 	addonResp, err := a.getAddonDetail(clusterID)
-	if err != nil || addonResp.Code != 0 {
+	if err != nil || (addonResp.Code != nil && *addonResp.Code != 0) {
 		return fmt.Errorf("[AddonsInstaller] InstallAddons failed: %v", err)
 	}
 
 	start := time.Now()
 	resp, err := a.client.UpgradeAddons(context.Background(), &helmmanager.UpgradeAddonsReq{
-		ProjectCode: a.projectID,
-		ClusterID:   clusterID,
-		Name:        a.addonName,
+		ProjectCode: &a.projectID,
+		ClusterID:   &clusterID,
+		Name:        &a.addonName,
 		Version:     addonResp.Data.Version,
 	})
 	if err != nil {
@@ -149,9 +149,9 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 		return fmt.Errorf("InstallAddons failed, resp is empty")
 	}
 
-	if resp.Code != 0 || !resp.Result {
-		blog.Errorf("[AddonsInstaller] InstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
-		return fmt.Errorf("InstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
+	if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
+		blog.Errorf("[AddonsInstaller] InstallAddons failed, code: %d, message: %s", resp.Code, *resp.Message)
+		return fmt.Errorf("InstallAddons failed, code: %d, message: %s", *resp.Code, *resp.Message)
 	}
 
 	blog.Errorf("[AddonsInstaller] InstallAddons[%s:%s] success[%s]", a.projectID, clusterID, a.addonName)
@@ -173,9 +173,9 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 	start := time.Now()
 	// delete addon
 	resp, err := a.client.UninstallAddons(context.Background(), &helmmanager.UninstallAddonsReq{
-		ProjectCode: a.projectID,
-		ClusterID:   clusterID,
-		Name:        a.addonName,
+		ProjectCode: &a.projectID,
+		ClusterID:   &clusterID,
+		Name:        &a.addonName,
 	})
 	if err != nil {
 		metrics.ReportLibRequestMetric("addons", "UninstallAddons", "grpc", metrics.LibCallStatusErr, start)
@@ -184,10 +184,10 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 	}
 	metrics.ReportLibRequestMetric("addons", "UninstallAddons", "grpc", metrics.LibCallStatusOK, start)
 
-	if resp.Code != 0 {
-		blog.Errorf("[AddonsInstaller] UninstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
-		return fmt.Errorf("UninstallAddons failed, code: %d, message: %s, requestID: %s", resp.Code,
-			resp.Message, resp.RequestID)
+	if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
+		blog.Errorf("[AddonsInstaller] UninstallAddons failed, code: %d, message: %s", *resp.Code, *resp.Message)
+		return fmt.Errorf("UninstallAddons failed, code: %d, message: %s, requestID: %s", *resp.Code,
+			*resp.Message, *resp.RequestID)
 	}
 
 	blog.Infof("[AddonsInstaller] delete addon successful[%s:%s]", clusterID, a.addonName)

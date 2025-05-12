@@ -102,8 +102,7 @@ func (ac *AddonsClient) GetAddonsClient() (helmmanager.ClusterAddonsClient, func
 
 	blog.Infof("GetAddonsClient config[%+v]", *conf)
 
-	cli, closeCon := helmmanager.NewHelmAddonsClient(conf)
-	return cli, closeCon, nil
+	return helmmanager.NewHelmAddonsClient(conf)
 }
 
 // Stop stop addonsClient

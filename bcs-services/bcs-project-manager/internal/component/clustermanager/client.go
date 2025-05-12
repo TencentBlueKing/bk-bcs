@@ -31,7 +31,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
-	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 )
@@ -81,7 +80,7 @@ func GetClusterManagerClient() (ClusterManagerClient, func(), error) {
 	}
 
 	if ClusterClient.disc == nil {
-		return nil, nil, fmt.Errorf("resourceManager module not enable dsicovery")
+		return nil, nil, fmt.Errorf("resourceManager module not enable discovery")
 	}
 
 	nodeServer, err := ClusterClient.disc.GetRandomServiceNode()
@@ -119,7 +118,7 @@ func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
 	header := map[string]string{
 		"x-content-type":                "application/grpc+proto",
 		"Content-Type":                  "application/grpc",
-		middleware.InnerClientHeaderKey: common.ServiceDomain,
+		middleware.InnerClientHeaderKey: constant.ServiceDomain,
 	}
 	if len(config.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)

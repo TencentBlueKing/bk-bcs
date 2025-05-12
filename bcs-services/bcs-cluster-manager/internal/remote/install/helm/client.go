@@ -102,8 +102,7 @@ func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, fun
 
 	blog.Infof("GetHelmManagerClient config[%+v]", *conf)
 
-	cli, closeCon := helmmanager.NewHelmClient(conf)
-	return cli, closeCon, nil
+	return helmmanager.NewHelmClient(conf)
 }
 
 // Stop stop HelmManagerClient

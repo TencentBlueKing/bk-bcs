@@ -25,8 +25,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/avast/retry-go"
+
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
@@ -65,7 +66,7 @@ func (rm *ResManClient) getResourceManagerClient() (ResourceManagerClient, func(
 	}
 
 	if rm.disc == nil {
-		return nil, nil, fmt.Errorf("resourceManager module not enable dsicovery")
+		return nil, nil, fmt.Errorf("resourceManager module not enable discovery")
 	}
 
 	// random server

@@ -14,6 +14,7 @@
 package bcsproject
 
 import (
+	"crypto/tls"
 	"fmt"
 	"math/rand"
 	"time"
@@ -21,10 +22,56 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	blog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
+	headerpkg "github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 )
+
+var (
+	clientConfig *bcsapi.ClientConfig
+)
+
+// SetClientConfig set bcs project client config
+// disc nil 表示使用k8s 内置的service 进行服务访问
+func SetClientConfig(tlsConfig *tls.Config, disc *discovery.ModuleDiscovery) {
+	clientConfig = &bcsapi.ClientConfig{
+		TLSConfig: tlsConfig,
+		Discovery: disc,
+	}
+}
+
+// GetClient get cm client by discovery
+func GetClient(innerClientName string) (*ProjectClient, func(), error) {
+	if clientConfig == nil {
+		return nil, nil, bcsapi.ErrNotInited
+	}
+	var addr string
+	if discovery.UseServiceDiscovery() {
+		addr = fmt.Sprintf("%s:%d", discovery.ProjectManagerServiceName, discovery.ServiceGrpcPort)
+	} else {
+		if clientConfig.Discovery == nil {
+			return nil, nil, fmt.Errorf("project manager module not enable discovery")
+		}
+
+		nodeServer, err := clientConfig.Discovery.GetRandomServiceNode()
+		if err != nil {
+			return nil, nil, err
+		}
+		addr = nodeServer.Address
+	}
+	klog.Infof("get project manager client with address: %s", addr)
+	conf := &bcsapi.Config{
+		Hosts:           []string{addr},
+		TLSConfig:       clientConfig.TLSConfig,
+		InnerClientName: innerClientName,
+	}
+	cli, closeCon := NewProjectManagerClient(conf)
+
+	return cli, closeCon, nil
+}
 
 // ProjectClient xxx
 type ProjectClient struct {
@@ -44,8 +91,9 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 	}
 	// create grpc connection
 	header := map[string]string{
-		"x-content-type": "application/grpc+proto",
-		"Content-Type":   "application/grpc",
+		"x-content-type":            "application/grpc+proto",
+		"Content-Type":              "application/grpc",
+		header.InnerClientHeaderKey: config.InnerClientName,
 	}
 	if len(config.AuthToken) != 0 {
 		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)
@@ -67,6 +115,7 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 	if config.AuthToken != "" {
 		opts = append(opts, grpc.WithPerRPCCredentials(bcsapi.NewTokenAuth(config.AuthToken)))
 	}
+	opts = append(opts, grpc.WithUnaryInterceptor(headerpkg.LaneHeaderInterceptor()))
 
 	var conn *grpc.ClientConn
 	var err error
@@ -76,7 +125,7 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 		addr := config.Hosts[selected]
 		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
-			blog.Errorf("Create project manager grpc client with %s error: %s", addr, err.Error())
+			klog.Errorf("Create project manager grpc client with %s error: %s", addr, err.Error())
 			continue
 		}
 		if conn != nil {
@@ -84,7 +133,7 @@ func NewProjectManagerClient(config *bcsapi.Config) (*ProjectClient, func()) {
 		}
 	}
 	if conn == nil {
-		blog.Errorf("create no project manager client after all instance tries")
+		klog.Errorf("create no project manager client after all instance tries")
 		return nil, nil
 	}
 	// init project manager client

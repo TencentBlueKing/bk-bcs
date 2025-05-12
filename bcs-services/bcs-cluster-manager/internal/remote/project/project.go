@@ -20,10 +20,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/patrickmn/go-cache"
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
-	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
@@ -95,7 +96,7 @@ func (pm *ProManClient) getProjectManagerClient() (*bcsproject.ProjectClient, fu
 	}
 
 	if pm.disc == nil {
-		return nil, nil, fmt.Errorf("resourceManager module not enable dsicovery")
+		return nil, nil, fmt.Errorf("resourceManager module not enable discovery")
 	}
 
 	// random server

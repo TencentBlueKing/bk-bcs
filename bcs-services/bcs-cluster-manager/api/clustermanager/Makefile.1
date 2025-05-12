@@ -11,7 +11,7 @@ PROTO_IMAGE := "proto"
 
 .PHONY: all clean
 
-all:docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+all:docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ) sync-to-bcsapi
 
 $(OBJ):$(PROTO)
 
@@ -54,3 +54,6 @@ docker:
 
 clean:
 	rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+
+sync-to-bcsapi:
+	cp -f *.pb.go *.pb.gw.go *.pb.micro.go *.pb.validate.go ../../../../bcs-common/pkg/bcsapi/clustermanager/

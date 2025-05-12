@@ -20,7 +20,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -31,7 +30,6 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
-var _ = metadata.Join
 
 func request_HelmManager_Available_0(ctx context.Context, marshaler runtime.Marshaler, client HelmManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AvailableReq
@@ -75,7 +73,7 @@ func request_HelmManager_CreateRepository_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -110,13 +108,83 @@ func local_request_HelmManager_CreateRepository_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
 	}
 
 	msg, err := server.CreateRepository(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_HelmManager_CreatePersonalRepo_0(ctx context.Context, marshaler runtime.Marshaler, client HelmManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreatePersonalRepoReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	msg, err := client.CreatePersonalRepo(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_HelmManager_CreatePersonalRepo_0(ctx context.Context, marshaler runtime.Marshaler, server HelmManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq CreatePersonalRepoReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	msg, err := server.CreatePersonalRepo(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -145,7 +213,7 @@ func request_HelmManager_UpdateRepository_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -156,7 +224,7 @@ func request_HelmManager_UpdateRepository_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -191,7 +259,7 @@ func local_request_HelmManager_UpdateRepository_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -202,7 +270,7 @@ func local_request_HelmManager_UpdateRepository_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -229,7 +297,7 @@ func request_HelmManager_GetRepository_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -240,7 +308,7 @@ func request_HelmManager_GetRepository_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -267,7 +335,7 @@ func local_request_HelmManager_GetRepository_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -278,7 +346,7 @@ func local_request_HelmManager_GetRepository_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -313,7 +381,7 @@ func request_HelmManager_DeleteRepository_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -324,7 +392,7 @@ func request_HelmManager_DeleteRepository_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -359,7 +427,7 @@ func local_request_HelmManager_DeleteRepository_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -370,7 +438,7 @@ func local_request_HelmManager_DeleteRepository_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -397,7 +465,7 @@ func request_HelmManager_ListRepository_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -424,7 +492,7 @@ func local_request_HelmManager_ListRepository_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -455,7 +523,7 @@ func request_HelmManager_ListChartV1_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -466,7 +534,7 @@ func request_HelmManager_ListChartV1_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -500,7 +568,7 @@ func local_request_HelmManager_ListChartV1_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -511,7 +579,7 @@ func local_request_HelmManager_ListChartV1_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -545,7 +613,7 @@ func request_HelmManager_GetChartDetailV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -556,7 +624,7 @@ func request_HelmManager_GetChartDetailV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -567,7 +635,7 @@ func request_HelmManager_GetChartDetailV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -594,7 +662,7 @@ func local_request_HelmManager_GetChartDetailV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -605,7 +673,7 @@ func local_request_HelmManager_GetChartDetailV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -616,7 +684,7 @@ func local_request_HelmManager_GetChartDetailV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -647,7 +715,7 @@ func request_HelmManager_ListChartVersionV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -658,7 +726,7 @@ func request_HelmManager_ListChartVersionV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -669,7 +737,7 @@ func request_HelmManager_ListChartVersionV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -703,7 +771,7 @@ func local_request_HelmManager_ListChartVersionV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -714,7 +782,7 @@ func local_request_HelmManager_ListChartVersionV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -725,7 +793,7 @@ func local_request_HelmManager_ListChartVersionV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -759,7 +827,7 @@ func request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -770,7 +838,7 @@ func request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -781,7 +849,7 @@ func request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -792,7 +860,7 @@ func request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version")
 	}
 
-	protoReq.Version, err = runtime.String(val)
+	protoReq.Version, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version", err)
@@ -819,7 +887,7 @@ func local_request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -830,7 +898,7 @@ func local_request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -841,7 +909,7 @@ func local_request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -852,7 +920,7 @@ func local_request_HelmManager_GetVersionDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version")
 	}
 
-	protoReq.Version, err = runtime.String(val)
+	protoReq.Version, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version", err)
@@ -879,7 +947,7 @@ func request_HelmManager_DeleteChart_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -890,7 +958,7 @@ func request_HelmManager_DeleteChart_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -901,7 +969,7 @@ func request_HelmManager_DeleteChart_0(ctx context.Context, marshaler runtime.Ma
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -928,7 +996,7 @@ func local_request_HelmManager_DeleteChart_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -939,7 +1007,7 @@ func local_request_HelmManager_DeleteChart_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -950,7 +1018,7 @@ func local_request_HelmManager_DeleteChart_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -977,7 +1045,7 @@ func request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -988,7 +1056,7 @@ func request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -999,7 +1067,7 @@ func request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1010,7 +1078,7 @@ func request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version")
 	}
 
-	protoReq.Version, err = runtime.String(val)
+	protoReq.Version, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version", err)
@@ -1037,7 +1105,7 @@ func local_request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1048,7 +1116,7 @@ func local_request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -1059,7 +1127,7 @@ func local_request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1070,7 +1138,7 @@ func local_request_HelmManager_DeleteChartVersion_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version")
 	}
 
-	protoReq.Version, err = runtime.String(val)
+	protoReq.Version, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version", err)
@@ -1097,7 +1165,7 @@ func request_HelmManager_DownloadChart_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1108,7 +1176,7 @@ func request_HelmManager_DownloadChart_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -1119,7 +1187,7 @@ func request_HelmManager_DownloadChart_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1130,7 +1198,7 @@ func request_HelmManager_DownloadChart_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version")
 	}
 
-	protoReq.Version, err = runtime.String(val)
+	protoReq.Version, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version", err)
@@ -1157,7 +1225,7 @@ func local_request_HelmManager_DownloadChart_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1168,7 +1236,7 @@ func local_request_HelmManager_DownloadChart_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -1179,7 +1247,7 @@ func local_request_HelmManager_DownloadChart_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1190,7 +1258,7 @@ func local_request_HelmManager_DownloadChart_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "version")
 	}
 
-	protoReq.Version, err = runtime.String(val)
+	protoReq.Version, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "version", err)
@@ -1225,7 +1293,7 @@ func request_HelmManager_GetChartRelease_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1236,7 +1304,7 @@ func request_HelmManager_GetChartRelease_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -1247,7 +1315,7 @@ func request_HelmManager_GetChartRelease_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1282,7 +1350,7 @@ func local_request_HelmManager_GetChartRelease_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1293,7 +1361,7 @@ func local_request_HelmManager_GetChartRelease_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "repoName")
 	}
 
-	protoReq.RepoName, err = runtime.String(val)
+	protoReq.RepoName, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "repoName", err)
@@ -1304,7 +1372,7 @@ func local_request_HelmManager_GetChartRelease_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1335,7 +1403,7 @@ func request_HelmManager_ListReleaseV1_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1346,7 +1414,7 @@ func request_HelmManager_ListReleaseV1_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1380,7 +1448,7 @@ func local_request_HelmManager_ListReleaseV1_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1391,7 +1459,7 @@ func local_request_HelmManager_ListReleaseV1_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1405,6 +1473,100 @@ func local_request_HelmManager_ListReleaseV1_0(ctx context.Context, marshaler ru
 	}
 
 	msg, err := server.ListReleaseV1(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_HelmManager_ListReleaseV2_0 = &utilities.DoubleArray{Encoding: map[string]int{"projectCode": 0, "clusterID": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+)
+
+func request_HelmManager_ListReleaseV2_0(ctx context.Context, marshaler runtime.Marshaler, client HelmManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListReleaseV1Req
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_HelmManager_ListReleaseV2_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListReleaseV2(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_HelmManager_ListReleaseV2_0(ctx context.Context, marshaler runtime.Marshaler, server HelmManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListReleaseV1Req
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_HelmManager_ListReleaseV2_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListReleaseV2(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1425,7 +1587,7 @@ func request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1436,7 +1598,7 @@ func request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1447,7 +1609,7 @@ func request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1458,7 +1620,7 @@ func request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1485,7 +1647,7 @@ func local_request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1496,7 +1658,7 @@ func local_request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1507,7 +1669,7 @@ func local_request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1518,7 +1680,7 @@ func local_request_HelmManager_GetReleaseDetailV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1553,7 +1715,7 @@ func request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1564,7 +1726,7 @@ func request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1575,7 +1737,7 @@ func request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1586,7 +1748,7 @@ func request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1621,7 +1783,7 @@ func local_request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1632,7 +1794,7 @@ func local_request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1643,7 +1805,7 @@ func local_request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1654,7 +1816,7 @@ func local_request_HelmManager_InstallReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1689,7 +1851,7 @@ func request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1700,7 +1862,7 @@ func request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1711,7 +1873,7 @@ func request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1722,7 +1884,7 @@ func request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1757,7 +1919,7 @@ func local_request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1768,7 +1930,7 @@ func local_request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1779,7 +1941,7 @@ func local_request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1790,7 +1952,7 @@ func local_request_HelmManager_UninstallReleaseV1_0(ctx context.Context, marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1825,7 +1987,7 @@ func request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1836,7 +1998,7 @@ func request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1847,7 +2009,7 @@ func request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1858,7 +2020,7 @@ func request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1893,7 +2055,7 @@ func local_request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1904,7 +2066,7 @@ func local_request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1915,7 +2077,7 @@ func local_request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1926,7 +2088,7 @@ func local_request_HelmManager_UpgradeReleaseV1_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -1961,7 +2123,7 @@ func request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -1972,7 +2134,7 @@ func request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -1983,7 +2145,7 @@ func request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -1994,7 +2156,7 @@ func request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2029,7 +2191,7 @@ func local_request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2040,7 +2202,7 @@ func local_request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2051,7 +2213,7 @@ func local_request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2062,7 +2224,7 @@ func local_request_HelmManager_RollbackReleaseV1_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2097,7 +2259,7 @@ func request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2108,7 +2270,7 @@ func request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2119,7 +2281,7 @@ func request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2130,7 +2292,7 @@ func request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2165,7 +2327,7 @@ func local_request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2176,7 +2338,7 @@ func local_request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2187,7 +2349,7 @@ func local_request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2198,7 +2360,7 @@ func local_request_HelmManager_ReleasePreview_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2229,7 +2391,7 @@ func request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2240,7 +2402,7 @@ func request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2251,7 +2413,7 @@ func request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2262,7 +2424,7 @@ func request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2296,7 +2458,7 @@ func local_request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2307,7 +2469,7 @@ func local_request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2318,7 +2480,7 @@ func local_request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2329,7 +2491,7 @@ func local_request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2343,6 +2505,148 @@ func local_request_HelmManager_GetReleaseHistory_0(ctx context.Context, marshale
 	}
 
 	msg, err := server.GetReleaseHistory(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_HelmManager_GetReleaseManifest_0(ctx context.Context, marshaler runtime.Marshaler, client HelmManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetReleaseManifestReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["namespace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
+	}
+
+	protoReq.Namespace, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	val, ok = pathParams["revision"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
+	}
+
+	protoReq.Revision, err = runtime.Uint32P(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
+	}
+
+	msg, err := client.GetReleaseManifest(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_HelmManager_GetReleaseManifest_0(ctx context.Context, marshaler runtime.Marshaler, server HelmManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetReleaseManifestReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["namespace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
+	}
+
+	protoReq.Namespace, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	val, ok = pathParams["revision"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "revision")
+	}
+
+	protoReq.Revision, err = runtime.Uint32P(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "revision", err)
+	}
+
+	msg, err := server.GetReleaseManifest(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -2363,7 +2667,7 @@ func request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2374,7 +2678,7 @@ func request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2385,7 +2689,7 @@ func request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2396,7 +2700,7 @@ func request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2423,7 +2727,7 @@ func local_request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2434,7 +2738,7 @@ func local_request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2445,7 +2749,7 @@ func local_request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2456,13 +2760,133 @@ func local_request_HelmManager_GetReleaseStatus_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := server.GetReleaseStatus(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_HelmManager_GetReleaseDetailExtend_0(ctx context.Context, marshaler runtime.Marshaler, client HelmManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetReleaseDetailExtendReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["namespace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
+	}
+
+	protoReq.Namespace, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	msg, err := client.GetReleaseDetailExtend(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_HelmManager_GetReleaseDetailExtend_0(ctx context.Context, marshaler runtime.Marshaler, server HelmManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetReleaseDetailExtendReq
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["namespace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
+	}
+
+	protoReq.Namespace, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	msg, err := server.GetReleaseDetailExtend(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -2487,7 +2911,7 @@ func request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2498,7 +2922,7 @@ func request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2509,7 +2933,7 @@ func request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2520,7 +2944,7 @@ func request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2554,7 +2978,7 @@ func local_request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2565,7 +2989,7 @@ func local_request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2576,7 +3000,7 @@ func local_request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
 	}
 
-	protoReq.Namespace, err = runtime.String(val)
+	protoReq.Namespace, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
@@ -2587,7 +3011,7 @@ func local_request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2601,6 +3025,142 @@ func local_request_HelmManager_GetReleasePods_0(ctx context.Context, marshaler r
 	}
 
 	msg, err := server.GetReleasePods(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_HelmManager_ImportClusterRelease_0(ctx context.Context, marshaler runtime.Marshaler, client HelmManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ImportClusterReleaseReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["namespace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
+	}
+
+	protoReq.Namespace, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	msg, err := client.ImportClusterRelease(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_HelmManager_ImportClusterRelease_0(ctx context.Context, marshaler runtime.Marshaler, server HelmManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ImportClusterReleaseReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["namespace"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "namespace")
+	}
+
+	protoReq.Namespace, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "namespace", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	msg, err := server.ImportClusterRelease(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -2621,7 +3181,7 @@ func request_ClusterAddons_ListAddons_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2632,7 +3192,7 @@ func request_ClusterAddons_ListAddons_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2659,7 +3219,7 @@ func local_request_ClusterAddons_ListAddons_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2670,7 +3230,7 @@ func local_request_ClusterAddons_ListAddons_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2697,7 +3257,7 @@ func request_ClusterAddons_GetAddonsDetail_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2708,7 +3268,7 @@ func request_ClusterAddons_GetAddonsDetail_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2719,7 +3279,7 @@ func request_ClusterAddons_GetAddonsDetail_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2746,7 +3306,7 @@ func local_request_ClusterAddons_GetAddonsDetail_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2757,7 +3317,7 @@ func local_request_ClusterAddons_GetAddonsDetail_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2768,7 +3328,7 @@ func local_request_ClusterAddons_GetAddonsDetail_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2803,7 +3363,7 @@ func request_ClusterAddons_InstallAddons_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2814,7 +3374,7 @@ func request_ClusterAddons_InstallAddons_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2849,7 +3409,7 @@ func local_request_ClusterAddons_InstallAddons_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2860,7 +3420,7 @@ func local_request_ClusterAddons_InstallAddons_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2895,7 +3455,7 @@ func request_ClusterAddons_UpgradeAddons_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2906,7 +3466,7 @@ func request_ClusterAddons_UpgradeAddons_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2917,7 +3477,7 @@ func request_ClusterAddons_UpgradeAddons_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -2952,7 +3512,7 @@ func local_request_ClusterAddons_UpgradeAddons_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -2963,7 +3523,7 @@ func local_request_ClusterAddons_UpgradeAddons_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -2974,13 +3534,127 @@ func local_request_ClusterAddons_UpgradeAddons_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
 	}
 
 	msg, err := server.UpgradeAddons(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_ClusterAddons_PreviewAddons_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterAddonsClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PreviewAddonsReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	msg, err := client.PreviewAddons(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_ClusterAddons_PreviewAddons_0(ctx context.Context, marshaler runtime.Marshaler, server ClusterAddonsServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq PreviewAddonsReq
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["projectCode"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
+	}
+
+	protoReq.ProjectCode, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
+	}
+
+	val, ok = pathParams["clusterID"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
+	}
+
+	protoReq.ClusterID, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
+	}
+
+	val, ok = pathParams["name"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	}
+
+	protoReq.Name, err = runtime.StringP(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	msg, err := server.PreviewAddons(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -3009,7 +3683,7 @@ func request_ClusterAddons_StopAddons_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -3020,7 +3694,7 @@ func request_ClusterAddons_StopAddons_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -3031,7 +3705,7 @@ func request_ClusterAddons_StopAddons_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -3066,7 +3740,7 @@ func local_request_ClusterAddons_StopAddons_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -3077,7 +3751,7 @@ func local_request_ClusterAddons_StopAddons_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -3088,7 +3762,7 @@ func local_request_ClusterAddons_StopAddons_0(ctx context.Context, marshaler run
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -3123,7 +3797,7 @@ func request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -3134,7 +3808,7 @@ func request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -3145,7 +3819,7 @@ func request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -3180,7 +3854,7 @@ func local_request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "projectCode")
 	}
 
-	protoReq.ProjectCode, err = runtime.String(val)
+	protoReq.ProjectCode, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "projectCode", err)
@@ -3191,7 +3865,7 @@ func local_request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "clusterID")
 	}
 
-	protoReq.ClusterID, err = runtime.String(val)
+	protoReq.ClusterID, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "clusterID", err)
@@ -3202,7 +3876,7 @@ func local_request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
 	}
 
-	protoReq.Name, err = runtime.String(val)
+	protoReq.Name, err = runtime.StringP(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
@@ -3216,14 +3890,11 @@ func local_request_ClusterAddons_UninstallAddons_0(ctx context.Context, marshale
 // RegisterHelmManagerGwServer registers the http handlers for service HelmManager to "mux".
 // UnaryRPC     :call HelmManagerServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterHelmManagerGwFromEndpoint instead.
 func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, server HelmManagerServer) error {
 
 	mux.Handle("GET", pattern_HelmManager_Available_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3231,7 +3902,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_Available_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3245,8 +3915,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_HelmManager_CreateRepository_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3254,7 +3922,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_CreateRepository_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3265,11 +3932,29 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
+	mux.Handle("POST", pattern_HelmManager_CreatePersonalRepo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_HelmManager_CreatePersonalRepo_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_CreatePersonalRepo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_HelmManager_UpdateRepository_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3277,7 +3962,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_UpdateRepository_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3291,8 +3975,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_GetRepository_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3300,7 +3982,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetRepository_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3314,8 +3995,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_HelmManager_DeleteRepository_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3323,7 +4002,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_DeleteRepository_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3337,8 +4015,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_ListRepository_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3346,7 +4022,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_ListRepository_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3360,8 +4035,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_ListChartV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3369,7 +4042,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_ListChartV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3383,8 +4055,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_GetChartDetailV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3392,7 +4062,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetChartDetailV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3406,8 +4075,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_ListChartVersionV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3415,7 +4082,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_ListChartVersionV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3429,8 +4095,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_GetVersionDetailV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3438,7 +4102,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetVersionDetailV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3452,8 +4115,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_HelmManager_DeleteChart_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3461,7 +4122,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_DeleteChart_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3475,8 +4135,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_HelmManager_DeleteChartVersion_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3484,7 +4142,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_DeleteChartVersion_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3498,8 +4155,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_DownloadChart_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3507,7 +4162,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_DownloadChart_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3521,8 +4175,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_HelmManager_GetChartRelease_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3530,7 +4182,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetChartRelease_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3544,8 +4195,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_ListReleaseV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3553,7 +4202,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_ListReleaseV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3564,11 +4212,29 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
+	mux.Handle("GET", pattern_HelmManager_ListReleaseV2_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_HelmManager_ListReleaseV2_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_ListReleaseV2_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_HelmManager_GetReleaseDetailV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3576,7 +4242,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetReleaseDetailV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3590,8 +4255,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_HelmManager_InstallReleaseV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3599,7 +4262,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_InstallReleaseV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3613,8 +4275,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_HelmManager_UninstallReleaseV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3622,7 +4282,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_UninstallReleaseV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3636,8 +4295,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_HelmManager_UpgradeReleaseV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3645,7 +4302,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_UpgradeReleaseV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3659,8 +4315,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_HelmManager_RollbackReleaseV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3668,7 +4322,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_RollbackReleaseV1_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3682,8 +4335,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_HelmManager_ReleasePreview_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3691,7 +4342,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_ReleasePreview_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3705,8 +4355,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_HelmManager_GetReleaseHistory_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3714,7 +4362,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetReleaseHistory_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3725,11 +4372,29 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
+	mux.Handle("GET", pattern_HelmManager_GetReleaseManifest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_HelmManager_GetReleaseManifest_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_GetReleaseManifest_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_HelmManager_GetReleaseStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3737,7 +4402,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetReleaseStatus_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3748,11 +4412,29 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
+	mux.Handle("GET", pattern_HelmManager_GetReleaseDetailExtend_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_HelmManager_GetReleaseDetailExtend_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_GetReleaseDetailExtend_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_HelmManager_GetReleasePods_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3760,7 +4442,6 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 		resp, md, err := local_request_HelmManager_GetReleasePods_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3771,20 +4452,37 @@ func RegisterHelmManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
+	mux.Handle("POST", pattern_HelmManager_ImportClusterRelease_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_HelmManager_ImportClusterRelease_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_ImportClusterRelease_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
 // RegisterClusterAddonsGwServer registers the http handlers for service ClusterAddons to "mux".
 // UnaryRPC     :call ClusterAddonsServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
-// Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterClusterAddonsGwFromEndpoint instead.
 func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, server ClusterAddonsServer) error {
 
 	mux.Handle("GET", pattern_ClusterAddons_ListAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3792,7 +4490,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 		resp, md, err := local_request_ClusterAddons_ListAddons_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3806,8 +4503,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 	mux.Handle("GET", pattern_ClusterAddons_GetAddonsDetail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3815,7 +4510,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 		resp, md, err := local_request_ClusterAddons_GetAddonsDetail_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3829,8 +4523,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 	mux.Handle("POST", pattern_ClusterAddons_InstallAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3838,7 +4530,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 		resp, md, err := local_request_ClusterAddons_InstallAddons_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3852,8 +4543,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 	mux.Handle("PUT", pattern_ClusterAddons_UpgradeAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3861,7 +4550,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 		resp, md, err := local_request_ClusterAddons_UpgradeAddons_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3872,11 +4560,29 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 
 	})
 
+	mux.Handle("POST", pattern_ClusterAddons_PreviewAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_ClusterAddons_PreviewAddons_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterAddons_PreviewAddons_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_ClusterAddons_StopAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3884,7 +4590,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 		resp, md, err := local_request_ClusterAddons_StopAddons_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3898,8 +4603,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 	mux.Handle("DELETE", pattern_ClusterAddons_UninstallAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
 		if err != nil {
@@ -3907,7 +4610,6 @@ func RegisterClusterAddonsGwServer(ctx context.Context, mux *runtime.ServeMux, s
 			return
 		}
 		resp, md, err := local_request_ClusterAddons_UninstallAddons_0(rctx, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3996,6 +4698,26 @@ func RegisterHelmManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 		}
 
 		forward_HelmManager_CreateRepository_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_HelmManager_CreatePersonalRepo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_HelmManager_CreatePersonalRepo_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_CreatePersonalRepo_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4259,6 +4981,26 @@ func RegisterHelmManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
+	mux.Handle("GET", pattern_HelmManager_ListReleaseV2_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_HelmManager_ListReleaseV2_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_ListReleaseV2_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_HelmManager_GetReleaseDetailV1_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -4399,6 +5141,26 @@ func RegisterHelmManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
+	mux.Handle("GET", pattern_HelmManager_GetReleaseManifest_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_HelmManager_GetReleaseManifest_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_GetReleaseManifest_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("GET", pattern_HelmManager_GetReleaseStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -4416,6 +5178,26 @@ func RegisterHelmManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 		}
 
 		forward_HelmManager_GetReleaseStatus_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_HelmManager_GetReleaseDetailExtend_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_HelmManager_GetReleaseDetailExtend_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_GetReleaseDetailExtend_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -4439,6 +5221,26 @@ func RegisterHelmManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
+	mux.Handle("POST", pattern_HelmManager_ImportClusterRelease_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_HelmManager_ImportClusterRelease_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_HelmManager_ImportClusterRelease_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -4446,6 +5248,8 @@ var (
 	pattern_HelmManager_Available_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"helmmanager", "v1", "available"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_HelmManager_CreateRepository_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"helmmanager", "v1", "projects", "projectCode", "repos"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_HelmManager_CreatePersonalRepo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"helmmanager", "v1", "projects", "projectCode", "repos", "personal"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_HelmManager_UpdateRepository_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"helmmanager", "v1", "projects", "projectCode", "repos", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -4473,6 +5277,8 @@ var (
 
 	pattern_HelmManager_ListReleaseV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "releases"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_HelmManager_ListReleaseV2_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 2, 7}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "v2", "releases"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_HelmManager_GetReleaseDetailV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_HelmManager_InstallReleaseV1_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -4487,15 +5293,23 @@ var (
 
 	pattern_HelmManager_GetReleaseHistory_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name", "history"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_HelmManager_GetReleaseManifest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10, 1, 0, 4, 1, 5, 11, 2, 12}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name", "revisions", "revision", "manifest"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_HelmManager_GetReleaseStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name", "status"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_HelmManager_GetReleaseDetailExtend_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name", "expend"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_HelmManager_GetReleasePods_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name", "pods"}, "", runtime.AssumeColonVerbOpt(true)))
+
+	pattern_HelmManager_ImportClusterRelease_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 9, 2, 10}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "namespaces", "namespace", "releases", "name", "import"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
 	forward_HelmManager_Available_0 = runtime.ForwardResponseMessage
 
 	forward_HelmManager_CreateRepository_0 = runtime.ForwardResponseMessage
+
+	forward_HelmManager_CreatePersonalRepo_0 = runtime.ForwardResponseMessage
 
 	forward_HelmManager_UpdateRepository_0 = runtime.ForwardResponseMessage
 
@@ -4523,6 +5337,8 @@ var (
 
 	forward_HelmManager_ListReleaseV1_0 = runtime.ForwardResponseMessage
 
+	forward_HelmManager_ListReleaseV2_0 = runtime.ForwardResponseMessage
+
 	forward_HelmManager_GetReleaseDetailV1_0 = runtime.ForwardResponseMessage
 
 	forward_HelmManager_InstallReleaseV1_0 = runtime.ForwardResponseMessage
@@ -4537,9 +5353,15 @@ var (
 
 	forward_HelmManager_GetReleaseHistory_0 = runtime.ForwardResponseMessage
 
+	forward_HelmManager_GetReleaseManifest_0 = runtime.ForwardResponseMessage
+
 	forward_HelmManager_GetReleaseStatus_0 = runtime.ForwardResponseMessage
 
+	forward_HelmManager_GetReleaseDetailExtend_0 = runtime.ForwardResponseMessage
+
 	forward_HelmManager_GetReleasePods_0 = runtime.ForwardResponseMessage
+
+	forward_HelmManager_ImportClusterRelease_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterClusterAddonsGwFromEndpoint is same as RegisterClusterAddonsGw but
@@ -4660,6 +5482,26 @@ func RegisterClusterAddonsGwClient(ctx context.Context, mux *runtime.ServeMux, c
 
 	})
 
+	mux.Handle("POST", pattern_ClusterAddons_PreviewAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterAddons_PreviewAddons_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterAddons_PreviewAddons_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("PUT", pattern_ClusterAddons_StopAddons_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -4712,6 +5554,8 @@ var (
 
 	pattern_ClusterAddons_UpgradeAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_ClusterAddons_PreviewAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name", "preview"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_ClusterAddons_StopAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7, 2, 8}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name", "stop"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_ClusterAddons_UninstallAddons_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 7}, []string{"helmmanager", "v1", "projects", "projectCode", "clusters", "clusterID", "addons", "name"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -4725,6 +5569,8 @@ var (
 	forward_ClusterAddons_InstallAddons_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterAddons_UpgradeAddons_0 = runtime.ForwardResponseMessage
+
+	forward_ClusterAddons_PreviewAddons_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterAddons_StopAddons_0 = runtime.ForwardResponseMessage
 

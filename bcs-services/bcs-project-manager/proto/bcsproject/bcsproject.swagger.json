@@ -4,26 +4,6 @@
     "title": "Bcs Project Manager API Doc",
     "version": "0.0.1"
   },
-  "tags": [
-    {
-      "name": "BCSProject"
-    },
-    {
-      "name": "Business"
-    },
-    {
-      "name": "Namespace"
-    },
-    {
-      "name": "Variable"
-    },
-    {
-      "name": "Healthz"
-    },
-    {
-      "name": "BCSProjectQuota"
-    }
-  ],
   "basePath": "/bcsapi/v4",
   "schemes": [
     "http"
@@ -48,9 +28,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -60,7 +40,8 @@
             "description": "all. 表示查询所有项目并且携带权限信息",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "kind",
@@ -111,9 +92,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -123,7 +104,8 @@
             "description": "useBCS. 业务是否开启BCS容器服务",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -143,9 +125,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -166,9 +148,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -190,9 +172,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -263,9 +245,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -297,9 +279,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -328,9 +310,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -359,9 +341,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -378,42 +360,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "项目中文名称, 长度不能超过64字符",
-                  "title": "name"
-                },
-                "quota": {
-                  "$ref": "#/definitions/bcsprojectQuotaResource",
-                  "description": "更新资源quota",
-                  "title": "quota"
-                },
-                "updater": {
-                  "type": "string",
-                  "description": "更新者",
-                  "title": "updater"
-                },
-                "labels": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "description": "资源quota的标签配置",
-                  "title": "labels"
-                },
-                "annotations": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "description": "资源quota的注解配置",
-                  "title": "annotations"
-                }
-              },
-              "description": "更新项目quota请求",
-              "title": "UpdateProjectQuotaRequest"
+              "$ref": "#/definitions/bcsprojectUpdateProjectQuotaRequest"
             }
           }
         ],
@@ -435,9 +382,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -454,21 +401,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "quota": {
-                  "$ref": "#/definitions/bcsprojectQuotaResource",
-                  "description": "缩容的资源容量",
-                  "title": "quota"
-                },
-                "updater": {
-                  "type": "string",
-                  "description": "操作人",
-                  "title": "updater"
-                }
-              },
-              "description": "缩容项目维度的资源quota",
-              "title": "ScaleDownProjectQuotaRequest"
+              "$ref": "#/definitions/bcsprojectScaleDownProjectQuotaRequest"
             }
           }
         ],
@@ -490,9 +423,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -509,21 +442,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "quota": {
-                  "$ref": "#/definitions/bcsprojectQuotaResource",
-                  "description": "扩容的资源容量,增量容量扩容",
-                  "title": "quota"
-                },
-                "updater": {
-                  "type": "string",
-                  "description": "操作人",
-                  "title": "updater"
-                }
-              },
-              "description": "根据不同的资源类型增量扩容项目维度的资源quota",
-              "title": "ScaleUpProjectQuotaRequest"
+              "$ref": "#/definitions/bcsprojectScaleUpProjectQuotaRequest"
             }
           }
         ],
@@ -545,9 +464,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -578,9 +497,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -641,7 +560,8 @@
             "description": "all. 表示查询全量数据",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           },
           {
             "name": "businessID",
@@ -667,9 +587,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -701,9 +621,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -734,9 +654,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -767,9 +687,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -805,9 +725,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -831,48 +751,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
-                  "title": "name"
-                },
-                "quota": {
-                  "$ref": "#/definitions/bcsprojectResourceQuota",
-                  "description": "命名空间配额",
-                  "title": "quota"
-                },
-                "labels": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectLabel"
-                  },
-                  "description": "命名空间标签",
-                  "title": "labels"
-                },
-                "annotations": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectAnnotation"
-                  },
-                  "description": "命名空间注解",
-                  "title": "annotations"
-                },
-                "variables": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectVariableValue"
-                  },
-                  "description": "命名空间变量列表",
-                  "title": "variables"
-                }
-              },
-              "description": "创建命名空间请求",
-              "title": "CreateNamespaceRequest",
-              "required": [
-                "name"
-              ]
+              "$ref": "#/definitions/bcsprojectCreateNamespaceRequest"
             }
           }
         ],
@@ -894,9 +773,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -920,9 +799,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "description": "创建命名空间请求",
-              "title": "CreateNamespaceRequest"
+              "$ref": "#/definitions/bcsprojectSyncNamespaceRequest"
             }
           }
         ],
@@ -944,9 +821,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -989,9 +866,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1034,9 +911,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1067,32 +944,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "labels": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectLabel"
-                  },
-                  "description": "命名空间标签",
-                  "title": "labels"
-                },
-                "annotations": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectAnnotation"
-                  },
-                  "description": "命名空间注解",
-                  "title": "annotations"
-                },
-                "quota": {
-                  "$ref": "#/definitions/bcsprojectResourceQuota",
-                  "description": "命名空间配额",
-                  "title": "quota"
-                }
-              },
-              "description": "更新命名空间配额请求",
-              "title": "UpdateNamespaceRequest"
+              "$ref": "#/definitions/bcsprojectUpdateNamespaceRequest"
             }
           }
         ],
@@ -1114,9 +966,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1147,41 +999,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "title": {
-                  "type": "string",
-                  "description": "ITSM 单据标题",
-                  "title": "title"
-                },
-                "currentStatus": {
-                  "type": "string",
-                  "description": "ITSM 单据状态",
-                  "title": "currentStatus"
-                },
-                "sn": {
-                  "type": "string",
-                  "description": "ITSM 单号",
-                  "title": "sn"
-                },
-                "ticketUrl": {
-                  "type": "string",
-                  "description": "ITSM 单据链接",
-                  "title": "ticket_url"
-                },
-                "approveResult": {
-                  "type": "boolean",
-                  "description": "单据审批结果",
-                  "title": "approve_result"
-                },
-                "applyInCluster": {
-                  "type": "boolean",
-                  "description": "是否下发到集群",
-                  "title": "applyInCluster"
-                }
-              },
-              "description": "命名空间itsm回调",
-              "title": "NamespaceCallbackRequest"
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackRequest"
             }
           }
         ],
@@ -1203,9 +1021,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1236,41 +1054,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "title": {
-                  "type": "string",
-                  "description": "ITSM 单据标题",
-                  "title": "title"
-                },
-                "currentStatus": {
-                  "type": "string",
-                  "description": "ITSM 单据状态",
-                  "title": "currentStatus"
-                },
-                "sn": {
-                  "type": "string",
-                  "description": "ITSM 单号",
-                  "title": "sn"
-                },
-                "ticketUrl": {
-                  "type": "string",
-                  "description": "ITSM 单据链接",
-                  "title": "ticket_url"
-                },
-                "approveResult": {
-                  "type": "boolean",
-                  "description": "单据审批结果",
-                  "title": "approve_result"
-                },
-                "applyInCluster": {
-                  "type": "boolean",
-                  "description": "是否下发到集群",
-                  "title": "applyInCluster"
-                }
-              },
-              "description": "命名空间itsm回调",
-              "title": "NamespaceCallbackRequest"
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackRequest"
             }
           }
         ],
@@ -1292,9 +1076,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1325,41 +1109,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "title": {
-                  "type": "string",
-                  "description": "ITSM 单据标题",
-                  "title": "title"
-                },
-                "currentStatus": {
-                  "type": "string",
-                  "description": "ITSM 单据状态",
-                  "title": "currentStatus"
-                },
-                "sn": {
-                  "type": "string",
-                  "description": "ITSM 单号",
-                  "title": "sn"
-                },
-                "ticketUrl": {
-                  "type": "string",
-                  "description": "ITSM 单据链接",
-                  "title": "ticket_url"
-                },
-                "approveResult": {
-                  "type": "boolean",
-                  "description": "单据审批结果",
-                  "title": "approve_result"
-                },
-                "applyInCluster": {
-                  "type": "boolean",
-                  "description": "是否下发到集群",
-                  "title": "applyInCluster"
-                }
-              },
-              "description": "命名空间itsm回调",
-              "title": "NamespaceCallbackRequest"
+              "$ref": "#/definitions/bcsprojectNamespaceCallbackRequest"
             }
           }
         ],
@@ -1381,9 +1131,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1426,9 +1176,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1459,22 +1209,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectVariableValue"
-                  },
-                  "description": "命名空间变量值",
-                  "title": "data"
-                }
-              },
-              "description": "更新命名空间所有变量值请求",
-              "title": "UpdateNamespaceVariablesRequest",
-              "required": [
-                "variableID"
-              ]
+              "$ref": "#/definitions/bcsprojectUpdateNamespaceVariablesRequest"
             }
           }
         ],
@@ -1496,9 +1231,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1550,9 +1285,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1583,9 +1318,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "description": "创建命名空间请求",
-              "title": "CreateNamespaceRequest"
+              "$ref": "#/definitions/bcsprojectWithdrawNamespaceRequest"
             }
           }
         ],
@@ -1607,9 +1340,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1645,9 +1378,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1671,19 +1404,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectVariableValue"
-                  },
-                  "description": "集群变量值",
-                  "title": "data"
-                }
-              },
-              "description": "更新集群所有变量值请求",
-              "title": "UpdateClusterVariablesRequest"
+              "$ref": "#/definitions/bcsprojectUpdateClusterVariablesRequest"
             }
           }
         ],
@@ -1705,9 +1426,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1754,7 +1475,8 @@
             "description": "all. 是否查询全量数据",
             "in": "query",
             "required": false,
-            "type": "boolean"
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -1773,9 +1495,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1811,9 +1533,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1830,40 +1552,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "变量名称, 长度不能超过32字符",
-                  "title": "name"
-                },
-                "key": {
-                  "type": "string",
-                  "description": "变量 key，项目内唯一，长度不能超过64字符",
-                  "title": "key"
-                },
-                "scope": {
-                  "type": "string",
-                  "description": "变量作用域，取值范围：global, cluster, namespace",
-                  "title": "name"
-                },
-                "default": {
-                  "type": "string",
-                  "description": "变量默认值",
-                  "title": "default"
-                },
-                "desc": {
-                  "type": "string",
-                  "description": "变量说明与描述, 限制在100字符以内",
-                  "title": "desc"
-                }
-              },
-              "description": "创建变量请求",
-              "title": "CreateVariableRequest",
-              "required": [
-                "name",
-                "key"
-              ]
+              "$ref": "#/definitions/bcsprojectCreateVariableRequest"
             }
           }
         ],
@@ -1885,9 +1574,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1904,19 +1593,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectImportVariableData"
-                  },
-                  "description": "变量列表",
-                  "title": "data"
-                }
-              },
-              "description": "从文件导入变量请求",
-              "title": "ImportVariablesRequest"
+              "$ref": "#/definitions/bcsprojectImportVariablesRequest"
             }
           }
         ],
@@ -1938,9 +1615,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -1964,36 +1641,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "变量名称, 长度不能超过32字符",
-                  "title": "name"
-                },
-                "key": {
-                  "type": "string",
-                  "description": "变量 key, 项目内唯一, 长度不能超过64字符",
-                  "title": "key"
-                },
-                "scope": {
-                  "type": "string",
-                  "description": "变量作用域, 取值范围: global, cluster, namespace",
-                  "title": "scope"
-                },
-                "default": {
-                  "type": "string",
-                  "description": "变量默认值",
-                  "title": "default"
-                },
-                "desc": {
-                  "type": "string",
-                  "description": "变量说明与描述, 限制在100字符以内",
-                  "title": "desc"
-                }
-              },
-              "description": "更新变量请求",
-              "title": "UpdateVariableRequest"
+              "$ref": "#/definitions/bcsprojectUpdateVariableRequest"
             }
           }
         ],
@@ -2015,9 +1663,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2053,9 +1701,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2079,19 +1727,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectVariableValue"
-                  },
-                  "description": "集群变量值",
-                  "title": "data"
-                }
-              },
-              "description": "更新项目下集群变量值请求",
-              "title": "UpdateClustersVariablesRequest"
+              "$ref": "#/definitions/bcsprojectUpdateClustersVariablesRequest"
             }
           }
         ],
@@ -2113,9 +1749,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2151,9 +1787,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2177,19 +1813,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/bcsprojectVariableValue"
-                  },
-                  "description": "命名空间变量值",
-                  "title": "data"
-                }
-              },
-              "description": "更新项目下命名空间变量值请求",
-              "title": "UpdateNamespacesVariablesRequest"
+              "$ref": "#/definitions/bcsprojectUpdateNamespacesVariablesRequest"
             }
           }
         ],
@@ -2211,9 +1835,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2244,9 +1868,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2277,9 +1901,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2317,9 +1941,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2356,9 +1980,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2387,9 +2011,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2406,72 +2030,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "项目中文名称, 长度不能超过64字符",
-                  "title": "name"
-                },
-                "updater": {
-                  "type": "string",
-                  "description": "更新者",
-                  "title": "updater"
-                },
-                "useBKRes": {
-                  "type": "boolean",
-                  "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
-                  "title": "useBKRes"
-                },
-                "description": {
-                  "type": "string",
-                  "description": "项目简要描述",
-                  "title": "description"
-                },
-                "isOffline": {
-                  "type": "boolean",
-                  "description": "项目是否已经下线, 默认false",
-                  "title": "isOffline"
-                },
-                "kind": {
-                  "type": "string",
-                  "description": "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃",
-                  "title": "kind"
-                },
-                "businessID": {
-                  "type": "string",
-                  "description": "项目绑定的蓝鲸CMDB中业务ID信息",
-                  "title": "businessID"
-                },
-                "managers": {
-                  "type": "string",
-                  "description": "项目管理员",
-                  "title": "managers"
-                },
-                "creator": {
-                  "type": "string",
-                  "description": "创建人",
-                  "title": "creator"
-                },
-                "labels": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "description": "project的标签配置",
-                  "title": "labels"
-                },
-                "annotations": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "description": "project的注解配置",
-                  "title": "annotations"
-                }
-              },
-              "description": "更新项目请求",
-              "title": "UpdateProjectRequest"
+              "$ref": "#/definitions/bcsprojectUpdateProjectRequest"
             }
           }
         ],
@@ -2493,9 +2052,9 @@
             }
           },
           "default": {
-            "description": "An unexpected error response.",
+            "description": "An unexpected error response",
             "schema": {
-              "$ref": "#/definitions/rpcStatus"
+              "$ref": "#/definitions/runtimeError"
             }
           }
         },
@@ -2543,6 +2102,62 @@
           "title": "maintainer"
         }
       }
+    },
+    "bcsprojectCreateNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "命名空间配额",
+          "title": "quota"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectLabel"
+          },
+          "description": "命名空间标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectAnnotation"
+          },
+          "description": "命名空间注解",
+          "title": "annotations"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "命名空间变量列表",
+          "title": "variables"
+        }
+      },
+      "description": "创建命名空间请求",
+      "title": "CreateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "name"
+      ]
     },
     "bcsprojectCreateNamespaceResponse": {
       "type": "object",
@@ -2642,17 +2257,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "创建项目维度的quota资源配额",
@@ -2692,6 +2303,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -2702,6 +2314,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -2717,6 +2330,7 @@
         },
         "isSecret": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否为保密项目, 默认为false",
           "title": "isSecret"
         },
@@ -2766,17 +2380,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "创建项目",
@@ -2830,6 +2440,48 @@
           "title": "category"
         }
       }
+    },
+    "bcsprojectCreateVariableRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "变量名称, 长度不能超过32字符",
+          "title": "name"
+        },
+        "key": {
+          "type": "string",
+          "description": "变量 key，项目内唯一，长度不能超过64字符",
+          "title": "key"
+        },
+        "scope": {
+          "type": "string",
+          "description": "变量作用域，取值范围：global, cluster, namespace",
+          "title": "name"
+        },
+        "default": {
+          "type": "string",
+          "description": "变量默认值",
+          "title": "default"
+        },
+        "desc": {
+          "type": "string",
+          "description": "变量说明与描述, 限制在100字符以内",
+          "title": "desc"
+        }
+      },
+      "description": "创建变量请求",
+      "title": "CreateVariableRequest",
+      "required": [
+        "projectCode",
+        "name",
+        "key"
+      ]
     },
     "bcsprojectCreateVariableResponse": {
       "type": "object",
@@ -3244,6 +2896,29 @@
           "title": "value"
         }
       }
+    },
+    "bcsprojectImportVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectImportVariableData"
+          },
+          "description": "变量列表",
+          "title": "data"
+        }
+      },
+      "description": "从文件导入变量请求",
+      "title": "ImportVariablesRequest",
+      "required": [
+        "projectCode"
+      ]
     },
     "bcsprojectImportVariablesResponse": {
       "type": "object",
@@ -3829,6 +3504,65 @@
       "description": "集群变量列表数据",
       "title": "ListVariableValuesData"
     },
+    "bcsprojectNamespaceCallbackRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+          "title": "namespace"
+        },
+        "title": {
+          "type": "string",
+          "description": "ITSM 单据标题",
+          "title": "title"
+        },
+        "currentStatus": {
+          "type": "string",
+          "description": "ITSM 单据状态",
+          "title": "currentStatus"
+        },
+        "sn": {
+          "type": "string",
+          "description": "ITSM 单号",
+          "title": "sn"
+        },
+        "ticketUrl": {
+          "type": "string",
+          "description": "ITSM 单据链接",
+          "title": "ticket_url"
+        },
+        "approveResult": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "单据审批结果",
+          "title": "approve_result"
+        },
+        "applyInCluster": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否下发到集群",
+          "title": "applyInCluster"
+        }
+      },
+      "description": "命名空间itsm回调",
+      "title": "NamespaceCallbackRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace"
+      ]
+    },
     "bcsprojectNamespaceCallbackResponse": {
       "type": "object",
       "properties": {
@@ -3855,6 +3589,7 @@
         },
         "result": {
           "type": "boolean",
+          "format": "boolean",
           "description": "回调结果",
           "title": "result"
         }
@@ -4104,6 +3839,7 @@
         },
         "useBKRes": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
           "title": "useBKRes"
         },
@@ -4114,6 +3850,7 @@
         },
         "isOffline": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目是否已经下线, 默认false",
           "title": "isOffline"
         },
@@ -4136,17 +3873,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "project的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "项目的基本信息",
@@ -4157,6 +3890,7 @@
       "properties": {
         "isActive": {
           "type": "boolean",
+          "format": "boolean",
           "description": "是否活跃",
           "title": "isActive"
         }
@@ -4217,6 +3951,7 @@
         },
         "isDeleted": {
           "type": "boolean",
+          "format": "boolean",
           "description": "项目下该资源配额是否已下线(默认软删),同类型同种类资源仅不允许重复申请,可更改配额",
           "title": "isDeleted"
         },
@@ -4277,17 +4012,13 @@
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的标签配置",
-          "title": "labels"
+          }
         },
         "annotations": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          },
-          "description": "资源quota的注解配置",
-          "title": "annotations"
+          }
         }
       },
       "description": "项目配额信息(支持不同类型)",
@@ -4439,6 +4170,28 @@
         }
       }
     },
+    "bcsprojectScaleDownProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "配额Id",
+          "title": "quotaId"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "缩容的资源容量",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "操作人",
+          "title": "updater"
+        }
+      },
+      "description": "缩容项目维度的资源quota",
+      "title": "ScaleDownProjectQuotaRequest"
+    },
     "bcsprojectScaleDownProjectQuotaResponse": {
       "type": "object",
       "properties": {
@@ -4469,6 +4222,28 @@
           "title": "web_annotations"
         }
       }
+    },
+    "bcsprojectScaleUpProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "配额Id",
+          "title": "quotaId"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "扩容的资源容量,增量容量扩容",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "操作人",
+          "title": "updater"
+        }
+      },
+      "description": "根据不同的资源类型增量扩容项目维度的资源quota",
+      "title": "ScaleUpProjectQuotaRequest"
     },
     "bcsprojectScaleUpProjectQuotaResponse": {
       "type": "object",
@@ -4501,6 +4276,27 @@
         }
       }
     },
+    "bcsprojectSyncNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        }
+      },
+      "description": "创建命名空间请求",
+      "title": "CreateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID"
+      ]
+    },
     "bcsprojectSyncNamespaceResponse": {
       "type": "object",
       "properties": {
@@ -4530,23 +4326,23 @@
     "bcsprojectTopologyData": {
       "type": "object",
       "properties": {
-        "bkInstId": {
+        "bk_inst_id": {
           "type": "integer",
           "format": "int64",
           "description": "业务ID",
           "title": "bk_inst_id"
         },
-        "bkInstName": {
+        "bk_inst_name": {
           "type": "string",
           "description": "业务名称",
           "title": "bk_inst_name"
         },
-        "bkObjId": {
+        "bk_obj_id": {
           "type": "string",
           "description": "bk_obj_id",
           "title": "bk_obj_id"
         },
-        "bkObjName": {
+        "bk_obj_name": {
           "type": "string",
           "description": "bk_obj_name",
           "title": "bk_obj_name"
@@ -4566,6 +4362,35 @@
           "title": "child"
         }
       }
+    },
+    "bcsprojectUpdateClusterVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群 id",
+          "title": "clusterID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "集群变量值",
+          "title": "data"
+        }
+      },
+      "description": "更新集群所有变量值请求",
+      "title": "UpdateClusterVariablesRequest",
+      "required": [
+        "projectCode",
+        "clusterID"
+      ]
     },
     "bcsprojectUpdateClusterVariablesResponse": {
       "type": "object",
@@ -4588,6 +4413,35 @@
         }
       }
     },
+    "bcsprojectUpdateClustersVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "variableID": {
+          "type": "string",
+          "description": "变量 id",
+          "title": "variableID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "集群变量值",
+          "title": "data"
+        }
+      },
+      "description": "更新项目下集群变量值请求",
+      "title": "UpdateClustersVariablesRequest",
+      "required": [
+        "projectCode",
+        "variableID"
+      ]
+    },
     "bcsprojectUpdateClustersVariablesResponse": {
       "type": "object",
       "properties": {
@@ -4608,6 +4462,54 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectUpdateNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名称, 长度不能超过63字符,只能包含小写字母、数字，以及 '-',必须以字母开头，不能以 '-' 结尾",
+          "title": "namespace"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectLabel"
+          },
+          "description": "命名空间标签",
+          "title": "labels"
+        },
+        "annotations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectAnnotation"
+          },
+          "description": "命名空间注解",
+          "title": "annotations"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectResourceQuota",
+          "description": "命名空间配额",
+          "title": "quota"
+        }
+      },
+      "description": "更新命名空间配额请求",
+      "title": "UpdateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace"
+      ]
     },
     "bcsprojectUpdateNamespaceResponse": {
       "type": "object",
@@ -4635,6 +4537,40 @@
         }
       }
     },
+    "bcsprojectUpdateNamespaceVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群 id",
+          "title": "clusterID"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "namespace"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "命名空间变量值",
+          "title": "data"
+        }
+      },
+      "description": "更新命名空间所有变量值请求",
+      "title": "UpdateNamespaceVariablesRequest",
+      "required": [
+        "projectCode",
+        "variableID"
+      ]
+    },
     "bcsprojectUpdateNamespaceVariablesResponse": {
       "type": "object",
       "properties": {
@@ -4656,6 +4592,35 @@
         }
       }
     },
+    "bcsprojectUpdateNamespacesVariablesRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "variableID": {
+          "type": "string",
+          "description": "变量 id",
+          "title": "variableID"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/bcsprojectVariableValue"
+          },
+          "description": "命名空间变量值",
+          "title": "data"
+        }
+      },
+      "description": "更新项目下命名空间变量值请求",
+      "title": "UpdateNamespacesVariablesRequest",
+      "required": [
+        "projectCode",
+        "variableID"
+      ]
+    },
     "bcsprojectUpdateNamespacesVariablesResponse": {
       "type": "object",
       "properties": {
@@ -4676,6 +4641,116 @@
           "title": "request id"
         }
       }
+    },
+    "bcsprojectUpdateProjectQuotaRequest": {
+      "type": "object",
+      "properties": {
+        "quotaId": {
+          "type": "string",
+          "description": "资源quotaId",
+          "title": "quotaId"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "quota": {
+          "$ref": "#/definitions/bcsprojectQuotaResource",
+          "description": "更新资源quota",
+          "title": "quota"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "更新项目quota请求",
+      "title": "UpdateProjectQuotaRequest"
+    },
+    "bcsprojectUpdateProjectRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "name": {
+          "type": "string",
+          "description": "项目中文名称, 长度不能超过64字符",
+          "title": "name"
+        },
+        "updater": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updater"
+        },
+        "useBKRes": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否使用蓝鲸提供的资源池, 主要用于资源计费, 默认false",
+          "title": "useBKRes"
+        },
+        "description": {
+          "type": "string",
+          "description": "项目简要描述",
+          "title": "description"
+        },
+        "isOffline": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "项目是否已经下线, 默认false",
+          "title": "isOffline"
+        },
+        "kind": {
+          "type": "string",
+          "description": "项目中集群类型, 可选k8s/mesos, 未来该字段可能废弃",
+          "title": "kind"
+        },
+        "businessID": {
+          "type": "string",
+          "description": "项目绑定的蓝鲸CMDB中业务ID信息",
+          "title": "businessID"
+        },
+        "managers": {
+          "type": "string",
+          "description": "项目管理员",
+          "title": "managers"
+        },
+        "creator": {
+          "type": "string",
+          "description": "创建人",
+          "title": "creator"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "更新项目请求",
+      "title": "UpdateProjectRequest"
     },
     "bcsprojectUpdateVariableData": {
       "type": "object",
@@ -4721,6 +4796,52 @@
           "title": "category"
         }
       }
+    },
+    "bcsprojectUpdateVariableRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "variableID": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "variableID"
+        },
+        "name": {
+          "type": "string",
+          "description": "变量名称, 长度不能超过32字符",
+          "title": "name"
+        },
+        "key": {
+          "type": "string",
+          "description": "变量 key, 项目内唯一, 长度不能超过64字符",
+          "title": "key"
+        },
+        "scope": {
+          "type": "string",
+          "description": "变量作用域, 取值范围: global, cluster, namespace",
+          "title": "scope"
+        },
+        "default": {
+          "type": "string",
+          "description": "变量默认值",
+          "title": "default"
+        },
+        "desc": {
+          "type": "string",
+          "description": "变量说明与描述, 限制在100字符以内",
+          "title": "desc"
+        }
+      },
+      "description": "更新变量请求",
+      "title": "UpdateVariableRequest",
+      "required": [
+        "projectCode",
+        "variableID"
+      ]
     },
     "bcsprojectUpdateVariableResponse": {
       "type": "object",
@@ -4868,6 +4989,33 @@
         }
       }
     },
+    "bcsprojectWithdrawNamespaceRequest": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码(英文缩写), 全局唯一, 长度不能超过64字符",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "集群ID",
+          "title": "projectCode"
+        },
+        "namespace": {
+          "type": "string",
+          "description": "命名空间名称",
+          "title": "namespace"
+        }
+      },
+      "description": "创建命名空间请求",
+      "title": "CreateNamespaceRequest",
+      "required": [
+        "projectCode",
+        "clusterID",
+        "namespace"
+      ]
+    },
     "bcsprojectWithdrawNamespaceResponse": {
       "type": "object",
       "properties": {
@@ -4913,12 +5061,16 @@
     "protobufAny": {
       "type": "object",
       "properties": {
-        "@type": {
+        "type_url": {
           "type": "string",
           "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
         }
       },
-      "additionalProperties": {},
       "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     },
     "protobufNullValue": {
@@ -4929,9 +5081,12 @@
       "default": "NULL_VALUE",
       "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\n The JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
     },
-    "rpcStatus": {
+    "runtimeError": {
       "type": "object",
       "properties": {
+        "error": {
+          "type": "string"
+        },
         "code": {
           "type": "integer",
           "format": "int32"

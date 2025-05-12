@@ -8,7 +8,7 @@ GOENVPATH = $(shell go env GOPATH)
 
 .PHONY: all clean
 
-all:$(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+all:$(OBJ) $(GWOBJ) $(SWAGGEROBJ) sync-to-bcsapi
 
 $(OBJ):$(PROTO)
 
@@ -30,3 +30,6 @@ $(SWAGGEROBJ):$(PROTO)
 
 clean:
 	rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+
+sync-to-bcsapi:
+	cp -f *.pb.go *.pb.gw.go *.pb.micro.go *.pb.validate.go ../../../../bcs-common/pkg/bcsapi/clustermanager/
