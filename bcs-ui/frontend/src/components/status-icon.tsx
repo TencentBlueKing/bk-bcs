@@ -56,7 +56,7 @@ export default defineComponent({
       : (resultEnums[color.value] || resultEnums.orange)));
     const statusText = computed(() => {
       if (hideText.value) return '';
-      return statusTextMap.value[status.value] || status.value || $i18n.t('generic.status.unknown1');
+      return statusTextMap.value[status.value] || status.value || '--';
     });
 
     const svgEnums = {

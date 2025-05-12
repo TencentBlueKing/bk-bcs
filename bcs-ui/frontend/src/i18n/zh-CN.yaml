@@ -316,11 +316,9 @@ generic:
     batchDelete: 批量删除
     update: 更新
     drain:
-      text: pod驱逐
+      text: Pod驱逐
       tips: IP状态为停止调度才能做POD驱逐操作
       title: 确认Pod驱逐
-      subTitle: '确认要对节点 {ip} 上的Pod进行驱逐'
-      subTitle2: '确认要对 {ip} 等 {num} 个节点上的Pod进行驱逐'
     cordon:
       text: 停止调度
       title: '确认对节点 {ip} 停止调度'
@@ -444,6 +442,9 @@ generic:
     enableFailed: 开启失败
     disable: 禁用中
     disableFailed: 禁用失败
+    halfSuccess: 部分成功
+    terminate: 退出
+    waiting: 等待
   validate:
     name: 仅支持字母，数字和字符(-)，且以字母开头
     repeatKey: 重复键
@@ -456,6 +457,7 @@ generic:
     required1: taints不能有空字段
     annotationValueEmpty: 注解值不能为空
     labelKey1: 仅支持字母，数字和字符(-_./)，且需以字母数字开头和结尾
+    labelValue: 仅支持字母，数字和字符(-_.)，且需以字母数字开头和结尾
     kindName: 名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     fileName: 文件名称只能包含数字、字母、中划线(-)、下划线(_)、点(.)，开头结尾必须是数字或字母
     notRootName: 用户名不能为root
@@ -1203,8 +1205,6 @@ cluster:
         desc: 注意：若节点池已开启自动伸缩， 则数量将会随集群负载自动调整
         label:
           name: 节点名称
-        msg:
-          drainSuccess: POD迁移成功
         action:
           delete:
             text: 删除节点
@@ -1318,6 +1318,7 @@ cluster:
         subTitle: '确认是否删除 {ip} 等 {num} 个节点'
       saveSetting: 变动预览
       gotIt: 我知道了
+      drainConfirm: '确认驱逐 ({num})'
     msg:
       labelDesc: 标签有助于整理你的资源
       selectedData: '已选择 {num} 条数据'
@@ -1339,6 +1340,7 @@ cluster:
       batchEdit: 批量设置
       copyNodeIP: 一键复制节点IP
       note: 注意：NoExecute污点可能驱逐节点上的所有Pod，请谨慎操作。
+      filterTip: 筛选结果仅用于当前页面查询，不影响实际驱逐范围
     placeholder:
       searchNode: 搜索IP、标签、污点、注解、状态、可用区、节点来源、所属节点池
       inputKey: 请输入key
@@ -1371,6 +1373,24 @@ cluster:
       thisAddition: 本次添加
       thisRemoval: 本次移除
       nodeNum: '本次选择 {nodeNum} 个节点，本次批量编辑标签内容如下：'
+      selectedNode: 已选择节点
+      drainRange:
+        text: 驱逐范围
+        all: 已选节点的所有 Pod
+        labels: 已选节点中，按 Pod 标签筛选
+      terminationGracePeriod:
+        text: Pod 终止宽限时间
+        default: 使用 Pod 定义的 terminationGracePeriodSeconds 值
+        seconds: '等待 {seconds} 后退出'
+      preview: 结果预览
+      drainNum: >-
+        共 {podNum} 个 Pod，其中 {drainNum} 个可被驱逐，{notDrainNum} 个 DaemonSet 管理的 Pod
+        不会被驱逐
+      namespace: 命名空间
+      node: 节点
+      termination: 终止宽限时间
+      drainRisk: 驱逐风险
+      isDrainOnly: 仅展示可驱逐的 Pod
     metric:
       cpuUsageAndRequestUsage: CPU使用率/装箱率
       memUsageAndRequestUsage: 内存使用率/装箱率
@@ -1383,6 +1403,7 @@ cluster:
       applying: 资源申请中
     create:
       text: 添加节点
+      text1: 去添加节点
       button:
         confirmAdd:
           text: 确定添加

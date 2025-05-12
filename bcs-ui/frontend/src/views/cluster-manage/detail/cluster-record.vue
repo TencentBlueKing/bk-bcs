@@ -48,8 +48,11 @@
       <bk-table-column :label="$t('generic.label.resourceID')" prop="resourceID" width="180"></bk-table-column>
       <bk-table-column :label="$t('generic.label.status')" width="120">
         <template #default="{ row }">
-          <StatusIcon :status="row.status" :status-color-map="statusColorMap" :pending="row.status === 'RUNNING'">
-            {{ statusTextMap[row.status] || '--' }}
+          <StatusIcon
+            :status="row.status"
+            :status-color-map="statusColorMap"
+            :status-text-map="statusTextMap"
+            :pending="row.status === 'RUNNING'">
           </StatusIcon>
         </template>
       </bk-table-column>
@@ -69,7 +72,7 @@
               @click="showTaskDetail(row)">{{ $t("generic.button.detail") }}</bcs-button>
             <bcs-button
               text
-              v-if="row.taskID && row.status !== 'SUCCESS' && row.allowRetry"
+              v-if="row.taskID && !hideRetryStatus.includes(row.status) && row.allowRetry"
               class="ml-[8px]"
               @click="handleRetryTask(row)">
               {{ $t("generic.button.retry") }}
@@ -136,6 +139,8 @@ interface Props {
 }
 const props = defineProps<Props>();
 
+const hideRetryStatus = ref(['SUCCESS', 'RUNNING']);
+
 const timeRange = ref<Date[]>([]);
 // 快捷时间配置
 const shortcuts = ref([
@@ -194,7 +199,11 @@ const statusColorMap = ref({
 const statusTextMap = {
   FAILURE: $i18n.t('generic.status.failed'),
   SUCCESS: $i18n.t('generic.status.success'),
-  RUNNING: $i18n.t('generic.status.running'),
+  RUNNING: $i18n.t('generic.status.loading'),
+  INITIALIZING: $i18n.t('generic.status.loading'),
+  PART_FAILURE: $i18n.t('generic.status.halfSuccess'),
+  NOTSTARTED: $i18n.t('generic.status.waiting'),
+  TIMEOUT: $i18n.t('generic.status.terminate'),
 };
 
 // 状态

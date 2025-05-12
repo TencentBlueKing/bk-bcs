@@ -9,12 +9,18 @@
       <div slot="title">
         {{$t('cluster.nodeList.article1')}}
         <i18n v-if="isShowTableAlertAfter" path="cluster.nodeList.article2">
-          <span place="nodes" class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
-          <span place="realRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
+          <template #nodes>
+            <span class="num">{{ clusterData.extraInfo?.clusterCurNodeNum || '--' }}</span>
+          </template>
+          <template #realRemainNodesCount>
+            <span class="num">{{ clusterData.extraInfo?.clusterSupNodeNum || '--' }}</span>
+          </template>
         </i18n>
         <template v-if="clusterData.provider === 'tencentCloud'">
           <i18n path="cluster.nodeList.article3">
-            <span place="maxRemainNodesCount" class="num">{{ clusterData.extraInfo?.clusterMaxNodeNum || '--' }}</span>
+            <template #maxRemainNodesCount>
+              <span class="num">{{ clusterData.extraInfo?.clusterMaxNodeNum || '--' }}</span>
+            </template>
           </i18n>
         </template>
       </div>
@@ -232,7 +238,9 @@
           <transition name="fade">
             <div class="selection-tips" v-if="selectType !== CheckType.Uncheck">
               <i18n path="cluster.nodeList.msg.selectedData">
-                <span place="num" class="tips-num">{{selections.length}}</span>
+                <template #num>
+                  <span class="tips-num">{{selections.length}}</span>
+                </template>
               </i18n>
               <bk-button
                 ext-cls="tips-btn"
@@ -247,7 +255,9 @@
                 v-else
                 @click="handleSelectionAll">
                 <i18n path="cluster.nodeList.msg.selectedAllData">
-                  <span place="num" class="tips-num">{{pagination.count}}</span>
+                  <template #num>
+                    <span class="tips-num">{{pagination.count}}</span>
+                  </template>
                 </i18n>
               </bk-button>
             </div>
@@ -662,6 +672,22 @@
         />
       </template>
     </bcs-sideslider>
+    <!-- pod 驱逐 -->
+    <bcs-sideslider
+      :is-show.sync="podConfig.isShow"
+      :title="$t('generic.button.drain.text')"
+      :width="960"
+      :before-close="handleBeforeClose"
+      quick-close
+      transfer>
+      <template #content>
+        <PodDrain
+          :nodes="podConfig.nodes"
+          :cluster-id="clusterId"
+          @cancel="handleHidePodDrain"
+          @success="handleSuccess" />
+      </template>
+    </bcs-sideslider>
     <!-- 查看日志 -->
     <bk-sideslider
       :is-show.sync="logSideDialogConf.isShow"
@@ -737,6 +763,7 @@ import useTableAcrossCheck from '../../../composables/use-table-across-check';
 import useTableSearchSelect, { ISearchSelectData } from '../../../composables/use-table-search-select';
 import useTableSetting from '../../../composables/use-table-setting';
 import { useClusterInfo, useClusterList, useTask } from '../cluster/use-cluster';
+import PodDrain from '../components/pod-drain.vue';
 import TaintContent from '../components/taint.vue';
 
 import DeleteNode from './delete-node.vue';
@@ -796,6 +823,7 @@ export default defineComponent({
     RingCell,
     KeyValue,
     TaintContent,
+    PodDrain,
     TaskLog,
     BcsCascade,
     TopoSelector,
@@ -1162,7 +1190,7 @@ export default defineComponent({
       getTaskData,
       handleCordonNodes,
       handleUncordonNodes,
-      schedulerNode,
+      // schedulerNode,
       addNode,
       retryTask,
       setNodeLabels,
@@ -1586,20 +1614,29 @@ export default defineComponent({
         },
       });
     };
+
+
     // Pod驱逐
+    const podConfig = ref<{
+      isShow: boolean;
+      nodes: any[];
+    }>({
+      isShow: false,
+      nodes: [],
+    });
     const handleSchedulerNode = (row) => {
-      bkComfirmInfo({
-        title: $i18n.t('generic.button.drain.title'),
-        subTitle: $i18n.t('generic.button.drain.subTitle', { ip: row.nodeName }),
-        callback: async () => {
-          await schedulerNode({
-            clusterId: row.cluster_id,
-            nodes: [row.nodeName],
-          });
-          // result && handleGetNodeData()
-        },
-      });
+      podConfig.value.isShow = true;
+      podConfig.value.nodes = [row];
     };
+    function handleHidePodDrain() {
+      podConfig.value.isShow = false;
+      podConfig.value.nodes = [];
+    }
+    function handleSuccess() {
+      handleHidePodDrain();
+      handleGetNodeData();
+    }
+
     // 节点删除
     const deleting = ref(false);
     const user = computed(() => $store.state.user);
@@ -1849,20 +1886,9 @@ export default defineComponent({
         });
         return;
       }
-      bkComfirmInfo({
-        title: $i18n.t('generic.button.drain.title'),
-        subTitle: $i18n.t('generic.button.drain.subTitle2', {
-          num: selections.value.length,
-          ip: selections.value[0].nodeName,
-        }),
-        callback: async () => {
-          await schedulerNode({
-            clusterId: localClusterId.value,
-            nodes: selections.value.map(item => item.nodeName),
-          });
-          // result && handleGetNodeData()
-        },
-      });
+      // 改为 侧栏
+      podConfig.value.isShow = true;
+      podConfig.value.nodes = selections.value;
     };
     // 添加节点
     const handleAddNode = () => {
@@ -2092,6 +2118,7 @@ export default defineComponent({
       tableSetting,
       taintConfig,
       setLabelConf,
+      podConfig,
       tableLoading,
       localClusterId,
       CheckType,
@@ -2165,6 +2192,8 @@ export default defineComponent({
       handleSkip,
       handleStepRetry,
       handleStepSkip,
+      handleHidePodDrain,
+      handleSuccess,
     };
   },
 });
