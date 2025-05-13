@@ -470,7 +470,7 @@ generic:
   title:
     createPublicCluster: 新建公有云集群
     diffVersion: 线上版本
-    curVersion: 待上线
+    curVersion: 当前版本
     basicInfo: 基础信息
     basicInfo1: 基本信息
     preview: 预览

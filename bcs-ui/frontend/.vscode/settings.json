@@ -12,4 +12,7 @@
   ],
   "bk-code-ai.enable": false,
   "vue.codeActions.enabled": false,
+  "i18n-ally.localesPaths": [
+    "src/i18n"
+  ],
 }
