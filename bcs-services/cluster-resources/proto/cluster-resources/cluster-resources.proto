@@ -576,12 +576,22 @@ service Workload {
 		};
 	}
 
-	rpc ListPoLabelsByNode(ListPoByNodeReq) returns (CommonResp) {
+	rpc ListPoLabelKeyByNode(ListPoByNodeReq) returns (CommonResp) {
 		option (google.api.http) = {
-			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods/labels"
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pod_label_key"
 		};
 		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
-			description: "通过节点名称获取 Pod labels 列表"
+			description: "通过节点名称获取 Pod label key 列表"
+			summary: "ListPoLabelsByNode API"
+		};
+	}
+
+	rpc ListPoLabelValueByNode(ListPoByNodeReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pod_label_value"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "通过节点名称获取 Pod label value 列表"
 			summary: "ListPoLabelsByNode API"
 		};
 	}

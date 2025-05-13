@@ -233,10 +233,10 @@ func (h *Handler) ListPoByNode(
 	return err
 }
 
-// ListPoLabelsByNode 获取指定集群运行于某 Node 上的 Pod labels
+// ListPoLabelKeyByNode 获取指定集群运行于某 Node 上的 Pod labels key
 // 注意，该接口权限为 "集群查看" 权限，而非命名空间域资源查看权限，返回的数据也不是 manifest，仅包含列表展示需要的数据
 // 返回仅 pod 部分数据，不需要集群管理权限，很多用户只有集群查看权限，没有集群管理权限
-func (h *Handler) ListPoLabelsByNode(
+func (h *Handler) ListPoLabelKeyByNode(
 	ctx context.Context, req *clusterRes.ListPoByNodeReq, resp *clusterRes.CommonResp,
 ) error {
 	podCli := cli.NewPodCliByClusterID(ctx, req.ClusterID)
@@ -247,7 +247,7 @@ func (h *Handler) ListPoLabelsByNode(
 		return err
 	}
 
-	labels := parseResourceLabels(mapx.GetList(ret, "items"))
+	labels := parseResourceLabelKeys(mapx.GetList(ret, "items"))
 
 	labels = slice.RemoveDuplicateValues(labels)
 	sort.Strings(labels)
@@ -258,13 +258,52 @@ func (h *Handler) ListPoLabelsByNode(
 	return nil
 }
 
-// 根据集群命名空间查询资源标签
-func parseResourceLabels(items []interface{}) []string {
+// ListPoLabelValueByNode 获取指定集群运行于某 Node 上的 Pod label value
+// 注意，该接口权限为 "集群查看" 权限，而非命名空间域资源查看权限，返回的数据也不是 manifest，仅包含列表展示需要的数据
+// 返回仅 pod 部分数据，不需要集群管理权限，很多用户只有集群查看权限，没有集群管理权限
+func (h *Handler) ListPoLabelValueByNode(
+	ctx context.Context, req *clusterRes.ListPoByNodeReq, resp *clusterRes.CommonResp,
+) error {
+	podCli := cli.NewPodCliByClusterID(ctx, req.ClusterID)
+	ret, err := podCli.ListAllPods(
+		ctx, req.ProjectID, req.ClusterID, metav1.ListOptions{FieldSelector: "spec.nodeName=" + req.NodeName},
+	)
+	if err != nil {
+		return err
+	}
+
+	labels := parseResourceLabelValues(mapx.GetList(ret, "items"))
+
+	labels = slice.RemoveDuplicateValues(labels)
+	sort.Strings(labels)
+
+	if resp.Data, err = pbstruct.Map2pbStruct(map[string]interface{}{"values": labels}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// 根据集群命名空间查询资源标签key
+func parseResourceLabelKeys(items []interface{}) []string {
 	labels := make([]string, 0)
 	for _, item := range items {
 		v := item.(map[string]interface{})
 		for k := range mapx.GetMap(v, "metadata.labels") {
 			labels = append(labels, k)
+		}
+	}
+	return labels
+}
+
+// 根据集群命名空间查询资源标签value
+func parseResourceLabelValues(items []interface{}) []string {
+	labels := make([]string, 0)
+	for _, item := range items {
+		v := item.(map[string]interface{})
+		for _, v := range mapx.GetMap(v, "metadata.labels") {
+			if vv, ok := v.(string); ok {
+				labels = append(labels, vv)
+			}
 		}
 	}
 	return labels

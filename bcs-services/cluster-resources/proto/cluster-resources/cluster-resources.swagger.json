@@ -8735,16 +8735,16 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pod_label_key": {
       "get": {
-        "summary": "ListPoByNode API",
-        "description": "通过节点名称获取 Pod 列表",
-        "operationId": "Workload_ListPoByNode",
+        "summary": "ListPoLabelsByNode API",
+        "description": "通过节点名称获取 Pod labels 列表",
+        "operationId": "Workload_ListPoLabelKeyByNode",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/clusterresourcesCommonListResp"
+              "$ref": "#/definitions/clusterresourcesCommonResp"
             }
           },
           "default": {
@@ -8779,16 +8779,60 @@
         ]
       }
     },
-    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods/labels": {
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pod_label_value": {
       "get": {
         "summary": "ListPoLabelsByNode API",
         "description": "通过节点名称获取 Pod labels 列表",
-        "operationId": "Workload_ListPoLabelsByNode",
+        "operationId": "Workload_ListPoLabelValueByNode",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/clusterresourcesCommonResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "nodeName",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Workload"
+        ]
+      }
+    },
+    "/clusterresources/v1/projects/{projectID}/clusters/{clusterID}/nodes/{nodeName}/workloads/pods": {
+      "get": {
+        "summary": "ListPoByNode API",
+        "description": "通过节点名称获取 Pod 列表",
+        "operationId": "Workload_ListPoByNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clusterresourcesCommonListResp"
             }
           },
           "default": {
