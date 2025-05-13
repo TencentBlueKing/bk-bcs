@@ -155,18 +155,14 @@ func (h *GameStatefulSetHistoryViewer) ViewHistory(namespace, name string, revis
 
 // GetHistory returns the revisions associated with a StatefulSet
 func (h *GameStatefulSetHistoryViewer) GetHistory(namespace, name string) (map[int64]runtime.Object, error) {
-	sts, history, err := gameStatefulSetHistory(h.c.AppsV1(), h.g, namespace, name)
+	_, history, err := gameStatefulSetHistory(h.c.AppsV1(), h.g, namespace, name)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make(map[int64]runtime.Object)
 	for _, h := range history {
-		applied, err := applyGameStatefulSetHistory(sts, h)
-		if err != nil {
-			return nil, err
-		}
-		result[h.Revision] = applied
+		result[h.Revision] = h.DeepCopy()
 	}
 
 	return result, nil
@@ -195,18 +191,14 @@ func (h *GameDeploymentHistoryViewer) ViewHistory(namespace, name string, revisi
 
 // GetHistory returns the revisions associated with a GameDeployment
 func (h *GameDeploymentHistoryViewer) GetHistory(namespace, name string) (map[int64]runtime.Object, error) {
-	ds, history, err := gameDeploymentHistory(h.c.AppsV1(), h.g, namespace, name)
+	_, history, err := gameDeploymentHistory(h.c.AppsV1(), h.g, namespace, name)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make(map[int64]runtime.Object)
 	for _, h := range history {
-		applied, err := applyGameDeploymentHistory(ds, h)
-		if err != nil {
-			return nil, err
-		}
-		result[h.Revision] = applied
+		result[h.Revision] = h.DeepCopy()
 	}
 
 	return result, nil
@@ -336,18 +328,14 @@ func (h *DaemonSetHistoryViewer) ViewHistory(namespace, name string, revision in
 
 // GetHistory returns the revisions associated with a DaemonSet
 func (h *DaemonSetHistoryViewer) GetHistory(namespace, name string) (map[int64]runtime.Object, error) {
-	ds, history, err := daemonSetHistory(h.c.AppsV1(), namespace, name)
+	_, history, err := daemonSetHistory(h.c.AppsV1(), namespace, name)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make(map[int64]runtime.Object)
 	for _, h := range history {
-		applied, err := applyDaemonSetHistory(ds, h)
-		if err != nil {
-			return nil, err
-		}
-		result[h.Revision] = applied
+		result[h.Revision] = h.DeepCopy()
 	}
 
 	return result, nil
@@ -424,18 +412,14 @@ func (h *StatefulSetHistoryViewer) ViewHistory(namespace, name string, revision 
 
 // GetHistory returns the revisions associated with a StatefulSet
 func (h *StatefulSetHistoryViewer) GetHistory(namespace, name string) (map[int64]runtime.Object, error) {
-	sts, history, err := statefulSetHistory(h.c.AppsV1(), namespace, name)
+	_, history, err := statefulSetHistory(h.c.AppsV1(), namespace, name)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make(map[int64]runtime.Object)
 	for _, h := range history {
-		applied, err := applyStatefulSetHistory(sts, h)
-		if err != nil {
-			return nil, err
-		}
-		result[h.Revision] = applied
+		result[h.Revision] = h.DeepCopy()
 	}
 
 	return result, nil
