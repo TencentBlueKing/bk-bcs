@@ -199,7 +199,7 @@ func (c *CRDClient) HistoryRevision(ctx context.Context, kind, namespace, name s
 			log.Error(ctx, "convert to unstructured failed, err %s", err.Error())
 			continue
 		}
-		ret := formatter.FormatWorkloadRes(unstructuredObj)
+		ret := formatter.FormatControllerRevisionRes(unstructuredObj)
 		ret["revision"] = v
 		m = append(m, ret)
 	}
