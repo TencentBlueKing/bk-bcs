@@ -2406,9 +2406,7 @@ dashboard:
       zoomOut: 缩小
       zoomIn: 放大
       copy: 复制代码
-    weterm:
-      login: 登入
-      debug: Debug
+    weterm: {}
   storage:
     usedBy: 被挂载
 apiToken:

@@ -137,6 +137,7 @@
               :show-overflow-tooltip="false">
               <template #default="{ row }">
                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
+                <bk-button text class="ml10" @click="resolveLink('login', row.name)">WeTERM</bk-button>
                 <bk-popover
                   placement="bottom"
                   theme="light dropdown"
@@ -158,29 +159,6 @@
                         :href="logLinks[row.containerID] && logLinks[row.containerID].file_log_url"
                         target="_blank" class="dropdown-item">
                         {{ $t('dashboard.workload.pods.filelog') }}
-                      </a>
-                    </ul>
-                  </div>
-                </bk-popover>
-                <bk-popover
-                  placement="bottom"
-                  theme="light dropdown"
-                  :arrow="false"
-                  trigger="click">
-                  <bk-button style="cursor: default;" text class="ml10">WeTERM</bk-button>
-                  <div slot="content">
-                    <ul>
-                      <a
-                        :href="resolveLink('login', row.name)"
-                        target="_blank"
-                        class="dropdown-item">
-                        {{ $t('dashboard.workload.weterm.login') }}
-                      </a>
-                      <a
-                        :href="resolveLink('debug', row.name)"
-                        target="_blank"
-                        class="dropdown-item">
-                        {{ $t('dashboard.workload.weterm.debug') }}
                       </a>
                     </ul>
                   </div>
@@ -556,7 +534,7 @@ export default defineComponent({
     const isDropdownShow = ref(false);
     // 3. weterm
     function resolveLink(type: 'login' | 'debug', container: string) {
-      return `weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${BK_BCS_ENV_ID}`;
+      window.open(`weterm://session/open/bcs?ns=${props.namespace}&pod=${metadata.value.name}&container=${container}&type=${type}&clusterId=${clusterId.value}&envId=${window.BCS_CONFIG.bkBcsEnvID}`);
     }
 
     onMounted(async () => {

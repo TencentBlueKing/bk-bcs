@@ -25,6 +25,7 @@ interface ILink {
   uiPrefix: string // UI前缀，用于特性环境
   webConsole: string // web console文档
   backToLegacyButtonUrl: string // 回退到旧版link
+  bkBcsEnvID: string // 客户端环境ID
 }
 
 interface Window {
@@ -64,5 +65,3 @@ declare const BK_BCS_VERSION: string;
 declare const SITE_URL: string;
 
 declare const DEVOPS_BCS_API_URL: string;
-
-declare const BK_BCS_ENV_ID: string;
