@@ -203,6 +203,14 @@ func (m *TaskManager) RetryAll(task *types.Task) error {
 	task.SetStatus(types.TaskStatusRunning)
 	task.SetMessage("task retrying")
 
+	for _, step := range task.Steps {
+		step.RetryCount = 0
+		step.Status = types.TaskStatusNotStarted
+	}
+	task.CurrentStep = ""
+	task.CallbackResult = ""
+	task.CallbackMessage = ""
+
 	if err := GetGlobalStorage().UpdateTask(context.Background(), task); err != nil {
 		return err
 	}

@@ -190,9 +190,6 @@ func (s *mysqlStore) UpdateTask(ctx context.Context, task *types.Task) error {
 		}
 
 		for _, step := range task.Steps {
-			if step.Name != task.CurrentStep {
-				continue
-			}
 			updateStep := getUpdateStepRecord(step)
 			if err := tx.Model(&StepRecord{}).
 				Where("task_id = ? AND name= ?", task.TaskID, step.Name).
