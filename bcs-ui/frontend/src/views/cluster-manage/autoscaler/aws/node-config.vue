@@ -387,8 +387,8 @@ import { sortBy } from 'lodash';
 import { computed, defineComponent, onMounted, ref, toRefs, watch } from 'vue';
 
 import FormGroup from '@/components/form-group.vue';
-import usePage from '@/composables/use-page';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
+import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -652,15 +652,16 @@ export default defineComponent({
           }
           return false;
         })
-        .filter(instance => (!CPU.value || instance.cpu === CPU.value)
-        && (!Mem.value || instance.memory === Mem.value));
+        .filter(instance => (CPU.value === '' || instance.cpu === CPU.value)
+        && (Mem.value === '' || instance.memory === Mem.value));
     });
     let timer: any = null;
     watch(() => instanceTypesList.value.length, () => {
       if (isEdit.value) {
-        const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
         timer && clearTimeout(timer);
         timer = setTimeout(() => {
+          // eslint-disable-next-line max-len
+          const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
           pageChange(Math.ceil((index + 1) / pagination.value.limit));
         }, 100);
       }

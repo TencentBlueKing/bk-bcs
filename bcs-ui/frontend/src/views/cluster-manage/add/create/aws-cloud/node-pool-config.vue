@@ -472,14 +472,15 @@ export default defineComponent({
           }
           return false;
         })
-        .filter(instance => (!CPU.value || instance.cpu === CPU.value)
-        && (!Mem.value || instance.memory === Mem.value));
+        .filter(instance => (CPU.value === '' || instance.cpu === CPU.value)
+        && (Mem.value === '' || instance.memory === Mem.value));
     });
     let timer: any = null;
     watch(() => instanceTypesList.value.length, () => {
-      const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
       timer && clearTimeout(timer);
       timer = setTimeout(() => {
+        // eslint-disable-next-line max-len
+        const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
         pageChange(Math.ceil((index + 1) / pagination.value.limit));
       }, 100);
       handleResetPage();
