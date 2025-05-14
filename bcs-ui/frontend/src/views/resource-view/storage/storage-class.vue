@@ -18,10 +18,6 @@
       <bk-table
         :data="curPageData"
         :pagination="pageConf"
-        ref="tableRef"
-        v-bk-column-memory="{
-          instance: tableRef
-        }"
         @page-change="handlePageChange"
         @page-limit-change="handlePageSizeChange"
         @sort-change="handleSortChange">
@@ -103,7 +99,7 @@
   </BaseLayout>
 </template>
 <script>
-import { defineComponent, ref } from 'vue';
+import { defineComponent } from 'vue';
 
 import sourceTableCell from '../common/source-table-cell.vue';
 
@@ -114,11 +110,8 @@ export default defineComponent({
   setup() {
     const handleParseObjToArr = (row, prop) => Object.keys(row[prop] || {}).map(key => `${key}=${row[prop][key]}`)
       .join(', ');
-
-    const tableRef = ref(null);
     return {
       handleParseObjToArr,
-      tableRef,
     };
   },
 });

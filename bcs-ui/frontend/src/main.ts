@@ -44,7 +44,6 @@ import BcsEmptyTableStatus from '@/components/empty-table-status.vue';
 import bkSelector from '@/components/selector/index.vue';
 import Authority from '@/directives/authority';
 import focus from '@/directives/focus/index';
-import tableColMemory from '@/directives/table-col-memory';
 import i18n from '@/i18n/i18n-setup';
 import config from '@/mixins/config';
 import router from '@/router';
@@ -80,7 +79,6 @@ Vue.prototype.$chainable = chainable;
 Vue.use(BcsErrorPlugin);
 Vue.use(Authority);
 Vue.use(focus);
-Vue.use(tableColMemory);
 Vue.use(bkmagic2);
 Vue.use(VeeValidate, {
   fieldsBagName: '_veeFields',

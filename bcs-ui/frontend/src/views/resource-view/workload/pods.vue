@@ -66,10 +66,6 @@
         <bk-table
           :data="curPageData"
           :pagination="pageConf"
-          ref="tableRef"
-          v-bk-column-memory="{
-            instance: tableRef
-          }"
           @page-change="handlePageChange"
           @page-limit-change="handlePageSizeChange"
           @sort-change="handleSortChange"
@@ -358,8 +354,6 @@ export default defineComponent({
       });
     };
 
-    const tableRef = ref(null);
-
     return {
       baseLayoutRef,
       showLog,
@@ -368,7 +362,6 @@ export default defineComponent({
       searchSelectData,
       searchSelectKey,
       searchSelectValue,
-      tableRef,
       searchSelectChange,
       handleShowLog,
     };
