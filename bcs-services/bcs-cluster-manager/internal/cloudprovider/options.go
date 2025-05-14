@@ -74,7 +74,7 @@ const (
 	TaskStatusSuccess = "SUCCESS"
 	// TaskStatusSkip task skip
 	TaskStatusSkip = "SKIP"
-	// TaskStatusPartFailure task part failure
+	// TaskStatusPartFailure task part failure, part of success result
 	TaskStatusPartFailure = "PART_FAILURE"
 	// TaskStatusFailure task failed
 	TaskStatusFailure = "FAILURE"

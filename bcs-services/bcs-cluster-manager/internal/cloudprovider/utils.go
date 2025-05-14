@@ -102,6 +102,8 @@ const (
 	LadderResourcePoolLabelAction = "yunti-ResourcePoolLabelTask"
 	// AddNodesShieldAlarmAction 屏蔽机器告警
 	AddNodesShieldAlarmAction = "addNodesShieldAlarm"
+	// NodeDrainPodAction 节点驱逐pod
+	NodeDrainPodAction = "nodeDrainPod"
 )
 
 var (

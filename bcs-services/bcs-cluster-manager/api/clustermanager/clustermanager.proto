@@ -379,6 +379,17 @@ service ClusterManager {
     };
   }
 
+  rpc CheckDrainNode(CheckDrainNodeRequest) returns (CheckDrainNodeResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/node/drain/check"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "节点pod驱逐前风险检查"
+      summary : "节点上的 Pod 驱逐前风险检查"
+    };
+  }
+
   rpc UpdateNodeLabels(UpdateNodeLabelsRequest) returns (UpdateNodeLabelsResponse) {
     option (google.api.http) = {
       put : "/clustermanager/v1/node/labels"
@@ -13219,6 +13230,7 @@ message DrainNodeRequest {
   bool disableEviction = 11;
   uint32 skipWaitForDeleteTimeoutSeconds = 12;
   bool dryRun = 13;
+  string operator = 14;
 }
 message DrainNodeResponse {
   uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
@@ -13232,10 +13244,66 @@ message DrainNodeResponse {
     title : "result",
     description : "返回结果"
   }];
-  NodeOperationStatus data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  Task data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
-    description : "返回数据"
+    description : "驱逐节点任务返回信息"
   }];
+}
+
+message CheckDrainNodeData {
+  string podName = 1;
+  string nameSpace = 2;
+  string podStatus = 3;
+  string podServiceAccount = 4;
+  string node = 5;
+  uint32 gracePeriodSeconds = 6;
+  repeated EvictionRisk evictionRisk = 7;
+  bool willBeEvicted = 8;
+}
+
+message EvictionRisk {
+  string riskParameter = 1;
+  string riskDescription = 2;
+}
+
+message CheckDrainNodeRequest {
+  repeated string innerIPs = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "innerIPs",
+      description : "节点内网IP列表，和节点名称列表二选一，优先节点名称列表"
+    }];
+  string clusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "pod迁移节点所属的clusterID"    },
+    (validate.rules).string = {min_bytes: 1}
+  ];
+  repeated string nodes = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodes",
+      description : "节点名称列表，和节点内网IP列表二选一，优先节点名称列表"
+    }];
+  bool force = 4;
+  int32 gracePeriodSeconds = 5;
+  bool ignoreAllDaemonSets = 6;
+  bool deleteLocalData = 7;
+  string selector = 8;
+  string podSelector = 9;
+  bool disableEviction = 10;
+}
+
+message CheckDrainNodeResponse {
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", description : "返回错误码"  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"  }];
+  repeated CheckDrainNodeData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回数据"  }];
 }
 
 message NodeAnnotation {

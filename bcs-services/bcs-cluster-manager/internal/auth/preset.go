@@ -28,6 +28,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetNodeInfo",
 	"ClusterManager.GetNodeInfo",
 	"ClusterManager.CheckNodeInCluster",
+	"ClusterManager.CheckDrainNode",
 
 	// cluster credential
 

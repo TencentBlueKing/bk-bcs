@@ -79,6 +79,9 @@ var (
 
 	// DebugBkSopsTask task
 	DebugBkSopsTask TaskType = "DebugBkSopsTask"
+
+	// NodeDrainPodTask task
+	NodeDrainPodTask TaskType = "NodeDrainPodTask"
 )
 
 // GetTaskType by cloud
@@ -145,6 +148,9 @@ var (
 
 	// DebugBkSopsTaskName task
 	DebugBkSopsTaskName TaskName = "调试标准运维任务"
+
+	// NodeDrainPodTask task
+	NodeDrainPodTaskName TaskName = "节点驱逐 pod 任务"
 )
 
 // ParamKey xxx
@@ -364,4 +370,7 @@ var (
 	IsStaticIpModeKey ParamKey = "isStaticIpMode"
 	// ClaimExpiredSecondsKey xxx
 	ClaimExpiredSecondsKey ParamKey = "claimExpiredSeconds"
+
+	// DrainHelperKey xxx
+	DrainHelperKey ParamKey = "drainHelper"
 )

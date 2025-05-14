@@ -113,7 +113,7 @@ func (m *ModelTaskStepLog) CreateTaskStepLogWarn(ctx context.Context, taskID, st
 	if _, err := m.db.Table(m.tableName).Insert(ctx, []interface{}{types.TaskStepLog{
 		TaskID:     taskID,
 		StepName:   stepName,
-		Level:      "WARN",
+		Level:      "WARNING",
 		Message:    message,
 		CreateTime: time.Now().Format(time.RFC3339Nano),
 	}}); err != nil {

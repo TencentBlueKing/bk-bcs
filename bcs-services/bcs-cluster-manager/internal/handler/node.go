@@ -86,6 +86,22 @@ func (cm *ClusterManager) DrainNode(ctx context.Context,
 	return nil
 }
 
+// CheckDrainNode implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) CheckDrainNode(ctx context.Context,
+	req *cmproto.CheckDrainNodeRequest, resp *cmproto.CheckDrainNodeResponse) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := node.NewCheckDrainNodeAction(cm.model, cm.kubeOp)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("CheckDrainNode", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: CheckDrainNode, req %v, resp %v", reqID,
+		utils.ToJSONString(req), utils.ToJSONString(resp))
+	return nil
+}
+
 // UpdateNodeAnnotations implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) UpdateNodeAnnotations(ctx context.Context,
 	req *cmproto.UpdateNodeAnnotationsRequest, resp *cmproto.UpdateNodeAnnotationsResponse) error {

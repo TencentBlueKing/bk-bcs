@@ -19,6 +19,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 )
 
 // stringInSlice returns true if given string in slice
@@ -90,4 +91,44 @@ func (ko *K8SOperator) GetNodePods(ctx context.Context, option GetNodePodsOption
 	}
 
 	return pods, nil
+}
+
+// CheckPodPDBOption check pod PDB option
+type CheckPodPDBOption struct {
+	ClusterID string
+	Pod       v1.Pod
+}
+
+// CheckPodPDB check pod has PDB
+func (ko *K8SOperator) CheckPodPDB(ctx context.Context, option CheckPodPDBOption) (bool, error) {
+	if ko == nil {
+		return false, ErrServerNotInit
+	}
+
+	clientInterface, err := ko.GetClusterClient(option.ClusterID)
+	if err != nil {
+		blog.Errorf("CheckPodPDB GetClusterClient failed: %v", err)
+		return false, err
+	}
+
+	// List all PDB in the pod namespace
+	pdbs, err := clientInterface.PolicyV1().PodDisruptionBudgets(option.Pod.Namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return false, fmt.Errorf("CheckPodPDB Get PodDisruptionBudgets List failed: %v", err)
+	}
+
+	// check if any PDB selector matches the pod labels
+	for _, pdb := range pdbs.Items {
+		selector, err := metav1.LabelSelectorAsSelector(pdb.Spec.Selector)
+		if err != nil {
+			blog.Warnf("CheckPodPDB[%s] parse selector for PDB failed: %v", pdb.Name, err)
+			continue
+		}
+
+		if selector.Matches(labels.Set(option.Pod.Labels)) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

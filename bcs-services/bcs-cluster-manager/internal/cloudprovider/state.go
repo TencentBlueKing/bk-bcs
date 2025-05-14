@@ -298,6 +298,54 @@ func (stat *TaskState) UpdateStepFailure(start time.Time, stepName string, err e
 	return nil
 }
 
+// UpdateStepPartFailure update step failure
+func (stat *TaskState) UpdateStepPartFailure(start time.Time, stepName string, err error) error {
+	step := stat.Task.Steps[stepName]
+	end := time.Now()
+	step.ExecutionTime = uint32(end.Unix() - start.Unix())
+	step.Start = start.Format(time.RFC3339)
+	step.End = end.Format(time.RFC3339)
+	step.Status = TaskStatusPartFailure
+	step.LastUpdate = step.End
+	step.Message = fmt.Sprintf("running part failed, %s", err.Error())
+	if stat.TaskUrl != "" {
+		step.Params[BkSopsTaskUrlKey.String()] = stat.TaskUrl
+	}
+
+	taskStart, _ := time.Parse(time.RFC3339, stat.Task.Start)
+	stat.Task.End = end.Format(time.RFC3339)
+	stat.Task.ExecutionTime = uint32(end.Unix() - taskStart.Unix())
+	stat.Task.Status = TaskStatusPartFailure
+	stat.Task.Message = fmt.Sprintf("step %s running part failed, %s", step.Name, err.Error())
+	stat.Task.LastUpdate = step.End
+	if err = GetStorageModel().UpdateTask(context.Background(), stat.Task); err != nil {
+		blog.Errorf("task %s fatal, update task step %s failure status failed, %s. required admin intervetion",
+			stat.Task.TaskID, stepName, err.Error())
+		return err
+	}
+
+	metricName := step.Name
+	if strings.HasPrefix(step.Name, BKSOPTask) {
+		metricName = BKSOPTask
+	}
+	metrics.ReportMasterTaskMetric(stat.Task.TaskType, stat.Task.Status, metricName, taskStart)
+
+	stepStart, _ := time.Parse(time.RFC3339, step.Start)
+	metrics.ReportMasterTaskMetric(stat.Task.TaskType, step.Status, metricName, stepStart)
+
+	if stat.JobResult != nil {
+		err = stat.JobResult.UpdateJobResultStatus(false)
+		if err != nil {
+			blog.Errorf("task[%s] stepName[%s] UpdateJobResultStatus failed: %v", stat.Task.TaskID, stepName, err)
+		} else {
+			blog.Infof("task[%s] stepName[%s] UpdateJobResultStatus successful", stat.Task.TaskID, stepName)
+		}
+	}
+
+	blog.Infof("task %s step %s running part failure", stat.Task.TaskID, stepName)
+	return nil
+}
+
 // SkipFailure step if need to skip failure status
 func (stat *TaskState) SkipFailure(start time.Time, stepName string, err error) error {
 	step := stat.Task.Steps[stepName]

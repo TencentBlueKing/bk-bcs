@@ -4423,6 +4423,40 @@
         ]
       }
     },
+    "/clustermanager/v1/node/drain/check": {
+      "post": {
+        "summary": "节点上的 Pod 驱逐前风险检查",
+        "description": "节点pod驱逐前风险检查",
+        "operationId": "ClusterManager_CheckDrainNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCheckDrainNodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCheckDrainNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/node/labels": {
       "put": {
         "summary": "更新节点标签",
@@ -7765,6 +7799,122 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerCheckDrainNodeData": {
+      "type": "object",
+      "properties": {
+        "podName": {
+          "type": "string"
+        },
+        "nameSpace": {
+          "type": "string"
+        },
+        "podStatus": {
+          "type": "string"
+        },
+        "podServiceAccount": {
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "gracePeriodSeconds": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "evictionRisk": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerEvictionRisk"
+          }
+        },
+        "willBeEvicted": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "clustermanagerCheckDrainNodeRequest": {
+      "type": "object",
+      "properties": {
+        "innerIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点内网IP列表，和节点名称列表二选一，优先节点名称列表",
+          "title": "innerIPs"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "pod迁移节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点名称列表，和节点内网IP列表二选一，优先节点名称列表",
+          "title": "nodes"
+        },
+        "force": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "gracePeriodSeconds": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ignoreAllDaemonSets": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "deleteLocalData": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "selector": {
+          "type": "string"
+        },
+        "podSelector": {
+          "type": "string"
+        },
+        "disableEviction": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "clustermanagerCheckDrainNodeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCheckDrainNodeData"
+          },
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerCheckNodesRequest": {
       "type": "object",
@@ -12195,6 +12345,9 @@
         "dryRun": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "operator": {
+          "type": "string"
         }
       }
     },
@@ -12219,8 +12372,8 @@
           "title": "result"
         },
         "data": {
-          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
-          "description": "返回数据",
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "驱逐节点任务返回信息",
           "title": "data"
         }
       }
@@ -12278,6 +12431,17 @@
         "step": {
           "type": "integer",
           "format": "int64"
+        }
+      }
+    },
+    "clustermanagerEvictionRisk": {
+      "type": "object",
+      "properties": {
+        "riskParameter": {
+          "type": "string"
+        },
+        "riskDescription": {
+          "type": "string"
         }
       }
     },
