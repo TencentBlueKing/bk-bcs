@@ -94,8 +94,7 @@
             </i18n>
             <bk-checkbox
               class="select-none flex-shrink-0 leading-[24px]"
-              v-model="isShowDrainOnly"
-              @change="handleResetPage">
+              v-model="isShowDrainOnly">
               {{ $t('cluster.nodeList.label.isDrainOnly') }}
             </bk-checkbox>
           </div>
@@ -316,6 +315,7 @@ export default defineComponent({
         .catch(() => [])
         .finally(() => {
           podLoading.value = false;
+          handleResetPage();
         });
     }
 
@@ -438,6 +438,10 @@ export default defineComponent({
         podSelector: paramsData.value.podSelector,
       });
     }, { deep: true });
+
+    watch(isShowFilterTip, () => {
+      handleResetPage();
+    });
 
     onBeforeMount(() => {
       getPodList();
