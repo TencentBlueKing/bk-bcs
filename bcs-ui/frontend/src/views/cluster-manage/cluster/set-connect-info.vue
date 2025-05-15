@@ -92,7 +92,7 @@ const handleConfirm = async () => {
 
   isLoading.value = false;
   if (result) {
-    emits('confirm', props.cluster.clusterID);
+    emits('confirm', props.cluster);
     emits('cancel');
   }
 };
