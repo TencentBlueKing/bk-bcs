@@ -15,6 +15,7 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
@@ -64,7 +65,7 @@ func DeleteGKEClusterTask(taskID string, stepName string) error {
 
 	if basicInfo.Cluster.SystemID != "" {
 		err = cli.DeleteCluster(context.Background(), basicInfo.Cluster.SystemID)
-		if err != nil {
+		if err != nil && !strings.Contains(err.Error(), "Not found") {
 			blog.Errorf("DeleteGKEClusterTask[%s]: call google DeleteGKECluster failed: %v",
 				taskID, err)
 			retErr := fmt.Errorf("call google DeleteGKECluster failed: %s", err.Error())

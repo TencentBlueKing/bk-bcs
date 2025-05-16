@@ -129,10 +129,7 @@ func createGKENodeGroup(cmOption *cloudprovider.CommonOption, group *proto.NodeG
 
 // generateCreateNodePoolInput generate create node pool input
 func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster) *api.CreateNodePoolRequest {
-	if group.NodeTemplate.MaxPodsPerNode == 0 {
-		group.NodeTemplate.MaxPodsPerNode = 110
-	}
-	return &api.CreateNodePoolRequest{
+	req := &api.CreateNodePoolRequest{
 		NodePool: &api.NodePool{
 			// gke nodePool名称中不允许有大写字母
 			Name:             group.CloudNodeGroupID,
@@ -140,7 +137,7 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 			InitialNodeCount: int64(group.AutoScaling.DesiredSize),
 			Locations:        group.AutoScaling.Zones,
 			MaxPodsConstraint: &api.MaxPodsConstraint{
-				MaxPodsPerNode: int64(group.NodeTemplate.MaxPodsPerNode),
+				MaxPodsPerNode: 0,
 			},
 			Autoscaling: &api.NodePoolAutoscaling{
 				// 不开启谷歌云 CA 组件，因为需要部署 BCS 自己的 CA 组件
@@ -149,6 +146,13 @@ func generateCreateNodePoolInput(group *proto.NodeGroup, cluster *proto.Cluster)
 			Management: generateNodeManagement(group, cluster),
 		},
 	}
+
+	if group.NodeTemplate.MaxPodsPerNode > 0 {
+		// 如果节点池不指定最大 Pods 限制时，使用集群默认值
+		req.NodePool.MaxPodsConstraint.MaxPodsPerNode = int64(group.NodeTemplate.MaxPodsPerNode)
+	}
+
+	return req
 }
 
 // CheckCloudNodeGroupStatusTask check cloud node group status task
