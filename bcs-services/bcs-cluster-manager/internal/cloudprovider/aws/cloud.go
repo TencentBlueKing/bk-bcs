@@ -114,7 +114,7 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 
 	// cluster cloud basic setting
-	clusterBasicSettingByEks(cls, cluster)
+	clusterBasicSettingByEks(cls, cluster, opt)
 
 	// cluster cloud network setting
 	clusterNetworkSettingByEks(cls, cluster, ipv4Cidr, ipv6Cidr)
@@ -122,10 +122,12 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	return nil
 }
 
-func clusterBasicSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster) {
+func clusterBasicSettingByEks(cls *cmproto.Cluster, cluster *eks.Cluster,
+	opt *cloudprovider.SyncClusterCloudInfoOption) {
 	cls.ClusterBasicSettings = &cmproto.ClusterBasicSetting{
 		Version:     *cluster.Version,
 		VersionName: *cluster.Version,
+		Area:        opt.Area,
 	}
 	// if cluster.NodeConfig != nil {
 	// 	cls.ClusterBasicSettings.OS = cluster.NodeConfig.ImageType

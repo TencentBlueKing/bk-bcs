@@ -110,3 +110,37 @@ func (as *AutoScalingClient) DetachInstances(input *autoscaling.DetachInstancesI
 
 	return output.Activities, nil
 }
+
+// DescribeLifecycleHooks list all lifecycle hooks in AutoScalingGroups
+func (as *AutoScalingClient) DescribeLifecycleHooks(asName *string) ([]*autoscaling.LifecycleHook, error) {
+	blog.Infof("DescribeLifecycleHooks asName: %s", asName)
+
+	output, err := as.asClient.DescribeLifecycleHooks(&autoscaling.DescribeLifecycleHooksInput{
+		AutoScalingGroupName: asName,
+	})
+	if err != nil {
+		blog.Errorf("DescribeLifecycleHooks failed: %v", err)
+		return nil, err
+	}
+	blog.Infof("DescribeLifecycleHooks find hooks %s", output.GoString())
+
+	return output.LifecycleHooks, nil
+}
+
+// DeleteLifecycleHooks delete lifecycle hooks in AutoScalingGroups
+func (as *AutoScalingClient) DeleteLifecycleHooks(asName *string, hookName []string) error {
+	for _, hook := range hookName {
+		_, err := as.asClient.DeleteLifecycleHook(&autoscaling.DeleteLifecycleHookInput{
+			AutoScalingGroupName: asName,
+			LifecycleHookName:    &hook,
+		})
+		if err != nil {
+			blog.Errorf("DeleteLifecycleHook failed: %s", err)
+			return err
+		}
+
+		blog.Infof("DeleteLifecycleHooks delete hooks %s successful", hook)
+	}
+
+	return nil
+}
