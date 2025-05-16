@@ -616,8 +616,12 @@ export default defineComponent({
         .filter(instance => (!CPU.value || instance.cpu === CPU.value)
         && (!Mem.value || instance.memory === Mem.value));
     });
-    watch(() => instanceTypesList.value.length, () => {
-      handleResetPage();
+    const watchOnce = watch(() => instanceTypesList.value.length, () => {
+      // eslint-disable-next-line max-len
+      const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
+      // 初始化监听一次
+      pageChange(Math.ceil((index + 1) / pagination.value.limit));
+      watchOnce();
     });
     // eslint-disable-next-line max-len
     const curInstanceItem = computed(() => instanceData.value.find(instance => instance.nodeType === nodePoolConfig.value.launchTemplate.instanceType) || {});
@@ -648,6 +652,7 @@ export default defineComponent({
     ], () => {
       // 重置机型
       nodePoolConfig.value.launchTemplate.instanceType = '';
+      handleResetPage();
       handleSetDefaultInstance();
     });
     watch(curInstanceItem, () => {
@@ -656,6 +661,11 @@ export default defineComponent({
     watch(() => nodePoolConfig.value.launchTemplate.instanceType, () => {
       // 机型变更时重置子网数据
       nodePoolConfig.value.autoScaling.subnetIDs = [];
+      if (nodePoolConfig.value.launchTemplate.instanceType) {
+        // eslint-disable-next-line max-len
+        const index = instanceTypesList.value.findIndex(item => item.nodeType === nodePoolConfig.value.launchTemplate.instanceType);
+        pageChange(Math.ceil((index + 1) / pagination.value.limit));
+      }
     });
     const instanceRowClass = ({ row }) => {
       // SELL 表示售卖，SOLD_OUT 表示售罄
@@ -670,13 +680,11 @@ export default defineComponent({
     };
     // 设置默认机型
     const handleSetDefaultInstance = () => {
-      setTimeout(() => {
-        // 默认机型配置
-        if (!nodePoolConfig.value.launchTemplate.instanceType) {
-          nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
-            .find(instance => instance.status === 'SELL')?.nodeType;
-        }
-      });
+      // 默认机型配置
+      if (!nodePoolConfig.value.launchTemplate.instanceType) {
+        nodePoolConfig.value.launchTemplate.instanceType = instanceTypesList.value
+          .find(instance => instance.status === 'SELL')?.nodeType;
+      }
     };
     const handleGetInstanceTypes = async () => {
       instanceTypesLoading.value = true;
