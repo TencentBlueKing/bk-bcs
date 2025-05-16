@@ -52,6 +52,18 @@ const (
 	perfMeterData = "bcs::webconsole::meter_data"
 )
 
+type ctxKey string
+
+const (
+	// HeaderTenantId header tenant id
+	HeaderTenantId = "X-Bk-Tenant-Id"
+	// DefaultTenantId default tenant id
+	DefaultTenantId = "default"
+
+	// TenantIdCtxKey ctx key tenant id
+	TenantIdCtxKey ctxKey = "tenant_id_context"
+)
+
 // APIResponse xxx
 type APIResponse struct {
 	Code      int         `json:"code"`
