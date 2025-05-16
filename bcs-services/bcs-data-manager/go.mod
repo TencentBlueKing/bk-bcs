@@ -2,6 +2,8 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager
 
 go 1.20
 
+replace github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20250115101422-10b01a987a53
+
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418123107-72b120390195
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
