@@ -37,7 +37,7 @@ enabled=1
 gpgcheck=0
 EOF
   IFS='.' read -ra v1 <<< "$K8S_VER"
-  IFS='.' read -ra v2 <<< "1.22"
+  IFS='.' read -ra v2 <<< "1.23"
   for i in "${!v1[@]}"; do
     if (( ${i} == 0 ));then
       continue
