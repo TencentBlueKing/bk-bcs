@@ -5968,6 +5968,30 @@ func NewMultiClusterEndpoints() []*api.Endpoint {
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "MultiCluster.GetApiResourcesObject",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object/{resName}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.CreateApiResourcesObject",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.UpdateApiResourcesObject",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MultiCluster.DeleteApiResourcesObject",
+			Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object/{resName}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -5979,6 +6003,10 @@ type MultiClusterService interface {
 	FetchMultiClusterCustomResources(ctx context.Context, in *FetchMultiClusterCustomResourcesReq, opts ...client.CallOption) (*CommonResp, error)
 	FetchMultiClusterCustomObject(ctx context.Context, in *FetchMultiClusterCustomObjectReq, opts ...client.CallOption) (*CommonResp, error)
 	MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, opts ...client.CallOption) (*CommonResp, error)
+	GetApiResourcesObject(ctx context.Context, in *GetApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error)
+	CreateApiResourcesObject(ctx context.Context, in *CreateApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error)
+	UpdateApiResourcesObject(ctx context.Context, in *UpdateApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error)
+	DeleteApiResourcesObject(ctx context.Context, in *DeleteApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error)
 }
 
 type multiClusterService struct {
@@ -6043,6 +6071,46 @@ func (c *multiClusterService) MultiClusterResourceCount(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *multiClusterService) GetApiResourcesObject(ctx context.Context, in *GetApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.GetApiResourcesObject", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) CreateApiResourcesObject(ctx context.Context, in *CreateApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.CreateApiResourcesObject", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) UpdateApiResourcesObject(ctx context.Context, in *UpdateApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.UpdateApiResourcesObject", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *multiClusterService) DeleteApiResourcesObject(ctx context.Context, in *DeleteApiResourcesObjectReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "MultiCluster.DeleteApiResourcesObject", in)
+	out := new(CommonResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for MultiCluster service
 
 type MultiClusterHandler interface {
@@ -6051,6 +6119,10 @@ type MultiClusterHandler interface {
 	FetchMultiClusterCustomResources(context.Context, *FetchMultiClusterCustomResourcesReq, *CommonResp) error
 	FetchMultiClusterCustomObject(context.Context, *FetchMultiClusterCustomObjectReq, *CommonResp) error
 	MultiClusterResourceCount(context.Context, *MultiClusterResourceCountReq, *CommonResp) error
+	GetApiResourcesObject(context.Context, *GetApiResourcesObjectReq, *CommonResp) error
+	CreateApiResourcesObject(context.Context, *CreateApiResourcesObjectReq, *CommonResp) error
+	UpdateApiResourcesObject(context.Context, *UpdateApiResourcesObjectReq, *CommonResp) error
+	DeleteApiResourcesObject(context.Context, *DeleteApiResourcesObjectReq, *CommonResp) error
 }
 
 func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts ...server.HandlerOption) error {
@@ -6060,6 +6132,10 @@ func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts
 		FetchMultiClusterCustomResources(ctx context.Context, in *FetchMultiClusterCustomResourcesReq, out *CommonResp) error
 		FetchMultiClusterCustomObject(ctx context.Context, in *FetchMultiClusterCustomObjectReq, out *CommonResp) error
 		MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error
+		GetApiResourcesObject(ctx context.Context, in *GetApiResourcesObjectReq, out *CommonResp) error
+		CreateApiResourcesObject(ctx context.Context, in *CreateApiResourcesObjectReq, out *CommonResp) error
+		UpdateApiResourcesObject(ctx context.Context, in *UpdateApiResourcesObjectReq, out *CommonResp) error
+		DeleteApiResourcesObject(ctx context.Context, in *DeleteApiResourcesObjectReq, out *CommonResp) error
 	}
 	type MultiCluster struct {
 		multiCluster
@@ -6095,6 +6171,30 @@ func RegisterMultiClusterHandler(s server.Server, hdlr MultiClusterHandler, opts
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.GetApiResourcesObject",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object/{resName}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.CreateApiResourcesObject",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.UpdateApiResourcesObject",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MultiCluster.DeleteApiResourcesObject",
+		Path:    []string{"/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object/{resName}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&MultiCluster{h}, opts...))
 }
 
@@ -6120,4 +6220,20 @@ func (h *multiClusterHandler) FetchMultiClusterCustomObject(ctx context.Context,
 
 func (h *multiClusterHandler) MultiClusterResourceCount(ctx context.Context, in *MultiClusterResourceCountReq, out *CommonResp) error {
 	return h.MultiClusterHandler.MultiClusterResourceCount(ctx, in, out)
+}
+
+func (h *multiClusterHandler) GetApiResourcesObject(ctx context.Context, in *GetApiResourcesObjectReq, out *CommonResp) error {
+	return h.MultiClusterHandler.GetApiResourcesObject(ctx, in, out)
+}
+
+func (h *multiClusterHandler) CreateApiResourcesObject(ctx context.Context, in *CreateApiResourcesObjectReq, out *CommonResp) error {
+	return h.MultiClusterHandler.CreateApiResourcesObject(ctx, in, out)
+}
+
+func (h *multiClusterHandler) UpdateApiResourcesObject(ctx context.Context, in *UpdateApiResourcesObjectReq, out *CommonResp) error {
+	return h.MultiClusterHandler.UpdateApiResourcesObject(ctx, in, out)
+}
+
+func (h *multiClusterHandler) DeleteApiResourcesObject(ctx context.Context, in *DeleteApiResourcesObjectReq, out *CommonResp) error {
+	return h.MultiClusterHandler.DeleteApiResourcesObject(ctx, in, out)
 }
