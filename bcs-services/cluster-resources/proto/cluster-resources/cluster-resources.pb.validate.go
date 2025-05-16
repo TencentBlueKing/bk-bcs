@@ -15102,3 +15102,677 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = MultiClusterResourceCountReqValidationError{}
+
+// Validate checks the field values on GetApiResourcesObjectReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *GetApiResourcesObjectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GetApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// GetApiResourcesObjectReqMultiError, or nil if none found.
+func (m *GetApiResourcesObjectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GetApiResourcesObjectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResName()) < 1 {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "ResName",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if _, ok := _GetApiResourcesObjectReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest formData]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetKind()); l < 1 || l > 128 {
+		err := GetApiResourcesObjectReqValidationError{
+			field:  "Kind",
+			reason: "value length must be between 1 and 128 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return GetApiResourcesObjectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// GetApiResourcesObjectReqMultiError is an error wrapping multiple validation
+// errors returned by GetApiResourcesObjectReq.ValidateAll() if the designated
+// constraints aren't met.
+type GetApiResourcesObjectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GetApiResourcesObjectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GetApiResourcesObjectReqMultiError) AllErrors() []error { return m }
+
+// GetApiResourcesObjectReqValidationError is the validation error returned by
+// GetApiResourcesObjectReq.Validate if the designated constraints aren't met.
+type GetApiResourcesObjectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GetApiResourcesObjectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GetApiResourcesObjectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GetApiResourcesObjectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GetApiResourcesObjectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GetApiResourcesObjectReqValidationError) ErrorName() string {
+	return "GetApiResourcesObjectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e GetApiResourcesObjectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGetApiResourcesObjectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GetApiResourcesObjectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GetApiResourcesObjectReqValidationError{}
+
+var _GetApiResourcesObjectReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+	"formData": {},
+}
+
+// Validate checks the field values on CreateApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *CreateApiResourcesObjectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CreateApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// CreateApiResourcesObjectReqMultiError, or nil if none found.
+func (m *CreateApiResourcesObjectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CreateApiResourcesObjectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := CreateApiResourcesObjectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := CreateApiResourcesObjectReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetRawData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateApiResourcesObjectReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateApiResourcesObjectReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateApiResourcesObjectReqValidationError{
+				field:  "RawData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _CreateApiResourcesObjectReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := CreateApiResourcesObjectReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Namespaced
+
+	if len(errors) > 0 {
+		return CreateApiResourcesObjectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// CreateApiResourcesObjectReqMultiError is an error wrapping multiple
+// validation errors returned by CreateApiResourcesObjectReq.ValidateAll() if
+// the designated constraints aren't met.
+type CreateApiResourcesObjectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CreateApiResourcesObjectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CreateApiResourcesObjectReqMultiError) AllErrors() []error { return m }
+
+// CreateApiResourcesObjectReqValidationError is the validation error returned
+// by CreateApiResourcesObjectReq.Validate if the designated constraints
+// aren't met.
+type CreateApiResourcesObjectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CreateApiResourcesObjectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CreateApiResourcesObjectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CreateApiResourcesObjectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CreateApiResourcesObjectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CreateApiResourcesObjectReqValidationError) ErrorName() string {
+	return "CreateApiResourcesObjectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e CreateApiResourcesObjectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCreateApiResourcesObjectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CreateApiResourcesObjectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CreateApiResourcesObjectReqValidationError{}
+
+var _CreateApiResourcesObjectReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+}
+
+// Validate checks the field values on UpdateApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *UpdateApiResourcesObjectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on UpdateApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// UpdateApiResourcesObjectReqMultiError, or nil if none found.
+func (m *UpdateApiResourcesObjectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *UpdateApiResourcesObjectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := UpdateApiResourcesObjectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := UpdateApiResourcesObjectReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if all {
+		switch v := interface{}(m.GetRawData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateApiResourcesObjectReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateApiResourcesObjectReqValidationError{
+					field:  "RawData",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRawData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateApiResourcesObjectReqValidationError{
+				field:  "RawData",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if _, ok := _UpdateApiResourcesObjectReq_Format_InLookup[m.GetFormat()]; !ok {
+		err := UpdateApiResourcesObjectReqValidationError{
+			field:  "Format",
+			reason: "value must be in list [ manifest]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return UpdateApiResourcesObjectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// UpdateApiResourcesObjectReqMultiError is an error wrapping multiple
+// validation errors returned by UpdateApiResourcesObjectReq.ValidateAll() if
+// the designated constraints aren't met.
+type UpdateApiResourcesObjectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m UpdateApiResourcesObjectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m UpdateApiResourcesObjectReqMultiError) AllErrors() []error { return m }
+
+// UpdateApiResourcesObjectReqValidationError is the validation error returned
+// by UpdateApiResourcesObjectReq.Validate if the designated constraints
+// aren't met.
+type UpdateApiResourcesObjectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e UpdateApiResourcesObjectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e UpdateApiResourcesObjectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e UpdateApiResourcesObjectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e UpdateApiResourcesObjectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e UpdateApiResourcesObjectReqValidationError) ErrorName() string {
+	return "UpdateApiResourcesObjectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e UpdateApiResourcesObjectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sUpdateApiResourcesObjectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = UpdateApiResourcesObjectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = UpdateApiResourcesObjectReqValidationError{}
+
+var _UpdateApiResourcesObjectReq_Format_InLookup = map[string]struct{}{
+	"":         {},
+	"manifest": {},
+}
+
+// Validate checks the field values on DeleteApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *DeleteApiResourcesObjectReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DeleteApiResourcesObjectReq with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// DeleteApiResourcesObjectReqMultiError, or nil if none found.
+func (m *DeleteApiResourcesObjectReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DeleteApiResourcesObjectReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if l := utf8.RuneCountInString(m.GetProjectCode()); l < 1 || l > 64 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "ProjectCode",
+			reason: "value length must be between 1 and 64 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetClusterID()); l < 13 || l > 14 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "ClusterID",
+			reason: "value length must be between 13 and 14 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetResName()) < 1 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "ResName",
+			reason: "value length must be at least 1 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetNamespace()) > 64 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "Namespace",
+			reason: "value length must be at most 64 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if utf8.RuneCountInString(m.GetKind()) > 128 {
+		err := DeleteApiResourcesObjectReqValidationError{
+			field:  "Kind",
+			reason: "value length must be at most 128 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return DeleteApiResourcesObjectReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// DeleteApiResourcesObjectReqMultiError is an error wrapping multiple
+// validation errors returned by DeleteApiResourcesObjectReq.ValidateAll() if
+// the designated constraints aren't met.
+type DeleteApiResourcesObjectReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DeleteApiResourcesObjectReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DeleteApiResourcesObjectReqMultiError) AllErrors() []error { return m }
+
+// DeleteApiResourcesObjectReqValidationError is the validation error returned
+// by DeleteApiResourcesObjectReq.Validate if the designated constraints
+// aren't met.
+type DeleteApiResourcesObjectReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DeleteApiResourcesObjectReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DeleteApiResourcesObjectReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DeleteApiResourcesObjectReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DeleteApiResourcesObjectReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DeleteApiResourcesObjectReqValidationError) ErrorName() string {
+	return "DeleteApiResourcesObjectReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e DeleteApiResourcesObjectReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDeleteApiResourcesObjectReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DeleteApiResourcesObjectReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DeleteApiResourcesObjectReqValidationError{}
