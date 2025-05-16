@@ -142,14 +142,14 @@ func (r *ReleaseInstallAction) Prepare(ctx context.Context) error {
 }
 
 // Validate xxx
-func (r *ReleaseInstallAction) Validate() error {
+func (r *ReleaseInstallAction) Validate(ctx context.Context) error {
 	blog.V(5).Infof("start to validate release %s/%s install", r.namespace, r.name)
 	// 非真实用户无法在权限中心鉴权，跳过检测
 	if len(r.AuthUser) == 0 {
 		return nil
 	}
 	// 如果是共享集群，且集群不属于该项目，说明是用户使用共享集群，需要单独鉴权
-	cls, err := clustermanager.GetCluster(r.clusterID)
+	cls, err := clustermanager.GetCluster(ctx, r.clusterID)
 	if err != nil {
 		return err
 	}
