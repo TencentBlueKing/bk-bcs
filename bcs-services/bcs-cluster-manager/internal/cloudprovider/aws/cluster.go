@@ -174,6 +174,14 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 		}
 	}
 
+	if opt.Cluster.ClusterAdvanceSettings.NetworkType == "" {
+		opt.Cluster.ClusterAdvanceSettings.NetworkType = common.VpcCni
+	}
+
+	if opt.Cluster.NetworkType == "" {
+		opt.Cluster.NetworkType = common.ClusterUnderlayNetwork
+	}
+
 	return opt.Cluster, nil
 }
 
