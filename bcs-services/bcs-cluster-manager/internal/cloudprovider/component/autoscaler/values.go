@@ -158,7 +158,7 @@ type AutoScalerValues struct { // nolint
 // AutoScaler component paras
 type AutoScaler struct {
 	// NodeGroups cluster nodeGroup list
-	NodeGroups []cmproto.NodeGroup
+	NodeGroups []*cmproto.NodeGroup
 	// AutoScalingOption autoScaling deploy paras
 	AutoScalingOption *cmproto.ClusterAutoScalingOption
 	// Replicas

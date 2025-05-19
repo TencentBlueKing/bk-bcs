@@ -41,7 +41,7 @@ func (d *Daemon) reportClusterGroupNodeNum(error chan<- error) {
 
 	for i := range groupList {
 		concurency.Add(1)
-		go func(group cmproto.NodeGroup) {
+		go func(group *cmproto.NodeGroup) {
 			defer concurency.Done()
 
 			if group.LaunchTemplate == nil || group.LaunchTemplate.InstanceType == "" {

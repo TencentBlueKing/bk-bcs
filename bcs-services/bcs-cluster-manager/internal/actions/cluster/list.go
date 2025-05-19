@@ -118,7 +118,7 @@ func (la *ListAction) getSharedCluster() error {
 		if clusterList[i].GetProjectID() == la.req.ProjectID {
 			continue
 		}
-		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
+		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDs = append(clusterIDs, clusterList[i].ClusterID)
 	}
 
@@ -144,10 +144,10 @@ func (la *ListAction) getSharedCluster() error {
 	return nil
 }
 
-func (la *ListAction) filterClusterList() ([]cmproto.Cluster, bool, error) {
+func (la *ListAction) filterClusterList() ([]*cmproto.Cluster, bool, error) {
 	var (
 		sharedCluster = true
-		clusterList   []cmproto.Cluster
+		clusterList   []*cmproto.Cluster
 		err           error
 	)
 
@@ -217,7 +217,7 @@ func (la *ListAction) listCluster() error {
 		if clusterList[i].IsShared {
 			clusterList[i].IsShared = false
 		}
-		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
+		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
@@ -372,9 +372,9 @@ func (la *ListProjectClusterAction) listProjectCluster() error {
 		}
 
 		if clusterList[i].Status == common.StatusRunning {
-			runningCluster = append(runningCluster, shieldClusterInfo(&clusterList[i]))
+			runningCluster = append(runningCluster, shieldClusterInfo(clusterList[i]))
 		} else {
-			otherCluster = append(otherCluster, shieldClusterInfo(&clusterList[i]))
+			otherCluster = append(otherCluster, shieldClusterInfo(clusterList[i]))
 		}
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
@@ -568,7 +568,7 @@ func (la *ListCommonClusterAction) listCluster() error {
 		}
 
 		// 平台共享集群
-		la.clusterList = append(la.clusterList, shieldClusterInfo(&clusterList[i]))
+		la.clusterList = append(la.clusterList, shieldClusterInfo(clusterList[i]))
 		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
@@ -985,7 +985,7 @@ func getUserClusterPermList(iam iam.PermClient, user actions.PermInfo,
 }
 
 // getCloudProviderEngine get cluster cloud engineType
-func getCloudProviderEngine(model store.ClusterManagerModel, cls cmproto.Cluster) string {
+func getCloudProviderEngine(model store.ClusterManagerModel, cls *cmproto.Cluster) string {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -1000,7 +1000,7 @@ func getCloudProviderEngine(model store.ClusterManagerModel, cls cmproto.Cluster
 
 // returnClusterExtraInfo return cluster extra info
 func returnClusterExtraInfo(model store.ClusterManagerModel,
-	clusterList []cmproto.Cluster) map[string]*cmproto.ExtraInfo {
+	clusterList []*cmproto.Cluster) map[string]*cmproto.ExtraInfo {
 	extraInfo := make(map[string]*cmproto.ExtraInfo, 0)
 
 	// cluster extra info
@@ -1039,7 +1039,7 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 			utils.StringContainInSlice(projectId, clusterList[i].SharedRanges.ProjectIdOrCodes)) ||
 			(len(clusterList[i].SharedRanges.GetBizs()) > 0 && len(bizId) > 0 &&
 				utils.StringContainInSlice(bizId, clusterList[i].SharedRanges.GetBizs()))) {
-			clusters = append(clusters, shieldClusterInfo(&clusterList[i]))
+			clusters = append(clusters, shieldClusterInfo(clusterList[i]))
 
 			continue
 		}
@@ -1048,7 +1048,7 @@ func getSharedCluster(projectId string, bizId string, model store.ClusterManager
 		if clusterList[i].SharedRanges == nil || (clusterList[i].SharedRanges != nil &&
 			(len(clusterList[i].SharedRanges.GetProjectIdOrCodes()) == 0 &&
 				len(clusterList[i].SharedRanges.GetBizs()) == 0)) {
-			clusters = append(clusters, shieldClusterInfo(&clusterList[i]))
+			clusters = append(clusters, shieldClusterInfo(clusterList[i]))
 			continue
 		}
 	}

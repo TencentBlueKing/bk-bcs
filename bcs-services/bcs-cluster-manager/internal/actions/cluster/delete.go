@@ -41,8 +41,8 @@ type DeleteAction struct {
 	model             store.ClusterManagerModel
 	cluster           *cmproto.Cluster
 	nodes             []*cmproto.Node
-	quotaList         []cmproto.ResourceQuota
-	nodeGroups        []cmproto.NodeGroup
+	quotaList         []*cmproto.ResourceQuota
+	nodeGroups        []*cmproto.NodeGroup
 	lastClusterStatus string
 
 	kube *clusterops.K8SOperator
@@ -234,7 +234,7 @@ func (da *DeleteAction) deleteRelativeResource() error {
 	//! we don't delete it here, we delete it after all Nodes are releasing
 	for _, group := range da.nodeGroups {
 		group.Status = common.StatusDeleting
-		if err := da.model.UpdateNodeGroup(da.ctx, &group); err != nil {
+		if err := da.model.UpdateNodeGroup(da.ctx, group); err != nil {
 			blog.Errorf("setting Cluster %s relative NodeGroup %s to status DELETING failed, %s",
 				da.req.ClusterID, group.NodeGroupID, err.Error())
 			return err

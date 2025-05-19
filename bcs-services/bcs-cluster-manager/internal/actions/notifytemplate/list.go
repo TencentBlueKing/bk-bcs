@@ -68,7 +68,7 @@ func (la *ListAction) listNotifyTemplates() error {
 		templates[i].UpdateTime = utils.TransTimeFormat(templates[i].UpdateTime)
 		templates[i].CreateTime = utils.TransTimeFormat(templates[i].CreateTime)
 
-		la.notifyTemplateList = append(la.notifyTemplateList, &templates[i])
+		la.notifyTemplateList = append(la.notifyTemplateList, templates[i])
 	}
 	return nil
 }

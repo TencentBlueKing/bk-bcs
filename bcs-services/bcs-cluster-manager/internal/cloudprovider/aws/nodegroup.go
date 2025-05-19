@@ -86,23 +86,33 @@ func (ng *NodeGroup) UpdateNodeGroup(
 		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
 		return nil, err
 	}
+
 	eksCli, err := api.NewEksClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create eks client failed, err: %s", err.Error())
 		return nil, err
 	}
+
 	if group.NodeGroupID == "" || group.ClusterID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
 	}
-	_, err = eksCli.UpdateNodegroupConfig(ng.generateUpdateNodegroupConfigInput(group, cluster.SystemID))
+
+	cloudNg, err := eksCli.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
+	if err != nil {
+		blog.Errorf("get cloud nodegroup failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	_, err = eksCli.UpdateNodegroupConfig(ng.generateUpdateNodegroupConfigInput(group, cloudNg, cluster.SystemID))
 	if err != nil {
 		return nil, err
 	}
+
 	return nil, nil
 }
 
-func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
+func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, cloudNg *eks.Nodegroup,
 	cluster string) *eks.UpdateNodegroupConfigInput {
 	input := &eks.UpdateNodegroupConfigInput{
 		ClusterName:   &cluster,
@@ -111,19 +121,52 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 
 	if len(group.GetNodeTemplate().GetLabels()) > 0 {
 		input.Labels = &eks.UpdateLabelsPayload{
-			AddOrUpdateLabels: aws.StringMap(group.GetNodeTemplate().GetLabels()),
+			AddOrUpdateLabels: aws.StringMap(group.NodeTemplate.Labels),
 		}
+
+		for k := range cloudNg.Labels {
+			if _, ok := group.NodeTemplate.Labels[k]; !ok {
+				input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
+			}
+		}
+	} else if len(cloudNg.Labels) > 0 {
+		input.Labels = &eks.UpdateLabelsPayload{}
+		for k := range cloudNg.Labels {
+			input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
+		}
+	}
+
+	if len(group.GetNodeTemplate().GetTaints()) > 0 {
+		input.Taints = &eks.UpdateTaintsPayload{
+			AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
+		}
+
+		for _, v := range cloudNg.Taints {
+			exit := false
+			for _, y := range group.NodeTemplate.Taints {
+				if *v.Key == y.Key {
+					exit = true
+					continue
+				}
+			}
+
+			if !exit {
+				input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, &eks.Taint{
+					Key:    v.Key,
+					Value:  v.Value,
+					Effect: v.Effect,
+				})
+			}
+		}
+	} else if len(cloudNg.Taints) > 0 {
+		input.Taints = &eks.UpdateTaintsPayload{}
+		input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, cloudNg.Taints...)
 	}
 
 	if group.AutoScaling != nil {
 		input.ScalingConfig = &eks.NodegroupScalingConfig{
 			MaxSize: aws.Int64(int64(group.AutoScaling.MaxSize)),
 			MinSize: aws.Int64(int64(group.AutoScaling.MinSize)),
-		}
-	}
-	if group.NodeTemplate != nil && group.NodeTemplate.Taints != nil {
-		input.Taints = &eks.UpdateTaintsPayload{
-			AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
 		}
 	}
 
@@ -400,7 +443,7 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 }
 
 // GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup,
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 	return nil, nil
 }

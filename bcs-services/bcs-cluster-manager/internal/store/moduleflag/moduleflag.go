@@ -168,8 +168,8 @@ func (m *ModelCloudModuleFlag) GetCloudModuleFlag(ctx context.Context, cloudID, 
 // ListCloudModuleFlag list cloud moduleFlag
 func (m *ModelCloudModuleFlag) ListCloudModuleFlag(ctx context.Context, cond *operator.Condition,
 	opt *options.ListOption) (
-	[]types.CloudModuleFlag, error) {
-	retFlagList := make([]types.CloudModuleFlag, 0)
+	[]*types.CloudModuleFlag, error) {
+	retFlagList := make([]*types.CloudModuleFlag, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
