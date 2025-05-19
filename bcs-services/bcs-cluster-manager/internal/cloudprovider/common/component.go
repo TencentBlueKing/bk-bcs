@@ -647,7 +647,7 @@ const (
 	defaultReplicas = 1
 )
 
-func getClusterNodeGroups(clusterID string) ([]proto.NodeGroup, error) {
+func getClusterNodeGroups(clusterID string) ([]*proto.NodeGroup, error) {
 	// get cluster nodegroup list
 	cond := &operator.Condition{
 		Op: operator.Eq,
@@ -663,7 +663,7 @@ func getClusterNodeGroups(clusterID string) ([]proto.NodeGroup, error) {
 	}
 
 	// filter status deleting node group
-	filterGroups := make([]proto.NodeGroup, 0)
+	filterGroups := make([]*proto.NodeGroup, 0)
 	for _, group := range nodegroupList {
 		if group.Status == common.StatusDeleteNodeGroupDeleting {
 			continue
@@ -731,7 +731,7 @@ func EnsureAutoScalerTask(taskID string, stepName string) error {
 	return nil
 }
 
-func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []proto.NodeGroup, // nolint
+func ensureAutoScalerWithInstaller(ctx context.Context, nodeGroups []*proto.NodeGroup, // nolint
 	as *proto.ClusterAutoScalingOption) error {
 	taskID, stepName := cloudprovider.GetTaskIDAndStepNameFromContext(ctx)
 

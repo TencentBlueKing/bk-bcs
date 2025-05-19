@@ -69,16 +69,16 @@ func (la *ListAction) listNodeTemplates() error {
 	for i := range templates {
 		templates[i].UpdateTime = utils.TransTimeFormat(templates[i].UpdateTime)
 		templates[i].CreateTime = utils.TransTimeFormat(templates[i].CreateTime)
-		err = decodeTemplateScript(&templates[i])
+		err = decodeTemplateScript(templates[i])
 		if err != nil {
 			return err
 		}
-		err = decodeAction(&templates[i])
+		err = decodeAction(templates[i])
 		if err != nil {
 			return err
 		}
 
-		la.nodeTemplateList = append(la.nodeTemplateList, &templates[i])
+		la.nodeTemplateList = append(la.nodeTemplateList, templates[i])
 	}
 	return nil
 }

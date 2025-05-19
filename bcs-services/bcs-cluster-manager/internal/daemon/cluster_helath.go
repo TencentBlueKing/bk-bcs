@@ -58,7 +58,7 @@ func (d *Daemon) reportClusterHealthStatus(error chan<- error) {
 		}
 
 		concurency.Add(1)
-		go func(cls cmproto.Cluster) {
+		go func(cls *cmproto.Cluster) {
 			defer concurency.Done()
 
 			newCluster, errLocal := d.model.GetCluster(d.ctx, cls.GetClusterID())

@@ -803,7 +803,7 @@ func (c *Cluster) AddSubnetsToCluster(ctx context.Context, subnet *proto.SubnetS
 	}
 
 	// 检测当前集群子网资源使用率, 如果使用率达标则继续扩容, 不达标则拒绝扩容
-	zoneSubnetRatio, _, _, err := business.GetClusterCurrentVpcCniSubnets(*opt.Cluster, false)
+	zoneSubnetRatio, _, _, err := business.GetClusterCurrentVpcCniSubnets(opt.Cluster, false)
 	if err != nil {
 		return fmt.Errorf("AddSubnetsToCluster failed: %v", err)
 	}

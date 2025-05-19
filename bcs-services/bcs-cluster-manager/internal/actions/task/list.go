@@ -79,16 +79,16 @@ func (la *ListAction) listTask() error {
 		return err
 	}
 	for i := range tasks {
-		utils.HandleTaskStepData(la.ctx, &tasks[i])
+		utils.HandleTaskStepData(la.ctx, tasks[i])
 		// actions.FormatTaskTime(&tasks[i])
 
 		if len(la.req.NodeIP) > 0 {
 			exist := iutils.StringContainInSlice(la.req.NodeIP, tasks[i].NodeIPList)
 			if exist {
-				la.TaskList = append(la.TaskList, &tasks[i])
+				la.TaskList = append(la.TaskList, tasks[i])
 			}
 		} else {
-			la.TaskList = append(la.TaskList, &tasks[i])
+			la.TaskList = append(la.TaskList, tasks[i])
 		}
 	}
 

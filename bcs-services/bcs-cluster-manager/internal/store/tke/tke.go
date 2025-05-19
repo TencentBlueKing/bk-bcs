@@ -155,8 +155,8 @@ func (m *ModelTkeCidr) GetTkeCidr(ctx context.Context, vpc string, cidr string) 
 
 // ListTkeCidr list tke cidr
 func (m *ModelTkeCidr) ListTkeCidr(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.TkeCidr, error) {
-	retTkeCidrList := make([]types.TkeCidr, 0)
+	[]*types.TkeCidr, error) {
+	retTkeCidrList := make([]*types.TkeCidr, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
@@ -176,8 +176,8 @@ func (m *ModelTkeCidr) ListTkeCidr(ctx context.Context, cond *operator.Condition
 }
 
 // ListTkeCidrCount list tke cidr count
-func (m *ModelTkeCidr) ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]types.TkeCidrCount, error) {
-	retTkeCidrCountList := make([]types.TkeCidrCount, 0)
+func (m *ModelTkeCidr) ListTkeCidrCount(ctx context.Context, opt *options.ListOption) ([]*types.TkeCidrCount, error) {
+	retTkeCidrCountList := make([]*types.TkeCidrCount, 0)
 	pipeline := []map[string]interface{}{
 		{
 			"$group": map[string]interface{}{

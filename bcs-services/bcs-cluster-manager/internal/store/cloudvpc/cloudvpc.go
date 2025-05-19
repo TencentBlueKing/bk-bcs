@@ -150,8 +150,8 @@ func (m *ModelCloudVPC) GetCloudVPC(ctx context.Context, cloudID, vpcID string) 
 
 // ListCloudVPC list cloudVPC
 func (m *ModelCloudVPC) ListCloudVPC(ctx context.Context, vpc *operator.Condition, opt *options.ListOption) (
-	[]types.CloudVPC, error) {
-	cloudVPCList := make([]types.CloudVPC, 0)
+	[]*types.CloudVPC, error) {
+	cloudVPCList := make([]*types.CloudVPC, 0)
 	finder := m.db.Table(m.tableName).Find(vpc)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))

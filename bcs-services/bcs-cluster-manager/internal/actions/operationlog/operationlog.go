@@ -61,7 +61,7 @@ func (ua *ListOperationLogsAction) setResp(code uint32, msg string) {
 	ua.resp.Result = (code == common.BcsErrClusterManagerSuccess)
 }
 
-func (ua *ListOperationLogsAction) filterOperationLogs() ([]cmproto.TaskOperationLog, int, error) {
+func (ua *ListOperationLogsAction) filterOperationLogs() ([]*cmproto.TaskOperationLog, int, error) {
 	var (
 		conds   = make([]bson.E, 0)
 		condDst = make([]bson.E, 0)
@@ -250,7 +250,7 @@ func (ua *ListOperationLogsAction) appendTasks(taskIDs []string) error {
 	}
 	taskMap := make(map[string]*cmproto.Task, 0)
 	for i := range tasks {
-		taskMap[tasks[i].TaskID] = &tasks[i]
+		taskMap[tasks[i].TaskID] = tasks[i]
 	}
 	for i, v := range ua.resp.Data.Results {
 		if t, ok := taskMap[v.TaskID]; ok {
