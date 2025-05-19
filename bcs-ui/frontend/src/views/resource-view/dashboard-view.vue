@@ -1,49 +1,54 @@
 <template>
   <div class="bcs-dashboard-view h-full flex">
-    <div class="bcs-border-right cursor-default bg-[#fff] h-full">
-      <!-- 视图切换 -->
-      <ViewSelector
-        class="bcs-border-bottom w-full"
-        :is-view-config-show="showViewConfig"
-        @toggle-view-config="showViewConfig = !showViewConfig"
-        @create-new-view="handleCreateView"
-        @edit-view="handleEditView" />
-      <div class="flex items-start v-m-menu-box overflow-auto">
-        <!-- 视图配置 -->
-        <ViewConfig
-          v-if="showViewConfig"
-          class="bcs-border-right h-full"
-          ref="viewConfigRef"
-          @close="closeViewConfig" />
-        <!-- 侧边导航 -->
-        <ResourceMenu class="w-[260px] h-full" />
-      </div>
-    </div>
-    <!-- 界面 -->
-    <div class="relative w-[0] h-full flex-1">
-      <!-- 预览态样式 -->
-      <div
-        :class="[
-          'absolute h-full z-[1000] right-0',
-          'border-solid border-[6px] border-[#FFB848] pointer-events-none',
-          openSideMenu ? 'left-[-260px]' : 'left-[-60px]'
-        ]"
-        v-if="isViewEditable">
-        <div class="flex items-center h-[32px] absolute right-[-6px] top-[-6px]">
-          <svg class="icon svg-icon" width="32px" height="32px">
-            <use xlink:href="#bcs-icon-color-edit-tag"></use>
-          </svg>
-          <div
-            :class="[
-              'flex items-center pr-[24px] p-[4px] h-[32px] ml-[-4px]',
-              'text-[16px] text-[#fff] bg-[#FF9C01]'
-            ]">
-            {{ $t('view.tips.editMode') }}
-          </div>
+    <template v-if="clusterList.length">
+      <div class="bcs-border-right cursor-default bg-[#fff] h-full">
+        <!-- 视图切换 -->
+        <ViewSelector
+          class="bcs-border-bottom w-full"
+          :is-view-config-show="showViewConfig"
+          @toggle-view-config="showViewConfig = !showViewConfig"
+          @create-new-view="handleCreateView"
+          @edit-view="handleEditView" />
+        <div class="flex items-start v-m-menu-box overflow-auto">
+          <!-- 视图配置 -->
+          <ViewConfig
+            v-if="showViewConfig"
+            class="bcs-border-right h-full"
+            ref="viewConfigRef"
+            @close="closeViewConfig" />
+          <!-- 侧边导航 -->
+          <ResourceMenu class="w-[260px] h-full" />
         </div>
       </div>
-      <RouterView :key="$route.fullPath" v-if="isRouterAlive" />
-    </div>
+      <!-- 界面 -->
+      <div class="relative w-[0] h-full flex-1">
+        <!-- 预览态样式 -->
+        <div
+          :class="[
+            'absolute h-full z-[1000] right-0',
+            'border-solid border-[6px] border-[#FFB848] pointer-events-none',
+            openSideMenu ? 'left-[-260px]' : 'left-[-60px]'
+          ]"
+          v-if="isViewEditable">
+          <div class="flex items-center h-[32px] absolute right-[-6px] top-[-6px]">
+            <svg class="icon svg-icon" width="32px" height="32px">
+              <use xlink:href="#bcs-icon-color-edit-tag"></use>
+            </svg>
+            <div
+              :class="[
+                'flex items-center pr-[24px] p-[4px] h-[32px] ml-[-4px]',
+                'text-[16px] text-[#fff] bg-[#FF9C01]'
+              ]">
+              {{ $t('view.tips.editMode') }}
+            </div>
+          </div>
+        </div>
+        <RouterView :key="$route.fullPath" v-if="isRouterAlive" />
+      </div>
+    </template>
+    <template v-else>
+      <ClusterGuide />
+    </template>
   </div>
 </template>
 <script lang="ts" setup>
@@ -58,6 +63,7 @@ import { bus } from '@/common/bus';
 import { useCluster } from '@/composables/use-app';
 import $router from '@/router';
 import $store from '@/store';
+import ClusterGuide from '@/views/app/cluster-guide.vue';
 
 const openSideMenu = computed(() => $store.state.openSideMenu);
 
@@ -152,7 +158,7 @@ watch(
         },
       });
     } else if (dashboardViewID.value && dashboardViewID.value !== $router.currentRoute?.query?.viewID) {
-      // 替换query上的试图ID
+      // 替换query上的视图ID
       $router.replace({
         name: $router.currentRoute?.name,
         params: $router.currentRoute.params,
@@ -173,7 +179,15 @@ const initClusterAndViewID = () => {
   if (pathClusterID === '-') {
     pathClusterID = '';
   }
-  if (pathClusterID) {
+  if (pathClusterID && clusterList.value.length === 0) {
+    // 没有集群
+    $router.replace({
+      name: $router.currentRoute?.name,
+      params: {
+        clusterId: '-',
+      },
+    });
+  } else if (pathClusterID) {
     // 路径上带有集群ID, 以路径集群ID为主
     cluster = clusterList.value.find(item => item.clusterID === pathClusterID);
     if (isDashboardHome.value) {
