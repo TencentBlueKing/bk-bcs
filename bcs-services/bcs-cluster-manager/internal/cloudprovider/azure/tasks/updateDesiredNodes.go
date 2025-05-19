@@ -156,6 +156,8 @@ func applyInstanceMachinesByPool(ctx context.Context, info *cloudprovider.CloudD
 
 	// update agent pool desired size
 	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
+		// rollout instances
+		_ = ScaleAgentPoolToDesiredSize(ctx, info, *agentPool.Properties.Count-int32(nodeNum))
 		blog.Errorf("applyInstanceMachines[%s] failed: %v", taskId, err)
 		return err
 	}
