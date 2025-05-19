@@ -19,10 +19,12 @@ import $router from '@/router';
 import $store from '@/store';
 
 export default function () {
-  const { clusterNameMap } = useCluster();
+  const { clusterNameMap, clusterList } = useCluster();
   const clusterID = computed(() => {
     // 兼容自定义视图场景无集群ID问题(vue router路径中间不能有可选参数，临时用 - 代替)
     if ($router.currentRoute?.params?.clusterId === '-') return '';
+    // 集群列表为空时，不显示任何视图
+    if (clusterList.value.length === 0) return '';
 
     return $router.currentRoute?.params?.clusterId;
   });
