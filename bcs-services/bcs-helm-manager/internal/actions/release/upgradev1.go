@@ -89,7 +89,7 @@ func (u *UpgradeReleaseV1Action) upgrade() error {
 	if err := u.saveDB(); err != nil {
 		return fmt.Errorf("db error, %s", err.Error())
 	}
-	cls, err := clustermanager.GetCluster(u.req.GetClusterID())
+	cls, err := clustermanager.GetCluster(u.ctx, u.req.GetClusterID())
 	if err != nil {
 		return err
 	}

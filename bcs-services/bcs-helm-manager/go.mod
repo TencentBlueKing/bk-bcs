@@ -18,7 +18,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241212023042-2c0651f4eded
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520073417-0dcd5da201c6
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230911112816-85f490b1c029
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240418123107-72b120390195
 	github.com/chartmuseum/helm-push v0.10.4

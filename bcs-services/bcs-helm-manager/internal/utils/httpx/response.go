@@ -62,8 +62,8 @@ func returnJSON(w http.ResponseWriter, data interface{}) {
 	result, err := json.Marshal(data)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintln(w, err.Error())
+		fmt.Fprintln(w, err.Error()) // nolint:errcheck
 		return
 	}
-	fmt.Fprintln(w, string(result))
+	fmt.Fprintln(w, string(result)) // nolint:errcheck
 }

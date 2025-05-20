@@ -34,7 +34,7 @@ type Operation interface {
 	// Name operation name
 	Name() string
 	// Validate check param is valid
-	Validate() error
+	Validate(ctx context.Context) error
 	// Prepare do something to prepare release execute, like download chart content
 	Prepare(ctx context.Context) error
 	// Execute execute release install/upgrade/uninstall/rollback action
@@ -156,7 +156,7 @@ func (o *operator) dispatch(op Operation, timeout time.Duration, done chan struc
 			op.Done(fmt.Errorf("prepare error, %s", err.Error()))
 			return
 		}
-		if err := op.Validate(); err != nil {
+		if err := op.Validate(ctx); err != nil {
 			metrics.ReportOperationMetric(op.Action(), operateFail, start)
 			blog.Errorf("operation %s validate error, %s", op.Name(), err.Error())
 			op.Done(fmt.Errorf("validate error, %s", err))

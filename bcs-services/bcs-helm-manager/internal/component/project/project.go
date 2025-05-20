@@ -19,13 +19,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/patrickmn/go-cache"
 	microRgt "go-micro.dev/v4/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 )
 
 const (
@@ -41,46 +40,31 @@ const (
 
 // Client xxx
 type Client struct {
-	Discovery       *discovery.ModuleDiscovery
-	ClientTLSConfig *tls.Config
-	Cache           *cache.Cache
+	Cache *cache.Cache
 }
 
 var client *Client
 
 // NewClient create project service client
 func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
-	dis := discovery.NewModuleDiscovery(ProjectManagerServiceName, microRgt)
-	err := dis.Start()
-	if err != nil {
-		return err
+	if !discovery.UseServiceDiscovery() {
+		dis := discovery.NewModuleDiscovery(ProjectManagerServiceName, microRgt)
+		err := dis.Start()
+		if err != nil {
+			return err
+		}
+		bcsproject.SetClientConfig(tlsConfig, dis)
+	} else {
+		bcsproject.SetClientConfig(tlsConfig, nil)
 	}
 	client = &Client{
-		Discovery:       dis,
-		ClientTLSConfig: tlsConfig,
-		Cache:           cache.New(defaultExpiration, cache.NoExpiration),
+		Cache: cache.New(defaultExpiration, cache.NoExpiration),
 	}
 	return nil
 }
 
-func (p *Client) getProjectClient() (*bcsproject.ProjectClient, func(), error) {
-	node, err := p.Discovery.GetRandServiceInst()
-	if err != nil {
-		return nil, nil, err
-	}
-	blog.V(4).Infof("get random project-manager instance [%s] from etcd registry successful", node.Address)
-
-	cfg := bcsapi.Config{}
-	// discovery hosts
-	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
-	cfg.TLSConfig = p.ClientTLSConfig
-	cfg.InnerClientName = "bcs-helm-manager"
-	cli, close := bcsproject.NewProjectManagerClient(&cfg)
-	return cli, close, nil
-}
-
 // GetProjectByCode get project from project code
-func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
+func GetProjectByCode(ctx context.Context, projectCode string) (*bcsproject.Project, error) {
 	// load project data from cache
 	key := fmt.Sprintf(cacheProjectKeyPrefix, projectCode)
 	v, ok := client.Cache.Get(key)
@@ -89,7 +73,7 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 			return project, nil
 		}
 	}
-	cli, close, err := client.getProjectClient()
+	cli, close, err := bcsproject.GetClient(common.ServiceDomain)
 	defer func() {
 		if close != nil {
 			close()
@@ -98,7 +82,7 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	p, err := cli.Project.GetProject(context.Background(),
+	p, err := cli.Project.GetProject(ctx,
 		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectCode})
 	if err != nil {
 		return nil, fmt.Errorf("GetProject error: %s", err)
@@ -114,7 +98,7 @@ func GetProjectByCode(projectCode string) (*bcsproject.Project, error) {
 
 // ListNamespaces list namespaces
 func ListNamespaces(ctx context.Context, projectCode, clusterID string) ([]*bcsproject.NamespaceData, error) {
-	cli, close, err := client.getProjectClient()
+	cli, close, err := bcsproject.GetClient(common.ServiceDomain)
 	defer func() {
 		if close != nil {
 			close()
@@ -138,8 +122,8 @@ func ListNamespaces(ctx context.Context, projectCode, clusterID string) ([]*bcsp
 }
 
 // GetVariable get project from project code
-func GetVariable(projectCode, clusterID, namespace string) ([]*bcsproject.VariableValue, error) {
-	client, close, err := client.getProjectClient()
+func GetVariable(ctx context.Context, projectCode, clusterID, namespace string) ([]*bcsproject.VariableValue, error) {
+	client, close, err := bcsproject.GetClient(common.ServiceDomain)
 	defer func() {
 		if close != nil {
 			close()
@@ -148,7 +132,7 @@ func GetVariable(projectCode, clusterID, namespace string) ([]*bcsproject.Variab
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.Variable.RenderVariables(context.Background(),
+	resp, err := client.Variable.RenderVariables(ctx,
 		&bcsproject.RenderVariablesRequest{ProjectCode: projectCode, ClusterID: clusterID, Namespace: namespace})
 	if err != nil {
 		return nil, fmt.Errorf("ListNamespaceVariables error: %s", err)
