@@ -499,6 +499,7 @@ func (cli *CceClient) GetClusterNodePool(clusterId, nodePoolId string) (*model.N
 	}, nil
 }
 
+// ListClusterNodeGroups list cluster node groups
 func (cli *CceClient) ListClusterNodeGroups(clusterId string) ([]model.NodePool, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
@@ -572,17 +573,23 @@ func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, d
 		return nil, fmt.Errorf("cluster or nodePool empty")
 	}
 
-	if inc {
-		nodePool, err := cli.GetClusterNodePool(clusterId, nodePoolId)
-		if err != nil {
-			return nil, fmt.Errorf("updateDesiredNodes get cluster nodePool err: %s", err)
-		}
-
-		desiredSize += *nodePool.Spec.InitialNodeCount
-		blog.Infof("updateDesiredNodes nodepool initialNodeCount: %d", *nodePool.Spec.InitialNodeCount)
+	nodePool, err := cli.GetClusterNodePool(clusterId, nodePoolId)
+	if err != nil {
+		return nil, fmt.Errorf("updateDesiredNodes get cluster nodePool err: %s", err)
 	}
 
-	blog.Infof("updateDesiredNodes nodepool desiredSize: %d", desiredSize)
+	blog.Infof("UpdateNodePoolDesiredNodes[%s] nodepool[%s]: %v",
+		clusterId, nodePoolId, *nodePool.Spec.InitialNodeCount)
+
+	// scaleUp nodeNum nodes
+	if inc {
+		desiredSize += *nodePool.Spec.InitialNodeCount
+		blog.Infof("updateDesiredNodes[%s] nodepool[%s] scaleUp initialNodeCount: %d", clusterId, nodePoolId,
+			desiredSize)
+	}
+
+	// inc false: nodePool scale to desiredSize num nodes
+	blog.Infof("updateDesiredNodes[%s] nodepool[%s] desiredSize: %d", clusterId, nodePoolId, desiredSize)
 
 	rsp, err := cli.cce.ScaleNodePool(&model.ScaleNodePoolRequest{
 		ClusterId:  clusterId,
