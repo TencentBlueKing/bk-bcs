@@ -3,7 +3,6 @@ module github.com/Tencent/bk-bcs/bcs-services/cluster-resources
 go 1.23
 
 replace (
-	github.com/Tencent/bk-bcs/bcs-common => github.com/LidolLxf/bk-bcs/bcs-common v0.0.0-20250120075906-fd5988c50f3f
 	github.com/chai2010/gettext-go => github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5
 	k8s.io/api => k8s.io/api v0.23.1
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.23.1
@@ -41,7 +40,7 @@ replace (
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241212023042-2c0651f4eded
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250516061604-eeca82cb136b
 	github.com/TencentBlueKing/gopkg v1.1.0
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	// fork 自 https://github.com/signalfx/splunk-otel-go/tree/main/instrumentation/k8s.io/client-go/splunkclient-go

@@ -19,12 +19,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
@@ -54,7 +54,7 @@ func UploadChart(ctx context.Context, file *chart.Chart, projectCode, version st
 
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
-		SetHeaders(header.GetLaneIDByCtx(ctx)).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		SetFile("chart", filename).
 		Post(url)

@@ -18,13 +18,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runmode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
@@ -102,7 +102,7 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Proj
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
-		SetHeaders(header.GetLaneIDByCtx(ctx)).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 
@@ -146,7 +146,7 @@ func (c *ProjClient) fetchSharedClusterProjNs(ctx context.Context, projectID, cl
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
-		SetHeaders(header.GetLaneIDByCtx(ctx)).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 
@@ -171,7 +171,7 @@ func (c *ProjClient) getVariable(ctx context.Context, projectCode, clusterID, na
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", "").
-		SetHeaders(header.GetLaneIDByCtx(ctx)).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 

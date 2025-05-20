@@ -30,6 +30,11 @@ const (
 	ClusterIDContextKey ContextKey = "clusterID"
 	// LangContectKey lang context key
 	LangContectKey ContextKey = "lang"
+
+	// LaneKey is the key for lane
+	LaneKey ContextKey = "X-Lane"
+	// LaneIDPrefix 染色的header前缀
+	LaneIDPrefix = "X-Lane-"
 )
 
 // HeaderKey string
