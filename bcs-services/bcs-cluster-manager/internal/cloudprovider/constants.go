@@ -149,7 +149,7 @@ var (
 	// DebugBkSopsTaskName task
 	DebugBkSopsTaskName TaskName = "调试标准运维任务"
 
-	// NodeDrainPodTask task
+	// NodeDrainPodTaskName task
 	NodeDrainPodTaskName TaskName = "节点驱逐 pod 任务"
 )
 

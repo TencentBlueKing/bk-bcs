@@ -81,7 +81,7 @@ var (
 		StepName:   "检测下架节点状态",
 	}
 
-	// CheckClusterCleanNodesActionStep 检测下架节点状态
+	// NodeDrainPodActionStep 检测下架节点状态
 	NodeDrainPodActionStep = cloudprovider.StepInfo{
 		StepMethod: cloudprovider.NodeDrainPodAction,
 		StepName:   "节点驱逐Pod",
