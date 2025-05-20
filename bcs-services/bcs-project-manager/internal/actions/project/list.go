@@ -145,7 +145,7 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 					&page.Pagination{Offset: req.Offset, Limit: req.Limit})
 			}
 		} else {
-			// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，分页和模糊查询都无效
+			// all 为 false 且用户没有全部项目查看权限时，返回用户有权限的项目，模糊查询都无效
 			var cond *operator.Condition
 			condKind := make(operator.M)
 			if req.Kind != "" {
@@ -159,7 +159,14 @@ func (lap *ListAuthorizedProject) Do(ctx context.Context,
 				cond = operator.NewBranchCondition(operator.And,
 					operator.NewLeafCondition(operator.In, condID), operator.NewLeafCondition(operator.Eq, condKind))
 			}
-			projects, total, err = lap.model.ListProjects(ctx, cond, &page.Pagination{All: true})
+			pagination := &page.Pagination{All: false}
+			if req.Limit == 0 && req.Offset == 0 {
+				pagination.All = true
+			} else {
+				pagination.Offset = req.Offset
+				pagination.Limit = req.Limit
+			}
+			projects, total, err = lap.model.ListProjects(ctx, cond, pagination)
 		}
 		if err != nil {
 			return nil, err
