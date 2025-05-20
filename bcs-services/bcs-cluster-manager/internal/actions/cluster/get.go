@@ -90,7 +90,7 @@ func (ga *GetAction) getCluster() error {
 
 	// append project code
 	if len(cluster.GetProjectID()) > 0 {
-		pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(cluster.GetProjectID(), true)
+		pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, cluster.GetProjectID(), true)
 		if errLocal == nil {
 			cluster.ExtraInfo[common.ProjectCode] = pInfo.GetProjectCode()
 		}
@@ -729,7 +729,7 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 	if len(projectIDorCodes) == 0 {
 		projectID := cluster.GetProjectID()
 		if projectID != "" {
-			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectID, true)
+			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, projectID, true)
 			if err != nil {
 				blog.Errorf("get project info by project manager client failed, %s", err.Error())
 				return err
@@ -761,7 +761,7 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 			defer utils.RecoverPrintStack("GetClusterSharedProjectAction")
 			defer barrier.Done()
 
-			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectIDorCode, true)
+			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, projectIDorCode, true)
 			if err != nil {
 				blog.Errorf("get project info by project manager client failed, %s", err.Error())
 				return

@@ -458,7 +458,8 @@ func (ua *UpdateAction) checkAdjustGroupQuota() error {
 
 	scaleUpNum := ua.req.GetAutoScaling().GetMaxSize() - ua.group.GetAutoScaling().GetMaxSize()
 	// check resource pool quota
-	err := checkNodeGroupResourceValidate(ua.cloud.GetCloudProvider(), ua.group, common.OperationUpdate, scaleUpNum)
+	err := checkNodeGroupResourceValidate(ua.ctx, ua.cloud.GetCloudProvider(), ua.group,
+		common.OperationUpdate, scaleUpNum)
 	if err != nil {
 		return err
 	}

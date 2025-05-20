@@ -255,7 +255,7 @@ type NodeManager interface {
 	// GetZoneList get zoneList by region
 	GetZoneList(opt *GetZoneListOption) ([]*proto.ZoneInfo, error)
 	// ListNodeInstanceType get node instance type list
-	ListNodeInstanceType(info InstanceInfo, opt *CommonOption) ([]*proto.InstanceType, error)
+	ListNodeInstanceType(ctx context.Context, info InstanceInfo, opt *CommonOption) ([]*proto.InstanceType, error)
 	// ListDiskTypes get disk type list
 	ListDiskTypes(instanceTypes []string, zones []string, diskChargeType string, cpu, memory uint64,
 		opt *CommonOption) ([]*proto.DiskConfigSet, error)
@@ -372,7 +372,7 @@ type NodeGroupManager interface {
 	// UpdateNodeGroup update specified nodegroup configuration
 	UpdateNodeGroup(group *proto.NodeGroup, opt *UpdateNodeGroupOption) (*proto.Task, error)
 	// RecommendNodeGroupConf recommends nodegroup configs
-	RecommendNodeGroupConf(opt *CommonOption) ([]*proto.RecommendNodeGroupConf, error)
+	RecommendNodeGroupConf(ctx context.Context, opt *CommonOption) ([]*proto.RecommendNodeGroupConf, error)
 	// GetNodesInGroup get all nodes belong to NodeGroup
 	GetNodesInGroup(group *proto.NodeGroup, opt *CommonOption) ([]*proto.Node, error)
 	// GetNodesInGroupV2 get all nodes belong to NodeGroup
@@ -380,7 +380,7 @@ type NodeGroupManager interface {
 	// MoveNodesToGroup add cluster nodes to NodeGroup
 	MoveNodesToGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *MoveNodesOption) (*proto.Task, error)
 	// CheckResourcePoolQuota need to check resource pool quota when revise group quota
-	CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error
+	CheckResourcePoolQuota(ctx context.Context, group *proto.NodeGroup, operation string, scaleUpNum uint32) error
 
 	// RemoveNodesFromGroup remove nodes from NodeGroup, nodes are still in cluster
 	RemoveNodesFromGroup(nodes []*proto.Node, group *proto.NodeGroup, opt *RemoveNodesOption) error

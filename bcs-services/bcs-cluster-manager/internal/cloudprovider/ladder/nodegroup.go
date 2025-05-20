@@ -155,7 +155,8 @@ func (ng *NodeGroup) UpdateNodeGroup(
 }
 
 // RecommendNodeGroupConf recommends nodegroup configs
-func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+func (ng *NodeGroup) RecommendNodeGroupConf(
+	ctx context.Context, opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -523,7 +524,8 @@ func matchProjectAutoscalerQuotaByGroup(groups []*proto.NodeGroup, projectQuota 
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error { // nolint
+func (ng *NodeGroup) CheckResourcePoolQuota(
+	ctx context.Context, group *proto.NodeGroup, operation string, scaleUpNum uint32) error { // nolint
 	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
 	if err == nil && cloud.GetConfInfo().GetDisableCheckGroupResource() {
 		return nil
@@ -555,7 +557,7 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation st
 		return false
 	}()
 
-	quotaGrayValue, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(group.GetProjectID())
+	quotaGrayValue, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(ctx, group.GetProjectID())
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
 			group.GetProjectID(), err)

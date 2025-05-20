@@ -73,12 +73,12 @@ func virtualNodeID() string {
 	return "bcs-" + utils.RandomHexString(8)
 }
 
-func checkNodeGroupResourceValidate(provider string, nodeGroup *cmproto.NodeGroup,
+func checkNodeGroupResourceValidate(ctx context.Context, provider string, nodeGroup *cmproto.NodeGroup,
 	operation string, scaleUpResource uint32) error {
 	ngr, err := cloudprovider.GetNodeGroupMgr(provider)
 	if err != nil {
 		return err
 	}
 
-	return ngr.CheckResourcePoolQuota(nodeGroup, operation, scaleUpResource)
+	return ngr.CheckResourcePoolQuota(ctx, nodeGroup, operation, scaleUpResource)
 }

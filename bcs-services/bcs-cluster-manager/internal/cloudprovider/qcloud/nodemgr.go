@@ -217,24 +217,24 @@ func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Li
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
-	[]*proto.InstanceType, error) {
+func (nm *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
+	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
 		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
 
 	if options.GetEditionInfo().IsInnerEdition() {
-		return nm.getInnerInstanceTypes(info)
+		return nm.getInnerInstanceTypes(ctx, info)
 	}
 
 	return nm.getCloudInstanceType(info, opt)
 }
 
 // getInnerInstanceTypes get inner instance types info
-func (nm *NodeManager) getInnerInstanceTypes(info cloudprovider.InstanceInfo) ( // nolint
+func (nm *NodeManager) getInnerInstanceTypes(ctx context.Context, info cloudprovider.InstanceInfo) ( // nolint
 	[]*proto.InstanceType, error) {
 	blog.Infof("getInnerInstanceTypes %+v", info)
 
-	quoteGrayMode, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(info.ProjectID)
+	quoteGrayMode, err := project.GetProjectManagerClient().CheckProjectQuotaGrayLabel(ctx, info.ProjectID)
 	if err != nil {
 		blog.Errorf("GetProjectManagerClient GetProjectQuotaGrayLabel[%s] failed: %v",
 			info.ProjectID, err)

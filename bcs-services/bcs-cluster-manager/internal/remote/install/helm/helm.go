@@ -88,13 +88,13 @@ func NewHelmInstaller(opts HelmOptions, client *HelmClient,
 var _ install.Installer = &HelmInstaller{}
 
 // IsInstalled returns whether the app is installed
-func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
+func (h *HelmInstaller) IsInstalled(ctx context.Context, clusterID string) (bool, error) {
 	if h.debug {
 		return true, nil
 	}
 
 	start := time.Now()
-	resp, err := h.client.GetReleaseDetailV1(context.Background(), &helmmanager.GetReleaseDetailV1Req{
+	resp, err := h.client.GetReleaseDetailV1(ctx, &helmmanager.GetReleaseDetailV1Req{
 		ProjectCode: &h.projectID,
 		ClusterID:   &clusterID,
 		Namespace:   &h.releaseNamespace,
@@ -122,9 +122,9 @@ func (h *HelmInstaller) IsInstalled(clusterID string) (bool, error) {
 	return true, nil
 }
 
-func (h *HelmInstaller) getChartLatestVersion(project string, repo, chart string) (string, error) {
+func (h *HelmInstaller) getChartLatestVersion(ctx context.Context, project string, repo, chart string) (string, error) {
 	start := time.Now()
-	resp, err := h.client.GetChartDetailV1(context.Background(), &helmmanager.GetChartDetailV1Req{
+	resp, err := h.client.GetChartDetailV1(ctx, &helmmanager.GetChartDetailV1Req{
 		ProjectCode: &project,
 		RepoName:    &repo,
 		Name:        &chart,
@@ -152,14 +152,14 @@ func (h *HelmInstaller) setRepo() {
 }
 
 // Install installs the app
-func (h *HelmInstaller) Install(clusterID, values string) error {
+func (h *HelmInstaller) Install(ctx context.Context, clusterID, values string) error {
 	if h.debug {
 		return nil
 	}
 
 	h.setRepo()
 	// get chart latest version
-	version, err := h.getChartLatestVersion(h.projectID, h.repo, h.chartName)
+	version, err := h.getChartLatestVersion(ctx, h.projectID, h.repo, h.chartName)
 	if err != nil {
 		blog.Errorf("[HelmInstaller] getChartLatestVersion failed: %v", err)
 		return err
@@ -181,7 +181,7 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 	resp := &helmmanager.InstallReleaseV1Resp{}
 	err = retry.Do(func() error {
 		start := time.Now()
-		resp, err = h.client.InstallReleaseV1(context.Background(), req)
+		resp, err = h.client.InstallReleaseV1(ctx, req)
 		if err != nil {
 			metrics.ReportLibRequestMetric("helm", "InstallReleaseV1", "grpc", metrics.LibCallStatusErr, start)
 			blog.Errorf("[HelmInstaller] InstallRelease failed, err: %s", err.Error())
@@ -209,13 +209,13 @@ func (h *HelmInstaller) Install(clusterID, values string) error {
 }
 
 // Upgrade upgrades the app
-func (h *HelmInstaller) Upgrade(clusterID, values string) error {
+func (h *HelmInstaller) Upgrade(ctx context.Context, clusterID, values string) error {
 	if h.debug {
 		return nil
 	}
 
 	// upgrade need app status deployed
-	ok, err := h.CheckAppStatus(clusterID, time.Minute*10, true)
+	ok, err := h.CheckAppStatus(ctx, clusterID, time.Minute*10, true)
 	if err != nil {
 		blog.Errorf("[HelmInstaller] Upgrade CheckAppStatus failed: %v", err)
 		return err
@@ -248,7 +248,7 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 	}
 
 	start := time.Now()
-	resp, err := h.client.UpgradeReleaseV1(context.Background(), req)
+	resp, err := h.client.UpgradeReleaseV1(ctx, req)
 	if err != nil {
 		metrics.ReportLibRequestMetric("helm", "UpgradeReleaseV1", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("[HelmInstaller] UpgradeRelease failed, err: %s", err.Error())
@@ -269,13 +269,13 @@ func (h *HelmInstaller) Upgrade(clusterID, values string) error {
 }
 
 // Uninstall uninstalls the app
-func (h *HelmInstaller) Uninstall(clusterID string) error {
+func (h *HelmInstaller) Uninstall(ctx context.Context, clusterID string) error {
 	if h.debug {
 		return nil
 	}
 
 	// get project cluster release
-	ok, err := h.IsInstalled(clusterID)
+	ok, err := h.IsInstalled(ctx, clusterID)
 	if err != nil {
 		blog.Errorf("[HelmInstaller] check app installed failed, err: %s", err.Error())
 		return err
@@ -287,7 +287,7 @@ func (h *HelmInstaller) Uninstall(clusterID string) error {
 
 	start := time.Now()
 	// delete app
-	resp, err := h.client.UninstallReleaseV1(context.Background(), &helmmanager.UninstallReleaseV1Req{
+	resp, err := h.client.UninstallReleaseV1(ctx, &helmmanager.UninstallReleaseV1Req{
 		ProjectCode: &h.projectID,
 		Name:        &h.releaseName,
 		Namespace:   &h.releaseNamespace,
@@ -310,13 +310,14 @@ func (h *HelmInstaller) Uninstall(clusterID string) error {
 }
 
 // CheckAppStatus check app install status
-func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error) {
+func (h *HelmInstaller) CheckAppStatus(
+	ctx context.Context, clusterID string, timeout time.Duration, pre bool) (bool, error) {
 	if h.debug {
 		return true, nil
 	}
 
 	// get project cluster appID
-	ok, err := h.IsInstalled(clusterID)
+	ok, err := h.IsInstalled(ctx, clusterID)
 	if err != nil {
 		blog.Errorf("[HelmInstaller] check app installed failed, err: %s", err.Error())
 		return false, err
@@ -327,7 +328,7 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 	}
 
 	// 等待应用正常
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	err = loop.LoopDoFunc(ctx, func() error {
 		start := time.Now()
@@ -351,7 +352,6 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, code: %d, message: %s, requestID: %s",
 				*resp.Code, *resp.Message, *resp.RequestID)
 		}
-
 
 		if resp.Data == nil {
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, resp is empty")

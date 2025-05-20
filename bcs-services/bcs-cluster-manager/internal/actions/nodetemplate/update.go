@@ -157,7 +157,7 @@ func (ua *UpdateAction) validate() error {
 		return err
 	}
 
-	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ua.req.ProjectID, true)
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ua.ctx, ua.req.ProjectID, true)
 	if errLocal == nil {
 		ua.project = proInfo
 	}

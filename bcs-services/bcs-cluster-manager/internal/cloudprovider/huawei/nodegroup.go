@@ -114,7 +114,8 @@ func (ng *NodeGroup) UpdateNodeGroup(group *proto.NodeGroup, opt *cloudprovider.
 }
 
 // RecommendNodeGroupConf recommends nodegroup configs
-func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+func (ng *NodeGroup) RecommendNodeGroupConf(
+	ctx context.Context, opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }
 
@@ -379,7 +380,8 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(
+	ctx context.Context, group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
 	return nil
 }
 
