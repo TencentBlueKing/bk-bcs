@@ -22,6 +22,8 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/google/uuid"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/labels"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
@@ -31,8 +33,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/taskserver"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 // DrainNodeAction action for drain node
@@ -197,8 +197,7 @@ func (ua *DrainNodeAction) buildDrainPodTask() (*cmproto.Task, error) {
 		ForceTerminate: false,
 	}
 	// generate taskName
-	taskName := fmt.Sprintf("节点驱逐pod任务")
-	task.CommonParams[cloudprovider.TaskNameKey.String()] = taskName
+	task.CommonParams[cloudprovider.TaskNameKey.String()] = "节点驱逐pod任务"
 
 	err := ua.generateDrainPodStep(task)
 	if err != nil {
@@ -330,7 +329,7 @@ func (ua *CheckDrainNodeAction) validate() error {
 	return nil
 }
 
-func (ua *CheckDrainNodeAction) checkDrainClusterNodes() error {
+func (ua *CheckDrainNodeAction) checkDrainClusterNodes() error { // nolint
 	// get node names
 	nodeLabelsMap := make(map[string]map[string]string)
 
@@ -408,7 +407,8 @@ func (ua *CheckDrainNodeAction) checkDrainClusterNodes() error {
 
 				evictionRisk, willBeEvicted, err := ua.getEvictionRisk(pod)
 				if err != nil {
-					blog.Warnf("getEvictionRisk[%s] failed in cluster %s, node %s, err %s", pod.Name, ua.req.ClusterID, node, err.Error())
+					blog.Warnf("getEvictionRisk[%s] failed in cluster %s, node %s, err %s",
+						pod.Name, ua.req.ClusterID, node, err.Error())
 				}
 
 				podCheckData = append(podCheckData, &cmproto.CheckDrainNodeData{
@@ -438,19 +438,28 @@ func (ua *CheckDrainNodeAction) checkDrainClusterNodes() error {
 }
 
 const (
-	DaemonSetController                = "DaemonSet"
-	ForceRiskParameter                 = "--force"
-	ForceRiskDescription               = "未声明控制器的Pod"
-	IgnoreAllDaemonSetsRiskParameter   = "--ignore-daemonsets"
+	// DaemonSetController daemonset controller name
+	DaemonSetController = "DaemonSet"
+	// ForceRiskParameter force risk parameter
+	ForceRiskParameter = "--force"
+	// ForceRiskDescription force risk description
+	ForceRiskDescription = "未声明控制器的Pod"
+	// IgnoreAllDaemonSetsRiskParameter ignore all daemonsets risk parameter
+	IgnoreAllDaemonSetsRiskParameter = "--ignore-daemonsets"
+	// IgnoreAllDaemonSetsRiskDescription ignore all daemonsets risk description
 	IgnoreAllDaemonSetsRiskDescription = "忽略DaemonSet所控制的Pod"
-	DeleteLocalDataParameter           = "--delete-local-data"
-	DeleteLocalDataDescription         = "本地存储的Pod被驱逐后数据将丢失"
-	DisableEvictionParameter           = "--disable-eviction"
-	DisableEvictionDescription         = "受PodDisruptionBudget(PDB)策略保护的Pod"
+	// DeleteLocalDataParameter delete local data parameter
+	DeleteLocalDataParameter = "--delete-local-data"
+	// DeleteLocalDataDescription delete local data description
+	DeleteLocalDataDescription = "本地存储的Pod被驱逐后数据将丢失"
+	// DisableEvictionParameter disable eviction parameter
+	DisableEvictionParameter = "--disable-eviction"
+	// DisableEvictionDescription disable eviction description
+	DisableEvictionDescription = "受PodDisruptionBudget(PDB)策略保护的Pod"
 )
 
 // getEvictionRisk get pod eviction risk
-func (ua *CheckDrainNodeAction) getEvictionRisk(pod *corev1.Pod) ([]*cmproto.EvictionRisk, bool, error) {
+func (ua *CheckDrainNodeAction) getEvictionRisk(pod *corev1.Pod) ([]*cmproto.EvictionRisk, bool, error) { // nolint
 	evictionRisks := make([]*cmproto.EvictionRisk, 0)
 
 	// ignore-daemonsets parameter needs to check if the pod has a controller
@@ -540,7 +549,8 @@ func (ua *CheckDrainNodeAction) setResp(code uint32, msg string) {
 }
 
 // Handle handles check node drain
-func (ua *CheckDrainNodeAction) Handle(ctx context.Context, req *cmproto.CheckDrainNodeRequest, resp *cmproto.CheckDrainNodeResponse) {
+func (ua *CheckDrainNodeAction) Handle(ctx context.Context, req *cmproto.CheckDrainNodeRequest,
+	resp *cmproto.CheckDrainNodeResponse) {
 	if req == nil || resp == nil {
 		blog.Errorf("check drain cluster node failed, req or resp is empty")
 		return

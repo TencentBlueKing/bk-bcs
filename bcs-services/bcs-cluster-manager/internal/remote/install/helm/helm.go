@@ -18,10 +18,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avast/retry-go"
-
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
+	"github.com/avast/retry-go"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install"
@@ -351,7 +350,6 @@ func (h *HelmInstaller) CheckAppStatus(clusterID string, timeout time.Duration, 
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, code: %d, message: %s, requestID: %s",
 				*resp.Code, *resp.Message, *resp.RequestID)
 		}
-
 
 		if resp.Data == nil {
 			return fmt.Errorf("[HelmInstaller] GetReleaseDetail failed, resp is empty")

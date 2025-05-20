@@ -17,7 +17,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	
+
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common/profile"
