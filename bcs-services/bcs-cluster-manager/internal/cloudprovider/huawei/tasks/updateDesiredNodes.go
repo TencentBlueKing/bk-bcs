@@ -68,6 +68,9 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	blog.Infof("ApplyInstanceMachinesTask[%s]: begin to apply machines, nodeGroupID: %s, nodeNum: %d, manual: %s",
+		taskID, nodeGroupID, nodeNum, manual)
+
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -90,10 +93,18 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	err = applyInstanceMachines(ctx, dependInfo, int32(nodeNum))
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed")
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
-		_ = state.UpdateStepFailure(start, stepName, retErr)
-		return retErr
+		rbErr := rollbackNodeGroupDesiredSize(ctx, dependInfo, int32(nodeNum), manual)
+		if rbErr != nil {
+			if manual == common.True {
+				_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+			} else {
+				_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+			}
+
+			retErr := fmt.Errorf("%s, %s", err.Error(), rbErr.Error())
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
 	}
 
 	// trans success nodes to cm DB and record common paras, not handle error
@@ -141,6 +152,7 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
+	i := 0
 	err = loop.LoopDoFunc(context.Background(), func() error {
 		nodePool, errLocal := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
 		if errLocal != nil {
@@ -150,9 +162,17 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 
 		if nodePool.Status.Phase.Value() == "" {
 			return loop.EndLoop
-		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() ||
-			nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
-			return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, nodePool.Status.Phase.Value())
+		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() {
+			return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID,
+				nodePool.Status.Phase.Value())
+		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
+			// 扩容机型售罄 等待10次查看是否购买申请成功
+			if i < 10 {
+				i++
+			} else {
+				return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: nodeGroup status: %v, "+
+					"the node has been sold out", taskID, nodePool.Status.Phase.Value())
+			}
 		}
 
 		blog.Infof("taskID[%s] operation %s still running", taskID, nodePool.Status.Phase.Value())
@@ -161,6 +181,79 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 
 	if err != nil {
 		return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, err)
+	}
+
+	return nil
+}
+
+// rollbackNodeGroupDesiredSize rollback node group desired size
+func rollbackNodeGroupDesiredSize(ctx context.Context, info *cloudprovider.CloudDependBasicInfo,
+	nodeNum int32, manual string) error {
+	taskID := cloudprovider.GetTaskIDFromContext(ctx)
+
+	blog.Infof("rollbackNodeGroupDesiredSize[%s]: begin to rollback machines, nodeNum: %d, manual: %s",
+		taskID, nodeNum, manual)
+
+	client, err := api.NewCceClient(info.CmOption)
+	if err != nil {
+		return err
+	}
+
+	successInstance, err := differentInstance(context.Background(), info, client)
+	if err != nil {
+		return err
+	}
+
+	if len(successInstance) == 0 {
+		return fmt.Errorf("rollbackNodeGroupDesiredSize[%s] failed: all node create failed", taskID)
+	}
+
+	var size uint32
+	if manual != common.True {
+		nodeNum -= int32(len(successInstance))
+	}
+
+	if info.NodeGroup.AutoScaling.DesiredSize >= uint32(nodeNum) {
+		size = info.NodeGroup.AutoScaling.DesiredSize - uint32(nodeNum)
+	} else {
+		size = 0
+		blog.Warnf("rollbackNodeGroupDesiredSize[%s] abnormal, desiredSize[%v] scaleNodesNum[%v]", taskID,
+			info.NodeGroup.AutoScaling.DesiredSize, nodeNum)
+	}
+
+	blog.Infof("rollbackNodeGroupDesiredSize[%s] rollback desired size to %d", taskID, size)
+
+	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID,
+		int32(size), false)
+	if err != nil {
+		return fmt.Errorf("UpdateNodePoolDesiredNodes failed: %v", err)
+	}
+
+	err = loop.LoopDoFunc(context.Background(), func() error {
+		nodePool, errLocal := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+		if errLocal != nil {
+			blog.Errorf("rollbackNodeGroupDesiredSize[%s] GetClusterNodePool failed: %v", taskID, errLocal)
+			return nil
+		}
+
+		if nodePool.Status.Phase.Value() == "" {
+			return loop.EndLoop
+		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() {
+			return fmt.Errorf("rollbackNodeGroupDesiredSize[%s] GetOperation failed: %v",
+				taskID, nodePool.Status.Phase.Value())
+		}
+
+		blog.Infof("taskID[%s] operation %s still running", taskID, nodePool.Status.Phase.Value())
+		return nil
+	}, loop.LoopInterval(3*time.Second))
+	if err != nil {
+		return fmt.Errorf("rollbackNodeGroupDesiredSize[%s] GetOperation failed: %v", taskID, err)
+	}
+
+	blog.Infof("rollbackNodeGroupDesiredSize[%s] rollback successful", taskID)
+
+	if manual == common.True {
+		return fmt.Errorf("rollbackNodeGroupDesiredSize[%s] rollback nodeGroup desired size to %d", taskID, size)
 	}
 
 	return nil

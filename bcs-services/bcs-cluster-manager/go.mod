@@ -37,7 +37,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.1.87
+	github.com/huaweicloud/huaweicloud-sdk-go-v3 v0.1.144
 	github.com/kirito41dd/xslice v0.0.1
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/parnurzeal/gorequest v0.2.16
@@ -53,7 +53,7 @@ require (
 	github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc v1.0.714
 	go-micro.dev/v4 v4.9.0
 	go.etcd.io/etcd/client/v3 v3.5.5
-	go.mongodb.org/mongo-driver v1.12.0
+	go.mongodb.org/mongo-driver v1.13.1
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/tools v0.13.0
 	google.golang.org/api v0.155.0
