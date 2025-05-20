@@ -36,7 +36,7 @@ import (
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
-func ApplyInstanceMachinesTask(taskID string, stepName string) error {
+func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -167,12 +167,11 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 				nodePool.Status.Phase.Value())
 		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
 			// 扩容机型售罄 等待10次查看是否购买申请成功
-			if i < 10 {
-				i++
-			} else {
+			if i >= 10 {
 				return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: nodeGroup status: %v, "+
 					"the node has been sold out", taskID, nodePool.Status.Phase.Value())
 			}
+			i++
 		}
 
 		blog.Infof("taskID[%s] operation %s still running", taskID, nodePool.Status.Phase.Value())

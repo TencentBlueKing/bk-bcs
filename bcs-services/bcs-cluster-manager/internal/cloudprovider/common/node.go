@@ -28,7 +28,7 @@ import (
 )
 
 // NodeDrainPodTask running node drain pod job and wait for results
-func NodeDrainPodTask(taskID string, stepName string) error {
+func NodeDrainPodTask(taskID string, stepName string) error { // nolint
 	// step1: get para by taskID
 	// step2: for range node use goroutine run k8s command to drain pod
 	// step3: record success and failed result
@@ -141,7 +141,8 @@ func NodeDrainPodTask(taskID string, stepName string) error {
 	failedNodesStr := strings.Join(failedNodes, ",")
 	partFailedNodesStr := strings.Join(partFailedNodes, ",")
 
-	message = fmt.Sprintf("successNodes: [%s]; partFailedNodes: [%s]; failedNodes: [%s]", successNodesStr, partFailedNodesStr, failedNodesStr)
+	message = fmt.Sprintf("successNodes: [%s]; partFailedNodes: [%s]; failedNodes: [%s]",
+		successNodesStr, partFailedNodesStr, failedNodesStr)
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName, message)
 
 	if len(failedNodes) > 0 || len(partFailedNodes) > 0 {
@@ -168,8 +169,11 @@ type CreateNodeDrainPodTaskParas struct {
 }
 
 const (
-	NodeDrainPodResultSuccess    = "success"
-	NodeDrainPodResultFailed     = "failed"
+	// NodeDrainPodResultSuccess node drain pod result success
+	NodeDrainPodResultSuccess = "success"
+	// NodeDrainPodResultFailed node drain pod result failed
+	NodeDrainPodResultFailed = "failed"
+	// NodeDrainPodResultPartFailed node drain pod result part failed
 	NodeDrainPodResultPartFailed = "partial_failed"
 )
 
