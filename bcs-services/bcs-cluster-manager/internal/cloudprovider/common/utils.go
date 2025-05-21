@@ -644,10 +644,14 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	}
 
 	for _, node := range nodeNames {
-		// user defined labels
-		labels := data.Labels
-		if labels == nil {
-			labels = make(map[string]string)
+
+		blog.Infof("updateClusterNodesLabels[%s] node[%s] ip[%s] before labels: %v",
+			taskID, node.NodeName, node.NodeIP, node.NodeLabels)
+
+		// user defined labels 深拷贝本地标签配置
+		labels := make(map[string]string)
+		for k, v := range data.Labels {
+			labels[k] = v
 		}
 
 		// cmdb labels

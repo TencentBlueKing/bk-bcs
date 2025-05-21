@@ -923,7 +923,7 @@ func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, scaleUpNum u
 }
 
 // GetProjectCaResourceQuota get project ca resource quota
-func (ng *NodeGroup) GetProjectCaResourceQuota(groups []proto.NodeGroup,
+func (ng *NodeGroup) GetProjectCaResourceQuota(groups []*proto.NodeGroup,
 	opt *cloudprovider.CommonOption) ([]*proto.ProjectAutoscalerQuota, error) {
 	return nil, nil
 }

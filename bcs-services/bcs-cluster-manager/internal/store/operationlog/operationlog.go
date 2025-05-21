@@ -163,9 +163,9 @@ func (m *ModelOperationLog) DeleteOperationLogByDate(ctx context.Context, startT
 
 // ListOperationLog list logs
 func (m *ModelOperationLog) ListOperationLog(ctx context.Context, cond *operator.Condition, opt *options.ListOption) (
-	[]types.OperationLog, error) {
+	[]*types.OperationLog, error) {
 
-	logList := make([]types.OperationLog, 0)
+	logList := make([]*types.OperationLog, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(util.MapInt2MapIf(opt.Sort))
@@ -199,9 +199,9 @@ func (m *ModelOperationLog) CountOperationLog(ctx context.Context, cond *operato
 // ListAggreOperationLog aggre logs
 func (m *ModelOperationLog) ListAggreOperationLog(ctx context.Context, condSrc, condDst []bson.E,
 	opt *options.ListOption) (
-	[]types.TaskOperationLog, error) {
+	[]*types.TaskOperationLog, error) {
 
-	retTaskOpLogs := make([]types.TaskOperationLog, 0)
+	retTaskOpLogs := make([]*types.TaskOperationLog, 0)
 
 	const (
 		asField = "task"

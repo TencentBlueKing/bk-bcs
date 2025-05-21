@@ -40,7 +40,7 @@ type GetProjectResourceQuotaUsageAction struct {
 	projectId string
 	cloud     *cmproto.Cloud
 
-	groups []cmproto.NodeGroup
+	groups []*cmproto.NodeGroup
 
 	regionInsTypes map[string][]string // nolint
 }

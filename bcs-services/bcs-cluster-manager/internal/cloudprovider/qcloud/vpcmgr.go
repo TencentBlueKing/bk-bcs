@@ -261,7 +261,7 @@ func (c *VPCManager) GetClusterIpUsage(clusterId string, ipType string, opt *clo
 	case common.ClusterOverlayNetwork:
 		return business.GetClusterGrIPSurplus(opt, "", cls.GetSystemID())
 	case common.ClusterUnderlayNetwork:
-		zoneSubs, _, _, errLocal := business.GetClusterCurrentVpcCniSubnets(*cls, false)
+		zoneSubs, _, _, errLocal := business.GetClusterCurrentVpcCniSubnets(cls, false)
 		if errLocal != nil {
 			return 0, 0, err
 		}

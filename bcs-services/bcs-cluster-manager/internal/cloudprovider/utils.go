@@ -213,7 +213,7 @@ func GetCredential(data *CredentialData) (*CommonOption, error) {
 }
 
 // GetCloudCmOptionByCluster get common option by cluster
-func GetCloudCmOptionByCluster(cls proto.Cluster) (*CommonOption, error) {
+func GetCloudCmOptionByCluster(cls *proto.Cluster) (*CommonOption, error) {
 	cloud, err := GetStorageModel().GetCloud(context.Background(), cls.GetProvider())
 	if err != nil {
 		blog.Errorf("GetCloudCmOptionByCluster[%s:%s] get cloud failed: %v",
@@ -1427,7 +1427,7 @@ func GetNetworkResourceGroup(cls *proto.Cluster) string {
 }
 
 // ListProjectNotifyTemplates list project notify templates
-func ListProjectNotifyTemplates(projectId string) ([]proto.NotifyTemplate, error) {
+func ListProjectNotifyTemplates(projectId string) ([]*proto.NotifyTemplate, error) {
 	condM := make(operator.M)
 	condM["projectid"] = projectId
 

@@ -30,7 +30,7 @@ const (
 
 // getAllNodeTemplates list all nodeTemplates
 func getAllNodeTemplates(
-	ctx context.Context, model store.ClusterManagerModel, projectID string) ([]proto.NodeTemplate, error) {
+	ctx context.Context, model store.ClusterManagerModel, projectID string) ([]*proto.NodeTemplate, error) {
 	condM := make(operator.M)
 	condM[nodetemplate.ProjectIDKey] = projectID
 	cond := operator.NewLeafCondition(operator.Eq, condM)

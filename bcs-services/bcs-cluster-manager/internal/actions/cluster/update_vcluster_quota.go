@@ -89,7 +89,7 @@ func (ua *UpdateVirtualClusterQuotaAction) Handle(ctx context.Context, req *cmpr
 		return
 	}
 
-	var nsInfo cmproto.NamespaceInfo
+	var nsInfo *cmproto.NamespaceInfo
 	err = utils.ToStringObject([]byte(ua.cluster.ExtraInfo[common.VClusterNamespaceInfo]), &nsInfo)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerCloudProviderErr, err.Error())

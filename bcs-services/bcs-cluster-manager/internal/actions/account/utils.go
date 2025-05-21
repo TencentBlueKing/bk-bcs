@@ -37,7 +37,7 @@ type CloudAccount struct {
 
 // getAllAccountsByCloudID list all accounts by cloud
 func getAllAccountsByCloudID(
-	ctx context.Context, model store.ClusterManagerModel, cloudID string) ([]proto.CloudAccount, error) {
+	ctx context.Context, model store.ClusterManagerModel, cloudID string) ([]*proto.CloudAccount, error) {
 	condM := make(operator.M)
 	condM[account.CloudKey] = cloudID
 	cond := operator.NewLeafCondition(operator.Eq, condM)
