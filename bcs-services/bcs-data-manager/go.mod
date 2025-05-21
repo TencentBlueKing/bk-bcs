@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager
 go 1.20
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418123107-72b120390195
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/grpc v1.2.0

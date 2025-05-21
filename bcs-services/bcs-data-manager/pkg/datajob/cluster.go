@@ -87,7 +87,7 @@ func (p *ClusterDayPolicy) ImplementPolicy(ctx context.Context, opts *types.JobC
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
-	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients)
+	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(ctx, opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster day policy error, opts: %v, err: %v", opts, err)
 	}
@@ -176,7 +176,7 @@ func (p *ClusterHourPolicy) ImplementPolicy(ctx context.Context, opts *types.Job
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
-	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients)
+	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(ctx, opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster hour policy error, opts: %v, err: %v", opts, err)
 	}
@@ -267,7 +267,7 @@ func (p *ClusterMinutePolicy) ImplementPolicy(ctx context.Context, opts *types.J
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}
-	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(opts, clients)
+	node, availableNode, err := p.MetricGetter.GetClusterNodeCount(ctx, opts, clients)
 	if err != nil {
 		blog.Errorf("do cluster minute policy error, opts: %v, err: %v", opts, err)
 	}

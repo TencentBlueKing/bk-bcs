@@ -14,13 +14,13 @@ package datajob
 
 import (
 	"context"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/cmanager"
+	"testing"
+	"time"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/mock"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-data-manager/pkg/utils"
 	"github.com/stretchr/testify/assert"
-	"testing"
-	"time"
 )
 
 func TestProjectDayPolicy_CalculateCpu(t *testing.T) {
@@ -92,15 +92,11 @@ func Test_ProjectDayPolicy(t *testing.T) {
 		Dimension:   types.DimensionDay,
 		CurrentTime: utils.FormatTime(time.Now(), types.DimensionDay),
 	}
-	cmCli := &cmanager.ClusterManagerClientWithHeader{
-		Cli: mock.NewMockCm(),
-		Ctx: ctx,
-	}
+
 	client := &types.Clients{
 		MonitorClient:   nil,
 		K8sStorageCli:   mock.NewMockStorage(),
 		MesosStorageCli: mock.NewMockStorage(),
-		CmCli:           cmCli,
 	}
 	minutePolicy.ImplementPolicy(ctx, minuteOpts, client)
 	hourPolicy.ImplementPolicy(ctx, hourOpts, client)
