@@ -1,18 +1,20 @@
 <template>
   <div class="flex items-center">
     <template v-if="!editable">
-      <LoadingIcon v-if="varLoading || loading">{{ $t('generic.status.loading') }}...</LoadingIcon>
+      <LoadingIcon v-if="initLoading || loading">{{ $t('generic.status.loading') }}...</LoadingIcon>
       <template v-else>
         <span class="flex items-center" v-if="isAll">
-          <span class="bg-[#1768EF] text-[white] rounded-sm h-[14px] leading-[10px] p-[2px] mr-[5px]">ALL</span>
-          <span>{{ $t('cluster.msg.allProject') }}</span>
+          <svg width="16px" height="16px" fill="#3A84FF">
+            <use xlink:href="#bcs-icon-all"></use>
+          </svg>
+          <span class="ml-[4px]">{{ $t('cluster.msg.allProject') }}</span>
         </span>
         <span
           v-else
           class="break-all clamp-text"
           v-bk-overflow-tips="{ content: projectNameList.join() }">
-          <span v-for="(item, index) in projectNameList" :key="item">
-            <span>{{ item }}</span>
+          <span v-for="(item, index) in innerValue" :key="item">
+            <span>{{ projectIDMap[item] || sharedProjectMap[item] || item }}</span>
             <bcs-tag class="m-0 px-[5px]" theme="info" v-if="isOnlyCurrentPorject">
               {{ $t('cluster.tag.onlyCurrentProject') }}</bcs-tag>
             <bcs-tag
@@ -49,9 +51,25 @@
           :loading="initLoading"
           ref="selectRef"
           :allow-enter="false"
+          @toggle="handleToggle"
           @selected="handleProjectChange"
           @clear="innerValue = []"
           @scroll-end="handleScrollToBottom">
+          <template #trigger>
+            <div class="relative">
+              <div
+                :title="projectNameList.join()"
+                class="pr-[36px] pl-[10px] overflow-hidden text-ellipsis text-nowrap">
+                {{ isSelectAll ? $t('generic.label.total') : projectNameList.join() }}
+              </div>
+              <i
+                :class="[
+                  'absolute top-[4px] right-[2px] text-[22px] text-[#979ba5]',
+                  'bk-icon icon-angle-down transition duration-300',
+                  { 'rotate-[-180deg]': isToggle }
+                ]"></i>
+            </div>
+          </template>
           <template #search>
             <div
               :class="[
@@ -60,8 +78,10 @@
               ]"
               @click.stop="handleSelectAll">
               <span class="flex items-center">
-                <span class="bg-[#1768EF] text-[white] rounded-sm h-[14px] leading-[10px] p-[2px] mr-[5px]">ALL</span>
-                <span>{{ $t('cluster.msg.allProject') }}</span>
+                <svg width="16px" height="16px" :fill="isSelectAll ? '#3A84FF' : '#63656e'">
+                  <use xlink:href="#bcs-icon-all"></use>
+                </svg>
+                <span class="ml-[4px]">{{ $t('cluster.msg.allProject') }}</span>
               </span>
               <i v-show="isSelectAll" class="bk-option-icon bk-icon icon-check-1 text-[2em] mr-[5px]"></i>
             </div>
@@ -78,7 +98,8 @@
             :key="option.projectID"
             :id="option.projectID"
             :name="option.name"
-            :disabled="!(perms[option.projectID] && perms[option.projectID].project_view)"
+            :disabled="(!(perms[option.projectID] && perms[option.projectID].project_view))
+              || curProject.projectID === option.projectID"
             v-authority="{
               clickable: perms[option.projectID]
                 && perms[option.projectID].project_view,
@@ -100,7 +121,7 @@
                   v-if="curProject.projectID === option.projectID">{{ $t('cluster.tag.currentProject') }}</bcs-tag>
               </span>
               <i
-                v-show="innerValue.includes(option.projectID)"
+                v-show="innerValue.includes(option.projectID) && !isSelectAll"
                 class="bk-option-icon bk-icon icon-check-1 text-[2em]"></i>
             </span>
           </bk-option>
@@ -118,7 +139,7 @@
   </div>
 </template>
 <script lang="ts">
-import { computed, defineComponent, onBeforeMount, PropType, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, PropType, ref, toRefs, watch } from 'vue';
 
 import { getSharedprojects } from '@/api/modules/cluster-manager';
 import LoadingIcon from '@/components/loading-icon.vue';
@@ -177,24 +198,20 @@ export default defineComponent({
     const inputRef = ref<any>(null);
     const handleEdit = () => {
       ctx.emit('edit');
+      if (value.value.length === 0 && isShared.value) {
+        isSelectAll.value = true;
+      };
       setTimeout(() => {
         inputRef.value?.focus();
       });
     };
     const innerValue = ref<string[]>(value.value);
     const originValue = ref<string[]>(value.value);
-    const isOnlyCurrentPorject = computed(() => (!isSelectAll.value && !innerValue.value.length)
-      || (innerValue.value.length === 1 && innerValue.value[0] === curProject.value.projectID));
-    const handleChange = async (params?) => {
-      if (params === true) return;
-      ctx.emit('cancel');
-      // 值未变更不做保存
-      if (innerValue.value === value.value) return;
+    const isOnlyCurrentPorject = computed(() => (!isSelectAll.value
+      && innerValue.value.length === 1
+      && innerValue.value[0] === curProject.value.projectID));
 
-      ctx.emit('change', innerValue.value);
-    };
     function handleSave() {
-      if (isSelectAll.value) {}
       ctx.emit('save', {
         isAll: isSelectAll.value,
         isOnlyCurrentPorject: isOnlyCurrentPorject.value,
@@ -203,23 +220,30 @@ export default defineComponent({
     }
     function handleCancel() {
       ctx.emit('cancel');
+      isSelectAll.value = false;
       innerValue.value = originValue.value;
     }
 
     // 初始化数据
-    const varLoading = ref(false);
     const projectList = ref<IProject[]>([]);
-    const projectNameList = computed(() => innerValue.value.map(item => projectIDMap.value[item]?.name || item));
+    const projectNameList = computed(() => {
+      // 缓存所有.value提升性能（减少响应式getter访问）
+      const currentIDs = innerValue.value;
+      const idMap = projectIDMap.value;
+      const sharedMap = sharedProjectMap.value;
+
+      // 改用map替代reduce（时间复杂度相同但更简洁）
+      return currentIDs.map(cur => idMap[cur]
+        || sharedMap[cur]
+        || cur);
+    });
     const initLoading = ref(false);
     const params = ref({
       offset: 0,
       limit: 20,
     });
     const perms = ref<Record<string, IProjectPerm>>({});
-    const hasProjects = ref(false); // 解决组件projectID回显问题
-    const hasSharedprojects = ref(false);
     async function handleInitProjectList() {
-      varLoading.value = true;
       params.value.offset = 0;
       const res = await getProjectList({
         ...params.value,
@@ -235,37 +259,30 @@ export default defineComponent({
       }));
       projectList.value = res?.data?.results || [];
       perms.value = res?.web_annotations?.perms || {};
-      if (!value.value.length) {
-        innerValue.value = [curProject.value.projectID];
-        originValue.value = [curProject.value.projectID];
-      }
-      hasSharedprojects.value && (varLoading.value = false);
-      // 标识项目列表请求完成
-      hasProjects.value = true;
     };
-    watch(() => props.clusterId, async () => {
-      // 当前项目列表不存在当前项目id对应的project信息，获取相应项目列表
-      varLoading.value = true;
-      await getSharedprojects({
-        $clusterId: props.clusterId,
-      }, { needRes: true }).then((res) => {
-        const list = res.sharedProjects || [];
-        list.forEach((item) => {
-          if (!projectIDMap.value[item.projectID]) {
-            projectList.value.push(item); // 缺少 businessName、isOffline，不影响这个组件使用
-            perms.value[item.projectID] = { // 后续请求会覆盖这个临时值
-              project_create: true,
-              project_delete: false,
-              project_edit: false,
-              project_view: false,
-            };
-          }
-        });
-        // 标识Sharedprojects请求完成
-        hasSharedprojects.value = true;
-      });
-      hasProjects.value && (varLoading.value = false);
+
+    const sharedProjectList = ref<IProject[]>([]);
+    const sharedProjectMap = computed(() => {
+      // 缓存 sharedProjectList.value 减少响应式 getter 访问次数
+      const sharedMap = sharedProjectList.value;
+
+      return Object.fromEntries(sharedMap.map(item => [
+        item.projectID,
+        item.name,
+      ]));
     });
+    async function getSharedprojectList() {
+      // 当前项目列表不存在当前项目id对应的project信息，获取相应项目列表
+      sharedProjectList.value = await getSharedprojects({
+        $clusterId: props.clusterId,
+      }).catch(() => []);
+    };
+
+    // 折叠状态
+    const isToggle = ref(false);
+    function handleToggle(status) {
+      isToggle.value = status;
+    };
 
     // 远程搜索
     const selectRef = ref();
@@ -277,10 +294,16 @@ export default defineComponent({
     });
 
     // 滚动加载
-    const projectIDMap = computed(() => projectList.value.reduce((pre, item) => {
-      pre[item.projectID] = item;
-      return pre;
-    }, {}));
+    const projectIDMap = computed(() => {
+      // 缓存 projectList.value 减少响应式 getter 访问次数
+      const currentProjects = projectList.value;
+
+      // 使用 Object.fromEntries + map 替代 reduce（更高效的构建方式）
+      return Object.fromEntries(currentProjects.map(item => [
+        item.projectID, // 键
+        item.name, // 值
+      ]));
+    });
     const finished = ref(false);
     const scrollLoading = ref(false);
     const handleScrollToBottom = async () => {
@@ -315,16 +338,16 @@ export default defineComponent({
     const isSelectAll = ref(false);
     function handleSelectAll() {
       isSelectAll.value = !isSelectAll.value;
-      innerValue.value = [];
-      ctx.emit('change', []);
+      innerValue.value = [curProject.value.projectID];
+      ctx.emit('change', [curProject.value.projectID]);
     }
 
-    watch(value, () => {
+    watch([() => props.clusterId, () => props.value], () => {
       if (value.value.length === 0 && isShared.value) {
         // 全部项目可见
         isSelectAll.value = true;
-        innerValue.value = [];
-        originValue.value = [];
+        innerValue.value = [curProject.value.projectID];
+        originValue.value = [curProject.value.projectID];
       } else if (value.value.length === 0 && !isShared.value) {
         // 仅当前项目可见
         innerValue.value = [curProject.value.projectID];
@@ -336,8 +359,9 @@ export default defineComponent({
       }
     });
 
-    onBeforeMount(async () => {
+    watch(() => props.clusterId, async () => {
       initLoading.value = true;
+      await getSharedprojectList();
       await handleInitProjectList();
       initLoading.value = false;
     });
@@ -355,15 +379,18 @@ export default defineComponent({
       isSelectAll,
       isOnlyCurrentPorject,
       perms,
-      varLoading,
       isAll,
+      sharedProjectMap,
+      isToggle,
+      projectIDMap,
       handleSave,
       handleEdit,
-      handleChange,
       handleScrollToBottom,
       handleProjectChange,
       handleSelectAll,
       handleCancel,
+      getSharedprojectList,
+      handleToggle,
     };
   },
 });
