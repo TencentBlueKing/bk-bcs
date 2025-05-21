@@ -403,14 +403,15 @@ func (ua *UpdateAction) updateCloudNodeGroup() error {
 			)
 			return err
 		}
+		// update group info
+		if err = ua.saveNodeGroupStatus(common.StatusNodeGroupUpdating); err != nil {
+			return err
+		}
+
 		if err = taskserver.GetTaskServer().Dispatch(task); err != nil {
 			blog.Errorf("dispatch update nodegroup task for nodegroup %s failed, %s",
 				ua.group.NodeGroupID, err.Error(),
 			)
-			return err
-		}
-		// update group info
-		if err = ua.saveNodeGroupStatus(common.StatusNodeGroupUpdating); err != nil {
 			return err
 		}
 
