@@ -75,10 +75,6 @@ func (ga *GetAction) getCluster() error {
 		}
 	}
 
-	if cluster.IsShared && ga.req.ProjectId == cluster.ProjectID {
-		cluster.IsShared = false
-	}
-
 	// append apiServer info
 	if cluster.ExtraInfo == nil {
 		cluster.ExtraInfo = make(map[string]string, 0)
