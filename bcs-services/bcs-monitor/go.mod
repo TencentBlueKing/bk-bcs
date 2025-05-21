@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 go 1.23.0
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241225073847-71cfc38de294
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230602131736-2c6f5ea23f31
 	github.com/chonla/format v0.0.0-20220105105701-1119f4a3f36f
