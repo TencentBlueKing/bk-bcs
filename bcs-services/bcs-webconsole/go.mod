@@ -3,7 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole
 go 1.23
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240506114534-2223209a5716
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520073524-90b8a72d65db
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20240506114534-2223209a5716
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	github.com/dustin/go-humanize v1.0.0
@@ -12,7 +12,7 @@ require (
 	github.com/go-micro/plugins/v4/config/encoder/yaml v1.1.0
 	github.com/go-micro/plugins/v4/registry/etcd v1.1.0
 	github.com/go-micro/plugins/v4/server/http v1.1.1
-	github.com/go-redis/redis/v8 v8.11.4
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.12.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510

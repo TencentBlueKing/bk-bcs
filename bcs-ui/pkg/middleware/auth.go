@@ -25,6 +25,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component/iam"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/rest"
 )
 
@@ -42,7 +43,8 @@ type ContextValueKey string
 func NeedProjectAuthorization(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
+		// 新增泳道特性
+		ctx = contextx.WithLaneIdCtx(ctx, r.Header)
 		claims, err := decodeBCSJwtFromContext(ctx, r)
 		if err != nil {
 			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, err.Error())

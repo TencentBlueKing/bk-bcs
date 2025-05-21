@@ -14,9 +14,14 @@
 package types
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"net/textproto"
 	"strings"
 	"time"
+
+	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
@@ -31,6 +36,17 @@ const (
 	ClusterExternalMode WebConsoleMode = "cluster_external" // 平台集群, 外部模式, 需要设置 AdminClusterId
 	// ContainerDirectMode xxx
 	ContainerDirectMode WebConsoleMode = "container_direct" // 直连容器
+)
+
+// ContextValueKey is the key for context value
+type ContextValueKey string
+
+// LaneKey is the key for lane
+const (
+	// LaneKey is the key for lane
+	LaneKey ContextValueKey = "X-Lane"
+	// LaneIDPrefix 染色的header前缀
+	LaneIDPrefix = "X-Lane-"
 )
 
 const (
@@ -247,4 +263,45 @@ func DefaultTerminalSize() *TerminalSize {
 		Rows: defaultTerminalRows,
 		Cols: defaultTerminalCols,
 	}
+}
+
+// GetLaneIDByCtx get lane id by ctx
+func GetLaneIDByCtx(ctx context.Context) map[string]string {
+	// http 格式的以key value方式存放，eg: key: X-Lane value: X-Lane-xxx:xxx
+	v, ok := ctx.Value(LaneKey).(string)
+	if ok || v != "" {
+		result := strings.Split(v, ":")
+		if len(result) != 2 {
+			return nil
+		}
+		return map[string]string{result[0]: result[1]}
+	}
+	if !ok || v == "" {
+		return grpcLaneIDValue(ctx)
+	}
+	return nil
+}
+
+// grpcLaneIDValue grpc lane id 处理
+func grpcLaneIDValue(ctx context.Context) map[string]string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		for k, v := range md {
+			tmpKey := textproto.CanonicalMIMEHeaderKey(k)
+			if strings.HasPrefix(tmpKey, LaneIDPrefix) && len(v) > 0 {
+				return map[string]string{tmpKey: md.Get(k)[0]}
+			}
+		}
+	}
+	return nil
+}
+
+// WithLaneIdCtx ctx lane id
+func WithLaneIdCtx(ctx context.Context, h http.Header) context.Context {
+	for k, v := range h {
+		if strings.HasPrefix(k, LaneIDPrefix) && len(v) > 0 {
+			ctx = context.WithValue(ctx, LaneKey, k+":"+v[0])
+		}
+	}
+	return ctx
 }
