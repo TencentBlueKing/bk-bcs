@@ -38,5 +38,5 @@ func (a *SharedNamespaceAction) SyncNamespace(ctx context.Context,
 		return errorx.NewClusterErr(err.Error())
 	}
 	nsItems := nsutils.FilterNamespaces(nsList, true, req.GetProjectCode())
-	return common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), nsItems)
+	return common.SyncNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), nsItems)
 }

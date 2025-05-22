@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"sync"
 
+	bcsapiClusterManager "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"golang.org/x/sync/errgroup"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -51,14 +52,14 @@ func (la *ListNamespacesVariablesAction) Do(ctx context.Context,
 	la.ctx = ctx
 	la.req = req
 
-	variables, err := la.listNamespaceVariables()
+	variables, err := la.listNamespaceVariables(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return variables, nil
 }
 
-func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.VariableValue, error) {
+func (la *ListNamespacesVariablesAction) listNamespaceVariables(ctx context.Context) ([]*proto.VariableValue, error) {
 	project, err := la.model.GetProject(la.ctx, la.req.GetProjectCode())
 	if err != nil {
 		logging.Info("get project from db failed, err: %s", err.Error())
@@ -73,7 +74,7 @@ func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.Vari
 		return nil, fmt.Errorf("variable %s scope is %s rather than namespace",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
-	clusters, err := clustermanager.ListClusters(project.ProjectID)
+	clusters, err := clustermanager.ListClusters(ctx, project.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -83,17 +84,18 @@ func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.Vari
 	g, ctx := errgroup.WithContext(la.ctx)
 	la.ctx = ctx
 	for _, cluster := range clusters {
-		c := *cluster
-		g.Go(func() error {
-			vs, err := la.concurrencyList(c, variableDefinition)
-			if err != nil {
-				return err
+		g.Go(func(cluster *bcsapiClusterManager.Cluster) func() error {
+			return func() error {
+				vs, err := la.concurrencyList(cluster, variableDefinition)
+				if err != nil {
+					return err
+				}
+				lock.Lock()
+				defer lock.Unlock()
+				variables = append(variables, vs...)
+				return nil
 			}
-			lock.Lock()
-			defer lock.Unlock()
-			variables = append(variables, vs...)
-			return nil
-		})
+		}(cluster))
 	}
 	if err := g.Wait(); err != nil {
 		logging.Error("list variables failed, err:%s", err.Error())
@@ -102,7 +104,7 @@ func (la *ListNamespacesVariablesAction) listNamespaceVariables() ([]*proto.Vari
 	return variables, nil
 }
 
-func (la *ListNamespacesVariablesAction) concurrencyList(cluster clustermanager.Cluster,
+func (la *ListNamespacesVariablesAction) concurrencyList(cluster *bcsapiClusterManager.Cluster,
 	variableDefinition *vdm.VariableDefinition) ([]*proto.VariableValue, error) {
 	client, err := clientset.GetClientGroup().Client(cluster.GetClusterID())
 	if err != nil {

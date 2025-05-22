@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	bcsapiClusterManager "github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/bcsstorage"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
@@ -47,12 +48,12 @@ func checkProjectValidate(model store.ProjectModel, projectId, projectCode, name
 	return p, nil
 }
 
-func checkClusterValidate(clusterId string) (*clustermanager.Cluster, error) {
+func checkClusterValidate(ctx context.Context, clusterId string) (*bcsapiClusterManager.Cluster, error) {
 	if len(strings.TrimSpace(clusterId)) == 0 {
 		return nil, nil
 	}
 
-	cls, err := clustermanager.GetCluster(clusterId)
+	cls, err := clustermanager.GetCluster(ctx, clusterId)
 	if err != nil {
 		return nil, err
 	}

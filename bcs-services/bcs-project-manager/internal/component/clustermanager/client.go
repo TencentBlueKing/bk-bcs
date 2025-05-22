@@ -15,23 +15,15 @@ package clustermanager
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
-	grpc "google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/metadata"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/cache"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
+	common "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 )
 
@@ -45,135 +37,23 @@ var (
 	CacheKeyClusterPrefix = "CLUSTER_%s"
 )
 
-type authentication struct {
-}
-
-func (a *authentication) GetRequestMetadata(context.Context, ...string) (map[string]string, error) {
-	return map[string]string{middleware.InnerClientHeaderKey: constant.ServiceName}, nil
-}
-
-func (a *authentication) RequireTransportSecurity() bool {
-	return true
-}
-
-// ClsManClient xxx
-type ClsManClient struct {
-	tlsConfig *tls.Config
-	disc      *discovery.ModuleDiscovery
-}
-
-// ClusterClient xxx
-var ClusterClient *ClsManClient
-
-// SetClusterManagerClient set cluster manager client config
-func SetClusterManagerClient(tlsConfig *tls.Config, disc *discovery.ModuleDiscovery) {
-	ClusterClient = &ClsManClient{
-		tlsConfig: tlsConfig,
-		disc:      disc,
-	}
-}
-
-// GetClusterManagerClient get cm client by discovery
-func GetClusterManagerClient() (ClusterManagerClient, func(), error) {
-	if ClusterClient == nil {
-		return nil, nil, ErrNotInited
-	}
-
-	if ClusterClient.disc == nil {
-		return nil, nil, fmt.Errorf("resourceManager module not enable discovery")
-	}
-
-	nodeServer, err := ClusterClient.disc.GetRandomServiceNode()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	blog.Infof("ResManClient get node[%s] from disc", nodeServer.Address)
-	conf := &Config{
-		Hosts:     []string{nodeServer.Address},
-		TLSConfig: ClusterClient.tlsConfig,
-	}
-	cli, closeCon := NewClusterManager(conf)
-
-	return cli, closeCon, nil
-}
-
-// Config for connect cm server
-type Config struct {
-	Hosts     []string
-	AuthToken string
-	TLSConfig *tls.Config
-}
-
-// NewClusterManager create ResourceManager SDK implementation
-func NewClusterManager(config *Config) (ClusterManagerClient, func()) {
-	// NOCC: gosec/crypto(没有特殊的安全需求)
-	//nolint:gosec
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	if len(config.Hosts) == 0 {
-		// ! pay more attention for nil return
-		return nil, nil
-	}
-	// create grpc connection
-	header := map[string]string{
-		"x-content-type":                "application/grpc+proto",
-		"Content-Type":                  "application/grpc",
-		middleware.InnerClientHeaderKey: constant.ServiceDomain,
-	}
-	if len(config.AuthToken) != 0 {
-		header["Authorization"] = fmt.Sprintf("Bearer %s", config.AuthToken)
-	}
-	md := metadata.New(header)
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
-	opts = append(opts, grpc.WithPerRPCCredentials(&authentication{}))
-	if config.TLSConfig != nil {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
-	} else {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	}
-	var conn *grpc.ClientConn
-	var err error
-	maxTries := 3
-	for i := 0; i < maxTries; i++ {
-		selected := r.Intn(1024) % len(config.Hosts)
-		addr := config.Hosts[selected]
-		conn, err = grpc.Dial(addr, opts...)
-		if err != nil {
-			blog.Errorf("Create resource manager grpc client with %s error: %s", addr, err.Error())
-			continue
-		}
-		if conn != nil {
-			break
-		}
-	}
-	if conn == nil {
-		blog.Errorf("create no resource manager client after all instance tries")
-		return nil, nil
-	}
-
-	// init cluster manager client
-	// nolint
-	return NewClusterManagerClient(conn), func() { conn.Close() }
-}
-
 // GetCluster get cluster by clusterID
-func GetCluster(clusterID string) (*Cluster, error) {
+func GetCluster(ctx context.Context, clusterID string) (*clustermanager.Cluster, error) {
 	// 1. if hit, get from cache
 	c := cache.GetCache()
 	if cluster, exists := c.Get(fmt.Sprintf(CacheKeyClusterPrefix, clusterID)); exists {
-		return cluster.(*Cluster), nil
+		return cluster.(*clustermanager.Cluster), nil
 	}
-	cli, closeCon, err := GetClusterManagerClient()
+	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
 	defer closeCon()
-	req := &GetClusterReq{
+	req := &clustermanager.GetClusterReq{
 		ClusterID: clusterID,
 	}
-	resp, err := cli.GetCluster(context.Background(), req)
+	resp, err := cli.GetCluster(ctx, req)
 	if err != nil {
 		logging.Error("get cluster from cluster manager failed, err: %s", err.Error())
 		return nil, err
@@ -187,18 +67,18 @@ func GetCluster(clusterID string) (*Cluster, error) {
 }
 
 // ListClusters list clusters by projectID
-func ListClusters(projectID string) ([]*Cluster, error) {
-	cli, closeCon, err := GetClusterManagerClient()
+func ListClusters(ctx context.Context, projectID string) ([]*clustermanager.Cluster, error) {
+	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
 	defer closeCon()
-	req := &ListClusterReq{
+	req := &clustermanager.ListClusterReq{
 		ProjectID: projectID,
 		Status:    ClusterStatusRunning,
 	}
-	resp, err := cli.ListCluster(context.Background(), req)
+	resp, err := cli.ListCluster(ctx, req)
 	if err != nil {
 		logging.Error("list clusters from cluster manager failed, err: %s", err.Error())
 		return nil, err
@@ -211,18 +91,19 @@ func ListClusters(projectID string) ([]*Cluster, error) {
 }
 
 // GetResourceUsage get project resource usage
-func GetResourceUsage(projectID, provider string) ([]*ProjectAutoscalerQuota, error) {
-	cli, closeCon, err := GetClusterManagerClient()
+func GetResourceUsage(ctx context.Context, projectID, provider string) (
+	[]*clustermanager.ProjectAutoscalerQuota, error) {
+	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
 	defer closeCon()
-	req := &GetProjectResourceQuotaUsageRequest{
+	req := &clustermanager.GetProjectResourceQuotaUsageRequest{
 		ProjectID:  projectID,
 		ProviderID: provider,
 	}
-	resp, err := cli.GetProjectResourceQuotaUsage(context.Background(), req)
+	resp, err := cli.GetProjectResourceQuotaUsage(ctx, req)
 	if err != nil {
 		logging.Error("get project resource usage from cluster manager failed, err: %s", err.Error())
 		return nil, err
@@ -238,7 +119,7 @@ func GetResourceUsage(projectID, provider string) ([]*ProjectAutoscalerQuota, er
 	}
 	logging.Info("get project resource usage from cluster manager, data: %s", string(data))
 
-	var pqs []*ProjectAutoscalerQuota
+	var pqs []*clustermanager.ProjectAutoscalerQuota
 
 	if err = json.Unmarshal(data, &pqs); err != nil {
 		logging.Error("unmarshal error: %s", err.Error())
@@ -246,25 +127,26 @@ func GetResourceUsage(projectID, provider string) ([]*ProjectAutoscalerQuota, er
 	}
 
 	for _, pq := range pqs {
-		logging.Info("pq: %v", *pq)
+		pqRaw, _ := json.Marshal(pq)
+		logging.Info("pq: %s", string(pqRaw))
 	}
 
 	return pqs, nil
 }
 
 // GetNodeGroup get node group
-func GetNodeGroup(nodeGroupID string) (*NodeGroup, error) {
-	cli, closeCon, err := GetClusterManagerClient()
+func GetNodeGroup(ctx context.Context, nodeGroupID string) (*clustermanager.NodeGroup, error) {
+	cli, closeCon, err := clustermanager.GetClient(common.ServiceDomain)
 	if err != nil {
 		logging.Error("get cluster manager client failed, err: %s", err.Error())
 		return nil, err
 	}
 	defer closeCon()
-	req := &GetNodeGroupRequest{
+	req := &clustermanager.GetNodeGroupRequest{
 		NodeGroupID: nodeGroupID,
 	}
 
-	resp, err := cli.GetNodeGroup(context.Background(), req)
+	resp, err := cli.GetNodeGroup(ctx, req)
 	if err != nil {
 		logging.Error("get project resource usage from cluster manager failed, err: %s", err.Error())
 		return nil, err

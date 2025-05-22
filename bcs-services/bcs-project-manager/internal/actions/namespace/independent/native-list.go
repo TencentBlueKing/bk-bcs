@@ -40,7 +40,7 @@ func (c *IndependentNamespaceAction) ListNativeNamespaces(ctx context.Context,
 		return errorx.NewClusterErr(err.Error())
 	}
 	retDatas := []*proto.NativeNamespaceData{}
-	cluster, err := clustermanager.GetCluster(req.GetClusterID())
+	cluster, err := clustermanager.GetCluster(ctx, req.GetClusterID())
 	if err != nil {
 		logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 		return err

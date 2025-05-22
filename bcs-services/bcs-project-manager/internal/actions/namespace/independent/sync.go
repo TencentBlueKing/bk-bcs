@@ -36,5 +36,5 @@ func (c *IndependentNamespaceAction) SyncNamespace(ctx context.Context,
 	if err != nil {
 		return errorx.NewClusterErr(err.Error())
 	}
-	return common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), nsList.Items)
+	return common.SyncNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), nsList.Items)
 }

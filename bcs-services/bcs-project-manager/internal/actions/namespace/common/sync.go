@@ -30,7 +30,7 @@ import (
 )
 
 // SyncNamespace sync namespaces in paas-cc with apiserver
-func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace) error {
+func SyncNamespace(ctx context.Context, projectCode, clusterID string, namespaces []corev1.Namespace) error {
 	etcdCli, err := etcd.GetClient()
 	if err != nil {
 		logging.Error("get etcd client failed, err: %s", err.Error())
@@ -55,7 +55,7 @@ func SyncNamespace(projectCode, clusterID string, namespaces []corev1.Namespace)
 	}
 	// nolint
 	defer mu.Unlock(context.TODO())
-	cluster, err := clustermanager.GetCluster(clusterID)
+	cluster, err := clustermanager.GetCluster(ctx, clusterID)
 	if err != nil {
 		logging.Error("get cluster %s from cluster-manager failed, err: %s", clusterID, err.Error())
 		return err

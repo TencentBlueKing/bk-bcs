@@ -11,7 +11,7 @@ PROTO_IMAGE := "proto"
 
 .PHONY: all clean
 
-all:docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ) sync-to-bcsapi
+all: clean docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ) sync-to-bcsapi
 
 $(OBJ):$(PROTO)
 
