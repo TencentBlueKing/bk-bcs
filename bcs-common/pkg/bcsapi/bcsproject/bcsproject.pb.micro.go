@@ -6,7 +6,7 @@ package bcsproject
 import (
 	fmt "fmt"
 	_ "github.com/envoyproxy/protoc-gen-validate/validate"
-	_ "github.com/golang/protobuf/ptypes/struct"
+	_struct "github.com/golang/protobuf/ptypes/struct"
 	_ "github.com/golang/protobuf/ptypes/wrappers"
 	_ "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -78,6 +78,12 @@ func NewBCSProjectEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "BCSProject.GetProjectActive",
+			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/active"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -91,6 +97,7 @@ type BCSProjectService interface {
 	ListProjects(ctx context.Context, in *ListProjectsRequest, opts ...client.CallOption) (*ListProjectsResponse, error)
 	ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, opts ...client.CallOption) (*ListAuthorizedProjResp, error)
 	ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, opts ...client.CallOption) (*ListProjectsForIAMResp, error)
+	GetProjectActive(ctx context.Context, in *GetProjectActiveRequest, opts ...client.CallOption) (*GetProjectActiveResponse, error)
 }
 
 type bCSProjectService struct {
@@ -175,6 +182,16 @@ func (c *bCSProjectService) ListProjectsForIAM(ctx context.Context, in *ListProj
 	return out, nil
 }
 
+func (c *bCSProjectService) GetProjectActive(ctx context.Context, in *GetProjectActiveRequest, opts ...client.CallOption) (*GetProjectActiveResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProject.GetProjectActive", in)
+	out := new(GetProjectActiveResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for BCSProject service
 
 type BCSProjectHandler interface {
@@ -185,6 +202,7 @@ type BCSProjectHandler interface {
 	ListProjects(context.Context, *ListProjectsRequest, *ListProjectsResponse) error
 	ListAuthorizedProjects(context.Context, *ListAuthorizedProjReq, *ListAuthorizedProjResp) error
 	ListProjectsForIAM(context.Context, *ListProjectsForIAMReq, *ListProjectsForIAMResp) error
+	GetProjectActive(context.Context, *GetProjectActiveRequest, *GetProjectActiveResponse) error
 }
 
 func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...server.HandlerOption) error {
@@ -196,6 +214,7 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		ListProjects(ctx context.Context, in *ListProjectsRequest, out *ListProjectsResponse) error
 		ListAuthorizedProjects(ctx context.Context, in *ListAuthorizedProjReq, out *ListAuthorizedProjResp) error
 		ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, out *ListProjectsForIAMResp) error
+		GetProjectActive(ctx context.Context, in *GetProjectActiveRequest, out *GetProjectActiveResponse) error
 	}
 	type BCSProject struct {
 		bCSProject
@@ -243,6 +262,12 @@ func RegisterBCSProjectHandler(s server.Server, hdlr BCSProjectHandler, opts ...
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProject.GetProjectActive",
+		Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/active"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&BCSProject{h}, opts...))
 }
 
@@ -276,6 +301,10 @@ func (h *bCSProjectHandler) ListAuthorizedProjects(ctx context.Context, in *List
 
 func (h *bCSProjectHandler) ListProjectsForIAM(ctx context.Context, in *ListProjectsForIAMReq, out *ListProjectsForIAMResp) error {
 	return h.BCSProjectHandler.ListProjectsForIAM(ctx, in, out)
+}
+
+func (h *bCSProjectHandler) GetProjectActive(ctx context.Context, in *GetProjectActiveRequest, out *GetProjectActiveResponse) error {
+	return h.BCSProjectHandler.GetProjectActive(ctx, in, out)
 }
 
 // Api Endpoints for Business service
@@ -478,6 +507,12 @@ func NewNamespaceEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "Namespace.ListNativeNamespacesContent",
+			Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -495,6 +530,7 @@ type NamespaceService interface {
 	SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, opts ...client.CallOption) (*SyncNamespaceResponse, error)
 	WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, opts ...client.CallOption) (*WithdrawNamespaceResponse, error)
 	ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, opts ...client.CallOption) (*ListNativeNamespacesResponse, error)
+	ListNativeNamespacesContent(ctx context.Context, in *ListNativeNamespacesContentRequest, opts ...client.CallOption) (*_struct.Struct, error)
 }
 
 type namespaceService struct {
@@ -619,6 +655,16 @@ func (c *namespaceService) ListNativeNamespaces(ctx context.Context, in *ListNat
 	return out, nil
 }
 
+func (c *namespaceService) ListNativeNamespacesContent(ctx context.Context, in *ListNativeNamespacesContentRequest, opts ...client.CallOption) (*_struct.Struct, error) {
+	req := c.c.NewRequest(c.name, "Namespace.ListNativeNamespacesContent", in)
+	out := new(_struct.Struct)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Namespace service
 
 type NamespaceHandler interface {
@@ -633,6 +679,7 @@ type NamespaceHandler interface {
 	SyncNamespace(context.Context, *SyncNamespaceRequest, *SyncNamespaceResponse) error
 	WithdrawNamespace(context.Context, *WithdrawNamespaceRequest, *WithdrawNamespaceResponse) error
 	ListNativeNamespaces(context.Context, *ListNativeNamespacesRequest, *ListNativeNamespacesResponse) error
+	ListNativeNamespacesContent(context.Context, *ListNativeNamespacesContentRequest, *_struct.Struct) error
 }
 
 func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...server.HandlerOption) error {
@@ -648,6 +695,7 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		SyncNamespace(ctx context.Context, in *SyncNamespaceRequest, out *SyncNamespaceResponse) error
 		WithdrawNamespace(ctx context.Context, in *WithdrawNamespaceRequest, out *WithdrawNamespaceResponse) error
 		ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error
+		ListNativeNamespacesContent(ctx context.Context, in *ListNativeNamespacesContentRequest, out *_struct.Struct) error
 	}
 	type Namespace struct {
 		namespace
@@ -719,6 +767,12 @@ func RegisterNamespaceHandler(s server.Server, hdlr NamespaceHandler, opts ...se
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "Namespace.ListNativeNamespacesContent",
+		Path:    []string{"/bcsproject/v1/projects/{projectIDOrCode}/clusters/{clusterID}/api/v1/namespaces"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&Namespace{h}, opts...))
 }
 
@@ -768,6 +822,10 @@ func (h *namespaceHandler) WithdrawNamespace(ctx context.Context, in *WithdrawNa
 
 func (h *namespaceHandler) ListNativeNamespaces(ctx context.Context, in *ListNativeNamespacesRequest, out *ListNativeNamespacesResponse) error {
 	return h.NamespaceHandler.ListNativeNamespaces(ctx, in, out)
+}
+
+func (h *namespaceHandler) ListNativeNamespacesContent(ctx context.Context, in *ListNativeNamespacesContentRequest, out *_struct.Struct) error {
+	return h.NamespaceHandler.ListNativeNamespacesContent(ctx, in, out)
 }
 
 // Api Endpoints for Variable service
@@ -1318,4 +1376,283 @@ func (h *healthzHandler) Healthz(ctx context.Context, in *HealthzRequest, out *H
 
 func (h *healthzHandler) Ping(ctx context.Context, in *PingRequest, out *PingResponse) error {
 	return h.HealthzHandler.Ping(ctx, in, out)
+}
+
+// Api Endpoints for BCSProjectQuota service
+
+func NewBCSProjectQuotaEndpoints() []*api.Endpoint {
+	return []*api.Endpoint{
+		{
+			Name:    "BCSProjectQuota.CreateProjectQuota",
+			Path:    []string{"/bcsproject/v1/projectQuotas"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.GetProjectQuota",
+			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.UpdateProjectQuota",
+			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.ScaleUpProjectQuota",
+			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/scaleup"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.ScaleDownProjectQuota",
+			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/scaledown"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.DeleteProjectQuota",
+			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.ListProjectQuotas",
+			Path:    []string{"/bcsproject/v1/projectQuotas"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "BCSProjectQuota.GetProjectQuotasUsage",
+			Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/usage"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+	}
+}
+
+// Client API for BCSProjectQuota service
+
+type BCSProjectQuotaService interface {
+	// CreateProjectQuota 申请项目资源额度
+	CreateProjectQuota(ctx context.Context, in *CreateProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error)
+	GetProjectQuota(ctx context.Context, in *GetProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error)
+	UpdateProjectQuota(ctx context.Context, in *UpdateProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error)
+	ScaleUpProjectQuota(ctx context.Context, in *ScaleUpProjectQuotaRequest, opts ...client.CallOption) (*ScaleUpProjectQuotaResponse, error)
+	ScaleDownProjectQuota(ctx context.Context, in *ScaleDownProjectQuotaRequest, opts ...client.CallOption) (*ScaleDownProjectQuotaResponse, error)
+	// DeleteProjectQuota 退回资源额度
+	DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error)
+	ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, opts ...client.CallOption) (*ListProjectQuotasResponse, error)
+	GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error)
+}
+
+type bCSProjectQuotaService struct {
+	c    client.Client
+	name string
+}
+
+func NewBCSProjectQuotaService(name string, c client.Client) BCSProjectQuotaService {
+	return &bCSProjectQuotaService{
+		c:    c,
+		name: name,
+	}
+}
+
+func (c *bCSProjectQuotaService) CreateProjectQuota(ctx context.Context, in *CreateProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.CreateProjectQuota", in)
+	out := new(ProjectQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) GetProjectQuota(ctx context.Context, in *GetProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.GetProjectQuota", in)
+	out := new(ProjectQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) UpdateProjectQuota(ctx context.Context, in *UpdateProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.UpdateProjectQuota", in)
+	out := new(ProjectQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) ScaleUpProjectQuota(ctx context.Context, in *ScaleUpProjectQuotaRequest, opts ...client.CallOption) (*ScaleUpProjectQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.ScaleUpProjectQuota", in)
+	out := new(ScaleUpProjectQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) ScaleDownProjectQuota(ctx context.Context, in *ScaleDownProjectQuotaRequest, opts ...client.CallOption) (*ScaleDownProjectQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.ScaleDownProjectQuota", in)
+	out := new(ScaleDownProjectQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, opts ...client.CallOption) (*ProjectQuotaResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.DeleteProjectQuota", in)
+	out := new(ProjectQuotaResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, opts ...client.CallOption) (*ListProjectQuotasResponse, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.ListProjectQuotas", in)
+	out := new(ListProjectQuotasResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bCSProjectQuotaService) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, opts ...client.CallOption) (*GetProjectQuotasUsageResp, error) {
+	req := c.c.NewRequest(c.name, "BCSProjectQuota.GetProjectQuotasUsage", in)
+	out := new(GetProjectQuotasUsageResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for BCSProjectQuota service
+
+type BCSProjectQuotaHandler interface {
+	// CreateProjectQuota 申请项目资源额度
+	CreateProjectQuota(context.Context, *CreateProjectQuotaRequest, *ProjectQuotaResponse) error
+	GetProjectQuota(context.Context, *GetProjectQuotaRequest, *ProjectQuotaResponse) error
+	UpdateProjectQuota(context.Context, *UpdateProjectQuotaRequest, *ProjectQuotaResponse) error
+	ScaleUpProjectQuota(context.Context, *ScaleUpProjectQuotaRequest, *ScaleUpProjectQuotaResponse) error
+	ScaleDownProjectQuota(context.Context, *ScaleDownProjectQuotaRequest, *ScaleDownProjectQuotaResponse) error
+	// DeleteProjectQuota 退回资源额度
+	DeleteProjectQuota(context.Context, *DeleteProjectQuotaRequest, *ProjectQuotaResponse) error
+	ListProjectQuotas(context.Context, *ListProjectQuotasRequest, *ListProjectQuotasResponse) error
+	GetProjectQuotasUsage(context.Context, *GetProjectQuotasUsageReq, *GetProjectQuotasUsageResp) error
+}
+
+func RegisterBCSProjectQuotaHandler(s server.Server, hdlr BCSProjectQuotaHandler, opts ...server.HandlerOption) error {
+	type bCSProjectQuota interface {
+		CreateProjectQuota(ctx context.Context, in *CreateProjectQuotaRequest, out *ProjectQuotaResponse) error
+		GetProjectQuota(ctx context.Context, in *GetProjectQuotaRequest, out *ProjectQuotaResponse) error
+		UpdateProjectQuota(ctx context.Context, in *UpdateProjectQuotaRequest, out *ProjectQuotaResponse) error
+		ScaleUpProjectQuota(ctx context.Context, in *ScaleUpProjectQuotaRequest, out *ScaleUpProjectQuotaResponse) error
+		ScaleDownProjectQuota(ctx context.Context, in *ScaleDownProjectQuotaRequest, out *ScaleDownProjectQuotaResponse) error
+		DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, out *ProjectQuotaResponse) error
+		ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, out *ListProjectQuotasResponse) error
+		GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error
+	}
+	type BCSProjectQuota struct {
+		bCSProjectQuota
+	}
+	h := &bCSProjectQuotaHandler{hdlr}
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.CreateProjectQuota",
+		Path:    []string{"/bcsproject/v1/projectQuotas"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.GetProjectQuota",
+		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.UpdateProjectQuota",
+		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.ScaleUpProjectQuota",
+		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/scaleup"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.ScaleDownProjectQuota",
+		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/scaledown"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.DeleteProjectQuota",
+		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.ListProjectQuotas",
+		Path:    []string{"/bcsproject/v1/projectQuotas"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "BCSProjectQuota.GetProjectQuotasUsage",
+		Path:    []string{"/bcsproject/v1/projectQuotas/{quotaId}/usage"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	return s.Handle(s.NewHandler(&BCSProjectQuota{h}, opts...))
+}
+
+type bCSProjectQuotaHandler struct {
+	BCSProjectQuotaHandler
+}
+
+func (h *bCSProjectQuotaHandler) CreateProjectQuota(ctx context.Context, in *CreateProjectQuotaRequest, out *ProjectQuotaResponse) error {
+	return h.BCSProjectQuotaHandler.CreateProjectQuota(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) GetProjectQuota(ctx context.Context, in *GetProjectQuotaRequest, out *ProjectQuotaResponse) error {
+	return h.BCSProjectQuotaHandler.GetProjectQuota(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) UpdateProjectQuota(ctx context.Context, in *UpdateProjectQuotaRequest, out *ProjectQuotaResponse) error {
+	return h.BCSProjectQuotaHandler.UpdateProjectQuota(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) ScaleUpProjectQuota(ctx context.Context, in *ScaleUpProjectQuotaRequest, out *ScaleUpProjectQuotaResponse) error {
+	return h.BCSProjectQuotaHandler.ScaleUpProjectQuota(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) ScaleDownProjectQuota(ctx context.Context, in *ScaleDownProjectQuotaRequest, out *ScaleDownProjectQuotaResponse) error {
+	return h.BCSProjectQuotaHandler.ScaleDownProjectQuota(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) DeleteProjectQuota(ctx context.Context, in *DeleteProjectQuotaRequest, out *ProjectQuotaResponse) error {
+	return h.BCSProjectQuotaHandler.DeleteProjectQuota(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) ListProjectQuotas(ctx context.Context, in *ListProjectQuotasRequest, out *ListProjectQuotasResponse) error {
+	return h.BCSProjectQuotaHandler.ListProjectQuotas(ctx, in, out)
+}
+
+func (h *bCSProjectQuotaHandler) GetProjectQuotasUsage(ctx context.Context, in *GetProjectQuotasUsageReq, out *GetProjectQuotasUsageResp) error {
+	return h.BCSProjectQuotaHandler.GetProjectQuotasUsage(ctx, in, out)
 }
