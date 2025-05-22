@@ -88,6 +88,11 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 	cls.KubeConfig = kubeConfig
 
+	// gke集群是否启用autopilot
+	if cluster.Autopilot.Enabled {
+		cls.AutoGenerateMasterNodes = true
+	}
+
 	// cluster cloud basic setting
 	clusterBasicSettingByGKE(cls, cluster, opt)
 	// cluster cloud network setting
