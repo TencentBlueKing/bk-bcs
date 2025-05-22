@@ -60,6 +60,7 @@ func (rn ResourceNode) BuildResourceNode() iam.ResourceNode {
 type PermissionRequest struct {
 	SystemID string
 	UserName string
+	TenantId string
 }
 
 func (pr PermissionRequest) validate() bool { // nolint
@@ -237,6 +238,7 @@ type GradeManagerRequest struct {
 	Members             []string             `json:"members"`
 	AuthorizationScopes []AuthorizationScope `json:"authorization_scopes"`
 	SubjectScopes       []iam.Subject        `json:"subject_scopes"`
+	TenantId            string               `json:"-"`
 }
 
 // LevelResource level resource
@@ -326,6 +328,8 @@ type GradeManagerID struct {
 // CreateUserGroupRequest create user group request
 type CreateUserGroupRequest struct {
 	Groups []UserGroup `json:"groups"`
+	// TenantId xx
+	TenantId string `json:"-"`
 }
 
 // UserGroup xxx
@@ -436,6 +440,8 @@ type ResourceCreator struct {
 	ResourceID   string `json:"id"`
 	ResourceName string `json:"name"`
 	Creator      string `json:"creator"`
+	// TenantId xx
+	TenantId string `json:"-"`
 }
 
 // Ancestor resource level parent

@@ -58,6 +58,7 @@ func (pm *PermManager) CreateProjectGradeManager(ctx context.Context, users []st
 		Members:             users,
 		AuthorizationScopes: authScopes,
 		SubjectScopes:       []tiam.Subject{iam.GlobalSubjectUser},
+		TenantId:            info.Project.getTenantId(),
 	}
 	managerID, err := pm.iamClient.CreateGradeManagers(ctx, req)
 	if err != nil {
@@ -82,13 +83,13 @@ func (pm *PermManager) CreateProjectUserGroup(ctx context.Context, gradeManagerI
 		return err
 	}
 	// step2: add userGroup members
-	err = pm.addUserGroupMember(ctx, groupID, info.Users)
+	err = pm.addUserGroupMember(ctx, info.Project.getTenantId(), groupID, info.Users)
 	if err != nil {
 		blog.Errorf("CreateProjectManagerUserGroup addUserGroupMember failed: %v", err)
 		return err
 	}
 	// step3: build userGroup AuthorizationScope
-	pm.createProjectUserGroupPolicy(ctx, groupID, info.Policy, info.Project)
+	pm.createProjectUserGroupPolicy(ctx, info.Project.getTenantId(), groupID, info.Policy, info.Project)
 
 	return nil
 }
@@ -116,6 +117,7 @@ func (pm *PermManager) CreateClusterGradeManager(ctx context.Context, users []st
 		Members:             users,
 		AuthorizationScopes: authScopes,
 		SubjectScopes:       []tiam.Subject{iam.GlobalSubjectUser},
+		TenantId:            cls.getTenantId(),
 	}
 	managerID, err := pm.iamClient.CreateGradeManagers(ctx, req)
 	if err != nil {
@@ -140,13 +142,13 @@ func (pm *PermManager) CreateClusterUserGroup(ctx context.Context, gradeManagerI
 		return err
 	}
 	// step2: add userGroup members
-	err = pm.addUserGroupMember(ctx, groupID, info.Users)
+	err = pm.addUserGroupMember(ctx, info.Project.getTenantId(), groupID, info.Users)
 	if err != nil {
 		blog.Errorf("CreateProjectManagerUserGroup addUserGroupMember failed: %v", err)
 		return err
 	}
 	// step3: build userGroup AuthorizationScope
-	pm.createProjectUserGroupPolicy(ctx, groupID, info.Policy, info.Project)
+	pm.createProjectUserGroupPolicy(ctx, info.Project.getTenantId(), groupID, info.Policy, info.Project)
 
 	return nil
 }
@@ -156,13 +158,17 @@ func (pm *PermManager) createUserGroup(ctx context.Context, gradeManagerID uint6
 	if pm == nil {
 		return 0, utils.ErrServerNotInited
 	}
+
 	// 用户组名称保持全局唯一
 	userGroups := make([]iam.UserGroup, 0)
 	userGroups = append(userGroups, iam.UserGroup{
 		Name:        info.Name,
 		Description: info.Desc,
 	})
-	groups, err := pm.iamClient.CreateUserGroup(ctx, gradeManagerID, iam.CreateUserGroupRequest{Groups: userGroups})
+	groups, err := pm.iamClient.CreateUserGroup(ctx, gradeManagerID, iam.CreateUserGroupRequest{
+		Groups:   userGroups,
+		TenantId: info.Project.getTenantId(),
+	})
 	if err != nil {
 		blog.Errorf("createUserGroup gradeManager[%v] failed: %v", gradeManagerID, err)
 		return 0, err
@@ -174,17 +180,23 @@ func (pm *PermManager) createUserGroup(ctx context.Context, gradeManagerID uint6
 
 // addUserGroupMember xxx
 // createUserGroup create single userGroup
-func (pm *PermManager) addUserGroupMember(ctx context.Context, userGroupID uint64, members []string) error {
+func (pm *PermManager) addUserGroupMember(ctx context.Context, tenantId string,
+	userGroupID uint64, members []string) error {
 	if pm == nil {
 		return utils.ErrServerNotInited
 	}
+
+	if tenantId == "" {
+		tenantId = utils.DefaultTenantId
+	}
+
 	subjects := make([]tiam.Subject, 0)
 	for i := range members {
 		subjects = append(subjects, tiam.Subject{Type: iam.User.String(), ID: members[i]})
 	}
 
-	err := pm.iamClient.AddUserGroupMembers(ctx, userGroupID, iam.AddGroupMemberRequest{
-		Members: subjects,
+	err := pm.iamClient.AddUserGroupMembers(ctx, tenantId, userGroupID, iam.AddGroupMemberRequest{
+		Members:  subjects,
 		// default ExpiredAt half year
 		ExpiredAt: int(time.Now().Add(time.Hour * 24 * 30 * 6).Unix()),
 	})
@@ -197,7 +209,8 @@ func (pm *PermManager) addUserGroupMember(ctx context.Context, userGroupID uint6
 	return nil
 }
 
-func (pm *PermManager) createProjectUserGroupPolicy(ctx context.Context, groupID uint64, pType PolicyType, p *Project) {
+func (pm *PermManager) createProjectUserGroupPolicy(ctx context.Context, tenantId string, groupID uint64,
+	pType PolicyType, p *Project) {
 	scopeFuncs := make([]AuthorizationScopeFunc, 0)
 
 	switch pType {
@@ -221,7 +234,7 @@ func (pm *PermManager) createProjectUserGroupPolicy(ctx context.Context, groupID
 		wg.Add(1)
 		go func(scope iam.AuthorizationScope) {
 			defer wg.Done()
-			err := pm.iamClient.CreateUserGroupPolicies(ctx, groupID, scope)
+			err := pm.iamClient.CreateUserGroupPolicies(ctx, tenantId, groupID, scope)
 			if err != nil {
 				blog.Errorf("createProjectUserGroupPolicy CreateUserGroupPolicies failed: %v", err)
 				return
@@ -254,7 +267,7 @@ func (pm *PermManager) createClusterUserGroupPolicy(ctx context.Context, groupID
 		wg.Add(1)
 		go func(scope iam.AuthorizationScope) {
 			defer wg.Done()
-			err := pm.iamClient.CreateUserGroupPolicies(ctx, groupID, scope)
+			err := pm.iamClient.CreateUserGroupPolicies(ctx, c.getTenantId(), groupID, scope)
 			if err != nil {
 				blog.Errorf("createClusterUserGroupPolicy CreateUserGroupPolicies failed: %v", err)
 				return
