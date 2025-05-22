@@ -176,7 +176,7 @@ func (c *Cluster) GetCluster(cloudID string, opt *cloudprovider.GetClusterOption
 		opt.Cluster.ClusterAdvanceSettings.NetworkType = common.AzureCniOverlay
 	}
 
-	if opt.Cluster.NetworkType == "" {
+	if opt.Cluster.ClusterAdvanceSettings.NetworkType == common.AzureCniOverlay {
 		opt.Cluster.NetworkType = common.ClusterOverlayNetwork
 	}
 

@@ -107,8 +107,12 @@ func (vm *VPCManager) ListSubnets(vpcID, zone string, opt *cloudprovider.ListNet
 	result := make([]*proto.Subnet, 0)
 	for _, v := range subnets {
 		var cidr string
-		if v.Properties != nil && v.Properties.AddressPrefix != nil {
-			cidr = *v.Properties.AddressPrefix
+		if v.Properties != nil {
+			if v.Properties.AddressPrefix != nil && *v.Properties.AddressPrefix != "" {
+				cidr = *v.Properties.AddressPrefix
+			} else if len(v.Properties.AddressPrefixes) > 0 {
+				cidr = *v.Properties.AddressPrefixes[0]
+			}
 		}
 
 		result = append(result, &proto.Subnet{
