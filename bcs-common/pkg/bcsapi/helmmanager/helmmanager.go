@@ -78,7 +78,7 @@ func GetClient(innerClientName string) (*HelmClientWrapper, func(), error) {
 
 // HelmClientWrapper helm manager client wrapper
 type HelmClientWrapper struct {
-	helmManagerClient   HelmManagerClient
+	HelmManagerClient   HelmManagerClient
 	ClusterAddonsClient ClusterAddonsClient
 }
 
@@ -145,7 +145,7 @@ func NewHelmClientWrapper(config *bcsapi.Config) (*HelmClientWrapper, func(), er
 		return nil, nil, err
 	}
 	return &HelmClientWrapper{
-		helmManagerClient:   NewHelmManagerClient(conn),
+		HelmManagerClient:   NewHelmManagerClient(conn),
 		ClusterAddonsClient: NewClusterAddonsClient(conn),
 	}, closeFn, nil
 }
