@@ -172,28 +172,34 @@ func (s *StorageServer) initTlsConfig() (err error) {
 	   init micro server and client tls
 	*/
 	// loading client tls configuration
-	cliConfig, err := ssl.ClientTslConfVerity(
-		s.conf.ClientCert.CAFile,
-		s.conf.ClientCert.CertFile,
-		s.conf.ClientCert.KeyFile,
-		s.conf.ClientCert.CertPwd,
-	)
-	if err != nil {
-		return errors.Wrapf(err, "loading client side tls configuration failed")
+	if len(s.conf.ClientCert.CertFile) != 0 && len(s.conf.ClientCert.KeyFile) != 0 &&
+		len(s.conf.ClientCert.CAFile) != 0 {
+		cliConfig, err := ssl.ClientTslConfVerity(
+			s.conf.ClientCert.CAFile,
+			s.conf.ClientCert.CertFile,
+			s.conf.ClientCert.KeyFile,
+			s.conf.ClientCert.CertPwd,
+		)
+		if err != nil {
+			return errors.Wrapf(err, "loading client side tls configuration failed")
+		}
+		s.microServer.SetClientTLSConfig(cliConfig)
 	}
-	s.microServer.SetClientTLSConfig(cliConfig)
 
-	// loading server tls configuration
-	svrConfig, err := ssl.ServerTslConfVerityClient(
-		s.conf.ServerCert.CAFile,
-		s.conf.ServerCert.CertFile,
-		s.conf.ServerCert.KeyFile,
-		s.conf.ServerCert.CertPwd,
-	)
-	if err != nil {
-		return errors.Wrapf(err, "loading server side tls config failed")
+	if len(s.conf.ServerCert.CertFile) != 0 && len(s.conf.ServerCert.KeyFile) != 0 &&
+		len(s.conf.ServerCert.CertFile) != 0 {
+		// loading server tls configuration
+		svrConfig, err := ssl.ServerTslConfVerityClient(
+			s.conf.ServerCert.CAFile,
+			s.conf.ServerCert.CertFile,
+			s.conf.ServerCert.KeyFile,
+			s.conf.ServerCert.CertPwd,
+		)
+		if err != nil {
+			return errors.Wrapf(err, "loading server side tls config failed")
+		}
+		s.microServer.SetServerTLSConfig(svrConfig)
 	}
-	s.microServer.SetServerTLSConfig(svrConfig)
 
 	return nil
 }
