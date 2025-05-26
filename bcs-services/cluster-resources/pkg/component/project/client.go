@@ -88,9 +88,7 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 		return nil, err
 	}
 
-	if err = c.cache.Add(cacheKey, projInfo, cache.DefaultExpiration); err != nil {
-		log.Warn(ctx, "set project info to cache failed: %v", err)
-	}
+	c.cache.Set(cacheKey, projInfo, cache.DefaultExpiration)
 	return projInfo, nil
 }
 
@@ -130,9 +128,7 @@ func (c *ProjClient) fetchSharedClusterProjNsWitchCache(ctx context.Context, pro
 		return nil, err
 	}
 
-	if err = c.cache.Add(cacheKey, ns, time.Minute); err != nil {
-		log.Warn(ctx, "set project ns to cache failed: %v", err)
-	}
+	c.cache.Set(cacheKey, ns, time.Minute)
 	return ns, nil
 }
 
