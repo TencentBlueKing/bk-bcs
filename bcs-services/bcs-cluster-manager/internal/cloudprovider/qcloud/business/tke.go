@@ -960,7 +960,7 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 
 	// wait node group state to normal
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 12*time.Minute)
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 20*time.Minute)
 	defer cancel()
 
 	// wait all nodes to be ready

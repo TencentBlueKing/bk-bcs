@@ -115,15 +115,27 @@ func printOperationLog(taskId, clusterId, groupId string, operation string, isSu
 			taskId, cls.ProjectID, errLocal)
 		return
 	}
+	task, err := GetStorageModel().GetTask(ctx, taskId)
+	if err != nil {
+		blog.Errorf("task[%s] printClusterOperation GetTask failed: %v", taskId, err)
+		return
+	}
+
+	var bizId = "0"
+	stepInfo, ok := task.GetSteps()[task.GetCurrentStep()]
+	if ok && len(stepInfo.GetParams()[BkSopsBizIDKey.String()]) > 0 {
+		bizId = stepInfo.GetParams()[BkSopsBizIDKey.String()]
+	}
 
 	result := common.TaskStatusSuccess
 	if !isSuccess {
 		result = common.TaskStatusFailure
 	}
 
-	blog.Infof("task %s operation %s for cluster %s nodegroup %s in project %s result: %v, Url: %v",
-		taskId, operation, clusterId, groupId, cls.ProjectID, result, fmt.Sprintf(
-			options.GetGlobalCMOptions().ComponentDeploy.BcsClusterUrl, proInfo.GetProjectCode(), clusterId))
+	blog.Infof("task %s operation %s for cluster %s nodegroup %s in project %s result: %v, Url: %v, "+
+		"currentStep: %s:%s", taskId, operation, clusterId, groupId, cls.ProjectID, result,
+		fmt.Sprintf(options.GetGlobalCMOptions().ComponentDeploy.BcsClusterUrl, proInfo.GetProjectCode(), clusterId),
+		bizId, task.GetCurrentStep())
 }
 
 // UpdateJobResultStatus update job status by result
