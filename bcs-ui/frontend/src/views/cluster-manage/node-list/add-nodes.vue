@@ -6,7 +6,7 @@
           <bk-radio
             value="ip"
             :disabled="isKubeConfigImportCluster"
-            v-if="['tencentCloud','tencentPublicCloud','bluekingCloud'].includes(provider)">
+            v-if="ipProviderList.includes(provider)">
             <span
               v-bk-tooltips="{
                 disabled: !isKubeConfigImportCluster,
@@ -59,6 +59,8 @@ export default defineComponent({
       && curCluster.value.importCategory === 'kubeConfig');
     const provider = computed(() => curCluster.value.provider);
 
+    const ipProviderList = ['tencentCloud', 'tencentPublicCloud', 'bluekingCloud'];
+
     const nodeSource = ref<'nodePool'|'ip'>('ip');
     const setDefaultNodeSource = () => {
       switch (provider.value) {
@@ -66,7 +68,13 @@ export default defineComponent({
           nodeSource.value = 'nodePool';// gcpCloud 只能通过节点池添加节点
           break;
         default:
-          nodeSource.value = props.source || 'nodePool';// 默认推荐节点池方式添加
+          if (props.source) {
+            nodeSource.value = props.source;
+          } else if (!curCluster.value.autoScale && ipProviderList.includes(provider.value)) {
+            nodeSource.value = 'ip'; // 支持ip方式添加，但是未开启 自动伸缩，只能使用ip方式添加
+          } else {
+            nodeSource.value = 'nodePool'; // 默认推荐节点池方式添加
+          }
       }
     };
 
@@ -79,6 +87,7 @@ export default defineComponent({
       provider,
       curCluster,
       nodeSource,
+      ipProviderList,
     };
   },
 });
