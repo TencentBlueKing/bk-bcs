@@ -139,6 +139,11 @@ micro-gateway:pre
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-gateway-discovery/* ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
 
+bk-apisix-gateway:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bk-apisix-gateway/* ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway/
+	cp -R ./bcs-services/bcs-bk-apisix-gateway/plugins ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway/
+
 api-gateway-syncing:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-api-gateway-syncing/* ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing/
