@@ -26,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
@@ -74,7 +75,11 @@ func (m *MicroServer) stop() {
 // initHTTPServer 初始化httpServer
 func (m *MicroServer) initHTTPServer() error {
 	grpcDialOpts := make([]grpc.DialOption, 0)
-	gMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}))
+
+	gMux := runtime.NewServeMux(
+		runtime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
+	)
 
 	if m.clientTLSConfig == nil || m.serverTLSConfig == nil {
 		// nolint
