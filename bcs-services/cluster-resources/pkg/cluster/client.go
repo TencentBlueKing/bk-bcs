@@ -84,9 +84,7 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 		return nil, err
 	}
 
-	if err = c.cache.Add(cacheKey, clusterInfo, cache.DefaultExpiration); err != nil {
-		log.Warn(ctx, "set cluster info to cache failed: %v", err)
-	}
+	c.cache.Set(cacheKey, clusterInfo, cache.DefaultExpiration)
 	return clusterInfo, nil
 }
 
