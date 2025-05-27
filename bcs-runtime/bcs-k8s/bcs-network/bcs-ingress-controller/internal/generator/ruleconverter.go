@@ -494,53 +494,45 @@ func (rc *RuleConverter) getServiceBackendsFromPods(
 			continue
 		}
 		backendWeight := rc.getPodWeight(pod, weight)
-		if pod.DeletionTimestamp != nil {
-			backendWeight = 0
-		}
-		// if container is unready, client should not visit this pod
-		if pod.Status.Phase == k8scorev1.PodRunning {
-			ready := true
-			for _, c := range pod.Status.Conditions {
-				if c.Type == k8scorev1.ContainersReady && c.Status != k8scorev1.ConditionTrue {
-					ready = false
-					break
-				}
-			}
-			if !ready {
-				backendWeight = 0
-			}
-			blog.Infof("pod name %s namespace %s is running, backendWeight: %d", pod.Name, pod.Namespace, backendWeight)
-		}
+		// hostPort模式 or 仅指定port名称时，pod上必须定义对应containerPort才能找到对应端口号
+		if !svcRoute.HostPort && svcPort.TargetPort.IntValue() != 0 {
+			retBackends = append(retBackends, networkextensionv1.ListenerBackend{
+				IP:     pod.Status.PodIP,
+				Port:   int(svcPort.TargetPort.IntValue()),
+				Weight: backendWeight,
+			})
+		} else {
+			found := false
+			for _, container := range pod.Spec.Containers {
+				for _, port := range container.Ports {
+					if (port.ContainerPort == int32(svcPort.TargetPort.IntValue()) && port.Protocol == svcPort.Protocol) ||
+						(port.Name == svcPort.TargetPort.String() && port.Protocol == svcPort.Protocol) {
+						// if the hostport is specified, use it as backend port
+						backend := networkextensionv1.ListenerBackend{
+							IP:     pod.Status.PodIP,
+							Port:   int(port.ContainerPort),
+							Weight: backendWeight,
+						}
 
-		found := false
-		for _, container := range pod.Spec.Containers {
-			for _, port := range container.Ports {
-				if (port.ContainerPort == int32(svcPort.TargetPort.IntValue()) && port.Protocol == svcPort.Protocol) ||
-					(port.Name == svcPort.TargetPort.String() && port.Protocol == svcPort.Protocol) {
-					backend := networkextensionv1.ListenerBackend{
-						IP:     pod.Status.PodIP,
-						Port:   int(port.ContainerPort),
-						Weight: backendWeight,
+						if svcRoute.HostPort {
+							backend.IP = pod.Status.HostIP
+							backend.Port = int(port.HostPort)
+						}
+						retBackends = append(retBackends, backend)
+						found = true
+						break
 					}
-					// if the hostport is specified, use it as backend port
-					if svcRoute.HostPort {
-						backend.IP = pod.Status.HostIP
-						backend.Port = int(port.HostPort)
-					}
-					retBackends = append(retBackends, backend)
-					found = true
+				}
+				if found {
 					break
 				}
 			}
-			if found {
-				break
+			if !found {
+				metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeConfigError, rc.ingress.Namespace, rc.ingress.Name)
+				rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
+					fmt.Sprintf("port %s is not found in pod %s/%s, please add port definition on pod(containerPort)",
+						svcPort.TargetPort.String(), pod.Namespace, pod.Name))
 			}
-		}
-		if !found {
-			metrics.IncreaseFailMetric(metrics.ObjectIngress, metrics.FailTypeConfigError, rc.ingress.Namespace, rc.ingress.Name)
-			rc.eventf(rc.ingress, k8scorev1.EventTypeWarning, constant.EventIngressBindFailed,
-				fmt.Sprintf("port %s is not found in pod %s/%s, please add port definition on pod(containerPort)",
-					svcPort.TargetPort.String(), pod.Namespace, pod.Name))
 		}
 	}
 	return retBackends, nil
@@ -581,7 +573,6 @@ func (rc *RuleConverter) getNodePortBackends(
 			Port:   int(svcPort.NodePort),
 			Weight: weight,
 		}
-		newBackend.Weight = rc.getPodWeight(pod, weight)
 		backendMap[pod.Status.HostIP+strconv.Itoa(int(svcPort.NodePort))] = newBackend
 		retBackends = append(retBackends, newBackend)
 	}
@@ -611,6 +602,29 @@ func (rc *RuleConverter) getPodsByLabels(ns string, labels map[string]string) ([
 
 // get pod clb-weight from annotations
 func (rc *RuleConverter) getPodWeight(pod *k8scorev1.Pod, weight int) int {
+	backendWeight := rc.getPodAnnotationWeight(pod, weight)
+	if pod.DeletionTimestamp != nil {
+		backendWeight = 0
+	}
+	// if container is unready, client should not visit this pod
+	if pod.Status.Phase == k8scorev1.PodRunning {
+		ready := true
+		for _, c := range pod.Status.Conditions {
+			if c.Type == k8scorev1.ContainersReady && c.Status != k8scorev1.ConditionTrue {
+				ready = false
+				break
+			}
+		}
+		if !ready {
+			backendWeight = 0
+		}
+		blog.Infof("pod name %s namespace %s is running, backendWeight: %d", pod.Name, pod.Namespace, backendWeight)
+	}
+	return backendWeight
+}
+
+// get pod clb-weight from annotations
+func (rc *RuleConverter) getPodAnnotationWeight(pod *k8scorev1.Pod, weight int) int {
 	if clbWeightValue, ok := pod.Annotations[networkextensionv1.AnnotationKeyForLoadbalanceWeight]; ok {
 		clbWeight, err := strconv.Atoi(clbWeightValue)
 		if err != nil {
