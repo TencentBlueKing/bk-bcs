@@ -74,13 +74,15 @@ func (pbih *portBindingItemHandler) ensureItem(
 		listener := rawListener.DeepCopy()
 		// listener has targetGroup
 		if listener.Spec.TargetGroup != nil && len(listener.Spec.TargetGroup.Backends) != 0 {
-			// listener has not synced
-			if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
-				blog.V(4).Infof("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
-				return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusNotReady)
-			}
 			// listener has targetGroup and targetGroup(include pod ip) has no changed
 			if reflect.DeepEqual(listener.Spec.TargetGroup, tmpTargetGroup) {
+				// listener has not synced
+				if listener.Status.Status != networkextensionv1.ListenerStatusSynced {
+					blog.V(4).Infof("listener %s/%s changes not synced", listenerName, item.PoolNamespace)
+					return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusNotReady)
+				}
+				
+				// if targetGroup is same and status is synced, listener is ready
 				countReady++
 				continue
 			}
