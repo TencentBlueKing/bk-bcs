@@ -219,6 +219,12 @@ spec:
                   is typically equal to the number of len(spec.Images).
                 format: int32
                 type: integer
+              failedNodes:
+                description: FailedNodes is the nodes which have been failed to load
+                  image
+                items:
+                  type: string
+                type: array
               failedStatuses:
                 description: FailedStatuses is the status of ImagePullJob which has
                   the failed nodes(status.Failed>0) .
@@ -237,6 +243,11 @@ spec:
                       description: Name of the image
                       type: string
                   type: object
+                type: array
+              loadedNodes:
+                description: LoadedNodes is the nodes which have been loaded image
+                items:
+                  type: string
                 type: array
               observedGeneration:
                 description: ObservedGeneration is the most recent generation observed
@@ -260,7 +271,6 @@ spec:
                 format: int32
                 type: integer
             required:
-            - desired
             - revision
             type: object
         type: object

@@ -24,14 +24,6 @@ rules:
   resources:
   - pods
   verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - batch
-  resources:
-  - jobs
-  verbs:
   - create
   - delete
   - get

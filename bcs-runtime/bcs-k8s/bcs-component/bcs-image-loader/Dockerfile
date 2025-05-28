@@ -26,7 +26,7 @@
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 # FROM gcr.io/distroless/static:nonroot
-FROM centos:centos7
+FROM mirrors.tencent.com/tencentos/tencentos4:4.2-v20250227
 WORKDIR /
 COPY bcs-image-loader bcs-image-loader
 USER 65532:65532

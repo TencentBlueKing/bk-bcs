@@ -18,15 +18,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/controller/history"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/integer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-image-loader/api/v1alpha1"
@@ -41,6 +43,9 @@ const (
 
 	// NodeNameKey the annotation key of node name
 	NodeNameKey = "imageloader.tkex.tencent.com/node-name"
+
+	// ImageLoaderRevisionKey the annotation key of imageloader revision
+	ImageLoaderRevisionKey = "imageloader.tkex.tencent.com/revision-hash"
 )
 
 func getRevisionHash(spec *tkexv1alpha1.ImageLoaderSpec) string {
@@ -54,89 +59,63 @@ func getRevisionHash(spec *tkexv1alpha1.ImageLoaderSpec) string {
 	return hash
 }
 
-func getJobName(loader *tkexv1alpha1.ImageLoader, index int) string {
-	return fmt.Sprintf("%s-%d", loader.Name, index)
-}
-
-func newJob(loader *tkexv1alpha1.ImageLoader) *batchv1.Job {
-	job := &batchv1.Job{
+func newPod(loader *tkexv1alpha1.ImageLoader, newStatus *tkexv1alpha1.ImageLoaderStatus) *corev1.Pod {
+	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: loader.Namespace,
-			Labels: map[string]string{
-				// specific label
-				ImageLoaderNameKey: loader.Name,
-			},
-			Annotations: make(map[string]string),
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: tkexv1alpha1.GroupVersion.String(),
-					Kind:       tkexv1alpha1.KindImageLoader,
-					Name:       loader.Name,
-					UID:        loader.UID,
-					Controller: pointer.Bool(true),
-				},
-			},
+			Namespace:   loader.Namespace,
+			Name:        loader.Name + "-",
+			Labels:      loader.Labels,
+			Annotations: loader.Annotations,
 		},
-		Spec: batchv1.JobSpec{
-			BackoffLimit:          &loader.Spec.BackoffLimit,
-			ActiveDeadlineSeconds: &loader.Spec.JobTimeout,
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels:      make(map[string]string),
-					Annotations: make(map[string]string),
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:            "image-loader",
-							ImagePullPolicy: loader.Spec.ImagePullPolicy,
-						},
-					},
-					ImagePullSecrets: loader.Spec.ImagePullSecrets,
-					RestartPolicy:    "Never",
-					Tolerations:      loader.Spec.Tolerations,
-				},
-			},
-			// the job will be delete by reconciler, no need to set ttl
+		Spec: corev1.PodSpec{
+			Containers:       make([]corev1.Container, 0, len(loader.Spec.Images)),
+			RestartPolicy:    corev1.RestartPolicyOnFailure,
+			ImagePullSecrets: loader.Spec.ImagePullSecrets,
+			Tolerations:      loader.Spec.Tolerations,
 		},
 	}
-	if loader.Labels != nil && len(loader.Labels) != 0 {
-		for k, v := range loader.Labels {
-			job.Labels[k] = v
-		}
-		job.Spec.Template.Labels = loader.Labels
+	for i := range loader.Spec.Images {
+		pod.Spec.Containers = append(pod.Spec.Containers, corev1.Container{
+			Name:            fmt.Sprintf("image-loader-%d", i),
+			Image:           loader.Spec.Images[i],
+			ImagePullPolicy: loader.Spec.ImagePullPolicy,
+			Command:         []string{"echo", "pull", loader.Spec.Images[i]},
+		})
 	}
-	if loader.Annotations != nil && len(loader.Annotations) != 0 {
-		job.Annotations = loader.Annotations
-		job.Spec.Template.Annotations = loader.Annotations
+	if len(pod.Labels) == 0 {
+		pod.Labels = make(map[string]string)
 	}
-	return job
+	pod.Labels[ImageLoaderNameKey] = loader.Name
+	pod.Labels[ImageLoaderRevisionKey] = newStatus.Revision
+	return pod
 }
 
 func (r *ImageLoaderReconciler) handleSelector(ctx context.Context, imageLoader *tkexv1alpha1.ImageLoader,
-	job *batchv1.Job) error {
+	pod *corev1.Pod,
+) error {
 	var err error
-	if imageLoader.Spec.PodSelector != nil {
-		err = r.handlePodSelector(ctx, imageLoader, job)
-		if err == nil && (job.Spec.Completions == nil || *job.Spec.Completions == 0) &&
-			imageLoader.Spec.NodeSelector != nil {
+	switch {
+	case imageLoader.Spec.PodSelector != nil:
+		err = r.handlePodSelector(ctx, imageLoader, pod)
+		if err == nil && len(pod.Annotations[NodeNameKey]) == 0 && imageLoader.Spec.NodeSelector != nil {
 			logger.Info("failed to find node with specific pod, try to find node with specific node selector",
 				"podSelector", imageLoader.Spec.PodSelector)
-			job.Spec.Template.Spec.Affinity = nil
-			err = r.handleNodeSelector(ctx, imageLoader, job)
+			pod.Spec.Affinity = nil
+			err = r.handleNodeSelector(ctx, imageLoader, pod)
 		}
-	} else if imageLoader.Spec.NodeSelector != nil {
-		err = r.handleNodeSelector(ctx, imageLoader, job)
-	} else {
-		err = r.handleAllNode(ctx, job)
+	case imageLoader.Spec.NodeSelector != nil:
+		err = r.handleNodeSelector(ctx, imageLoader, pod)
+	default:
+		err = r.handleAllNode(ctx, pod)
 	}
 	return err
 }
 
 func (r *ImageLoaderReconciler) handlePodSelector(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	job *batchv1.Job) error {
+	pod *corev1.Pod,
+) error {
 	// ensure every node with specific pod will be scheduled to run this job
-	job.Spec.Template.Spec.Affinity = &corev1.Affinity{
+	pod.Spec.Affinity = &corev1.Affinity{
 		PodAffinity: &corev1.PodAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
 				{
@@ -163,27 +142,29 @@ func (r *ImageLoaderReconciler) handlePodSelector(ctx context.Context, loader *t
 	}
 	nodes := make(map[string]struct{})
 	for _, pod := range podList.Items {
+		if pod.Spec.NodeName == "" {
+			logger.Info("pod's nodeName is empty", "pod", pod.Name, "status", pod.Status.Phase)
+			continue
+		}
 		nodes[pod.Spec.NodeName] = struct{}{}
 	}
-	unqieNodes := make([]string, 0, len(nodes))
+	uniqueNodes := make([]string, 0, len(nodes))
 	for key := range nodes {
-		unqieNodes = append(unqieNodes, key)
+		uniqueNodes = append(uniqueNodes, key)
 	}
 	// set nodes info in annotaions
-	job.Annotations[NodeNameKey] = strings.Join(unqieNodes, ",")
-	job.Spec.Parallelism = pointer.Int32(int32(len(unqieNodes)))
-	job.Spec.Completions = pointer.Int32(int32(len(unqieNodes)))
+	pod.Annotations[NodeNameKey] = strings.Join(uniqueNodes, ",")
 	return nil
 }
 
 func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	job *batchv1.Job) error {
-
+	pod *corev1.Pod,
+) error {
 	nodes := make([]corev1.Node, 0)
 	if len(loader.Spec.NodeSelector.MatchLabels) != 0 {
 		// for selector. use nodeSelector
 		nodeList := &corev1.NodeList{}
-		job.Spec.Template.Spec.NodeSelector = loader.Spec.NodeSelector.MatchLabels
+		pod.Spec.NodeSelector = loader.Spec.NodeSelector.MatchLabels
 		selector := labels.Set(loader.Spec.NodeSelector.MatchLabels).AsSelector()
 		err := r.Client.List(ctx, nodeList, client.MatchingLabelsSelector{Selector: selector})
 		if err != nil {
@@ -193,7 +174,7 @@ func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *
 	} else if len(loader.Spec.NodeSelector.Names) != 0 {
 		// for nodeName, use affinity
 		requirement := convertMatchExpressions(loader.Spec.NodeSelector.Names)
-		job.Spec.Template.Spec.Affinity.NodeAffinity = &corev1.NodeAffinity{
+		pod.Spec.Affinity.NodeAffinity = &corev1.NodeAffinity{
 			RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
 				NodeSelectorTerms: []corev1.NodeSelectorTerm{
 					{
@@ -220,18 +201,15 @@ func (r *ImageLoaderReconciler) handleNodeSelector(ctx context.Context, loader *
 		return nil
 	}
 
-	unqieNodes := make([]string, len(nodes))
+	uniqueNodes := make([]string, len(nodes))
 	for i := range nodes {
-		unqieNodes[i] = nodes[i].Name
+		uniqueNodes[i] = nodes[i].Name
 	}
-	job.Annotations[NodeNameKey] = strings.Join(unqieNodes, ",")
-	job.Spec.Parallelism = pointer.Int32(int32(len(unqieNodes)))
-	job.Spec.Completions = pointer.Int32(int32(len(unqieNodes)))
-
+	pod.Annotations[NodeNameKey] = strings.Join(uniqueNodes, ",")
 	return nil
 }
 
-func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, job *batchv1.Job) error {
+func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, pod *corev1.Pod) error {
 	nodeList := &corev1.NodeList{}
 	err := r.Client.List(ctx, nodeList)
 	if err != nil {
@@ -241,42 +219,85 @@ func (r *ImageLoaderReconciler) handleAllNode(ctx context.Context, job *batchv1.
 		logger.Info("no node found")
 		return nil
 	}
-	job.Spec.Parallelism = pointer.Int32(int32(len(nodeList.Items)))
-	job.Spec.Completions = pointer.Int32(int32(len(nodeList.Items)))
+	uniqueNodes := make([]string, len(nodeList.Items))
+	for i := range nodeList.Items {
+		uniqueNodes[i] = nodeList.Items[i].Name
+	}
+	pod.Annotations[NodeNameKey] = strings.Join(uniqueNodes, ",")
 	return nil
 }
 
-func modifyJob(job *batchv1.Job, loader *tkexv1alpha1.ImageLoader, index int) {
-	job.Name = getJobName(loader, index)
-	if job.Annotations == nil {
-		job.Annotations = make(map[string]string)
+func deletePods(ctx context.Context, cli client.Client, pods []*corev1.Pod) error {
+	initialBatchSize := 1
+	podsDeleteChan := make(chan *corev1.Pod, len(pods))
+	for _, p := range pods {
+		podsDeleteChan <- p
 	}
-	job.Annotations[LoaderJobNameKey] = job.Name
-	if job.Spec.Template.Labels == nil {
-		job.Spec.Template.Labels = make(map[string]string)
+	_, err := DoItSlowly(len(pods), initialBatchSize, func() error {
+		pod := <-podsDeleteChan
+		if deleteErr := cli.Delete(ctx, pod, client.GracePeriodSeconds(0)); deleteErr != nil {
+			logger.Error(deleteErr, "failed to delete pod", "pod", klog.KRef(pod.Namespace, pod.Name))
+			return deleteErr
+		}
+		logger.Info("deleted pod", "pod", klog.KRef(pod.Namespace, pod.Name))
+		return nil
+	})
+	return err
+}
+
+func createPods(ctx context.Context, cli client.Client, pods []*corev1.Pod) error {
+	initialBatchSize := 1
+	podsCreateChan := make(chan *corev1.Pod, len(pods))
+	for _, p := range pods {
+		podsCreateChan <- p
 	}
-	job.Spec.Template.Labels[LoaderJobNameKey] = job.Name
-	job.Spec.Template.Spec.Containers[0].Image = loader.Spec.Images[index]
-	job.Spec.Template.Spec.Containers[0].Command = []string{
-		"echo", "pull " + loader.Spec.Images[index],
+	_, err := DoItSlowly(len(pods), initialBatchSize, func() error {
+		pod := <-podsCreateChan
+		if createErr := cli.Create(ctx, pod); createErr != nil && !errors.IsAlreadyExists(createErr) {
+			logger.Error(createErr, "failed to create pod", "pod", klog.KRef(pod.Namespace, pod.Name))
+			return createErr
+		}
+		return nil
+	})
+	return err
+}
+
+// DoItSlowly tries to call the provided function a total of 'count' times,
+// starting slow to check for errors, then speeding up if calls succeed.
+//
+// It groups the calls into batches, starting with a group of initialBatchSize.
+// Within each batch, it may call the function multiple times concurrently.
+//
+// If a whole batch succeeds, the next batch may get exponentially larger.
+// If there are any failures in a batch, all remaining batches are skipped
+// after waiting for the current batch to complete.
+//
+// It returns the number of successful calls to the function.
+func DoItSlowly(count int, initialBatchSize int, fn func() error) (int, error) {
+	remaining := count
+	successes := 0
+	for batchSize := integer.IntMin(remaining, initialBatchSize); batchSize > 0; batchSize = integer.IntMin(
+		2*batchSize, remaining) {
+		errCh := make(chan error, batchSize)
+		var wg sync.WaitGroup
+		wg.Add(batchSize)
+		for i := 0; i < batchSize; i++ {
+			go func() {
+				defer wg.Done()
+				if err := fn(); err != nil {
+					errCh <- err
+				}
+			}()
+		}
+		wg.Wait()
+		curSuccesses := batchSize - len(errCh)
+		successes += curSuccesses
+		if len(errCh) > 0 {
+			return successes, <-errCh
+		}
+		remaining -= batchSize
 	}
-	// ensure the job runs one pod on each node
-	if job.Spec.Template.Spec.Affinity == nil {
-		job.Spec.Template.Spec.Affinity = &corev1.Affinity{}
-	}
-	job.Spec.Template.Spec.Affinity.PodAntiAffinity = &corev1.PodAntiAffinity{
-		RequiredDuringSchedulingIgnoredDuringExecution: []corev1.PodAffinityTerm{
-			{
-				Namespaces: []string{loader.Namespace},
-				LabelSelector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						LoaderJobNameKey: job.Name,
-					},
-				},
-				TopologyKey: corev1.LabelHostname,
-			},
-		},
-	}
+	return successes, nil
 }
 
 // convertMatchExpressions covert nodeName to matchExpressions
