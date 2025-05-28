@@ -13,9 +13,9 @@
 package app
 
 import (
+	"flag"
 	"time"
 
-	"github.com/spf13/pflag"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -41,24 +41,24 @@ func NewServerRunOptions() *RunOptions {
 	options.addKubeFlags()
 	options.addElectionFlags()
 	options.addGPAFlags()
-	RecommendDefaultGPAControllerConfig(options.GPAControllerConfiguration)
+	RecommendedDefaultGPAControllerConfiguration(options.GPAControllerConfiguration)
 	return options
 }
 
 func (s *RunOptions) addKubeFlags() {
-	pflag.DurationVar(&s.Resync, "resync", 10*time.Minute, "Time to resync from apiserver.")
-	pflag.StringVar(&s.KubeconfigPath,
+	flag.DurationVar(&s.Resync, "resync", 10*time.Minute, "Time to resync from apiserver.")
+	flag.StringVar(&s.KubeconfigPath,
 		"kubeconfig-path", "", "Absolute path to the kubeconfig file.")
-	pflag.StringVar(&s.MasterUrl, "master", "", "Master url.")
-	pflag.IntVar(&s.QPS, "qps", 100, "qps of auto scaler.")
-	pflag.IntVar(&s.Burst, "burst", 200, "burst of auto scaler.")
+	flag.StringVar(&s.MasterUrl, "master", "", "Master url.")
+	flag.IntVar(&s.QPS, "qps", 100, "qps of auto scaler.")
+	flag.IntVar(&s.Burst, "burst", 200, "burst of auto scaler.")
 }
 
 func (s *RunOptions) addElectionFlags() {
-	pflag.StringVar(&s.ElectionName, "election-name", "general-podautoscaler", "election name.")
-	pflag.StringVar(&s.ElectionNamespace,
+	flag.StringVar(&s.ElectionName, "election-name", "general-podautoscaler", "election name.")
+	flag.StringVar(&s.ElectionNamespace,
 		"election-namespace", "bcs-system", "election namespace.")
-	pflag.StringVar(&s.ElectionResourceLock,
+	flag.StringVar(&s.ElectionResourceLock,
 		"election-resource-lock",
 		"leases",
 		"election resource type, support endoints, leases, configmaps and so on.")
@@ -71,41 +71,41 @@ func (o *RunOptions) addGPAFlags() {
 		return
 	}
 
-	pflag.DurationVar(&o.GeneralPodAutoscalerSyncPeriod.Duration,
+	flag.DurationVar(&o.GeneralPodAutoscalerSyncPeriod.Duration,
 		"general-pod-autoscaler-sync-period", o.GeneralPodAutoscalerSyncPeriod.Duration,
 		"The period for syncing the number of pods in general pod autoscaler.")
-	pflag.DurationVar(&o.GeneralPodAutoscalerUpscaleForbiddenWindow.Duration,
+	flag.DurationVar(&o.GeneralPodAutoscalerUpscaleForbiddenWindow.Duration,
 		"general-pod-autoscaler-upscale-delay", o.GeneralPodAutoscalerUpscaleForbiddenWindow.Duration,
 		"The period since last upscale, before another upscale can be performed in general pod autoscaler.")
-	pflag.DurationVar(&o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
+	flag.DurationVar(&o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
 		"general-pod-autoscaler-downscale-stabilization",
 		o.GeneralPodAutoscalerDownscaleStabilizationWindow.Duration,
 		"The period for which autoscaler will look backwards and "+
 			"not scale down below any recommendation it made during that period.")
-	pflag.DurationVar(
+	flag.DurationVar(
 		&o.GeneralPodAutoscalerDownscaleForbiddenWindow.Duration,
 		"general-pod-autoscaler-downscale-delay",
 		o.GeneralPodAutoscalerDownscaleForbiddenWindow.Duration,
 		"The period since last downscale, before another downscale can be performed in general pod autoscaler.")
-	pflag.Float64Var(&o.GeneralPodAutoscalerTolerance,
+	flag.Float64Var(&o.GeneralPodAutoscalerTolerance,
 		"general-pod-autoscaler-tolerance", o.GeneralPodAutoscalerTolerance,
 		"The minimum change (from 1.0) in the desired-to-actual metrics ratio for "+
 			"the general pod autoscaler to consider scaling.")
-	pflag.BoolVar(&o.GeneralPodAutoscalerUseRESTClients,
+	flag.BoolVar(&o.GeneralPodAutoscalerUseRESTClients,
 		"general-pod-autoscaler-use-rest-clients",
 		o.GeneralPodAutoscalerUseRESTClients,
 		"If set to true, causes the general pod autoscaler controller to use REST clients through the kube-aggregator,"+
 			" instead of using the legacy metrics client through the API server proxy."+
 			" This is required for custom metrics support in the general pod autoscaler.")
-	pflag.DurationVar(&o.GeneralPodAutoscalerCPUInitializationPeriod.Duration,
+	flag.DurationVar(&o.GeneralPodAutoscalerCPUInitializationPeriod.Duration,
 		"general-pod-autoscaler-cpu-initialization-period",
 		o.GeneralPodAutoscalerCPUInitializationPeriod.Duration,
 		"The period after pod start when CPU samples might be skipped.")
-	pflag.DurationVar(&o.GeneralPodAutoscalerInitialReadinessDelay.Duration,
+	flag.DurationVar(&o.GeneralPodAutoscalerInitialReadinessDelay.Duration,
 		"general-pod-autoscaler-initial-readiness-delay",
 		o.GeneralPodAutoscalerInitialReadinessDelay.Duration,
 		"The period after pod start during which readiness changes will be treated as initial readiness.")
-	pflag.IntVar(&o.GeneralPodAutoscalerWorkers,
+	flag.IntVar(&o.GeneralPodAutoscalerWorkers,
 		"general-pod-autoscaler-workers",
 		o.GeneralPodAutoscalerWorkers,
 		"The number for parallel process worker.")

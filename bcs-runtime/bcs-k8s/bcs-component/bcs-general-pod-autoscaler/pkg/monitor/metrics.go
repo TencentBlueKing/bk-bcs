@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package metrics xxx
-package metrics
+// Package monitor TODO
+package monitor
 
 // Server an HTTP serving instance to track metrics
 type Server interface {

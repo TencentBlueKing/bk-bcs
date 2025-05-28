@@ -13,14 +13,16 @@
 package scaler
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	v12 "k8s.io/api/apps/v1"
-
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta/testrestmapper"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -39,9 +41,6 @@ import (
 	metricsfake "k8s.io/metrics/pkg/client/clientset/versioned/fake"
 	cmfake "k8s.io/metrics/pkg/client/custom_metrics/fake"
 	emfake "k8s.io/metrics/pkg/client/external_metrics/fake"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 
 	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 	metricsclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
@@ -369,14 +368,14 @@ func (tc *replicaCalcTestCase) runTest(t *testing.T) {
 	}
 
 	if tc.resource != nil {
-		outReplicas, outUtilization, outRawValue, outTimestamp, err := replicaCalc.GetResourceReplicas(tc.currentReplicas, tc.resource.targetUtilization, tc.resource.name, testNamespace, selector, "", false)
+		outReplicas, outUtilization, outRawValue, outTimestamp, err2 := replicaCalc.GetResourceReplicas(context.Background(), tc.currentReplicas, tc.resource.targetUtilization, tc.resource.name, testNamespace, selector, "", false)
 
 		if tc.expectedError != nil {
-			require.Error(t, err, "there should be an error calculating the replica count")
-			assert.Contains(t, err.Error(), tc.expectedError.Error(), "the error message should have contained the expected error message")
+			require.Error(t, err2, "there should be an error calculating the replica count")
+			assert.Contains(t, err2.Error(), tc.expectedError.Error(), "the error message should have contained the expected error message")
 			return
 		}
-		require.NoError(t, err, "there should not have been an error calculating the replica count")
+		require.NoError(t, err2, "there should not have been an error calculating the replica count")
 		assert.Equal(t, tc.expectedReplicas, outReplicas, "replicas should be as expected")
 		assert.Equal(t, tc.resource.expectedUtilization, outUtilization, "utilization should be as expected")
 		assert.Equal(t, tc.resource.expectedValue, outRawValue, "raw value should be as expected")
@@ -593,6 +592,7 @@ func TestReplicaCalcSUDP(t *testing.T) {
 	tc.runTest(t)
 }
 
+// NOCC:tosa/fn_length(设计如此)
 func TestReplicasCalcSUIgnoresAnnotations(t *testing.T) {
 	tc := replicaCalcTestCase{
 		currentReplicas:      2,

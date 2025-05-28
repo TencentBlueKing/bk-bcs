@@ -14,10 +14,22 @@ package scaler
 
 import (
 	"encoding/json"
+	"sort"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
+
+	autoscaling "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 )
+
+type result struct {
+	replicas  int32
+	metric    string
+	statuses  []autoscaling.MetricStatus
+	timestamp time.Time
+	priority  int32
+}
 
 // GetPodCondition extracts the provided condition from the given status and returns that.
 // Returns nil and -1 if the condition is not present, and the index of the located condition.
@@ -75,4 +87,34 @@ func CreateMergePatch(original, new interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return patch, nil
+}
+
+// getMetricName returns the name of the metric
+func getMetricName(metricSpec autoscaling.MetricSpec) string {
+	switch metricSpec.Type {
+	case autoscaling.ObjectMetricSourceType:
+		return metricSpec.Object.Metric.Name
+	case autoscaling.PodsMetricSourceType:
+		return metricSpec.Pods.Metric.Name
+	case autoscaling.ResourceMetricSourceType:
+		return string(metricSpec.Resource.Name)
+	case autoscaling.ContainerResourceMetricSourceType:
+		return string(metricSpec.ContainerResource.Name)
+	case autoscaling.ExternalMetricSourceType:
+		return metricSpec.External.Metric.Name
+	default:
+		return ""
+	}
+}
+
+// sortResults sorts results by priority and replicas
+func sortResults(results []result) []result {
+	sort.SliceStable(results, func(i, j int) bool {
+		if results[i].priority != results[j].priority {
+			return results[i].priority > results[j].priority
+		} else {
+			return results[i].replicas > results[j].replicas
+		}
+	})
+	return results
 }

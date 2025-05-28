@@ -10,15 +10,19 @@
  * limitations under the License.
  */
 
-package metrics
+package monitor
 
 import (
-	"log"
+	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"k8s.io/klog/v2"
+
+	autoscaling "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 )
 
 var (
@@ -156,22 +160,27 @@ type PrometheusMetricServer struct{}
 
 var registry *prometheus.Registry
 
+var register sync.Once
+
 func init() {
-	registry = prometheus.NewRegistry()
-	registry.MustRegister(scalerErrorsTotal)
-	registry.MustRegister(scalerTargetMetricsValue)
-	registry.MustRegister(scalerCurrentMetricsValue)
-	registry.MustRegister(scalerDesiredReplicasValue)
-	registry.MustRegister(scalerErrors)
-	registry.MustRegister(scaledObjectErrors)
-	registry.MustRegister(gpaDesiredReplicasValue)
-	registry.MustRegister(gpaCurrentReplicasValue)
-	registry.MustRegister(gpaMinReplicasValue)
-	registry.MustRegister(gpaMaxReplicasValue)
-	registry.MustRegister(scalerExecDuration)
-	registry.MustRegister(scaleUpdateDuration)
-	registry.MustRegister(scalerMetricExecDuration)
-	registry.MustRegister(scalerReplicasUpdateDuration)
+	register.Do(func() {
+		registry = prometheus.NewRegistry()
+		registry.MustRegister(scalerErrorsTotal)
+		registry.MustRegister(scalerTargetMetricsValue)
+		registry.MustRegister(scalerCurrentMetricsValue)
+		registry.MustRegister(scalerDesiredReplicasValue)
+		registry.MustRegister(scalerErrors)
+		registry.MustRegister(scaledObjectErrors)
+		registry.MustRegister(gpaDesiredReplicasValue)
+		registry.MustRegister(gpaCurrentReplicasValue)
+		registry.MustRegister(gpaMinReplicasValue)
+		registry.MustRegister(gpaMaxReplicasValue)
+		registry.MustRegister(scalerExecDuration)
+		registry.MustRegister(scaleUpdateDuration)
+		registry.MustRegister(scalerMetricExecDuration)
+		registry.MustRegister(scalerReplicasUpdateDuration)
+	})
+
 }
 
 // NewServer creates a new http serving instance of prometheus metrics
@@ -180,123 +189,105 @@ func (metricsServer PrometheusMetricServer) NewServer(address string, pattern st
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte("OK"))
 		if err != nil {
-			log.Fatalf("Unable to write to serve custom metrics: %v", err)
+			klog.Fatalf("Unable to write to serve custom metrics: %v", err)
 		}
 	})
-	log.Printf("Starting metrics server at %v", address)
+	klog.Infof("Starting metrics server at %v", address)
 	http.Handle(pattern, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 
 	// initialize the total error metric
 	_, errscaler := scalerErrorsTotal.GetMetricWith(prometheus.Labels{})
 	if errscaler != nil {
-		log.Fatalf("Unable to initialize total error metrics as : %v", errscaler)
+		klog.Fatalf("Unable to initialize total error metrics as : %v", errscaler)
 	}
 
-	log.Fatal(http.ListenAndServe(address, nil))
+	klog.Fatal(http.ListenAndServe(address, nil))
 }
 
-// RecordGPAScalerMetric create a measurement of the external metric used by the GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(namespace string, name string, scaledObject string,
+// RecordGPAScalerMetric create a measurement of the metric used by the GPA
+// 每个模式的指标目标值和当前值
+func (metricsServer PrometheusMetricServer) RecordGPAScalerMetric(gpa *autoscaling.GeneralPodAutoscaler,
 	scaler string, metric string, targetValue int64, currentValue int64) {
-	scalerTargetMetricsValue.With(getLabels(namespace, name, scaledObject, scaler, metric)).Set(float64(targetValue))
-	scalerCurrentMetricsValue.With(getLabels(namespace, name, scaledObject, scaler, metric)).Set(float64(currentValue))
+	scalerTargetMetricsValue.With(getLabels(gpa, scaler, metric)).
+		Set(float64(targetValue))
+	scalerCurrentMetricsValue.With(getLabels(gpa, scaler, metric)).
+		Set(float64(currentValue))
 }
 
 // RecordGPAScalerDesiredReplicas record desired replicas value computed by a scaling mode for GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(namespace string, name string,
-	scaledObject string, scaler string, replicas int32) {
-	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name,
-		"scaledObject": scaledObject, "scaler": scaler}).Set(float64(replicas))
+// 每个模式的推荐副本数
+func (metricsServer PrometheusMetricServer) RecordGPAScalerDesiredReplicas(gpa *autoscaling.GeneralPodAutoscaler,
+	scaler string, replicas int32) {
+	scalerDesiredReplicasValue.With(prometheus.Labels{"namespace": gpa.Namespace, "name": gpa.Name,
+		"scaledObject": getTargetRefKey(gpa), "scaler": scaler}).Set(float64(replicas))
 }
 
 // RecordGPAReplicas record final replicas value for GPA
-func (metricsServer PrometheusMetricServer) RecordGPAReplicas(namespace string, name string, scaledObject string,
-	minReplicas, maxReplicas, desiredReplicas, currentReplicas int32) {
-	gpaMinReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
-		Set(float64(minReplicas))
-	gpaMaxReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
-		Set(float64(maxReplicas))
-	gpaDesiredReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
-		Set(float64(desiredReplicas))
-	gpaCurrentReplicasValue.With(prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}).
-		Set(float64(currentReplicas))
+func (metricsServer PrometheusMetricServer) RecordGPAReplicas(gpa *autoscaling.GeneralPodAutoscaler,
+	minReplicas, desiredReplicas int32) {
+
+	gpaMinReplicasValue.With(getGPALabels(gpa)).Set(float64(minReplicas))
+	gpaMaxReplicasValue.With(getGPALabels(gpa)).Set(float64(gpa.Spec.MaxReplicas))
+	gpaDesiredReplicasValue.With(getGPALabels(gpa)).Set(float64(desiredReplicas))
+	gpaCurrentReplicasValue.With(getGPALabels(gpa)).Set(float64(gpa.Status.CurrentReplicas))
 }
 
 // RecordScalerExecDuration records duration by seconds when executing scaler.
 // In metric mode, it records duration of executing every metric.
-func (metricsServer PrometheusMetricServer) RecordScalerExecDuration(namespace, name, scaledObject, metric, scaler,
-	status string, duration time.Duration) {
-	scalerExecDuration.WithLabelValues(namespace, name, scaledObject, metric, scaler, status).Observe(duration.Seconds())
+func (metricsServer PrometheusMetricServer) RecordScalerExecDuration(gpa *autoscaling.GeneralPodAutoscaler, metric,
+	scaler, status string, duration time.Duration) {
+	scalerExecDuration.WithLabelValues(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), metric, scaler, status).
+		Observe(duration.Seconds())
 }
 
 // RecordScalerUpdateDuration records duration by seconds when updating a scale.
-func (metricsServer PrometheusMetricServer) RecordScalerUpdateDuration(namespace, name, scaledObject,
+// histogram 类型
+func (metricsServer PrometheusMetricServer) RecordScalerUpdateDuration(gpa *autoscaling.GeneralPodAutoscaler,
 	status string, duration time.Duration) {
-	scaleUpdateDuration.WithLabelValues(namespace, name, scaledObject,
-		status).Observe(duration.Seconds())
+	scaleUpdateDuration.WithLabelValues(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), status).Observe(duration.Seconds())
 }
 
 // RecordScalerMetricExecDuration records duration by second when executing metric
-func (metricsServer PrometheusMetricServer) RecordScalerMetricExecDuration(namespace, name, scaledObject, metric,
-	scaler, status string, duration time.Duration) {
-	scalerMetricExecDuration.WithLabelValues(namespace, name, scaledObject, metric, scaler, status).Set(duration.Seconds())
+func (metricsServer PrometheusMetricServer) RecordScalerMetricExecDuration(gpa *autoscaling.GeneralPodAutoscaler,
+	metric, scaler, status string, duration time.Duration) {
+	scalerMetricExecDuration.WithLabelValues(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), metric, scaler, status).
+		Set(duration.Seconds())
 }
 
 // RecordScalerReplicasUpdateDuration records duration by seconds when updating a scale.
-func (metricsServer PrometheusMetricServer) RecordScalerReplicasUpdateDuration(namespace, name, scaledObject,
+// gauge 类型
+func (metricsServer PrometheusMetricServer) RecordScalerReplicasUpdateDuration(gpa *autoscaling.GeneralPodAutoscaler,
 	status string, duration time.Duration) {
-	scalerReplicasUpdateDuration.WithLabelValues(namespace, name, scaledObject, status).Set(duration.Seconds())
+	scalerReplicasUpdateDuration.WithLabelValues(gpa.Namespace, gpa.Name, getTargetRefKey(gpa), status).
+		Set(duration.Seconds())
 }
 
 // RecordGPAScalerError counts the number of errors occurred in trying get an external metric used by the GPA
-func (metricsServer PrometheusMetricServer) RecordGPAScalerError(namespace string, name string, scaledObject string,
-	scaler string, metric string, isErr bool) {
-	if isErr {
-		scalerErrors.With(getLabels(namespace, name, scaledObject, scaler, metric)).Inc()
-		// scaledObjectErrors.With(prometheus.Labels{"namespace": namespace, "scaledObject": scaledObject}).Inc()
-		metricsServer.RecordScalerObjectError(namespace, name, scaledObject, isErr)
-		scalerErrorsTotal.With(prometheus.Labels{}).Inc()
-		return
-	}
-	// initialize metric with 0 if not already set
-	_, errscaler := scalerErrors.GetMetricWith(getLabels(namespace, name, scaledObject, scaler, metric))
-	_, errscaledobject := scaledObjectErrors.GetMetricWith(
-		prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject})
-	if errscaler != nil {
-		log.Fatalf("Unable to write to serve custom metrics: %v", errscaler)
-		return
-	}
-	if errscaledobject != nil {
-		log.Fatalf("Unable to write to serve custom metrics: %v", errscaledobject)
-		return
-	}
+func (metricsServer PrometheusMetricServer) RecordGPAScalerError(gpa *autoscaling.GeneralPodAutoscaler,
+	scaler string, metric string) {
+	// 模式错误
+	scaledObjectErrors.With(getGPALabels(gpa)).Inc()
+	// gpa 错误
+	scalerErrors.With(getLabels(gpa, scaler, metric)).Inc()
+	// 总错误
+	scalerErrorsTotal.With(prometheus.Labels{}).Inc()
+	return
+
 }
 
-// RecordScalerObjectError counts the number of errors with the scaled object
-func (metricsServer PrometheusMetricServer) RecordScalerObjectError(namespace string, name string,
-	scaledObject string, isErr bool) {
-	labels := prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject}
-	if isErr {
-		scaledObjectErrors.With(labels).Inc()
-		return
-	}
-	// initialize metric with 0 if not already set
-	_, errscaledobject := scaledObjectErrors.GetMetricWith(labels)
-	if errscaledobject != nil {
-		log.Fatalf("Unable to write to serve custom metrics: %v", errscaledobject)
-		return
-	}
-}
-
-func getLabels(namespace string, name string, scaledObject string, scaler string, metric string) prometheus.Labels {
-	return prometheus.Labels{"namespace": namespace, "name": name, "scaledObject": scaledObject,
+func getLabels(gpa *autoscaling.GeneralPodAutoscaler, scaler string, metric string) prometheus.Labels {
+	return prometheus.Labels{"namespace": gpa.Namespace, "name": gpa.Name, "scaledObject": getTargetRefKey(gpa),
 		"scaler": scaler, "metric": metric}
+}
+
+func getGPALabels(gpa *autoscaling.GeneralPodAutoscaler) prometheus.Labels {
+	return prometheus.Labels{"namespace": gpa.Namespace, "name": gpa.Name,
+		"scaledObject": getTargetRefKey(gpa)}
 }
 
 // ResetScalerMetrics reset metrics when delete gpa object
 func (metricsServer PrometheusMetricServer) ResetScalerMetrics(namespace, name string) {
 	labels := prometheus.Labels{"namespace": namespace, "name": name}
-
 	scalerTargetMetricsValue.DeletePartialMatch(labels)
 	scalerCurrentMetricsValue.DeletePartialMatch(labels)
 	scalerDesiredReplicasValue.DeletePartialMatch(labels)
@@ -306,4 +297,8 @@ func (metricsServer PrometheusMetricServer) ResetScalerMetrics(namespace, name s
 	gpaCurrentReplicasValue.DeletePartialMatch(labels)
 	gpaMinReplicasValue.DeletePartialMatch(labels)
 	gpaMaxReplicasValue.DeletePartialMatch(labels)
+}
+
+func getTargetRefKey(gpa *autoscaling.GeneralPodAutoscaler) string {
+	return fmt.Sprintf("%s/%s", gpa.Spec.ScaleTargetRef.Kind, gpa.Spec.ScaleTargetRef.Name)
 }

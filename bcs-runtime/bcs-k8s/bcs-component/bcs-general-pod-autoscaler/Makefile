@@ -56,3 +56,10 @@ generate-code:
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis \
 	"autoscaling:v1alpha1" \
 	--go-header-file ./hack/boilerplate.go.txt
+
+generate-crd:
+	mkdir -p manifests
+	controller-gen paths=./... \
+	crd:crdVersions=v1,maxDescLen=1000,generateEmbeddedObjectMeta=true \
+	rbac:roleName=operator \
+	output:crd:artifacts:config=./manifests/

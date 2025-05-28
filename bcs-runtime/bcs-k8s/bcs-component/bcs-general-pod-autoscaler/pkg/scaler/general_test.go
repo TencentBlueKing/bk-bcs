@@ -13,6 +13,7 @@
 package scaler
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalinginternal "k8s.io/api/autoscaling/v1"
 	v1 "k8s.io/api/core/v1"
@@ -32,17 +34,16 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes/fake"
-	core "k8s.io/client-go/testing"
-
 	scalefake "k8s.io/client-go/scale/fake"
+	core "k8s.io/client-go/testing"
+	"k8s.io/kubernetes/pkg/controller"
 	cmapi "k8s.io/metrics/pkg/apis/custom_metrics/v1beta2"
 	emapi "k8s.io/metrics/pkg/apis/external_metrics/v1beta1"
 	metricsapi "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	metricsfake "k8s.io/metrics/pkg/client/clientset/versioned/fake"
 	cmfake "k8s.io/metrics/pkg/client/custom_metrics/fake"
 	emfake "k8s.io/metrics/pkg/client/external_metrics/fake"
-
-	"github.com/stretchr/testify/assert"
+	"k8s.io/utils/pointer"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling"
 	autoscalingv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
@@ -88,10 +89,13 @@ type fakeResource struct {
 
 type testCase struct {
 	sync.Mutex
-	minReplicas    int32
-	maxReplicas    int32
-	specReplicas   int32
-	statusReplicas int32
+	minReplicas     int32
+	maxReplicas     int32
+	specReplicas    int32
+	statusReplicas  int32
+	initialReplicas int32
+	scaleUpRules    *autoscalingv1alpha1.GPAScalingRules
+	scaleDownRules  *autoscalingv1alpha1.GPAScalingRules
 
 	// CPU target utilization as a percentage of the requested resources.
 	CPUTarget                    int32
@@ -194,30 +198,53 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 	fakeGPAClient.AddReactor("list", "generalpodautoscalers", func(action core.Action) (handled bool, ret runtime.Object, err error) {
 		tc.Lock()
 		defer tc.Unlock()
-
-		obj := &autoscalingv1alpha1.GeneralPodAutoscalerList{
-			Items: []autoscalingv1alpha1.GeneralPodAutoscaler{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      gpaName,
-						Namespace: namespace,
-					},
-					Spec: autoscalingv1alpha1.GeneralPodAutoscalerSpec{
-						ScaleTargetRef: autoscalingv1alpha1.CrossVersionObjectReference{
-							Kind:       tc.resource.kind,
-							Name:       tc.resource.name,
-							APIVersion: tc.resource.apiVersion,
+		var behavior *autoscalingv1alpha1.GeneralPodAutoscalerBehavior
+		if tc.scaleUpRules != nil || tc.scaleDownRules != nil {
+			behavior = &autoscalingv1alpha1.GeneralPodAutoscalerBehavior{
+				ScaleUp:   tc.scaleUpRules,
+				ScaleDown: tc.scaleDownRules,
+			}
+		} else {
+			p := autoscalingv1alpha1.MaxPolicySelect
+			behavior = &autoscalingv1alpha1.GeneralPodAutoscalerBehavior{
+				ScaleUp: &autoscalingv1alpha1.GPAScalingRules{
+					StabilizationWindowSeconds: pointer.Int32(0),
+					SelectPolicy:               &p,
+					Policies: []autoscalingv1alpha1.GPAScalingPolicy{
+						{
+							Type:          autoscalingv1alpha1.PodsScalingPolicy,
+							Value:         100,
+							PeriodSeconds: 15,
 						},
-						MinReplicas: &tc.minReplicas,
-						MaxReplicas: tc.maxReplicas,
-					},
-					Status: autoscalingv1alpha1.GeneralPodAutoscalerStatus{
-						CurrentReplicas: tc.specReplicas,
-						DesiredReplicas: tc.specReplicas,
-						LastScaleTime:   tc.lastScaleTime,
 					},
 				},
+			}
+		}
+		gpa := autoscalingv1alpha1.GeneralPodAutoscaler{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      gpaName,
+				Namespace: namespace,
 			},
+			Spec: autoscalingv1alpha1.GeneralPodAutoscalerSpec{
+				ScaleTargetRef: autoscalingv1alpha1.CrossVersionObjectReference{
+					Kind:       tc.resource.kind,
+					Name:       tc.resource.name,
+					APIVersion: tc.resource.apiVersion,
+				},
+				MinReplicas: &tc.minReplicas,
+				MaxReplicas: tc.maxReplicas,
+				Behavior:    behavior,
+			},
+			Status: autoscalingv1alpha1.GeneralPodAutoscalerStatus{
+				CurrentReplicas: tc.specReplicas,
+				DesiredReplicas: tc.specReplicas,
+				LastScaleTime:   tc.lastScaleTime,
+			},
+		}
+		// autoscalingv1alpha1.SetDefaults_GeneralPodAutoscaler(&gpa)
+
+		obj := &autoscalingv1alpha1.GeneralPodAutoscalerList{
+			Items: []autoscalingv1alpha1.GeneralPodAutoscaler{gpa},
 		}
 
 		annotations := obj.Items[0].Annotations
@@ -237,6 +264,7 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 					Resource: &autoscalingv1alpha1.ResourceMetricSource{
 						Name: v1.ResourceCPU,
 						Target: autoscalingv1alpha1.MetricTarget{
+							Type:               autoscalingv1alpha1.UtilizationMetricType,
 							AverageUtilization: &tc.CPUTarget,
 						},
 					},
@@ -331,13 +359,24 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
 						{
-							Name: "container",
+							Name: "container1",
 							Resources: v1.ResourceRequirements{
 								Requests: v1.ResourceList{
-									v1.ResourceCPU: reportedCPURequest,
+									v1.ResourceCPU: *resource.NewMilliQuantity(reportedCPURequest.MilliValue()/2, resource.DecimalSI),
 								},
 								Limits: v1.ResourceList{
-									v1.ResourceCPU: reportedCPULimit,
+									v1.ResourceCPU: *resource.NewMilliQuantity(reportedCPULimit.MilliValue()/2, resource.DecimalSI),
+								},
+							},
+						},
+						{
+							Name: "container2",
+							Resources: v1.ResourceRequirements{
+								Requests: v1.ResourceList{
+									v1.ResourceCPU: *resource.NewMilliQuantity(reportedCPURequest.MilliValue()/2, resource.DecimalSI),
+								},
+								Limits: v1.ResourceList{
+									v1.ResourceCPU: *resource.NewMilliQuantity(reportedCPULimit.MilliValue()/2, resource.DecimalSI),
 								},
 							},
 						},
@@ -360,6 +399,24 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 			assert.Equal(t, namespace, obj.Namespace, "the GPA namespace should be as expected")
 			assert.Equal(t, gpaName, obj.Name, "the GPA name should be as expected")
 			assert.Equal(t, tc.expectedDesiredReplicas, obj.Status.DesiredReplicas, "the desired replica count reported in the object status should be as expected")
+			if tc.verifyCPUCurrent {
+				if utilization := findCpuUtilization(obj.Status.CurrentMetrics); assert.NotNil(t, utilization, "the reported CPU utilization percentage should be non-nil") {
+					assert.Equal(t, tc.CPUCurrent, *utilization, "the report CPU utilization percentage should be as expected")
+				}
+			}
+			actualConditions := obj.Status.Conditions
+			// TODO: it's ok not to sort these because statusOk
+			// contains all the conditions, so we'll never be appending.
+			// Default to statusOk when missing any specific conditions
+			if tc.expectedConditions == nil {
+				tc.expectedConditions = statusOkWithOverrides()
+			}
+			// clear the message so that we can easily compare
+			for i := range actualConditions {
+				actualConditions[i].Message = ""
+				actualConditions[i].LastTransitionTime = metav1.Time{}
+			}
+			assert.Equal(t, tc.expectedConditions, actualConditions, "the status conditions should have been as expected")
 			// Every time we reconcile GPA object we are updating status.
 			tc.statusUpdated = true
 			return true, obj, nil
@@ -487,13 +544,24 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 				Window:    metav1.Duration{Duration: time.Minute},
 				Containers: []metricsapi.ContainerMetrics{
 					{
-						Name: "container",
+						Name: "container1",
 						Usage: v1.ResourceList{
 							v1.ResourceCPU: *resource.NewMilliQuantity(
-								int64(cpu),
+								int64(cpu/2),
 								resource.DecimalSI),
 							v1.ResourceMemory: *resource.NewQuantity(
-								int64(1024*1024),
+								int64(1024*1024/2),
+								resource.BinarySI),
+						},
+					},
+					{
+						Name: "container2",
+						Usage: v1.ResourceList{
+							v1.ResourceCPU: *resource.NewMilliQuantity(
+								int64(cpu/2),
+								resource.DecimalSI),
+							v1.ResourceMemory: *resource.NewQuantity(
+								int64(1024*1024/2),
 								resource.BinarySI),
 						},
 					},
@@ -611,6 +679,25 @@ func (tc *testCase) prepareTestClient(t *testing.T) (*fake.Clientset, *metricsfa
 	return fakeClient, fakeMetricsClient, fakeCMClient, fakeEMClient, fakeScaleClient, fakeGPAClient
 }
 
+func findCpuUtilization(metricStatus []autoscalingv1alpha1.MetricStatus) (utilization *int32) {
+	for _, s := range metricStatus {
+		if s.Type != autoscalingv1alpha1.ResourceMetricSourceType {
+			continue
+		}
+		if s.Resource == nil {
+			continue
+		}
+		if s.Resource.Name != v1.ResourceCPU {
+			continue
+		}
+		if s.Resource.Current.AverageUtilization == nil {
+			continue
+		}
+		return s.Resource.Current.AverageUtilization
+	}
+	return nil
+}
+
 func (tc *testCase) verifyResults(t *testing.T) {
 	tc.Lock()
 	defer tc.Unlock()
@@ -675,7 +762,7 @@ func (tc *testCase) setupController(t *testing.T) (*GeneralController, informers
 		return true, obj, nil
 	})
 
-	scalerFactory := autoscalinginformer.NewSharedInformerFactory(testGPAClient, 0)
+	scalerFactory := autoscalinginformer.NewSharedInformerFactory(testGPAClient, controller.NoResyncPeriodFunc())
 	informerFactory := informers.NewSharedInformerFactory(testClient, 0)
 
 	defaultDownscalestabilizationWindow := 5 * time.Minute
@@ -687,7 +774,7 @@ func (tc *testCase) setupController(t *testing.T) (*GeneralController, informers
 		metricsClient,
 		scalerFactory.Autoscaling().V1alpha1().GeneralPodAutoscalers(),
 		informerFactory.Core().V1().Pods(),
-		0,
+		100*time.Millisecond, // we need non-zero resync period to avoid race conditions
 		defaultDownscalestabilizationWindow,
 		defaultTestingTolerance,
 		defaultTestingCPUInitializationPeriod,
@@ -702,16 +789,26 @@ func (tc *testCase) setupController(t *testing.T) (*GeneralController, informers
 	return gpaController, informerFactory, scalerFactory
 }
 
+func hotCPUCreationTime() metav1.Time {
+	return metav1.Time{Time: time.Now()}
+}
+
+func coolCPUCreationTime() metav1.Time {
+	return metav1.Time{Time: time.Now().Add(-3 * time.Minute)}
+}
+
 func (tc *testCase) runTestWithController(t *testing.T, gpaController *GeneralController, informerFactory informers.SharedInformerFactory,
 	scalerFactory autoscalinginformer.SharedInformerFactory) {
-	stop := make(chan struct{})
-	defer close(stop)
-	scalerFactory.Start(stop)
-	informerFactory.Start(stop)
-	go gpaController.Run(stop)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	scalerFactory.Start(ctx.Done())
+	informerFactory.Start(ctx.Done())
+	go gpaController.Run(ctx)
+
 	tc.Lock()
 	shouldWait := tc.verifyEvents
 	tc.Unlock()
+
 	if shouldWait {
 		// We need to wait for events to be broadcasted (sleep for longer than record.sleepDuration).
 		timeoutTime := time.Now().Add(2 * time.Second)
@@ -1014,10 +1111,9 @@ func TestScaleUpCMUnreadyandCpuHot(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestScaleUpHotCpuNoScaleWouldSD 原方法名TestScaleUpHotCpuNoScaleWouldScaleDown
-//
-// TestScaleUpHotCpuNoScaleWouldSD Test Scale Up Hot Cpu No Scale Would Scale Down
-func TestScaleUpHotCpuNoScaleWouldSD(t *testing.T) {
+// TestScaleUpHotCpuNoScaleWouldScaleDown Test Scale Up Hot Cpu No Scale Would Scale Down
+// NOCC:tosa/fn_length(设计如此)
+func TestScaleUpHotCpuNoScaleWouldScaleDown(t *testing.T) {
 	averageValue := resource.MustParse("15.0")
 	tc := testCase{
 		minReplicas:             2,
@@ -1121,10 +1217,9 @@ func TestScaleUpFromZeroCMObject(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestScaleUpFromZeroIgnoresTCMO 原方法名TestScaleUpFromZeroIgnoresToleranceCMObject
-//
-// TestScaleUpFromZeroIgnoresTCMO Test Scale Up From Zero Ignores Tolerance CM Object
-func TestScaleUpFromZeroIgnoresTCMO(t *testing.T) {
+// TestScaleUpFromZeroIgnoresToleranceCMObject Test Scale Up From Zero Ignores Tolerance CM Object
+// NOCC:tosa/fn_length(设计如此)
+func TestScaleUpFromZeroIgnoresToleranceCMObject(t *testing.T) {
 	targetValue := resource.MustParse("1.0")
 	tc := testCase{
 		minReplicas:             0,
@@ -1223,7 +1318,7 @@ func TestScaleUpByContainerResource(t *testing.T) {
 		maxReplicas:             6,
 		specReplicas:            3,
 		statusReplicas:          3,
-		expectedDesiredReplicas: 6,
+		expectedDesiredReplicas: 5,
 		metricsTarget: []autoscalingv1alpha1.MetricSpec{{
 			Type: autoscalingv1alpha1.ContainerResourceMetricSourceType,
 			ContainerResource: &autoscalingv1alpha1.ContainerResourceMetricSource{
@@ -1232,10 +1327,10 @@ func TestScaleUpByContainerResource(t *testing.T) {
 					Type:               autoscalingv1alpha1.UtilizationMetricType,
 					AverageUtilization: &cpuUtilization,
 				},
-				Container: "container",
+				Container: "container1",
 			},
 		}},
-		reportedLevels:      []uint64{800, 900, 900},
+		reportedLevels:      []uint64{300, 500, 700},
 		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
 		useMetricsAPI:       true,
 	}
@@ -1249,7 +1344,7 @@ func TestScaleUpByLimits(t *testing.T) {
 		maxReplicas:             6,
 		specReplicas:            2,
 		statusReplicas:          2,
-		expectedDesiredReplicas: 2,
+		expectedDesiredReplicas: 4,
 		computeByLimits:         true,
 		metricsTarget: []autoscalingv1alpha1.MetricSpec{{
 			Type: autoscalingv1alpha1.ContainerResourceMetricSourceType,
@@ -1259,13 +1354,13 @@ func TestScaleUpByLimits(t *testing.T) {
 					Type:               autoscalingv1alpha1.UtilizationMetricType,
 					AverageUtilization: &cpuUtilization,
 				},
-				Container: "container",
+				Container: "container1",
 			},
 		}},
-		reportedLevels:      []uint64{300, 300, 200},
+		reportedLevels:      []uint64{600, 600, 400},
 		reportedCPURequests: []resource.Quantity{resource.MustParse("0.5"), resource.MustParse("0.5"), resource.MustParse("0.5")},
 		reportedCPULimits:   []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
-		useMetricsAPI:       false,
+		useMetricsAPI:       true,
 	}
 	tc.runTest(t)
 }
@@ -1637,64 +1732,6 @@ func TestScaleDownIncludeUnreadyPods(t *testing.T) {
 	tc.runTest(t)
 }
 
-func TestScaleDownOneMetricInvalid(t *testing.T) {
-	tc := testCase{
-		minReplicas:             2,
-		maxReplicas:             6,
-		specReplicas:            5,
-		statusReplicas:          5,
-		expectedDesiredReplicas: 3,
-		CPUTarget:               50,
-		metricsTarget: []autoscalingv1alpha1.MetricSpec{
-			{
-				Type: "CheddarCheese",
-			},
-		},
-		reportedLevels:      []uint64{100, 300, 500, 250, 250},
-		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
-		useMetricsAPI:       true,
-		recommendations:     []timestampedRecommendation{},
-	}
-
-	tc.runTest(t)
-}
-
-func TestScaleDownOneMetricEmpty(t *testing.T) {
-	tc := testCase{
-		minReplicas:             2,
-		maxReplicas:             6,
-		specReplicas:            5,
-		statusReplicas:          5,
-		expectedDesiredReplicas: 3,
-		CPUTarget:               50,
-		metricsTarget: []autoscalingv1alpha1.MetricSpec{
-			{
-				Type: autoscalingv1alpha1.ExternalMetricSourceType,
-				External: &autoscalingv1alpha1.ExternalMetricSource{
-					Metric: autoscalingv1alpha1.MetricIdentifier{
-						Name:     "qps",
-						Selector: &metav1.LabelSelector{},
-					},
-					Target: autoscalingv1alpha1.MetricTarget{
-						Type:         autoscalingv1alpha1.AverageValueMetricType,
-						AverageValue: resource.NewMilliQuantity(1000, resource.DecimalSI),
-					},
-				},
-			},
-		},
-		reportedLevels:      []uint64{100, 300, 500, 250, 250},
-		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
-		useMetricsAPI:       true,
-		recommendations:     []timestampedRecommendation{},
-	}
-	_, _, _, testEMClient, _, _ := tc.prepareTestClient(t)
-	testEMClient.PrependReactor("list", "*", func(action core.Action) (handled bool, ret runtime.Object, err error) {
-		return true, &emapi.ExternalMetricValueList{}, fmt.Errorf("something went wrong")
-	})
-	tc.testEMClient = testEMClient
-	tc.runTest(t)
-}
-
 func TestScaleDownIgnoreHotCpuPods(t *testing.T) {
 	tc := testCase{
 		minReplicas:             2,
@@ -1828,6 +1865,7 @@ func TestToleranceCMObject(t *testing.T) {
 						Name: "qps",
 					},
 					Target: autoscalingv1alpha1.MetricTarget{
+						Type:  autoscalingv1alpha1.ValueMetricType,
 						Value: &targetValue,
 					},
 				},
@@ -1896,6 +1934,7 @@ func TestTolerancePerPodCMObject(t *testing.T) {
 						Selector: &metav1.LabelSelector{},
 					},
 					Target: autoscalingv1alpha1.MetricTarget{
+						Type:         autoscalingv1alpha1.AverageValueMetricType,
 						AverageValue: resource.NewMilliQuantity(2200, resource.DecimalSI),
 					},
 				},
@@ -2213,6 +2252,7 @@ func TestUpscaleCap(t *testing.T) {
 		maxReplicas:             100,
 		specReplicas:            3,
 		statusReplicas:          3,
+		scaleUpRules:            generateScalingRules(0, 0, 700, 60, 0),
 		expectedDesiredReplicas: 24,
 		CPUTarget:               10,
 		reportedLevels:          []uint64{100, 200, 300},
@@ -2227,10 +2267,9 @@ func TestUpscaleCap(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestUpscaleCapGreaterTMR 原方法名TestUpscaleCapGreaterThanMaxReplicas
-//
-// TestUpscaleCapGreaterTMR Test Up scale Cap Greater Than Max Replicas
-func TestUpscaleCapGreaterTMR(t *testing.T) {
+// TestUpscaleCapGreaterThanMaxReplicas Test Up scale Cap Greater Than Max Replicas
+// NOCC:tosa/fn_length(设计如此)
+func TestUpscaleCapGreaterThanMaxReplicas(t *testing.T) {
 	tc := testCase{
 		minReplicas:    1,
 		maxReplicas:    20,
@@ -2323,10 +2362,9 @@ func TestConditionInvalidSelectorMissing(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestConditionInvalidSU 原方法名TestConditionInvalidSelectorUnparsable
-//
-// TestConditionInvalidSU Test Condition Invalid Selector Unparsable
-func TestConditionInvalidSU(t *testing.T) {
+// TestConditionInvalidSelectorUnparsable Test Condition Invalid Selector Unparsable
+// NOCC:tosa/fn_length(设计如此)
+func TestConditionInvalidSelectorUnparsable(t *testing.T) {
 	tc := testCase{
 		minReplicas:             1,
 		maxReplicas:             100,
@@ -2364,7 +2402,7 @@ func TestConditionInvalidSU(t *testing.T) {
 			},
 			Status: autoscalinginternal.ScaleStatus{
 				Replicas: tc.specReplicas,
-				Selector: "cheddar=cheese",
+				Selector: "cheddar cheese",
 			},
 		}
 		return true, obj, nil
@@ -2696,12 +2734,11 @@ func TestStabilizeDownscale(t *testing.T) {
 	tc.runTest(t)
 }
 
-// TestComputedToleranceAI 原方法名 TestComputedToleranceAlgImplementation
-//
-// TestComputedToleranceAI is a regression test which
+// TestComputedToleranceAlgImplementation is a regression test which
 // back-calculates a minimal percentage for downscaling based on a small percentage
 // increase in pod utilization which is calibrated against the tolerance value.
-func TestComputedToleranceAI(t *testing.T) {
+// NOCC:tosa/fn_length(设计如此)
+func TestComputedToleranceAlgImplementation(t *testing.T) {
 
 	startPods := int32(10)
 	// 150 mCPU per pod.
@@ -3149,9 +3186,8 @@ func TestNoScaleDownOneMetricInvalid(t *testing.T) {
 		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
 		useMetricsAPI:       true,
 		expectedConditions: []autoscalingv1alpha1.GeneralPodAutoscalerCondition{
-			{Type: autoscalingv1alpha1.AbleToScale, Status: v1.ConditionTrue, Reason: "ScaleDownStabilized"},
-			{Type: autoscalingv1alpha1.ScalingActive, Status: v1.ConditionTrue, Reason: "ValidMetricFound"},
-			{Type: autoscalingv1alpha1.ScalingLimited, Status: v1.ConditionFalse, Reason: "DesiredWithinRange"},
+			{Type: autoscalingv1alpha1.AbleToScale, Status: v1.ConditionTrue, Reason: "SucceededGetScale"},
+			{Type: autoscalingv1alpha1.ScalingActive, Status: v1.ConditionFalse, Reason: "InvalidMetricSourceType"},
 		},
 	}
 
@@ -3184,9 +3220,8 @@ func TestNoScaleDownOneMetricEmpty(t *testing.T) {
 		reportedCPURequests: []resource.Quantity{resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0"), resource.MustParse("1.0")},
 		useMetricsAPI:       true,
 		expectedConditions: []autoscalingv1alpha1.GeneralPodAutoscalerCondition{
-			{Type: autoscalingv1alpha1.AbleToScale, Status: v1.ConditionTrue, Reason: "ScaleDownStabilized"},
-			{Type: autoscalingv1alpha1.ScalingActive, Status: v1.ConditionTrue, Reason: "ValidMetricFound"},
-			{Type: autoscalingv1alpha1.ScalingLimited, Status: v1.ConditionFalse, Reason: "DesiredWithinRange"},
+			{Type: autoscalingv1alpha1.AbleToScale, Status: v1.ConditionTrue, Reason: "SucceededGetScale"},
+			{Type: autoscalingv1alpha1.ScalingActive, Status: v1.ConditionFalse, Reason: "FailedGetExternalMetric"},
 		},
 	}
 	_, _, _, testEMClient, _, _ := tc.prepareTestClient(t)
@@ -3212,4 +3247,21 @@ func testScheme() *runtime.Scheme {
 		Version: "v1",
 	}, &v1.Pod{}, &v1.PodList{}, &v1.Event{}, &v1.EventList{}, &v1.ReplicationController{}, &v1.ReplicationControllerList{})
 	return s
+}
+
+func generateScalingRules(pods, podsPeriod, percent, percentPeriod, stabilizationWindow int32) *autoscalingv1alpha1.GPAScalingRules {
+	policy := autoscalingv1alpha1.MaxPolicySelect
+	directionBehavior := autoscalingv1alpha1.GPAScalingRules{
+		StabilizationWindowSeconds: pointer.Int32(stabilizationWindow),
+		SelectPolicy:               &policy,
+	}
+	if pods != 0 {
+		directionBehavior.Policies = append(directionBehavior.Policies,
+			autoscalingv1alpha1.GPAScalingPolicy{Type: autoscalingv1alpha1.PodsScalingPolicy, Value: pods, PeriodSeconds: podsPeriod})
+	}
+	if percent != 0 {
+		directionBehavior.Policies = append(directionBehavior.Policies,
+			autoscalingv1alpha1.GPAScalingPolicy{Type: autoscalingv1alpha1.PercentScalingPolicy, Value: percent, PeriodSeconds: percentPeriod})
+	}
+	return &directionBehavior
 }

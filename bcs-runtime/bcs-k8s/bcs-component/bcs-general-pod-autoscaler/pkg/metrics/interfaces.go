@@ -13,6 +13,7 @@
 package metrics
 
 import (
+	"context"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -37,7 +38,7 @@ type PodMetricsInfo map[string]PodMetric
 type MetricsClient interface {
 	// GetResourceMetric gets the given resource metric (and an associated oldest timestamp)
 	// for all pods matching the specified selector in the given namespace
-	GetResourceMetric(resource v1.ResourceName, namespace string, selector labels.Selector,
+	GetResourceMetric(ctx context.Context, resource v1.ResourceName, namespace string, selector labels.Selector,
 		container string) (PodMetricsInfo, time.Time, error)
 
 	// GetRawMetric gets the given metric (and an associated oldest timestamp)

@@ -21,7 +21,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/spf13/pflag"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apiserver/pkg/server"
@@ -35,7 +34,7 @@ import (
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 	componentbaseconfig "k8s.io/component-base/config"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 	resourceclient "k8s.io/metrics/pkg/client/clientset/versioned/typed/metrics/v1beta1"
 	"k8s.io/metrics/pkg/client/custom_metrics"
 	"k8s.io/metrics/pkg/client/external_metrics"
@@ -45,6 +44,7 @@ import (
 	autoscalingclient "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/clientset/versioned"
 	autoscalinginformer "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/client/informers/externalversions"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/monitor"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/scaler"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/version"
 )
@@ -58,14 +58,16 @@ const (
 var (
 	metricServerAddress string
 	metricPort          uint
+	leaderElect         bool
 )
 
+// main TODO
 // nolint funlen
 func main() {
 	runConfig := app.NewServerRunOptions()
 	options := validator.NewServerRunOptions()
-	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
-	pflag.Parse()
+	klog.InitFlags(nil)
+	flag.Parse()
 	defer klog.Flush()
 	version.Print()
 
@@ -151,45 +153,49 @@ func main() {
 		}
 	}()
 	run := func(ctx context.Context) {
-		controller.Run(ctx.Done())
+		controller.Run(ctx)
 	}
-	var metricsServer metrics.PrometheusMetricServer
+	var metricsServer monitor.PrometheusMetricServer
 	addr := metricServerAddress + ":" + strconv.Itoa(int(metricPort))
 	go metricsServer.NewServer(addr, "/metrics")
 	id, err := os.Hostname()
 	if err != nil {
 		klog.Fatalf("Unable to get hostname: %v", err)
 	}
-
-	lock, err := resourcelock.New(
-		leaderElection.ResourceLock,
-		runConfig.ElectionNamespace,
-		runConfig.ElectionName,
-		client.CoreV1(),
-		client.CoordinationV1(),
-		resourcelock.ResourceLockConfig{
-			Identity: id,
-		},
-	)
-	if err != nil {
-		klog.Fatalf("Unable to create leader election lock: %v", err)
+	if !leaderElect {
+		run(ctx)
+	} else {
+		lock, err := resourcelock.New(
+			leaderElection.ResourceLock,
+			runConfig.ElectionNamespace,
+			runConfig.ElectionName,
+			client.CoreV1(),
+			client.CoordinationV1(),
+			resourcelock.ResourceLockConfig{
+				Identity: id,
+			},
+		)
+		if err != nil {
+			klog.Fatalf("Unable to create leader election lock: %v", err)
+		}
+		leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+			Lock:          lock,
+			LeaseDuration: leaderElection.LeaseDuration.Duration,
+			RenewDeadline: leaderElection.RenewDeadline.Duration,
+			RetryPeriod:   leaderElection.RetryPeriod.Duration,
+			Callbacks: leaderelection.LeaderCallbacks{
+				OnStartedLeading: func(ctx context.Context) {
+					// Since we are committing a suicide after losing
+					// mastership, we can safely ignore the argument.
+					run(ctx)
+				},
+				OnStoppedLeading: func() {
+					klog.Fatalf("lost master")
+				},
+			},
+		})
 	}
-	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
-		Lock:          lock,
-		LeaseDuration: leaderElection.LeaseDuration.Duration,
-		RenewDeadline: leaderElection.RenewDeadline.Duration,
-		RetryPeriod:   leaderElection.RetryPeriod.Duration,
-		Callbacks: leaderelection.LeaderCallbacks{
-			OnStartedLeading: func(ctx context.Context) {
-				// Since we are committing a suicide after losing
-				// mastership, we can safely ignore the argument.
-				run(ctx)
-			},
-			OnStoppedLeading: func() {
-				klog.Fatalf("lost master")
-			},
-		},
-	})
+
 }
 
 func defaultLeaderElectionConfiguration() componentbaseconfig.LeaderElectionConfiguration {
@@ -203,6 +209,7 @@ func defaultLeaderElectionConfiguration() componentbaseconfig.LeaderElectionConf
 }
 
 func init() {
-	pflag.StringVar(&metricServerAddress, "metric-server-address", "0.0.0.0", "http metric server address")
-	pflag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
+	flag.StringVar(&metricServerAddress, "metric-server-address", "0.0.0.0", "http metric server address")
+	flag.UintVar(&metricPort, "metric-port", 10251, "prometheus metrics port")
+	flag.BoolVar(&leaderElect, "leader-elect", true, "use leader election")
 }
