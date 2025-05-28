@@ -210,7 +210,7 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.22.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.22.0
 	k8s.io/apiserver => k8s.io/apiserver v0.22.0
-	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20230605062414-0c6b329e9ef7
+	k8s.io/autoscaler/cluster-autoscaler => github.com/OvertimeDog/cluster-autoscaler v0.0.0-20250526080722-cee925853e17
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.22.0
 	k8s.io/client-go => k8s.io/client-go v0.22.0
 	k8s.io/cloud-provider => k8s.io/cloud-provider v0.22.0

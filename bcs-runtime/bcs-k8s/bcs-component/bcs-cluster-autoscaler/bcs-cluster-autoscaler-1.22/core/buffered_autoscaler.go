@@ -16,6 +16,7 @@ package core
 import (
 	ctx "context"
 	"fmt"
+	"reflect"
 	"sort"
 	"time"
 
@@ -140,8 +141,8 @@ func NewBufferedAutoscaler(
 	cloudProvider cloudprovider.CloudProvider,
 	expanderStrategy expander.Strategy,
 	estimatorBuilder estimatorinternal.ExtendedEstimatorBuilder,
-	backoff backoff.Backoff) core.Autoscaler {
-
+	backoff backoff.Backoff,
+) core.Autoscaler {
 	processorCallbacks := newBufferedAutoscalerProcessorCallbacks()
 	autoscalingContext := contextinternal.NewAutoscalingContext(opts, predicateChecker,
 		clusterSnapshot, autoscalingKubeClients, cloudProvider, expanderStrategy,
@@ -236,7 +237,8 @@ func (b *BufferedAutoscaler) cleanUpIfRequired() {
 }
 
 func (b *BufferedAutoscaler) initializeClusterSnapshot(nodes []*apiv1.Node,
-	scheduledPods []*apiv1.Pod) errors.AutoscalerError {
+	scheduledPods []*apiv1.Pod,
+) errors.AutoscalerError {
 	b.ClusterSnapshot.Clear()
 
 	knownNodes := make(map[string]bool)
@@ -423,7 +425,8 @@ func (b *BufferedAutoscaler) preRun(currentTime time.Time) ([]*corev1.Node, []*c
 }
 
 func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.AutoscalingContext,
-	currentTime time.Time, scaleDown *ScaleDown, allNodes []*apiv1.Node) (bool, errors.AutoscalerError) {
+	currentTime time.Time, scaleDown *ScaleDown, allNodes []*apiv1.Node,
+) (bool, errors.AutoscalerError) {
 	// Check if there are any nodes that failed to register in Kubernetes
 	// master.
 	unregisteredNodes := b.clusterStateRegistry.GetUnregisteredNodes()
@@ -472,7 +475,8 @@ func (b *BufferedAutoscaler) checkClusterState(autoscalingContext *context.Autos
 func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Context,
 	currentTime time.Time, allNodes []*corev1.Node, readyNodes []*corev1.Node,
 	nodeInfosForGroups map[string]*schedulerframework.NodeInfo,
-	daemonsets []*appsv1.DaemonSet) (*status.ScaleUpStatus, bool, errors.AutoscalerError) {
+	daemonsets []*appsv1.DaemonSet,
+) (*status.ScaleUpStatus, bool, errors.AutoscalerError) {
 	var scaleUpStatusProcessorAlreadyCalled bool
 	var typedErr errors.AutoscalerError
 	scaleUpStatus := &status.ScaleUpStatus{Result: status.ScaleUpNotTried}
@@ -540,11 +544,11 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/eni-ip")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "tke.cloud.tencent.com/direct-eni")
 			delete(pod.Spec.InitContainers[j].Resources.Requests, "ephemeral-storage")
-			delete(pod.Spec.Containers[j].Resources.Requests, "bkbcs.tencent.com/cpuset")
-			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/diskIO")
-			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/disk")
-			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/netIO")
-			delete(pod.Spec.Containers[j].Resources.Requests, "extend.resource/other")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "bkbcs.tencent.com/cpuset")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "extend.resource/diskIO")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "extend.resource/disk")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "extend.resource/netIO")
+			delete(pod.Spec.InitContainers[j].Resources.Requests, "extend.resource/other")
 		}
 		prunedUnschedulablePods = append(prunedUnschedulablePods, pod)
 	}
@@ -608,7 +612,8 @@ func (b *BufferedAutoscaler) doScaleUp(autoscalingContext *contextinternal.Conte
 // nolint funlen
 func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.AutoscalingContext,
 	currentTime time.Time, allNodes []*corev1.Node) (
-	*status.ScaleDownStatus, bool, errors.AutoscalerError) {
+	*status.ScaleDownStatus, bool, errors.AutoscalerError,
+) {
 	scaleDown := b.scaleDown
 
 	scaleDownStatus := &status.ScaleDownStatus{Result: status.ScaleDownNotTried}
@@ -714,7 +719,8 @@ func (b *BufferedAutoscaler) doScaleDown(autoscalingContext *context.Autoscaling
 }
 
 func (b *BufferedAutoscaler) processNodes(autoscalingContext *context.AutoscalingContext, allNodes []*apiv1.Node) (
-	[]*apiv1.Node, []*apiv1.Node, errors.AutoscalerError) {
+	[]*apiv1.Node, []*apiv1.Node, errors.AutoscalerError,
+) {
 	var scaleDownCandidates []*apiv1.Node
 	var podDestinations []*apiv1.Node
 
@@ -760,6 +766,10 @@ func (b *BufferedAutoscaler) deleteCreatedNodesWithErrors(allNodes []*apiv1.Node
 				id = node.Name
 			}
 			klog.Warningf("Cannot determine nodeGroup for node %v; %v", id, err)
+			continue
+		}
+		if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
+			klog.Warningf("Skipped %s from delete with errors consideration - the node is not autoscaled", node.Name)
 			continue
 		}
 		nodesToBeDeletedByNodeGroupID[nodeGroup.Id()] = append(nodesToBeDeletedByNodeGroupID[nodeGroup.Id()], node)
@@ -855,7 +865,8 @@ func (b *BufferedAutoscaler) nodeGroupsByID() map[string]cloudprovider.NodeGroup
 // filterOutYoungPods TODO
 // don't consider pods newer than newPodScaleUpDelay seconds old as unschedulable
 func (b *BufferedAutoscaler) filterOutYoungPods(allUnschedulablePods []*corev1.Pod,
-	currentTime time.Time) []*corev1.Pod {
+	currentTime time.Time,
+) []*corev1.Pod {
 	var oldUnschedulablePods []*corev1.Pod
 	newPodScaleUpDelay := b.AutoscalingOptions.NewPodScaleUpDelay
 	for _, pod := range allUnschedulablePods {
@@ -864,7 +875,6 @@ func (b *BufferedAutoscaler) filterOutYoungPods(allUnschedulablePods []*corev1.P
 			oldUnschedulablePods = append(oldUnschedulablePods, pod)
 		} else {
 			klog.V(3).Infof("Pod %s is %.3f seconds old, too new to consider unschedulable", pod.Name, podAge.Seconds())
-
 		}
 	}
 	return oldUnschedulablePods
@@ -887,7 +897,8 @@ func (b *BufferedAutoscaler) ExitCleanUp() {
 // obtainNodeLists TODO
 // nolint
 func (b *BufferedAutoscaler) obtainNodeLists(cp cloudprovider.CloudProvider) ([]*corev1.Node, []*corev1.Node,
-	errors.AutoscalerError) {
+	errors.AutoscalerError,
+) {
 	allNodes, err := b.AllNodeLister().List()
 	if err != nil {
 		klog.Errorf("Failed to list all nodes: %v", err)
@@ -930,7 +941,8 @@ func (b *BufferedAutoscaler) actOnEmptyCluster(allNodes, readyNodes []*corev1.No
 }
 
 func (b *BufferedAutoscaler) updateClusterState(allNodes []*corev1.Node,
-	nodeInfosForGroups map[string]*schedulerframework.NodeInfo, currentTime time.Time) errors.AutoscalerError {
+	nodeInfosForGroups map[string]*schedulerframework.NodeInfo, currentTime time.Time,
+) errors.AutoscalerError {
 	err := b.clusterStateRegistry.UpdateNodes(allNodes, nodeInfosForGroups, currentTime)
 	if err != nil {
 		klog.Errorf("Failed to update node registry: %v", err)

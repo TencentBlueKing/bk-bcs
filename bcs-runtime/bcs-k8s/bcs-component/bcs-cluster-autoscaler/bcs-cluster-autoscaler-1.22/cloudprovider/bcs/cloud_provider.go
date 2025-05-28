@@ -33,14 +33,12 @@ const (
 	ProviderName = "bcs"
 )
 
-var (
-	availableGPUTypes = map[string]struct{}{
-		"Tesla-P4": {},
-		"M40":      {},
-		"P100":     {},
-		"V100":     {},
-	}
-)
+var availableGPUTypes = map[string]struct{}{
+	"Tesla-P4": {},
+	"M40":      {},
+	"P100":     {},
+	"V100":     {},
+}
 
 // var gpuName = "alpha.kubernetes.io/nvidia-gpu"
 
@@ -54,7 +52,8 @@ type Provider struct {
 
 // BuildCloudProvider builds a cloud Provider.
 func BuildCloudProvider(opts scalingconfig.Options, do cloudprovider.NodeGroupDiscoveryOptions,
-	rl *cloudprovider.ResourceLimiter) cloudprovider.CloudProvider {
+	rl *cloudprovider.ResourceLimiter,
+) cloudprovider.CloudProvider {
 	var (
 		cache      *NodeGroupCache
 		client     clustermanager.NodePoolClientInterface
@@ -96,7 +95,8 @@ func BuildCloudProvider(opts scalingconfig.Options, do cloudprovider.NodeGroupDi
 // BuildBcsCloudProvider builds CloudProvider implementation for Bcs.
 func BuildBcsCloudProvider(cache *NodeGroupCache, client clustermanager.NodePoolClientInterface,
 	discoveryOpts cloudprovider.NodeGroupDiscoveryOptions, resourceLimiter *cloudprovider.ResourceLimiter) (
-	cloudprovider.CloudProvider, error) {
+	cloudprovider.CloudProvider, error,
+) {
 	taskChecker = NewTaskChecker(client)
 	if discoveryOpts.StaticDiscoverySpecified() {
 		cloud := &Provider{
@@ -161,7 +161,7 @@ func (cloud *Provider) NodeGroupForNode(node *apiv1.Node) (cloudprovider.NodeGro
 
 	if group == nil {
 		klog.V(6).Infof("Instance %v, node(%s) is not found in any group", ref, node.Name)
-		return group, err
+		return nil, nil
 	}
 	return group, nil
 }
@@ -180,7 +180,8 @@ func (cloud *Provider) GetAvailableMachineTypes() ([]string, error) {
 // The node group is not automatically created on the cloud Provider side.
 // The node group is not returned by NodeGroups() until it is created.
 func (cloud *Provider) NewNodeGroup(machineType string, labels map[string]string, systemLabels map[string]string,
-	taints []apiv1.Taint, extraResources map[string]resource.Quantity) (cloudprovider.NodeGroup, error) {
+	taints []apiv1.Taint, extraResources map[string]resource.Quantity,
+) (cloudprovider.NodeGroup, error) {
 	return nil, cloudprovider.ErrNotImplemented
 }
 
