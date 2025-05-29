@@ -135,6 +135,45 @@ func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) 
 				}
 				return nil
 			}(),
+			GPUArgs: func() *tke.GPUArgs {
+				if advancedSetting != nil && advancedSetting.GPUArgs != nil {
+					gpuArgs := &tke.GPUArgs{
+						MIGEnable: common.BoolPtr(advancedSetting.GPUArgs.MIGEnable),
+					}
+
+					if advancedSetting.GPUArgs.Driver != nil {
+						gpuArgs.Driver = &tke.DriverVersion{
+							Version: common.StringPtr(advancedSetting.GPUArgs.Driver.Version),
+							Name:    common.StringPtr(advancedSetting.GPUArgs.Driver.Name),
+						}
+					}
+
+					if advancedSetting.GPUArgs.CUDA != nil {
+						gpuArgs.CUDA = &tke.DriverVersion{
+							Version: common.StringPtr(advancedSetting.GPUArgs.CUDA.Version),
+							Name:    common.StringPtr(advancedSetting.GPUArgs.CUDA.Name),
+						}
+					}
+
+					if advancedSetting.GPUArgs.CUDNN != nil {
+						gpuArgs.CUDNN = &tke.CUDNN{
+							Version: common.StringPtr(advancedSetting.GPUArgs.CUDNN.Version),
+							Name:    common.StringPtr(advancedSetting.GPUArgs.CUDNN.Name),
+							DevName: common.StringPtr(advancedSetting.GPUArgs.CUDNN.DevName),
+							DocName: common.StringPtr(advancedSetting.GPUArgs.CUDNN.DocName),
+						}
+					}
+
+					if advancedSetting.GPUArgs.CustomDriver != nil {
+						gpuArgs.CustomDriver = &tke.CustomDriver{
+							Address: common.StringPtr(advancedSetting.GPUArgs.CustomDriver.Address),
+						}
+					}
+
+					return gpuArgs
+				}
+				return nil
+			}(),
 		}
 
 		return advancedSet

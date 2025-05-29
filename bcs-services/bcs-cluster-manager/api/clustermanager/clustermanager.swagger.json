@@ -4066,6 +4066,13 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "isForce",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
           }
         ],
         "tags": [
@@ -7767,6 +7774,31 @@
         }
       }
     },
+    "clustermanagerCUDNN": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "cuDNN的版本",
+          "title": "version"
+        },
+        "name": {
+          "type": "string",
+          "description": "cuDNN的名字",
+          "title": "name"
+        },
+        "docName": {
+          "type": "string",
+          "description": "cuDNN的Doc名字",
+          "title": "docName"
+        },
+        "devName": {
+          "type": "string",
+          "description": "cuDNN的Dev名字",
+          "title": "devName"
+        }
+      }
+    },
     "clustermanagerCheckCidrConflictFromVpcResponse": {
       "type": "object",
       "properties": {
@@ -11222,6 +11254,16 @@
           "$ref": "#/definitions/clustermanagerMapStruct",
           "description": "用户设置节点annotations",
           "title": "annotations"
+        },
+        "imageInfo": {
+          "$ref": "#/definitions/clustermanagerImageInfo",
+          "description": "节点模板镜像信息",
+          "title": "ImageInfo"
+        },
+        "gpuArgs": {
+          "$ref": "#/definitions/clustermanagerGPUArgs",
+          "description": "GPU参数信息",
+          "title": "GPUArgs"
         }
       },
       "description": "创建节点模板",
@@ -11712,6 +11754,16 @@
       },
       "description": "用于记录云账户信息, 包含全量云账号配置",
       "title": "Credential"
+    },
+    "clustermanagerCustomDriver": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "自定义GPU驱动地址链接",
+          "title": "address"
+        }
+      }
     },
     "clustermanagerDataDisk": {
       "type": "object",
@@ -12378,6 +12430,21 @@
         }
       }
     },
+    "clustermanagerDriverVersion": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "节点模版镜像信息",
+          "title": "version"
+        },
+        "name": {
+          "type": "string",
+          "description": "节点模版镜像信息",
+          "title": "name"
+        }
+      }
+    },
     "clustermanagerEnableNodeGroupAutoScaleRequest": {
       "type": "object",
       "properties": {
@@ -12487,6 +12554,37 @@
           "format": "boolean",
           "description": "集群是否支持弹性伸缩, 在云支持弹性伸缩的前提下, 某些类型集群支持弹性伸缩",
           "title": "autoScale"
+        }
+      }
+    },
+    "clustermanagerGPUArgs": {
+      "type": "object",
+      "properties": {
+        "migEnable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否启用MIG特性",
+          "title": "MIGEnable"
+        },
+        "driver": {
+          "$ref": "#/definitions/clustermanagerDriverVersion",
+          "description": "GPU驱动版本信息",
+          "title": "driver"
+        },
+        "cuda": {
+          "$ref": "#/definitions/clustermanagerDriverVersion",
+          "description": "CUDA版本信息",
+          "title": "CUDA"
+        },
+        "cudnn": {
+          "$ref": "#/definitions/clustermanagerCUDNN",
+          "description": "cuDNN版本信息",
+          "title": "cuDNN"
+        },
+        "customDriver": {
+          "$ref": "#/definitions/clustermanagerCustomDriver",
+          "description": "自定义GPU驱动信息",
+          "title": "customDriver"
         }
       }
     },
@@ -16757,6 +16855,12 @@
           "type": "string",
           "description": "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像",
           "title": "nodeOs"
+        },
+        "isGPUNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否GPU节点",
+          "title": "isGPUNode"
         }
       }
     },
@@ -17543,6 +17647,11 @@
           "$ref": "#/definitions/clustermanagerImageInfo",
           "description": "节点模版镜像信息",
           "title": "image"
+        },
+        "gpuArgs": {
+          "$ref": "#/definitions/clustermanagerGPUArgs",
+          "description": "GPU参数信息",
+          "title": "GPUArgs"
         }
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",

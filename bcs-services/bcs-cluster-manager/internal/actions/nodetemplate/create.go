@@ -111,6 +111,8 @@ func (ca *CreateAction) createNodeTemplate() error {
 			}
 			return ca.req.Annotations.Values
 		}(),
+		Image:   ca.req.ImageInfo,
+		GpuArgs: ca.req.GpuArgs,
 	}
 
 	return ca.model.CreateNodeTemplate(ca.ctx, nodeTemplate)

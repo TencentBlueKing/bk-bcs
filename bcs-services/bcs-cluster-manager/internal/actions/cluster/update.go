@@ -858,6 +858,23 @@ func (ua *AddNodesAction) cloudCheckValidate() error {
 	return nil
 }
 
+func (ua *AddNodesAction) checkNodesInstanceType() error {
+	// use first node as base type
+	if len(ua.nodes) > 0 {
+		baseType := ua.nodes[0].InstanceType
+
+		// check all nodes have same InstanceType
+		for i, node := range ua.nodes {
+			if node.InstanceType != baseType {
+				return fmt.Errorf("node[%d] has different InstanceType[%s]",
+					i, node.InstanceType)
+			}
+		}
+	}
+
+	return nil
+}
+
 // validate check
 func (ua *AddNodesAction) validate() error {
 	if err := ua.req.Validate(); err != nil {
@@ -899,6 +916,16 @@ func (ua *AddNodesAction) validate() error {
 	err = ua.transCloudNodeToDNodes()
 	if err != nil {
 		return err
+	}
+
+	if ua.req.Advance != nil && ua.req.Advance.GetIsGPUNode() {
+		if ua.req.GetNodeTemplateID() == "" {
+			return fmt.Errorf("add nodes failed: GPUNode nodeTemplateID is empty")
+		}
+		err = ua.checkNodesInstanceType()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -2245,6 +2245,110 @@ var _ interface {
 	ErrorName() string
 } = NodeLoginInfoValidationError{}
 
+// Validate checks the field values on NodeAdvancedInfo with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *NodeAdvancedInfo) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on NodeAdvancedInfo with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// NodeAdvancedInfoMultiError, or nil if none found.
+func (m *NodeAdvancedInfo) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *NodeAdvancedInfo) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for NodeOs
+
+	// no validation rules for IsGPUNode
+
+	if len(errors) > 0 {
+		return NodeAdvancedInfoMultiError(errors)
+	}
+
+	return nil
+}
+
+// NodeAdvancedInfoMultiError is an error wrapping multiple validation errors
+// returned by NodeAdvancedInfo.ValidateAll() if the designated constraints
+// aren't met.
+type NodeAdvancedInfoMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m NodeAdvancedInfoMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m NodeAdvancedInfoMultiError) AllErrors() []error { return m }
+
+// NodeAdvancedInfoValidationError is the validation error returned by
+// NodeAdvancedInfo.Validate if the designated constraints aren't met.
+type NodeAdvancedInfoValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e NodeAdvancedInfoValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e NodeAdvancedInfoValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e NodeAdvancedInfoValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e NodeAdvancedInfoValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e NodeAdvancedInfoValidationError) ErrorName() string { return "NodeAdvancedInfoValidationError" }
+
+// Error satisfies the builtin error interface
+func (e NodeAdvancedInfoValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sNodeAdvancedInfo.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = NodeAdvancedInfoValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = NodeAdvancedInfoValidationError{}
+
 // Validate checks the field values on ClusterCredential with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -7999,7 +8103,7 @@ func (m *ListCloudVPCRequest) validate(all bool) error {
 	if _, ok := _ListCloudVPCRequest_NetworkType_InLookup[m.GetNetworkType()]; !ok {
 		err := ListCloudVPCRequestValidationError{
 			field:  "NetworkType",
-			reason: "value must be in list [overlay underlay all]",
+			reason: "value must be in list [overlay underlay]",
 		}
 		if !all {
 			return err
@@ -8092,7 +8196,6 @@ var _ interface {
 var _ListCloudVPCRequest_NetworkType_InLookup = map[string]struct{}{
 	"overlay":  {},
 	"underlay": {},
-	"all":      {},
 }
 
 // Validate checks the field values on ListCloudVPCResponse with the rules
@@ -12080,6 +12183,8 @@ func (m *ImageInfo) validate(all bool) error {
 
 	// no validation rules for ImageType
 
+	// no validation rules for ImageOs
+
 	if len(errors) > 0 {
 		return ImageInfoMultiError(errors)
 	}
@@ -12919,6 +13024,64 @@ func (m *NodeTemplate) validate(all bool) error {
 
 	// no validation rules for AllowSkipScaleInWhenFailed
 
+	if all {
+		switch v := interface{}(m.GetImage()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NodeTemplateValidationError{
+					field:  "Image",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NodeTemplateValidationError{
+					field:  "Image",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetImage()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "Image",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGpuArgs()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, NodeTemplateValidationError{
+					field:  "GpuArgs",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, NodeTemplateValidationError{
+					field:  "GpuArgs",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGpuArgs()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return NodeTemplateValidationError{
+				field:  "GpuArgs",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return NodeTemplateMultiError(errors)
 	}
@@ -13667,6 +13830,64 @@ func (m *CreateNodeTemplateRequest) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return CreateNodeTemplateRequestValidationError{
 				field:  "Annotations",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetImageInfo()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNodeTemplateRequestValidationError{
+					field:  "ImageInfo",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNodeTemplateRequestValidationError{
+					field:  "ImageInfo",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetImageInfo()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNodeTemplateRequestValidationError{
+				field:  "ImageInfo",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetGpuArgs()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, CreateNodeTemplateRequestValidationError{
+					field:  "GpuArgs",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, CreateNodeTemplateRequestValidationError{
+					field:  "GpuArgs",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetGpuArgs()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CreateNodeTemplateRequestValidationError{
+				field:  "GpuArgs",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -34527,6 +34748,35 @@ func (m *AddNodesRequest) validate(all bool) error {
 		}
 	}
 
+	if all {
+		switch v := interface{}(m.GetAdvance()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AddNodesRequestValidationError{
+					field:  "Advance",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AddNodesRequestValidationError{
+					field:  "Advance",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAdvance()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AddNodesRequestValidationError{
+				field:  "Advance",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return AddNodesRequestMultiError(errors)
 	}
@@ -34902,6 +35152,35 @@ func (m *AddNodesV2Request) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return AddNodesV2RequestValidationError{
 				field:  "Login",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetAdvance()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, AddNodesV2RequestValidationError{
+					field:  "Advance",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, AddNodesV2RequestValidationError{
+					field:  "Advance",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetAdvance()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return AddNodesV2RequestValidationError{
+				field:  "Advance",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -67914,3 +68193,530 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = GetClusterSharedProjectResponseValidationError{}
+
+// Validate checks the field values on GPUArgs with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *GPUArgs) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on GPUArgs with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in GPUArgsMultiError, or nil if none found.
+func (m *GPUArgs) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *GPUArgs) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for MigEnable
+
+	if all {
+		switch v := interface{}(m.GetDriver()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "Driver",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "Driver",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDriver()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GPUArgsValidationError{
+				field:  "Driver",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCuda()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "Cuda",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "Cuda",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCuda()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GPUArgsValidationError{
+				field:  "Cuda",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCudnn()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "Cudnn",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "Cudnn",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCudnn()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GPUArgsValidationError{
+				field:  "Cudnn",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetCustomDriver()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "CustomDriver",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, GPUArgsValidationError{
+					field:  "CustomDriver",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetCustomDriver()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return GPUArgsValidationError{
+				field:  "CustomDriver",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return GPUArgsMultiError(errors)
+	}
+
+	return nil
+}
+
+// GPUArgsMultiError is an error wrapping multiple validation errors returned
+// by GPUArgs.ValidateAll() if the designated constraints aren't met.
+type GPUArgsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m GPUArgsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m GPUArgsMultiError) AllErrors() []error { return m }
+
+// GPUArgsValidationError is the validation error returned by GPUArgs.Validate
+// if the designated constraints aren't met.
+type GPUArgsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e GPUArgsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e GPUArgsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e GPUArgsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e GPUArgsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e GPUArgsValidationError) ErrorName() string { return "GPUArgsValidationError" }
+
+// Error satisfies the builtin error interface
+func (e GPUArgsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sGPUArgs.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = GPUArgsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = GPUArgsValidationError{}
+
+// Validate checks the field values on DriverVersion with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *DriverVersion) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on DriverVersion with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in DriverVersionMultiError, or
+// nil if none found.
+func (m *DriverVersion) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *DriverVersion) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Version
+
+	// no validation rules for Name
+
+	if len(errors) > 0 {
+		return DriverVersionMultiError(errors)
+	}
+
+	return nil
+}
+
+// DriverVersionMultiError is an error wrapping multiple validation errors
+// returned by DriverVersion.ValidateAll() if the designated constraints
+// aren't met.
+type DriverVersionMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m DriverVersionMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m DriverVersionMultiError) AllErrors() []error { return m }
+
+// DriverVersionValidationError is the validation error returned by
+// DriverVersion.Validate if the designated constraints aren't met.
+type DriverVersionValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e DriverVersionValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e DriverVersionValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e DriverVersionValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e DriverVersionValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e DriverVersionValidationError) ErrorName() string { return "DriverVersionValidationError" }
+
+// Error satisfies the builtin error interface
+func (e DriverVersionValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sDriverVersion.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = DriverVersionValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = DriverVersionValidationError{}
+
+// Validate checks the field values on CUDNN with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CUDNN) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CUDNN with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in CUDNNMultiError, or nil if none found.
+func (m *CUDNN) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CUDNN) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Version
+
+	// no validation rules for Name
+
+	// no validation rules for DocName
+
+	// no validation rules for DevName
+
+	if len(errors) > 0 {
+		return CUDNNMultiError(errors)
+	}
+
+	return nil
+}
+
+// CUDNNMultiError is an error wrapping multiple validation errors returned by
+// CUDNN.ValidateAll() if the designated constraints aren't met.
+type CUDNNMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CUDNNMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CUDNNMultiError) AllErrors() []error { return m }
+
+// CUDNNValidationError is the validation error returned by CUDNN.Validate if
+// the designated constraints aren't met.
+type CUDNNValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CUDNNValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CUDNNValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CUDNNValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CUDNNValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CUDNNValidationError) ErrorName() string { return "CUDNNValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CUDNNValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCUDNN.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CUDNNValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CUDNNValidationError{}
+
+// Validate checks the field values on CustomDriver with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *CustomDriver) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on CustomDriver with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in CustomDriverMultiError, or
+// nil if none found.
+func (m *CustomDriver) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *CustomDriver) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Address
+
+	if len(errors) > 0 {
+		return CustomDriverMultiError(errors)
+	}
+
+	return nil
+}
+
+// CustomDriverMultiError is an error wrapping multiple validation errors
+// returned by CustomDriver.ValidateAll() if the designated constraints aren't met.
+type CustomDriverMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m CustomDriverMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m CustomDriverMultiError) AllErrors() []error { return m }
+
+// CustomDriverValidationError is the validation error returned by
+// CustomDriver.Validate if the designated constraints aren't met.
+type CustomDriverValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CustomDriverValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CustomDriverValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CustomDriverValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CustomDriverValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CustomDriverValidationError) ErrorName() string { return "CustomDriverValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CustomDriverValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCustomDriver.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CustomDriverValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CustomDriverValidationError{}

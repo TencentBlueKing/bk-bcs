@@ -381,6 +381,8 @@ type InstanceAdvancedSettings struct {
 	PreStartUserScript string `json:"preStartUserScript"`
 	// TaintList 节点污点
 	TaintList []*Taint `json:"taintList"`
+	// GPUArgs GPU参数信息
+	GPUArgs *GPUArgs `json:"GPUArgs"`
 }
 
 // KeyValue struct(name/value)
@@ -1676,4 +1678,44 @@ type ZoneInfo struct {
 	Zone      string
 	ZoneName  string
 	ZoneState string
+}
+
+// GPUArgs gpu 参数
+type GPUArgs struct {
+	// 是否启用MIG特性
+	MIGEnable bool `json:"MIGEnable,omitempty" name:"MIGEnable"`
+	// GPU驱动版本信息
+	Driver *DriverVersion `json:"Driver,omitempty" name:"Driver"`
+	// CUDA版本信息
+	CUDA *DriverVersion `json:"CUDA,omitempty" name:"CUDA"`
+	// cuDNN版本信息
+	CUDNN *CUDNN `json:"CUDNN,omitempty" name:"CUDNN"`
+	// 自定义GPU驱动信息
+	CustomDriver *CustomDriver `json:"CustomDriver,omitempty" name:"CustomDriver"`
+}
+
+// DriverVersion driver version
+type DriverVersion struct {
+	// GPU驱动或者CUDA的版本
+	Version string `json:"Version,omitempty" name:"Version"`
+	// GPU驱动或者CUDA的名字
+	Name string `json:"Name,omitempty" name:"Name"`
+}
+
+// CUDNN cudnn
+type CUDNN struct {
+	// cuDNN的版本
+	Version string `json:"Version,omitempty" name:"Version"`
+	// cuDNN的名字
+	Name string `json:"Name,omitempty" name:"Name"`
+	// cuDNN的Doc名字
+	DocName string `json:"DocName,omitempty" name:"DocName"`
+	// cuDNN的Dev名字
+	DevName string `json:"DevName,omitempty" name:"DevName"`
+}
+
+// CustomDriver custom driver
+type CustomDriver struct {
+	// 自定义GPU驱动地址链接
+	Address string `json:"Address,omitempty" name:"Address"`
 }

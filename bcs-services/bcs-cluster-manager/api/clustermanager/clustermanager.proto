@@ -2159,6 +2159,10 @@ message NodeAdvancedInfo {
     title: "nodeOs",
     description: "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像"
   }];
+  bool isGPUNode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isGPUNode",
+    description: "是否GPU节点"
+  }];
 }
 
 message ClusterCredential {
@@ -4417,6 +4421,10 @@ message NodeTemplate {
     title: "image",
     description: "节点模版镜像信息"
   }];
+  GPUArgs gpuArgs = 34 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "GPUArgs",
+    description: "GPU参数信息"
+  }];
 }
 
 message ClusterModule {
@@ -4576,6 +4584,14 @@ message CreateNodeTemplateRequest {
   MapStruct annotations = 22 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "用户设置节点annotations"
+  }];
+  ImageInfo imageInfo = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "ImageInfo",
+    description: "节点模板镜像信息"
+  }];
+  GPUArgs gpuArgs = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "GPUArgs",
+    description: "GPU参数信息"
   }];
 }
 
@@ -15201,5 +15217,65 @@ message GetClusterSharedProjectResponse {
   google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "集群信息的SharedProject"
+  }];
+}
+
+message GPUArgs {
+  bool migEnable = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "MIGEnable",
+    description: "是否启用MIG特性"
+  }];
+  DriverVersion driver = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "driver",
+    description: "GPU驱动版本信息"
+  }];
+  DriverVersion cuda = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "CUDA",
+    description: "CUDA版本信息"
+  }];
+  CUDNN cudnn = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cuDNN",
+    description: "cuDNN版本信息"
+  }];
+  CustomDriver customDriver = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "customDriver",
+    description: "自定义GPU驱动信息"
+  }];
+}
+
+message DriverVersion {
+  string version = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "节点模版镜像信息"
+  }];
+  string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "节点模版镜像信息"
+  }];
+}
+
+message CUDNN {
+  string version = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "cuDNN的版本"
+  }];
+  string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "cuDNN的名字"
+  }];
+  string docName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "docName",
+    description: "cuDNN的Doc名字"
+  }];
+  string devName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "devName",
+    description: "cuDNN的Dev名字"
+  }];
+  }
+
+message CustomDriver {
+  string address = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "address",
+    description: "自定义GPU驱动地址链接"
   }];
 }
