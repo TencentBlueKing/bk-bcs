@@ -144,7 +144,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 					if p.opt.Synchronization {
 						pluginmanager.Pm.Lock()
 					}
-					go p.Check()
+					go p.Check(pluginmanager.CheckOption{})
 				} else {
 					klog.Infof("the former clustercheck didn't over, skip in this loop")
 				}
@@ -158,7 +158,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == pluginmanager.RunModeOnce {
-		p.Check()
+		p.Check(pluginmanager.CheckOption{})
 	}
 
 	return nil
@@ -179,7 +179,7 @@ func (p *Plugin) Name() string {
 func int64Ptr(i int64) *int64 { return &i }
 
 // Check check for cluster apiserver cert, control panael availability and store result
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	start := time.Now()
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
@@ -192,18 +192,37 @@ func (p *Plugin) Check() {
 		metricmanager.SetCommonDurationMetric([]string{"clustercheck", "", "", ""}, start)
 	}()
 
-	clusterConfigs := pluginmanager.Pm.GetConfig().ClusterConfigs
+	clusterConfigs := make(map[string]*pluginmanager.ClusterConfig)
+	if option.ClusterIDs == nil || len(option.ClusterIDs) == 0 {
+		clusterConfigs = pluginmanager.Pm.GetConfig().ClusterConfigs
+		// clean deleted cluster metric data
+	} else {
+		for _, clusterID := range option.ClusterIDs {
+			if cluster, ok := pluginmanager.Pm.GetConfig().ClusterConfigs[clusterID]; ok {
+				clusterConfigs[clusterID] = cluster
+			}
+		}
+	}
+
 	wg := sync.WaitGroup{}
 
 	// 遍历所有集群
 	for _, cluster := range clusterConfigs {
 		wg.Add(1)
-		pluginmanager.Pm.Add()
+		if len(option.ClusterIDs) > 0 {
+			pluginmanager.Pm.AddCheck()
+		} else {
+			pluginmanager.Pm.Add()
+		}
 
 		go func(cluster *pluginmanager.ClusterConfig) {
 			defer func() {
 				wg.Done()
-				pluginmanager.Pm.Done()
+				if len(option.ClusterIDs) > 0 {
+					pluginmanager.Pm.DoneCheck()
+				} else {
+					pluginmanager.Pm.Done()
+				}
 			}()
 
 			clusterId := cluster.ClusterID

@@ -123,9 +123,24 @@ func run(ctx context.Context) {
 
 	// start webserver
 	if bcro.RunMode == pluginmanager.RunModeDaemon {
+		// get cluster check report pdf
 		r.GET("cluster/:clusterID/pdf", func(c *gin.Context) {
 			clusterID := c.Param("clusterID")
-			pdf, reportErr := pluginmanager.GetClusterReport(clusterID, bcro.Plugins)
+
+			// init checkoption
+			var checkOption pluginmanager.CheckOption
+			if err = c.ShouldBindQuery(&checkOption); err != nil {
+				c.String(http.StatusInternalServerError, err.Error())
+				klog.Errorf(err.Error())
+				return
+			}
+
+			checkOption.ClusterIDs = []string{clusterID}
+			if checkOption.PluginStr == "" {
+				checkOption.PluginStr = bcro.Plugins
+			}
+
+			pdf, reportErr := pluginmanager.GetClusterReport(clusterID, checkOption)
 			if reportErr != nil {
 				c.String(404, fmt.Sprintf("cluster %s not found", clusterID))
 				return
@@ -194,7 +209,9 @@ func run(ctx context.Context) {
 		metricmanager.MM.SetEngine(r)
 	} else if bcro.RunMode == pluginmanager.RunModeOnce {
 		for _, clusterConfig := range pluginmanager.Pm.GetConfig().ClusterConfigs {
-			result := pluginmanager.Pm.GetClusterResult(bcro.Plugins, clusterConfig.ClusterID)
+			result := pluginmanager.Pm.GetClusterResult(clusterConfig.ClusterID, pluginmanager.CheckOption{
+				ClusterIDs: []string{clusterConfig.ClusterID},
+			})
 			data, _ := yaml.Marshal(result)
 			fmt.Println(string(data))
 		}
@@ -278,11 +295,12 @@ func getClusters() {
 		clusterConfigList = pluginmanager.Pm.GetConfig().ClusterConfigs
 	}
 
+	selecterMap := getLabelMap(bcro.LabelSelector)
 	// 从bcs获取BCS集群配置
 	if bcro.BcsGatewayApiserver != "" && bcro.BcsClusterManagerApiserver != "" && bcro.BcsGatewayToken != "" &&
 		bcro.BcsClusterManagerToken != "" {
 		bcsClusterConfigList, err := GetClusterConfigFromBCS(bcro.BcsClusterManagerToken,
-			bcro.BcsClusterManagerApiserver, bcro.BcsGatewayApiserver, bcro.BcsGatewayToken, clusterConfigList)
+			bcro.BcsClusterManagerApiserver, bcro.BcsGatewayApiserver, bcro.BcsGatewayToken, selecterMap, clusterConfigList)
 		if err != nil {
 			klog.Fatalf(err.Error())
 		}
@@ -296,6 +314,7 @@ func getClusters() {
 		if err != nil {
 			klog.Fatalf(err.Error())
 		}
+		klog.Infof("fileClusterConfigList: %v", fileClusterConfigList)
 		for key, value := range fileClusterConfigList {
 			clusterConfigList[key] = value
 		}
@@ -328,7 +347,7 @@ func getClusters() {
 }
 
 // GetClusterConfigFromBCS get clusterconfig from bcs api
-func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver, bcsGatewayApiserver, bcsGatewayToken string, existClusterConfigList map[string]*pluginmanager.ClusterConfig) (map[string]*pluginmanager.ClusterConfig, error) {
+func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver, bcsGatewayApiserver, bcsGatewayToken string, selectorMap map[string]string, existClusterConfigList map[string]*pluginmanager.ClusterConfig) (map[string]*pluginmanager.ClusterConfig, error) {
 	clusterConfigList := make(map[string]*pluginmanager.ClusterConfig)
 	bcsClusterManager, err := bcs.NewClusterManager(bcsClusterManagerToken, bcsClusterManagerApiserver,
 		bcsGatewayApiserver, bcsGatewayToken)
@@ -354,34 +373,15 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 			}
 		}
 	} else {
-	clusterloop:
 		for _, cluster := range clusterList {
 			if cluster.IsShared == true || cluster.Status != "RUNNING" || cluster.EngineType != "k8s" || (cluster.Environment == bcro.BcsClusterType && bcro.BcsClusterType != "") {
 				continue // 跳过公共集群的记录 跳过未就绪集群 跳过非K8S集群 以及匹配对应参数的集群
 			} else {
-				// 跳过master ip不正常的集群
-				for masterName, _ := range cluster.Master {
-					if strings.Contains(masterName, "127.0.0") {
-						// 跳过算力集群
-						continue clusterloop
-					}
+				// 判断是否需要检测该集群
+				if shouldCheckCluster(cluster, selectorMap) {
+					continue
 				}
-
-				if strings.Contains(cluster.ClusterName, "联邦") {
-					continue clusterloop
-				}
-
-				if cluster.CreateTime != "" {
-					createTime, err := time.Parse(time.RFC3339, cluster.CreateTime)
-					if err != nil {
-						klog.Errorf("parse cluster %s createtime failed %s", cluster.ClusterID, err.Error())
-						continue
-					}
-					// 创建时间超过10分钟才进行巡检
-					if (time.Now().Unix() - createTime.Unix()) > 60*30 {
-						filteredClusterList = append(filteredClusterList, cluster)
-					}
-				}
+				filteredClusterList = append(filteredClusterList, cluster)
 			}
 		}
 	}
@@ -433,7 +433,46 @@ func GetClusterConfigFromBCS(bcsClusterManagerToken, bcsClusterManagerApiserver,
 	return clusterConfigList, nil
 }
 
+func shouldCheckCluster(cluster cmproto.Cluster, selectorMap map[string]string) bool {
+	for masterName := range cluster.Master {
+		if strings.Contains(masterName, "127.0.0") {
+			// 跳过算力集群
+			return true
+		}
+	}
+
+	if value, ok := cluster.Labels["federation.bkbcs.tencent.com/is-fed-cluster"]; ok {
+		if value == "true" {
+			return true
+		}
+	}
+
+	if selectorMap != nil {
+		for key, value := range selectorMap {
+			if cluster.ExtraInfo[key] != value {
+				klog.Infof("label: %s=%s, value: %s", key, value, cluster.ExtraInfo[key])
+				return true
+			}
+		}
+	}
+
+	if cluster.CreateTime != "" {
+		createTime, err := time.Parse(time.RFC3339, cluster.CreateTime)
+		if err != nil {
+			klog.Errorf("parse cluster %s createtime failed %s", cluster.ClusterID, err.Error())
+			return true
+		}
+		// 创建时间超过10分钟才进行巡检
+		if (time.Now().Unix() - createTime.Unix()) < 60*30 {
+			return true
+		}
+	}
+
+	return false
+}
+
 // GetClusterInfo return ClusterConfig by parsing kubeconfig file
+// 后缀为config的文件会被读取
 func GetClusterInfo(kubeConfigDir string, existClusterConfigList map[string]*pluginmanager.ClusterConfig) (map[string]*pluginmanager.ClusterConfig, error) {
 	clusterConfigList := make(map[string]*pluginmanager.ClusterConfig)
 	var filePathList []string
@@ -448,6 +487,8 @@ func GetClusterInfo(kubeConfigDir string, existClusterConfigList map[string]*plu
 
 		if !info.IsDir() && strings.HasSuffix(info.Name(), "config") {
 			filePathList = append(filePathList, path)
+		} else {
+			klog.Infof("skip file: %s", path)
 		}
 		return nil
 	})
@@ -564,7 +605,7 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 	}
 
 	for _, node := range nodeList.Items {
-		for key, _ := range node.Labels {
+		for key := range node.Labels {
 			if key == "node-role.kubernetes.io/master" {
 				masterList = append(masterList, getIP(&node))
 			}
@@ -580,6 +621,7 @@ func GetClusterConfig(clusterID string, config *rest.Config) (*pluginmanager.Clu
 		MetricSet: metricsClient,
 		Master:    masterList,
 		NodeInfo:  nodeInfo,
+		NodeNum:   len(nodeList.Items),
 	}
 
 	// 检测集群得metricAPI是否可用，不可用置为nil
@@ -600,6 +642,26 @@ func getIP(node *v12.Node) string {
 		return address.Address
 	}
 	return ""
+}
+
+func getLabelMap(labelSelector string) map[string]string {
+	labelSelector = strings.TrimSpace(labelSelector)
+	if len(labelSelector) == 0 {
+		return nil
+	}
+	selectors := strings.Split(labelSelector, ",")
+
+	result := make(map[string]string)
+	for _, selector := range selectors {
+		seg := strings.Split(selector, "=")
+		if len(seg) != 2 || len(seg[0]) == 0 || len(seg[1]) == 0 {
+			return nil
+		} else {
+			result[seg[0]] = seg[1]
+		}
+	}
+
+	return result
 }
 
 func main() {

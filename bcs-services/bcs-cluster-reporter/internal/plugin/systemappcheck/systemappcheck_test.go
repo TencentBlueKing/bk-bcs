@@ -14,7 +14,10 @@
 package systemappcheck
 
 import (
+	"context"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	"k8s.io/klog/v2"
 	"testing"
 
 	v1 "k8s.io/api/apps/v1"
@@ -22,6 +25,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	runtime "k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func TestGetResourceGaugeVecSet(t *testing.T) {
@@ -69,4 +74,23 @@ func TestGetResourceGaugeVecSet(t *testing.T) {
 	fmt.Println(unstr.GetName())
 	fmt.Println(unstr.GetObjectKind().GroupVersionKind().Kind)
 	fmt.Println(unstr.GetObjectKind())
+}
+
+func TestCheckApiserverAudit(t *testing.T) {
+	config, err := clientcmd.BuildConfigFromFlags("", "/root/.kube/config")
+	if err != nil {
+		// 处理错误
+	}
+	cs, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		klog.Errorf(err.Error())
+		return
+	}
+
+	pod, _ := cs.CoreV1().Pods("kube-system").Get(context.Background(), "xxxxxxxxx", metav1.GetOptions{})
+
+	checkApiserverAudit(pod, "/etc/kubernetes/*.audit", &pluginmanager.ClusterConfig{
+		ClusterID: "test",
+		Config:    config,
+	})
 }

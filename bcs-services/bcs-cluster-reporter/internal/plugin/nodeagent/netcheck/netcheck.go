@@ -90,7 +90,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
-					go p.Check()
+					go p.Check(pluginmanager.CheckOption{})
 				} else {
 					klog.Infof("the former %s didn't over, skip in this loop", p.Name())
 				}
@@ -104,7 +104,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == pluginmanager.RunModeOnce {
-		p.Check()
+		p.Check(pluginmanager.CheckOption{})
 	}
 
 	return nil
@@ -125,7 +125,7 @@ func (p *Plugin) Name() string {
 }
 
 // Check xxx
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
@@ -432,7 +432,7 @@ func (p *Plugin) GetResult(string) pluginmanager.CheckResult {
 
 // Execute xxx
 func (p *Plugin) Execute() {
-	p.Check()
+	p.Check(pluginmanager.CheckOption{})
 }
 
 // GetDetail xxx

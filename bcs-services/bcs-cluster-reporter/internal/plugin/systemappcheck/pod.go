@@ -14,13 +14,19 @@
 package systemappcheck
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"k8s.io/klog"
+	"os"
+	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,12 +39,12 @@ import (
 )
 
 // CheckStaticPod check static pod config
-func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
+func CheckStaticPod(cluster *pluginmanager.ClusterConfig, deepCheck bool) ([]pluginmanager.CheckItem, []*metricmanager.GaugeVecSet, error) {
 	staticPodcache, ok := util.GetCache(cluster.ClusterID + "staticpod")
 	podList := make([]v1.Pod, 0, 0)
 	if ok {
 		staticPodNameList, ok1 := staticPodcache.([]string)
-		klog.Infof("%s has static pod caches, get pod from kube-system namespace", cluster.ClusterID)
+		klog.V(9).Infof("%s has static pod caches, get pod from kube-system namespace", cluster.ClusterID)
 		if !ok1 {
 			return nil, nil, fmt.Errorf("%s get staticPodcache failed %s", cluster.ClusterID, staticPodcache)
 		}
@@ -56,7 +62,7 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 		}
 	}
 	if !ok {
-		klog.Infof("%s has no static pod caches, list from cluster kube-system namespace", cluster.ClusterID)
+		klog.V(9).Infof("%s has no static pod caches, list from cluster kube-system namespace", cluster.ClusterID)
 		result, err := cluster.ClientSet.CoreV1().Pods("kube-system").List(context.Background(), metav1.ListOptions{ResourceVersion: "0"})
 		if err != nil {
 			return nil, nil, err
@@ -99,8 +105,8 @@ func CheckStaticPod(cluster *pluginmanager.ClusterConfig) ([]pluginmanager.Check
 
 		checkItemList = append(checkItemList, CheckLabel(&pod)...)
 	}
-	checkItemList = append(checkItemList, CheckETCD(etcdPodList, cluster)...)
-	checkItemList = append(checkItemList, CheckApiserver(apiserverPodList, cluster)...)
+	checkItemList = append(checkItemList, CheckETCD(etcdPodList, cluster, deepCheck)...)
+	checkItemList = append(checkItemList, CheckApiserver(apiserverPodList, cluster, deepCheck)...)
 
 	if !ok {
 		// 缓存集群当前static pod信息，避免频繁list pod
@@ -172,7 +178,7 @@ func CheckKCM(pod *v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager
 }
 
 // CheckETCD check etcd config
-func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
+func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig, deepCheck bool) []pluginmanager.CheckItem {
 	checkItemList := make([]pluginmanager.CheckItem, 0)
 	podParamList := make([][]string, 0)
 
@@ -254,7 +260,7 @@ func CheckETCD(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []plugin
 }
 
 // CheckApiserver check apiserver config
-func CheckApiserver(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []pluginmanager.CheckItem {
+func CheckApiserver(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig, deepCheck bool) []pluginmanager.CheckItem {
 	checkItemList := make([]pluginmanager.CheckItem, 0, 0)
 	podParamList := make([][]string, 0)
 
@@ -262,7 +268,7 @@ func CheckApiserver(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []p
 		podParamList = append(podParamList, append(pod.Spec.Containers[0].Command, pod.Spec.Containers[0].Args...))
 	}
 
-	// 检查etcd参数是否一致
+	// 检查是否有goaway参数和audit-policy-file参数
 	err := checkParamConsistency(podParamList, []string{"--goaway-chance", "--audit-policy-file"})
 	if err != nil {
 		klog.Errorf("%s checkParamConsistency failed: %s", cluster.ClusterID, err.Error())
@@ -277,7 +283,206 @@ func CheckApiserver(podList []*v1.Pod, cluster *pluginmanager.ClusterConfig) []p
 		})
 	}
 
+	// if deepCheck then check apiserver audit log for performance analysis
+	if deepCheck {
+		for _, pod := range podList {
+			auditCheckItem, err := checkApiserverAudit(pod, "/etc/kubernetes/*.audit", cluster)
+			if err != nil {
+				klog.Errorf(err.Error())
+			} else {
+				checkItemList = append(checkItemList, auditCheckItem...)
+			}
+		}
+	}
+
 	return checkItemList
+}
+
+// checkApiserverAudit check audit log from apiserver pod's host
+func checkApiserverAudit(pod *v1.Pod, auditLogPath string, cluster *pluginmanager.ClusterConfig) ([]pluginmanager.CheckItem, error) {
+	// get nodecontroller object
+	nodeController, err := k8s.NewNodeController(pod.Spec.NodeName, cluster.Config, cluster.ClusterID, "")
+	if err != nil {
+		klog.Errorf("get file failed: %s", err.Error())
+		return nil, err
+	}
+	defer func() {
+		nodeController.Close()
+	}()
+
+	// create dir to store apsierver audit log
+	if err = os.MkdirAll(fmt.Sprintf("/tmp/%s-%s", cluster.ClusterID, pod.Name), 0666); err != nil {
+		return nil, err
+	}
+
+	// get audit log from nodecontroller(copy from pod)
+	err = nodeController.NodeGetFile(auditLogPath, fmt.Sprintf("/tmp/%s-%s", cluster.ClusterID, pod.Name))
+	if err != nil {
+		klog.Errorf("get file failed: %s", err.Error())
+		return nil, err
+	}
+
+	// get audit log file list
+	files, err := filepath.Glob(fmt.Sprintf("/tmp/%s-%s/*", cluster.ClusterID, pod.Name))
+	if err != nil {
+		return nil, err
+	}
+
+	var auditLog k8s.AuditLog
+	auditLog.Events = make(map[string]k8s.AuditEvent)
+
+	// analysis audit log file
+	for _, file := range files {
+		klog.Infof("read file:%s", file)
+
+		// 打开文件
+		f, err := os.Open(file)
+		if err != nil {
+			klog.Errorf("open file error: %s", err.Error())
+			continue
+		}
+		defer f.Close()
+
+		// 创建一个 Scanner 逐行读取文件
+		scanner := bufio.NewScanner(f)
+		scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+		for scanner.Scan() {
+			line := scanner.Text()
+			var event k8s.AuditEvent
+
+			// 解析 JSON 行
+			if err := json.Unmarshal([]byte(line), &event); err != nil {
+				fmt.Println("unmarshal failed:", err)
+				continue
+			}
+
+			// 将事件添加到审计日志中;避免添加同一event 不同stage的情况
+			if addedEvent, ok := auditLog.Events[string(event.AuditID)]; !ok {
+				auditLog.Events[string(event.AuditID)] = event
+			} else if event.StageTimestamp.Unix() > addedEvent.StageTimestamp.Unix() {
+				auditLog.Events[string(event.AuditID)] = event
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			klog.Errorf("scan error: %s", err.Error())
+		}
+	}
+
+	klog.Infof("event count: %d\n", len(auditLog.Events))
+
+	auditLog.CalculateDurations()
+	stats := auditLog.GetRequestStats()
+
+	countStats := make([]*k8s.RequestStats, 0, len(stats))
+	timeStats := make([]*k8s.RequestStats, 0, len(stats))
+	averageStats := make([]*k8s.RequestStats, 0, len(stats))
+	count := 100
+
+	for key, stat := range stats {
+		// remove stat with low count
+		if count > 0 && stat.Count < count {
+			delete(stats, key)
+			continue
+		}
+		countStats = append(countStats, &stat)
+		timeStats = append(timeStats, &stat)
+		averageStats = append(averageStats, &stat)
+	}
+
+	// sort slice by request count
+	sort.Slice(countStats, func(i, j int) bool {
+		return countStats[i].Count > countStats[j].Count
+	})
+
+	// sort slice by request average time
+	sort.Slice(averageStats, func(i, j int) bool {
+		a := averageStats[i].TotalTime / time.Duration(averageStats[i].Count)
+		b := averageStats[j].TotalTime / time.Duration(averageStats[j].Count)
+		return a > b
+	})
+
+	// sort slice by request max time
+	sort.Slice(timeStats, func(i, j int) bool {
+		return timeStats[i].MaxAuditEvent.Duration > timeStats[j].MaxAuditEvent.Duration
+	})
+
+	// clean audit log dir
+	err = os.RemoveAll(fmt.Sprintf("/tmp/%s-%s", cluster.ClusterID, pod.Name))
+	if err != nil {
+		klog.Errorf(err.Error())
+		return nil, err
+	}
+
+	// print result to log and return
+	result := make([]pluginmanager.CheckItem, 0)
+	klog.Infof("request count")
+	for index, stat := range countStats {
+		if index < 1 {
+			result = append(result, pluginmanager.CheckItem{
+				ItemName:   SystemAppStatusCheckItemName,
+				ItemTarget: "apiserver",
+				Status:     NormalStatus,
+				Normal:     true,
+				Detail: fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+					stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration),
+				Tags:  nil,
+				Level: pluginmanager.WARNLevel,
+			})
+		}
+
+		if index >= 10 {
+			break
+		}
+		klog.Infof("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
+	}
+
+	klog.Infof("request average duration")
+	for index, stat := range averageStats {
+		if index < 1 {
+			result = append(result, pluginmanager.CheckItem{
+				ItemName:   SystemAppStatusCheckItemName,
+				ItemTarget: "apiserver",
+				Status:     NormalStatus,
+				Normal:     true,
+				Detail: fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+					stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration),
+				Tags:  nil,
+				Level: pluginmanager.WARNLevel,
+			})
+		}
+
+		if index >= 10 {
+			break
+		}
+		klog.Infof("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
+	}
+
+	klog.Infof("request max duration")
+	for index, stat := range timeStats {
+		if index < 1 {
+			result = append(result, pluginmanager.CheckItem{
+				ItemName:   SystemAppStatusCheckItemName,
+				ItemTarget: "apiserver",
+				Status:     NormalStatus,
+				Normal:     true,
+				Detail: fmt.Sprintf("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+					stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration),
+				Tags:  nil,
+				Level: pluginmanager.WARNLevel,
+			})
+		}
+
+		if index >= 10 {
+			break
+		}
+		klog.Infof("useragent: %s, verb: %s, uri: %s, count: %d, average: %v, max: %v\n",
+			stat.UserAgent, stat.Verb, stat.URI, stat.Count, stat.TotalTime/time.Duration(stat.Count), stat.MaxAuditEvent.Duration)
+	}
+
+	return result, nil
 }
 
 // CheckLabel xxx

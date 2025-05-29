@@ -39,10 +39,11 @@ type BcsClusterReporterOptions struct {
 	// 也可以单独配置kubeconfig
 	KubeConfigDir string
 	// 也可以配置incluster模式
-	InCluster bool
-	ClusterID string
-	BizID     string
-	RunMode   string
+	InCluster     bool
+	ClusterID     string
+	BizID         string
+	RunMode       string
+	LabelSelector string
 }
 
 // NewBcsClusterReporterOptions init options
@@ -75,6 +76,7 @@ func (bcro *BcsClusterReporterOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVarP(&bcro.InCluster, "inCluster", "", false, "Set true the reporter will work as in-cluster mode")
 	fs.StringVarP(&bcro.ClusterID, "clusterID", "", "0", "Set clusterID")
 	fs.StringVarP(&bcro.BizID, "bizID", "", "incluster", "Set cluster bizID")
+	fs.StringVarP(&bcro.LabelSelector, "labelSelector", "", "", "Label to select clusters")
 	fs.StringVar(&bcro.RunMode, "runMode", "daemon", "daemon, once")
 }
 

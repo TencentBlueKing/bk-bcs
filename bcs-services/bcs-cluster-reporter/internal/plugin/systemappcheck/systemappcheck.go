@@ -105,12 +105,13 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 		interval = 60
 	}
 
+	checkOpt := pluginmanager.CheckOption{}
+
 	if runMode == pluginmanager.RunModeDaemon {
 		go func() {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
-					pluginmanager.Pm.Lock()
 
 					// 重载opt
 					opt := &Options{}
@@ -128,7 +129,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 						}
 					}
 					// 执行检查
-					go p.Check()
+					go p.Check(checkOpt)
 				} else {
 					klog.V(3).Infof("the former systemappcheck didn't over, skip in this loop")
 				}
@@ -143,7 +144,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == pluginmanager.RunModeOnce {
-		p.Check()
+		p.Check(checkOpt)
 	}
 
 	return nil
@@ -162,43 +163,84 @@ func (p *Plugin) Name() string {
 }
 
 // Check xxx
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	start := time.Now()
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	defer func() {
 		klog.Infof("end %s", p.Name())
-		pluginmanager.Pm.UnLock()
 		p.CheckLock.Unlock()
-		metricmanager.SetCommonDurationMetric([]string{"systemappcheck", "", "", ""}, start)
+		if option.ClusterIDs == nil || len(option.ClusterIDs) == 0 {
+			metricmanager.SetCommonDurationMetric([]string{p.PluginName, "", "", ""}, start)
+		}
 	}()
 
+	clusterConfigs := make(map[string]*pluginmanager.ClusterConfig)
+	if option.ClusterIDs == nil || len(option.ClusterIDs) == 0 {
+		clusterConfigs = pluginmanager.Pm.GetConfig().ClusterConfigs
+		// clean deleted cluster metric data
+		p.WriteLock.Lock()
+		for clusterID, _ := range p.ReadyMap {
+			if _, ok := clusterConfigs[clusterID]; !ok {
+				delete(p.ReadyMap, clusterID)
+				metricmanager.DeleteMetric(systemAppChartVersion, systemAppChartGVSList[clusterID])
+				metricmanager.DeleteMetric(systemAppImageVersion, systemAppImageGVSList[clusterID])
+				metricmanager.DeleteMetric(systemAppStatus, systemAppStatusGVSList[clusterID])
+				metricmanager.DeleteMetric(systemAppConfig, systemAppConfigGVSList[clusterID])
+				delete(systemAppChartGVSList, clusterID)
+				delete(systemAppImageGVSList, clusterID)
+				delete(systemAppStatusGVSList, clusterID)
+				delete(systemAppConfigGVSList, clusterID)
+				delete(p.Result, clusterID)
+				klog.Infof("delete cluster %s", clusterID)
+			}
+		}
+		p.WriteLock.Unlock()
+	} else {
+		for _, clusterID := range option.ClusterIDs {
+			if cluster, ok := pluginmanager.Pm.GetConfig().ClusterConfigs[clusterID]; ok {
+				clusterConfigs[clusterID] = cluster
+			}
+		}
+	}
+
+	p.checkClusters(clusterConfigs, option)
+}
+
+func (p *Plugin) checkClusters(clusterConfigs map[string]*pluginmanager.ClusterConfig, option pluginmanager.CheckOption) {
 	wg := sync.WaitGroup{}
 	// 默认获取以下这些namespace中的应用
 	namespaceList := p.opt.Namespaces
-
-	for _, cluster := range pluginmanager.Pm.GetConfig().ClusterConfigs {
+	for _, cluster := range clusterConfigs {
 		wg.Add(1)
-		pluginmanager.Pm.Add()
+		if len(option.ClusterIDs) > 0 {
+			pluginmanager.Pm.AddCheck()
+		} else {
+			pluginmanager.Pm.Add()
+		}
 
 		go func(cluster *pluginmanager.ClusterConfig) {
 			cluster.Lock()
-			klog.Infof("start systemappcheck for %s", cluster.ClusterID)
+			klog.Infof("start %s for %s", p.Name(), cluster.ClusterID)
 
-			clusterId := cluster.ClusterID
+			clusterID := cluster.ClusterID
 			clientSet := cluster.ClientSet
 			config := cluster.Config
 			clusterResult := pluginmanager.CheckResult{
 				Items: make([]pluginmanager.CheckItem, 0, 0),
 			}
 
-			trace := utiltrace.New("systemappcheck", utiltrace.Field{"target", clusterId})
+			trace := utiltrace.New("systemappcheck", utiltrace.Field{"target", clusterID})
 
 			defer func() {
 				cluster.Unlock()
-				klog.Infof("end systemappcheck for %s", clusterId)
+				klog.Infof("end systemappcheck for %s", clusterID)
 				wg.Done()
-				pluginmanager.Pm.Done()
+				if len(option.ClusterIDs) > 0 {
+					pluginmanager.Pm.DoneCheck()
+				} else {
+					pluginmanager.Pm.Done()
+				}
 				p.WriteLock.Lock()
 				p.ReadyMap[cluster.ClusterID] = true
 				p.WriteLock.Unlock()
@@ -207,6 +249,16 @@ func (p *Plugin) Check() {
 
 			p.WriteLock.Lock()
 			p.ReadyMap[cluster.ClusterID] = false
+			// return if all nodes are master.
+			if len(cluster.Master) == cluster.NodeNum {
+				metricmanager.DeleteMetric(systemAppChartVersion, systemAppChartGVSList[clusterID])
+				metricmanager.DeleteMetric(systemAppImageVersion, systemAppImageGVSList[clusterID])
+				metricmanager.DeleteMetric(systemAppStatus, systemAppStatusGVSList[clusterID])
+				metricmanager.DeleteMetric(systemAppConfig, systemAppConfigGVSList[clusterID])
+				p.Result[clusterID] = clusterResult
+				p.WriteLock.Unlock()
+				return
+			}
 			p.WriteLock.Unlock()
 
 			loopSystemAppChartGVSList := make([]*metricmanager.GaugeVecSet, 0, 0)
@@ -216,20 +268,20 @@ func (p *Plugin) Check() {
 
 			clusterVersion, err := k8s.GetK8sVersion(clientSet)
 			if err != nil {
-				klog.Errorf("%s GetK8sVersion failed: %s", clusterId, err.Error())
+				klog.Errorf("%s GetK8sVersion failed: %s", clusterID, err.Error())
 				return
 			}
 
 			// don't check for v1.8 cluster
 			if strings.Contains(clusterVersion, "v1.8") {
-				klog.Infof("%s version is %s, skip", clusterId, clusterVersion)
+				klog.Infof("%s version is %s, skip", clusterID, clusterVersion)
 				return
 			}
 
-			// 检查静态pod配置
-			podCheckItemList, staticPodGVSList, err := CheckStaticPod(cluster)
+			// 检查静态pod配置，支持deep
+			podCheckItemList, staticPodGVSList, err := CheckStaticPod(cluster, option.DeepCheck)
 			if err != nil {
-				klog.Errorf("%s CheckStaticPod failed %s", clusterId, err.Error())
+				klog.Errorf("%s CheckStaticPod failed %s", clusterID, err.Error())
 			} else {
 				loopSystemAppConfigGVSList = append(loopSystemAppConfigGVSList, staticPodGVSList...)
 				clusterResult.Items = append(clusterResult.Items, podCheckItemList...)
@@ -237,9 +289,9 @@ func (p *Plugin) Check() {
 			trace.Step("check static pod")
 
 			// 检查svc配置
-			svcCheckItemList, GVSList, err := CheckService(cluster, clusterId)
+			svcCheckItemList, GVSList, err := CheckService(cluster, clusterID)
 			if err != nil {
-				klog.Errorf("%s CheckService failed %s", clusterId, err.Error())
+				klog.Errorf("%s CheckService failed %s", clusterID, err.Error())
 			} else {
 				// 生成异常配置指标
 				loopSystemAppConfigGVSList = append(loopSystemAppConfigGVSList, GVSList...)
@@ -295,7 +347,7 @@ func (p *Plugin) Check() {
 				componentCheckItemList, componentStatusGVSList, componentImageGVSList, componentConfigGVSList, err :=
 					CheckComponent(component, cluster, "", p.opt.ComponentVersionConf)
 				if err != nil {
-					klog.Errorf("%s %s CheckComponent failed: %s", clusterId, component.Name, err.Error())
+					klog.Errorf("%s %s CheckComponent failed: %s", clusterID, component.Name, err.Error())
 				}
 
 				clusterResult.Items = append(clusterResult.Items, componentCheckItemList...)
@@ -315,17 +367,15 @@ func (p *Plugin) Check() {
 			// get former metric data
 			p.WriteLock.Lock()
 			// 删除上一次检查的指标
-			if _, ok := systemAppChartGVSList[cluster.ClusterID]; ok {
-				metricmanager.DeleteMetric(systemAppChartVersion, systemAppChartGVSList[clusterId])
-				metricmanager.DeleteMetric(systemAppImageVersion, systemAppImageGVSList[clusterId])
-				metricmanager.DeleteMetric(systemAppStatus, systemAppStatusGVSList[clusterId])
-				metricmanager.DeleteMetric(systemAppConfig, systemAppConfigGVSList[clusterId])
-			}
+			metricmanager.DeleteMetric(systemAppChartVersion, systemAppChartGVSList[clusterID])
+			metricmanager.DeleteMetric(systemAppImageVersion, systemAppImageGVSList[clusterID])
+			metricmanager.DeleteMetric(systemAppStatus, systemAppStatusGVSList[clusterID])
+			metricmanager.DeleteMetric(systemAppConfig, systemAppConfigGVSList[clusterID])
 
-			systemAppChartGVSList[clusterId] = loopSystemAppChartGVSList
-			systemAppImageGVSList[clusterId] = loopSystemAppImageGVSList
-			systemAppStatusGVSList[clusterId] = loopSystemAppStatusGVSList
-			systemAppConfigGVSList[clusterId] = loopSystemAppConfigGVSList
+			systemAppChartGVSList[clusterID] = loopSystemAppChartGVSList
+			systemAppImageGVSList[clusterID] = loopSystemAppImageGVSList
+			systemAppStatusGVSList[clusterID] = loopSystemAppStatusGVSList
+			systemAppConfigGVSList[clusterID] = loopSystemAppConfigGVSList
 			// get new metric data
 			p.WriteLock.Unlock()
 
@@ -345,34 +395,13 @@ func (p *Plugin) Check() {
 			}
 
 			p.WriteLock.Lock()
-			p.Result[clusterId] = clusterResult
+			p.Result[clusterID] = clusterResult
 			p.WriteLock.Unlock()
 
 			trace.Step("refresh metric")
 		}(cluster)
 	}
 	wg.Wait()
-
-	// clean deleted cluster metric data
-	clusterConfigs := pluginmanager.Pm.GetConfig().ClusterConfigs
-	p.WriteLock.Lock()
-
-	for clusterID, _ := range p.ReadyMap {
-		if _, ok := clusterConfigs[clusterID]; !ok {
-			delete(p.ReadyMap, clusterID)
-			metricmanager.DeleteMetric(systemAppChartVersion, systemAppChartGVSList[clusterID])
-			metricmanager.DeleteMetric(systemAppImageVersion, systemAppImageGVSList[clusterID])
-			metricmanager.DeleteMetric(systemAppStatus, systemAppStatusGVSList[clusterID])
-			metricmanager.DeleteMetric(systemAppConfig, systemAppConfigGVSList[clusterID])
-			delete(systemAppChartGVSList, clusterID)
-			delete(systemAppImageGVSList, clusterID)
-			delete(systemAppStatusGVSList, clusterID)
-			delete(systemAppConfigGVSList, clusterID)
-			delete(p.Result, clusterID)
-			klog.Infof("delete cluster %s", clusterID)
-		}
-	}
-	p.WriteLock.Unlock()
 }
 
 // CheckRelease 检查release详情
@@ -597,53 +626,63 @@ func getWorkLoadStatus(workloadType string, workloadName string, namespace strin
 	var status = NormalStatus
 	var err error
 	ctx := internalUtil.GetCtx(10 * time.Second)
-	switch strings.ToLower(workloadType) {
-	case strings.ToLower(deployment):
-		var deploy *v1.Deployment
-		deploy, err = cluster.ClientSet.AppsV1().Deployments(namespace).Get(ctx, workloadName, metav1.GetOptions{
-			ResourceVersion: "0",
-		})
+	for i := 0; i < 2; i++ {
+		switch strings.ToLower(workloadType) {
+		case strings.ToLower(deployment):
+			var deploy *v1.Deployment
+			deploy, err = cluster.ClientSet.AppsV1().Deployments(namespace).Get(ctx, workloadName, metav1.GetOptions{
+				ResourceVersion: "0",
+			})
 
-		if err != nil {
-			status = AppErrorStatus
-			if strings.Contains(err.Error(), "not found") {
-				status = APPNotfoundAppStatus
+			if err != nil {
+				status = AppErrorStatus
+				if strings.Contains(err.Error(), "not found") {
+					status = APPNotfoundAppStatus
+				}
+			} else {
+				containerImageList, status, err = getDeployCheckResult(deploy, cluster)
 			}
-		} else {
-			containerImageList, status, err = getDeployCheckResult(deploy, cluster)
-		}
 
-	case strings.ToLower(daemonset):
-		var ds *v1.DaemonSet
-		ds, err = cluster.ClientSet.AppsV1().DaemonSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
-			ResourceVersion: "0",
-		})
+		case strings.ToLower(daemonset):
+			var ds *v1.DaemonSet
+			ds, err = cluster.ClientSet.AppsV1().DaemonSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
+				ResourceVersion: "0",
+			})
 
-		if err != nil {
-			status = AppErrorStatus
-			if strings.Contains(err.Error(), "not found") {
-				status = APPNotfoundAppStatus
+			if err != nil {
+				status = AppErrorStatus
+				if strings.Contains(err.Error(), "not found") {
+					status = APPNotfoundAppStatus
+				}
+			} else {
+				containerImageList, status, err = getDSCheckResult(ds, cluster)
 			}
-		} else {
-			containerImageList, status, err = getDSCheckResult(ds, cluster)
-		}
 
-	case strings.ToLower(statefulset):
-		var sts *v1.StatefulSet
-		sts, err = cluster.ClientSet.AppsV1().StatefulSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
-			ResourceVersion: "0",
-		})
+		case strings.ToLower(statefulset):
+			var sts *v1.StatefulSet
+			sts, err = cluster.ClientSet.AppsV1().StatefulSets(namespace).Get(ctx, workloadName, metav1.GetOptions{
+				ResourceVersion: "0",
+			})
 
-		if err != nil {
-			status = AppErrorStatus
-			if strings.Contains(err.Error(), "not found") {
-				status = APPNotfoundAppStatus
+			if err != nil {
+				status = AppErrorStatus
+				if strings.Contains(err.Error(), "not found") {
+					status = APPNotfoundAppStatus
+				}
+			} else {
+				containerImageList, status, err = getSTSCheckResult(sts, cluster)
 			}
-		} else {
-			containerImageList, status, err = getSTSCheckResult(sts, cluster)
+		default:
+			klog.Errorf("unsupported resource type %s", workloadType)
 		}
-	default:
-		klog.Errorf("unsupported resource type %s", workloadType)
+		if err == nil {
+			break
+		} else if strings.Contains(err.Error(), "Timeout") || strings.Contains(err.Error(), "timeout") || strings.Contains(err.Error(), "deadline") {
+			ctx = internalUtil.GetCtx(20 * time.Second)
+			continue
+		} else {
+			break
+		}
 	}
 
 	if err != nil {

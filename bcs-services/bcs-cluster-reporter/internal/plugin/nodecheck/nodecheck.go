@@ -84,7 +84,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
-					go p.Check()
+					go p.Check(pluginmanager.CheckOption{})
 				} else {
 					klog.V(3).Infof("the former %s didn't over, skip in this loop", p.Name())
 				}
@@ -98,7 +98,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == "once" {
-		p.Check()
+		p.Check(pluginmanager.CheckOption{})
 	}
 
 	return nil
@@ -117,7 +117,7 @@ func (p *Plugin) Name() string {
 }
 
 // Check xxx
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	start := time.Now()
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
@@ -134,7 +134,11 @@ func (p *Plugin) Check() {
 	// 遍历所有集群
 	for _, cluster := range clusterConfigs {
 		wg.Add(1)
-		pluginmanager.Pm.Add()
+		if len(option.ClusterIDs) > 0 {
+			pluginmanager.Pm.AddCheck()
+		} else {
+			pluginmanager.Pm.Add()
+		}
 
 		go func(cluster *pluginmanager.ClusterConfig) {
 			cluster.Lock()
@@ -149,7 +153,11 @@ func (p *Plugin) Check() {
 
 			defer func() {
 				cluster.Unlock()
-				pluginmanager.Pm.Done()
+				if len(option.ClusterIDs) > 0 {
+					pluginmanager.Pm.DoneCheck()
+				} else {
+					pluginmanager.Pm.Done()
+				}
 				p.WriteLock.Lock()
 				p.ReadyMap[cluster.ClusterID] = true
 				p.WriteLock.Unlock()
@@ -192,7 +200,7 @@ func (p *Plugin) Check() {
 				// 检查更新时间
 				if updateTime, err1 := time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", configmap.Data["updateTime"]); err1 == nil {
 					if time.Now().Sub(updateTime) > time.Hour*24*7 {
-						klog.Info("delete cm %s %s %s", clusterId, configmap.Name, configmap.Data["updateTime"])
+						klog.Infof("delete cm %s %s %s", clusterId, configmap.Name, configmap.Data["updateTime"])
 						err = clientSet.CoreV1().ConfigMaps(nodeagentNamespace).Delete(util.GetCtx(10*time.Second), configmap.Name, v1.DeleteOptions{})
 						if err != nil {
 							klog.Errorf("%s delete nodeagent cm %s failed: %s", clusterId, configmap.Name, err.Error())

@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/jung-kurt/gofpdf"
+	"k8s.io/klog/v2"
 )
 
 // GetBizReport xxx
@@ -27,80 +28,82 @@ func GetBizReport(bizID string, pluginStr string) (gofpdf.Pdf, error) {
 }
 
 // GetClusterReport xxx
-func GetClusterReport(clusterID string, pluginStr string) (gofpdf.Pdf, error) {
+func GetClusterReport(clusterID string, option CheckOption) (gofpdf.Pdf, error) {
 	pdf := gofpdf.New("P", "mm", "A3", "")
-	for _, clusterConfig := range Pm.GetConfig().ClusterConfigs {
-		if clusterID != clusterConfig.ClusterID {
+	clusterConfigs := Pm.GetConfig().ClusterConfigs
+
+	clusterConfig := clusterConfigs[clusterID]
+	if clusterConfig == nil {
+		err := fmt.Errorf("%s not found in clusters", clusterID)
+		klog.Errorf(err.Error())
+		return nil, err
+	}
+	result := Pm.GetClusterResult(clusterID, option)
+
+	pdf.AddPage()
+	pdf.AddUTF8Font("tencent", "", "TencentSans-W3.ttf")
+	pdf.AddUTF8Font("tencent", "B", "TencentSans-W7.ttf")
+	pdf.SetFont("tencent", "", 12)
+	pdf.SetXY(0, 10)
+
+	// 打印集群信息
+	infoTable := ConvertInfoItemToPDFTable(InfoItem{ItemName: ClusterID, Result: clusterConfig.ClusterID}, "集群信息")
+	WriteClusterInfo(clusterConfig, infoTable)
+	util.WritePDFTable(pdf, *infoTable, true)
+
+	// 打印节点信息
+	typeNumMap := make(map[string]int)
+	regionNumMap := make(map[string]int)
+	zoneNumMap := make(map[string]int)
+	for _, nodeInfo := range clusterConfig.NodeInfo {
+		if _, ok := typeNumMap[nodeInfo.Type]; !ok {
+			typeNumMap[nodeInfo.Type] = 1
+		} else {
+			typeNumMap[nodeInfo.Type] = typeNumMap[nodeInfo.Type] + 1
+		}
+
+		if _, ok := regionNumMap[nodeInfo.Region]; !ok {
+			regionNumMap[nodeInfo.Region] = 1
+		} else {
+			regionNumMap[nodeInfo.Region] = regionNumMap[nodeInfo.Region] + 1
+		}
+
+		if _, ok := zoneNumMap[nodeInfo.Zone]; !ok {
+			zoneNumMap[nodeInfo.Zone] = 1
+		} else {
+			zoneNumMap[nodeInfo.Zone] = zoneNumMap[nodeInfo.Zone] + 1
+		}
+	}
+
+	nodeInfoTable := NewInfoItemToPDFTable("节点信息")
+	for key, value := range typeNumMap {
+		AddInfoItemToPDFTable(InfoItem{ItemName: "机型:" + key, Result: value}, nodeInfoTable)
+	}
+	for key, value := range regionNumMap {
+		AddInfoItemToPDFTable(InfoItem{ItemName: "地域:" + key, Result: value}, nodeInfoTable)
+	}
+	for key, value := range zoneNumMap {
+		AddInfoItemToPDFTable(InfoItem{ItemName: "可用区:" + key, Result: value}, nodeInfoTable)
+	}
+	util.WritePDFTable(pdf, *nodeInfoTable, true)
+
+	// 打印各类检查项
+	for pluginName, checkItemList := range result {
+		checkItemTable := NewCheckItemPDFTable(pluginName)
+
+		for _, checkItem := range checkItemList.Items {
+			//if checkItem.Normal {
+			//	continue
+			//}
+			AddCheckItemToPDFTable(checkItem, checkItemTable)
+		}
+
+		if checkItemTable.Line == 0 {
 			continue
 		}
-		result := Pm.GetClusterResult(pluginStr, clusterID)
-
-		pdf.AddPage()
-		pdf.AddUTF8Font("tencent", "", "TencentSans-W3.ttf")
-		pdf.AddUTF8Font("tencent", "B", "TencentSans-W7.ttf")
-		pdf.SetFont("tencent", "", 12)
-		pdf.SetXY(0, 10)
-
-		// 打印集群信息
-		infoTable := ConvertInfoItemToPDFTable(InfoItem{ItemName: ClusterID, Result: clusterConfig.ClusterID}, "集群信息")
-		WriteClusterInfo(clusterConfig, infoTable)
-		util.WritePDFTable(pdf, *infoTable, true)
-
-		// 打印节点信息
-		typeNumMap := make(map[string]int)
-		regionNumMap := make(map[string]int)
-		zoneNumMap := make(map[string]int)
-		for _, nodeInfo := range clusterConfig.NodeInfo {
-			if _, ok := typeNumMap[nodeInfo.Type]; !ok {
-				typeNumMap[nodeInfo.Type] = 1
-			} else {
-				typeNumMap[nodeInfo.Type] = typeNumMap[nodeInfo.Type] + 1
-			}
-
-			if _, ok := regionNumMap[nodeInfo.Region]; !ok {
-				regionNumMap[nodeInfo.Region] = 1
-			} else {
-				regionNumMap[nodeInfo.Region] = regionNumMap[nodeInfo.Region] + 1
-			}
-
-			if _, ok := zoneNumMap[nodeInfo.Zone]; !ok {
-				zoneNumMap[nodeInfo.Zone] = 1
-			} else {
-				zoneNumMap[nodeInfo.Zone] = zoneNumMap[nodeInfo.Zone] + 1
-			}
-		}
-
-		nodeInfoTable := NewInfoItemToPDFTable("节点信息")
-		for key, value := range typeNumMap {
-			AddInfoItemToPDFTable(InfoItem{ItemName: "机型:" + key, Result: value}, nodeInfoTable)
-		}
-		for key, value := range regionNumMap {
-			AddInfoItemToPDFTable(InfoItem{ItemName: "地域:" + key, Result: value}, nodeInfoTable)
-		}
-		for key, value := range zoneNumMap {
-			AddInfoItemToPDFTable(InfoItem{ItemName: "可用区:" + key, Result: value}, nodeInfoTable)
-		}
-		util.WritePDFTable(pdf, *nodeInfoTable, true)
-
-		// 打印各类检查项
-		for pluginName, checkItemList := range result {
-			checkItemTable := NewCheckItemPDFTable(pluginName)
-
-			for _, checkItem := range checkItemList.Items {
-				//if checkItem.Normal {
-				//	continue
-				//}
-				AddCheckItemToPDFTable(checkItem, checkItemTable)
-			}
-
-			if checkItemTable.Line == 0 {
-				continue
-			}
-			util.WritePDFTable(pdf, *checkItemTable, true)
-		}
-		return pdf, nil
+		util.WritePDFTable(pdf, *checkItemTable, true)
 	}
-	return nil, fmt.Errorf("%s not found", clusterID)
+	return pdf, nil
 }
 
 // WriteClusterInfo xxx
