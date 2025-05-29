@@ -15,11 +15,12 @@ package pluginmanager
 
 import (
 	"fmt"
-	"k8s.io/klog"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 
@@ -230,6 +231,10 @@ func (pm *PluginManager) GetClusterResult(clusterID string, option CheckOption) 
 			}()
 
 			plugin := pm.GetPlugin(pluginName)
+			if plugin == nil {
+				klog.Errorf("plugin %s not found", pluginName)
+				return
+			}
 
 			if option.DeepCheck {
 				option.ClusterIDs = []string{clusterID}

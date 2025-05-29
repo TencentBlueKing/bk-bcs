@@ -1,0 +1,664 @@
+# 请保留 entries 的顺序。
+# 注意：0000-0100 区间为内部或预留使用。
+messages:
+  - name: "InternalError"
+    friendlyName: "内部错误"
+    code: IST0001
+    level: Error
+    description: "工具链发生内部错误。这通常是实现中的 bug。"
+    template: "内部错误: %v"
+    args:
+      - name: detail
+        type: string
+
+  - name: "Deprecated"
+    friendlyName: "已弃用"
+    code: IST0002
+    level: Warning
+    description: "配置依赖的某个功能已被弃用。"
+    template: "已弃用: %s"
+    args:
+      - name: detail
+        type: string
+
+  - name: "ReferencedResourceNotFound"
+    friendlyName: "引用的资源不存在"
+    code: IST0101
+    level: Error
+    description: "被引用的资源不存在。"
+    template: "引用的 %s 未找到: %q"
+    args:
+      - name: reftype
+        type: string
+      - name: refval
+        type: string
+
+  - name: "NamespaceNotInjected"
+    friendlyName: "未启用注入"
+    code: IST0102
+    level: Info
+    description: "命名空间未启用 Istio 注入。"
+    template: "该命名空间未启用 Istio 注入。运行 'kubectl label namespace %s istio-injection=enabled' 以启用，或 'kubectl label namespace %s istio-injection=disabled' 明确标记为不需要注入。"
+    args:
+      - name: namespace
+        type: string
+      - name: namespace2
+        type: string
+
+  - name: "PodMissingProxy"
+    friendlyName: "缺少代理"
+    code: IST0103
+    level: Warning
+    description: "Pod 缺少 Istio 代理。"
+    template: "Pod %s 缺少 Istio 代理。通常可通过重启或重新部署工作负载解决。"
+    args:
+      - name: podName
+        type: string
+
+  - name: "GatewayPortNotOnWorkload"
+    friendlyName: "网关端口未暴露"
+    code: IST0104
+    level: Warning
+    description: "未处理的网关端口"
+    template: "网关引用了未在工作负载（pod selector %s；端口 %d）上暴露的端口"
+    args:
+      - name: selector
+        type: string
+      - name: port
+        type: int
+
+  # IST0105 RETIRED
+
+  - name: "SchemaValidationError"
+    friendlyName: "Schema校验错误"
+    code: IST0106
+    level: Error
+    description: "资源存在 schema 校验错误。"
+    template: "Schema 校验错误: %v"
+    args:
+      - name: err
+        type: error
+
+  - name: "MisplacedAnnotation"
+    friendlyName: "注解位置错误"
+    code: IST0107
+    level: Warning
+    description: "Istio 注解应用在了错误的资源类型上。"
+    template: "注解位置错误: %s 只能应用于 %s"
+    args:
+      - name: annotation
+        type: string
+      - name: kind
+        type: string
+
+  - name: "UnknownAnnotation"
+    friendlyName: "未知注解"
+    code: IST0108
+    level: Warning
+    description: "Istio 注解无法识别，未适用于任何资源类型。"
+    template: "未知注解: %s"
+    args:
+      - name: annotation
+        type: string
+
+  - name: "ConflictingMeshGatewayVirtualServiceHosts"
+    friendlyName: "VirtualService主机冲突"
+    code: IST0109
+    level: Error
+    description: "与 mesh gateway 关联的 VirtualService 存在主机冲突。"
+    template: "与 mesh gateway 关联的 VirtualService %s 定义了相同的主机 %s，可能导致未定义行为。可通过合并冲突的 VirtualService 资源解决。"
+    args:
+      - name: virtualServices
+        type: string
+      - name: host
+        type: string
+
+  - name: "ConflictingSidecarWorkloadSelectors"
+    friendlyName: "Sidecar选择冲突"
+    code: IST0110
+    level: Error
+    description: "Sidecar 资源选择了与其他 Sidecar 资源相同的工作负载。"
+    template: "命名空间 %q 中的 Sidecar %v 选择了相同的工作负载 pod %q，可能导致未定义行为。"
+    args:
+      - name: conflictingSidecars
+        type: "[]string"
+      - name: namespace
+        type: string
+      - name: workloadPod
+        type: string
+
+  - name: "MultipleSidecarsWithoutWorkloadSelectors"
+    friendlyName: "Sidecar未指定选择器"
+    code: IST0111
+    level: Error
+    description: "一个命名空间中有多个 Sidecar 资源未设置 workload selector。"
+    template: "命名空间 %q 中的 Sidecar %v 未设置 workload selector，可能导致未定义行为。"
+    args:
+      - name: conflictingSidecars
+        type: "[]string"
+      - name: namespace
+        type: string
+
+  - name: "VirtualServiceDestinationPortSelectorRequired"
+    friendlyName: "VirtualService端口未指定"
+    code: IST0112
+    level: Error
+    description: "VirtualService 路由到的服务暴露了多个端口，但未指定使用哪个端口。"
+    template: "该 VirtualService 路由到的服务 %q 暴露了多个端口 %v。必须在 destination 中指定端口以消除歧义。"
+    args:
+      - name: destHost
+        type: string
+      - name: destPorts
+        type: "[]int"
+
+  - name: "MTLSPolicyConflict"
+    friendlyName: "mTLS策略冲突"
+    code: IST0113
+    level: Error
+    description: "DestinationRule 与 Policy 在 mTLS 配置上存在冲突。"
+    template: "DestinationRule %q 和 Policy %q 在主机 %s 的 mTLS 配置上存在冲突。DestinationRule 要求 mTLS 为 %t，而 Policy 对象要求为 %s。"
+    args:
+      - name: host
+        type: string
+      - name: destinationRuleName
+        type: string
+      - name: destinationRuleMTLSMode
+        type: bool
+      - name: policyName
+        type: string
+      - name: policyMTLSMode
+        type: string
+
+  # IST0114 RETIRED
+  # IST0115 RETIRED
+
+  - name: "DeploymentAssociatedToMultipleServices"
+    friendlyName: "多服务端口协议冲突"
+    code: IST0116
+    level: Warning
+    description: "服务网格部署的 pod 不能通过同一端口但不同协议关联到多个服务。"
+    template: "该部署 %s 关联到多个服务，使用端口 %d 但协议不同: %v"
+    args:
+      - name: deployment
+        type: string
+      - name: port
+        type: int32
+      - name: services
+        type: "[]string"
+
+  - name: "DeploymentRequiresServiceAssociated"
+    friendlyName: "未关联服务"
+    code: IST0117
+    level: Warning
+    description: "服务网格部署的 pod 必须至少关联一个服务。"
+    template: "未关联任何服务。服务网格部署必须关联至少一个服务。"
+
+  - name: "PortNameIsNotUnderNamingConvention"
+    friendlyName: "端口名不规范"
+    code: IST0118
+    level: Info
+    description: "端口名不符合命名规范，将对该端口应用协议检测。"
+    template: "端口名 %s（端口: %d, targetPort: %s）不符合 Istio 端口命名规范。"
+    args:
+      - name: portName
+        type: string
+      - name: port
+        type: int
+      - name: targetPort
+        type: string
+
+  - name: "JwtFailureDueToInvalidServicePortPrefix"
+    friendlyName: "JWT端口前缀无效"
+    code: IST0119
+    level: Warning
+    description: "带 JWT 的认证策略目标服务端口规范无效。"
+    template: "带 JWT 的认证策略目标服务端口规范无效（端口: %d, 名称: %s, 协议: %s, targetPort: %s）。"
+    args:
+      - name: port
+        type: int
+      - name: portName
+        type: string
+      - name: protocol
+        type: string
+      - name: targetPort
+        type: string
+
+  # IST0120 RETIRED
+  # IST0121 RETIRED
+
+  - name: "InvalidRegexp"
+    friendlyName: "正则表达式无效"
+    code: IST0122
+    level: Warning
+    description: "无效的正则表达式"
+    template: "字段 %q 的正则表达式无效: %q (%s)"
+    args:
+      - name: where
+        type: string
+      - name: re
+        type: string
+      - name: problem
+        type: string
+
+  - name: "NamespaceMultipleInjectionLabels"
+    friendlyName: "注入标签冲突"
+    code: IST0123
+    level: Warning
+    description: "命名空间同时存在新旧注入标签。"
+    template: "该命名空间同时存在新旧注入标签。运行 'kubectl label namespace %s istio.io/rev-' 或 'kubectl label namespace %s istio-injection-'"
+    args:
+      - name: namespace
+        type: string
+      - name: namespace2
+        type: string
+
+  - name: "InvalidAnnotation"
+    friendlyName: "注解无效"
+    code: IST0125
+    level: Warning
+    description: "无效的 Istio 注解"
+    template: "无效注解 %s: %s"
+    args:
+      - name: annotation
+        type: string
+      - name: problem
+        type: string
+
+  - name: "UnknownMeshNetworksServiceRegistry"
+    friendlyName: "未知服务注册表"
+    code: IST0126
+    level: Error
+    description: "Mesh Networks 中的服务注册表未知"
+    template: "网络 %s 中的服务注册表 %s 未知"
+    args:
+      - name: serviceregistry
+        type: string
+      - name: network
+        type: string
+
+  - name: "NoMatchingWorkloadsFound"
+    friendlyName: "无匹配工作负载"
+    code: IST0127
+    level: Warning
+    description: "没有匹配资源标签的工作负载"
+    template: "该资源没有匹配以下标签的工作负载: %s"
+    args:
+      - name: labels
+        type: string
+
+  - name: "NoServerCertificateVerificationDestinationLevel"
+    friendlyName: "未验证服务器证书"
+    code: IST0128
+    level: Warning
+    description: "DestinationRule 未设置 caCertificates，导致不会验证服务器证书。"
+    template: "命名空间 %s 中的 DestinationRule %s TLS 模式为 %s，但未设置 caCertificates 验证主机 %s 的服务器身份。"
+    args:
+      - name: destinationrule
+        type: string
+      - name: namespace
+        type: string
+      - name: mode
+        type: string
+      - name: host
+        type: string
+
+  - name: "NoServerCertificateVerificationPortLevel"
+    friendlyName: "端口未验证服务器证书"
+    code: IST0129
+    level: Warning
+    description: "DestinationRule 未设置 caCertificates，导致不会验证指定端口的服务器证书。"
+    template: "命名空间 %s 中的 DestinationRule %s TLS 模式为 %s，但未设置 caCertificates 验证主机 %s 的端口 %s 的服务器身份。"
+    args:
+      - name: destinationrule
+        type: string
+      - name: namespace
+        type: string
+      - name: mode
+        type: string
+      - name: host
+        type: string
+      - name: port
+        type: string
+
+  - name: "VirtualServiceUnreachableRule"
+    friendlyName: "规则不可达"
+    code: IST0130
+    level: Warning
+    description: "VirtualService 某条规则因前面规则匹配相同，永远不会被使用。"
+    template: "VirtualService 规则 %v 未被使用（%s）。"
+    args:
+      - name: ruleno
+        type: string
+      - name: reason
+        type: "string"
+
+  - name: "VirtualServiceIneffectiveMatch"
+    friendlyName: "规则匹配无效"
+    code: IST0131
+    level: Info
+    description: "VirtualService 某条规则的 match 与前面规则重复。"
+    template: "VirtualService 规则 %v 的 match %v 未被使用（在规则 %v 中重复/重叠）。"
+    args:
+      - name: ruleno
+        type: string
+      - name: matchno
+        type: string
+      - name: dupno
+        type: string
+
+  - name: "VirtualServiceHostNotFoundInGateway"
+    friendlyName: "主机未在Gateway中"
+    code: IST0132
+    level: Warning
+    description: "VirtualService 中定义的主机未在 Gateway 中找到。"
+    template: "VirtualService %s 中定义的一个或多个主机 %v 未在 Gateway %s 中找到。"
+    args:
+      - name: host
+        type: "[]string"
+      - name: virtualservice
+        type: string
+      - name: gateway
+        type: string
+
+  - name: "SchemaWarning"
+    friendlyName: "Schema校验警告"
+    code: IST0133
+    level: Warning
+    description: "资源存在 schema 校验警告。"
+    template: "Schema 校验警告: %v"
+    args:
+      - name: err
+        type: error
+
+  - name: "ServiceEntryAddressesRequired"
+    friendlyName: "ServiceEntry缺少地址"
+    code: IST0134
+    level: Warning
+    description: "TCP（或未设置）协议的端口需要虚拟 IP 地址。"
+    template: "ServiceEntry 必须为该协议设置 addresses。"
+
+  - name: "DeprecatedAnnotation"
+    friendlyName: "注解已弃用"
+    code: IST0135
+    level: Info
+    description: "资源使用了已弃用的 Istio 注解。"
+    template: "注解 %q 已被弃用%s，未来 Istio 版本可能无法使用。"
+    args:
+      - name: annotation
+        type: string
+      - name: extra
+        type: string
+
+  - name: "AlphaAnnotation"
+    friendlyName: "Alpha阶段注解"
+    code: IST0136
+    level: Info
+    description: "Istio 注解属于 alpha 阶段，可能不适合生产环境。"
+    template: "注解 %q 属于 alpha 阶段功能，可能支持不完整。"
+    args:
+      - name: annotation
+        type: string
+
+  - name: "DeploymentConflictingPorts"
+    friendlyName: "端口冲突"
+    code: IST0137
+    level: Warning
+    description: "选择同一工作负载且 targetPort 相同的两个服务，必须引用同一端口。"
+    template: "该部署 %s 关联到多个服务 %v，使用 targetPort %q 但端口不同: %v。"
+    args:
+      - name: deployment
+        type: string
+      - name: services
+        type: "[]string"
+      - name: targetPort
+        type: string
+      - name: ports
+        type: "[]int32"
+
+# https://github.com/envoyproxy/envoy/issues/6767
+  - name: "GatewayDuplicateCertificate"
+    friendlyName: "证书重复"
+    code: IST0138
+    level: Warning
+    description: "多个网关中重复的证书可能导致客户端复用 HTTP2 连接时出现 404。"
+    template: "多个网关 %v 中重复的证书可能导致客户端复用 HTTP2 连接时出现 404。"
+    args:
+      - name: gateways
+        type: "[]string"
+
+  - name: "InvalidWebhook"
+    friendlyName: "Webhook无效"
+    code: IST0139
+    level: Error
+    description: "Webhook 无效或引用了不存在的控制面服务。"
+    template: "%v"
+    args:
+      - name: error
+        type: string
+
+  - name: "IngressRouteRulesNotAffected"
+    friendlyName: "路由规则无效"
+    code: IST0140
+    level: Warning
+    description: "路由规则对 ingress gateway 请求无效。"
+    template: "virtual service %s 的 subset 对 ingress gateway %s 的请求无效"
+    args:
+      - name: virtualservicesubset
+        type: string
+      - name: virtualservice
+        type: string
+
+  - name: "InsufficientPermissions"
+    friendlyName: "权限不足"
+    code: IST0141
+    level: Error
+    description: "缺少安装 Istio 所需的权限。"
+    template: "缺少创建资源 %v 的权限（%v）"
+    args:
+      - name: resource
+        type: string
+      - name: error
+        type: string
+
+  - name: "UnsupportedKubernetesVersion"
+    friendlyName: "K8S版本不支持"
+    code: IST0142
+    level: Error
+    description: "Kubernetes 版本不受支持"
+    template: "Kubernetes 版本 %q 低于最低要求版本: %v"
+    args:
+      - name: version
+        type: string
+      - name: minimumVersion
+        type: string
+
+  - name: "LocalhostListener"
+    friendlyName: "本地监听端口"
+    code: IST0143
+    level: Error
+    description: "Service 暴露的端口绑定在本地地址。"
+    template: "端口 %v 在 Service 中暴露，但监听在 localhost，仅本地可访问。"
+    args:
+      - name: port
+        type: string
+
+  - name: "InvalidApplicationUID"
+    friendlyName: "UID冲突"
+    code: IST0144
+    level: Warning
+    description: "应用 pod 不应以用户 ID (UID) 1337 运行。"
+    template: "用户 ID (UID) 1337 为 sidecar 代理保留。"
+
+  - name: "ConflictingGateways"
+    friendlyName: "Gateway冲突"
+    code: IST0145
+    level: Error
+    description: "Gateway 不应具有相同的 selector、端口和主机。"
+    template: "与 gateway %s 冲突（workload selector %s，端口 %s，主机 %v）。"
+    args:
+      - name: gateway
+        type: string
+      - name: selector
+        type: string
+      - name: portnumber
+        type: string
+      - name: hosts
+        type: string
+
+  - name: "ImageAutoWithoutInjectionWarning"
+    friendlyName: "未注入image:auto"
+    code: IST0146
+    level: Warning
+    description: "带有 `image: auto` 的部署应启用注入。"
+    template: "%s %s 包含 `image: auto` 但未匹配任何 Istio 注入 webhook selector。"
+    args:
+      - name: resourceType
+        type: string
+      - name: resourceName
+        type: string
+
+  - name: "ImageAutoWithoutInjectionError"
+    friendlyName: "未注入image:auto(错误)"
+    code: IST0147
+    level: Error
+    description: "带有 `image: auto` 的 pod 应启用注入。"
+    template: "%s %s 包含 `image: auto` 但未匹配任何 Istio 注入 webhook selector。"
+    args:
+      - name: resourceType
+        type: string
+      - name: resourceName
+        type: string
+
+  - name: "NamespaceInjectionEnabledByDefault"
+    friendlyName: "默认可注入"
+    code: IST0148
+    level: Info
+    description: "如果 Istio 安装时启用了 enableNamespacesByDefault 且未设置注入标签，则用户命名空间应可注入。"
+    template: "已启用 Istio 注入，因为 Istio 安装时 enableNamespacesByDefault 为 true。"
+
+  - name: "JwtClaimBasedRoutingWithoutRequestAuthN"
+    friendlyName: "JWT路由未认证"
+    code: IST0149
+    level: Error
+    description: "VirtualService 使用基于 JWT claim 的路由但未配置请求认证。"
+    template: "该 virtual service 使用基于 JWT claim（key: %s）路由，但未为 gateway（%s）pod（%s）配置请求认证。必须先为 gateway pod 配置请求认证以校验 JWT 并使 claim 可用于路由。"
+    args:
+      - name: key
+        type: string
+      - name: gateway
+        type: string
+      - name: pod
+        type: string
+        
+  - name: "ExternalNameServiceTypeInvalidPortName"
+    friendlyName: "ExternalName端口名无效"
+    code: IST0150
+    level: Warning
+    description: "ExternalName 服务的端口名无效，可能导致代理无法正确转发 TCP 命名端口和未匹配流量。"
+    template: "ExternalName 服务的端口名无效。代理可能无法正确转发 TCP 命名端口和未匹配流量。"
+
+  - name: "EnvoyFilterUsesRelativeOperation"
+    friendlyName: "EnvoyFilter相对操作"
+    code: IST0151
+    level: Warning
+    description: "该 EnvoyFilter 未设置优先级且使用了相对 patch 操作，可能导致未被应用。建议使用 INSERT_FIRST 或 ADD 选项，或设置优先级以确保正确应用。"
+    template: "该 EnvoyFilter 未设置优先级且使用了相对 patch 操作，可能导致未被应用。建议使用 INSERT_FIRST 或 ADD 选项，或设置优先级以确保正确应用。"
+   
+  - name: "EnvoyFilterUsesReplaceOperationIncorrectly"
+    friendlyName: "EnvoyFilter REPLACE用法错误"
+    code: IST0152
+    level: Error
+    description: "REPLACE 操作仅对 HTTP_FILTER 和 NETWORK_FILTER 有效。"
+    template: "REPLACE 操作仅对 HTTP_FILTER 和 NETWORK_FILTER 有效。"
+    
+  - name: "EnvoyFilterUsesAddOperationIncorrectly"
+    friendlyName: "EnvoyFilter ADD用法错误"
+    code: IST0153
+    level: Error
+    description: "当 applyTo 设置为 ROUTE_CONFIGURATION 或 HTTP_ROUTE 时，ADD 操作将被忽略。"
+    template: "当 applyTo 设置为 ROUTE_CONFIGURATION 或 HTTP_ROUTE 时，ADD 操作将被忽略。"
+  
+  - name: "EnvoyFilterUsesRemoveOperationIncorrectly"
+    friendlyName: "EnvoyFilter REMOVE用法错误"
+    code: IST0154
+    level: Error
+    description: "当 applyTo 设置为 ROUTE_CONFIGURATION 或 HTTP_ROUTE 时，REMOVE 操作将被忽略。"
+    template: "当 applyTo 设置为 ROUTE_CONFIGURATION 或 HTTP_ROUTE 时，REMOVE 操作将被忽略。"
+    
+  - name: "EnvoyFilterUsesRelativeOperationWithProxyVersion"
+    friendlyName: "EnvoyFilter相对操作+proxyVersion"
+    code: IST0155
+    level: Warning
+    description: "该 EnvoyFilter 未设置优先级，且使用了相对 patch 操作（NSTERT_BEFORE/AFTER、REPLACE、MERGE、DELETE）和 proxyVersion，可能导致升级时未被应用。建议使用 INSERT_FIRST 或 ADD 选项，或设置优先级以确保正确应用。"
+    template: "该 EnvoyFilter 未设置优先级，且使用了相对 patch 操作（NSTERT_BEFORE/AFTER、REPLACE、MERGE、DELETE）和 proxyVersion，可能导致升级时未被应用。建议使用 INSERT_FIRST 或 ADD 选项，或设置优先级以确保正确应用。"
+
+  - name: "UnsupportedGatewayAPIVersion"
+    friendlyName: "GatewayAPI版本不支持"
+    code: IST0156
+    level: Error
+    description: "Gateway API CRD 版本不受支持"
+    template: "Gateway API CRD 版本 %v 低于最低要求版本: %v"
+    args:
+    - name: version
+      type: string
+    - name: minimumVersion
+      type: string
+
+  - name: "InvalidTelemetryProvider"
+    friendlyName: "Telemetry未设置provider"
+    code: IST0157
+    level: Warning
+    description: "Telemetry 资源未设置 provider，将被忽略。"
+    template: "命名空间 %q 中的 Telemetry %v 未设置 provider，将被忽略。"
+    args:
+    - name: name
+      type: string
+    - name: namespace
+      type: string
+
+  - name: "PodsIstioProxyImageMismatchInNamespace"
+    friendlyName: "代理镜像不一致"
+    code: IST0158
+    level: Warning
+    description: "命名空间中 pod 的 Istio 代理镜像与注入配置中定义的不一致。"
+    template: "命名空间中 pod 的 Istio 代理镜像与注入配置中定义的不一致（pod 名称: %v）。通常在升级 Istio 控制面后出现，可通过重新部署 pod 解决。"
+    args:
+      - name: podNames
+        type: "[]string"
+
+  - name: "ConflictingTelemetryWorkloadSelectors"
+    friendlyName: "Telemetry选择冲突"
+    code: IST0159
+    level: Error
+    description: "Telemetry 资源选择了与其他 Telemetry 资源相同的工作负载。"
+    template: "命名空间 %q 中的 Telemetry %v 选择了相同的工作负载 pod %q，可能导致未定义行为。"
+    args:
+      - name: conflictingTelemetries
+        type: "[]string"
+      - name: namespace
+        type: string
+      - name: workloadPod
+        type: string
+
+  - name: "MultipleTelemetriesWithoutWorkloadSelectors"
+    friendlyName: "Telemetry未指定选择器"
+    code: IST0160
+    level: Error
+    description: "一个命名空间中有多个 Telemetry 资源未设置 workload selector。"
+    template: "命名空间 %q 中的 Telemetry %v 未设置 workload selector，可能导致未定义行为。"
+    args:
+      - name: conflictingTelemetries
+        type: "[]string"
+      - name: namespace
+        type: string
+  - name: "InvalidGatewayCredential"
+    friendlyName: "Gateway凭证无效"
+    code: IST0161
+    level: Error
+    description: "Gateway 资源引用的凭证无效"
+    template: "命名空间 %s 中的 Gateway %s 引用的凭证无效，可能导致流量异常。"
+    args:
+      - name: gatewayName
+        type: string
+      - name: gatewayNamespace
+        type: string

@@ -17,14 +17,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
-	v12 "k8s.io/api/core/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
-	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -32,12 +24,16 @@ import (
 	"sync"
 	"time"
 
-	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/bcs"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
+	v12 "k8s.io/api/core/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
+
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -48,8 +44,16 @@ import (
 	"k8s.io/klog"
 	apiv1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1"
 
+	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/cmd/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/api/bcs"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/k8s"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
+
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/capacitycheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/clustercheck"
+	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodecheck"
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/systemappcheck"
 )
@@ -138,6 +142,14 @@ func run(ctx context.Context) {
 			checkOption.ClusterIDs = []string{clusterID}
 			if checkOption.PluginStr == "" {
 				checkOption.PluginStr = bcro.Plugins
+			}
+			// 传入的pluginStr一定要在bcro.Plugins中
+			plugins := strings.Split(checkOption.PluginStr, ",")
+			for _, plugin := range plugins {
+				if !strings.Contains(bcro.Plugins, plugin) {
+					c.String(404, fmt.Sprintf("plugin %s not found", plugin))
+					return
+				}
 			}
 
 			pdf, reportErr := pluginmanager.GetClusterReport(clusterID, checkOption)
