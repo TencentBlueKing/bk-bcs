@@ -216,6 +216,7 @@ func handleAddNodesData(ctx context.Context, clusterId string, nodes *business.I
 		successNodeIds = make([]string, 0)
 	)
 
+	// get taskID
 	taskId := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// update success nodes ip

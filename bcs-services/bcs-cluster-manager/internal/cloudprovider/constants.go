@@ -373,4 +373,11 @@ var (
 
 	// DrainHelperKey xxx
 	DrainHelperKey ParamKey = "drainHelper"
+
+	// TransVPCMasterNodesIDs trans vpc master nodes id
+	TransVPCMasterNodesIDs ParamKey = "transVPCMasterNodeIDs"
+	// TransVPCWorkerNodesIDs trans vpc worker nodes id
+	TransVPCWorkerNodesIDs ParamKey = "transVPCWorkerNodeIDs"
+	// TransVPCWorkerNodesIDs trans vpc nodes ip
+	TransVPCIPs ParamKey = "transVPCNodeIPs"
 )

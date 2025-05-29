@@ -392,7 +392,6 @@ func CheckCvmInstanceState(ctx context.Context, ids []string,
 			blog.Errorf("cvm client GetInstancesById len(%d) failed, %s", len(ids), err.Error())
 			return nil
 		}
-
 		index := 0
 		running, failure := make([]InstanceInfo, 0), make([]InstanceInfo, 0)
 

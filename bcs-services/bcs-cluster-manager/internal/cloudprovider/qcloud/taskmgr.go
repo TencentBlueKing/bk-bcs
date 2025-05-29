@@ -53,6 +53,10 @@ func newtask() *Task {
 
 	// create cluster task
 	task.works[createClusterShieldAlarmStep.StepMethod] = tasks.CreateClusterShieldAlarmTask
+
+	task.works[createModifyInstancesVpcStep.StepMethod] = tasks.CreateModifyInstancesVpcTask
+	task.works[createCheckInstanceStateStep.StepMethod] = tasks.CreateCheckInstanceStateTask
+
 	task.works[createTKEClusterStep.StepMethod] = tasks.CreateTkeClusterTask
 	task.works[checkTKEClusterStatusStep.StepMethod] = tasks.CheckTkeClusterStatusTask
 	task.works[checkCreateClusterNodeStatusStep.StepMethod] = tasks.CheckCreateClusterNodeStatusTask
@@ -179,9 +183,17 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
-	createClusterTask := &CreateClusterTaskOption{Cluster: cls, Nodes: opt.WorkerNodes, NodeTemplate: opt.NodeTemplate}
+	createClusterTask := &CreateClusterTaskOption{
+		Cluster: cls, Nodes: opt.WorkerNodes, NodeTemplate: opt.NodeTemplate, DiffVpcNodeIPs: opt.DiffVPCNodeIPs,
+	}
 	// step0: create cluster shield alarm step
 	createClusterTask.BuildShieldAlertStep(task)
+
+	// step: check vpc and trans diff nodes
+	createClusterTask.BuildCreateModifyInstancesVpcStep(task)
+	createClusterTask.BuildCreateCheckInstanceStateStep(task)
+	createClusterTask.BuildCheckNodeIpsInCmdbStep(task)
+
 	// step1: createTKECluster and return clusterID inject common paras
 	createClusterTask.BuildCreateClusterStep(task)
 	// step2: check cluster status by clusterID
@@ -254,6 +266,7 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	if len(opt.WorkerNodes) > 0 {
 		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.WorkerNodes, ",")
 	}
+	task.CommonParams[cloudprovider.TransVPCIPs.String()] = strings.Join(opt.DiffVPCNodeIPs, ",")
 
 	return task, nil
 }

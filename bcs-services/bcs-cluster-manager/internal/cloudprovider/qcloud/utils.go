@@ -99,6 +99,16 @@ var (
 		StepMethod: fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",
 	}
+
+	createModifyInstancesVpcStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateModifyInstancesVpcTask", cloudName),
+		StepName:   "节点转移vpc任务",
+	}
+	createCheckInstanceStateStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateCheckInstanceStateTask", cloudName),
+		StepName:   "节点转移vpc状态检测",
+	}
+
 	createTKEClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CreateTKEClusterTask", cloudName),
 		StepName:   "创建集群",
@@ -282,9 +292,10 @@ var (
 
 // CreateClusterTaskOption 创建集群构建step子任务
 type CreateClusterTaskOption struct {
-	Cluster      *proto.Cluster
-	Nodes        []string
-	NodeTemplate *proto.NodeTemplate
+	Cluster        *proto.Cluster
+	Nodes          []string
+	NodeTemplate   *proto.NodeTemplate
+	DiffVpcNodeIPs []string
 }
 
 // BuildShieldAlertStep 屏蔽告警任务
@@ -295,6 +306,44 @@ func (cn *CreateClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
 
 	task.Steps[createClusterShieldAlarmStep.StepMethod] = shieldStep
 	task.StepSequence = append(task.StepSequence, createClusterShieldAlarmStep.StepMethod)
+}
+
+// BuildCreateModifyInstancesVpcStep 创建集群修改集群节点vpc任务
+func (cn *CreateClusterTaskOption) BuildCreateModifyInstancesVpcStep(task *proto.Task) {
+	if len(cn.DiffVpcNodeIPs) == 0 {
+		return
+	}
+
+	vpcStep := cloudprovider.InitTaskStep(createModifyInstancesVpcStep)
+	vpcStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	vpcStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	vpcStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
+
+	task.Steps[createModifyInstancesVpcStep.StepMethod] = vpcStep
+	task.StepSequence = append(task.StepSequence, createModifyInstancesVpcStep.StepMethod)
+}
+
+// BuildCreateCheckInstanceStateStep 创建集群检查节点状态任务
+func (cn *CreateClusterTaskOption) BuildCreateCheckInstanceStateStep(task *proto.Task) {
+	if len(cn.DiffVpcNodeIPs) == 0 {
+		return
+	}
+
+	vpcStep := cloudprovider.InitTaskStep(createCheckInstanceStateStep)
+	vpcStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	vpcStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	task.Steps[createCheckInstanceStateStep.StepMethod] = vpcStep
+	task.StepSequence = append(task.StepSequence, createCheckInstanceStateStep.StepMethod)
+}
+
+// BuildCheckNodeIpsInCmdbStep 创建集群检查节点ip是否在cmdb
+func (cn *CreateClusterTaskOption) BuildCheckNodeIpsInCmdbStep(task *proto.Task) {
+	if len(cn.DiffVpcNodeIPs) == 0 {
+		return
+	}
+
+	common.BuildCheckNodeIpsInCmdbStep(task, cn.Cluster)
 }
 
 // BuildCreateClusterStep 创建集群任务

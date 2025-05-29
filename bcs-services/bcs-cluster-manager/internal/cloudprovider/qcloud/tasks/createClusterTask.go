@@ -557,7 +557,7 @@ type clusterInfo struct {
 
 // createTkeCluster create tke cluster
 func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, // nolint
-	nodeIPs []string, passwd, operator string) (*clusterInfo, error) {
+	masterIPs, nodeIPs []string, passwd, operator string) (*clusterInfo, error) {
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 
 	var (
@@ -589,23 +589,24 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 		passwd = utils.BuildInstancePwd()
 	}
 
-	// masterIP list
-	masterIPs := cloudprovider.GetClusterMasterIPList(info.Cluster)
-	if len(masterIPs) > 0 {
-		masterNodes, errTrans := transIPsToInstances(&cloudprovider.ListNodesOption{
-			Common:       info.CmOption,
-			ClusterVPCID: info.Cluster.VpcID,
-		}, masterIPs)
-		if errTrans != nil || len(masterNodes) == 0 {
-			blog.Errorf("createTkeCluster[%s]: transMasterIPs for cluster[%s] failed: %v",
-				taskID, info.Cluster.ClusterID, errTrans)
-			retErr := fmt.Errorf("createTkeCluster transMasterIPs err, %s", errTrans)
-			return nil, retErr
-		}
+	// if masterIPs is empty, means no master nodes trans vpc
+	if len(masterIPs) == 0 {
+		masterIPs = cloudprovider.GetClusterMasterIPList(info.Cluster)
+	}
 
-		for i := range masterNodes {
-			masterIDs = append(masterIDs, masterNodes[i].NodeID)
-		}
+	masterNodes, errTrans := transIPsToInstances(&cloudprovider.ListNodesOption{
+		Common:       info.CmOption,
+		ClusterVPCID: info.Cluster.VpcID,
+	}, masterIPs)
+	if errTrans != nil || len(masterNodes) == 0 {
+		blog.Errorf("createTkeCluster[%s]: transMasterIPs for cluster[%s] failed: %v",
+			taskID, info.Cluster.ClusterID, errTrans)
+		retErr := fmt.Errorf("createTkeCluster transMasterIPs err, %s", errTrans)
+		return nil, retErr
+	}
+
+	for i := range masterNodes {
+		masterIDs = append(masterIDs, masterNodes[i].NodeID)
 	}
 
 	// handle nodeIPs if exist
@@ -738,6 +739,295 @@ func createTkeCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	}, nil
 }
 
+// CreateModifyInstancesVpcTask xxx
+func CreateModifyInstancesVpcTask(taskID string, stepName string) error {
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("CreateModifyInstancesVpcTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		return nil
+	}
+	blog.Infof("CreateModifyInstancesVpcTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"CreateModifyInstancesVpcTask start")
+
+	// step login started here
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+	nodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
+	if err != nil {
+		blog.Errorf("CreateModifyInstancesVpcTask[%s] GetClusterDependBasicInfo task %s step %s failed, %s",
+			taskID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	clusterVpcId := dependInfo.Cluster.GetVpcID()
+
+	// masterIP list
+	masterIPs := cloudprovider.GetClusterMasterIPList(dependInfo.Cluster)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CreateModifyInstancesVpcTask[%s] master IP: %+v", taskID, masterIPs))
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CreateModifyInstancesVpcTask[%s] node IP: %+v", taskID, nodeIPs))
+
+	var (
+		transVPCMasterNodeIds []string
+		transVPCWorkerNodeIds []string
+		masterNodeIds         []string
+		workerNodeIds         []string
+		masterNodeIps         []string
+		workerNodeIps         []string
+	)
+
+	if len(masterIPs) > 0 && dependInfo.Cluster.ManageType == icommon.ClusterManageTypeIndependent {
+		nodes, errTrans := transIPsToInstances(&cloudprovider.ListNodesOption{
+			Common: dependInfo.CmOption,
+		}, masterIPs)
+		if errTrans != nil || len(nodes) == 0 {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("CreateModifyInstancesVpcTask[%s] transNodeIPs for cluster[%s] failed: %v",
+					taskID, dependInfo.Cluster.ClusterID, errTrans))
+			blog.Errorf("CreateModifyInstancesVpcTask[%s] transNodeIPs for cluster[%s] failed: %v",
+				taskID, dependInfo.Cluster.ClusterID, errTrans)
+			retErr := fmt.Errorf("CreateModifyInstancesVpcTask transMasterIPs err, %s", errTrans)
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+
+		for i := range nodes {
+			if nodes[i].GetVPC() != clusterVpcId {
+				transVPCMasterNodeIds = append(transVPCMasterNodeIds, nodes[i].NodeID)
+			} else {
+				masterNodeIds = append(masterNodeIds, nodes[i].NodeID)
+				masterNodeIps = append(masterNodeIps, nodes[i].InnerIP)
+			}
+		}
+	}
+
+	if len(nodeIPs) > 0 {
+		nodes, errTrans := transIPsToInstances(&cloudprovider.ListNodesOption{
+			Common: dependInfo.CmOption,
+		}, nodeIPs)
+		if errTrans != nil || len(nodes) == 0 {
+			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+				fmt.Sprintf("CreateModifyInstancesVpcTask[%s] transNodeIPs for cluster[%s] failed: %v",
+					taskID, dependInfo.Cluster.ClusterID, errTrans))
+			blog.Errorf("CreateModifyInstancesVpcTask[%s] transNodeIPs for cluster[%s] failed: %v",
+				taskID, dependInfo.Cluster.ClusterID, errTrans)
+			retErr := fmt.Errorf("CreateModifyInstancesVpcTask transMasterIPs err, %s", errTrans)
+			_ = state.UpdateStepFailure(start, stepName, retErr)
+			return retErr
+		}
+
+		for i := range nodes {
+			if nodes[i].GetVPC() != clusterVpcId {
+				transVPCWorkerNodeIds = append(transVPCWorkerNodeIds, nodes[i].NodeID)
+			} else {
+				workerNodeIds = append(workerNodeIds, nodes[i].NodeID)
+				workerNodeIps = append(workerNodeIps, nodes[i].InnerIP)
+			}
+		}
+	}
+
+	state.Task.CommonParams[cloudprovider.TransVPCMasterNodesIDs.String()] = strings.Join(transVPCMasterNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.TransVPCWorkerNodesIDs.String()] = strings.Join(transVPCWorkerNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.MasterIDs.String()] = strings.Join(masterNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(workerNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.MasterIPs.String()] = strings.Join(masterNodeIps, ",")
+	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(workerNodeIps, ",")
+
+	allTransVPCNodeId := make([]string, 0)
+	allTransVPCNodeId = append(allTransVPCNodeId, transVPCMasterNodeIds...)
+	allTransVPCNodeId = append(allTransVPCNodeId, transVPCWorkerNodeIds...)
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CreateModifyInstancesVpcTask[%s] ready Handle VPC[%s] instance ID: %+v", taskID, clusterVpcId, allTransVPCNodeId))
+
+	err = business.ModifyInstancesVpcAttribute(ctx, clusterVpcId, allTransVPCNodeId, dependInfo.CmOption)
+	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("modify nodes vpc failed [%s]", err))
+		blog.Errorf("CreateModifyInstancesVpcTask[%s]: ModifyInstancesVpcAttribute for vpc[%v] nodes[%v] failed, %s",
+			taskID, clusterVpcId, allTransVPCNodeId, err.Error())
+		retErr := fmt.Errorf("ModifyInstancesVpcAttribute err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"modify nodes vpc successful")
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CreateModifyInstancesVpcTask[%s] update to storage fatal: %s", taskID, stepName)
+		return err
+	}
+	return nil
+}
+
+// CreateCheckInstanceStateTask check instance operation state
+func CreateCheckInstanceStateTask(taskID string, stepName string) error {
+	start := time.Now()
+
+	// get task and task current step
+	state, step, err := cloudprovider.GetTaskStateAndCurrentStep(taskID, stepName)
+	if err != nil {
+		return err
+	}
+	// previous step successful when retry task
+	if step == nil {
+		blog.Infof("CreateCheckInstanceStateTask[%s]: current step[%s] successful and skip", taskID, stepName)
+		return nil
+	}
+	blog.Infof("CreateCheckInstanceStateTask[%s]: task %s run step %s, system: %s, old state: %s, params %v",
+		taskID, taskID, stepName, step.System, step.Status, step.Params)
+
+	// inject taskID
+	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"CreateCheckInstanceStateTask start")
+
+	// step login started here
+	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
+	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
+
+	transVPCMasterNodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.TransVPCMasterNodesIDs.String(), ",")
+	transVPCWorkerNodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.TransVPCWorkerNodesIDs.String(), ",")
+	masterNodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.MasterIDs.String(), ",")
+	workerNodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.NodeIDsKey.String(), ",")
+	masterNodeIps := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.MasterIPs.String(), ",")
+	workerNodeIps := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.NodeIPsKey.String(), ",")
+
+	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
+		ClusterID: clusterID,
+		CloudID:   cloudID,
+	})
+	if err != nil {
+		blog.Errorf("CreateCheckInstanceStateTask[%s] GetClusterDependBasicInfo task %s step %s failed, %s",
+			taskID, taskID, stepName, err.Error())
+		retErr := fmt.Errorf("get cloud credential err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+
+	allTransVPCNodeID := make([]string, 0)
+	allTransVPCNodeID = append(allTransVPCNodeID, transVPCMasterNodeIds...)
+	allTransVPCNodeID = append(allTransVPCNodeID, transVPCWorkerNodeIds...)
+
+	instanceList, err := business.CheckCvmInstanceState(ctx, allTransVPCNodeID,
+		&cloudprovider.ListNodesOption{Common: dependInfo.CmOption})
+	if err != nil {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			fmt.Sprintf("check cvm instance state failed [%s]", err))
+		blog.Errorf("CreateCheckInstanceStateTask[%s]: CheckCvmInstanceState for nodes[%v] failed, %s",
+			taskID, allTransVPCNodeID, err.Error())
+		retErr := fmt.Errorf("CheckCvmInstanceState err, %s", err.Error())
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	if len(instanceList.SuccessNodes) == 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
+			"success nodes empty")
+		blog.Errorf("CreateCheckInstanceStateTask[%s] failed[%+v], successNodes empty",
+			taskID, allTransVPCNodeID)
+		retErr := fmt.Errorf("CreateCheckInstanceStateTask failed: successNodes empty")
+		_ = state.UpdateStepFailure(start, stepName, retErr)
+		return retErr
+	}
+	successIds, failedIds := handleAddNodesData(ctx, clusterID, instanceList)
+	blog.Infof("CreateCheckInstanceStateTask[%s] nodeIds[%v] success[%v] failed[%v]",
+		taskID, allTransVPCNodeID, successIds, failedIds)
+
+	// handle task nodes
+	var (
+		availableMasterNodeIds = make([]string, 0)
+		availableMasterNodeIps = make([]string, 0)
+		availableWorkerNodeIds = make([]string, 0)
+		availableWorkerNodeIps = make([]string, 0)
+		transNodesIps          = make([]string, 0)
+	)
+
+	for i := range transVPCMasterNodeIds {
+		if utils.StringInSlice(transVPCMasterNodeIds[i], failedIds) {
+			continue
+		}
+		availableMasterNodeIds = append(availableMasterNodeIds, transVPCMasterNodeIds[i])
+	}
+
+	successInstance := instanceList.SuccessNodes
+	for i := range availableMasterNodeIds {
+		for insIdx := range successInstance {
+			if successInstance[insIdx].NodeId == availableMasterNodeIds[i] {
+				availableMasterNodeIps = append(availableMasterNodeIps, successInstance[insIdx].NodeIp)
+				transNodesIps = append(transNodesIps, successInstance[insIdx].NodeIp)
+			}
+		}
+	}
+
+	availableMasterNodeIds = append(availableMasterNodeIds, masterNodeIds...)
+	availableMasterNodeIps = append(availableMasterNodeIps, masterNodeIps...)
+
+	for i := range transVPCWorkerNodeIds {
+		if utils.StringInSlice(transVPCWorkerNodeIds[i], failedIds) {
+			continue
+		}
+		availableWorkerNodeIds = append(availableWorkerNodeIds, transVPCWorkerNodeIds[i])
+	}
+
+	workerNodes := cloudprovider.GetNodesByInstanceIDs(availableWorkerNodeIds)
+	for i := range workerNodes {
+		availableWorkerNodeIps = append(availableWorkerNodeIps, workerNodes[i].GetInnerIP())
+		transNodesIps = append(transNodesIps, workerNodes[i].GetInnerIP())
+	}
+
+	availableWorkerNodeIds = append(availableWorkerNodeIds, workerNodeIds...)
+	availableWorkerNodeIps = append(availableWorkerNodeIps, workerNodeIps...)
+
+	state.Task.CommonParams[cloudprovider.MasterIDs.String()] = strings.Join(availableMasterNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.MasterIPs.String()] = strings.Join(availableMasterNodeIps, ",")
+	state.Task.CommonParams[cloudprovider.NodeIDsKey.String()] = strings.Join(availableWorkerNodeIds, ",")
+	state.Task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(availableWorkerNodeIps, ",")
+	state.Task.CommonParams[cloudprovider.FailedTransVpcNodeIDsKey.String()] = strings.Join(failedIds, ",")
+	state.Task.CommonParams[cloudprovider.TransVPCIPs.String()] = strings.Join(transNodesIps, ",")
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("state.Task.CommonParams[%s] masterIds:[%v] masterIps:[%v] nodeIds:[%v] nodeIps:[%v]",
+			taskID, availableMasterNodeIds, availableMasterNodeIps, availableWorkerNodeIds, availableWorkerNodeIps))
+
+	if len(failedIds) > 0 {
+		state.PartFailure = true
+		state.Message = fmt.Sprintf("node[%s] trans vpc failed", strings.Join(failedIds, ","))
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		"check instance operation status successful")
+
+	// update step
+	if err := state.UpdateStepSucc(start, stepName); err != nil {
+		blog.Errorf("CreateCheckInstanceStateTask[%s] update to storage fatal: %s", taskID, stepName)
+		return err
+	}
+	return nil
+}
+
 // CreateTkeClusterTask call qcloud interface to create cluster
 func CreateTkeClusterTask(taskID string, stepName string) error {
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
@@ -761,6 +1051,8 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	clusterID := step.Params[cloudprovider.ClusterIDKey.String()]
 	cloudID := step.Params[cloudprovider.CloudIDKey.String()]
 	nodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(step.Params, cloudprovider.NodeIPsKey.String(), ",")
+	transNodeIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.NodeIPsKey.String(), ",")
+	transMasterIPs := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams, cloudprovider.MasterIPs.String(), ",")
 	passwd := state.Task.CommonParams[cloudprovider.PasswordKey.String()]
 	operator := state.Task.CommonParams[cloudprovider.OperatorKey.String()]
 	nodeTemplateID := step.Params[cloudprovider.NodeTemplateIDKey.String()]
@@ -781,8 +1073,13 @@ func CreateTkeClusterTask(taskID string, stepName string) error {
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
+	// if transNodeIps is not empty, means some nodes trans vpc, use transNodeIps
+	if len(transNodeIPs) > 0 {
+		nodeIPs = transNodeIPs
+	}
+
 	// create cluster task
-	cls, err := createTkeCluster(ctx, dependInfo, nodeIPs, passwd, operator)
+	cls, err := createTkeCluster(ctx, dependInfo, transMasterIPs, nodeIPs, passwd, operator)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 			fmt.Sprintf("create tke cluster failed [%s]", err))
