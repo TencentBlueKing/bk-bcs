@@ -27,3 +27,17 @@ func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 	ret["immutable"] = mapx.GetBool(manifest, "immutable")
 	return ret
 }
+
+// FormatBscpConfig ...
+func FormatBscpConfig(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonFormatRes(manifest)
+	data := []string{}
+	if cmData, ok := manifest["data"]; ok {
+		for k := range cmData.(map[string]interface{}) {
+			data = append(data, k)
+		}
+	}
+	ret["data"] = data
+	ret["releaseID"] = mapx.GetStr(manifest, "status.releaseID")
+	return ret
+}
