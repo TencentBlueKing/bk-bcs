@@ -55,15 +55,16 @@ func GetNodeGroupMaxPod(common cloudprovider.CommonOption, clusterId string) (in
 		for _, flavor := range *flavors {
 			if flavor.Name == nodeTemplate.Flavor {
 				ram := flavor.Ram / 1024
-				if ram < 8 {
+				switch {
+				case ram < 8:
 					return 20, nil
-				} else if ram < 16 {
+				case ram < 16:
 					return 40, nil
-				} else if ram < 32 {
+				case ram < 32:
 					return 60, nil
-				} else if ram < 64 {
+				case ram < 64:
 					return 80, nil
-				} else {
+				default:
 					return 110, nil
 				}
 			}
