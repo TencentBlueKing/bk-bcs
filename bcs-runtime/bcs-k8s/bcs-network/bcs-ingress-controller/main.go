@@ -215,8 +215,7 @@ func main() {
 
 	nodeBindCache := portbindingctrl.NewNodePortBindingCache(mgr.GetClient())
 	portBindingReconciler := portbindingctrl.NewPortBindingReconciler(
-		ctx, opts.PortBindingCheckInterval, mgr.GetClient(), portPoolCache,
-		mgr.GetEventRecorderFor("bcs-ingress-controller"), opts.NodePortBindingNs, nodeBindCache)
+		ctx, mgr.GetClient(), portPoolCache, mgr.GetEventRecorderFor("bcs-ingress-controller"), nodeBindCache, opts)
 	if err = portBindingReconciler.SetupWithManager(mgr); err != nil {
 		blog.Errorf("unable to create port binding reconciler, err %s", err.Error())
 		os.Exit(1)
@@ -281,7 +280,7 @@ func main() {
 	checkRunner.
 		Register(check.NewPortBindChecker(mgr.GetClient(), mgr.GetEventRecorderFor("bcs-ingress-controller")),
 			check.CheckPerMin).
-		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper), check.CheckPerMin).
+		Register(check.NewListenerChecker(mgr.GetClient(), listenerHelper), check.CheckPer10Min).
 		Register(check.NewIngressChecker(mgr.GetClient(), lbClient, lbIDCache, lbNameCache, opts.LBCacheExpiration),
 			check.CheckPerMin).
 		Register(check.NewPortLeakChecker(mgr.GetClient(), portPoolCache, opts.PortLeakThresholdSecs), check.CheckPerMin).

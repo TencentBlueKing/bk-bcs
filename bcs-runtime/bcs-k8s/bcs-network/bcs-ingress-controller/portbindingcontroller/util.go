@@ -15,7 +15,6 @@ package portbindingcontroller
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
@@ -106,11 +105,7 @@ func checkPodNeedReconcile(oldPod, newPod *k8scorev1.Pod) bool {
 	}
 
 	// Pod状态/IP等变化时需要触发PortBinding调谐
-	if !reflect.DeepEqual(oldPod.Status, newPod.Status) {
-		return true
-	}
-
-	if !reflect.DeepEqual(oldPod.Spec, newPod.Spec) {
+	if oldPod.Status.Phase != newPod.Status.Phase || oldPod.Status.PodIP != newPod.Status.PodIP {
 		return true
 	}
 

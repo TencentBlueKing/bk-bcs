@@ -57,7 +57,7 @@ func (l *ListenerChecker) Run() {
 		return
 	}
 
-	go l.setMetric(listenerList)
+	// go l.setMetric(listenerList)
 	go l.deletePortPoolUnusedListener(listenerList)
 }
 

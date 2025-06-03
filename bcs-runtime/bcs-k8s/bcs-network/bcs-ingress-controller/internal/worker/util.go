@@ -88,6 +88,9 @@ func (h *EventHandler) recordListenerOwnerEvent(lis *networkextensionv1.Listener
 			lis.GetName(), msg)
 	case constant.KindPortPool:
 		sourceName := lis.GetListenerSourceName()
+		if sourceName == "" || sourceName == "NULL" {
+			return
+		}
 		sourceNamespace := lis.GetListenerSourceNamespace()
 		portBinding := &networkextensionv1.PortBinding{}
 		if err := h.k8sCli.Get(context.Background(), k8stypes.NamespacedName{

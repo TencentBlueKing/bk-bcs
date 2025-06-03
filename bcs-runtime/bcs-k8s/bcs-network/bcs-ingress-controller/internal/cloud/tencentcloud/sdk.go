@@ -35,6 +35,8 @@ const (
 	RequestLimitExceededCode = "RequestLimitExceeded"
 	// WrongStatusCode code for incorrect status
 	WrongStatusCode = "InternalError"
+	// ResourceInOperation code for resource in operation
+	ResourceInOperation = "FailedOperation.ResourceInOperating"
 	// TaskStatusDealing  task is dealing
 	TaskStatusDealing = 2
 	// TaskStatusFailed task is failed
@@ -208,8 +210,7 @@ func (sw *SdkWrapper) DescribeLoadBalancers(region string, req *tclb.DescribeLoa
 		resp, err = clbCli.DescribeLoadBalancers(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -304,8 +305,7 @@ func (sw *SdkWrapper) doCreateListener(region string, req *tclb.CreateListenerRe
 		resp, err = clbCli.CreateListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -411,8 +411,7 @@ func (sw *SdkWrapper) doDescribeListeners(region string, req *tclb.DescribeListe
 		resp, err = clbCli.DescribeListeners(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -505,8 +504,7 @@ func (sw *SdkWrapper) doDescribeTargets(region string, req *tclb.DescribeTargets
 		resp, err = clbCli.DescribeTargets(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -553,8 +551,7 @@ func (sw *SdkWrapper) DeleteListener(region string, req *tclb.DeleteListenerRequ
 		resp, err = clbCli.DeleteListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -634,8 +631,7 @@ func (sw *SdkWrapper) doDeleteLoadbalanceListenners(region string, req *tclb.Del
 		resp, err = clbCli.DeleteLoadBalancerListeners(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -687,8 +683,7 @@ func (sw *SdkWrapper) CreateRule(region string, req *tclb.CreateRuleRequest) ([]
 		resp, err = clbCli.CreateRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -740,8 +735,7 @@ func (sw *SdkWrapper) DeleteRule(region string, req *tclb.DeleteRuleRequest) err
 		resp, err = clbCli.DeleteRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -793,8 +787,7 @@ func (sw *SdkWrapper) ModifyRule(region string, req *tclb.ModifyRuleRequest) err
 		resp, err = clbCli.ModifyRule(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -846,8 +839,7 @@ func (sw *SdkWrapper) ModifyListener(region string, req *tclb.ModifyListenerRequ
 		resp, err = clbCli.ModifyListener(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -899,8 +891,7 @@ func (sw *SdkWrapper) ModifyDomainAttributes(region string, req *tclb.ModifyDoma
 		resp, err = clbCli.ModifyDomainAttributes(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}
@@ -1013,8 +1004,7 @@ func (sw *SdkWrapper) ModifyTargetWeight(region string, req *tclb.ModifyTargetWe
 		resp, err = clbCli.ModifyTargetWeight(req)
 		if err != nil {
 			if terr, ok := err.(*terrors.TencentCloudSDKError); ok {
-				sw.checkErrCode(terr, mf)
-				if terr.Code == RequestLimitExceededCode || terr.Code == WrongStatusCode {
+				if sw.isRetryableErr(terr, mf) {
 					continue
 				}
 			}

@@ -103,7 +103,7 @@ func (pbh *portBindingHandler) ensurePortBinding(portBinding *networkextensionv1
 	updateStatus := portBinding.Status.Status
 
 	if err := pbh.k8sClient.Status().Update(context.Background(), portBinding, &client.UpdateOptions{}); err != nil {
-		return true, fmt.Errorf("ensure port binding %s/%s failed, err %s",
+		return true, fmt.Errorf("update port binding %s/%s failed, err %s",
 			portBinding.GetName(), portBinding.GetNamespace(), err.Error())
 	}
 
@@ -162,7 +162,7 @@ func (pbh *portBindingHandler) cleanPortBinding(portBinding *networkextensionv1.
 
 	newPortBindingStatusList := make([]*networkextensionv1.PortBindingStatusItem, 0)
 	for _, item := range portBinding.Spec.PortBindingList {
-		var itemStatus *networkextensionv1.PortBindingStatusItem = nil
+		var itemStatus *networkextensionv1.PortBindingStatusItem
 		for _, status := range portBinding.Status.PortBindingStatusList {
 			if item.GetFullKey() == status.GetFullKey() {
 				itemStatus = status

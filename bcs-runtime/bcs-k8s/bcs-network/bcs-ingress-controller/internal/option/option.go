@@ -128,6 +128,8 @@ type ControllerOption struct {
 
 	// PortLeakThresholdSecs 检查端口泄漏的间隔，单位秒, 为0时不检查
 	PortLeakThresholdSecs int
+
+	PortBindingReconcileConcurrent int
 }
 
 // Conf 服务配置
@@ -270,6 +272,8 @@ func (op *ControllerOption) BindFromCommandLine() {
 	flag.IntVar(&op.HealthCheckIntervalSecs, "health_check_interval_secs", 30, "seconds for pull health metrics, "+
 		"turn off if set to 0")
 	flag.IntVar(&op.ListenerBypassMaxConcurrent, "listener_bypass_max_concurrent", 10, "max concurrent for bypass listener")
+
+	flag.IntVar(&op.PortBindingReconcileConcurrent, "portbinding_reconcile_concurrent", 10, "max concurrent for portbinding reconcile")
 
 	flag.Parse()
 

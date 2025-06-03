@@ -26,8 +26,10 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
@@ -35,6 +37,7 @@ import (
 	ingresscommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/constant"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/option"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/portpoolcache"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/utils"
 	bcsnetcommon "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/pkg/common"
@@ -42,28 +45,27 @@ import (
 
 // PortBindingReconciler reconciler for bcs port pool
 type PortBindingReconciler struct {
-	cleanInterval time.Duration
-	ctx           context.Context
-	k8sClient     client.Client
-	poolCache     *portpoolcache.Cache
-	eventer       record.EventRecorder
+	opts *option.ControllerOption
 
-	nodePortBindingNs string
-	nodeBindCache     *NodePortBindingCache
+	ctx       context.Context
+	k8sClient client.Client
+	poolCache *portpoolcache.Cache
+	eventer   record.EventRecorder
+
+	nodeBindCache *NodePortBindingCache
 }
 
 // NewPortBindingReconciler create PortBindingReconciler
-func NewPortBindingReconciler(ctx context.Context, cleanInterval time.Duration, k8sClient client.Client,
-	poolCache *portpoolcache.Cache, eventer record.EventRecorder, nodePortBindingNs string,
-	nodeBindCache *NodePortBindingCache) *PortBindingReconciler {
+func NewPortBindingReconciler(ctx context.Context, k8sClient client.Client,
+	poolCache *portpoolcache.Cache, eventer record.EventRecorder,
+	nodeBindCache *NodePortBindingCache, opts *option.ControllerOption) *PortBindingReconciler {
 	return &PortBindingReconciler{
-		ctx:               ctx,
-		cleanInterval:     cleanInterval,
-		k8sClient:         k8sClient,
-		poolCache:         poolCache,
-		eventer:           eventer,
-		nodePortBindingNs: nodePortBindingNs,
-		nodeBindCache:     nodeBindCache,
+		ctx:           ctx,
+		k8sClient:     k8sClient,
+		poolCache:     poolCache,
+		eventer:       eventer,
+		nodeBindCache: nodeBindCache,
+		opts:          opts,
 	}
 }
 
@@ -72,6 +74,10 @@ func NewPortBindingReconciler(ctx context.Context, cleanInterval time.Duration, 
 // nolint  funlen
 func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	blog.V(3).Infof("PortBinding %+v triggered", req.NamespacedName) // found same namespacedName pod & node
+	start := time.Now()
+	defer func() {
+		blog.V(3).Infof("PortBinding %+v triggered cost %v", req.NamespacedName, time.Since(start))
+	}()
 
 	portBinding, pod, node, err := pbr.getResource(req.NamespacedName, req.Name)
 	if err != nil {
@@ -163,7 +169,7 @@ func (pbr *PortBindingReconciler) Reconcile(req ctrl.Request) (ctrl.Result, erro
 func (pbr *PortBindingReconciler) getResource(namespacedName k8stypes.NamespacedName,
 	name string) (*networkextensionv1.PortBinding, *k8scorev1.Pod, *k8scorev1.Node, error) {
 	pb := &networkextensionv1.PortBinding{}
-	var portBinding *networkextensionv1.PortBinding = nil
+	var portBinding *networkextensionv1.PortBinding
 	if err := pbr.k8sClient.Get(pbr.ctx, namespacedName, pb); err != nil {
 		// nolint
 		if !k8serrors.IsNotFound(err) {
@@ -190,7 +196,7 @@ func (pbr *PortBindingReconciler) getResource(namespacedName k8stypes.Namespaced
 		}
 	} else {
 		// node's namespace is empty, set to match node portbindings' namespace
-		node.SetNamespace(pbr.nodePortBindingNs)
+		node.SetNamespace(pbr.opts.NodePortBindingNs)
 		return portBinding, nil, node, nil
 	}
 
@@ -259,7 +265,7 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 		if !expired && err == nil {
 			return ctrl.Result{
 				Requeue:      true,
-				RequeueAfter: pbr.cleanInterval,
+				RequeueAfter: pbr.opts.PortBindingCheckInterval,
 			}, nil
 		}
 		if err != nil {
@@ -347,12 +353,15 @@ func (pbr *PortBindingReconciler) cleanPortBinding(portBinding *networkextension
 
 // SetupWithManager set reconciler
 func (pbr *PortBindingReconciler) SetupWithManager(mgr ctrl.Manager) error {
-
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&networkextensionv1.PortBinding{}).
 		Watches(&source.Kind{Type: &k8scorev1.Pod{}}, NewPodFilter(mgr.GetClient())).
-		Watches(&source.Kind{Type: &k8scorev1.Node{}}, NewNodeFilter(mgr.GetClient(), pbr.nodePortBindingNs)).
+		Watches(&source.Kind{Type: &k8scorev1.Node{}}, NewNodeFilter(mgr.GetClient(), pbr.opts.NodePortBindingNs)).
 		WithEventFilter(pbr.getPortBindingPredicate()).
+		WithOptions(controller.Options{MaxConcurrentReconciles: pbr.opts.PortBindingReconcileConcurrent,
+			RateLimiter: workqueue.NewMaxOfRateLimiter(
+				workqueue.NewItemExponentialFailureRateLimiter(5*time.Millisecond, 100*time.Second),
+			)}).
 		Complete(pbr)
 }
 
@@ -453,7 +462,7 @@ func (pbr *PortBindingReconciler) isNodeValid(node *k8scorev1.Node) bool {
 }
 
 func (pbr *PortBindingReconciler) podPortBindingPreCheck(portBindingType string, portBinding *networkextensionv1.
-PortBinding, pod *k8scorev1.Pod) (bool, ctrl.Result, error) {
+	PortBinding, pod *k8scorev1.Pod) (bool, ctrl.Result, error) {
 	if portBinding == nil {
 		if pod.Status.Phase == k8scorev1.PodFailed {
 			blog.Infof("pod '%s/%s' is failed, reason: %s, msg: %s, no need to handle it", pod.GetNamespace(),
@@ -485,7 +494,7 @@ PortBinding, pod *k8scorev1.Pod) (bool, ctrl.Result, error) {
 }
 
 func (pbr *PortBindingReconciler) nodePortBindingPreCheck(portBindingType string, portBinding *networkextensionv1.
-PortBinding, node *k8scorev1.Node) (bool, ctrl.Result, error) {
+	PortBinding, node *k8scorev1.Node) (bool, ctrl.Result, error) {
 	if portBinding == nil {
 		res, err := pbr.createPortBinding(portBindingType, node.GetNamespace(), node.GetName(), node.GetAnnotations())
 		return false, res, err

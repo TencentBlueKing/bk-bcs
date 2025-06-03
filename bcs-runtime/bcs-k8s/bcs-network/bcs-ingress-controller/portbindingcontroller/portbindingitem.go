@@ -183,6 +183,7 @@ func (pbih *portBindingItemHandler) deleteItem(
 			blog.Warnf("failed to update listener %s/%s, err %s", listenerName, item.PoolNamespace, err.Error())
 			return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusDeleting)
 		}
+		blog.Infof("update listener %s/%s successfully", listenerName, item.PoolNamespace)
 	}
 	return pbih.generateStatus(item, itemStatus, constant.PortBindingItemStatusCleaned)
 }

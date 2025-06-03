@@ -46,7 +46,7 @@ var (
 		Subsystem: "listener",
 		Name:      "handle_latency_seconds",
 		Help:      "handle latency statistic for bkbcs ingress controller to reconcile listener batch",
-		Buckets:   []float64{0.5, 1.0, 2.0, 3.0, 5.0, 10.0, 20.0, 30.0, 60.0},
+		Buckets:   []float64{10.0, 20.0, 30.0, 60.0, 90.0, 120.0, 150.0, 180.0},
 	}, []string{"batch_size", "is_bulk_mode", "method", "status"})
 )
 
