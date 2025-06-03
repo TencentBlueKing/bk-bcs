@@ -4066,13 +4066,6 @@
             "in": "query",
             "required": false,
             "type": "string"
-          },
-          {
-            "name": "isForce",
-            "in": "query",
-            "required": false,
-            "type": "boolean",
-            "format": "boolean"
           }
         ],
         "tags": [
@@ -11258,12 +11251,17 @@
         "imageInfo": {
           "$ref": "#/definitions/clustermanagerImageInfo",
           "description": "节点模板镜像信息",
-          "title": "ImageInfo"
+          "title": "imageInfo"
         },
         "gpuArgs": {
           "$ref": "#/definitions/clustermanagerGPUArgs",
           "description": "GPU参数信息",
-          "title": "GPUArgs"
+          "title": "gpuArgs"
+        },
+        "extraInfo": {
+          "$ref": "#/definitions/clustermanagerMapStruct",
+          "description": "节点模版额外标识信息",
+          "title": "extraInfo"
         }
       },
       "description": "创建节点模板",
@@ -12564,7 +12562,7 @@
           "type": "boolean",
           "format": "boolean",
           "description": "是否启用MIG特性",
-          "title": "MIGEnable"
+          "title": "migEnable"
         },
         "driver": {
           "$ref": "#/definitions/clustermanagerDriverVersion",
@@ -12574,7 +12572,7 @@
         "cuda": {
           "$ref": "#/definitions/clustermanagerDriverVersion",
           "description": "CUDA版本信息",
-          "title": "CUDA"
+          "title": "cuda"
         },
         "cudnn": {
           "$ref": "#/definitions/clustermanagerCUDNN",
@@ -17651,7 +17649,13 @@
         "gpuArgs": {
           "$ref": "#/definitions/clustermanagerGPUArgs",
           "description": "GPU参数信息",
-          "title": "GPUArgs"
+          "title": "gpuArgs"
+        },
+        "extraInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
@@ -21366,6 +21370,21 @@
           "$ref": "#/definitions/clustermanagerMapStruct",
           "description": "用户设置节点annotations",
           "title": "annotations"
+        },
+        "imageInfo": {
+          "$ref": "#/definitions/clustermanagerImageInfo",
+          "description": "节点模板镜像信息",
+          "title": "imageInfo"
+        },
+        "gpuArgs": {
+          "$ref": "#/definitions/clustermanagerGPUArgs",
+          "description": "GPU参数信息",
+          "title": "gpuArgs"
+        },
+        "extraInfo": {
+          "$ref": "#/definitions/clustermanagerMapStruct",
+          "description": "节点模版额外标识信息",
+          "title": "extraInfo"
         }
       },
       "description": "更新cloud账号请求，不允许更改账号信息，防止对存量集群产生影响",

@@ -226,8 +226,10 @@ var (
 	// LastClusterStatus xxx
 	LastClusterStatus ParamKey = "lastClusterStatus"
 
-	// NodeIPsKey xxx
 	// Task Common Instance
+	// NodeDatasKey xxx
+	NodeDatasKey ParamKey = "nodeDatas"
+	// NodeIPsKey xxx
 	NodeIPsKey ParamKey = "nodeIPs"
 	// OriginNodeIPsKey xxx
 	OriginNodeIPsKey ParamKey = "originNodeIPs"
@@ -278,6 +280,8 @@ var (
 	DynamicNodeScriptKey ParamKey = "ExternalNodeScript"
 	// DynamicClusterKubeConfigKey xxx
 	DynamicClusterKubeConfigKey ParamKey = "KubeConfig"
+	// DynamicMasterNodeIPListKey xxx
+	DynamicMasterNodeIPListKey ParamKey = "MasterNodeIPList"
 
 	// SuccessNodeIDsKey xxx
 	// CVM Instance
@@ -374,10 +378,6 @@ var (
 	// DrainHelperKey xxx
 	DrainHelperKey ParamKey = "drainHelper"
 
-	// TransVPCMasterNodesIDs trans vpc master nodes id
-	TransVPCMasterNodesIDs ParamKey = "transVPCMasterNodeIDs"
-	// TransVPCWorkerNodesIDs trans vpc worker nodes id
-	TransVPCWorkerNodesIDs ParamKey = "transVPCWorkerNodeIDs"
-	// TransVPCWorkerNodesIDs trans vpc nodes ip
+	// TransVPCIPs trans vpc nodes ip
 	TransVPCIPs ParamKey = "transVPCNodeIPs"
 )

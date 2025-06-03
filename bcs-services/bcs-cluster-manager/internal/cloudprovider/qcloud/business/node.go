@@ -349,6 +349,53 @@ type InstanceList struct {
 	FailedNodes  []InstanceInfo
 }
 
+// GetNodeIds get success node ids
+func (insList InstanceList) GetNodeIds(success bool) []string {
+	var (
+		ids         []string
+		insListData []InstanceInfo
+	)
+	if success {
+		insListData = insList.SuccessNodes
+	} else {
+		insListData = insList.FailedNodes
+	}
+
+	for _, ins := range insListData {
+		ids = append(ids, ins.NodeId)
+	}
+	return ids
+}
+
+// MapSuccessNodeIdToIp get success node ids
+func (insList InstanceList) MapSuccessNodeIdToIp() map[string]string {
+	var (
+		idToIp = make(map[string]string, 0)
+	)
+	for _, ins := range insList.SuccessNodes {
+		idToIp[ins.NodeId] = ins.NodeIp
+	}
+	return idToIp
+}
+
+// GetNodeIps get success node ips
+func (insList InstanceList) GetNodeIps(success bool) []string {
+	var (
+		ips         []string
+		ipsListData []InstanceInfo
+	)
+	if success {
+		ipsListData = insList.SuccessNodes
+	} else {
+		ipsListData = insList.FailedNodes
+	}
+
+	for _, ins := range ipsListData {
+		ips = append(ips, ins.NodeIp)
+	}
+	return ips
+}
+
 // InstanceInfo cvm id/ip
 type InstanceInfo struct {
 	NodeId       string

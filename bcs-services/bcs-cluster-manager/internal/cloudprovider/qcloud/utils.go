@@ -292,10 +292,10 @@ var (
 
 // CreateClusterTaskOption 创建集群构建step子任务
 type CreateClusterTaskOption struct {
-	Cluster        *proto.Cluster
-	Nodes          []string
-	NodeTemplate   *proto.NodeTemplate
-	DiffVpcNodeIPs []string
+	Cluster       *proto.Cluster
+	Nodes         []string
+	NodeTemplate  *proto.NodeTemplate
+	transVpcNodes []cloudprovider.NodeData
 }
 
 // BuildShieldAlertStep 屏蔽告警任务
@@ -310,36 +310,41 @@ func (cn *CreateClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
 
 // BuildCreateModifyInstancesVpcStep 创建集群修改集群节点vpc任务
 func (cn *CreateClusterTaskOption) BuildCreateModifyInstancesVpcStep(task *proto.Task) {
-	if len(cn.DiffVpcNodeIPs) == 0 {
+	if len(cn.transVpcNodes) == 0 {
 		return
 	}
 
-	vpcStep := cloudprovider.InitTaskStep(createModifyInstancesVpcStep)
-	vpcStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
-	vpcStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
-	vpcStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
+	createStep := cloudprovider.InitTaskStep(createModifyInstancesVpcStep)
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
 
-	task.Steps[createModifyInstancesVpcStep.StepMethod] = vpcStep
+	nodes, _ := json.Marshal(cn.transVpcNodes)
+	createStep.Params[cloudprovider.NodeDatasKey.String()] = string(nodes)
+
+	task.Steps[createModifyInstancesVpcStep.StepMethod] = createStep
 	task.StepSequence = append(task.StepSequence, createModifyInstancesVpcStep.StepMethod)
 }
 
 // BuildCreateCheckInstanceStateStep 创建集群检查节点状态任务
 func (cn *CreateClusterTaskOption) BuildCreateCheckInstanceStateStep(task *proto.Task) {
-	if len(cn.DiffVpcNodeIPs) == 0 {
+	if len(cn.transVpcNodes) == 0 {
 		return
 	}
 
-	vpcStep := cloudprovider.InitTaskStep(createCheckInstanceStateStep)
-	vpcStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
-	vpcStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+	checkStep := cloudprovider.InitTaskStep(createCheckInstanceStateStep)
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
 
-	task.Steps[createCheckInstanceStateStep.StepMethod] = vpcStep
+	nodes, _ := json.Marshal(cn.transVpcNodes)
+	checkStep.Params[cloudprovider.NodeDatasKey.String()] = string(nodes)
+
+	task.Steps[createCheckInstanceStateStep.StepMethod] = checkStep
 	task.StepSequence = append(task.StepSequence, createCheckInstanceStateStep.StepMethod)
 }
 
 // BuildCheckNodeIpsInCmdbStep 创建集群检查节点ip是否在cmdb
 func (cn *CreateClusterTaskOption) BuildCheckNodeIpsInCmdbStep(task *proto.Task) {
-	if len(cn.DiffVpcNodeIPs) == 0 {
+	if len(cn.transVpcNodes) == 0 {
 		return
 	}
 
@@ -351,7 +356,6 @@ func (cn *CreateClusterTaskOption) BuildCreateClusterStep(task *proto.Task) {
 	createStep := cloudprovider.InitTaskStep(createTKEClusterStep)
 	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
-	createStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
 	if cn.NodeTemplate != nil {
 		createStep.Params[cloudprovider.NodeTemplateIDKey.String()] = cn.NodeTemplate.NodeTemplateID
 	}

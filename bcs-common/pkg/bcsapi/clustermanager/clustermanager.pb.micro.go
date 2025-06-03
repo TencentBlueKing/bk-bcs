@@ -235,6 +235,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.CheckDrainNode",
+			Path:    []string{"/clustermanager/v1/node/drain/check"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.UpdateNodeLabels",
 			Path:    []string{"/clustermanager/v1/node/labels"},
 			Method:  []string{"PUT"},
@@ -989,6 +995,7 @@ type ClusterManagerService interface {
 	CordonNode(ctx context.Context, in *CordonNodeRequest, opts ...client.CallOption) (*CordonNodeResponse, error)
 	UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, opts ...client.CallOption) (*UnCordonNodeResponse, error)
 	DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error)
+	CheckDrainNode(ctx context.Context, in *CheckDrainNodeRequest, opts ...client.CallOption) (*CheckDrainNodeResponse, error)
 	UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, opts ...client.CallOption) (*UpdateNodeLabelsResponse, error)
 	UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, opts ...client.CallOption) (*UpdateNodeAnnotationsResponse, error)
 	UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, opts ...client.CallOption) (*UpdateNodeTaintsResponse, error)
@@ -1474,6 +1481,16 @@ func (c *clusterManagerService) UnCordonNode(ctx context.Context, in *UnCordonNo
 func (c *clusterManagerService) DrainNode(ctx context.Context, in *DrainNodeRequest, opts ...client.CallOption) (*DrainNodeResponse, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.DrainNode", in)
 	out := new(DrainNodeResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) CheckDrainNode(ctx context.Context, in *CheckDrainNodeRequest, opts ...client.CallOption) (*CheckDrainNodeResponse, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.CheckDrainNode", in)
+	out := new(CheckDrainNodeResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2709,6 +2726,7 @@ type ClusterManagerHandler interface {
 	CordonNode(context.Context, *CordonNodeRequest, *CordonNodeResponse) error
 	UnCordonNode(context.Context, *UnCordonNodeRequest, *UnCordonNodeResponse) error
 	DrainNode(context.Context, *DrainNodeRequest, *DrainNodeResponse) error
+	CheckDrainNode(context.Context, *CheckDrainNodeRequest, *CheckDrainNodeResponse) error
 	UpdateNodeLabels(context.Context, *UpdateNodeLabelsRequest, *UpdateNodeLabelsResponse) error
 	UpdateNodeAnnotations(context.Context, *UpdateNodeAnnotationsRequest, *UpdateNodeAnnotationsResponse) error
 	UpdateNodeTaints(context.Context, *UpdateNodeTaintsRequest, *UpdateNodeTaintsResponse) error
@@ -2894,6 +2912,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		CordonNode(ctx context.Context, in *CordonNodeRequest, out *CordonNodeResponse) error
 		UnCordonNode(ctx context.Context, in *UnCordonNodeRequest, out *UnCordonNodeResponse) error
 		DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error
+		CheckDrainNode(ctx context.Context, in *CheckDrainNodeRequest, out *CheckDrainNodeResponse) error
 		UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error
 		UpdateNodeAnnotations(ctx context.Context, in *UpdateNodeAnnotationsRequest, out *UpdateNodeAnnotationsResponse) error
 		UpdateNodeTaints(ctx context.Context, in *UpdateNodeTaintsRequest, out *UpdateNodeTaintsResponse) error
@@ -3213,6 +3232,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.DrainNode",
 		Path:    []string{"/clustermanager/v1/node/drain"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.CheckDrainNode",
+		Path:    []string{"/clustermanager/v1/node/drain/check"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -4067,6 +4092,10 @@ func (h *clusterManagerHandler) UnCordonNode(ctx context.Context, in *UnCordonNo
 
 func (h *clusterManagerHandler) DrainNode(ctx context.Context, in *DrainNodeRequest, out *DrainNodeResponse) error {
 	return h.ClusterManagerHandler.DrainNode(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) CheckDrainNode(ctx context.Context, in *CheckDrainNodeRequest, out *CheckDrainNodeResponse) error {
+	return h.ClusterManagerHandler.CheckDrainNode(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) UpdateNodeLabels(ctx context.Context, in *UpdateNodeLabelsRequest, out *UpdateNodeLabelsResponse) error {

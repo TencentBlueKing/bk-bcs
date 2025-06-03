@@ -46,6 +46,7 @@ type CreateAction struct {
 	cloud        *cmproto.Cloud
 	nodeTemplate *cmproto.NodeTemplate // nolint
 	task         *cmproto.Task
+	diffVpcNodes []cloudprovider.NodeData
 	req          *cmproto.CreateClusterReq
 	resp         *cmproto.CreateClusterResp
 }
@@ -53,8 +54,9 @@ type CreateAction struct {
 // NewCreateAction create cluster action
 func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLock) *CreateAction {
 	return &CreateAction{
-		model:  model,
-		locker: locker,
+		model:        model,
+		locker:       locker,
+		diffVpcNodes: make([]cloudprovider.NodeData, 0),
 	}
 }
 
@@ -158,6 +160,13 @@ func (ca *CreateAction) checkClusterWorkerNodes(cls *cmproto.Cluster) error { //
 			blog.Errorf("createCluster checkClusterWorkerNodes[%s] failed: %v", node.InnerIP, err)
 			continue
 		}
+
+		if node.GetVPC() != cls.VpcID {
+			ca.diffVpcNodes = append(ca.diffVpcNodes, cloudprovider.NodeData{
+				NodeIp: node.InnerIP,
+				NodeId: node.NodeID,
+			})
+		}
 	}
 
 	return nil
@@ -185,6 +194,12 @@ func (ca *CreateAction) checkClusterMasterNodes(cls *cmproto.Cluster) error {
 
 	for _, node := range nodes {
 		cls.Master[node.InnerIP] = node
+		if node.GetVPC() != cls.VpcID {
+			ca.diffVpcNodes = append(ca.diffVpcNodes, cloudprovider.NodeData{
+				NodeIp: node.InnerIP,
+				NodeId: node.NodeID,
+			})
+		}
 	}
 
 	return nil
@@ -220,28 +235,6 @@ func (ca *CreateAction) transNodeIPsToCloudNode(ips []string) ([]*cmproto.Node, 
 
 	blog.Infof("get cloud[%s] IPs[%v] to Node successfully", ca.cloud.CloudProvider, ips)
 	return nodes, nil
-}
-
-func (ca *CreateAction) checkNodesVPC(cls *cmproto.Cluster) ([]string, error) {
-	allNodes := make([]string, 0)
-	allNodes = append(allNodes, ca.req.Master...)
-	allNodes = append(allNodes, ca.req.Nodes...)
-
-	nodes, err := ca.transNodeIPsToCloudNode(allNodes)
-	if err != nil {
-		blog.Errorf("createCluster checkNodesVPC[%s] failed: %v", allNodes, err)
-		return nil, err
-	}
-
-	diffVPCNodeIPs := make([]string, 0)
-
-	for _, node := range nodes {
-		if node.GetVPC() != cls.VpcID {
-			diffVPCNodeIPs = append(diffVPCNodeIPs, node.InnerIP)
-		}
-	}
-
-	return diffVPCNodeIPs, nil
 }
 
 // createClusterValidate create cluster validate
@@ -592,15 +585,6 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		}
 	}
 
-	diffVPCNodeIps, err := ca.checkNodesVPC(cls)
-	if err != nil {
-		blog.Errorf("checkNodesVPC failed: masterNodes[%v], workerNodes[%v], err: %s",
-			ca.req.Master, ca.req.Nodes, err.Error())
-		ca.resp.Data = cls
-		ca.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
-		return err
-	}
-
 	// create cluster task by task manager
 	task, err := provider.CreateCluster(cls, &cloudprovider.CreateClusterOption{
 		CommonOption: *coption,
@@ -609,10 +593,10 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		Operator:     ca.req.Creator,
 		Cloud:        ca.cloud,
 		// worker nodes info
-		WorkerNodes:    ca.req.Nodes,
-		MasterNodes:    ca.req.Master,
-		NodeGroupIDs:   nodeGroupIDs,
-		DiffVPCNodeIPs: diffVPCNodeIps,
+		WorkerNodes:  ca.req.Nodes,
+		MasterNodes:  ca.req.Master,
+		NodeGroupIDs: nodeGroupIDs,
+		DiffVpcNodes: ca.diffVpcNodes,
 		NodeTemplate: func() *cmproto.NodeTemplate {
 			if ca.req.NodeTemplateID == "" {
 				return nil

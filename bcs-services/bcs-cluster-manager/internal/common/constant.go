@@ -233,6 +233,8 @@ const (
 )
 
 const (
+	// Default Default platform default
+	Default = "default"
 	// Iptables iptables mode
 	Iptables = "iptables"
 	// Ipvs ipvs mode
@@ -655,4 +657,13 @@ const (
 	GcpCloudProvider = "gcpCloud"
 	// KindDaemonSet kind daemonset
 	KindDaemonSet = "DaemonSet"
+)
+
+const (
+	// TemplateType template type
+	TemplateType = "templateType"
+	// TemplateGpu template gpu
+	TemplateGpu = "gpu"
+	// TemplateInstanceType template instance type
+	TemplateInstanceType = "templateInstanceType"
 )

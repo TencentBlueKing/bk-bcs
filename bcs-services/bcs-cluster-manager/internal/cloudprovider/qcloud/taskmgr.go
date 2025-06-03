@@ -184,7 +184,10 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 
 	// setting all steps details
 	createClusterTask := &CreateClusterTaskOption{
-		Cluster: cls, Nodes: opt.WorkerNodes, NodeTemplate: opt.NodeTemplate, DiffVpcNodeIPs: opt.DiffVPCNodeIPs,
+		Cluster:       cls,
+		Nodes:         opt.WorkerNodes,
+		NodeTemplate:  opt.NodeTemplate,
+		transVpcNodes: opt.DiffVpcNodes,
 	}
 	// step0: create cluster shield alarm step
 	createClusterTask.BuildShieldAlertStep(task)
@@ -212,7 +215,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
 				NodeOperator:   opt.Operator,
-				NodeIPList:     strings.Join(opt.WorkerNodes, ","),
+				MasterIPList:   cloudprovider.DynamicMasterNodeIPListKey.String(),
+				NodeIPList: func() string {
+					if len(createClusterTask.transVpcNodes) > 0 {
+						return ""
+					}
+
+					return strings.Join(opt.WorkerNodes, ",")
+				}(),
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CreateCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -224,7 +234,13 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID: cls.ClusterID,
 			Content:   opt.NodeTemplate.UserScript,
-			NodeIps:   strings.Join(opt.WorkerNodes, ","),
+			NodeIps: func() string {
+				if len(createClusterTask.transVpcNodes) > 0 {
+					return ""
+				}
+
+				return strings.Join(opt.WorkerNodes, ",")
+			}(),
 			Operator:  opt.Operator,
 			StepName:  common.PostInitStepJob,
 			Translate: common.PostInitJob,
@@ -237,8 +253,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd:  passwd,
-				NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+				InstancePasswd: passwd,
+				NodeIPList: func() string {
+					if len(createClusterTask.transVpcNodes) > 0 {
+						return ""
+					}
+
+					return strings.Join(opt.WorkerNodes, ",")
+				}(),
 				NodeOperator:    opt.Operator,
 				ShowSopsUrl:     true,
 				TranslateMethod: template.UserPostInit,
@@ -266,7 +288,6 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	if len(opt.WorkerNodes) > 0 {
 		task.CommonParams[cloudprovider.NodeIPsKey.String()] = strings.Join(opt.WorkerNodes, ",")
 	}
-	task.CommonParams[cloudprovider.TransVPCIPs.String()] = strings.Join(opt.DiffVPCNodeIPs, ",")
 
 	return task, nil
 }

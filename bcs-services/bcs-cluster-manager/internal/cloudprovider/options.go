@@ -178,12 +178,18 @@ type CreateClusterOption struct {
 	InitPassword string
 	Operator     string
 	// cloud is used for cloudprovider template
-	Cloud          *proto.Cloud
-	WorkerNodes    []string
-	MasterNodes    []string
-	NodeGroupIDs   []string
-	DiffVPCNodeIPs []string
-	NodeTemplate   *proto.NodeTemplate
+	Cloud        *proto.Cloud
+	WorkerNodes  []string
+	MasterNodes  []string
+	NodeGroupIDs []string
+	DiffVpcNodes []NodeData
+	NodeTemplate *proto.NodeTemplate
+}
+
+// NodeData node data
+type NodeData struct {
+	NodeIp string `json:"nodeIp"`
+	NodeId string `json:"nodeId"`
 }
 
 // CreateVirtualClusterOption create virtual cluster option

@@ -4422,8 +4422,12 @@ message NodeTemplate {
     description: "节点模版镜像信息"
   }];
   GPUArgs gpuArgs = 34 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "GPUArgs",
+    title: "gpuArgs",
     description: "GPU参数信息"
+  }];
+  map<string, string> extraInfo = 35 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点模版额外标识信息"
   }];
 }
 
@@ -4586,12 +4590,16 @@ message CreateNodeTemplateRequest {
     description: "用户设置节点annotations"
   }];
   ImageInfo imageInfo = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "ImageInfo",
+    title: "imageInfo",
     description: "节点模板镜像信息"
   }];
   GPUArgs gpuArgs = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "GPUArgs",
+    title: "gpuArgs",
     description: "GPU参数信息"
+  }];
+  MapStruct extraInfo = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点模版额外标识信息"
   }];
 }
 
@@ -4715,6 +4723,18 @@ message UpdateNodeTemplateRequest {
   MapStruct annotations = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "用户设置节点annotations"
+  }];
+  ImageInfo imageInfo = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "imageInfo",
+    description: "节点模板镜像信息"
+  }];
+  GPUArgs gpuArgs = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpuArgs",
+    description: "GPU参数信息"
+  }];
+  MapStruct extraInfo = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点模版额外标识信息"
   }];
 }
 
@@ -15222,7 +15242,7 @@ message GetClusterSharedProjectResponse {
 
 message GPUArgs {
   bool migEnable = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "MIGEnable",
+    title: "migEnable",
     description: "是否启用MIG特性"
   }];
   DriverVersion driver = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -15230,7 +15250,7 @@ message GPUArgs {
     description: "GPU驱动版本信息"
   }];
   DriverVersion cuda = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "CUDA",
+    title: "cuda",
     description: "CUDA版本信息"
   }];
   CUDNN cudnn = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

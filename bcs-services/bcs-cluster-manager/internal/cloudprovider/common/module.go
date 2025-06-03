@@ -390,7 +390,7 @@ func CheckNodeIpsInCMDBTask(taskID string, stepName string) error {
 	transVPCIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
 		cloudprovider.TransVPCIPs.String(), ",")
 
-	// transIpList is trans vpc node in create cluster, where nodeIDsKey contains all worker nodes
+	// when nodeIpList && transVPCIpList exist, use transVPCIpList. nodeIpList pass to backward
 	if len(transVPCIpList) > 0 {
 		nodeIpList = transVPCIpList
 	}

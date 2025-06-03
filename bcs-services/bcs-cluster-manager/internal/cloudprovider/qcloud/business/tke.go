@@ -487,6 +487,10 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 	}
 
 	if options != nil && options.Advance != nil {
+		if options.Advance.GetNodeOs() != "" {
+			req.ImageId = options.Advance.GetNodeOs()
+		}
+
 		if options.Advance.GetIsGPUNode() && info.NodeTemplate.GetImage().GetImageName() != "" {
 			// if gpu node, use nodeTemplate imageName and call api to get imageID
 			imageName := info.NodeTemplate.GetImage().GetImageName()
@@ -495,8 +499,6 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 				blog.Errorf("GenerateNTAddExistedInstanceReq GetCVMImageIDByImageName failed: %v", err)
 			}
 			req.ImageId = imageID
-		} else if options.Advance.GetNodeOs() != "" {
-			req.ImageId = options.Advance.GetNodeOs()
 		}
 	}
 
@@ -829,7 +831,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		advanceInfo.PreStartUserScript = script
 	}
 
-	if nodeTemplate.GpuArgs != nil && (options == nil || options.Advance == nil || options.Advance.IsGPUNode) {
+	if options != nil && options.Advance != nil && options.Advance.GetIsGPUNode() && nodeTemplate.GpuArgs != nil {
 		gpuArgs := nodeTemplate.GpuArgs
 		advanceInfo.GPUArgs = generateGPUArgs(gpuArgs)
 	}

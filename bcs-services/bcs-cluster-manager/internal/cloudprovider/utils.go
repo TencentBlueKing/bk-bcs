@@ -437,7 +437,8 @@ func getNodeNormalStatus(extraStatus []string) []string {
 	return defaultStatus
 }
 
-func getClusterOrPoolNodes(clusterId, nodePoolId string) ([]*proto.Node, error) {
+// GetClusterOrPoolNodes get cluster or nodeGroup nodes
+func GetClusterOrPoolNodes(clusterId, nodePoolId string) ([]*proto.Node, error) {
 	condM := make(operator.M)
 	condM["clusterid"] = clusterId
 
@@ -445,12 +446,12 @@ func getClusterOrPoolNodes(clusterId, nodePoolId string) ([]*proto.Node, error) 
 		condM["nodegroupid"] = nodePoolId
 	}
 	cond := operator.NewLeafCondition(operator.Eq, condM)
-	return GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{})
+	return GetStorageModel().ListNode(context.Background(), cond, &storeopt.ListOption{All: true})
 }
 
 // ListNodesInClusterNodePool list nodeGroup nodes
 func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, error) {
-	nodes, err := getClusterOrPoolNodes(clusterID, nodePoolID)
+	nodes, err := GetClusterOrPoolNodes(clusterID, nodePoolID)
 	if err != nil {
 		blog.Errorf("ListNodesInClusterNodePool NodeGroup %s all Nodes failed, %s", nodePoolID, err.Error())
 		return nil, err
@@ -471,7 +472,7 @@ func ListNodesInClusterNodePool(clusterID, nodePoolID string) ([]*proto.Node, er
 
 // ListClusterNodes list cluster nodes (运行中/上架中状态)
 func ListClusterNodes(clusterID string) ([]*proto.Node, error) {
-	nodes, err := getClusterOrPoolNodes(clusterID, "")
+	nodes, err := GetClusterOrPoolNodes(clusterID, "")
 	if err != nil {
 		blog.Errorf("ListClusterNodes %s all Nodes failed, %s", clusterID, err.Error())
 		return nil, err
