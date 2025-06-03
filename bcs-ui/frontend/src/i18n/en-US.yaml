@@ -2999,7 +2999,6 @@ dashboard:
       zoomOut: Zoom out
       zoomIn: Zoom in
       copy: Copy
-    weterm: {}
   storage:
     usedBy: Mount
   button:

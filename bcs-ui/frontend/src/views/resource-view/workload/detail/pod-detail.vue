@@ -137,7 +137,9 @@
               :show-overflow-tooltip="false">
               <template #default="{ row }">
                 <bk-button text @click="handleShowTerminal(row)">WebConsole</bk-button>
-                <bk-button text class="ml10" @click="resolveLink('login', row.name)">WeTERM</bk-button>
+                <bk-button text class="ml10" @click="resolveLink('login', row.name)" v-if="IS_INTERNAL">
+                  WeTERM
+                </bk-button>
                 <bk-popover
                   placement="bottom"
                   theme="light dropdown"
@@ -168,13 +170,21 @@
           </bk-table>
         </bcs-tab-panel>
         <bcs-tab-panel name="event" :label="$t('generic.label.event')" render-directive="if">
+          <EventTable
+            :kinds="['Pod']"
+            :cluster-id="clusterId"
+            :namespace="namespace"
+            :name="name"
+            v-if="!clusterMap[clusterId]?.is_shared">
+          </EventTable>
           <EventQueryTable
             class="min-h-[360px]"
             hide-cluster-and-namespace
             :kinds="['Pod']"
             :cluster-id="clusterId"
             :namespace="namespace"
-            :name="name">
+            :name="name"
+            v-else>
           </EventQueryTable>
         </bcs-tab-panel>
         <bcs-tab-panel name="conditions" :label="$t('k8s.conditions')" render-directive="if">
@@ -344,6 +354,7 @@
 import { bkOverflowTips } from 'bk-magic-vue';
 import { computed, defineComponent, onMounted, ref, toRefs } from 'vue';
 
+import EventTable from './bk-monitor-event.vue';
 import useDetail from './use-detail';
 
 import { logCollectorEntrypoints } from '@/api/modules/monitor';
@@ -373,6 +384,7 @@ export default defineComponent({
     StatusIcon,
     Metric,
     CodeEditor,
+    EventTable,
     EventQueryTable,
   },
   directives: {
@@ -403,7 +415,7 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const { clusterNameMap } = useCluster();
+    const { clusterNameMap, clusterMap } = useCluster();
     const {
       isLoading,
       detail,
@@ -573,8 +585,10 @@ export default defineComponent({
       handleUpdateResource,
       handleDeleteResource,
       handleShowTerminal,
+      clusterMap,
       clusterNameMap,
       resolveLink,
+      IS_INTERNAL: _INTERNAL_.value,
     };
   },
 });

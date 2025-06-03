@@ -2406,7 +2406,6 @@ dashboard:
       zoomOut: 缩小
       zoomIn: 放大
       copy: 复制代码
-    weterm: {}
   storage:
     usedBy: 被挂载
 apiToken:
