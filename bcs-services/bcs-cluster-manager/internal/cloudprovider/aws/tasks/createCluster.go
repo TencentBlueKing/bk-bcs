@@ -379,8 +379,8 @@ func createAddon(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) 
 	for _, addon := range defaultAddons {
 		// 调用CreateAddon方法创建addon
 		_, err = cli.CreateAddon(&eks.CreateAddonInput{
-			ClusterName: aws.String(info.Cluster.ClusterName), // 设置集群名称
-			AddonName:   aws.String(addon),                    // 设置要创建的addon名称
+			ClusterName: aws.String(info.Cluster.SystemID), // 设置集群名称
+			AddonName:   aws.String(addon),                 // 设置要创建的addon名称
 		})
 		// 如果创建addon失败，则直接返回错误
 		if err != nil {

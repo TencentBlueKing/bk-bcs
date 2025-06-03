@@ -214,9 +214,6 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 		Name:             input.NodePool.Name,
 		InitialNodeCount: input.NodePool.InitialNodeCount,
 		Locations:        input.NodePool.Locations,
-		MaxPodsConstraint: &container.MaxPodsConstraint{
-			MaxPodsPerNode: input.NodePool.MaxPodsConstraint.MaxPodsPerNode,
-		},
 		Autoscaling: &container.NodePoolAutoscaling{
 			Enabled: false,
 		},
@@ -246,6 +243,12 @@ func GenerateNodePool(input *CreateNodePoolRequest) *container.NodePool {
 		nodePool.Management = &container.NodeManagement{
 			AutoRepair:  input.NodePool.Management.AutoRepair,
 			AutoUpgrade: input.NodePool.Management.AutoUpgrade,
+		}
+	}
+
+	if input.NodePool.MaxPodsConstraint.MaxPodsPerNode > 0 {
+		nodePool.MaxPodsConstraint = &container.MaxPodsConstraint{
+			MaxPodsPerNode: input.NodePool.MaxPodsConstraint.MaxPodsPerNode,
 		}
 	}
 
