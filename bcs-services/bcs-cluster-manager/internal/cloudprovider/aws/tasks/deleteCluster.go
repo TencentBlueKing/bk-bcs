@@ -88,7 +88,7 @@ func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	}
 
 	// check cluster if exist
-	_, err = cli.GetEksCluster(cluster.SystemID)
+	cloudCluster, err := cli.GetEksCluster(cluster.SystemID)
 	if err != nil {
 		if strings.Contains(err.Error(), eks.ErrCodeResourceNotFoundException) {
 			return nil
@@ -145,6 +145,51 @@ func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 	if err != nil {
 		blog.Errorf("deleteEKSCluster[%s]: call aws DeleteEKSCluster failed: %v", taskID, err)
 		return fmt.Errorf("call aws DeleteEKSCluster failed: %s", err.Error())
+	}
+
+	clusterCtx, clusterCancel := context.WithTimeout(ctx, 5*time.Minute)
+	defer clusterCancel()
+	err = loop.LoopDoFunc(clusterCtx, func() error {
+		_, retErr := cli.GetEksCluster(cluster.SystemID)
+		if retErr == nil {
+			blog.Infof("deleteEKSCluster[%s] %s cluster is being deleted", taskID, cluster.SystemID)
+			return nil
+		}
+
+		// 集群已经被删除
+		if strings.Contains(retErr.Error(), eks.ErrCodeResourceNotFoundException) {
+			return loop.EndLoop
+		}
+
+		blog.Errorf("deleteEKSCluster[%s]: call aws GetEksCluster failed: %v", taskID, retErr)
+		return nil
+	}, loop.LoopInterval(10*time.Second))
+	if err != nil {
+		blog.Errorf("deleteEKSCluster[%s] delete cluster failed: %v", taskID, err)
+		return err
+	}
+
+	ecCli, err := api.NewEC2Client(info.CmOption)
+	if err != nil {
+		blog.Errorf("deleteEKSCluster[%s]: get aws ec client for cluster[%s] failed, %s", taskID, cluster.ClusterID,
+			err.Error())
+		return fmt.Errorf("get aws ec client failed, %s", err.Error())
+	}
+
+	// 删除创建集群时自动创建的子网
+	for _, subnetId := range cloudCluster.ResourcesVpcConfig.SubnetIds {
+		err = retry.Do(func() error {
+			if errLocal := ecCli.DeleteSubnet(subnetId); errLocal != nil {
+				return errLocal
+			}
+
+			return nil
+		}, retry.Attempts(3), retry.DelayType(retry.FixedDelay), retry.Delay(time.Second))
+		if err != nil {
+			blog.Errorf("deleteEKSCluster[%s] delete cluster subnet %s failed: %v", taskID, *subnetId, err)
+		}
+
+		blog.Infof("deleteEKSCluster[%s] delete cluster subnet %s successful", taskID, *subnetId)
 	}
 
 	return nil
