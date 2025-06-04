@@ -656,7 +656,7 @@ func buildList(ctx context.Context, resources []*storage.Resource) map[string]in
 	manifestItems := []interface{}{}
 	// 获取 apiVersion
 	apiVersion := mapx.GetStr(resources[0].Data, "apiVersion")
-	kind := resources[0].ResourceType
+	kind := mapx.GetStr(resources[0].Data, "kind")
 	formatFunc := formatter.GetFormatFunc(kind, apiVersion)
 	pruneFunc := formatter.GetPruneFunc(kind)
 	// 遍历列表中的每个资源，生成 manifestExt
