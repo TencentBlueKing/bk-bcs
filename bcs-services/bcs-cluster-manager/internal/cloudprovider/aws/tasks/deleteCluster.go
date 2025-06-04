@@ -71,7 +71,7 @@ func DeleteEKSClusterTask(taskID string, stepName string) error {
 	return nil
 }
 
-func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error {
+func deleteEKSCluster(ctx context.Context, info *cloudprovider.CloudDependBasicInfo) error { // nolint
 	taskID := cloudprovider.GetTaskIDFromContext(ctx)
 	cluster := info.Cluster
 
