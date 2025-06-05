@@ -1,8 +1,9 @@
 package k8s
 
 import (
-	"k8s.io/client-go/tools/clientcmd"
 	"testing"
+
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func TestNode(t *testing.T) {

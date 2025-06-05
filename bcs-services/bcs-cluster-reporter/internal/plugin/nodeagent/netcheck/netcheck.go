@@ -15,8 +15,6 @@ package netcheck
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
-	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"net"
 	"os/exec"
 	"runtime/debug"
@@ -25,6 +23,9 @@ import (
 	"syscall"
 	"time"
 	"unsafe"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/vishvananda/netlink"

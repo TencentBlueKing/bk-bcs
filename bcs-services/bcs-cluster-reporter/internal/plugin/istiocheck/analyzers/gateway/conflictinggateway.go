@@ -17,8 +17,6 @@ import (
 	"strconv"
 	"strings"
 
-	klabels "k8s.io/apimachinery/pkg/labels"
-
 	"istio.io/api/networking/v1alpha3"
 	"istio.io/istio/pkg/config"
 	"istio.io/istio/pkg/config/analysis"
@@ -26,6 +24,7 @@ import (
 	"istio.io/istio/pkg/config/host"
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/gvk"
+	klabels "k8s.io/apimachinery/pkg/labels"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck/msg"
 )

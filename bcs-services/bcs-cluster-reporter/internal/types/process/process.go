@@ -16,16 +16,18 @@ package process
 import (
 	"bufio"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
-	"github.com/moby/sys/mountinfo"
-	"github.com/shirou/gopsutil/process"
-	"k8s.io/klog/v2"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
+
+	"github.com/moby/sys/mountinfo"
+	"github.com/shirou/gopsutil/process"
+	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // HOST_PROC

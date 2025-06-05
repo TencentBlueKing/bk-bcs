@@ -16,8 +16,6 @@ package multicluster
 import (
 	"fmt"
 
-	v1 "k8s.io/api/core/v1"
-
 	"istio.io/api/mesh/v1alpha1"
 	"istio.io/istio/pilot/pkg/serviceregistry/provider"
 	"istio.io/istio/pkg/config"
@@ -26,6 +24,7 @@ import (
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/gvk"
 	"istio.io/istio/pkg/kube/multicluster"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck/msg"
 )

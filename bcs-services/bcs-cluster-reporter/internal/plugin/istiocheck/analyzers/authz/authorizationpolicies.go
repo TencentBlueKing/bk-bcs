@@ -17,8 +17,6 @@ import (
 	"fmt"
 	"strings"
 
-	klabels "k8s.io/apimachinery/pkg/labels"
-
 	"istio.io/api/mesh/v1alpha1"
 	"istio.io/api/security/v1beta1"
 	"istio.io/istio/pkg/config"
@@ -26,6 +24,7 @@ import (
 	"istio.io/istio/pkg/config/analysis/analyzers/util"
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/gvk"
+	klabels "k8s.io/apimachinery/pkg/labels"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck/msg"
 )

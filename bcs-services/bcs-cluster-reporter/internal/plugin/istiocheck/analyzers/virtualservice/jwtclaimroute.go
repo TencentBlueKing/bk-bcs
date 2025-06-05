@@ -15,8 +15,6 @@ package virtualservice
 import (
 	"strings"
 
-	klabels "k8s.io/apimachinery/pkg/labels"
-
 	"istio.io/api/networking/v1alpha3"
 	"istio.io/api/security/v1beta1"
 	"istio.io/istio/pilot/pkg/util/constant"
@@ -26,6 +24,7 @@ import (
 	"istio.io/istio/pkg/config/constants"
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/gvk"
+	klabels "k8s.io/apimachinery/pkg/labels"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck/msg"
 )

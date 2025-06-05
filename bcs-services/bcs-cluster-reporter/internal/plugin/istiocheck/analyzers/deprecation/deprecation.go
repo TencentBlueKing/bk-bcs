@@ -16,13 +16,12 @@ package deprecation
 import (
 	"fmt"
 
-	k8sext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-
 	"istio.io/api/networking/v1alpha3"
 	"istio.io/istio/pkg/config"
 	"istio.io/istio/pkg/config/analysis"
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/gvk"
+	k8sext "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck/msg"
 )

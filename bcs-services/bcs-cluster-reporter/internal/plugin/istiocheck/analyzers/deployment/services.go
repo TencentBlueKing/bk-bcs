@@ -16,16 +16,15 @@ import (
 	"fmt"
 	"strconv"
 
-	appsv1 "k8s.io/api/apps/v1"
-	core_v1 "k8s.io/api/core/v1"
-	klabels "k8s.io/apimachinery/pkg/labels"
-
 	"istio.io/istio/pkg/config"
 	"istio.io/istio/pkg/config/analysis"
 	"istio.io/istio/pkg/config/analysis/analyzers/util"
 	"istio.io/istio/pkg/config/constants"
 	"istio.io/istio/pkg/config/resource"
 	"istio.io/istio/pkg/config/schema/gvk"
+	appsv1 "k8s.io/api/apps/v1"
+	core_v1 "k8s.io/api/core/v1"
+	klabels "k8s.io/apimachinery/pkg/labels"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/istiocheck/msg"
 )

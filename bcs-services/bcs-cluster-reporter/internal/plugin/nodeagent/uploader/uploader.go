@@ -14,7 +14,6 @@
 package uploader
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"sort"
 	"strconv"
@@ -23,6 +22,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"

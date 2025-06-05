@@ -19,6 +19,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,12 +42,6 @@ import (
 	watchtools "k8s.io/client-go/tools/watch"
 	"k8s.io/klog/v2"
 	"k8s.io/kubectl/pkg/util/interrupt"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
-	"sync"
-	"time"
 )
 
 // NodeController XXX

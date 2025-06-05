@@ -15,8 +15,9 @@ package k8s
 
 import (
 	"fmt"
-	"k8s.io/apiserver/pkg/apis/audit"
 	"time"
+
+	"k8s.io/apiserver/pkg/apis/audit"
 )
 
 // AuditLog k8s audit log

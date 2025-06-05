@@ -16,8 +16,6 @@ package systemappcheck
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
-	"k8s.io/klog/v2"
 	"testing"
 
 	v1 "k8s.io/api/apps/v1"
@@ -27,6 +25,9 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 )
 
 func TestGetResourceGaugeVecSet(t *testing.T) {

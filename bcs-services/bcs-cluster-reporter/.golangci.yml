@@ -70,12 +70,12 @@ linters-settings:
   govet:
     check-shadowing: true
   goimports:
-    local-prefixes: github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager
+    local-prefixes: github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter
   gci:
     sections:
       - standard
       - default
-      - prefix(github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager)
+      - prefix(github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter)
   gocritic:
     settings:
       ifElseChain:

@@ -15,11 +15,12 @@ package nodecheck
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin/nodeagent/processcheck"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/types/process"
-	"path/filepath"
-	"strings"
 )
 
 func checkProcess(detail processcheck.Detail, nodeName string) []pluginmanager.CheckItem {

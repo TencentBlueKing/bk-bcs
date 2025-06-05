@@ -17,11 +17,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"k8s.io/klog/v2"
 	"os"
 	"strings"
 	"syscall"
 	"time"
+
+	"k8s.io/klog/v2"
 )
 
 // LogFile xxx

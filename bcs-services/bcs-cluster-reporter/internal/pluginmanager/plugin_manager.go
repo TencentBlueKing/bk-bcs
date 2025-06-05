@@ -20,11 +20,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (

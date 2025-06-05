@@ -18,8 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/docker/docker/api/types"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 func TestGetDockerCli(t *testing.T) {
