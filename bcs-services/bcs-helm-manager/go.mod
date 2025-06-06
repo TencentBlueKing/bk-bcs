@@ -5,7 +5,7 @@ go 1.23.0
 replace (
 	// github.com/databus23/helm-diff/v3 limit by go 1.23
 	github.com/databus23/helm-diff/v3 => github.com/databus23/helm-diff/v3 v3.9.11
-	helm.sh/helm/v3 => github.com/LidolLxf/helm/v3 v3.0.0-20250530065531-86c5b1764c81
+	helm.sh/helm/v3 => github.com/adevjoe/helm/v3 v3.0.0-20250606024046-bdebadf2b674
 	k8s.io/api => k8s.io/api v0.32.2
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.32.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.32.2
