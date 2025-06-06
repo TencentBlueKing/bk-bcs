@@ -279,6 +279,7 @@ func (pm *ProxyManager) persistLvsConfig() error {
 func (pm *ProxyManager) initProxyOptions(options *config.ProxyAPIServerOptions) {
 	if pm == nil { // nolint
 		blog.Errorf("server failed:%v", ErrProxyManagerNotInited)
+		return
 	}
 
 	pm.options = options // nolint
@@ -289,12 +290,14 @@ func (pm *ProxyManager) checkVirtualServerIsExist() error {
 		return ErrProxyManagerNotInited
 	}
 
-	available := pm.lvsProxy.IsVirtualServerAvailable(pm.options.ProxyLvs.VirtualAddress)
+	vaddr := pm.options.ProxyLvs.VirtualAddress
+	available := pm.lvsProxy.IsVirtualServerAvailable(vaddr)
 	if !available {
-		err := pm.lvsProxy.CreateVirtualServer(pm.options.ProxyLvs.VirtualAddress)
+		err := pm.lvsProxy.CreateVirtualServer(vaddr)
 		if err != nil {
 			return err
 		}
+		blog.Infof("create virtual address %s is successfully", vaddr)
 	}
 
 	return nil
@@ -433,7 +436,7 @@ func (pm *ProxyManager) waitQuitHandler() error {
 	}
 
 	quitSignal := make(chan os.Signal, 10)
-	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM) // nolint
+	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // nolint
 
 	go func() {
 		select {
@@ -455,7 +458,6 @@ func (pm *ProxyManager) close() {
 		return
 	}
 
-	pm.lvsProxy.DeleteVirtualServer(pm.options.ProxyLvs.VirtualAddress) // nolint
 	pm.cancel()
 }
 
