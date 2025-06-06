@@ -357,8 +357,8 @@ import { cloudsZones } from '@/api/modules/cluster-manager';
 import FormGroup from '@/components/form-group.vue';
 import TextTips from '@/components/layout/TextTips.vue';
 import { useProject } from '@/composables/use-app';
-import usePage from '@/composables/use-page';
 import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
+import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
 import $store from '@/store/index';
@@ -714,13 +714,8 @@ export default defineComponent({
         };
         nodePoolConfig.value.launchTemplate.securityGroupIDs = [];
         nodePoolConfig.value.launchTemplate.dataDisks = [];
-        nodePoolConfig.value.nodeTemplate.dataDisks = [{
-          diskType: '',
-          diskSize: '',
-          fileSystem: 'ext4',
-          autoFormatAndMount: true,
-          mountTarget: '/data',
-        }];
+        // 自建资源池调整为null
+        nodePoolConfig.value.nodeTemplate.dataDisks = null;
         const resourcePoolIDList = curInstanceItem.value?.resourcePoolID;
         nodePoolConfig.value.extra.poolID = Array.isArray(resourcePoolIDList) ? resourcePoolIDList?.join(',') : resourcePoolIDList;
       } else {
