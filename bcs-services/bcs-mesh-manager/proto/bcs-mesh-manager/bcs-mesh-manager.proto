@@ -1,7 +1,6 @@
 syntax = "proto3";
 package meshmanager;
 
-
 option go_package = "./;meshmanager";
 
 import "google/api/annotations.proto";
@@ -9,63 +8,66 @@ import "google/protobuf/wrappers.proto";
 import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/struct.proto";
+
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
-  info: {
-    title: "Mesh Manager API Doc"
-    version: "0.1.0"
-  };
-  schemes : HTTP
-  consumes : "application/json"
-  produces : "application/json"
-};
+  info : {title : "Mesh Manager API Doc" version : "0.1.0"};
+schemes : HTTP consumes : "application/json" produces : "application/json"
+}
+;
 
 message WebAnnotations {
-  google.protobuf.Struct perms = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "perms",
-    description: "权限信息"
-  }];
+  google.protobuf.Struct perms = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "perms",
+        description : "权限信息"
+      } ];
 }
 
 service MeshManager {
-    // 获取当前开放的istio版本
-    rpc ListIstioVersion(ListIstioVersionRequest) returns (ListIstioVersionResponse) {
-        option (google.api.http) = {
-            get: "/v1/mesh/istio/version"
-        };
-    }
+  // 获取当前开放的istio版本
+  rpc ListIstioVersion(ListIstioVersionRequest)
+      returns (ListIstioVersionResponse) {
+    option (google.api.http) = {
+      get : "/v1/mesh/istio/version"
+    };
+  }
 }
 
 message ListIstioVersionRequest {}
 
 message ListIstioVersionResponse {
-   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
       title : "ListIstioVersionResponse"
       description : "获取istio版本列表响应"
-      required : ["code", "message"]
+      required : [ "code", "message", "requestID", "web_annotations", "data" ]
     }
   };
-uint32 code = 1 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "code",
-      description : "返回错误码"
-    }];
-  string message = 2 [
-    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title : "message",
-      description : "返回错误信息"
-    }];
-  repeated IstioVersion data = 3 [
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "code", description : "返回错误码"} ];
+  string message = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "message",
+        description : "返回错误信息"
+      } ];
+  string requestID = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "request id",
+        description : "请求 ID"
+      } ];
+  WebAnnotations web_annotations = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "web_annotations",
+        description : "权限信息"
+      } ];
+  repeated IstioVersion data = 5 [
     json_name = "data",
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-      title: "data"
-      description: "响应数据，任务列表"
+      title : "data"
+      description : "响应数据，任务列表"
     }
   ];
-  WebAnnotations web_annotations = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title : "web_annotations",
-    description : "权限信息"
-  }];
 }
 
 message IstioVersion {
@@ -73,4 +75,3 @@ message IstioVersion {
   string chartVersion = 2;
   string kubeVersion = 3;
 }
-

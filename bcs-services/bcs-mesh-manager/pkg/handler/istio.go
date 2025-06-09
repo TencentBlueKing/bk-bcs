@@ -14,6 +14,7 @@ package handler
 
 import (
 	"context"
+	"errors"
 
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
@@ -24,12 +25,18 @@ func (m *MeshManager) ListIstioVersion(
 	req *meshmanager.ListIstioVersionRequest,
 	resp *meshmanager.ListIstioVersionResponse,
 ) error {
-	// TODO: implement actual logic
-	resp.Data = []*meshmanager.IstioVersion{
-		{
-			Name:         "1.18",
-			ChartVersion: "1.18-bcs.2",
-		},
+	// 获取版本配置并输出
+	istioConfig := m.opt.IstioConfig
+	if istioConfig == nil {
+		return errors.New("istio config is nil")
 	}
+	for _, version := range istioConfig.IstioVersion {
+		resp.Data = append(resp.Data, &meshmanager.IstioVersion{
+			Name:         version.Name,
+			ChartVersion: version.ChartVersion,
+			KubeVersion:  version.KubeVersion,
+		})
+	}
+
 	return nil
 }

@@ -14,19 +14,22 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"log"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/app"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 )
 
 func main() {
-	opts := app.NewMeshManagerOptions()
-	if err := app.Parse(opts); err != nil {
-		fmt.Fprintf(os.Stderr, "set config file failed, err %s\n", err.Error())
-		os.Exit(1)
+	opts := options.NewMeshManagerOptions()
+	if err := options.Parse(opts); err != nil {
+		log.Fatalf("parse options failed, err %s", err.Error())
+	}
+
+	if err := opts.Validate(); err != nil {
+		log.Fatalf("validate options failed, err %s", err.Error())
 	}
 
 	blog.InitLogs(opts.LogConfig)

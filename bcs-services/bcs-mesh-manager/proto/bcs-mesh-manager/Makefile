@@ -39,7 +39,7 @@ $(SWAGGEROBJ):$(PROTO)
 		-v $(DIRECTORY)/../../third_party:/third_party \
 		-v $(DIRECTORY):/proto \
 		${PROTO_IMAGE} \
-		protoc -I/third_party --proto_path=/proto --swagger_out=allow_delete_body=true,logtostderr=true:/proto $<
+		protoc -I/third_party --proto_path=/proto --openapiv2_out=logtostderr=true:/proto $<
 
 clean:
 	rm -f $(OBJ) $(GWOBJ) $(SWAGGEROBJ) *.pb.micro.go *.pb.validate.go

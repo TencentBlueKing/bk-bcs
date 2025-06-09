@@ -2,7 +2,7 @@ REGISTRY = "mirrors.tencent.com"
 REPO ?= $(REGISTRY)/bcs
 TAG ?= $(VERSION)
 
-.PHONY: proto build test tidy lint fmt vendor fmttool push-image
+.PHONY: proto build test tidy lint fmt vendor fmttool proto-fmt push-image
 
 ifdef VERSION
     VERSION=${VERSION}
@@ -10,11 +10,25 @@ else
     VERSION=$(shell git describe --always)
 endif
 
+# install fmt tool
+fmttool:
+	go install github.com/incu6us/goimports-reviser/v3@latest
+
+# format
+fmt:fmttool
+	goimports-reviser -rm-unused -project-name github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager -excludes ./third_party/,./proto/,./vendor  ./...
+
+# generate proto
 proto:
 	$(MAKE) -C proto/bcs-mesh-manager clean
 	$(MAKE) -C proto/bcs-mesh-manager
 
-build:
+# format proto
+proto-fmt:
+	clang-format -i proto/bcs-mesh-manager/bcs-mesh-manager.proto
+
+# build
+build:fmt
 	go build -o bin/bcs-mesh-manager ./cmd/mesh-manager/main.go
 
 # test
@@ -33,12 +47,6 @@ lint:
 vendor:
 	go mod vendor
 
-fmttool:
-	go install -v github.com/incu6us/goimports-reviser/v3@latest
-
-# format
-fmt:fmttool
-	goimports-reviser -rm-unused -project-name github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager -excludes ./third_party/,./proto/,./vendor  ./...
 
 # use buildx build arm64/amd64 image and push
 .PHONY: push-image

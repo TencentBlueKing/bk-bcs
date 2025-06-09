@@ -25,5 +25,4 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -mod vendor -a 
 
 FROM tencentos/tencentos4-minimal
 WORKDIR /root
-COPY ./bin/bcs-mesh-manager /usr/local/bin/bcs-mesh-manager
 COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/bcs-mesh-manager /usr/local/bin/bcs-mesh-manager

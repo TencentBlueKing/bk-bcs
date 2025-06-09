@@ -14,6 +14,7 @@
 package handler
 
 import (
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -26,6 +27,7 @@ type MeshManager struct {
 
 // MeshManagerOptions mesh manager options
 type MeshManagerOptions struct {
+	IstioConfig *options.IstioConfig
 }
 
 // NewMeshManager return a new HelmManager instance

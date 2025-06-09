@@ -10,11 +10,10 @@
  * limitations under the License.
  */
 
-// Package app contains the options for the mesh manager
-package app
+// Package options contains the options for the mesh manager
+package options
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -25,15 +24,16 @@ import (
 
 // MeshManagerOptions options for mesh manager
 type MeshManagerOptions struct {
-	conf.LogConfig `json:"log"`
-	ServerConfig   `json:"server"`
-	ClientConfig   `json:"client"`
-	Etcd           *EtcdOption    `json:"etcd"`
-	Mongo          *MongoOption   `json:"mongo"`
-	Gateway        *GatewayConfig `json:"gateway"`
-	Debug          bool           `json:"debug"`
-	IAM            IAMConfig      `json:"iam"`
-	Auth           AuthConfig     `json:"auth"`
+	conf.LogConfig
+	ServerConfig
+	ClientConfig
+	Etcd        *EtcdOption    `json:"etcd"`
+	Mongo       *MongoOption   `json:"mongo"`
+	Gateway     *GatewayConfig `json:"gateway"`
+	Debug       bool           `json:"debug"`
+	IAM         IAMConfig      `json:"iam"`
+	Auth        AuthConfig     `json:"auth"`
+	IstioConfig *IstioConfig   `json:"istio"`
 }
 
 // Parse parse
@@ -101,7 +101,6 @@ type EtcdOption struct {
 	EtcdCert      string `json:"cert" value:"" usage:"cert file of etcd"`
 	EtcdKey       string `json:"key" value:"" usage:"key file for etcd"`
 	EtcdCa        string `json:"ca" value:"" usage:"ca file for etcd"`
-	tlsConfig     *tls.Config
 }
 
 // MongoOption option for mongo db
@@ -152,4 +151,10 @@ func loadConfigFile(fileName string, opt *MeshManagerOptions) error {
 		return err
 	}
 	return json.Unmarshal(content, opt)
+}
+
+// Validate validate options
+func (o *MeshManagerOptions) Validate() error {
+	//TODO: validate options
+	return nil
 }

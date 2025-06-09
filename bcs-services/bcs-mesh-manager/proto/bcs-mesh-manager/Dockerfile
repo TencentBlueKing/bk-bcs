@@ -3,7 +3,6 @@ FROM golang:1.18 AS builder
 ARG PROTOC_GEN_GO_VERSION=1.4.2
 ARG PROTOC_GEN_MICRO_VERSION=4.6.0
 ARG PROTOC_GEN_GRPC_GATEWAY_VERSION=2.7.3
-ARG PROTOC_GEN_SWAGGER_VERSION=1.14.6
 ARG PROTOC_GEN_VALIDATE_VERSION=0.6.7
 
 # Install protoc-gen-go
@@ -15,8 +14,8 @@ RUN go install go-micro.dev/v4/cmd/protoc-gen-micro@v${PROTOC_GEN_MICRO_VERSION}
 # Install protoc-gen-gateway
 RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${PROTOC_GEN_GRPC_GATEWAY_VERSION}
 
-# Install protoc-gen-swagger
-RUN go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v${PROTOC_GEN_SWAGGER_VERSION}
+# Install protoc-gen-openapiv2 for swagger
+RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v${PROTOC_GEN_GRPC_GATEWAY_VERSION}
 
 # Install protoc-gen-validate
 RUN go install github.com/envoyproxy/protoc-gen-validate@v${PROTOC_GEN_VALIDATE_VERSION}

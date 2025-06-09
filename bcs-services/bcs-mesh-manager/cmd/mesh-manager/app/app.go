@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,7 @@ import (
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
 	grpcsvr "github.com/go-micro/plugins/v4/server/grpc"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/urfave/cli/v2"
@@ -41,7 +43,9 @@ import (
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
@@ -57,7 +61,7 @@ type Server struct {
 	clientTLSConfig *tls.Config
 
 	httpServer *http.Server
-	opt        *MeshManagerOptions
+	opt        *options.MeshManagerOptions
 
 	discovery            *discovery.ModuleDiscovery
 	helmManagerDiscovery *discovery.ModuleDiscovery
@@ -70,7 +74,7 @@ type Server struct {
 }
 
 // NewServer create mesh manager instance
-func NewServer(opt *MeshManagerOptions) *Server {
+func NewServer(opt *options.MeshManagerOptions) *Server {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Server{
 		opt:           opt,
@@ -94,6 +98,7 @@ func (s *Server) Init() error {
 		// s.initSkipHandler,
 		s.initMicro,
 		s.initHTTPService,
+		// TODO: add log wrapper
 	}
 
 	// init
@@ -177,7 +182,6 @@ func (s *Server) initRegistry() error {
 		if err != nil {
 			return err
 		}
-		s.opt.Etcd.tlsConfig = etcdTLS
 	}
 	s.microRegistry = etcd.NewRegistry(
 		registry.Addrs(etcdEndpoints...),
@@ -216,6 +220,7 @@ func (s *Server) initMicro() error {
 		}),
 		micro.WrapHandler(
 			utils.ResponseWrapper,
+			utils.RequestLogWarpper,
 			// authWrapper.AuthenticationFunc,
 			// authWrapper.AuthorizationFunc,
 			trace.NewTracingWrapper(),
@@ -231,7 +236,7 @@ func (s *Server) initMicro() error {
 
 	if err := meshmanager.RegisterMeshManagerHandler(
 		s.microService.Server(),
-		handler.NewMeshManager(&handler.MeshManagerOptions{}),
+		handler.NewMeshManager(&handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig}),
 	); err != nil {
 		blog.Errorf("failed to register mesh manager handler to micro, error: %s", err.Error())
 		return err
@@ -245,7 +250,10 @@ func (s *Server) initMicro() error {
 func (s *Server) initHTTPService() error {
 	// init http gateway
 	gwmux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{}),
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			// 设置为true，表示输出未设置的值
+			MarshalOptions: protojson.MarshalOptions{EmitUnpopulated: true},
+		}),
 	)
 	grpcDialOpts := []grpc.DialOption{}
 	if s.tlsConfig != nil && s.clientTLSConfig != nil {
@@ -263,7 +271,7 @@ func (s *Server) initHTTPService() error {
 		return fmt.Errorf("register http gateway failed, err %s", err.Error())
 	}
 	router := mux.NewRouter()
-	router.Handle("/{uri:.*}", gwmux)
+	router.Handle("/{uri:.*}", handlers.LoggingHandler(os.Stdout, gwmux))
 	blog.Info("register grpc gateway handler to path /")
 
 	// init http server

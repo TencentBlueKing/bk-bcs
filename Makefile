@@ -87,7 +87,7 @@ bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager federation-manager powertrading
+	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager
 
 bcs-scenarios: kourse gitops
 
@@ -346,6 +346,10 @@ helm-manager:pre tongsuo
 	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
 	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
 
+mesh-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-mesh-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-mesh-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager cmd/mesh-manager/main.go
 
 nodegroup-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager

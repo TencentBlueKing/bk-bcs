@@ -1,8 +1,29 @@
 {
-    "server": {
-        "address": "0.0.0.0",
-        "port": 8081,
-        "httpport": 8080,
-        "metricport": 8082
+    "address": "0.0.0.0",
+    "port": 8081,
+    "httpport": 8080,
+    "metricport": 8082,
+    "alsologtostderr": true,
+    "logtostderr": true,
+    "istio": {
+        "istioVersion": [
+            {
+                "name": "1.20",
+                "chartVersion": "1.20.7",
+                "kubeVersion": ">1.18.0"
+            },
+            {
+                "name": "1.18",
+                "chartVersion": "1.18.7",
+                "kubeVersion": ">1.16.0"
+            }
+        ],
+        "featureConfig": {
+            "outboundTrafficPolicy": {
+                "default": "ALLOW_ANY",
+                "enabled": true,
+                "supportVersion": ">1.16.0"
+            }
+        }
     }
 }

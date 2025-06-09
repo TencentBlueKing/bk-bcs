@@ -24,4 +24,7 @@ const (
 
 	// MetaKeyHTTPPort TODO
 	MetaKeyHTTPPort = "httpport"
+
+	// LangContectKey lang context key
+	LangContectKey string = "lang"
 )
