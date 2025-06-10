@@ -441,3 +441,43 @@ type GetBcsCollectorStorageResp struct {
 	BaseResp
 	Data json.Number `json:"data"`
 }
+
+// DatabusCustomCreateReq xxx
+type DatabusCustomCreateReq struct {
+	BkBizID               int    `json:"bk_biz_id"`
+	CollectorConfigName   string `json:"collector_config_name"`
+	CollectorConfigNameEN string `json:"collector_config_name_en"`
+	Description           string `json:"description"`
+	CustomType            string `json:"custom_type"`
+	CategoryID            string `json:"category_id"`
+	Retention             int    `json:"retention"`
+	EsShards              int    `json:"es_shards"`
+	StorageReplies        int    `json:"storage_replies"`
+	AllocationMinDays     int    `json:"allocation_min_days"`
+	DataLinkID            int    `json:"data_link_id"`
+}
+
+// DatabusCustomCreateResp xxx
+type DatabusCustomCreateResp struct {
+	BaseResp
+	Data DatabusCustomCreateRespData `json:"data"`
+}
+
+// DatabusCustomCreateRespData xxx
+type DatabusCustomCreateRespData struct {
+	BkDataID          int `json:"bk_data_id"`
+	CollectorConfigID int `json:"collector_config_id"`
+}
+
+// DatabusCustomUpdateReq xxx
+type DatabusCustomUpdateReq struct {
+	CollectorConfigName string `json:"collector_config_name"`
+	Description         string `json:"description"`
+	CustomType          string `json:"custom_type"`
+	CategoryID          string `json:"category_id"`
+	StorageClusterID    int    `json:"storage_cluster_id"`
+	Retention           int    `json:"retention"`
+	EsShards            int    `json:"es_shards"`
+	StorageReplies      int    `json:"storage_replies"`
+	AllocationMinDays   int    `json:"allocation_min_days"`
+}

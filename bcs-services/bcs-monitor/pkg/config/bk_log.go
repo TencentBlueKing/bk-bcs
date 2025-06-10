@@ -18,3 +18,9 @@ type BKLogConf struct {
 	Entrypoint       string `yaml:"entrypoint"`        // bk-log 页面 host 地址，e.g: https://bklog.example.com
 	BKBaseEntrypoint string `yaml:"bkbase_entrypoint"` // bkbase 页面 host 地址，e.g: https://bkbase.example.com
 }
+
+// BKBaseConf bk base config
+type BKBaseConf struct {
+	APIServer        string `yaml:"api_server"`         // openapi 地址
+	AuditChannelName string `yaml:"audit_channel_name"` // 审计通道名称
+}

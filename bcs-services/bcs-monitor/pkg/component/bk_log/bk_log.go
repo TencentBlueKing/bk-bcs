@@ -453,3 +453,73 @@ func GetBcsCollectorStorage(ctx context.Context, spaceUID, clusterID string) (in
 	}
 	return int(data), nil
 }
+
+// DatabusCustomCreate create data id
+func DatabusCustomCreate(ctx context.Context, req *DatabusCustomCreateReq) (*DatabusCustomCreateRespData, error) {
+	url := fmt.Sprintf("%s/databus_custom_create", config.G.BKLog.APIServer)
+	// generate bk api auth header, X-Bkapi-Authorization
+	authInfo, err := component.GetBKAPIAuthorization("")
+	if err != nil {
+		return nil, err
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetBody(req).
+		Post(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &DatabusCustomCreateResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return nil, errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return nil, errors.Errorf("databus_custom_create error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	return &result.Data, nil
+}
+
+// DatabusCustomUpdate update data id
+func DatabusCustomUpdate(ctx context.Context, id int, req *DatabusCustomUpdateReq) error {
+	url := fmt.Sprintf("%s/%d/databus_custom_update", config.G.BKLog.APIServer, id)
+	// generate bk api auth header, X-Bkapi-Authorization
+	authInfo, err := component.GetBKAPIAuthorization("")
+	if err != nil {
+		return err
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetBody(req).
+		Post(url)
+
+	if err != nil {
+		return err
+	}
+
+	if !resp.IsSuccess() {
+		return errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &BaseResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return errors.Errorf("databus_custom_update error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	return nil
+}
