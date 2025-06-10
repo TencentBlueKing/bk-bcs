@@ -171,10 +171,9 @@ func (pm *ProxyManager) syncAddLvsRealServers() error {
 		return err
 	}
 	if len(adds) == 0 {
+		blog.V(5).Infof("no new real servers")
 		return nil
 	}
-
-	blog.V(5).Infof("syncAddLvsRealServers, adds: [%v]", adds)
 
 	if len(adds) > 0 {
 		for s := range adds {
@@ -221,6 +220,8 @@ func (pm *ProxyManager) getAddRealServers() (sets.String, error) {
 	// diff get add & delete server
 	addServers = clusterRsMap.Difference(proxyRsMap)
 
+	blog.V(5).Infof("getAddRealServers, clusterRsMap: [%v], proxyRsMap: [%v], addServers: [%v]",
+		clusterRsMap.List(), proxyRsMap.List(), addServers.List())
 	return addServers, nil
 }
 
@@ -291,6 +292,7 @@ func (pm *ProxyManager) checkVirtualServerIsExist() error {
 	}
 
 	vaddr := pm.options.ProxyLvs.VirtualAddress
+	blog.Infof("check virtual address %s is exist", vaddr)
 	available := pm.lvsProxy.IsVirtualServerAvailable(vaddr)
 	if !available {
 		err := pm.lvsProxy.CreateVirtualServer(vaddr)
