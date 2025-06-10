@@ -44,10 +44,40 @@
     }
   },
   "definitions": {
+    "meshmanagerFeatureConfig": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "defaultValue": {
+          "type": "string"
+        },
+        "availableValues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "supportVersions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "功能列表"
+    },
     "meshmanagerIstioVersion": {
       "type": "object",
       "properties": {
         "name": {
+          "type": "string"
+        },
+        "version": {
           "type": "string"
         },
         "chartVersion": {
@@ -56,7 +86,30 @@
         "kubeVersion": {
           "type": "string"
         }
-      }
+      },
+      "title": "获取istio版本列表响应"
+    },
+    "meshmanagerIstioVersionAndFeatures": {
+      "type": "object",
+      "properties": {
+        "istioVersions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerIstioVersion"
+          },
+          "description": "istio版本列表",
+          "title": "istioVersions"
+        },
+        "featureConfigs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerFeatureConfig"
+          },
+          "description": "功能列表(注意版本)",
+          "title": "featureConfigs"
+        }
+      },
+      "title": "获取istio版本列表响应"
     },
     "meshmanagerListIstioVersionResponse": {
       "type": "object",
@@ -83,11 +136,8 @@
           "title": "web_annotations"
         },
         "data": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/meshmanagerIstioVersion"
-          },
-          "description": "响应数据，任务列表",
+          "$ref": "#/definitions/meshmanagerIstioVersionAndFeatures",
+          "description": "响应数据",
           "title": "data"
         }
       },

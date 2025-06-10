@@ -323,38 +323,33 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		}
 	}
 
-	for idx, item := range m.GetData() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, ListIstioVersionResponseValidationError{
-						field:  fmt.Sprintf("Data[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, ListIstioVersionResponseValidationError{
-						field:  fmt.Sprintf("Data[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return ListIstioVersionResponseValidationError{
-					field:  fmt.Sprintf("Data[%v]", idx),
+	if all {
+		switch v := interface{}(m.GetData()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ListIstioVersionResponseValidationError{
+					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ListIstioVersionResponseValidationError{
+					field:  "Data",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
 		}
-
+	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ListIstioVersionResponseValidationError{
+				field:  "Data",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if len(errors) > 0 {
@@ -437,6 +432,176 @@ var _ interface {
 	ErrorName() string
 } = ListIstioVersionResponseValidationError{}
 
+// Validate checks the field values on IstioVersionAndFeatures with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *IstioVersionAndFeatures) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on IstioVersionAndFeatures with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// IstioVersionAndFeaturesMultiError, or nil if none found.
+func (m *IstioVersionAndFeatures) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *IstioVersionAndFeatures) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetIstioVersions() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, IstioVersionAndFeaturesValidationError{
+						field:  fmt.Sprintf("IstioVersions[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, IstioVersionAndFeaturesValidationError{
+						field:  fmt.Sprintf("IstioVersions[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return IstioVersionAndFeaturesValidationError{
+					field:  fmt.Sprintf("IstioVersions[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetFeatureConfigs() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, IstioVersionAndFeaturesValidationError{
+						field:  fmt.Sprintf("FeatureConfigs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, IstioVersionAndFeaturesValidationError{
+						field:  fmt.Sprintf("FeatureConfigs[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return IstioVersionAndFeaturesValidationError{
+					field:  fmt.Sprintf("FeatureConfigs[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return IstioVersionAndFeaturesMultiError(errors)
+	}
+
+	return nil
+}
+
+// IstioVersionAndFeaturesMultiError is an error wrapping multiple validation
+// errors returned by IstioVersionAndFeatures.ValidateAll() if the designated
+// constraints aren't met.
+type IstioVersionAndFeaturesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m IstioVersionAndFeaturesMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m IstioVersionAndFeaturesMultiError) AllErrors() []error { return m }
+
+// IstioVersionAndFeaturesValidationError is the validation error returned by
+// IstioVersionAndFeatures.Validate if the designated constraints aren't met.
+type IstioVersionAndFeaturesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e IstioVersionAndFeaturesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e IstioVersionAndFeaturesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e IstioVersionAndFeaturesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e IstioVersionAndFeaturesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e IstioVersionAndFeaturesValidationError) ErrorName() string {
+	return "IstioVersionAndFeaturesValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e IstioVersionAndFeaturesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sIstioVersionAndFeatures.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = IstioVersionAndFeaturesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = IstioVersionAndFeaturesValidationError{}
+
 // Validate checks the field values on IstioVersion with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
 // error encountered is returned, or nil if there are no violations.
@@ -460,6 +625,8 @@ func (m *IstioVersion) validate(all bool) error {
 	var errors []error
 
 	// no validation rules for Name
+
+	// no validation rules for Version
 
 	// no validation rules for ChartVersion
 
@@ -541,3 +708,109 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = IstioVersionValidationError{}
+
+// Validate checks the field values on FeatureConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *FeatureConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on FeatureConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in FeatureConfigMultiError, or
+// nil if none found.
+func (m *FeatureConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *FeatureConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for DefaultValue
+
+	if len(errors) > 0 {
+		return FeatureConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// FeatureConfigMultiError is an error wrapping multiple validation errors
+// returned by FeatureConfig.ValidateAll() if the designated constraints
+// aren't met.
+type FeatureConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m FeatureConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m FeatureConfigMultiError) AllErrors() []error { return m }
+
+// FeatureConfigValidationError is the validation error returned by
+// FeatureConfig.Validate if the designated constraints aren't met.
+type FeatureConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e FeatureConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e FeatureConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e FeatureConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e FeatureConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e FeatureConfigValidationError) ErrorName() string { return "FeatureConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e FeatureConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sFeatureConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = FeatureConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = FeatureConfigValidationError{}

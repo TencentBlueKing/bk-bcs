@@ -33,8 +33,10 @@ service MeshManager {
   }
 }
 
+// 获取当前开放的istio版本请求
 message ListIstioVersionRequest {}
 
+// 获取当前开放的istio版本响应
 message ListIstioVersionResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
@@ -61,17 +63,42 @@ message ListIstioVersionResponse {
         title : "web_annotations",
         description : "权限信息"
       } ];
-  repeated IstioVersion data = 5 [
+  IstioVersionAndFeatures data = 5 [
     json_name = "data",
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "data"
-      description : "响应数据，任务列表"
+      description : "响应数据"
     }
   ];
 }
 
+// 获取istio版本列表响应
+message IstioVersionAndFeatures {
+  repeated IstioVersion istioVersions = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "istioVersions"
+        description : "istio版本列表"
+      } ];
+  repeated FeatureConfig featureConfigs = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "featureConfigs"
+        description : "功能列表(注意版本)"
+      } ];
+}
+
+// 获取istio版本列表响应
 message IstioVersion {
   string name = 1;
-  string chartVersion = 2;
-  string kubeVersion = 3;
+  string version = 2;
+  string chartVersion = 3;
+  string kubeVersion = 4;
+}
+
+// 功能列表
+message FeatureConfig {
+  string name = 1;
+  string description = 2;
+  string defaultValue = 3;
+  repeated string availableValues = 4;
+  repeated string supportVersions = 5;
 }

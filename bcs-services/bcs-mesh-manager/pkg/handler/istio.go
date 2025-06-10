@@ -16,6 +16,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -30,13 +32,52 @@ func (m *MeshManager) ListIstioVersion(
 	if istioConfig == nil {
 		return errors.New("istio config is nil")
 	}
-	for _, version := range istioConfig.IstioVersion {
-		resp.Data = append(resp.Data, &meshmanager.IstioVersion{
+	// 输出版本
+	istioVersions := []*meshmanager.IstioVersion{}
+	for _, version := range istioConfig.IstioVersions {
+		if !version.Enabled {
+			continue
+		}
+		istioVersions = append(istioVersions, &meshmanager.IstioVersion{
 			Name:         version.Name,
+			Version:      version.Version,
 			ChartVersion: version.ChartVersion,
 			KubeVersion:  version.KubeVersion,
 		})
 	}
-
+	resp.Data = &meshmanager.IstioVersionAndFeatures{
+		IstioVersions:  istioVersions,
+		FeatureConfigs: buildFeaturesForVersion(istioVersions, istioConfig.FeatureConfigs),
+	}
 	return nil
+}
+
+// buildFeaturesForVersion 根据版本和全局 featureConfig 构建 features 列表
+func buildFeaturesForVersion(
+	istioVersions []*meshmanager.IstioVersion,
+	featureConfigs []*options.FeatureConfig,
+) []*meshmanager.FeatureConfig {
+	features := []*meshmanager.FeatureConfig{}
+	for _, feature := range featureConfigs {
+		if !feature.Enabled {
+			continue
+		}
+		supportVersions := []string{}
+		for _, version := range istioVersions {
+			if utils.IsVersionSupported(version.Version, feature.IstioVersion) {
+				supportVersions = append(supportVersions, version.Version)
+			}
+		}
+		if len(supportVersions) == 0 {
+			continue
+		}
+		features = append(features, &meshmanager.FeatureConfig{
+			Name:            feature.Name,
+			Description:     feature.Description,
+			DefaultValue:    feature.DefaultValue,
+			AvailableValues: feature.AvailableValues,
+			SupportVersions: supportVersions,
+		})
+	}
+	return features
 }

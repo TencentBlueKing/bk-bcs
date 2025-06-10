@@ -3,6 +3,7 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager
 go 1.23.0
 
 require (
+	github.com/Masterminds/semver/v3 v3.3.1
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250603080618-3dfa31c8c64c
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20250603080618-3dfa31c8c64c
 	github.com/envoyproxy/protoc-gen-validate v1.0.4

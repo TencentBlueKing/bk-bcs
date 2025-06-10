@@ -155,6 +155,12 @@ func loadConfigFile(fileName string, opt *MeshManagerOptions) error {
 
 // Validate validate options
 func (o *MeshManagerOptions) Validate() error {
-	//TODO: validate options
+	if o.IstioConfig == nil {
+		return fmt.Errorf("istio config is nil")
+	}
+	// validate istio config
+	if err := o.IstioConfig.Validate(); err != nil {
+		return err
+	}
 	return nil
 }

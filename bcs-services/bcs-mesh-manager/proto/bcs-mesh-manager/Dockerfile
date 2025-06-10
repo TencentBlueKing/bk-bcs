@@ -1,7 +1,7 @@
 FROM golang:1.18 AS builder
 
 ARG PROTOC_GEN_GO_VERSION=1.4.2
-ARG PROTOC_GEN_MICRO_VERSION=4.6.0
+ARG PROTOC_GEN_MICRO_VERSION=latest
 ARG PROTOC_GEN_GRPC_GATEWAY_VERSION=2.7.3
 ARG PROTOC_GEN_VALIDATE_VERSION=0.6.7
 
@@ -9,7 +9,7 @@ ARG PROTOC_GEN_VALIDATE_VERSION=0.6.7
 RUN go install github.com/golang/protobuf/protoc-gen-go@v${PROTOC_GEN_GO_VERSION}
 
 # Install protoc-gen-micro
-RUN go install go-micro.dev/v4/cmd/protoc-gen-micro@v${PROTOC_GEN_MICRO_VERSION}
+RUN go install github.com/go-micro/generator/cmd/protoc-gen-micro@${PROTOC_GEN_MICRO_VERSION}
 
 # Install protoc-gen-gateway
 RUN go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway@v${PROTOC_GEN_GRPC_GATEWAY_VERSION}

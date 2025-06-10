@@ -12,15 +12,23 @@
 
 package options
 
+import (
+	"fmt"
+	"slices"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
+)
+
 // IstioConfig istio config
 type IstioConfig struct {
-	IstioVersion  []*IstioVersion `json:"istioVersion"`
-	FeatureConfig *FeatureConfig  `json:"featureConfig"`
+	IstioVersions  []*IstioVersion  `json:"istioVersions"`
+	FeatureConfigs []*FeatureConfig `json:"featureConfigs"`
 }
 
 // IstioVersion istio version
 type IstioVersion struct {
 	Name         string `json:"name"`
+	Version      string `json:"version"`
 	ChartVersion string `json:"chartVersion"`
 	KubeVersion  string `json:"kubeVersion"`
 	Enabled      bool   `json:"enabled"`
@@ -28,28 +36,21 @@ type IstioVersion struct {
 
 // FeatureConfig feature config
 type FeatureConfig struct {
-	OutboundTrafficPolicy           OutboundTrafficPolicy           `json:"outboundTrafficPolicy"`
-	HoldApplicationUntilProxyStarts HoldApplicationUntilProxyStarts `json:"holdApplicationUntilProxyStarts"`
-	ExitOnZeroActiveConnections     ExitOnZeroActiveConnections     `json:"exitOnZeroActiveConnections"`
+	Name            string   `json:"name"`
+	Description     string   `json:"description"`
+	DefaultValue    string   `json:"defaultValue"`
+	AvailableValues []string `json:"availableValues"`
+	IstioVersion    string   `json:"istioVersion"` // 支持的istio版本
+	Enabled         bool     `json:"enabled"`
 }
 
-// OutboundTrafficPolicy outbound traffic policy
-type OutboundTrafficPolicy struct {
-	Default        string `json:"default"`
-	Enabled        bool   `json:"enabled"`
-	SupportVersion string `json:"supportVersion,omitempty"`
-}
-
-// HoldApplicationUntilProxyStarts hold application until proxy starts
-type HoldApplicationUntilProxyStarts struct {
-	Default        string `json:"default"`
-	Enabled        bool   `json:"enabled"`
-	SupportVersion string `json:"supportVersion,omitempty"`
-}
-
-// ExitOnZeroActiveConnections exit on zero active connections
-type ExitOnZeroActiveConnections struct {
-	Default        string `json:"default"`
-	Enabled        bool   `json:"enabled"`
-	SupportVersion string `json:"supportVersion,omitempty"`
+// Validate validate istio config
+func (c *IstioConfig) Validate() error {
+	// validate istio feature config
+	for _, feature := range c.FeatureConfigs {
+		if !slices.Contains(common.SupportedFeatures, feature.Name) {
+			return fmt.Errorf("feature %s is not supported", feature.Name)
+		}
+	}
+	return nil
 }
