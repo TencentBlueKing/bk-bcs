@@ -564,15 +564,13 @@ export default defineComponent({
     });
     // 动态 i18n 问题，这里使用computed
     const masterConfigRules = computed(() => ({
-      master: [{
-        message: $i18n.t('cluster.create.validate.masterNum35'),
-        trigger: 'custom',
-        validator: () => masterConfig.value.master.length && [3, 5].includes(masterConfig.value.master.length),
-      }, {
-        message: '',
-        trigger: 'custom',
-        validator: () => masterConfig.value.master.every(item => item.vpc === networkConfig.value.vpcID),
-      }],
+      master: [
+        {
+          message: $i18n.t('cluster.create.validate.masterNum35'),
+          trigger: 'custom',
+          validator: () => masterConfig.value.master.length && [3, 5].includes(masterConfig.value.master.length),
+        },
+      ],
     }));
     // 节点配置
     const nodesConfig = ref<{
@@ -584,19 +582,26 @@ export default defineComponent({
     });
     // 动态 i18n 问题，这里使用computed
     const nodesConfigRules = computed(() => ({
-      nodes: [{
-        message: $i18n.t('generic.validate.required'),
-        trigger: 'custom',
-        validator: () => manageType.value === 'INDEPENDENT_CLUSTER' || !!nodesConfig.value.nodes.length,
-      }, {
-        message: '',
-        trigger: 'custom',
-        validator: () => nodesConfig.value.nodes.every(item => item.vpc === networkConfig.value.vpcID)
-          || (skipAddNodes.value && manageType.value === 'INDEPENDENT_CLUSTER'),
-      }],
+      nodes: [
+        {
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'custom',
+          validator: () => manageType.value === 'INDEPENDENT_CLUSTER' || !!nodesConfig.value.nodes.length,
+        },
+        {
+          message: $i18n.t('generic.validate.required'),
+          trigger: 'custom',
+          validator: () => !!nodesConfig.value.nodes.length || (skipAddNodes.value && manageType.value === 'INDEPENDENT_CLUSTER'),
+        },
+      ],
     }));
 
     const skipAddNodes = ref(false);
+    watch(skipAddNodes, () => {
+      const $refs = proxy?.$refs || {};
+      const index = steps.value.findIndex(step => activeTabName.value === step.name);
+      ($refs[steps.value[index]?.formRef] as any)?.validate().catch(() => false);
+    });
     // 集群规模
     const clusterScale = ref<IScale[]>(clusterScaleData.data);
     const curClusterScale = computed<IScale>(() => clusterScale.value

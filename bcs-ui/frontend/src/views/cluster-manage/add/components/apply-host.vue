@@ -57,15 +57,6 @@
           <bk-table-column label="VPC">
             <template #default="{ row }">
               {{ row.vpc || '--' }}
-              <span
-                class="text-[#ea3636] text-[16px]"
-                v-bk-tooltips="$t('cluster.create.validate.vpcDiff', {
-                  vpc1: row.vpc || '--',
-                  vpc2: vpc.vpcID || '--'
-                })"
-                v-if="row.vpc !== vpc.vpcID">
-                <i class="bk-icon icon-exclamation-circle-shape"></i>
-              </span>
             </template>
           </bk-table-column>
           <bk-table-column :label="$t('cluster.ca.nodePool.create.az.title')">
@@ -92,6 +83,7 @@
           :cloud-id="cloudId"
           :region="region"
           :vpc="vpc"
+          :validate-vpc="true"
           @confirm="handleChooseServer"
           @cancel="showIpSelector = false" />
       </template>
