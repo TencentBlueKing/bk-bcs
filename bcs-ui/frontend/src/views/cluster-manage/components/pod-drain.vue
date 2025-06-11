@@ -22,26 +22,13 @@
               <span class="pl-[4px]">{{ $t('cluster.nodeList.label.drainRange.labels') }}</span>
             </bk-radio>
           </bk-radio-group>
-          <KeyValue
+          <LabelSelector
+            v-show="range === 'labels'"
             class="ml-[22px] mt-[8px] w-[500px]"
-            ref="keyValueRef"
-            :show-header="false"
-            :show-operate="false"
-            :show-footer="false"
-            :model-value="podLabels"
-            :key-rules="[
-              {
-                message: $i18n.t('generic.validate.labelKey1'),
-                validator: KEY_REGEXP
-              }
-            ]"
-            :value-rules="[
-              {
-                message: $i18n.t('generic.validate.labelValue'),
-                validator: VALUE_REGEXP
-              }
-            ]"
-            @data-change="handleLabelChange" />
+            v-model="podLabels"
+            :type="'simple'"
+            :cluster-namespaces="clusterNamespaces"
+            @change="handleLabelChange" />
         </div>
         <div class="mt-[16px]">
           <div class="mb-[12px]">{{ $t('cluster.nodeList.label.terminationGracePeriod.text') }}</div>
@@ -214,12 +201,11 @@ import { computed, defineComponent, onBeforeMount, PropType, ref, watch } from '
 
 import { drainCheckList, schedulerNode } from '@/api/modules/cluster-manager';
 import $bkMessage from '@/common/bkmagic';
-import { KEY_REGEXP, VALUE_REGEXP } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
-import KeyValue from '@/components/key-value.vue';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
+import LabelSelector from '@/views/resource-view/view-manage/label-selector.vue';
 
 type Risk = {
   riskDescription: string
@@ -239,7 +225,7 @@ interface IPod {
 
 export default defineComponent({
   name: 'PodDrain',
-  components: { KeyValue },
+  components: { LabelSelector },
   props: {
     nodes: {
       type: Array as PropType<any[]>,
@@ -247,6 +233,7 @@ export default defineComponent({
     },
     clusterId: {
       type: String,
+      default: '',
     },
   },
   setup(props, ctx) {
@@ -255,22 +242,23 @@ export default defineComponent({
 
 
     // 驱逐范围
-    const keyValueRef = ref<InstanceType<typeof KeyValue> | null>(null);
     const range = ref('all');
     const labelValueStr = ref('');
     const podLabels = ref([]);
+    const clusterNamespaces = computed(() => [{ clusterID: props.clusterId }]);
     function handleRadioChange(curRange) {
       if (curRange === 'all') {
         paramsData.value.podSelector = '';
-      } else if (keyValueRef.value?.validate?.()) {
+      } else {
         paramsData.value.podSelector = labelValueStr.value;
       }
     };
     function labelChange(result) {
-      const resultList = result.filter(item => !!item.key && !!item.value);
-      const labelValues = resultList.map(item => `${item.key}=${item.value}`);
+      const resultList = result.filter(item => !!item.key && !!item.values?.[0]);
+      const labelValues = resultList.map(item => `${item.key}=${item.values[0]}`);
       labelValueStr.value = labelValues.join(',');
-      if (range.value !== 'all' && keyValueRef.value?.validate?.()) {
+
+      if (range.value !== 'all') {
         paramsData.value.podSelector = labelValueStr.value;
       }
     };
@@ -464,9 +452,7 @@ export default defineComponent({
       podLabels,
       drainNum,
       isShowDrainOnly,
-      KEY_REGEXP,
-      VALUE_REGEXP,
-      keyValueRef,
+      clusterNamespaces,
       pageChange,
       pageSizeChange,
       handleSubmit,
