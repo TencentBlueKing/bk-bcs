@@ -28,6 +28,7 @@ const DashboardNetworkEndpoints = () => import(/* webpackChunkName: 'dashboard' 
 // configs
 const DashboardConfigsConfigMaps = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/configuration/config-maps.vue');
 const DashboardConfigsSecrets = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/configuration/secrets.vue');
+const dashboardConfigsBscpConfigs = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/configuration/bscp-configs.vue');
 
 // storage
 const DashboardStoragePersistentVolumesClaims = () => import(/* webpackChunkName: 'dashboard' */'@/views/resource-view/storage/persistent-volumes-claims.vue');
@@ -211,6 +212,12 @@ export default [
         path: 'configs/secrets',
         name: 'dashboardConfigsSecrets',
         component: DashboardConfigsSecrets,
+      },
+      // configs bscp-configs
+      {
+        path: 'configs/bscp-configs',
+        name: 'dashboardConfigsBscpConfigs',
+        component: dashboardConfigsBscpConfigs,
       },
       // rbac
       {

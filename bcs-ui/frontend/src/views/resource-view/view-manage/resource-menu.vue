@@ -77,7 +77,10 @@
                 activeMenu.id === menu.id ? 'text-[#3a84ff]' : 'text-[#63656e]'
               ]"
               :href="menu.children && !!menu.children.length ? 'javascript:void(0)' : resolveMenuLink(menu)">
-              <span :title="menu.title" class="flex-1 bcs-ellipsis">{{ menu.title }}</span>
+              <span class="flex items-center">
+                <span :title="menu.title" class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ menu.title }}</span>
+                <bcs-tag theme="danger" v-if="menu.tag">{{ menu.tag }}</bcs-tag>
+              </span>
               <span
                 :class="[
                   'flex items-center justify-center',
@@ -103,7 +106,10 @@
                     activeMenu.id === child.id ? 'text-[#3a84ff]' : 'text-[#63656e]'
                   ]"
                   :href="resolveMenuLink(child)">
-                  <span :title="child.title" class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ child.title }}</span>
+                  <span class="flex items-center">
+                    <span :title="child.title" class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ child.title }}</span>
+                    <bcs-tag theme="danger" v-if="child.tag" class="mr-[6px]">{{ child.tag }}</bcs-tag>
+                  </span>
                   <span
                     :class="[
                       'flex items-center justify-center',
