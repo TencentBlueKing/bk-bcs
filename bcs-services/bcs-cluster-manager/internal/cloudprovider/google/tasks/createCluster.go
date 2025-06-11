@@ -163,6 +163,12 @@ func createGKECluster(ctx context.Context, info *cloudprovider.CloudDependBasicI
 
 	info.Cluster.ExtraInfo = make(map[string]string, 0)
 	info.Cluster.ExtraInfo[api.GKEClusterLocationType] = clusterType
+	info.Cluster.ExtraInfo[api.GKEClusterType] = api.Standard
+	// gke集群是否启用autopilot
+	if info.Cluster.ManageType == common.ClusterManageTypeManaged {
+		info.Cluster.ExtraInfo[api.GKEClusterType] = api.Autopilot
+	}
+	info.Cluster.ManageType = common.ClusterManageTypeManaged
 
 	blog.Infof("createGKECluster[%s] call createGKECluster UpdateClusterSystemID successful", taskID)
 
