@@ -19,13 +19,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/patrickmn/go-cache"
 	microRgt "go-micro.dev/v4/registry"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 )
 
 const (
@@ -41,46 +40,31 @@ const (
 
 // Client xxx
 type Client struct {
-	Discovery       *discovery.ModuleDiscovery
-	ClientTLSConfig *tls.Config
-	Cache           *cache.Cache
+	Cache *cache.Cache
 }
 
 var client *Client
 
 // NewClient create cluster manager service client
 func NewClient(tlsConfig *tls.Config, microRgt microRgt.Registry) error {
-	dis := discovery.NewModuleDiscovery(ClusterManagerServiceName, microRgt)
-	err := dis.Start()
-	if err != nil {
-		return err
+	if !discovery.UseServiceDiscovery() {
+		dis := discovery.NewModuleDiscovery(ClusterManagerServiceName, microRgt)
+		err := dis.Start()
+		if err != nil {
+			return err
+		}
+		clustermanager.SetClientConfig(tlsConfig, dis)
+	} else {
+		clustermanager.SetClientConfig(tlsConfig, nil)
 	}
 	client = &Client{
-		Discovery:       dis,
-		ClientTLSConfig: tlsConfig,
-		Cache:           cache.New(defaultExpiration, cache.NoExpiration),
+		Cache: cache.New(defaultExpiration, cache.NoExpiration),
 	}
 	return nil
 }
 
-func (p *Client) getClusterClient() (clustermanager.ClusterManagerClient, func(), error) {
-	node, err := p.Discovery.GetRandServiceInst()
-	if err != nil {
-		return nil, nil, err
-	}
-	blog.V(4).Infof("get random cluster-manager instance [%s] from etcd registry successful", node.Address)
-
-	cfg := bcsapi.Config{}
-	// discovery hosts
-	cfg.Hosts = discovery.GetServerEndpointsFromRegistryNode(node)
-	cfg.TLSConfig = p.ClientTLSConfig
-	cfg.InnerClientName = "bcs-helm-manager"
-	cli, close := clustermanager.NewClusterManager(&cfg)
-	return cli, close, nil
-}
-
 // GetCluster get cluster from cluster manager
-func GetCluster(clusterID string) (*clustermanager.Cluster, error) {
+func GetCluster(ctx context.Context, clusterID string) (*clustermanager.Cluster, error) {
 	key := fmt.Sprintf(cacheClusterIDKeyPrefix, clusterID)
 	v, ok := client.Cache.Get(key)
 	if ok {
@@ -88,7 +72,7 @@ func GetCluster(clusterID string) (*clustermanager.Cluster, error) {
 			return cluster, nil
 		}
 	}
-	cli, close, err := client.getClusterClient()
+	cli, close, err := clustermanager.GetClient(common.ServiceDomain)
 	defer func() {
 		if close != nil {
 			close()
@@ -97,8 +81,7 @@ func GetCluster(clusterID string) (*clustermanager.Cluster, error) {
 	if err != nil {
 		return nil, err
 	}
-	p, err := cli.GetCluster(context.Background(),
-		&clustermanager.GetClusterReq{ClusterID: clusterID})
+	p, err := cli.GetCluster(ctx, &clustermanager.GetClusterReq{ClusterID: clusterID})
 	if err != nil {
 		return nil, fmt.Errorf("GetCluster error: %s", err)
 	}

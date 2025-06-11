@@ -216,7 +216,7 @@ func (c *client) Install(ctx context.Context, config release.HelmInstallConfig) 
 	}
 
 	// values数据, 增加Var values在最后
-	varValues, vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	varValues, vars, err := c.getVarValue(ctx, config.ProjectCode, config.Namespace)
 	if err != nil {
 		blog.Errorf("sdk client get vars failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -277,7 +277,7 @@ func (c *client) Upgrade(ctx context.Context, config release.HelmUpgradeConfig) 
 	}
 
 	// values数据, 增加Var values在最后
-	varValues, vars, err := c.getVarValue(config.ProjectCode, config.Namespace)
+	varValues, vars, err := c.getVarValue(ctx, config.ProjectCode, config.Namespace)
 	if err != nil {
 		blog.Errorf("sdk client get vars failed, %s, "+
 			"namespace %s, name %s", err.Error(), config.Namespace, config.Name)
@@ -399,13 +399,14 @@ func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags 
 
 // getVarValue 将命名空间变量转化到 values文件
 // 兼容旧版本，注入 bcs 变量
-func (c *client) getVarValue(projectCode, namespace string) (*release.File, map[string]interface{}, error) {
+func (c *client) getVarValue(
+	ctx context.Context, projectCode, namespace string) (*release.File, map[string]interface{}, error) {
 	// get project info
-	project, err := projectClient.GetProjectByCode(projectCode)
+	project, err := projectClient.GetProjectByCode(ctx, projectCode)
 	if err != nil {
 		return nil, nil, err
 	}
-	variables, err := projectClient.GetVariable(projectCode, c.clusterID, namespace)
+	variables, err := projectClient.GetVariable(ctx, projectCode, c.clusterID, namespace)
 	if err != nil {
 		blog.Infof("get vars failed: %s", err.Error())
 	}

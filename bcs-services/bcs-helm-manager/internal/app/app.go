@@ -38,6 +38,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	middleauth "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
@@ -62,7 +64,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/storage"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
@@ -444,7 +445,7 @@ func (hm *HelmManager) initMicro() error { // nolint
 // init grpc gatewasy
 func (hm *HelmManager) initHTTPService() error {
 	rmMux := ggRuntime.NewServeMux(
-		ggRuntime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
+		ggRuntime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
 		ggRuntime.WithOutgoingHeaderMatcher(runtimex.CustomHeaderMatcher),
 		ggRuntime.WithMarshalerOption(ggRuntime.MIMEWildcard, &ggRuntime.HTTPBodyMarshaler{
 			Marshaler: &ggRuntime.JSONPb{OrigName: true, EmitDefaults: true}}),

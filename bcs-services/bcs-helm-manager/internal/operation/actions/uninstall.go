@@ -81,7 +81,7 @@ func (r *ReleaseUninstallAction) Prepare(ctx context.Context) error {
 }
 
 // Validate xxx
-func (r *ReleaseUninstallAction) Validate() error {
+func (r *ReleaseUninstallAction) Validate(ctx context.Context) error {
 	return nil
 }
 
