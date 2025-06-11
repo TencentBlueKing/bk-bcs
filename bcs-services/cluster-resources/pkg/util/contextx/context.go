@@ -15,6 +15,9 @@ package contextx
 
 import (
 	"context"
+	"net/http"
+	"net/textproto"
+	"strings"
 
 	"go-micro.dev/v4/metadata"
 )
@@ -61,4 +64,45 @@ func GetUserAgentFromCtx(ctx context.Context) string {
 	}
 	userAgent, _ := md.Get(UserAgentHeaderKey)
 	return userAgent
+}
+
+// GetLaneIDByCtx get lane id by ctx
+func GetLaneIDByCtx(ctx context.Context) map[string]string {
+	// http 格式的以key value方式存放，eg: key: X-Lane value: X-Lane-xxx:xxx
+	v, ok := ctx.Value(LaneKey).(string)
+	if ok || v != "" {
+		result := strings.Split(v, ":")
+		if len(result) != 2 {
+			return nil
+		}
+		return map[string]string{result[0]: result[1]}
+	}
+	if !ok || v == "" {
+		return grpcLaneIDValue(ctx)
+	}
+	return nil
+}
+
+// grpcLaneIDValue grpc lane id 处理
+func grpcLaneIDValue(ctx context.Context) map[string]string {
+	md, ok := metadata.FromContext(ctx)
+	if ok {
+		for k, v := range md {
+			tmpKey := textproto.CanonicalMIMEHeaderKey(k)
+			if strings.HasPrefix(tmpKey, LaneIDPrefix) {
+				return map[string]string{tmpKey: v}
+			}
+		}
+	}
+	return nil
+}
+
+// WithLaneIdCtx ctx lane id
+func WithLaneIdCtx(ctx context.Context, h http.Header) context.Context {
+	for k, v := range h {
+		if strings.HasPrefix(k, LaneIDPrefix) && len(v) > 0 {
+			ctx = context.WithValue(ctx, LaneKey, k+":"+v[0])
+		}
+	}
+	return ctx
 }
