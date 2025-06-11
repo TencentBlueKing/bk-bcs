@@ -51,7 +51,7 @@ func (s service) RegisterRoute(router gin.IRoutes) {
 
 	// 跳转 URL
 	web.GET("/user/perm_request/", metrics.RequestCollect("UserPermRequestRedirect"), route.APIAuthRequired(),
-		s.UserPermRequestRedirect)
+		route.TenantHandler(), s.UserPermRequestRedirect)
 
 	// html 页面
 	web.GET("/projects/:projectId/clusters/:clusterId/*action", metrics.RequestCollect("IndexPage"), s.IndexPageHandler)

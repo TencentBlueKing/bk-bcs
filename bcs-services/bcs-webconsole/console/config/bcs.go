@@ -23,12 +23,13 @@ type BCSClusterEnv string
 
 // BCSConf BCS配置
 type BCSConf struct {
-	InnerHost          string         `yaml:"inner_host"`
-	Host               string         `yaml:"host"`
-	Token              string         `yaml:"token"`
-	InsecureSkipVerify bool           `yaml:"insecure_skip_verify"`
-	JWTPubKey          string         `yaml:"jwt_public_key"`
-	JWTPubKeyObj       *rsa.PublicKey `yaml:"-"`
+	InnerHost             string         `yaml:"inner_host"`
+	Host                  string         `yaml:"host"`
+	Token                 string         `yaml:"token"`
+	InsecureSkipVerify    bool           `yaml:"insecure_skip_verify"`
+	JWTPubKey             string         `yaml:"jwt_public_key"`
+	EnableMultiTenantMode bool           `yaml:"enable_multi_tenant_mode"`
+	JWTPubKeyObj          *rsa.PublicKey `yaml:"-"`
 }
 
 // Init xxx
@@ -40,6 +41,7 @@ func (c *BCSConf) Init() {
 	c.JWTPubKey = ""
 	c.JWTPubKeyObj = nil
 	c.InsecureSkipVerify = false
+	c.EnableMultiTenantMode = false
 }
 
 // InitJWTPubKey xxx

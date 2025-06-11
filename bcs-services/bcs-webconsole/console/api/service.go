@@ -57,7 +57,7 @@ func NewRouteRegistrar(opts *route.Options) route.Registrar {
 
 // RegisterRoute xxx
 func (s service) RegisterRoute(router gin.IRoutes) {
-	api := router.Use(route.APIAuthRequired(), gintrace.Middleware(tracing.ServiceName))
+	api := router.Use(route.APIAuthRequired(), route.TenantHandler(), gintrace.Middleware(tracing.ServiceName))
 
 	// 用户登入态鉴权, session鉴权
 	api.GET("/api/projects/:projectId/clusters/:clusterId/session/",

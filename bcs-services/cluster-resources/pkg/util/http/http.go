@@ -34,6 +34,8 @@ func CustomHeaderMatcher(key string) (string, bool) {
 		return ctxkey.CustomUsernameHeaderKey, true
 	case ctxkey.InnerClientHeaderKey:
 		return ctxkey.CustomUsernameHeaderKey, true
+	case ctxkey.TenantIdHeaderKey:
+		return ctxkey.TenantIdHeaderKey, true
 	default:
 		return runtime.DefaultHeaderMatcher(key)
 	}

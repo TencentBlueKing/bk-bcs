@@ -46,6 +46,7 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 				return errorx.New(errcode.General, "failed to get micro's metadata")
 			}
 			username := envs.AnonymousUsername
+			var user *bcsJwt.UserClaimsInfo
 
 			// 内部用户，不鉴权
 			clientName, ok := md.Get(ctxkey.InnerClientHeaderKey)
@@ -54,8 +55,12 @@ func NewContextInjectWrapper() server.HandlerWrapper {
 			}
 			// 1. 从 Metadata（headers）中获取 jwtToken，转换为 username
 			if !canExemptAuth(req) && clientName == "" {
-				if username, err = parseUsername(md); err != nil {
+				username, user, err = parseUsername(md)
+				if err != nil {
 					return err
+				}
+				if user != nil {
+					ctx = context.WithValue(ctx, ctxkey.UserinfoKey, user)
 				}
 			}
 			ctx = context.WithValue(ctx, ctxkey.UsernameKey, username)
@@ -111,32 +116,32 @@ func canExemptAuth(req server.Request) bool {
 }
 
 // parseUsername 通过 micro metadata（headers）信息，解析出用户名
-func parseUsername(md metadata.Metadata) (string, error) {
+func parseUsername(md metadata.Metadata) (string, *bcsJwt.UserClaimsInfo, error) {
 	authorization, ok := md.Get("Authorization")
 	if !ok {
-		return "", errorx.New(errcode.Unauth, "failed to get authorization token!")
+		return "", nil, errorx.New(errcode.Unauth, "failed to get authorization token!")
 	}
 	if len(authorization) == 0 || !strings.HasPrefix(authorization, "Bearer ") {
-		return "", errorx.New(errcode.Unauth, "authorization token error")
+		return "", nil, errorx.New(errcode.Unauth, "authorization token error")
 	}
 
 	u, err := jwtDecode(authorization[7:])
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if u.SubType == bcsJwt.User.String() {
 		if u.UserName == "" {
-			return u.ClientID, nil
+			return u.ClientID, u, nil
 		}
-		return u.UserName, nil
+		return u.UserName, u, nil
 	}
 	if u.SubType == bcsJwt.Client.String() {
 		if username, ok := md.Get(ctxkey.CustomUsernameHeaderKey); ok {
-			return username, nil
+			return username, u, nil
 		}
-		return "", errorx.New(errcode.Unauth, "username is empty")
+		return "", nil, errorx.New(errcode.Unauth, "username is empty")
 	}
-	return u.UserName, nil
+	return u.UserName, u, nil
 }
 
 // jwtDecode 解析 jwt

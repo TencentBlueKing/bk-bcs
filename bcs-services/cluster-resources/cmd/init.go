@@ -180,6 +180,10 @@ func (crSvc *clusterResourcesService) initMicro() error {
 			// 自动执行参数校验
 			wrapper.NewValidatorHandlerWrapper(),
 		),
+		server.WrapHandler(
+			// context 信息注入
+			wrapper.NewTenantWrapper(),
+		),
 	)
 	if err := grpcServer.Init(); err != nil {
 		return err
