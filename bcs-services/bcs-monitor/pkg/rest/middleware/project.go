@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component/bcs"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // ProjectParse 解析 project
@@ -37,7 +38,10 @@ func ProjectParse(next http.Handler) http.Handler {
 		if len(restContext.ProjectCode) != 0 {
 			projectIDOrCode = restContext.ProjectCode
 		}
-		project, err := bcs.GetProject(r.Context(), config.G.BCS, projectIDOrCode)
+
+		ctx := utils.WithLaneIdCtx(r.Context(), r.Header)
+		r = r.WithContext(ctx)
+		project, err := bcs.GetProject(ctx, config.G.BCS, projectIDOrCode)
 		if err != nil {
 			blog.Errorf("get project error for project %s, error: %s", projectIDOrCode, err.Error())
 			_ = render.Render(w, r, rest.AbortWithBadRequestError(restContext, err))

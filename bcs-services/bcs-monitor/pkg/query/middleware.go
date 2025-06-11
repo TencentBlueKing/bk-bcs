@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/rest/tracing"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const (
@@ -100,6 +101,9 @@ func (t *TenantAuthMiddleware) NewHandler(handlerName string, handler http.Handl
 		ctx = store.WithRequestIDValue(ctx, requestID)
 		// Traceparent 透传给grpc
 		ctx = metadata.AppendToOutgoingContext(ctx, "Traceparent", r.Header.Get("traceparent"))
+		// X-Lane 透传给grpc
+		laneKey, laneValue := utils.GetLaneIDByHeader(r.Header)
+		ctx = store.WithLaneValue(ctx, laneKey, laneValue)
 		r = r.WithContext(ctx)
 		handleFunc(w, r)
 	}

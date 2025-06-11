@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const cacheExpireDuration = time.Hour * 24 // 缓存过期时间, 现在的场景主要是获取不可变的 lowerPodID
@@ -82,6 +83,7 @@ func GetPod(ctx context.Context, clusterID, namespace, podname string) (*Workloa
 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetAuthToken(config.G.BCS.Token).
 		Get(url)
 
@@ -114,6 +116,7 @@ func GetNamespaces(ctx context.Context, clusterID string) ([]string, error) {
 	url := fmt.Sprintf("%s/clusters/%s/api/v1/namespaces", config.G.BCS.Host, clusterID)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetAuthToken(config.G.BCS.Token).
 		Get(url)
 
