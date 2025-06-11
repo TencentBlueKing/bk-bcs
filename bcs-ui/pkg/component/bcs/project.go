@@ -18,6 +18,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
 )
 
 // Project 项目信息
@@ -44,6 +45,7 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 

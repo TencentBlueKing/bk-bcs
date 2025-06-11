@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cache"
+	pkgutils "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
@@ -63,6 +64,7 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 		projectIDOrCode)
 	resp, err := GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgutils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		Get(url)
 
@@ -89,6 +91,7 @@ func QueryProjects(ctx context.Context, limit, offset int, params map[string]str
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgutils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		SetQueryParams(params).
 		Get(url)
@@ -117,6 +120,7 @@ func GetClusterNamespaces(ctx context.Context, projectCode, clusterID string) ([
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
+		SetHeaders(pkgutils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		Get(url)
 

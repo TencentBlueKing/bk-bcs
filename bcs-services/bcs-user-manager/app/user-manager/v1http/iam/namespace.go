@@ -134,7 +134,7 @@ func (p NamespaceProvider) FetchInstanceInfo(req resource.Request) resource.Resp
 		wg.Add(1)
 		go func(nsID string) {
 			defer wg.Done()
-			ctx := context.Background()
+			ctx := req.Context
 			ctx = context.WithValue(ctx, utils.ContextValueKeyRequestID, utils.GetRequestIDFromContext(req.Context))
 			clusterID, err := parseNSID(nsID)
 			if err != nil {
