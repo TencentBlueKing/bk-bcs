@@ -283,7 +283,7 @@ replace (
 	// from github.com/thanos-io/thanos
 	github.com/prometheus/client_golang => github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common => github.com/prometheus/common v0.34.0
-	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20250102092401-8457964e42cb
+	github.com/thanos-io/thanos => github.com/ifooth/thanos v0.26.1-0.20250526073612-c4fe7453486c
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
 	// from github.com/thanos-io/thanos
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp => go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
