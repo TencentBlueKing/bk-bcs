@@ -13,6 +13,7 @@
 package eop
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -45,7 +46,7 @@ func (n *NodeManager) ListExternalNodesByIP(ips []string, opt *cloudprovider.Lis
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo,
+func (n *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
 	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
 	return nil, cloudprovider.ErrCloudNotImplemented
 }

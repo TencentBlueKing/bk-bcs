@@ -61,7 +61,10 @@ func Get(obj map[string]interface{}, paths interface{}, _default interface{}) in
 
 // GetBool 获取 Bool 类型快捷方法，默认值为 false
 func GetBool(obj map[string]interface{}, paths interface{}) bool {
-	return Get(obj, paths, false).(bool)
+	if b, ok := Get(obj, paths, false).(bool); ok {
+		return b
+	}
+	return false
 }
 
 // GetInt64 获取 int64 类型快捷方法，默认值为 int64(0)
@@ -72,12 +75,18 @@ func GetInt64(obj map[string]interface{}, paths interface{}) int64 {
 	if i, ok := Get(obj, paths, int(0)).(int); ok {
 		return int64(i)
 	}
-	return int64(Get(obj, paths, float64(0)).(float64))
+	if i, ok := Get(obj, paths, float64(0)).(float64); ok {
+		return int64(i)
+	}
+	return 0
 }
 
 // GetStr 获取 string 类型快捷方法，默认值为 ""
 func GetStr(obj map[string]interface{}, paths interface{}) string {
-	return Get(obj, paths, "").(string)
+	if s, ok := Get(obj, paths, "").(string); ok {
+		return s
+	}
+	return ""
 }
 
 // GetIntStr 获取 string or int 类型快捷方法，默认值为 ""
@@ -91,12 +100,18 @@ func GetIntStr(obj map[string]interface{}, paths interface{}) string {
 
 // GetList 获取 []interface{} 类型快捷方法，默认值为 []interface{}{}
 func GetList(obj map[string]interface{}, paths interface{}) []interface{} {
-	return Get(obj, paths, []interface{}{}).([]interface{})
+	if l, ok := Get(obj, paths, []interface{}{}).([]interface{}); ok {
+		return l
+	}
+	return []interface{}{}
 }
 
 // GetMap 获取 map[string]interface{} 类型快捷方法，默认值为 map[string]interface{}
 func GetMap(obj map[string]interface{}, paths interface{}) map[string]interface{} {
-	return Get(obj, paths, map[string]interface{}{}).(map[string]interface{})
+	if m, ok := Get(obj, paths, map[string]interface{}{}).(map[string]interface{}); ok {
+		return m
+	}
+	return map[string]interface{}{}
 }
 
 // ConvertPath 将路径中的 "." 转换为 "．"，避免在 json 中被解析为 map

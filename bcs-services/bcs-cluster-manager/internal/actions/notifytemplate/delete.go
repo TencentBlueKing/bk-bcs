@@ -64,7 +64,7 @@ func (da *DeleteAction) validate() error {
 
 	da.template = template
 
-	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(da.req.ProjectID, true)
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(da.ctx, da.req.ProjectID, true)
 	if errLocal == nil {
 		da.project = proInfo
 	}

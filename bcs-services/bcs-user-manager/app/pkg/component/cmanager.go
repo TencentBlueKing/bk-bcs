@@ -22,6 +22,7 @@ import (
 	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
@@ -72,6 +73,7 @@ func GetClusterByClusterID(ctx context.Context, clusterID string) (*Cluster, err
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		Get(url)
 	if err != nil {
@@ -96,6 +98,7 @@ func GetClustersByProjectID(ctx context.Context, projectID string) ([]*Cluster, 
 
 	resp, err := GetClient().R().
 		SetContext(ctx).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		Get(url)
 	if err != nil {
@@ -165,6 +168,7 @@ func ListCloudAccount(ctx context.Context, projectID string, accountIDs []string
 	}
 	resp, err := GetClient().R().
 		SetContext(ctx).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		SetQueryParamsFromValues(params).
 		Get(url)

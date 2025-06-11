@@ -72,12 +72,12 @@ func NewAddonsInstaller(opts AddonOptions, client *AddonsClient,
 var _ install.Installer = &AddonsInstaller{}
 
 // IsInstalled returns whether the app is installed
-func (a *AddonsInstaller) IsInstalled(clusterID string) (bool, error) {
+func (a *AddonsInstaller) IsInstalled(ctx context.Context, clusterID string) (bool, error) {
 	if a.debug {
 		return true, nil
 	}
 
-	resp, err := a.getAddonDetail(clusterID)
+	resp, err := a.getAddonDetail(ctx, clusterID)
 	if err != nil {
 		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, err: %s", err.Error())
 		return false, err
@@ -97,9 +97,10 @@ func (a *AddonsInstaller) IsInstalled(clusterID string) (bool, error) {
 	return true, nil
 }
 
-func (a *AddonsInstaller) getAddonDetail(clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
+func (a *AddonsInstaller) getAddonDetail(
+	ctx context.Context, clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
 	start := time.Now()
-	resp, err := a.client.GetAddonsDetail(context.Background(), &helmmanager.GetAddonsDetailReq{
+	resp, err := a.client.GetAddonsDetail(ctx, &helmmanager.GetAddonsDetailReq{
 		ProjectCode: &a.projectID,
 		ClusterID:   &clusterId,
 		Name:        &a.addonName,
@@ -120,18 +121,18 @@ func (a *AddonsInstaller) getAddonDetail(clusterId string) (*helmmanager.GetAddo
 }
 
 // Install installs the app
-func (a *AddonsInstaller) Install(clusterID, values string) error {
+func (a *AddonsInstaller) Install(ctx context.Context, clusterID, values string) error {
 	if a.debug {
 		return nil
 	}
 
-	addonResp, err := a.getAddonDetail(clusterID)
+	addonResp, err := a.getAddonDetail(ctx, clusterID)
 	if err != nil || (addonResp.Code != nil && *addonResp.Code != 0) {
 		return fmt.Errorf("[AddonsInstaller] InstallAddons failed: %v", err)
 	}
 
 	start := time.Now()
-	resp, err := a.client.UpgradeAddons(context.Background(), &helmmanager.UpgradeAddonsReq{
+	resp, err := a.client.UpgradeAddons(ctx, &helmmanager.UpgradeAddonsReq{
 		ProjectCode: &a.projectID,
 		ClusterID:   &clusterID,
 		Name:        &a.addonName,
@@ -160,19 +161,19 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 }
 
 // Upgrade upgrades the app
-func (a *AddonsInstaller) Upgrade(clusterID, values string) error {
+func (a *AddonsInstaller) Upgrade(ctx context.Context, clusterID, values string) error {
 	return nil
 }
 
 // Uninstall uninstalls the app
-func (a *AddonsInstaller) Uninstall(clusterID string) error {
+func (a *AddonsInstaller) Uninstall(ctx context.Context, clusterID string) error {
 	if a.debug {
 		return nil
 	}
 
 	start := time.Now()
 	// delete addon
-	resp, err := a.client.UninstallAddons(context.Background(), &helmmanager.UninstallAddonsReq{
+	resp, err := a.client.UninstallAddons(ctx, &helmmanager.UninstallAddonsReq{
 		ProjectCode: &a.projectID,
 		ClusterID:   &clusterID,
 		Name:        &a.addonName,
@@ -195,7 +196,8 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 }
 
 // CheckAppStatus check app install status
-func (a *AddonsInstaller) CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error) {
+func (a *AddonsInstaller) CheckAppStatus(
+	ctx context.Context, clusterID string, timeout time.Duration, pre bool) (bool, error) {
 	if a.debug {
 		return true, nil
 	}

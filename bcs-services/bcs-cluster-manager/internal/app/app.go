@@ -40,10 +40,12 @@ import (
 	commonutil "github.com/Tencent/bk-bcs/bcs-common/common/util"
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/constants"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 	restful "github.com/emicklei/go-restful"
@@ -66,7 +68,6 @@ import (
 	cmcommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/commonhandler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/daemon"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock"
 	etcdlock "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/lock/etcd"
@@ -79,7 +80,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cmdb"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/encrypt"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/gse"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/addons"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/helm"
 	installTypes "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/job"
@@ -412,18 +412,6 @@ func (cm *ClusterManager) initRemoteClient() error { // nolint
 	if err != nil {
 		return err
 	}
-	// init addons client
-	err = addons.SetAddonsClient(&installTypes.Options{
-		Enable:          cm.opt.Helm.Enable,
-		GateWay:         cm.opt.Helm.GateWay,
-		Token:           cm.opt.Helm.Token,
-		Module:          cm.opt.Helm.Module,
-		EtcdRegistry:    cm.microRegistry,
-		ClientTLSConfig: cm.clientTLSConfig,
-	})
-	if err != nil {
-		return err
-	}
 
 	// init encrypt client
 	err = encrypt.SetEncryptClient(cm.opt.Encrypt)
@@ -714,25 +702,36 @@ func (cm *ClusterManager) initDiscovery() {
 
 	// enable discovery resource module
 	if cm.opt.ResourceManager.Enable {
-		cm.resourceDisc = discovery.NewModuleDiscovery(cm.opt.ResourceManager.Module, cm.microRegistry)
-		blog.Infof("init discovery for resource manager successfully")
+		if !discovery.UseServiceDiscovery() {
+			cm.resourceDisc = discovery.NewModuleDiscovery(cm.opt.ResourceManager.Module, cm.microRegistry)
+			blog.Infof("init discovery for resource manager successfully")
 
-		resource.SetResourceClient(&resource.Options{
-			Enable:    cm.opt.ResourceManager.Enable,
-			Module:    cm.opt.ResourceManager.Module,
-			TLSConfig: cm.clientTLSConfig,
-		}, cm.resourceDisc)
+			resource.SetResourceClient(&resource.Options{
+				Enable:    cm.opt.ResourceManager.Enable,
+				Module:    cm.opt.ResourceManager.Module,
+				TLSConfig: cm.clientTLSConfig,
+			}, cm.resourceDisc)
+		} else {
+			resource.SetResourceClient(&resource.Options{
+				Enable:    cm.opt.ResourceManager.Enable,
+				Module:    cm.opt.ResourceManager.Module,
+				TLSConfig: cm.clientTLSConfig,
+			}, nil)
+		}
 	}
 
 	// enable discovery project module
 	if cm.opt.ProjectManager.Enable {
-		cm.projectDisc = discovery.NewModuleDiscovery(cm.opt.ProjectManager.Module, cm.microRegistry)
-		blog.Infof("init discovery for project manager successfully")
-
 		project.SetProjectClient(&project.Options{
-			Module:    cm.opt.ProjectManager.Module,
-			TLSConfig: cm.clientTLSConfig,
-		}, cm.projectDisc)
+			Module: cm.opt.ProjectManager.Module,
+		})
+		if !discovery.UseServiceDiscovery() {
+			cm.projectDisc = discovery.NewModuleDiscovery(cm.opt.ProjectManager.Module, cm.microRegistry)
+			blog.Infof("init discovery for project manager successfully")
+			bcsproject.SetClientConfig(cm.clientTLSConfig, cm.projectDisc)
+		} else {
+			bcsproject.SetClientConfig(cm.clientTLSConfig, nil)
+		}
 	}
 }
 
@@ -803,26 +802,10 @@ func (cm *ClusterManager) initTunnelServer(router *mux.Router) error {
 	return nil
 }
 
-// CustomMatcher for http header
-func CustomMatcher(key string) (string, bool) {
-	switch key {
-	case "X-Request-Id":
-		return "X-Request-Id", true
-	case middleware.CustomUsernameHeaderKey:
-		return middleware.CustomUsernameHeaderKey, true
-	case middleware.InnerClientHeaderKey:
-		return middleware.InnerClientHeaderKey, true
-	case constants.Traceparent:
-		return constants.GrpcTraceparent, true
-	default:
-		return runtime.DefaultHeaderMatcher(key)
-	}
-}
-
 // init http grpc gateway
 func (cm *ClusterManager) initHTTPGateway(router *mux.Router) error {
 	gwmux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		runtime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
 			EmitDefaults: true,
@@ -1105,7 +1088,6 @@ func (cm *ClusterManager) close() {
 	closeCtx, closeCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer closeCancel()
 	helm.GetHelmManagerClient().Stop()
-	addons.GetAddonsClient().Stop()
 	cm.extraServer.Shutdown(closeCtx) // nolint
 	cm.httpServer.Shutdown(closeCtx)  // nolint
 	cm.daemon.Stop()

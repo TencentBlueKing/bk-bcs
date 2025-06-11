@@ -19,6 +19,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
 )
 
 // Announcement 通知中心公告
@@ -47,6 +48,7 @@ func RegisterSystem(ctx context.Context) error {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -73,6 +75,7 @@ func GetCurrentAnnouncements(ctx context.Context, lang string) ([]Announcement, 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		Get(url)
 
 	if err != nil {

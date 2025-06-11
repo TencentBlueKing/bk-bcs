@@ -17,13 +17,11 @@ import (
 	"context"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/install/types"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // helmClient helm-manager client
@@ -65,13 +63,16 @@ func NewHelmClient(opts *types.Options) (*HelmClient, error) {
 	}
 	helmClient.ctx, helmClient.cancel = context.WithCancel(context.Background())
 
-	if len(opts.GateWay) == 0 {
+	if !discovery.UseServiceDiscovery() {
 		helmClient.discovery = discovery.NewModuleDiscovery(opts.Module, opts.EtcdRegistry)
 		err := helmClient.discovery.Start()
 		if err != nil {
 			blog.Errorf("start discovery[%s] client failed: %v", types.ModuleHelmManager, err)
 			return nil, err
 		}
+		helmmanager.SetClientConfig(opts.ClientTLSConfig, helmClient.discovery)
+	} else {
+		helmmanager.SetClientConfig(opts.ClientTLSConfig, nil)
 	}
 
 	return helmClient, nil
@@ -82,27 +83,11 @@ func (hm *HelmClient) GetHelmManagerClient() (helmmanager.HelmManagerClient, fun
 	if hm == nil {
 		return nil, nil, types.ErrNotInited
 	}
-
-	conf := &bcsapi.Config{
-		TLSConfig:       hm.opts.ClientTLSConfig,
-		InnerClientName: common.ClusterManager,
+	cli, conn, err := helmmanager.GetClient(common.ClusterManager)
+	if err != nil {
+		return nil, nil, err
 	}
-
-	if len(hm.opts.GateWay) != 0 {
-		conf.Hosts = []string{hm.opts.GateWay}
-		conf.AuthToken = hm.opts.Token
-	} else {
-		nodeServer, err := hm.discovery.GetRandomServiceNode()
-		if err != nil {
-			return nil, nil, err
-		}
-		endpoints := utils.GetServerEndpointsFromRegistryNode(nodeServer)
-		conf.Hosts = endpoints
-	}
-
-	blog.Infof("GetHelmManagerClient config[%+v]", *conf)
-
-	return helmmanager.NewHelmClient(conf)
+	return cli.HelmManagerClient, conn, nil
 }
 
 // Stop stop HelmManagerClient

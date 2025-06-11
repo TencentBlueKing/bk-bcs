@@ -21,6 +21,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/components"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/types"
 )
 
 const (
@@ -61,6 +62,7 @@ func ListClusters(ctx context.Context, projectId string) ([]*Cluster, error) {
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(types.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCS.Token).
 		SetQueryParam("projectID", projectId).
 		Get(url)
@@ -83,6 +85,7 @@ func GetCluster(ctx context.Context, projectId, clusterId string) (*Cluster, err
 
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(types.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCS.Token).
 		Get(url)
 
@@ -128,6 +131,7 @@ func CreateTempToken(ctx context.Context, username, clusterId string) (*Token, e
 	}
 	resp, err := components.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(types.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCS.Token).
 		SetBody(data).
 		Post(url)

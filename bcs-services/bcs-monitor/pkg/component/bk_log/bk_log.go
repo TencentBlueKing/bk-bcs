@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // ListLogCollectors list log collectors
@@ -71,6 +72,7 @@ func ListLogCollectorsWithPath(ctx context.Context, clusterID, spaceUID string,
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetQueryParam("bcs_cluster_id", clusterID).
 		SetQueryParam("space_uid", spaceUID).
 		Get(url)
@@ -107,6 +109,7 @@ func CreateLogCollectors(ctx context.Context, req *CreateBCSCollectorReq) (*Crea
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(req).
 		Post(url)
 
@@ -143,6 +146,7 @@ func UpdateLogCollectors(ctx context.Context, ruleID int, req *UpdateBCSCollecto
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(req).
 		Post(url)
 
@@ -178,6 +182,7 @@ func DeleteLogCollectors(ctx context.Context, ruleID int) error {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Delete(url)
 
 	if err != nil {
@@ -212,6 +217,7 @@ func RetryLogCollectors(ctx context.Context, ruleID int, username string) error 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -246,6 +252,7 @@ func StartLogCollectors(ctx context.Context, ruleID int, username string) error 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -280,6 +287,7 @@ func StopLogCollectors(ctx context.Context, ruleID int, username string) error {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -314,6 +322,7 @@ func HasLog(ctx context.Context, indexSetID int) (bool, error) {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(map[string]interface{}{"index_set_id": indexSetID}).
 		Post(url)
 
@@ -349,6 +358,7 @@ func GetStorageClusters(ctx context.Context, spaceUID string) ([]GetStorageClust
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetQueryParam("space_uid", spaceUID).
 		Get(url)
 
@@ -390,6 +400,7 @@ func SwitchStorage(ctx context.Context, spaceUID, bcsClusterID string, storageCl
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(body).
 		Post(url)
 
@@ -425,6 +436,7 @@ func GetBcsCollectorStorage(ctx context.Context, spaceUID, clusterID string) (in
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetQueryParam("space_uid", spaceUID).
 		SetQueryParam("bcs_cluster_id", clusterID).
 		Get(url)

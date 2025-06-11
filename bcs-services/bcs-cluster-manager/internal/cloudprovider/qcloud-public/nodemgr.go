@@ -13,6 +13,7 @@
 package qcloud
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -238,7 +239,8 @@ func (nm *NodeManager) ListNodesByInstanceID(ids []string, opt *cloudprovider.Li
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
+func (nm *NodeManager) ListNodeInstanceType(
+	ctx context.Context, info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
 		info.Zone, info.NodeFamily, info.Cpu, info.Memory)

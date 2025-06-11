@@ -22,6 +22,7 @@ import (
 	"github.com/prometheus/prometheus/prompb"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 const (
@@ -166,6 +167,7 @@ func (c *SuanLiClient) QueryInfo(ctx context.Context, metricName string, tagFilt
 		SetHeader("projectname", c.config.ProjectName).
 		SetHeader("token", c.config.Token).
 		SetHeader("Content-Type", "application/json").
+		SetHeaders(utils.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetBody(jsonData).
 		Post(rawURL)
 
@@ -213,6 +215,7 @@ func (c *SuanLiClient) QuerySecondInfo(ctx context.Context, metricName string, t
 		SetHeader("projectname", c.config.ProjectName).
 		SetHeader("token", c.config.Token).
 		SetHeader("Content-Type", "application/json").
+		SetHeaders(utils.GetLaneIDByCtx(ctx)). // 泳道特性
 		SetBody(jsonData).
 		Post(rawURL)
 

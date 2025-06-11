@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package contextx xxx
-package contextx
+// Package utils xxx
+package utils
 
 import (
 	"context"
@@ -19,52 +19,19 @@ import (
 	"net/textproto"
 	"strings"
 
-	"go-micro.dev/v4/metadata"
+	"google.golang.org/grpc/metadata"
 )
 
-// GetRequestIDFromCtx 通过 ctx 获取 requestID
-func GetRequestIDFromCtx(ctx context.Context) string {
-	id, _ := ctx.Value(RequestIDContextKey).(string)
-	return id
-}
+// ContextKey is the key for context
+type ContextKey string
 
-// GetProjectIDFromCtx 通过 ctx 获取 projectID
-func GetProjectIDFromCtx(ctx context.Context) string {
-	id, _ := ctx.Value(ProjectIDContextKey).(string)
-	return id
-}
+const (
+	// LaneKey is the key for lane
+	LaneKey ContextKey = "X-Lane"
 
-// GetProjectCodeFromCtx 通过 ctx 获取 projectCode
-func GetProjectCodeFromCtx(ctx context.Context) string {
-	id, _ := ctx.Value(ProjectCodeContextKey).(string)
-	return id
-}
-
-// GetClusterIDFromCtx 通过 ctx 获取 clusterID
-func GetClusterIDFromCtx(ctx context.Context) string {
-	id, _ := ctx.Value(ClusterIDContextKey).(string)
-	return id
-}
-
-// GetSourceIPFromCtx 通过 ctx 获取 sourceIP
-func GetSourceIPFromCtx(ctx context.Context) string {
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return ""
-	}
-	forwarded, _ := md.Get(ForwardedForHeaderKey)
-	return forwarded
-}
-
-// GetUserAgentFromCtx 通过 ctx 获取 userAgent
-func GetUserAgentFromCtx(ctx context.Context) string {
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return ""
-	}
-	userAgent, _ := md.Get(UserAgentHeaderKey)
-	return userAgent
-}
+	// LaneIDPrefix 染色的header前缀
+	LaneIDPrefix = "X-Lane-"
+)
 
 // GetLaneIDByCtx get lane id by ctx
 func GetLaneIDByCtx(ctx context.Context) map[string]string {
@@ -85,12 +52,12 @@ func GetLaneIDByCtx(ctx context.Context) map[string]string {
 
 // grpcLaneIDValue grpc lane id 处理
 func grpcLaneIDValue(ctx context.Context) map[string]string {
-	md, ok := metadata.FromContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		for k, v := range md {
 			tmpKey := textproto.CanonicalMIMEHeaderKey(k)
-			if strings.HasPrefix(tmpKey, LaneIDPrefix) {
-				return map[string]string{tmpKey: v}
+			if strings.HasPrefix(tmpKey, LaneIDPrefix) && len(v) > 0 {
+				return map[string]string{tmpKey: md.Get(k)[0]}
 			}
 		}
 	}
@@ -105,4 +72,14 @@ func WithLaneIdCtx(ctx context.Context, h http.Header) context.Context {
 		}
 	}
 	return ctx
+}
+
+// GetLaneIDByHeader get lane id by header
+func GetLaneIDByHeader(h http.Header) (string, string) {
+	for k, v := range h {
+		if strings.HasPrefix(k, LaneIDPrefix) && len(v) > 0 {
+			return k, v[0]
+		}
+	}
+	return "", ""
 }

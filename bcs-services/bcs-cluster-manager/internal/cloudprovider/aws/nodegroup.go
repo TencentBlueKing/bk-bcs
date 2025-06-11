@@ -174,7 +174,8 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, 
 }
 
 // RecommendNodeGroupConf recommends nodegroup configs
-func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+func (ng *NodeGroup) RecommendNodeGroupConf(
+	ctx context.Context, opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
 	if opt == nil {
 		return nil, fmt.Errorf("invalid request")
 	}
@@ -193,7 +194,7 @@ func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]
 	}
 	config.ServiceRoleName = serviceRoles[0].RoleName
 
-	insTypes, err := mgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
+	insTypes, err := mgr.ListNodeInstanceType(ctx, cloudprovider.InstanceInfo{
 		Region: opt.Region,
 		Cpu:    8,
 		Memory: 16,
@@ -438,7 +439,8 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(
+	ctx context.Context, group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
 	return nil
 }
 

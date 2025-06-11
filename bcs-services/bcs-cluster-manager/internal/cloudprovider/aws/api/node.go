@@ -13,6 +13,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"strings"
@@ -70,7 +71,7 @@ type NodeManager struct {
 }
 
 // ListNodeInstanceType get node instance type list
-func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo,
+func (nm *NodeManager) ListNodeInstanceType(ctx context.Context, info cloudprovider.InstanceInfo,
 	opt *cloudprovider.CommonOption) ([]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType region: %s, nodeFamily: %s, cpu: %d, memory: %d",
 		info.Region, info.NodeFamily, info.Cpu, info.Memory)

@@ -40,7 +40,7 @@ replace (
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241212023042-2c0651f4eded
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250516061604-eeca82cb136b
 	github.com/TencentBlueKing/gopkg v1.1.0
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
 	// fork 自 https://github.com/signalfx/splunk-otel-go/tree/main/instrumentation/k8s.io/client-go/splunkclient-go

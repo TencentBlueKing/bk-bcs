@@ -14,6 +14,7 @@
 package huawei
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -153,7 +154,8 @@ func (nm *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*pro
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (nm *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
+func (nm *NodeManager) ListNodeInstanceType(
+	ctx context.Context, info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	var (
 		usableAZ = []string{"normal", "promotion"}

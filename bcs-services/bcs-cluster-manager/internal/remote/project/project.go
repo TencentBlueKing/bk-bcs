@@ -15,20 +15,17 @@ package project
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
-	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/bcsproject"
 	"github.com/patrickmn/go-cache"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	rutils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/utils"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 const (
@@ -56,22 +53,18 @@ const (
 type Options struct {
 	// Module module name
 	Module string
-	// other configInfo
-	TLSConfig *tls.Config
 }
 
 // ProjectClient global project client
 var ProjectClient *ProManClient
 
 // SetProjectClient set global project client
-func SetProjectClient(opts *Options, disc *discovery.ModuleDiscovery) {
+func SetProjectClient(opts *Options) {
 	if opts.Module == "" {
 		opts.Module = projectManagerServiceName
 	}
 
 	ProjectClient = &ProManClient{
-		opts:  opts,
-		disc:  disc,
 		cache: cache.New(5*time.Minute, 60*time.Minute),
 	}
 }
@@ -83,8 +76,6 @@ func GetProjectManagerClient() *ProManClient {
 
 // ProManClient project client
 type ProManClient struct {
-	opts  *Options
-	disc  *discovery.ModuleDiscovery
 	cache *cache.Cache
 }
 
@@ -93,31 +84,12 @@ func (pm *ProManClient) getProjectManagerClient() (*bcsproject.ProjectClient, fu
 	if pm == nil {
 		return nil, nil, rutils.ErrServerNotInit
 	}
-
-	if pm.disc == nil {
-		return nil, nil, fmt.Errorf("resourceManager module not enable discovery")
-	}
-
-	// random server
-	nodeServer, err := pm.disc.GetRandomServiceNode()
-	if err != nil {
-		return nil, nil, err
-	}
-	endpoints := utils.GetServerEndpointsFromRegistryNode(nodeServer)
-
-	blog.Infof("ProManClient get node[%s] from disc", nodeServer.Address)
-	conf := &bcsapi.Config{
-		Hosts:           endpoints,
-		TLSConfig:       pm.opts.TLSConfig,
-		InnerClientName: "bcs-cluster-manager",
-	}
-	cli, closeCon := bcsproject.NewProjectManagerClient(conf)
-
-	return cli, closeCon, nil
+	return bcsproject.GetClient(common.ClusterManager)
 }
 
 // GetProjectInfo get project detailed info
-func (pm *ProManClient) GetProjectInfo(projectIdOrCode string, isCache bool) (*bcsproject.Project, error) {
+func (pm *ProManClient) GetProjectInfo(
+	ctx context.Context, projectIdOrCode string, isCache bool) (*bcsproject.Project, error) {
 	if pm == nil {
 		return nil, rutils.ErrServerNotInit
 	}
@@ -145,8 +117,7 @@ func (pm *ProManClient) GetProjectInfo(projectIdOrCode string, isCache bool) (*b
 	}()
 
 	start := time.Now()
-	resp, err := cli.Project.GetProject(context.Background(),
-		&bcsproject.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
+	resp, err := cli.Project.GetProject(ctx, &bcsproject.GetProjectRequest{ProjectIDOrCode: projectIdOrCode})
 	if err != nil {
 		metrics.ReportLibRequestMetric("project", "GetProject", "grpc", metrics.LibCallStatusErr, start)
 		blog.Errorf("GetProjectInfo[%s] GetProject failed: %v", projectIdOrCode, err)
@@ -205,8 +176,8 @@ func (pm *ProManClient) ListProjectQuotas(projectId, quotaType, provider string)
 }
 
 // CheckProjectQuotaGrayLabel get project is has quota-gray label
-func (pm *ProManClient) CheckProjectQuotaGrayLabel(projectId string) (string, error) {
-	projInfo, err := ProjectClient.GetProjectInfo(projectId, true)
+func (pm *ProManClient) CheckProjectQuotaGrayLabel(ctx context.Context, projectId string) (string, error) {
+	projInfo, err := ProjectClient.GetProjectInfo(ctx, projectId, true)
 	if err != nil {
 		blog.Errorf("CheckProjectQuotaGrayLabel GetProjectInfo[%s] failed: %v", projectId, err)
 		return "", err
