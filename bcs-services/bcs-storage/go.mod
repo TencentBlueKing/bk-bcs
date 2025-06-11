@@ -12,7 +12,7 @@ replace (
 )
 
 require (
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241212023042-2c0651f4eded
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
 	github.com/deckarep/golang-set v1.8.0
 	github.com/emicklei/go-restful v2.15.0+incompatible
 	github.com/google/uuid v1.6.0
@@ -69,6 +69,7 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-git/go-git/v5 v5.12.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-micro/plugins/v4/broker/rabbitmq v1.1.0 // indirect
 	github.com/go-micro/plugins/v4/broker/stan v1.1.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
@@ -134,8 +135,10 @@ require (
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
+	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	k8s.io/klog/v2 v2.100.1 // indirect
 )
