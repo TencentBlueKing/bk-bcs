@@ -114,7 +114,7 @@ func (la *ListNodeTypeAction) listCloudInstancetypes() error {
 	cmOption.Region = la.req.Region
 
 	// get instance types list
-	insTypes, err := nodeMgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
+	insTypes, err := nodeMgr.ListNodeInstanceType(la.ctx, cloudprovider.InstanceInfo{
 		Region:       la.req.Region,
 		Zone:         la.req.Zone,
 		NodeFamily:   la.req.NodeFamily,

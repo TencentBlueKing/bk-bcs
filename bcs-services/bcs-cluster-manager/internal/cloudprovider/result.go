@@ -109,7 +109,7 @@ func printOperationLog(taskId, clusterId, groupId string, operation string, isSu
 		blog.Errorf("task[%s] printClusterOperation failed: %v", taskId, err)
 		return
 	}
-	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(cls.ProjectID, true)
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ctx, cls.ProjectID, true)
 	if errLocal != nil {
 		blog.Errorf("task[%s] printClusterOperation GetProjectInfo[%s] failed: %v",
 			taskId, cls.ProjectID, errLocal)

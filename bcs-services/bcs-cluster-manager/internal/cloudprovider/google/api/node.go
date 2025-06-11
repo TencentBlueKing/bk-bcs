@@ -88,7 +88,8 @@ func (n *NodeManager) GetZoneList(opt *cloudprovider.GetZoneListOption) ([]*prot
 }
 
 // ListNodeInstanceType list node type by zone and node family
-func (n *NodeManager) ListNodeInstanceType(info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
+func (n *NodeManager) ListNodeInstanceType(
+	ctx context.Context, info cloudprovider.InstanceInfo, opt *cloudprovider.CommonOption) (
 	[]*proto.InstanceType, error) {
 	blog.Infof("ListNodeInstanceType zone: %s, nodeFamily: %s, cpu: %d, memory: %d",
 		info.Zone, info.NodeFamily, info.Cpu, info.Memory)
