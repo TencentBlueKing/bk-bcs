@@ -18,8 +18,8 @@ import "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
 	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
+	if cmData, ok := manifest["data"].(map[string]interface{}); ok {
+		for k := range cmData {
 			data = append(data, k)
 		}
 	}
@@ -31,13 +31,6 @@ func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 // FormatBscpConfig ...
 func FormatBscpConfig(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
-	data := []string{}
-	if cmData, ok := manifest["data"]; ok {
-		for k := range cmData.(map[string]interface{}) {
-			data = append(data, k)
-		}
-	}
-	ret["data"] = data
 	ret["releaseID"] = mapx.GetStr(manifest, "status.releaseID")
 	return ret
 }
