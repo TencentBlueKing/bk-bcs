@@ -81,7 +81,7 @@
           <monaco-editor
             ref="yamlEditor"
             class="editor"
-            theme="monokai"
+            theme="vs-dark"
             language="yaml"
             :style="{ height: `${editorHeight}px`, width: '100%' }"
             v-model="editorOptions.content"
@@ -94,6 +94,9 @@
         <div class="create-wrapper">
           <bk-button type="primary" :title="$t('generic.button.update')" @click="handleUpdate">
             {{$t('generic.button.update')}}
+          </bk-button>
+          <bk-button @click="handleShowPreview">
+            {{ $t('generic.title.preview') }}
           </bk-button>
           <bk-button type="default" :title="$t('generic.button.cancel')" @click="goBack">
             {{$t('generic.button.cancel')}}
@@ -114,8 +117,8 @@
           v-if="yamlDiffEditorOptions.isDiff">{{$t('plugin.tools.confirmUpgradeTips')}}</p>
         <div class="difference-code">
           <div class="editor-header" v-if="yamlDiffEditorOptions.isDiff">
-            <div>当前内容</div>
-            <div>更新内容</div>
+            <div>{{ $t('generic.title.curVersion') }}</div>
+            <div>{{ $t('deploy.helm.upgrade') }}</div>
           </div>
 
           <div
@@ -124,7 +127,7 @@
             <monaco-editor
               ref="yamlEditor"
               class="editor"
-              theme="monokai"
+              theme="vs-dark"
               language="yaml"
               :style="{ height: `${diffEditorHeight}px`, width: '100%' }"
               v-model="curAppDifference.content"
@@ -153,20 +156,36 @@
         </div>
       </div>
     </bk-dialog>
+    <!-- 预览 -->
+    <bcs-sideslider
+      quick-close
+      :is-show.sync="showPreview"
+      :width="1000"
+      :title="$t('generic.title.preview')">
+      <template #content>
+        <ChartFileTree
+          :contents="previewData.newContents"
+          v-bkloading="{ isLoading: previewLoading }"
+          class="bcs-sideslider-content"
+          style="height: calc(100vh - 100px)" />
+      </template>
+    </bcs-sideslider>
   </BcsContent>
 </template>
 
 <script>
-import { addonsDetail, updateOns } from '@/api/modules/helm';
+import { addonsDetail, addonsPreview, updateOns } from '@/api/modules/helm';
 import { catchErrorHandler } from '@/common/util';
 import BcsContent from '@/components/layout/Content.vue';
 import MonacoEditor from '@/components/monaco-editor/editor.vue';
+import ChartFileTree from '@/views/deploy-manage/helm/chart-file-tree.vue';
 import useHelm from '@/views/deploy-manage/helm/use-helm';
 
 export default {
   components: {
     MonacoEditor,
     BcsContent,
+    ChartFileTree,
   },
   data() {
     return {
@@ -210,6 +229,9 @@ export default {
       },
       namespaceList: [],
       chartVersionsList: [],
+      showPreview: false,
+      previewData: {},
+      previewLoading: false,
     };
   },
   computed: {
@@ -260,9 +282,12 @@ export default {
       this.$router.back();
     },
 
-    handleUpdate() {
-      this.curAppDifference.content = this.editorOptions.content;
-      this.curAppDifference.originContent = this.editorOptions.originContent;
+    async handleUpdate() {
+      await this.getPreviewData();
+      // this.curAppDifference.content = this.editorOptions.content;
+      // this.curAppDifference.originContent = this.editorOptions.originContent;
+      this.curAppDifference.content = this.previewData.newContent;
+      this.curAppDifference.originContent = this.previewData.oldContent;
       if (this.curAppDifference.content === this.curAppDifference.originContent) {
         this.curAppDifference.content = this.$t('plugin.tools.noChages');
         this.yamlDiffEditorOptions.isDiff = false;
@@ -321,6 +346,27 @@ export default {
       } finally {
         this.updateInstanceLoading = false;
       }
+    },
+
+    async handleShowPreview() {
+      this.showPreview = true;
+      this.previewLoading = true;
+      await this.getPreviewData();
+      this.previewLoading = false;
+    },
+
+    async getPreviewData() {
+      this.previewData = await addonsPreview({
+        $clusterId: this.curClusterId,
+        $name: this.curApp.name,
+        values: this.editorOptions.content || '',
+        version: this.curApp.version,
+      }).catch(() => ({
+        newContent: '',
+        newContents: {},
+        oldContent: '',
+        oldContents: {},
+      }));
     },
   },
 };
