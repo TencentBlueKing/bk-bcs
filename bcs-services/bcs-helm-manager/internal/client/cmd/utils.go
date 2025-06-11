@@ -85,7 +85,7 @@ func newHelmClient(config *bcsapi.Config) (helmmanager.HelmManagerClient, func()
 	for i := 0; i < maxTries; i++ {
 		selected := rand.Intn(1024) % len(config.Hosts) // nolint
 		addr := config.Hosts[selected]
-		conn, err = grpc.Dial(addr, opts...)
+		conn, err = grpc.Dial(addr, opts...) // nolint:staticcheck
 		if err != nil {
 			blog.Errorf("Create helm manager grpc client with %s error: %s", addr, err.Error())
 			continue
