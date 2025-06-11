@@ -98,7 +98,8 @@
             :key="option.projectID"
             :id="option.projectID"
             :name="option.name"
-            :disabled="!(perms[option.projectID] && perms[option.projectID].project_view)"
+            :disabled="(!(perms[option.projectID] && perms[option.projectID].project_view))
+              || curProject.projectID === option.projectID"
             v-authority="{
               clickable: perms[option.projectID]
                 && perms[option.projectID].project_view,
@@ -120,7 +121,7 @@
                   v-if="curProject.projectID === option.projectID">{{ $t('cluster.tag.currentProject') }}</bcs-tag>
               </span>
               <i
-                v-show="innerValue.includes(option.projectID)"
+                v-show="innerValue.includes(option.projectID) && !isSelectAll"
                 class="bk-option-icon bk-icon icon-check-1 text-[2em]"></i>
             </span>
           </bk-option>
@@ -206,11 +207,11 @@ export default defineComponent({
     };
     const innerValue = ref<string[]>(value.value);
     const originValue = ref<string[]>(value.value);
-    const isOnlyCurrentPorject = computed(() => (!isSelectAll.value && !innerValue.value.length)
-      || (innerValue.value.length === 1 && innerValue.value[0] === curProject.value.projectID));
+    const isOnlyCurrentPorject = computed(() => (!isSelectAll.value
+      && innerValue.value.length === 1
+      && innerValue.value[0] === curProject.value.projectID));
 
     function handleSave() {
-      if (isSelectAll.value) {}
       ctx.emit('save', {
         isAll: isSelectAll.value,
         isOnlyCurrentPorject: isOnlyCurrentPorject.value,
@@ -337,16 +338,16 @@ export default defineComponent({
     const isSelectAll = ref(false);
     function handleSelectAll() {
       isSelectAll.value = !isSelectAll.value;
-      innerValue.value = [];
-      ctx.emit('change', []);
+      innerValue.value = [curProject.value.projectID];
+      ctx.emit('change', [curProject.value.projectID]);
     }
 
     watch([() => props.clusterId, () => props.value], () => {
       if (value.value.length === 0 && isShared.value) {
         // 全部项目可见
         isSelectAll.value = true;
-        innerValue.value = [];
-        originValue.value = [];
+        innerValue.value = [curProject.value.projectID];
+        originValue.value = [curProject.value.projectID];
       } else if (value.value.length === 0 && !isShared.value) {
         // 仅当前项目可见
         innerValue.value = [curProject.value.projectID];
