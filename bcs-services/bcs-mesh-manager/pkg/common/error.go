@@ -42,3 +42,10 @@ const (
 	// PermDeniedErrMsg 无权限消息
 	PermDeniedErrMsg = "no permission"
 )
+
+var (
+	// MeshNotFoundErr 网格不存在
+	MeshNotFoundErr = commErr.AdditionErrorCode + 404
+	// MeshNotFoundErrMsg 网格不存在消息
+	MeshNotFoundErrMsg = "mesh not found"
+)

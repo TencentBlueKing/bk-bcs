@@ -42,6 +42,30 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "MeshManager.InstallIstio",
+			Path:    []string{"/v1/mesh/istio/install"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MeshManager.ListMesh",
+			Path:    []string{"/v1/mesh/list"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MeshManager.UpdateMesh",
+			Path:    []string{"/v1/mesh/{meshID}"},
+			Method:  []string{"PUT"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "MeshManager.DeleteMesh",
+			Path:    []string{"/v1/mesh/{meshID}"},
+			Method:  []string{"DELETE"},
+			Handler: "rpc",
+		},
 	}
 }
 
@@ -50,6 +74,14 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 type MeshManagerService interface {
 	// 获取当前开放的istio版本
 	ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, opts ...client.CallOption) (*ListIstioVersionResponse, error)
+	// 安装istio
+	InstallIstio(ctx context.Context, in *InstallIstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
+	// 获取网格列表
+	ListMesh(ctx context.Context, in *ListMeshRequest, opts ...client.CallOption) (*ListMeshResponse, error)
+	// 更新网格配置
+	UpdateMesh(ctx context.Context, in *UpdateMeshRequest, opts ...client.CallOption) (*UpdateMeshResponse, error)
+	// 删除网格
+	DeleteMesh(ctx context.Context, in *DeleteMeshRequest, opts ...client.CallOption) (*DeleteMeshResponse, error)
 }
 
 type meshManagerService struct {
@@ -74,16 +106,68 @@ func (c *meshManagerService) ListIstioVersion(ctx context.Context, in *ListIstio
 	return out, nil
 }
 
+func (c *meshManagerService) InstallIstio(ctx context.Context, in *InstallIstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.InstallIstio", in)
+	out := new(InstallIstioResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *meshManagerService) ListMesh(ctx context.Context, in *ListMeshRequest, opts ...client.CallOption) (*ListMeshResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.ListMesh", in)
+	out := new(ListMeshResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *meshManagerService) UpdateMesh(ctx context.Context, in *UpdateMeshRequest, opts ...client.CallOption) (*UpdateMeshResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.UpdateMesh", in)
+	out := new(UpdateMeshResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *meshManagerService) DeleteMesh(ctx context.Context, in *DeleteMeshRequest, opts ...client.CallOption) (*DeleteMeshResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.DeleteMesh", in)
+	out := new(DeleteMeshResponse)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for MeshManager service
 
 type MeshManagerHandler interface {
 	// 获取当前开放的istio版本
 	ListIstioVersion(context.Context, *ListIstioVersionRequest, *ListIstioVersionResponse) error
+	// 安装istio
+	InstallIstio(context.Context, *InstallIstioRequest, *InstallIstioResponse) error
+	// 获取网格列表
+	ListMesh(context.Context, *ListMeshRequest, *ListMeshResponse) error
+	// 更新网格配置
+	UpdateMesh(context.Context, *UpdateMeshRequest, *UpdateMeshResponse) error
+	// 删除网格
+	DeleteMesh(context.Context, *DeleteMeshRequest, *DeleteMeshResponse) error
 }
 
 func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts ...server.HandlerOption) error {
 	type meshManager interface {
 		ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error
+		InstallIstio(ctx context.Context, in *InstallIstioRequest, out *InstallIstioResponse) error
+		ListMesh(ctx context.Context, in *ListMeshRequest, out *ListMeshResponse) error
+		UpdateMesh(ctx context.Context, in *UpdateMeshRequest, out *UpdateMeshResponse) error
+		DeleteMesh(ctx context.Context, in *DeleteMeshRequest, out *DeleteMeshResponse) error
 	}
 	type MeshManager struct {
 		meshManager
@@ -95,6 +179,30 @@ func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts .
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MeshManager.InstallIstio",
+		Path:    []string{"/v1/mesh/istio/install"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MeshManager.ListMesh",
+		Path:    []string{"/v1/mesh/list"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MeshManager.UpdateMesh",
+		Path:    []string{"/v1/mesh/{meshID}"},
+		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "MeshManager.DeleteMesh",
+		Path:    []string{"/v1/mesh/{meshID}"},
+		Method:  []string{"DELETE"},
+		Handler: "rpc",
+	}))
 	return s.Handle(s.NewHandler(&MeshManager{h}, opts...))
 }
 
@@ -104,4 +212,20 @@ type meshManagerHandler struct {
 
 func (h *meshManagerHandler) ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error {
 	return h.MeshManagerHandler.ListIstioVersion(ctx, in, out)
+}
+
+func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *InstallIstioRequest, out *InstallIstioResponse) error {
+	return h.MeshManagerHandler.InstallIstio(ctx, in, out)
+}
+
+func (h *meshManagerHandler) ListMesh(ctx context.Context, in *ListMeshRequest, out *ListMeshResponse) error {
+	return h.MeshManagerHandler.ListMesh(ctx, in, out)
+}
+
+func (h *meshManagerHandler) UpdateMesh(ctx context.Context, in *UpdateMeshRequest, out *UpdateMeshResponse) error {
+	return h.MeshManagerHandler.UpdateMesh(ctx, in, out)
+}
+
+func (h *meshManagerHandler) DeleteMesh(ctx context.Context, in *DeleteMeshRequest, out *DeleteMeshResponse) error {
+	return h.MeshManagerHandler.DeleteMesh(ctx, in, out)
 }

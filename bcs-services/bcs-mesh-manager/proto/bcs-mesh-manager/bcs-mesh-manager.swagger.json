@@ -19,6 +19,39 @@
     "application/json"
   ],
   "paths": {
+    "/v1/mesh/istio/install": {
+      "post": {
+        "summary": "安装istio",
+        "operationId": "MeshManager_InstallIstio",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerInstallIstioResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/meshmanagerInstallIstioRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MeshManager"
+        ]
+      }
+    },
     "/v1/mesh/istio/version": {
       "get": {
         "summary": "获取当前开放的istio版本",
@@ -41,9 +74,245 @@
           "MeshManager"
         ]
       }
+    },
+    "/v1/mesh/list": {
+      "get": {
+        "summary": "获取网格列表",
+        "operationId": "MeshManager_ListMesh",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerListMeshResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "MeshManager"
+        ]
+      }
+    },
+    "/v1/mesh/{meshID}": {
+      "delete": {
+        "summary": "删除网格",
+        "operationId": "MeshManager_DeleteMesh",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerDeleteMeshResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "meshID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "MeshManager"
+        ]
+      },
+      "put": {
+        "summary": "更新网格配置",
+        "operationId": "MeshManager_UpdateMesh",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerUpdateMeshResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "meshID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "meshName": {
+                  "type": "string"
+                },
+                "chartVersion": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "primaryClusters": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "remoteClusters": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "differentNetwork": {
+                  "type": "boolean"
+                },
+                "serviceDiscovery": {
+                  "$ref": "#/definitions/meshmanagerServiceDiscovery"
+                },
+                "sidecarResourceConfig": {
+                  "$ref": "#/definitions/meshmanagerResourceConfig"
+                },
+                "highAvailability": {
+                  "$ref": "#/definitions/meshmanagerHighAvailability"
+                },
+                "logCollectorConfig": {
+                  "$ref": "#/definitions/meshmanagerLogCollectorConfig"
+                },
+                "tracingConfig": {
+                  "$ref": "#/definitions/meshmanagerTracingConfig"
+                },
+                "featureConfigs": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/definitions/meshmanagerFeatureConfig"
+                  }
+                }
+              },
+              "description": "更新网格请求",
+              "title": "UpdateMeshRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MeshManager"
+        ]
+      }
     }
   },
   "definitions": {
+    "meshmanagerAccessLogEncoding": {
+      "type": "string",
+      "enum": [
+        "ACCESS_LOG_ENCODING_UNSPECIFIED",
+        "ACCESS_LOG_ENCODING_JSON",
+        "ACCESS_LOG_ENCODING_TEXT"
+      ],
+      "default": "ACCESS_LOG_ENCODING_UNSPECIFIED",
+      "title": "日志编码[json, text]"
+    },
+    "meshmanagerClusterMode": {
+      "type": "string",
+      "enum": [
+        "CLUSTER_MODE_UNSPECIFIED",
+        "CLUSTER_MODE_PRIMARY_REMOTE",
+        "CLUSTER_MODE_MULTI_PRIMARY"
+      ],
+      "default": "CLUSTER_MODE_UNSPECIFIED",
+      "title": "多集群集群模式"
+    },
+    "meshmanagerControlPlaneMode": {
+      "type": "string",
+      "enum": [
+        "CONTROL_PLANE_MODE_UNSPECIFIED",
+        "CONTROL_PLANE_MODE_STANDALONE",
+        "CONTROL_PLANE_MODE_HOSTING"
+      ],
+      "default": "CONTROL_PLANE_MODE_UNSPECIFIED",
+      "title": "安装模式"
+    },
+    "meshmanagerDedicatedNodeLabel": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "专属调度标签"
+    },
+    "meshmanagerDeleteMeshResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/meshmanagerWebAnnotations"
+        }
+      },
+      "description": "删除网格响应",
+      "title": "DeleteMeshResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "webAnnotations"
+      ]
+    },
     "meshmanagerFeatureConfig": {
       "type": "object",
       "properties": {
@@ -69,7 +338,154 @@
           }
         }
       },
-      "title": "功能列表"
+      "title": "功能特性配置"
+    },
+    "meshmanagerHighAvailability": {
+      "type": "object",
+      "properties": {
+        "autoscaleEnabled": {
+          "type": "boolean",
+          "title": "是否开启hpa"
+        },
+        "autoscaleMin": {
+          "type": "integer",
+          "format": "int32",
+          "title": "hpa最小副本数"
+        },
+        "autoscaleMax": {
+          "type": "integer",
+          "format": "int32",
+          "title": "hpa最大副本数"
+        },
+        "replicaCount": {
+          "type": "integer",
+          "format": "int32",
+          "title": "副本数"
+        },
+        "resourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "title": "resource配置"
+        },
+        "dedicatedNodeLabel": {
+          "$ref": "#/definitions/meshmanagerDedicatedNodeLabel",
+          "title": "专属节点（专用节点标签），默认会加上容忍"
+        }
+      },
+      "title": "高可用配置，hpa，副本数设置等"
+    },
+    "meshmanagerInstallIstioRequest": {
+      "type": "object",
+      "properties": {
+        "projectID": {
+          "type": "string",
+          "title": "项目ID"
+        },
+        "projectCode": {
+          "type": "string",
+          "title": "项目编码"
+        },
+        "meshName": {
+          "type": "string",
+          "title": "名称"
+        },
+        "description": {
+          "type": "string",
+          "title": "描述"
+        },
+        "version": {
+          "type": "string",
+          "title": "使用的版本"
+        },
+        "controlPlaneMode": {
+          "$ref": "#/definitions/meshmanagerControlPlaneMode",
+          "title": "安装模式"
+        },
+        "clusterMode": {
+          "$ref": "#/definitions/meshmanagerClusterMode",
+          "title": "多集群集群模式： 主从[primaryRemote]，多主[multiPrimary]"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "主集群列表：安装istio控制面，存在多主的情况"
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "远程集群列表：适用于多集群的情况，从集群"
+        },
+        "differentNetwork": {
+          "type": "boolean",
+          "title": "网络是否一致：关乎是否默认安装egress gateway"
+        },
+        "chartVersion": {
+          "type": "string",
+          "title": "chart版本"
+        },
+        "sidecarResourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "title": "sidecar资源配置"
+        },
+        "highAvailability": {
+          "$ref": "#/definitions/meshmanagerHighAvailability",
+          "title": "高可用配置"
+        },
+        "logCollectorConfig": {
+          "$ref": "#/definitions/meshmanagerLogCollectorConfig",
+          "title": "日志采集配置"
+        },
+        "tracingConfig": {
+          "$ref": "#/definitions/meshmanagerTracingConfig",
+          "title": "tracing配置"
+        },
+        "featureConfigs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerFeatureConfig"
+          },
+          "title": "功能特性[跟随版本关联的特性]"
+        }
+      },
+      "description": "安装istio请求",
+      "title": "InstallIstioRequest"
+    },
+    "meshmanagerInstallIstioResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/meshmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        }
+      },
+      "description": "安装istio响应",
+      "title": "InstallIstioResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "webAnnotations"
+      ]
     },
     "meshmanagerIstioVersion": {
       "type": "object",
@@ -149,6 +565,282 @@
         "requestID",
         "webAnnotations",
         "data"
+      ]
+    },
+    "meshmanagerListMeshData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/meshmanagerMeshListItem"
+          }
+        }
+      }
+    },
+    "meshmanagerListMeshResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/meshmanagerWebAnnotations"
+        },
+        "data": {
+          "$ref": "#/definitions/meshmanagerListMeshData"
+        }
+      },
+      "description": "获取网格列表响应",
+      "title": "ListMeshResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "webAnnotations",
+        "data"
+      ]
+    },
+    "meshmanagerLogCollectorConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "accessLogEncoding": {
+          "$ref": "#/definitions/meshmanagerAccessLogEncoding"
+        },
+        "accessLogFormat": {
+          "type": "string"
+        }
+      },
+      "title": "日志采集配置"
+    },
+    "meshmanagerMeshListItem": {
+      "type": "object",
+      "properties": {
+        "meshID": {
+          "type": "string"
+        },
+        "meshName": {
+          "type": "string"
+        },
+        "projectID": {
+          "type": "string"
+        },
+        "projectCode": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "chartVersion": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/definitions/meshmanagerMeshStatus"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64"
+        },
+        "createBy": {
+          "type": "string"
+        },
+        "updateBy": {
+          "type": "string"
+        },
+        "controlPlaneMode": {
+          "$ref": "#/definitions/meshmanagerControlPlaneMode"
+        },
+        "clusterMode": {
+          "$ref": "#/definitions/meshmanagerClusterMode"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "differentNetwork": {
+          "type": "boolean"
+        },
+        "serviceDiscovery": {
+          "$ref": "#/definitions/meshmanagerServiceDiscovery"
+        },
+        "sidecarResourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig"
+        },
+        "highAvailability": {
+          "$ref": "#/definitions/meshmanagerHighAvailability"
+        },
+        "logCollectorConfig": {
+          "$ref": "#/definitions/meshmanagerLogCollectorConfig"
+        },
+        "tracingConfig": {
+          "$ref": "#/definitions/meshmanagerTracingConfig"
+        },
+        "featureConfigs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerFeatureConfig"
+          }
+        }
+      },
+      "description": "网格列表项",
+      "title": "MeshListItem"
+    },
+    "meshmanagerMeshStatus": {
+      "type": "string",
+      "enum": [
+        "MESH_STATUS_UNSPECIFIED",
+        "MESH_STATUS_INSTALLING",
+        "MESH_STATUS_RUNNING",
+        "MESH_STATUS_FAILED",
+        "MESH_STATUS_DELETING"
+      ],
+      "default": "MESH_STATUS_UNSPECIFIED",
+      "title": "Mesh status enum"
+    },
+    "meshmanagerNamespaceList": {
+      "type": "object",
+      "properties": {
+        "namespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Namespace list message"
+    },
+    "meshmanagerNamespacePods": {
+      "type": "object",
+      "properties": {
+        "namespacePods": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerPodList"
+          }
+        }
+      },
+      "title": "Namespace pods message"
+    },
+    "meshmanagerPodList": {
+      "type": "object",
+      "properties": {
+        "pods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "Pod list message"
+    },
+    "meshmanagerResourceConfig": {
+      "type": "object",
+      "properties": {
+        "cpuRequest": {
+          "type": "string"
+        },
+        "cpuLimit": {
+          "type": "string"
+        },
+        "memoryRequest": {
+          "type": "string"
+        },
+        "memoryLimit": {
+          "type": "string"
+        }
+      },
+      "title": "resource配置"
+    },
+    "meshmanagerServiceDiscovery": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "autoInjectNS": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerNamespaceList"
+          }
+        },
+        "disabledInjectPods": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerNamespacePods"
+          }
+        }
+      },
+      "description": "服务发现配置",
+      "title": "ServiceDiscovery"
+    },
+    "meshmanagerTracingConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "bkToken": {
+          "type": "string"
+        }
+      },
+      "title": "tracing配置"
+    },
+    "meshmanagerUpdateMeshResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "requestID": {
+          "type": "string"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/meshmanagerWebAnnotations"
+        }
+      },
+      "description": "更新网格响应",
+      "title": "UpdateMeshResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "webAnnotations"
       ]
     },
     "meshmanagerWebAnnotations": {

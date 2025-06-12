@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	trace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -48,6 +49,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
@@ -67,6 +69,8 @@ type Server struct {
 	helmManagerDiscovery *discovery.ModuleDiscovery
 
 	helmManagerClient *helmmanager.HelmClientWrapper
+	model             store.MeshManagerModel
+	mongoOptions      *mongo.Options
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
@@ -90,7 +94,7 @@ func (s *Server) Init() error {
 	initializer := []func() error{
 		s.initTLSConfig,
 		s.initRegistry,
-		// s.initModel,
+		s.initModel,
 		// s.initIAMClient,
 		// s.initJWTClient,
 		// s.initSkipClients,
@@ -197,6 +201,49 @@ func (s *Server) initRegistry() error {
 	return nil
 }
 
+// initModel decode the connection info from the config and init a new store.MeshManagerModel
+func (s *Server) initModel() error {
+	if len(s.opt.Mongo.MongoEndpoints) == 0 {
+		return fmt.Errorf("mongo endpoints cannot be empty")
+	}
+	if len(s.opt.Mongo.MongoDatabaseName) == 0 {
+		return fmt.Errorf("mongo database cannot be empty")
+	}
+
+	// get mongo password
+	password := s.opt.Mongo.MongoPassword
+
+	mongoOptions := &mongo.Options{
+		Hosts:                 strings.Split(s.opt.Mongo.MongoEndpoints, ","),
+		ConnectTimeoutSeconds: s.opt.Mongo.MongoConnectTimeout,
+		Database:              s.opt.Mongo.MongoDatabaseName,
+		Username:              s.opt.Mongo.MongoUsername,
+		Password:              password,
+		MaxPoolSize:           100,
+		MinPoolSize:           10,
+	}
+	s.mongoOptions = mongoOptions
+
+	// init mongo db
+	mongoDB, err := mongo.NewDB(mongoOptions)
+	if err != nil {
+		blog.Errorf("init mongo db failed, err %s", err.Error())
+		return err
+	}
+
+	// ping mongo to check connection
+	if err = mongoDB.Ping(); err != nil {
+		blog.Errorf("ping mongo db failed, err %s", err.Error())
+		return err
+	}
+	blog.Info("init mongo db successfully")
+
+	// init store
+	s.model = store.New(mongoDB)
+	blog.Info("init store successfully")
+	return nil
+}
+
 // init micro service
 func (s *Server) initMicro() error {
 	opts := []micro.Option{
@@ -236,7 +283,7 @@ func (s *Server) initMicro() error {
 
 	if err := meshmanager.RegisterMeshManagerHandler(
 		s.microService.Server(),
-		handler.NewMeshManager(&handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig}),
+		handler.NewMeshManager(s.model, &handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig}),
 	); err != nil {
 		blog.Errorf("failed to register mesh manager handler to micro, error: %s", err.Error())
 		return err

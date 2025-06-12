@@ -23,12 +23,51 @@ message WebAnnotations {
       } ];
 }
 
+// Mesh status enum
+enum MeshStatus {
+  MESH_STATUS_UNSPECIFIED = 0;
+  MESH_STATUS_INSTALLING = 1;  // 安装中
+  MESH_STATUS_RUNNING = 2;     // 运行中
+  MESH_STATUS_FAILED = 3;      // 安装失败
+  MESH_STATUS_DELETING = 4;    // 删除中
+}
+
 service MeshManager {
   // 获取当前开放的istio版本
   rpc ListIstioVersion(ListIstioVersionRequest)
       returns (ListIstioVersionResponse) {
     option (google.api.http) = {
       get : "/v1/mesh/istio/version"
+    };
+  }
+
+  // 安装istio
+  rpc InstallIstio(InstallIstioRequest) returns (InstallIstioResponse) {
+    option (google.api.http) = {
+      post : "/v1/mesh/istio/install"
+      body : "*"
+    };
+  }
+
+  // 获取网格列表
+  rpc ListMesh(ListMeshRequest) returns (ListMeshResponse) {
+    option (google.api.http) = {
+      get : "/v1/mesh/list"
+    };
+  }
+
+  // 更新网格配置
+  rpc UpdateMesh(UpdateMeshRequest) returns (UpdateMeshResponse) {
+    option (google.api.http) = {
+      put : "/v1/mesh/{meshID}"
+      body : "*"
+    };
+  }
+
+  // 删除网格
+  rpc DeleteMesh(DeleteMeshRequest) returns (DeleteMeshResponse) {
+    option (google.api.http) = {
+      delete : "/v1/mesh/{meshID}"
     };
   }
 }
@@ -94,11 +133,348 @@ message IstioVersion {
   string kubeVersion = 4;
 }
 
-// 功能列表
+// 功能特性配置
 message FeatureConfig {
   string name = 1;
   string description = 2;
   string defaultValue = 3;
   repeated string availableValues = 4;
   repeated string supportVersions = 5;
+}
+
+// 获取网格列表请求
+message ListMeshRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListMeshRequest"
+      description : "获取网格列表请求"
+    }
+  };
+
+  string projectID = 1 [(validate.rules).string = {min_len: 1}];
+  string status = 2;
+  int32 page = 3 [(validate.rules).int32 = {gt: 0}];
+  int32 pageSize = 4 [(validate.rules).int32 = {gt: 0, lte: 100}];
+}
+
+// 获取网格列表响应
+message ListMeshResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ListMeshResponse"
+      description : "获取网格列表响应"
+      required : [ "code", "message", "requestID", "web_annotations", "data" ]
+    }
+  };
+
+  uint32 code = 1;
+  string message = 2;
+  string requestID = 3;
+  WebAnnotations web_annotations = 4;
+  ListMeshData data = 5;
+}
+
+message ListMeshData {
+  int32 total = 1;
+  repeated MeshListItem items = 2;
+}
+
+message MeshListItem {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "MeshListItem"
+      description : "网格列表项"
+    }
+  };
+
+  string meshID = 1;
+  string meshName = 2;
+  string projectID = 3;
+  string projectCode = 4;
+  string description = 5;
+  string chartVersion = 6;
+  MeshStatus status = 7;
+  int64 createTime = 8;
+  int64 updateTime = 9;
+  string createBy = 10;
+  string updateBy = 11;
+  ControlPlaneMode controlPlaneMode = 12;
+  ClusterMode clusterMode = 13;
+  repeated string primaryClusters = 14;
+  repeated string remoteClusters = 15;
+  bool differentNetwork = 16;
+  ServiceDiscovery serviceDiscovery = 17;
+  ResourceConfig sidecarResourceConfig = 18;
+  HighAvailability highAvailability = 19;
+  LogCollectorConfig logCollectorConfig = 20;
+  TracingConfig tracingConfig = 21;
+  map<string, FeatureConfig> featureConfigs = 22;
+}
+
+// 更新网格请求
+message UpdateMeshRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateMeshRequest"
+      description : "更新网格请求"
+    }
+  };
+
+  string meshID = 1 [(validate.rules).string = {min_len: 1}];
+  string meshName = 2;
+  string chartVersion = 3;
+  string description = 4;
+  repeated string primaryClusters = 5;
+  repeated string remoteClusters = 6;
+  bool differentNetwork = 7;
+  ServiceDiscovery serviceDiscovery = 8;
+  ResourceConfig sidecarResourceConfig = 9;
+  HighAvailability highAvailability = 10;
+  LogCollectorConfig logCollectorConfig = 11;
+  TracingConfig tracingConfig = 12;
+  map<string, FeatureConfig> featureConfigs = 13;
+}
+
+// 更新网格响应
+message UpdateMeshResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "UpdateMeshResponse"
+      description : "更新网格响应"
+      required : [ "code", "message", "requestID", "web_annotations" ]
+    }
+  };
+
+  uint32 code = 1;
+  string message = 2;
+  string requestID = 3;
+  WebAnnotations web_annotations = 4;
+}
+
+// 删除网格请求
+message DeleteMeshRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteMeshRequest"
+      description : "删除网格请求"
+    }
+  };
+
+  string meshID = 1 [(validate.rules).string = {min_len: 1}];
+}
+
+// 删除网格响应
+message DeleteMeshResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "DeleteMeshResponse"
+      description : "删除网格响应"
+      required : [ "code", "message", "requestID", "web_annotations" ]
+    }
+  };
+
+  uint32 code = 1;
+  string message = 2;
+  string requestID = 3;
+  WebAnnotations web_annotations = 4;
+}
+
+// 安装istio请求
+message InstallIstioRequest {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstallIstioRequest"
+      description : "安装istio请求"
+    }
+  };
+
+  // 项目ID
+  string projectID = 1 [(validate.rules).string = {min_len: 1}];
+  // 项目编码
+  string projectCode = 2 [(validate.rules).string = {min_len: 1}];
+  // 名称
+  string meshName = 3 [(validate.rules).string = {min_len: 1, max_len: 64}];
+  // 描述
+  string description = 4 [(validate.rules).string = {max_len: 256}];
+  // 使用的版本
+  string version = 5 [(validate.rules).string = {min_len: 1}];
+  // 安装模式
+  ControlPlaneMode controlPlaneMode = 6 [(validate.rules).enum = {in: [1, 2]}];
+  // 多集群集群模式： 主从[primaryRemote]，多主[multiPrimary]
+  ClusterMode clusterMode = 7 [(validate.rules).enum = {in: [1, 2]}];
+  // 主集群列表：安装istio控制面，存在多主的情况
+  repeated string primaryClusters = 8 [(validate.rules).repeated = {min_items: 1}];
+  // 远程集群列表：适用于多集群的情况，从集群
+  repeated string remoteClusters = 9;
+  // 网络是否一致：关乎是否默认安装egress gateway
+  bool differentNetwork = 10;
+  // chart版本
+  string chartVersion = 11 [(validate.rules).string = {min_len: 1}];
+  // sidecar资源配置
+  ResourceConfig sidecarResourceConfig = 12;
+  // 高可用配置
+  HighAvailability highAvailability = 13;
+  // 日志采集配置
+  LogCollectorConfig logCollectorConfig = 14;
+  // tracing配置
+  TracingConfig tracingConfig = 15;
+  // 功能特性[跟随版本关联的特性]
+  map<string, FeatureConfig> featureConfigs = 16;
+}
+
+// 安装istio响应
+message InstallIstioResponse {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "InstallIstioResponse"
+      description : "安装istio响应"
+      required : [ "code", "message", "requestID", "web_annotations" ]
+    }
+  };
+
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "code",
+    description : "返回错误码"
+  } ];
+  string message = 2 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"
+  } ];
+  string requestID = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "request id",
+    description : "请求 ID"
+  } ];
+  WebAnnotations web_annotations = 4 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "web_annotations",
+    description : "权限信息"
+  } ];
+}
+
+// 安装模式
+enum ControlPlaneMode {
+  CONTROL_PLANE_MODE_UNSPECIFIED = 0;
+  CONTROL_PLANE_MODE_STANDALONE = 1;
+  CONTROL_PLANE_MODE_HOSTING = 2;
+}
+
+// 多集群集群模式
+enum ClusterMode {
+  CLUSTER_MODE_UNSPECIFIED = 0;
+  CLUSTER_MODE_PRIMARY_REMOTE = 1;
+  CLUSTER_MODE_MULTI_PRIMARY = 2;
+}
+
+// 日志编码[json, text]
+enum AccessLogEncoding {
+  ACCESS_LOG_ENCODING_UNSPECIFIED = 0;
+  ACCESS_LOG_ENCODING_JSON = 1;
+  ACCESS_LOG_ENCODING_TEXT = 2;
+}
+
+// resource配置
+message ResourceConfig {
+  string cpuRequest = 1;
+  string cpuLimit = 2;
+  string memoryRequest = 3;
+  string memoryLimit = 4;
+}
+
+// 专属调度标签
+message DedicatedNodeLabel {
+  string key = 1;
+  string value = 2;
+}
+
+// 高可用配置，hpa，副本数设置等
+message HighAvailability {
+  // 是否开启hpa
+  bool autoscaleEnabled = 1;
+  // hpa最小副本数
+  int32 autoscaleMin = 2;
+  // hpa最大副本数
+  int32 autoscaleMax = 3;
+  // 副本数
+  int32 replicaCount = 4;
+  // resource配置
+  ResourceConfig resourceConfig = 5;
+  // 专属节点（专用节点标签），默认会加上容忍
+  DedicatedNodeLabel dedicatedNodeLabel = 6;
+}
+
+// 日志采集配置
+message LogCollectorConfig {
+  bool enabled = 1;
+  AccessLogEncoding accessLogEncoding = 2;
+  string accessLogFormat = 3;
+}
+
+// tracing配置
+message TracingConfig {
+  bool enabled = 1;
+  string endpoint = 2;
+  string bkToken = 3;
+}
+
+// Mesh message definition
+message Mesh {
+  // Basic information
+  string meshID = 1;
+  string meshName = 2;
+  string projectID = 3;
+  string projectCode = 4;
+  string description = 5;
+  string chartVersion = 6;
+  MeshStatus status = 7;
+  int64 createTime = 8;
+  int64 updateTime = 9;
+  string createBy = 10;
+  string updateBy = 11;
+
+  // Mesh configuration
+  ControlPlaneMode controlPlaneMode = 12;
+  ClusterMode clusterMode = 13;
+  repeated string primaryClusters = 14;
+  repeated string remoteClusters = 15;
+  bool differentNetwork = 16;
+
+  // Service discovery information
+  ServiceDiscovery serviceDiscovery = 17;
+
+  // Resource and observability configurations
+  ResourceConfig sidecarResourceConfig = 18;
+  HighAvailability highAvailability = 19;
+  LogCollectorConfig logCollectorConfig = 20;
+  TracingConfig tracingConfig = 21;
+
+  // Feature configurations
+  map<string, FeatureConfig> featureConfigs = 22;
+}
+
+// Service discovery configuration
+message ServiceDiscovery {
+  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+    json_schema : {
+      title : "ServiceDiscovery"
+      description : "服务发现配置"
+    }
+  };
+
+  repeated string clusters = 1;
+  map<string, NamespaceList> autoInjectNS = 2;
+  map<string, NamespacePods> disabledInjectPods = 3;
+}
+
+// Namespace list message
+message NamespaceList {
+  repeated string namespaces = 1;
+}
+
+// Namespace pods message
+message NamespacePods {
+  map<string, PodList> namespacePods = 1;
+}
+
+// Pod list message
+message PodList {
+  repeated string pods = 1;
 }
