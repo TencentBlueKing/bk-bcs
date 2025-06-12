@@ -31,6 +31,6 @@ func FormatConfigRes(manifest map[string]interface{}) map[string]interface{} {
 // FormatBscpConfig ...
 func FormatBscpConfig(manifest map[string]interface{}) map[string]interface{} {
 	ret := CommonFormatRes(manifest)
-	ret["releaseID"] = mapx.GetStr(manifest, "status.releaseID")
+	ret["releaseID"] = mapx.GetInt64(manifest, "status.releaseID")
 	return ret
 }
