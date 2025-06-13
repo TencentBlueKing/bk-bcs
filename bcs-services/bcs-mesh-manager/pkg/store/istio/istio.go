@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package mesh provides mesh-related storage operations for the mesh manager
-package mesh
+// Package istio provides istio-related storage operations for the mesh manager
+package istio
 
 import (
 	"context"
@@ -21,7 +21,6 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
@@ -30,7 +29,7 @@ import (
 )
 
 const (
-	tableName = "mesh"
+	tableName = "istio"
 )
 
 var (
@@ -52,8 +51,8 @@ var (
 	}
 )
 
-// ModelMesh provides database operations for mesh
-type ModelMesh struct {
+// ModelMeshIstio provides database operations for mesh istio
+type ModelMeshIstio struct {
 	tableName           string
 	indexes             []drivers.Index
 	db                  drivers.DB
@@ -61,16 +60,16 @@ type ModelMesh struct {
 	isTableEnsuredMutex sync.Mutex
 }
 
-// New returns a new ModelMesh instance
-func New(db drivers.DB) *ModelMesh {
-	return &ModelMesh{
+// New returns a new ModelMeshIstio instance
+func New(db drivers.DB) *ModelMeshIstio {
+	return &ModelMeshIstio{
 		tableName: utils.DataTableNamePrefix + tableName,
 		indexes:   tableIndexes,
 		db:        db,
 	}
 }
 
-func (m *ModelMesh) ensureTable(ctx context.Context) error {
+func (m *ModelMeshIstio) ensureTable(ctx context.Context) error {
 	if m.isTableEnsured {
 		return nil
 	}
@@ -88,14 +87,14 @@ func (m *ModelMesh) ensureTable(ctx context.Context) error {
 	return nil
 }
 
-// ListMesh queries a list of meshes based on conditions and options
-func (m *ModelMesh) ListMesh(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
-	int64, []*entity.Mesh, error) {
+// List queries a list of meshes based on conditions and options
+func (m *ModelMeshIstio) List(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (
+	int64, []*entity.MeshIstio, error) {
 	if err := m.ensureTable(ctx); err != nil {
 		return 0, nil, err
 	}
 
-	l := make([]*entity.Mesh, 0)
+	l := make([]*entity.MeshIstio, 0)
 	finder := m.db.Table(m.tableName).Find(cond)
 	if len(opt.Sort) != 0 {
 		finder = finder.WithSort(common.MapInt2MapIf(opt.Sort))
@@ -119,13 +118,13 @@ func (m *ModelMesh) ListMesh(ctx context.Context, cond *operator.Condition, opt 
 	return total, l, nil
 }
 
-// UpdateMesh updates an existing mesh
-func (m *ModelMesh) UpdateMesh(ctx context.Context, meshID string, mesh entity.M) error {
+// Update updates an existing mesh istio
+func (m *ModelMeshIstio) Update(ctx context.Context, meshID string, entityM entity.M) error {
 	if meshID == "" {
 		return fmt.Errorf("meshID cannot be empty")
 	}
 
-	if mesh == nil {
+	if entityM == nil {
 		return fmt.Errorf("mesh cannot be empty")
 	}
 
@@ -138,25 +137,25 @@ func (m *ModelMesh) UpdateMesh(ctx context.Context, meshID string, mesh entity.M
 	})
 
 	// Check if mesh exists
-	old := &entity.Mesh{}
+	old := &entity.MeshIstio{}
 	if err := m.db.Table(m.tableName).Find(cond).One(ctx, old); err != nil {
 		return err
 	}
 
 	// Set update time if not provided
-	if mesh[entity.FieldKeyUpdateTime] == nil {
-		mesh[entity.FieldKeyUpdateTime] = time.Now().Unix()
+	if entityM[entity.FieldKeyUpdateTime] == nil {
+		entityM[entity.FieldKeyUpdateTime] = time.Now().Unix()
 	}
 
-	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": mesh}); err != nil {
+	if err := m.db.Table(m.tableName).Update(ctx, cond, operator.M{"$set": entityM}); err != nil {
 		return fmt.Errorf("update mesh %s failed: %v", meshID, err)
 	}
 
 	return nil
 }
 
-// DeleteMesh deletes a mesh by its ID
-func (m *ModelMesh) DeleteMesh(ctx context.Context, meshID string) error {
+// Delete deletes a mesh istio by its ID
+func (m *ModelMeshIstio) Delete(ctx context.Context, meshID string) error {
 	if meshID == "" {
 		return fmt.Errorf("meshID cannot be empty")
 	}
@@ -177,12 +176,8 @@ func (m *ModelMesh) DeleteMesh(ctx context.Context, meshID string) error {
 	return nil
 }
 
-func (m *ModelMesh) generateMeshID() string {
-	return fmt.Sprintf("mesh-%s", uuid.New().String())
-}
-
-// CreateMesh creates a new mesh
-func (m *ModelMesh) CreateMesh(ctx context.Context, mesh *entity.Mesh) error {
+// Create creates a new mesh istio
+func (m *ModelMeshIstio) Create(ctx context.Context, mesh *entity.MeshIstio) error {
 	if mesh == nil {
 		return fmt.Errorf("mesh cannot be empty")
 	}
@@ -191,8 +186,6 @@ func (m *ModelMesh) CreateMesh(ctx context.Context, mesh *entity.Mesh) error {
 		return err
 	}
 
-	// Generate mesh ID and set basic fields
-	mesh.MeshID = m.generateMeshID()
 	now := time.Now().Unix()
 	mesh.CreateTime = now
 	mesh.UpdateTime = now

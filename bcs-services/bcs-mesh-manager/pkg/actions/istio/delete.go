@@ -10,8 +10,8 @@
  * limitations under the License.
  */
 
-// Package mesh implements the mesh management actions
-package mesh
+// Package istio implements the istio management actions
+package istio
 
 import (
 	"context"
@@ -23,53 +23,53 @@ import (
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
-// DeleteMeshAction action for deleting mesh
-type DeleteMeshAction struct {
+// DeleteIstioAction action for deleting istio
+type DeleteIstioAction struct {
 	model store.MeshManagerModel
-	req   *meshmanager.DeleteMeshRequest
-	resp  *meshmanager.DeleteMeshResponse
+	req   *meshmanager.DeleteIstioRequest
+	resp  *meshmanager.DeleteIstioResponse
 }
 
-// NewDeleteMeshAction create delete mesh action
-func NewDeleteMeshAction(model store.MeshManagerModel) *DeleteMeshAction {
-	return &DeleteMeshAction{
+// NewDeleteIstioAction create delete istio action
+func NewDeleteIstioAction(model store.MeshManagerModel) *DeleteIstioAction {
+	return &DeleteIstioAction{
 		model: model,
 	}
 }
 
 // Handle processes the mesh deletion request
-func (d *DeleteMeshAction) Handle(
+func (d *DeleteIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.DeleteMeshRequest,
-	resp *meshmanager.DeleteMeshResponse,
+	req *meshmanager.DeleteIstioRequest,
+	resp *meshmanager.DeleteIstioResponse,
 ) error {
 	d.req = req
 	d.resp = resp
 
 	if err := d.req.Validate(); err != nil {
 		blog.Errorf("delete mesh failed, invalid request, %s, param: %v", err.Error(), d.req)
-		d.setResp(common.ParamErr, err.Error())
+		d.setResp(common.ParamErrorCode, err.Error())
 		return nil
 	}
 
 	if err := d.delete(ctx); err != nil {
 		blog.Errorf("delete mesh failed, %s, meshID: %s", err.Error(), d.req.MeshID)
-		d.setResp(common.DBErr, err.Error())
+		d.setResp(common.DBErrorCode, err.Error())
 		return nil
 	}
 
-	d.setResp(common.Success, common.SuccessMsg)
+	d.setResp(common.SuccessCode, "")
 	blog.Infof("delete mesh successfully, meshID: %s", d.req.MeshID)
 	return nil
 }
 
 // setResp sets the response with code and message
-func (d *DeleteMeshAction) setResp(code uint32, message string) {
+func (d *DeleteIstioAction) setResp(code uint32, message string) {
 	d.resp.Code = code
 	d.resp.Message = message
 }
 
-// delete implements the business logic for deleting mesh
-func (d *DeleteMeshAction) delete(ctx context.Context) error {
-	return d.model.DeleteMesh(ctx, d.req.MeshID)
+// delete implements the business logic for deleting istio
+func (d *DeleteIstioAction) delete(ctx context.Context) error {
+	return d.model.Delete(ctx, d.req.MeshID)
 }

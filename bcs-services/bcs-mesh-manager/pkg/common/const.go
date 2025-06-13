@@ -28,3 +28,65 @@ const (
 	// LangContectKey lang context key
 	LangContectKey string = "lang"
 )
+
+const (
+	// ComponentIstiod istiod组件
+	ComponentIstiod = "istiod"
+	// ComponentIstioBase istio base组件
+	ComponentIstioBase = "base"
+	// ComponentIstioGateway istio gateway组件
+	ComponentIstioGateway = "gateway"
+
+	// IstioInstallModePrimary 主集群安装
+	IstioInstallModePrimary = "primary"
+	// IstioInstallModeRemote 远程集群安装
+	IstioInstallModeRemote = "remote"
+	// IstioNamespace istio命名空间
+	IstioNamespace = "istio-system"
+
+	// IstioInstallBaseName istio base安装名称
+	IstioInstallBaseName = "bcs-istio-base"
+	// IstioInstallIstiodName istiod安装名称
+	IstioInstallIstiodName = "bcs-istio-istiod"
+	// IstioInstallIstioGatewayName istio gateway安装名称
+	IstioInstallIstioGatewayName = "bcs-istio-ingress-gateway"
+)
+
+const (
+	// ControlPlaneModeHosting 托管控制面
+	ControlPlaneModeHosting = "hosting"
+	// ControlPlaneModeIndependent 独立控制面
+	ControlPlaneModeIndependent = "independent"
+
+	// MultiClusterModePrimaryRemote 主从结构
+	MultiClusterModePrimaryRemote = "primaryPemote"
+	// MultiClusterModeMultiPrimary 多主结构
+	MultiClusterModeMultiPrimary = "multiPrimary"
+
+	// AccessLogEncodingJSON 日志编码json
+	AccessLogEncodingJSON = "json"
+	// AccessLogEncodingTEXT 日志编码text
+	AccessLogEncodingTEXT = "text"
+)
+
+// IstioStatus 控制面状态
+const (
+	// IstioStatusRunning 运行中
+	IstioStatusRunning = "running"
+	// IstioStatusInstalling 安装中
+	IstioStatusInstalling = "installing"
+	// IstioStatusInstalled 安装完成
+	IstioStatusInstalled = "installed"
+	// IstioStatusFailed 安装失败
+	IstioStatusFailed = "failed"
+	// IstioStatusUninstalling 卸载中
+	IstioStatusUninstalling = "uninstalling"
+	// IstioStatusUninstalled 卸载完成
+	IstioStatusUninstalled = "uninstalled"
+	// IstioStatusUninstallingFailed 卸载失败
+	IstioStatusUninstallingFailed = "uninstalling-failed"
+	// IstioStatusUpdating 配置更新中
+	IstioStatusUpdating = "updating"
+	// IstioStatusUpdateFailed 配置更新失败
+	IstioStatusUpdateFailed = "update-failed"
+)

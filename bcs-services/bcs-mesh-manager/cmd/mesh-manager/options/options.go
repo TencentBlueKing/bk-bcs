@@ -27,10 +27,9 @@ type MeshManagerOptions struct {
 	conf.LogConfig
 	ServerConfig
 	ClientConfig
-	Etcd        *EtcdOption    `json:"etcd"`
-	Mongo       *MongoOption   `json:"mongo"`
+	Etcd        *EtcdConfig    `json:"etcd"`
+	Mongo       *MongoConfig   `json:"mongo"`
 	Gateway     *GatewayConfig `json:"gateway"`
-	Debug       bool           `json:"debug"`
 	IAM         IAMConfig      `json:"iam"`
 	Auth        AuthConfig     `json:"auth"`
 	IstioConfig *IstioConfig   `json:"istio"`
@@ -63,30 +62,29 @@ func NewMeshManagerOptions() *MeshManagerOptions {
 			MetricPort: 8082,
 		},
 		ClientConfig: ClientConfig{},
-		Etcd:         &EtcdOption{},
-		Mongo:        &MongoOption{},
+		Etcd:         &EtcdConfig{},
+		Mongo:        &MongoConfig{},
 		Gateway:      &GatewayConfig{},
-		Debug:        false,
 	}
 }
 
 // ServerConfig config for server
 type ServerConfig struct {
 	Address         string `json:"address"`
-	InsecureAddress string `json:"insecureaddress"`
+	InsecureAddress string `json:"insecureAddress"`
 	Port            uint   `json:"port"`
-	HTTPPort        uint   `json:"httpport"`
-	MetricPort      uint   `json:"metricport"`
-	ServerCert      string `json:"servercert"`
-	ServerKey       string `json:"serverkey"`
-	ServerCa        string `json:"serverca"`
+	HTTPPort        uint   `json:"httpPort"`
+	MetricPort      uint   `json:"metricPort"`
+	ServerCert      string `json:"serverCert"`
+	ServerKey       string `json:"serverKey"`
+	ServerCa        string `json:"serverCa"`
 }
 
 // ClientConfig config for client
 type ClientConfig struct {
-	ClientCert string `json:"clientcert"`
-	ClientKey  string `json:"clientkey"`
-	ClientCa   string `json:"clientca"`
+	ClientCert string `json:"clientCert"`
+	ClientKey  string `json:"clientKey"`
+	ClientCa   string `json:"clientCa"`
 }
 
 // GatewayConfig bcs gateway config
@@ -95,26 +93,26 @@ type GatewayConfig struct {
 	Token    string `json:"token"`
 }
 
-// EtcdOption options for ectd to registry
-type EtcdOption struct {
+// EtcdConfig options for ectd to registry
+type EtcdConfig struct {
 	EtcdEndpoints string `json:"endpoints" value:"" usage:"endpoints of etcd"`
 	EtcdCert      string `json:"cert" value:"" usage:"cert file of etcd"`
 	EtcdKey       string `json:"key" value:"" usage:"key file for etcd"`
 	EtcdCa        string `json:"ca" value:"" usage:"ca file for etcd"`
 }
 
-// MongoOption option for mongo db
-type MongoOption struct {
-	// MongoEndpoints addr of mongodb
-	MongoEndpoints string `json:"endpoints"`
-	// MongoConnectTimeout connect timeout of mongodb
-	MongoConnectTimeout int `json:"connecttimeout"`
-	// MongoDatabaseName database of mongodb
-	MongoDatabaseName string `json:"database"`
-	// MongoUsername username of mongodb
-	MongoUsername string `json:"username"`
-	// MongoPassword password of mongodb
-	MongoPassword string `json:"password"`
+// MongoConfig option for mongo db
+type MongoConfig struct {
+	Address        string `json:"address" yaml:"address"`
+	Replicaset     string `json:"replicaset" yaml:"replicaset"`
+	ConnectTimeout uint   `json:"connectTimeout" yaml:"connectTimeout"`
+	AuthDatabase   string `json:"authDatabase" yaml:"authDatabase"`
+	Database       string `json:"database" yaml:"database"`
+	Username       string `json:"username" yaml:"username"`
+	Password       string `json:"password" yaml:"password"`
+	MaxPoolSize    uint   `json:"maxPoolSize" yaml:"maxPoolSize"`
+	MinPoolSize    uint   `json:"minPoolSize" yaml:"minPoolSize"`
+	Encrypted      bool   `json:"encrypted" yaml:"encrypted"`
 }
 
 // IAMConfig config for iam

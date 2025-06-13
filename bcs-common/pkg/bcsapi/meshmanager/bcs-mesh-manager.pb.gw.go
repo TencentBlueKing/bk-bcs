@@ -84,43 +84,43 @@ func local_request_MeshManager_InstallIstio_0(ctx context.Context, marshaler run
 }
 
 var (
-	filter_MeshManager_ListMesh_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_MeshManager_ListIstio_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
-func request_MeshManager_ListMesh_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListMeshRequest
+func request_MeshManager_ListIstio_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListIstioRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_MeshManager_ListMesh_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_MeshManager_ListIstio_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListMesh(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.ListIstio(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_MeshManager_ListMesh_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq ListMeshRequest
+func local_request_MeshManager_ListIstio_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq ListIstioRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_MeshManager_ListMesh_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_MeshManager_ListIstio_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := server.ListMesh(ctx, &protoReq)
+	msg, err := server.ListIstio(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_MeshManager_UpdateMesh_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateMeshRequest
+func request_MeshManager_UpdateIstio_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateIstioRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -148,13 +148,13 @@ func request_MeshManager_UpdateMesh_0(ctx context.Context, marshaler runtime.Mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "meshID", err)
 	}
 
-	msg, err := client.UpdateMesh(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.UpdateIstio(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_MeshManager_UpdateMesh_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq UpdateMeshRequest
+func local_request_MeshManager_UpdateIstio_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq UpdateIstioRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -182,13 +182,13 @@ func local_request_MeshManager_UpdateMesh_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "meshID", err)
 	}
 
-	msg, err := server.UpdateMesh(ctx, &protoReq)
+	msg, err := server.UpdateIstio(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_MeshManager_DeleteMesh_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteMeshRequest
+func request_MeshManager_DeleteIstio_0(ctx context.Context, marshaler runtime.Marshaler, client MeshManagerClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteIstioRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -208,13 +208,13 @@ func request_MeshManager_DeleteMesh_0(ctx context.Context, marshaler runtime.Mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "meshID", err)
 	}
 
-	msg, err := client.DeleteMesh(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DeleteIstio(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_MeshManager_DeleteMesh_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteMeshRequest
+func local_request_MeshManager_DeleteIstio_0(ctx context.Context, marshaler runtime.Marshaler, server MeshManagerServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq DeleteIstioRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -234,7 +234,7 @@ func local_request_MeshManager_DeleteMesh_0(ctx context.Context, marshaler runti
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "meshID", err)
 	}
 
-	msg, err := server.DeleteMesh(ctx, &protoReq)
+	msg, err := server.DeleteIstio(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -251,7 +251,7 @@ func RegisterMeshManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/ListIstioVersion", runtime.WithHTTPPathPattern("/v1/mesh/istio/version"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/ListIstioVersion", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/version"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -274,7 +274,7 @@ func RegisterMeshManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/InstallIstio", runtime.WithHTTPPathPattern("/v1/mesh/istio/install"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/InstallIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/install"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -291,18 +291,18 @@ func RegisterMeshManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 
 	})
 
-	mux.Handle("GET", pattern_MeshManager_ListMesh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_MeshManager_ListIstio_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/ListMesh", runtime.WithHTTPPathPattern("/v1/mesh/list"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/ListIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/list"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_MeshManager_ListMesh_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_MeshManager_ListIstio_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -310,22 +310,22 @@ func RegisterMeshManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_MeshManager_ListMesh_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MeshManager_ListIstio_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_MeshManager_UpdateMesh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_MeshManager_UpdateIstio_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/UpdateMesh", runtime.WithHTTPPathPattern("/v1/mesh/{meshID}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/UpdateIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/{meshID}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_MeshManager_UpdateMesh_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_MeshManager_UpdateIstio_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -333,22 +333,22 @@ func RegisterMeshManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_MeshManager_UpdateMesh_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MeshManager_UpdateIstio_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_MeshManager_DeleteMesh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_MeshManager_DeleteIstio_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/DeleteMesh", runtime.WithHTTPPathPattern("/v1/mesh/{meshID}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/meshmanager.MeshManager/DeleteIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/{meshID}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_MeshManager_DeleteMesh_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_MeshManager_DeleteIstio_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -356,7 +356,7 @@ func RegisterMeshManagerGwServer(ctx context.Context, mux *runtime.ServeMux, ser
 			return
 		}
 
-		forward_MeshManager_DeleteMesh_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MeshManager_DeleteIstio_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -405,7 +405,7 @@ func RegisterMeshManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/ListIstioVersion", runtime.WithHTTPPathPattern("/v1/mesh/istio/version"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/ListIstioVersion", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/version"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -425,7 +425,7 @@ func RegisterMeshManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/InstallIstio", runtime.WithHTTPPathPattern("/v1/mesh/istio/install"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/InstallIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/install"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -441,63 +441,63 @@ func RegisterMeshManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 
 	})
 
-	mux.Handle("GET", pattern_MeshManager_ListMesh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_MeshManager_ListIstio_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/ListMesh", runtime.WithHTTPPathPattern("/v1/mesh/list"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/ListIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/list"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_MeshManager_ListMesh_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_MeshManager_ListIstio_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MeshManager_ListMesh_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MeshManager_ListIstio_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("PUT", pattern_MeshManager_UpdateMesh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("PUT", pattern_MeshManager_UpdateIstio_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/UpdateMesh", runtime.WithHTTPPathPattern("/v1/mesh/{meshID}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/UpdateIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/{meshID}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_MeshManager_UpdateMesh_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_MeshManager_UpdateIstio_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MeshManager_UpdateMesh_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MeshManager_UpdateIstio_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
-	mux.Handle("DELETE", pattern_MeshManager_DeleteMesh_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_MeshManager_DeleteIstio_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/DeleteMesh", runtime.WithHTTPPathPattern("/v1/mesh/{meshID}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/meshmanager.MeshManager/DeleteIstio", runtime.WithHTTPPathPattern("/meshmanager/v1/mesh/istio/{meshID}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_MeshManager_DeleteMesh_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_MeshManager_DeleteIstio_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_MeshManager_DeleteMesh_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_MeshManager_DeleteIstio_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -505,15 +505,15 @@ func RegisterMeshManagerGwClient(ctx context.Context, mux *runtime.ServeMux, cli
 }
 
 var (
-	pattern_MeshManager_ListIstioVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "mesh", "istio", "version"}, ""))
+	pattern_MeshManager_ListIstioVersion_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"meshmanager", "v1", "mesh", "istio", "version"}, ""))
 
-	pattern_MeshManager_InstallIstio_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v1", "mesh", "istio", "install"}, ""))
+	pattern_MeshManager_InstallIstio_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"meshmanager", "v1", "mesh", "istio", "install"}, ""))
 
-	pattern_MeshManager_ListMesh_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "mesh", "list"}, ""))
+	pattern_MeshManager_ListIstio_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"meshmanager", "v1", "mesh", "istio", "list"}, ""))
 
-	pattern_MeshManager_UpdateMesh_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "mesh", "meshID"}, ""))
+	pattern_MeshManager_UpdateIstio_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"meshmanager", "v1", "mesh", "istio", "meshID"}, ""))
 
-	pattern_MeshManager_DeleteMesh_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "mesh", "meshID"}, ""))
+	pattern_MeshManager_DeleteIstio_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"meshmanager", "v1", "mesh", "istio", "meshID"}, ""))
 )
 
 var (
@@ -521,9 +521,9 @@ var (
 
 	forward_MeshManager_InstallIstio_0 = runtime.ForwardResponseMessage
 
-	forward_MeshManager_ListMesh_0 = runtime.ForwardResponseMessage
+	forward_MeshManager_ListIstio_0 = runtime.ForwardResponseMessage
 
-	forward_MeshManager_UpdateMesh_0 = runtime.ForwardResponseMessage
+	forward_MeshManager_UpdateIstio_0 = runtime.ForwardResponseMessage
 
-	forward_MeshManager_DeleteMesh_0 = runtime.ForwardResponseMessage
+	forward_MeshManager_DeleteIstio_0 = runtime.ForwardResponseMessage
 )

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package mesh
+package istio
 
 import (
 	"context"
@@ -24,57 +24,57 @@ import (
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
-// ListMeshAction action for listing mesh
-type ListMeshAction struct {
+// ListIstioAction action for listing istio
+type ListIstioAction struct {
 	model store.MeshManagerModel
-	req   *meshmanager.ListMeshRequest
-	resp  *meshmanager.ListMeshResponse
+	req   *meshmanager.ListIstioRequest
+	resp  *meshmanager.ListIstioResponse
 }
 
-// NewListMeshAction create list mesh action
-func NewListMeshAction(model store.MeshManagerModel) *ListMeshAction {
-	return &ListMeshAction{
+// NewListIstioAction create list istio action
+func NewListIstioAction(model store.MeshManagerModel) *ListIstioAction {
+	return &ListIstioAction{
 		model: model,
 	}
 }
 
 // Handle processes the mesh list request
-func (l *ListMeshAction) Handle(
+func (l *ListIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.ListMeshRequest,
-	resp *meshmanager.ListMeshResponse,
+	req *meshmanager.ListIstioRequest,
+	resp *meshmanager.ListIstioResponse,
 ) error {
 	l.req = req
 	l.resp = resp
 
 	if err := l.req.Validate(); err != nil {
 		blog.Errorf("list mesh failed, invalid request, %s, param: %v", err.Error(), l.req)
-		l.setResp(common.ParamErr, err.Error(), nil)
+		l.setResp(common.ParamErrorCode, err.Error(), nil)
 		return nil
 	}
 
 	result, err := l.list(ctx)
 	if err != nil {
 		blog.Errorf("list mesh failed, %s, projectID: %s", err.Error(), l.req.ProjectID)
-		l.setResp(common.DBErr, err.Error(), nil)
+		l.setResp(common.DBErrorCode, err.Error(), nil)
 		return nil
 	}
 
 	// 设置成功响应
-	l.setResp(common.Success, common.SuccessMsg, result)
+	l.setResp(common.SuccessCode, "", result)
 	blog.Infof("list mesh successfully, projectID: %s", l.req.ProjectID)
 	return nil
 }
 
 // setResp sets the response with code, message and data
-func (l *ListMeshAction) setResp(code uint32, message string, data *meshmanager.ListMeshData) {
+func (l *ListIstioAction) setResp(code uint32, message string, data *meshmanager.ListIstioData) {
 	l.resp.Code = code
 	l.resp.Message = message
 	l.resp.Data = data
 }
 
 // list implements the business logic for listing meshes
-func (l *ListMeshAction) list(ctx context.Context) (*meshmanager.ListMeshData, error) {
+func (l *ListIstioAction) list(ctx context.Context) (*meshmanager.ListIstioData, error) {
 	// 构建查询条件
 	conditions := make([]*operator.Condition, 0)
 	if l.req.ProjectID != "" {
@@ -112,12 +112,13 @@ func (l *ListMeshAction) list(ctx context.Context) (*meshmanager.ListMeshData, e
 		Size: pageSize,
 	}
 
-	total, meshes, err := l.model.ListMesh(ctx, cond, opt)
+	total, meshIstios, err := l.model.List(ctx, cond, opt)
 	if err != nil {
 		return nil, err
 	}
-	items := make([]*meshmanager.MeshListItem, 0, len(meshes))
-	for _, mesh := range meshes {
+	items := make([]*meshmanager.IstioListItem, 0, len(meshIstios))
+	blog.Infof("list mesh istio: total: %d, cond: %v", total, cond)
+	for _, mesh := range meshIstios {
 		item := mesh.Transfer2Proto()
 		if item == nil {
 			blog.Warnf("list mesh: failed to convert mesh to proto, meshID: %s", mesh.MeshID)
@@ -126,7 +127,7 @@ func (l *ListMeshAction) list(ctx context.Context) (*meshmanager.ListMeshData, e
 		items = append(items, item)
 	}
 
-	return &meshmanager.ListMeshData{
+	return &meshmanager.ListIstioData{
 		Total: int32(total),
 		Items: items,
 	}, nil

@@ -10,7 +10,7 @@
  * limitations under the License.
  */
 
-package mesh
+package istio
 
 import (
 	"context"
@@ -23,48 +23,48 @@ import (
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
-// UpdateMeshAction handles mesh update request
-type UpdateMeshAction struct {
+// UpdateIstioAction handles istio update request
+type UpdateIstioAction struct {
 	model store.MeshManagerModel
-	req   *meshmanager.UpdateMeshRequest
-	resp  *meshmanager.UpdateMeshResponse
+	req   *meshmanager.UpdateIstioRequest
+	resp  *meshmanager.UpdateIstioResponse
 }
 
-// NewUpdateMeshAction create update mesh action
-func NewUpdateMeshAction(model store.MeshManagerModel) *UpdateMeshAction {
-	return &UpdateMeshAction{
+// NewUpdateIstioAction create update istio action
+func NewUpdateIstioAction(model store.MeshManagerModel) *UpdateIstioAction {
+	return &UpdateIstioAction{
 		model: model,
 	}
 }
 
-// Handle processes the mesh update request
-func (u *UpdateMeshAction) Handle(
+// Handle processes the istio update request
+func (u *UpdateIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.UpdateMeshRequest,
-	resp *meshmanager.UpdateMeshResponse,
+	req *meshmanager.UpdateIstioRequest,
+	resp *meshmanager.UpdateIstioResponse,
 ) error {
 	u.req = req
 	u.resp = resp
 
 	if err := u.req.Validate(); err != nil {
 		blog.Errorf("update mesh failed, invalid request, %s, param: %v", err.Error(), u.req)
-		u.setResp(common.ParamErr, err.Error())
+		u.setResp(common.ParamErrorCode, err.Error())
 		return nil
 	}
 
 	if err := u.update(ctx); err != nil {
 		blog.Errorf("update mesh failed, %s, meshID: %s", err.Error(), u.req.MeshID)
-		u.setResp(common.DBErr, err.Error())
+		u.setResp(common.DBErrorCode, err.Error())
 		return nil
 	}
 
-	u.setResp(common.Success, common.SuccessMsg)
+	u.setResp(common.SuccessCode, "")
 	blog.Infof("update mesh successfully, meshID: %s", u.req.MeshID)
 	return nil
 }
 
 // setResp sets the response with code and message
-func (u *UpdateMeshAction) setResp(code uint32, message string) {
+func (u *UpdateIstioAction) setResp(code uint32, message string) {
 	u.resp.Code = code
 	u.resp.Message = message
 }
@@ -93,8 +93,8 @@ func ServiceDiscoveryFromProto(proto *meshmanager.ServiceDiscovery) *entity.Serv
 }
 
 // update implements the business logic for updating mesh
-func (u *UpdateMeshAction) update(ctx context.Context) error {
-	mesh := &entity.Mesh{}
+func (u *UpdateIstioAction) update(ctx context.Context) error {
+	mesh := &entity.MeshIstio{}
 	updateFields := mesh.UpdateFromProto(u.req)
 
 	// 迁移 ServiceDiscovery 字段的转换逻辑到 action 层
@@ -102,5 +102,5 @@ func (u *UpdateMeshAction) update(ctx context.Context) error {
 		updateFields["serviceDiscovery"] = ServiceDiscoveryFromProto(u.req.ServiceDiscovery)
 	}
 
-	return u.model.UpdateMesh(ctx, u.req.MeshID, updateFields)
+	return u.model.Update(ctx, u.req.MeshID, updateFields)
 }

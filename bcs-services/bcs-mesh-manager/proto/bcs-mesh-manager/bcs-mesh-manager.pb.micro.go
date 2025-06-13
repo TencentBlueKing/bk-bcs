@@ -38,31 +38,31 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		{
 			Name:    "MeshManager.ListIstioVersion",
-			Path:    []string{"/v1/mesh/istio/version"},
+			Path:    []string{"/meshmanager/v1/mesh/istio/version"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
 			Name:    "MeshManager.InstallIstio",
-			Path:    []string{"/v1/mesh/istio/install"},
+			Path:    []string{"/meshmanager/v1/mesh/istio/install"},
 			Method:  []string{"POST"},
 			Handler: "rpc",
 		},
 		{
-			Name:    "MeshManager.ListMesh",
-			Path:    []string{"/v1/mesh/list"},
+			Name:    "MeshManager.ListIstio",
+			Path:    []string{"/meshmanager/v1/mesh/istio/list"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
 		{
-			Name:    "MeshManager.UpdateMesh",
-			Path:    []string{"/v1/mesh/{meshID}"},
+			Name:    "MeshManager.UpdateIstio",
+			Path:    []string{"/meshmanager/v1/mesh/istio/{meshID}"},
 			Method:  []string{"PUT"},
 			Handler: "rpc",
 		},
 		{
-			Name:    "MeshManager.DeleteMesh",
-			Path:    []string{"/v1/mesh/{meshID}"},
+			Name:    "MeshManager.DeleteIstio",
+			Path:    []string{"/meshmanager/v1/mesh/istio/{meshID}"},
 			Method:  []string{"DELETE"},
 			Handler: "rpc",
 		},
@@ -72,16 +72,18 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 // Client API for MeshManager service
 
 type MeshManagerService interface {
+	// ===== 版本管理相关 =====
 	// 获取当前开放的istio版本
 	ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, opts ...client.CallOption) (*ListIstioVersionResponse, error)
+	// ===== Istio 相关 =====
 	// 安装istio
 	InstallIstio(ctx context.Context, in *InstallIstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
-	// 获取网格列表
-	ListMesh(ctx context.Context, in *ListMeshRequest, opts ...client.CallOption) (*ListMeshResponse, error)
-	// 更新网格配置
-	UpdateMesh(ctx context.Context, in *UpdateMeshRequest, opts ...client.CallOption) (*UpdateMeshResponse, error)
-	// 删除网格
-	DeleteMesh(ctx context.Context, in *DeleteMeshRequest, opts ...client.CallOption) (*DeleteMeshResponse, error)
+	// 获取istio列表
+	ListIstio(ctx context.Context, in *ListIstioRequest, opts ...client.CallOption) (*ListIstioResponse, error)
+	// 更新istio配置
+	UpdateIstio(ctx context.Context, in *UpdateIstioRequest, opts ...client.CallOption) (*UpdateIstioResponse, error)
+	// 删除istio
+	DeleteIstio(ctx context.Context, in *DeleteIstioRequest, opts ...client.CallOption) (*DeleteIstioResponse, error)
 }
 
 type meshManagerService struct {
@@ -116,9 +118,9 @@ func (c *meshManagerService) InstallIstio(ctx context.Context, in *InstallIstioR
 	return out, nil
 }
 
-func (c *meshManagerService) ListMesh(ctx context.Context, in *ListMeshRequest, opts ...client.CallOption) (*ListMeshResponse, error) {
-	req := c.c.NewRequest(c.name, "MeshManager.ListMesh", in)
-	out := new(ListMeshResponse)
+func (c *meshManagerService) ListIstio(ctx context.Context, in *ListIstioRequest, opts ...client.CallOption) (*ListIstioResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.ListIstio", in)
+	out := new(ListIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -126,9 +128,9 @@ func (c *meshManagerService) ListMesh(ctx context.Context, in *ListMeshRequest, 
 	return out, nil
 }
 
-func (c *meshManagerService) UpdateMesh(ctx context.Context, in *UpdateMeshRequest, opts ...client.CallOption) (*UpdateMeshResponse, error) {
-	req := c.c.NewRequest(c.name, "MeshManager.UpdateMesh", in)
-	out := new(UpdateMeshResponse)
+func (c *meshManagerService) UpdateIstio(ctx context.Context, in *UpdateIstioRequest, opts ...client.CallOption) (*UpdateIstioResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.UpdateIstio", in)
+	out := new(UpdateIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -136,9 +138,9 @@ func (c *meshManagerService) UpdateMesh(ctx context.Context, in *UpdateMeshReque
 	return out, nil
 }
 
-func (c *meshManagerService) DeleteMesh(ctx context.Context, in *DeleteMeshRequest, opts ...client.CallOption) (*DeleteMeshResponse, error) {
-	req := c.c.NewRequest(c.name, "MeshManager.DeleteMesh", in)
-	out := new(DeleteMeshResponse)
+func (c *meshManagerService) DeleteIstio(ctx context.Context, in *DeleteIstioRequest, opts ...client.CallOption) (*DeleteIstioResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.DeleteIstio", in)
+	out := new(DeleteIstioResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -149,25 +151,27 @@ func (c *meshManagerService) DeleteMesh(ctx context.Context, in *DeleteMeshReque
 // Server API for MeshManager service
 
 type MeshManagerHandler interface {
+	// ===== 版本管理相关 =====
 	// 获取当前开放的istio版本
 	ListIstioVersion(context.Context, *ListIstioVersionRequest, *ListIstioVersionResponse) error
+	// ===== Istio 相关 =====
 	// 安装istio
 	InstallIstio(context.Context, *InstallIstioRequest, *InstallIstioResponse) error
-	// 获取网格列表
-	ListMesh(context.Context, *ListMeshRequest, *ListMeshResponse) error
-	// 更新网格配置
-	UpdateMesh(context.Context, *UpdateMeshRequest, *UpdateMeshResponse) error
-	// 删除网格
-	DeleteMesh(context.Context, *DeleteMeshRequest, *DeleteMeshResponse) error
+	// 获取istio列表
+	ListIstio(context.Context, *ListIstioRequest, *ListIstioResponse) error
+	// 更新istio配置
+	UpdateIstio(context.Context, *UpdateIstioRequest, *UpdateIstioResponse) error
+	// 删除istio
+	DeleteIstio(context.Context, *DeleteIstioRequest, *DeleteIstioResponse) error
 }
 
 func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts ...server.HandlerOption) error {
 	type meshManager interface {
 		ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error
 		InstallIstio(ctx context.Context, in *InstallIstioRequest, out *InstallIstioResponse) error
-		ListMesh(ctx context.Context, in *ListMeshRequest, out *ListMeshResponse) error
-		UpdateMesh(ctx context.Context, in *UpdateMeshRequest, out *UpdateMeshResponse) error
-		DeleteMesh(ctx context.Context, in *DeleteMeshRequest, out *DeleteMeshResponse) error
+		ListIstio(ctx context.Context, in *ListIstioRequest, out *ListIstioResponse) error
+		UpdateIstio(ctx context.Context, in *UpdateIstioRequest, out *UpdateIstioResponse) error
+		DeleteIstio(ctx context.Context, in *DeleteIstioRequest, out *DeleteIstioResponse) error
 	}
 	type MeshManager struct {
 		meshManager
@@ -175,31 +179,31 @@ func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts .
 	h := &meshManagerHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "MeshManager.ListIstioVersion",
-		Path:    []string{"/v1/mesh/istio/version"},
+		Path:    []string{"/meshmanager/v1/mesh/istio/version"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "MeshManager.InstallIstio",
-		Path:    []string{"/v1/mesh/istio/install"},
+		Path:    []string{"/meshmanager/v1/mesh/istio/install"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "MeshManager.ListMesh",
-		Path:    []string{"/v1/mesh/list"},
+		Name:    "MeshManager.ListIstio",
+		Path:    []string{"/meshmanager/v1/mesh/istio/list"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "MeshManager.UpdateMesh",
-		Path:    []string{"/v1/mesh/{meshID}"},
+		Name:    "MeshManager.UpdateIstio",
+		Path:    []string{"/meshmanager/v1/mesh/istio/{meshID}"},
 		Method:  []string{"PUT"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "MeshManager.DeleteMesh",
-		Path:    []string{"/v1/mesh/{meshID}"},
+		Name:    "MeshManager.DeleteIstio",
+		Path:    []string{"/meshmanager/v1/mesh/istio/{meshID}"},
 		Method:  []string{"DELETE"},
 		Handler: "rpc",
 	}))
@@ -218,14 +222,14 @@ func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *InstallIstioR
 	return h.MeshManagerHandler.InstallIstio(ctx, in, out)
 }
 
-func (h *meshManagerHandler) ListMesh(ctx context.Context, in *ListMeshRequest, out *ListMeshResponse) error {
-	return h.MeshManagerHandler.ListMesh(ctx, in, out)
+func (h *meshManagerHandler) ListIstio(ctx context.Context, in *ListIstioRequest, out *ListIstioResponse) error {
+	return h.MeshManagerHandler.ListIstio(ctx, in, out)
 }
 
-func (h *meshManagerHandler) UpdateMesh(ctx context.Context, in *UpdateMeshRequest, out *UpdateMeshResponse) error {
-	return h.MeshManagerHandler.UpdateMesh(ctx, in, out)
+func (h *meshManagerHandler) UpdateIstio(ctx context.Context, in *UpdateIstioRequest, out *UpdateIstioResponse) error {
+	return h.MeshManagerHandler.UpdateIstio(ctx, in, out)
 }
 
-func (h *meshManagerHandler) DeleteMesh(ctx context.Context, in *DeleteMeshRequest, out *DeleteMeshResponse) error {
-	return h.MeshManagerHandler.DeleteMesh(ctx, in, out)
+func (h *meshManagerHandler) DeleteIstio(ctx context.Context, in *DeleteIstioRequest, out *DeleteIstioResponse) error {
+	return h.MeshManagerHandler.DeleteIstio(ctx, in, out)
 }

@@ -21,7 +21,7 @@ import (
 
 const (
 	// DataTableNamePrefix is the prefix for data table names
-	DataTableNamePrefix = "bcsmesh_"
+	DataTableNamePrefix = "bcs_mesh_"
 )
 
 // EnsureTable ensures the data table exists, creates it if it doesn't exist

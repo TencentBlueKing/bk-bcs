@@ -20,11 +20,12 @@ import (
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
-// Mesh represents a service mesh entity in database
-type Mesh struct {
+// MeshIstio represents a service mesh istio entity in database
+type MeshIstio struct {
 	// Basic information
 	MeshID       string `bson:"meshID" json:"meshID" validate:"required"`
 	MeshName     string `bson:"meshName" json:"meshName" validate:"required"`
+	NetworkID    string `bson:"networkID" json:"networkID" validate:"required"`
 	ProjectID    string `bson:"projectID" json:"projectID" validate:"required"`
 	ProjectCode  string `bson:"projectCode" json:"projectCode" validate:"required"`
 	Description  string `bson:"description" json:"description"`
@@ -119,8 +120,8 @@ type FeatureConfig struct {
 	SupportVersions []string `bson:"supportVersions" json:"supportVersions"`
 }
 
-// Transfer2Proto converts Mesh entity to proto message
-func (m *Mesh) Transfer2Proto() *meshmanager.MeshListItem {
+// Transfer2Proto converts MeshIstio entity to proto message
+func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 	// 转换基本字段
 	proto := m.transferBasicFields()
 
@@ -138,21 +139,21 @@ func (m *Mesh) Transfer2Proto() *meshmanager.MeshListItem {
 }
 
 // transferBasicFields 转换基本字段
-func (m *Mesh) transferBasicFields() *meshmanager.MeshListItem {
-	return &meshmanager.MeshListItem{
+func (m *MeshIstio) transferBasicFields() *meshmanager.IstioListItem {
+	return &meshmanager.IstioListItem{
 		MeshID:           m.MeshID,
 		MeshName:         m.MeshName,
 		ProjectID:        m.ProjectID,
 		ProjectCode:      m.ProjectCode,
 		Description:      m.Description,
 		ChartVersion:     m.ChartVersion,
-		Status:           meshmanager.MeshStatus(meshmanager.MeshStatus_value[m.Status]),
+		Status:           m.Status,
 		CreateTime:       m.CreateTime,
 		UpdateTime:       m.UpdateTime,
 		CreateBy:         m.CreateBy,
 		UpdateBy:         m.UpdateBy,
-		ControlPlaneMode: meshmanager.ControlPlaneMode(meshmanager.ControlPlaneMode_value[m.ControlPlaneMode]),
-		ClusterMode:      meshmanager.ClusterMode(meshmanager.ClusterMode_value[m.ClusterMode]),
+		ControlPlaneMode: m.ControlPlaneMode,
+		ClusterMode:      m.ClusterMode,
 		PrimaryClusters:  m.PrimaryClusters,
 		RemoteClusters:   m.RemoteClusters,
 		DifferentNetwork: m.DifferentNetwork,
@@ -160,7 +161,7 @@ func (m *Mesh) transferBasicFields() *meshmanager.MeshListItem {
 }
 
 // transferServiceDiscovery 转换服务发现配置
-func (m *Mesh) transferServiceDiscovery() *meshmanager.ServiceDiscovery {
+func (m *MeshIstio) transferServiceDiscovery() *meshmanager.ServiceDiscovery {
 	if m.ServiceDiscovery == nil {
 		return nil
 	}
@@ -195,7 +196,7 @@ func (m *Mesh) transferServiceDiscovery() *meshmanager.ServiceDiscovery {
 }
 
 // transferFeatureConfigs 转换特性配置
-func (m *Mesh) transferFeatureConfigs() map[string]*meshmanager.FeatureConfig {
+func (m *MeshIstio) transferFeatureConfigs() map[string]*meshmanager.FeatureConfig {
 	protoFeatureConfigs := make(map[string]*meshmanager.FeatureConfig)
 	for name, config := range m.FeatureConfigs {
 		// 只转换支持的特性
@@ -215,7 +216,7 @@ func (m *Mesh) transferFeatureConfigs() map[string]*meshmanager.FeatureConfig {
 }
 
 // transferSidecarResourceConfig 转换 Sidecar 资源配置
-func (m *Mesh) transferSidecarResourceConfig() *meshmanager.ResourceConfig {
+func (m *MeshIstio) transferSidecarResourceConfig() *meshmanager.ResourceConfig {
 	if m.SidecarResourceConfig == nil {
 		return nil
 	}
@@ -228,7 +229,7 @@ func (m *Mesh) transferSidecarResourceConfig() *meshmanager.ResourceConfig {
 }
 
 // transferHighAvailability 转换高可用配置
-func (m *Mesh) transferHighAvailability() *meshmanager.HighAvailability {
+func (m *MeshIstio) transferHighAvailability() *meshmanager.HighAvailability {
 	if m.HighAvailability == nil {
 		return nil
 	}
@@ -260,21 +261,19 @@ func (m *Mesh) transferHighAvailability() *meshmanager.HighAvailability {
 }
 
 // transferLogCollectorConfig 转换日志收集配置
-func (m *Mesh) transferLogCollectorConfig() *meshmanager.LogCollectorConfig {
+func (m *MeshIstio) transferLogCollectorConfig() *meshmanager.LogCollectorConfig {
 	if m.LogCollectorConfig == nil {
 		return nil
 	}
-	encoding := meshmanager.AccessLogEncoding(
-		meshmanager.AccessLogEncoding_value[m.LogCollectorConfig.AccessLogEncoding])
 	return &meshmanager.LogCollectorConfig{
 		Enabled:           m.LogCollectorConfig.Enabled,
-		AccessLogEncoding: encoding,
+		AccessLogEncoding: m.LogCollectorConfig.AccessLogEncoding,
 		AccessLogFormat:   m.LogCollectorConfig.AccessLogFormat,
 	}
 }
 
 // transferTracingConfig 转换链路追踪配置
-func (m *Mesh) transferTracingConfig() *meshmanager.TracingConfig {
+func (m *MeshIstio) transferTracingConfig() *meshmanager.TracingConfig {
 	if m.TracingConfig == nil {
 		return nil
 	}
@@ -285,17 +284,16 @@ func (m *Mesh) transferTracingConfig() *meshmanager.TracingConfig {
 	}
 }
 
-// TransferFromProto converts InstallIstioRequest to Mesh entity
-func (m *Mesh) TransferFromProto(req *meshmanager.InstallIstioRequest) {
+// TransferFromProto converts InstallIstioRequest to MeshIstio entity
+func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 	// 转换基本字段
-	m.MeshName = req.MeshName
+	m.MeshName = req.Name
 	m.ProjectID = req.ProjectID
 	m.ProjectCode = req.ProjectCode
 	m.Description = req.Description
-	m.ChartVersion = req.ChartVersion
-	m.Status = meshmanager.MeshStatus_MESH_STATUS_INSTALLING.String()
-	m.ControlPlaneMode = req.ControlPlaneMode.String()
-	m.ClusterMode = req.ClusterMode.String()
+	m.ChartVersion = req.Version
+	m.ControlPlaneMode = req.ControlPlaneMode
+	m.ClusterMode = req.ClusterMode
 	m.PrimaryClusters = req.PrimaryClusters
 	m.RemoteClusters = req.RemoteClusters
 	m.DifferentNetwork = req.DifferentNetwork
@@ -344,7 +342,7 @@ func (m *Mesh) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 	if req.LogCollectorConfig != nil {
 		m.LogCollectorConfig = &LogCollectorConfig{
 			Enabled:           req.LogCollectorConfig.Enabled,
-			AccessLogEncoding: req.LogCollectorConfig.AccessLogEncoding.String(),
+			AccessLogEncoding: req.LogCollectorConfig.AccessLogEncoding,
 			AccessLogFormat:   req.LogCollectorConfig.AccessLogFormat,
 		}
 	}
@@ -377,8 +375,8 @@ func (m *Mesh) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 	}
 }
 
-// UpdateFromProto converts UpdateMeshRequest to update fields
-func (m *Mesh) UpdateFromProto(req *meshmanager.UpdateMeshRequest) M {
+// UpdateFromProto converts UpdateIstioRequest to update fields
+func (m *MeshIstio) UpdateFromProto(req *meshmanager.UpdateIstioRequest) M {
 	updateFields := m.updateBasicFields(req)
 	m.updateServiceDiscovery(req, updateFields)
 	m.updateResourceConfigs(req, updateFields)
@@ -387,7 +385,7 @@ func (m *Mesh) UpdateFromProto(req *meshmanager.UpdateMeshRequest) M {
 }
 
 // updateBasicFields updates basic fields from request
-func (m *Mesh) updateBasicFields(req *meshmanager.UpdateMeshRequest) M {
+func (m *MeshIstio) updateBasicFields(req *meshmanager.UpdateIstioRequest) M {
 	return M{
 		"description":      req.Description,
 		"primaryClusters":  req.PrimaryClusters,
@@ -399,7 +397,7 @@ func (m *Mesh) updateBasicFields(req *meshmanager.UpdateMeshRequest) M {
 }
 
 // updateServiceDiscovery updates service discovery configuration
-func (m *Mesh) updateServiceDiscovery(req *meshmanager.UpdateMeshRequest, updateFields M) {
+func (m *MeshIstio) updateServiceDiscovery(req *meshmanager.UpdateIstioRequest, updateFields M) {
 	if req.ServiceDiscovery == nil {
 		return
 	}
@@ -428,7 +426,7 @@ func (m *Mesh) updateServiceDiscovery(req *meshmanager.UpdateMeshRequest, update
 }
 
 // updateResourceConfigs updates resource related configurations
-func (m *Mesh) updateResourceConfigs(req *meshmanager.UpdateMeshRequest, updateFields M) {
+func (m *MeshIstio) updateResourceConfigs(req *meshmanager.UpdateIstioRequest, updateFields M) {
 	// Update Sidecar resource config
 	if req.SidecarResourceConfig != nil {
 		updateFields["sidecarResourceConfig"] = &ResourceConfig{
@@ -448,7 +446,7 @@ func (m *Mesh) updateResourceConfigs(req *meshmanager.UpdateMeshRequest, updateF
 	if req.LogCollectorConfig != nil {
 		updateFields["logCollectorConfig"] = &LogCollectorConfig{
 			Enabled:           req.LogCollectorConfig.Enabled,
-			AccessLogEncoding: req.LogCollectorConfig.AccessLogEncoding.String(),
+			AccessLogEncoding: req.LogCollectorConfig.AccessLogEncoding,
 			AccessLogFormat:   req.LogCollectorConfig.AccessLogFormat,
 		}
 	}
@@ -464,7 +462,7 @@ func (m *Mesh) updateResourceConfigs(req *meshmanager.UpdateMeshRequest, updateF
 }
 
 // convertHighAvailability converts proto HighAvailability to entity
-func (m *Mesh) convertHighAvailability(ha *meshmanager.HighAvailability) *HighAvailability {
+func (m *MeshIstio) convertHighAvailability(ha *meshmanager.HighAvailability) *HighAvailability {
 	highAvailability := &HighAvailability{
 		AutoscaleEnabled: ha.AutoscaleEnabled,
 		AutoscaleMin:     ha.AutoscaleMin,
@@ -492,7 +490,7 @@ func (m *Mesh) convertHighAvailability(ha *meshmanager.HighAvailability) *HighAv
 }
 
 // updateFeatureConfigs updates feature configurations
-func (m *Mesh) updateFeatureConfigs(req *meshmanager.UpdateMeshRequest, updateFields M) {
+func (m *MeshIstio) updateFeatureConfigs(req *meshmanager.UpdateIstioRequest, updateFields M) {
 	if len(req.FeatureConfigs) == 0 {
 		return
 	}

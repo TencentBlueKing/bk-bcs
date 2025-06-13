@@ -1,0 +1,85 @@
+/*
+ * Tencent is pleased to support the open source community by making Blueking Container Service available.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Package k8s 提供k8s client功能
+package k8s
+
+import (
+	"context"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+)
+
+var (
+	bcsToken    string
+	bcsEndpoint string
+)
+
+// InitClient 初始化k8s client
+func InitClient(endpoint, token string) error {
+	bcsEndpoint = endpoint
+	bcsToken = token
+	return nil
+}
+
+// GetClient 获取k8s client
+func GetClient(clusterID string) (*kubernetes.Clientset, error) {
+	host := fmt.Sprintf("%s/clusters/%s", bcsEndpoint, clusterID)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsToken,
+	}
+
+	return kubernetes.NewForConfig(config)
+}
+
+// CheckNamespaceExist 检查namespace是否存在
+func CheckNamespaceExist(ctx context.Context, clusterID, namespace string) (bool, error) {
+	_, err := GetNamespace(ctx, clusterID, namespace)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
+// GetNamespace 获取namespace
+func GetNamespace(ctx context.Context, clusterID, namespace string) (*corev1.Namespace, error) {
+	client, err := GetClient(clusterID)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+}
+
+// CreateNamespace 创建namespace
+func CreateNamespace(ctx context.Context, clusterID, namespace string) error {
+	client, err := GetClient(clusterID)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.CoreV1().Namespaces().Create(ctx, &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}, metav1.CreateOptions{})
+	return err
+}

@@ -15,16 +15,13 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-	"go-micro.dev/v4/errors"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -56,13 +53,6 @@ func ResponseWrapper(fn server.HandlerFunc) server.HandlerFunc {
 
 func renderResponse(rsp interface{}, requestID string, err error) error {
 	v := reflect.ValueOf(rsp)
-	msg, code := getMsgCode(err)
-	if v.Elem().FieldByName("Message").IsValid() {
-		v.Elem().FieldByName("Message").SetString(msg)
-	}
-	if v.Elem().FieldByName("Code").IsValid() {
-		v.Elem().FieldByName("Code").SetUint(uint64(code))
-	}
 	if v.Elem().FieldByName("RequestID").IsValid() {
 		v.Elem().FieldByName("RequestID").SetString(requestID)
 	}
@@ -118,17 +108,4 @@ func getRequestID(ctx context.Context) string {
 	}
 
 	return requestID
-}
-
-// getMsgCode 根据不同的错误类型，获取错误信息 & 错误码
-func getMsgCode(err interface{}) (string, uint32) {
-	if err == nil {
-		return common.SuccessMsg, common.Success
-	}
-	switch e := err.(type) {
-	case *errors.Error:
-		return e.Detail, common.InnerErr
-	default:
-		return fmt.Sprintf("%s", e), common.InnerErr
-	}
 }

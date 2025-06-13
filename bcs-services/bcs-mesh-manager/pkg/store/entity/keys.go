@@ -17,6 +17,7 @@ const (
 	// Basic mesh information
 	FieldKeyMeshID     = "meshID"
 	FieldKeyMeshName   = "meshName"
+	FieldKeyNetworkID  = "networkID"
 	FieldKeyStatus     = "status"
 	FieldKeyCreateTime = "createTime"
 	FieldKeyUpdateTime = "updateTime"
