@@ -30,7 +30,7 @@ func NewBCSProjectPermClient(cli iam.PermClient) *BCSProjectPerm {
 }
 
 // CanCreateProject check user createProject perm
-func (bpp *BCSProjectPerm) CanCreateProject(user utils.UserInfo) (bool, string, []utils.ResourceAction, error) {
+func (bpp *BCSProjectPerm) CanCreateProject(user string) (bool, string, []utils.ResourceAction, error) {
 	if bpp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -38,8 +38,7 @@ func (bpp *BCSProjectPerm) CanCreateProject(user utils.UserInfo) (bool, string, 
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 
 	allow, err := bpp.iamClient.IsAllowedWithoutResource(ProjectCreate.String(), req, false)
@@ -63,7 +62,7 @@ func (bpp *BCSProjectPerm) CanCreateProject(user utils.UserInfo) (bool, string, 
 }
 
 // CanEditProject check user manageCluster perm
-func (bpp *BCSProjectPerm) CanEditProject(user utils.UserInfo, projectID string) (bool, string, []utils.ResourceAction, error) {
+func (bpp *BCSProjectPerm) CanEditProject(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
 	if bpp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -77,8 +76,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user utils.UserInfo, projectID string)
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{ProjectEdit.String(), ProjectView.String()}
 	projectNode := ProjectResourceNode{
@@ -93,7 +91,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user utils.UserInfo, projectID string)
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSProjectModule,
 		Operation: CanEditProjectOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -112,7 +110,7 @@ func (bpp *BCSProjectPerm) CanEditProject(user utils.UserInfo, projectID string)
 }
 
 // CanDeleteProject check user deleteProject perm
-func (bpp *BCSProjectPerm) CanDeleteProject(user utils.UserInfo, projectID string) (bool, string,
+func (bpp *BCSProjectPerm) CanDeleteProject(user string, projectID string) (bool, string,
 	[]utils.ResourceAction, error) {
 	if bpp == nil {
 		return false, "", nil, utils.ErrServerNotInited
@@ -127,8 +125,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user utils.UserInfo, projectID strin
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{ProjectDelete.String(), ProjectView.String()}
 	projectNode := ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
@@ -142,7 +139,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user utils.UserInfo, projectID strin
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSProjectModule,
 		Operation: CanDeleteProjectOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 
 	if err != nil {
@@ -161,7 +158,7 @@ func (bpp *BCSProjectPerm) CanDeleteProject(user utils.UserInfo, projectID strin
 }
 
 // CanViewProject check user viewProject perm
-func (bpp *BCSProjectPerm) CanViewProject(user utils.UserInfo, projectID string) (bool, string, []utils.ResourceAction, error) {
+func (bpp *BCSProjectPerm) CanViewProject(user string, projectID string) (bool, string, []utils.ResourceAction, error) {
 	if bpp == nil {
 		return false, "", nil, utils.ErrServerNotInited
 	}
@@ -174,8 +171,7 @@ func (bpp *BCSProjectPerm) CanViewProject(user utils.UserInfo, projectID string)
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{ProjectView.String()}
 	projectNode := ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.BuildResourceNodes()
@@ -189,7 +185,7 @@ func (bpp *BCSProjectPerm) CanViewProject(user utils.UserInfo, projectID string)
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSProjectModule,
 		Operation: CanViewProjectOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 
 	if err != nil {
@@ -229,8 +225,8 @@ func (bpp *BCSProjectPerm) GenerateIAMApplicationURL(systemID string, applicatio
 }
 
 // GetProjectMultiActionPermission only support same instanceSelection
-func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user utils.UserInfo, projectID string,
-	actionIDs []string) (map[string]bool, error) {
+func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user, projectID string, actionIDs []string) (map[string]bool,
+	error) {
 	if bpp == nil {
 		return nil, utils.ErrServerNotInited
 	}
@@ -241,12 +237,11 @@ func (bpp *BCSProjectPerm) GetProjectMultiActionPermission(user utils.UserInfo, 
 
 	return bpp.iamClient.ResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId()}, projectNode)
+		UserName: user}, projectNode)
 }
 
 // GetMultiProjectMultiActionPerm only support same instanceSelection
-func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPerm(user utils.UserInfo, projectIDs,
+func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPerm(user string, projectIDs,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bpp == nil {
 		return nil, utils.ErrServerNotInited
@@ -262,6 +257,5 @@ func (bpp *BCSProjectPerm) GetMultiProjectMultiActionPerm(user utils.UserInfo, p
 
 	return bpp.iamClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId()}, resourceNodes)
+		UserName: user}, resourceNodes)
 }

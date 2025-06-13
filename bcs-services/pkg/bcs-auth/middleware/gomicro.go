@@ -18,8 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
-
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"go-micro.dev/v4/metadata"
 	"go-micro.dev/v4/server"
@@ -29,7 +27,7 @@ import (
 type GoMicroAuth struct {
 	skipHandler   func(ctx context.Context, req server.Request) bool
 	exemptClient  func(ctx context.Context, req server.Request, client string) bool
-	checkUserPerm func(ctx context.Context, req server.Request, user utils.UserInfo) (bool, error)
+	checkUserPerm func(ctx context.Context, req server.Request, username string) (bool, error)
 	jwtClient     *jwt.JWTClient
 }
 
@@ -55,7 +53,7 @@ func (g *GoMicroAuth) EnableSkipClient(exemptClient func(ctx context.Context, re
 
 // SetCheckUserPerm set check user permission function
 func (g *GoMicroAuth) SetCheckUserPerm(checkUserPerm func(ctx context.Context,
-	req server.Request, user utils.UserInfo) (bool, error)) *GoMicroAuth {
+	req server.Request, username string) (bool, error)) *GoMicroAuth {
 	g.checkUserPerm = checkUserPerm
 	return g
 }
@@ -139,10 +137,7 @@ func (g *GoMicroAuth) AuthorizationFunc(fn server.HandlerFunc) server.HandlerFun
 			return errors.New("username & clientName is empty")
 		}
 
-		if allow, errLocal := g.checkUserPerm(ctx, req, utils.UserInfo{
-			TenantId:   authUser.TenantId,
-			BkUserName: authUser.Username,
-		}); errLocal != nil {
+		if allow, errLocal := g.checkUserPerm(ctx, req, authUser.GetUsername()); errLocal != nil {
 			return errLocal
 		} else if !allow {
 			return errors.New("user not authorized")

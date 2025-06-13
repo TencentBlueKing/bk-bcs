@@ -35,7 +35,7 @@ func NewBCSAccountPermClient(cli iam.PermClient) *BCSCloudAccountPerm {
 }
 
 // CanCreateCloudAccount check user createCloudAccount perm
-func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user utils.UserInfo, projectID string) (bool, string, error) {
+func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user string, projectID string) (bool, string, error) {
 	if bcp == nil {
 		return false, "", utils.ErrServerNotInited
 	}
@@ -49,8 +49,7 @@ func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user utils.UserInfo, proje
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{AccountCreate.String(), project.ProjectView.String()}
 	accountNode := AccountResourceNode{
@@ -71,7 +70,7 @@ func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user utils.UserInfo, proje
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSCloudAccountModule,
 		Operation: CanCreateCloudAccountOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", err
@@ -103,7 +102,7 @@ func (bcp *BCSCloudAccountPerm) CanCreateCloudAccount(user utils.UserInfo, proje
 }
 
 // CanManageCloudAccount check user manageAccount perm
-func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user utils.UserInfo, projectID string, accountID string) (bool, string,
+func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user string, projectID string, accountID string) (bool, string,
 	error) {
 	if bcp == nil {
 		return false, "", utils.ErrServerNotInited
@@ -118,8 +117,7 @@ func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user utils.UserInfo, proje
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{AccountManage.String(), project.ProjectView.String()}
 	accountNode := AccountResourceNode{
@@ -137,7 +135,7 @@ func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user utils.UserInfo, proje
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSCloudAccountModule,
 		Operation: CanManageCloudAccountOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", err
@@ -169,7 +167,7 @@ func (bcp *BCSCloudAccountPerm) CanManageCloudAccount(user utils.UserInfo, proje
 }
 
 // CanUseCloudAccount check user use cloudAccount perm
-func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user utils.UserInfo, projectID string, accountID string) (bool, string,
+func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user string, projectID string, accountID string) (bool, string,
 	error) {
 	if bcp == nil {
 		return false, "", utils.ErrServerNotInited
@@ -184,8 +182,7 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user utils.UserInfo, projectI
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{AccountUse.String(), project.ProjectView.String()}
 	accountNode := AccountResourceNode{
@@ -203,7 +200,7 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user utils.UserInfo, projectI
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSCloudAccountModule,
 		Operation: CanUseCloudAccountOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", err
@@ -235,13 +232,13 @@ func (bcp *BCSCloudAccountPerm) CanUseCloudAccount(user utils.UserInfo, projectI
 }
 
 // AuthorizeResourceCreatorPerm 授予资源创建者关联权限(https://bk.tencent.com/docs/document/6.1/229/23026)
-func (bcp *BCSCloudAccountPerm) AuthorizeResourceCreatorPerm(creator utils.UserInfo, resource utils.ResourceInfo,
+func (bcp *BCSCloudAccountPerm) AuthorizeResourceCreatorPerm(creator string, resource utils.ResourceInfo,
 	opts ...utils.AuthorizeCreatorOption) error {
 	if bcp == nil {
 		return utils.ErrServerNotInited
 	}
 
-	if len(creator.BkUserName) == 0 || resource.Validate() != nil {
+	if len(creator) == 0 || resource.Validate() != nil {
 		return fmt.Errorf("BCSCloudAccountPerm AuthorizeResourceCreatorPerm paras empty")
 	}
 
@@ -256,25 +253,23 @@ func (bcp *BCSCloudAccountPerm) AuthorizeResourceCreatorPerm(creator utils.UserI
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	err := bcp.iamClient.AuthResourceCreatorPerm(ctx, iam.ResourceCreator{
-		Creator:      creator.GetBKUserName(),
+		Creator:      creator,
 		ResourceType: resource.Type,
 		ResourceID:   resource.ID,
 		ResourceName: resource.Name,
-		TenantId:     creator.GetTenantId(),
 	}, options.Ancestors)
 	if err != nil {
-		blog.Errorf("BCSCloudAccountPerm AuthResourceCreatorPerm[%s] [%s:%s] failed: %v", creator,
+		blog.Errorf("BCSCloudAccountPerm AuthResourceCreatorPerm[%s:%s:%s] failed: %v", creator,
 			resource.ID, resource.Name, err)
 		return err
 	}
 
-	blog.Infof("BCSCloudAccountPerm AuthResourceCreatorPerm successful[%s] [%s:%s]",
-		creator, resource.ID, resource.Name)
+	blog.Infof("BCSCloudAccountPerm AuthResourceCreatorPerm successful[%s:%s:%s]", creator, resource.ID, resource.Name)
 	return nil
 }
 
 // GetMultiAccountMultiActionPerm only support same instanceSelection
-func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPerm(user utils.UserInfo, projectID string, accountIDs []string,
+func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPerm(user, projectID string, accountIDs []string,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bcp == nil {
 		return nil, utils.ErrServerNotInited
@@ -290,9 +285,7 @@ func (bcp *BCSCloudAccountPerm) GetMultiAccountMultiActionPerm(user utils.UserIn
 
 	return bcp.iamClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
-	}, resourceNodes)
+		UserName: user}, resourceNodes)
 }
 
 // GenerateIAMApplicationURL build permission URL

@@ -48,10 +48,10 @@ type PermClient interface {
 	// perm management API
 	CreateGradeManagers(ctx context.Context, request GradeManagerRequest) (uint64, error)
 	CreateUserGroup(ctx context.Context, gradeManagerID uint64, request CreateUserGroupRequest) ([]uint64, error)
-	DeleteUserGroup(ctx context.Context, tenantId string, groupID uint64) error
-	AddUserGroupMembers(ctx context.Context, tenantId string, groupID uint64, request AddGroupMemberRequest) error
-	DeleteUserGroupMembers(ctx context.Context, tenantId string, groupID uint64, request DeleteGroupMemberRequest) error
-	CreateUserGroupPolicies(ctx context.Context, tenantId string, groupID uint64, request AuthorizationScope) error
+	DeleteUserGroup(ctx context.Context, groupID uint64) error
+	AddUserGroupMembers(ctx context.Context, groupID uint64, request AddGroupMemberRequest) error
+	DeleteUserGroupMembers(ctx context.Context, groupID uint64, request DeleteGroupMemberRequest) error
+	CreateUserGroupPolicies(ctx context.Context, groupID uint64, request AuthorizationScope) error
 	AuthResourceCreatorPerm(ctx context.Context, resource ResourceCreator, ancestors []Ancestor) error
 }
 
@@ -87,6 +87,8 @@ type Options struct {
 	Metric bool
 	// Debug
 	Debug bool
+	// TenantId tenant id
+	TenantId string
 }
 
 func (opt *Options) validate() error {
@@ -103,6 +105,9 @@ func (opt *Options) validate() error {
 	}
 	if opt.External && (opt.BkiIAMHost == "" || opt.IAMHost == "") {
 		return fmt.Errorf("BKIAMHost and BKPAASHost required when UseGateway flag set to false")
+	}
+	if opt.TenantId == "" {
+		opt.TenantId = "default"
 	}
 
 	return nil
@@ -149,10 +154,11 @@ func NewIamClient(opt *Options) (PermClient, error) {
 
 	if opt.External {
 		// true directCAll + ESB API
-		client.cli = iam.NewIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.IAMHost, opt.BkiIAMHost)
+		client.cli = iam.NewIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.GateWayHost)
 	} else {
 		// false APIGW
-		client.cli = iam.NewAPIGatewayIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.GateWayHost)
+		client.cli = iam.NewAPIGatewayIAM(opt.SystemID, opt.AppCode, opt.AppSecret,
+			opt.GateWayHost, iam.WithBkTenantID(opt.TenantId))
 	}
 
 	// init IAM logger
@@ -179,10 +185,12 @@ func NewIamMigrateClient(opt *Options) (PermMigrateClient, error) {
 
 	if opt.External {
 		// true directCAll + ESB API
-		client.cli = iam.NewIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.IAMHost, opt.BkiIAMHost)
+		client.cli = iam.NewIAM(opt.SystemID, opt.AppCode, opt.AppSecret,
+			opt.GateWayHost, iam.WithBkTenantID(opt.TenantId))
 	} else {
 		// false APIGW
-		client.cli = iam.NewAPIGatewayIAM(opt.SystemID, opt.AppCode, opt.AppSecret, opt.GateWayHost)
+		client.cli = iam.NewAPIGatewayIAM(opt.SystemID, opt.AppCode, opt.AppSecret,
+			opt.GateWayHost, iam.WithBkTenantID(opt.TenantId))
 	}
 
 	// init IAM logger
@@ -334,15 +342,15 @@ func (ic *iamClient) IsBasicAuthAllowed(user BkUser) error {
 }
 
 // GetApplyURL will generate the application URL
-func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction, user BkUser) (string,
-	error) {
+func (ic *iamClient) GetApplyURL(request ApplicationRequest, relatedResources []ApplicationAction,
+	user BkUser) (string, error) {
 	if ic == nil {
 		return "", ErrServerNotInit
 	}
 
 	application := request.BuildApplication(relatedResources)
 
-	url, err := ic.cli.GetApplyURL(application, user.BkToken, user.BkUserName)
+	url, err := ic.cli.GetApplyURL(application)
 	if err != nil {
 		klog.Errorf("iam generate apply url failed: %s", err)
 		return IamAppURL, err
@@ -380,7 +388,6 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, request.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -431,7 +438,6 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, request.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -451,7 +457,7 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 }
 
 // DeleteUserGroup delete userGroup
-func (ic *iamClient) DeleteUserGroup(ctx context.Context, tenantId string, groupID uint64) error {
+func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error {
 	if ic == nil {
 		return ErrServerNotInit
 	}
@@ -478,7 +484,6 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, tenantId string, group
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, tenantId).
 		SetDebug(true).
 		EndStruct(resp)
 
@@ -497,8 +502,7 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, tenantId string, group
 }
 
 // AddUserGroupMembers add user group members
-func (ic *iamClient) AddUserGroupMembers(ctx context.Context, tenantId string,
-	groupID uint64, request AddGroupMemberRequest) error {
+func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, request AddGroupMemberRequest) error {
 	if ic == nil {
 		return ErrServerNotInit
 	}
@@ -525,7 +529,6 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, tenantId string,
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, tenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -545,7 +548,7 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, tenantId string,
 }
 
 // DeleteUserGroupMembers delete user group members
-func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, tenantId string, groupID uint64,
+func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
 	request DeleteGroupMemberRequest) error {
 	if ic == nil {
 		return ErrServerNotInit
@@ -581,7 +584,6 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, tenantId string
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, tenantId).
 		SetDebug(true).
 		EndStruct(resp)
 
@@ -600,8 +602,7 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, tenantId string
 }
 
 // CreateUserGroupPolicies create group policies
-func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, tenantId string,
-	groupID uint64, request AuthorizationScope) error {
+func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64, request AuthorizationScope) error {
 	if ic == nil {
 		return ErrServerNotInit
 	}
@@ -628,7 +629,6 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, tenantId strin
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, tenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -674,7 +674,6 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
-		Set(HeaderTenantId, resource.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)

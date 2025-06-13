@@ -45,7 +45,7 @@ func (bnp *BCSNamespacePerm) GenerateIAMApplicationURL(systemID string, applicat
 }
 
 // CanCreateNamespace check user createNamespace perm
-func (bnp *BCSNamespacePerm) CanCreateNamespace(user utils.UserInfo,
+func (bnp *BCSNamespacePerm) CanCreateNamespace(user,
 	projectID, clusterID string, isSharedCluster bool) (bool, string, []utils.ResourceAction, error) {
 	// related actions
 	resources := []utils.ResourceAction{
@@ -56,8 +56,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user utils.UserInfo,
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceCreate.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -87,7 +86,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user utils.UserInfo,
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanCreateNamespaceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -128,7 +127,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespace(user utils.UserInfo,
 }
 
 // CanViewNamespace check user viewNamespace perm
-func (bnp *BCSNamespacePerm) CanViewNamespace(user utils.UserInfo,
+func (bnp *BCSNamespacePerm) CanViewNamespace(user,
 	projectID, clusterID, namespace string, isSharedCluster bool) (bool, string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
@@ -140,8 +139,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespace(user utils.UserInfo,
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceView.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -170,7 +168,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespace(user utils.UserInfo,
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanViewNamespaceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -210,7 +208,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespace(user utils.UserInfo,
 }
 
 // CanListNamespace check user listNamespace perm
-func (bnp *BCSNamespacePerm) CanListNamespace(user utils.UserInfo,
+func (bnp *BCSNamespacePerm) CanListNamespace(user,
 	projectID, clusterID string, isSharedCluster bool) (bool, string, []utils.ResourceAction, error) {
 	// related actions
 	resources := []utils.ResourceAction{
@@ -221,8 +219,7 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user utils.UserInfo,
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceList.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -252,7 +249,7 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user utils.UserInfo,
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanListNamespaceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -290,7 +287,7 @@ func (bnp *BCSNamespacePerm) CanListNamespace(user utils.UserInfo,
 }
 
 // CanUpdateNamespace check user updateNamespace perm
-func (bnp *BCSNamespacePerm) CanUpdateNamespace(user utils.UserInfo,
+func (bnp *BCSNamespacePerm) CanUpdateNamespace(user,
 	projectID, clusterID, namespace string, isSharedCluster bool) (bool, string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
@@ -302,8 +299,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user utils.UserInfo,
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceUpdate.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -332,7 +328,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user utils.UserInfo,
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanUpdateNamespaceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -372,7 +368,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespace(user utils.UserInfo,
 }
 
 // CanDeleteNamespace check user deleteNamespace perm
-func (bnp *BCSNamespacePerm) CanDeleteNamespace(user utils.UserInfo,
+func (bnp *BCSNamespacePerm) CanDeleteNamespace(user,
 	projectID, clusterID, namespace string, isSharedCluster bool) (bool, string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
@@ -384,8 +380,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user utils.UserInfo,
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), NameSpaceDelete.String()}
 	projectNode := project.ProjectResourceNode{SystemID: iam.SystemIDBKBCS, ProjectID: projectID}.
@@ -414,7 +409,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user utils.UserInfo,
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanDeleteNamespaceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -454,8 +449,8 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespace(user utils.UserInfo,
 }
 
 // CanCreateNamespaceScopedResource check user createNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user utils.UserInfo, projectID, clusterID,
-	namespace string) (bool, string, []utils.ResourceAction, error) {
+func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -468,8 +463,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user utils.UserInf
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceView.String(),
 		NameSpaceScopedCreate.String(),
@@ -497,7 +491,7 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user utils.UserInf
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanCreateNamespaceScopedResourceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -532,8 +526,8 @@ func (bnp *BCSNamespacePerm) CanCreateNamespaceScopedResource(user utils.UserInf
 }
 
 // CanViewNamespaceScopedResource check user viewNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user utils.UserInfo, projectID, clusterID,
-	namespace string) (bool, string, []utils.ResourceAction, error) {
+func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -546,8 +540,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user utils.UserInfo,
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceView.String(),
 		NameSpaceScopedView.String(),
@@ -575,7 +568,7 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user utils.UserInfo,
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanViewNamespaceScopedResourceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -612,8 +605,8 @@ func (bnp *BCSNamespacePerm) CanViewNamespaceScopedResource(user utils.UserInfo,
 }
 
 // CanUpdateNamespaceScopedResource check user updateNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user utils.UserInfo, projectID, clusterID,
-	namespace string) (bool, string, []utils.ResourceAction, error) {
+func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -626,8 +619,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user utils.UserInf
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceView.String(),
 		NameSpaceScopedUpdate.String(),
@@ -655,7 +647,7 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user utils.UserInf
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanUpdateNamespaceScopedResourceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -692,8 +684,8 @@ func (bnp *BCSNamespacePerm) CanUpdateNamespaceScopedResource(user utils.UserInf
 }
 
 // CanDeleteNamespaceScopedResource check user deleteNamespaceScopedResource perm
-func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user utils.UserInfo, projectID, clusterID,
-	namespace string) (bool, string, []utils.ResourceAction, error) {
+func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user, projectID, clusterID, namespace string) (bool,
+	string, []utils.ResourceAction, error) {
 	namespaceID := utils.CalcIAMNsID(clusterID, namespace)
 	// related actions
 	resources := []utils.ResourceAction{
@@ -706,8 +698,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user utils.UserInf
 	// build request iam.request resourceNodes
 	req := iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId(),
+		UserName: user,
 	}
 	relatedActionIDs := []string{project.ProjectView.String(), cluster.ClusterView.String(), NameSpaceView.String(),
 		NameSpaceScopedDelete.String(),
@@ -735,7 +726,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user utils.UserInf
 	allow, err := utils.CheckResourcePerms(utils.CheckResourceRequest{
 		Module:    BCSNamespaceModule,
 		Operation: CanDeleteNamespaceScopedResourceOperation,
-		User:      user.GetBKUserName(),
+		User:      user,
 	}, resources, perms)
 	if err != nil {
 		return false, "", nil, err
@@ -770,7 +761,7 @@ func (bnp *BCSNamespacePerm) CanDeleteNamespaceScopedResource(user utils.UserInf
 }
 
 // GetMultiNamespaceMultiActionPerm only support same instanceSelection
-func (bnp *BCSNamespacePerm) GetMultiNamespaceMultiActionPerm(user utils.UserInfo, namespaces []ProjectNamespaceData,
+func (bnp *BCSNamespacePerm) GetMultiNamespaceMultiActionPerm(user string, namespaces []ProjectNamespaceData,
 	actionIDs []string) (map[string]map[string]bool, error) {
 	if bnp == nil {
 		return nil, utils.ErrServerNotInited
@@ -791,6 +782,5 @@ func (bnp *BCSNamespacePerm) GetMultiNamespaceMultiActionPerm(user utils.UserInf
 
 	return bnp.iamClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
-		UserName: user.GetBKUserName(),
-		TenantId: user.GetTenantId()}, resourceNodes)
+		UserName: user}, resourceNodes)
 }
