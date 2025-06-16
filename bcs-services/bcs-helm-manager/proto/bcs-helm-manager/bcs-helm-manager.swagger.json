@@ -278,6 +278,61 @@
         ]
       }
     },
+    "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview": {
+      "post": {
+        "summary": "预览更新集群组件",
+        "description": "预览更新集群组件",
+        "operationId": "ClusterAddons_PreviewAddons",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/helmmanagerReleasePreviewResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "projectCode",
+            "description": "项目代码",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clusterID",
+            "description": "所在的集群ID",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "description": "组件名称",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/helmmanagerPreviewAddonsReq"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterAddons"
+        ]
+      }
+    },
     "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop": {
       "put": {
         "summary": "停止集群组件运行",
@@ -3391,6 +3446,37 @@
       },
       "description": "获取仓库列表的返回",
       "title": "ListRepositoryResp"
+    },
+    "helmmanagerPreviewAddonsReq": {
+      "type": "object",
+      "properties": {
+        "projectCode": {
+          "type": "string",
+          "description": "项目代码",
+          "title": "projectCode"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "所在的集群ID",
+          "title": "clusterID"
+        },
+        "name": {
+          "type": "string",
+          "description": "组件名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "组件版本",
+          "title": "version"
+        },
+        "values": {
+          "type": "string",
+          "description": "values",
+          "title": "values"
+        }
+      },
+      "title": "PreviewAddonsReq"
     },
     "helmmanagerRelease": {
       "type": "object",

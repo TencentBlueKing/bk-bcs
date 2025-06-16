@@ -41,6 +41,7 @@ export interface ICluster {
   }
   master: any
   provider: CloudID,
+  projectID: string
   clusterBasicSettings: any
   environment: 'stag'|'debug'|'prod'
   extraInfo?: Record<string, any>

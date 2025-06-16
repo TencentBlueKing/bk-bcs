@@ -82,7 +82,9 @@ func WebAuthRequired() gin.HandlerFunc {
 		}
 		c.Set("auth_context", authCtx)
 
-		c.Request = c.Request.WithContext(components.WithRequestIDValue(c.Request.Context(), authCtx.RequestId))
+		// 新增泳道特性
+		ctx := types.WithLaneIdCtx(c.Request.Context(), c.Request.Header)
+		c.Request = c.Request.WithContext(components.WithRequestIDValue(ctx, authCtx.RequestId))
 
 		c.Next()
 	}
@@ -97,7 +99,9 @@ func APIAuthRequired() gin.HandlerFunc {
 		}
 		c.Set("auth_context", authCtx)
 
-		c.Request = c.Request.WithContext(components.WithRequestIDValue(c.Request.Context(), authCtx.RequestId))
+		// 新增泳道特性
+		ctx := types.WithLaneIdCtx(c.Request.Context(), c.Request.Header)
+		c.Request = c.Request.WithContext(components.WithRequestIDValue(ctx, authCtx.RequestId))
 
 		if c.Request.Method == http.MethodOptions {
 			c.Next()

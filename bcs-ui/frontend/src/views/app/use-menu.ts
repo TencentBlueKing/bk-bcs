@@ -126,6 +126,15 @@ export default function useMenu() {
           icon: 'bcs-icon-zy-resource',
           children: [
             {
+              title: 'BscpConfigs',
+              route: 'dashboardConfigsBscpConfigs',
+              id: 'BSCPCONFIG',
+              meta: {
+                kind: 'BscpConfig',
+              },
+              tag: 'NEW',
+            },
+            {
               title: 'ConfigMaps',
               route: 'dashboardConfigsConfigMaps',
               id: 'CONFIGMAP',
@@ -143,6 +152,7 @@ export default function useMenu() {
             },
           ],
           id: 'CONFIGURATION',
+          tag: 'NEW',
         },
         {
           title: $i18n.t('nav.storage'),

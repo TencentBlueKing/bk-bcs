@@ -171,7 +171,7 @@ func (p *ProjectHandler) ListAuthorizedProjects(ctx context.Context,
 			setListPermsResp(resp, projects, perms)
 		}
 	} else {
-		// list all authorized projects, so no need to set web_annotation
+		// list only authorized projects, so no need to set web_annotation
 		setListResp(resp, projects)
 	}
 	projutil.PatchBusinessName(resp.Data.Results)

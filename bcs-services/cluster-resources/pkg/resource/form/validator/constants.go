@@ -33,8 +33,9 @@ var FormSupportedResAPIVersion = map[string][]string{
 	resCsts.PVC: {"v1"},
 	resCsts.SC:  {"storage.k8s.io/v1"},
 	// 配置类
-	resCsts.CM:     {"v1"},
-	resCsts.Secret: {"v1"},
+	resCsts.CM:         {"v1"},
+	resCsts.Secret:     {"v1"},
+	resCsts.BscpConfig: {"bk.tencent.com/v1alpha1"},
 	// 自定义资源
 	resCsts.GDeploy:  {"tkex.tencent.com/v1alpha1"},
 	resCsts.HookTmpl: {"tkex.tencent.com/v1alpha1"},
@@ -42,4 +43,4 @@ var FormSupportedResAPIVersion = map[string][]string{
 }
 
 // FormSupportedCObjKinds 支持表单化的自定义资源
-var FormSupportedCObjKinds = []string{resCsts.GDeploy, resCsts.HookTmpl, resCsts.GSTS}
+var FormSupportedCObjKinds = []string{resCsts.GDeploy, resCsts.HookTmpl, resCsts.GSTS, resCsts.BscpConfig}

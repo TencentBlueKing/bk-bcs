@@ -23,6 +23,8 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/apiserver/pkg/util/webhook"
+	corevalidation "k8s.io/kubernetes/pkg/apis/core/v1/validation"
+	apivalidation "k8s.io/kubernetes/pkg/apis/core/validation"
 
 	autoscaling "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 )
@@ -122,34 +124,34 @@ func ValidateHorizontalPodAutoscaler(autoscaler *autoscaling.GeneralPodAutoscale
 
 	// MinReplicasLowerBound represents a minimum value for minReplicas
 	// 0 when GPA scale-to-zero feature is enabled
-	var minReplicasLowerBound int32
+	var minReplicasLowerBound int32 = 0
 
 	allErrs = append(allErrs, validateHorizontalPodAutoscalerSpec(autoscaler.Spec, field.NewPath("spec"),
 		minReplicasLowerBound)...)
 	return allErrs
 }
 
-// ValidateHorizontalPodAU 原方法名 ValidateHorizontalPodAutoscalerUpdate
-//
-// ValidateHorizontalPodAU validates an update to a HorizontalPodAutoscaler and returns an
+// ValidateHorizontalPodAutoscalerUpdate validates an update to a HorizontalPodAutoscaler and returns an
 // ErrorList with any errors.
-func ValidateHorizontalPodAU(newAutoscaler, oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
+// NOCC:tosa/fn_length(设计如此)
+func ValidateHorizontalPodAutoscalerUpdate(newAutoscaler,
+	oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
 	allErrs := apimachineryvalidation.ValidateObjectMetaUpdate(&newAutoscaler.ObjectMeta, &oldAutoscaler.ObjectMeta,
 		field.NewPath("metadata"))
 
 	// minReplicasLowerBound represents a minimum value for minReplicas
 	// 0 when GPA scale-to-zero feature is enabled or GPA object already has minReplicas=0
-	var minReplicasLowerBound int32
+	var minReplicasLowerBound int32 = 0
 	allErrs = append(allErrs, validateHorizontalPodAutoscalerSpec(newAutoscaler.Spec, field.NewPath("spec"),
 		minReplicasLowerBound)...)
 	return allErrs
 }
 
-// ValidateHorizontalPodASU 原方法名 ValidateHorizontalPodAutoscalerStatusUpdate
-//
-// ValidateHorizontalPodASU validates an update to status on a HorizontalPodAutoscaler and
+// ValidateHorizontalPodAutoscalerStatusUpdate validates an update to status on a HorizontalPodAutoscaler and
 // returns an ErrorList with any errors.
-func ValidateHorizontalPodASU(newAutoscaler, oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
+// NOCC:tosa/fn_length(设计如此)
+func ValidateHorizontalPodAutoscalerStatusUpdate(newAutoscaler,
+	oldAutoscaler *autoscaling.GeneralPodAutoscaler) field.ErrorList {
 	allErrs := apimachineryvalidation.ValidateObjectMetaUpdate(&newAutoscaler.ObjectMeta, &oldAutoscaler.ObjectMeta,
 		field.NewPath("metadata"))
 	status := newAutoscaler.Status
@@ -194,11 +196,11 @@ func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field
 	allErrs := field.ErrorList{}
 	if wc == nil { // nolint
 		allErrs = append(allErrs, field.Forbidden(fldPath, "webhook config should not be empty"))
+		return allErrs
 	}
 	switch {
 	case wc.Service == nil && wc.URL == nil: // nolint
 		allErrs = append(allErrs, field.Forbidden(fldPath, "must specify at least one service or url"))
-
 	case wc.URL != nil:
 		allErrs = append(allErrs, webhook.ValidateWebhookURL(fldPath.Child("url"), *wc.URL, false)...)
 	case wc.Service != nil:
@@ -207,8 +209,7 @@ func validateWebhook(wc *v1beta1.WebhookClientConfig, fldPath *field.Path) field
 			port = *wc.Service.Port
 		}
 		allErrs = append(allErrs, webhook.ValidateWebhookService(fldPath.Child("service"), wc.Service.Namespace,
-			wc.Service.Name,
-			wc.Service.Path, port)...)
+			wc.Service.Name, wc.Service.Path, port)...)
 	}
 	return allErrs
 }
@@ -374,6 +375,30 @@ func validateMetricSpec(spec autoscaling.MetricSpec, fldPath *field.Path) field.
 		}
 	}
 
+	if spec.ContainerResource != nil {
+		typesPresent.Insert("containerResource")
+		if typesPresent.Len() == 1 {
+			allErrs = append(allErrs, validateContainerResourceSource(spec.ContainerResource,
+				fldPath.Child("containerResource"))...)
+		}
+	}
+
+	expectedField, errs := validateSourceType(spec, fldPath)
+	allErrs = append(allErrs, errs...)
+
+	if typesPresent.Len() != 1 {
+		typesPresent.Delete(expectedField)
+		for typ := range typesPresent {
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child(typ), "must populate the given metric source only"))
+		}
+	}
+
+	return allErrs
+}
+
+func validateSourceType(spec autoscaling.MetricSpec, fldPath *field.Path) (string, field.ErrorList) {
+	allErrs := field.ErrorList{}
+
 	var expectedField string
 	switch spec.Type {
 
@@ -411,14 +436,7 @@ func validateMetricSpec(spec autoscaling.MetricSpec, fldPath *field.Path) field.
 		allErrs = append(allErrs, field.NotSupported(fldPath.Child("type"), spec.Type, validMetricSourceTypesList))
 	}
 
-	if typesPresent.Len() != 1 {
-		typesPresent.Delete(expectedField)
-		for typ := range typesPresent {
-			allErrs = append(allErrs, field.Forbidden(fldPath.Child(typ), "must populate the given metric source only"))
-		}
-	}
-
-	return allErrs
+	return expectedField, allErrs
 }
 
 // validateObjectSource validates object resource and returns an ErrorList with any errors.
@@ -479,6 +497,37 @@ func validateResourceSource(src *autoscaling.ResourceMetricSource, fldPath *fiel
 
 	if len(src.Name) == 0 {
 		allErrs = append(allErrs, field.Required(fldPath.Child("name"), "must specify a resource name"))
+	}
+
+	allErrs = append(allErrs, validateMetricTarget(src.Target, fldPath.Child("target"))...)
+
+	if src.Target.AverageUtilization == nil && src.Target.AverageValue == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("target").Child("averageUtilization"),
+			"must set either a target raw value or a target utilization"))
+	}
+
+	if src.Target.AverageUtilization != nil && src.Target.AverageValue != nil {
+		allErrs = append(allErrs, field.Forbidden(fldPath.Child("target").Child("averageValue"),
+			"may not set both a target raw value and a target utilization"))
+	}
+
+	return allErrs
+}
+
+func validateContainerResourceSource(src *autoscaling.ContainerResourceMetricSource,
+	fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if len(src.Name) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("name"), "must specify a resource name"))
+	} else {
+		allErrs = append(allErrs, corevalidation.ValidateContainerResourceName(string(src.Name), fldPath.Child("name"))...)
+	}
+
+	if len(src.Container) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath.Child("container"), "must specify a container"))
+	} else {
+		allErrs = append(allErrs, apivalidation.ValidateDNS1123Label(src.Container, fldPath.Child("container"))...)
 	}
 
 	allErrs = append(allErrs, validateMetricTarget(src.Target, fldPath.Child("target"))...)

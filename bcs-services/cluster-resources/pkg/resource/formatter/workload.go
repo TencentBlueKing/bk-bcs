@@ -38,6 +38,14 @@ func FormatWorkloadRes(manifest map[string]interface{}) map[string]interface{} {
 	return ret
 }
 
+// FormatControllerRevisionRes xxx
+func FormatControllerRevisionRes(manifest map[string]interface{}) map[string]interface{} {
+	ret := CommonFormatRes(manifest)
+	ret["images"] = parseContainerImages(manifest, "data.spec.template.spec.containers")
+	ret["resources"] = parseContainersResources(manifest, "data.spec.template.spec.containers")
+	return ret
+}
+
 // FormatDeploy xxx
 func FormatDeploy(manifest map[string]interface{}) map[string]interface{} {
 	ret := FormatWorkloadRes(manifest)

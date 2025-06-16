@@ -117,12 +117,17 @@ type MetricMode struct {
 	// If not set, the default metric will be set to 80% average CPU utilization.
 	// +optional
 	Metrics []MetricSpec `json:"metrics,omitempty" protobuf:"bytes,1,opt,name=metrics"`
+	// Priority is the priority of the metric mode, default is 0
+	// +kubebuilder:default=0
+	Proirity int32 `json:"priority,omitempty" protobuf:"varint,2,opt,name=priority"`
 }
 
 // EventMode is the event driven mode
 type EventMode struct {
 	// Triggers are thr event triggers
 	Triggers []ScaleTriggers `json:"triggers"`
+	// +kubebuilder:default=0
+	Proirity int32 `json:"priority,omitempty" protobuf:"varint,2,opt,name=priority"`
 }
 
 // ScaleTriggers reference the scaler that will be used
@@ -141,12 +146,16 @@ type WebhookMode struct {
 	*admregv1b.WebhookClientConfig `json:",inline"`
 	// Parameters are the webhook parameters
 	Parameters map[string]string `json:"parameters,omitempty" protobuf:"bytes,1,opt,name=parameters"`
+	// +kubebuilder:default=0
+	Proirity int32 `json:"priority,omitempty" protobuf:"varint,2,opt,name=priority"`
 }
 
 // TimeMode is a mode allows user to define a crontab regular
 type TimeMode struct {
 	// TimeRanges defines a array that for time driven mode
 	TimeRanges []TimeRange `json:"ranges,omitempty" protobuf:"bytes,1,opt,name=ranges"`
+	// +kubebuilder:default=0
+	Proirity int32 `json:"priority,omitempty" protobuf:"varint,2,opt,name=priority"`
 }
 
 // TimeRange is a mode allows user to define a crontab regular

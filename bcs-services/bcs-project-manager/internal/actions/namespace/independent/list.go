@@ -84,7 +84,7 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 		if creator, exists := ns.Annotations[constant.AnnotationKeyCreator]; exists {
 			managers = append(managers, creator)
 		} else {
-			cluster, err := clustermanager.GetCluster(req.ClusterID)
+			cluster, err := clustermanager.GetCluster(ctx, req.ClusterID)
 			if err != nil {
 				return err
 			}
@@ -95,7 +95,7 @@ func (c *IndependentNamespaceAction) ListNamespaces(ctx context.Context,
 	}
 	resp.Data = retDatas
 	go func() {
-		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), nsList.Items); err != nil {
+		if err := common.SyncNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), nsList.Items); err != nil {
 			logging.Error("sync namespaces %s/%s failed, err:%s",
 				req.GetProjectCode(), req.GetClusterID(), err.Error())
 		}

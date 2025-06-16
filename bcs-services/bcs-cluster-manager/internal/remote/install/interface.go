@@ -14,17 +14,18 @@
 package install
 
 import (
+	"context"
 	"time"
 )
 
 // Installer is the interface for app installer
 type Installer interface {
-	IsInstalled(clusterID string) (bool, error)
-	Install(clusterID, values string) error
-	Upgrade(clusterID, values string) error
-	Uninstall(clusterID string) error
+	IsInstalled(ctx context.Context, clusterID string) (bool, error)
+	Install(ctx context.Context, clusterID, values string) error
+	Upgrade(ctx context.Context, clusterID, values string) error
+	Uninstall(ctx context.Context, clusterID string) error
 	// CheckAppStatus check app status. pre:true 前置检查；pre:false 后置检查
-	CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error)
+	CheckAppStatus(ctx context.Context, clusterID string, timeout time.Duration, pre bool) (bool, error)
 	Close()
 }
 

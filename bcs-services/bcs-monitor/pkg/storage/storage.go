@@ -18,7 +18,9 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/logindex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage/logrule"
@@ -38,11 +40,18 @@ type Storage interface {
 	GetIndexSetID(ctx context.Context, projectID, clusterID string) (int, int, error)
 	CreateOldIndexSetID(ctx context.Context, logIndex *entity.LogIndex) error
 	GetOldIndexSetID(ctx context.Context, projectID string) (*entity.LogIndex, error)
+	// Audit operation
+	GetAudit(ctx context.Context, projectCode, clusterID string) (*entity.Audit, error)
+	CreateAudit(ctx context.Context, audit *entity.Audit) (primitive.ObjectID, error)
+	UpdateAudit(ctx context.Context, id string, audit entity.M) error
+	DeleteAudit(ctx context.Context, id string) error
+	FirstAuditOrCreate(ctx context.Context, audit *entity.Audit) (*entity.Audit, error)
 }
 
 type modelSet struct {
 	*logrule.ModelLogRule
 	*logindex.ModelLogIndex
+	*audit.ModelAudit
 }
 
 // New return a new ResourceManagerModel instance
@@ -50,5 +59,6 @@ func New(db drivers.DB) Storage {
 	return &modelSet{
 		ModelLogRule:  logrule.New(db),
 		ModelLogIndex: logindex.New(db),
+		ModelAudit:    audit.New(db),
 	}
 }

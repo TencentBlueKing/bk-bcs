@@ -23,6 +23,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // ListLogCollectors list log collectors
@@ -71,6 +72,7 @@ func ListLogCollectorsWithPath(ctx context.Context, clusterID, spaceUID string,
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetQueryParam("bcs_cluster_id", clusterID).
 		SetQueryParam("space_uid", spaceUID).
 		Get(url)
@@ -107,6 +109,7 @@ func CreateLogCollectors(ctx context.Context, req *CreateBCSCollectorReq) (*Crea
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(req).
 		Post(url)
 
@@ -143,6 +146,7 @@ func UpdateLogCollectors(ctx context.Context, ruleID int, req *UpdateBCSCollecto
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(req).
 		Post(url)
 
@@ -178,6 +182,7 @@ func DeleteLogCollectors(ctx context.Context, ruleID int) error {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Delete(url)
 
 	if err != nil {
@@ -212,6 +217,7 @@ func RetryLogCollectors(ctx context.Context, ruleID int, username string) error 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -246,6 +252,7 @@ func StartLogCollectors(ctx context.Context, ruleID int, username string) error 
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -280,6 +287,7 @@ func StopLogCollectors(ctx context.Context, ruleID int, username string) error {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		Post(url)
 
 	if err != nil {
@@ -314,6 +322,7 @@ func HasLog(ctx context.Context, indexSetID int) (bool, error) {
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(map[string]interface{}{"index_set_id": indexSetID}).
 		Post(url)
 
@@ -349,6 +358,7 @@ func GetStorageClusters(ctx context.Context, spaceUID string) ([]GetStorageClust
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetQueryParam("space_uid", spaceUID).
 		Get(url)
 
@@ -390,6 +400,7 @@ func SwitchStorage(ctx context.Context, spaceUID, bcsClusterID string, storageCl
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetBody(body).
 		Post(url)
 
@@ -425,6 +436,7 @@ func GetBcsCollectorStorage(ctx context.Context, spaceUID, clusterID string) (in
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetHeaders(utils.GetLaneIDByCtx(ctx)).
 		SetQueryParam("space_uid", spaceUID).
 		SetQueryParam("bcs_cluster_id", clusterID).
 		Get(url)
@@ -452,4 +464,74 @@ func GetBcsCollectorStorage(ctx context.Context, spaceUID, clusterID string) (in
 		return 0, nil
 	}
 	return int(data), nil
+}
+
+// DatabusCustomCreate create data id
+func DatabusCustomCreate(ctx context.Context, req *DatabusCustomCreateReq) (*DatabusCustomCreateRespData, error) {
+	url := fmt.Sprintf("%s/databus_custom_create", config.G.BKLog.APIServer)
+	// generate bk api auth header, X-Bkapi-Authorization
+	authInfo, err := component.GetBKAPIAuthorization("")
+	if err != nil {
+		return nil, err
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetBody(req).
+		Post(url)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !resp.IsSuccess() {
+		return nil, errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &DatabusCustomCreateResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return nil, errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return nil, errors.Errorf("databus_custom_create error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	return &result.Data, nil
+}
+
+// DatabusCustomUpdate update data id
+func DatabusCustomUpdate(ctx context.Context, id int, req *DatabusCustomUpdateReq) error {
+	url := fmt.Sprintf("%s/%d/databus_custom_update", config.G.BKLog.APIServer, id)
+	// generate bk api auth header, X-Bkapi-Authorization
+	authInfo, err := component.GetBKAPIAuthorization("")
+	if err != nil {
+		return err
+	}
+	resp, err := component.GetClient().R().
+		SetContext(ctx).
+		SetHeader("X-Bkapi-Authorization", authInfo).
+		SetBody(req).
+		Post(url)
+
+	if err != nil {
+		return err
+	}
+
+	if !resp.IsSuccess() {
+		return errors.Errorf("http code %d != 200, body: %s", resp.StatusCode(), resp.Body())
+	}
+
+	result := &BaseResp{}
+	err = json.Unmarshal(resp.Body(), result)
+	if err != nil {
+		return errors.Errorf("unmarshal resp body error, %s", err.Error())
+	}
+
+	if !result.IsSuccess() {
+		return errors.Errorf("databus_custom_update error, code: %d, message: %s, request_id: %s",
+			result.GetCode(), result.Message, result.RequestID)
+	}
+	return nil
 }

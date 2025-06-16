@@ -45,7 +45,7 @@ func NewMultiClusterEpsFilter(cli client.Client, ingressCache ingresscache.Ingre
 func (m *MultiClusterEpsFilter) enqueueRelatedIngress(eps *federationv1.MultiClusterEndpointSlice,
 	q workqueue.RateLimitingInterface) {
 	ingressMetas := m.ingressCache.GetRelatedIngressOfService(networkextensionv1.ServiceKindMultiClusterService,
-		eps.GetRelatedServiceNameSpace(), eps.GetName())
+		eps.GetRelatedServiceNameSpace(), eps.GetRelatedServiceName())
 
 	if len(ingressMetas) == 0 {
 		return

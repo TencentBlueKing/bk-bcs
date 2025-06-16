@@ -237,10 +237,7 @@ const tabs = computed(() => [
     name: 'taskRecord',
     label: 'cluster.title.opRecord',
     component: TaskRecord,
-    isShow: (!curCluster.value?.is_shared
-      && !['virtual', 'federation'].includes(curCluster.value.clusterType || '')
-      && normalStatusList.value.includes(curCluster.value.status || '')
-      && curCluster.value.provider === 'tencentCloud'),
+    isShow: true,
     componentConfig: {
       clusterId: props.clusterId,
     },

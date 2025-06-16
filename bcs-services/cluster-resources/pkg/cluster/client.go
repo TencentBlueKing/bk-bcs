@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
@@ -84,9 +85,7 @@ func (c *CMClient) fetchClusterInfoWithCache(ctx context.Context, clusterID stri
 		return nil, err
 	}
 
-	if err = c.cache.Add(cacheKey, clusterInfo, cache.DefaultExpiration); err != nil {
-		log.Warn(ctx, "set cluster info to cache failed: %v", err)
-	}
+	c.cache.Set(cacheKey, clusterInfo, cache.DefaultExpiration)
 	return clusterInfo, nil
 }
 
@@ -96,6 +95,7 @@ func (c *CMClient) fetchClusterInfo(ctx context.Context, clusterID string) (*Clu
 
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 

@@ -1448,7 +1448,7 @@ func (cli *TkeClient) getCommonImages() ([]*OSImage, error) {
 }
 
 // DescribeOsImages pull common images
-func (cli *TkeClient) DescribeOsImages(provider string, opt *cloudprovider.CommonOption) ([]*OSImage, error) {
+func (cli *TkeClient) DescribeOsImages(provider string, bcsImageNameList []string, opt *cloudprovider.CommonOption) ([]*OSImage, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
@@ -1488,6 +1488,25 @@ func (cli *TkeClient) DescribeOsImages(provider string, opt *cloudprovider.Commo
 				ImageId: cvmImages[i].ImageId,
 			})
 		}
+		return images, nil
+	case icommon.BCSImageProvider:
+		if len(bcsImageNameList) > 0 {
+			for _, imageName := range bcsImageNameList {
+				image, err := getCvmImageByImageName(imageName, opt)
+				if err != nil {
+					return nil, fmt.Errorf("qcloud getCvmImageByImageName[%s] failed: %v", imageName, err)
+				}
+
+				images = append(images, &OSImage{
+					Alias:   image.ImageName,
+					Arch:    image.Architecture,
+					OsName:  image.OsName,
+					Status:  image.ImageState,
+					ImageId: image.ImageId,
+				})
+			}
+		}
+
 		return images, nil
 	default:
 	}

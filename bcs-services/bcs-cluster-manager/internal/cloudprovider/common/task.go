@@ -59,6 +59,7 @@ func RegisterCommonActions() map[string]interface{} {
 		cloudprovider.AddNodesShieldAlarmAction:          AddNodesShieldAlarmTask,
 		cloudprovider.CheckNodeIpsInCmdbAction:           CheckNodeIpsInCMDBTask,
 		cloudprovider.CheckNodePodsAction:                CheckNodePodsTask,
+		cloudprovider.NodeDrainPodAction:                 NodeDrainPodTask,
 	}
 }
 

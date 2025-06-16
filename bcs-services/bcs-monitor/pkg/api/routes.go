@@ -26,6 +26,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 
 	_ "github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/docs" // docs xxx
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/audit"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/logrule"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/api/pod"
@@ -105,16 +106,19 @@ func (a *APIServer) newRoutes() http.Handler {
 	// 注册 HTTP 请求
 	r.Mount("/", registerRoutes())
 	r.Mount("/metrics", registerMetricsRoutes())
+	r.Mount("/audit", registerAuditRoutes())
 
 	// 注册到网关的地址
 	routePrefix := config.G.Web.RoutePrefix
 	if routePrefix != "" && routePrefix != "/" {
 		r.Mount(routePrefix+"/", http.StripPrefix(routePrefix, registerRoutes()))
 		r.Mount(routePrefix+"/metrics", http.StripPrefix(routePrefix, registerMetricsRoutes()))
+		r.Mount(routePrefix+"/audit", http.StripPrefix(routePrefix, registerAuditRoutes()))
 	}
 	webApiPrefix := path.Join(config.G.Web.RoutePrefix, config.APIServicePrefix)
 	r.Mount(webApiPrefix+"/", http.StripPrefix(webApiPrefix, registerRoutes()))
 	r.Mount(webApiPrefix+"/metrics", http.StripPrefix(webApiPrefix, registerMetricsRoutes()))
+	r.Mount(webApiPrefix+"/audit", http.StripPrefix(webApiPrefix, registerAuditRoutes()))
 	return r
 }
 
@@ -233,6 +237,24 @@ func registerMetricsRoutes() http.Handler {
 			rest.Handle(podmonitor.BatchDeletePodMonitor))
 
 		route.Get("/event_data_id", rest.Handle(metrics.GetClusterEventDataId))
+	})
+	return r
+}
+
+func registerAuditRoutes() http.Handler {
+	r := chi.NewRouter()
+	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
+		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ClusterAuthorization)
+		route.Use(middleware.Tracing, middleware.Audit)
+
+		// 开启集群审计
+		route.Put("/enable", rest.Handle(audit.EnableAudit))
+		// 关闭集群审计
+		route.Put("/disable", rest.Handle(audit.DisableAudit))
+		// 获取集群审计状态
+		route.Get("/status", rest.Handle(audit.GetAuditStatus))
+		// 集群审计关联 ES
+		route.Post("/es", rest.Handle(audit.EnableAuditES))
 	})
 	return r
 }

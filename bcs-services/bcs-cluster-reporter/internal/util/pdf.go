@@ -14,9 +14,10 @@
 package util
 
 import (
-	"github.com/jung-kurt/gofpdf"
 	"math"
 	"strings"
+
+	"github.com/jung-kurt/gofpdf"
 )
 
 // PDFTable xxx

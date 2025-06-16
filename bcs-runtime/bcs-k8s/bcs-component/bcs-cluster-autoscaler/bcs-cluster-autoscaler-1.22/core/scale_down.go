@@ -1602,6 +1602,8 @@ func getLatestPodsToDrain(sd *ScaleDown, node *apiv1.Node) ([]*apiv1.Pod, error)
 	}
 	// fix(bcs): 过滤低优先级 pod
 	unexpendablePods := filterOutExpendablePods(podsOfNode, sd.expendablePodsPriorityCutoff)
+	// fix(bcs): 过滤 dpm pod
+	unexpendablePods = filterOutDpmPods(unexpendablePods)
 	podsToDrain, _, _, getErr := drain.GetPodsForDeletionOnNodeDrain(
 		unexpendablePods, []*policyv1.PodDisruptionBudget{}, false, false, false,
 		nil, 0, time.Now())

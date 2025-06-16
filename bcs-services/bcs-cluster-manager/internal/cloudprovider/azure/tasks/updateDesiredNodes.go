@@ -156,6 +156,8 @@ func applyInstanceMachinesByPool(ctx context.Context, info *cloudprovider.CloudD
 
 	// update agent pool desired size
 	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
+		// rollout instances
+		_ = ScaleAgentPoolToDesiredSize(ctx, info, *agentPool.Properties.Count-int32(nodeNum))
 		blog.Errorf("applyInstanceMachines[%s] failed: %v", taskId, err)
 		return err
 	}
@@ -182,6 +184,9 @@ func ScaleAgentPoolToDesiredSize(ctx context.Context, info *cloudprovider.CloudD
 		return errors.Wrapf(err, "new azure client failed")
 	}
 
+	blog.Infof("ScaleAgentPoolToDesiredSize[%s] begin to scale agentPool %s to %d", taskId,
+		info.NodeGroup.CloudNodeGroupID, desired)
+
 	agentPool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 		info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
 	if err != nil {
@@ -190,11 +195,17 @@ func ScaleAgentPoolToDesiredSize(ctx context.Context, info *cloudprovider.CloudD
 	}
 	agentPool.Properties.Count = &desired
 
+	blog.Infof("ScaleAgentPoolToDesiredSize[%s] scale agentPool %s to %d", taskId, *agentPool.Name, desired)
+
 	// update agent pool desired size
 	if err = scaleUpNodePool(ctx, client, info, agentPool); err != nil {
-		blog.Errorf("ScaleAgentPoolToDesiredSize[%s] scaleUpNodePool[%s] failed: %v", taskId, *agentPool.Name, err)
+		blog.Errorf("ScaleAgentPoolToDesiredSize[%s] scaleUpNodePool[%s] failed: %v", taskId,
+			*agentPool.Name, err)
 		return err
 	}
+
+	blog.Infof("ScaleAgentPoolToDesiredSize[%s] scale agentPool %s to %d successfully", taskId,
+		*agentPool.Name, desired)
 
 	return nil
 }
@@ -258,11 +269,15 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	)
 	defer cancel()
 
+	blog.Infof("scaleUpNodePool[%s] begin to scale up node pool %s", taskID, *targetPool.Name)
+
 	err := loop.LoopDoFunc(ctx, func() error {
 		pool, err := client.UpdatePoolAndReturn(ctx, targetPool, cloudprovider.GetClusterResourceGroup(info.Cluster),
 			cluster.SystemID, *targetPool.Name)
 		// 扩容完成
 		if err == nil {
+			blog.Infof("scaleUpNodePool[%s] scale up nodePool[%s] %+v successfully", taskID,
+				*targetPool.Name, pool.Properties)
 			targetPool.Properties = pool.Properties
 			return loop.EndLoop
 		}
@@ -277,7 +292,7 @@ func scaleUpNodePool(rootCtx context.Context, client api.AksService, info *cloud
 	if err != nil {
 		return errors.Wrapf(err, "scaleUpNodePool[%s] UpdatePoolAndReturn failed(scale up)", taskID)
 	}
-	blog.Infof("scaleUpNodePool[%s] successfully", taskID)
+	blog.Infof("scaleUpNodePool[%s] scale up nodePool[%s] successfully", taskID, *targetPool.Name)
 
 	return nil
 }
@@ -287,15 +302,17 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 	var (
 		group       = info.NodeGroup
 		taskID      = cloudprovider.GetTaskIDFromContext(rootCtx)
-		ctx, cancel = context.WithTimeout(rootCtx, 5*time.Second)
+		ctx, cancel = context.WithTimeout(rootCtx, 5*time.Minute)
 	)
 	defer cancel()
 
+	blog.Infof("checkScaleUp[%s] begin to check scale up node pool %s", taskID, group.CloudNodeGroupID)
 	err := loop.LoopDoFunc(ctx, func() error {
 		agentPool, err := client.GetPoolAndReturn(ctx, cloudprovider.GetClusterResourceGroup(info.Cluster),
 			info.Cluster.SystemID, group.CloudNodeGroupID)
 		if err != nil {
-			return errors.Wrapf(err, "checkScaleUp[%s] call GetPoolAndReturn failed", taskID)
+			blog.Errorf("checkScaleUp[%s] call GetPoolAndReturn failed: %v", taskID, err)
+			return nil
 		}
 		// 打印状态
 		status := *agentPool.Properties.ProvisioningState
@@ -310,6 +327,8 @@ func checkScaleUp(rootCtx context.Context, client api.AksService, info *cloudpro
 		return errors.Wrapf(err, "taskID[%s] checkScaleUp[%s][%s] failed", taskID, group.CloudNodeGroupID,
 			group.Name)
 	}
+
+	blog.Infof("checkScaleUp[%s] check scale up node pool %s successfully", taskID, group.CloudNodeGroupID)
 
 	return nil
 }

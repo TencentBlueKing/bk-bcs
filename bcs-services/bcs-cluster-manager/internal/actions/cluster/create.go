@@ -46,6 +46,7 @@ type CreateAction struct {
 	cloud        *cmproto.Cloud
 	nodeTemplate *cmproto.NodeTemplate // nolint
 	task         *cmproto.Task
+	diffVpcNodes []cloudprovider.NodeData
 	req          *cmproto.CreateClusterReq
 	resp         *cmproto.CreateClusterResp
 }
@@ -53,8 +54,9 @@ type CreateAction struct {
 // NewCreateAction create cluster action
 func NewCreateAction(model store.ClusterManagerModel, locker lock.DistributedLock) *CreateAction {
 	return &CreateAction{
-		model:  model,
-		locker: locker,
+		model:        model,
+		locker:       locker,
+		diffVpcNodes: make([]cloudprovider.NodeData, 0),
 	}
 }
 
@@ -158,6 +160,13 @@ func (ca *CreateAction) checkClusterWorkerNodes(cls *cmproto.Cluster) error { //
 			blog.Errorf("createCluster checkClusterWorkerNodes[%s] failed: %v", node.InnerIP, err)
 			continue
 		}
+
+		if node.GetVPC() != cls.VpcID {
+			ca.diffVpcNodes = append(ca.diffVpcNodes, cloudprovider.NodeData{
+				NodeIp: node.InnerIP,
+				NodeId: node.NodeID,
+			})
+		}
 	}
 
 	return nil
@@ -185,6 +194,12 @@ func (ca *CreateAction) checkClusterMasterNodes(cls *cmproto.Cluster) error {
 
 	for _, node := range nodes {
 		cls.Master[node.InnerIP] = node
+		if node.GetVPC() != cls.VpcID {
+			ca.diffVpcNodes = append(ca.diffVpcNodes, cloudprovider.NodeData{
+				NodeIp: node.InnerIP,
+				NodeId: node.NodeID,
+			})
+		}
 	}
 
 	return nil
@@ -211,8 +226,7 @@ func (ca *CreateAction) transNodeIPsToCloudNode(ips []string) ([]*cmproto.Node, 
 
 	// cluster check instance if exist, validate nodes existence
 	nodes, err := nodeMgr.ListNodesByIP(ips, &cloudprovider.ListNodesOption{
-		Common:       cmOption,
-		ClusterVPCID: ca.req.VpcID,
+		Common: cmOption,
 	})
 	if err != nil {
 		blog.Errorf("validate nodes %v existence failed, %s", ips, err.Error())
@@ -582,6 +596,7 @@ func (ca *CreateAction) createClusterTask(ctx context.Context, cls *cmproto.Clus
 		WorkerNodes:  ca.req.Nodes,
 		MasterNodes:  ca.req.Master,
 		NodeGroupIDs: nodeGroupIDs,
+		DiffVpcNodes: ca.diffVpcNodes,
 		NodeTemplate: func() *cmproto.NodeTemplate {
 			if ca.req.NodeTemplateID == "" {
 				return nil

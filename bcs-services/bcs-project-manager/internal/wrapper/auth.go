@@ -197,7 +197,7 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败, 该操作不支持用户态权限")
 	}
 
-	allow, url, resources, err := callIAM(username, action, *resourceID)
+	allow, url, resources, err := callIAM(ctx, username, action, *resourceID)
 	if err != nil {
 		return false, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")
 	}
@@ -212,10 +212,11 @@ func CheckUserPerm(ctx context.Context, req server.Request, username string) (bo
 	return allow, nil
 }
 
-func callIAM(username, action string, resourceID resourceID) (bool, string, []authutils.ResourceAction, error) {
+func callIAM(ctx context.Context, username, action string, resourceID resourceID) (
+	bool, string, []authutils.ResourceAction, error) {
 	var isSharedCluster bool
 	if resourceID.ClusterID != "" {
-		cluster, err := clustermanager.GetCluster(resourceID.ClusterID)
+		cluster, err := clustermanager.GetCluster(ctx, resourceID.ClusterID)
 		if err != nil {
 			logging.Error("get cluster %s from cluster-manager failed, err: %s", cluster, err.Error())
 			return false, "", nil, errorx.NewReadableErr(errorx.PermDeniedErr, "校验用户权限失败")

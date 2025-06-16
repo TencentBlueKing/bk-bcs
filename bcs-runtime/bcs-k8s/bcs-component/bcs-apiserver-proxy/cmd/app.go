@@ -171,10 +171,9 @@ func (pm *ProxyManager) syncAddLvsRealServers() error {
 		return err
 	}
 	if len(adds) == 0 {
+		blog.V(5).Infof("no new real servers")
 		return nil
 	}
-
-	blog.V(5).Infof("syncAddLvsRealServers, adds: [%v]", adds)
 
 	if len(adds) > 0 {
 		for s := range adds {
@@ -221,6 +220,8 @@ func (pm *ProxyManager) getAddRealServers() (sets.String, error) {
 	// diff get add & delete server
 	addServers = clusterRsMap.Difference(proxyRsMap)
 
+	blog.V(5).Infof("getAddRealServers, clusterRsMap: [%v], proxyRsMap: [%v], addServers: [%v]",
+		clusterRsMap.List(), proxyRsMap.List(), addServers.List())
 	return addServers, nil
 }
 
@@ -279,6 +280,7 @@ func (pm *ProxyManager) persistLvsConfig() error {
 func (pm *ProxyManager) initProxyOptions(options *config.ProxyAPIServerOptions) {
 	if pm == nil { // nolint
 		blog.Errorf("server failed:%v", ErrProxyManagerNotInited)
+		return
 	}
 
 	pm.options = options // nolint
@@ -289,12 +291,15 @@ func (pm *ProxyManager) checkVirtualServerIsExist() error {
 		return ErrProxyManagerNotInited
 	}
 
-	available := pm.lvsProxy.IsVirtualServerAvailable(pm.options.ProxyLvs.VirtualAddress)
+	vaddr := pm.options.ProxyLvs.VirtualAddress
+	blog.Infof("check virtual address %s is exist", vaddr)
+	available := pm.lvsProxy.IsVirtualServerAvailable(vaddr)
 	if !available {
-		err := pm.lvsProxy.CreateVirtualServer(pm.options.ProxyLvs.VirtualAddress)
+		err := pm.lvsProxy.CreateVirtualServer(vaddr)
 		if err != nil {
 			return err
 		}
+		blog.Infof("create virtual address %s is successfully", vaddr)
 	}
 
 	return nil
@@ -433,7 +438,7 @@ func (pm *ProxyManager) waitQuitHandler() error {
 	}
 
 	quitSignal := make(chan os.Signal, 10)
-	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM) // nolint
+	signal.Notify(quitSignal, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM) // nolint
 
 	go func() {
 		select {
@@ -455,7 +460,6 @@ func (pm *ProxyManager) close() {
 		return
 	}
 
-	pm.lvsProxy.DeleteVirtualServer(pm.options.ProxyLvs.VirtualAddress) // nolint
 	pm.cancel()
 }
 

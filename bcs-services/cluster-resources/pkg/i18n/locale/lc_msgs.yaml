@@ -432,6 +432,46 @@
   en: "SubPath In Volume"
 - msgID: 基本信息
   en: Metadata
+- msgID: configSyncer
+  en: configSyncer
+- msgID: 资源类型
+  en: ResourceType
+- msgID: 名称
+  en: name
+- msgID: 关联的bscp配置项名称
+  en: associated BSCP configuration item name
+- msgID: 生成configmap资源的名称
+  en: name of the generated configmap resource
+- msgID: 关联的bscp配置匹配规则，支持linux wilecard语法
+  en: the associated BSCP configuration matching rules, support Linux wilecard syntax
+- msgID: 生成secret资源的名称
+  en: name of the generated secret resource
+- msgID: provider
+  en: provider
+- msgID: feedAddr
+  en: feedAddr
+- msgID: feed 地址
+  en: FeedAddress
+- msgID: 业务ID
+  en: BizID
+- msgID: 客户端密钥
+  en: ClientSecretKey
+- msgID: 多个模糊匹配
+  en: MultipleFuzzyMatches
+- msgID: 精准匹配
+  en: PreciseMatches
+- msgID: biz
+  en: biz
+- msgID: token
+  en: token
+- msgID: app
+  en: app
+- msgID: configmap
+  en: configmap
+- msgID: secret
+  en: secret
+- msgID: matchConfigs
+  en: matchConfigs
 - msgID: 标签
   en: Labels
 - msgID: 注解

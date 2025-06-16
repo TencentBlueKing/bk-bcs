@@ -17,11 +17,12 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"k8s.io/klog/v2"
 	"os"
 	"strings"
 	"syscall"
 	"time"
+
+	"k8s.io/klog/v2"
 )
 
 // LogFile xxx
@@ -160,6 +161,10 @@ func (f *LogFile) checkNewEntries() error {
 		}
 
 		*f = *newFile
+
+		// 不读取历史内容
+		f.pos = info.Size()
+		return nil
 	}
 
 	if info.Size() > f.pos {

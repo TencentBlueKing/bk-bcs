@@ -9,6 +9,11 @@ plugins:
     serviceServerPort: 8089
     dbmOptimizeEnabled: true
     ticketTimer: 60
+    initContainerResources:
+      cpu_request: 64m
+      cpu_limit: 128m
+      mem_request: 64m
+      mem_limit: 128m
   imageloader:
     enabled: true
   randhostport:

@@ -46,7 +46,7 @@ func (la *ListClustersVariablesAction) Do(ctx context.Context,
 	la.ctx = ctx
 	la.req = req
 
-	variables, err := la.listClusterVariables()
+	variables, err := la.listClusterVariables(ctx)
 	if err != nil {
 		return nil, errorx.NewDBErr(err.Error())
 	}
@@ -54,7 +54,7 @@ func (la *ListClustersVariablesAction) Do(ctx context.Context,
 	return variables, nil
 }
 
-func (la *ListClustersVariablesAction) listClusterVariables() ([]*proto.VariableValue, error) {
+func (la *ListClustersVariablesAction) listClusterVariables(ctx context.Context) ([]*proto.VariableValue, error) {
 	project, err := la.model.GetProject(la.ctx, la.req.GetProjectCode())
 	if err != nil {
 		logging.Error("get project from db failed, err: %s", err.Error())
@@ -69,7 +69,7 @@ func (la *ListClustersVariablesAction) listClusterVariables() ([]*proto.Variable
 		return nil, fmt.Errorf("variable %s scope is %s rather than cluster",
 			la.req.GetVariableID(), variableDefinition.Scope)
 	}
-	clusters, err := clustermanager.ListClusters(project.ProjectID)
+	clusters, err := clustermanager.ListClusters(ctx, project.ProjectID)
 	if err != nil {
 		return nil, err
 	}

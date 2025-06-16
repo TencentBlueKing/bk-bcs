@@ -93,7 +93,7 @@ func (ra *RecommendNodeGroupConfAction) Handle(ctx context.Context, req *cmproto
 		return
 	}
 
-	configs, err := mgr.RecommendNodeGroupConf(cmOption)
+	configs, err := mgr.RecommendNodeGroupConf(ctx, cmOption)
 	if err != nil {
 		ra.setResp(common.BcsErrClusterManagerCheckKubeConnErr, err.Error())
 		return

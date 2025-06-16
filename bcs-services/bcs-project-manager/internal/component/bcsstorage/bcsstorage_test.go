@@ -14,9 +14,10 @@
 package bcsstorage
 
 import (
-	svcConfig "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 	"os"
 	"testing"
+
+	svcConfig "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 )

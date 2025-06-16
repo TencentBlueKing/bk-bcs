@@ -13,13 +13,15 @@ data:
     {{- if .Values.plugins.dbpriv.dbmOptimizeEnabled }}
     "service_name": "{{ .Release.Name }}",
     "service_namespace": "{{ .Release.Namespace }}",
-    "service_port": "{{ .Values.plugins.dbpriv.servicePort }}",
-    "service_server_port": "{{ .Values.plugins.dbpriv.serviceServerPort }}",
-    "dbm_optimize_enabled": "{{ .Values.plugins.dbpriv.dbmOptimizeEnabled }}",
-    "ticket_timer": "{{ .Values.plugins.dbpriv.ticketTimer }}",
+    "service_port": {{ .Values.plugins.dbpriv.servicePort }},
+    "service_server_port": {{ .Values.plugins.dbpriv.serviceServerPort }},
+    "dbm_optimize_enabled": {{ .Values.plugins.dbpriv.dbmOptimizeEnabled }},
+    "ticket_timer": {{ .Values.plugins.dbpriv.ticketTimer }},
+    {{- end }}
+    {{- if .Values.plugins.dbpriv.initContainerResources }}
+    "init_container_resources": {{ .Values.plugins.dbpriv.initContainerResources | toJson }},
     {{- end }}
     "init_container_image": "{{ .Values.plugins.dbpriv.initContainerImage }}"
-
 }'
   {{- end }}
   {{- if .Values.plugins.randhostport.enabled }}

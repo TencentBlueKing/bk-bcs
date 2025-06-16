@@ -17,10 +17,15 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	registry "github.com/Tencent/bk-bcs/bcs-common/pkg/registry"
 )
+
+// ErrNotInited err server not init
+var ErrNotInited = errors.New("server not init")
 
 // ! v4 version binding~
 
@@ -126,4 +131,10 @@ func (c *Client) UserManager() UserManager {
 // Storage client interface
 func (c *Client) Storage() Storage {
 	return NewStorage(c.config)
+}
+
+// ClientConfig cluster manager client config
+type ClientConfig struct {
+	TLSConfig *tls.Config
+	Discovery *discovery.ModuleDiscovery
 }

@@ -6,4 +6,4 @@ const request = createRequest({
   prefix: '/bcsapi/v4/clusterresources/api/v1',
 });
 
-export const storageEvents = request('get', '/projects/$projectCode/clusters/$clusterID/events');
+export const storageEvents = request('post', '/projects/$projectCode/clusters/$clusterID/events');

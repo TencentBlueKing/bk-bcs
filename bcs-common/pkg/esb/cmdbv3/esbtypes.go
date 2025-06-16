@@ -343,7 +343,7 @@ type ESBSearchModuleRequest struct {
 	Condition         map[string]interface{} `json:"condition"`
 }
 
-// ESBSearchModuleResponse response for search module
+// ESBSearchModuleResult response for search module
 type ESBSearchModuleResult struct {
 	ESBBaseResp `json:",inline"`
 	Data        *ESBSearchModuleData `json:"data"`

@@ -15,14 +15,12 @@ package controller
 
 import (
 	"context"
-	"fmt"
+	"strings"
 	"time"
 
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	tkexv1alpha1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-image-loader/api/v1alpha1"
@@ -30,7 +28,8 @@ import (
 
 func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 	imageLoader *tkexv1alpha1.ImageLoader) (
-	*tkexv1alpha1.ImageLoaderStatus, *time.Duration, error) {
+	*tkexv1alpha1.ImageLoaderStatus, *time.Duration, error,
+) {
 	var requeue time.Duration
 	var err error
 	newStatus := imageLoader.Status.DeepCopy()
@@ -52,28 +51,30 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 	if newRevision != newStatus.Revision {
 		logger.Info("ImageLoader spec changed")
 		r.resetStatus(imageLoader, newStatus)
-		finished, cleanErr := r.cleanJobs(ctx, imageLoader)
+		finished, cleanErr := r.cleanPods(ctx, imageLoader, newStatus.Revision)
 		if cleanErr != nil {
 			return newStatus, nil, cleanErr
 		}
 		if !finished {
+			logger.Info("wait for previous pods to completely cleanup")
 			requeue = time.Second
 			return newStatus, &requeue, nil
 		}
-		logger.Info("finish clean previous jobs")
+		logger.Info("finish cleaning previous pods")
 		now := metav1.Now()
 		newStatus.StartTime = &now
 		newStatus.Revision = newRevision
 	}
 
-	// 2. create jobs if need
-	baseJob := newJob(imageLoader)
-	err = r.handleSelector(ctx, imageLoader, baseJob)
+	// 2. new pod based on spec
+	basePod := newPod(imageLoader, newStatus)
+	err = r.handleSelector(ctx, imageLoader, basePod)
 	if err != nil {
 		return newStatus, nil, err
 	}
-	if baseJob.Spec.Completions == nil || *baseJob.Spec.Completions == 0 {
+	if len(basePod.Annotations[NodeNameKey]) == 0 {
 		r.resetStatus(imageLoader, newStatus)
+		newStatus.Desired = -1
 		newStatus.ObservedGeneration = imageLoader.Generation
 		newStatus.Completed = newStatus.Desired
 		newStatus.Succeeded = newStatus.Desired
@@ -82,154 +83,224 @@ func (r *ImageLoaderReconciler) reconcileImageLoader(ctx context.Context,
 		return newStatus, nil, nil
 	}
 
-	err = r.createJobsIfNeed(ctx, imageLoader, baseJob)
+	// 3. load image
+	err = r.loadImage(ctx, imageLoader, basePod, newStatus)
 	if err != nil {
 		return newStatus, nil, err
 	}
 
-	// 3. update status
-	err = r.updateStatus(ctx, imageLoader, newStatus)
-	if err != nil {
-		return newStatus, nil, err
-	}
-
-	// 4. clean up jobs if all complete succeed
-	if newStatus.Completed == newStatus.Desired && newStatus.Succeeded == newStatus.Desired {
-		logger.Info("imagerloader's all jobs complete successfully, clean up jobs")
-		_, err = r.cleanJobs(ctx, imageLoader)
-		if err != nil {
-			return newStatus, nil, err
-		}
-	}
+	// 4. renew status
+	r.renewStatus(imageLoader, newStatus)
 
 	return newStatus, nil, nil
 }
 
-func (r *ImageLoaderReconciler) cleanJobs(ctx context.Context,
-	loader *tkexv1alpha1.ImageLoader) (bool, error) {
-	jobList := &batchv1.JobList{}
-	if err := r.List(ctx, jobList, client.MatchingLabels{
-		ImageLoaderNameKey: loader.Name,
+func (r *ImageLoaderReconciler) cleanPods(ctx context.Context,
+	loader *tkexv1alpha1.ImageLoader, revision string,
+) (bool, error) {
+	podList := &corev1.PodList{}
+	if err := r.List(ctx, podList, client.MatchingLabels{
+		ImageLoaderNameKey:     loader.Name,
+		ImageLoaderRevisionKey: revision,
 	}, client.InNamespace(loader.Namespace)); err != nil {
 		return false, err
 	}
-	if len(jobList.Items) == 0 {
+	if len(podList.Items) == 0 {
 		return true, nil
 	}
-	for i := range jobList.Items {
-		logger.Info("delete job", "job", fmt.Sprintf(jobList.Items[i].Namespace, jobList.Items[i].Name))
-		if err := r.Delete(ctx, &jobList.Items[i],
-			client.PropagationPolicy(metav1.DeletePropagationBackground)); err != nil {
+	for i := range podList.Items {
+		if podList.Items[i].DeletionTimestamp != nil {
+			logger.Info("pod is deleting", "pod", podList.Items[i].Name, "node", podList.Items[i].Spec.NodeName)
+			continue
+		}
+		logger.Info("delete pod", "pod", podList.Items[i].Name, "node", podList.Items[i].Spec.NodeName)
+		if err := r.Delete(ctx, &podList.Items[i]); err != nil {
+			logger.Error(err, "failed to delete pod", "pod", podList.Items[i].Name, "node", podList.Items[i].Spec.NodeName)
 			return false, err
 		}
 	}
 	return false, nil
 }
 
-func (r *ImageLoaderReconciler) createJobsIfNeed(ctx context.Context,
-	loader *tkexv1alpha1.ImageLoader, baseJob *batchv1.Job) error {
-	for i := range loader.Spec.Images {
-		job := &batchv1.Job{}
-		err := r.Get(ctx, types.NamespacedName{Namespace: loader.Namespace,
-			Name: getJobName(loader, i)}, job)
-		if err != nil && errors.IsNotFound(err) {
-			logger.Info(fmt.Sprintf("create job for %d image", i))
-			err = r.createJob(ctx, loader, baseJob, i)
-			if err != nil {
-				return err
-			}
-		}
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
+func (r *ImageLoaderReconciler) loadImage(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
+	basePod *corev1.Pod, newStatus *tkexv1alpha1.ImageLoaderStatus,
+) error {
+	expectedNodes := strings.Split(basePod.Annotations[NodeNameKey], ",")
+	delete(basePod.Annotations, NodeNameKey)
+	newStatus.Desired = int32(len(expectedNodes))
+	newStatus.Active = 0
 
-func (r *ImageLoaderReconciler) createJob(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	baseJob *batchv1.Job, index int) error {
-	// some field may be nil after deepcopy
-	job := baseJob.DeepCopy()
-	modifyJob(job, loader, index)
-
-	err := r.Client.Create(ctx, job)
+	// 检查现有 pods
+	toDeletePods, toCreatePods, ignoredNodes, err := r.processPods(ctx, loader, newStatus)
 	if err != nil {
-		logger.Error(err, "failed to create job", "job", fmt.Sprintf("%s/%s", job.Namespace, job.Name))
 		return err
 	}
-	logger.Info("create job successfully", "job", fmt.Sprintf("%s/%s", job.Namespace, job.Name))
-	return nil
+
+	// 执行删除 pod
+	err = deletePods(ctx, r.Client, toDeletePods)
+	if err != nil {
+		return err
+	}
+
+	// 检查节点
+	for _, node := range expectedNodes {
+		// 忽略节点直接跳过
+		if _, ok := ignoredNodes[node]; ok {
+			continue
+		}
+		newPod := basePod.DeepCopy()
+		newPod.Name += node
+		newPod.Spec.NodeName = node
+		if err = ctrl.SetControllerReference(loader, newPod, r.Client.Scheme()); err != nil {
+			logger.Error(err, "failed to set owner for pod", "pod", newPod.Name)
+			continue
+		}
+		logger.Info("want to create pod", "pod", newPod.Name, "node", node)
+		toCreatePods = append(toCreatePods, newPod)
+	}
+
+	// 创建 pod
+	err = createPods(ctx, r.Client, toCreatePods)
+	if len(toCreatePods) > 0 || len(toDeletePods) > 0 {
+		logger.Info("new status in loadImage", "active", newStatus.Active, "succeed", newStatus.Succeeded, "desired",
+			newStatus.Desired)
+	}
+	return err
+}
+
+func (r *ImageLoaderReconciler) processPods(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
+	newStatus *tkexv1alpha1.ImageLoaderStatus,
+) ([]*corev1.Pod, []*corev1.Pod, map[string]struct{}, error) {
+	// 已加载成功/失败节点
+	ignoredNodes := map[string]struct{}{}
+	loadedNodes := map[string]struct{}{}
+	failedNodes := map[string]struct{}{}
+	for _, n := range newStatus.LoadedNodes {
+		ignoredNodes[n] = struct{}{}
+		loadedNodes[n] = struct{}{}
+	}
+	for _, n := range newStatus.FailedNodes {
+		ignoredNodes[n] = struct{}{}
+		failedNodes[n] = struct{}{}
+	}
+
+	existPods := &corev1.PodList{}
+	err := r.Client.List(ctx, existPods, client.InNamespace(loader.Namespace), client.MatchingLabels{
+		ImageLoaderNameKey: loader.Name, ImageLoaderRevisionKey: newStatus.Revision,
+	})
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	toDeletePods := make([]*corev1.Pod, 0)
+	toCreatePods := make([]*corev1.Pod, 0)
+
+	for i := range existPods.Items {
+		pod := &existPods.Items[i]
+		// 删除中，忽略
+		if !pod.DeletionTimestamp.IsZero() {
+			ignoredNodes[pod.Spec.NodeName] = struct{}{}
+			// logger.Info("loading pod deleting, ignore it", "pod", pod.Name)
+			continue
+		}
+		// succeed: 删除 Pod 并记录节点
+		if pod.Status.Phase == corev1.PodSucceeded {
+			toDeletePods = append(toDeletePods, pod)
+			loadedNodes[pod.Spec.NodeName] = struct{}{}
+			ignoredNodes[pod.Spec.NodeName] = struct{}{}
+			logger.Info("loading pod succeed, delete it", "pod", pod.Name)
+			continue
+		}
+		// failed or unknown: 删除 Pod 并跳过此次创建，等待下次创建
+		if pod.Status.Phase == corev1.PodFailed || pod.Status.Phase == corev1.PodUnknown {
+			logger.Info("loading pod failed, rebuild it", "pod", pod.Name, "phase", pod.Status.Phase,
+				"reason", pod.Status.Reason)
+			toDeletePods = append(toDeletePods, pod)
+			ignoredNodes[pod.Spec.NodeName] = struct{}{}
+			continue
+		}
+		// 持续一段时间没完成，强制删除 pod
+		if pod.Status.StartTime != nil &&
+			time.Since(pod.Status.StartTime.Time) > time.Second*time.Duration(loader.Spec.JobTimeout) {
+			// 如果已经失败了多次，保留 pod 不删除
+			if time.Since(newStatus.StartTime.Time) >
+				time.Second*time.Duration(loader.Spec.BackoffLimit)*time.Duration(loader.Spec.JobTimeout) {
+				logger.Info("load image timeout, please check it", "pod", pod.Name)
+				failedNodes[pod.Spec.NodeName] = struct{}{}
+				r.Recorder.Eventf(loader, corev1.EventTypeWarning,
+					"LoadImageFailed", "load image failed on node %s", pod.Spec.NodeName)
+				imageLoaderFailed.WithLabelValues(loader.Namespace, loader.Name, pod.Spec.NodeName).Inc()
+			} else {
+				toDeletePods = append(toDeletePods, pod)
+				logger.Info("load pod running timeout, delete it", "pod", pod.Name)
+			}
+			ignoredNodes[pod.Spec.NodeName] = struct{}{}
+			continue
+		}
+
+		// running or pending: 跳过创建
+		newStatus.Active++
+		ignoredNodes[pod.Spec.NodeName] = struct{}{}
+		// logger.Info("loading pod running or pending, ignore it", "pod", pod.Name, "phase", pod.Status.Phase)
+	}
+
+	newStatus.LoadedNodes = make([]string, 0, len(loadedNodes))
+	newStatus.FailedNodes = make([]string, 0, len(failedNodes))
+	for n := range loadedNodes {
+		newStatus.LoadedNodes = append(newStatus.LoadedNodes, n)
+	}
+	for n := range failedNodes {
+		newStatus.FailedNodes = append(newStatus.FailedNodes, n)
+	}
+	newStatus.Completed = int32(len(newStatus.LoadedNodes)) + int32(len(newStatus.FailedNodes))
+	newStatus.Succeeded = int32(len(newStatus.LoadedNodes))
+	return toDeletePods, toCreatePods, ignoredNodes, nil
 }
 
 func (r *ImageLoaderReconciler) resetStatus(loader *tkexv1alpha1.ImageLoader,
-	newStatus *tkexv1alpha1.ImageLoaderStatus) {
+	newStatus *tkexv1alpha1.ImageLoaderStatus,
+) {
 	newStatus.ObservedGeneration = loader.Generation
-	newStatus.Desired = int32(len(loader.Spec.Images))
-	newStatus.Active = 0
+	newStatus.Desired = 0
 	newStatus.Active = 0
 	newStatus.Completed = 0
 	newStatus.Succeeded = 0
 	newStatus.FailedStatuses = make([]*tkexv1alpha1.FailedStatus, 0)
 	newStatus.CompletionTime = nil
+	newStatus.LoadedNodes = make([]string, 0)
+	newStatus.FailedNodes = make([]string, 0)
 }
 
-func (r *ImageLoaderReconciler) updateStatus(ctx context.Context, loader *tkexv1alpha1.ImageLoader,
-	newStatus *tkexv1alpha1.ImageLoaderStatus) error {
-	r.resetStatus(loader, newStatus)
-
-	jobList := &batchv1.JobList{}
-	if err := r.List(ctx, jobList, client.MatchingLabels{
-		ImageLoaderNameKey: loader.Name,
-	}, client.InNamespace(loader.Namespace)); err != nil {
-		return err
-	}
-	for i := range jobList.Items {
-		job := &jobList.Items[i]
-		if len(job.Status.Conditions) == 0 {
-			// running
-			newStatus.Active++
-			continue
-		}
-		// succeed
-		if job.Status.Conditions[0].Type == batchv1.JobComplete &&
-			job.Status.Conditions[0].Status == corev1.ConditionTrue {
-			newStatus.Completed++
-			if job.Status.Succeeded == *job.Spec.Completions {
-				logger.Info("job complete successfully", "job", fmt.Sprintf("%s/%s", job.Namespace, job.Name))
-				newStatus.Succeeded++
-			}
-			continue
-		}
-		// failed
-		if job.Status.Conditions[0].Type == batchv1.JobFailed &&
-			job.Status.Conditions[0].Status == corev1.ConditionTrue {
-			newStatus.Completed++
-			newStatus.FailedStatuses = append(newStatus.FailedStatuses,
-				&tkexv1alpha1.FailedStatus{
-					JobName: job.Name,
-					Name:    job.Spec.Template.Spec.Containers[0].Image,
-					Message: job.Status.Conditions[0].Message,
-				})
-			r.Recorder.Eventf(loader, corev1.EventTypeWarning, "Failed", "preload image %s failed",
-				job.Spec.Template.Spec.Containers[0].Image)
-			logger.Error(fmt.Errorf(job.Status.Conditions[0].Message), "job failed", "job", fmt.Sprintf("%s/%s", job.Namespace,
-				job.Name))
-		}
-
-	}
+func (r *ImageLoaderReconciler) renewStatus(imageLoader *tkexv1alpha1.ImageLoader,
+	newStatus *tkexv1alpha1.ImageLoaderStatus,
+) {
 	if newStatus.Desired == newStatus.Completed {
+		imageLoaderRuningSeconds.WithLabelValues(imageLoader.Namespace, imageLoader.Name).Set(0)
 		now := metav1.Now()
 		newStatus.CompletionTime = &now
 		if newStatus.Succeeded == newStatus.Desired {
 			logger.Info("imageloader completed successfully")
-			r.Recorder.Eventf(loader, corev1.EventTypeNormal, "Succeed", "All imageloader jobs succeeded")
+			r.Recorder.Eventf(imageLoader, corev1.EventTypeNormal, "Succeed", "All imageloader jobs succeeded")
+			imageLoaderCompletedSeconds.WithLabelValues(imageLoader.Namespace, imageLoader.Name,
+				"Succeeded").Set(time.Since(newStatus.StartTime.Time).Seconds())
 		} else {
 			logger.Info("imageloader completed with partial jobs succeed", "succeeded", newStatus.Succeeded, "desired",
 				newStatus.Desired)
-			r.Recorder.Eventf(loader, corev1.EventTypeWarning, "Completed", "Some imageloader jobs failed")
+			r.Recorder.Eventf(imageLoader, corev1.EventTypeWarning, "Completed", "Some imageloader jobs failed")
+			imageLoaderCompletedSeconds.WithLabelValues(imageLoader.Namespace, imageLoader.Name,
+				"Completed").Set(time.Since(newStatus.StartTime.Time).Seconds())
 		}
-		return nil
+	} else {
+		imageLoaderRuningSeconds.WithLabelValues(imageLoader.Namespace, imageLoader.Name).Set(
+			time.Since(newStatus.StartTime.Time).Seconds())
 	}
-	logger.Info("waiting for job done")
-	return nil
+
+	if len(newStatus.FailedNodes) > 0 {
+		newStatus.FailedStatuses = make([]*tkexv1alpha1.FailedStatus, 0)
+		for _, node := range newStatus.FailedNodes {
+			newStatus.FailedStatuses = append(newStatus.FailedStatuses, &tkexv1alpha1.FailedStatus{
+				Name: node,
+			})
+		}
+	}
 }

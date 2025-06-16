@@ -17,7 +17,6 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
@@ -41,9 +40,8 @@ var logger logr.Logger
 // +kubebuilder:rbac:groups=tkex.tencent.com,resources=imageloaders,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=tkex.tencent.com,resources=imageloaders/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=tkex.tencent.com,resources=imageloaders/finalizers,verbs=update
-// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
-// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -84,7 +82,7 @@ func (r *ImageLoaderReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *ImageLoaderReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&tkexv1alpha1.ImageLoader{}).
-		Owns(&batchv1.Job{}).
+		Owns(&corev1.Pod{}).
 		Watches(&corev1.Pod{}, &EmptyEventHandler{}).
 		Watches(&corev1.Node{}, &EmptyEventHandler{}).
 		Complete(r)

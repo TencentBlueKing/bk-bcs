@@ -25,11 +25,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
 	"github.com/avast/retry-go"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/loop"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/resource"
@@ -64,18 +65,24 @@ func (rm *ResManClient) getResourceManagerClient() (ResourceManagerClient, func(
 		return nil, nil, ErrNotInited
 	}
 
-	if rm.disc == nil {
-		return nil, nil, fmt.Errorf("resourceManager module not enable dsicovery")
+	var endpoints []string
+	if discovery.UseServiceDiscovery() {
+		addr := fmt.Sprintf("%s:%d", discovery.ResourceManagerServiceName, discovery.ServiceGrpcPort)
+		endpoints = append(endpoints, addr)
+	} else {
+		if rm.disc == nil {
+			return nil, nil, fmt.Errorf("resourceManager module not enable dsicovery")
+		}
+
+		// random server
+		nodeServer, err := rm.disc.GetRandomServiceNode()
+		if err != nil {
+			return nil, nil, err
+		}
+		endpoints = utils.GetServerEndpointsFromRegistryNode(nodeServer)
 	}
 
-	// random server
-	nodeServer, err := rm.disc.GetRandomServiceNode()
-	if err != nil {
-		return nil, nil, err
-	}
-	endpoints := utils.GetServerEndpointsFromRegistryNode(nodeServer)
-
-	blog.Infof("ResManClient get node[%s] from disc", nodeServer.Address)
+	blog.Infof("ResManClient get node[%s] from disc", endpoints)
 	conf := &Config{
 		Hosts:     endpoints,
 		TLSConfig: rm.opts.TLSConfig,

@@ -44,7 +44,7 @@ var (
 	HasDemoManifestResKinds = []string{
 		resCsts.Deploy, resCsts.STS, resCsts.DS, resCsts.CJ, resCsts.Job, resCsts.Po, resCsts.Ing, resCsts.SVC,
 		resCsts.EP, resCsts.CM, resCsts.Secret, resCsts.PV, resCsts.PVC, resCsts.SC, resCsts.HPA, resCsts.SA,
-		resCsts.GDeploy, resCsts.GSTS, resCsts.CObj,
+		resCsts.GDeploy, resCsts.GSTS, resCsts.CObj, resCsts.BscpConfig,
 	}
 )
 

@@ -683,11 +683,23 @@ func (c *Cluster) ListOsImage(provider string, opt *cloudprovider.CommonOption) 
 
 	images := make([]*proto.OsImage, 0)
 
+	var filterImageProvider = []string{icommon.PublicImageProvider, icommon.BCSImageProvider}
+	if !utils.StringInSlice(provider, filterImageProvider) {
+		return images, nil
+	}
+
 	cli, err := api.NewTkeClient(opt)
 	if err != nil {
 		return nil, err
 	}
-	cloudImages, err := cli.DescribeOsImages(provider, opt)
+
+	cloud, err := cloudprovider.GetCloudByProvider(cloudName)
+	if err != nil {
+		return nil, err
+	}
+	bcsImageNameList := cloud.GetOsManagement().GetAvailableVersion()
+
+	cloudImages, err := cli.DescribeOsImages(provider, bcsImageNameList, opt)
 	if err != nil {
 		return nil, err
 	}

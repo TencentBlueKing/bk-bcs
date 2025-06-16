@@ -43,7 +43,7 @@ func NewListQuotaAction(model store.ProjectModel) *ListQuotaAction {
 	}
 }
 
-func (la *ListQuotaAction) doHost(req *proto.ListProjectQuotasRequest,
+func (la *ListQuotaAction) doHost(ctx context.Context, req *proto.ListProjectQuotasRequest,
 	pquota []*proto.ProjectQuota) ([]*proto.ProjectQuota, error) {
 	p, err := la.model.GetProject(la.ctx, req.ProjectID)
 	if err != nil {
@@ -80,7 +80,7 @@ func (la *ListQuotaAction) doHost(req *proto.ListProjectQuotasRequest,
 		}
 	}
 
-	pq, errU := la.doHostUsage(req, pquota, p)
+	pq, errU := la.doHostUsage(ctx, req, pquota, p)
 	if errU != nil {
 		return pquota, errU
 	}
@@ -89,10 +89,10 @@ func (la *ListQuotaAction) doHost(req *proto.ListProjectQuotasRequest,
 	return pquota, nil
 }
 
-func (la *ListQuotaAction) doHostUsage(req *proto.ListProjectQuotasRequest,
+func (la *ListQuotaAction) doHostUsage(ctx context.Context, req *proto.ListProjectQuotasRequest,
 	pquota []*proto.ProjectQuota, p *project.Project) ([]*proto.ProjectQuota, error) {
 	// 获取指定项目和提供商的资源使用情况
-	pqs, errC := clustermanager.GetResourceUsage(req.ProjectID, req.Provider)
+	pqs, errC := clustermanager.GetResourceUsage(ctx, req.ProjectID, req.Provider)
 
 	if errC != nil {
 		return pquota, errC
@@ -103,7 +103,7 @@ func (la *ListQuotaAction) doHostUsage(req *proto.ListProjectQuotasRequest,
 		var NG []*proto.NodeGroup
 		// 获取每个节点组的详细信息
 		for _, gpid := range pq.TotalGroupIds {
-			ng, errG := clustermanager.GetNodeGroup(gpid)
+			ng, errG := clustermanager.GetNodeGroup(ctx, gpid)
 			if errG != nil {
 				return pquota, errG
 			}
@@ -192,7 +192,7 @@ func (la *ListQuotaAction) Do(ctx context.Context,
 	var PQ []*proto.ProjectQuota
 
 	if req.ProjectID != "" && req.GetQuotaType() != string(quota.Federation) {
-		pq, err := la.doHost(req, PQ)
+		pq, err := la.doHost(ctx, req, PQ)
 		if err != nil {
 			return err
 		}

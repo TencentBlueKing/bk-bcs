@@ -106,11 +106,12 @@ type SVCLB struct {
 
 // SVCPort ...
 type SVCPort struct {
-	Name       string `structs:"name"`
-	Port       int64  `structs:"port"`
-	Protocol   string `structs:"protocol"`
-	TargetPort string `structs:"targetPort"`
-	NodePort   int64  `structs:"nodePort"`
+	Name             string `structs:"name"`
+	Port             int64  `structs:"port"`
+	Protocol         string `structs:"protocol"`
+	TargetPort       string `structs:"targetPort"`
+	TargetSelectPort string `structs:"targetSelectPort"`
+	NodePort         int64  `structs:"nodePort"`
 }
 
 // SVCSelector ...

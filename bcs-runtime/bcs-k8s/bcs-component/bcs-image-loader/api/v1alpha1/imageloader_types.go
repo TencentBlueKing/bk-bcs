@@ -91,23 +91,30 @@ type ImageLoaderStatus struct {
 	Revision string `json:"revision"`
 
 	// Desired is the desired number of ImagePullJobs, this is typically equal to the number of len(spec.Images).
-	Desired int32 `json:"desired"`
+	Desired int32 `json:"desired,omitempty"`
 
 	// Active is the number of running ImagePullJobs which are acknowledged by the imagepulljob controller.
 	// +optional
-	Active int32 `json:"active"`
+	Active int32 `json:"active,omitempty"`
 
 	// Completed is the number of ImagePullJobs which are finished
 	// +optional
-	Completed int32 `json:"completed"`
+	Completed int32 `json:"completed,omitempty"`
 
 	// Succeeded is the number of image pull job which are finished and status.Succeeded==status.Desired.
 	// +optional
-	Succeeded int32 `json:"succeeded"`
+	Succeeded int32 `json:"succeeded,omitempty"`
 
 	// FailedStatuses is the status of ImagePullJob which has the failed nodes(status.Failed>0) .
 	// +optional
 	FailedStatuses []*FailedStatus `json:"failedStatuses,omitempty"`
+
+	// LoadedNodes is the nodes which have been loaded image
+	// +optional
+	LoadedNodes []string `json:"loadedNodes,omitempty"`
+	// FailedNodes is the nodes which have been failed to load image
+	// +optional
+	FailedNodes []string `json:"failedNodes,omitempty"`
 }
 
 // FailedStatus the state of ImagePullJob which has the failed nodes(status.Failed>0)

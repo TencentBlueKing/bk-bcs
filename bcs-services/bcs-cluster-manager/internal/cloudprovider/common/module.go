@@ -385,22 +385,36 @@ func CheckNodeIpsInCMDBTask(taskID string, stepName string) error {
 	}
 
 	// get nodeIPs
-	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
+	nodeIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
 		cloudprovider.NodeIPsKey.String(), ",")
-	if len(ipList) == 0 {
+	transVPCIpList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
+		cloudprovider.TransVPCIPs.String(), ",")
+
+	// when nodeIpList && transVPCIpList exist, use transVPCIpList. nodeIpList pass to backward
+	if len(transVPCIpList) > 0 {
+		nodeIpList = transVPCIpList
+	}
+
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CheckNodeIpsInCMDBTask[%s] nodeIds:[%v]",
+			taskID, nodeIpList))
+
+	if len(nodeIpList) == 0 {
 		blog.Infof("CheckNodeIpsInCMDBTask[%s] nodeIPs empty", taskID)
 		return nil
 	}
 
 	ctx := cloudprovider.WithTaskIDForContext(context.Background(), taskID)
 
-	err = CheckIPsInCmdb(ctx, ipList)
+	err = CheckIPsInCmdb(ctx, nodeIpList)
 	if err != nil {
 		blog.Errorf("CheckNodeIpsInCMDBTask[%s] failed: %v", taskID, err)
 		_ = state.UpdateStepFailure(start, stepName, err)
 		return err
 	}
 	blog.Infof("CheckNodeIpsInCMDBTask %s successful", taskID)
+	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+		fmt.Sprintf("CheckNodeIpsInCMDBTask[%s] successful", taskID))
 
 	// update step
 	_ = state.UpdateStepSucc(start, stepName)

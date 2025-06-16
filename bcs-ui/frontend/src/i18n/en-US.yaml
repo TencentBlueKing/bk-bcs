@@ -343,8 +343,6 @@ generic:
       text: Pod-Drain
       tips: IP status is to stop scheduling to do POD expelction operation
       title: Confirm pod drain
-      subTitle: 'Confirm that you need to expel the POD on the node {IP}'
-      subTitle2: 'Confirm that {ip} and other {num} pods on the node node'
     cordon:
       text: Cordon
       title: 'Confirm stops scheduling {ip} '
@@ -469,6 +467,9 @@ generic:
     enableFailed: Enable failed
     disable: Disabling
     disableFailed: Disable failed
+    halfSuccess: Half success
+    terminate: Terminate
+    waiting: Waiting
   validate:
     repeatKey: Repeat key
     required: Requiring item
@@ -480,6 +481,9 @@ generic:
     annotations: 'only support letters, numbers, space and characters (-_./)'
     labelKey1: >-
       Only support the letters, numbers and characters (-_./), and need to start
+      with the letter number
+    labelValue: >-
+      Only support the letters, numbers and characters (-_.), and need to start
       with the letter number
     kindName: >-
       The name can only include numbers, letters, mid-line lines (-), down line
@@ -623,7 +627,6 @@ cluster:
     useSharedCluster: Use shared cluster
     addCluster: Add
     dashboard: Dashboard
-    applyMaster: Apply for master node
     applyRecord: Check the application record
     overview: Overview
     delete:
@@ -1515,8 +1518,6 @@ cluster:
           number of nodes will be automatically adjusted
         label:
           name: Node name
-        msg:
-          drainSuccess: POD Migration Successful
         action:
           delete:
             text: Delete node
@@ -1643,7 +1644,6 @@ cluster:
     button:
       selectPage: Selected on this page
       selectAcrossPage: Cross page
-      applyNode: Apply for node node
       batch: Batch
       retry: Failure to retry
       setLabel: Set label
@@ -1659,6 +1659,7 @@ cluster:
         subTitle: 'Confirm whether to delete {ip} and other {num} nodes'
       saveSetting: Change Preview
       gotIt: Got it
+      drainConfirm: 'Drain ({num})'
     msg:
       labelDesc: Tag helps to sort out your resources
       selectedData: 'Selected {num}'
@@ -1680,6 +1681,9 @@ cluster:
       batchEdit: Batch edit
       copyNodeIP: Click to Copy Node IP
       note: 'Note: NoExecute taint may evict all Pods on the node; proceed with care.'
+      filterTip: >-
+        The filtered results are only for querying the current page and do not
+        affect the actual drain scope.
     placeholder:
       searchNode: 'Search for IP, label, taints, annotations, status, node source, nodePool'
       inputKey: Please enter the key
@@ -1716,6 +1720,25 @@ cluster:
       nodeNum: >-
         This selection includes {nodeNum} nodes, and the batch edit label
         content for this batch is as follows:
+      selectedNode: Selected Nodes
+      drainRange:
+        text: Drain Scope
+        all: All Pods of the selected nodes
+        labels: Filter by pod label
+      terminationGracePeriod:
+        text: Pod termination grace period
+        default: Use the terminationGracePeriodSeconds value defined in the Pod
+        seconds: 'Exiting after waiting for {seconds}'
+      preview: Preview
+      drainNum: >-
+        There are {podNum} Pods in total, {drainNum} of which can be evicted, 
+        and the other {notDrainNum} Pods managed by DaemonSet will not be
+        evicted
+      namespace: Namespace
+      node: Node
+      termination: Termination grace period
+      drainRisk: Drain Risk
+      isDrainOnly: Only show will be evicted Pods
     metric:
       cpuUsageAndRequestUsage: CPU usage rate/packing rate
       memUsageAndRequestUsage: Memory usage/packing rate
@@ -1728,6 +1751,7 @@ cluster:
       applying: Applying
     create:
       text: Nodes
+      text1: Nodes
       button:
         confirmAdd:
           text: Determine add
@@ -3409,7 +3433,6 @@ amazonCloud:
     search: Search ID/name/SubscriptionID/tenantID/ClientID/cluster
   tips:
     nameRegex: 'Only support English, numbers and characters (-)'
-    secretKeyRegex: 'Only support English, numbers and characters (- or /)'
   label:
     create: Create
     clusterType: Cluster type

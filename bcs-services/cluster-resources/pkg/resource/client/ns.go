@@ -62,7 +62,12 @@ func (c *NSClient) List(ctx context.Context, opts metav1.ListOptions) (map[strin
 	if err != nil {
 		return nil, err
 	}
-	if clusterInfo.Type == cluster.ClusterTypeShared {
+	projInfo, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if clusterInfo.Type == cluster.ClusterTypeShared && clusterInfo.ProjID != projInfo.ID {
 		return filterProjNSList(ctx, manifest)
 	}
 	return manifest, nil
@@ -93,7 +98,11 @@ func (c *NSClient) ListByClusterViewPerm(
 	if err != nil {
 		return nil, err
 	}
-	if clusterInfo.Type == cluster.ClusterTypeShared {
+	projInfo, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if clusterInfo.Type == cluster.ClusterTypeShared && clusterInfo.ProjID != projInfo.ID {
 		return filterProjNSList(ctx, manifest)
 	}
 	return manifest, nil

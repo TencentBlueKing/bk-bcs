@@ -1,0 +1,59 @@
+{
+    "address": "0.0.0.0",
+    "port": 8081,
+    "httpport": 8080,
+    "metricport": 8082,
+    "alsologtostderr": true,
+    "logtostderr": true,
+    "istio": {
+        "istioVersions": [
+            {
+                "name": "istio 1.20",
+                "version": "1.20",
+                "chartVersion": "1.20-bcs.1",
+                "kubeVersion": ">1.18.0",
+                "enabled": true
+            },
+            {
+                "name": "istio 1.18",
+                "version": "1.18",
+                "chartVersion": "1.18-bcs.1",
+                "kubeVersion": ">1.16.0",
+                "enabled": true
+            },
+            {
+                "name": "istio 1.14",
+                "version": "1.14",
+                "chartVersion": "1.14-bcs.1",
+                "kubeVersion": ">1.12.0",
+                "enabled": true
+            }
+        ],
+        "featureConfigs": [
+            {   
+                "name": "outboundTrafficPolicy",
+                "description": "出站流量策略",
+                "defaultValue": "ALLOW_ANY",
+                "availableValues": ["ALLOW_ANY", "REGISTRY_ONLY"],
+                "istioVersion": ">1.5.0",
+                "enabled": true
+            },
+            {
+                "name": "holdApplicationUntilProxyStarts",
+                "description": "应用等待 sidecar 启动",
+                "defaultValue": "true",
+                "availableValues": ["true", "false"],
+                "istioVersion": ">1.16.0",
+                "enabled": true
+            },
+            {
+                "name": "exitOnZeroActiveConnections",
+                "description": "无活动连接时退出",
+                "defaultValue": "true",
+                "availableValues": ["true", "false"],
+                "istioVersion": ">1.16.0",
+                "enabled": true
+            }
+        ]
+    }
+}

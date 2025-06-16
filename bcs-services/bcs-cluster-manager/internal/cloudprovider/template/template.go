@@ -50,6 +50,7 @@ const (
 var (
 	// DynamicParameterInject inject parameter for bk-sops
 	DynamicParameterInject = map[string]string{
+		clusterMasterIPs:   "MasterNodeIPList",
 		nodeIPList:         "NodeIPList",
 		externalNodeScript: "ExternalNodeScript",
 		clusterKubeConfig:  "KubeConfig",
@@ -60,6 +61,7 @@ var (
 type ExtraInfo struct {
 	InstancePasswd     string
 	NodeIPList         string
+	MasterIPList       string
 	NodeOperator       string
 	ModuleID           string
 	BusinessID         string
@@ -243,7 +245,10 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		}
 		return common.False, nil
 	case clusterMasterIPs:
-		return getClusterMasterIPs(cluster), nil
+		if len(extra.MasterIPList) == 0 {
+			return getClusterMasterIPs(cluster), nil
+		}
+		return clusterMasterIPs, nil
 	case clusterRegion:
 		return cluster.GetRegion(), nil
 	case clusterVPC:
@@ -254,6 +259,8 @@ func getTemplateParameterByName(name string, cluster *proto.Cluster, extra Extra
 		if extra.BusinessID == "" {
 			return cluster.GetBusinessID(), nil
 		}
+		return extra.BusinessID, nil
+	case clusterBizCCID:
 		return extra.BusinessID, nil
 	case clusterModuleID:
 		return extra.ModuleID, nil

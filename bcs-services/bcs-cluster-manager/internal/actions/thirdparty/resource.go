@@ -157,7 +157,7 @@ func (ga *GetProviderResourceUsageAction) getBizInfoByPools() error {
 						continue
 					}
 
-					proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(cls.ProjectID, true)
+					proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, cls.ProjectID, true)
 					if errLocal != nil {
 						blog.Errorf("getProviderDevicePools GetProjectInfo[%s] failed: %v",
 							group.ClusterID, errLocal)

@@ -499,6 +499,7 @@ func (cli *CceClient) GetClusterNodePool(clusterId, nodePoolId string) (*model.N
 	}, nil
 }
 
+// ListClusterNodeGroups list cluster node groups
 func (cli *CceClient) ListClusterNodeGroups(clusterId string) ([]model.NodePool, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
@@ -563,7 +564,7 @@ func (cli *CceClient) UpdateNodePoolV2(data *model.UpdateNodePoolRequest) (
 
 // UpdateNodePoolDesiredNodes update nodePool desired desiredSize nodes count
 func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, desiredSize int32, inc bool) (
-	*model.UpdateNodePoolResponse, error) {
+	*model.ScaleNodePoolResponse, error) {
 	if cli == nil {
 		return nil, cloudprovider.ErrServerIsNil
 	}
@@ -572,54 +573,36 @@ func (cli *CceClient) UpdateNodePoolDesiredNodes(clusterId, nodePoolId string, d
 		return nil, fmt.Errorf("cluster or nodePool empty")
 	}
 
-	var (
-		taints            []model.Taint
-		k8sTags           map[string]string
-		autoscalingConfig = &model.NodePoolNodeAutoscaling{}
-	)
-
 	nodePool, err := cli.GetClusterNodePool(clusterId, nodePoolId)
 	if err != nil {
 		return nil, fmt.Errorf("updateDesiredNodes get cluster nodePool err: %s", err)
 	}
 
-	if nodePool != nil && nodePool.Spec != nil && nodePool.Spec.NodeTemplate != nil &&
-		nodePool.Spec.NodeTemplate.Taints != nil {
-		taints = *nodePool.Spec.NodeTemplate.Taints
-	}
+	blog.Infof("UpdateNodePoolDesiredNodes[%s] nodepool[%s]: %v",
+		clusterId, nodePoolId, *nodePool.Spec.InitialNodeCount)
 
-	if nodePool != nil && nodePool.Spec != nil && nodePool.Spec.NodeTemplate != nil &&
-		nodePool.Spec.NodeTemplate.K8sTags != nil {
-		k8sTags = nodePool.Spec.NodeTemplate.K8sTags
-	}
-
-	if nodePool != nil && nodePool.Spec != nil && nodePool.Spec.Autoscaling != nil {
-		autoscalingConfig = nodePool.Spec.Autoscaling
-	}
-
+	// scaleUp nodeNum nodes
 	if inc {
 		desiredSize += *nodePool.Spec.InitialNodeCount
+		blog.Infof("updateDesiredNodes[%s] nodepool[%s] scaleUp initialNodeCount: %d", clusterId, nodePoolId,
+			desiredSize)
 	}
 
-	req := &model.UpdateNodePoolRequest{
+	// inc false: nodePool scale to desiredSize num nodes
+	blog.Infof("updateDesiredNodes[%s] nodepool[%s] desiredSize: %d", clusterId, nodePoolId, desiredSize)
+
+	rsp, err := cli.cce.ScaleNodePool(&model.ScaleNodePoolRequest{
 		ClusterId:  clusterId,
 		NodepoolId: nodePoolId,
-		Body: &model.NodePoolUpdate{
-			Metadata: &model.NodePoolMetadataUpdate{
-				Name: nodePool.Metadata.Name,
-			},
-			Spec: &model.NodePoolSpecUpdate{
-				NodeTemplate: &model.NodeSpecUpdate{
-					Taints:  taints,
-					K8sTags: k8sTags,
-				},
-				InitialNodeCount: desiredSize,
-				Autoscaling:      autoscalingConfig,
+		Body: &model.ScaleNodePoolRequestBody{
+			Kind:       "NodePool",
+			ApiVersion: "v3",
+			Spec: &model.ScaleNodePoolSpec{
+				DesiredNodeCount: desiredSize,
+				ScaleGroups:      []string{"default"},
 			},
 		},
-	}
-
-	rsp, err := cli.cce.UpdateNodePool(req)
+	})
 	if err != nil {
 		return nil, err
 	}

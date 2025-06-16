@@ -80,6 +80,12 @@ var (
 		StepMethod: cloudprovider.CheckClusterCleanNodesAction,
 		StepName:   "检测下架节点状态",
 	}
+
+	// NodeDrainPodActionStep 检测下架节点状态
+	NodeDrainPodActionStep = cloudprovider.StepInfo{
+		StepMethod: cloudprovider.NodeDrainPodAction,
+		StepName:   "节点驱逐Pod",
+	}
 )
 
 // CreateClusterNamespace for cluster create namespace
@@ -644,10 +650,14 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 	}
 
 	for _, node := range nodeNames {
-		// user defined labels
-		labels := data.Labels
-		if labels == nil {
-			labels = make(map[string]string)
+
+		blog.Infof("updateClusterNodesLabels[%s] node[%s] ip[%s] before labels: %v",
+			taskID, node.NodeName, node.NodeIP, node.NodeLabels)
+
+		// user defined labels 深拷贝本地标签配置
+		labels := make(map[string]string)
+		for k, v := range data.Labels {
+			labels[k] = v
 		}
 
 		// cmdb labels
@@ -681,6 +691,10 @@ func UpdateClusterNodesLabels(ctx context.Context, data NodeLabelsData) error { 
 				labels[k] = v
 			}
 		}
+
+		blog.Infof("updateClusterNodesLabels[%s] node[%s] ip[%s] after labels: %v",
+			taskID, node.NodeName, node.NodeIP, labels)
+
 		err := k8sOperator.UpdateNodeLabels(ctx, data.ClusterID, node.NodeName, labels)
 		if err != nil {
 			blog.Errorf("updateClusterNodesLabels[%s] ip[%s] failed: %v", taskID, node.NodeName, err)

@@ -30,3 +30,18 @@
         }
     }
 }
+.dropdown-item {
+    display: block;
+    height: 32px;
+    line-height: 33px;
+    padding: 0 16px;
+    color: #63656e;
+    font-size: 12px;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    &:hover {
+        background-color: #eaf3ff;
+        color: #3a84ff;
+    }
+}

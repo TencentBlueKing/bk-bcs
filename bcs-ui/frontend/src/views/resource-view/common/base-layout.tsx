@@ -290,8 +290,32 @@ export default defineComponent({
     };
 
     // 跳转详情界面
-    const gotoDetail = (row) => {
-      $router.push({
+    const gotoDetail = ($event, url, row) => {
+      if (isViewEditable.value) return;
+      // 检测是否按下了 Ctrl 键
+      if ($event.ctrlKey || $event.metaKey) {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        $router.push({
+          name: 'dashboardWorkloadDetail',
+          params: {
+            category: category.value,
+            name: row.metadata.name,
+            namespace: row.metadata.namespace,
+            clusterId: handleGetExtData(row.metadata.uid, 'clusterID'),
+          },
+          query: {
+            kind: kind.value,
+            crd: crd.value,
+            viewID: dashboardViewID.value,
+          },
+        });
+      }
+    };
+
+    const resolveLink = (row) => {
+      if (isViewEditable.value) return 'javascript:void(0)';
+      const { href } = $router.resolve({
         name: 'dashboardWorkloadDetail',
         params: {
           category: category.value,
@@ -305,6 +329,7 @@ export default defineComponent({
           viewID: dashboardViewID.value,
         },
       });
+      return href;
     };
 
     // 跳转命名空间
@@ -645,11 +670,11 @@ export default defineComponent({
       nsList.value = await getNamespaceData({ $clusterId: curClusterId.value });
     };
     watch(curClusterId, async () => {
+      isLoading.value = true;
       await handleGetNsData();
       // 首次加载
-      if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace) {
+      if (!isEntry.value && nsList.value[0]?.name && !currentRoute.value?.query?.namespace && !curNsList.value.length) {
         $store.commit('updateViewNsList', [nsList.value[0].name]);
-        isEntry.value = true;
       } else {
         // 切换集群，判断当前选中的命名空间是否在新的命名空间列表中
         const newNs = curNsList.value?.reduce<string[]>((acc, cur) => {
@@ -661,16 +686,42 @@ export default defineComponent({
         }, []);
         $store.commit('updateViewNsList', newNs);
       }
+      isEntry.value = true;
 
       if (isClosed.value) {
+        isLoading.value = false;
         return;
       }
-      isLoading.value = true;
+      // isLoading.value = true;
       await handleGetTableData();
       isLoading.value = false;
       // 轮询资源，频繁切换资源，即使页面卸载，这个回调也会执行，导致存在多个定时器，使用isClosed来控制
       start();
     }, { immediate: true });
+
+    // 同步命名空间到query
+    watch(curNsList, () => {
+      const urlQuery = $router.currentRoute?.query || {};
+      // 不是集群模式 / 命名空间未改变 / 清空命名空间，直接返回
+      if (!isClusterMode.value
+        || urlQuery.namespace === curNsList.value.join(',')
+        || (!urlQuery.namespace && !curNsList.value.join(','))) return;
+      const data = {
+        ...urlQuery,
+        namespace: curNsList.value.join(','),
+      };
+      // 删除值为空的参数
+      Object.keys(data).forEach((key) => {
+        if (!data[key]) {
+          delete data[key];
+        }
+      });
+      $router.replace({
+        query: {
+          ...data,
+        },
+      });
+    });
 
     const isClosed = ref(false);
     onBeforeUnmount(() => {
@@ -736,6 +787,7 @@ export default defineComponent({
       detailLoading,
       sourceTypeMap,
       applyURL,
+      resolveLink,
     };
   },
   render() {
@@ -877,6 +929,7 @@ export default defineComponent({
                 isViewEditable: this.isViewEditable,
                 isClusterMode: this.isClusterMode,
                 sourceTypeMap: this.sourceTypeMap,
+                resolveLink: this.resolveLink,
               })
           }
         </div>

@@ -16,6 +16,7 @@ package stringx
 import (
 	"math/rand"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -107,14 +108,9 @@ func TrimStringToRuneCount(s string, maxRunes int) string {
 	return string(trimmed)
 }
 
-// GetIntOrDefault string转int，如果出现错误则返回0
-func GetIntOrDefault(s string) int {
-	if s == "" {
-		return 0
-	}
-	result, err := strconv.Atoi(s)
-	if err != nil {
-		return 0
-	}
-	return result
+// ReplaceIllegalChars 将不合法的用户名进行k8s label 规则转换
+func ReplaceIllegalChars(username string) string {
+	// 只允许 A-Za-z0-9-_.，其他的全部替换成 "_"
+	re := regexp.MustCompile(`[^A-Za-z0-9\-_.]`)
+	return re.ReplaceAllString(username, "_")
 }

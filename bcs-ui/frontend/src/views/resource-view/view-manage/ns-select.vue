@@ -4,13 +4,14 @@
     multiple
     :popover-min-width="360"
     searchable
-    :key="Date.now()"
     :clearable="false"
     :display-tag="displayTag"
     :placeholder="$t('view.labels.all')"
     selected-style="checkbox"
     v-model="nsData"
-    @selected="handleNsChange">
+    @toggle="handleToggle"
+    @selected="handleNsChange"
+    @tab-remove="handleRemove">
     <!-- <bcs-option key="all" id="" :name="$t('view.labels.all')">
       <bcs-checkbox :value="nsData.includes('')">
         <span class="text-[12px]">{{ $t('view.labels.all') }}</span>
@@ -59,19 +60,15 @@ const { getNamespaceData } = useNamespace();
 
 const nsData = ref<string[]>([]);
 const curNsData = computed(() => nsData.value.filter(item => !!item));// 过滤全部命名空间
-watch(() => props.value, () => {
+
+function setData() {
   if (isEqual(props.value, curNsData.value)) return;
   if (!props.value?.length) {
     nsData.value = [];// 全部命名空间逻辑
   } else {
     nsData.value = JSON.parse(JSON.stringify(props.value));
   }
-}, { immediate: true });
-watch(curNsData, (newValue, oldValue) => {
-  if (isEqual(newValue, oldValue)) return;
-  emits('change', curNsData.value);
-  emits('input', curNsData.value);
-});
+}
 
 const handleNsChange = (nsList) => {
   const last = nsList[nsList.length - 1];
@@ -83,6 +80,25 @@ const handleNsChange = (nsList) => {
   }
 };
 
+// 失去焦点才触发
+const isToggle = ref(false);
+function handleToggle(val: boolean) {
+  isToggle.value = val;
+  if (!isToggle.value) {
+    emits('change', curNsData.value);
+    emits('input', curNsData.value);
+  }
+}
+
+// 清除
+function handleRemove({ name }) {
+  const index = nsData.value.findIndex(v => v === name);
+  nsData.value.splice(index, 1);
+  if (isToggle.value) return;
+  emits('change', curNsData.value);
+  emits('input', curNsData.value);
+}
+
 // 组件使用的数据
 const nsList = ref<Array<INamespace>>([]);
 const nsLoading = ref(false);
@@ -93,6 +109,8 @@ const handleGetNsData = async () => {
   nsLoading.value = true;
   nsList.value = await getNamespaceData({ $clusterId: props.clusterId });
   nsLoading.value = false;
+  // 保证有数据后再设置值，否则 collapse-tag 数字不显示
+  setData();
 };
 
 // 跳转命名空间
@@ -106,7 +124,17 @@ const handleGotoNs = () => {
   window.open(href);
 };
 
+watch(() => props.value, () => {
+  if (!nsList.value.length) return;
+  setData();
+});
+
 watch(() => props.clusterId, () => {
   handleGetNsData();
 }, { immediate: true });
 </script>
+<style lang="postcss" scoped>
+:deep(.bk-select-tag-container) {
+  max-height: 500px !important;
+}
+</style>

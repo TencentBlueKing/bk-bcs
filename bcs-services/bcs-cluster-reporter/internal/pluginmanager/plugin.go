@@ -32,7 +32,16 @@ type Plugin interface {
 	// get check details for further analysiss
 	GetDetail() interface{}
 	// Check function for one time execute
-	Check()
+	Check(checkOption CheckOption)
+}
+
+// CheckOption check options
+type CheckOption struct {
+	// 是否触发深度检查
+	DeepCheck bool `json:"deepCheck" form:"deepCheck"`
+	// 需要返回的plugin
+	PluginStr  string   `json:"pluginStr" form:"pluginStr"`
+	ClusterIDs []string `json:"clusterIDs" form:"clusterIDs"`
 }
 
 // CheckItem struct to store check result

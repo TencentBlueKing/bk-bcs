@@ -17,12 +17,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/metrics"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
 
 // SearchActivities search activities
 func SearchActivities(projectCode, resourceType, activityType string, status models.ActivityStatus,
 	startTime, endTime time.Time, offset, limit int) ([]*models.Activity, int, error) {
+	start := time.Now()
 	var activities []*models.Activity
 	if projectCode == "" {
 		return nil, 0, fmt.Errorf("projectCode can not be empty")
@@ -46,27 +48,34 @@ func SearchActivities(projectCode, resourceType, activityType string, status mod
 	}
 	count := 0
 	if err := query.Count(&count).Error; err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("SearchActivities_Count", metrics.Query, metrics.ErrStatus, start)
 		return nil, 0, err
 	}
 	if err := query.Offset(offset).Limit(limit).Order("created_at desc").Find(&activities).Error; err != nil {
+		metrics.ReportMysqlSlowQueryMetrics("SearchActivities_Find", metrics.Query, metrics.ErrStatus, start)
 		return nil, 0, err
 	}
+	metrics.ReportMysqlSlowQueryMetrics("SearchActivities", metrics.Query, metrics.SucStatus, start)
 	return activities, count, nil
 }
 
 // CreateActivity create activity
 func CreateActivity(activity []*models.Activity) error {
+	start := time.Now()
 	for i := range activity {
 		err := GCoreDB.Create(activity[i]).Error
 		if err != nil {
+			metrics.ReportMysqlSlowQueryMetrics("CreateActivity", metrics.Create, metrics.ErrStatus, start)
 			return err
 		}
 	}
+	metrics.ReportMysqlSlowQueryMetrics("CreateActivity", metrics.Create, metrics.SucStatus, start)
 	return nil
 }
 
 // BatchDeleteActivity 通过配置的天数，资源类型删除操作记录
 func BatchDeleteActivity(resourceType []string, createdAt time.Time) error {
+	start := time.Now()
 	// stopFlag 循环删除的标志
 	stopFlag := true
 	// batchSize 一次删除的条数
@@ -76,6 +85,7 @@ func BatchDeleteActivity(resourceType []string, createdAt time.Time) error {
 		result := GCoreDB.Limit(batchSize).Where("resource_type in (?) and created_at < ?",
 			resourceType, createdAt).Delete(&models.Activity{})
 		if result.Error != nil {
+			metrics.ReportMysqlSlowQueryMetrics("BatchDeleteActivity", metrics.Delete, metrics.ErrStatus, start)
 			return result.Error
 		}
 
@@ -84,6 +94,6 @@ func BatchDeleteActivity(resourceType []string, createdAt time.Time) error {
 			stopFlag = false
 		}
 	}
-
+	metrics.ReportMysqlSlowQueryMetrics("BatchDeleteActivity", metrics.Delete, metrics.SucStatus, start)
 	return nil
 }

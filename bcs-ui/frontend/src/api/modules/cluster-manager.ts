@@ -79,6 +79,7 @@ export const cordonNodes = request('put', '/node/cordon');
 export const schedulerNode = request('post', '/node/drain');
 export const setNodeLabels = request('put', '/node/labels');
 export const setNodeTaints = request('put', '/node/taints');
+export const drainCheckList = request('post', '/node/drain/check');
 
 // 集群管理
 export const masterList = request('get', '/cluster/$clusterId/master');

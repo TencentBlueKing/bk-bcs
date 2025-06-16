@@ -79,6 +79,9 @@ var (
 
 	// DebugBkSopsTask task
 	DebugBkSopsTask TaskType = "DebugBkSopsTask"
+
+	// NodeDrainPodTask task
+	NodeDrainPodTask TaskType = "NodeDrainPodTask"
 )
 
 // GetTaskType by cloud
@@ -145,6 +148,9 @@ var (
 
 	// DebugBkSopsTaskName task
 	DebugBkSopsTaskName TaskName = "调试标准运维任务"
+
+	// NodeDrainPodTaskName task
+	NodeDrainPodTaskName TaskName = "节点驱逐 pod 任务"
 )
 
 // ParamKey xxx
@@ -220,8 +226,10 @@ var (
 	// LastClusterStatus xxx
 	LastClusterStatus ParamKey = "lastClusterStatus"
 
-	// NodeIPsKey xxx
 	// Task Common Instance
+	// NodeDatasKey xxx
+	NodeDatasKey ParamKey = "nodeDatas"
+	// NodeIPsKey xxx
 	NodeIPsKey ParamKey = "nodeIPs"
 	// OriginNodeIPsKey xxx
 	OriginNodeIPsKey ParamKey = "originNodeIPs"
@@ -243,6 +251,8 @@ var (
 	WorkerNodeIPsKey ParamKey = "workerIPs"
 	// VpcKey vpcId
 	VpcKey ParamKey = "vpc"
+	// NodeAdvanceKey node advanced info
+	NodeAdvanceKey ParamKey = "nodeAdvance"
 
 	// TerminateChargeNodes terminate nodes
 	TerminateChargeNodes ParamKey = "terminateChargeNodes"
@@ -270,6 +280,8 @@ var (
 	DynamicNodeScriptKey ParamKey = "ExternalNodeScript"
 	// DynamicClusterKubeConfigKey xxx
 	DynamicClusterKubeConfigKey ParamKey = "KubeConfig"
+	// DynamicMasterNodeIPListKey xxx
+	DynamicMasterNodeIPListKey ParamKey = "MasterNodeIPList"
 
 	// SuccessNodeIDsKey xxx
 	// CVM Instance
@@ -362,4 +374,10 @@ var (
 	IsStaticIpModeKey ParamKey = "isStaticIpMode"
 	// ClaimExpiredSecondsKey xxx
 	ClaimExpiredSecondsKey ParamKey = "claimExpiredSeconds"
+
+	// DrainHelperKey xxx
+	DrainHelperKey ParamKey = "drainHelper"
+
+	// TransVPCIPs trans vpc nodes ip
+	TransVPCIPs ParamKey = "transVPCNodeIPs"
 )

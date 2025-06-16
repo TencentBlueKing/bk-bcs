@@ -14,13 +14,15 @@
 package pluginmanager
 
 import (
+	"sync"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	metricsclientset "k8s.io/metrics/pkg/client/clientset/versioned"
-	"sync"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/plugin"
 )
 
 const (

@@ -95,7 +95,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 		logging.Error("batch list variables failed, err: %s", err.Error())
 		return errorx.NewClusterErr(err.Error())
 	}
-	list, err := loadRetDatasFromCluster(req.ClusterID, namespaces, variablesMap, quotaMap, existns)
+	list, err := loadRetDatasFromCluster(ctx, req.ClusterID, namespaces, variablesMap, quotaMap, existns)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (a *SharedNamespaceAction) ListNamespaces(ctx context.Context,
 
 	go func() {
 		// sync namespaces to bcs-cc
-		if err := common.SyncNamespace(req.GetProjectCode(), req.GetClusterID(), namespaces); err != nil {
+		if err := common.SyncNamespace(ctx, req.GetProjectCode(), req.GetClusterID(), namespaces); err != nil {
 			logging.Error("sync shared namespaces %s/%s failed, err:%s",
 				req.GetProjectCode(), req.GetClusterID(), err.Error())
 		}
@@ -223,7 +223,7 @@ func loadListRetDataFromDB(namespace nsm.Namespace) *proto.NamespaceData {
 	return retData
 }
 
-func loadRetDatasFromCluster(clusterID string, namespaces []corev1.Namespace,
+func loadRetDatasFromCluster(ctx context.Context, clusterID string, namespaces []corev1.Namespace,
 	variablesMap map[string][]*proto.VariableValue, quotaMap map[string]corev1.ResourceQuota,
 	existns map[string]nsm.Namespace) ([]*proto.NamespaceData, error) {
 	retDatas := []*proto.NamespaceData{}
@@ -252,7 +252,7 @@ func loadRetDatasFromCluster(clusterID string, namespaces []corev1.Namespace,
 		if creator, exists := namespace.Annotations[constant.AnnotationKeyCreator]; exists {
 			managers = append(managers, creator)
 		} else {
-			cluster, err := clustermanager.GetCluster(clusterID)
+			cluster, err := clustermanager.GetCluster(ctx, clusterID)
 			if err != nil {
 				return nil, err
 			}

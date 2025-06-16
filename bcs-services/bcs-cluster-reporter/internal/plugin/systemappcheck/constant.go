@@ -36,7 +36,7 @@ const (
 
 	ConfigErrorStatus         = "configerr"
 	SVCConfigErrorStatus      = "svc configerr"
-	ConfigInconsistencyStatus = "configinconsistency "
+	ConfigInconsistencyStatus = "configinconsistency"
 	NolabelStatus             = "no labels"
 	ConfigOtherErrorStatus    = "ConfigOtherErrorStatus"
 	UnrecommandedStatus       = "UnrecommandedStatus"

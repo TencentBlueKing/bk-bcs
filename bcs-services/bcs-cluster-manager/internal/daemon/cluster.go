@@ -52,7 +52,7 @@ func (d *Daemon) reportClusterGroupNodeNum(error chan<- error) {
 			}
 
 			bizId := ""
-			pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(group.ProjectID, true)
+			pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(d.ctx, group.ProjectID, true)
 			if errLocal == nil {
 				bizId = pInfo.GetBusinessID()
 			}

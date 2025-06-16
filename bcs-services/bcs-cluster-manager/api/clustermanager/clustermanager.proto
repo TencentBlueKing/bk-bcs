@@ -379,6 +379,17 @@ service ClusterManager {
     };
   }
 
+  rpc CheckDrainNode(CheckDrainNodeRequest) returns (CheckDrainNodeResponse) {
+    option (google.api.http) = {
+      post : "/clustermanager/v1/node/drain/check"
+      body : "*"
+    };
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+      description : "节点pod驱逐前风险检查"
+      summary : "节点上的 Pod 驱逐前风险检查"
+    };
+  }
+
   rpc UpdateNodeLabels(UpdateNodeLabelsRequest) returns (UpdateNodeLabelsResponse) {
     option (google.api.http) = {
       put : "/clustermanager/v1/node/labels"
@@ -2140,6 +2151,17 @@ message NodeLoginInfo {
   KeyInfo keyPair = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "keyPair",
     description: "节点私钥信息, 与密码2选一，2者均设置优先密钥"
+  }];
+}
+
+message NodeAdvancedInfo {
+  string nodeOs = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "nodeOs",
+    description: "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像"
+  }];
+  bool isGPUNode = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "isGPUNode",
+    description: "是否GPU节点"
   }];
 }
 
@@ -4066,7 +4088,11 @@ message ImageInfo {
   }];
   string imageType = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "imageType",
-    description: "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE)"
+    description: "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE/BCS_IMAGE)"
+  }];
+  string imageOs = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "imageOs",
+    description: "镜像系统"
   }];
 }
 
@@ -4391,6 +4417,18 @@ message NodeTemplate {
     title: "skipSystemInit",
     description: "缩容失败时是否允许跳过流程, 默认不允许跳过"
   }];
+  ImageInfo image = 33 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "image",
+    description: "节点模版镜像信息"
+  }];
+  GPUArgs gpuArgs = 34 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpuArgs",
+    description: "GPU参数信息"
+  }];
+  map<string, string> extraInfo = 35 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点模版额外标识信息"
+  }];
 }
 
 message ClusterModule {
@@ -4551,6 +4589,18 @@ message CreateNodeTemplateRequest {
     title: "annotations",
     description: "用户设置节点annotations"
   }];
+  ImageInfo imageInfo = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "imageInfo",
+    description: "节点模板镜像信息"
+  }];
+  GPUArgs gpuArgs = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpuArgs",
+    description: "GPU参数信息"
+  }];
+  MapStruct extraInfo = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点模版额外标识信息"
+  }];
 }
 
 message CreateNodeTemplateResponse {
@@ -4673,6 +4723,18 @@ message UpdateNodeTemplateRequest {
   MapStruct annotations = 23 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title: "annotations",
     description: "用户设置节点annotations"
+  }];
+  ImageInfo imageInfo = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "imageInfo",
+    description: "节点模板镜像信息"
+  }];
+  GPUArgs gpuArgs = 25[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "gpuArgs",
+    description: "GPU参数信息"
+  }];
+  MapStruct extraInfo = 26[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "extraInfo",
+    description: "节点模版额外标识信息"
   }];
 }
 
@@ -9081,6 +9143,10 @@ message AddNodesRequest {
     title : "login",
     description : "上架节点重装系统时设置节点密码，不同云可兼容处理"
   }];
+  NodeAdvancedInfo advance = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "advance",
+    description : "上架节点高级设置信息,例如使用自定义镜像"
+  }];
 }
 
 message AddNodesResponse {
@@ -9161,6 +9227,10 @@ message AddNodesV2Request {
   NodeLoginInfo login = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "login",
     description : "上架节点重装系统时设置节点密码，不同云可兼容处理"
+  }];
+  NodeAdvancedInfo advance = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "advance",
+    description : "上架节点高级设置信息,例如使用自定义镜像"
   }];
 }
 
@@ -13196,6 +13266,7 @@ message DrainNodeRequest {
   bool disableEviction = 11;
   uint32 skipWaitForDeleteTimeoutSeconds = 12;
   bool dryRun = 13;
+  string operator = 14;
 }
 message DrainNodeResponse {
   uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
@@ -13209,10 +13280,66 @@ message DrainNodeResponse {
     title : "result",
     description : "返回结果"
   }];
-  NodeOperationStatus data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+  Task data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
-    description : "返回数据"
+    description : "驱逐节点任务返回信息"
   }];
+}
+
+message CheckDrainNodeData {
+  string podName = 1;
+  string nameSpace = 2;
+  string podStatus = 3;
+  string podServiceAccount = 4;
+  string node = 5;
+  uint32 gracePeriodSeconds = 6;
+  repeated EvictionRisk evictionRisk = 7;
+  bool willBeEvicted = 8;
+}
+
+message EvictionRisk {
+  string riskParameter = 1;
+  string riskDescription = 2;
+}
+
+message CheckDrainNodeRequest {
+  repeated string innerIPs = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "innerIPs",
+      description : "节点内网IP列表，和节点名称列表二选一，优先节点名称列表"
+    }];
+  string clusterID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "clusterID",
+      description : "pod迁移节点所属的clusterID"    },
+    (validate.rules).string = {min_bytes: 1}
+  ];
+  repeated string nodes = 3 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "nodes",
+      description : "节点名称列表，和节点内网IP列表二选一，优先节点名称列表"
+    }];
+  bool force = 4;
+  int32 gracePeriodSeconds = 5;
+  bool ignoreAllDaemonSets = 6;
+  bool deleteLocalData = 7;
+  string selector = 8;
+  string podSelector = 9;
+  bool disableEviction = 10;
+}
+
+message CheckDrainNodeResponse {
+  uint32 code = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) ={
+    title : "code", description : "返回错误码"  }];
+  string message = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "message",
+    description : "返回错误信息"  }];
+  bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "result",
+    description : "返回结果"  }];
+  repeated CheckDrainNodeData data = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title : "data",
+    description : "返回数据"  }];
 }
 
 message NodeAnnotation {
@@ -15110,5 +15237,65 @@ message GetClusterSharedProjectResponse {
   google.protobuf.ListValue data = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "集群信息的SharedProject"
+  }];
+}
+
+message GPUArgs {
+  bool migEnable = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "migEnable",
+    description: "是否启用MIG特性"
+  }];
+  DriverVersion driver = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "driver",
+    description: "GPU驱动版本信息"
+  }];
+  DriverVersion cuda = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cuda",
+    description: "CUDA版本信息"
+  }];
+  CUDNN cudnn = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "cuDNN",
+    description: "cuDNN版本信息"
+  }];
+  CustomDriver customDriver = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "customDriver",
+    description: "自定义GPU驱动信息"
+  }];
+}
+
+message DriverVersion {
+  string version = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "节点模版镜像信息"
+  }];
+  string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "节点模版镜像信息"
+  }];
+}
+
+message CUDNN {
+  string version = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "version",
+    description: "cuDNN的版本"
+  }];
+  string name = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "name",
+    description: "cuDNN的名字"
+  }];
+  string docName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "docName",
+    description: "cuDNN的Doc名字"
+  }];
+  string devName = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "devName",
+    description: "cuDNN的Dev名字"
+  }];
+  }
+
+message CustomDriver {
+  string address = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+    title: "address",
+    description: "自定义GPU驱动地址链接"
   }];
 }

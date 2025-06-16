@@ -33,6 +33,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/mock"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/cloud/tencentcloud"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 )
 
@@ -1228,7 +1229,7 @@ func TestIngressConvert(t *testing.T) {
 
 			for _, ingress := range test.ingresses {
 				cli.Create(context.TODO(), &ingress)
-				err := ic.ProcessUpdateIngress(&ingress)
+				_, err := ic.ProcessUpdateIngress(&ingress)
 				if (err != nil && !test.hasErr) || (err == nil && test.hasErr) {
 					t.Errorf("expect %v, but err is %v", test.hasErr, err)
 				}

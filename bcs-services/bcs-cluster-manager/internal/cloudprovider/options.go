@@ -74,7 +74,7 @@ const (
 	TaskStatusSuccess = "SUCCESS"
 	// TaskStatusSkip task skip
 	TaskStatusSkip = "SKIP"
-	// TaskStatusPartFailure task part failure
+	// TaskStatusPartFailure task part failure, part of success result
 	TaskStatusPartFailure = "PART_FAILURE"
 	// TaskStatusFailure task failed
 	TaskStatusFailure = "FAILURE"
@@ -182,7 +182,14 @@ type CreateClusterOption struct {
 	WorkerNodes  []string
 	MasterNodes  []string
 	NodeGroupIDs []string
+	DiffVpcNodes []NodeData
 	NodeTemplate *proto.NodeTemplate
+}
+
+// NodeData node data
+type NodeData struct {
+	NodeIp string `json:"nodeIp"`
+	NodeId string `json:"nodeId"`
 }
 
 // CreateVirtualClusterOption create virtual cluster option
@@ -308,6 +315,8 @@ type AddNodesOption struct {
 	NodeGroupID string
 	// node scheduler status
 	NodeSchedule bool
+	// Advance for node advanced info
+	Advance *proto.NodeAdvancedInfo
 }
 
 // DeleteNodesOption create cluster option

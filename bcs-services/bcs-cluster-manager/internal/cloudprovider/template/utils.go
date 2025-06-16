@@ -58,6 +58,7 @@ var (
 	clusterVPC             = "CM.cluster.ClusterVPC"
 	clusterNetworkType     = "CM.cluster.ClusterNetworkType"
 	clusterBizID           = "CM.cluster.ClusterBizID"
+	clusterBizCCID         = "CM.cluster.ClusterBizCCID"
 	clusterModuleID        = "CM.cluster.ClusterModuleID"
 	clusterExtraID         = "CM.cluster.ClusterExtraID"
 	clusterExtraClusterID  = "CM.cluster.ClusterExtraClusterID"

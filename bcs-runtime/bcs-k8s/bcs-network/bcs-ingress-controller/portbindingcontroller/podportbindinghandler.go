@@ -20,6 +20,7 @@ import (
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 	"github.com/pkg/errors"
 	k8scorev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8stypes "k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -128,6 +129,10 @@ func (p *PodPortBindingHandler) updatePodCondition(pod *k8scorev1.Pod, status st
 		newPod := &k8scorev1.Pod{}
 		if err := p.k8sClient.Get(p.ctx, k8stypes.NamespacedName{Namespace: pod.GetNamespace(),
 			Name: pod.GetName()}, newPod); err != nil {
+			if k8serrors.IsNotFound(err) {
+				blog.Infof("pod '%s/%s' has been deleted, do not update condition", pod.GetNamespace(), pod.GetName())
+				return nil
+			}
 			return err
 		}
 
@@ -180,6 +185,10 @@ func (p *PodPortBindingHandler) patchPodAnnotation(pod *k8scorev1.Pod, status st
 		},
 	}
 	if err := p.k8sClient.Patch(context.Background(), updatePod, rawPatch, &client.PatchOptions{}); err != nil {
+		if k8serrors.IsNotFound(err) {
+			blog.Infof("pod '%s/%s' has been deleted, do not patch annotation", pod.GetNamespace(), pod.GetName())
+			return nil
+		}
 		err = errors.Wrapf(err, "patch pod %s/%s annotation status failed", pod.GetName(), pod.GetNamespace())
 		blog.Errorf("%v", err)
 		return err

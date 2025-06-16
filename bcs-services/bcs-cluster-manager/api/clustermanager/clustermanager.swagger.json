@@ -4423,6 +4423,40 @@
         ]
       }
     },
+    "/clustermanager/v1/node/drain/check": {
+      "post": {
+        "summary": "节点上的 Pod 驱逐前风险检查",
+        "description": "节点pod驱逐前风险检查",
+        "operationId": "ClusterManager_CheckDrainNode",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCheckDrainNodeResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clustermanagerCheckDrainNodeRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ClusterManager"
+        ]
+      }
+    },
     "/clustermanager/v1/node/labels": {
       "put": {
         "summary": "更新节点标签",
@@ -7283,6 +7317,11 @@
           "$ref": "#/definitions/clustermanagerNodeLoginInfo",
           "description": "上架节点重装系统时设置节点密码，不同云可兼容处理",
           "title": "login"
+        },
+        "advance": {
+          "$ref": "#/definitions/clustermanagerNodeAdvancedInfo",
+          "description": "上架节点高级设置信息,例如使用自定义镜像",
+          "title": "advance"
         }
       },
       "description": "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器",
@@ -7382,6 +7421,11 @@
           "$ref": "#/definitions/clustermanagerNodeLoginInfo",
           "description": "上架节点重装系统时设置节点密码，不同云可兼容处理",
           "title": "login"
+        },
+        "advance": {
+          "$ref": "#/definitions/clustermanagerNodeAdvancedInfo",
+          "description": "上架节点高级设置信息,例如使用自定义镜像",
+          "title": "advance"
         }
       },
       "description": "给指定的集群进行扩容，！注意！扩容的机器如果是腾讯云cvm默认会重装系统，不能使用竞价计费类型的机器",
@@ -7723,6 +7767,31 @@
         }
       }
     },
+    "clustermanagerCUDNN": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "cuDNN的版本",
+          "title": "version"
+        },
+        "name": {
+          "type": "string",
+          "description": "cuDNN的名字",
+          "title": "name"
+        },
+        "docName": {
+          "type": "string",
+          "description": "cuDNN的Doc名字",
+          "title": "docName"
+        },
+        "devName": {
+          "type": "string",
+          "description": "cuDNN的Dev名字",
+          "title": "devName"
+        }
+      }
+    },
     "clustermanagerCheckCidrConflictFromVpcResponse": {
       "type": "object",
       "properties": {
@@ -7755,6 +7824,122 @@
         "code",
         "message"
       ]
+    },
+    "clustermanagerCheckDrainNodeData": {
+      "type": "object",
+      "properties": {
+        "podName": {
+          "type": "string"
+        },
+        "nameSpace": {
+          "type": "string"
+        },
+        "podStatus": {
+          "type": "string"
+        },
+        "podServiceAccount": {
+          "type": "string"
+        },
+        "node": {
+          "type": "string"
+        },
+        "gracePeriodSeconds": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "evictionRisk": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerEvictionRisk"
+          }
+        },
+        "willBeEvicted": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "clustermanagerCheckDrainNodeRequest": {
+      "type": "object",
+      "properties": {
+        "innerIPs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点内网IP列表，和节点名称列表二选一，优先节点名称列表",
+          "title": "innerIPs"
+        },
+        "clusterID": {
+          "type": "string",
+          "description": "pod迁移节点所属的clusterID",
+          "title": "clusterID"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "节点名称列表，和节点内网IP列表二选一，优先节点名称列表",
+          "title": "nodes"
+        },
+        "force": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "gracePeriodSeconds": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ignoreAllDaemonSets": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "deleteLocalData": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "selector": {
+          "type": "string"
+        },
+        "podSelector": {
+          "type": "string"
+        },
+        "disableEviction": {
+          "type": "boolean",
+          "format": "boolean"
+        }
+      }
+    },
+    "clustermanagerCheckDrainNodeResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "result": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "返回结果",
+          "title": "result"
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clustermanagerCheckDrainNodeData"
+          },
+          "description": "返回数据",
+          "title": "data"
+        }
+      }
     },
     "clustermanagerCheckNodesRequest": {
       "type": "object",
@@ -11062,6 +11247,21 @@
           "$ref": "#/definitions/clustermanagerMapStruct",
           "description": "用户设置节点annotations",
           "title": "annotations"
+        },
+        "imageInfo": {
+          "$ref": "#/definitions/clustermanagerImageInfo",
+          "description": "节点模板镜像信息",
+          "title": "imageInfo"
+        },
+        "gpuArgs": {
+          "$ref": "#/definitions/clustermanagerGPUArgs",
+          "description": "GPU参数信息",
+          "title": "gpuArgs"
+        },
+        "extraInfo": {
+          "$ref": "#/definitions/clustermanagerMapStruct",
+          "description": "节点模版额外标识信息",
+          "title": "extraInfo"
         }
       },
       "description": "创建节点模板",
@@ -11552,6 +11752,16 @@
       },
       "description": "用于记录云账户信息, 包含全量云账号配置",
       "title": "Credential"
+    },
+    "clustermanagerCustomDriver": {
+      "type": "object",
+      "properties": {
+        "address": {
+          "type": "string",
+          "description": "自定义GPU驱动地址链接",
+          "title": "address"
+        }
+      }
     },
     "clustermanagerDataDisk": {
       "type": "object",
@@ -12185,6 +12395,9 @@
         "dryRun": {
           "type": "boolean",
           "format": "boolean"
+        },
+        "operator": {
+          "type": "string"
         }
       }
     },
@@ -12209,9 +12422,24 @@
           "title": "result"
         },
         "data": {
-          "$ref": "#/definitions/clustermanagerNodeOperationStatus",
-          "description": "返回数据",
+          "$ref": "#/definitions/clustermanagerTask",
+          "description": "驱逐节点任务返回信息",
           "title": "data"
+        }
+      }
+    },
+    "clustermanagerDriverVersion": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "节点模版镜像信息",
+          "title": "version"
+        },
+        "name": {
+          "type": "string",
+          "description": "节点模版镜像信息",
+          "title": "name"
         }
       }
     },
@@ -12271,6 +12499,17 @@
         }
       }
     },
+    "clustermanagerEvictionRisk": {
+      "type": "object",
+      "properties": {
+        "riskParameter": {
+          "type": "string"
+        },
+        "riskDescription": {
+          "type": "string"
+        }
+      }
+    },
     "clustermanagerExistedSubnetIDs": {
       "type": "object",
       "properties": {
@@ -12313,6 +12552,37 @@
           "format": "boolean",
           "description": "集群是否支持弹性伸缩, 在云支持弹性伸缩的前提下, 某些类型集群支持弹性伸缩",
           "title": "autoScale"
+        }
+      }
+    },
+    "clustermanagerGPUArgs": {
+      "type": "object",
+      "properties": {
+        "migEnable": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否启用MIG特性",
+          "title": "migEnable"
+        },
+        "driver": {
+          "$ref": "#/definitions/clustermanagerDriverVersion",
+          "description": "GPU驱动版本信息",
+          "title": "driver"
+        },
+        "cuda": {
+          "$ref": "#/definitions/clustermanagerDriverVersion",
+          "description": "CUDA版本信息",
+          "title": "cuda"
+        },
+        "cudnn": {
+          "$ref": "#/definitions/clustermanagerCUDNN",
+          "description": "cuDNN版本信息",
+          "title": "cuDNN"
+        },
+        "customDriver": {
+          "$ref": "#/definitions/clustermanagerCustomDriver",
+          "description": "自定义GPU驱动信息",
+          "title": "customDriver"
         }
       }
     },
@@ -13863,8 +14133,13 @@
         },
         "imageType": {
           "type": "string",
-          "description": "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE)",
+          "description": "镜像类型(PUBLIC_IMAGE/PRIVATE_IMAGE/MARKET_IMAGE/BCS_IMAGE)",
           "title": "imageType"
+        },
+        "imageOs": {
+          "type": "string",
+          "description": "镜像系统",
+          "title": "imageOs"
         }
       },
       "title": "ImageInfo 创建cvm实例的镜像信息"
@@ -16571,6 +16846,22 @@
       "description": "记录节点信息，用于维护节点状态，被cluster与nodegroup使用",
       "title": "Node"
     },
+    "clustermanagerNodeAdvancedInfo": {
+      "type": "object",
+      "properties": {
+        "nodeOs": {
+          "type": "string",
+          "description": "上架节点时可支持设置自定义节点镜像,不设置时复用集群镜像",
+          "title": "nodeOs"
+        },
+        "isGPUNode": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "是否GPU节点",
+          "title": "isGPUNode"
+        }
+      }
+    },
     "clustermanagerNodeAnnotation": {
       "type": "object",
       "properties": {
@@ -17349,6 +17640,22 @@
           "format": "boolean",
           "description": "缩容失败时是否允许跳过流程, 默认不允许跳过",
           "title": "skipSystemInit"
+        },
+        "image": {
+          "$ref": "#/definitions/clustermanagerImageInfo",
+          "description": "节点模版镜像信息",
+          "title": "image"
+        },
+        "gpuArgs": {
+          "$ref": "#/definitions/clustermanagerGPUArgs",
+          "description": "GPU参数信息",
+          "title": "gpuArgs"
+        },
+        "extraInfo": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "description": "节点模版, 主要用于对kubernetes集群节点的通用特性设置",
@@ -21063,6 +21370,21 @@
           "$ref": "#/definitions/clustermanagerMapStruct",
           "description": "用户设置节点annotations",
           "title": "annotations"
+        },
+        "imageInfo": {
+          "$ref": "#/definitions/clustermanagerImageInfo",
+          "description": "节点模板镜像信息",
+          "title": "imageInfo"
+        },
+        "gpuArgs": {
+          "$ref": "#/definitions/clustermanagerGPUArgs",
+          "description": "GPU参数信息",
+          "title": "gpuArgs"
+        },
+        "extraInfo": {
+          "$ref": "#/definitions/clustermanagerMapStruct",
+          "description": "节点模版额外标识信息",
+          "title": "extraInfo"
         }
       },
       "description": "更新cloud账号请求，不允许更改账号信息，防止对存量集群产生影响",

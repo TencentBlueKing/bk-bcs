@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	headerpkg "github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -71,6 +72,7 @@ func NewResourceManager(config *Config) (ResourceManagerClient, func()) {
 	md := metadata.New(header)
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithDefaultCallOptions(grpc.Header(&md)))
+	opts = append(opts, grpc.WithUnaryInterceptor(headerpkg.LaneHeaderInterceptor()))
 	if config.TLSConfig != nil {
 		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(config.TLSConfig)))
 	} else {

@@ -282,11 +282,11 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 				err.Error()); inErr != nil {
 				blog.Warnf("patch listener id of %s/%s failed, err %s", li.GetName(), li.GetNamespace(), inErr.Error())
 			}
-			metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
-				err, startTime)
 			h.eventQueue.AddRateLimited(obj)
 			h.eventQueue.Done(obj)
 		}
+		metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
+			err, startTime)
 		return err
 	}
 	// 不发success事件，避免Listener量大时Event事件影响etcd性能
@@ -322,11 +322,11 @@ func (h *EventHandler) ensureMultiListeners(listeners []*networkextensionv1.List
 			continue
 		}
 		blog.V(3).Infof("ensure listener %s/%s from cloud successfully", li.GetName(), li.GetNamespace())
-		metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
-			nil, startTime)
 		h.eventQueue.Forget(obj)
 		h.eventQueue.Done(obj)
 	}
+	metrics.ReportHandleListenerMetric(len(listeners), h.isBulkMode, metrics.ListenerMethodEnsureListener,
+	nil, startTime)
 	return nil
 }
 

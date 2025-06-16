@@ -30,6 +30,9 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/tcp/listener"
 	"github.com/Tencent/bk-bcs/bcs-common/common/types"
 	"github.com/Tencent/bk-bcs/bcs-common/common/util"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
+	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/header"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/i18n"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	microEtcd "github.com/go-micro/plugins/v4/registry/etcd"
@@ -51,16 +54,13 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clientset"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	conf "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/config"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/discovery"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/etcd"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/handler"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/logging"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/manager"
 	pmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/runtimex"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/util/stringx"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/version"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/wrapper"
@@ -259,11 +259,15 @@ func (p *ProjectService) initRegistry() error {
 }
 
 func (p *ProjectService) initDiscovery() error {
-	p.discovery = discovery.NewModuleDiscovery(constant.ServiceDomain, p.microRgt)
-	logging.Info("init discovery for project manager successfully")
-	// enable discovery cluster manager module
-	p.clusterDiscovery = discovery.NewModuleDiscovery(constant.ClusterManagerDomain, p.microRgt)
-	clustermanager.SetClusterManagerClient(p.clientTLSConfig, p.clusterDiscovery)
+	if !discovery.UseServiceDiscovery() {
+		p.discovery = discovery.NewModuleDiscovery(constant.ServiceDomain, p.microRgt)
+		logging.Info("init discovery for project manager successfully")
+		// enable discovery cluster manager module
+		p.clusterDiscovery = discovery.NewModuleDiscovery(constant.ClusterManagerDomain, p.microRgt)
+		clustermanager.SetClientConfig(p.clientTLSConfig, p.clusterDiscovery)
+	} else {
+		clustermanager.SetClientConfig(p.clientTLSConfig, nil)
+	}
 	logging.Info("init discovery for cluster manager successfully")
 	return nil
 }
@@ -286,6 +290,7 @@ func (p *ProjectService) initPermClient() error {
 
 // initMicro init micro service
 // NOCC:golint/fnsize(设计如此)
+// nolint:funlen
 func (p *ProjectService) initMicro() error {
 
 	// server listen ip
@@ -322,12 +327,18 @@ func (p *ProjectService) initMicro() error {
 		microSvc.RegisterInterval(25*time.Second), // add interval to config
 		microSvc.Context(p.ctx),
 		microSvc.AfterStart(func() error {
+			if discovery.UseServiceDiscovery() {
+				return nil
+			}
 			if err := p.clusterDiscovery.Start(); err != nil {
 				return err
 			}
 			return p.discovery.Start()
 		}),
 		microSvc.BeforeStop(func() error {
+			if discovery.UseServiceDiscovery() {
+				return nil
+			}
 			p.clusterDiscovery.Stop()
 			p.discovery.Stop()
 			etcd.Close()
@@ -417,7 +428,7 @@ func (p *ProjectService) registerHandlers(grpcServer server.Server) error {
 // initHTTPGateway xxx
 func (p *ProjectService) initHTTPGateway(router *mux.Router) error {
 	gwMux := runtime.NewServeMux(
-		runtime.WithIncomingHeaderMatcher(runtimex.CustomHeaderMatcher),
+		runtime.WithIncomingHeaderMatcher(header.CustomHeaderMatcher),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			OrigName:     true,
 			EmitDefaults: true,

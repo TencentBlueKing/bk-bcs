@@ -18,18 +18,27 @@ import (
 
 // DbPrivOptions options for db privilege plugin
 type DbPrivOptions struct {
-	KubeMaster         string `json:"kube_master"`
-	Kubeconfig         string `json:"kubeconfig"`
-	NetworkType        string `json:"network_type"`
-	ExternalSysType    string `json:"external_sys_type"`
-	ExternalSysConfig  string `json:"external_sys_config"`
-	InitContainerImage string `json:"init_container_image"`
-	ServicePort        int    `json:"service_port"`
-	ServiceName        string `json:"service_name"`
-	ServiceNamespace   string `json:"service_namespace"`
-	ServiceServerPort  int    `json:"service_server_port"`
-	DbmOptimizeEnabled bool   `json:"dbm_optimize_enabled"`
-	TicketTimer        int    `json:"ticket_timer"`
+	KubeMaster             string                  `json:"kube_master"`
+	Kubeconfig             string                  `json:"kubeconfig"`
+	NetworkType            string                  `json:"network_type"`
+	ExternalSysType        string                  `json:"external_sys_type"`
+	ExternalSysConfig      string                  `json:"external_sys_config"`
+	InitContainerImage     string                  `json:"init_container_image"`
+	ServicePort            int                     `json:"service_port"`
+	ServiceName            string                  `json:"service_name"`
+	ServiceNamespace       string                  `json:"service_namespace"`
+	ServiceServerPort      int                     `json:"service_server_port"`
+	DbmOptimizeEnabled     bool                    `json:"dbm_optimize_enabled"`
+	TicketTimer            int                     `json:"ticket_timer"`
+	InitContainerResources *InitContainerResources `json:"init_container_resources,omitempty"`
+}
+
+// InitContainerResources init container resources
+type InitContainerResources struct {
+	CpuRequest string `json:"cpu_request"`
+	CpuLimit   string `json:"cpu_limit"`
+	MemRequest string `json:"mem_request"`
+	MemLimit   string `json:"mem_limit"`
 }
 
 // Validate validate options

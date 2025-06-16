@@ -325,7 +325,11 @@
           width="130px"
           :label="$t('projects.quota.label.gpuAvailable')"
           prop="gpuAvailable"
-          v-if="isColumnRender('gpuAvailable')" />
+          v-if="isColumnRender('gpuAvailable')">
+          <template #default="{ row }">
+            {{ smartFormat(row.gpuAvailable) }}
+          </template>
+        </bk-table-column>
       </template>
       <bk-table-column
         sortable
@@ -344,7 +348,11 @@
         width="130px"
         :label="$t('projects.quota.label.cpuAvailable')"
         prop="cpuAvailable"
-        v-if="isColumnRender('cpuAvailable')" />
+        v-if="isColumnRender('cpuAvailable')">
+        <template #default="{ row }">
+          {{ smartFormat(row.cpuAvailable) }}
+        </template>
+      </bk-table-column>
       <bk-table-column
         sortable
         width="140px"
@@ -362,7 +370,11 @@
         width="150px"
         :label="$t('projects.quota.label.memAvailable')"
         prop="memAvailable"
-        v-if="isColumnRender('memAvailable')" />
+        v-if="isColumnRender('memAvailable')">
+        <template #default="{ row }">
+          {{ smartFormat(row.memAvailable) }}
+        </template>
+      </bk-table-column>
       <bk-table-column
         sortable
         width="100px"
@@ -589,7 +601,7 @@ export default defineComponent({
           : Number(cur.quota.cpu?.deviceQuotaUsed || 0);
         obj.cpuAvailable = isHost ? (zoneResources.cpu || 0) * (obj.quotaAvailable || 0) // cpu 剩余
           : Number(isNaN(cur.quota.cpu?.deviceQuota - cur.quota.cpu?.deviceQuotaUsed) ? 0
-            : cur.quota.cpu?.deviceQuota - cur.quota.cpu?.deviceQuotaUsed);
+            : smartFormat(cur.quota.cpu?.deviceQuota - cur.quota.cpu?.deviceQuotaUsed));
 
         obj.memNum = isHost ? (zoneResources.mem || 0) * (obj.quotaNum || 0) // mem 总量
           : extractNumber(cur.quota.mem?.deviceQuota);
@@ -601,7 +613,7 @@ export default defineComponent({
         obj.gpuNum = Number(cur.quota.gpu?.deviceQuota || 0); // gpu 总量
         obj.gpuUsed = Number(cur.quota.gpu?.deviceQuotaUsed || 0); // gpu 已用
         obj.gpuAvailable = Number(isNaN(cur.quota.gpu?.deviceQuota - cur.quota.gpu?.deviceQuotaUsed) ? 0 // gpu 剩余
-          : cur.quota.gpu?.deviceQuota - cur.quota.gpu?.deviceQuotaUsed);
+          : smartFormat(cur.quota.gpu?.deviceQuota - cur.quota.gpu?.deviceQuotaUsed));
 
         // eslint-disable-next-line no-nested-ternary
         const rate = isHost ? ((obj.quotaUsed || 0) / (obj.quotaNum || 1))
@@ -617,9 +629,19 @@ export default defineComponent({
       // 整理饼图数据
       getChartData();
     }
-    const extractNumber = (str) => { // str = '40GiB'
+    // 处理可能带单位的数据，取数字部分
+    function extractNumber(str) { // str = '40GiB'
       const digits = str?.match(/\d+\.?\d*/)?.[0]; // 安全处理空值
       return digits ? parseFloat(digits) : 0;
+    };
+    // 浮点数保留两位小数，整数不保留小数
+    function smartFormat(value: number) {
+      if (isNaN(value)) return 0;
+      // 检测是否为整数（兼容浮点精度问题）
+      const isInteger = Number.isInteger(value)
+        || Math.abs(value - Math.round(value)) < 1e-10;
+
+      return isInteger ? value.toFixed(0) : value.toFixed(2);
     };
     const parseSearchSelectValue = computed(() => {
       const searchValues: { id: string; value: string[] }[] = [];
@@ -1106,6 +1128,7 @@ export default defineComponent({
       handleFilter,
       truncateToTwoDecimals,
       getProperties,
+      smartFormat,
     };
   },
 });

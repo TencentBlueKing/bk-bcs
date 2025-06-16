@@ -64,20 +64,18 @@ const (
 	valueTrue = "true"
 )
 
-var (
-	nodeConditionTaints = taintKeySet{
-		apiv1.TaintNodeNotReady:                     true,
-		apiv1.TaintNodeUnreachable:                  true,
-		apiv1.TaintNodeUnschedulable:                true,
-		apiv1.TaintNodeMemoryPressure:               true,
-		apiv1.TaintNodeDiskPressure:                 true,
-		apiv1.TaintNodeNetworkUnavailable:           true,
-		apiv1.TaintNodePIDPressure:                  true,
-		cloudproviderapi.TaintExternalCloudProvider: true,
-		cloudproviderapi.TaintNodeShutdown:          true,
-		gkeNodeTerminationHandlerTaint:              true,
-	}
-)
+var nodeConditionTaints = taintKeySet{
+	apiv1.TaintNodeNotReady:                     true,
+	apiv1.TaintNodeUnreachable:                  true,
+	apiv1.TaintNodeUnschedulable:                true,
+	apiv1.TaintNodeMemoryPressure:               true,
+	apiv1.TaintNodeDiskPressure:                 true,
+	apiv1.TaintNodeNetworkUnavailable:           true,
+	apiv1.TaintNodePIDPressure:                  true,
+	cloudproviderapi.TaintExternalCloudProvider: true,
+	cloudproviderapi.TaintNodeShutdown:          true,
+	gkeNodeTerminationHandlerTaint:              true,
+}
 
 var nodeInfoCacheExpiredTime = 10 * time.Minute
 
@@ -151,7 +149,8 @@ func (podMap podSchedulableMap) set(pod *apiv1.Pod, err *simulator.PredicateErro
 //   - waiting for lower priority pods preemption
 //   - other pods.
 func filterOutExpendableAndSplit(unschedulableCandidates []*apiv1.Pod,
-	expendablePodsPriorityCutoff int) ([]*apiv1.Pod, []*apiv1.Pod) {
+	expendablePodsPriorityCutoff int,
+) ([]*apiv1.Pod, []*apiv1.Pod) {
 	var unschedulableNonExpendable []*apiv1.Pod
 	var waitingForLowerPriorityPreemption []*apiv1.Pod
 	for _, pod := range unschedulableCandidates {
@@ -180,6 +179,23 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 	return result
 }
 
+func filterOutDpmPods(pods []*apiv1.Pod) []*apiv1.Pod {
+	var result []*apiv1.Pod
+	for _, pod := range pods {
+		isOwnedByDpm := false
+		for _, ref := range pod.OwnerReferences {
+			if ref.Kind == "DSPackage" && *ref.Controller {
+				isOwnedByDpm = true
+				break
+			}
+		}
+		if !isOwnedByDpm {
+			result = append(result, pod)
+		}
+	}
+	return result
+}
+
 // getNodeInfosForGroups finds NodeInfos for all node groups used to manage the given nodes.
 // It also returns a node group to sample node mapping.
 // DOTO(mwielgus): This returns map keyed by url, while most code (including scheduler) uses node.Name for a key.
@@ -189,7 +205,8 @@ func filterOutExpendablePods(pods []*apiv1.Pod, expendablePodsPriorityCutoff int
 func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]cacheItem,
 	cloudProvider cloudprovider.CloudProvider, listers kube_util.ListerRegistry,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
-	ignoredTaints taints.TaintKeySet) (map[string]*schedulerframework.NodeInfo, errors.AutoscalerError) {
+	ignoredTaints taints.TaintKeySet,
+) (map[string]*schedulerframework.NodeInfo, errors.AutoscalerError) {
 	result := make(map[string]*schedulerframework.NodeInfo)
 	seenGroups := make(map[string]bool)
 
@@ -274,6 +291,10 @@ func getNodeInfosForGroups(nodes []*apiv1.Node, nodeInfoCache map[string]cacheIt
 				return map[string]*schedulerframework.NodeInfo{}, errors.ToAutoscalerError(
 					errors.CloudProviderError, err)
 			}
+			if nodeGroup == nil || reflect.ValueOf(nodeGroup).IsNil() {
+				klog.Infof("No node group for node %s, skipping", node.Name)
+				continue
+			}
 			if added {
 				klog.Warningf("Built template for %s based on unready/unschedulable node %s", nodeGroup.Id(), node.Name)
 			}
@@ -288,7 +309,8 @@ func getNodeInfos(cloudProvider cloudprovider.CloudProvider,
 	daemonsets []*appsv1.DaemonSet, predicateChecker simulator.PredicateChecker,
 	ignoredTaints taints.TaintKeySet, seenGroups map[string]bool,
 	result map[string]*schedulerframework.NodeInfo) (map[string]bool,
-	map[string]*schedulerframework.NodeInfo, errors.AutoscalerError) {
+	map[string]*schedulerframework.NodeInfo, errors.AutoscalerError,
+) {
 	for _, nodeGroup := range cloudProvider.NodeGroups() {
 		id := nodeGroup.Id()
 		seenGroups[id] = true
@@ -339,7 +361,8 @@ func getPodsForNodes(listers kube_util.ListerRegistry) (map[string][]*apiv1.Pod,
 // returned by NodeGroup.TemplateNodeInfo().
 func getNodeInfoFromTemplate(nodeGroup cloudprovider.NodeGroup, daemonsets []*appsv1.DaemonSet,
 	predicateChecker simulator.PredicateChecker, ignoredTaints taints.TaintKeySet) (*schedulerframework.NodeInfo,
-	errors.AutoscalerError) {
+	errors.AutoscalerError,
+) {
 	id := nodeGroup.Id()
 	baseNodeInfo, err := nodeGroup.TemplateNodeInfo()
 	if err != nil {
@@ -366,7 +389,8 @@ func getNodeInfoFromTemplate(nodeGroup cloudprovider.NodeGroup, daemonsets []*ap
 // return autoscaled node group.
 // NOCC:tosa/fn_length(设计如此)
 func filterOutNodesFromNotAutoscaledGroups(nodes []*apiv1.Node, cloudProvider cloudprovider.CloudProvider) (
-	[]*apiv1.Node, errors.AutoscalerError) {
+	[]*apiv1.Node, errors.AutoscalerError,
+) {
 	result := make([]*apiv1.Node, 0)
 
 	for _, node := range nodes {
@@ -395,7 +419,8 @@ func deepCopyNodeInfo(nodeInfo *schedulerframework.NodeInfo) (*schedulerframewor
 }
 
 func sanitizeNodeInfo(nodeInfo *schedulerframework.NodeInfo, nodeGroupName string,
-	ignoredTaints taints.TaintKeySet) (*schedulerframework.NodeInfo, errors.AutoscalerError) {
+	ignoredTaints taints.TaintKeySet,
+) (*schedulerframework.NodeInfo, errors.AutoscalerError) {
 	// Sanitize node name.
 	sanitizedNode, err := sanitizeTemplateNode(nodeInfo.Node(), nodeGroupName, ignoredTaints)
 	if err != nil {
@@ -418,7 +443,8 @@ func sanitizeNodeInfo(nodeInfo *schedulerframework.NodeInfo, nodeGroupName strin
 
 // nolint
 func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
-	ignoredTaints taints.TaintKeySet) (*apiv1.Node, errors.AutoscalerError) {
+	ignoredTaints taints.TaintKeySet,
+) (*apiv1.Node, errors.AutoscalerError) {
 	newNode := node.DeepCopy()
 	nodeName := fmt.Sprintf("template-node-for-%s-%d", nodeGroup, rand.Int63()) // nolint
 	newNode.Labels = make(map[string]string, len(node.Labels))
@@ -470,7 +496,8 @@ func sanitizeTemplateNode(node *apiv1.Node, nodeGroup string,
 // removeOldUnregisteredNodes removes unregistered nodes if needed. Returns true if anything
 // was removed and error if such occurred.
 func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNode, context *context.AutoscalingContext,
-	csr *clusterstate.ClusterStateRegistry, currentTime time.Time, logRecorder *utils.LogEventRecorder) (bool, error) {
+	csr *clusterstate.ClusterStateRegistry, currentTime time.Time, logRecorder *utils.LogEventRecorder,
+) (bool, error) {
 	removedAny := false
 	for _, unregisteredNode := range unregisteredNodes {
 		if unregisteredNode.UnregisteredSince.Add(context.MaxNodeProvisionTime).Before(currentTime) {
@@ -516,7 +543,8 @@ func removeOldUnregisteredNodes(unregisteredNodes []clusterstate.UnregisteredNod
 // if the difference was constant for a prolonged time. Returns true if managed
 // to fix something.
 func fixNodeGroupSize(context *context.AutoscalingContext, clusterStateRegistry *clusterstate.ClusterStateRegistry,
-	currentTime time.Time) (bool, error) {
+	currentTime time.Time,
+) (bool, error) {
 	fixed := false
 	for _, nodeGroup := range context.CloudProvider.NodeGroups() {
 		incorrectSize := clusterStateRegistry.GetIncorrectNodeGroupSize(nodeGroup.Id())
@@ -617,7 +645,8 @@ func allPodsAreNew(pods []*apiv1.Pod, currentTime time.Time) bool {
 }
 
 func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
-	nodeInfos map[string]*schedulerframework.NodeInfo) []*schedulerframework.NodeInfo {
+	nodeInfos map[string]*schedulerframework.NodeInfo,
+) []*schedulerframework.NodeInfo {
 	upcomingNodes := make([]*schedulerframework.NodeInfo, 0)
 	for nodeGroup, numberOfNodes := range registry.GetUpcomingNodes() {
 		nodeTemplate, found := nodeInfos[nodeGroup]
@@ -643,7 +672,8 @@ func getUpcomingNodeInfos(registry *clusterstate.ClusterStateRegistry,
 }
 
 func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
-	podsToReschedule []*apiv1.Pod, cpuRatio, memRatio, ratio float64) bool {
+	podsToReschedule []*apiv1.Pod, cpuRatio, memRatio, ratio float64,
+) bool {
 	sumResources := &schedulerframework.Resource{}
 	leftResources := &schedulerframework.Resource{}
 	for _, nodeInfo := range nodes {
@@ -710,8 +740,8 @@ func checkResourceNotEnough(nodes map[string]*schedulerframework.NodeInfo,
 }
 
 func substractRescheduledPodResources(leftResources *schedulerframework.Resource,
-	podsToReschedule []*apiv1.Pod) *schedulerframework.Resource {
-
+	podsToReschedule []*apiv1.Pod,
+) *schedulerframework.Resource {
 	podResources := &schedulerframework.Resource{
 		ScalarResources: make(map[apiv1.ResourceName]int64),
 	}

@@ -233,6 +233,8 @@ const (
 )
 
 const (
+	// Default Default platform default
+	Default = "default"
 	// Iptables iptables mode
 	Iptables = "iptables"
 	// Ipvs ipvs mode
@@ -317,6 +319,8 @@ const (
 	ClusterOverlayNetwork = "overlay"
 	// ClusterUnderlayNetwork underlay
 	ClusterUnderlayNetwork = "underlay"
+	// ClusterAllNetwork all
+	ClusterAllNetwork = "all"
 
 	// Flannel network plugin
 	Flannel = "flannel"
@@ -591,6 +595,8 @@ const (
 	PrivateImageProvider = "PRIVATE_IMAGE"
 	// MarketImageProvider 市场镜像
 	MarketImageProvider = "MARKET_IMAGE"
+	// BCSImageProvider BCS镜像
+	BCSImageProvider = "BCS_IMAGE"
 	// AllImageProvider 所有镜像
 	AllImageProvider = "ALL"
 )
@@ -649,4 +655,15 @@ const (
 const (
 	// GcpCloudProvider gcp cloud provider
 	GcpCloudProvider = "gcpCloud"
+	// KindDaemonSet kind daemonset
+	KindDaemonSet = "DaemonSet"
+)
+
+const (
+	// TemplateType template type
+	TemplateType = "templateType"
+	// TemplateGpu template gpu
+	TemplateGpu = "gpu"
+	// TemplateInstanceType template instance type
+	TemplateInstanceType = "templateInstanceType"
 )

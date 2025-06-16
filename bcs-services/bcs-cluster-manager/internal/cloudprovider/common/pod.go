@@ -24,6 +24,7 @@ import (
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/clusterops"
+	icommon "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
@@ -160,6 +161,7 @@ func checkNodesBusinessPods(ctx context.Context, clusterId string, nodeNames []s
 			ClusterID:        clusterId,
 			NodeName:         name,
 			FilterNamespaces: filterNamespaces,
+			FilterKinds:      []string{icommon.KindDaemonSet},
 		})
 		if err != nil {
 			mulErrors.Append(fmt.Errorf("node[%s] err %v", name, err))

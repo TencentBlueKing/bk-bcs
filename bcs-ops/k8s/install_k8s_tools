@@ -35,7 +35,29 @@ name=Kubernetes
 baseurl=${repo_url}
 enabled=1
 gpgcheck=0
-
+EOF
+  IFS='.' read -ra v1 <<< "$K8S_VER"
+  IFS='.' read -ra v2 <<< "1.23"
+  for i in "${!v1[@]}"; do
+    if (( ${i} == 0 ));then
+      continue
+    fi
+    if (( ${v1[i]} <= ${v2[i]} )); then
+cat >"$ROOT_DIR/kubernetes.repo" <<EOF
+[kubernetes]
+name=Kubernetes
+baseurl=${repo_url}
+enabled=1
+gpgcheck=0
+EOF
+      break
+    elif (( ${v1[i]} > ${v2[i]} )); then
+cat >"$ROOT_DIR/kubernetes.repo" <<EOF
+[kubernetes]
+name=Kubernetes
+baseurl=${repo_url}
+enabled=1
+gpgcheck=0
 [kubernetes1]
 name=Kubernetes
 baseurl=https://pkgs.k8s.io/core:/stable:/v${K8S_VER%.*}/rpm/
@@ -48,7 +70,15 @@ baseurl=https://mirrors.tencent.com/kubernetes_new/core:/stable:/v${K8S_VER%.*}/
 enabled=1
 gpgcheck=0
 EOF
-  yum install -y -q yum-utils
+      break
+    fi
+  done
+
+  if grep -i "TencentOS Server 4.[0-9]*" /etc/tlinux-release;then
+    yum install -y -q dnf-utils
+  else
+    yum install -y -q yum-utils
+  fi
   yum-config-manager --add-repo "$ROOT_DIR/kubernetes.repo"
   yum clean all
   yum makecache fast 2>/dev/null|| yum makecache
@@ -82,12 +112,13 @@ _yum_k8s() {
   [[ -n $pkg_ver ]] \
     || utils::log "ERROR" "${K8S_VER:-} not found amongst yum list results"
   local crictl_pat crictl_ver
+
   crictl_pat=$(awk '/crictl:/{gsub("\"","",$2);print $2;exit}' "${ROOT_DIR}"/env/offline-manifest.yaml)
 
   crictl_ver=$(yum list cri-tools --showduplicates \
     | awk '/'"${crictl_pat}"'/{last=$2} END{sub(/.*:/,"",last);print last}')
 
-  yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}" "cri-tools-${crictl_ver}"
+  yum install -y "kubeadm-${pkg_ver}" "kubelet-${pkg_ver}" "kubectl-${pkg_ver}" "cri-tools"
 }
 
 _curl_k8s() {

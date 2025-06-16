@@ -40,6 +40,7 @@ type Configuration struct {
 	BKAPIGW     *BKAPIGWConf             `yaml:"bkapigw_conf"`
 	BKMonitor   *BKMonitorConf           `yaml:"bk_monitor_conf"`
 	BKLog       *BKLogConf               `yaml:"bk_log_conf"`
+	BKBase      *BKBaseConf              `yaml:"bk_base_conf"`
 	BCS         *BCSConf                 `yaml:"bcs_conf"`
 	IAM         *IAMConfig               `yaml:"iam_conf"`
 	Credentials map[string][]*Credential `yaml:"-"`
@@ -96,6 +97,7 @@ func newConfiguration() (*Configuration, error) {
 	c.BKMonitor = defaultBKMonitorConf()
 
 	c.BKLog = &BKLogConf{}
+	c.BKBase = &BKBaseConf{}
 	c.TracingConf = &TracingConf{}
 
 	return c, nil

@@ -111,6 +111,9 @@ func (ca *CreateAction) createNodeTemplate() error {
 			}
 			return ca.req.Annotations.Values
 		}(),
+		Image:     ca.req.ImageInfo,
+		GpuArgs:   ca.req.GpuArgs,
+		ExtraInfo: ca.req.GetExtraInfo().GetValues(),
 	}
 
 	return ca.model.CreateNodeTemplate(ca.ctx, nodeTemplate)
@@ -177,7 +180,7 @@ func (ca *CreateAction) validate() error {
 		return err
 	}
 
-	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ca.req.ProjectID, true)
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ca.ctx, ca.req.ProjectID, true)
 	if errLocal == nil {
 		ca.project = proInfo
 	}

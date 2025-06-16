@@ -16,12 +16,16 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	gocache "github.com/patrickmn/go-cache"
 	as "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/as/v20180419"
 	"github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
+	cvm "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/cvm/v20170312"
 	tke "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/tke/v20180525"
 	vpc "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/vpc/v20170312"
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
@@ -131,6 +135,45 @@ func generateInstanceAdvancedSetting(advancedSetting *InstanceAdvancedSettings) 
 				}
 				return nil
 			}(),
+			GPUArgs: func() *tke.GPUArgs {
+				if advancedSetting != nil && advancedSetting.GPUArgs != nil {
+					gpuArgs := &tke.GPUArgs{
+						MIGEnable: common.BoolPtr(advancedSetting.GPUArgs.MIGEnable),
+					}
+
+					if advancedSetting.GPUArgs.Driver != nil {
+						gpuArgs.Driver = &tke.DriverVersion{
+							Version: common.StringPtr(advancedSetting.GPUArgs.Driver.Version),
+							Name:    common.StringPtr(advancedSetting.GPUArgs.Driver.Name),
+						}
+					}
+
+					if advancedSetting.GPUArgs.CUDA != nil {
+						gpuArgs.CUDA = &tke.DriverVersion{
+							Version: common.StringPtr(advancedSetting.GPUArgs.CUDA.Version),
+							Name:    common.StringPtr(advancedSetting.GPUArgs.CUDA.Name),
+						}
+					}
+
+					if advancedSetting.GPUArgs.CUDNN != nil {
+						gpuArgs.CUDNN = &tke.CUDNN{
+							Version: common.StringPtr(advancedSetting.GPUArgs.CUDNN.Version),
+							Name:    common.StringPtr(advancedSetting.GPUArgs.CUDNN.Name),
+							DevName: common.StringPtr(advancedSetting.GPUArgs.CUDNN.DevName),
+							DocName: common.StringPtr(advancedSetting.GPUArgs.CUDNN.DocName),
+						}
+					}
+
+					if advancedSetting.GPUArgs.CustomDriver != nil {
+						gpuArgs.CustomDriver = &tke.CustomDriver{
+							Address: common.StringPtr(advancedSetting.GPUArgs.CustomDriver.Address),
+						}
+					}
+
+					return gpuArgs
+				}
+				return nil
+			}(),
 		}
 
 		return advancedSet
@@ -206,6 +249,10 @@ func generateAddExistedInstancesReq(addReq *AddExistedInstanceReq) *tke.AddExist
 			req.InstanceAdvancedSettingsOverrides = append(req.InstanceAdvancedSettingsOverrides,
 				generateInstanceAdvancedSetting(addReq.InstanceAdvancedSettingsOverrides[i]))
 		}
+	}
+
+	if len(addReq.ImageId) > 0 {
+		req.ImageId = common.StringPtr(addReq.ImageId)
 	}
 
 	return req
@@ -681,10 +728,6 @@ func MapToTags(tags map[string]string) []*Tag {
 
 // MapToCloudLabels converts a map of string-string to a slice of Label
 func MapToCloudLabels(labels map[string]string) []*tke.Label {
-	if len(labels) == 0 {
-		return nil
-	}
-
 	result := make([]*tke.Label, 0)
 	for k, v := range labels {
 		name := k
@@ -696,10 +739,6 @@ func MapToCloudLabels(labels map[string]string) []*tke.Label {
 
 // MapToCloudTaints converts a map of string-string to a slice of Taint
 func MapToCloudTaints(taints []*proto.Taint) []*tke.Taint {
-	if len(taints) == 0 {
-		return nil
-	}
-
 	result := make([]*tke.Taint, 0)
 	for _, v := range taints {
 		key := v.Key
@@ -712,10 +751,6 @@ func MapToCloudTaints(taints []*proto.Taint) []*tke.Taint {
 
 // MapToCloudTags converts a map of string-string to a slice of Tag
 func MapToCloudTags(tags map[string]string) []*tke.Tag {
-	if len(tags) == 0 {
-		return nil
-	}
-
 	result := make([]*tke.Tag, 0)
 	for k, v := range tags {
 		key := k
@@ -741,4 +776,47 @@ func convertASGInstance(ins *as.Instance) *AutoScalingInstances {
 		VersionNumber:           ins.VersionNumber,
 		AutoScalingGroupName:    ins.AutoScalingGroupName,
 	}
+}
+
+const (
+	cacheImageNameToImage = "cached_image_name"
+)
+
+func buildCacheName(keyPrefix string, region, name string) string {
+	return fmt.Sprintf("%s_%v_%v", keyPrefix, region, name)
+}
+
+// setImageNameCacheData set image cache
+func setImageNameCacheData(region, name string, imageData *cvm.Image) error {
+	cacheName := buildCacheName(cacheImageNameToImage, region, name)
+
+	var err error
+
+	image, exist := cache.GetCache().Get(cacheName)
+	if exist {
+		blog.Infof("SetImageNameCacheData cacheName:%s, cache exist %+v", cacheName, image)
+		err = cache.GetCache().Replace(cacheName, imageData, gocache.DefaultExpiration)
+	} else {
+		err = cache.GetCache().Add(cacheName, imageData, gocache.DefaultExpiration)
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// getImageNameCacheData get image name data
+func getImageNameCacheData(region, name string) (*cvm.Image, bool) {
+	cacheName := buildCacheName(cacheImageNameToImage, region, name)
+
+	val, ok := cache.GetCache().Get(cacheName)
+	if ok && val != nil {
+		blog.Infof("GetImageNameCacheData cacheName:%s, cache exist %+v", cacheName, val)
+		if image, ok1 := val.(*cvm.Image); ok1 {
+			return image, true
+		}
+	}
+
+	return nil, false
 }

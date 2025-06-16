@@ -61,4 +61,5 @@ var ActionPermissions = map[string]string{
 	"ClusterAddons.UpgradeAddons":   project.CanViewProjectOperation,
 	"ClusterAddons.StopAddons":      project.CanViewProjectOperation,
 	"ClusterAddons.UninstallAddons": project.CanViewProjectOperation,
+	"ClusterAddons.PreviewAddons":   project.CanViewProjectOperation,
 }

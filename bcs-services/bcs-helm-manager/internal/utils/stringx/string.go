@@ -80,3 +80,10 @@ func SplitManifests(bigFile string) []string {
 	}
 	return res
 }
+
+// ReplaceIllegalChars 将不合法的用户名进行k8s label 规则转换
+func ReplaceIllegalChars(username string) string {
+	// 只允许 A-Za-z0-9-_.，其他的全部替换成 "_"
+	re := regexp.MustCompile(`[^A-Za-z0-9\-_.]`)
+	return re.ReplaceAllString(username, "_")
+}

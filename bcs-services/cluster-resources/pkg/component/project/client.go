@@ -24,6 +24,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/runtime"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/contextx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/httpclient"
 )
 
@@ -88,9 +89,7 @@ func (c *ProjClient) fetchProjInfoWithCache(ctx context.Context, projectID strin
 		return nil, err
 	}
 
-	if err = c.cache.Add(cacheKey, projInfo, cache.DefaultExpiration); err != nil {
-		log.Warn(ctx, "set project info to cache failed: %v", err)
-	}
+	c.cache.Set(cacheKey, projInfo, cache.DefaultExpiration)
 	return projInfo, nil
 }
 
@@ -101,6 +100,7 @@ func (c *ProjClient) fetchProjInfo(ctx context.Context, projectID string) (*Proj
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 
@@ -130,9 +130,7 @@ func (c *ProjClient) fetchSharedClusterProjNsWitchCache(ctx context.Context, pro
 		return nil, err
 	}
 
-	if err = c.cache.Add(cacheKey, ns, time.Minute); err != nil {
-		log.Warn(ctx, "set project ns to cache failed: %v", err)
-	}
+	c.cache.Set(cacheKey, ns, time.Minute)
 	return ns, nil
 }
 
@@ -144,6 +142,7 @@ func (c *ProjClient) fetchSharedClusterProjNs(ctx context.Context, projectID, cl
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 
@@ -168,6 +167,7 @@ func (c *ProjClient) getVariable(ctx context.Context, projectCode, clusterID, na
 	resp, err := httpclient.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Project-Username", "").
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.G.BCSAPIGW.AuthToken).
 		Get(url)
 

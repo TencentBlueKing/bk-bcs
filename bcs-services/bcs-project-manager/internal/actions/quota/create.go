@@ -19,11 +19,11 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/task/types"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/middleware"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/common/page"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/component/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/provider/manager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-project-manager/internal/store"
@@ -57,7 +57,7 @@ func NewCreateQuotaAction(model store.ProjectModel) *CreateQuotaAction {
 }
 
 // validate check project quota request
-func (ca *CreateQuotaAction) validate() error {
+func (ca *CreateQuotaAction) validate(ctx context.Context) error {
 	err := ca.req.Validate()
 	if err != nil {
 		return err
@@ -71,7 +71,7 @@ func (ca *CreateQuotaAction) validate() error {
 	ca.project = p
 
 	// cluster validate
-	cls, err := checkClusterValidate(ca.req.ClusterId)
+	cls, err := checkClusterValidate(ctx, ca.req.ClusterId)
 	if err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func (ca *CreateQuotaAction) Do(ctx context.Context,
 	ca.req = req
 	ca.resp = resp
 
-	if err := ca.validate(); err != nil {
+	if err := ca.validate(ctx); err != nil {
 		return errorx.NewReadableErr(errorx.ParamErr, err.Error())
 	}
 

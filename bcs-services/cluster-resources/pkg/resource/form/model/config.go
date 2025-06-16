@@ -12,6 +12,48 @@
 
 package model
 
+// BscpConfig BscpConfig 表单化建模
+type BscpConfig struct {
+	Metadata Metadata       `structs:"metadata"`
+	Spec     BscpConfigSpec `structs:"spec"`
+}
+
+// BscpConfigSpec BscpConfig spec 表单化建模
+type BscpConfigSpec struct {
+	Provider     Provider       `structs:"provider"`
+	ConfigSyncer []ConfigSyncer `structs:"configSyncer"`
+}
+
+// ConfigSyncer BscpConfig configSyncer 表单化建模
+type ConfigSyncer struct {
+	ConfigmapName    string             `structs:"configmapName"`
+	AssociationRules string             `structs:"associationRules"`
+	ConfigData       []ConfigSyncerData `structs:"configData"`
+	ResourceType     string             `structs:"resourceType"`
+	SecretName       string             `structs:"secretName"`
+	SecretType       string             `structs:"secretType"`
+	MatchConfigs     []MatchConfigs     `structs:"matchConfigs"`
+}
+
+// ConfigSyncerData BscpConfig data 表单化建模
+type ConfigSyncerData struct {
+	Key       string `structs:"key"`
+	RefConfig string `structs:"refConfig"`
+}
+
+// MatchConfigs BscpConfig matchConfigs 表单化建模
+type MatchConfigs struct {
+	Value string `structs:"value"`
+}
+
+// Provider BscpConfig provider 表单化建模
+type Provider struct {
+	FeedAddr string `structs:"feedAddr"`
+	Biz      int64  `structs:"biz"`
+	Token    string `structs:"token"`
+	App      string `structs:"app"`
+}
+
 // CM ConfigMap 表单化建模
 type CM struct {
 	Metadata Metadata `structs:"metadata"`

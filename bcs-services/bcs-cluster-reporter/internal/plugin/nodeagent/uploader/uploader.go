@@ -14,7 +14,6 @@
 package uploader
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"sort"
 	"strconv"
@@ -23,6 +22,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
@@ -67,7 +67,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
-					go p.Check()
+					go p.Check(pluginmanager.CheckOption{})
 				} else {
 					klog.Infof("the former %s didn't over, skip in this loop", p.Name())
 				}
@@ -81,14 +81,14 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == pluginmanager.RunModeOnce {
-		p.Check()
+		p.Check(pluginmanager.CheckOption{})
 	}
 
 	return nil
 }
 
 // Check xxx
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
 	p.ready = false

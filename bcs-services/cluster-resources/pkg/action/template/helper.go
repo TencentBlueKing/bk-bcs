@@ -34,6 +34,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/stringx"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
 )
 
@@ -149,6 +150,7 @@ func replaceTemplateFileToHelm(template string) string {
 // patchTemplateAnnotations patch template annotations
 func patchTemplateAnnotations(manifest map[string]interface{}, username, templateSpace, templateName,
 	templateVersion string) map[string]interface{} {
+	username = stringx.ReplaceIllegalChars(username)
 	annos := mapx.GetMap(manifest, "metadata.annotations")
 	if len(annos) == 0 {
 		_ = mapx.SetItems(manifest, "metadata.annotations", map[string]interface{}{})

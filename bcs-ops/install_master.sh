@@ -48,7 +48,14 @@ safe_source "${ROOT_DIR}/functions/k8s.sh"
 "${ROOT_DIR}"/system/check_host.sh -c all
 
 "${ROOT_DIR}"/system/config_envfile.sh -c init
-"${ROOT_DIR}"/system/config_system.sh -c dns sysctl
+
+safe_source "${ROOT_DIR}/env/bcs.env"
+if [[ "${ENABLE_CONFIG_SYSTEM}" == "true" ]];then
+  "${ROOT_DIR}"/system/config_system.sh -c dns sysctl
+else
+  "${ROOT_DIR}"/system/config_system.sh -c dns
+fi
+
 "${ROOT_DIR}"/tools/install_tools.sh jq yq
 "${ROOT_DIR}"/k8s/install_cri.sh
 "${ROOT_DIR}"/k8s/install_k8s_tools
@@ -99,7 +106,9 @@ if [[ -z ${MASTER_JOIN_CMD:-} ]]; then
   fi
 
   # create etcd secret
-  kubectl create secret generic etcd-client-cert --from-file=etcd-ca=/etc/kubernetes/pki/ca.crt --from-file=etcd-client-key=/etc/kubernetes/pki/apiserver-etcd-client.key --from-file=etcd-client=/etc/kubernetes/pki/apiserver-etcd-client.crt -n kube-system
+  if ! kubectl get secret etcd-client-cert etcd-client-cert;then
+    kubectl create secret generic etcd-client-cert --from-file=etcd-ca=/etc/kubernetes/pki/ca.crt --from-file=etcd-client-key=/etc/kubernetes/pki/apiserver-etcd-client.key --from-file=etcd-client=/etc/kubernetes/pki/apiserver-etcd-client.crt -n kube-system
+  fi
 else
   if systemctl is-active kubelet.service -q; then
     utils::log "WARN" "kubelet service is active now, skip kubeadm join"

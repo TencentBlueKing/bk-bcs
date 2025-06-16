@@ -59,7 +59,7 @@ func (ga *GetProjectResourceQuotaUsageAction) validate() error {
 	}
 
 	// check projectId or Code
-	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ga.req.GetProjectID(), false)
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, ga.req.GetProjectID(), false)
 	if errLocal != nil {
 		return errLocal
 	}

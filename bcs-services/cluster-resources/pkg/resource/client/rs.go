@@ -110,7 +110,7 @@ func (c *RSClient) GetResHistoryRevision(ctx context.Context, kind, namespace, n
 			log.Error(ctx, "convert to unstructured failed, err %s", err.Error())
 			continue
 		}
-		ret := formatter.FormatWorkloadRes(unstructuredObj)
+		ret := formatter.FormatControllerRevisionRes(unstructuredObj)
 		ret["revision"] = v
 		m = append(m, ret)
 	}

@@ -16,16 +16,14 @@ package capacitycheck
 import (
 	"bytes"
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
-	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"math"
 	"net"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 	"github.com/prometheus/client_golang/prometheus"
 	io_prometheus_client "github.com/prometheus/client_model/go"
 	"github.com/prometheus/common/expfmt"
@@ -36,6 +34,10 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/rawhttp"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // Plugin xxx
@@ -87,7 +89,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 					if p.opt.Synchronization {
 						pluginmanager.Pm.Lock()
 					}
-					go p.Check()
+					go p.Check(pluginmanager.CheckOption{})
 				} else {
 					klog.V(3).Infof("the former clustercheck didn't over, skip in this loop")
 				}
@@ -101,7 +103,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == pluginmanager.RunModeOnce {
-		p.Check()
+		p.Check(pluginmanager.CheckOption{})
 	}
 
 	return nil
@@ -120,7 +122,7 @@ func (p *Plugin) Name() string {
 }
 
 // Check cluster capacity and store result
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	start := time.Now()
 	p.CheckLock.Lock()
 	klog.Infof("start %s", p.Name())
@@ -181,6 +183,12 @@ func (p *Plugin) Check() {
 
 				p.Result[cluster.ClusterID] = clusterResult
 				p.WriteLock.Unlock()
+			}()
+
+			defer func() {
+				if r := recover(); r != nil {
+					klog.Errorf("%s clustercheck failed: %s, stack: %v\n", cluster.ClusterID, r, string(debug.Stack()))
+				}
 			}()
 
 			// 获取apiserver的metric指标
@@ -250,6 +258,9 @@ func (p *Plugin) Check() {
 					totalIPNum = totalIPNum + int(ipNum)
 				}
 				totalIPNum = totalIPNum - cluster.ServiceMaxNum
+				if nodePodNum == 0 {
+					nodePodNum = 256
+				}
 
 				maxNodeNum := totalIPNum / int(nodePodNum)
 

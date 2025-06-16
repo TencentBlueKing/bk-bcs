@@ -14,6 +14,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
+	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/qcloud/business"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
@@ -151,7 +153,7 @@ func CheckInstanceStateTask(taskID string, stepName string) error {
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}
-	successIds, failedIds := handleAddNodesData(ctx, clusterID, instanceList)
+	successIds, failedIds := handleClusterWorkerNodesData(ctx, clusterID, instanceList)
 
 	blog.Infof("CheckCvmInstanceState[%s] nodeIds[%v] success[%v] failed[%v]",
 		taskID, nodeIds, successIds, failedIds)
@@ -174,6 +176,7 @@ func CheckInstanceStateTask(taskID string, stepName string) error {
 	return nil
 }
 
+// handleTaskData handle task data
 func handleTaskData(state *cloudprovider.TaskState, failedIds []string) {
 	// again inject nodeIds/nodeIps
 	nodeIds := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.CommonParams,
@@ -206,23 +209,71 @@ func handleTaskData(state *cloudprovider.TaskState, failedIds []string) {
 	state.Task.CommonParams[cloudprovider.FailedTransVpcNodeIDsKey.String()] = strings.Join(failedIds, ",")
 }
 
-func handleAddNodesData(ctx context.Context, clusterId string, nodes *business.InstanceList) ([]string, []string) {
+// handleClusterMasterNodesData handle master nodes data
+func handleClusterMasterNodesData(ctx context.Context, clusterId string, nodes *business.InstanceList) error {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	cls, err := cloudprovider.GetStorageModel().GetCluster(ctx, clusterId)
+	if err != nil {
+		blog.Errorf("handleClusterMasterNodesData[%s] get cluster[%s] failed: %v", taskId, clusterId, err)
+		return err
+	}
+
+	// if cluster is managed, do not need to update master nodes
+	if len(cls.Master) == 0 || cls.ManageType == common.ClusterManageTypeManaged {
+		return nil
+	}
+
+	var (
+		masterIds      = make([]string, 0)
+		masterIdToNode = make(map[string]*proto.Node)
+	)
+	for i := range cls.GetMaster() {
+		masterIds = append(masterIds, cls.GetMaster()[i].NodeID)
+		masterIdToNode[cls.GetMaster()[i].NodeID] = cls.GetMaster()[i]
+	}
+
+	nodeIdToNode := make(map[string]business.InstanceInfo)
+	for _, n := range nodes.SuccessNodes {
+		nodeIdToNode[n.NodeId] = n
+	}
+
+	// update master nodes ip
+	masterNodes := make(map[string]*proto.Node)
+	for _, id := range masterIds {
+		dbNode := masterIdToNode[id]
+
+		ins, ok := nodeIdToNode[id]
+		if ok {
+			dbNode.InnerIP = ins.NodeIp
+			dbNode.VPC = ins.VpcId
+		}
+		masterNodes[dbNode.InnerIP] = dbNode
+	}
+	cls.Master = masterNodes
+
+	return cloudprovider.GetStorageModel().UpdateCluster(ctx, cls)
+}
+
+// handleClusterWorkerNodesData handle nodes data
+func handleClusterWorkerNodesData(ctx context.Context, clusterId string, nodes *business.InstanceList) ([]string, []string) {
 	var (
 		failedNodeIds  = make([]string, 0)
 		successNodeIds = make([]string, 0)
 	)
 
+	// get taskID
 	taskId := cloudprovider.GetTaskIDFromContext(ctx)
 
 	// update success nodes ip
 	for i := range nodes.SuccessNodes {
-		successNodeIds = append(successNodeIds, nodes.SuccessNodes[i].NodeId)
 		err := updateNodeIPByNodeID(ctx, clusterId, nodes.SuccessNodes[i])
 		if err != nil {
 			blog.Errorf("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] failed: %v",
 				taskId, nodes.SuccessNodes[i].NodeId, nodes.SuccessNodes[i].NodeIp, err)
 			continue
 		}
+		successNodeIds = append(successNodeIds, nodes.SuccessNodes[i].NodeId)
 
 		blog.Infof("handleAddNodesData[%s] updateNodeIPByNodeID[%s][%s] successful",
 			taskId, nodes.SuccessNodes[i].NodeId, nodes.SuccessNodes[i].NodeIp)
@@ -270,6 +321,13 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 
 	// parse node schedule status
 	schedule, _ := strconv.ParseBool(scheduleStr)
+
+	// get node advance info
+	advancedInfo := &proto.NodeAdvancedInfo{}
+	advance, exist := step.Params[cloudprovider.NodeAdvanceKey.String()]
+	if exist {
+		_ = json.Unmarshal([]byte(advance), advancedInfo)
+	}
 
 	// get nodes IDs and IPs
 	ipList := cloudprovider.ParseNodeIpOrIdFromCommonMap(state.Task.GetCommonParams(),
@@ -321,8 +379,12 @@ func AddNodesToClusterTask(taskID string, stepName string) error { // nolint
 	successNodes = append(successNodes, existedInstance...)
 
 	if len(notExistedInstance) > 0 {
-		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{NodeScheduler: schedule}, // nolint
-			notExistedInstance, initPasswd, false, idToIPMap, operator)
+		// if node template exists, set user script for new node
+		result, err := business.AddNodesToCluster(ctx, dependInfo, &business.NodeAdvancedOptions{ // nolint
+			NodeScheduler:         schedule,
+			SetPreStartUserScript: true,
+			Advance:               advancedInfo,
+		}, notExistedInstance, initPasswd, false, idToIPMap, operator)
 		if err != nil {
 			cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
 				fmt.Sprintf("add nodes to cluster failed [%s]", err))
@@ -415,6 +477,7 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 	// inject taskID
 	ctx := cloudprovider.WithTaskIDAndStepNameForContext(context.Background(), taskID, stepName)
 
+	// check add node status
 	addSuccessNodes, addFailureNodes, err := business.CheckClusterInstanceStatus(ctx, dependInfo, successNodes)
 	if err != nil {
 		cloudprovider.GetStorageModel().CreateTaskStepLogError(context.Background(), taskID, stepName,
@@ -445,9 +508,11 @@ func CheckAddNodesStatusTask(taskID string, stepName string) error { // nolint
 		_ = updateFailedNodeStatusByNodeID(ctx, insInfos, common.StatusAddNodesFailed)
 	}
 
+	// if successNodes empty
 	if len(addSuccessNodes) == 0 {
 		blog.Errorf("CheckAddNodesStatusTask[%s] AddSuccessNodes empty", taskID)
 		retErr := fmt.Errorf("上架节点超时/失败, 请联系管理员")
+		// update step
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
 	}

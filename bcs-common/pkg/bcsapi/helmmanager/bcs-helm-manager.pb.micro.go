@@ -49,6 +49,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "HelmManager.CreatePersonalRepo",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/personal"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "HelmManager.UpdateRepository",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/{name}"},
 			Method:  []string{"PUT"},
@@ -127,6 +133,12 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "HelmManager.ListReleaseV2",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/v2/releases"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "HelmManager.GetReleaseDetailV1",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 			Method:  []string{"GET"},
@@ -169,8 +181,20 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "HelmManager.GetReleaseManifest",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/revisions/{revision}/manifest"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "HelmManager.GetReleaseStatus",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/status"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
+			Name:    "HelmManager.GetReleaseDetailExtend",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -180,21 +204,28 @@ func NewHelmManagerEndpoints() []*api.Endpoint {
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
+		{
+			Name:    "HelmManager.ImportClusterRelease",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
 	}
 }
 
 // Client API for HelmManager service
 
 type HelmManagerService interface {
-	// * common service
+	//* common service
 	Available(ctx context.Context, in *AvailableReq, opts ...client.CallOption) (*AvailableResp, error)
-	// * repository service
+	//* repository service
 	CreateRepository(ctx context.Context, in *CreateRepositoryReq, opts ...client.CallOption) (*CreateRepositoryResp, error)
+	CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, opts ...client.CallOption) (*CreatePersonalRepoResp, error)
 	UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, opts ...client.CallOption) (*UpdateRepositoryResp, error)
 	GetRepository(ctx context.Context, in *GetRepositoryReq, opts ...client.CallOption) (*GetRepositoryResp, error)
 	DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, opts ...client.CallOption) (*DeleteRepositoryResp, error)
 	ListRepository(ctx context.Context, in *ListRepositoryReq, opts ...client.CallOption) (*ListRepositoryResp, error)
-	// * chart service
+	//* chart service
 	ListChartV1(ctx context.Context, in *ListChartV1Req, opts ...client.CallOption) (*ListChartV1Resp, error)
 	GetChartDetailV1(ctx context.Context, in *GetChartDetailV1Req, opts ...client.CallOption) (*GetChartDetailV1Resp, error)
 	ListChartVersionV1(ctx context.Context, in *ListChartVersionV1Req, opts ...client.CallOption) (*ListChartVersionV1Resp, error)
@@ -203,8 +234,10 @@ type HelmManagerService interface {
 	DeleteChartVersion(ctx context.Context, in *DeleteChartVersionReq, opts ...client.CallOption) (*DeleteChartVersionResp, error)
 	DownloadChart(ctx context.Context, in *DownloadChartReq, opts ...client.CallOption) (*httpbody.HttpBody, error)
 	GetChartRelease(ctx context.Context, in *GetChartReleaseReq, opts ...client.CallOption) (*GetChartReleaseResp, error)
-	// * release service
+	//* release service
 	ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
+	//* release service v2
+	ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error)
 	GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error)
 	InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, opts ...client.CallOption) (*InstallReleaseV1Resp, error)
 	UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, opts ...client.CallOption) (*UninstallReleaseV1Resp, error)
@@ -212,8 +245,11 @@ type HelmManagerService interface {
 	RollbackReleaseV1(ctx context.Context, in *RollbackReleaseV1Req, opts ...client.CallOption) (*RollbackReleaseV1Resp, error)
 	ReleasePreview(ctx context.Context, in *ReleasePreviewReq, opts ...client.CallOption) (*ReleasePreviewResp, error)
 	GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, opts ...client.CallOption) (*GetReleaseHistoryResp, error)
+	GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, opts ...client.CallOption) (*GetReleaseManifestResp, error)
 	GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error)
+	GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, opts ...client.CallOption) (*CommonResp, error)
 	GetReleasePods(ctx context.Context, in *GetReleasePodsReq, opts ...client.CallOption) (*CommonListResp, error)
+	ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, opts ...client.CallOption) (*ImportClusterReleaseResp, error)
 }
 
 type helmManagerService struct {
@@ -241,6 +277,16 @@ func (c *helmManagerService) Available(ctx context.Context, in *AvailableReq, op
 func (c *helmManagerService) CreateRepository(ctx context.Context, in *CreateRepositoryReq, opts ...client.CallOption) (*CreateRepositoryResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.CreateRepository", in)
 	out := new(CreateRepositoryResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, opts ...client.CallOption) (*CreatePersonalRepoResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.CreatePersonalRepo", in)
+	out := new(CreatePersonalRepoResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -378,6 +424,16 @@ func (c *helmManagerService) ListReleaseV1(ctx context.Context, in *ListReleaseV
 	return out, nil
 }
 
+func (c *helmManagerService) ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, opts ...client.CallOption) (*ListReleaseV1Resp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.ListReleaseV2", in)
+	out := new(ListReleaseV1Resp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, opts ...client.CallOption) (*GetReleaseDetailV1Resp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetailV1", in)
 	out := new(GetReleaseDetailV1Resp)
@@ -448,9 +504,29 @@ func (c *helmManagerService) GetReleaseHistory(ctx context.Context, in *GetRelea
 	return out, nil
 }
 
+func (c *helmManagerService) GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, opts ...client.CallOption) (*GetReleaseManifestResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseManifest", in)
+	out := new(GetReleaseManifestResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *helmManagerService) GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, opts ...client.CallOption) (*CommonListResp, error) {
 	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseStatus", in)
 	out := new(CommonListResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *helmManagerService) GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, opts ...client.CallOption) (*CommonResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.GetReleaseDetailExtend", in)
+	out := new(CommonResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -468,18 +544,29 @@ func (c *helmManagerService) GetReleasePods(ctx context.Context, in *GetReleaseP
 	return out, nil
 }
 
+func (c *helmManagerService) ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, opts ...client.CallOption) (*ImportClusterReleaseResp, error) {
+	req := c.c.NewRequest(c.name, "HelmManager.ImportClusterRelease", in)
+	out := new(ImportClusterReleaseResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for HelmManager service
 
 type HelmManagerHandler interface {
-	// * common service
+	//* common service
 	Available(context.Context, *AvailableReq, *AvailableResp) error
-	// * repository service
+	//* repository service
 	CreateRepository(context.Context, *CreateRepositoryReq, *CreateRepositoryResp) error
+	CreatePersonalRepo(context.Context, *CreatePersonalRepoReq, *CreatePersonalRepoResp) error
 	UpdateRepository(context.Context, *UpdateRepositoryReq, *UpdateRepositoryResp) error
 	GetRepository(context.Context, *GetRepositoryReq, *GetRepositoryResp) error
 	DeleteRepository(context.Context, *DeleteRepositoryReq, *DeleteRepositoryResp) error
 	ListRepository(context.Context, *ListRepositoryReq, *ListRepositoryResp) error
-	// * chart service
+	//* chart service
 	ListChartV1(context.Context, *ListChartV1Req, *ListChartV1Resp) error
 	GetChartDetailV1(context.Context, *GetChartDetailV1Req, *GetChartDetailV1Resp) error
 	ListChartVersionV1(context.Context, *ListChartVersionV1Req, *ListChartVersionV1Resp) error
@@ -488,8 +575,10 @@ type HelmManagerHandler interface {
 	DeleteChartVersion(context.Context, *DeleteChartVersionReq, *DeleteChartVersionResp) error
 	DownloadChart(context.Context, *DownloadChartReq, *httpbody.HttpBody) error
 	GetChartRelease(context.Context, *GetChartReleaseReq, *GetChartReleaseResp) error
-	// * release service
+	//* release service
 	ListReleaseV1(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
+	//* release service v2
+	ListReleaseV2(context.Context, *ListReleaseV1Req, *ListReleaseV1Resp) error
 	GetReleaseDetailV1(context.Context, *GetReleaseDetailV1Req, *GetReleaseDetailV1Resp) error
 	InstallReleaseV1(context.Context, *InstallReleaseV1Req, *InstallReleaseV1Resp) error
 	UninstallReleaseV1(context.Context, *UninstallReleaseV1Req, *UninstallReleaseV1Resp) error
@@ -497,14 +586,18 @@ type HelmManagerHandler interface {
 	RollbackReleaseV1(context.Context, *RollbackReleaseV1Req, *RollbackReleaseV1Resp) error
 	ReleasePreview(context.Context, *ReleasePreviewReq, *ReleasePreviewResp) error
 	GetReleaseHistory(context.Context, *GetReleaseHistoryReq, *GetReleaseHistoryResp) error
+	GetReleaseManifest(context.Context, *GetReleaseManifestReq, *GetReleaseManifestResp) error
 	GetReleaseStatus(context.Context, *GetReleaseStatusReq, *CommonListResp) error
+	GetReleaseDetailExtend(context.Context, *GetReleaseDetailExtendReq, *CommonResp) error
 	GetReleasePods(context.Context, *GetReleasePodsReq, *CommonListResp) error
+	ImportClusterRelease(context.Context, *ImportClusterReleaseReq, *ImportClusterReleaseResp) error
 }
 
 func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts ...server.HandlerOption) error {
 	type helmManager interface {
 		Available(ctx context.Context, in *AvailableReq, out *AvailableResp) error
 		CreateRepository(ctx context.Context, in *CreateRepositoryReq, out *CreateRepositoryResp) error
+		CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, out *CreatePersonalRepoResp) error
 		UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, out *UpdateRepositoryResp) error
 		GetRepository(ctx context.Context, in *GetRepositoryReq, out *GetRepositoryResp) error
 		DeleteRepository(ctx context.Context, in *DeleteRepositoryReq, out *DeleteRepositoryResp) error
@@ -518,6 +611,7 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		DownloadChart(ctx context.Context, in *DownloadChartReq, out *httpbody.HttpBody) error
 		GetChartRelease(ctx context.Context, in *GetChartReleaseReq, out *GetChartReleaseResp) error
 		ListReleaseV1(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
+		ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error
 		GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error
 		InstallReleaseV1(ctx context.Context, in *InstallReleaseV1Req, out *InstallReleaseV1Resp) error
 		UninstallReleaseV1(ctx context.Context, in *UninstallReleaseV1Req, out *UninstallReleaseV1Resp) error
@@ -525,8 +619,11 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		RollbackReleaseV1(ctx context.Context, in *RollbackReleaseV1Req, out *RollbackReleaseV1Resp) error
 		ReleasePreview(ctx context.Context, in *ReleasePreviewReq, out *ReleasePreviewResp) error
 		GetReleaseHistory(ctx context.Context, in *GetReleaseHistoryReq, out *GetReleaseHistoryResp) error
+		GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, out *GetReleaseManifestResp) error
 		GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error
+		GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, out *CommonResp) error
 		GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error
+		ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, out *ImportClusterReleaseResp) error
 	}
 	type HelmManager struct {
 		helmManager
@@ -541,6 +638,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.CreateRepository",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos"},
+		Method:  []string{"POST"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.CreatePersonalRepo",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/repos/personal"},
 		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
@@ -623,6 +726,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.ListReleaseV2",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/v2/releases"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetReleaseDetailV1",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}"},
 		Method:  []string{"GET"},
@@ -665,8 +774,20 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseManifest",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/revisions/{revision}/manifest"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "HelmManager.GetReleaseStatus",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/status"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.GetReleaseDetailExtend",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/expend"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -674,6 +795,12 @@ func RegisterHelmManagerHandler(s server.Server, hdlr HelmManagerHandler, opts .
 		Name:    "HelmManager.GetReleasePods",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/pods"},
 		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "HelmManager.ImportClusterRelease",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/namespaces/{namespace}/releases/{name}/import"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	return s.Handle(s.NewHandler(&HelmManager{h}, opts...))
@@ -689,6 +816,10 @@ func (h *helmManagerHandler) Available(ctx context.Context, in *AvailableReq, ou
 
 func (h *helmManagerHandler) CreateRepository(ctx context.Context, in *CreateRepositoryReq, out *CreateRepositoryResp) error {
 	return h.HelmManagerHandler.CreateRepository(ctx, in, out)
+}
+
+func (h *helmManagerHandler) CreatePersonalRepo(ctx context.Context, in *CreatePersonalRepoReq, out *CreatePersonalRepoResp) error {
+	return h.HelmManagerHandler.CreatePersonalRepo(ctx, in, out)
 }
 
 func (h *helmManagerHandler) UpdateRepository(ctx context.Context, in *UpdateRepositoryReq, out *UpdateRepositoryResp) error {
@@ -743,6 +874,10 @@ func (h *helmManagerHandler) ListReleaseV1(ctx context.Context, in *ListReleaseV
 	return h.HelmManagerHandler.ListReleaseV1(ctx, in, out)
 }
 
+func (h *helmManagerHandler) ListReleaseV2(ctx context.Context, in *ListReleaseV1Req, out *ListReleaseV1Resp) error {
+	return h.HelmManagerHandler.ListReleaseV2(ctx, in, out)
+}
+
 func (h *helmManagerHandler) GetReleaseDetailV1(ctx context.Context, in *GetReleaseDetailV1Req, out *GetReleaseDetailV1Resp) error {
 	return h.HelmManagerHandler.GetReleaseDetailV1(ctx, in, out)
 }
@@ -771,12 +906,24 @@ func (h *helmManagerHandler) GetReleaseHistory(ctx context.Context, in *GetRelea
 	return h.HelmManagerHandler.GetReleaseHistory(ctx, in, out)
 }
 
+func (h *helmManagerHandler) GetReleaseManifest(ctx context.Context, in *GetReleaseManifestReq, out *GetReleaseManifestResp) error {
+	return h.HelmManagerHandler.GetReleaseManifest(ctx, in, out)
+}
+
 func (h *helmManagerHandler) GetReleaseStatus(ctx context.Context, in *GetReleaseStatusReq, out *CommonListResp) error {
 	return h.HelmManagerHandler.GetReleaseStatus(ctx, in, out)
 }
 
+func (h *helmManagerHandler) GetReleaseDetailExtend(ctx context.Context, in *GetReleaseDetailExtendReq, out *CommonResp) error {
+	return h.HelmManagerHandler.GetReleaseDetailExtend(ctx, in, out)
+}
+
 func (h *helmManagerHandler) GetReleasePods(ctx context.Context, in *GetReleasePodsReq, out *CommonListResp) error {
 	return h.HelmManagerHandler.GetReleasePods(ctx, in, out)
+}
+
+func (h *helmManagerHandler) ImportClusterRelease(ctx context.Context, in *ImportClusterReleaseReq, out *ImportClusterReleaseResp) error {
+	return h.HelmManagerHandler.ImportClusterRelease(ctx, in, out)
 }
 
 // Api Endpoints for ClusterAddons service
@@ -808,6 +955,12 @@ func NewClusterAddonsEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterAddons.PreviewAddons",
+			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview"},
+			Method:  []string{"POST"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterAddons.StopAddons",
 			Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop"},
 			Method:  []string{"PUT"},
@@ -829,6 +982,7 @@ type ClusterAddonsService interface {
 	GetAddonsDetail(ctx context.Context, in *GetAddonsDetailReq, opts ...client.CallOption) (*GetAddonsDetailResp, error)
 	InstallAddons(ctx context.Context, in *InstallAddonsReq, opts ...client.CallOption) (*InstallAddonsResp, error)
 	UpgradeAddons(ctx context.Context, in *UpgradeAddonsReq, opts ...client.CallOption) (*UpgradeAddonsResp, error)
+	PreviewAddons(ctx context.Context, in *PreviewAddonsReq, opts ...client.CallOption) (*ReleasePreviewResp, error)
 	StopAddons(ctx context.Context, in *StopAddonsReq, opts ...client.CallOption) (*StopAddonsResp, error)
 	UninstallAddons(ctx context.Context, in *UninstallAddonsReq, opts ...client.CallOption) (*UninstallAddonsResp, error)
 }
@@ -885,6 +1039,16 @@ func (c *clusterAddonsService) UpgradeAddons(ctx context.Context, in *UpgradeAdd
 	return out, nil
 }
 
+func (c *clusterAddonsService) PreviewAddons(ctx context.Context, in *PreviewAddonsReq, opts ...client.CallOption) (*ReleasePreviewResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterAddons.PreviewAddons", in)
+	out := new(ReleasePreviewResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *clusterAddonsService) StopAddons(ctx context.Context, in *StopAddonsReq, opts ...client.CallOption) (*StopAddonsResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterAddons.StopAddons", in)
 	out := new(StopAddonsResp)
@@ -912,6 +1076,7 @@ type ClusterAddonsHandler interface {
 	GetAddonsDetail(context.Context, *GetAddonsDetailReq, *GetAddonsDetailResp) error
 	InstallAddons(context.Context, *InstallAddonsReq, *InstallAddonsResp) error
 	UpgradeAddons(context.Context, *UpgradeAddonsReq, *UpgradeAddonsResp) error
+	PreviewAddons(context.Context, *PreviewAddonsReq, *ReleasePreviewResp) error
 	StopAddons(context.Context, *StopAddonsReq, *StopAddonsResp) error
 	UninstallAddons(context.Context, *UninstallAddonsReq, *UninstallAddonsResp) error
 }
@@ -922,6 +1087,7 @@ func RegisterClusterAddonsHandler(s server.Server, hdlr ClusterAddonsHandler, op
 		GetAddonsDetail(ctx context.Context, in *GetAddonsDetailReq, out *GetAddonsDetailResp) error
 		InstallAddons(ctx context.Context, in *InstallAddonsReq, out *InstallAddonsResp) error
 		UpgradeAddons(ctx context.Context, in *UpgradeAddonsReq, out *UpgradeAddonsResp) error
+		PreviewAddons(ctx context.Context, in *PreviewAddonsReq, out *ReleasePreviewResp) error
 		StopAddons(ctx context.Context, in *StopAddonsReq, out *StopAddonsResp) error
 		UninstallAddons(ctx context.Context, in *UninstallAddonsReq, out *UninstallAddonsResp) error
 	}
@@ -951,6 +1117,12 @@ func RegisterClusterAddonsHandler(s server.Server, hdlr ClusterAddonsHandler, op
 		Name:    "ClusterAddons.UpgradeAddons",
 		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}"},
 		Method:  []string{"PUT"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterAddons.PreviewAddons",
+		Path:    []string{"/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview"},
+		Method:  []string{"POST"},
 		Handler: "rpc",
 	}))
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
@@ -986,6 +1158,10 @@ func (h *clusterAddonsHandler) InstallAddons(ctx context.Context, in *InstallAdd
 
 func (h *clusterAddonsHandler) UpgradeAddons(ctx context.Context, in *UpgradeAddonsReq, out *UpgradeAddonsResp) error {
 	return h.ClusterAddonsHandler.UpgradeAddons(ctx, in, out)
+}
+
+func (h *clusterAddonsHandler) PreviewAddons(ctx context.Context, in *PreviewAddonsReq, out *ReleasePreviewResp) error {
+	return h.ClusterAddonsHandler.PreviewAddons(ctx, in, out)
 }
 
 func (h *clusterAddonsHandler) StopAddons(ctx context.Context, in *StopAddonsReq, out *StopAddonsResp) error {

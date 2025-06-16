@@ -86,23 +86,33 @@ func (ng *NodeGroup) UpdateNodeGroup(
 		blog.Errorf("get cluster %s failed, %s", group.ClusterID, err.Error())
 		return nil, err
 	}
+
 	eksCli, err := api.NewEksClient(&opt.CommonOption)
 	if err != nil {
 		blog.Errorf("create eks client failed, err: %s", err.Error())
 		return nil, err
 	}
+
 	if group.NodeGroupID == "" || group.ClusterID == "" {
 		blog.Errorf("nodegroup id or cluster id is empty")
 		return nil, fmt.Errorf("nodegroup id or cluster id is empty")
 	}
-	_, err = eksCli.UpdateNodegroupConfig(ng.generateUpdateNodegroupConfigInput(group, cluster.SystemID))
+
+	cloudNg, err := eksCli.DescribeNodegroup(&group.CloudNodeGroupID, &cluster.SystemID)
+	if err != nil {
+		blog.Errorf("get cloud nodegroup failed, err: %s", err.Error())
+		return nil, err
+	}
+
+	_, err = eksCli.UpdateNodegroupConfig(ng.generateUpdateNodegroupConfigInput(group, cloudNg, cluster.SystemID))
 	if err != nil {
 		return nil, err
 	}
+
 	return nil, nil
 }
 
-func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
+func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup, cloudNg *eks.Nodegroup,
 	cluster string) *eks.UpdateNodegroupConfigInput {
 	input := &eks.UpdateNodegroupConfigInput{
 		ClusterName:   &cluster,
@@ -111,8 +121,46 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 
 	if len(group.GetNodeTemplate().GetLabels()) > 0 {
 		input.Labels = &eks.UpdateLabelsPayload{
-			AddOrUpdateLabels: aws.StringMap(group.GetNodeTemplate().GetLabels()),
+			AddOrUpdateLabels: aws.StringMap(group.NodeTemplate.Labels),
 		}
+
+		for k := range cloudNg.Labels {
+			if _, ok := group.NodeTemplate.Labels[k]; !ok {
+				input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
+			}
+		}
+	} else if len(cloudNg.Labels) > 0 {
+		input.Labels = &eks.UpdateLabelsPayload{}
+		for k := range cloudNg.Labels {
+			input.Labels.RemoveLabels = append(input.Labels.RemoveLabels, aws.String(k))
+		}
+	}
+
+	if len(group.GetNodeTemplate().GetTaints()) > 0 {
+		input.Taints = &eks.UpdateTaintsPayload{
+			AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
+		}
+
+		for _, v := range cloudNg.Taints {
+			exit := false
+			for _, y := range group.NodeTemplate.Taints {
+				if *v.Key == y.Key {
+					exit = true
+					continue
+				}
+			}
+
+			if !exit {
+				input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, &eks.Taint{
+					Key:    v.Key,
+					Value:  v.Value,
+					Effect: v.Effect,
+				})
+			}
+		}
+	} else if len(cloudNg.Taints) > 0 {
+		input.Taints = &eks.UpdateTaintsPayload{}
+		input.Taints.RemoveTaints = append(input.Taints.RemoveTaints, cloudNg.Taints...)
 	}
 
 	if group.AutoScaling != nil {
@@ -121,17 +169,13 @@ func (ng *NodeGroup) generateUpdateNodegroupConfigInput(group *proto.NodeGroup,
 			MinSize: aws.Int64(int64(group.AutoScaling.MinSize)),
 		}
 	}
-	if group.NodeTemplate != nil && group.NodeTemplate.Taints != nil {
-		input.Taints = &eks.UpdateTaintsPayload{
-			AddOrUpdateTaints: api.MapToAwsTaints(group.NodeTemplate.Taints),
-		}
-	}
 
 	return input
 }
 
 // RecommendNodeGroupConf recommends nodegroup configs
-func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
+func (ng *NodeGroup) RecommendNodeGroupConf(
+	ctx context.Context, opt *cloudprovider.CommonOption) ([]*proto.RecommendNodeGroupConf, error) {
 	if opt == nil {
 		return nil, fmt.Errorf("invalid request")
 	}
@@ -150,7 +194,7 @@ func (ng *NodeGroup) RecommendNodeGroupConf(opt *cloudprovider.CommonOption) ([]
 	}
 	config.ServiceRoleName = serviceRoles[0].RoleName
 
-	insTypes, err := mgr.ListNodeInstanceType(cloudprovider.InstanceInfo{
+	insTypes, err := mgr.ListNodeInstanceType(ctx, cloudprovider.InstanceInfo{
 		Region: opt.Region,
 		Cpu:    8,
 		Memory: 16,
@@ -395,7 +439,8 @@ func (ng *NodeGroup) GetExternalNodeScript(group *proto.NodeGroup, internal bool
 }
 
 // CheckResourcePoolQuota check resource pool quota when revise group limit
-func (ng *NodeGroup) CheckResourcePoolQuota(group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
+func (ng *NodeGroup) CheckResourcePoolQuota(
+	ctx context.Context, group *proto.NodeGroup, operation string, scaleUpNum uint32) error {
 	return nil
 }
 

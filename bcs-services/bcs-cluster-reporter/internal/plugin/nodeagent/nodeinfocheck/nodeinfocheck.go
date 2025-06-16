@@ -15,11 +15,12 @@ package nodeinfocheck
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
-	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 	"os"
 	"path"
 	"time"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/metricmanager"
+	pluginmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/pluginmanager"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"k8s.io/klog/v2"
@@ -80,7 +81,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			for {
 				if p.CheckLock.TryLock() {
 					p.CheckLock.Unlock()
-					go p.Check()
+					go p.Check(pluginmanager.CheckOption{})
 				} else {
 					klog.Infof("the former %s didn't over, skip in this loop", p.Name())
 				}
@@ -94,7 +95,7 @@ func (p *Plugin) Setup(configFilePath string, runMode string) error {
 			}
 		}()
 	} else if runMode == pluginmanager.RunModeOnce {
-		p.Check()
+		p.Check(pluginmanager.CheckOption{})
 	}
 
 	return nil
@@ -115,7 +116,7 @@ func (p *Plugin) Name() string {
 }
 
 // Check for node's platform info
-func (p *Plugin) Check() {
+func (p *Plugin) Check(option pluginmanager.CheckOption) {
 	result := pluginmanager.CheckResult{
 		Items:        make([]pluginmanager.CheckItem, 0, 0),
 		InfoItemList: make([]pluginmanager.InfoItem, 0, 0),

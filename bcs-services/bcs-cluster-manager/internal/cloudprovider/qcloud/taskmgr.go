@@ -53,6 +53,10 @@ func newtask() *Task {
 
 	// create cluster task
 	task.works[createClusterShieldAlarmStep.StepMethod] = tasks.CreateClusterShieldAlarmTask
+
+	task.works[createModifyInstancesVpcStep.StepMethod] = tasks.CreateModifyInstancesVpcTask
+	task.works[createCheckInstanceStateStep.StepMethod] = tasks.CreateCheckInstanceStateTask
+
 	task.works[createTKEClusterStep.StepMethod] = tasks.CreateTkeClusterTask
 	task.works[checkTKEClusterStatusStep.StepMethod] = tasks.CheckTkeClusterStatusTask
 	task.works[checkCreateClusterNodeStatusStep.StepMethod] = tasks.CheckCreateClusterNodeStatusTask
@@ -179,9 +183,20 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 	task.CommonParams[cloudprovider.PasswordKey.String()] = passwd
 
 	// setting all steps details
-	createClusterTask := &CreateClusterTaskOption{Cluster: cls, Nodes: opt.WorkerNodes, NodeTemplate: opt.NodeTemplate}
+	createClusterTask := &CreateClusterTaskOption{
+		Cluster:       cls,
+		Nodes:         opt.WorkerNodes,
+		NodeTemplate:  opt.NodeTemplate,
+		transVpcNodes: opt.DiffVpcNodes,
+	}
 	// step0: create cluster shield alarm step
 	createClusterTask.BuildShieldAlertStep(task)
+
+	// step: check vpc and trans diff nodes
+	createClusterTask.BuildCreateModifyInstancesVpcStep(task)
+	createClusterTask.BuildCreateCheckInstanceStateStep(task)
+	createClusterTask.BuildCheckNodeIpsInCmdbStep(task)
+
 	// step1: createTKECluster and return clusterID inject common paras
 	createClusterTask.BuildCreateClusterStep(task)
 	// step2: check cluster status by clusterID
@@ -200,7 +215,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			Extra: template.ExtraInfo{
 				InstancePasswd: passwd,
 				NodeOperator:   opt.Operator,
-				NodeIPList:     strings.Join(opt.WorkerNodes, ","),
+				MasterIPList:   cloudprovider.DynamicMasterNodeIPListKey.String(),
+				NodeIPList: func() string {
+					if len(createClusterTask.transVpcNodes) > 0 {
+						return ""
+					}
+
+					return strings.Join(opt.WorkerNodes, ",")
+				}(),
 			}}.BuildSopsStep(task, opt.Cloud.ClusterManagement.CreateCluster, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCreateClusterTask BuildBkSopsStepAction failed: %v", err)
@@ -212,7 +234,13 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 		common.BuildJobExecuteScriptStep(task, common.JobExecParas{
 			ClusterID: cls.ClusterID,
 			Content:   opt.NodeTemplate.UserScript,
-			NodeIps:   strings.Join(opt.WorkerNodes, ","),
+			NodeIps: func() string {
+				if len(createClusterTask.transVpcNodes) > 0 {
+					return ""
+				}
+
+				return strings.Join(opt.WorkerNodes, ",")
+			}(),
 			Operator:  opt.Operator,
 			StepName:  common.PostInitStepJob,
 			Translate: common.PostInitJob,
@@ -225,8 +253,14 @@ func (t *Task) BuildCreateClusterTask(cls *proto.Cluster, opt *cloudprovider.Cre
 			StepName: template.UserAfterInit,
 			Cluster:  cls,
 			Extra: template.ExtraInfo{
-				InstancePasswd:  passwd,
-				NodeIPList:      strings.Join(opt.WorkerNodes, ","),
+				InstancePasswd: passwd,
+				NodeIPList: func() string {
+					if len(createClusterTask.transVpcNodes) > 0 {
+						return ""
+					}
+
+					return strings.Join(opt.WorkerNodes, ",")
+				}(),
 				NodeOperator:    opt.Operator,
 				ShowSopsUrl:     true,
 				TranslateMethod: template.UserPostInit,
@@ -635,6 +669,7 @@ func (t *Task) BuildAddNodesToClusterTask(cls *proto.Cluster, nodes []*proto.Nod
 		PassWd:         passwd,
 		Operator:       opt.Operator,
 		NodeSchedule:   opt.NodeSchedule,
+		Advance:        opt.Advance,
 	}
 	// step1: modify nodes vpc if need
 	addNodesTask.BuildModifyInstancesVpcStep(task)

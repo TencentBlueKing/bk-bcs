@@ -144,7 +144,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 
 import { cloudAccounts, createCloudAccounts, deleteCloudAccounts } from '@/api/base';
 import $bkMessage from '@/common/bkmagic';
-import { NAME_REGEX, SECRETKEY_REGEX } from '@/common/constant';
+import { NAME_REGEX } from '@/common/constant';
 import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import usePage from '@/composables/use-page';
 import useTableSearch from '@/composables/use-search';
@@ -222,13 +222,6 @@ const formRules = ref({
       required: true,
       message: $i18n.t('generic.validate.required'),
       trigger: 'blur',
-    },
-    {
-      message: $i18n.t('amazonCloud.tips.secretKeyRegex'),
-      trigger: 'blur',
-      validator(val) {
-        return new RegExp(SECRETKEY_REGEX, 'g').test(val);
-      },
     },
   ],
 });

@@ -14,9 +14,10 @@
 package util
 
 import (
+	"strings"
+
 	"github.com/PuerkitoBio/goquery"
 	"golang.org/x/net/html"
-	"strings"
 )
 
 var (

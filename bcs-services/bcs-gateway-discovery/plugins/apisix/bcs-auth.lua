@@ -23,6 +23,7 @@ local plugin_name = "bcs-auth"
 local schema = {
     type = "object",
     properties = {
+        bk_login_host_tenant = {type = "string", description = "bk login host tenant"},
         bk_login_host_esb = {type = "string", description = "bk login host esb"},
         bk_login_host = {type = "string", description = "bk login host (with scheme prefix)"},
         private_key = {type = "string", description = "jwt private_key"},

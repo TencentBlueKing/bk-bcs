@@ -26,13 +26,14 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-network/bcs-ingress-controller/internal/common"
 	networkextensionv1 "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/apis/networkextension/v1"
 
+	"strings"
+
 	tclb "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/clb/v20180317"
 	tcommon "github.com/tencentcloud/tencentcloud-sdk-go/tencentcloud/common"
-	"strings"
 )
 
 // desribe listener info and listener targets with port list, used by batch operation
-func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
+func (c *Clb) batchDescribeListeners(region, lbID string, ports []int, listenerIDList []string) (
 	map[string]*networkextensionv1.Listener, error) {
 	if len(ports) == 0 {
 		return nil, nil
@@ -44,6 +45,11 @@ func (c *Clb) batchDescribeListeners(region, lbID string, ports []int) (
 	// 1. desribe listener attributes
 	req := tclb.NewDescribeListenersRequest()
 	req.LoadBalancerId = tcommon.StringPtr(lbID)
+	// 当ports和listenerIDList对应时， 说明所有Listener都已知， 可以直接通过listenerIDList获取
+	// 当clb Listener数量较多时， 直接获取所有Listener性能较差
+	if len(ports) == len(listenerIDList) {
+		req.ListenerIds = tcommon.StringPtrs(listenerIDList)
+	}
 	ctime := time.Now()
 	resp, err := c.sdkWrapper.DescribeListeners(region, req)
 	if err != nil {
@@ -904,7 +910,7 @@ func (c *Clb) resolveUpdateListener(lbID, region string, updatedListeners []*net
 						Res:     cloudListenerGroup[index].Status.ListenerID}
 				} else {
 					retMap[group[index].GetName()] = cloud.Result{IsError: true, Err: inErr}
-					blog.Warnf("update 7 layer listener %s failed in batch, err: %s", group[index].GetName(), inErr.Error())
+					blog.Warnf("update listener %s failed in batch, err: %s", group[index].GetName(), inErr.Error())
 				}
 			}
 		}

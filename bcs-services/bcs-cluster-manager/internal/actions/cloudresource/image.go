@@ -103,7 +103,8 @@ func (la *ListCloudOsImageAction) listCloudImageOs() error {
 
 	switch la.req.Provider {
 	case common.AllImageProvider:
-		providers := []string{common.PublicImageProvider, common.MarketImageProvider, common.PrivateImageProvider}
+		providers := []string{common.PublicImageProvider, common.MarketImageProvider,
+			common.PrivateImageProvider, common.BCSImageProvider}
 		for i := range providers {
 			images, errLocal := clsMgr.ListOsImage(providers[i], cmOption)
 			if errLocal != nil {

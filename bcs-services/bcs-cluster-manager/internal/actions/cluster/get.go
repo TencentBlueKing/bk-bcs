@@ -75,10 +75,6 @@ func (ga *GetAction) getCluster() error {
 		}
 	}
 
-	if cluster.IsShared && ga.req.ProjectId == cluster.ProjectID {
-		cluster.IsShared = false
-	}
-
 	// append apiServer info
 	if cluster.ExtraInfo == nil {
 		cluster.ExtraInfo = make(map[string]string, 0)
@@ -90,16 +86,45 @@ func (ga *GetAction) getCluster() error {
 
 	// append project code
 	if len(cluster.GetProjectID()) > 0 {
-		pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(cluster.GetProjectID(), true)
+		pInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, cluster.GetProjectID(), true)
 		if errLocal == nil {
 			cluster.ExtraInfo[common.ProjectCode] = pInfo.GetProjectCode()
 		}
 	}
 
+	// sort cluster shared range, current project first
+	ga.sortSharedRangeProjectIDorCodes()
+
 	// append module info
 	ga.appendModuleInfo()
 
 	return nil
+}
+
+func (ga *GetAction) sortSharedRangeProjectIDorCodes() {
+	sharedRanges := ga.cluster.GetSharedRanges()
+	if sharedRanges == nil {
+		return
+	}
+
+	if len(sharedRanges.GetProjectIdOrCodes()) == 0 {
+		return
+	}
+
+	projectIDorCodes := sharedRanges.GetProjectIdOrCodes()
+	currentProjectID := ga.cluster.GetProjectID()
+
+	remainProjectIDorCodes := make([]string, 0, len(projectIDorCodes))
+	for _, id := range projectIDorCodes {
+		if id != currentProjectID {
+			remainProjectIDorCodes = append(remainProjectIDorCodes, id)
+		}
+	}
+
+	sorted := make([]string, 0, 1+len(remainProjectIDorCodes))
+	sorted = append(sorted, append([]string{currentProjectID}, remainProjectIDorCodes...)...)
+
+	ga.cluster.SharedRanges.ProjectIdOrCodes = sorted
 }
 
 func (ga *GetAction) appendModuleInfo() {
@@ -700,7 +725,7 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 	if len(projectIDorCodes) == 0 {
 		projectID := cluster.GetProjectID()
 		if projectID != "" {
-			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectID, true)
+			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, projectID, true)
 			if err != nil {
 				blog.Errorf("get project info by project manager client failed, %s", err.Error())
 				return err
@@ -732,7 +757,7 @@ func (ga *GetClusterSharedProjectAction) getSharedProject() error {
 			defer utils.RecoverPrintStack("GetClusterSharedProjectAction")
 			defer barrier.Done()
 
-			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(projectIDorCode, true)
+			pInfo, err := project.GetProjectManagerClient().GetProjectInfo(ga.ctx, projectIDorCode, true)
 			if err != nil {
 				blog.Errorf("get project info by project manager client failed, %s", err.Error())
 				return

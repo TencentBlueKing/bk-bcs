@@ -439,6 +439,59 @@ func getCvmImagesByImageType(provider string, opt *cloudprovider.CommonOption) (
 	return cvmImages, nil
 }
 
+func getCvmImageByImageName(imageName string, opt *cloudprovider.CommonOption) (*cvm.Image, error) {
+	cli, err := GetCVMClient(opt)
+	if err != nil {
+		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetCVMClient failed: %v", imageName, err)
+	}
+
+	image, exist := getImageNameCacheData(opt.Region, imageName)
+	if exist {
+		return image, nil
+	}
+
+	imageID, err := cli.GetImageIDByImageName(imageName, opt)
+	if err != nil {
+		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageIDByImageName failed: %v", imageName, err)
+	}
+
+	cvmImage, err := cli.GetImageByImageID(imageID)
+	if err != nil {
+		return nil, fmt.Errorf("getCvmImageByImageName[%s] GetImageByImageID failed: %v", imageID, err)
+	}
+
+	err = setImageNameCacheData(opt.Region, imageName, cvmImage)
+	if err != nil {
+		blog.Errorf("getCvmImageByImageName[%s] setImageNameCacheData failed: %v", imageName, err)
+	}
+
+	return cvmImage, nil
+}
+
+// GetImageIDByImageName get imageID by imageName
+func (nc *NodeClient) GetImageIDByImageName(imageName string, opt *cloudprovider.CommonOption) (string, error) {
+	cloudImages, err := nc.ListImages()
+	if err != nil {
+		blog.Errorf("getCVMImageIDByImageName cvm ListImages %s failed, %s", imageName, err.Error())
+		return "", err
+	}
+	var (
+		imageIDList = make([]string, 0)
+	)
+	for _, image := range cloudImages {
+		if *image.ImageName == imageName {
+			imageIDList = append(imageIDList, *image.ImageId)
+		}
+	}
+	blog.Infof("GetImageIDByImageName successful %v", imageIDList)
+
+	if len(imageIDList) == 0 {
+		return "", fmt.Errorf("GetImageIDByImageName[%s] failed: imageIDList empty", imageName)
+	}
+
+	return imageIDList[0], nil
+}
+
 // ListKeyPairs describe all ssh keyPairs https://cloud.tencent.com/document/product/213/15699
 func (nc *NodeClient) ListKeyPairs() ([]*cvm.KeyPair, error) {
 	var (

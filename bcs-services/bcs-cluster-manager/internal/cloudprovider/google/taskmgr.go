@@ -498,6 +498,7 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			Operator:         opt.Operator,
 			StepName:         common.PreInitStepJob,
 			AllowSkipJobTask: group.NodeTemplate.AllowSkipScaleInWhenFailed,
+			Translate:        common.PreInitJob,
 		})
 	}
 
@@ -507,10 +508,11 @@ func (t *Task) BuildCleanNodesInGroupTask(nodes []*proto.Node, group *proto.Node
 			StepName: template.UserPreInit,
 			Cluster:  opt.Cluster,
 			Extra: template.ExtraInfo{
-				InstancePasswd: "",
-				NodeIPList:     strings.Join(nodeIPs, ","),
-				NodeOperator:   opt.Operator,
-				ShowSopsUrl:    true,
+				InstancePasswd:  "",
+				NodeIPList:      strings.Join(nodeIPs, ","),
+				NodeOperator:    opt.Operator,
+				ShowSopsUrl:     true,
+				TranslateMethod: template.UserBeforeInit,
 			}}.BuildSopsStep(task, group.NodeTemplate.ScaleInExtraAddons, true)
 		if err != nil {
 			return nil, fmt.Errorf("BuildCleanNodesInGroupTask ScaleInExtraAddons.PreActions "+
@@ -723,6 +725,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 			Operator:         opt.Operator,
 			StepName:         common.PostInitStepJob,
 			AllowSkipJobTask: group.NodeTemplate.GetAllowSkipScaleOutWhenFailed(),
+			Translate:        common.PostInitJob,
 		})
 	}
 
@@ -737,6 +740,7 @@ func (t *Task) BuildUpdateDesiredNodesTask(desired uint32, group *proto.NodeGrou
 				ShowSopsUrl:        true,
 				ExternalNodeScript: "",
 				NodeGroupID:        group.NodeGroupID,
+				TranslateMethod:    template.UserPostInit,
 			}}.BuildSopsStep(task, group.NodeTemplate.ScaleOutExtraAddons, false)
 		if err != nil {
 			return nil, fmt.Errorf("BuildScalingNodesTask business BuildBkSopsStepAction failed: %v", err)

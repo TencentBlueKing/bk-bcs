@@ -25,7 +25,7 @@
             :value="clusterData.clusterName"
             :placeholder="$t('cluster.create.validate.name')"
             class="w-[300px]"
-            :disable-edit="clusterData.status !== 'RUNNING' || clusterData.is_shared"
+            :disable-edit="!editable"
             @save="handleClusterNameChange" />
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.clusterType')">
@@ -53,7 +53,7 @@
             <span v-else>--</span>
             <span
               class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
-              v-if="clusterData.status === 'RUNNING' && !clusterData.is_shared"
+              v-if="editable"
               @click="isEdit = true">
               <i class="bk-icon icon-edit-line"></i>
             </span>
@@ -98,7 +98,7 @@
             :value="clusterData.description"
             :placeholder="$t('cluster.placeholder.desc')"
             class="w-[300px]"
-            :disable-edit="clusterData.status !== 'RUNNING' || clusterData.is_shared"
+            :disable-edit="!editable"
             @save="handleClusterDescChange" />
         </bk-form-item>
         <bk-form-item :label="$t('cluster.labels.visibleRange')">
@@ -108,6 +108,7 @@
             :is-shared="clusterData?.is_shared"
             :loading="isLoading"
             :cluster-id="clusterData.clusterID"
+            :disable-edit="!editable"
             @edit="rangeEdit = true"
             @cancel="rangeEdit = false"
             @save="handleVisibleRangeChange" />
@@ -171,7 +172,7 @@
               {{ nodemanArea || '--' }}
             </span>
             <span
-              v-if="clusterData.status === 'RUNNING' && !clusterData.is_shared"
+              v-if="editable"
               class="hover:text-[#3a84ff] cursor-pointer ml-[8px]"
               @click="handleEditNodemanArea">
               <i class="bk-icon icon-edit-line"></i>
@@ -318,7 +319,11 @@ export default defineComponent({
       if (clusterData.value.clusterType === 'virtual') return clusterData.value?.extraInfo?.provider;
       return clusterData.value?.provider;
     });
-    const clusterType = computed(() => getClusterTypeName(clusterData.value));
+    const clusterType = computed(() => getClusterTypeName(clusterData.value, isFromCurProject.value));
+    // 是否可编辑
+    const editable = computed(() => clusterData.value.status === 'RUNNING' && (!clusterData.value.is_shared || isFromCurProject.value));
+    // 当前项目集群
+    const isFromCurProject = computed(() => $store.state.curProject?.projectID === clusterData.value.projectID);
     // 修改集群信息
     const handleModifyCluster = async (params  = {}) => {
       isLoading.value = true;
@@ -480,6 +485,7 @@ export default defineComponent({
       providerNameMap,
       rangeEdit,
       handleVisibleRangeChange,
+      editable,
     };
   },
 });

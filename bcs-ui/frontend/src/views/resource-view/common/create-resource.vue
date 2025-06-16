@@ -95,7 +95,7 @@ const editMode = ref<'yaml'|'form'>('form');
 const clusterID = ref('');
 const namespace = ref('');
 const disabledKindListOfSharedCluster = ref(['DaemonSet', 'PersistentVolume', 'StorageClass']);
-const gameCRDList = ref(['GameDeployment', 'GameStatefulSet', 'HookTemplate']);
+const gameCRDList = ref(['GameDeployment', 'GameStatefulSet', 'HookTemplate', 'BscpConfig']);
 const curCluster = computed(() => clusterList.value.find(item => item.clusterID === clusterID.value));
 const disabledFormMode = computed(() => props.category === 'custom_objects'
   && !gameCRDList.value.includes(props.kind));

@@ -114,6 +114,7 @@ func (l *lvsProxy) DeleteVirtualServer(vs string) error {
 		blog.Warn("DeleteVirtualServer error: ", err)
 		return err
 	}
+	blog.Infof("DeleteVirtualServer %s:%d successful", vIP, vPort)
 
 	l.vs = nil
 	return nil

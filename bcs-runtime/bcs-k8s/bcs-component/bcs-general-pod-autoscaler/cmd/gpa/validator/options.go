@@ -14,10 +14,9 @@
 package validator
 
 import (
+	"flag"
 	"fmt"
 	"net"
-
-	"github.com/spf13/pflag"
 )
 
 var (
@@ -47,12 +46,12 @@ func NewServerRunOptions() *ServerRunOptions {
 }
 
 func (s *ServerRunOptions) addFlags() {
-	pflag.StringVar(&s.Address, "address", "0.0.0.0", "The address of scheduler manager.")
-	pflag.IntVar(&s.Port, "port", 8080, "The port of scheduler manager.")
-	pflag.StringVar(&s.TlsCert, "tlscert", "", "Path to TLS certificate file")
-	pflag.StringVar(&s.TlsKey, "tlskey", "", "Path to TLS key file")
-	pflag.StringVar(&s.TlsCA, "CA", "", "Path to certificate file")
-	pflag.BoolVar(&s.ShowVersion, "version", false, "Show version.")
+	flag.StringVar(&s.Address, "address", "0.0.0.0", "The address of scheduler manager.")
+	flag.IntVar(&s.Port, "port", 8080, "The port of scheduler manager.")
+	flag.StringVar(&s.TlsCert, "tlscert", "", "Path to TLS certificate file")
+	flag.StringVar(&s.TlsKey, "tlskey", "", "Path to TLS key file")
+	flag.StringVar(&s.TlsCA, "CA", "", "Path to certificate file")
+	flag.BoolVar(&s.ShowVersion, "version", false, "Show version.")
 }
 
 // Validate validate

@@ -216,16 +216,20 @@ func (c *Clb) DeleteListener(region string, listener *networkextensionv1.Listene
 // EnsureMultiListeners ensure multiple listeners to cloud
 func (c *Clb) EnsureMultiListeners(
 	region, lbID string, listeners []*networkextensionv1.Listener) (map[string]cloud.Result, error) {
+	var listenerIDList []string
 	var portList []int
 	for _, li := range listeners {
 		portList = append(portList, li.Spec.Port)
+		if len(li.Status.ListenerID) != 0 {
+			listenerIDList = append(listenerIDList, li.Status.ListenerID)
+		}
 	}
-	cloudListenerMap, err := c.batchDescribeListeners(region, lbID, portList)
+	cloudListenerMap, err := c.batchDescribeListeners(region, lbID, portList, listenerIDList)
 	if err != nil {
 		return nil, err
 	}
 	addListeners, updatedListeners, deleteCloudListeners := compareListener(lbID, cloudListenerMap, listeners)
-
+	blog.Infof("addListeners %d, updatedListeners %d, deleteCloudListeners %d", len(addListeners), len(updatedListeners), len(deleteCloudListeners))
 	if len(deleteCloudListeners) != 0 {
 		var delListenerIDs []string
 		for _, li := range deleteCloudListeners {
@@ -333,10 +337,14 @@ func (c *Clb) EnsureSegmentListener(region string, listener *networkextensionv1.
 func (c *Clb) EnsureMultiSegmentListeners(region, lbID string, listeners []*networkextensionv1.Listener) (
 	map[string]cloud.Result, error) {
 	var portList []int
+	var listenerIDList []string
 	for _, li := range listeners {
 		portList = append(portList, li.Spec.Port)
+		if len(li.Status.ListenerID) != 0 {
+			listenerIDList = append(listenerIDList, li.Status.ListenerID)
+		}
 	}
-	cloudListenerMap, err := c.batchDescribeListeners(region, lbID, portList)
+	cloudListenerMap, err := c.batchDescribeListeners(region, lbID, portList, listenerIDList)
 	if err != nil {
 		return nil, err
 	}

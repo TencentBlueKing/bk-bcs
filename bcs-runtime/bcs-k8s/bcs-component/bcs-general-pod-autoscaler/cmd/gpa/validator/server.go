@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"time"
 
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/util"
 	webhook "github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/validator"
@@ -38,7 +38,7 @@ func Run(s *ServerRunOptions) error {
 
 	// Start debug monitor.
 	mux := http.NewServeMux()
-	mux.HandleFunc("/mutate", webHook.Serve)
+	mux.HandleFunc("/validate", webHook.Serve)
 	mux.HandleFunc("/debug/pprof/", pprof.Index)
 	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)

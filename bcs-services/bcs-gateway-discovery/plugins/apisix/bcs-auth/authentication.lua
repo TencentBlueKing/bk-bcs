@@ -112,6 +112,22 @@ function LoginTokenAuthentication:injected_user_info(credential, jwt_str, conf, 
         }
     end
 
+    if conf.bk_login_host_tenant then
+        --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
+        local data = bklogin.get_username_and_tenant_for_token(credential, conf)
+        local username, tenant_id
+        if data ~= nil then
+            if data["data"] ~= nil then
+                username, tenant_id = data["data"]["bk_username"], data["data"]["tenant_id"]
+            end
+        end
+        return {
+            username = username,
+            usertype = "user",
+            tenant_id = tenant_id,
+        }
+    end
+
     return {
         username = bklogin.get_username_for_token(credential, conf.bk_login_host),
         usertype = "user",
@@ -121,6 +137,10 @@ end
 function LoginTokenAuthentication:get_jwt(credential, conf, ctx)
     if conf.bk_login_host_esb then
         return jwt:get_jwt_from_redis(credential, conf, ctx,  "bcs_auth:session_id:", true, bklogin.get_username_for_token_esb)
+    end
+    if conf.bk_login_host_tenant then
+        --core.log.warn("conf.bk_login_host_tenant: ", conf.bk_login_host_tenant)
+        return jwt:get_jwt_from_redis(credential, conf, ctx,  "bcs_auth:session_id:", true, bklogin.get_username_and_tenant_for_token)
     end
 
     return jwt:get_jwt_from_redis(credential, conf, ctx, "bcs_auth:session_id:", true, bklogin.get_username_for_token)

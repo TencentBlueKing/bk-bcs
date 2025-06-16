@@ -36,6 +36,7 @@ export const createServiceMonitor = request('post', '/namespaces/$namespaceId/se
 export const updateServiceMonitor = request('put', '/namespaces/$namespaceId/service_monitors/$name');
 export const deleteServiceMonitor = request('delete', '/namespaces/$namespaceId/service_monitors/$name');
 export const batchDeleteServiceMonitor = request('post', '/service_monitors/batchdelete');
+export const getEventDataID = request('get', '/event_data_id');
 
 const LOG_API_URL = '/bcsapi/v4/monitor/api/projects/$projectId/clusters/$clusterId';
 const request2 = createRequest({

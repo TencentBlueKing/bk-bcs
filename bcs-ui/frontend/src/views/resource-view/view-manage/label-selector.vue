@@ -12,7 +12,7 @@
       <div class="flex items-center flex-1">
         <span
           class="flex items-center justify-center w-[26px] h-[32px] text-[#3A84FF] mr-[8px] bcs-border"
-          v-if="index > 0">
+          v-if="index > 0 && type === 'normal'">
           &
         </span>
         <bcs-select
@@ -29,6 +29,7 @@
         </bcs-select>
       </div>
       <PopoverSelector
+        v-if="type === 'normal'"
         offset="0, 6"
         :on-hide="onHide"
         :on-show="onShow"
@@ -60,6 +61,12 @@
           </li>
         </template>
       </PopoverSelector>
+      <div
+        v-else
+        :class="[
+          'px-[8px] h-[32px] min-w-[68px] text-center leading-[32px]',
+          'text-[#FF9C01] bg-[#EAEBF0] rounded-sm'
+        ]">=</div>
       <LabelValues
         v-model="item.values"
         :label="item.key"
@@ -112,6 +119,10 @@ const props = defineProps({
   clusterNamespaces: {
     type: Array as PropType<IClusterNamespace[]>,
     default: () => [],
+  },
+  type: {
+    type: String as PropType<'normal' | 'simple'>,
+    default: 'normal',
   },
 });
 const emits = defineEmits(['input', 'change']);

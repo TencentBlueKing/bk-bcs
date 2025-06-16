@@ -36,7 +36,7 @@ import (
 )
 
 // ApplyInstanceMachinesTask update desired nodes task
-func ApplyInstanceMachinesTask(taskID string, stepName string) error {
+func ApplyInstanceMachinesTask(taskID string, stepName string) error { // nolint
 	start := time.Now()
 
 	// get task and task current step
@@ -68,6 +68,9 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 		return retErr
 	}
 
+	blog.Infof("ApplyInstanceMachinesTask[%s]: begin to apply machines, nodeGroupID: %s, nodeNum: %d, manual: %s",
+		taskID, nodeGroupID, nodeNum, manual)
+
 	dependInfo, err := cloudprovider.GetClusterDependBasicInfo(cloudprovider.GetBasicInfoReq{
 		ClusterID:   clusterID,
 		CloudID:     cloudID,
@@ -90,10 +93,16 @@ func ApplyInstanceMachinesTask(taskID string, stepName string) error {
 	err = applyInstanceMachines(ctx, dependInfo, int32(nodeNum))
 	if err != nil {
 		blog.Errorf("ApplyInstanceMachinesTask[%s]: applyInstanceMachines failed: %s", taskID, err.Error())
-		retErr := fmt.Errorf("ApplyInstanceMachinesTask applyInstanceMachines failed")
-		_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		retErr := fmt.Errorf("applyInstanceMachines failed: %s", err.Error())
+
+		if manual == common.True {
+			_ = cloudprovider.UpdateVirtualNodeStatus(clusterID, nodeGroupID, taskID)
+		} else {
+			_ = cloudprovider.UpdateNodeGroupDesiredSize(nodeGroupID, nodeNum, true)
+		}
 		_ = state.UpdateStepFailure(start, stepName, retErr)
 		return retErr
+
 	}
 
 	// trans success nodes to cm DB and record common paras, not handle error
@@ -136,32 +145,96 @@ func applyInstanceMachines(ctx context.Context, info *cloudprovider.CloudDependB
 		return err
 	}
 
+	nodePool, err := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+	if err != nil {
+		return fmt.Errorf("applyInstanceMachines[%s] get cluster nodePool err: %s", taskID, err)
+	}
+
+	// update node group desired size
 	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID, nodeNum, true)
 	if err != nil {
 		return err
 	}
 
-	err = loop.LoopDoFunc(context.Background(), func() error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+
+	err = loop.LoopDoFunc(ctx, func() error {
+		nodePoolLocal, errLocal := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
+		if errLocal != nil {
+			blog.Errorf("applyInstanceMachines[%s] GetClusterNodePool[%s] failed: %v",
+				taskID, info.NodeGroup.CloudNodeGroupID, errLocal)
+			return nil
+		}
+
+		if nodePoolLocal.Status.Phase.Value() == "" {
+			return loop.EndLoop
+		} else if nodePoolLocal.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() {
+			return fmt.Errorf("applyInstanceMachines[%s] nodePool[%s] status failed: %v", taskID,
+				info.NodeGroup.CloudNodeGroupID, nodePoolLocal.Status.Phase.Value())
+		} else if nodePoolLocal.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
+			return fmt.Errorf("applyInstanceMachines[%s] nodePool[%s] status failed: %v",
+				taskID, info.NodeGroup.CloudNodeGroupID, nodePoolLocal.Status.Phase.Value())
+		}
+
+		blog.Infof("applyInstanceMachines[%s] nodePool[%s] status %s", taskID,
+			info.NodeGroup.CloudNodeGroupID, nodePoolLocal.Status.Phase.Value())
+		return nil
+	}, loop.LoopInterval(5*time.Second))
+
+	if err != nil {
+		_ = rollbackNodePoolToDesiredSize(ctx, info, *nodePool.Spec.InitialNodeCount)
+		return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, err)
+	}
+
+	return nil
+}
+
+// rollbackNodePoolToDesiredSize rollback node pool to desired size nodes
+func rollbackNodePoolToDesiredSize(ctx context.Context, info *cloudprovider.CloudDependBasicInfo, desired int32) error {
+	taskId := cloudprovider.GetTaskIDFromContext(ctx)
+
+	client, err := api.NewCceClient(info.CmOption)
+	if err != nil {
+		return err
+	}
+
+	blog.Infof("rollbackNodePoolToDesiredSize[%s] begin to rollback nodePool %s desiredSize: %d",
+		taskId, info.NodeGroup.CloudNodeGroupID, desired)
+
+	_, err = client.UpdateNodePoolDesiredNodes(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID,
+		desired, false)
+	if err != nil {
+		return fmt.Errorf("UpdateNodePoolDesiredNodes failed: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+	defer cancel()
+
+	err = loop.LoopDoFunc(ctx, func() error {
 		nodePool, errLocal := client.GetClusterNodePool(info.Cluster.SystemID, info.NodeGroup.CloudNodeGroupID)
 		if errLocal != nil {
-			blog.Errorf("applyInstanceMachines[%s] GetClusterNodePool failed: %v", taskID, errLocal)
+			blog.Errorf("rollbackNodePoolToDesiredSize[%s] GetClusterNodePool failed: %v", taskId, errLocal)
 			return nil
 		}
 
 		if nodePool.Status.Phase.Value() == "" {
 			return loop.EndLoop
-		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() ||
-			nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().SOLD_OUT.Value() {
-			return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, nodePool.Status.Phase.Value())
+		} else if nodePool.Status.Phase.Value() == model.GetNodePoolStatusPhaseEnum().ERROR.Value() {
+			return fmt.Errorf("rollbackNodePoolToDesiredSize[%s] GetOperation failed: %v",
+				taskId, nodePool.Status.Phase.Value())
 		}
 
-		blog.Infof("taskID[%s] operation %s still running", taskID, nodePool.Status.Phase.Value())
+		blog.Infof("rollbackNodePoolToDesiredSize[%s] operation %s still running", taskId,
+			nodePool.Status.Phase.Value())
 		return nil
-	}, loop.LoopInterval(3*time.Second))
-
+	}, loop.LoopInterval(5*time.Second))
 	if err != nil {
-		return fmt.Errorf("applyInstanceMachines[%s] GetOperation failed: %v", taskID, err)
+		return fmt.Errorf("rollbackNodeGroupDesiredSize[%s] GetOperation failed: %v", taskId, err)
 	}
+
+	blog.Infof("rollbackNodeGroupDesiredSize[%s] rollback nodePool[%s:%v] successful",
+		taskId, info.NodeGroup.CloudNodeGroupID, desired)
 
 	return nil
 }

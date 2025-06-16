@@ -17,14 +17,13 @@ import (
 	"time"
 
 	"github.com/robfig/cron"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
-	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/metrics"
+	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/monitor"
 )
 
 var _ Scaler = &CronScaler{}
-var recordScheduleName = ""
 
 // CronScaler is a crontab GPA
 type CronScaler struct {
@@ -41,16 +40,21 @@ func NewCronScaler(ranges []v1alpha1.TimeRange) Scaler {
 // GetReplicas return replicas  recommend by crontab GPA
 func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentReplicas int32) (int32, error) {
 	var max int32 = -1
-	var metricsServer metrics.PrometheusMetricServer
-	key := gpa.Spec.ScaleTargetRef.Kind + "/" + gpa.Spec.ScaleTargetRef.Name
+	var metricsServer monitor.PrometheusMetricServer
+	var recordScheduleName string
+	var err error
 	startTime := time.Now()
+	defer func() {
+		recordTimePromMetrics(gpa, metricsServer, recordScheduleName, startTime, max, currentReplicas, err)
+	}()
+
 	for _, t := range s.ranges {
-		timeMetric := t.Schedule
-		_, finalMatch, err := s.getFinalMatchAndMisMatch(gpa, t.Schedule)
+		var finalMatch *time.Time
+		_, finalMatch, err = s.getFinalMatchAndMisMatch(t.Schedule)
 		if err != nil {
-			metricsServer.RecordGPAScalerError(gpa.Namespace, gpa.Name, key, "time", timeMetric, true)
+			recordScheduleName = t.Schedule
 			klog.Error(err)
-			return currentReplicas, nil
+			return currentReplicas, err
 		}
 		if finalMatch == nil {
 			continue
@@ -63,15 +67,7 @@ func (s *CronScaler) GetReplicas(gpa *v1alpha1.GeneralPodAutoscaler, currentRepl
 	}
 	if max == -1 {
 		klog.V(4).Infof("Now is not in any time range")
-	} else {
-		metricsServer.RecordScalerExecDuration(gpa.Namespace, gpa.Name, key, recordScheduleName, "time",
-			"success", time.Since(startTime))
-		metricsServer.RecordScalerMetricExecDuration(gpa.Namespace, gpa.Name, key, recordScheduleName, "time",
-			"success", time.Since(startTime))
 	}
-	metricsServer.RecordGPAScalerMetric(gpa.Namespace, gpa.Name, key, "time", recordScheduleName,
-		int64(max), int64(currentReplicas))
-	metricsServer.RecordGPAScalerDesiredReplicas(gpa.Namespace, gpa.Name, key, "time", max)
 	return max, nil
 }
 
@@ -80,36 +76,14 @@ func (s *CronScaler) ScalerName() string {
 	return s.name
 }
 
+// getFinalMatchAndMisMatch TODO
 // nolint
-func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler,
+func (s *CronScaler) getFinalMatchAndMisMatch(
 	schedule string) (*time.Time, *time.Time, error) {
 	sched, err := cron.ParseStandard(schedule)
 	if err != nil {
 		return nil, nil, err
 	}
-	// lastTime := gpa.Status.LastCronScheduleTime.DeepCopy()
-	// if recordScheduleName != schedule {
-	// 	lastTime = nil
-	// }
-	// if lastTime == nil || lastTime.IsZero() {
-	// 	lastTime = gpa.CreationTimestamp.DeepCopy()
-	// }
-	// match := lastTime.Time
-	// misMatch := lastTime.Time
-	// klog.Infof("Init time: %v, now: %v", lastTime, s.now)
-	// t := lastTime.Time
-	// for {
-	// 	if !t.After(s.now) {
-	// 		misMatch = t
-	// 		t = sched.Next(t)
-	// 		continue
-	// 	}
-	// 	match = t
-	// 	break
-	// }
-	// if s.now.Sub(misMatch).Minutes() < 1 && s.now.After(misMatch) {
-	// 	return &misMatch, &match, nil
-	// }
 
 	lastTime := s.now.Add(-2 * time.Minute)
 	match := lastTime
@@ -130,4 +104,19 @@ func (s *CronScaler) getFinalMatchAndMisMatch(gpa *v1alpha1.GeneralPodAutoscaler
 	}
 
 	return nil, nil, nil
+}
+
+func recordTimePromMetrics(gpa *v1alpha1.GeneralPodAutoscaler, ms monitor.PrometheusMetricServer,
+	metricName string, t time.Time, targetReplicas, currentReplicas int32, err error) {
+
+	ms.RecordGPAScalerMetric(gpa, "time", metricName, int64(targetReplicas), int64(currentReplicas))
+	ms.RecordGPAScalerDesiredReplicas(gpa, "time", targetReplicas)
+	if err != nil {
+		ms.RecordGPAScalerError(gpa, "time", metricName)
+		ms.RecordScalerExecDuration(gpa, metricName, "time", "failure", time.Since(t))
+		ms.RecordScalerMetricExecDuration(gpa, metricName, "time", "failure", time.Since(t))
+	} else {
+		ms.RecordScalerExecDuration(gpa, metricName, "time", "success", time.Since(t))
+		ms.RecordScalerMetricExecDuration(gpa, metricName, "time", "success", time.Since(t))
+	}
 }

@@ -358,6 +358,16 @@ service ClusterAddons {
             description: "更新集群组件"
         };
     }
+    rpc PreviewAddons(PreviewAddonsReq) returns (ReleasePreviewResp) {
+        option (google.api.http) = {
+            post: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/preview"
+            body: "*"
+        };
+        option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+            summary: "预览更新集群组件"
+            description: "预览更新集群组件"
+        };
+    }
     rpc StopAddons(StopAddonsReq) returns (StopAddonsResp) {
         option (google.api.http) = {
             put: "/helmmanager/v1/projects/{projectCode}/clusters/{clusterID}/addons/{name}/stop"
@@ -2896,6 +2906,35 @@ message UpgradeAddonsResp {
         title : "web_annotations",
         description : "权限信息"
     }, json_name = "web_annotations"];
+}
+
+message PreviewAddonsReq {
+    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+        json_schema : {
+            title : "PreviewAddonsReq"
+        }
+    };
+
+    optional string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "projectCode",
+        description: "项目代码"
+    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    optional string clusterID = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "clusterID",
+        description: "所在的集群ID"
+    }, (validate.rules).string = {min_len : 1 , max_len : 64}];
+    optional string name = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "name",
+        description: "组件名称"
+    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
+    optional string version = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "version",
+        description: "组件版本"
+    }, (validate.rules).string = {min_len : 1}];
+    optional string values = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title: "values",
+        description: "values"
+    }];
 }
 
 message StopAddonsReq {

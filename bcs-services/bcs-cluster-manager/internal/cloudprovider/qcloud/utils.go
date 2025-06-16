@@ -13,6 +13,7 @@
 package qcloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -98,6 +99,16 @@ var (
 		StepMethod: fmt.Sprintf("%s-CreateClusterShieldAlarmTask", cloudName),
 		StepName:   "屏蔽机器告警",
 	}
+
+	createModifyInstancesVpcStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateModifyInstancesVpcTask", cloudName),
+		StepName:   "节点转移vpc任务",
+	}
+	createCheckInstanceStateStep = cloudprovider.StepInfo{
+		StepMethod: fmt.Sprintf("%s-CreateCheckInstanceStateTask", cloudName),
+		StepName:   "节点转移vpc状态检测",
+	}
+
 	createTKEClusterStep = cloudprovider.StepInfo{
 		StepMethod: fmt.Sprintf("%s-CreateTKEClusterTask", cloudName),
 		StepName:   "创建集群",
@@ -281,9 +292,10 @@ var (
 
 // CreateClusterTaskOption 创建集群构建step子任务
 type CreateClusterTaskOption struct {
-	Cluster      *proto.Cluster
-	Nodes        []string
-	NodeTemplate *proto.NodeTemplate
+	Cluster       *proto.Cluster
+	Nodes         []string
+	NodeTemplate  *proto.NodeTemplate
+	transVpcNodes []cloudprovider.NodeData
 }
 
 // BuildShieldAlertStep 屏蔽告警任务
@@ -296,12 +308,54 @@ func (cn *CreateClusterTaskOption) BuildShieldAlertStep(task *proto.Task) {
 	task.StepSequence = append(task.StepSequence, createClusterShieldAlarmStep.StepMethod)
 }
 
+// BuildCreateModifyInstancesVpcStep 创建集群修改集群节点vpc任务
+func (cn *CreateClusterTaskOption) BuildCreateModifyInstancesVpcStep(task *proto.Task) {
+	if len(cn.transVpcNodes) == 0 {
+		return
+	}
+
+	createStep := cloudprovider.InitTaskStep(createModifyInstancesVpcStep)
+	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	nodes, _ := json.Marshal(cn.transVpcNodes)
+	createStep.Params[cloudprovider.NodeDatasKey.String()] = string(nodes)
+
+	task.Steps[createModifyInstancesVpcStep.StepMethod] = createStep
+	task.StepSequence = append(task.StepSequence, createModifyInstancesVpcStep.StepMethod)
+}
+
+// BuildCreateCheckInstanceStateStep 创建集群检查节点状态任务
+func (cn *CreateClusterTaskOption) BuildCreateCheckInstanceStateStep(task *proto.Task) {
+	if len(cn.transVpcNodes) == 0 {
+		return
+	}
+
+	checkStep := cloudprovider.InitTaskStep(createCheckInstanceStateStep)
+	checkStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
+	checkStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
+
+	nodes, _ := json.Marshal(cn.transVpcNodes)
+	checkStep.Params[cloudprovider.NodeDatasKey.String()] = string(nodes)
+
+	task.Steps[createCheckInstanceStateStep.StepMethod] = checkStep
+	task.StepSequence = append(task.StepSequence, createCheckInstanceStateStep.StepMethod)
+}
+
+// BuildCheckNodeIpsInCmdbStep 创建集群检查节点ip是否在cmdb
+func (cn *CreateClusterTaskOption) BuildCheckNodeIpsInCmdbStep(task *proto.Task) {
+	if len(cn.transVpcNodes) == 0 {
+		return
+	}
+
+	common.BuildCheckNodeIpsInCmdbStep(task, cn.Cluster)
+}
+
 // BuildCreateClusterStep 创建集群任务
 func (cn *CreateClusterTaskOption) BuildCreateClusterStep(task *proto.Task) {
 	createStep := cloudprovider.InitTaskStep(createTKEClusterStep)
 	createStep.Params[cloudprovider.ClusterIDKey.String()] = cn.Cluster.ClusterID
 	createStep.Params[cloudprovider.CloudIDKey.String()] = cn.Cluster.Provider
-	createStep.Params[cloudprovider.NodeIPsKey.String()] = strings.Join(cn.Nodes, ",")
 	if cn.NodeTemplate != nil {
 		createStep.Params[cloudprovider.NodeTemplateIDKey.String()] = cn.NodeTemplate.NodeTemplateID
 	}
@@ -628,6 +682,8 @@ type AddNodesToClusterTaskOption struct {
 	PassWd       string
 	Operator     string
 	NodeSchedule bool
+
+	Advance *proto.NodeAdvancedInfo
 }
 
 // BuildModifyInstancesVpcStep 节点转移vpc任务
@@ -678,10 +734,16 @@ func (ac *AddNodesToClusterTaskOption) BuildAddNodesToClusterStep(task *proto.Ta
 	if ac.NodeTemplate != nil {
 		templateID = ac.NodeTemplate.GetNodeTemplateID()
 	}
+
 	addStep.Params[cloudprovider.NodeTemplateIDKey.String()] = templateID
 	addStep.Params[cloudprovider.PasswordKey.String()] = ac.PassWd
 	addStep.Params[cloudprovider.OperatorKey.String()] = ac.Operator
 	addStep.Params[cloudprovider.NodeSchedule.String()] = strconv.FormatBool(ac.NodeSchedule)
+
+	if ac.Advance != nil {
+		advanceBytes, _ := json.Marshal(ac.Advance)
+		addStep.Params[cloudprovider.NodeAdvanceKey.String()] = string(advanceBytes)
+	}
 
 	task.Steps[addNodesToClusterStep.StepMethod] = addStep
 	task.StepSequence = append(task.StepSequence, addNodesToClusterStep.StepMethod)

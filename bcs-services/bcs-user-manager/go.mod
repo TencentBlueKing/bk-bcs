@@ -10,7 +10,7 @@ replace (
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20241015035856-99f8d8f45458
+	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
 	github.com/Tencent/bk-bcs/bcs-common/common/encryptv2 v0.0.0-20230921064043-a8ed550f5a77
 	github.com/Tencent/bk-bcs/bcs-services/pkg v0.0.0-20230921034852-f07df6e705c2
 	github.com/TencentBlueKing/iam-go-sdk v0.1.6
@@ -33,6 +33,7 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.44.0
+	google.golang.org/grpc v1.62.1
 	gopkg.in/go-playground/validator.v9 v9.31.0
 	k8s.io/apimachinery v0.23.1
 	k8s.io/klog/v2 v2.100.1
@@ -151,7 +152,6 @@ require (
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
-	google.golang.org/grpc v1.62.1 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect

@@ -22,9 +22,10 @@ import (
 	"time"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/rest"
 	k8srest "k8s.io/client-go/rest"
 	"k8s.io/klog/v2"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/rest"
 )
 
 // GetClusters get clustermanager clusters by ids

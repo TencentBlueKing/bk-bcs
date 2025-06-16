@@ -223,7 +223,7 @@ func (ca *CreateAction) saveNodeGroup() error {
 	group := ca.constructNodeGroup()
 
 	// check resource pool quota
-	err := checkNodeGroupResourceValidate(ca.cloud.GetCloudProvider(), group, "",
+	err := checkNodeGroupResourceValidate(ca.ctx, ca.cloud.GetCloudProvider(), group, "",
 		group.GetAutoScaling().GetMaxSize())
 	if err != nil {
 		return err

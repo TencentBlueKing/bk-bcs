@@ -23,6 +23,7 @@ import (
 const (
 	// LibCallStatusErr error shows during lib call
 	LibCallStatusErr = "err"
+	LibCallStatusPartialErr = "partial_err"
 	// LibCallStatusTimeout timeout during lib call
 	LibCallStatusTimeout = "timeout"
 	// LibCallStatusOK lib call successfully

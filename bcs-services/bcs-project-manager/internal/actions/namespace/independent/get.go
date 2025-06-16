@@ -83,7 +83,7 @@ func (c *IndependentNamespaceAction) GetNamespace(ctx context.Context,
 	if creator, exists := ns.Annotations[constant.AnnotationKeyCreator]; exists {
 		managers = append(managers, creator)
 	} else {
-		cluster, err := clustermanager.GetCluster(req.ClusterID)
+		cluster, err := clustermanager.GetCluster(ctx, req.ClusterID)
 		if err != nil {
 			return err
 		}

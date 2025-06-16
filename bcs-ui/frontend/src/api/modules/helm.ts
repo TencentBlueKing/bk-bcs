@@ -34,6 +34,7 @@ export const addonsList = request('get', '/clusters/$clusterId/addons');
 export const addonsInstall = request('post', '/clusters/$clusterId/addons');
 export const addonsUninstall = request('delete', '/clusters/$clusterId/addons/$name');
 export const addonsStop = request('put', '/clusters/$clusterId/addons/$name/stop');
+export const addonsPreview = request('post', '/clusters/$clusterId/addons/$name/preview');
 
 // cluster tools
 const request2 = createRequest({

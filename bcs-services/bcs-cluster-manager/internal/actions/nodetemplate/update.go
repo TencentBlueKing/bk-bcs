@@ -125,6 +125,15 @@ func (ua *UpdateAction) updateNodeTemplate(destNodeTemplate *cmproto.NodeTemplat
 	if ua.req.Annotations != nil {
 		destNodeTemplate.Annotations = ua.req.Annotations.Values
 	}
+	if ua.req.GetImageInfo() != nil {
+		destNodeTemplate.Image = ua.req.GetImageInfo()
+	}
+	if ua.req.GetGpuArgs() != nil {
+		destNodeTemplate.GpuArgs = ua.req.GetGpuArgs()
+	}
+	if ua.req.GetExtraInfo() != nil && ua.req.GetExtraInfo().GetValues() != nil {
+		destNodeTemplate.ExtraInfo = ua.req.GetExtraInfo().GetValues()
+	}
 
 	return ua.model.UpdateNodeTemplate(ua.ctx, destNodeTemplate)
 }
@@ -157,7 +166,7 @@ func (ua *UpdateAction) validate() error {
 		return err
 	}
 
-	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ua.req.ProjectID, true)
+	proInfo, errLocal := project.GetProjectManagerClient().GetProjectInfo(ua.ctx, ua.req.ProjectID, true)
 	if errLocal == nil {
 		ua.project = proInfo
 	}
@@ -180,6 +189,7 @@ func (ua *UpdateAction) Handle(
 		ua.setResp(common.BcsErrClusterManagerInvalidParameter, err.Error())
 		return
 	}
+
 	destNodeTemplate, err := ua.model.GetNodeTemplate(ua.ctx, req.ProjectID, req.NodeTemplateID)
 	if err != nil {
 		ua.setResp(common.BcsErrClusterManagerDBOperation, err.Error())

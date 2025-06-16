@@ -68,7 +68,7 @@ func (ga *GetAction) Active(ctx context.Context, req *proto.GetProjectActiveRequ
 		return false, nil
 	}
 
-	clusters, err := clustermanager.ListClusters(p.ProjectID)
+	clusters, err := clustermanager.ListClusters(ctx, p.ProjectID)
 	if err != nil {
 		return false, err
 	}

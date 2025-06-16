@@ -20,6 +20,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/storage"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/utils"
 )
 
 // Project 项目信息
@@ -59,7 +60,8 @@ func GetProject(ctx context.Context, bcsConf *config.BCSConf, projectIDOrCode st
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects/%s", bcsConf.Host, projectIDOrCode)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
-		SetHeader("X-Project-Username", ""). // bcs_project 要求有这个header
+		SetHeaders(utils.GetLaneIDByCtx(ctx)). // 泳道特性
+		SetHeader("X-Project-Username", "").   // bcs_project 要求有这个header
 		SetAuthToken(bcsConf.Token).
 		Get(url)
 

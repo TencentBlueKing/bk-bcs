@@ -15,12 +15,14 @@ package configfilecheck
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"path"
 	"regexp"
 	"strings"
+
+	"k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 // Options bcs log options

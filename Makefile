@@ -58,10 +58,6 @@ export GATEWAYERRORLDFLAG=-ldflags "-X github.com/Tencent/bk-bcs/bcs-common/comm
 export PACKAGEPATH=./build/bcs.${VERSION}
 export SCENARIOSPACKAGE=${WORKSPACE}/${PACKAGEPATH}/bcs-scenarios
 
-# bscp 应用自定义
-export BSCP_LDFLAG=-ldflags "-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.BUILDTIME=${BUILDTIME} \
-	-X github.com/TencentBlueKing/bk-bcs/bcs-services/bcs-bscp/pkg/version.GITHASH=${GITHASH}"
-
 # tongsuo related environment variables
 export TONGSUO_PATH?=$(WORKSPACE)/build/bcs.${VERSION}/tongsuo
 export IS_STATIC?=true
@@ -91,7 +87,7 @@ bcs-network:ingress-controller
 
 bcs-services:bkcmdb-synchronizer gateway \
 	storage user-manager cluster-manager cluster-reporter nodeagent tools k8s-watch kube-agent data-manager \
-	helm-manager project-manager nodegroup-manager federation-manager powertrading
+	helm-manager project-manager nodegroup-manager federation-manager powertrading mesh-manager
 
 bcs-scenarios: kourse gitops
 
@@ -142,6 +138,11 @@ micro-gateway:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-micro-gateway
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-gateway-discovery/* ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
 	cp -R ./bcs-services/bcs-gateway-discovery/plugins/apisix ${PACKAGEPATH}/bcs-services/bcs-micro-gateway/
+
+bk-apisix-gateway:
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bk-apisix-gateway/* ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway/
+	cp -R ./bcs-services/bcs-bk-apisix-gateway/plugins ${PACKAGEPATH}/bcs-services/bcs-bk-apisix-gateway/
 
 api-gateway-syncing:
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-api-gateway-syncing
@@ -202,23 +203,6 @@ monitor:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-monitor
 	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-monitor ${PACKAGEPATH}/bcs-services
 	cd bcs-services/bcs-monitor/ && go mod tidy && CGO_ENABLED=0 go build -trimpath ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-monitor/bcs-monitor ./cmd/bcs-monitor
-
-bscp:pre
-	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-bscp
-	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-bscp ${PACKAGEPATH}/bcs-services
-	cd bcs-services/bcs-bscp && cd ui && npm install --legacy-peer-deps && npm run build && cd ../ && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bscp-ui ./cmd/ui
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-apiserver ./cmd/api-server
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-authserver ./cmd/auth-server
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-configserver ./cmd/config-server
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-dataservice ./cmd/data-service
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-feedserver ./cmd/feed-server
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-cacheservice ./cmd/cache-service
-	cd bcs-services/bcs-bscp && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-vaultserver ./cmd/vault-server
-	cd bcs-services/bcs-bscp/cmd/vault-server/vault && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/vault ./main.go
-	cd bcs-services/bcs-bscp/cmd/vault-server/vault-sidecar && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/vault-sidecar *.go
-	cd bcs-services/bcs-bscp/cmd/vault-server/vault-plugins && go mod tidy -compat=1.20 && CGO_ENABLED=0 go build -trimpath ${BSCP_LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/hyper/bk-bscp-secret *.go
-	# alias docker image name to bk-bscp-hyper
-	touch ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && chmod a+x ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-bscp/bk-bscp-hyper && ls -la ${PACKAGEPATH}/bcs-services/bcs-bscp/hyper
 
 busybox:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-busybox
@@ -362,6 +346,10 @@ helm-manager:pre tongsuo
 	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager ./main.go
 	cd ${BCS_SERVICES_PATH}/bcs-helm-manager && go mod tidy && $(CGO_BUILD_FLAGS) go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-helm-manager/bcs-helm-manager-migrator ./cmd/bcs-helm-manager-migrator/main.go
 
+mesh-manager:pre
+	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-mesh-manager
+	cp -R ${BCS_CONF_SERVICES_PATH}/bcs-mesh-manager ${PACKAGEPATH}/bcs-services
+	cd bcs-services/bcs-mesh-manager/ && go mod tidy && go build ${LDFLAG} -o ${WORKSPACE}/${PACKAGEPATH}/bcs-services/bcs-mesh-manager/bcs-mesh-manager cmd/mesh-manager/main.go
 
 nodegroup-manager:pre
 	mkdir -p ${PACKAGEPATH}/bcs-services/bcs-nodegroup-manager

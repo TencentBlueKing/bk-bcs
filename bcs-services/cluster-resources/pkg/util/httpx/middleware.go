@@ -104,15 +104,16 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-
-		pj, err := projectClient.GetProjectInfo(r.Context(), projectCode)
+		// X-Lane往下透传
+		ctx := contextx.WithLaneIdCtx(r.Context(), r.Header)
+		pj, err := projectClient.GetProjectInfo(ctx, projectCode)
 		if err != nil {
 			msg := fmt.Errorf("ParseProjectID get projectID error, projectCode: %s, err: %s", projectCode, err.Error())
 			ResponseSystemError(w, r, msg)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), contextx.ProjectCodeContextKey, pj.Code)
+		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.Code)
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)

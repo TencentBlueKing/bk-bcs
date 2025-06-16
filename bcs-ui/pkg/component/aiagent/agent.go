@@ -27,6 +27,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-ui/pkg/contextx"
 )
 
 // AssistantResponse resp
@@ -90,6 +91,7 @@ func BKAssistant(ctx context.Context, bk_ticket, prompt, input, username string)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeader("X-Bkapi-Authorization", authHeader).
+		SetHeaders(contextx.GetLaneIDByCtx(ctx)).
 		SetBody(body).
 		Post(url)
 

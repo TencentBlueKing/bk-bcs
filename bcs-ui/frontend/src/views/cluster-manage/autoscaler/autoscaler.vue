@@ -329,17 +329,14 @@
       </bcs-table>
     </section>
     <!-- 节点数量 -->
-    <bcs-dialog
-      theme="primary"
-      header-position="left"
+    <WrapperDialog
       :title="$t('cluster.ca.nodePool.nodes.title')"
-      :width="800"
-      v-model="showNodeManage"
+      :is-show="showNodeManage"
       @cancel="handleNodeManageCancel">
       <bcs-alert type="info" :title="$t('cluster.ca.nodePool.nodes.desc')"></bcs-alert>
-      <bcs-form class="form-content mt15" :label-width="100">
+      <bcs-form class="form-content mt15 !flex-nowrap" :label-width="100">
         <bcs-form-item class="form-content-item" :label="$t('cluster.ca.nodePool.label.name')">
-          <span>{{ currentOperateRow.name }}</span>
+          <span class="w-[150px] bcs-ellipsis" v-bk-overflow-tips>{{ currentOperateRow.name }}</span>
         </bcs-form-item>
         <bcs-form-item class="form-content-item" :label="$t('cluster.ca.nodePool.label.nodeQuota')">
           <span>
@@ -367,7 +364,7 @@
             icon="plus"
             class="mr10"
             @click="handleAddNode(currentOperateRow)">
-            {{$t('cluster.nodeList.create.text')}}
+            {{$t('cluster.nodeList.create.text1')}}
           </bcs-button>
           <bcs-dropdown-menu
             :disabled="!selections.length"
@@ -488,7 +485,7 @@
             </StatusIcon>
           </template>
         </bcs-table-column>
-        <bcs-table-column :label="$t('generic.label.action')" width="120">
+        <bcs-table-column :label="$t('generic.label.action')" :resizable="false" width="260">
           <template #default="{ row }">
             <div class="operate">
               <template v-if="row.status === 'APPLY-FAILURE'">
@@ -503,45 +500,46 @@
                   @click="handleToggleCordon(row)">
                   {{row.unSchedulable ? $t('generic.button.uncordon.text') : $t('generic.button.cordon.text')}}
                 </bcs-button>
-                <bcs-popover
-                  placement="bottom"
-                  theme="light dropdown"
-                  :arrow="false"
-                  :disabled="['DELETING', 'INITIALIZATION'].includes(row.status)"
-                  trigger="click"
-                  class="ml15">
-                  <span
-                    :class="['more-icon', { 'disabled': ['DELETING', 'INITIALIZATION'].includes(row.status) }]">
-                    <i class="bcs-icon bcs-icon-more"></i>
-                  </span>
-                  <div slot="content">
-                    <ul>
-                      <li class="dropdown-item" @click="handleNodeDrain(row)">{{$t('generic.button.drain.text')}}</li>
-                      <li
-                        :class="['dropdown-item', { disabled: !row.unSchedulable }]"
-                        v-bk-tooltips="{
-                          content: $t('cluster.ca.nodePool.nodes.action.delete.tips'),
-                          disabled: row.unSchedulable,
-                          placement: 'left'
-                        }"
-                        @click="handleDeleteNodeGroupNode(row)"
-                      >{{$t('cluster.ca.nodePool.nodes.action.delete.text')}}</li>
-                    </ul>
-                  </div>
-                </bcs-popover>
+                <span
+                  class="ml-[10px]"
+                  v-bk-tooltips="{
+                    content: $t('generic.button.drain.tips'),
+                    interactive: false,
+                    disabled: row.status === 'REMOVABLE',
+                    placement: 'top'
+                  }">
+                  <bcs-button
+                    text
+                    :disabled="row.status !== 'REMOVABLE'"
+                    @click="handleNodeDrain(row)">
+                    {{$t('generic.button.drain.text')}}
+                  </bcs-button>
+                </span>
+                <span
+                  class="ml-[10px]"
+                  v-bk-tooltips="{
+                    content: $t('cluster.ca.nodePool.nodes.action.delete.tips'),
+                    interactive: false,
+                    disabled: row.unSchedulable,
+                    placement: 'top'
+                  }">
+                  <bcs-button
+                    text
+                    :disabled="!row.unSchedulable"
+                    @click="handleDeleteNodeGroupNode(row)">
+                    {{$t('cluster.ca.nodePool.nodes.action.delete.text')}}
+                  </bcs-button>
+                </span>
               </template>
             </div>
           </template>
         </bcs-table-column>
       </bcs-table>
-    </bcs-dialog>
+    </WrapperDialog>
     <!-- 扩缩容记录 -->
-    <bcs-dialog
-      theme="primary"
-      header-position="left"
+    <WrapperDialog
       :title="$t('cluster.ca.button.record')"
-      :width="1200"
-      v-model="showRecord"
+      :is-show="showRecord"
       @cancel="handleRecordCancel">
       <div class="mb15 flex-between">
         <bcs-date-picker
@@ -708,7 +706,7 @@
           </template>
         </bcs-table-column>
       </bcs-table>
-    </bcs-dialog>
+    </WrapperDialog>
     <!-- IP列表 -->
     <bcs-dialog
       theme="primary"
@@ -758,11 +756,28 @@
         <span class="text-[#979BA5] ml-[8px]">(-2147483647 ~ -1)</span>
       </div>
     </bcs-dialog>
+    <!-- Pod驱逐 -->
+    <bcs-sideslider
+      :is-show.sync="podConfig.isShow"
+      :title="$t('generic.button.drain.text')"
+      :width="960"
+      :before-close="handleBeforeClose"
+      quick-close
+      transfer>
+      <template #content>
+        <PodDrain
+          :nodes="podConfig.nodes"
+          :cluster-id="clusterId"
+          @cancel="handleHidePodDrain"
+          @success="handleSuccess" />
+      </template>
+    </bcs-sideslider>
   </div>
 </template>
 <script lang="ts">
 import { computed, defineComponent, getCurrentInstance, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
+import PodDrain from '../components/pod-drain.vue';
 import useNode from '../node-list/use-node';
 
 import AutoScalerFormItem from './components/form-item.vue';
@@ -776,11 +791,13 @@ import $bkInfo from '@/components/bk-magic-2.0/bk-info';
 import Row from '@/components/layout/Row.vue';
 import LoadingIcon from '@/components/loading-icon.vue';
 import StatusIcon from '@/components/status-icon';
+import WrapperDialog from '@/components/wrapper-dialog.vue';
 import { ICluster, useAppData, useProject } from '@/composables/use-app';
 import useAutoCols from '@/composables/use-auto-cols';
 import useDebouncedRef from '@/composables/use-debounce';
 import useInterval from '@/composables/use-interval';
 import usePage from '@/composables/use-page';
+import useSideslider from '@/composables/use-sideslider';
 import useTableAcrossCheck from '@/composables/use-table-across-check';
 import $i18n from '@/i18n/i18n-setup';
 import $router from '@/router';
@@ -790,7 +807,15 @@ import LayoutGroup from '@/views/cluster-manage/components/layout-group.vue';
 
 export default defineComponent({
   name: 'AutoScaler',
-  components: { StatusIcon, LoadingIcon, LayoutGroup, AutoScalerFormItem, Row },
+  components: {
+    StatusIcon,
+    LoadingIcon,
+    LayoutGroup,
+    AutoScalerFormItem,
+    Row,
+    PodDrain,
+    WrapperDialog,
+  },
   props: {
     clusterId: {
       type: String,
@@ -1335,6 +1360,7 @@ export default defineComponent({
       stopNodeInterval();
       // 刷新节点规格
       handleGetNodePoolList();
+      showNodeManage.value = false;
     };
     const handleShowNodeManage = (row) => {
       currentOperateRow.value = row;
@@ -1362,39 +1388,35 @@ export default defineComponent({
       nodeListLoading.value = false;
     };
     const { start: startNodeInterval, stop: stopNodeInterval } = useInterval(getNodeList, 5000); // 轮询
-    const handleNodeDrain = async (row) => {
-      if (nodeListLoading.value) return;
 
-      $bkInfo({
-        type: 'warning',
-        clsName: 'custom-info-confirm',
-        title: $i18n.t('generic.button.drain.title'),
-        subTitle: $i18n.t('generic.button.drain.subTitle', { ip: row.innerIP }),
-        defaultInfo: true,
-        confirmFn: async () => {
-          // POD迁移
-          nodeListLoading.value = true;
-          const result = await $store.dispatch('clustermanager/clusterNodeDrain', {
-            innerIPs: [row.innerIP],
-            clusterID: props.clusterId,
-            updater: user.value.username,
-          });
-          if (result) {
-            $bkMessage({
-              theme: 'success',
-              message: $i18n.t('cluster.ca.nodePool.nodes.msg.drainSuccess'),
-            });
-            await getNodeList();
-          }
-          nodeListLoading.value = false;
-        },
-      });
+    // Pod驱逐
+    const podConfig = ref<{
+      isShow: boolean;
+      nodes: any[];
+    }>({
+      isShow: false,
+      nodes: [],
+    });
+    // 侧滑关闭交互
+    const { handleBeforeClose } = useSideslider();
+    const handleNodeDrain = async (row) => {
+      if (nodeListLoading.value || row.status !== 'REMOVABLE') return;
+      podConfig.value.isShow = true;
+      podConfig.value.nodes = [row];
     };
+    function handleHidePodDrain() {
+      podConfig.value.isShow = false;
+      podConfig.value.nodes = [];
+    }
+    function handleSuccess() {
+      handleHidePodDrain();
+      handleGetNodeList();
+    }
+
     const {
       batchDeleteNodes,
       handleCordonNodes,
       handleUncordonNodes,
-      schedulerNode,
     } = useNode();
     const handleDeleteNodeGroupNode = async (row) => {
       if (nodeListLoading.value || (!row.unSchedulable && row.status !== 'APPLY-FAILURE')) return;
@@ -1405,6 +1427,7 @@ export default defineComponent({
         title: $i18n.t('cluster.ca.nodePool.nodes.action.delete.title'),
         subTitle: $i18n.t('cluster.ca.nodePool.nodes.action.delete.subTitle', { ip: row.innerIP }),
         defaultInfo: true,
+        theme: 'danger',
         confirmFn: async () => {
           // 删除节点组节点
           nodeListLoading.value = true;
@@ -1549,7 +1572,7 @@ export default defineComponent({
     };
       // 批量Pod驱逐
     const handleBatchPodScheduler = () => {
-      if (!selections.value.length) return;
+      if (!selections.value.length || podDisabled.value) return;
 
       if (selections.value.length > 10) {
         $bkMessage({
@@ -1558,19 +1581,8 @@ export default defineComponent({
         });
         return;
       }
-      bkComfirmInfo({
-        title: $i18n.t('generic.button.drain.title'),
-        subTitle: $i18n.t('generic.button.drain.subTitle2', {
-          num: selections.value.length,
-          ip: selections.value[0].innerIP,
-        }),
-        callback: async () => {
-          await schedulerNode({
-            clusterId: props.clusterId,
-            nodes: selections.value.map(item => item.innerIP),
-          });
-        },
-      });
+      podConfig.value.isShow = true;
+      podConfig.value.nodes = selections.value;
     };
     // 批量删除节点
     const handleBatchDeleteNodes = () => {
@@ -1774,6 +1786,7 @@ export default defineComponent({
         showTotalCount: true,
       };
       expandRowKeys.value = [];
+      showRecord.value = false;
     };
     const { start: startTaskPool, stop: stopTaskPool } = useInterval(getRecordList, 5000); // 轮询
     async function getRecordList() {
@@ -2066,6 +2079,10 @@ export default defineComponent({
       searchIpData,
       handleClonePool,
       takesTimeFormat,
+      podConfig,
+      handleBeforeClose,
+      handleHidePodDrain,
+      handleSuccess,
     };
   },
 });

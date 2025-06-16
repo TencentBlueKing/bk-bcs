@@ -15,6 +15,7 @@ package multicluster
 import (
 	"context"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
@@ -36,6 +37,7 @@ import (
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	res "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/formatter"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/storage"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
@@ -48,7 +50,8 @@ import (
 // Query represents a query for multicluster resources.
 type Query interface {
 	Fetch(ctx context.Context, groupVersion, kind string) (map[string]interface{}, error)
-	FetchApiResources(ctx context.Context, kind string) (map[string]interface{}, error)
+	FetchPreferred(
+		ctx context.Context, gvr *schema.GroupVersionResource) (map[string]interface{}, error)
 }
 
 // StorageQuery represents a query for multicluster resources.
@@ -105,8 +108,9 @@ func (q *StorageQuery) Fetch(ctx context.Context, groupVersion, kind string) (ma
 	return resp, nil
 }
 
-// FetchApiResources fetches multicluster api resources.
-func (q *StorageQuery) FetchApiResources(ctx context.Context, kind string) (map[string]interface{}, error) {
+// FetchPreferred fetches multicluster resources.
+func (q *StorageQuery) FetchPreferred(
+	ctx context.Context, gvr *schema.GroupVersionResource) (map[string]interface{}, error) {
 	// 目前仅仅只是添加此方法，暂时不做实现
 	return map[string]interface{}{}, nil
 }
@@ -156,6 +160,37 @@ func (q *APIServerQuery) Fetch(ctx context.Context, groupVersion, kind string) (
 	return resp, nil
 }
 
+// FetchPreferred fetches multicluster resources.
+func (q *APIServerQuery) FetchPreferred(
+	ctx context.Context, gvr *schema.GroupVersionResource) (map[string]interface{}, error) {
+	var (
+		err      error
+		applyURL string
+	)
+	// kind 设置为空跳过某些特殊检查检查
+	if q.ClusterdNamespaces, applyURL, err = checkMultiClusterAccess(ctx, "", q.ClusterdNamespaces); err != nil {
+		return nil, err
+	}
+	log.Info(ctx, "fetch multi cluster resources, gvr: %s, clusterdNamespaces: %v", gvr, q.ClusterdNamespaces)
+	resources, err := listResourcePreferred(ctx, q.ClusterdNamespaces, gvr, metav1.ListOptions{
+		LabelSelector: q.ViewFilter.LabelSelectorString()})
+	if err != nil {
+		return nil, err
+	}
+	resources = ApplyFilter(resources, q.ViewFilter.CreatorFilter, q.ViewFilter.NameFilter,
+		q.ViewFilter.CreateSourceFilter)
+	// 第二次过滤
+	resources = ApplyFilter(resources, q.QueryFilter.CreatorFilter, q.QueryFilter.NameFilter,
+		q.QueryFilter.StatusFilter, q.QueryFilter.LabelSelectorFilter, q.QueryFilter.IPFilter,
+		q.QueryFilter.CreateSourceFilter)
+	total := len(resources)
+	resources = q.QueryFilter.Page(resources)
+	resp := buildList(ctx, resources)
+	resp["total"] = total
+	resp["perms"] = map[string]interface{}{"applyURL": applyURL}
+	return resp, nil
+}
+
 // FetchApiResources fetches api resources.
 func (q *APIServerQuery) FetchApiResources(ctx context.Context, kind string) (map[string]interface{}, error) {
 	var (
@@ -177,6 +212,34 @@ func (q *APIServerQuery) FetchApiResources(ctx context.Context, kind string) (ma
 	return resp, nil
 }
 
+// FetchApiResourcesPreferred fetches api resources.
+func FetchApiResourcesPreferred(
+	ctx context.Context, onlyCrd bool, resName string, clusters []string) (map[string]interface{}, error) {
+	var (
+		err           error
+		applyURL      string
+		accessCluster []string
+		kind          string
+	)
+	// 仅获取crd资源
+	if onlyCrd {
+		kind = constants.CRD
+	}
+
+	if accessCluster, applyURL, err = checkMultiOnlyClusterAccess(ctx, kind, clusters); err != nil {
+		return nil, err
+	}
+
+	resources, err := listClusterApiResource(ctx, onlyCrd, resName, accessCluster)
+	if err != nil {
+		return nil, err
+	}
+	resp := make(map[string]interface{}, 0)
+	resp["resources"] = resources
+	resp["perms"] = map[string]interface{}{"applyURL": applyURL}
+	return resp, nil
+}
+
 // listResource 列出多集群资源
 func listResource(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterNamespaces, groupVersion, kind string,
 	opts metav1.ListOptions) ([]*storage.Resource, error) {
@@ -188,6 +251,32 @@ func listResource(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterN
 		ns := v
 		errGroups.Go(func() error {
 			resources, err := listNamespaceResources(ctx, ns.ClusterID, ns.Namespaces, groupVersion, kind, opts)
+			if err != nil {
+				return err
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = append(result, resources...)
+			return nil
+		})
+	}
+	if err := errGroups.Wait(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// listResourcePreferred 列出多集群资源
+func listResourcePreferred(ctx context.Context, clusterdNamespaces []*clusterRes.ClusterNamespaces,
+	gvr *schema.GroupVersionResource, opts metav1.ListOptions) ([]*storage.Resource, error) {
+	errGroups := errgroup.Group{}
+	errGroups.SetLimit(10)
+	result := []*storage.Resource{}
+	mux := sync.Mutex{}
+	for _, v := range clusterdNamespaces {
+		ns := v
+		errGroups.Go(func() error {
+			resources, err := listNamespaceResourcesPreferred(ctx, ns.Namespaces, ns.ClusterID, gvr, opts)
 			if err != nil {
 				return err
 			}
@@ -234,6 +323,73 @@ func listApiResource(ctx context.Context, clusterdNamespaces []*clusterRes.Clust
 		return nil, err
 	}
 	return results, nil
+}
+
+// listClusterApiResource 列出多集群资源
+func listClusterApiResource(
+	ctx context.Context, onlyCrd bool, resName string, clusters []string) (map[string]interface{}, error) {
+	errGroups := errgroup.Group{}
+	errGroups.SetLimit(10)
+	resources := make([]map[string]interface{}, 0)
+	mux := sync.Mutex{}
+	for _, v := range clusters {
+		clusterID := v
+		errGroups.Go(func() error {
+			var (
+				res []map[string]interface{}
+				err error
+			)
+			// 仅获取crd资源
+			if onlyCrd {
+				res, err = getClusterCrdResources(ctx, clusterID, resName)
+				if err != nil {
+					return err
+				}
+			} else {
+				// 获取所有api-resources
+				res, err = getClusterApiResources(ctx, clusterID, resName)
+				if err != nil {
+					return err
+				}
+			}
+			if len(res) == 0 {
+				return nil
+			}
+
+			mux.Lock()
+			defer mux.Unlock()
+			resources = append(resources, res...)
+			return nil
+		})
+	}
+
+	if err := errGroups.Wait(); err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]interface{}, 0)
+	uniq := make(map[string]struct{}, 0)
+	// 返回格式key: group/version, value: []map[string] interface
+	for _, value := range resources {
+		// group+version+resource+kind确定一条唯一的资源
+		uniqKey := filepath.Join(value["group"].(string), value["version"].(string),
+			value["resource"].(string), value["kind"].(string))
+		if _, ok := uniq[uniqKey]; ok {
+			continue
+		} else {
+			uniq[uniqKey] = struct{}{}
+			key := filepath.Join(value["group"].(string), value["version"].(string))
+			if r, ok := result[key].([]map[string]interface{}); ok {
+				result[key] = append(r, value)
+			} else {
+				result[key] = []map[string]interface{}{
+					value,
+				}
+			}
+		}
+
+	}
+	return result, nil
 }
 
 // listNamespaceResources 列出某个集群下某些命名空间的资源
@@ -285,6 +441,49 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 		})
 	}
 	if err = errGroups.Wait(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// listNamespaceResourcesPreferred 列出某个集群下某些命名空间的资源
+func listNamespaceResourcesPreferred(ctx context.Context, namespaces []string,
+	clusterID string, gvr *schema.GroupVersionResource, opts metav1.ListOptions) ([]*storage.Resource, error) {
+
+	clusterConf := res.NewClusterConf(clusterID)
+
+	// 如果命名空间为空，则查询所有命名空间，如果命名空间数量大于 5，则查全部命名空间并最后筛选命名空间，这样能减少并发请求
+	filterNamespace := namespaces
+	if len(namespaces) == 0 {
+		filterNamespace = []string{""}
+	}
+	errGroups := errgroup.Group{}
+	errGroups.SetLimit(5)
+	result := []*storage.Resource{}
+	mux := sync.Mutex{}
+	// 根据命名空间列表，并发查询资源
+	for _, v := range filterNamespace {
+		ns := v
+		errGroups.Go(func() error {
+			ret, innerErr := cli.NewResClient(clusterConf, *gvr).ListAllWithoutPermPreferred(ctx, ns, opts)
+			if innerErr != nil {
+				return innerErr
+			}
+			if len(ret) == 0 {
+				return nil
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			for _, item := range ret {
+				// 过滤命名空间，如果命名空间为空，则表示查询全部命名空间或者集群域资源，这种直接通过。其他情况则筛选命名空间
+				if len(namespaces) == 0 || slice.StringInSlice(item.GetNamespace(), namespaces) {
+					result = append(result, &storage.Resource{ClusterID: clusterID, Data: item.UnstructuredContent()})
+				}
+			}
+			return nil
+		})
+	}
+	if err := errGroups.Wait(); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -361,6 +560,64 @@ func listNamespaceApiResources(ctx context.Context, clusterID string, namespaces
 	return result, nil
 }
 
+// getClusterApiResources 获取某个集群下的所有api资源
+func getClusterApiResources(
+	ctx context.Context, clusterID string, resName string) ([]map[string]interface{}, error) {
+	clusterConf := res.NewClusterConf(clusterID)
+	return res.GetApiResourcesByName(ctx, clusterConf, resName)
+}
+
+// getClusterCrdResources 获取某个集群下的所有crd资源
+func getClusterCrdResources(
+	ctx context.Context, clusterID string, resName string) ([]map[string]interface{}, error) {
+	crdList, err := cli.ListCrdResources(ctx, clusterID, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return parseCrdToMap(resName, crdList), nil
+}
+
+func parseCrdToMap(resName string, crdList *apiextensions.CustomResourceDefinitionList) []map[string]interface{} {
+	resp := make([]map[string]interface{}, 0)
+	for _, v := range crdList.Items {
+		var version string
+		for _, vv := range v.Spec.Versions {
+			if vv.Storage {
+				// 当前使用版本
+				version = vv.Name
+			}
+		}
+		name := strings.SplitN(v.Name, ".", 2)
+		// 通过资源名称筛选
+		if resName == "" {
+			if len(name) < 1 {
+				continue
+			}
+			resp = append(resp, map[string]interface{}{
+				"group":      v.Spec.Group,
+				"kind":       v.Spec.Names.Kind,
+				"version":    version,
+				"resource":   name[0],
+				"namespaced": v.Spec.Scope == apiextensions.NamespaceScoped,
+			})
+			continue
+		}
+
+		if resName != "" && resName == name[0] {
+			resp = append(resp, map[string]interface{}{
+				"group":      v.Spec.Group,
+				"kind":       v.Spec.Names.Kind,
+				"version":    version,
+				"resource":   name[0],
+				"namespaced": v.Spec.Scope == apiextensions.NamespaceScoped,
+			})
+			return resp
+		}
+
+	}
+	return resp
+}
+
 // 获取crd 中的相关资源
 func getCrdResources(object map[string]interface{}) (string, map[string]interface{}) {
 	resouces := mapx.GetStr(object, "metadata.name")
@@ -399,7 +656,7 @@ func buildList(ctx context.Context, resources []*storage.Resource) map[string]in
 	manifestItems := []interface{}{}
 	// 获取 apiVersion
 	apiVersion := mapx.GetStr(resources[0].Data, "apiVersion")
-	kind := resources[0].ResourceType
+	kind := mapx.GetStr(resources[0].Data, "kind")
 	formatFunc := formatter.GetFormatFunc(kind, apiVersion)
 	pruneFunc := formatter.GetPruneFunc(kind)
 	// 遍历列表中的每个资源，生成 manifestExt
@@ -444,6 +701,12 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 			continue
 		}
 		if !clusterInfo.IsShared {
+			newClusters = append(newClusters, v)
+			continue
+		}
+
+		// kind为空情况下跳过下面的检查，允许查询各种资源
+		if kind == "" {
 			newClusters = append(newClusters, v)
 			continue
 		}
@@ -517,6 +780,84 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 
 	// get apply url
 	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(clusterIDs, ","))
+	applyURL := ""
+	if _, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
+		if perr, ok := err.(*perm.IAMPermError); ok {
+			applyURL, _ = perr.ApplyURL()
+		}
+	}
+	return result, applyURL, nil
+}
+
+// checkMultiOnlyClusterAccess 检查多集群共享集群中的资源访问权限
+func checkMultiOnlyClusterAccess(ctx context.Context, kind string, clusters []string) ([]string, string, error) {
+	newClusters := []string{}
+	projInfo, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, "", errorx.New(errcode.General, i18n.GetMsg(ctx, "由 Context 获取项目信息失败"))
+	}
+
+	// 共享集群过滤
+	for _, v := range clusters {
+		clusterInfo, err := cluster.GetClusterInfo(ctx, v)
+		if err != nil {
+			return nil, "", err
+		}
+		// 集群不存在或者不是运行状态，则忽略
+		if clusterInfo.Status != cluster.ClusterStatusRunning {
+			continue
+		}
+		if !clusterInfo.IsShared {
+			newClusters = append(newClusters, v)
+			continue
+		}
+
+		// kind为空情况下查询所有资源
+		if kind == "" {
+			newClusters = append(newClusters, v)
+			continue
+		}
+
+		// SC 允许用户查看
+		if slice.StringInSlice(kind, cluster.SharedClusterBypassClusterScopedKinds) {
+			newClusters = append(newClusters, v)
+			continue
+		}
+		// 共享集群不允许访问的资源类型
+		if !slice.StringInSlice(kind, cluster.SharedClusterEnabledNativeKinds) &&
+			!slice.StringInSlice(kind, config.G.SharedCluster.EnabledCObjKinds) {
+			continue
+		}
+		// 其他可访问的资源类型
+		newClusters = append(newClusters, v)
+	}
+
+	// iam 权限过滤，只允许访问有权限的集群
+	errGroups := errgroup.Group{}
+	errGroups.SetLimit(10)
+	result := []string{}
+	mux := sync.Mutex{}
+	username := ctx.Value(ctxkey.UsernameKey).(string)
+	for _, v := range newClusters {
+		errGroups.Go(func() error {
+			permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, v)
+			if allow, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
+				return nil
+			} else if !allow {
+				return nil
+			}
+			mux.Lock()
+			defer mux.Unlock()
+			result = append(result, v)
+			return nil
+		})
+	}
+	if err := errGroups.Wait(); err != nil {
+		return nil, "", err
+	}
+
+	// get apply url
+	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(newClusters, ","))
 	applyURL := ""
 	if _, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
 		if perr, ok := err.(*perm.IAMPermError); ok {

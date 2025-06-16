@@ -19,14 +19,14 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"k8s.io/api/admission/v1beta1"
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
+	v1 "k8s.io/api/admission/v1"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/apis/autoscaling/v1alpha1"
 	"github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/bcs-component/bcs-general-pod-autoscaler/pkg/validation"
@@ -46,7 +46,7 @@ type WebhookServer struct {
 
 func init() {
 	_ = corev1.AddToScheme(runtimeScheme)
-	_ = admissionregistrationv1beta1.AddToScheme(runtimeScheme)
+	_ = admissionregistrationv1.AddToScheme(runtimeScheme)
 	runtimeScheme.AddKnownTypes(v1alpha1.SchemeGroupVersion)
 }
 
@@ -55,26 +55,23 @@ func NewWebhookServer() *WebhookServer {
 	return &WebhookServer{}
 }
 
-// mutate xxx
-// validate deployments and services
-func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
+// validate validates gpa spec
+func (whsvr *WebhookServer) validate(ar *v1.AdmissionReview) *v1.AdmissionResponse {
 	req := ar.Request
 
 	klog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v Operation=%v UserInfo=%v",
 		req.Kind, req.Namespace, req.Name, req.UID, req.Operation, req.UserInfo)
 	var err error
-	var patch []byte
 	var causes []metav1.StatusCause
 	switch req.Kind.Kind {
 	case "GeneralPodAutoscaler":
-		patch, causes, err = forGPA(req)
+		causes, err = forGPA(req)
 
 	default:
-		return &v1beta1.AdmissionResponse{
+		return &v1.AdmissionResponse{
 			Allowed: false,
 		}
 	}
-	klog.V(6).Infof("Final patch %+v", string(patch))
 
 	result := metav1.Status{
 		Details: &metav1.StatusDetails{
@@ -89,17 +86,13 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 		result.Code = 400
 		result.Message = err.Error()
 		result.Details.Causes = causes
-		return &v1beta1.AdmissionResponse{
+		return &v1.AdmissionResponse{
 			Allowed: false,
 			Result:  &result,
 		}
 	}
-	jsonPatch := v1beta1.PatchTypeJSONPatch
-	return &v1beta1.AdmissionResponse{
-		Allowed:   true,
-		Result:    &result,
-		Patch:     patch,
-		PatchType: &jsonPatch,
+	return &v1.AdmissionResponse{
+		Allowed: true,
 	}
 }
 
@@ -111,7 +104,6 @@ func (whsvr *WebhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 			body = data
 		}
 	}
-	klog.Info(r.URL.RawPath)
 	klog.V(6).Infof("Receive request: %+v", *r)
 	if len(body) == 0 {
 		klog.Error("empty body")
@@ -127,23 +119,22 @@ func (whsvr *WebhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var admissionResponse *v1beta1.AdmissionResponse
-	ar := v1beta1.AdmissionReview{}
+	var admissionResponse *v1.AdmissionResponse
+	ar := v1.AdmissionReview{}
 	if _, _, err := deserializer.Decode(body, nil, &ar); err != nil {
 		klog.Errorf("Can't decode body: %v", err)
-		admissionResponse = &v1beta1.AdmissionResponse{
+		admissionResponse = &v1.AdmissionResponse{
 			Result: &metav1.Status{
 				Message: err.Error(),
 			},
 		}
 	} else {
-		fmt.Println(r.URL.Path)
-		if r.URL.Path == "/mutate" {
-			admissionResponse = whsvr.mutate(&ar)
+		if r.URL.Path == "/validate" {
+			admissionResponse = whsvr.validate(&ar)
 		}
 	}
 
-	admissionReview := v1beta1.AdmissionReview{}
+	admissionReview := v1.AdmissionReview{}
 	if admissionResponse != nil {
 		admissionReview.Response = admissionResponse
 		if ar.Request != nil {
@@ -162,8 +153,9 @@ func (whsvr *WebhookServer) Serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// forGPA TODO
 // nolint
-func forGPA(req *v1beta1.AdmissionRequest) ([]byte, []metav1.StatusCause, error) {
+func forGPA(req *v1.AdmissionRequest) ([]metav1.StatusCause, error) {
 	var errs field.ErrorList
 	causes := make([]metav1.StatusCause, 0)
 	defer func() {
@@ -182,25 +174,25 @@ func forGPA(req *v1beta1.AdmissionRequest) ([]byte, []metav1.StatusCause, error)
 	var gpa, oldGPA v1alpha1.GeneralPodAutoscaler
 	if err := json.Unmarshal(req.Object.Raw, &gpa); err != nil {
 		klog.Errorf("Could not unmarshal raw object: %v", err)
-		return nil, nil, err
+		return nil, err
 	}
-	if req.Operation == v1beta1.Create {
+	if req.Operation == v1.Create {
 		// validate
 		errs = validation.ValidateHorizontalPodAutoscaler(&gpa)
 		if len(errs) > 0 {
-			return nil, causes, errs.ToAggregate()
+			return causes, errs.ToAggregate()
 		}
 	}
-	if req.Operation == v1beta1.Update {
+	if req.Operation == v1.Update {
 		if err := json.Unmarshal(req.OldObject.Raw, &oldGPA); err != nil {
 			klog.Errorf("Could not unmarshal old raw object: %v", err)
-			return nil, nil, err
+			return nil, err
 		}
 		// validate
-		errs = validation.ValidateHorizontalPodAU(&gpa, &oldGPA)
+		errs = validation.ValidateHorizontalPodAutoscalerUpdate(&gpa, &oldGPA)
 		if len(errs) > 0 {
-			return nil, causes, errs.ToAggregate()
+			return causes, errs.ToAggregate()
 		}
 	}
-	return nil, nil, nil
+	return nil, nil
 }

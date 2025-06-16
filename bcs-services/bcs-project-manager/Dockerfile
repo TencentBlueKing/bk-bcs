@@ -9,9 +9,9 @@ ADD proto/bcsproject/bcsproject.swagger.json /data/bcs/swagger/bcsproject.swagge
 
 WORKDIR /data/bcs/
 
-ADD bcs-project-manager /usr/bin/bcs-project-manager
-ADD bcs-project-migration /usr/bin/bcs-project-migration
-ADD bcs-variable-migration /usr/bin/bcs-variable-migration
+ADD bin/bcs-project-manager /usr/bin/bcs-project-manager
+ADD bin/bcs-project-migration /usr/bin/bcs-project-migration
+ADD bin/bcs-variable-migration /usr/bin/bcs-variable-migration
 
 RUN chmod +x /usr/bin/bcs-project-manager
 

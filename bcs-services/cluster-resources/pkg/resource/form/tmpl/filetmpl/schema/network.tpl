@@ -340,6 +340,8 @@ portConf:
             ui:rules:
               - maxLength64
               - rfc1123LabelRegex
+            ui:props:
+              showTitle: false
           port:
             title: {{ i18n "监听端口" .lang }}
             type: integer
@@ -351,6 +353,8 @@ portConf:
             ui:rules:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
+            ui:props:
+              showTitle: false                
           protocol:
             title: {{ i18n "协议" .lang }}
             type: string
@@ -364,6 +368,8 @@ portConf:
                     value: TCP
                   - label: UDP
                     value: UDP
+            ui:props:
+              showTitle: false                    
           targetPort:
             title: {{ i18n "目标端口" .lang }}
             type: string
@@ -371,6 +377,50 @@ portConf:
             ui:rules:
               - validator: "{{`{{`}} $self.value {{`}}`}}"
                 message: {{ i18n "值不能为空" .lang }}
+            ui:reactions:
+              - if: "{{`{{`}} !$self.getValue('spec.selector.associate') {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+                    value: "80"
+            ui:props:
+              showTitle: false                  
+          targetSelectPort:
+            title: {{ i18n "目标端口" .lang }}
+            type: string
+            default: "80"
+            ui:rules:
+              - validator: "{{`{{`}} $self.value {{`}}`}}"
+                message: {{ i18n "值不能为空" .lang }}  
+            ui:component:
+              name: select
+              props:
+                remoteConfig:
+                  url: "{{`{{`}} `${$context.baseUrl}/projects/${$context.projectID}/template/ports?kind=${$self.getValue('spec.selector.workloadType')}&templateSpace={{ .templateSpace }}&associateName=${$self.getValue('spec.selector.workloadName')}` {{`}}`}}"
+            ui:reactions:
+              - if: "{{`{{`}} $self.getValue('spec.selector.associate') {{`}}`}}"
+                then:
+                  state:
+                    visible: true
+                else:
+                  state:
+                    visible: false
+                    value: "80"
+              - lifetime: init
+                then:
+                  actions:
+                    - "{{`{{`}} $loadDataSource {{`}}`}}"
+              - source: "spec.selector.workloadName"
+                then:
+                  state:
+                    value: ""
+                  actions:
+                    - "{{`{{`}} $loadDataSource {{`}}`}}"
+            ui:props:
+              showTitle: false                    
           nodePort:
             title: {{ i18n "节点端口" .lang }}
             type: integer
@@ -397,10 +447,14 @@ portConf:
                 else:
                   state:
                     disabled: false
+                    visible: true
+            ui:props:
+              showTitle: false                    
       ui:component:
         name: bfArray
       ui:props:
         showTitle: false
+        showTableHead: true
 {{- end }}
 
 {{- define "network.svcSelector" }}
@@ -451,6 +505,16 @@ selector:
         else:
           state:
             visible: true
+      - target: spec.portConf.ports
+        if: "{{`{{`}} $self.value {{`}}`}}"
+        then:
+          state:
+            value: [{"name":"http","port":80,"protocol":"TCP","targetSelectPort":"", nodePort:0}] 
+      - target: spec.portConf.ports
+        if: "{{`{{`}} !$self.value {{`}}`}}"
+        then:
+          state:    
+            value: [{"name":"http","port":80,"protocol":"TCP","targetPort":"", nodePort:0}]    
     workloadType:
       title: {{ i18n "资源类型" .lang }}
       type: string

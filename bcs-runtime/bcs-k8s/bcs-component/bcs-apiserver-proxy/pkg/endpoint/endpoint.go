@@ -261,12 +261,14 @@ func (ec *endpointsClient) getAPIServerEndpoints() ([]utils.EndPoint, error) {
 			}
 
 			health := healthCheck.IsHTTPAPIHealth(nodeIP, apiServerPort)
-			if health {
-				apiserverEndpoints = append(apiserverEndpoints, utils.EndPoint{
-					IP:   nodeIP,
-					Port: apiServerPort,
-				})
+			if !health {
+				blog.Errorf("master apiserver %s:%d not health, skip", nodeIP, apiServerPort)
+				continue
 			}
+			apiserverEndpoints = append(apiserverEndpoints, utils.EndPoint{
+				IP:   nodeIP,
+				Port: apiServerPort,
+			})
 		}
 	}
 

@@ -11,7 +11,7 @@ PROTO_IMAGE := "proto"
 
 .PHONY: all clean
 
-all:docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ)
+all:docker $(OBJ) $(GWOBJ) $(SWAGGEROBJ) sync-to-bcsapi
 
 $(OBJ):$(PROTO)
 
@@ -46,3 +46,6 @@ clean:
 
 docker:
 	@docker build -t ${PROTO_IMAGE} .
+
+sync-to-bcsapi:
+	cp -f *.pb.go *.pb.gw.go *.pb.micro.go *.pb.validate.go ../../../../bcs-common/pkg/bcsapi/helmmanager/

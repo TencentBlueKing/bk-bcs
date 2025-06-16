@@ -15,15 +15,15 @@ package pluginmanager
 
 import (
 	"fmt"
-	"k8s.io/klog"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
-
 	"github.com/prometheus/client_golang/prometheus"
+	"k8s.io/klog"
+
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-reporter/internal/util"
 )
 
 var (
@@ -55,6 +55,7 @@ type PluginManager struct {
 	configLock        sync.Mutex
 	concurrencyLock   sync.Mutex
 	routinePool       *util.RoutinePool
+	checkRoutinePool  *util.RoutinePool
 	clusterReportList map[string]map[string]string
 }
 
@@ -152,6 +153,16 @@ func (pm *PluginManager) Done() {
 	pm.routinePool.Done()
 }
 
+// AddCheck xxx
+func (pm *PluginManager) AddCheck() {
+	pm.checkRoutinePool.Add(1)
+}
+
+// DoneCheck xxx
+func (pm *PluginManager) DoneCheck() {
+	pm.checkRoutinePool.Done()
+}
+
 // StopPlugin xxx
 func (pm *PluginManager) StopPlugin(plugins string) error {
 	for _, plugin := range strings.Split(plugins, ",") {
@@ -171,6 +182,7 @@ func (pm *PluginManager) StopPlugin(plugins string) error {
 func NewPluginManager() *PluginManager {
 	return &PluginManager{
 		routinePool:       util.NewRoutinePool(80),
+		checkRoutinePool:  util.NewRoutinePool(10),
 		plugins:           make(map[string]Plugin),
 		clusterReportList: make(map[string]map[string]string),
 	}
@@ -204,13 +216,39 @@ func (pm *PluginManager) Ready(pluginStr string, targetID string) bool {
 }
 
 // GetClusterResult xxx
-func (pm *PluginManager) GetClusterResult(pluginStr string, clusterID string) map[string]CheckResult {
-	Pm.Ready(pluginStr, clusterID)
+func (pm *PluginManager) GetClusterResult(clusterID string, option CheckOption) map[string]CheckResult {
 	result := make(map[string]CheckResult)
-	for _, plugin := range strings.Split(pluginStr, ",") {
-		p := pm.GetPlugin(plugin)
-		result[plugin] = p.GetResult(clusterID)
+
+	var wg sync.WaitGroup
+	var lock sync.Mutex
+	for _, pluginName := range strings.Split(option.PluginStr, ",") {
+		wg.Add(1)
+		go func(pluginName string) {
+			defer func() {
+				wg.Done()
+				klog.Infof("get cluster %s plugin %s result done.", clusterID, pluginName)
+			}()
+
+			plugin := pm.GetPlugin(pluginName)
+			if plugin == nil {
+				klog.Errorf("plugin %s not found", pluginName)
+				return
+			}
+
+			if option.DeepCheck {
+				option.ClusterIDs = []string{clusterID}
+				plugin.Check(option)
+			}
+
+			Pm.Ready(pluginName, clusterID)
+			lock.Lock()
+			result[pluginName] = plugin.GetResult(clusterID)
+			lock.Unlock()
+		}(pluginName)
 	}
+
+	wg.Wait()
+
 	return result
 }
 

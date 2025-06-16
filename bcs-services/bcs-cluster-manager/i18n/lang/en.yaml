@@ -88,6 +88,8 @@ CheckClusterCleanNodsTask: "check nodes clean finished"
 CheckCleanDBDataTask: "clean db data"
 ModifyInstancesVpcTask: "modify node vpc"
 CheckInstanceStateTask: "check cvm status"
+CreateModifyInstancesVpcTask: "modify cluster node vpc"
+CreateCheckInstanceStateTask: "check cluster cvm status"
 ReturnNodesToResourcePoolTask: "return nodes to resource pool"
 UpdateCloudNodeGroupTask: "update node group data"
 #

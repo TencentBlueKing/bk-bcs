@@ -216,6 +216,44 @@ func (t *TemplateVersionAction) GetTemplateAssociateLabels(
 	return parser.ParseLablesFromManifest(templateVersions, in.Kind, names[1]), nil
 }
 
+// GetTemplateAssociatePorts xxx
+func (t *TemplateVersionAction) GetTemplateAssociatePorts(
+	ctx context.Context, in *clusterRes.GetTemplateAssociatePortsReq) (map[string]interface{}, error) {
+
+	if err := t.checkAccess(ctx); err != nil {
+		return nil, err
+	}
+
+	p, err := project.FromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	//  associateName 格式为 templateName/workloadName
+	names := strings.SplitN(in.AssociateName, "/", 2)
+	if len(names) != 2 {
+		return parser.ParsePortsFromManifest(nil, in.Kind, "", ""), nil
+	}
+
+	templateSpace, err := t.model.GetTemplateSpace(ctx, in.TemplateSpace)
+	if err != nil {
+		return parser.ParsePortsFromManifest(nil, in.Kind, "", ""), nil
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyProjectCode:   p.Code,
+		entity.FieldKeyTemplateSpace: templateSpace.Name,
+		entity.FieldKeyTemplateName:  names[0],
+	})
+
+	templateVersions, err := t.model.ListTemplateVersion(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+
+	return parser.ParsePortsFromManifest(templateVersions, in.Kind, names[1], in.Protocol), nil
+}
+
 // List xxx
 func (t *TemplateVersionAction) List(
 	ctx context.Context, templateID string) ([]map[string]interface{}, error) {

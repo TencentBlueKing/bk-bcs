@@ -670,6 +670,7 @@ export default defineComponent({
     };
     // 切换到表单模式
     const handleChangeMode = () => {
+      const crdData =  props.crd ? { crd: props.crd } : {};
       $router.replace({
         name: 'dashboardFormResourceUpdate',
         params: {
@@ -682,6 +683,7 @@ export default defineComponent({
           category: category.value,
           kind: kind.value,
           formUpdate: formUpdate.value as any,
+          ...crdData,
         },
       });
     };

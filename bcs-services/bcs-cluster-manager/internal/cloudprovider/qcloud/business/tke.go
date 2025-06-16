@@ -486,6 +486,22 @@ func GenerateNTAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 		SkipValidateOptions: skipValidateOption(info.Cluster),
 	}
 
+	if options != nil && options.Advance != nil {
+		if options.Advance.GetNodeOs() != "" {
+			req.ImageId = options.Advance.GetNodeOs()
+		}
+
+		if options.Advance.GetIsGPUNode() && info.NodeTemplate.GetImage().GetImageName() != "" {
+			// if gpu node, use nodeTemplate imageName and call api to get imageID
+			imageName := info.NodeTemplate.GetImage().GetImageName()
+			imageID, err := GetCVMImageIDByImageName(imageName, info.CmOption)
+			if err != nil {
+				blog.Errorf("GenerateNTAddExistedInstanceReq GetCVMImageIDByImageName failed: %v", err)
+			}
+			req.ImageId = imageID
+		}
+	}
+
 	// 未使用节点模板 或者 节点模板未配置磁盘格式化
 	if info.NodeTemplate == nil || len(info.NodeTemplate.DataDisks) == 0 {
 		// 使用默认配置, 主要解决CVM多盘挂载问题
@@ -618,6 +634,10 @@ func GenerateNGAddExistedInstanceReq(info *cloudprovider.CloudDependBasicInfo, n
 		}, options),
 		LoginSetting:        &api.LoginSettings{Password: passwd},
 		SkipValidateOptions: skipValidateOption(info.Cluster),
+	}
+
+	if info.NodeGroup.GetNodeTemplate().GetImage().GetImageID() != "" {
+		req.ImageId = info.NodeGroup.GetNodeTemplate().GetImage().GetImageID()
 	}
 
 	return req
@@ -760,7 +780,8 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 			})
 		}
 	}
-	if len(nodeTemplate.Taints) > 0 {
+
+	if len(nodeTemplate.Taints) > 0 && (options == nil || !options.CreateCluster) {
 		for _, t := range nodeTemplate.Taints {
 			advanceInfo.TaintList = append(advanceInfo.TaintList, &api.Taint{
 				Key:    qcommon.StringPtr(t.Key),
@@ -802,7 +823,7 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		advanceInfo.ExtraArgs.Kubelet = kubeletParams
 	}
 
-	if len(nodeTemplate.PreStartUserScript) > 0 {
+	if len(nodeTemplate.PreStartUserScript) > 0 && (options == nil || options.SetPreStartUserScript) {
 		script, err := template.GetNodeTemplateScript(vars, nodeTemplate.PreStartUserScript)
 		if err != nil {
 			blog.Errorf("generateInstanceAdvanceInfoFromNp getNodeTemplateScript failed: %v", err)
@@ -810,7 +831,53 @@ func generateInstanceAdvanceInfoFromNp(cls *proto.Cluster, nodeTemplate *proto.N
 		advanceInfo.PreStartUserScript = script
 	}
 
+	if options != nil && options.Advance != nil && options.Advance.GetIsGPUNode() && nodeTemplate.GpuArgs != nil {
+		gpuArgs := nodeTemplate.GpuArgs
+		advanceInfo.GPUArgs = generateGPUArgs(gpuArgs)
+	}
+
 	return advanceInfo
+}
+
+func generateGPUArgs(gpuArgs *proto.GPUArgs) *api.GPUArgs {
+	if gpuArgs == nil {
+		return nil
+	}
+
+	result := &api.GPUArgs{}
+
+	result.MIGEnable = gpuArgs.MigEnable
+
+	if gpuArgs.Driver != nil {
+		result.Driver = &api.DriverVersion{
+			Version: gpuArgs.Driver.Version,
+			Name:    gpuArgs.Driver.Name,
+		}
+	}
+
+	if gpuArgs.Cuda != nil {
+		result.CUDA = &api.DriverVersion{
+			Version: gpuArgs.Cuda.Version,
+			Name:    gpuArgs.Cuda.Name,
+		}
+	}
+
+	if gpuArgs.Cudnn != nil {
+		result.CUDNN = &api.CUDNN{
+			Version: gpuArgs.Cudnn.Version,
+			Name:    gpuArgs.Cudnn.Name,
+			DocName: gpuArgs.Cudnn.DocName,
+			DevName: gpuArgs.Cudnn.DevName,
+		}
+	}
+
+	if gpuArgs.CustomDriver != nil {
+		result.CustomDriver = &api.CustomDriver{
+			Address: gpuArgs.CustomDriver.Address,
+		}
+	}
+
+	return result
 }
 
 // AddExistedInstanceResult add existed result
@@ -878,6 +945,11 @@ func AddNodesToCluster(ctx context.Context, info *cloudprovider.CloudDependBasic
 
 	cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
 		fmt.Sprintf("success [%v] failed [%v]", result.SuccessNodes, result.FailedNodes))
+
+	if len(result.FailedNodes) > 0 {
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("failed Nodes:[%v], reason:[%v]", result.FailedNodes, resp.FailedReasons))
+	}
 
 	return result, nil
 }
@@ -951,11 +1023,12 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}
 
 	// wait node group state to normal
-	timeCtx, cancel := context.WithTimeout(context.TODO(), 12*time.Minute)
+	timeCtx, cancel := context.WithTimeout(context.TODO(), 20*time.Minute)
 	defer cancel()
 
 	// wait all nodes to be ready
 	err = loop.LoopDoFunc(timeCtx, func() error {
+
 		instances, errQuery := cli.QueryTkeClusterInstances(&api.DescribeClusterInstances{
 			ClusterID:   info.Cluster.SystemID,
 			InstanceIDs: instanceIDs,
@@ -990,11 +1063,16 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 	}, loop.LoopInterval(20*time.Second))
 	// other error
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+
 		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
 		return nil, nil, err
 	}
 	// timeout error
 	if errors.Is(err, context.DeadlineExceeded) {
+
+		cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+			fmt.Sprintf("QueryTkeClusterInstances DeadlineExceeded: %v", err))
+
 		blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, err)
 
 		running, failure := make([]string, 0), make([]string, 0)
@@ -1003,6 +1081,10 @@ func CheckClusterInstanceStatus(ctx context.Context, info *cloudprovider.CloudDe
 			InstanceIDs: instanceIDs,
 		})
 		if errQuery != nil {
+
+			cloudprovider.GetStorageModel().CreateTaskStepLogInfo(context.Background(), taskID, stepName,
+				fmt.Sprintf("QueryTkeClusterInstances errQuery: %v", errQuery))
+
 			blog.Errorf("checkClusterInstanceStatus[%s] QueryTkeClusterInstances failed: %v", taskID, errQuery)
 			return nil, nil, errQuery
 		}

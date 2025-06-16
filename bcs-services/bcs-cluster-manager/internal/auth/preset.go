@@ -28,6 +28,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.GetNodeInfo",
 	"ClusterManager.GetNodeInfo",
 	"ClusterManager.CheckNodeInCluster",
+	"ClusterManager.CheckDrainNode",
 
 	// cluster credential
 
@@ -113,6 +114,7 @@ var NoAuthMethod = []string{
 	"ClusterManager.CheckCidrConflictFromVpc",
 	"ClusterManager.GetMasterSuggestedMachines",
 	"ClusterManager.ListCloudNodePublicPrefix",
+	"ClusterManager.GetClusterSharedProject",
 }
 
 // ActionPermissions action 对应权限中心的权限
@@ -126,7 +128,6 @@ var ActionPermissions = map[string]string{
 	"ClusterManager.GetCluster":                   cluster.CanViewClusterOperation,
 	"ClusterManager.ListProjectCluster":           project.CanViewProjectOperation,
 	"ClusterManager.ListCluster":                  project.CanViewProjectOperation,
-	"ClusterManager.GetClusterSharedProject":      project.CanViewProjectOperation,
 	"ClusterManager.ListCommonCluster":            "",
 	"ClusterManager.CreateVirtualCluster":         cluster.CanCreateClusterOperation,
 	"ClusterManager.DeleteVirtualCluster":         cluster.CanDeleteClusterOperation,

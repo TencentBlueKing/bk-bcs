@@ -72,37 +72,38 @@ func NewAddonsInstaller(opts AddonOptions, client *AddonsClient,
 var _ install.Installer = &AddonsInstaller{}
 
 // IsInstalled returns whether the app is installed
-func (a *AddonsInstaller) IsInstalled(clusterID string) (bool, error) {
+func (a *AddonsInstaller) IsInstalled(ctx context.Context, clusterID string) (bool, error) {
 	if a.debug {
 		return true, nil
 	}
 
-	resp, err := a.getAddonDetail(clusterID)
+	resp, err := a.getAddonDetail(ctx, clusterID)
 	if err != nil {
 		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, err: %s", err.Error())
 		return false, err
 	}
 	// not found addon
-	if resp.Code != 0 {
-		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, code: %d, message: %s", resp.Code, resp.Message)
+	if resp.Code != nil && *resp.Code != 0 {
+		blog.Errorf("[AddonsInstaller] GetAddonsDetail failed, code: %d, message: %s", *resp.Code, *resp.Message)
 		return false, nil
 	}
 	blog.Infof("[AddonsInstaller] [%s:%s] GetAddonsDetail success[%s:%s] status: %s",
-		a.projectID, a.clusterID, resp.Data.Namespace, resp.Data.Name, resp.Data.Status)
+		a.projectID, a.clusterID, *resp.Data.Namespace, *resp.Data.Name, *resp.Data.Status)
 
-	if resp.Data.Status == "" {
+	if resp.Data.Status == nil || *resp.Data.Status == "" {
 		return false, nil
 	}
 
 	return true, nil
 }
 
-func (a *AddonsInstaller) getAddonDetail(clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
+func (a *AddonsInstaller) getAddonDetail(
+	ctx context.Context, clusterId string) (*helmmanager.GetAddonsDetailResp, error) {
 	start := time.Now()
-	resp, err := a.client.GetAddonsDetail(context.Background(), &helmmanager.GetAddonsDetailReq{
-		ProjectCode: a.projectID,
-		ClusterID:   clusterId,
-		Name:        a.addonName,
+	resp, err := a.client.GetAddonsDetail(ctx, &helmmanager.GetAddonsDetailReq{
+		ProjectCode: &a.projectID,
+		ClusterID:   &clusterId,
+		Name:        &a.addonName,
 	})
 	if err != nil {
 		metrics.ReportLibRequestMetric("addons", "GetAddonsDetail", "grpc", metrics.LibCallStatusErr, start)
@@ -120,21 +121,21 @@ func (a *AddonsInstaller) getAddonDetail(clusterId string) (*helmmanager.GetAddo
 }
 
 // Install installs the app
-func (a *AddonsInstaller) Install(clusterID, values string) error {
+func (a *AddonsInstaller) Install(ctx context.Context, clusterID, values string) error {
 	if a.debug {
 		return nil
 	}
 
-	addonResp, err := a.getAddonDetail(clusterID)
-	if err != nil || addonResp.Code != 0 {
+	addonResp, err := a.getAddonDetail(ctx, clusterID)
+	if err != nil || (addonResp.Code != nil && *addonResp.Code != 0) {
 		return fmt.Errorf("[AddonsInstaller] InstallAddons failed: %v", err)
 	}
 
 	start := time.Now()
-	resp, err := a.client.UpgradeAddons(context.Background(), &helmmanager.UpgradeAddonsReq{
-		ProjectCode: a.projectID,
-		ClusterID:   clusterID,
-		Name:        a.addonName,
+	resp, err := a.client.UpgradeAddons(ctx, &helmmanager.UpgradeAddonsReq{
+		ProjectCode: &a.projectID,
+		ClusterID:   &clusterID,
+		Name:        &a.addonName,
 		Version:     addonResp.Data.Version,
 	})
 	if err != nil {
@@ -149,9 +150,9 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 		return fmt.Errorf("InstallAddons failed, resp is empty")
 	}
 
-	if resp.Code != 0 || !resp.Result {
-		blog.Errorf("[AddonsInstaller] InstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
-		return fmt.Errorf("InstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
+	if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
+		blog.Errorf("[AddonsInstaller] InstallAddons failed, code: %d, message: %s", resp.Code, *resp.Message)
+		return fmt.Errorf("InstallAddons failed, code: %d, message: %s", *resp.Code, *resp.Message)
 	}
 
 	blog.Errorf("[AddonsInstaller] InstallAddons[%s:%s] success[%s]", a.projectID, clusterID, a.addonName)
@@ -160,22 +161,22 @@ func (a *AddonsInstaller) Install(clusterID, values string) error {
 }
 
 // Upgrade upgrades the app
-func (a *AddonsInstaller) Upgrade(clusterID, values string) error {
+func (a *AddonsInstaller) Upgrade(ctx context.Context, clusterID, values string) error {
 	return nil
 }
 
 // Uninstall uninstalls the app
-func (a *AddonsInstaller) Uninstall(clusterID string) error {
+func (a *AddonsInstaller) Uninstall(ctx context.Context, clusterID string) error {
 	if a.debug {
 		return nil
 	}
 
 	start := time.Now()
 	// delete addon
-	resp, err := a.client.UninstallAddons(context.Background(), &helmmanager.UninstallAddonsReq{
-		ProjectCode: a.projectID,
-		ClusterID:   clusterID,
-		Name:        a.addonName,
+	resp, err := a.client.UninstallAddons(ctx, &helmmanager.UninstallAddonsReq{
+		ProjectCode: &a.projectID,
+		ClusterID:   &clusterID,
+		Name:        &a.addonName,
 	})
 	if err != nil {
 		metrics.ReportLibRequestMetric("addons", "UninstallAddons", "grpc", metrics.LibCallStatusErr, start)
@@ -184,10 +185,10 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 	}
 	metrics.ReportLibRequestMetric("addons", "UninstallAddons", "grpc", metrics.LibCallStatusOK, start)
 
-	if resp.Code != 0 {
-		blog.Errorf("[AddonsInstaller] UninstallAddons failed, code: %d, message: %s", resp.Code, resp.Message)
-		return fmt.Errorf("UninstallAddons failed, code: %d, message: %s, requestID: %s", resp.Code,
-			resp.Message, resp.RequestID)
+	if (resp.Code != nil && *resp.Code != 0) || (resp.Result != nil && !*resp.Result) {
+		blog.Errorf("[AddonsInstaller] UninstallAddons failed, code: %d, message: %s", *resp.Code, *resp.Message)
+		return fmt.Errorf("UninstallAddons failed, code: %d, message: %s, requestID: %s", *resp.Code,
+			*resp.Message, *resp.RequestID)
 	}
 
 	blog.Infof("[AddonsInstaller] delete addon successful[%s:%s]", clusterID, a.addonName)
@@ -195,7 +196,8 @@ func (a *AddonsInstaller) Uninstall(clusterID string) error {
 }
 
 // CheckAppStatus check app install status
-func (a *AddonsInstaller) CheckAppStatus(clusterID string, timeout time.Duration, pre bool) (bool, error) {
+func (a *AddonsInstaller) CheckAppStatus(
+	ctx context.Context, clusterID string, timeout time.Duration, pre bool) (bool, error) {
 	if a.debug {
 		return true, nil
 	}
