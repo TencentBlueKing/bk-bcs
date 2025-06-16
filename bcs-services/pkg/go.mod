@@ -2,14 +2,12 @@ module github.com/Tencent/bk-bcs/bcs-services/pkg
 
 go 1.20
 
-replace (
-	github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
-)
+replace github.com/Tencent/bk-bcs/bcs-common => ../../bcs-common
 
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20240418095107-1d05d2d5c43c
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1
 	github.com/google/uuid v1.6.0
 	go-micro.dev/v4 v4.8.1
 	k8s.io/klog/v2 v2.100.1

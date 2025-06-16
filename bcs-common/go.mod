@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubernetes/common v0.0.0-20220330120237-0bbed74dcf6d
 	github.com/TencentBlueKing/bk-audit-go-sdk v0.0.6
-	github.com/TencentBlueKing/iam-go-sdk v1.0.0
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1
 	github.com/alicebob/miniredis v2.5.0+incompatible
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/docker/engine-api v0.4.0
