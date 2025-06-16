@@ -88,9 +88,11 @@ func (c *CloudInfoManager) SyncClusterCloudInfo(cls *cmproto.Cluster,
 	}
 	cls.KubeConfig = kubeConfig
 
+	cls.ExtraInfo[api.GKEClusterType] = api.Standard
+	cls.ManageType = common.ClusterManageTypeManaged
 	// gke集群是否启用autopilot
 	if cluster.Autopilot.Enabled {
-		cls.ManageType = common.ClusterManageTypeManaged
+		cls.ExtraInfo[api.GKEClusterType] = api.Autopilot
 	}
 
 	// cluster cloud basic setting

@@ -35,6 +35,7 @@ import (
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
@@ -737,7 +738,7 @@ func IsSupportAutoScale(store store.ClusterManagerModel, cls *proto.Cluster) boo
 		return false
 	}
 
-	if cls.Provider == common.GcpCloudProvider && cls.ManageType == common.ClusterManageTypeManaged {
+	if cls.Provider == common.GcpCloudProvider && cls.ExtraInfo[api.GKEClusterType] == api.Autopilot {
 		return false
 	}
 
