@@ -28,7 +28,9 @@ const CreateDataIDBody = `{
 			"metadata": {
 				"namespace": "%s",
 				"name": "%s",
-				"labels": {},
+				"labels": {
+					"plat_project": "bk_bcs"
+				},
 				"annotations": {}
 			},
 			"spec": {
@@ -60,6 +62,9 @@ const CreateDatabusBody = `{
 			"metadata": {
 				"namespace": "%s",
 				"name": "%s",
+				"labels": {
+					"plat_project": "bk_bcs"
+				},
 				"annotations": {}
 			},
 			"spec": {
