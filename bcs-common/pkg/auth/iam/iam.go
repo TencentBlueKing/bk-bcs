@@ -107,7 +107,7 @@ func (opt *Options) validate() error {
 		return fmt.Errorf("BKIAMHost and BKPAASHost required when UseGateway flag set to false")
 	}
 	if opt.TenantId == "" {
-		opt.TenantId = "default"
+		opt.TenantId = DefaultTenantId
 	}
 
 	return nil
@@ -388,6 +388,7 @@ func (ic *iamClient) CreateGradeManagers(ctx context.Context, request GradeManag
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
+		Set(HeaderTenantId, ic.opt.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -438,6 +439,7 @@ func (ic *iamClient) CreateUserGroup(ctx context.Context, gradeManagerID uint64,
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
+		Set(HeaderTenantId, ic.opt.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -484,6 +486,7 @@ func (ic *iamClient) DeleteUserGroup(ctx context.Context, groupID uint64) error 
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
+		Set(HeaderTenantId, ic.opt.TenantId).
 		SetDebug(true).
 		EndStruct(resp)
 
@@ -529,6 +532,7 @@ func (ic *iamClient) AddUserGroupMembers(ctx context.Context, groupID uint64, re
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
+		Set(HeaderTenantId, ic.opt.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -583,6 +587,7 @@ func (ic *iamClient) DeleteUserGroupMembers(ctx context.Context, groupID uint64,
 		Query(fmt.Sprintf("ids=%s", strings.Join(request.IDs, ","))).
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
+		Set(HeaderTenantId, ic.opt.TenantId).
 		Set("X-Bkapi-Authorization", auth).
 		SetDebug(true).
 		EndStruct(resp)
@@ -629,6 +634,7 @@ func (ic *iamClient) CreateUserGroupPolicies(ctx context.Context, groupID uint64
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
+		Set(HeaderTenantId, ic.opt.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
@@ -674,6 +680,7 @@ func (ic *iamClient) AuthResourceCreatorPerm(ctx context.Context, resource Resou
 		Set("Content-Type", "application/json").
 		Set("Accept", "application/json").
 		Set("X-Bkapi-Authorization", auth).
+		Set(HeaderTenantId, ic.opt.TenantId).
 		SetDebug(true).
 		Send(&request).
 		EndStruct(resp)
