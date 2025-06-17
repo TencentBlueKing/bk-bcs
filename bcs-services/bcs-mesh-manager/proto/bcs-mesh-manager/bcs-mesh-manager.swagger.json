@@ -78,6 +78,18 @@
             "type": "string"
           },
           {
+            "name": "meshID",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "meshName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "status",
             "in": "query",
             "required": false,
@@ -210,9 +222,6 @@
                 },
                 "differentNetwork": {
                   "type": "boolean"
-                },
-                "serviceDiscovery": {
-                  "$ref": "#/definitions/meshmanagerServiceDiscovery"
                 },
                 "sidecarResourceConfig": {
                   "$ref": "#/definitions/meshmanagerResourceConfig"
@@ -499,9 +508,6 @@
         "differentNetwork": {
           "type": "boolean"
         },
-        "serviceDiscovery": {
-          "$ref": "#/definitions/meshmanagerServiceDiscovery"
-        },
         "sidecarResourceConfig": {
           "$ref": "#/definitions/meshmanagerResourceConfig"
         },
@@ -664,42 +670,6 @@
       },
       "title": "日志采集配置"
     },
-    "meshmanagerNamespaceList": {
-      "type": "object",
-      "properties": {
-        "namespaces": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "Namespace list message"
-    },
-    "meshmanagerNamespacePods": {
-      "type": "object",
-      "properties": {
-        "namespacePods": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/meshmanagerPodList"
-          }
-        }
-      },
-      "title": "Namespace pods message"
-    },
-    "meshmanagerPodList": {
-      "type": "object",
-      "properties": {
-        "pods": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "Pod list message"
-    },
     "meshmanagerResourceConfig": {
       "type": "object",
       "properties": {
@@ -717,31 +687,6 @@
         }
       },
       "title": "resource配置"
-    },
-    "meshmanagerServiceDiscovery": {
-      "type": "object",
-      "properties": {
-        "clusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "autoInjectNS": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/meshmanagerNamespaceList"
-          }
-        },
-        "disabledInjectPods": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/meshmanagerNamespacePods"
-          }
-        }
-      },
-      "description": "服务发现配置",
-      "title": "ServiceDiscovery"
     },
     "meshmanagerTracingConfig": {
       "type": "object",

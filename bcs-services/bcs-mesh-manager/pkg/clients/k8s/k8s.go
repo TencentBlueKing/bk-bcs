@@ -20,6 +20,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -82,4 +84,36 @@ func CreateNamespace(ctx context.Context, clusterID, namespace string) error {
 		},
 	}, metav1.CreateOptions{})
 	return err
+}
+
+// GetDynamicClient returns a dynamic client for the given cluster
+func GetDynamicClient(clusterID string) (dynamic.Interface, error) {
+	host := fmt.Sprintf("%s/clusters/%s", bcsEndpoint, clusterID)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsToken,
+	}
+
+	client, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("create dynamic client failed: %v", err)
+	}
+
+	return client, nil
+}
+
+// GetDiscoveryClient returns a discovery client for the given cluster
+func GetDiscoveryClient(clusterID string) (*discovery.DiscoveryClient, error) {
+	host := fmt.Sprintf("%s/clusters/%s", bcsEndpoint, clusterID)
+	config := &rest.Config{
+		Host:        host,
+		BearerToken: bcsToken,
+	}
+
+	client, err := discovery.NewDiscoveryClientForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("create discovery client failed: %v", err)
+	}
+
+	return client, nil
 }

@@ -27,7 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/metrics"
 )
 
-// Operation ensure release install/upgrade/uninstall/rollback action to be executed
+// Operation ensure istio install/upgrade/uninstall/rollback action to be executed
 type Operation interface {
 	// Action operation action name
 	Action() string
@@ -35,9 +35,9 @@ type Operation interface {
 	Name() string
 	// Validate check param is valid
 	Validate() error
-	// Prepare do something to prepare release execute, like download chart content
+	// Prepare do something to prepare istio execute, like download chart content
 	Prepare(ctx context.Context) error
-	// Execute execute release install/upgrade/uninstall/rollback action
+	// Execute execute istio install/upgrade/uninstall/rollback action
 	Execute(ctx context.Context) error
 	// Done do something for done operation
 	Done(err error)

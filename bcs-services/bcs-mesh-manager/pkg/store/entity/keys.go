@@ -25,10 +25,9 @@ const (
 	FieldKeyUpdateBy   = "updateBy"
 
 	// Mesh metadata
-	FieldKeyChartVersion     = "chartVersion"
-	FieldKeyClusters         = "clusters"
-	FieldKeyFeatureConfigs   = "featureConfigs"
-	FieldKeyServiceDiscovery = "serviceDiscovery"
+	FieldKeyChartVersion   = "chartVersion"
+	FieldKeyClusters       = "clusters"
+	FieldKeyFeatureConfigs = "featureConfigs"
 
 	// Feature configuration keys
 	FieldKeyMeshMode                = "meshMode"
@@ -42,10 +41,6 @@ const (
 	FieldKeyMonitoring              = "monitoring"
 	FieldKeyTracing                 = "tracing"
 	FieldKeyLogging                 = "logging"
-
-	// Service discovery fields
-	FieldKeyAutoInjectionNamespaces = "autoInjectionNamespaces"
-	FieldKeyDisabledInjectionPods   = "disabledInjectionPods"
 
 	// Sidecar configuration fields
 	FieldKeySidecarEnabled      = "enabled"

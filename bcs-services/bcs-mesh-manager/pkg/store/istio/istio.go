@@ -156,10 +156,6 @@ func (m *ModelMeshIstio) Update(ctx context.Context, meshID string, entityM enti
 
 // Delete deletes a mesh istio by its ID
 func (m *ModelMeshIstio) Delete(ctx context.Context, meshID string) error {
-	if meshID == "" {
-		return fmt.Errorf("meshID cannot be empty")
-	}
-
 	if err := m.ensureTable(ctx); err != nil {
 		return err
 	}
@@ -196,4 +192,26 @@ func (m *ModelMeshIstio) Create(ctx context.Context, mesh *entity.MeshIstio) err
 	}
 
 	return nil
+}
+
+// Get gets a mesh by its ID
+func (m *ModelMeshIstio) Get(ctx context.Context, meshID string) (*entity.MeshIstio, error) {
+	if meshID == "" {
+		return nil, fmt.Errorf("meshID cannot be empty")
+	}
+
+	if err := m.ensureTable(ctx); err != nil {
+		return nil, err
+	}
+
+	cond := operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyMeshID: meshID,
+	})
+
+	mesh := &entity.MeshIstio{}
+	if err := m.db.Table(m.tableName).Find(cond).One(ctx, mesh); err != nil {
+		return nil, err
+	}
+
+	return mesh, nil
 }

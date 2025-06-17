@@ -69,38 +69,10 @@ func (u *UpdateIstioAction) setResp(code uint32, message string) {
 	u.resp.Message = message
 }
 
-// ServiceDiscoveryFromProto converts proto ServiceDiscovery to entity.ServiceDiscovery
-func ServiceDiscoveryFromProto(proto *meshmanager.ServiceDiscovery) *entity.ServiceDiscovery {
-	if proto == nil {
-		return nil
-	}
-	sd := &entity.ServiceDiscovery{
-		Clusters:           proto.Clusters,
-		AutoInjectNS:       make(map[string][]string),
-		DisabledInjectPods: make(map[string]map[string][]string),
-	}
-	for clusterID, namespaceList := range proto.AutoInjectNS {
-		sd.AutoInjectNS[clusterID] = namespaceList.Namespaces
-	}
-	for clusterID, namespacePods := range proto.DisabledInjectPods {
-		clusterPods := make(map[string][]string)
-		for namespace, podList := range namespacePods.NamespacePods {
-			clusterPods[namespace] = podList.Pods
-		}
-		sd.DisabledInjectPods[clusterID] = clusterPods
-	}
-	return sd
-}
-
 // update implements the business logic for updating mesh
 func (u *UpdateIstioAction) update(ctx context.Context) error {
 	mesh := &entity.MeshIstio{}
 	updateFields := mesh.UpdateFromProto(u.req)
-
-	// 迁移 ServiceDiscovery 字段的转换逻辑到 action 层
-	if u.req.ServiceDiscovery != nil {
-		updateFields["serviceDiscovery"] = ServiceDiscoveryFromProto(u.req.ServiceDiscovery)
-	}
 
 	return u.model.Update(ctx, u.req.MeshID, updateFields)
 }

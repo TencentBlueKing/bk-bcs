@@ -82,6 +82,16 @@ func (l *ListIstioAction) list(ctx context.Context) (*meshmanager.ListIstioData,
 			"projectID": l.req.ProjectID,
 		}))
 	}
+	if l.req.MeshID != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
+			"meshID": l.req.MeshID,
+		}))
+	}
+	if l.req.MeshName != "" {
+		conditions = append(conditions, operator.NewLeafCondition(operator.Con, operator.M{
+			"meshName": l.req.MeshName,
+		}))
+	}
 	if l.req.Status != "" {
 		conditions = append(conditions, operator.NewLeafCondition(operator.Eq, operator.M{
 			"status": l.req.Status,

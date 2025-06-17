@@ -43,9 +43,6 @@ type MeshIstio struct {
 	RemoteClusters   []string `bson:"remoteClusters" json:"remoteClusters"`
 	DifferentNetwork bool     `bson:"differentNetwork" json:"differentNetwork"`
 
-	// Service discovery information
-	ServiceDiscovery *ServiceDiscovery `bson:"serviceDiscovery" json:"serviceDiscovery"`
-
 	// Feature configurations
 	FeatureConfigs map[string]*FeatureConfig `bson:"featureConfigs" json:"featureConfigs"`
 
@@ -94,18 +91,6 @@ type TracingConfig struct {
 	BkToken  string `bson:"bkToken" json:"bkToken"`
 }
 
-// ServiceDiscovery represents the service discovery configuration of the mesh
-type ServiceDiscovery struct {
-	// List of cluster IDs that this mesh is bound to
-	Clusters []string `bson:"clusters" json:"clusters"`
-	// Auto-injection namespace mapping
-	// key: clusterID, value: list of namespaces that need auto-injection in this cluster
-	AutoInjectNS map[string][]string `bson:"autoInjectNS" json:"autoInjectNS"`
-	// Disabled injection pods mapping
-	// key: clusterID, value: map[namespace][]podName
-	DisabledInjectPods map[string]map[string][]string `bson:"disabledInjectPods" json:"disabledInjectPods"`
-}
-
 // FeatureConfig represents a feature configuration
 type FeatureConfig struct {
 	// Feature name
@@ -124,9 +109,6 @@ type FeatureConfig struct {
 func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 	// 转换基本字段
 	proto := m.transferBasicFields()
-
-	// 转换服务发现配置
-	proto.ServiceDiscovery = m.transferServiceDiscovery()
 
 	// 转换配置相关字段
 	proto.SidecarResourceConfig = m.transferSidecarResourceConfig()
@@ -158,41 +140,6 @@ func (m *MeshIstio) transferBasicFields() *meshmanager.IstioListItem {
 		RemoteClusters:   m.RemoteClusters,
 		DifferentNetwork: m.DifferentNetwork,
 	}
-}
-
-// transferServiceDiscovery 转换服务发现配置
-func (m *MeshIstio) transferServiceDiscovery() *meshmanager.ServiceDiscovery {
-	if m.ServiceDiscovery == nil {
-		return nil
-	}
-
-	protoServiceDiscovery := &meshmanager.ServiceDiscovery{
-		Clusters:           m.ServiceDiscovery.Clusters,
-		AutoInjectNS:       make(map[string]*meshmanager.NamespaceList),
-		DisabledInjectPods: make(map[string]*meshmanager.NamespacePods),
-	}
-
-	// 转换 AutoInjectNS
-	for clusterID, namespaces := range m.ServiceDiscovery.AutoInjectNS {
-		protoServiceDiscovery.AutoInjectNS[clusterID] = &meshmanager.NamespaceList{
-			Namespaces: namespaces,
-		}
-	}
-
-	// 转换 DisabledInjectPods
-	for clusterID, namespacePods := range m.ServiceDiscovery.DisabledInjectPods {
-		protoNamespacePods := &meshmanager.NamespacePods{
-			NamespacePods: make(map[string]*meshmanager.PodList),
-		}
-		for namespace, pods := range namespacePods {
-			protoNamespacePods.NamespacePods[namespace] = &meshmanager.PodList{
-				Pods: pods,
-			}
-		}
-		protoServiceDiscovery.DisabledInjectPods[clusterID] = protoNamespacePods
-	}
-
-	return protoServiceDiscovery
 }
 
 // transferFeatureConfigs 转换特性配置
@@ -378,7 +325,6 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 // UpdateFromProto converts UpdateIstioRequest to update fields
 func (m *MeshIstio) UpdateFromProto(req *meshmanager.UpdateIstioRequest) M {
 	updateFields := m.updateBasicFields(req)
-	m.updateServiceDiscovery(req, updateFields)
 	m.updateResourceConfigs(req, updateFields)
 	m.updateFeatureConfigs(req, updateFields)
 	return updateFields
@@ -394,35 +340,6 @@ func (m *MeshIstio) updateBasicFields(req *meshmanager.UpdateIstioRequest) M {
 		"updateTime":       time.Now().Unix(),
 		"updateBy":         "system", // TODO: get from context
 	}
-}
-
-// updateServiceDiscovery updates service discovery configuration
-func (m *MeshIstio) updateServiceDiscovery(req *meshmanager.UpdateIstioRequest, updateFields M) {
-	if req.ServiceDiscovery == nil {
-		return
-	}
-
-	serviceDiscovery := &ServiceDiscovery{
-		Clusters:           req.ServiceDiscovery.Clusters,
-		AutoInjectNS:       make(map[string][]string),
-		DisabledInjectPods: make(map[string]map[string][]string),
-	}
-
-	// Convert AutoInjectNS
-	for clusterID, namespaceList := range req.ServiceDiscovery.AutoInjectNS {
-		serviceDiscovery.AutoInjectNS[clusterID] = namespaceList.Namespaces
-	}
-
-	// Convert DisabledInjectPods
-	for clusterID, namespacePods := range req.ServiceDiscovery.DisabledInjectPods {
-		clusterPods := make(map[string][]string)
-		for namespace, podList := range namespacePods.NamespacePods {
-			clusterPods[namespace] = podList.Pods
-		}
-		serviceDiscovery.DisabledInjectPods[clusterID] = clusterPods
-	}
-
-	updateFields["serviceDiscovery"] = serviceDiscovery
 }
 
 // updateResourceConfigs updates resource related configurations

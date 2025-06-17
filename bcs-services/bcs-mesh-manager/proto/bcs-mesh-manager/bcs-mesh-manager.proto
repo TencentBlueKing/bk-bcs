@@ -239,9 +239,11 @@ message ListIstioRequest {
   };
 
   string projectID = 1 [ (validate.rules).string = {min_len : 1} ];
-  string status = 2;
-  int32 page = 3 [ (validate.rules).int32 = {gt : 0} ];
-  int32 pageSize = 4 [ (validate.rules).int32 = {gt : 0, lte : 100} ];
+  string meshID = 2;
+  string meshName = 3;
+  string status = 4;
+  int32 page = 5 [ (validate.rules).int32 = {gt : 0, lte : 10000} ];
+  int32 pageSize = 6 [ (validate.rules).int32 = {gt : 0, lte : 100} ];
 }
 
 // 获取istio列表响应
@@ -287,12 +289,11 @@ message IstioListItem {
   repeated string primaryClusters = 14;
   repeated string remoteClusters = 15;
   bool differentNetwork = 16;
-  ServiceDiscovery serviceDiscovery = 17;
-  ResourceConfig sidecarResourceConfig = 18;
-  HighAvailability highAvailability = 19;
-  LogCollectorConfig logCollectorConfig = 20;
-  TracingConfig tracingConfig = 21;
-  map<string, FeatureConfig> featureConfigs = 22;
+  ResourceConfig sidecarResourceConfig = 17;
+  HighAvailability highAvailability = 18;
+  LogCollectorConfig logCollectorConfig = 19;
+  TracingConfig tracingConfig = 20;
+  map<string, FeatureConfig> featureConfigs = 21;
 }
 
 // 更新istio请求
@@ -308,12 +309,11 @@ message UpdateIstioRequest {
   repeated string primaryClusters = 5;
   repeated string remoteClusters = 6;
   bool differentNetwork = 7;
-  ServiceDiscovery serviceDiscovery = 8;
-  ResourceConfig sidecarResourceConfig = 9;
-  HighAvailability highAvailability = 10;
-  LogCollectorConfig logCollectorConfig = 11;
-  TracingConfig tracingConfig = 12;
-  map<string, FeatureConfig> featureConfigs = 13;
+  ResourceConfig sidecarResourceConfig = 8;
+  HighAvailability highAvailability = 9;
+  LogCollectorConfig logCollectorConfig = 10;
+  TracingConfig tracingConfig = 11;
+  map<string, FeatureConfig> featureConfigs = 12;
 }
 
 // 更新istio响应
@@ -356,23 +356,3 @@ message DeleteIstioResponse {
   string requestID = 3;
   WebAnnotations web_annotations = 4;
 }
-
-// Service discovery configuration
-message ServiceDiscovery {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {title : "ServiceDiscovery" description : "服务发现配置"}
-  };
-
-  repeated string clusters = 1;
-  map<string, NamespaceList> autoInjectNS = 2;
-  map<string, NamespacePods> disabledInjectPods = 3;
-}
-
-// Namespace list message
-message NamespaceList { repeated string namespaces = 1; }
-
-// Namespace pods message
-message NamespacePods { map<string, PodList> namespacePods = 1; }
-
-// Pod list message
-message PodList { repeated string pods = 1; }
