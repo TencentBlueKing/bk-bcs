@@ -97,6 +97,8 @@ const (
 	AnnotationIsPrivateResourceKey = "isPrivateResource"
 	// AnnotationScheduleAlgorithmKey  is the annotation scheduleAlgorithm key for the taiji.
 	AnnotationScheduleAlgorithmKey = "scheduleAlgorithm"
+	// AnnotationScheduleAlgorithmValue  is the annotation scheduleAlgorithm default value for the MEMA.
+	AnnotationScheduleAlgorithmValue = "MEMA"
 
 	// MixerClusterNetworksValue networks Value
 	MixerClusterNetworksValue = "flannel"

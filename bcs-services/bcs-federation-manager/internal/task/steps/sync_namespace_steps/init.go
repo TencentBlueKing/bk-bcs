@@ -32,7 +32,11 @@ func init() {
 			NewHandleHunbuNamespaceStep(),
 			NewHandleNormalNamespaceStep(),
 			NewUpdateFederationNamespaceStatusStep(),
-			// NewCreateSuanliNamespaceStep(), // not implemented
+			NewGetNamespaceQuotaStep(),
+			NewCheckInTaijiStep(),
+			NewCheckInSuanliStep(),
+			NewCheckInHunbuStep(),
+			NewCheckInNormalStep(),
 		})
 	})
 }

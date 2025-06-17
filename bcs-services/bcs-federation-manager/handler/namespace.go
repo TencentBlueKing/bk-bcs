@@ -246,10 +246,9 @@ func (f *FederationManager) CreateFederationClusterNamespace(ctx context.Context
 	if err != nil {
 		return ErrReturn(resp, fmt.Sprintf("CreateFederationClusterNamespace transfor failed err: %s", err.Error()))
 	}
-	status := cluster.NamespaceCreating
+
 	// init task
 	if len(reqMap) == 0 {
-		status = cluster.NamespaceSuccess
 		blog.Errorf("CreateFederationClusterNamespace taskParams is empty, HostClusterID %s, subClusterIds %+v, "+
 			"req %+v", fedCluster.HostClusterID, subClusterIds, req)
 	} else {
@@ -277,8 +276,11 @@ func (f *FederationManager) CreateFederationClusterNamespace(ctx context.Context
 			return ErrReturn(resp, fmt.Sprintf("CreateFederationClusterNamespace.GetNamespace failed,err: %s", err.Error()))
 		}
 		// 将 任务id，状态 写入到annotations中
+		if federationClusterNamespace.Annotations == nil {
+			federationClusterNamespace.Annotations = make(map[string]string)
+		}
 		federationClusterNamespace.Annotations[cluster.CreateNamespaceTaskId] = t.GetTaskID()
-		federationClusterNamespace.Annotations[cluster.HostClusterNamespaceStatus] = status
+		federationClusterNamespace.Annotations[cluster.HostClusterNamespaceStatus] = cluster.NamespaceCreating
 		federationClusterNamespace.Annotations[cluster.NamespaceUpdateTimestamp] = time.Now().Format(time.RFC3339)
 		err = f.clusterCli.UpdateNamespace(fedCluster.HostClusterID, federationClusterNamespace)
 		if err != nil {
@@ -333,7 +335,7 @@ func (f *FederationManager) checkAndCreateNamespace(ctx context.Context, req *fe
 		}
 
 		// 判断联邦的所有子集群中是否有同名ns
-		for subClusterId, _ := range subClusterIdMap {
+		for subClusterId := range subClusterIdMap {
 			err = f.checkCreateSubClusterNamespace(subClusterId, fedCluster.FederationClusterID, req.Namespace)
 			if err != nil {
 				return nil, err
@@ -640,7 +642,7 @@ func (f *FederationManager) transferUpdateSubClusterNamespaceParam(hostClusterId
 		req.Annotations[cluster.FedNamespaceProjectCodeKey] = cluster.FedNamespaceProjectCodeTest
 	}
 
-	for subClusterId, _ := range subClusterIdMap {
+	for subClusterId := range subClusterIdMap {
 		// 获取managedCluster 对象
 		managedCluster, err := f.clusterCli.GetManagedCluster(hostClusterId, subClusterId)
 		if err != nil {
@@ -1097,8 +1099,6 @@ func createFederationNamespace(hostClusterId string, manager *FederationManager,
 	}
 
 	req.Annotations[cluster.FedNamespaceIsFederatedKey] = cluster.ValueIsTrue
-	// 将ns状态写入到annotations中
-	req.Annotations[cluster.HostClusterNamespaceStatus] = cluster.NamespaceCreating
 	// 1. 创建fedClusterNs
 	err := manager.clusterCli.CreateClusterNamespace(hostClusterId, req.Namespace, req.Annotations)
 	if err != nil {
@@ -1113,7 +1113,6 @@ func createFederationNamespace(hostClusterId string, manager *FederationManager,
 	}
 
 	delete(req.Annotations, cluster.FedNamespaceIsFederatedKey)
-	delete(req.Annotations, cluster.HostClusterNamespaceStatus)
 	blog.Infof("createFederationNamespace successful")
 
 	return nil
@@ -1331,7 +1330,7 @@ func (f *FederationManager) updateFederationNamespace(fedCluster *store.Federati
 			return err
 		}
 		ns.Annotations[cluster.HostClusterNamespaceStatus] = cluster.NamespaceCreating
-		ns.Annotations[cluster.FederationClusterTaskIDLabelKey] = t.GetTaskID()
+		ns.Annotations[cluster.CreateNamespaceTaskId] = t.GetTaskID()
 		// update ns
 		err = f.clusterCli.UpdateNamespace(fedCluster.HostClusterID, ns)
 		if err != nil {
