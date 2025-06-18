@@ -27,6 +27,7 @@ import (
 
 	proto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/utils"
 )
 
 // Crypt encryption node password
@@ -205,6 +206,19 @@ func GenerateCreateNodePoolRequest(group *proto.NodeGroup,
 				MaxPod:           int32(group.NodeTemplate.MaxPodsPerNode),
 				PreScript:        group.NodeTemplate.PreStartUserScript,
 				PostScript:       group.NodeTemplate.UserScript,
+				PublicIp: PublicIp{
+					Bandwidth: func() int32 {
+						if group.LaunchTemplate.InternetAccess.InternetMaxBandwidth == "" {
+							return 0
+						}
+
+						size, _ := utils.StringToInt(group.LaunchTemplate.InternetAccess.InternetMaxBandwidth)
+
+						return int32(size)
+					}(),
+					ChangeType: group.LaunchTemplate.InternetAccess.InternetChargeType,
+					Enable:     group.LaunchTemplate.InternetAccess.PublicIPAssigned,
+				},
 			},
 			SecurityGroups: securityGroups,
 			SubnetId:       subnetId,
