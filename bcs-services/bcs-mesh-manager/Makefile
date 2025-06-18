@@ -49,7 +49,7 @@ build:fmt
 
 # test
 test:
-	go test -v ./cmd/... ./internal/... -cover -count=1 -vet=off
+	go test -v ./cmd/... ./pkg/... -cover -count=1 -vet=off
 
 # tidy
 tidy:

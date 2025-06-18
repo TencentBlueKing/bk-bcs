@@ -926,11 +926,11 @@ func (m *InstallIstioRequest) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetLogCollectorConfig()).(type) {
+		switch v := interface{}(m.GetObservabilityConfig()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, InstallIstioRequestValidationError{
-					field:  "LogCollectorConfig",
+					field:  "ObservabilityConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -938,45 +938,16 @@ func (m *InstallIstioRequest) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, InstallIstioRequestValidationError{
-					field:  "LogCollectorConfig",
+					field:  "ObservabilityConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetLogCollectorConfig()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return InstallIstioRequestValidationError{
-				field:  "LogCollectorConfig",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetTracingConfig()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, InstallIstioRequestValidationError{
-					field:  "TracingConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, InstallIstioRequestValidationError{
-					field:  "TracingConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetTracingConfig()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return InstallIstioRequestValidationError{
-				field:  "TracingConfig",
+				field:  "ObservabilityConfig",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1109,6 +1080,195 @@ var _ interface {
 	ErrorName() string
 } = InstallIstioRequestValidationError{}
 
+// Validate checks the field values on ObservabilityConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ObservabilityConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ObservabilityConfig with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ObservabilityConfigMultiError, or nil if none found.
+func (m *ObservabilityConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ObservabilityConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetMetricsConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ObservabilityConfigValidationError{
+					field:  "MetricsConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ObservabilityConfigValidationError{
+					field:  "MetricsConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMetricsConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ObservabilityConfigValidationError{
+				field:  "MetricsConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetLogCollectorConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ObservabilityConfigValidationError{
+					field:  "LogCollectorConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ObservabilityConfigValidationError{
+					field:  "LogCollectorConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetLogCollectorConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ObservabilityConfigValidationError{
+				field:  "LogCollectorConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetTracingConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, ObservabilityConfigValidationError{
+					field:  "TracingConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, ObservabilityConfigValidationError{
+					field:  "TracingConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetTracingConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return ObservabilityConfigValidationError{
+				field:  "TracingConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if len(errors) > 0 {
+		return ObservabilityConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// ObservabilityConfigMultiError is an error wrapping multiple validation
+// errors returned by ObservabilityConfig.ValidateAll() if the designated
+// constraints aren't met.
+type ObservabilityConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ObservabilityConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ObservabilityConfigMultiError) AllErrors() []error { return m }
+
+// ObservabilityConfigValidationError is the validation error returned by
+// ObservabilityConfig.Validate if the designated constraints aren't met.
+type ObservabilityConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ObservabilityConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ObservabilityConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ObservabilityConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ObservabilityConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ObservabilityConfigValidationError) ErrorName() string {
+	return "ObservabilityConfigValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ObservabilityConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sObservabilityConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ObservabilityConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ObservabilityConfigValidationError{}
+
 // Validate checks the field values on HighAvailability with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -1138,6 +1298,8 @@ func (m *HighAvailability) validate(all bool) error {
 	// no validation rules for AutoscaleMax
 
 	// no validation rules for ReplicaCount
+
+	// no validation rules for TargetCPUAverageUtilizationPercent
 
 	if all {
 		switch v := interface{}(m.GetResourceConfig()).(type) {
@@ -1169,11 +1331,11 @@ func (m *HighAvailability) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetDedicatedNodeLabel()).(type) {
+		switch v := interface{}(m.GetDedicatedNode()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, HighAvailabilityValidationError{
-					field:  "DedicatedNodeLabel",
+					field:  "DedicatedNode",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -1181,16 +1343,16 @@ func (m *HighAvailability) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, HighAvailabilityValidationError{
-					field:  "DedicatedNodeLabel",
+					field:  "DedicatedNode",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetDedicatedNodeLabel()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetDedicatedNode()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return HighAvailabilityValidationError{
-				field:  "DedicatedNodeLabel",
+				field:  "DedicatedNode",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1275,46 +1437,46 @@ var _ interface {
 	ErrorName() string
 } = HighAvailabilityValidationError{}
 
-// Validate checks the field values on DedicatedNodeLabel with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DedicatedNodeLabel) Validate() error {
+// Validate checks the field values on DedicatedNode with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *DedicatedNode) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on DedicatedNodeLabel with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DedicatedNodeLabelMultiError, or nil if none found.
-func (m *DedicatedNodeLabel) ValidateAll() error {
+// ValidateAll checks the field values on DedicatedNode with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in DedicatedNodeMultiError, or
+// nil if none found.
+func (m *DedicatedNode) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *DedicatedNodeLabel) validate(all bool) error {
+func (m *DedicatedNode) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
 
 	var errors []error
 
-	// no validation rules for Key
+	// no validation rules for Enabled
 
-	// no validation rules for Value
+	// no validation rules for NodeLabels
 
 	if len(errors) > 0 {
-		return DedicatedNodeLabelMultiError(errors)
+		return DedicatedNodeMultiError(errors)
 	}
 
 	return nil
 }
 
-// DedicatedNodeLabelMultiError is an error wrapping multiple validation errors
-// returned by DedicatedNodeLabel.ValidateAll() if the designated constraints
+// DedicatedNodeMultiError is an error wrapping multiple validation errors
+// returned by DedicatedNode.ValidateAll() if the designated constraints
 // aren't met.
-type DedicatedNodeLabelMultiError []error
+type DedicatedNodeMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m DedicatedNodeLabelMultiError) Error() string {
+func (m DedicatedNodeMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1323,11 +1485,11 @@ func (m DedicatedNodeLabelMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m DedicatedNodeLabelMultiError) AllErrors() []error { return m }
+func (m DedicatedNodeMultiError) AllErrors() []error { return m }
 
-// DedicatedNodeLabelValidationError is the validation error returned by
-// DedicatedNodeLabel.Validate if the designated constraints aren't met.
-type DedicatedNodeLabelValidationError struct {
+// DedicatedNodeValidationError is the validation error returned by
+// DedicatedNode.Validate if the designated constraints aren't met.
+type DedicatedNodeValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1335,24 +1497,22 @@ type DedicatedNodeLabelValidationError struct {
 }
 
 // Field function returns field value.
-func (e DedicatedNodeLabelValidationError) Field() string { return e.field }
+func (e DedicatedNodeValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e DedicatedNodeLabelValidationError) Reason() string { return e.reason }
+func (e DedicatedNodeValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e DedicatedNodeLabelValidationError) Cause() error { return e.cause }
+func (e DedicatedNodeValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e DedicatedNodeLabelValidationError) Key() bool { return e.key }
+func (e DedicatedNodeValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e DedicatedNodeLabelValidationError) ErrorName() string {
-	return "DedicatedNodeLabelValidationError"
-}
+func (e DedicatedNodeValidationError) ErrorName() string { return "DedicatedNodeValidationError" }
 
 // Error satisfies the builtin error interface
-func (e DedicatedNodeLabelValidationError) Error() string {
+func (e DedicatedNodeValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1364,14 +1524,14 @@ func (e DedicatedNodeLabelValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sDedicatedNodeLabel.%s: %s%s",
+		"invalid %sDedicatedNode.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = DedicatedNodeLabelValidationError{}
+var _ error = DedicatedNodeValidationError{}
 
 var _ interface {
 	Field() string
@@ -1379,7 +1539,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = DedicatedNodeLabelValidationError{}
+} = DedicatedNodeValidationError{}
 
 // Validate checks the field values on ResourceConfig with the rules defined in
 // the proto definition for this message. If any rules are violated, the first
@@ -1621,6 +1781,8 @@ func (m *TracingConfig) validate(all bool) error {
 
 	// no validation rules for Enabled
 
+	// no validation rules for TraceSamplingPercent
+
 	// no validation rules for Endpoint
 
 	// no validation rules for BkToken
@@ -1702,6 +1864,110 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = TracingConfigValidationError{}
+
+// Validate checks the field values on MetricsConfig with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *MetricsConfig) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on MetricsConfig with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in MetricsConfigMultiError, or
+// nil if none found.
+func (m *MetricsConfig) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *MetricsConfig) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ControlPlaneMetricsEnabled
+
+	// no validation rules for DataPlaneMetricsEnabled
+
+	if len(errors) > 0 {
+		return MetricsConfigMultiError(errors)
+	}
+
+	return nil
+}
+
+// MetricsConfigMultiError is an error wrapping multiple validation errors
+// returned by MetricsConfig.ValidateAll() if the designated constraints
+// aren't met.
+type MetricsConfigMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m MetricsConfigMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m MetricsConfigMultiError) AllErrors() []error { return m }
+
+// MetricsConfigValidationError is the validation error returned by
+// MetricsConfig.Validate if the designated constraints aren't met.
+type MetricsConfigValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e MetricsConfigValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e MetricsConfigValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e MetricsConfigValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e MetricsConfigValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e MetricsConfigValidationError) ErrorName() string { return "MetricsConfigValidationError" }
+
+// Error satisfies the builtin error interface
+func (e MetricsConfigValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sMetricsConfig.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = MetricsConfigValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = MetricsConfigValidationError{}
 
 // Validate checks the field values on InstallIstioResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -2309,15 +2575,11 @@ func (m *IstioListItem) validate(all bool) error {
 
 	// no validation rules for MeshName
 
-	// no validation rules for ProjectID
+	// no validation rules for Status
 
-	// no validation rules for ProjectCode
-
-	// no validation rules for Description
+	// no validation rules for StatusMessage
 
 	// no validation rules for ChartVersion
-
-	// no validation rules for Status
 
 	// no validation rules for CreateTime
 
@@ -2326,6 +2588,16 @@ func (m *IstioListItem) validate(all bool) error {
 	// no validation rules for CreateBy
 
 	// no validation rules for UpdateBy
+
+	// no validation rules for ProjectID
+
+	// no validation rules for ProjectCode
+
+	// no validation rules for Name
+
+	// no validation rules for Description
+
+	// no validation rules for Version
 
 	// no validation rules for ControlPlaneMode
 
@@ -2392,11 +2664,11 @@ func (m *IstioListItem) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetLogCollectorConfig()).(type) {
+		switch v := interface{}(m.GetObservabilityConfig()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, IstioListItemValidationError{
-					field:  "LogCollectorConfig",
+					field:  "ObservabilityConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -2404,45 +2676,16 @@ func (m *IstioListItem) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, IstioListItemValidationError{
-					field:  "LogCollectorConfig",
+					field:  "ObservabilityConfig",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetLogCollectorConfig()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetObservabilityConfig()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return IstioListItemValidationError{
-				field:  "LogCollectorConfig",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetTracingConfig()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "TracingConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IstioListItemValidationError{
-					field:  "TracingConfig",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetTracingConfig()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IstioListItemValidationError{
-				field:  "TracingConfig",
+				field:  "ObservabilityConfig",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

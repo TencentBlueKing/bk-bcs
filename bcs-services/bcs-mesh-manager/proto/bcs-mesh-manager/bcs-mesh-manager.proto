@@ -151,29 +151,36 @@ message InstallIstioRequest {
   repeated string primaryClusters = 8; // 主集群列表
   repeated string remoteClusters = 9;  // 远程集群列表
   bool differentNetwork = 10; // 网络是否一致：关乎是否默认安装egress gateway
-  ResourceConfig sidecarResourceConfig = 11;  // sidecar资源配置
-  HighAvailability highAvailability = 12;     // 高可用配置
-  LogCollectorConfig logCollectorConfig = 13; // 日志采集配置
-  TracingConfig tracingConfig = 14;           // tracing配置
+  ResourceConfig sidecarResourceConfig = 11; // sidecar资源配置
+  HighAvailability highAvailability = 12;    // 高可用配置
+  // 可观测性配置
+  ObservabilityConfig observabilityConfig = 13;
   map<string, FeatureConfig> featureConfigs =
       15; // 功能特性[跟随版本关联的特性]
 }
 
+// 可观测性配置
+message ObservabilityConfig {
+  MetricsConfig metricsConfig = 1;           // 指标采集配置
+  LogCollectorConfig logCollectorConfig = 2; // 日志采集配置
+  TracingConfig tracingConfig = 3;           // 全量路追踪配置
+}
+
 // 高可用配置，hpa，副本数设置等
 message HighAvailability {
-  bool autoscaleEnabled = 1;         // 是否开启hpa
-  int32 autoscaleMin = 2;            // hpa最小副本数
-  int32 autoscaleMax = 3;            // hpa最大副本数
-  int32 replicaCount = 4;            // 副本数
-  ResourceConfig resourceConfig = 5; // resource配置
-  DedicatedNodeLabel dedicatedNodeLabel =
-      6; // 专属节点（专用节点标签），默认会加上容忍
+  bool autoscaleEnabled = 1;                    // 是否开启hpa
+  int32 autoscaleMin = 2;                       // hpa最小副本数
+  int32 autoscaleMax = 3;                       // hpa最大副本数
+  int32 replicaCount = 4;                       // 副本数
+  int32 targetCPUAverageUtilizationPercent = 5; // 目标cpu平均使用率 0-100
+  ResourceConfig resourceConfig = 6;            // resource配置
+  DedicatedNode dedicatedNode = 7; // 专属节点（专用节点标签），默认会加上容忍
 }
 
 // 专属调度标签
-message DedicatedNodeLabel {
-  string key = 1;   // 标签key
-  string value = 2; // 标签value
+message DedicatedNode {
+  bool enabled = 1;                   // 是否启用
+  map<string, string> nodeLabels = 2; // 节点标签
 }
 
 // resource配置
@@ -193,9 +200,18 @@ message LogCollectorConfig {
 
 // tracing配置
 message TracingConfig {
-  bool enabled = 1;    // 是否启用
-  string endpoint = 2; // 上报地址
-  string bkToken = 3;  // 蓝鲸token
+  bool enabled = 1;               // 是否启用
+  int32 traceSamplingPercent = 2; // 采样率,百分比
+  string endpoint = 3;            // 上报地址
+  string bkToken = 4;             // 蓝鲸token
+}
+
+// 指标采集配置
+message MetricsConfig {
+  // 控制面指标
+  bool controlPlaneMetricsEnabled = 1;
+  // 数据面指标
+  bool dataPlaneMetricsEnabled = 2;
 }
 
 // 安装istio响应
@@ -263,37 +279,45 @@ message ListIstioResponse {
   ListIstioData data = 5;
 }
 
+// istio列表响应
 message ListIstioData {
   int32 total = 1;
   repeated IstioListItem items = 2;
 }
 
+// istio列表项
 message IstioListItem {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {title : "IstioListItem" description : "istio列表项"}
   };
 
-  string meshID = 1;
-  string meshName = 2;
-  string projectID = 3;
-  string projectCode = 4;
-  string description = 5;
-  string chartVersion = 6;
-  string status = 7;
-  int64 createTime = 8;
-  int64 updateTime = 9;
-  string createBy = 10;
-  string updateBy = 11;
-  string controlPlaneMode = 12;
-  string clusterMode = 13;
-  repeated string primaryClusters = 14;
-  repeated string remoteClusters = 15;
-  bool differentNetwork = 16;
-  ResourceConfig sidecarResourceConfig = 17;
-  HighAvailability highAvailability = 18;
-  LogCollectorConfig logCollectorConfig = 19;
-  TracingConfig tracingConfig = 20;
-  map<string, FeatureConfig> featureConfigs = 21;
+  string meshID = 1;        // meshID
+  string meshName = 2;      // mesh名称
+  string status = 3;        // 状态
+  string statusMessage = 4; // 状态消息
+  string chartVersion = 5;  // chart版本
+  int64 createTime = 6;     // 创建时间
+  int64 updateTime = 7;     // 更新时间
+  string createBy = 8;      // 创建者
+  string updateBy = 9;      // 更新者
+
+  /* 保持跟 InstallIstioRequest 一致 */
+  string projectID = 10;                // 项目ID
+  string projectCode = 11;              // 项目编码
+  string name = 12;                     // 名称
+  string description = 13;              // 描述
+  string version = 14;                  // 使用的版本
+  string controlPlaneMode = 15;         // 安装模式
+  string clusterMode = 16;              // 多集群集群模式
+  repeated string primaryClusters = 17; // 主集群列表
+  repeated string remoteClusters = 18;  // 远程集群列表
+  bool differentNetwork = 19; // 网络是否一致：关乎是否默认安装egress gateway
+  ResourceConfig sidecarResourceConfig = 20; // sidecar资源配置
+  HighAvailability highAvailability = 21;    // 高可用配置
+  // 可观测性配置
+  ObservabilityConfig observabilityConfig = 22;
+  map<string, FeatureConfig> featureConfigs =
+      23; // 功能特性[跟随版本关联的特性]
 }
 
 // 更新istio请求

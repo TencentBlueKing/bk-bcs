@@ -12,8 +12,43 @@
 
 package common
 
-// IstiodInstallArgs istiod安装参数
-type IstiodInstallArgs struct {
+import (
+	v1 "k8s.io/api/core/v1"
+
+	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
+)
+
+const (
+	// AccessLogFileStdout 访问日志文件
+	AccessLogFileStdout = "/dev/stdout"
+)
+
+// IstioInstallOption istio安装操作选项
+type IstioInstallOption struct {
+	ChartValuesPath string
+	ChartRepo       string
+
+	ProjectID             string
+	ProjectCode           string
+	Name                  string
+	Description           string
+	Version               string
+	ControlPlaneMode      string
+	ClusterMode           string
+	PrimaryClusters       []string
+	RemoteClusters        []string
+	SidecarResourceConfig *meshmanager.ResourceConfig
+	HighAvailability      *meshmanager.HighAvailability
+	ObservabilityConfig   *meshmanager.ObservabilityConfig
+	FeatureConfigs        map[string]*meshmanager.FeatureConfig
+
+	MeshID       string
+	NetworkID    string
+	ChartVersion string
+}
+
+// IstiodInstallValues istiod安装参数
+type IstiodInstallValues struct {
 	IstiodRemote *IstiodRemoteConfig       `yaml:"istiodRemote,omitempty"`
 	Pilot        *IstiodPilotConfig        `yaml:"pilot,omitempty"`
 	Telemetry    *IstiodTelemetryConfig    `yaml:"telemetry,omitempty"`
@@ -30,8 +65,21 @@ type IstiodRemoteConfig struct {
 
 // IstiodPilotConfig pilot配置
 type IstiodPilotConfig struct {
-	ConfigMap *bool             `yaml:"configMap,omitempty"`
-	Env       map[string]string `yaml:"env,omitempty"`
+	Resources        *v1.ResourceRequirements `yaml:"resources,omitempty"`
+	AutoscaleEnabled *bool                    `yaml:"autoscaleEnabled,omitempty"`
+	AutoscaleMin     *int32                   `yaml:"autoscaleMin,omitempty"`
+	AutoscaleMax     *int32                   `yaml:"autoscaleMax,omitempty"`
+	ReplicaCount     *int32                   `yaml:"replicaCount,omitempty"`
+	TraceSampling    *float64                 `yaml:"traceSampling,omitempty"`
+	ConfigMap        *bool                    `yaml:"configMap,omitempty"`
+	CPU              *HPACPUConfig            `yaml:"cpu,omitempty"`
+	Env              map[string]string        `yaml:"env,omitempty"`
+	NodeSelector     map[string]string        `yaml:"nodeSelector,omitempty"`
+}
+
+// HPACPUConfig HPA cpu配置
+type HPACPUConfig struct {
+	TargetAverageUtilization *int32 `yaml:"targetAverageUtilization,omitempty"`
 }
 
 // IstiodTelemetryConfig telemetry配置
@@ -52,7 +100,8 @@ type IstiodGlobalConfig struct {
 
 // IstioProxyConfig proxy配置
 type IstioProxyConfig struct {
-	ExcludeIPRanges *string `yaml:"excludeIPRanges,omitempty"`
+	ExcludeIPRanges *string                  `yaml:"excludeIPRanges,omitempty"`
+	Resources       *v1.ResourceRequirements `yaml:"resources,omitempty"`
 }
 
 // IstiodMultiClusterConfig multiCluster配置
@@ -64,6 +113,10 @@ type IstiodMultiClusterConfig struct {
 type IstiodMeshConfig struct {
 	OutboundTrafficPolicy *OutboundTrafficPolicy `yaml:"outboundTrafficPolicy,omitempty"`
 	DefaultConfig         *DefaultConfig         `yaml:"defaultConfig,omitempty"`
+	EnableTracing         *bool                  `yaml:"enableTracing,omitempty"`
+	AccessLogFile         *string                `yaml:"accessLogFile,omitempty"`
+	AccessLogFormat       *string                `yaml:"accessLogFormat,omitempty"`
+	AccessLogEncoding     *string                `yaml:"accessLogEncoding,omitempty"`
 }
 
 // OutboundTrafficPolicy 出站流量策略
@@ -75,6 +128,17 @@ type OutboundTrafficPolicy struct {
 type DefaultConfig struct {
 	HoldApplicationUntilProxyStarts *bool          `yaml:"holdApplicationUntilProxyStarts,omitempty"`
 	ProxyMetadata                   *ProxyMetadata `yaml:"proxyMetadata,omitempty"`
+	TracingConfig                   *TracingConfig `yaml:"tracingConfig,omitempty"`
+}
+
+// TracingConfig 追踪配置
+type TracingConfig struct {
+	Zipkin *ZipkinConfig `yaml:"zipkin,omitempty"`
+}
+
+// ZipkinConfig zipkin配置
+type ZipkinConfig struct {
+	Address *string `yaml:"address,omitempty"`
 }
 
 // ProxyMetadata proxy metadata

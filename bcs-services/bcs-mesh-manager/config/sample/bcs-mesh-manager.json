@@ -19,15 +19,14 @@
     "istio": {
         "chartRepo": "test",
         "chartValuesPath": "./config/sample/istio",
-        "istioVersions": [
-            {
+        "istioVersions":{ 
+           "1.20":{
                 "name": "istio 1.20",
-                "version": "1.20",
                 "chartVersion": "1.20-bcs.1",
                 "kubeVersion": ">1.18.0",
                 "enabled": true
             }
-        ],
+        },
         "featureConfigs": {
             "outboundTrafficPolicy": {
                 "name": "outboundTrafficPolicy",

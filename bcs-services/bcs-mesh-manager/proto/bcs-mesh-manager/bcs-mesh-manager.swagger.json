@@ -254,14 +254,17 @@
     }
   },
   "definitions": {
-    "meshmanagerDedicatedNodeLabel": {
+    "meshmanagerDedicatedNode": {
       "type": "object",
       "properties": {
-        "key": {
-          "type": "string"
+        "enabled": {
+          "type": "boolean"
         },
-        "value": {
-          "type": "string"
+        "nodeLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       },
       "title": "专属调度标签"
@@ -340,11 +343,15 @@
           "type": "integer",
           "format": "int32"
         },
+        "targetCPUAverageUtilizationPercent": {
+          "type": "integer",
+          "format": "int32"
+        },
         "resourceConfig": {
           "$ref": "#/definitions/meshmanagerResourceConfig"
         },
-        "dedicatedNodeLabel": {
-          "$ref": "#/definitions/meshmanagerDedicatedNodeLabel"
+        "dedicatedNode": {
+          "$ref": "#/definitions/meshmanagerDedicatedNode"
         }
       },
       "title": "高可用配置，hpa，副本数设置等"
@@ -394,11 +401,9 @@
         "highAvailability": {
           "$ref": "#/definitions/meshmanagerHighAvailability"
         },
-        "logCollectorConfig": {
-          "$ref": "#/definitions/meshmanagerLogCollectorConfig"
-        },
-        "tracingConfig": {
-          "$ref": "#/definitions/meshmanagerTracingConfig"
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "title": "可观测性配置"
         },
         "featureConfigs": {
           "type": "object",
@@ -458,19 +463,13 @@
         "meshName": {
           "type": "string"
         },
-        "projectID": {
+        "status": {
           "type": "string"
         },
-        "projectCode": {
-          "type": "string"
-        },
-        "description": {
+        "statusMessage": {
           "type": "string"
         },
         "chartVersion": {
-          "type": "string"
-        },
-        "status": {
           "type": "string"
         },
         "createTime": {
@@ -485,6 +484,22 @@
           "type": "string"
         },
         "updateBy": {
+          "type": "string"
+        },
+        "projectID": {
+          "type": "string",
+          "title": "保持跟 InstallIstioRequest 一致"
+        },
+        "projectCode": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "version": {
           "type": "string"
         },
         "controlPlaneMode": {
@@ -514,11 +529,9 @@
         "highAvailability": {
           "$ref": "#/definitions/meshmanagerHighAvailability"
         },
-        "logCollectorConfig": {
-          "$ref": "#/definitions/meshmanagerLogCollectorConfig"
-        },
-        "tracingConfig": {
-          "$ref": "#/definitions/meshmanagerTracingConfig"
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "title": "可观测性配置"
         },
         "featureConfigs": {
           "type": "object",
@@ -583,7 +596,8 @@
             "$ref": "#/definitions/meshmanagerIstioListItem"
           }
         }
-      }
+      },
+      "title": "istio列表响应"
     },
     "meshmanagerListIstioResponse": {
       "type": "object",
@@ -670,6 +684,35 @@
       },
       "title": "日志采集配置"
     },
+    "meshmanagerMetricsConfig": {
+      "type": "object",
+      "properties": {
+        "controlPlaneMetricsEnabled": {
+          "type": "boolean",
+          "title": "控制面指标"
+        },
+        "dataPlaneMetricsEnabled": {
+          "type": "boolean",
+          "title": "数据面指标"
+        }
+      },
+      "title": "指标采集配置"
+    },
+    "meshmanagerObservabilityConfig": {
+      "type": "object",
+      "properties": {
+        "metricsConfig": {
+          "$ref": "#/definitions/meshmanagerMetricsConfig"
+        },
+        "logCollectorConfig": {
+          "$ref": "#/definitions/meshmanagerLogCollectorConfig"
+        },
+        "tracingConfig": {
+          "$ref": "#/definitions/meshmanagerTracingConfig"
+        }
+      },
+      "title": "可观测性配置"
+    },
     "meshmanagerResourceConfig": {
       "type": "object",
       "properties": {
@@ -693,6 +736,10 @@
       "properties": {
         "enabled": {
           "type": "boolean"
+        },
+        "traceSamplingPercent": {
+          "type": "integer",
+          "format": "int32"
         },
         "endpoint": {
           "type": "string"
