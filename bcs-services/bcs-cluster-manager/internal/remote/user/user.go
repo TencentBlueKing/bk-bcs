@@ -141,18 +141,29 @@ func (um *UserManagerClient) getUserManagerServerPath(url string) (string, error
 	}
 
 	// get bcs-user-manager server from etcd registry
-	node, err := um.discovery.GetRandomServiceNode()
-	if err != nil {
-		blog.Errorf("module[%s] GetRandomServiceInstance failed: %v", um.opts.Module, err)
-		return "", err
+	var addr string
+	if discovery.UseServiceDiscovery() {
+		addr = fmt.Sprintf("%s:%d", discovery.UserManagerServiceName, discovery.ServiceHTTPPort)
+	} else {
+		if um.discovery == nil {
+			return "", fmt.Errorf("user manager module not enable discovery")
+		}
+
+		nodeServer, err := um.discovery.GetRandomServiceNode()
+		if err != nil {
+			blog.Errorf("module[%s] GetRandomServiceInstance failed: %v", um.opts.Module, err)
+			return "", err
+		}
+		addr = nodeServer.Address
 	}
-	blog.V(4).Infof("get random user-manager instance [%s] from etcd registry successful", node.Address)
+
+	blog.V(4).Infof("get random user-manager instance [%s] from etcd registry successful", addr)
 
 	if um.opts.IsVerifyTLS {
-		return fmt.Sprintf("https://%s/%s", node.Address, url), nil
+		return fmt.Sprintf("https://%s/%s", addr, url), nil
 	}
 
-	return fmt.Sprintf("http://%s/%s", node.Address, url), nil
+	return fmt.Sprintf("http://%s/%s", addr, url), nil
 }
 
 // CreateUserToken create user token and return token
