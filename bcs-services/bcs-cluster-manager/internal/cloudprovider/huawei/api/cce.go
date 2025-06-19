@@ -685,4 +685,45 @@ func (cli *CceClient) CleanNodePoolNodes(clusterId string, nodeIds []string) err
 	return nil
 }
 
+// UpdateNodePoolLimitcore 更新节点池的limitcore
+func (cli *CceClient) UpdateNodePoolLimitcore(clusterId, nodePoolId string) error {
+	if cli == nil {
+		return cloudprovider.ErrServerIsNil
+	}
+
+	pName := "containerd"
+	cName := "limitcore"
+	var cValue interface{} = "infinity"
+
+	_, err := cli.cce.UpdateNodePoolConfiguration(&model.UpdateNodePoolConfigurationRequest{
+		ClusterId:  clusterId,
+		NodepoolId: nodePoolId,
+		Body: &model.UpdateClusterConfigurationsBody{
+			ApiVersion: "v3",
+			Kind:       "Configuration",
+			Metadata: &model.ConfigurationMetadata{
+				Name: "configuration",
+			},
+			Spec: &model.ClusterConfigurationsSpec{
+				Packages: []model.ClusterConfigurationsSpecPackages{
+					{
+						Name: &pName,
+						Configurations: &[]model.ConfigurationItem{
+							{
+								Name:  &cName,
+								Value: &cValue,
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // 节点池配置管理实现 实现组件参数管理
