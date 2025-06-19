@@ -3624,6 +3624,11 @@ message CloudConfigInfo {
       title: "maxNodeCount",
       description: "cloud最大节点数"
     }];
+  repeated string whiteImageOsName = 11 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title: "whiteImageOsName",
+      description: "镜像白名单"
+    }];
 }
 
 // CloudNetworkInfo storage for cloud network info

@@ -23,18 +23,19 @@ import (
 // MeshIstio represents a service mesh istio entity in database
 type MeshIstio struct {
 	// Basic information
-	MeshID       string `bson:"meshID" json:"meshID" validate:"required"`
-	MeshName     string `bson:"meshName" json:"meshName" validate:"required"`
-	NetworkID    string `bson:"networkID" json:"networkID" validate:"required"`
-	ProjectID    string `bson:"projectID" json:"projectID" validate:"required"`
-	ProjectCode  string `bson:"projectCode" json:"projectCode" validate:"required"`
-	Description  string `bson:"description" json:"description"`
-	ChartVersion string `bson:"chartVersion" json:"chartVersion" validate:"required"`
-	Status       string `bson:"status" json:"status" validate:"required"`
-	CreateTime   int64  `bson:"createTime" json:"createTime"`
-	UpdateTime   int64  `bson:"updateTime" json:"updateTime"`
-	CreateBy     string `bson:"createBy" json:"createBy"`
-	UpdateBy     string `bson:"updateBy" json:"updateBy"`
+	MeshID        string `bson:"meshID" json:"meshID" validate:"required"`
+	MeshName      string `bson:"meshName" json:"meshName" validate:"required"`
+	NetworkID     string `bson:"networkID" json:"networkID" validate:"required"`
+	ProjectID     string `bson:"projectID" json:"projectID" validate:"required"`
+	ProjectCode   string `bson:"projectCode" json:"projectCode" validate:"required"`
+	Description   string `bson:"description" json:"description"`
+	ChartVersion  string `bson:"chartVersion" json:"chartVersion" validate:"required"`
+	Status        string `bson:"status" json:"status" validate:"required"`
+	StatusMessage string `bson:"statusMessage" json:"statusMessage"`
+	CreateTime    int64  `bson:"createTime" json:"createTime"`
+	UpdateTime    int64  `bson:"updateTime" json:"updateTime"`
+	CreateBy      string `bson:"createBy" json:"createBy"`
+	UpdateBy      string `bson:"updateBy" json:"updateBy"`
 
 	// Mesh configuration
 	ControlPlaneMode string   `bson:"controlPlaneMode" json:"controlPlaneMode"`
@@ -47,10 +48,9 @@ type MeshIstio struct {
 	FeatureConfigs map[string]*FeatureConfig `bson:"featureConfigs" json:"featureConfigs"`
 
 	// Resource and observability configurations
-	SidecarResourceConfig *ResourceConfig     `bson:"sidecarResourceConfig" json:"sidecarResourceConfig"`
-	HighAvailability      *HighAvailability   `bson:"highAvailability" json:"highAvailability"`
-	LogCollectorConfig    *LogCollectorConfig `bson:"logCollectorConfig" json:"logCollectorConfig"`
-	TracingConfig         *TracingConfig      `bson:"tracingConfig" json:"tracingConfig"`
+	SidecarResourceConfig *ResourceConfig      `bson:"sidecarResourceConfig" json:"sidecarResourceConfig"`
+	HighAvailability      *HighAvailability    `bson:"highAvailability" json:"highAvailability"`
+	ObservabilityConfig   *ObservabilityConfig `bson:"observabilityConfig" json:"observabilityConfig"`
 }
 
 // ResourceConfig represents resource configuration for sidecar
@@ -61,20 +61,36 @@ type ResourceConfig struct {
 	MemoryLimit   string `bson:"memoryLimit" json:"memoryLimit"`
 }
 
-// DedicatedNodeLabel represents dedicated node label configuration
-type DedicatedNodeLabel struct {
-	Key   string `bson:"key" json:"key"`
-	Value string `bson:"value" json:"value"`
+// DedicatedNode represents dedicated node configuration
+type DedicatedNode struct {
+	Enabled    bool              `bson:"enabled" json:"enabled"`
+	NodeLabels map[string]string `bson:"nodeLabels" json:"nodeLabels"`
 }
 
 // HighAvailability represents high availability configuration
 type HighAvailability struct {
-	AutoscaleEnabled   bool                `bson:"autoscaleEnabled" json:"autoscaleEnabled"`
-	AutoscaleMin       int32               `bson:"autoscaleMin" json:"autoscaleMin"`
-	AutoscaleMax       int32               `bson:"autoscaleMax" json:"autoscaleMax"`
-	ReplicaCount       int32               `bson:"replicaCount" json:"replicaCount"`
-	ResourceConfig     *ResourceConfig     `bson:"resourceConfig" json:"resourceConfig"`
-	DedicatedNodeLabel *DedicatedNodeLabel `bson:"dedicatedNodeLabel" json:"dedicatedNodeLabel"`
+	AutoscaleEnabled                   bool            `bson:"autoscaleEnabled" json:"autoscaleEnabled"`
+	AutoscaleMin                       int32           `bson:"autoscaleMin" json:"autoscaleMin"`
+	AutoscaleMax                       int32           `bson:"autoscaleMax" json:"autoscaleMax"`
+	ReplicaCount                       int32           `bson:"replicaCount" json:"replicaCount"`
+	TargetCPUAverageUtilizationPercent int32           `bson:"targetCPUAverageUtilizationPercent" json:"targetCPUAverageUtilizationPercent"` // nolint:lll
+	ResourceConfig                     *ResourceConfig `bson:"resourceConfig" json:"resourceConfig"`
+	DedicatedNode                      *DedicatedNode  `bson:"dedicatedNode" json:"dedicatedNode"`
+}
+
+// ObservabilityConfig represents observability configuration
+type ObservabilityConfig struct {
+	MetricsConfig        *MetricsConfig      `bson:"metricsConfig" json:"metricsConfig"`
+	LogCollectorConfig   *LogCollectorConfig `bson:"logCollectorConfig" json:"logCollectorConfig"`
+	TracingConfig        *TracingConfig      `bson:"tracingConfig" json:"tracingConfig"`
+	TraceSamplingPercent int32               `bson:"traceSamplingPercent" json:"traceSamplingPercent"`
+}
+
+// MetricsConfig represents metrics configuration
+type MetricsConfig struct {
+	Enabled                    bool `bson:"enabled" json:"enabled"`
+	ControlPlaneMetricsEnabled bool `bson:"controlPlaneMetricsEnabled" json:"controlPlaneMetricsEnabled"`
+	DataPlaneMetricsEnabled    bool `bson:"dataPlaneMetricsEnabled" json:"dataPlaneMetricsEnabled"`
 }
 
 // LogCollectorConfig represents log collector configuration
@@ -86,9 +102,10 @@ type LogCollectorConfig struct {
 
 // TracingConfig represents tracing configuration
 type TracingConfig struct {
-	Enabled  bool   `bson:"enabled" json:"enabled"`
-	Endpoint string `bson:"endpoint" json:"endpoint"`
-	BkToken  string `bson:"bkToken" json:"bkToken"`
+	Enabled              bool   `bson:"enabled" json:"enabled"`
+	Endpoint             string `bson:"endpoint" json:"endpoint"`
+	BkToken              string `bson:"bkToken" json:"bkToken"`
+	TraceSamplingPercent int32  `bson:"traceSamplingPercent" json:"traceSamplingPercent"`
 }
 
 // FeatureConfig represents a feature configuration
@@ -113,8 +130,7 @@ func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
 	// 转换配置相关字段
 	proto.SidecarResourceConfig = m.transferSidecarResourceConfig()
 	proto.HighAvailability = m.transferHighAvailability()
-	proto.LogCollectorConfig = m.transferLogCollectorConfig()
-	proto.TracingConfig = m.transferTracingConfig()
+	proto.ObservabilityConfig = m.transferObservabilityConfig()
 	proto.FeatureConfigs = m.transferFeatureConfigs()
 
 	return proto
@@ -130,6 +146,7 @@ func (m *MeshIstio) transferBasicFields() *meshmanager.IstioListItem {
 		Description:      m.Description,
 		ChartVersion:     m.ChartVersion,
 		Status:           m.Status,
+		StatusMessage:    m.StatusMessage,
 		CreateTime:       m.CreateTime,
 		UpdateTime:       m.UpdateTime,
 		CreateBy:         m.CreateBy,
@@ -182,10 +199,11 @@ func (m *MeshIstio) transferHighAvailability() *meshmanager.HighAvailability {
 	}
 
 	protoHighAvailability := &meshmanager.HighAvailability{
-		AutoscaleEnabled: m.HighAvailability.AutoscaleEnabled,
-		AutoscaleMin:     m.HighAvailability.AutoscaleMin,
-		AutoscaleMax:     m.HighAvailability.AutoscaleMax,
-		ReplicaCount:     m.HighAvailability.ReplicaCount,
+		AutoscaleEnabled:                   m.HighAvailability.AutoscaleEnabled,
+		AutoscaleMin:                       m.HighAvailability.AutoscaleMin,
+		AutoscaleMax:                       m.HighAvailability.AutoscaleMax,
+		ReplicaCount:                       m.HighAvailability.ReplicaCount,
+		TargetCPUAverageUtilizationPercent: m.HighAvailability.TargetCPUAverageUtilizationPercent,
 	}
 
 	if m.HighAvailability.ResourceConfig != nil {
@@ -197,41 +215,68 @@ func (m *MeshIstio) transferHighAvailability() *meshmanager.HighAvailability {
 		}
 	}
 
-	if m.HighAvailability.DedicatedNodeLabel != nil {
-		protoHighAvailability.DedicatedNodeLabel = &meshmanager.DedicatedNodeLabel{
-			Key:   m.HighAvailability.DedicatedNodeLabel.Key,
-			Value: m.HighAvailability.DedicatedNodeLabel.Value,
+	if m.HighAvailability.DedicatedNode != nil {
+		protoHighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
+			Enabled:    m.HighAvailability.DedicatedNode.Enabled,
+			NodeLabels: m.HighAvailability.DedicatedNode.NodeLabels,
 		}
 	}
 
 	return protoHighAvailability
 }
 
+func (m *MeshIstio) transferObservabilityConfig() *meshmanager.ObservabilityConfig {
+	if m.ObservabilityConfig == nil {
+		return nil
+	}
+
+	protoObservabilityConfig := &meshmanager.ObservabilityConfig{
+		MetricsConfig:      m.transferMetricsConfig(),
+		LogCollectorConfig: m.transferLogCollectorConfig(),
+		TracingConfig:      m.transferTracingConfig(),
+	}
+
+	return protoObservabilityConfig
+}
+
+func (m *MeshIstio) transferMetricsConfig() *meshmanager.MetricsConfig {
+	if m.ObservabilityConfig == nil || m.ObservabilityConfig.MetricsConfig == nil {
+		return nil
+	}
+
+	return &meshmanager.MetricsConfig{
+		ControlPlaneMetricsEnabled: m.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled,
+		DataPlaneMetricsEnabled:    m.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled,
+	}
+}
+
 // transferLogCollectorConfig 转换日志收集配置
 func (m *MeshIstio) transferLogCollectorConfig() *meshmanager.LogCollectorConfig {
-	if m.LogCollectorConfig == nil {
+	if m.ObservabilityConfig == nil || m.ObservabilityConfig.LogCollectorConfig == nil {
 		return nil
 	}
 	return &meshmanager.LogCollectorConfig{
-		Enabled:           m.LogCollectorConfig.Enabled,
-		AccessLogEncoding: m.LogCollectorConfig.AccessLogEncoding,
-		AccessLogFormat:   m.LogCollectorConfig.AccessLogFormat,
+		Enabled:           m.ObservabilityConfig.LogCollectorConfig.Enabled,
+		AccessLogEncoding: m.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding,
+		AccessLogFormat:   m.ObservabilityConfig.LogCollectorConfig.AccessLogFormat,
 	}
 }
 
 // transferTracingConfig 转换链路追踪配置
 func (m *MeshIstio) transferTracingConfig() *meshmanager.TracingConfig {
-	if m.TracingConfig == nil {
+	if m.ObservabilityConfig == nil || m.ObservabilityConfig.TracingConfig == nil {
 		return nil
 	}
 	return &meshmanager.TracingConfig{
-		Enabled:  m.TracingConfig.Enabled,
-		Endpoint: m.TracingConfig.Endpoint,
-		BkToken:  m.TracingConfig.BkToken,
+		Enabled:              m.ObservabilityConfig.TracingConfig.Enabled,
+		Endpoint:             m.ObservabilityConfig.TracingConfig.Endpoint,
+		BkToken:              m.ObservabilityConfig.TracingConfig.BkToken,
+		TraceSamplingPercent: m.ObservabilityConfig.TraceSamplingPercent,
 	}
 }
 
 // TransferFromProto converts InstallIstioRequest to MeshIstio entity
+// nolint:funlen
 func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 	// 转换基本字段
 	m.MeshName = req.Name
@@ -262,10 +307,11 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 	// 转换高可用配置
 	if req.HighAvailability != nil {
 		m.HighAvailability = &HighAvailability{
-			AutoscaleEnabled: req.HighAvailability.AutoscaleEnabled,
-			AutoscaleMin:     req.HighAvailability.AutoscaleMin,
-			AutoscaleMax:     req.HighAvailability.AutoscaleMax,
-			ReplicaCount:     req.HighAvailability.ReplicaCount,
+			AutoscaleEnabled:                   req.HighAvailability.AutoscaleEnabled,
+			AutoscaleMin:                       req.HighAvailability.AutoscaleMin,
+			AutoscaleMax:                       req.HighAvailability.AutoscaleMax,
+			ReplicaCount:                       req.HighAvailability.ReplicaCount,
+			TargetCPUAverageUtilizationPercent: req.HighAvailability.TargetCPUAverageUtilizationPercent,
 		}
 
 		if req.HighAvailability.ResourceConfig != nil {
@@ -277,29 +323,34 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 			}
 		}
 
-		if req.HighAvailability.DedicatedNodeLabel != nil {
-			m.HighAvailability.DedicatedNodeLabel = &DedicatedNodeLabel{
-				Key:   req.HighAvailability.DedicatedNodeLabel.Key,
-				Value: req.HighAvailability.DedicatedNodeLabel.Value,
+		if req.HighAvailability.DedicatedNode != nil {
+			m.HighAvailability.DedicatedNode = &DedicatedNode{
+				Enabled:    req.HighAvailability.DedicatedNode.Enabled,
+				NodeLabels: req.HighAvailability.DedicatedNode.NodeLabels,
 			}
+
 		}
 	}
 
 	// 转换日志收集配置
-	if req.LogCollectorConfig != nil {
-		m.LogCollectorConfig = &LogCollectorConfig{
-			Enabled:           req.LogCollectorConfig.Enabled,
-			AccessLogEncoding: req.LogCollectorConfig.AccessLogEncoding,
-			AccessLogFormat:   req.LogCollectorConfig.AccessLogFormat,
+	if m.ObservabilityConfig == nil {
+		m.ObservabilityConfig = &ObservabilityConfig{}
+	}
+	if req.ObservabilityConfig != nil && req.ObservabilityConfig.LogCollectorConfig != nil {
+		m.ObservabilityConfig.LogCollectorConfig = &LogCollectorConfig{
+			Enabled:           req.ObservabilityConfig.LogCollectorConfig.Enabled,
+			AccessLogEncoding: req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding,
+			AccessLogFormat:   req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat,
 		}
 	}
 
 	// 转换链路追踪配置
-	if req.TracingConfig != nil {
-		m.TracingConfig = &TracingConfig{
-			Enabled:  req.TracingConfig.Enabled,
-			Endpoint: req.TracingConfig.Endpoint,
-			BkToken:  req.TracingConfig.BkToken,
+	if req.ObservabilityConfig != nil && req.ObservabilityConfig.TracingConfig != nil {
+		m.ObservabilityConfig.TracingConfig = &TracingConfig{
+			Enabled:              req.ObservabilityConfig.TracingConfig.Enabled,
+			Endpoint:             req.ObservabilityConfig.TracingConfig.Endpoint,
+			BkToken:              req.ObservabilityConfig.TracingConfig.BkToken,
+			TraceSamplingPercent: req.ObservabilityConfig.TracingConfig.TraceSamplingPercent,
 		}
 	}
 
@@ -381,10 +432,11 @@ func (m *MeshIstio) updateResourceConfigs(req *meshmanager.UpdateIstioRequest, u
 // convertHighAvailability converts proto HighAvailability to entity
 func (m *MeshIstio) convertHighAvailability(ha *meshmanager.HighAvailability) *HighAvailability {
 	highAvailability := &HighAvailability{
-		AutoscaleEnabled: ha.AutoscaleEnabled,
-		AutoscaleMin:     ha.AutoscaleMin,
-		AutoscaleMax:     ha.AutoscaleMax,
-		ReplicaCount:     ha.ReplicaCount,
+		AutoscaleEnabled:                   ha.AutoscaleEnabled,
+		AutoscaleMin:                       ha.AutoscaleMin,
+		AutoscaleMax:                       ha.AutoscaleMax,
+		ReplicaCount:                       ha.ReplicaCount,
+		TargetCPUAverageUtilizationPercent: ha.TargetCPUAverageUtilizationPercent,
 	}
 
 	if ha.ResourceConfig != nil {
@@ -396,10 +448,10 @@ func (m *MeshIstio) convertHighAvailability(ha *meshmanager.HighAvailability) *H
 		}
 	}
 
-	if ha.DedicatedNodeLabel != nil {
-		highAvailability.DedicatedNodeLabel = &DedicatedNodeLabel{
-			Key:   ha.DedicatedNodeLabel.Key,
-			Value: ha.DedicatedNodeLabel.Value,
+	if ha.DedicatedNode != nil {
+		highAvailability.DedicatedNode = &DedicatedNode{
+			Enabled:    ha.DedicatedNode.Enabled,
+			NodeLabels: ha.DedicatedNode.NodeLabels,
 		}
 	}
 

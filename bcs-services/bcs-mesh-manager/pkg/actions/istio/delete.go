@@ -20,7 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s/istio"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
@@ -115,20 +115,19 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 	allClusters = append(allClusters, meshIstio.RemoteClusters...)
 
 	for _, clusterID := range allClusters {
-		var clusterResources []string
-		clusterResources, err = istio.GetIstioResources(ctx, clusterID)
+		exists, err := k8s.CheckIstioResourceExists(ctx, clusterID)
 		if err != nil {
 			blog.Errorf("check istio resources failed, meshID: %s, clusterID: %s, err: %s",
 				d.req.MeshID, clusterID, err)
 			return nil, common.NewCodeMessageError(common.InnerErrorCode, "check istio resources failed", err)
 		}
 
-		if len(clusterResources) > 0 {
-			blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s, resources: %v",
-				d.req.MeshID, clusterID, clusterResources)
+		if exists {
+			blog.Errorf("cluster still has istio resources, meshID: %s, clusterID: %s",
+				d.req.MeshID, clusterID)
 			return nil, common.NewCodeMessageError(
 				common.InnerErrorCode,
-				fmt.Sprintf("cluster still %s has istio resources: %v", clusterID, clusterResources),
+				fmt.Sprintf("cluster %s still has istio resources", clusterID),
 				nil,
 			)
 		}

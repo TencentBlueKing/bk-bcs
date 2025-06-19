@@ -16,6 +16,7 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -24,6 +25,7 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	aggregatorclientset "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 )
 
 var (
@@ -36,6 +38,15 @@ func InitClient(endpoint, token string) error {
 	bcsEndpoint = endpoint
 	bcsToken = token
 	return nil
+}
+
+// GetConfig 获取k8s config
+func GetConfig(clusterID string) (*rest.Config, error) {
+	host := fmt.Sprintf("%s/clusters/%s", bcsEndpoint, clusterID)
+	return &rest.Config{
+		Host:        host,
+		BearerToken: bcsToken,
+	}, nil
 }
 
 // GetClient 获取k8s client
@@ -84,6 +95,45 @@ func CreateNamespace(ctx context.Context, clusterID, namespace string) error {
 		},
 	}, metav1.CreateOptions{})
 	return err
+}
+
+// GetClusterVersion 获取集群版本
+func GetClusterVersion(ctx context.Context, clusterID string) (string, error) {
+	client, err := GetClient(clusterID)
+	if err != nil {
+		return "", err
+	}
+
+	version, err := client.Discovery().ServerVersion()
+	if err != nil {
+		return "", err
+	}
+
+	return version.String(), nil
+}
+
+// CheckIstioInstalled 检查k8s集群是否安装了istio
+func CheckIstioInstalled(ctx context.Context, clusterID string) (bool, error) {
+	// 检查apiservices
+	config := &rest.Config{
+		Host:        fmt.Sprintf("%s/clusters/%s", bcsEndpoint, clusterID),
+		BearerToken: bcsToken,
+	}
+	aggregatorClient, err := aggregatorclientset.NewForConfig(config)
+	if err != nil {
+		return false, err
+	}
+	apiservices, err := aggregatorClient.ApiregistrationV1().APIServices().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return false, err
+	}
+	// 包含"istio.io"
+	for _, apiservice := range apiservices.Items {
+		if strings.Contains(apiservice.Name, "istio.io") {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // GetDynamicClient returns a dynamic client for the given cluster

@@ -17,14 +17,28 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 )
 
-// IsVersionSupported 判断当前 istioVersion 是否满足 supportVersion 区间
-func IsVersionSupported(istioVersion, supportVersion string) bool {
+// IsVersionSupported 判断当前 clusterVersion 是否满足 supportVersion 区间
+func IsVersionSupported(clusterVersion, supportVersion string) bool {
 	if supportVersion == "" {
 		return true
 	}
-	v, err := semver.NewVersion(istioVersion)
+	// 去除 '-' 后的所有内容
+	if idx := len(clusterVersion); idx > 0 {
+		if dash := stringIndex(clusterVersion, "-"); dash >= 0 {
+			clusterVersion = clusterVersion[:dash]
+		}
+	}
+	// 去除前缀 'v'，clusterVersion 和 supportVersion 都去除前缀 'v'
+	if len(clusterVersion) > 0 && clusterVersion[0] == 'v' {
+		clusterVersion = clusterVersion[1:]
+	}
+	if len(supportVersion) > 0 && supportVersion[0] == 'v' {
+		supportVersion = supportVersion[1:]
+	}
+
+	v, err := semver.NewVersion(clusterVersion)
 	if err != nil {
-		blog.Errorf("failed to parse istio version %s, err %s", istioVersion, err.Error())
+		blog.Errorf("failed to parse cluster version %s, err %s", clusterVersion, err.Error())
 		return false
 	}
 	c, err := semver.NewConstraint(supportVersion)
@@ -33,4 +47,14 @@ func IsVersionSupported(istioVersion, supportVersion string) bool {
 		return false
 	}
 	return c.Check(v)
+}
+
+// stringIndex returns the index of the first instance of substr in s, or -1 if substr is not present in s.
+func stringIndex(s, substr string) int {
+	for i := 0; i+len(substr) <= len(s); i++ {
+		if s[i:i+len(substr)] == substr {
+			return i
+		}
+	}
+	return -1
 }

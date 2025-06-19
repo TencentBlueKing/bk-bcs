@@ -75,15 +75,15 @@ func (m *MeshManager) ListIstioVersion(
 	}
 	// 输出版本
 	istioVersions := []*meshmanager.IstioVersion{}
-	for _, version := range istioConfig.IstioVersions {
-		if !version.Enabled {
+	for version, istioVersionConfig := range istioConfig.IstioVersions {
+		if !istioVersionConfig.Enabled {
 			continue
 		}
 		istioVersions = append(istioVersions, &meshmanager.IstioVersion{
-			Name:         version.Name,
-			Version:      version.Version,
-			ChartVersion: version.ChartVersion,
-			KubeVersion:  version.KubeVersion,
+			Name:         istioVersionConfig.Name,
+			Version:      version,
+			ChartVersion: istioVersionConfig.ChartVersion,
+			KubeVersion:  istioVersionConfig.KubeVersion,
 		})
 	}
 	resp.Data = &meshmanager.IstioVersionAndFeatures{

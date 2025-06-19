@@ -14,6 +14,7 @@ package utils
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -92,16 +93,18 @@ func TestGenIstiodValues(t *testing.T) {
 			Value: "REGISTRY_ONLY",
 		},
 	}
+	opt := &common.IstioInstallOption{
+		ChartValuesPath: dir,
+		ChartVersion:    "1.24",
+		PrimaryClusters: []string{"primary-cluster"},
+		MeshID:          "mesh-123",
+		NetworkID:       "net-456",
+		FeatureConfigs:  featureConfigs,
+	}
 	result, err := GenIstiodValues(
-		dir,
 		common.IstioInstallModePrimary,
-		"1.24",
-		"primary-cluster",
 		"",
-		"test-cluster",
-		"mesh-123",
-		"net-456",
-		featureConfigs,
+		opt,
 	)
 	t.Logf("result: %s", result)
 	if err != nil {
@@ -113,4 +116,64 @@ func TestGenIstiodValues(t *testing.T) {
 	if !strings.Contains(result, "REGISTRY_ONLY") {
 		t.Errorf("feature config not merged: %s", result)
 	}
+}
+
+func TestGetConfigChartValues(t *testing.T) {
+	dir := t.TempDir()
+	component := "base"
+	chartVersion := "1.18-bcs.2"
+	majorMinor := "1.18"
+	filename := component + "-values.yaml"
+
+	// 1. 精确版本匹配
+	verDir := filepath.Join(dir, chartVersion)
+	os.MkdirAll(verDir, 0755)
+	verFile := filepath.Join(verDir, filename)
+	os.WriteFile(verFile, []byte("exact: true\n"), 0644)
+
+	// 2. 主版本号匹配
+	majorDir := filepath.Join(dir, majorMinor)
+	os.MkdirAll(majorDir, 0755)
+	majorFile := filepath.Join(majorDir, filename)
+	os.WriteFile(majorFile, []byte("major: true\n"), 0644)
+
+	t.Run("exact match", func(t *testing.T) {
+		val, err := GetConfigChartValues(dir, component, chartVersion)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if val != "exact: true\n" {
+			t.Errorf("expected exact match, got: %q", val)
+		}
+	})
+
+	t.Run("major.minor match", func(t *testing.T) {
+		val, err := GetConfigChartValues(dir, component, "1.18-bcs.3")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if val != "major: true\n" {
+			t.Errorf("expected major.minor match, got: %q", val)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		val, err := GetConfigChartValues(dir, component, "2.0.0")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if val != "" {
+			t.Errorf("expected empty string for not found, got: %q", val)
+		}
+	})
+
+	t.Run("empty path", func(t *testing.T) {
+		val, err := GetConfigChartValues("", component, chartVersion)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if val != "" {
+			t.Errorf("expected empty string for empty path, got: %q", val)
+		}
+	})
 }

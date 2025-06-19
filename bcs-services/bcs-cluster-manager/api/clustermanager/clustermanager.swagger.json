@@ -8676,6 +8676,14 @@
           "format": "int64",
           "description": "cloud最大节点数",
           "title": "maxNodeCount"
+        },
+        "whiteImageOsName": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "镜像白名单",
+          "title": "whiteImageOsName"
         }
       },
       "description": "用于记录云公共配置信息",

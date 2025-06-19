@@ -109,6 +109,7 @@ func (i *IstioUninstallAction) Done(err error) {
 	if err != nil {
 		blog.Errorf("istio uninstall operation failed for mesh %s, err: %s", i.MeshID, err)
 		m[entity.FieldKeyStatus] = common.IstioStatusUninstallingFailed
+		m[entity.FieldKeyStatusMessage] = err.Error()
 	} else {
 		m[entity.FieldKeyStatus] = common.IstioStatusUninstalled
 	}

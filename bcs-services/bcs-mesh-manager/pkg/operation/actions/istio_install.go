@@ -29,47 +29,22 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
-	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
-
-// IstioInstallOption istio安装操作选项
-type IstioInstallOption struct {
-	Model store.MeshManagerModel
-
-	ChartValuesPath string
-	ChartRepo       string
-
-	ProjectID             string
-	ProjectCode           string
-	Name                  string
-	Description           string
-	Version               string
-	ControlPlaneMode      string
-	ClusterMode           string
-	PrimaryClusters       []string
-	RemoteClusters        []string
-	SidecarResourceConfig *meshmanager.ResourceConfig
-	HighAvailability      *meshmanager.HighAvailability
-	LogCollectorConfig    *meshmanager.LogCollectorConfig
-	TracingConfig         *meshmanager.TracingConfig
-	FeatureConfigs        map[string]*meshmanager.FeatureConfig
-
-	MeshID       string
-	NetworkID    string
-	ChartVersion string
-}
 
 // IstioInstallAction istio安装操作
 type IstioInstallAction struct {
-	*IstioInstallOption
+	model store.MeshManagerModel
+
+	*common.IstioInstallOption
 }
 
 var _ operation.Operation = &IstioInstallAction{}
 
 // NewIstioInstallAction 创建istio安装操作
-func NewIstioInstallAction(opt *IstioInstallOption) *IstioInstallAction {
+func NewIstioInstallAction(opt *common.IstioInstallOption, model store.MeshManagerModel) *IstioInstallAction {
 	return &IstioInstallAction{
 		IstioInstallOption: opt,
+		model:              model,
 	}
 }
 
@@ -106,19 +81,19 @@ func (i *IstioInstallAction) Validate() error {
 
 // Prepare 准备阶段
 func (i *IstioInstallAction) Prepare(ctx context.Context) error {
-	blog.Infof("prepare istio install for mesh %s", i.MeshID)
+	blog.Infof("[%s]prepare istio install", i.MeshID)
 	// 这里可以做一些准备工作
 	return nil
 }
 
 // Execute 执行安装
 func (i *IstioInstallAction) Execute(ctx context.Context) error {
-	blog.Infof("execute istio install for mesh %s", i.MeshID)
+	blog.Infof("[%s]execute istio install", i.MeshID)
 
 	// 安装主集群中的istio
 	for _, cluster := range i.PrimaryClusters {
 		if err := i.installIstioForPrimary(ctx, i.ChartVersion, cluster); err != nil {
-			blog.Errorf("install istio for primary cluster %s failed, err: %s", cluster, err)
+			blog.Errorf("[%s]install istio for primary cluster %s failed, err: %s", i.MeshID, cluster, err)
 			return fmt.Errorf("install istio for primary cluster %s failed: %s", cluster, err)
 		}
 	}
@@ -127,7 +102,7 @@ func (i *IstioInstallAction) Execute(ctx context.Context) error {
 	// 1、主集群中先安装egress gateway，获取到clb
 	// 2、远程集群中安装istio，使用主集群的clb
 
-	blog.Infof("istio install completed for mesh %s", i.MeshID)
+	blog.Infof("[%s]istio install completed", i.MeshID)
 	return nil
 }
 
@@ -135,15 +110,16 @@ func (i *IstioInstallAction) Execute(ctx context.Context) error {
 func (i *IstioInstallAction) Done(err error) {
 	m := make(entity.M)
 	if err != nil {
-		blog.Errorf("istio install failed for mesh %s, err: %s", i.MeshID, err)
+		blog.Errorf("[%s]istio install failed, err: %s", i.MeshID, err)
 		m[entity.FieldKeyStatus] = common.IstioStatusFailed
+		m[entity.FieldKeyStatusMessage] = err.Error()
 	} else {
-		blog.Infof("istio install success for mesh %s", i.MeshID)
+		blog.Infof("[%s]istio install success", i.MeshID)
 		m[entity.FieldKeyStatus] = common.IstioStatusRunning
 	}
-	updateErr := i.Model.Update(context.TODO(), i.MeshID, m)
+	updateErr := i.model.Update(context.TODO(), i.MeshID, m)
 	if updateErr != nil {
-		blog.Errorf("update mesh status failed for mesh %s, err: %s", i.MeshID, updateErr)
+		blog.Errorf("[%s]update mesh status failed, err: %s", i.MeshID, updateErr)
 	}
 }
 
@@ -152,60 +128,81 @@ func (i *IstioInstallAction) installIstioForPrimary(ctx context.Context, chartVe
 	// 创建 istio-system 命名空间,如果已经存在则忽略
 	exist, err := k8s.CheckNamespaceExist(ctx, clusterID, common.IstioNamespace)
 	if err != nil {
-		blog.Errorf("check namespace %s exist failed, err: %s", common.IstioNamespace, err)
+		blog.Errorf("[%s]check namespace %s exist failed, err: %s", i.MeshID, common.IstioNamespace, err)
 		return fmt.Errorf("check namespace exist failed: %s", err)
 	}
 	// 不存在则创建
 	if !exist {
 		if createErr := k8s.CreateNamespace(ctx, clusterID, common.IstioNamespace); createErr != nil {
-			blog.Errorf("create namespace %s failed, err: %s", common.IstioNamespace, createErr)
+			blog.Errorf("[%s]create namespace %s failed, err: %s", i.MeshID, common.IstioNamespace, createErr)
 			return fmt.Errorf("create namespace failed: %s", createErr)
 		}
 	}
 
 	// 安装istio base
-	if err := i.installIstioBase(ctx, chartVersion, clusterID); err != nil {
+	if err := i.installComponent(
+		ctx,
+		chartVersion,
+		clusterID,
+		common.IstioInstallBaseName,
+		common.ComponentIstioBase,
+		func() (string, error) {
+			return utils.GenBaseValues(i.IstioInstallOption)
+		},
+	); err != nil {
 		return fmt.Errorf("install istio base failed: %s", err)
 	}
 
 	// 安装istiod
-	if err := i.installIstiod(ctx, chartVersion, clusterID); err != nil {
+	if err := i.installComponent(
+		ctx,
+		chartVersion,
+		clusterID,
+		common.IstioInstallIstiodName,
+		common.ComponentIstiod,
+		func() (string, error) {
+			return utils.GenIstiodValues(common.IstioInstallModePrimary, "", i.IstioInstallOption)
+		},
+	); err != nil {
 		return fmt.Errorf("install istiod failed: %s", err)
 	}
 
 	return nil
 }
 
-// installIstioBase 安装istio base组件
-func (i *IstioInstallAction) installIstioBase(ctx context.Context, chartVersion, clusterID string) error {
-	baseValues, err := utils.GenBaseValues(i.ChartValuesPath, chartVersion, clusterID, i.MeshID, i.NetworkID)
+// installComponent 通用安装istio组件方法
+func (i *IstioInstallAction) installComponent(
+	ctx context.Context,
+	chartVersion, clusterID, componentName, chartName string,
+	valuesGenFunc func() (string, error),
+) error {
+	values, err := valuesGenFunc()
 	if err != nil {
-		return fmt.Errorf("gen base values failed: %s", err)
+		return fmt.Errorf("gen %s values failed: %s", componentName, err)
 	}
-	blog.Infof("install istio base values: %s for cluster: %s, mesh: %s, network: %s",
-		baseValues, clusterID, i.MeshID, i.NetworkID)
+	blog.Infof("install %s values: %s for cluster: %s, mesh: %s, network: %s",
+		componentName, values, clusterID, i.MeshID, i.NetworkID)
 
 	resp, err := helm.Install(ctx, &helmmanager.InstallReleaseV1Req{
 		ProjectCode: pointer.String(i.ProjectCode),
 		ClusterID:   pointer.String(clusterID),
-		Name:        pointer.String(common.IstioInstallBaseName),
+		Name:        pointer.String(componentName),
 		Namespace:   pointer.String(common.IstioNamespace),
-		Chart:       pointer.String(common.ComponentIstioBase),
+		Chart:       pointer.String(chartName),
 		Repository:  pointer.String(i.ChartRepo),
 		Version:     pointer.String(chartVersion),
-		Values:      []string{baseValues},
+		Values:      []string{values},
 		Args:        []string{"--wait"},
 	})
-	blog.Infof("install istio base resp: %+v", resp)
 	if err != nil {
-		blog.Errorf("install istio base failed, err: %s", err)
-		return fmt.Errorf("install istio base failed: %s", err)
+		blog.Errorf("install %s failed, err: %s", componentName, err)
+		return fmt.Errorf("install %s failed: %s", componentName, err)
 	}
 	if resp.Result != nil && !*resp.Result {
-		blog.Errorf("install istio base failed, err: %s", *resp.Message)
-		return fmt.Errorf("install istio base failed: %s", *resp.Message)
+		blog.Errorf("install %s failed, err: %s", componentName, *resp.Message)
+		return fmt.Errorf("install %s failed: %s", componentName, *resp.Message)
 	}
-	// 查询是否安装成功 查询详情 每隔10s查询一次 直到安装成功，超时2min
+	// 查询是否安装成功
 	timeout := time.NewTimer(2 * time.Minute)
 	defer timeout.Stop()
 	ticker := time.NewTicker(5 * time.Second)
@@ -214,97 +211,23 @@ func (i *IstioInstallAction) installIstioBase(ctx context.Context, chartVersion,
 	for {
 		select {
 		case <-timeout.C:
-			blog.Errorf("install istio base timeout for cluster %s", clusterID)
-			return fmt.Errorf("install istio base timeout for cluster %s", clusterID)
+			blog.Errorf("install %s timeout for cluster %s", componentName, clusterID)
+			return fmt.Errorf("install %s timeout for cluster %s", componentName, clusterID)
 		case <-ticker.C:
-			// 查询安装状态
 			release, err := helm.GetReleaseDetail(ctx, &helmmanager.GetReleaseDetailV1Req{
 				ProjectCode: pointer.String(i.ProjectCode),
 				ClusterID:   pointer.String(clusterID),
-				Name:        pointer.String(common.IstioInstallBaseName),
+				Name:        pointer.String(componentName),
 				Namespace:   pointer.String(common.IstioNamespace),
 			})
-			blog.Infof("[loop]get istio base release: %+v, err: %s, cluster: %s", release, err, clusterID)
+			blog.Infof("[loop]get %s release: %+v, err: %s, cluster: %s", componentName, release, err, clusterID)
 			if err != nil {
-				blog.Errorf("get istio base release failed, err: %s", err)
-				return fmt.Errorf("get istio base release failed: %s", err)
+				blog.Errorf("get %s release failed, err: %s", componentName, err)
+				return fmt.Errorf("get %s release failed: %s", componentName, err)
 			}
 			if release.Data != nil && release.Data.Status != nil {
 				if *release.Data.Status == helm.ReleaseStatusDeployed {
-					blog.Infof("install istio base success for cluster %s", clusterID)
-					return nil
-				}
-			}
-		}
-	}
-}
-
-// installIstiod 安装istiod组件
-func (i *IstioInstallAction) installIstiod(ctx context.Context, chartVersion, clusterID string) error {
-	istiodValues, err := utils.GenIstiodValues(
-		i.ChartValuesPath,
-		common.IstioInstallModePrimary,
-		chartVersion,
-		clusterID,
-		"",
-		clusterID,
-		i.MeshID,
-		i.NetworkID,
-		i.FeatureConfigs,
-	)
-	if err != nil {
-		return fmt.Errorf("gen istiod values failed: %s", err)
-	}
-	blog.Infof("install istiod values: %s for cluster: %s, mesh: %s, network: %s",
-		istiodValues, clusterID, i.MeshID, i.NetworkID)
-
-	resp, err := helm.Install(ctx, &helmmanager.InstallReleaseV1Req{
-		ProjectCode: pointer.String(i.ProjectCode),
-		ClusterID:   pointer.String(clusterID),
-		Name:        pointer.String(common.IstioInstallIstiodName),
-		Namespace:   pointer.String(common.IstioNamespace),
-		Chart:       pointer.String(common.ComponentIstiod),
-		Repository:  pointer.String(i.ChartRepo),
-		Version:     pointer.String(chartVersion),
-		Values:      []string{istiodValues},
-		Args:        []string{"--wait"},
-	})
-	if err != nil {
-		blog.Errorf("install istiod failed, err: %s", err)
-		return fmt.Errorf("install istiod failed: %s", err)
-	}
-	if resp.Result != nil && !*resp.Result {
-		blog.Errorf("install istiod failed, err: %s", *resp.Message)
-		return fmt.Errorf("install istiod failed: %s", *resp.Message)
-	}
-
-	// 查询是否安装成功 查询详情 每隔10s查询一次 直到安装成功，超时2min
-	timeout := time.NewTimer(2 * time.Minute)
-	defer timeout.Stop()
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-timeout.C:
-			blog.Errorf("install istiod timeout for cluster %s", clusterID)
-			return fmt.Errorf("install istiod timeout for cluster %s", clusterID)
-		case <-ticker.C:
-			// 查询安装状态
-			release, err := helm.GetReleaseDetail(ctx, &helmmanager.GetReleaseDetailV1Req{
-				ProjectCode: pointer.String(i.ProjectCode),
-				ClusterID:   pointer.String(clusterID),
-				Name:        pointer.String(common.IstioInstallIstiodName),
-				Namespace:   pointer.String(common.IstioNamespace),
-			})
-			blog.Infof("[loop]get istiod release: %+v, err: %s, cluster: %s", release, err, clusterID)
-			if err != nil {
-				blog.Errorf("get istiod release failed, err: %s", err)
-				return fmt.Errorf("get istiod release failed: %s", err)
-			}
-			if release.Data != nil && release.Data.Status != nil {
-				if *release.Data.Status == helm.ReleaseStatusDeployed {
-					blog.Infof("install istiod success for cluster %s", clusterID)
+					blog.Infof("install %s success for cluster %s", componentName, clusterID)
 					return nil
 				}
 			}
