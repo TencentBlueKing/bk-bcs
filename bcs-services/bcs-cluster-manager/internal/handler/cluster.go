@@ -325,6 +325,83 @@ func (cm *ClusterManager) ListCluster(ctx context.Context,
 	return nil
 }
 
+// ListClusterV2 implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListClusterV2(ctx context.Context,
+	req *cmproto.ListClusterV2Req, resp *cmproto.ListClusterV2Resp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	if err != nil {
+		return err
+	}
+	ca := clusterac.NewListAction(cm.model, cm.iam)
+	newReq := &cmproto.ListClusterReq{
+		ClusterName:         req.ClusterName,
+		Provider:            req.Provider,
+		Region:              req.Region,
+		VpcID:               req.VpcID,
+		ProjectID:           req.ProjectID,
+		BusinessID:          req.BusinessID,
+		Environment:         req.Environment,
+		EngineType:          req.EngineType,
+		IsExclusive:         req.IsExclusive,
+		ClusterType:         req.ClusterType,
+		FederationClusterID: req.FederationClusterID,
+		Status:              req.Status,
+		Offset:              req.Offset,
+		Limit:               req.Limit,
+		Operator:            req.Operator,
+		SystemID:            req.SystemID,
+		ExtraClusterID:      req.ExtraClusterID,
+		IsCommonCluster:     req.IsCommonCluster,
+		ClusterID:           req.ClusterID,
+		All:                 req.All,
+	}
+	newResp := &cmproto.ListClusterResp{}
+	ca.Handle(ctx, newReq, newResp)
+	resp.Code = newResp.Code
+	resp.Message = newResp.Message
+	resp.Result = newResp.Result
+	if len(newResp.Data) > 0 {
+		for i := range newResp.Data {
+			tmpRespData := &cmproto.ClusterV2{
+				ClusterID:       newResp.Data[i].ClusterID,
+				ClusterName:     newResp.Data[i].ClusterName,
+				Provider:        newResp.Data[i].Provider,
+				Region:          newResp.Data[i].Region,
+				VpcID:           newResp.Data[i].VpcID,
+				ProjectID:       newResp.Data[i].ProjectID,
+				BusinessID:      newResp.Data[i].BusinessID,
+				Environment:     newResp.Data[i].Environment,
+				EngineType:      newResp.Data[i].EngineType,
+				ClusterType:     newResp.Data[i].ClusterType,
+				Labels:          newResp.Data[i].Labels,
+				Creator:         newResp.Data[i].Creator,
+				CreateTime:      newResp.Data[i].CreateTime,
+				UpdateTime:      newResp.Data[i].UpdateTime,
+				SystemID:        newResp.Data[i].SystemID,
+				ManageType:      newResp.Data[i].ManageType,
+				Status:          newResp.Data[i].Status,
+				Updater:         newResp.Data[i].Updater,
+				NetworkType:     newResp.Data[i].NetworkType,
+				ModuleID:        newResp.Data[i].ModuleID,
+				IsCommonCluster: newResp.Data[i].IsCommonCluster,
+				Description:     newResp.Data[i].Description,
+				ClusterCategory: newResp.Data[i].ClusterCategory,
+				IsShared:        newResp.Data[i].IsShared,
+			}
+			resp.Data = append(resp.Data, tmpRespData)
+		}
+	}
+	metrics.ReportAPIRequestMetric("ListClusterV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListClusterV2, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListClusterV2, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCommonCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCommonCluster(ctx context.Context,
 	req *cmproto.ListCommonClusterReq, resp *cmproto.ListCommonClusterResp) error {
