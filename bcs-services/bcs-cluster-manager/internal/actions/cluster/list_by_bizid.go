@@ -21,6 +21,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
+
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
@@ -114,7 +115,6 @@ func (la *ListBusinessClusterAction) listBusinessCluster() error {
 	var (
 		otherCluster   = make([]*cmproto.BusinessCluster, 0)
 		runningCluster = make([]*cmproto.BusinessCluster, 0)
-		clusterIDList  = make([]string, 0)
 	)
 	for i := range clusterList {
 		if clusterList[i].IsShared {
@@ -126,7 +126,6 @@ func (la *ListBusinessClusterAction) listBusinessCluster() error {
 		} else {
 			otherCluster = append(otherCluster, clusterToBusinessCluster(clusterList[i]))
 		}
-		clusterIDList = append(clusterIDList, clusterList[i].ClusterID)
 	}
 
 	la.clusterList = append(la.clusterList, otherCluster...)

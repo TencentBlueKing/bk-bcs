@@ -273,12 +273,7 @@ func CheckUserHasPerm(businessID string, user string) bool {
 		return false
 	}
 
-	maintainers := strings.Split(businessData.BKBizMaintainer, ",")
-	if utils.StringInSlice(user, maintainers) {
-		return true
-	}
-
-	return false
+	return utils.StringInSlice(user, strings.Split(businessData.BKBizMaintainer, ","))
 }
 
 func canUseHosts(bizID int, user string, hostIPList []string) bool {

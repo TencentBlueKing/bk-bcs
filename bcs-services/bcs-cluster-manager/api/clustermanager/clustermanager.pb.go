@@ -7315,7 +7315,7 @@ func (x *InstanceChargePrepaid) GetRenewFlag() string {
 	return ""
 }
 
-//LaunchConfigure template for scaling node
+// LaunchConfigure template for scaling node
 type LaunchConfiguration struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
