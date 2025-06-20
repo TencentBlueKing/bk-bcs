@@ -139,6 +139,12 @@ func NewClusterManagerEndpoints() []*api.Endpoint {
 			Handler: "rpc",
 		},
 		{
+			Name:    "ClusterManager.ListBusinessCluster",
+			Path:    []string{"/clustermanager/v1/business/{businessID}/clusters"},
+			Method:  []string{"GET"},
+			Handler: "rpc",
+		},
+		{
 			Name:    "ClusterManager.ListCluster",
 			Path:    []string{"/clustermanager/v1/cluster"},
 			Method:  []string{"GET"},
@@ -978,6 +984,7 @@ type ClusterManagerService interface {
 	GetCluster(ctx context.Context, in *GetClusterReq, opts ...client.CallOption) (*GetClusterResp, error)
 	GetClusterSharedProject(ctx context.Context, in *GetClusterSharedProjectRequest, opts ...client.CallOption) (*GetClusterSharedProjectResponse, error)
 	ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...client.CallOption) (*ListProjectClusterResp, error)
+	ListBusinessCluster(ctx context.Context, in *ListBusinessClusterReq, opts ...client.CallOption) (*ListBusinessClusterResp, error)
 	ListCluster(ctx context.Context, in *ListClusterReq, opts ...client.CallOption) (*ListClusterResp, error)
 	ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, opts ...client.CallOption) (*ListCommonClusterResp, error)
 	AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, opts ...client.CallOption) (*AddSubnetToClusterResp, error)
@@ -1321,6 +1328,16 @@ func (c *clusterManagerService) GetClusterSharedProject(ctx context.Context, in 
 func (c *clusterManagerService) ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, opts ...client.CallOption) (*ListProjectClusterResp, error) {
 	req := c.c.NewRequest(c.name, "ClusterManager.ListProjectCluster", in)
 	out := new(ListProjectClusterResp)
+	err := c.c.Call(ctx, req, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *clusterManagerService) ListBusinessCluster(ctx context.Context, in *ListBusinessClusterReq, opts ...client.CallOption) (*ListBusinessClusterResp, error) {
+	req := c.c.NewRequest(c.name, "ClusterManager.ListBusinessCluster", in)
+	out := new(ListBusinessClusterResp)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -2709,6 +2726,7 @@ type ClusterManagerHandler interface {
 	GetCluster(context.Context, *GetClusterReq, *GetClusterResp) error
 	GetClusterSharedProject(context.Context, *GetClusterSharedProjectRequest, *GetClusterSharedProjectResponse) error
 	ListProjectCluster(context.Context, *ListProjectClusterReq, *ListProjectClusterResp) error
+	ListBusinessCluster(context.Context, *ListBusinessClusterReq, *ListBusinessClusterResp) error
 	ListCluster(context.Context, *ListClusterReq, *ListClusterResp) error
 	ListCommonCluster(context.Context, *ListCommonClusterReq, *ListCommonClusterResp) error
 	AddSubnetToCluster(context.Context, *AddSubnetToClusterReq, *AddSubnetToClusterResp) error
@@ -2896,6 +2914,7 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 		GetCluster(ctx context.Context, in *GetClusterReq, out *GetClusterResp) error
 		GetClusterSharedProject(ctx context.Context, in *GetClusterSharedProjectRequest, out *GetClusterSharedProjectResponse) error
 		ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, out *ListProjectClusterResp) error
+		ListBusinessCluster(ctx context.Context, in *ListBusinessClusterReq, out *ListBusinessClusterResp) error
 		ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error
 		ListCommonCluster(ctx context.Context, in *ListCommonClusterReq, out *ListCommonClusterResp) error
 		AddSubnetToCluster(ctx context.Context, in *AddSubnetToClusterReq, out *AddSubnetToClusterResp) error
@@ -3136,6 +3155,12 @@ func RegisterClusterManagerHandler(s server.Server, hdlr ClusterManagerHandler, 
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
 		Name:    "ClusterManager.ListProjectCluster",
 		Path:    []string{"/clustermanager/v1/projects/{projectID}/clusters"},
+		Method:  []string{"GET"},
+		Handler: "rpc",
+	}))
+	opts = append(opts, api.WithEndpoint(&api.Endpoint{
+		Name:    "ClusterManager.ListBusinessCluster",
+		Path:    []string{"/clustermanager/v1/business/{businessID}/clusters"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -4028,6 +4053,10 @@ func (h *clusterManagerHandler) GetClusterSharedProject(ctx context.Context, in 
 
 func (h *clusterManagerHandler) ListProjectCluster(ctx context.Context, in *ListProjectClusterReq, out *ListProjectClusterResp) error {
 	return h.ClusterManagerHandler.ListProjectCluster(ctx, in, out)
+}
+
+func (h *clusterManagerHandler) ListBusinessCluster(ctx context.Context, in *ListBusinessClusterReq, out *ListBusinessClusterResp) error {
+	return h.ClusterManagerHandler.ListBusinessCluster(ctx, in, out)
 }
 
 func (h *clusterManagerHandler) ListCluster(ctx context.Context, in *ListClusterReq, out *ListClusterResp) error {

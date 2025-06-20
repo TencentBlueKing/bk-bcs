@@ -552,6 +552,186 @@ var _Cluster_NetworkType_InLookup = map[string]struct{}{
 	"":         {},
 }
 
+// Validate checks the field values on BusinessCluster with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *BusinessCluster) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on BusinessCluster with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// BusinessClusterMultiError, or nil if none found.
+func (m *BusinessCluster) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *BusinessCluster) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for ClusterID
+
+	// no validation rules for ClusterName
+
+	// no validation rules for Provider
+
+	// no validation rules for Region
+
+	// no validation rules for VpcID
+
+	// no validation rules for ProjectID
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Environment
+
+	// no validation rules for EngineType
+
+	// no validation rules for ClusterType
+
+	// no validation rules for Labels
+
+	// no validation rules for Creator
+
+	// no validation rules for CreateTime
+
+	// no validation rules for UpdateTime
+
+	// no validation rules for SystemID
+
+	// no validation rules for ManageType
+
+	if _, ok := _BusinessCluster_Status_InLookup[m.GetStatus()]; !ok {
+		err := BusinessClusterValidationError{
+			field:  "Status",
+			reason: "value must be in list [CREATING RUNNING DELETING FALURE INITIALIZATION]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for Updater
+
+	if _, ok := _BusinessCluster_NetworkType_InLookup[m.GetNetworkType()]; !ok {
+		err := BusinessClusterValidationError{
+			field:  "NetworkType",
+			reason: "value must be in list [underlay overlay ]",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	// no validation rules for ModuleID
+
+	// no validation rules for IsCommonCluster
+
+	// no validation rules for Description
+
+	// no validation rules for ClusterCategory
+
+	// no validation rules for IsShared
+
+	if len(errors) > 0 {
+		return BusinessClusterMultiError(errors)
+	}
+
+	return nil
+}
+
+// BusinessClusterMultiError is an error wrapping multiple validation errors
+// returned by BusinessCluster.ValidateAll() if the designated constraints
+// aren't met.
+type BusinessClusterMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m BusinessClusterMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m BusinessClusterMultiError) AllErrors() []error { return m }
+
+// BusinessClusterValidationError is the validation error returned by
+// BusinessCluster.Validate if the designated constraints aren't met.
+type BusinessClusterValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e BusinessClusterValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e BusinessClusterValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e BusinessClusterValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e BusinessClusterValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e BusinessClusterValidationError) ErrorName() string { return "BusinessClusterValidationError" }
+
+// Error satisfies the builtin error interface
+func (e BusinessClusterValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sBusinessCluster.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = BusinessClusterValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = BusinessClusterValidationError{}
+
+var _BusinessCluster_Status_InLookup = map[string]struct{}{
+	"CREATING":       {},
+	"RUNNING":        {},
+	"DELETING":       {},
+	"FALURE":         {},
+	"INITIALIZATION": {},
+}
+
+var _BusinessCluster_NetworkType_InLookup = map[string]struct{}{
+	"underlay": {},
+	"overlay":  {},
+	"":         {},
+}
+
 // Validate checks the field values on SharedClusterRanges with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -26458,6 +26638,254 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListProjectClusterRespValidationError{}
+
+// Validate checks the field values on ListBusinessClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBusinessClusterReq) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBusinessClusterReq with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBusinessClusterReqMultiError, or nil if none found.
+func (m *ListBusinessClusterReq) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBusinessClusterReq) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for BusinessID
+
+	// no validation rules for Operator
+
+	if len(errors) > 0 {
+		return ListBusinessClusterReqMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBusinessClusterReqMultiError is an error wrapping multiple validation
+// errors returned by ListBusinessClusterReq.ValidateAll() if the designated
+// constraints aren't met.
+type ListBusinessClusterReqMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBusinessClusterReqMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBusinessClusterReqMultiError) AllErrors() []error { return m }
+
+// ListBusinessClusterReqValidationError is the validation error returned by
+// ListBusinessClusterReq.Validate if the designated constraints aren't met.
+type ListBusinessClusterReqValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBusinessClusterReqValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBusinessClusterReqValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBusinessClusterReqValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBusinessClusterReqValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBusinessClusterReqValidationError) ErrorName() string {
+	return "ListBusinessClusterReqValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBusinessClusterReqValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBusinessClusterReq.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBusinessClusterReqValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBusinessClusterReqValidationError{}
+
+// Validate checks the field values on ListBusinessClusterResp with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListBusinessClusterResp) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListBusinessClusterResp with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListBusinessClusterRespMultiError, or nil if none found.
+func (m *ListBusinessClusterResp) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListBusinessClusterResp) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Code
+
+	// no validation rules for Message
+
+	// no validation rules for Result
+
+	for idx, item := range m.GetData() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListBusinessClusterRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListBusinessClusterRespValidationError{
+						field:  fmt.Sprintf("Data[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListBusinessClusterRespValidationError{
+					field:  fmt.Sprintf("Data[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListBusinessClusterRespMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListBusinessClusterRespMultiError is an error wrapping multiple validation
+// errors returned by ListBusinessClusterResp.ValidateAll() if the designated
+// constraints aren't met.
+type ListBusinessClusterRespMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListBusinessClusterRespMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListBusinessClusterRespMultiError) AllErrors() []error { return m }
+
+// ListBusinessClusterRespValidationError is the validation error returned by
+// ListBusinessClusterResp.Validate if the designated constraints aren't met.
+type ListBusinessClusterRespValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListBusinessClusterRespValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListBusinessClusterRespValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListBusinessClusterRespValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListBusinessClusterRespValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListBusinessClusterRespValidationError) ErrorName() string {
+	return "ListBusinessClusterRespValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListBusinessClusterRespValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListBusinessClusterResp.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListBusinessClusterRespValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListBusinessClusterRespValidationError{}
 
 // Validate checks the field values on ListClusterReq with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

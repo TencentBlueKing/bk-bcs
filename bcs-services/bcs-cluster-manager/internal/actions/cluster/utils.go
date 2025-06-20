@@ -258,6 +258,25 @@ func CheckUseNodesPermForUser(businessID string, user string, nodes []string) bo
 	return canUseHosts(bizID, user, nodes)
 }
 
+// CheckUserHasPerm check user has perm
+func CheckUserHasPerm(businessID string, user string) bool {
+	bizID, err := strconv.Atoi(businessID)
+	if err != nil {
+		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
+		blog.Errorf(errMsg.Error())
+		return false
+	}
+
+	// query biz hosts
+	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(bizID)
+	if err != nil {
+		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
+		return false
+	}
+
+	return utils.StringInSlice(user, strings.Split(businessData.BKBizMaintainer, ","))
+}
+
 func canUseHosts(bizID int, user string, hostIPList []string) bool {
 	hasPermHosts := getUserHasPermHosts(bizID, user)
 
