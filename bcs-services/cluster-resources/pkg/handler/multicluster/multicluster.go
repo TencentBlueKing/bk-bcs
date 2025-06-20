@@ -21,13 +21,21 @@ import (
 	"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
+	respUtil "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/resp"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/trans"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/action/web"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/featureflag"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/config"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/i18n"
 	log "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/logging"
 	cli "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/client"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/resource/constants"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/store/entity"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/errorx"
+	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/pbstruct"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/slice"
 	clusterRes "github.com/Tencent/bk-bcs/bcs-services/cluster-resources/proto/cluster-resources"
@@ -270,4 +278,142 @@ func (h *Handler) MultiClusterResourceCount(ctx context.Context, req *clusterRes
 		web.NewFeatureFlag(featureflag.FormCreate, true),
 	).ToPbStruct()
 	return err
+}
+
+// GetApiResourcesObject get api resources object
+func (h *Handler) GetApiResourcesObject(ctx context.Context,
+	req *clusterRes.GetApiResourcesObjectReq, resp *clusterRes.CommonResp) (err error) {
+
+	resInfo, err := cli.GetResObjectInfo(ctx, req.ClusterID, req.Namespace, req.ResName, req.Kind, "")
+	if err != nil {
+		return err
+	}
+
+	manifest := resInfo.UnstructuredContent()
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, respUtil.DataBuilderParams{
+		Manifest: manifest, Kind: req.Kind, Format: req.Format,
+	})
+	if err != nil {
+		return err
+	}
+	result, err := respDataBuilder.Build()
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(result); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// CreateApiResourcesObject create api resources object
+func (h *Handler) CreateApiResourcesObject(ctx context.Context,
+	req *clusterRes.CreateApiResourcesObjectReq, resp *clusterRes.CommonResp) (err error) {
+
+	rawData := req.RawData.AsMap()
+	kind := mapx.GetStr(rawData, "kind")
+	apiVersion := mapx.GetStr(rawData, "apiVersion")
+
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, constants.CreateAction, req.Format)
+	if err != nil {
+		return err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return err
+	}
+	if err = checkAccess(ctx, "", req.ClusterID, kind, manifest); err != nil {
+		return err
+	}
+	resInfo, err := cli.CreateResObjectInfo(ctx, req.ClusterID, kind, apiVersion, req.Namespaced, manifest)
+	if err != nil {
+		return err
+	}
+
+	resp.Data = pbstruct.Unstructured2pbStruct(resInfo)
+	return nil
+}
+
+// UpdateApiResourcesObject update api resources object
+func (h *Handler) UpdateApiResourcesObject(ctx context.Context,
+	req *clusterRes.UpdateApiResourcesObjectReq, resp *clusterRes.CommonResp) (err error) {
+
+	rawData := req.RawData.AsMap()
+	kind := mapx.GetStr(rawData, "kind")
+	apiVersion := mapx.GetStr(rawData, "apiVersion")
+
+	transformer, err := trans.New(ctx, req.RawData.AsMap(), req.ClusterID, kind, constants.CreateAction, req.Format)
+	if err != nil {
+		return err
+	}
+	manifest, err := transformer.ToManifest()
+	if err != nil {
+		return err
+	}
+
+	if err = checkAccess(ctx, "", req.ClusterID, kind, manifest); err != nil {
+		return err
+	}
+
+	resInfo, err := cli.UpdateResObjectInfo(ctx, req.ClusterID, kind, apiVersion, manifest)
+	if err != nil {
+		return err
+	}
+
+	respDataBuilder, err := respUtil.NewRespDataBuilder(ctx, respUtil.DataBuilderParams{
+		Manifest: resInfo.UnstructuredContent(), Kind: kind, Format: req.Format,
+	})
+	if err != nil {
+		return err
+	}
+	result, err := respDataBuilder.Build()
+	if err != nil {
+		return err
+	}
+	if resp.Data, err = pbstruct.Map2pbStruct(result); err != nil {
+		return err
+	}
+
+	return err
+}
+
+// DeleteApiResourcesObject delete api resources object
+func (h *Handler) DeleteApiResourcesObject(ctx context.Context,
+	req *clusterRes.DeleteApiResourcesObjectReq, resp *clusterRes.CommonResp) (err error) {
+
+	if err = checkAccess(ctx, req.Namespace, req.ClusterID, req.Kind, nil); err != nil {
+		return err
+	}
+
+	return cli.DeleteResObjectInfo(ctx, req.ClusterID, req.Namespace, req.ResName, req.Kind, "")
+}
+
+// checkAccess 访问权限检查（如共享集群禁用等）
+func checkAccess(ctx context.Context, namespace, clusterID, kind string, manifest map[string]interface{}) error {
+	clusterInfo, err := cluster.GetClusterInfo(ctx, clusterID)
+	if err != nil {
+		return err
+	}
+	// 独立集群中，不需要做类似校验
+	if clusterInfo.Type == cluster.ClusterTypeSingle {
+		return nil
+	}
+	// SC 允许用户查看，PV 返回空，不报错
+	if slice.StringInSlice(kind, cluster.SharedClusterBypassClusterScopedKinds) {
+		return nil
+	}
+	// 不允许的资源类型，直接抛出错误
+	if !slice.StringInSlice(kind, cluster.SharedClusterEnabledNativeKinds) &&
+		!slice.StringInSlice(kind, config.G.SharedCluster.EnabledCObjKinds) {
+		return errorx.New(errcode.NoPerm, i18n.GetMsg(ctx, "该请求资源类型 %s 在共享集群中不可用"), kind)
+	}
+	// 对命名空间进行检查，确保是属于项目的，命名空间以 manifest 中的为准
+	if manifest != nil {
+		namespace = mapx.GetStr(manifest, "metadata.namespace")
+	}
+	if err = cli.CheckIsProjNSinSharedCluster(ctx, clusterID, namespace); err != nil {
+		return err
+	}
+	return nil
 }
