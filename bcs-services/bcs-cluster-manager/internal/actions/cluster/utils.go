@@ -35,6 +35,7 @@ import (
 	autils "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/actions/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider"
 	provider "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/common"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/cloudprovider/google/api"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/remote/auth"
@@ -255,6 +256,25 @@ func CheckUseNodesPermForUser(businessID string, user string, nodes []string) bo
 		return false
 	}
 	return canUseHosts(bizID, user, nodes)
+}
+
+// CheckUserHasPerm check user has perm
+func CheckUserHasPerm(businessID string, user string) bool {
+	bizID, err := strconv.Atoi(businessID)
+	if err != nil {
+		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)
+		blog.Errorf(errMsg.Error())
+		return false
+	}
+
+	// query biz hosts
+	businessData, err := cmdb.GetCmdbClient().GetBusinessMaintainer(bizID)
+	if err != nil {
+		blog.Errorf("getUserHasPermHosts GetBusinessMaintainer failed: %v", err)
+		return false
+	}
+
+	return utils.StringInSlice(user, strings.Split(businessData.BKBizMaintainer, ","))
 }
 
 func canUseHosts(bizID int, user string, hostIPList []string) bool {
@@ -737,7 +757,7 @@ func IsSupportAutoScale(store store.ClusterManagerModel, cls *proto.Cluster) boo
 		return false
 	}
 
-	if cls.Provider == common.GcpCloudProvider && cls.ManageType == common.ClusterManageTypeManaged {
+	if cls.Provider == common.GcpCloudProvider && cls.ExtraInfo[api.GKEClusterType] == api.Autopilot {
 		return false
 	}
 
