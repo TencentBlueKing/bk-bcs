@@ -258,8 +258,8 @@ func CheckUseNodesPermForUser(businessID string, user string, nodes []string) bo
 	return canUseHosts(bizID, user, nodes)
 }
 
-// CheckUserHasPerm check user has perm
-func CheckUserHasPerm(businessID string, user string) bool {
+// checkUserHasPerm check user has perm
+func checkUserHasPerm(businessID string, user string) bool {
 	bizID, err := strconv.Atoi(businessID)
 	if err != nil {
 		errMsg := fmt.Errorf("strconv BusinessID to int failed: %v", err)

@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	iauth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -81,8 +82,14 @@ func (la *ListBusinessClusterAction) validate() error {
 		return err
 	}
 
+	// default use request operator
+	if la.req.Operator == "" {
+		username := iauth.GetUserFromCtx(la.ctx)
+		la.req.Operator = username
+	}
+
 	// check operator host permission
-	canUse := CheckUserHasPerm(la.req.BusinessID, la.req.Operator)
+	canUse := checkUserHasPerm(la.req.BusinessID, la.req.Operator)
 	if !canUse {
 		errMsg := fmt.Errorf("list business cluster failed: user[%s] no perm in bizID[%s]",
 			la.req.Operator, la.req.BusinessID)
