@@ -133,7 +133,7 @@ init_env() {
   APISERVER_HA_MODE=${APISERVER_HA_MODE:-"bcs-apiserver-proxy"}
   VIP=${VIP:-"1.2.3.4"}
   ## bcs apiserver proxy
-  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.29.0-alpha.130-tencent"}
+  APISERVER_PROXY_VERSION=${APISERVER_PROXY_VERSION:-"v1.31.0-alpha.43"}
   PROXY_TOOL_PATH=${PROXY_TOOL_PATH:-"/usr/bin"}
   VS_PORT=${VS_PORT:-"6443"}
   LVS_SCHEDULER=${LVS_SCHEDULER:-"rr"}
