@@ -38,6 +38,7 @@ func CreateAdminUser(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name:     userName,
 		UserType: models.AdminUser,
+		TenantID: utils.GetTenantIDFromAttribute(request),
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -95,6 +96,7 @@ func CreateSaasUser(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name:     userName,
 		UserType: models.SaasUser,
+		TenantID: utils.GetTenantIDFromAttribute(request),
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -153,6 +155,7 @@ func CreatePlainUser(request *restful.Request, response *restful.Response) {
 	user := &models.BcsUser{
 		Name:     userName,
 		UserType: models.PlainUser,
+		TenantID: utils.GetTenantIDFromAttribute(request),
 	}
 	// if this user already exist
 	userInDb := sqlstore.GetUserByCondition(user)
@@ -311,6 +314,7 @@ func GetCurrentUserInfo(request *restful.Request, response *restful.Response) {
 	}
 	if user, ok := request.Attribute(constant.CurrentUserAttr).(*models.BcsUser); ok {
 		userInfo.UserName = user.Name
+		userInfo.TenantID = user.TenantID
 	}
 
 	data := utils.CreateResponseData(nil, "success", *userInfo)

@@ -14,6 +14,7 @@
 package utils
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -28,7 +29,6 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 	en_translations "gopkg.in/go-playground/validator.v9/translations/en"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 )
@@ -42,6 +42,13 @@ const (
 	TokenStatusExpired TokenStatus = iota
 	// TokenStatusActive mean that token is active.
 	TokenStatusActive
+
+	// HeaderTenantID header tenant id
+	HeaderTenantID = "X-Bk-Tenant-Id"
+	// DefaultTenantID default tenant id
+	DefaultTenantID = "default"
+	// SystemTenantID system tenant id
+	SystemTenantID = "system"
 )
 
 // Validate local implementation
@@ -132,13 +139,22 @@ func StringInSlice(s string, l []string) bool {
 	return false
 }
 
-// GetProjectFromAttribute get project from attribute
-func GetProjectFromAttribute(request *restful.Request) *component.Project {
-	project := request.Attribute(constant.ProjectAttr)
-	if p, ok := project.(*component.Project); ok {
+// GetTenantIDFromAttribute get tenant id from attribute
+func GetTenantIDFromAttribute(request *restful.Request) string {
+	tenantID := request.Attribute(constant.CurrentTenantID)
+	if p, ok := tenantID.(string); ok {
 		return p
 	}
-	return nil
+	return ""
+}
+
+// GetTenantIDFromContext get tenant id from context
+func GetTenantIDFromContext(ctx context.Context) string {
+	tenantID := ctx.Value(constant.CurrentTenantID)
+	if p, ok := tenantID.(string); ok {
+		return p
+	}
+	return ""
 }
 
 // GetUserFromAttribute get user from attribute

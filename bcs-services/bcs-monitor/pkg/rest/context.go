@@ -36,6 +36,7 @@ type Context struct {
 	StartTime     time.Time       `json:"start_time"`
 	Operator      string          `json:"operator"`
 	Username      string          `json:"username"`
+	TenantId      string          `json:"tenant_id"`
 	ProjectId     string          `json:"project_id"`
 	ProjectCode   string          `json:"project_code"`
 	ClusterId     string          `json:"cluster_id"`
@@ -89,6 +90,7 @@ func (a *APIGWToken) String() string {
 type UserClaimsInfo struct {
 	SubType      string `json:"sub_type"`
 	UserName     string `json:"username"`
+	TenantId     string `json:"tenant_id"`
 	BKAppCode    string `json:"bk_app_code"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`

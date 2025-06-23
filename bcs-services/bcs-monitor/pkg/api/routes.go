@@ -102,6 +102,7 @@ func (a *APIServer) newRoutes() http.Handler {
 	r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL("/swagger/doc.json")))
 	r.Get("/-/healthy", HealthyHandler)
 	r.Get("/-/ready", ReadyHandler)
+	r.Get("/service_enable", ServiceEnableHandler)
 
 	// 注册 HTTP 请求
 	r.Mount("/", registerRoutes())
@@ -125,9 +126,11 @@ func (a *APIServer) newRoutes() http.Handler {
 func registerRoutes() http.Handler {
 	r := chi.NewRouter()
 	// 日志相关接口
+	r.Use(middleware.ServiceEnable)
 
 	r.Route("/projects/{projectId}/clusters/{clusterId}", func(route chi.Router) {
 		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ClusterAuthorization)
+		route.Use(middleware.TanantCheck)
 		route.Use(middleware.Tracing, middleware.Audit)
 
 		route.Get("/namespaces/{namespace}/pods/{pod}/containers", rest.Handle(pod.GetPodContainers))
@@ -161,8 +164,10 @@ func registerMetricsRoutes() http.Handler {
 	// used 代表已使用
 	// overview, info 数值量
 
+	r.Use(middleware.ServiceEnable)
 	r.Route("/projects/{projectCode}/clusters/{clusterId}", func(route chi.Router) {
 		route.Use(middleware.AuthenticationRequired, middleware.ProjectParse, middleware.ProjectAuthorization)
+		route.Use(middleware.TanantCheck)
 		route.Use(middleware.Tracing)
 
 		route.Get("/overview", rest.Handle(metrics.GetClusterOverview))
@@ -278,4 +283,13 @@ func HealthyHandler(w http.ResponseWriter, r *http.Request) {
 // ReadyHandler 健康检查
 func ReadyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
+}
+
+// ServiceEnableHandler 服务是否可用
+func ServiceEnableHandler(w http.ResponseWriter, r *http.Request) {
+	if config.G.Base.ServiceEnable {
+		w.Write([]byte(`{"code": 0, "data": {"enable": true}, "message": "service is enable"}`))
+		return
+	}
+	w.Write([]byte(`{"code": 0, "data": {"enable": false}, "message": "service is not enable"}`))
 }

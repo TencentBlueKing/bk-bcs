@@ -183,6 +183,7 @@ type HelmManagerOptions struct {
 	TracingConfig conf.TracingConfig  `json:"tracingConfig" yaml:"tracingConfig"`
 	SharedCluster SharedClusterConfig `json:"sharedCluster" yaml:"sharedCluster"`
 	ServerConfig
+	EnableMultiTenant bool `json:"enableMultiTenant" yaml:"enableMultiTenant"`
 }
 
 // GlobalOptions global helm manager options

@@ -53,6 +53,17 @@ func GetPerms(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// permission switch for special case
+	if config.GetGlobalConfig().PermissionSwitch {
+		result := map[string]bool{}
+		for _, actionID := range form.ActionIDs {
+			result[actionID] = true
+		}
+		data := utils.CreateResponseData(nil, "success", map[string]interface{}{"perms": result})
+		_, _ = response.Write([]byte(data))
+		return
+	}
+
 	// get perm
 	permReq := iam.PermissionRequest{
 		SystemID: config.GetGlobalConfig().IAMConfig.SystemID,
@@ -60,11 +71,13 @@ func GetPerms(request *restful.Request, response *restful.Response) {
 	}
 	var result map[string]bool
 	if form.PermCtx == nil || form.PermCtx.ResourceType == "" {
-		result, err = config.GloablIAMClient.MultiActionsAllowedWithoutResource(form.ActionIDs, permReq)
+		result, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+			MultiActionsAllowedWithoutResource(form.ActionIDs, permReq)
 	} else {
 		nodes := make([]iam.ResourceNode, 0)
 		nodes = append(nodes, auth.GetResourceNodeFromPermCtx(form.PermCtx))
-		result, err = config.GloablIAMClient.ResourceMultiActionsAllowed(form.ActionIDs, permReq, nodes)
+		result, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+			ResourceMultiActionsAllowed(form.ActionIDs, permReq, nodes)
 	}
 	if err != nil {
 		msg := fmt.Sprintf("get perm failed, err %s", err.Error())
@@ -101,6 +114,16 @@ func GetPermByActionID(request *restful.Request, response *restful.Response) {
 		return
 	}
 
+	// permission switch for special case
+	if config.GetGlobalConfig().PermissionSwitch {
+		result := map[string]bool{
+			actionID: true,
+		}
+		data := utils.CreateResponseData(nil, "success", map[string]interface{}{"perms": result})
+		_, _ = response.Write([]byte(data))
+		return
+	}
+
 	// get perm
 	permReq := iam.PermissionRequest{
 		SystemID: config.GetGlobalConfig().IAMConfig.SystemID,
@@ -109,10 +132,12 @@ func GetPermByActionID(request *restful.Request, response *restful.Response) {
 	var allow bool
 	var applyURL string
 	if form.PermCtx == nil || form.PermCtx.ResourceType == "" {
-		allow, err = config.GloablIAMClient.IsAllowedWithoutResource(actionID, permReq, true)
+		allow, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+			IsAllowedWithoutResource(actionID, permReq, true)
 	} else {
 		node := auth.GetResourceNodeFromPermCtx(form.PermCtx)
-		allow, err = config.GloablIAMClient.IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
+		allow, err = config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+			IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
 	}
 	if err != nil {
 		msg := fmt.Sprintf("get perm failed, err %s", err.Error())
@@ -121,7 +146,8 @@ func GetPermByActionID(request *restful.Request, response *restful.Response) {
 	}
 
 	if !allow {
-		applyURL, err = auth.GetApplyURL(auth.GetApplicationsFromPermCtx(form.PermCtx, actionID))
+		applyURL, err = auth.GetApplyURL(auth.GetApplicationsFromPermCtx(form.PermCtx, actionID),
+			utils.GetTenantIDFromContext(request.Request.Context()))
 	}
 	if err != nil {
 		msg := fmt.Sprintf("get apply url failed, err %s", err.Error())

@@ -26,6 +26,10 @@ const (
 	ProjectIDContextKey ContextKey = "projectID"
 	// ProjectCodeContextKey projectCode context key
 	ProjectCodeContextKey ContextKey = "projectCode"
+	// TenantProjectCodeContextKey projectCode context key
+	TenantProjectCodeContextKey ContextKey = "tenantProjectCode"
+	// TenantIDContextKey tenantID context key
+	TenantIDContextKey ContextKey = "tenantID"
 	// LangContectKey lang context key
 	LangContectKey ContextKey = "lang"
 )
@@ -38,6 +42,8 @@ const (
 	ForwardedForHeaderKey = "X-Forwarded-For"
 	// UserAgentHeader is the header name of User-Agent.
 	UserAgentHeaderKey = "Grpcgateway-User-Agent"
+	// TenantIDHeaderKey is the header name of X-Bk-Tenant-Id.
+	TenantIDHeaderKey = "X-Bk-Tenant-Id"
 	// ContentDispositionKey content disposition key
 	ContentDispositionKey = "content-disposition"
 	// ContentDispositionKey content disposition key

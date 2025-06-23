@@ -27,6 +27,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/cache"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/options"
 )
@@ -76,6 +77,7 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		var userType uint
 		var subType jwt.UserType
 		var expiresAt time.Time
+		tenantID := utils.DefaultTenantID
 		switch u.UserType {
 		case "admin":
 			userType = models.AdminUser
@@ -92,6 +94,9 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 		default:
 			return fmt.Errorf("invalid user type, user type must be [admin, saas, plain]")
 		}
+		if u.TenantID != "" {
+			tenantID = u.TenantID
+		}
 		byteToken, err := encrypt.DesDecryptFromBase([]byte(u.Token))
 		if err != nil {
 			return fmt.Errorf("error decrypting token for user [%s], %s", u.Name, err.Error())
@@ -101,21 +106,12 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 			UserType:  userType,
 			UserToken: string(byteToken),
 			ExpiresAt: expiresAt,
-		}
-
-		// Query if user already exists
-		userInDb := sqlstore.GetUserByCondition(&models.BcsUser{Name: user.Name, UserType: user.UserType})
-		if userInDb != nil {
-			blog.Infof("bootstrap user(%s) already exists, skip creating...", user.Name)
-		} else {
-			err = sqlstore.CreateUser(&user)
-			if err != nil {
-				return fmt.Errorf("error creating user [%s]: %s", user.Name, err.Error())
-			}
+			TenantID:  tenantID,
 		}
 
 		// create user token
-		tokenInDB := tokenStore.GetTokenByCondition(&models.BcsUser{Name: user.Name, UserType: user.UserType})
+		tokenInDB := tokenStore.GetTokenByCondition(&models.BcsUser{Name: user.Name, UserType: user.UserType,
+			TenantID: user.TenantID})
 		if tokenInDB != nil {
 			blog.Infof("bootstrap user(%s) token already exists, skip creating...", user.Name)
 		} else {
@@ -125,6 +121,7 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 				UserType:  user.UserType,
 				CreatedBy: models.CreatedBySystem,
 				ExpiresAt: expiresAt,
+				TenantID:  user.TenantID,
 			})
 			if err != nil {
 				return fmt.Errorf("error creating user [%s] token: %s", user.Name, err.Error())
@@ -136,6 +133,7 @@ func createBootstrapUsers(users []options.BootStrapUser) error {
 			SubType:     subType.String(),
 			ExpiredTime: int64(time.Until(user.ExpiresAt).Seconds()),
 			Issuer:      jwt.JWTIssuer,
+			TenantId:    user.TenantID,
 		}
 		if userInfo.SubType == jwt.Client.String() {
 			userInfo.ClientName = user.Name
@@ -185,6 +183,7 @@ func syncToken(tokenStore sqlstore.TokenStore) {
 		userInfo := &jwt.UserInfo{
 			ExpiredTime: int64(time.Until(v.ExpiresAt).Seconds()),
 			Issuer:      jwt.JWTIssuer,
+			TenantId:    v.TenantID,
 		}
 		if v.IsClient() {
 			userInfo.SubType = jwt.Client.String()
@@ -218,6 +217,7 @@ func syncToken(tokenStore sqlstore.TokenStore) {
 				UserName:    user,
 				ExpiredTime: int64(time.Until(v.ExpiresAt).Seconds()),
 				Issuer:      jwt.JWTIssuer,
+				TenantId:    v.TenantID,
 			}
 			jwtString, err := jwt2.JWTClient.JWTSign(userInfo)
 			if err != nil {

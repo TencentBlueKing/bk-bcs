@@ -251,7 +251,7 @@ func (u *realTokenStore) GetAllClients() []models.BcsClientUser {
 	start := time.Now()
 	// nolint goconst
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
-		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
+		`u.expires_at, u.user_token, u.tenant_id FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL`, models.PlainUser).
 		Find(&tokens)
 	for k, v := range tokens {
@@ -270,7 +270,7 @@ func (u *realTokenStore) GetProjectClients(projectCode string) []models.BcsClien
 	var tokens []models.BcsClientUser
 	start := time.Now()
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
-		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
+		`u.expires_at, u.user_token, u.tenant_id FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ?`, models.PlainUser, projectCode).
 		Find(&tokens)
 	for k, v := range tokens {
@@ -288,7 +288,7 @@ func (u *realTokenStore) GetClient(projectCode, name string) *models.BcsClientUs
 	var client models.BcsClientUser
 	start := time.Now()
 	u.db.Raw(`SELECT c.project_code, c.name, c.manager, c.authority_user, c.created_by, c.created_at, c.updated_at, `+
-		`u.expires_at, u.user_token FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
+		`u.expires_at, u.user_token, u.tenant_id FROM bcs_clients AS c JOIN bcs_users AS u on u.name = c.name WHERE u.user_type = ? `+
 		`AND u.deleted_at IS NULL AND c.deleted_at IS NULL AND c.project_code = ? AND c.name = ?`,
 		models.PlainUser, projectCode, name).Scan(&client)
 	metrics.ReportMysqlSlowQueryMetrics("GetClient", metrics.Query, metrics.SucStatus, start)
@@ -309,6 +309,7 @@ func (u *realTokenStore) CreateClientToken(clientUser *models.BcsClientUser) err
 		UserToken: clientUser.UserToken,
 		CreatedBy: clientUser.CreatedBy,
 		ExpiresAt: clientUser.ExpiresAt,
+		TenantID:  clientUser.TenantID,
 	}
 	client := &models.BcsClient{
 		ProjectCode: clientUser.ProjectCode,

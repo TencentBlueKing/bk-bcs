@@ -14,6 +14,7 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -25,6 +26,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/jwt"
 	"github.com/emicklei/go-restful"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/errors"
 	jwt2 "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/jwt"
@@ -156,6 +158,7 @@ func (ta *TokenAuthenticater) GetJWTUser() *models.BcsUser {
 		user = &models.BcsUser{
 			Name:     username,
 			UserType: models.PlainUser,
+			TenantID: jwtUser.TenantId,
 		}
 	}
 	user.ExpiresAt = time.Unix(jwtUser.ExpiresAt, 0)
@@ -217,6 +220,9 @@ func TokenAuthenticateV2(request *restful.Request, response *restful.Response, c
 	}
 
 	request.SetAttribute(constant.CurrentUserAttr, user)
+	request.SetAttribute(constant.CurrentTenantID, getTenantID(user.TenantID, request))
+	ctx := context.WithValue(request.Request.Context(), constant.CurrentTenantID, getTenantID(user.TenantID, request))
+	request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)
 }
 
@@ -239,14 +245,16 @@ func PermsAuthFunc(actionID string, permCtx *PermCtx) func(request *restful.Requ
 		var allow bool
 		var applyURL string
 		node := GetResourceNodeFromPermCtx(permCtx)
-		allow, err := config.GloablIAMClient.IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
+		allow, err := config.GloablIAMClient(utils.GetTenantIDFromContext(request.Request.Context())).
+			IsAllowedWithResource(actionID, permReq, []iam.ResourceNode{node}, true)
 		if err != nil {
 			utils.ResponseSystemError(response, fmt.Errorf("get perm failed, err %s", err.Error()))
 			return
 		}
 
 		if !allow {
-			applyURL, err = GetApplyURL(GetApplicationsFromPermCtx(permCtx, actionID))
+			applyURL, err = GetApplyURL(GetApplicationsFromPermCtx(permCtx, actionID),
+				utils.GetTenantIDFromContext(request.Request.Context()))
 			if err != nil {
 				utils.ResponseSystemError(response, fmt.Errorf("get apply url failed, err %s", err.Error()))
 				return
@@ -263,7 +271,7 @@ func PermsAuthFunc(actionID string, permCtx *PermCtx) func(request *restful.Requ
 
 // ProjectViewAuthorization project view authorization
 func ProjectViewAuthorization(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -274,7 +282,7 @@ func ProjectViewAuthorization(request *restful.Request, response *restful.Respon
 
 // ProjectEditAuthorization project edit authorization
 func ProjectEditAuthorization(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -349,6 +357,9 @@ func TokenAuthAuthenticate(request *restful.Request, response *restful.Response,
 	}
 
 	request.SetAttribute(constant.CurrentUserAttr, user)
+	request.SetAttribute(constant.CurrentTenantID, getTenantID(user.TenantID, request))
+	ctx := context.WithValue(request.Request.Context(), constant.CurrentTenantID, getTenantID(user.TenantID, request))
+	request.Request.WithContext(ctx)
 	chain.ProcessFilter(request, response)
 }
 
@@ -376,7 +387,7 @@ var (
 func getIAMToken() (string, error) {
 	var err error
 	iamInstance.Do(func() {
-		iamToken, err = config.GloablIAMClient.GetToken()
+		iamToken, err = config.GloablIAMClient(utils.SystemTenantID).GetToken()
 	})
 	return iamToken, err
 }
@@ -411,4 +422,15 @@ func BKIAMAuthenticate(request *restful.Request, response *restful.Response, cha
 	}
 
 	chain.ProcessFilter(request, response)
+}
+
+// getTenantID get tenant id from request header or user info
+func getTenantID(userTenantID string, request *restful.Request) string {
+	if request.HeaderParameter(utils.HeaderTenantID) != "" {
+		return request.HeaderParameter(utils.HeaderTenantID)
+	}
+	if userTenantID != "" {
+		return userTenantID
+	}
+	return utils.DefaultTenantID
 }

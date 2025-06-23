@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 
+	authutils "github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/golang-jwt/jwt/v4"
@@ -65,7 +66,10 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 
 		projectID := restContext.ProjectId
 		clusterID := restContext.ClusterId
-		username := restContext.Username
+		user := authutils.UserInfo{
+			TenantId:   restContext.TenantId,
+			BkUserName: restContext.Username,
+		}
 
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
@@ -79,12 +83,12 @@ func ProjectAuthorization(next http.Handler) http.Handler {
 		}
 
 		// call iam
-		client, err := iam.GetProjectPermClient()
+		client, err := iam.GetProjectPermClient(restContext.TenantId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
-		allow, url, _, err := client.CanViewProject(username, projectID)
+		allow, url, _, err := client.CanViewProject(user.BkUserName, projectID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
@@ -110,7 +114,10 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 
 		projectID := restContext.ProjectId
 		clusterID := restContext.ClusterId
-		username := restContext.Username
+		user := authutils.UserInfo{
+			TenantId:   restContext.TenantId,
+			BkUserName: restContext.Username,
+		}
 
 		// check cluster
 		cls, err := bcs.GetCluster(clusterID)
@@ -124,12 +131,12 @@ func ClusterAuthorization(next http.Handler) http.Handler {
 		}
 
 		// call iam
-		client, err := iam.GetClusterPermClient()
+		client, err := iam.GetClusterPermClient(restContext.TenantId)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
 		}
-		allow, url, _, err := client.CanViewCluster(username, projectID, clusterID)
+		allow, url, _, err := client.CanViewCluster(user.BkUserName, projectID, clusterID)
 		if err != nil {
 			_ = render.Render(w, r, rest.AbortWithWithForbiddenError(restContext, err))
 			return
@@ -237,6 +244,7 @@ func initContextWithBCSJwt(r *http.Request, c *rest.Context) bool {
 
 	c.BindBCS = claims
 	c.Username = claims.UserName
+	c.TenantId = claims.TenantId
 	return true
 }
 
@@ -287,4 +295,17 @@ func GetSessionId(r *http.Request) string {
 		return chi.URLParam(r, "sessionId")
 	}
 	return ""
+}
+
+// ServiceEnable 服务是否可用，如果不可用则直接返回空数据
+func ServiceEnable(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if config.G.Base.ServiceEnable {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.Write([]byte(`{"code": 0, "data": {}, "message": "service is not available"}`))
+		w.WriteHeader(http.StatusOK)
+		return
+	})
 }

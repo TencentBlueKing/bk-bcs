@@ -112,7 +112,12 @@ func ParseProjectIDMiddleware(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), contextx.ProjectCodeContextKey, pj.ProjectCode)
+		if options.GlobalOptions.EnableMultiTenant {
+			ctx = context.WithValue(ctx, contextx.TenantProjectCodeContextKey,
+				strings.SplitN(pj.ProjectCode, "-", 2)[1])
+		}
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
+		ctx = context.WithValue(ctx, contextx.TenantIDContextKey, pj.ProjectCode)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
@@ -141,6 +146,7 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 		resourceID := options.CredentialScope{}
 		resourceID.ProjectID = contextx.GetProjectIDFromCtx(r.Context())
 		resourceID.ProjectCode = contextx.GetProjectCodeFromCtx(r.Context())
+		tenantID := contextx.GetTenantIDFromContext(r.Context())
 
 		// client 白名单
 		if skipClient(authUser.ClientName, resourceID) {
@@ -148,7 +154,8 @@ func AuthorizationMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		allow, url, resources, err := auth.CallIAM(authUser.GetUsername(), project.CanViewProjectOperation, resourceID)
+		allow, url, resources, err := auth.CallIAM(authUser.GetUsername(), project.CanViewProjectOperation, resourceID,
+			tenantID)
 		if err != nil {
 			ResponseAuthError(w, r, err)
 			return
@@ -208,4 +215,77 @@ func skipClient(client string, resourceID options.CredentialScope) bool {
 		}
 	}
 	return false
+}
+
+// GetResourceTenantId get resource tenant id
+func GetResourceTenantId(ctx context.Context) (string, error) {
+	projectCode := contextx.GetProjectCodeFromCtx(ctx)
+
+	pro, err := projectClient.GetProjectByCode(ctx, projectCode)
+	if err != nil {
+		return "", err
+	}
+
+	// 待租户ID支持后修改
+	return pro.ProjectCode, nil
+}
+
+// CheckUserResourceTenantMiddleware check user resource tenant
+func CheckUserResourceTenantMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !options.GlobalOptions.EnableMultiTenant {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		authUser, err := middleauth.GetUserFromContext(r.Context())
+		if err != nil {
+			ResponseAuthError(w, r, err)
+			return
+		}
+
+		if authUser.IsInner() {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// client 白名单
+		if skipClient(authUser.ClientName, options.CredentialScope{
+			ProjectID:   contextx.GetProjectIDFromCtx(r.Context()),
+			ProjectCode: contextx.GetProjectCodeFromCtx(r.Context()),
+		}) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// get tenant id
+		headerTenantId := r.Header.Get(contextx.TenantIDHeaderKey)
+		tenantId := func() string {
+			if headerTenantId != "" {
+				return headerTenantId
+			}
+			return authUser.GetTenantId()
+		}()
+
+		// 暂不校验
+		next.ServeHTTP(w, r)
+		return
+		// get resource tenant id
+		resourceTenantId, err := GetResourceTenantId(r.Context())
+		if err != nil {
+			msg := fmt.Errorf("CheckUserResourceTenantAttrFunc GetResourceTenantId failed, err: %s", err.Error())
+			ResponseSystemError(w, r, msg)
+			return
+		}
+
+		if tenantId != resourceTenantId {
+			msg := fmt.Errorf("user[%s] tenant[%s] not match resource tenant[%s]",
+				authUser.GetUsername(), tenantId, resourceTenantId)
+			ResponseSystemError(w, r, msg)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+		return
+	})
 }

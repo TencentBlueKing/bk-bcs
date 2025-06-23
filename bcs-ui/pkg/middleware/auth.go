@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
 	"github.com/golang-jwt/jwt"
 
 	"github.com/Tencent/bk-bcs/bcs-ui/pkg/auth"
@@ -54,6 +55,10 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 			rest.AbortWithUnauthorized(w, r, http.StatusUnauthorized, "auth failed, username is empty")
 			return
 		}
+		userInfo := utils.UserInfo{
+			BkUserName: claims.UserName,
+			TenantId:   claims.TenantId,
+		}
 
 		projectCode := r.URL.Query().Get("projectCode")
 		if projectCode == "" {
@@ -65,6 +70,14 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
+
+		// 如果 iam 鉴权关闭，则跳过鉴权
+		if config.G.IAM.Disable {
+			r = r.WithContext(ctx)
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		// iam 鉴权，先校验 cluster_view 权限，因为 cluster_view 权限包含 project_view 权限，
 		// 避免用户申请 project_view 之后还要再单独申请 cluster_view 权限
 		// 如果有 clusterID 参数，先校验 cluster_view 权限
@@ -75,8 +88,9 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
 				return
 			}
-			client, _ := iam.GetClusterPermClient()
-			allow, url, actionList, clusterErr := client.CanViewCluster(claims.UserName, project.ProjectID, clusterID)
+			client, _ := iam.GetClusterPermClient(userInfo.TenantId)
+			allow, url, actionList, clusterErr := client.CanViewCluster(userInfo.BkUserName, project.ProjectID,
+				clusterID)
 			if clusterErr != nil {
 				rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, clusterErr.Error())
 				return
@@ -90,12 +104,12 @@ func NeedProjectAuthorization(next http.Handler) http.Handler {
 			}
 		}
 		// 校验 project_view 权限
-		client, err := iam.GetProjectPermClient()
+		client, err := iam.GetProjectPermClient(userInfo.TenantId)
 		if err != nil {
 			rest.AbortWithBadRequest(w, r, http.StatusBadRequest, err.Error())
 			return
 		}
-		allow, url, actionList, err := client.CanViewProject(claims.UserName, project.ProjectID)
+		allow, url, actionList, err := client.CanViewProject(userInfo.BkUserName, project.ProjectID)
 		if err != nil {
 			rest.AbortWithInternalServerError(w, r, http.StatusInternalServerError, err.Error())
 			return

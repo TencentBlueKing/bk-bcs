@@ -25,7 +25,8 @@ type BcsTempToken struct {
 	ID        uint       `json:"id" gorm:"primary_key"`
 	Username  string     `json:"username" gorm:"not null"`
 	Token     string     `json:"token" gorm:"unique;size:128"`
-	UserType  uint       `json:"user_type"` // normal user or admin
+	UserType  uint       `json:"user_type"`                          // normal user or admin
+	TenantID  string     `json:"tenant_id" gorm:"default:'default'"` // 租户ID
 	CreatedBy string     `json:"created_by"`
 	CreatedAt time.Time  `json:"created_at"`
 	DeletedAt *time.Time `json:"deleted_at"`

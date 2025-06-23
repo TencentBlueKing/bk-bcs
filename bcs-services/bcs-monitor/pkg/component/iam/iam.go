@@ -16,14 +16,13 @@ package iam
 import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/auth/iam"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/cluster"
-	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/namespace"
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/project"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-monitor/pkg/config"
 )
 
 // GetIAMClient get iam client
-func GetIAMClient() (iam.PermClient, error) {
+func GetIAMClient(tenantID string) (iam.PermClient, error) {
 	return iam.NewIamClient(&iam.Options{
 		SystemID:    config.G.Base.SystemID,
 		AppCode:     config.G.Base.AppCode,
@@ -34,12 +33,13 @@ func GetIAMClient() (iam.PermClient, error) {
 		BkiIAMHost:  config.G.IAM.BkIAMServer,
 		Metric:      config.G.IAM.Metric,
 		Debug:       config.G.IAM.Debug,
+		TenantId:    tenantID,
 	})
 }
 
 // GetProjectPermClient get project perm iam client
-func GetProjectPermClient() (*project.BCSProjectPerm, error) {
-	iamClient, err := GetIAMClient()
+func GetProjectPermClient(tenantID string) (*project.BCSProjectPerm, error) {
+	iamClient, err := GetIAMClient(tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,19 +47,10 @@ func GetProjectPermClient() (*project.BCSProjectPerm, error) {
 }
 
 // GetClusterPermClient get cluster perm iam client
-func GetClusterPermClient() (*cluster.BCSClusterPerm, error) {
-	iamClient, err := GetIAMClient()
+func GetClusterPermClient(tenantID string) (*cluster.BCSClusterPerm, error) {
+	iamClient, err := GetIAMClient(tenantID)
 	if err != nil {
 		return nil, err
 	}
 	return cluster.NewBCSClusterPermClient(iamClient), nil
-}
-
-// GetNsScopePermClient get project perm iam client
-func GetNsScopePermClient() (*namespace.BCSNamespacePerm, error) {
-	iamClient, err := GetIAMClient()
-	if err != nil {
-		return nil, err
-	}
-	return namespace.NewBCSNamespacePermClient(iamClient), nil
 }

@@ -29,6 +29,9 @@ const (
 	// LaneKey is the key for lane
 	LaneKey ContextKey = "X-Lane"
 
+	// ContextTenantKey is the key of tenant id in context.
+	ContextTenantKey ContextKey = "tenant_id"
+
 	// LaneIDPrefix 染色的header前缀
 	LaneIDPrefix = "X-Lane-"
 )

@@ -32,8 +32,8 @@ func LoggingFilter(request *restful.Request, response *restful.Response, chain *
 		_ = response.WriteError(400, err)
 		return
 	}
-	blog.Log(request.Request.Context()).Infof("url: %s, method: %s, request: %s", request.Request.URL,
-		request.Request.Method, string(inBody))
+	blog.Log(request.Request.Context()).Infof("url: %s, method: %s, header: %s, request: %s", request.Request.URL,
+		request.Request.Method, request.Request.Header, string(inBody))
 	request.Request.Body = io.NopCloser(bytes.NewReader(inBody))
 
 	c := NewResponseCapture(response.ResponseWriter)

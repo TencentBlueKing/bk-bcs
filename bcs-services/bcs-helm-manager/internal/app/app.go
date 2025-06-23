@@ -418,6 +418,7 @@ func (hm *HelmManager) initMicro() error { // nolint
 			wrapper.ParseProjectIDWrapper,
 			authWrapper.AuthorizationFunc,
 			wrapper.NewAuditWrapper,
+			auth.CheckUserResourceTenantAttrFunc,
 			micro.NewTracingWrapper(),
 		),
 	)
@@ -587,22 +588,26 @@ func (hm *HelmManager) initJWTClient() error {
 // initIAMClient xxx
 // init iam client for perm
 func (hm *HelmManager) initIAMClient() error {
-	iamClient, err := iam.NewIamClient(&iam.Options{
-		SystemID:    hm.opt.IAM.SystemID,
-		AppCode:     hm.opt.IAM.AppCode,
-		AppSecret:   hm.opt.IAM.AppSecret,
-		External:    hm.opt.IAM.External,
-		GateWayHost: hm.opt.IAM.GatewayServer,
-		IAMHost:     hm.opt.IAM.IAMServer,
-		BkiIAMHost:  hm.opt.IAM.BkiIAMServer,
-		Metric:      hm.opt.IAM.Metric,
-		Debug:       hm.opt.IAM.Debug,
-	})
-	if err != nil {
-		return err
+	auth.IAMClient = func(tenantID string) iam.PermClient {
+		iamClient, err := iam.NewIamClient(&iam.Options{
+			SystemID:    hm.opt.IAM.SystemID,
+			AppCode:     hm.opt.IAM.AppCode,
+			AppSecret:   hm.opt.IAM.AppSecret,
+			External:    hm.opt.IAM.External,
+			GateWayHost: hm.opt.IAM.GatewayServer,
+			IAMHost:     hm.opt.IAM.IAMServer,
+			BkiIAMHost:  hm.opt.IAM.BkiIAMServer,
+			Metric:      hm.opt.IAM.Metric,
+			Debug:       hm.opt.IAM.Debug,
+			TenantId:    tenantID,
+		})
+		if err != nil {
+			blog.Errorf("init iam client failed, err %s", err.Error())
+			panic(err)
+		}
+		return iamClient
 	}
-	auth.IAMClient = iamClient
-	auth.InitPermClient(iamClient)
+	auth.InitPermClient()
 	blog.Info("init iam client successfully")
 	return nil
 }

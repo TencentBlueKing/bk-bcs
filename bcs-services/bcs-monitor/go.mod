@@ -2,6 +2,11 @@ module github.com/Tencent/bk-bcs/bcs-services/bcs-monitor
 
 go 1.23.0
 
+replace (
+	github.com/Tencent/bk-bcs/bcs-common => github.com/evanlixin/bk-bcs/bcs-common v0.0.0-20250616073156-6413baa64512
+	github.com/Tencent/bk-bcs/bcs-services/pkg => github.com/evanlixin/bk-bcs/bcs-services/pkg v0.0.0-20250616073156-6413baa64512
+)
+
 require (
 	github.com/Tencent/bk-bcs/bcs-common v0.0.0-20250520122750-18307f64fb0c
 	github.com/Tencent/bk-bcs/bcs-runtime/bcs-k8s/kubebkbcs v0.0.0-20230506100250-1d5620f4abf4
@@ -119,7 +124,7 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
-	github.com/TencentBlueKing/iam-go-sdk v0.1.6 // indirect
+	github.com/TencentBlueKing/iam-go-sdk v1.0.1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect

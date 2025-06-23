@@ -32,6 +32,8 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/storages/sqlstore"
+	util "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
 var (
@@ -60,17 +62,15 @@ const (
 )
 
 // NewPermVerifyClient verify permission client
-func NewPermVerifyClient(swi bool, iam iam.PermClient) *PermVerifyClient {
+func NewPermVerifyClient(swi bool) *PermVerifyClient {
 	return &PermVerifyClient{
 		PermSwitch: swi,
-		PermClient: iam,
 	}
 }
 
 // PermVerifyClient permission client
 type PermVerifyClient struct {
 	PermSwitch bool
-	PermClient iam.PermClient
 }
 
 // returnClusterType
@@ -339,7 +339,8 @@ func (cli *PermVerifyClient) verifyUserNamespaceScopedPermission(ctx context.Con
 	start := time.Now()
 
 	// check permission
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
+	allow, err := config.GloablIAMClient(util.GetTenantIDFromContext(ctx)).
+		IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespaceScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespaceScoped resource permission failed: %v", err)
@@ -429,7 +430,8 @@ func (cli *PermVerifyClient) verifyUserNamespacePermission(ctx context.Context, 
 		user, actionID, rn1)
 	start := time.Now()
 
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{*rn1}, true)
+	allow, err := config.GloablIAMClient(util.GetTenantIDFromContext(ctx)).
+		IsAllowedWithResource(actionID, req, []iam.ResourceNode{*rn1}, true)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserNamespacePermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check namespace permission failed: %v", err)
@@ -575,7 +577,8 @@ func (cli *PermVerifyClient) verifyUserClusterScopedPermission(ctx context.Conte
 	start := time.Now()
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission user[%s] actionID[%s] resource[%+v]",
 		user, actionID, rn1)
-	allow, err := cli.PermClient.IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
+	allow, err := config.GloablIAMClient(util.GetTenantIDFromContext(ctx)).
+		IsAllowedWithResource(actionID, req, []iam.ResourceNode{rn1}, true)
 	blog.Log(ctx).Infof("PermVerifyClient verifyUserClusterScopedPermission taken %s", time.Since(start).String())
 	if err != nil {
 		blog.Log(ctx).Errorf("perm_client check cluster permission failed: %v", err)

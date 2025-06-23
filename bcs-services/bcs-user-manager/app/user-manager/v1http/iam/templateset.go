@@ -71,3 +71,19 @@ func (p TemplateSetProvider) SearchInstance(req resource.Request) resource.Respo
 		Message: "not implemented",
 	}
 }
+
+// FetchInstanceList implements the fetch_instance_list
+func (p TemplateSetProvider) FetchInstanceList(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}
+
+// FetchResourceTypeSchema implements the fetch_resource_type_schema
+func (p TemplateSetProvider) FetchResourceTypeSchema(req resource.Request) resource.Response {
+	return resource.Response{
+		Code:    -1,
+		Message: "not implemented",
+	}
+}

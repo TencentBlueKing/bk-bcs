@@ -31,24 +31,30 @@ import (
 
 var (
 	// IAMClient iam client
-	IAMClient iam.PermClient
+	IAMClient func(tenantID string) iam.PermClient
 	// ProjectIamClient project iam client
-	ProjectIamClient *project.BCSProjectPerm
+	ProjectIamClient func(tenantID string) *project.BCSProjectPerm
 	// ClusterIamClient cluster iam client
-	ClusterIamClient *cluster.BCSClusterPerm
+	ClusterIamClient func(tenantID string) *cluster.BCSClusterPerm
 	// NamespaceIamClient namespace iam client
-	NamespaceIamClient *namespace.BCSNamespacePerm
+	NamespaceIamClient func(tenantID string) *namespace.BCSNamespacePerm
 )
 
 // InitPermClient new a perm client
-func InitPermClient(iamClient iam.PermClient) {
-	ProjectIamClient = project.NewBCSProjectPermClient(iamClient)
-	ClusterIamClient = cluster.NewBCSClusterPermClient(iamClient)
-	NamespaceIamClient = namespace.NewBCSNamespacePermClient(iamClient)
+func InitPermClient() {
+	ProjectIamClient = func(tenantID string) *project.BCSProjectPerm {
+		return project.NewBCSProjectPermClient(IAMClient(tenantID))
+	}
+	ClusterIamClient = func(tenantID string) *cluster.BCSClusterPerm {
+		return cluster.NewBCSClusterPermClient(IAMClient(tenantID))
+	}
+	NamespaceIamClient = func(tenantID string) *namespace.BCSNamespacePerm {
+		return namespace.NewBCSNamespacePermClient(IAMClient(tenantID))
+	}
 }
 
 // GetUserNamespacePermList get user namespace perm
-func GetUserNamespacePermList(username, projectID, clusterID string, namespaces []string) (
+func GetUserNamespacePermList(username, projectID, clusterID string, namespaces []string, tenantID string) (
 	map[string]map[string]interface{}, error) {
 	permissions := make(map[string]map[string]interface{})
 
@@ -63,7 +69,18 @@ func GetUserNamespacePermList(username, projectID, clusterID string, namespaces 
 		resourceNodes = append(resourceNodes, nsNode)
 	}
 
-	perms, err := IAMClient.BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
+	if !options.GlobalOptions.JWT.Enable {
+		for _, v := range namespaces {
+			nsID := utils.CalcIAMNsID(clusterID, v)
+			permissions[nsID] = make(map[string]interface{})
+			permissions[nsID][namespace.NameSpaceScopedCreate.String()] = true
+			permissions[nsID][namespace.NameSpaceScopedView.String()] = true
+			permissions[nsID][namespace.NameSpaceScopedUpdate.String()] = true
+			permissions[nsID][namespace.NameSpaceScopedDelete.String()] = true
+		}
+		return permissions, nil
+	}
+	perms, err := IAMClient(tenantID).BatchResourceMultiActionsAllowed(actionIDs, iam.PermissionRequest{
 		SystemID: iam.SystemIDBKBCS,
 		UserName: username}, resourceNodes)
 	if err != nil {

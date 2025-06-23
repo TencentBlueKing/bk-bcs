@@ -29,17 +29,19 @@ const (
 
 // BaseConf :
 type BaseConf struct {
-	AppCode      string              `yaml:"app_code"`
-	AppSecret    string              `yaml:"app_secret"`
-	SystemID     string              `yaml:"system_id"`
-	BKUsername   string              `yaml:"bk_username"`
-	TimeZone     string              `yaml:"time_zone"`
-	LanguageCode string              `yaml:"language_code"`
-	Managers     []string            `yaml:"managers"`
-	ManagerMap   map[string]struct{} `yaml:"-"`
-	Debug        bool                `yaml:"debug"`
-	RunEnv       string              `yaml:"run_env"`
-	Location     *time.Location      `yaml:"-"`
+	AppCode           string              `yaml:"app_code"`
+	AppSecret         string              `yaml:"app_secret"`
+	SystemID          string              `yaml:"system_id"`
+	BKUsername        string              `yaml:"bk_username"`
+	TimeZone          string              `yaml:"time_zone"`
+	LanguageCode      string              `yaml:"language_code"`
+	Managers          []string            `yaml:"managers"`
+	ManagerMap        map[string]struct{} `yaml:"-"`
+	Debug             bool                `yaml:"debug"`
+	RunEnv            string              `yaml:"run_env"`
+	Location          *time.Location      `yaml:"-"`
+	EnableMultiTenant bool                `yaml:"enable_multi_tenant"`
+	ServiceEnable     bool                `yaml:"service_enable"`
 }
 
 // Init :

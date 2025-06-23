@@ -50,6 +50,7 @@ func NewAPIRouter(hm *HelmManager) *mux.Router {
 	r.Use(httpx.AuthenticationMiddleware)
 	r.Use(httpx.ParseProjectIDMiddleware)
 	r.Use(httpx.AuthorizationMiddleware)
+	r.Use(httpx.CheckUserResourceTenantMiddleware)
 	r.Use(httpx.AuditMiddleware)
 
 	// chart upload

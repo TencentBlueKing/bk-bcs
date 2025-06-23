@@ -23,6 +23,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/emicklei/go-restful"
 
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/component"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/errors"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/user-manager/models"
@@ -68,7 +69,7 @@ type CreateProjectClientForm struct {
 
 // CreateProjectClient 创建项目下平台账号
 func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -80,9 +81,11 @@ func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *r
 		utils.ResponseParamsError(response, err)
 		return
 	}
+	tenantID := utils.GetTenantIDFromAttribute(request)
 
 	// check if client name already exist
-	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: models.PlainUser})
+	exist := t.tokenStore.GetTokenByCondition(&models.BcsUser{Name: form.ClientName, UserType: models.PlainUser,
+		TenantID: tenantID})
 	if exist != nil {
 		utils.ResponseParamsError(response, fmt.Errorf("client %s already exist", form.ClientName))
 		return
@@ -101,6 +104,7 @@ func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *r
 		UserName:    form.ClientName,
 		ExpiredTime: int64(form.Expiration),
 		Issuer:      jwt.JWTIssuer,
+		TenantId:    tenantID,
 	})
 	if err != nil {
 		utils.ResponseSystemError(response, fmt.Errorf("create jwt token failed, %s", err.Error()))
@@ -123,6 +127,7 @@ func (t *TokenHandler) CreateProjectClient(request *restful.Request, response *r
 	userToken := &models.BcsClientUser{
 		ProjectCode: project.ProjectCode,
 		Name:        form.ClientName,
+		TenantID:    tenantID,
 		UserToken:   token,
 		UserType:    models.PlainUser,
 		CreatedBy:   user.Name,
@@ -154,7 +159,7 @@ type GetProjectClientsResp struct {
 
 // GetProjectClients 获取项目下平台账号
 func (t *TokenHandler) GetProjectClients(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -198,7 +203,7 @@ type UpdateProjectClientForm struct {
 
 // UpdateProjectClient 更新项目下平台账号
 func (t *TokenHandler) UpdateProjectClient(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -250,7 +255,7 @@ func (t *TokenHandler) UpdateProjectClient(request *restful.Request, response *r
 
 // DeleteProjectClient 删除项目下平台账号
 func (t *TokenHandler) DeleteProjectClient(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -303,7 +308,7 @@ type AuthorizeClientForm struct {
 
 // AuthorizeClient 给平台账号授权
 func (t *TokenHandler) AuthorizeClient(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
@@ -381,7 +386,7 @@ func (t *TokenHandler) AuthorizeClient(request *restful.Request, response *restf
 
 // DeAuthorizeClient 取消平台账号授权
 func (t *TokenHandler) DeAuthorizeClient(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return

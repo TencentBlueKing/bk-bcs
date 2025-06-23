@@ -177,6 +177,7 @@ func QueryByPromQLRaw(ctx context.Context, rawURL, bkBizID string, start, end, s
 	resp, err := component.GetNoTraceClient().R().
 		SetContext(ctx).
 		SetBody(body).
+		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetHeader("X-Bk-Scope-Space-Uid", fmt.Sprintf("bkcc__%s", bkBizID)). // 支持空间参数
 		SetHeaders(utils.GetLaneIDByCtx(ctx)).                               // 泳道特性
@@ -331,6 +332,7 @@ func GetMetricsList(ctx context.Context, host, clusterID, bizID string) ([]Metri
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
 		SetHeaders(utils.GetLaneIDByCtx(ctx)).
+		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetQueryParam("cluster_ids", clusterID).
 		SetQueryString(fmt.Sprintf("bk_biz_ids=0&bk_biz_ids=%s", bizID)).
@@ -382,6 +384,7 @@ func GetClusterEventDataID(ctx context.Context, host, clusterID string) (*Cluste
 	url := fmt.Sprintf("%s/metadata_query_bcs_related_data_link_info", host)
 	resp, err := component.GetClient().R().
 		SetContext(ctx).
+		SetHeader(utils.TenantIDHeaderKey, utils.GetTenantIDFromContext(ctx)).
 		SetHeader("X-Bkapi-Authorization", authInfo).
 		SetQueryParam("bcs_cluster_id", clusterID).
 		Get(url)

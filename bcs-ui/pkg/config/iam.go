@@ -14,6 +14,7 @@ package config
 
 // IAMConf for BK-IAM
 type IAMConf struct {
+	Disable       bool   `yaml:"disable"`
 	External      bool   `yaml:"external"`
 	GatewayServer string `yaml:"gateway_server"`
 	IAMServer     string `yaml:"iam_server"`

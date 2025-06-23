@@ -19,9 +19,12 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-services/pkg/bcs-auth/utils"
+	"github.com/emicklei/go-restful"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/cache"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/constant"
 	pkgutils "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/pkg/utils"
+	util "github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/app/utils"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-user-manager/config"
 )
 
@@ -33,12 +36,22 @@ type ProjectData struct {
 
 // Project project
 type Project struct {
-	Creator     string `json:"creator"`
-	Updater     string `json:"updater"`
-	Managers    string `json:"managers"`
-	ProjectID   string `json:"projectID"`
-	Name        string `json:"name"`
-	ProjectCode string `json:"projectCode"`
+	Creator           string `json:"creator"`
+	Updater           string `json:"updater"`
+	Managers          string `json:"managers"`
+	ProjectID         string `json:"projectID"`
+	Name              string `json:"name"`
+	ProjectCode       string `json:"projectCode"`
+	TenantProjectCode string `json:"tenantProjectCode"`
+	TenantID          string `json:"tenantID"`
+}
+
+// GetProjectCode get project code
+func (p *Project) GetProjectCode() string {
+	if p.TenantProjectCode != "" {
+		return p.TenantProjectCode
+	}
+	return p.ProjectCode
 }
 
 // GetProjectWithCache 通过 project_id/code 获取项目信息
@@ -80,7 +93,8 @@ func GetProject(ctx context.Context, projectIDOrCode string) (*Project, error) {
 }
 
 // QueryProjects query projects
-func QueryProjects(ctx context.Context, limit, offset int, params map[string]string) (*ProjectData, error) {
+func QueryProjects(ctx context.Context, tenantID string, limit, offset int, params map[string]string) (*ProjectData,
+	error) {
 	url := fmt.Sprintf("%s/bcsapi/v4/bcsproject/v1/projects", config.GetGlobalConfig().BcsAPI.InnerHost)
 
 	if params == nil {
@@ -94,6 +108,7 @@ func QueryProjects(ctx context.Context, limit, offset int, params map[string]str
 		SetHeaders(pkgutils.GetLaneIDByCtx(ctx)).
 		SetAuthToken(config.GetGlobalConfig().BcsAPI.Token).
 		SetQueryParams(params).
+		SetHeader(util.HeaderTenantID, tenantID).
 		Get(url)
 
 	if err != nil {
@@ -200,4 +215,13 @@ func GetCachedNamespace(ctx context.Context, clusterID, nsID string) (*Namespace
 		return nil, fmt.Errorf("namespace %s not found", nsID)
 	}
 	return ns, nil
+}
+
+// GetProjectFromAttribute get project from attribute
+func GetProjectFromAttribute(request *restful.Request) *Project {
+	project := request.Attribute(constant.ProjectAttr)
+	if p, ok := project.(*Project); ok {
+		return p
+	}
+	return nil
 }

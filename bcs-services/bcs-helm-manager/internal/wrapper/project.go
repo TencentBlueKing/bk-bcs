@@ -17,12 +17,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"go-micro.dev/v4/server"
 
 	clusterClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/clustermanager"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/utils/contextx"
 )
 
@@ -73,6 +75,10 @@ func ParseProjectIDWrapper(fn server.HandlerFunc) server.HandlerFunc {
 
 		ctx = context.WithValue(ctx, contextx.ProjectIDContextKey, pj.ProjectID)
 		ctx = context.WithValue(ctx, contextx.ProjectCodeContextKey, pj.ProjectCode)
+		if options.GlobalOptions.EnableMultiTenant {
+			ctx = context.WithValue(ctx, contextx.TenantProjectCodeContextKey,
+				strings.SplitN(pj.ProjectCode, "-", 2)[1])
+		}
 		return fn(ctx, req, rsp)
 	}
 }

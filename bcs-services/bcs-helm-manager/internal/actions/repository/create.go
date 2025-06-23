@@ -93,7 +93,10 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	blog.Infof("try to create repository, takeover: %t, project: %s, type: %s, name: %s",
 		takeover, data.GetProjectCode(), data.GetType(), data.GetName())
 
-	r := &entity.Repository{}
+	r := &entity.Repository{
+		TenantID:          contextx.GetTenantIDFromContext(c.ctx),
+		TenantProjectCode: contextx.GetTenantProjectCodeFromContext(c.ctx, data.GetProjectCode()),
+	}
 	r.LoadFromProto(data)
 
 	// check repo exist in store
@@ -109,8 +112,8 @@ func (c *CreateRepositoryAction) create(takeover bool, data *helmmanager.Reposit
 	projectHandler := c.platform.User(repo.User{
 		Name:     data.GetCreateBy(),
 		Password: data.GetPassword(),
-	}).Project(data.GetProjectCode())
-	if err := projectHandler.Ensure(c.ctx); err != nil {
+	}).Project(r.GetRepoProjectID())
+	if err := projectHandler.Ensure(c.ctx, r.TenantProjectCode); err != nil {
 		blog.Errorf("create repository failed, ensure project failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		return nil
@@ -188,15 +191,17 @@ func (c *CreateRepositoryAction) createPublicRepoIfNotExist(data *helmmanager.Re
 	}
 	now := time.Now().Unix()
 	err = c.model.CreateRepository(context.TODO(), &entity.Repository{
-		ProjectID:   contextx.GetProjectCodeFromCtx(c.ctx),
-		Name:        common.PublicRepoName,
-		DisplayName: common.PublicRepoDisplayName,
-		Public:      true,
-		Type:        "HELM",
-		RepoURL:     publicRepo,
-		CreateBy:    data.GetCreateBy(),
-		CreateTime:  now,
-		UpdateTime:  now,
+		TenantID:          contextx.GetTenantIDFromContext(c.ctx),
+		TenantProjectCode: contextx.GetTenantProjectCodeFromContext(c.ctx, data.GetProjectCode()),
+		ProjectID:         contextx.GetProjectCodeFromCtx(c.ctx),
+		Name:              common.PublicRepoName,
+		DisplayName:       common.PublicRepoDisplayName,
+		Public:            true,
+		Type:              "HELM",
+		RepoURL:           publicRepo,
+		CreateBy:          data.GetCreateBy(),
+		CreateTime:        now,
+		UpdateTime:        now,
 	})
 	if err != nil {
 		blog.Errorf("create project %s public repo failed, err %s", c.req.GetProjectCode(), err.Error())
@@ -269,9 +274,12 @@ func (c *CreatePersonalRepositoryAction) create(data *helmmanager.Repository) er
 	blog.Infof("try to create repository, project: %s, type: %s, name: %s",
 		data.GetProjectCode(), data.GetType(), data.GetName())
 
-	r := &entity.Repository{}
+	r := &entity.Repository{
+		Personal:          true,
+		TenantID:          contextx.GetTenantIDFromContext(c.ctx),
+		TenantProjectCode: contextx.GetTenantProjectCodeFromContext(c.ctx, data.GetProjectCode()),
+	}
 	r.LoadFromProto(data)
-	r.Personal = true
 
 	// check repo exist in store
 	dbRepo, err := c.model.GetRepository(c.ctx, data.GetProjectCode(), data.GetName())
@@ -286,8 +294,8 @@ func (c *CreatePersonalRepositoryAction) create(data *helmmanager.Repository) er
 	projectHandler := c.platform.User(repo.User{
 		Name:     data.GetCreateBy(),
 		Password: data.GetPassword(),
-	}).Project(data.GetProjectCode())
-	if err := projectHandler.Ensure(c.ctx); err != nil {
+	}).Project(r.GetRepoProjectID())
+	if err := projectHandler.Ensure(c.ctx, r.TenantProjectCode); err != nil {
 		blog.Errorf("create repository failed, ensure project failed, %s, param: %v", err.Error(), r)
 		c.setResp(common.ErrHelmManagerCreateActionFailed, err.Error(), nil)
 		return nil

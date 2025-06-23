@@ -23,6 +23,7 @@ type BcsUser struct {
 	Name      string     `json:"name" gorm:"not null"`
 	UserType  uint       `json:"user_type"`
 	UserToken string     `json:"user_token" gorm:"unique;size:128"`
+	TenantID  string     `json:"tenant_id" gorm:"default:'default'"` // 租户ID
 	CreatedBy string     `json:"created_by"`
 	CreatedAt time.Time  `json:"created_at" gorm:"type:timestamp null;default:null"` // 用户创建时间
 	UpdatedAt time.Time  `json:"updated_at" gorm:"type:timestamp null;default:null"` // user-token刷新时间
@@ -60,12 +61,14 @@ func (t *BcsUser) IsAdmin() bool {
 type Userinfo struct {
 	UserName  string `json:"username"`
 	AvatarUrl string `json:"avatar_url"`
+	TenantID  string `json:"tenant_id"`
 }
 
 // BcsClientUser client user table 平台账号
 type BcsClientUser struct {
 	ProjectCode   string    `json:"project_code" gorm:"not null"`
 	Name          string    `json:"name" gorm:"not null"`
+	TenantID      string    `json:"tenant_id"` // 租户ID
 	UserType      uint      `json:"user_type"`
 	UserToken     string    `json:"user_token" gorm:"unique;size:128"`
 	CreatedBy     string    `json:"created_by"`

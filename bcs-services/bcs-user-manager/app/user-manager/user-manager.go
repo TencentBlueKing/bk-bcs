@@ -60,8 +60,7 @@ type UserManager struct {
 	config   *config.UserMgrConfig
 	httpServ *httpserver.HttpServer
 
-	IamPermClient iam.PermMigrateClient
-	EtcdRegistry  registry.Registry
+	EtcdRegistry registry.Registry
 
 	permService *permission.PermVerifyClient
 }
@@ -150,7 +149,7 @@ func Filter(req *restful.Request, resp *restful.Response, chain *restful.FilterC
 }
 
 func (u *UserManager) initPermService() error {
-	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch, u.IamPermClient)
+	permService := permission.NewPermVerifyClient(u.config.PermissionSwitch)
 	u.permService = permService
 
 	return nil
@@ -169,14 +168,18 @@ func (u *UserManager) initIamPermClient() error {
 		Metric:      u.config.IAMConfig.Metric,
 		Debug:       u.config.IAMConfig.ServerDebug,
 	}
-	iamCli, err := iam.NewIamMigrateClient(opt)
-	if err != nil {
-		blog.Errorf("initIamPermClient failed: %v", err)
-		return err
+
+	config.GloablIAMClient = func(tenantID string) iam.PermMigrateClient {
+		opt.TenantId = tenantID
+		iamCli, err := iam.NewIamMigrateClient(opt)
+		if err != nil {
+			panic(err)
+		}
+		return iamCli
 	}
 
-	u.IamPermClient = iamCli
-	config.GloablIAMClient = iamCli
+	// validate iam client
+	_ = config.GloablIAMClient("")
 	return nil
 }
 
@@ -270,7 +273,7 @@ func (u *UserManager) migrate() {
 			blog.Errorf("get migrations files error, %s", err.Error())
 			return
 		}
-		if err := u.IamPermClient.Migrate(sqlstore.GCoreDB.DB(), d, "bk_iam_migrations",
+		if err := config.GloablIAMClient(utils.SystemTenantID).Migrate(sqlstore.GCoreDB.DB(), d, "bk_iam_migrations",
 			5*time.Minute, tempVar); err != nil {
 			if strings.Contains(err.Error(), "no change") {
 				blog.Info("iam migration success")

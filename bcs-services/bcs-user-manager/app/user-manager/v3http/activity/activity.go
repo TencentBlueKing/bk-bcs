@@ -61,7 +61,7 @@ var decoder = schema.NewDecoder()
 
 // SearchActivities search activities
 func SearchActivities(request *restful.Request, response *restful.Response) {
-	project := utils.GetProjectFromAttribute(request)
+	project := component.GetProjectFromAttribute(request)
 	if project == nil {
 		utils.ResponseParamsError(response, errors.ErrProjectNotFound)
 		return
