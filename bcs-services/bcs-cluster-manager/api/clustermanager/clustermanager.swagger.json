@@ -7942,132 +7942,6 @@
         }
       }
     },
-    "clustermanagerBusinessCluster": {
-      "type": "object",
-      "properties": {
-        "clusterID": {
-          "type": "string",
-          "description": "BCS内部使用集群ID，格式为BCS-K8S-XXXXX",
-          "title": "clusterID"
-        },
-        "clusterName": {
-          "type": "string",
-          "description": "集群名称",
-          "title": "clusterName"
-        },
-        "provider": {
-          "type": "string",
-          "description": "集群云配置，为云类型ID",
-          "title": "provider"
-        },
-        "region": {
-          "type": "string",
-          "description": "集群区域信息",
-          "title": "region"
-        },
-        "vpcID": {
-          "type": "string",
-          "description": "集群所在vpc，部分环境下非必填",
-          "title": "vpcID"
-        },
-        "projectID": {
-          "type": "string",
-          "description": "集群所关联的项目ID",
-          "title": "projectID"
-        },
-        "businessID": {
-          "type": "string",
-          "description": "项目绑定的业务ID, 集群所关联的业务ID，该ID来源于CMDB",
-          "title": "businessID"
-        },
-        "environment": {
-          "type": "string",
-          "description": "集群所对应的环境信息，stag，debug，prod",
-          "title": "environment"
-        },
-        "engineType": {
-          "type": "string",
-          "description": "集群编排引擎，k8s、mesos",
-          "title": "engineType"
-        },
-        "clusterType": {
-          "type": "string",
-          "description": "集群类型，federation、single",
-          "title": "clusterType"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "creator": {
-          "type": "string",
-          "description": "集群信息创建者",
-          "title": "creator"
-        },
-        "createTime": {
-          "type": "string"
-        },
-        "updateTime": {
-          "type": "string"
-        },
-        "systemID": {
-          "type": "string",
-          "description": "kubernetes集群在各云平台上资源ID",
-          "title": "systemID"
-        },
-        "manageType": {
-          "type": "string",
-          "description": "集群管理类型，公有云时生效，MANAGED_CLUSTER(云上托管集群)，INDEPENDENT_CLUSTER(独立集群，自行维护)",
-          "title": "manageType"
-        },
-        "status": {
-          "type": "string",
-          "description": "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION",
-          "title": "status"
-        },
-        "updater": {
-          "type": "string",
-          "description": "集群信息更新者",
-          "title": "updater"
-        },
-        "networkType": {
-          "type": "string",
-          "description": "集群网络类型，(underlay/overlay)",
-          "title": "networkType"
-        },
-        "moduleID": {
-          "type": "string",
-          "description": "集群模块ID(CA添加节点时模块转移 废弃)",
-          "title": "moduleID"
-        },
-        "isCommonCluster": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "是否为公共集群,默认false(废弃)",
-          "title": "isCommonCluster"
-        },
-        "description": {
-          "type": "string",
-          "description": "集群简要描述",
-          "title": "description"
-        },
-        "clusterCategory": {
-          "type": "string",
-          "description": "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建",
-          "title": "clusterCategory"
-        },
-        "is_shared": {
-          "type": "boolean",
-          "format": "boolean",
-          "description": "是否为共享集群,默认false",
-          "title": "is_shared"
-        }
-      },
-      "description": "记录集群信息，用于维护集群状态",
-      "title": "Cluster"
-    },
     "clustermanagerCUDNN": {
       "type": "object",
       "properties": {
@@ -9957,8 +9831,8 @@
           "title": "is_shared"
         }
       },
-      "description": "简化版集群信息",
-      "title": "ClusterSimplify"
+      "description": "简化集群信息",
+      "title": "ClusterV2"
     },
     "clustermanagerClusterBasicSetting": {
       "type": "object",
@@ -15406,7 +15280,7 @@
         "data": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/clustermanagerBusinessCluster"
+            "$ref": "#/definitions/clustermanagerClusterBasicInfo"
           },
           "description": "集群信息列表",
           "title": "data"
