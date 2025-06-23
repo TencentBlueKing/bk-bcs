@@ -684,6 +684,11 @@ func buildList(ctx context.Context, resources []*storage.Resource) map[string]in
 // nolint
 func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clusterRes.ClusterNamespaces) (
 	[]*clusterRes.ClusterNamespaces, string, error) {
+
+	if config.G.Auth.Disabled {
+		return clusters, "", nil
+	}
+
 	newClusters := []*clusterRes.ClusterNamespaces{}
 	projInfo, err := project.FromContext(ctx)
 	if err != nil {
@@ -762,7 +767,7 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 		cls := v
 		clusterIDs = append(clusterIDs, cls.ClusterID)
 		errGroups.Go(func() error {
-			permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, cls.ClusterID)
+			permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, cls.ClusterID, projInfo.TenantID)
 			if allow, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
 				return nil
 			} else if !allow {
@@ -779,7 +784,7 @@ func checkMultiClusterAccess(ctx context.Context, kind string, clusters []*clust
 	}
 
 	// get apply url
-	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(clusterIDs, ","))
+	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(clusterIDs, ","), projInfo.TenantID)
 	applyURL := ""
 	if _, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
 		if perr, ok := err.(*perm.IAMPermError); ok {
@@ -840,7 +845,7 @@ func checkMultiOnlyClusterAccess(ctx context.Context, kind string, clusters []st
 	username := ctx.Value(ctxkey.UsernameKey).(string)
 	for _, v := range newClusters {
 		errGroups.Go(func() error {
-			permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, v)
+			permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, v, projInfo.TenantID)
 			if allow, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
 				return nil
 			} else if !allow {
@@ -857,7 +862,7 @@ func checkMultiOnlyClusterAccess(ctx context.Context, kind string, clusters []st
 	}
 
 	// get apply url
-	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(newClusters, ","))
+	permCtx := clusterAuth.NewPermCtx(username, projInfo.ID, strings.Join(newClusters, ","), projInfo.TenantID)
 	applyURL := ""
 	if _, err := iam.NewClusterPerm(projInfo.ID).CanView(permCtx); err != nil {
 		if perr, ok := err.(*perm.IAMPermError); ok {

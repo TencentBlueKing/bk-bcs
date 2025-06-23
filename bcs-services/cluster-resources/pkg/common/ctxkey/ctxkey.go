@@ -15,6 +15,7 @@ package ctxkey
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/types"
 )
@@ -24,6 +25,10 @@ const (
 	RequestIDKey = types.ContextKey("requestID")
 	// UsernameKey xxx
 	UsernameKey = types.ContextKey("username")
+	// TenantIDKey xxx
+	TenantIDKey = types.ContextKey("tenantID")
+	// UserinfoKey xxx
+	UserinfoKey = types.ContextKey("userinfo")
 	// ProjKey xxx
 	ProjKey = types.ContextKey("project")
 	// ClusterKey xxx
@@ -40,10 +45,19 @@ const (
 	AuthorizationHeaderKey = "Authorization"
 	// CustomUsernameHeaderKey is the key for custom username in header
 	CustomUsernameHeaderKey = "X-Bcs-Username"
+	// TenantIdHeaderKey is the key for tenant id in header
+	TenantIdHeaderKey = "X-Bk-Tenant-Id"
 )
 
 // GetUsernameFromCtx 通过 ctx 获取 username
 func GetUsernameFromCtx(ctx context.Context) string {
 	id, _ := ctx.Value(UsernameKey).(string)
+	return id
+}
+
+// GetTenantIDFromCtx 通过 ctx 获取 tenant id
+func GetTenantIDFromCtx(ctx context.Context) string {
+	id, _ := ctx.Value(TenantIDKey).(string)
+	fmt.Println("GetTenantIDFromCtx", id)
 	return id
 }

@@ -21,7 +21,7 @@ import (
 
 // ApplyURLGenerator 权限申请链接生成器
 type ApplyURLGenerator struct {
-	cli *bkiam.IAM
+	cli func(tenantID string) *bkiam.IAM
 }
 
 // NewApplyURLGenerator xxx
@@ -30,9 +30,9 @@ func NewApplyURLGenerator() *ApplyURLGenerator {
 }
 
 // Gen 生成权限申请跳转链接
-func (g *ApplyURLGenerator) Gen(username string, actionReqList []ActionResourcesRequest) (string, error) {
+func (g *ApplyURLGenerator) Gen(tenantID, username string, actionReqList []ActionResourcesRequest) (string, error) {
 	application := g.makeApplication(actionReqList)
-	return g.cli.GetApplyURL(application, "", username)
+	return g.cli(tenantID).GetApplyURL(application)
 }
 
 func (g *ApplyURLGenerator) makeApplication(actionReqList []ActionResourcesRequest) bkiam.Application {

@@ -60,6 +60,7 @@ func (t *TemplateSpaceAction) checkAccess(ctx context.Context) error {
 	// 权限控制为项目查看
 	permCtx := &projectAuth.PermCtx{
 		Username:  ctx.Value(ctxkey.UsernameKey).(string),
+		TenantID:  ctxkey.GetTenantIDFromCtx(ctx),
 		ProjectID: project.ID,
 	}
 	if allow, err := iam.NewProjectPerm().CanView(permCtx); err != nil {

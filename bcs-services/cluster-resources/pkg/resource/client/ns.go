@@ -79,7 +79,7 @@ func (c *NSClient) ListByClusterViewPerm(
 ) (map[string]interface{}, error) {
 	// 权限控制为集群查看
 	permCtx := clusterAuth.NewPermCtx(
-		ctx.Value(ctxkey.UsernameKey).(string), projectID, clusterID,
+		ctxkey.GetUsernameFromCtx(ctx), projectID, clusterID, ctxkey.GetTenantIDFromCtx(ctx),
 	)
 	if allow, err := iam.NewClusterPerm(projectID).CanView(permCtx); err != nil {
 		return nil, err

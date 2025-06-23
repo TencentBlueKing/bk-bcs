@@ -70,7 +70,7 @@ func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err 
 	} else {
 		resReq := p.makeResReq(ctx)
 		perms, _ = p.Cli.ResInstMultiActionsAllowed(
-			ctx.GetUsername(), actionIDs, resReq.MakeResources([]string{ctx.GetResID()}),
+			ctx.GetTenantID(), ctx.GetUsername(), actionIDs, resReq.MakeResources([]string{ctx.GetResID()}),
 		)
 	}
 	// 加入审计sdk
@@ -86,10 +86,9 @@ func (p *IAMPerm) CanMultiActions(ctx Ctx, actionIDs []string) (allow bool, err 
 }
 
 // BatchResMultiActionAllowed 判断用户对某些资源是否具有多个指定操作的权限. 当前 sdk 仅支持同类型的资源
-func (p *IAMPerm) BatchResMultiActionAllowed(
-	username string, actionIDs []string, resIDs []string,
-) (map[string]map[string]bool, error) {
-	return p.Cli.BatchResMultiActionsAllowed(username, actionIDs, p.ResReq.MakeResources(resIDs))
+func (p *IAMPerm) BatchResMultiActionAllowed(actionIDs []string, resIDs []string) (map[string]map[string]bool, error) {
+	return p.Cli.BatchResMultiActionsAllowed(p.PermCtx.GetTenantID(), p.PermCtx.GetUsername(), actionIDs,
+		p.ResReq.MakeResources(resIDs))
 }
 
 func (p *IAMPerm) hasParentRes() bool {
@@ -104,17 +103,17 @@ func (p *IAMPerm) canAction(ctx Ctx, actionID string, useCache bool) (bool, erro
 	if resID := ctx.GetResID(); resID != "" {
 		reqReq := p.makeResReq(ctx)
 		resources := reqReq.MakeResources(strings.Split(resID, ","))
-		return p.Cli.ResInstAllowed(ctx.GetUsername(), actionID, resources, useCache)
+		return p.Cli.ResInstAllowed(ctx.GetTenantID(), ctx.GetUsername(), actionID, resources, useCache)
 	}
 
 	if !p.hasParentRes() {
-		return p.Cli.ResTypeAllowed(ctx.GetUsername(), actionID, useCache)
+		return p.Cli.ResTypeAllowed(ctx.GetTenantID(), ctx.GetUsername(), actionID, useCache)
 	}
 
 	pPermCtx := p.ParentResPerm.PermCtx.FromMap(ctx.ToMap())
 	resReq := p.ParentResPerm.makeResReq(pPermCtx)
 	resources := resReq.MakeResources([]string{pPermCtx.GetResID()})
-	return p.Cli.ResInstAllowed(pPermCtx.GetUsername(), actionID, resources, useCache)
+	return p.Cli.ResInstAllowed(pPermCtx.GetTenantID(), pPermCtx.GetUsername(), actionID, resources, useCache)
 }
 
 func (p *IAMPerm) canMultiActions(ctx Ctx, perms map[string]bool) (bool, error) {
@@ -136,6 +135,7 @@ func (p *IAMPerm) canMultiActions(ctx Ctx, perms map[string]bool) (bool, error) 
 	}
 	return false, &IAMPermError{
 		Code:          errcode.NoIAMPerm,
+		TenantID:      ctx.GetTenantID(),
 		Username:      ctx.GetUsername(),
 		Msg:           strings.Join(messages, "; "),
 		ActionReqList: actionReqList,

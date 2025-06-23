@@ -15,6 +15,7 @@ package config
 
 import (
 	"crypto/rsa"
+	"fmt"
 	"net"
 	"os"
 
@@ -189,19 +190,9 @@ func (c *ClusterResourcesConf) initIAM() error {
 	if systemID == "" || appCode == "" || appSecret == "" {
 		return errorx.New(errcode.ValidateErr, "SystemID/AppCode/AppSecret required")
 	}
-	// 支持蓝鲸 APIGW / 直连 IAMHost
-	if c.Global.IAM.UseBKAPIGW {
-		bkAPIGWHost := c.Global.Basic.BKAPIGWHost
-		if bkAPIGWHost == "" {
-			return errorx.New(errcode.ValidateErr, "BKAPIGWHost required")
-		}
-		c.Global.IAM.Cli = bkiam.NewAPIGatewayIAM(systemID, appCode, appSecret, bkAPIGWHost)
-	} else {
-		bkIAMHost, bkPaaSHost := c.Global.IAM.Host, c.Global.Basic.BKPaaSHost
-		if bkIAMHost == "" || bkPaaSHost == "" {
-			return errorx.New(errcode.ValidateErr, "BKIAMHost/BKPaaSHost required")
-		}
-		c.Global.IAM.Cli = bkiam.NewIAM(systemID, appCode, appSecret, bkIAMHost, bkPaaSHost)
+	c.Global.IAM.Cli = func(tenantID string) *bkiam.IAM {
+		fmt.Println("new iam client with tenantID", tenantID)
+		return bkiam.NewIAM(systemID, appCode, appSecret, c.Global.Basic.BKAPIGWHost, bkiam.WithBkTenantID(tenantID))
 	}
 	// 指标相关
 	if c.Global.IAM.Metric {
@@ -346,19 +337,19 @@ type BasicConf struct {
 
 // BCSAPIGatewayConf 容器服务网关配置
 type BCSAPIGatewayConf struct {
-	Host                 string `yaml:"host" usage:"容器服务网关 Host"`
-	AuthToken            string `yaml:"authToken" usage:"网关 AuthToken"`
-	ReadAuthTokenFromEnv bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
+	Host                  string `yaml:"host" usage:"容器服务网关 Host"`
+	AuthToken             string `yaml:"authToken" usage:"网关 AuthToken"`
+	EnableMultiTenantMode bool   `yaml:"enableMultiTenantMode" usage:"多租户模式"`
+	ReadAuthTokenFromEnv  bool   `yaml:"readAuthTokenFromEnv" usage:"是否从环境变量获取 AuthToken（适用于同集群部署情况）"`
 }
 
 // IAMConf 权限中心相关配置
 type IAMConf struct {
-	Host       string     `yaml:"host" usage:"权限中心 V3 Host"`
-	SystemID   string     `yaml:"systemID" usage:"接入系统的 ID"`                                  // nolint:tagliatelle
-	UseBKAPIGW bool       `yaml:"useBKApiGW" usage:"为真则使用蓝鲸 apigw，否则使用 iamHost + bkPaaSHost"` // nolint:tagliatelle
-	Metric     bool       `yaml:"metric" usage:"支持 prometheus metrics"`
-	Debug      bool       `yaml:"debug" usage:"启用 iam 调试模式"`
-	Cli        *bkiam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
+	Host     string                           `yaml:"host" usage:"权限中心 V3 Host"`
+	SystemID string                           `yaml:"systemID" usage:"接入系统的 ID"` // nolint:tagliatelle
+	Metric   bool                             `yaml:"metric" usage:"支持 prometheus metrics"`
+	Debug    bool                             `yaml:"debug" usage:"启用 iam 调试模式"`
+	Cli      func(tenantID string) *bkiam.IAM `yaml:"-" usage:"iam Client 对象（自动生成）"`
 }
 
 // SharedClusterConf 共享集群相关配置

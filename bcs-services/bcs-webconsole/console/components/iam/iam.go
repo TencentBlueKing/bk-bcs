@@ -32,24 +32,15 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-webconsole/console/config"
 )
 
-func newIAMClient() (iam.PermClient, error) {
+func newIAMClient(tenantID string) (iam.PermClient, error) {
 	var opts = &iam.Options{
-		SystemID:  iam.SystemIDBKBCS,
-		AppCode:   config.G.Base.AppCode,
-		AppSecret: config.G.Base.AppSecret,
-		Metric:    false,
-		Debug:     config.G.IsDevMode(),
-	}
-
-	// 使用网关地址
-	if config.G.Auth.UseGateway {
-		opts.GateWayHost = config.G.Auth.GatewayHost
-		opts.External = false
-	} else {
-		// 使用 "外部" 权限中心地址和ESB地址
-		opts.IAMHost = config.G.Auth.Host
-		opts.BkiIAMHost = config.G.Base.BKPaaSHost
-		opts.External = true
+		SystemID:    iam.SystemIDBKBCS,
+		AppCode:     config.G.Base.AppCode,
+		AppSecret:   config.G.Base.AppSecret,
+		Metric:      false,
+		Debug:       config.G.IsDevMode(),
+		TenantId:    tenantID,
+		GateWayHost: config.G.Auth.GatewayHost,
 	}
 
 	client, err := iam.NewIamClient(opts)
@@ -57,11 +48,12 @@ func newIAMClient() (iam.PermClient, error) {
 }
 
 // IsAllowedWithResource 校验项目, 集群是否有权限
-func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceName, username string) (bool, error) {
+func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceName, username, tenantID string) (bool,
+	error) {
 	logger.Infof("auth with iam, projectId=%s, clusterId=%s, namespace=%s, username=%s", projectId, clusterId,
 		namespaceName, username)
 
-	iamClient, err := newIAMClient()
+	iamClient, err := newIAMClient(tenantID)
 	if err != nil {
 		return false, err
 	}
@@ -139,8 +131,9 @@ func IsAllowedWithResource(ctx context.Context, projectId, clusterId, namespaceN
 }
 
 // MakeResourceApplyUrl 权限中心申请URL
-func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceName, username string) (string, error) {
-	iamClient, err := newIAMClient()
+func MakeResourceApplyUrl(ctx context.Context, projectId, clusterId, namespaceName, username, tenantID string) (string,
+	error) {
+	iamClient, err := newIAMClient(tenantID)
 	if err != nil {
 		return "", err
 	}

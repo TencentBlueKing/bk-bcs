@@ -15,6 +15,7 @@ package project
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/errcode"
@@ -28,6 +29,7 @@ type Project struct {
 	ID         string `json:"projectID"`
 	Code       string `json:"projectCode"`
 	BusinessID string `json:"businessID"`
+	TenantID   string `json:"tenantID"`
 }
 
 // Namespace BCS 命名空间
@@ -77,5 +79,6 @@ func FromContext(ctx context.Context) (*Project, error) {
 	if p == nil {
 		return nil, errorx.New(errcode.General, "project info not exists in context")
 	}
+	fmt.Println("GetTenantIDFromProject", p.(*Project).TenantID)
 	return p.(*Project), nil
 }

@@ -23,7 +23,7 @@ const IAMCacheTTL = 10
 
 // IAMClient xxx
 type IAMClient struct {
-	cli *bkiam.IAM
+	cli func(tenantID string) *bkiam.IAM
 }
 
 // NewIAMClient xxx
@@ -32,30 +32,30 @@ func NewIAMClient() *IAMClient {
 }
 
 // ResTypeAllowed 判断用户是否具备某个操作权限（资源实例无关）
-func (c *IAMClient) ResTypeAllowed(username, actionID string, useCache bool) (bool, error) {
+func (c *IAMClient) ResTypeAllowed(tenantID, username, actionID string, useCache bool) (bool, error) {
 	req := c.makeRequest(username, actionID, []bkiam.ResourceNode{})
 	if useCache {
-		return c.cli.IsAllowedWithCache(req, IAMCacheTTL)
+		return c.cli(tenantID).IsAllowedWithCache(req, IAMCacheTTL)
 	}
-	return c.cli.IsAllowed(req)
+	return c.cli(tenantID).IsAllowed(req)
 }
 
 // ResInstAllowed 判断用户对某个资源实例是否具有指定操作的权限
 func (c *IAMClient) ResInstAllowed(
-	username, actionID string, resources []bkiam.ResourceNode, useCache bool,
+	tenantID, username, actionID string, resources []bkiam.ResourceNode, useCache bool,
 ) (bool, error) {
 	req := c.makeRequest(username, actionID, resources)
 	if useCache {
-		return c.cli.IsAllowedWithCache(req, IAMCacheTTL)
+		return c.cli(tenantID).IsAllowedWithCache(req, IAMCacheTTL)
 	}
-	return c.cli.IsAllowed(req)
+	return c.cli(tenantID).IsAllowed(req)
 }
 
 // ResTypeMultiActionsAllowed 判断用户是否具备多个操作的权限
-func (c *IAMClient) ResTypeMultiActionsAllowed(username string, actionIDs []string) (map[string]bool, error) {
+func (c *IAMClient) ResTypeMultiActionsAllowed(tenantID, username string, actionIDs []string) (map[string]bool, error) {
 	ret := map[string]bool{}
 	for _, id := range actionIDs {
-		allow, err := c.ResTypeAllowed(username, id, false)
+		allow, err := c.ResTypeAllowed(tenantID, username, id, false)
 		if err != nil {
 			return ret, err
 		}
@@ -66,22 +66,22 @@ func (c *IAMClient) ResTypeMultiActionsAllowed(username string, actionIDs []stri
 
 // ResInstMultiActionsAllowed 判断用户对某个(单个)资源实例是否具有多个操作的权限.
 func (c *IAMClient) ResInstMultiActionsAllowed(
-	username string, actionIDs []string, resources []bkiam.ResourceNode,
+	tenantID, username string, actionIDs []string, resources []bkiam.ResourceNode,
 ) (map[string]bool, error) {
 	req := c.makeMultiActionRequest(username, actionIDs, resources)
-	return c.cli.ResourceMultiActionsAllowed(req)
+	return c.cli(tenantID).ResourceMultiActionsAllowed(req)
 }
 
 // BatchResMultiActionsAllowed 判断用户对某些资源是否具有多个指定操作的权限. 当前sdk仅支持同类型的资源
 func (c *IAMClient) BatchResMultiActionsAllowed(
-	username string, actionsIDs []string, resources []bkiam.ResourceNode,
+	tenantID, username string, actionsIDs []string, resources []bkiam.ResourceNode,
 ) (map[string]map[string]bool, error) {
 	req := c.makeMultiActionRequest(username, actionsIDs, []bkiam.ResourceNode{})
 	resourceList := []bkiam.Resources{}
 	for _, res := range resources {
 		resourceList = append(resourceList, []bkiam.ResourceNode{res})
 	}
-	return c.cli.BatchResourceMultiActionsAllowed(req, resourceList)
+	return c.cli(tenantID).BatchResourceMultiActionsAllowed(req, resourceList)
 }
 
 func (c *IAMClient) makeRequest(username, actionID string, resources []bkiam.ResourceNode) bkiam.Request {

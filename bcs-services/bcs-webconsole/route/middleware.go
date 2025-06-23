@@ -56,6 +56,7 @@ type AuthContext struct {
 	ProjectId   string            `json:"project_id"`
 	ProjectCode string            `json:"project_code"`
 	ClusterId   string            `json:"cluster_id"`
+	TenantId    string            `json:"tenant_id"`
 	BindEnv     *EnvToken         `json:"bind_env"`
 	BindBCS     *UserClaimsInfo   `json:"bind_bcs"`
 	BindCluster *bcs.Cluster      `json:"bind_cluster"`
@@ -197,6 +198,7 @@ type UserClaimsInfo struct {
 	UserName     string `json:"username"`
 	BKAppCode    string `json:"bk_app_code"`
 	ClientID     string `json:"client_id"`
+	TenantId     string `json:"tenant_id"`
 	ClientSecret string `json:"client_secret"`
 	// https://tools.ietf.org/html/rfc7519#section-4.1
 	// aud: 接收jwt一方; exp: jwt过期时间; jti: jwt唯一身份认证; IssuedAt: 签发时间; Issuer: jwt签发者

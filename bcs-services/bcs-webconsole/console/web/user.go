@@ -40,7 +40,7 @@ func (s *service) UserPermRequestRedirect(c *gin.Context) {
 	}
 
 	redirectUrl, err := iam.MakeResourceApplyUrl(c.Request.Context(),
-		project.ProjectId, clusterId, route.GetNamespace(c), "")
+		project.ProjectId, clusterId, route.GetNamespace(c), "", "")
 	if err != nil {
 		rest.APIError(c, i18n.T(c, "%s", err))
 		return

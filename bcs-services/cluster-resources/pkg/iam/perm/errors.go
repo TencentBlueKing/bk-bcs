@@ -23,6 +23,7 @@ type IAMPermError struct {
 	Code          int
 	Msg           string
 	Username      string
+	TenantID      string
 	ActionReqList []ActionResourcesRequest
 }
 
@@ -33,7 +34,7 @@ func (e *IAMPermError) Error() string {
 
 // Perms xxx
 func (e *IAMPermError) Perms() (map[string]interface{}, error) {
-	applyURL, err := NewApplyURLGenerator().Gen(e.Username, e.ActionReqList)
+	applyURL, err := NewApplyURLGenerator().Gen(e.TenantID, e.Username, e.ActionReqList)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +54,7 @@ func (e *IAMPermError) Perms() (map[string]interface{}, error) {
 
 // ApplyURL xxx
 func (e *IAMPermError) ApplyURL() (string, error) {
-	return NewApplyURLGenerator().Gen(e.Username, e.ActionReqList)
+	return NewApplyURLGenerator().Gen(e.TenantID, e.Username, e.ActionReqList)
 }
 
 // NewIAMPermErr xxx

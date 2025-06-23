@@ -56,6 +56,7 @@ func (t *TemplateSpaceCollectAction) checkAccess(ctx context.Context) error {
 	permCtx := &projectAuth.PermCtx{
 		Username:  ctx.Value(ctxkey.UsernameKey).(string),
 		ProjectID: project.ID,
+		TenantID:  ctxkey.GetTenantIDFromCtx(ctx),
 	}
 	if allow, err := iam.NewProjectPerm().CanView(permCtx); err != nil {
 		return err

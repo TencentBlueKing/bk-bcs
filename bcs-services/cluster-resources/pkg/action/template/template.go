@@ -71,6 +71,7 @@ func (t *TemplateAction) checkAccess(ctx context.Context) error {
 	permCtx := &projectAuth.PermCtx{
 		Username:  ctxkey.GetUsernameFromCtx(ctx),
 		ProjectID: project.ID,
+		TenantID:  ctxkey.GetTenantIDFromCtx(ctx),
 	}
 	if allow, err := iam.NewProjectPerm().CanView(permCtx); err != nil {
 		return err
