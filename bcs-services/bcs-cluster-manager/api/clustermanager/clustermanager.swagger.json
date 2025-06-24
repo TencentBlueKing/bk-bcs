@@ -15217,6 +15217,14 @@
           "$ref": "#/definitions/clustermanagerInstanceChargePrepaid",
           "description": "实例的计费模式。当instanceChargeType为包年包月时，设置续费策略",
           "title": "charge"
+        },
+        "networkTag": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "网络标记，标记代表应用于每个节点的防火墙规则",
+          "title": "networkTag"
         }
       },
       "title": "LaunchConfigure template for scaling node"
