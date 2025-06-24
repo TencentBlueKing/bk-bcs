@@ -1046,6 +1046,7 @@ cluster:
             premium: 高性能云硬盘
             ssd: SSD云硬盘
             hssd: 增强型SSD云硬盘
+            bssd: 通用型SSD云硬盘
             balanced: 平衡性磁盘
             standard: 标准磁盘
             Standard_LRS: 标准 HDD

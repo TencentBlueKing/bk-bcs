@@ -1294,6 +1294,7 @@ cluster:
             premium: High -performance cloud hard disk
             ssd: SSD cloud hard disk
             hssd: Enhanced SSD cloud hard disk
+            bssd: General SSD cloud hard disk
             balanced: Balanced Disk
             standard: Standard Disk
             Standard_LRS: Standard HDD
