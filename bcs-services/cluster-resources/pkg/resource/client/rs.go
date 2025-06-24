@@ -103,6 +103,14 @@ func (c *RSClient) GetResHistoryRevision(ctx context.Context, kind, namespace, n
 	}
 	SortInts64Desc(versions)
 
+	var formatFun func(manifest map[string]interface{}) map[string]interface{}
+	// kind不同，unstructuredObj返回数据格式也不同
+	if kind == resCsts.Deploy {
+		formatFun = formatter.FormatWorkloadRes
+	} else {
+		formatFun = formatter.FormatControllerRevisionRes
+	}
+
 	for _, v := range versions {
 		var unstructuredObj map[string]interface{}
 		unstructuredObj, err = runtime.DefaultUnstructuredConverter.ToUnstructured(s[v])
@@ -110,7 +118,7 @@ func (c *RSClient) GetResHistoryRevision(ctx context.Context, kind, namespace, n
 			log.Error(ctx, "convert to unstructured failed, err %s", err.Error())
 			continue
 		}
-		ret := formatter.FormatControllerRevisionRes(unstructuredObj)
+		ret := formatFun(unstructuredObj)
 		ret["revision"] = v
 		m = append(m, ret)
 	}
