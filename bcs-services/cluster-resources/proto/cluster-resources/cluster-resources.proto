@@ -2034,6 +2034,48 @@ service MultiCluster {
 			summary: "Get multi cluster resources count"
 		};
 	}
+
+	rpc GetApiResourcesObject(GetApiResourcesObjectReq) returns (CommonResp) {
+		option (google.api.http) = {
+			get: "/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object/{resName}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "获取 api resources资源对象"
+			summary: "GetApiResourcesObject API"
+		};
+	}
+
+	rpc CreateApiResourcesObject(CreateApiResourcesObjectReq) returns (CommonResp) {
+		option (google.api.http) = {
+			post: "/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "创建 api resources资源对象"
+			summary: "CreateApiResourcesObject API"
+		};
+	}
+
+	rpc UpdateApiResourcesObject(UpdateApiResourcesObjectReq) returns (CommonResp) {
+		option (google.api.http) = {
+			put: "/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object"
+			body: "*"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "更新 api resources资源对象"
+			summary: "UpdateApiResourcesObject API"
+		};
+	}
+
+	rpc DeleteApiResourcesObject(DeleteApiResourcesObjectReq) returns (CommonResp) {
+		option (google.api.http) = {
+			delete: "/clusterresources/v1/projects/{projectCode}/clusters/{clusterID}/res_object/{resName}"
+		};
+		option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+			description: "删除 api resources资源对象"
+			summary: "DeleteApiResourcesObject API"
+		};
+	}
 }
 
 // 基础类请求/响应体
@@ -3850,4 +3892,84 @@ message MultiClusterResourceCountReq {
 	CreateSource createSource = 7 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
 		title: "createSource"
 	}];
+}
+
+message GetApiResourcesObjectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "GetApiResourcesObjectReq", description: "获取 api resources资源对象"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string resName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {min_len: 1}];
+	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["", "manifest", "formData"]}];
+	string namespace = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 64}];
+	string kind = 6 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {min_len: 1, max_len: 128}];
+}
+
+message CreateApiResourcesObjectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "CreateApiResourcesObjectReq", description: "创建 api resources资源对象"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	google.protobuf.Struct rawData = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["", "manifest"]}];
+	bool namespaced = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "是否属于命名空间作用域"
+	}];
+}
+
+message UpdateApiResourcesObjectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "UpdateApiResourcesObjectReq", description: "更新 api resources资源对象"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	google.protobuf.Struct rawData = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {title: "资源配置信息"}];
+	string format = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源配置格式（manifest/formData）"
+	}, (validate.rules).string = {in: ["", "manifest"]}];
+}
+
+message DeleteApiResourcesObjectReq {
+	option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
+		json_schema: {title: "DeleteApiResourcesObjectReq", description: "删除 api resources资源对象"}
+	};
+	string projectCode = 1 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "项目编码"
+	}, (validate.rules).string = {min_len: 1, max_len: 64}];
+	string clusterID = 2 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "集群 ID"
+	}, (validate.rules).string = {min_len: 13, max_len: 14}];
+	string resName = 3 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源名称"
+	}, (validate.rules).string = {min_len: 1}];
+	string namespace = 4 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "命名空间"
+	}, (validate.rules).string = {max_len: 64}];
+	string kind = 5 [(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+		title: "资源类型"
+	}, (validate.rules).string = {max_len: 128}];
 }
