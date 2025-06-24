@@ -1176,6 +1176,10 @@ cluster:
           desc: >-
             Cluster
             Autoscaler组件在扩容节点时会使用节点管理API自动安装gse_agent，以保证监控、日志、标准运维的正常使用，这里的云区域是指节点管理安装gse_agent时指定的云区域，默认为“直连区域”
+        networkTag:
+          title: 网络标记
+          desc: 标记代表应用于每个节点的防火墙规则
+          link: 添加网络标记
       detail:
         title:
           bashContent: Bash脚本内容
