@@ -38,6 +38,7 @@ type BkLogConfigSpec struct {
 	LabelSelector      *metav1.LabelSelector `json:"labelSelector,omitempty"`
 	Path               []string              `json:"path,omitempty"`
 	Encoding           string                `json:"encoding,omitempty"`
+	ExtMeta            map[string]string     `json:"extMeta,omitempty"`
 }
 
 // BKLogConfigGVR is the GroupVersionResource for BkLogConfig

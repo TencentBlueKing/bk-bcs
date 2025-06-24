@@ -21,6 +21,8 @@ type BKLogConf struct {
 
 // BKBaseConf bk base config
 type BKBaseConf struct {
-	APIServer        string `yaml:"api_server"`         // openapi 地址
-	AuditChannelName string `yaml:"audit_channel_name"` // 审计通道名称
+	APIServer               string `yaml:"api_server"`                 // openapi 地址
+	AuditChannelName        string `yaml:"audit_channel_name"`         // 审计通道名称
+	AuditChannelBindingName string `yaml:"audit_channel_binding_name"` // 审计通道绑定名称
+	AuditDataLinkID         int    `yaml:"audit_data_link_id"`         // 审计数据链路ID
 }

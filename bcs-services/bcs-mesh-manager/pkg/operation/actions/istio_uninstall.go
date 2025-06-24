@@ -95,9 +95,9 @@ func (i *IstioUninstallAction) Execute(ctx context.Context) error {
 	// 删除集群中的istio
 	for _, cluster := range clusters {
 		if err := i.uninstallIstio(ctx, cluster); err != nil {
-			blog.Errorf("uninstall istio for mesh %s failed, clusterID: %s, err: %s",
+			blog.Errorf("[%s]uninstall istio for cluster %s failed, err: %s",
 				i.MeshID, cluster, err)
-			return fmt.Errorf("uninstall istio for mesh %s failed: %s", i.MeshID, err)
+			return fmt.Errorf("uninstall istio for cluster %s failed: %s", cluster, err)
 		}
 	}
 	return nil
@@ -107,16 +107,17 @@ func (i *IstioUninstallAction) Execute(ctx context.Context) error {
 func (i *IstioUninstallAction) Done(err error) {
 	m := make(entity.M)
 	if err != nil {
-		blog.Errorf("istio uninstall operation failed for mesh %s, err: %s", i.MeshID, err)
+		blog.Errorf("[%s]istio uninstall operation failed, err: %s", i.MeshID, err)
 		m[entity.FieldKeyStatus] = common.IstioStatusUninstallingFailed
-		m[entity.FieldKeyStatusMessage] = err.Error()
+		m[entity.FieldKeyStatusMessage] = fmt.Sprintf("卸载失败，%s", err.Error())
 	} else {
+		blog.Infof("[%s]istio uninstall success", i.MeshID)
 		m[entity.FieldKeyStatus] = common.IstioStatusUninstalled
 	}
 	// 更新mesh状态为已删除
 	updateErr := i.Model.Update(context.TODO(), i.MeshID, m)
 	if updateErr != nil {
-		blog.Errorf("update mesh status failed for mesh %s, err: %s", i.MeshID, updateErr)
+		blog.Errorf("[%s]update mesh status failed, err: %s", i.MeshID, updateErr)
 	}
 }
 
@@ -144,12 +145,12 @@ func (i *IstioUninstallAction) uninstallIstioComponent(ctx context.Context, clus
 		Namespace:   pointer.String(common.IstioNamespace),
 	})
 	if err != nil {
-		blog.Errorf("helm uninstall %s failed, meshID: %s, clusterID: %s, err: %s",
-			componentName, i.MeshID, clusterID, err)
+		blog.Errorf("[%s]helm uninstall %s failed, clusterID: %s, err: %s",
+			i.MeshID, componentName, clusterID, err)
 		return fmt.Errorf("uninstall %s failed: %s", componentName, err)
 	}
 	if resp.Result != nil && !*resp.Result {
-		blog.Errorf("helm uninstall %s failed, meshID: %s, clusterID: %s, resp message: %s",
+		blog.Errorf("[%s]helm uninstall %s failed, meshID: %s, clusterID: %s, resp message: %s",
 			componentName, i.MeshID, clusterID, *resp.Message)
 		return fmt.Errorf("uninstall %s failed: %s", componentName, *resp.Message)
 	}
@@ -163,8 +164,8 @@ func (i *IstioUninstallAction) uninstallIstioComponent(ctx context.Context, clus
 	for {
 		select {
 		case <-timeout.C:
-			blog.Errorf("uninstall %s timeout, meshID: %s, clusterID: %s",
-				componentName, i.MeshID, clusterID)
+			blog.Errorf("[%s]uninstall %s timeout, clusterID: %s",
+				i.MeshID, componentName, clusterID)
 			return fmt.Errorf("uninstall %s timeout for cluster %s", componentName, clusterID)
 		case <-ticker.C:
 			// 查询 release 是否存在
@@ -175,8 +176,8 @@ func (i *IstioUninstallAction) uninstallIstioComponent(ctx context.Context, clus
 				Namespace:   pointer.String(common.IstioNamespace),
 			})
 			if err != nil {
-				blog.Errorf("get %s release status failed, meshID: %s, clusterID: %s, err: %v",
-					componentName, i.MeshID, clusterID, err)
+				blog.Errorf("[%s]get %s release status failed, clusterID: %s, err: %v",
+					i.MeshID, componentName, clusterID, err)
 				return fmt.Errorf("get %s release status failed: %v", componentName, err)
 			}
 			if detail != nil && detail.Message != nil && *detail.Message == driver.ErrReleaseNotFound.Error() {

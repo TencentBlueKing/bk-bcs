@@ -1793,106 +1793,6 @@ message Cluster {
   }];
 }
 
-message BusinessCluster {
-  option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {
-      title : "Cluster"
-      description : "记录集群信息，用于维护集群状态"
-    }
-  };
-  string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "clusterID", 
-    description: "BCS内部使用集群ID，格式为BCS-K8S-XXXXX"
-  }];
-  string clusterName = 2[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "clusterName", 
-    description: "集群名称"
-  }];
-  string provider = 3[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "provider", 
-    description: "集群云配置，为云类型ID"
-  }];
-  string region = 4[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "region", 
-    description: "集群区域信息"
-  }];
-  string vpcID = 5[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "vpcID", 
-    description: "集群所在vpc，部分环境下非必填"
-  }];
-  string projectID = 6[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "projectID", 
-    description: "集群所关联的项目ID"
-  }];
-  string businessID = 7[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "businessID", 
-    description: "项目绑定的业务ID, 集群所关联的业务ID，该ID来源于CMDB"
-  }];
-  string environment = 8[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "environment",
-    description: "集群所对应的环境信息，stag，debug，prod"
-  }];
-  string engineType = 9[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "engineType", 
-    description: "集群编排引擎，k8s、mesos"
-  }];
-  string clusterType = 10[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "clusterType", 
-    description: "集群类型，federation、single"
-  }];
-  map<string, string> labels = 11[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "labels", 
-    description: "集群标签"
-  }];
-  string creator = 12[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "creator", 
-    description: "集群信息创建者"
-  }];
-  string createTime = 13;
-  string updateTime = 14;
-  string systemID = 15[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "systemID", 
-    description: "kubernetes集群在各云平台上资源ID"
-  }];
-  string manageType = 16[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "manageType", 
-    description: "集群管理类型，公有云时生效，MANAGED_CLUSTER(云上托管集群)，INDEPENDENT_CLUSTER(独立集群，自行维护)"
-  }];
-  string status = 17[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "status", 
-    description: "集群状态，可能状态CREATING，RUNNING，DELETING，FALURE，INITIALIZATION"
-  }, (validate.rules).string = {in: ["CREATING", "RUNNING", "DELETING", "FALURE", "INITIALIZATION"]}
-  ];
-  string updater = 18[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "updater", 
-    description: "集群信息更新者"
-  }];
-  string networkType = 19[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "networkType",
-    description: "集群网络类型，(underlay/overlay)"
-  }, (validate.rules).string = {in: ["underlay", "overlay", ""]}];
-  string moduleID = 20[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "moduleID",
-    description: "集群模块ID(CA添加节点时模块转移 废弃)"
-  }];
-  bool isCommonCluster = 21[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "isCommonCluster",
-    description: "是否为公共集群,默认false(废弃)"
-  }];
-  string description = 22[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "description",
-    description: "集群简要描述"
-  }];
-  string clusterCategory = 23[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "clusterCategory",
-    description: "集群类别，主要用于区分该集群是否是自建、导入(builder/importer), 默认是自建"
-  }];
-  bool is_shared = 24[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-    title: "is_shared",
-    description: "是否为共享集群,默认false"
-  }];
-}
-
 message SharedClusterRanges {
   repeated string bizs = 1;
   repeated string projectIdOrCodes = 2;
@@ -7547,7 +7447,7 @@ message ListBusinessClusterResp {
   } ];
   bool result = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
   {title : "result", description : "返回结果"} ];
-  repeated BusinessCluster data = 4
+  repeated ClusterBasicInfo data = 4
   [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
     title : "data",
     description : "集群信息列表"
@@ -15584,8 +15484,8 @@ message CustomDriver {
 message ClusterBasicInfo {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "ClusterSimplify"
-      description : "简化版集群信息"
+      title : "ClusterV2"
+      description : "简化集群信息"
     }
   };
   string clusterID = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {

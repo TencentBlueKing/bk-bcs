@@ -23,6 +23,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	cmproto "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/api/clustermanager"
+	iauth "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/auth"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store"
 	storeopt "github.com/Tencent/bk-bcs/bcs-services/bcs-cluster-manager/internal/store/options"
@@ -36,7 +37,7 @@ type ListBusinessClusterAction struct {
 
 	req         *cmproto.ListBusinessClusterReq
 	resp        *cmproto.ListBusinessClusterResp
-	clusterList []*cmproto.BusinessCluster
+	clusterList []*cmproto.ClusterBasicInfo
 }
 
 // NewListBusinessClusterAction create list action for business cluster
@@ -81,8 +82,14 @@ func (la *ListBusinessClusterAction) validate() error {
 		return err
 	}
 
+	// default use request operator
+	if la.req.Operator == "" {
+		username := iauth.GetUserFromCtx(la.ctx)
+		la.req.Operator = username
+	}
+
 	// check operator host permission
-	canUse := CheckUserHasPerm(la.req.BusinessID, la.req.Operator)
+	canUse := checkUserHasPerm(la.req.BusinessID, la.req.Operator)
 	if !canUse {
 		errMsg := fmt.Errorf("list business cluster failed: user[%s] no perm in bizID[%s]",
 			la.req.Operator, la.req.BusinessID)
@@ -113,8 +120,8 @@ func (la *ListBusinessClusterAction) listBusinessCluster() error {
 
 	// cluster sort
 	var (
-		otherCluster   = make([]*cmproto.BusinessCluster, 0)
-		runningCluster = make([]*cmproto.BusinessCluster, 0)
+		otherCluster   = make([]*cmproto.ClusterBasicInfo, 0)
+		runningCluster = make([]*cmproto.ClusterBasicInfo, 0)
 	)
 	for i := range clusterList {
 		if clusterList[i].IsShared {
@@ -122,43 +129,14 @@ func (la *ListBusinessClusterAction) listBusinessCluster() error {
 		}
 
 		if clusterList[i].Status == common.StatusRunning {
-			runningCluster = append(runningCluster, clusterToBusinessCluster(clusterList[i]))
+			runningCluster = append(runningCluster, clusterToClusterBasicInfo(clusterList[i]))
 		} else {
-			otherCluster = append(otherCluster, clusterToBusinessCluster(clusterList[i]))
+			otherCluster = append(otherCluster, clusterToClusterBasicInfo(clusterList[i]))
 		}
 	}
 
-	la.clusterList = append(la.clusterList, otherCluster...)
 	la.clusterList = append(la.clusterList, runningCluster...)
+	la.clusterList = append(la.clusterList, otherCluster...)
 
 	return nil
-}
-
-func clusterToBusinessCluster(cluster *cmproto.Cluster) *cmproto.BusinessCluster {
-	return &cmproto.BusinessCluster{
-		ClusterID:       cluster.ClusterID,
-		ClusterName:     cluster.ClusterName,
-		Provider:        cluster.Provider,
-		Region:          cluster.Region,
-		VpcID:           cluster.VpcID,
-		ProjectID:       cluster.ProjectID,
-		BusinessID:      cluster.BusinessID,
-		Environment:     cluster.Environment,
-		EngineType:      cluster.EngineType,
-		ClusterType:     cluster.ClusterType,
-		Labels:          cluster.Labels,
-		Creator:         cluster.Creator,
-		CreateTime:      cluster.CreateTime,
-		UpdateTime:      cluster.UpdateTime,
-		SystemID:        cluster.SystemID,
-		ManageType:      cluster.ManageType,
-		Status:          cluster.Status,
-		Updater:         cluster.Updater,
-		NetworkType:     cluster.NetworkType,
-		ModuleID:        cluster.ModuleID,
-		IsCommonCluster: cluster.IsCommonCluster,
-		Description:     cluster.Description,
-		ClusterCategory: cluster.ClusterCategory,
-		IsShared:        cluster.IsShared,
-	}
 }

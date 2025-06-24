@@ -16,6 +16,8 @@ import (
 	"slices"
 	"time"
 
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
@@ -24,11 +26,12 @@ import (
 type MeshIstio struct {
 	// Basic information
 	MeshID        string `bson:"meshID" json:"meshID" validate:"required"`
-	MeshName      string `bson:"meshName" json:"meshName" validate:"required"`
+	Name          string `bson:"name" json:"name" validate:"required"`
 	NetworkID     string `bson:"networkID" json:"networkID" validate:"required"`
 	ProjectID     string `bson:"projectID" json:"projectID" validate:"required"`
 	ProjectCode   string `bson:"projectCode" json:"projectCode" validate:"required"`
 	Description   string `bson:"description" json:"description"`
+	Version       string `bson:"version" json:"version" validate:"required"`
 	ChartVersion  string `bson:"chartVersion" json:"chartVersion" validate:"required"`
 	Status        string `bson:"status" json:"status" validate:"required"`
 	StatusMessage string `bson:"statusMessage" json:"statusMessage"`
@@ -80,15 +83,13 @@ type HighAvailability struct {
 
 // ObservabilityConfig represents observability configuration
 type ObservabilityConfig struct {
-	MetricsConfig        *MetricsConfig      `bson:"metricsConfig" json:"metricsConfig"`
-	LogCollectorConfig   *LogCollectorConfig `bson:"logCollectorConfig" json:"logCollectorConfig"`
-	TracingConfig        *TracingConfig      `bson:"tracingConfig" json:"tracingConfig"`
-	TraceSamplingPercent int32               `bson:"traceSamplingPercent" json:"traceSamplingPercent"`
+	MetricsConfig      *MetricsConfig      `bson:"metricsConfig" json:"metricsConfig"`
+	LogCollectorConfig *LogCollectorConfig `bson:"logCollectorConfig" json:"logCollectorConfig"`
+	TracingConfig      *TracingConfig      `bson:"tracingConfig" json:"tracingConfig"`
 }
 
 // MetricsConfig represents metrics configuration
 type MetricsConfig struct {
-	Enabled                    bool `bson:"enabled" json:"enabled"`
 	ControlPlaneMetricsEnabled bool `bson:"controlPlaneMetricsEnabled" json:"controlPlaneMetricsEnabled"`
 	DataPlaneMetricsEnabled    bool `bson:"dataPlaneMetricsEnabled" json:"dataPlaneMetricsEnabled"`
 }
@@ -114,6 +115,8 @@ type FeatureConfig struct {
 	Name string `bson:"name" json:"name"`
 	// Feature description
 	Description string `bson:"description" json:"description"`
+	// Feature value
+	Value string `bson:"value" json:"value"`
 	// Default value of the feature
 	DefaultValue string `bson:"defaultValue" json:"defaultValue"`
 	// Available values for the feature
@@ -123,28 +126,18 @@ type FeatureConfig struct {
 }
 
 // Transfer2Proto converts MeshIstio entity to proto message
+// nolint:funlen
 func (m *MeshIstio) Transfer2Proto() *meshmanager.IstioListItem {
-	// 转换基本字段
-	proto := m.transferBasicFields()
-
-	// 转换配置相关字段
-	proto.SidecarResourceConfig = m.transferSidecarResourceConfig()
-	proto.HighAvailability = m.transferHighAvailability()
-	proto.ObservabilityConfig = m.transferObservabilityConfig()
-	proto.FeatureConfigs = m.transferFeatureConfigs()
-
-	return proto
-}
-
-// transferBasicFields 转换基本字段
-func (m *MeshIstio) transferBasicFields() *meshmanager.IstioListItem {
-	return &meshmanager.IstioListItem{
+	// TODO: 考虑直接序列化转换数据，避免逐个赋值
+	istioListItem := &meshmanager.IstioListItem{
 		MeshID:           m.MeshID,
-		MeshName:         m.MeshName,
+		Name:             m.Name,
 		ProjectID:        m.ProjectID,
 		ProjectCode:      m.ProjectCode,
+		NetworkID:        m.NetworkID,
 		Description:      m.Description,
 		ChartVersion:     m.ChartVersion,
+		Version:          m.Version,
 		Status:           m.Status,
 		StatusMessage:    m.StatusMessage,
 		CreateTime:       m.CreateTime,
@@ -157,138 +150,111 @@ func (m *MeshIstio) transferBasicFields() *meshmanager.IstioListItem {
 		RemoteClusters:   m.RemoteClusters,
 		DifferentNetwork: m.DifferentNetwork,
 	}
-}
 
-// transferFeatureConfigs 转换特性配置
-func (m *MeshIstio) transferFeatureConfigs() map[string]*meshmanager.FeatureConfig {
-	protoFeatureConfigs := make(map[string]*meshmanager.FeatureConfig)
-	for name, config := range m.FeatureConfigs {
-		// 只转换支持的特性
-		if !slices.Contains(common.SupportedFeatures, name) {
-			continue
-		}
-
-		protoFeatureConfigs[name] = &meshmanager.FeatureConfig{
-			Name:            config.Name,
-			Description:     config.Description,
-			DefaultValue:    config.DefaultValue,
-			AvailableValues: config.AvailableValues,
-			SupportVersions: config.SupportVersions,
-		}
-	}
-	return protoFeatureConfigs
-}
-
-// transferSidecarResourceConfig 转换 Sidecar 资源配置
-func (m *MeshIstio) transferSidecarResourceConfig() *meshmanager.ResourceConfig {
-	if m.SidecarResourceConfig == nil {
-		return nil
-	}
-	return &meshmanager.ResourceConfig{
-		CpuRequest:    m.SidecarResourceConfig.CpuRequest,
-		CpuLimit:      m.SidecarResourceConfig.CpuLimit,
-		MemoryRequest: m.SidecarResourceConfig.MemoryRequest,
-		MemoryLimit:   m.SidecarResourceConfig.MemoryLimit,
-	}
-}
-
-// transferHighAvailability 转换高可用配置
-func (m *MeshIstio) transferHighAvailability() *meshmanager.HighAvailability {
-	if m.HighAvailability == nil {
-		return nil
-	}
-
-	protoHighAvailability := &meshmanager.HighAvailability{
-		AutoscaleEnabled:                   m.HighAvailability.AutoscaleEnabled,
-		AutoscaleMin:                       m.HighAvailability.AutoscaleMin,
-		AutoscaleMax:                       m.HighAvailability.AutoscaleMax,
-		ReplicaCount:                       m.HighAvailability.ReplicaCount,
-		TargetCPUAverageUtilizationPercent: m.HighAvailability.TargetCPUAverageUtilizationPercent,
-	}
-
-	if m.HighAvailability.ResourceConfig != nil {
-		protoHighAvailability.ResourceConfig = &meshmanager.ResourceConfig{
-			CpuRequest:    m.HighAvailability.ResourceConfig.CpuRequest,
-			CpuLimit:      m.HighAvailability.ResourceConfig.CpuLimit,
-			MemoryRequest: m.HighAvailability.ResourceConfig.MemoryRequest,
-			MemoryLimit:   m.HighAvailability.ResourceConfig.MemoryLimit,
+	// 转换 Sidecar 资源配置
+	if m.SidecarResourceConfig != nil {
+		istioListItem.SidecarResourceConfig = &meshmanager.ResourceConfig{
+			CpuRequest:    wrapperspb.String(m.SidecarResourceConfig.CpuRequest),
+			CpuLimit:      wrapperspb.String(m.SidecarResourceConfig.CpuLimit),
+			MemoryRequest: wrapperspb.String(m.SidecarResourceConfig.MemoryRequest),
+			MemoryLimit:   wrapperspb.String(m.SidecarResourceConfig.MemoryLimit),
 		}
 	}
 
-	if m.HighAvailability.DedicatedNode != nil {
-		protoHighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
-			Enabled:    m.HighAvailability.DedicatedNode.Enabled,
-			NodeLabels: m.HighAvailability.DedicatedNode.NodeLabels,
+	// 转换高可用配置
+	if m.HighAvailability != nil {
+		istioListItem.HighAvailability = &meshmanager.HighAvailability{
+			AutoscaleEnabled:                   wrapperspb.Bool(m.HighAvailability.AutoscaleEnabled),
+			AutoscaleMin:                       wrapperspb.Int32(m.HighAvailability.AutoscaleMin),
+			AutoscaleMax:                       wrapperspb.Int32(m.HighAvailability.AutoscaleMax),
+			ReplicaCount:                       wrapperspb.Int32(m.HighAvailability.ReplicaCount),
+			TargetCPUAverageUtilizationPercent: wrapperspb.Int32(m.HighAvailability.TargetCPUAverageUtilizationPercent),
+		}
+
+		if m.HighAvailability.ResourceConfig != nil {
+			istioListItem.HighAvailability.ResourceConfig = &meshmanager.ResourceConfig{
+				CpuRequest:    wrapperspb.String(m.HighAvailability.ResourceConfig.CpuRequest),
+				CpuLimit:      wrapperspb.String(m.HighAvailability.ResourceConfig.CpuLimit),
+				MemoryRequest: wrapperspb.String(m.HighAvailability.ResourceConfig.MemoryRequest),
+				MemoryLimit:   wrapperspb.String(m.HighAvailability.ResourceConfig.MemoryLimit),
+			}
+		}
+
+		if m.HighAvailability.DedicatedNode != nil {
+			istioListItem.HighAvailability.DedicatedNode = &meshmanager.DedicatedNode{
+				Enabled:    wrapperspb.Bool(m.HighAvailability.DedicatedNode.Enabled),
+				NodeLabels: m.HighAvailability.DedicatedNode.NodeLabels,
+			}
 		}
 	}
 
-	return protoHighAvailability
-}
+	// 转换可观测性配置
+	if m.ObservabilityConfig != nil {
+		istioListItem.ObservabilityConfig = &meshmanager.ObservabilityConfig{}
 
-func (m *MeshIstio) transferObservabilityConfig() *meshmanager.ObservabilityConfig {
-	if m.ObservabilityConfig == nil {
-		return nil
+		// 转换指标配置
+		if m.ObservabilityConfig.MetricsConfig != nil {
+			istioListItem.ObservabilityConfig.MetricsConfig = &meshmanager.MetricsConfig{
+				ControlPlaneMetricsEnabled: wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled),
+				DataPlaneMetricsEnabled:    wrapperspb.Bool(m.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled),
+			}
+		}
+
+		// 转换日志收集配置
+		if m.ObservabilityConfig.LogCollectorConfig != nil {
+			istioListItem.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{
+				Enabled:           wrapperspb.Bool(m.ObservabilityConfig.LogCollectorConfig.Enabled),
+				AccessLogEncoding: wrapperspb.String(m.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding),
+				AccessLogFormat:   wrapperspb.String(m.ObservabilityConfig.LogCollectorConfig.AccessLogFormat),
+			}
+		}
+
+		// 转换链路追踪配置
+		if m.ObservabilityConfig.TracingConfig != nil {
+			istioListItem.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{
+				Enabled:              wrapperspb.Bool(m.ObservabilityConfig.TracingConfig.Enabled),
+				Endpoint:             wrapperspb.String(m.ObservabilityConfig.TracingConfig.Endpoint),
+				BkToken:              wrapperspb.String(m.ObservabilityConfig.TracingConfig.BkToken),
+				TraceSamplingPercent: wrapperspb.Int32(m.ObservabilityConfig.TracingConfig.TraceSamplingPercent),
+			}
+		}
 	}
 
-	protoObservabilityConfig := &meshmanager.ObservabilityConfig{
-		MetricsConfig:      m.transferMetricsConfig(),
-		LogCollectorConfig: m.transferLogCollectorConfig(),
-		TracingConfig:      m.transferTracingConfig(),
+	// 转换特性配置
+	if len(m.FeatureConfigs) > 0 {
+		istioListItem.FeatureConfigs = make(map[string]*meshmanager.FeatureConfig)
+		for name, config := range m.FeatureConfigs {
+			// 只转换支持的特性
+			if !slices.Contains(common.SupportedFeatures, name) {
+				continue
+			}
+			istioListItem.FeatureConfigs[name] = &meshmanager.FeatureConfig{
+				Name:            config.Name,
+				Description:     config.Description,
+				DefaultValue:    config.DefaultValue,
+				AvailableValues: config.AvailableValues,
+				SupportVersions: config.SupportVersions,
+			}
+		}
 	}
 
-	return protoObservabilityConfig
-}
-
-func (m *MeshIstio) transferMetricsConfig() *meshmanager.MetricsConfig {
-	if m.ObservabilityConfig == nil || m.ObservabilityConfig.MetricsConfig == nil {
-		return nil
-	}
-
-	return &meshmanager.MetricsConfig{
-		ControlPlaneMetricsEnabled: m.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled,
-		DataPlaneMetricsEnabled:    m.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled,
-	}
-}
-
-// transferLogCollectorConfig 转换日志收集配置
-func (m *MeshIstio) transferLogCollectorConfig() *meshmanager.LogCollectorConfig {
-	if m.ObservabilityConfig == nil || m.ObservabilityConfig.LogCollectorConfig == nil {
-		return nil
-	}
-	return &meshmanager.LogCollectorConfig{
-		Enabled:           m.ObservabilityConfig.LogCollectorConfig.Enabled,
-		AccessLogEncoding: m.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding,
-		AccessLogFormat:   m.ObservabilityConfig.LogCollectorConfig.AccessLogFormat,
-	}
-}
-
-// transferTracingConfig 转换链路追踪配置
-func (m *MeshIstio) transferTracingConfig() *meshmanager.TracingConfig {
-	if m.ObservabilityConfig == nil || m.ObservabilityConfig.TracingConfig == nil {
-		return nil
-	}
-	return &meshmanager.TracingConfig{
-		Enabled:              m.ObservabilityConfig.TracingConfig.Enabled,
-		Endpoint:             m.ObservabilityConfig.TracingConfig.Endpoint,
-		BkToken:              m.ObservabilityConfig.TracingConfig.BkToken,
-		TraceSamplingPercent: m.ObservabilityConfig.TraceSamplingPercent,
-	}
+	return istioListItem
 }
 
 // TransferFromProto converts InstallIstioRequest to MeshIstio entity
 // nolint:funlen
-func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
+func (m *MeshIstio) TransferFromProto(req *meshmanager.IstioRequest) {
 	// 转换基本字段
-	m.MeshName = req.Name
-	m.ProjectID = req.ProjectID
-	m.ProjectCode = req.ProjectCode
-	m.Description = req.Description
-	m.ChartVersion = req.Version
-	m.ControlPlaneMode = req.ControlPlaneMode
-	m.ClusterMode = req.ClusterMode
+	m.Name = req.Name.GetValue()
+	m.ProjectID = req.ProjectID.GetValue()
+	m.ProjectCode = req.ProjectCode.GetValue()
+	m.Description = req.Description.GetValue()
+	m.Version = req.Version.GetValue()
+	m.ControlPlaneMode = req.ControlPlaneMode.GetValue()
+	m.ClusterMode = req.ClusterMode.GetValue()
 	m.PrimaryClusters = req.PrimaryClusters
 	m.RemoteClusters = req.RemoteClusters
-	m.DifferentNetwork = req.DifferentNetwork
+	m.DifferentNetwork = req.DifferentNetwork.GetValue()
 	m.CreateTime = time.Now().Unix()
 	m.UpdateTime = time.Now().Unix()
 	m.CreateBy = "system" // TODO: get from context
@@ -297,60 +263,64 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 	// 转换 Sidecar 资源配置
 	if req.SidecarResourceConfig != nil {
 		m.SidecarResourceConfig = &ResourceConfig{
-			CpuRequest:    req.SidecarResourceConfig.CpuRequest,
-			CpuLimit:      req.SidecarResourceConfig.CpuLimit,
-			MemoryRequest: req.SidecarResourceConfig.MemoryRequest,
-			MemoryLimit:   req.SidecarResourceConfig.MemoryLimit,
+			CpuRequest:    req.SidecarResourceConfig.CpuRequest.GetValue(),
+			CpuLimit:      req.SidecarResourceConfig.CpuLimit.GetValue(),
+			MemoryRequest: req.SidecarResourceConfig.MemoryRequest.GetValue(),
+			MemoryLimit:   req.SidecarResourceConfig.MemoryLimit.GetValue(),
 		}
 	}
 
 	// 转换高可用配置
 	if req.HighAvailability != nil {
 		m.HighAvailability = &HighAvailability{
-			AutoscaleEnabled:                   req.HighAvailability.AutoscaleEnabled,
-			AutoscaleMin:                       req.HighAvailability.AutoscaleMin,
-			AutoscaleMax:                       req.HighAvailability.AutoscaleMax,
-			ReplicaCount:                       req.HighAvailability.ReplicaCount,
-			TargetCPUAverageUtilizationPercent: req.HighAvailability.TargetCPUAverageUtilizationPercent,
+			AutoscaleEnabled:                   req.HighAvailability.AutoscaleEnabled.GetValue(),
+			AutoscaleMin:                       req.HighAvailability.AutoscaleMin.GetValue(),
+			AutoscaleMax:                       req.HighAvailability.AutoscaleMax.GetValue(),
+			ReplicaCount:                       req.HighAvailability.ReplicaCount.GetValue(),
+			TargetCPUAverageUtilizationPercent: req.HighAvailability.TargetCPUAverageUtilizationPercent.GetValue(),
 		}
 
 		if req.HighAvailability.ResourceConfig != nil {
 			m.HighAvailability.ResourceConfig = &ResourceConfig{
-				CpuRequest:    req.HighAvailability.ResourceConfig.CpuRequest,
-				CpuLimit:      req.HighAvailability.ResourceConfig.CpuLimit,
-				MemoryRequest: req.HighAvailability.ResourceConfig.MemoryRequest,
-				MemoryLimit:   req.HighAvailability.ResourceConfig.MemoryLimit,
+				CpuRequest:    req.HighAvailability.ResourceConfig.CpuRequest.GetValue(),
+				CpuLimit:      req.HighAvailability.ResourceConfig.CpuLimit.GetValue(),
+				MemoryRequest: req.HighAvailability.ResourceConfig.MemoryRequest.GetValue(),
+				MemoryLimit:   req.HighAvailability.ResourceConfig.MemoryLimit.GetValue(),
 			}
 		}
 
 		if req.HighAvailability.DedicatedNode != nil {
 			m.HighAvailability.DedicatedNode = &DedicatedNode{
-				Enabled:    req.HighAvailability.DedicatedNode.Enabled,
+				Enabled:    req.HighAvailability.DedicatedNode.Enabled.GetValue(),
 				NodeLabels: req.HighAvailability.DedicatedNode.NodeLabels,
 			}
 
 		}
 	}
 
-	// 转换日志收集配置
-	if m.ObservabilityConfig == nil {
+	// 可观测性配置
+	if req.ObservabilityConfig != nil {
 		m.ObservabilityConfig = &ObservabilityConfig{}
-	}
-	if req.ObservabilityConfig != nil && req.ObservabilityConfig.LogCollectorConfig != nil {
-		m.ObservabilityConfig.LogCollectorConfig = &LogCollectorConfig{
-			Enabled:           req.ObservabilityConfig.LogCollectorConfig.Enabled,
-			AccessLogEncoding: req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding,
-			AccessLogFormat:   req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat,
+		if req.ObservabilityConfig.LogCollectorConfig != nil {
+			m.ObservabilityConfig.LogCollectorConfig = &LogCollectorConfig{
+				Enabled:           req.ObservabilityConfig.LogCollectorConfig.Enabled.GetValue(),
+				AccessLogEncoding: req.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue(),
+				AccessLogFormat:   req.ObservabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue(),
+			}
 		}
-	}
-
-	// 转换链路追踪配置
-	if req.ObservabilityConfig != nil && req.ObservabilityConfig.TracingConfig != nil {
-		m.ObservabilityConfig.TracingConfig = &TracingConfig{
-			Enabled:              req.ObservabilityConfig.TracingConfig.Enabled,
-			Endpoint:             req.ObservabilityConfig.TracingConfig.Endpoint,
-			BkToken:              req.ObservabilityConfig.TracingConfig.BkToken,
-			TraceSamplingPercent: req.ObservabilityConfig.TracingConfig.TraceSamplingPercent,
+		if req.ObservabilityConfig.TracingConfig != nil {
+			m.ObservabilityConfig.TracingConfig = &TracingConfig{
+				Enabled:              req.ObservabilityConfig.TracingConfig.Enabled.GetValue(),
+				Endpoint:             req.ObservabilityConfig.TracingConfig.Endpoint.GetValue(),
+				BkToken:              req.ObservabilityConfig.TracingConfig.BkToken.GetValue(),
+				TraceSamplingPercent: req.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue(),
+			}
+		}
+		if req.ObservabilityConfig.MetricsConfig != nil {
+			m.ObservabilityConfig.MetricsConfig = &MetricsConfig{
+				ControlPlaneMetricsEnabled: req.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue(),
+				DataPlaneMetricsEnabled:    req.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue(),
+			}
 		}
 	}
 
@@ -371,112 +341,4 @@ func (m *MeshIstio) TransferFromProto(req *meshmanager.InstallIstioRequest) {
 			}
 		}
 	}
-}
-
-// UpdateFromProto converts UpdateIstioRequest to update fields
-func (m *MeshIstio) UpdateFromProto(req *meshmanager.UpdateIstioRequest) M {
-	updateFields := m.updateBasicFields(req)
-	m.updateResourceConfigs(req, updateFields)
-	m.updateFeatureConfigs(req, updateFields)
-	return updateFields
-}
-
-// updateBasicFields updates basic fields from request
-func (m *MeshIstio) updateBasicFields(req *meshmanager.UpdateIstioRequest) M {
-	return M{
-		"description":      req.Description,
-		"primaryClusters":  req.PrimaryClusters,
-		"remoteClusters":   req.RemoteClusters,
-		"differentNetwork": req.DifferentNetwork,
-		"updateTime":       time.Now().Unix(),
-		"updateBy":         "system", // TODO: get from context
-	}
-}
-
-// updateResourceConfigs updates resource related configurations
-func (m *MeshIstio) updateResourceConfigs(req *meshmanager.UpdateIstioRequest, updateFields M) {
-	// Update Sidecar resource config
-	if req.SidecarResourceConfig != nil {
-		updateFields["sidecarResourceConfig"] = &ResourceConfig{
-			CpuRequest:    req.SidecarResourceConfig.CpuRequest,
-			CpuLimit:      req.SidecarResourceConfig.CpuLimit,
-			MemoryRequest: req.SidecarResourceConfig.MemoryRequest,
-			MemoryLimit:   req.SidecarResourceConfig.MemoryLimit,
-		}
-	}
-
-	// Update high availability config
-	if req.HighAvailability != nil {
-		updateFields["highAvailability"] = m.convertHighAvailability(req.HighAvailability)
-	}
-
-	// Update log collector config
-	if req.LogCollectorConfig != nil {
-		updateFields["logCollectorConfig"] = &LogCollectorConfig{
-			Enabled:           req.LogCollectorConfig.Enabled,
-			AccessLogEncoding: req.LogCollectorConfig.AccessLogEncoding,
-			AccessLogFormat:   req.LogCollectorConfig.AccessLogFormat,
-		}
-	}
-
-	// Update tracing config
-	if req.TracingConfig != nil {
-		updateFields["tracingConfig"] = &TracingConfig{
-			Enabled:  req.TracingConfig.Enabled,
-			Endpoint: req.TracingConfig.Endpoint,
-			BkToken:  req.TracingConfig.BkToken,
-		}
-	}
-}
-
-// convertHighAvailability converts proto HighAvailability to entity
-func (m *MeshIstio) convertHighAvailability(ha *meshmanager.HighAvailability) *HighAvailability {
-	highAvailability := &HighAvailability{
-		AutoscaleEnabled:                   ha.AutoscaleEnabled,
-		AutoscaleMin:                       ha.AutoscaleMin,
-		AutoscaleMax:                       ha.AutoscaleMax,
-		ReplicaCount:                       ha.ReplicaCount,
-		TargetCPUAverageUtilizationPercent: ha.TargetCPUAverageUtilizationPercent,
-	}
-
-	if ha.ResourceConfig != nil {
-		highAvailability.ResourceConfig = &ResourceConfig{
-			CpuRequest:    ha.ResourceConfig.CpuRequest,
-			CpuLimit:      ha.ResourceConfig.CpuLimit,
-			MemoryRequest: ha.ResourceConfig.MemoryRequest,
-			MemoryLimit:   ha.ResourceConfig.MemoryLimit,
-		}
-	}
-
-	if ha.DedicatedNode != nil {
-		highAvailability.DedicatedNode = &DedicatedNode{
-			Enabled:    ha.DedicatedNode.Enabled,
-			NodeLabels: ha.DedicatedNode.NodeLabels,
-		}
-	}
-
-	return highAvailability
-}
-
-// updateFeatureConfigs updates feature configurations
-func (m *MeshIstio) updateFeatureConfigs(req *meshmanager.UpdateIstioRequest, updateFields M) {
-	if len(req.FeatureConfigs) == 0 {
-		return
-	}
-
-	featureConfigs := make(map[string]*FeatureConfig)
-	for name, config := range req.FeatureConfigs {
-		// Only save supported features
-		if !slices.Contains(common.SupportedFeatures, name) {
-			continue
-		}
-		featureConfigs[name] = &FeatureConfig{
-			Name:            config.Name,
-			Description:     config.Description,
-			DefaultValue:    config.DefaultValue,
-			AvailableValues: config.AvailableValues,
-			SupportVersions: config.SupportVersions,
-		}
-	}
-	updateFields["featureConfigs"] = featureConfigs
 }

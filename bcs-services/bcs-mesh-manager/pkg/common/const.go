@@ -67,6 +67,9 @@ const (
 	AccessLogEncodingJSON = "json"
 	// AccessLogEncodingTEXT 日志编码text
 	AccessLogEncodingTEXT = "text"
+
+	// EnvPilotHTTP10 是否开启HTTP1.0
+	EnvPilotHTTP10 = "PILOT_HTTP10"
 )
 
 // IstioStatus 控制面状态
