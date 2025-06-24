@@ -35,7 +35,7 @@ type MeshManagerModel interface {
 	// List queries a list of meshes based on conditions and options
 	List(ctx context.Context, cond *operator.Condition, opt *utils.ListOption) (int64, []*entity.MeshIstio, error)
 	// Get gets a mesh by its ID
-	Get(ctx context.Context, meshID string) (*entity.MeshIstio, error)
+	Get(ctx context.Context, cond *operator.Condition) (*entity.MeshIstio, error)
 }
 
 // modelSet implements MeshManagerModel by embedding ModelMesh

@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/operator"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
@@ -93,7 +94,10 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 		return nil, common.NewCodeMessageError(common.InvalidRequestErrorCode, "invalid request parameters", err)
 	}
 
-	meshIstio, err := d.model.Get(ctx, d.req.MeshID)
+	meshIstio, err := d.model.Get(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
+		entity.FieldKeyMeshID:      d.req.MeshID,
+		entity.FieldKeyProjectCode: d.req.ProjectCode,
+	}))
 	if err != nil {
 		blog.Errorf("get mesh failed, meshID: %s, err: %s", d.req.MeshID, err)
 		return nil, common.NewCodeMessageError(common.DBErrorCode, "get mesh failed", err)
@@ -101,12 +105,6 @@ func (d *DeleteIstioAction) Validate(ctx context.Context) (*entity.MeshIstio, er
 	if meshIstio == nil {
 		blog.Errorf("mesh not found, meshID: %s", d.req.MeshID)
 		return nil, common.NewCodeMessageError(common.NotFoundErrorCode, "mesh not found", nil)
-	}
-
-	// 检查mesh状态是否允许删除
-	if meshIstio.Status != common.IstioStatusRunning {
-		blog.Errorf("mesh status is not running, meshID: %s, current status: %s", d.req.MeshID, meshIstio.Status)
-		return nil, common.NewCodeMessageError(common.InnerErrorCode, "mesh status is not running, cannot delete", nil)
 	}
 
 	// 检查集群中是否存在Istio资源，如果存在则不允许删除

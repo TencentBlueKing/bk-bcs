@@ -35,7 +35,7 @@ const (
 
 // GetConfigChartValues 从配置文件中获取istio安装的values
 // path目录中包含了以chartVersion命名的文件夹，文件夹中包含了values.yaml文件
-// 例如：./config/sample/istio/1.20/values.yaml
+// 例如：./config/sample/istio/1.20/base-values.yaml
 // 如果chartVersion中包含了小版本，但是没有对应的文件夹（例如：1.20.1的文件夹），则可以从1.20的文件夹中获取values
 func GetConfigChartValues(chartValuesPath, component, chartVersion string) (string, error) {
 	blog.Infof("GetConfigChartValues chartValuesPath: %s, component: %s, chartVersion: %s",
@@ -192,12 +192,6 @@ func GenIstiodValues(
 		blog.Errorf("gen istiod values by high availability failed: %s", err)
 		return "", err
 	}
-
-	var valuesMap map[string]interface{}
-	if yamlErr := yaml.Unmarshal([]byte(values), &valuesMap); yamlErr != nil {
-		blog.Errorf("unmarshal istiod values failed: %s", yamlErr)
-		return "", yamlErr
-	}
 	customValues, err := yaml.Marshal(installValues)
 	if err != nil {
 		blog.Errorf("marshal istiod values failed: %s", err)
@@ -220,28 +214,28 @@ func GenIstiodValuesBySidecarResource(
 	installValues *common.IstiodInstallValues,
 ) error {
 	if installOption.SidecarResourceConfig != nil {
-		if installOption.SidecarResourceConfig.CpuRequest != "" {
+		if installOption.SidecarResourceConfig.CpuRequest.GetValue() != "" {
 			if installValues.Global == nil {
 				installValues.Global = &common.IstiodGlobalConfig{}
 			}
 			if installValues.Global.Proxy == nil {
 				installValues.Global.Proxy = &common.IstioProxyConfig{}
 			}
-			if installOption.SidecarResourceConfig.CpuRequest != "" {
+			if installOption.SidecarResourceConfig.CpuRequest.GetValue() != "" {
 				installValues.Global.Proxy.Resources.Requests[v1.ResourceCPU] =
-					resource.MustParse(installOption.SidecarResourceConfig.CpuRequest)
+					resource.MustParse(installOption.SidecarResourceConfig.CpuRequest.GetValue())
 			}
-			if installOption.SidecarResourceConfig.CpuLimit != "" {
+			if installOption.SidecarResourceConfig.CpuLimit.GetValue() != "" {
 				installValues.Global.Proxy.Resources.Limits[v1.ResourceCPU] =
-					resource.MustParse(installOption.SidecarResourceConfig.CpuLimit)
+					resource.MustParse(installOption.SidecarResourceConfig.CpuLimit.GetValue())
 			}
-			if installOption.SidecarResourceConfig.MemoryRequest != "" {
+			if installOption.SidecarResourceConfig.MemoryRequest.GetValue() != "" {
 				installValues.Global.Proxy.Resources.Requests[v1.ResourceMemory] =
-					resource.MustParse(installOption.SidecarResourceConfig.MemoryRequest)
+					resource.MustParse(installOption.SidecarResourceConfig.MemoryRequest.GetValue())
 			}
-			if installOption.SidecarResourceConfig.MemoryLimit != "" {
+			if installOption.SidecarResourceConfig.MemoryLimit.GetValue() != "" {
 				installValues.Global.Proxy.Resources.Limits[v1.ResourceMemory] =
-					resource.MustParse(installOption.SidecarResourceConfig.MemoryLimit)
+					resource.MustParse(installOption.SidecarResourceConfig.MemoryLimit.GetValue())
 			}
 		}
 	}
@@ -289,7 +283,8 @@ func GenIstiodValuesByFeature(
 			if installValues.MeshConfig.DefaultConfig.ProxyMetadata == nil {
 				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsCapture = pointer.String(featureConfig.Value)
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsCapture =
+				pointer.String(featureConfig.Value)
 		case common.FeatureIstioMetaDnsAutoAllocate:
 			if installValues.MeshConfig == nil {
 				installValues.MeshConfig = &common.IstiodMeshConfig{}
@@ -300,7 +295,8 @@ func GenIstiodValuesByFeature(
 			if installValues.MeshConfig.DefaultConfig.ProxyMetadata == nil {
 				installValues.MeshConfig.DefaultConfig.ProxyMetadata = &common.ProxyMetadata{}
 			}
-			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsAutoAllocate = pointer.String(featureConfig.Value)
+			installValues.MeshConfig.DefaultConfig.ProxyMetadata.IstioMetaDnsAutoAllocate =
+				pointer.String(featureConfig.Value)
 		case common.FeatureIstioMetaHttp10:
 			if installValues.Pilot == nil {
 				installValues.Pilot = &common.IstiodPilotConfig{}
@@ -308,7 +304,7 @@ func GenIstiodValuesByFeature(
 			if installValues.Pilot.Env == nil {
 				installValues.Pilot.Env = make(map[string]string)
 			}
-			installValues.Pilot.Env["PILOT_HTTP10"] = featureConfig.Value
+			installValues.Pilot.Env[common.EnvPilotHTTP10] = featureConfig.Value
 		case common.FeatureExcludeIPRanges:
 			if installValues.Global == nil {
 				installValues.Global = &common.IstiodGlobalConfig{}
@@ -333,13 +329,15 @@ func GenIstiodValuesByObservability(
 	}
 	if observabilityConfig.LogCollectorConfig != nil {
 		// 日志采集配置，如果启用则配置，否则清空
-		if observabilityConfig.LogCollectorConfig.Enabled {
+		if observabilityConfig.LogCollectorConfig.Enabled.GetValue() {
 			installValues.MeshConfig.AccessLogFile = pointer.String(common.AccessLogFileStdout)
-			if observabilityConfig.LogCollectorConfig.AccessLogFormat != "" {
-				installValues.MeshConfig.AccessLogFormat = &observabilityConfig.LogCollectorConfig.AccessLogFormat
+			if observabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue() != "" {
+				installValues.MeshConfig.AccessLogFormat =
+					pointer.String(observabilityConfig.LogCollectorConfig.AccessLogFormat.GetValue())
 			}
-			if observabilityConfig.LogCollectorConfig.AccessLogEncoding != "" {
-				installValues.MeshConfig.AccessLogEncoding = &observabilityConfig.LogCollectorConfig.AccessLogEncoding
+			if observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue() != "" {
+				installValues.MeshConfig.AccessLogEncoding =
+					pointer.String(observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue())
 			}
 		} else {
 			installValues.MeshConfig.AccessLogFile = nil
@@ -377,7 +375,7 @@ func GenIstiodValuesByTracing(
 	}
 
 	// 关闭全链路追踪
-	if !tracingConfig.Enabled {
+	if !tracingConfig.Enabled.GetValue() {
 		installValues.MeshConfig.EnableTracing = pointer.Bool(false)
 		return nil
 	}
@@ -392,7 +390,7 @@ func GenIstiodValuesByTracing(
 	}
 	installValues.MeshConfig.DefaultConfig.TracingConfig = &common.TracingConfig{
 		Zipkin: &common.ZipkinConfig{
-			Address: pointer.String(tracingConfig.Endpoint),
+			Address: pointer.String(tracingConfig.Endpoint.GetValue()),
 		},
 	}
 	return nil
@@ -410,15 +408,15 @@ func GenIstiodValuesByHighAvailability(
 	if installValues.Pilot == nil {
 		installValues.Pilot = &common.IstiodPilotConfig{}
 	}
-	installValues.Pilot.ReplicaCount = pointer.Int32(highAvailability.ReplicaCount)
+	installValues.Pilot.ReplicaCount = pointer.Int32(highAvailability.ReplicaCount.GetValue())
 
 	// HPA
-	if highAvailability.AutoscaleEnabled {
+	if highAvailability.AutoscaleEnabled.GetValue() {
 		installValues.Pilot.AutoscaleEnabled = pointer.Bool(true)
-		installValues.Pilot.AutoscaleMin = pointer.Int32(highAvailability.AutoscaleMin)
-		installValues.Pilot.AutoscaleMax = pointer.Int32(highAvailability.AutoscaleMax)
+		installValues.Pilot.AutoscaleMin = pointer.Int32(highAvailability.AutoscaleMin.GetValue())
+		installValues.Pilot.AutoscaleMax = pointer.Int32(highAvailability.AutoscaleMax.GetValue())
 		installValues.Pilot.CPU = &common.HPACPUConfig{
-			TargetAverageUtilization: pointer.Int32(highAvailability.TargetCPUAverageUtilizationPercent),
+			TargetAverageUtilization: pointer.Int32(highAvailability.TargetCPUAverageUtilizationPercent.GetValue()),
 		}
 	} else {
 		installValues.Pilot.AutoscaleEnabled = pointer.Bool(false)
@@ -426,38 +424,38 @@ func GenIstiodValuesByHighAvailability(
 
 	// pilot资源设置
 	if highAvailability.ResourceConfig != nil {
-		if highAvailability.ResourceConfig.CpuRequest != "" {
+		if highAvailability.ResourceConfig.CpuRequest.GetValue() != "" {
 			if installValues.Pilot.Resources == nil {
 				installValues.Pilot.Resources = &v1.ResourceRequirements{}
 			}
 			installValues.Pilot.Resources.Requests[v1.ResourceCPU] =
-				resource.MustParse(highAvailability.ResourceConfig.CpuRequest)
+				resource.MustParse(highAvailability.ResourceConfig.CpuRequest.GetValue())
 		}
-		if highAvailability.ResourceConfig.CpuLimit != "" {
+		if highAvailability.ResourceConfig.CpuLimit.GetValue() != "" {
 			if installValues.Pilot.Resources == nil {
 				installValues.Pilot.Resources = &v1.ResourceRequirements{}
 			}
 			installValues.Pilot.Resources.Limits[v1.ResourceCPU] =
-				resource.MustParse(highAvailability.ResourceConfig.CpuLimit)
+				resource.MustParse(highAvailability.ResourceConfig.CpuLimit.GetValue())
 		}
-		if highAvailability.ResourceConfig.MemoryRequest != "" {
+		if highAvailability.ResourceConfig.MemoryRequest.GetValue() != "" {
 			if installValues.Pilot.Resources == nil {
 				installValues.Pilot.Resources = &v1.ResourceRequirements{}
 			}
 			installValues.Pilot.Resources.Requests[v1.ResourceMemory] =
-				resource.MustParse(highAvailability.ResourceConfig.MemoryRequest)
+				resource.MustParse(highAvailability.ResourceConfig.MemoryRequest.GetValue())
 		}
-		if highAvailability.ResourceConfig.MemoryLimit != "" {
+		if highAvailability.ResourceConfig.MemoryLimit.GetValue() != "" {
 			if installValues.Pilot.Resources == nil {
 				installValues.Pilot.Resources = &v1.ResourceRequirements{}
 			}
 			installValues.Pilot.Resources.Limits[v1.ResourceMemory] =
-				resource.MustParse(highAvailability.ResourceConfig.MemoryLimit)
+				resource.MustParse(highAvailability.ResourceConfig.MemoryLimit.GetValue())
 		}
 	}
 	// 专属节点
 	if highAvailability.DedicatedNode != nil {
-		if highAvailability.DedicatedNode.Enabled {
+		if highAvailability.DedicatedNode.Enabled.GetValue() {
 			if installValues.Pilot.NodeSelector == nil {
 				installValues.Pilot.NodeSelector = make(map[string]string)
 			}

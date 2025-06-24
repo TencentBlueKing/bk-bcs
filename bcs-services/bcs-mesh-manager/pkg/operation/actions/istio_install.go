@@ -112,7 +112,7 @@ func (i *IstioInstallAction) Done(err error) {
 	if err != nil {
 		blog.Errorf("[%s]istio install failed, err: %s", i.MeshID, err)
 		m[entity.FieldKeyStatus] = common.IstioStatusFailed
-		m[entity.FieldKeyStatusMessage] = err.Error()
+		m[entity.FieldKeyStatusMessage] = fmt.Sprintf("安装失败，%s", err.Error())
 	} else {
 		blog.Infof("[%s]istio install success", i.MeshID)
 		m[entity.FieldKeyStatus] = common.IstioStatusRunning

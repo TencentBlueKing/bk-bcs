@@ -21,7 +21,6 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/operation/actions"
@@ -35,7 +34,7 @@ import (
 type InstallIstioAction struct {
 	istioConfig *options.IstioConfig
 	model       store.MeshManagerModel
-	req         *meshmanager.InstallIstioRequest
+	req         *meshmanager.IstioRequest
 	resp        *meshmanager.InstallIstioResponse
 }
 
@@ -50,7 +49,7 @@ func NewInstallIstioAction(istioConfig *options.IstioConfig, model store.MeshMan
 // Handle handles the install istio request
 func (i *InstallIstioAction) Handle(
 	ctx context.Context,
-	req *meshmanager.InstallIstioRequest,
+	req *meshmanager.IstioRequest,
 	resp *meshmanager.InstallIstioResponse,
 ) error {
 
@@ -80,13 +79,13 @@ func (i *InstallIstioAction) Handle(
 // Validate 验证请求参数
 func (i *InstallIstioAction) Validate() error {
 	// 必填字段
-	if i.req.ProjectCode == "" && i.req.ProjectID == "" {
+	if i.req.ProjectCode.GetValue() == "" && i.req.ProjectID.GetValue() == "" {
 		return fmt.Errorf("project is required")
 	}
 	if len(i.req.PrimaryClusters) == 0 {
 		return fmt.Errorf("clusters is required")
 	}
-	if i.req.Version == "" {
+	if i.req.Version.GetValue() == "" {
 		return fmt.Errorf("chart version is required")
 	}
 	if i.req.FeatureConfigs == nil {
@@ -98,47 +97,40 @@ func (i *InstallIstioAction) Validate() error {
 		return err
 	}
 
-	// 检查主从集群版本
-	for _, cluster := range append(i.req.PrimaryClusters, i.req.RemoteClusters...) {
-		compatible, err := i.checkClusterVersionCompatible(cluster, i.req.Version)
-		if err != nil {
-			blog.Errorf("check cluster version compatible failed, err: %s, clusterID: %s", err, cluster)
-			return err
-		}
-		if !compatible {
-			blog.Errorf("cluster %s version is not compatible with istio version %s", cluster, i.req.Version)
-			return fmt.Errorf("cluster %s version is not compatible with istio version %s", cluster, i.req.Version)
-		}
+	// 检查主从集群版本兼容性
+	allClusters := make([]string, 0, len(i.req.PrimaryClusters)+len(i.req.RemoteClusters))
+	allClusters = append(allClusters, i.req.PrimaryClusters...)
+	allClusters = append(allClusters, i.req.RemoteClusters...)
+	if err := utils.ValidateClusterVersion(
+		context.TODO(),
+		i.istioConfig,
+		allClusters,
+		i.req.Version.GetValue(),
+	); err != nil {
+		return err
 	}
 
 	// 检查集群中是否已经安装了istio
-	for _, clusterID := range append(i.req.PrimaryClusters, i.req.RemoteClusters...) {
-		installed, err := k8s.CheckIstioInstalled(context.TODO(), clusterID)
-		if err != nil {
-			blog.Errorf("check cluster installed istio failed, err: %s, clusterID: %s", err, clusterID)
-			return err
-		}
-		if installed {
-			return fmt.Errorf("cluster %s already installed istio", clusterID)
-		}
+	if err := utils.ValidateIstioInstalled(context.TODO(), allClusters); err != nil {
+		return err
 	}
 	return nil
 }
 
-func (i *InstallIstioAction) validateResource(req *meshmanager.InstallIstioRequest) error {
+func (i *InstallIstioAction) validateResource(req *meshmanager.IstioRequest) error {
 	// 检查sidecar resource参数（limit和request 合法，并且limit >= request）
 	if req.SidecarResourceConfig == nil {
 		return nil
 	}
 	if err := utils.ValidateResourceLimit(
-		req.SidecarResourceConfig.CpuRequest,
-		req.SidecarResourceConfig.CpuLimit,
+		req.SidecarResourceConfig.CpuRequest.GetValue(),
+		req.SidecarResourceConfig.CpuLimit.GetValue(),
 	); err != nil {
 		return err
 	}
 	if err := utils.ValidateResourceLimit(
-		req.SidecarResourceConfig.MemoryRequest,
-		req.SidecarResourceConfig.MemoryLimit,
+		req.SidecarResourceConfig.MemoryRequest.GetValue(),
+		req.SidecarResourceConfig.MemoryLimit.GetValue(),
 	); err != nil {
 		return err
 	}
@@ -150,14 +142,14 @@ func (i *InstallIstioAction) validateResource(req *meshmanager.InstallIstioReque
 		return nil
 	}
 	if err := utils.ValidateResourceLimit(
-		req.HighAvailability.ResourceConfig.CpuRequest,
-		req.HighAvailability.ResourceConfig.CpuLimit,
+		req.HighAvailability.ResourceConfig.CpuRequest.GetValue(),
+		req.HighAvailability.ResourceConfig.CpuLimit.GetValue(),
 	); err != nil {
 		return err
 	}
 	if err := utils.ValidateResourceLimit(
-		req.HighAvailability.ResourceConfig.MemoryRequest,
-		req.HighAvailability.ResourceConfig.MemoryLimit,
+		req.HighAvailability.ResourceConfig.MemoryRequest.GetValue(),
+		req.HighAvailability.ResourceConfig.MemoryLimit.GetValue(),
 	); err != nil {
 		return err
 	}
@@ -181,7 +173,7 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 	meshIstio.MeshID = meshID
 	meshIstio.NetworkID = networkID
 
-	chartVersion, err := i.getIstioChartVersion(i.req.Version)
+	chartVersion, err := i.getIstioChartVersion(i.req.Version.GetValue())
 	if err != nil {
 		blog.Errorf("get istio chart version failed, err: %s", err)
 		return common.NewCodeMessageError(common.InnerErrorCode, "get istio chart version failed", err)
@@ -206,13 +198,13 @@ func (i *InstallIstioAction) install(ctx context.Context) error {
 			NetworkID:       networkID,
 			ChartVersion:    chartVersion,
 
-			ProjectID:             i.req.ProjectID,
-			ProjectCode:           i.req.ProjectCode,
-			Name:                  i.req.Name,
-			Description:           i.req.Description,
-			Version:               i.req.Version,
-			ControlPlaneMode:      i.req.ControlPlaneMode,
-			ClusterMode:           i.req.ClusterMode,
+			ProjectID:             i.req.ProjectID.GetValue(),
+			ProjectCode:           i.req.ProjectCode.GetValue(),
+			Name:                  i.req.Name.GetValue(),
+			Description:           i.req.Description.GetValue(),
+			Version:               i.req.Version.GetValue(),
+			ControlPlaneMode:      i.req.ControlPlaneMode.GetValue(),
+			ClusterMode:           i.req.ClusterMode.GetValue(),
 			PrimaryClusters:       i.req.PrimaryClusters,
 			RemoteClusters:        i.req.RemoteClusters,
 			SidecarResourceConfig: i.req.SidecarResourceConfig,
@@ -248,25 +240,4 @@ func (i *InstallIstioAction) getIstioChartVersion(version string) (string, error
 		return "", errors.New("version not found")
 	}
 	return i.istioConfig.IstioVersions[version].ChartVersion, nil
-}
-
-func (i *InstallIstioAction) checkClusterVersionCompatible(clusterID string, istioVersion string) (bool, error) {
-	version, err := k8s.GetClusterVersion(context.TODO(), clusterID)
-	if err != nil {
-		return false, fmt.Errorf("get cluster version failed, err: %s, clusterID: %s", err, clusterID)
-	}
-	blog.Infof("cluster %s version: %s", clusterID, version)
-	// 获取支持的版本
-	istioVersionConfig := i.istioConfig.IstioVersions[istioVersion]
-	if istioVersionConfig == nil {
-		blog.Errorf("istio version %s not found", istioVersion)
-		return false, fmt.Errorf("istio version %s not found", istioVersion)
-	}
-	// 判断版本是否支持
-	if istioVersionConfig.KubeVersion == "" {
-		blog.Warnf("istio version %s kube version is empty, compatible with all versions, clusterID: %s",
-			istioVersion, clusterID)
-		return true, nil
-	}
-	return utils.IsVersionSupported(version, istioVersionConfig.KubeVersion), nil
 }
