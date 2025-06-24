@@ -4,9 +4,15 @@
     kind="BscpConfig"
     type="crd"
     category="custom_objects"
-    :crd="crd"
+    :crd="`${resource}.${group}`"
     default-active-detail-type="overview"
     :show-detail-tab="true"
+    :crd-options="{
+      group: group,
+      version: version,
+      resource: resource,
+      namespaced: namespaced,
+    }"
     scope="Namespaced">
     <template
       #default="{
@@ -61,7 +67,7 @@
         </bk-table-column>
         <bk-table-column label="releaseID" prop="metadata.releaseID">
           <template #default="{ row }">
-            {{ handleGetExtData(row.metadata.uid, 'releaseID') || '--' }}
+            {{ handleGetExtData(row.metadata.uid, 'releaseID') ?? '--' }}
           </template>
         </bk-table-column>
         <bk-table-column :label="$t('generic.label.source')" :show-overflow-tooltip="false">
@@ -127,9 +133,21 @@ export default defineComponent({
   name: 'ConfigurationBscpConfigs',
   components: { BaseLayout, sourceTableCell, BCDetail },
   props: {
-    crd: {
+    group: {
       type: String,
-      default: 'bscpconfigs.bk.tencent.com',
+      default: 'bk.tencent.com',
+    },
+    version: {
+      type: String,
+      default: 'v1alpha1',
+    },
+    resource: {
+      type: String,
+      default: 'bscpconfigs',
+    },
+    namespaced: {
+      type: Boolean,
+      default: true,
     },
   },
 });

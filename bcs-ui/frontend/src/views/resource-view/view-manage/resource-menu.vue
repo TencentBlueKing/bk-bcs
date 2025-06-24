@@ -161,8 +161,8 @@
               <span :title="apiVersion" class="flex-1 bcs-ellipsis" v-bk-overflow-tips>{{ apiVersion }}</span>
               <template #child>
                 <bcs-navigation-menu-item
-                  v-for="item in searchCRData[apiVersion]"
-                  :key="item.kind"
+                  v-for="(item, index) in searchCRData[apiVersion]"
+                  :key="`${index}-${item.kind}`"
                   :id="item.kind"
                   @click="handleChangeCRD(item)">
                   <a
@@ -367,9 +367,13 @@ const resolveCRDLink = (item) => {
 };
 const handleChangeCRD = async (item) => {
   const queryData = cloneDeep(route.value.query);
-  queryData.crd = item.name;
+  queryData.crd = `${item.resource}.${item.group}`;
   queryData.kind = item.kind;
-  queryData.scope = item.scope;
+  queryData.scope = item.namespaced ? 'Namespaced' : 'Cluster';
+  queryData.group = item.group;
+  queryData.version = item.version;
+  queryData.resource = item.resource;
+  queryData.namespaced = item.namespaced;
   // 自定义资源
   $store.commit('updateCrdData', queryData);
   const routeData = {
@@ -395,7 +399,10 @@ const expandMenu = () => {
 };
 
 // 更多资源
-const { getMultiClusterCustomResourceDefinition, getMultiClusterResourcesCount } = useTableData();
+const {
+  getMultiClusterResourcesCount,
+  getMultiClusterAPIResources,
+} = useTableData();
 const { curViewData, dashboardViewID } = useViewConfig();
 const isLoading = ref(false);
 const crdData = ref<Record<string, any[]>>({});
@@ -416,27 +423,24 @@ const showMore = computed(() => showMoreResource.value || searchName.value);
 const toggleMoreResource = () => {
   showMoreResource.value = !showMoreResource.value;
 };
-const tkexCRDList = ['GameDeployment', 'GameStatefulSet', 'HookTemplate'];
+const tkexCRDList = computed(() => flatLeafMenus(menus.value.find(item => item.id === 'CLUSTERRESOURCE')?.children || []));
 const handleGetCustomResourceDefinition = async () => {
   if (!curViewData.value) return;
 
   isLoading.value = true;
-  const data = await getMultiClusterCustomResourceDefinition({
-    clusterNamespaces: curViewData.value.clusterNamespaces,
-    $crd: 'CustomResourceDefinition',
-    offset: 0,
-    limit: 1000,
-  });
+  const res = await getMultiClusterAPIResources(route.value.params?.clusterId || '', false);
   isLoading.value = false;
-  crdData.value = Object.keys(data?.manifestExt || {}).reduce((pre, key) => {
-    const item = data?.manifestExt?.[key] || {};
-    if (tkexCRDList.includes(item.kind)) return pre;// tkex自定义资源有单独UI展示
+  crdData.value = Object.keys(res.resources || {}).reduce((pre, key) => {
+    const item = res.resources?.[key] || [];
 
-    if (!pre[item.apiVersion]) {
-      pre[item.apiVersion] = [item];
-    } else if (!pre[item.apiVersion]?.some(d => d.kind === item.kind)) {
-      pre[item.apiVersion].push(item);
+    const list: any[] = [];
+    for (const resource of item) {
+      if (!tkexCRDList.value.find(v => v.meta?.kind === resource.kind)) { // tkex自定义资源有单独UI展示
+        list.push(resource);
+      }
     }
+
+    pre[key] = list;
     return pre;
   }, {});
 };

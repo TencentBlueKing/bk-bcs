@@ -192,11 +192,12 @@
 <script lang="ts">
 /* eslint-disable no-unused-expressions */
 import yamljs from 'js-yaml';
-import { computed, defineComponent, onBeforeUnmount, onMounted, ref, toRefs, watch } from 'vue';
+import { computed, defineComponent, onBeforeUnmount, onMounted, PropType, ref, toRefs, watch } from 'vue';
 
 import EditorStatus from './editor-status.vue';
 import FixedButton from './fixed-button.vue';
 
+import { createCustomResource, customResourceDetail, updateCustomResource } from '@/api/modules/cluster-resource';
 import $bkMessage from '@/common/bkmagic';
 import { copyText } from '@/common/util';
 import BcsMd from '@/components/bcs-md/index.vue';
@@ -270,6 +271,16 @@ export default defineComponent({
       default: '',
       required: true,
     },
+    // CRD资源分两种，普通和定制，customized 用来区分普通和定制
+    customized: {
+      type: Boolean,
+      default: false,
+    },
+    // CRD资源的作用域
+    scope: {
+      type: String as PropType<'Namespaced'|'Cluster'>,
+      default: '',
+    },
   },
   setup(props, ctx) {
     const {
@@ -284,6 +295,8 @@ export default defineComponent({
       formUpdate,
       clusterId,
       defaultOriginal,
+      customized,
+      scope,
     } = toRefs(props);
     const { clientHeight } = document.body;
 
@@ -358,13 +371,18 @@ export default defineComponent({
       isLoading.value = true;
       let res: any = null;
       if (type.value === 'crd') {
-        res = await $store.dispatch('dashboard/retrieveCustomResourceDetail', {
-          $crd: crd.value,
-          $category: category.value,
-          $name: name.value,
-          namespace: namespace.value,
+        res = await customResourceDetail({
+          format: 'manifest',
           $clusterId: clusterId.value,
-        });
+          $name: name.value,
+          kind: kind.value,
+          namespace: namespace.value,
+        }, { needRes: true }).catch(() => ({
+          data: {
+            manifest: {},
+            manifestExt: {},
+          },
+        }));
       } else {
         res = await $store.dispatch('dashboard/getResourceDetail', {
           $namespaceId: namespace.value,
@@ -555,7 +573,18 @@ export default defineComponent({
     };
     const handleCreateResource = async () => {
       let result = false;
-      if (type.value === 'crd') {
+      if (customized.value) { // 创建普通crd资源
+        result = await createCustomResource({
+          $clusterId: clusterId.value,
+          format: 'manifest',
+          namespaced: scope.value === 'Namespaced',
+          rawData: detail.value,
+        }).catch((err) => {
+          editorErr.value.type = 'http';
+          editorErr.value.message = err?.response?.data?.message || err?.message;
+          return false;
+        });
+      } else if (type.value === 'crd') { // 创建定制crd资源 bscpConfig、gameDeployment、gameStatefulSet、hookTemplate
         result = await $store.dispatch('dashboard/customResourceCreate', {
           $crd: crd.value,
           $category: category.value,
@@ -605,7 +634,17 @@ export default defineComponent({
         defaultInfo: true,
         confirmFn: async () => {
           let result = false;
-          if (type.value === 'crd') {
+          if (customized.value) {
+            result = await updateCustomResource({
+              $clusterId: clusterId.value,
+              format: 'manifest',
+              rawData: detail.value,
+            }).catch((err) => {
+              editorErr.value.type = 'http';
+              editorErr.value.message = err?.response?.data?.message || err?.message;
+              return false;
+            });
+          } else if (type.value === 'crd') {
             result = await $store.dispatch('dashboard/customResourceUpdate', {
               $crd: crd.value,
               $category: category.value,
