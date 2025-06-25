@@ -396,6 +396,12 @@ monitor-controller:
 	mkdir -p ${SCENARIOSPACKAGE}/bcs-monitor-controller
 	cd bcs-scenarios/bcs-monitor-controller && make manager && cd -
 
+
+image-proxy:pre
+	mkdir -p ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cp -R ${BCS_CONF_COMPONENT_PATH}/bcs-image-proxy ${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component
+	cd ${BCS_COMPONENT_PATH}/bcs-image-proxy && go mod tidy && go mod vendor && $(CGO_BUILD_FLAGS) go build -o ${WORKSPACE}/${PACKAGEPATH}/bcs-runtime/bcs-k8s/bcs-component/bcs-image-proxy/bcs-image-proxy ./main.go
+
 test: test-bcs-runtime
 
 test-bcs-runtime: test-bcs-k8s
