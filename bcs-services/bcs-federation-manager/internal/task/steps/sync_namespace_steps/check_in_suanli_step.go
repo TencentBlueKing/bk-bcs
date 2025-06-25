@@ -125,8 +125,13 @@ func (s CheckInSuanliStep) DoWork(t *types.Task) error {
 		return fmt.Errorf("getKubeConfigForSuanli failed namespace: %s, err: %s", nsName, err.Error())
 	}
 
+	if resp == nil {
+		blog.Infof("getKubeConfigForSuanli failed, namespace: %s, hostClusterId: %s", nsName, hostClusterID)
+		return fmt.Errorf("getKubeConfigForSuanli failed, namespace: %s, hostClusterId: %s", nsName, hostClusterID)
+	}
+
 	// 当namespace未注册时，才去新增
-	if resp != nil && strings.Contains(resp.Message, "namespace not register") {
+	if strings.Contains(resp.Message, "namespace not register") {
 		// 创建 suanli namespace quota
 		cerr := createSlNamespaceQuota(hostClusterID, namespace, multiClusterResourceQuotaList)
 		if cerr != nil {
@@ -136,6 +141,11 @@ func (s CheckInSuanliStep) DoWork(t *types.Task) error {
 		blog.Infof("CheckInSuanliStep Success, taskId: %s, taskName: %s, namespace: %s, hostClusterId: %s",
 			t.GetTaskID(), step.GetName(), nsName, hostClusterID)
 		return nil
+	} else if resp.Message != "SUCCESS" {
+		blog.Errorf("getKubeConfigForSuanli failed, namespace: %s, hostClusterId: %s, err: %s",
+			nsName, hostClusterID, resp.Message)
+		return fmt.Errorf("getKubeConfigForSuanli failed, namespace: %s, hostClusterId: %s, err: %s",
+			nsName, hostClusterID, resp.Message)
 	}
 
 	// 更新 suanli namespace quota

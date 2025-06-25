@@ -37,6 +37,7 @@ import (
 	"helm.sh/helm/v3/pkg/strvals"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/rest"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/common"
 	projectClient "github.com/Tencent/bk-bcs/bcs-services/bcs-helm-manager/internal/component/project"
@@ -388,6 +389,11 @@ func (c *client) History(_ context.Context, namespace, name string, max int) ([]
 // getConfigFlag 获取helm-client配置
 func (c *client) getConfigFlag(namespace string) *genericclioptions.ConfigFlags {
 	flags := genericclioptions.NewConfigFlags(false)
+	flags.WithWrapConfigFn(func(config *rest.Config) *rest.Config {
+		config.ContentType = "application/json"
+		config.AcceptContentTypes = "application/json"
+		return config
+	})
 
 	flags.APIServer = c.cf.APIServer
 	flags.BearerToken = c.cf.BearerToken

@@ -27,10 +27,6 @@ func init() {
 		fedsteps.InitSteps([]task.StepWorkerInterface{
 			NewCheckNamespaceQuotaStep(),
 			NewHandleFederationNamespaceQuotaStep(),
-			NewHandleTaijiNamespaceStep(),
-			NewHandleSuanliNamespaceStep(),
-			NewHandleHunbuNamespaceStep(),
-			NewHandleNormalNamespaceStep(),
 			NewUpdateFederationNamespaceStatusStep(),
 			NewGetNamespaceQuotaStep(),
 			NewCheckInTaijiStep(),

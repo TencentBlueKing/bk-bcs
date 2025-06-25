@@ -848,7 +848,8 @@ export default defineComponent({
 
     // 修改节点转移模块设置
     const { clusterData, getClusterDetail } = useClusterInfo();// clusterData和curCluster一样，就是多了云上的数据信息
-    const isGkeManagedCluster = computed(() => clusterData.value.provider === 'gcpCloud' && clusterData.value.manageType === 'MANAGED_CLUSTER');
+    const isGkeManagedCluster = computed(() => clusterData.value.provider === 'gcpCloud'
+      && clusterData.value.extraInfo?.clusterType === 'autopilot');
     const isEditModule = ref(false);
     const curModuleID = ref();
     const curNodeModule = ref<Record<string, any>>({});
