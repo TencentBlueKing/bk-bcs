@@ -38,7 +38,7 @@ metadata:
       ui:rules:
         - required
         - maxLength128
-        - rfc1123LabelRegex
+        - nameRegex
     namespace:
       title: {{ i18n "命名空间" .lang }}
       type: string
