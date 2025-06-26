@@ -542,6 +542,7 @@ function deleteFile(space: ITemplateSpaceData, file: IListTemplateMetadataItem) 
 
 // 编辑文件版本
 function editFile(file: IListTemplateMetadataItem) {
+  hidePopover();
   $router.push({
     name: 'addTemplateFileVersion',
     params: {
@@ -564,6 +565,7 @@ function mangeFileVersion(space: ITemplateSpaceData, file: IListTemplateMetadata
 
 // 部署文件
 function deployFile(file: IListTemplateMetadataItem) {
+  hidePopover();
   $router.push({
     name: 'templateFileDeploy',
     params: {
@@ -574,6 +576,7 @@ function deployFile(file: IListTemplateMetadataItem) {
 
 // 克隆版本
 function cloneVersion(file: IListTemplateMetadataItem) {
+  hidePopover();
   $router.push({
     name: 'addTemplateFile',
     params: {
