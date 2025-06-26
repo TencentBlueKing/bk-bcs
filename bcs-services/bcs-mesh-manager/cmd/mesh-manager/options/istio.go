@@ -21,14 +21,15 @@ import (
 
 // IstioConfig istio config
 type IstioConfig struct {
-	IstioVersions  []*IstioVersion  `json:"istioVersions"`
-	FeatureConfigs []*FeatureConfig `json:"featureConfigs"`
+	IstioVersions   map[string]*IstioVersion  `json:"istioVersions"`
+	FeatureConfigs  map[string]*FeatureConfig `json:"featureConfigs"`
+	ChartValuesPath string                    `json:"chartValuesPath"`
+	ChartRepo       string                    `json:"chartRepo"`
 }
 
 // IstioVersion istio version
 type IstioVersion struct {
 	Name         string `json:"name"`
-	Version      string `json:"version"`
 	ChartVersion string `json:"chartVersion"`
 	KubeVersion  string `json:"kubeVersion"`
 	Enabled      bool   `json:"enabled"`

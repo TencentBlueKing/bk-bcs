@@ -17,9 +17,50 @@ import (
 	"errors"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	istioaction "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/actions/istio"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
+
+// ListIstio implements meshmanager.MeshManagerHandler
+func (m *MeshManager) ListIstio(
+	ctx context.Context,
+	req *meshmanager.ListIstioRequest,
+	resp *meshmanager.ListIstioResponse,
+) error {
+	action := istioaction.NewListIstioAction(m.opt.IstioConfig, m.model)
+	return action.Handle(ctx, req, resp)
+}
+
+// InstallIstio implements meshmanager.MeshManagerHandler
+func (m *MeshManager) InstallIstio(
+	ctx context.Context,
+	req *meshmanager.IstioRequest,
+	resp *meshmanager.InstallIstioResponse,
+) error {
+	action := istioaction.NewInstallIstioAction(m.opt.IstioConfig, m.model)
+	return action.Handle(ctx, req, resp)
+}
+
+// UpdateIstio implements meshmanager.MeshManagerHandler
+func (m *MeshManager) UpdateIstio(
+	ctx context.Context,
+	req *meshmanager.IstioRequest,
+	resp *meshmanager.UpdateIstioResponse,
+) error {
+	action := istioaction.NewUpdateIstioAction(m.opt.IstioConfig, m.model)
+	return action.Handle(ctx, req, resp)
+}
+
+// DeleteIstio implements meshmanager.MeshManagerHandler
+func (m *MeshManager) DeleteIstio(
+	ctx context.Context,
+	req *meshmanager.DeleteIstioRequest,
+	resp *meshmanager.DeleteIstioResponse,
+) error {
+	action := istioaction.NewDeleteIstioAction(m.model)
+	return action.Handle(ctx, req, resp)
+}
 
 // ListIstioVersion implements meshmanager.MeshManagerHandler
 func (m *MeshManager) ListIstioVersion(
@@ -34,15 +75,15 @@ func (m *MeshManager) ListIstioVersion(
 	}
 	// 输出版本
 	istioVersions := []*meshmanager.IstioVersion{}
-	for _, version := range istioConfig.IstioVersions {
-		if !version.Enabled {
+	for version, istioVersionConfig := range istioConfig.IstioVersions {
+		if !istioVersionConfig.Enabled {
 			continue
 		}
 		istioVersions = append(istioVersions, &meshmanager.IstioVersion{
-			Name:         version.Name,
-			Version:      version.Version,
-			ChartVersion: version.ChartVersion,
-			KubeVersion:  version.KubeVersion,
+			Name:         istioVersionConfig.Name,
+			Version:      version,
+			ChartVersion: istioVersionConfig.ChartVersion,
+			KubeVersion:  istioVersionConfig.KubeVersion,
 		})
 	}
 	resp.Data = &meshmanager.IstioVersionAndFeatures{
@@ -55,9 +96,9 @@ func (m *MeshManager) ListIstioVersion(
 // buildFeaturesForVersion 根据版本和全局 featureConfig 构建 features 列表
 func buildFeaturesForVersion(
 	istioVersions []*meshmanager.IstioVersion,
-	featureConfigs []*options.FeatureConfig,
-) []*meshmanager.FeatureConfig {
-	features := []*meshmanager.FeatureConfig{}
+	featureConfigs map[string]*options.FeatureConfig,
+) map[string]*meshmanager.FeatureConfig {
+	features := make(map[string]*meshmanager.FeatureConfig)
 	for _, feature := range featureConfigs {
 		if !feature.Enabled {
 			continue
@@ -71,13 +112,23 @@ func buildFeaturesForVersion(
 		if len(supportVersions) == 0 {
 			continue
 		}
-		features = append(features, &meshmanager.FeatureConfig{
+		features[feature.Name] = &meshmanager.FeatureConfig{
 			Name:            feature.Name,
 			Description:     feature.Description,
 			DefaultValue:    feature.DefaultValue,
 			AvailableValues: feature.AvailableValues,
 			SupportVersions: supportVersions,
-		})
+		}
 	}
 	return features
+}
+
+// GetIstioDetail implements meshmanager.MeshManagerHandler
+func (m *MeshManager) GetIstioDetail(
+	ctx context.Context,
+	req *meshmanager.GetIstioDetailRequest,
+	resp *meshmanager.GetIstioDetailResponse,
+) error {
+	action := istioaction.NewGetIstioDetailAction(m.opt.IstioConfig, m.model)
+	return action.Handle(ctx, req, resp)
 }

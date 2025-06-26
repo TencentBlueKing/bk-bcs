@@ -308,6 +308,25 @@ func (cm *ClusterManager) ListProjectCluster(ctx context.Context,
 	return nil
 }
 
+// ListBusinessCluster implements interface cmproto.ClusterManagerServer
+func (cm *ClusterManager) ListBusinessCluster(ctx context.Context,
+	req *cmproto.ListBusinessClusterReq, resp *cmproto.ListBusinessClusterResp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+
+	start := time.Now()
+	ca := clusterac.NewListBusinessClusterAction(cm.model, cm.iam)
+	ca.Handle(ctx, req, resp)
+
+	metrics.ReportAPIRequestMetric("ListBusinessCluster", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListBusinessCluster, req %v, resp.Code %d, "+
+		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
+	blog.V(5).Infof("reqID: %s, action: ListBusinessCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
 // ListCluster implements interface cmproto.ClusterManagerServer
 func (cm *ClusterManager) ListCluster(ctx context.Context,
 	req *cmproto.ListClusterReq, resp *cmproto.ListClusterResp) error {
@@ -322,6 +341,23 @@ func (cm *ClusterManager) ListCluster(ctx context.Context,
 	blog.Infof("reqID: %s, action: ListCluster, req %v, resp.Code %d, "+
 		"resp.Message %s, resp.Data.Length %v", reqID, req, resp.Code, resp.Message, len(resp.Data))
 	blog.V(5).Infof("reqID: %s, action: ListCluster, req %v, resp %v", reqID, req, resp)
+	return nil
+}
+
+// ListClusterV2 implements interface cmproto.ClusterManagerServer, get ClusterBasicInfo
+func (cm *ClusterManager) ListClusterV2(ctx context.Context,
+	req *cmproto.ListClusterV2Req, resp *cmproto.ListClusterV2Resp) error {
+	reqID, err := requestIDFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	start := time.Now()
+	ca := clusterac.NewListBasicInfoAction(cm.model)
+	ca.Handle(ctx, req, resp)
+	metrics.ReportAPIRequestMetric("ListClusterV2", "grpc", strconv.Itoa(int(resp.Code)), start)
+	blog.Infof("reqID: %s, action: ListClusterV2, req %v, resp.Code %d, "+
+		"resp.Message %s", reqID, req, resp.Code, resp.Message)
+	blog.V(5).Infof("reqID: %s, action: ListClusterV2, req %v, resp %v", reqID, req, resp)
 	return nil
 }
 

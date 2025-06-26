@@ -33,6 +33,20 @@
               class="ml-[-1px] w-[140px] mr-[16px] bg-[#fff]"
               v-model="item.diskType"
               :loading="loading">
+              <template #trigger v-if="isEdit">
+                <div class="relative">
+                  <div
+                    :title="diskMap[item.diskType] || item.diskType"
+                    class="pr-[36px] pl-[10px] overflow-hidden text-ellipsis text-nowrap">
+                    {{ diskMap[item.diskType] || item.diskType }}
+                  </div>
+                  <i
+                    :class="[
+                      'absolute top-[4px] right-[2px] text-[22px] text-[#979ba5]',
+                      'bk-icon icon-angle-down',
+                    ]"></i>
+                </div>
+              </template>
               <bcs-option
                 v-for="diskItem in list"
                 :key="diskItem.id"
@@ -106,6 +120,8 @@
 </template>
 <script setup lang="ts">
 import { PropType, ref, watch } from 'vue';
+
+import { diskMap } from '../create/tencent-public-cloud/use-disk';
 
 import { diskEnum } from '@/common/constant';
 import Validate from '@/components/validate.vue';

@@ -118,4 +118,11 @@ const (
 	ParameterKey = "parameter"
 	// HandleTypeKey handle type
 	HandleTypeKey = "handleType"
+	// NamespaceQuotaListKey namespace quota list
+	NamespaceQuotaListKey = "quotaList"
+	// SyncNamespaceQuotaKey sync namespace quota
+	SyncNamespaceQuotaKey = "syncNamespaceQuota"
+
+	// ManagedClusterLabelsKey managed cluster labels
+	ManagedClusterLabelsKey = "managedClusterLabels"
 )

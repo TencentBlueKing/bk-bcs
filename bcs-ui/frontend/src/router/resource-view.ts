@@ -135,7 +135,7 @@ export default [
       {
         path: 'customobjects',
         name: 'dashboardCustomObjects',
-        props: route => ({ ...route.params, crd: route.query.crd, scope: route.query.scope, kind: route.query.kind }),
+        props: route => ({ ...route.params, ...route.query }),
         component: DashboardCustomObjects,
         meta: {
           menuId: 'CLUSTERRESOURCE',

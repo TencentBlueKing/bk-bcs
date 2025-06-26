@@ -27,12 +27,12 @@ func init() {
 		fedsteps.InitSteps([]task.StepWorkerInterface{
 			NewCheckNamespaceQuotaStep(),
 			NewHandleFederationNamespaceQuotaStep(),
-			NewHandleTaijiNamespaceStep(),
-			NewHandleSuanliNamespaceStep(),
-			NewHandleHunbuNamespaceStep(),
-			NewHandleNormalNamespaceStep(),
 			NewUpdateFederationNamespaceStatusStep(),
-			// NewCreateSuanliNamespaceStep(), // not implemented
+			NewGetNamespaceQuotaStep(),
+			NewCheckInTaijiStep(),
+			NewCheckInSuanliStep(),
+			NewCheckInHunbuStep(),
+			NewCheckInNormalStep(),
 		})
 	})
 }

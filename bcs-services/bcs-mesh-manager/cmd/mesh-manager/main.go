@@ -15,6 +15,8 @@ package main
 
 import (
 	"log"
+	"math/rand"
+	"time"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 
@@ -23,6 +25,7 @@ import (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	opts := options.NewMeshManagerOptions()
 	if err := options.Parse(opts); err != nil {
 		log.Fatalf("parse options failed, err %s", err.Error())

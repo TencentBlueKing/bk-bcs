@@ -211,6 +211,33 @@
             </a>
           </i18n>
         </bk-form-item>
+        <bk-form-item
+          :desc="{
+            allowHTML: true,
+            content: '#networkTagDesc',
+          }"
+          :label="$t('cluster.ca.nodePool.create.networkTag.title')">
+          <Values
+            :min-item="0"
+            :disabled="isEdit"
+            v-model="nodePoolConfig.launchTemplate.networkTag"
+            @change="v => nodePoolConfig.launchTemplate.networkTag = v">
+          </Values>
+          <div id="networkTagDesc">
+            <div>{{ $t('cluster.ca.nodePool.create.networkTag.desc') }}</div>
+            <div>
+              <i18n path="tke.button.goDetail">
+                <template #0>
+                  <span
+                    class="text-[12px] text-[#699DF4] cursor-pointer"
+                    @click="openLink('https://cloud.google.com/vpc/docs/add-remove-network-tags?hl=zh-cn&authuser=1')">
+                    {{ $t('cluster.ca.nodePool.create.networkTag.link') }}
+                  </span>
+                </template>
+              </i18n>
+            </div>
+          </div>
+        </bk-form-item>
         <!-- <bk-form-item :label="$t('dashboard.workload.container.dataDir')">
           <bcs-input disabled v-model="nodePoolConfig.nodeTemplate.dockerGraphPath"></bcs-input>
         </bk-form-item>
@@ -240,8 +267,10 @@ import { useFocusOnErrorField } from '@/composables/use-focus-on-error-field';
 import usePage from '@/composables/use-page';
 import $i18n from '@/i18n/i18n-setup';
 import $store from '@/store/index';
+import Values from '@/views/cluster-manage/components/values.vue';
 
 export default defineComponent({
+  components: { Values },
   props: {
     defaultValues: {
       type: Object,
@@ -336,6 +365,7 @@ export default defineComponent({
         // 默认值
         isSecurityService: defaultValues.value.launchTemplate?.isSecurityService || true,
         isMonitorService: defaultValues.value.launchTemplate?.isMonitorService || true,
+        networkTag: defaultValues.value.launchTemplate?.networkTag || [],
       },
       nodeTemplate: {
         dataDisks: defaultValues.value.nodeTemplate?.dataDisks || [],
@@ -606,6 +636,12 @@ export default defineComponent({
     // 集群详情
     const clusterDetailLoading = ref(false);
 
+    const openLink = (link: string) => {
+      if (!link) return;
+
+      window.open(link);
+    };
+
     onMounted(async () => {
       handleGetOsImage();
       // 机型
@@ -650,6 +686,7 @@ export default defineComponent({
       zoneList,
       zoneListLoading,
       handleSetZoneData,
+      openLink,
     };
   },
 });

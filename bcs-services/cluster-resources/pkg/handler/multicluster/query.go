@@ -368,10 +368,11 @@ func listClusterApiResource(
 	}
 
 	result := make(map[string]interface{}, 0)
-	uniq := make(map[string]struct{}, 0)
+	uniq := filterRes()
 	// 返回格式key: group/version, value: []map[string] interface
 	for _, value := range resources {
-		// group+version+resource+kind确定一条唯一的资源
+		// group+version+resource+kind确定一条唯一的资源,
+		// 存在不同集群group+version+resource一致，Kind不一致的情况
 		uniqKey := filepath.Join(value["group"].(string), value["version"].(string),
 			value["resource"].(string), value["kind"].(string))
 		if _, ok := uniq[uniqKey]; ok {
@@ -390,6 +391,54 @@ func listClusterApiResource(
 
 	}
 	return result, nil
+}
+
+// 过滤掉一些不支持get权限操作的资源以及workload资源
+func filterRes() map[string]struct{} {
+	uniq := make(map[string]struct{}, 0)
+	// 如果是需要所有的Api resource，则不进行过滤
+	if config.G.MultiCluster.AllApiResources {
+		return uniq
+	}
+	uniq = map[string]struct{}{
+		"apps/v1/deployments/Deployment":   {},
+		"apps/v1/statefulsets/StatefulSet": {},
+		"apps/v1/daemonsets/DaemonSet":     {},
+		"batch/v1/jobs/Job":                {},
+		"batch/v1/cronjobs/CronJob":        {},
+		"v1/pods/Pod":                      {},
+
+		"networking.k8s.io/v1/ingresses/Ingress": {},
+		"v1/services/Service":                    {},
+		"v1/endpoints/Endpoints":                 {},
+
+		"bk.tencent.com/v1alpha1/bscpconfigs/BscpConfig": {},
+		"v1/configmaps/ConfigMap":                        {},
+		"v1/secrets/Secret":                              {},
+
+		"v1/persistentvolumes/PersistentVolume":           {},
+		"v1/persistentvolumeclaims/PersistentVolumeClaim": {},
+		"storage.k8s.io/v1/storageclasses/StorageClass":   {},
+
+		"v1/serviceaccounts/ServiceAccount": {},
+
+		"autoscaling/v1/horizontalpodautoscalers/HorizontalPodAutoscaler": {},
+
+		"apiextensions.k8s.io/v1/customresourcedefinitions/CustomResourceDefinition": {},
+
+		"tkex.tencent.com/v1alpha1/gamedeployments/GameDeployment":   {},
+		"tkex.tencent.com/v1alpha1/gamestatefulsets/GameStatefulset": {},
+		"tkex.tencent.com/v1alpha1/hooktemplates/HookTemplates":      {},
+
+		"v1/componentstatuses/ComponentStatus":                                       {},
+		"authorization.k8s.io/v1/localsubjectaccessreviews/LocalSubjectAccessReview": {},
+		"authorization.k8s.io/v1/subjectaccessreviews/SubjectAccessReview":           {},
+		"authorization.k8s.io/v1/selfsubjectaccessreviews/SelfSubjectAccessReview":   {},
+		"authorization.k8s.io/v1/selfsubjectrulesreviews/SelfSubjectRulesReview":     {},
+		"authentication.k8s.io/v1/tokenreviews/TokenReview":                          {},
+	}
+
+	return uniq
 }
 
 // listNamespaceResources 列出某个集群下某些命名空间的资源
@@ -672,8 +721,11 @@ func buildList(ctx context.Context, resources []*storage.Resource) map[string]in
 			continue
 		}
 		ext["clusterID"] = item.ClusterID
-		manifestExt[uid.(string)] = ext
-		manifestItems = append(manifestItems, pruneFunc(item.Data))
+		// 过滤掉不支持uid的资源
+		if uidStr, ok := uid.(string); ok {
+			manifestExt[uidStr] = ext
+			manifestItems = append(manifestItems, pruneFunc(item.Data))
+		}
 	}
 	manifest["items"] = manifestItems
 	return map[string]interface{}{"manifest": manifest, "manifestExt": manifestExt}

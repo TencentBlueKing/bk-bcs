@@ -19,12 +19,23 @@ const (
 	FeatureHoldApplicationUntilProxyStarts = "holdApplicationUntilProxyStarts"
 	// FeatureExitOnZeroActiveConnections 无活动连接时退出
 	FeatureExitOnZeroActiveConnections = "exitOnZeroActiveConnections"
+	// FeatureExcludeIPRanges 排除IP范围
+	FeatureExcludeIPRanges = "excludeIPRanges"
+	// FeatureIstioMetaDnsCapture DNS转发
+	FeatureIstioMetaDnsCapture = "istioMetaDnsCapture"
+	// FeatureIstioMetaDnsAutoAllocate 自动分配IP
+	FeatureIstioMetaDnsAutoAllocate = "istioMetaDnsAutoAllocate"
+	// FeatureIstioMetaHttp10 是否支持HTTP/1.0
+	FeatureIstioMetaHttp10 = "istioMetaHttp10"
 )
 
 // SupportedFeatures 支持的功能列表
-// TODO: add more features
 var SupportedFeatures = []string{
 	FeatureOutboundTrafficPolicy,
 	FeatureHoldApplicationUntilProxyStarts,
 	FeatureExitOnZeroActiveConnections,
+	FeatureExcludeIPRanges,
+	FeatureIstioMetaDnsCapture,
+	FeatureIstioMetaDnsAutoAllocate,
+	FeatureIstioMetaHttp10,
 }

@@ -1294,6 +1294,7 @@ cluster:
             premium: High -performance cloud hard disk
             ssd: SSD cloud hard disk
             hssd: Enhanced SSD cloud hard disk
+            bssd: General SSD cloud hard disk
             balanced: Balanced Disk
             standard: Standard Disk
             Standard_LRS: Standard HDD
@@ -1487,6 +1488,10 @@ cluster:
             maintenance depend on gse_agent. The cloud area here refers to the
             cloud area specified  when installing gse_agent in
             bk-node-management. The default is "direct connection area"
+        networkTag:
+          title: Network tag
+          desc: Tags represent firewall rules applied to each node
+          link: Add network tags
       detail:
         title:
           bashContent: BASH script content

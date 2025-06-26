@@ -15,14 +15,16 @@ package handler
 
 import (
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
 var _ meshmanager.MeshManagerHandler = &MeshManager{}
 
-// MeshManager provides a manager server for resources
+// MeshManager provides a manager server for mesh resources
 type MeshManager struct {
-	opt *MeshManagerOptions
+	model store.MeshManagerModel
+	opt   *MeshManagerOptions
 }
 
 // MeshManagerOptions mesh manager options
@@ -30,9 +32,10 @@ type MeshManagerOptions struct {
 	IstioConfig *options.IstioConfig
 }
 
-// NewMeshManager return a new HelmManager instance
-func NewMeshManager(opt *MeshManagerOptions) *MeshManager {
+// NewMeshManager return a new MeshManager instance
+func NewMeshManager(model store.MeshManagerModel, opt *MeshManagerOptions) *MeshManager {
 	return &MeshManager{
-		opt: opt,
+		model: model,
+		opt:   opt,
 	}
 }

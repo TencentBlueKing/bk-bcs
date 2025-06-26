@@ -28,7 +28,9 @@ const CreateDataIDBody = `{
 			"metadata": {
 				"namespace": "%s",
 				"name": "%s",
-				"labels": {},
+				"labels": {
+					"plat_project": "bk_bcs"
+				},
 				"annotations": {}
 			},
 			"spec": {
@@ -41,9 +43,11 @@ const CreateDataIDBody = `{
 				"predefined": {
 					"dataId": %d,
 					"channel": {
+						"kind": "KafkaChannel",
 						"namespace": "%s",
 						"name": "%s"
-					}
+					},
+					"topic": "%s"
 				},
 				"eventType": "log"
 			}
@@ -60,6 +64,9 @@ const CreateDatabusBody = `{
 			"metadata": {
 				"namespace": "%s",
 				"name": "%s",
+				"labels": {
+					"plat_project": "bk_bcs"
+				},
 				"annotations": {}
 			},
 			"spec": {
@@ -197,7 +204,7 @@ const CreateDatabusBody = `{
 								}
 							}
 						],
-						"filter_rules": "False"
+						"filter_rules": "True"
 					}
 				],
 				"maintainers": [

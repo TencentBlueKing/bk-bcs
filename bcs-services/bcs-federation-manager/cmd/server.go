@@ -117,6 +117,7 @@ func (s *Server) Init() error {
 		s.initTaskManager,
 		s.initMicro,
 		s.initHTTPService,
+		s.initSyncNamespaceQuotaTicker,
 	}
 
 	// init
@@ -596,5 +597,20 @@ func (s *Server) initThirdpartyCli() error {
 
 	// init thirdparty client successfully
 	blog.Infof("init thirdparty manager client successfully")
+	return nil
+}
+
+// initSyncNamespaceQuotaTicker init start namespace quota ticker
+func (s *Server) initSyncNamespaceQuotaTicker() error {
+
+	cli := handler.NewFedNamespaceControllerManager()
+	err := cli.StartLoop(s.ctx, s.store, s.taskmanager, s.clusterCli)
+	if err != nil {
+		blog.Errorf("FedNamespaceControllerManager start loop failed, err %s", err.Error())
+		return err
+	}
+
+	// init start namespace quota ticker successfully
+	blog.Infof("init sync namespace quota ticker successfully")
 	return nil
 }

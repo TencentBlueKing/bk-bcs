@@ -20,9 +20,11 @@ COPY vendor/  vendor/
 ARG TARGETOS
 ARG TARGETARCH
 ARG VERSION
+ARG LDFLAG
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -mod vendor -a  -o bcs-mesh-manager github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -mod vendor -a -ldflags "${LDFLAG}" -o bcs-mesh-manager github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager
 
 FROM tencentos/tencentos4-minimal
+ENV GODEBUG=x509sha1=1
 WORKDIR /root
 COPY --from=builder /go/src/github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/bcs-mesh-manager /usr/local/bin/bcs-mesh-manager

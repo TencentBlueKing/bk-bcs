@@ -38,7 +38,7 @@ const (
 const (
 	// FederationClusterTaskIDLabelKey federation cluster task id label key, used for relate federation task
 	FederationClusterTaskIDLabelKey = "federation.bkbcs.tencent.com/taskid"
-	// FederationClusterTypeLabelKey federation cluster type label key, used for cluster manager identify cluster type
+	// FederationClusterTypeLabelKeyFedCluster federation cluster type label key, used for cluster manager identify cluster type
 	FederationClusterTypeLabelKeyFedCluster  = "federation.bkbcs.tencent.com/is-fed-cluster"
 	FederationClusterTypeLabelKeySubCluster  = "federation.bkbcs.tencent.com/is-sub-cluster"
 	FederationClusterTypeLabelKeyHostCluster = "federation.bkbcs.tencent.com/is-host-cluster"
@@ -57,6 +57,10 @@ const (
 	ClusterStatusDeleteFailure = "DELETE-FAILURE"
 	// ClusterStatusDeleted cluster deleted
 	ClusterStatusDeleted = "DELETED"
+	// TaskStatusINITIALIZING task initializing
+	TaskStatusINITIALIZING = "INITIALIZING"
+	// TaskStatusRUNNING task running
+	TaskStatusRUNNING = "RUNNING"
 )
 
 // ClusterStatusList cluster status list

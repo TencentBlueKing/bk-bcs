@@ -30,6 +30,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-common/common/version"
 	"github.com/Tencent/bk-bcs/bcs-common/pkg/bcsapi/helmmanager"
 	discovery "github.com/Tencent/bk-bcs/bcs-common/pkg/discovery"
+	"github.com/Tencent/bk-bcs/bcs-common/pkg/odm/drivers/mongo"
 	trace "github.com/Tencent/bk-bcs/bcs-common/pkg/otel/trace/micro"
 	grpccli "github.com/go-micro/plugins/v4/client/grpc"
 	"github.com/go-micro/plugins/v4/registry/etcd"
@@ -46,8 +47,10 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/handler"
+	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
@@ -66,7 +69,8 @@ type Server struct {
 	discovery            *discovery.ModuleDiscovery
 	helmManagerDiscovery *discovery.ModuleDiscovery
 
-	helmManagerClient *helmmanager.HelmClientWrapper
+	model        store.MeshManagerModel
+	mongoOptions *mongo.Options
 
 	ctx           context.Context
 	ctxCancelFunc context.CancelFunc
@@ -88,17 +92,18 @@ func NewServer(opt *options.MeshManagerOptions) *Server {
 func (s *Server) Init() error {
 	// initializers by sequence
 	initializer := []func() error{
+		// 注意顺序
 		s.initTLSConfig,
 		s.initRegistry,
-		// s.initModel,
+		s.initModel,
 		// s.initIAMClient,
 		// s.initJWTClient,
 		// s.initSkipClients,
-		s.initDiscovery,
 		// s.initSkipHandler,
+		s.initDiscovery,
 		s.initMicro,
 		s.initHTTPService,
-		// TODO: add log wrapper
+		s.initK8sClient,
 	}
 
 	// init
@@ -107,14 +112,6 @@ func (s *Server) Init() error {
 			return err
 		}
 	}
-
-	// init helm manager client
-	helmManagerClient, _, err := helmmanager.GetClient(common.ServiceDomain)
-	if err != nil {
-		return err
-	}
-	s.helmManagerClient = helmManagerClient
-
 	return nil
 }
 
@@ -197,6 +194,51 @@ func (s *Server) initRegistry() error {
 	return nil
 }
 
+// initModel decode the connection info from the config and init a new store.MeshManagerModel
+func (s *Server) initModel() error {
+	if len(s.opt.Mongo.Address) == 0 {
+		return fmt.Errorf("mongo endpoints cannot be empty")
+	}
+	if len(s.opt.Mongo.Database) == 0 {
+		return fmt.Errorf("mongo database cannot be empty")
+	}
+
+	// get mongo password
+	password := s.opt.Mongo.Password
+
+	mongoOptions := &mongo.Options{
+		Hosts:                 strings.Split(s.opt.Mongo.Address, ","),
+		Replicaset:            s.opt.Mongo.Replicaset,
+		AuthDatabase:          s.opt.Mongo.AuthDatabase,
+		ConnectTimeoutSeconds: int(s.opt.Mongo.ConnectTimeout),
+		Database:              s.opt.Mongo.Database,
+		Username:              s.opt.Mongo.Username,
+		Password:              password,
+		MaxPoolSize:           uint64(s.opt.Mongo.MaxPoolSize),
+		MinPoolSize:           uint64(s.opt.Mongo.MinPoolSize),
+	}
+	s.mongoOptions = mongoOptions
+
+	// init mongo db
+	mongoDB, err := mongo.NewDB(mongoOptions)
+	if err != nil {
+		blog.Errorf("init mongo db failed, err %s", err.Error())
+		return err
+	}
+
+	// ping mongo to check connection
+	if err = mongoDB.Ping(); err != nil {
+		blog.Errorf("ping mongo db failed, err %s", err.Error())
+		return err
+	}
+	blog.Info("init mongo db successfully")
+
+	// init store
+	s.model = store.New(mongoDB)
+	blog.Info("init store successfully")
+	return nil
+}
+
 // init micro service
 func (s *Server) initMicro() error {
 	opts := []micro.Option{
@@ -218,6 +260,8 @@ func (s *Server) initMicro() error {
 			Usage:       "set config file path",
 			DefaultText: "./bcs-mesh-manager.json",
 		}),
+		micro.AfterStart(s.microAfterStart),
+		micro.BeforeStop(s.microAfterStop),
 		micro.WrapHandler(
 			utils.ResponseWrapper,
 			utils.RequestLogWarpper,
@@ -236,13 +280,32 @@ func (s *Server) initMicro() error {
 
 	if err := meshmanager.RegisterMeshManagerHandler(
 		s.microService.Server(),
-		handler.NewMeshManager(&handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig}),
+		handler.NewMeshManager(s.model, &handler.MeshManagerOptions{IstioConfig: s.opt.IstioConfig}),
 	); err != nil {
 		blog.Errorf("failed to register mesh manager handler to micro, error: %s", err.Error())
 		return err
 	}
 
 	blog.Infof("success to register mesh manager handler to micro")
+	return nil
+}
+
+func (s *Server) microAfterStart() error {
+	if discovery.UseServiceDiscovery() {
+		return nil
+	}
+	if err := s.helmManagerDiscovery.Start(); err != nil {
+		return err
+	}
+	return s.discovery.Start()
+}
+
+func (s *Server) microAfterStop() error {
+	if discovery.UseServiceDiscovery() {
+		return nil
+	}
+	s.helmManagerDiscovery.Stop()
+	s.discovery.Stop()
 	return nil
 }
 
@@ -307,8 +370,8 @@ func (s *Server) initHTTPService() error {
 func (s *Server) initDiscovery() error {
 	if !discovery.UseServiceDiscovery() {
 		s.discovery = discovery.NewModuleDiscovery(common.ServiceDomain, s.microRegistry)
-		blog.Info("init discovery for project manager successfully")
-		// enable discovery cluster manager module
+		blog.Info("init discovery for mesh manager successfully")
+		// enable discovery helm manager module
 		s.helmManagerDiscovery = discovery.NewModuleDiscovery(common.HelmManagerServiceDomain, s.microRegistry)
 		helmmanager.SetClientConfig(s.clientTLSConfig, s.helmManagerDiscovery)
 	} else {
@@ -316,4 +379,8 @@ func (s *Server) initDiscovery() error {
 	}
 	blog.Info("init discovery for cluster manager successfully")
 	return nil
+}
+
+func (s *Server) initK8sClient() error {
+	return k8s.InitClient(s.opt.Gateway.Endpoint, s.opt.Gateway.Token)
 }
