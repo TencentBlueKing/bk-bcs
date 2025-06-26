@@ -37,7 +37,7 @@ import (
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/util/mapx"
 )
 
-var defaultLimit = 2000
+var defaultLimit = 1000
 
 // NewDynamicClient xxx
 func NewDynamicClient(conf *res.ClusterConf) dynamic.Interface {

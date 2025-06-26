@@ -24,6 +24,7 @@ import (
 	apiextensions "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/cluster"
 	"github.com/Tencent/bk-bcs/bcs-services/cluster-resources/pkg/common/ctxkey"
@@ -460,7 +461,17 @@ func listNamespaceResources(ctx context.Context, clusterID string, namespaces []
 	// 如果命名空间为空，则查询所有命名空间，如果命名空间数量大于 5，则查全部命名空间并最后筛选命名空间，这样能减少并发请求
 	filterNamespace := namespaces
 	if len(namespaces) == 0 {
-		filterNamespace = []string{""}
+		clientSet, errr := kubernetes.NewForConfig(clusterConf.Rest)
+		if errr != nil {
+			return nil, errr
+		}
+		nl, errr := clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+		if errr != nil {
+			return nil, errr
+		}
+		for _, v := range nl.Items {
+			filterNamespace = append(filterNamespace, v.Name)
+		}
 	}
 	errGroups := errgroup.Group{}
 	errGroups.SetLimit(5)
