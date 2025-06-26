@@ -28,6 +28,7 @@ const (
 	FieldKeyUpdateTime    = "updateTime"
 	FieldKeyCreateBy      = "createBy"
 	FieldKeyUpdateBy      = "updateBy"
+	FieldKeyIsDeleted     = "isDeleted"
 
 	// ===== Mesh 配置 =====
 	FieldKeyControlPlaneMode = "controlPlaneMode"

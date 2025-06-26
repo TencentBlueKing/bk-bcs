@@ -14,11 +14,8 @@ package handler
 
 import (
 	"context"
-	"errors"
 
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	istioaction "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/actions/istio"
-	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/utils"
 	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
@@ -62,65 +59,14 @@ func (m *MeshManager) DeleteIstio(
 	return action.Handle(ctx, req, resp)
 }
 
-// ListIstioVersion implements meshmanager.MeshManagerHandler
-func (m *MeshManager) ListIstioVersion(
+// ListIstioConfig implements meshmanager.MeshManagerHandler
+func (m *MeshManager) ListIstioConfig(
 	ctx context.Context,
-	req *meshmanager.ListIstioVersionRequest,
-	resp *meshmanager.ListIstioVersionResponse,
+	req *meshmanager.ListIstioConfigRequest,
+	resp *meshmanager.ListIstioConfigResponse,
 ) error {
-	// 获取版本配置并输出
-	istioConfig := m.opt.IstioConfig
-	if istioConfig == nil {
-		return errors.New("istio config is nil")
-	}
-	// 输出版本
-	istioVersions := []*meshmanager.IstioVersion{}
-	for version, istioVersionConfig := range istioConfig.IstioVersions {
-		if !istioVersionConfig.Enabled {
-			continue
-		}
-		istioVersions = append(istioVersions, &meshmanager.IstioVersion{
-			Name:         istioVersionConfig.Name,
-			Version:      version,
-			ChartVersion: istioVersionConfig.ChartVersion,
-			KubeVersion:  istioVersionConfig.KubeVersion,
-		})
-	}
-	resp.Data = &meshmanager.IstioVersionAndFeatures{
-		IstioVersions:  istioVersions,
-		FeatureConfigs: buildFeaturesForVersion(istioVersions, istioConfig.FeatureConfigs),
-	}
-	return nil
-}
-
-// buildFeaturesForVersion 根据版本和全局 featureConfig 构建 features 列表
-func buildFeaturesForVersion(
-	istioVersions []*meshmanager.IstioVersion,
-	featureConfigs map[string]*options.FeatureConfig,
-) map[string]*meshmanager.FeatureConfig {
-	features := make(map[string]*meshmanager.FeatureConfig)
-	for _, feature := range featureConfigs {
-		if !feature.Enabled {
-			continue
-		}
-		supportVersions := []string{}
-		for _, version := range istioVersions {
-			if utils.IsVersionSupported(version.Version, feature.IstioVersion) {
-				supportVersions = append(supportVersions, version.Version)
-			}
-		}
-		if len(supportVersions) == 0 {
-			continue
-		}
-		features[feature.Name] = &meshmanager.FeatureConfig{
-			Name:            feature.Name,
-			Description:     feature.Description,
-			DefaultValue:    feature.DefaultValue,
-			AvailableValues: feature.AvailableValues,
-			SupportVersions: supportVersions,
-		}
-	}
-	return features
+	action := istioaction.NewListIstioConfigAction(m.opt.IstioConfig)
+	return action.Handle(ctx, req, resp)
 }
 
 // GetIstioDetail implements meshmanager.MeshManagerHandler

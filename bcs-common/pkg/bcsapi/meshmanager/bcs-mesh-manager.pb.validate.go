@@ -164,22 +164,22 @@ var _ interface {
 	ErrorName() string
 } = WebAnnotationsValidationError{}
 
-// Validate checks the field values on ListIstioVersionRequest with the rules
+// Validate checks the field values on ListIstioConfigRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListIstioVersionRequest) Validate() error {
+func (m *ListIstioConfigRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListIstioVersionRequest with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on ListIstioConfigRequest with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListIstioVersionRequestMultiError, or nil if none found.
-func (m *ListIstioVersionRequest) ValidateAll() error {
+// ListIstioConfigRequestMultiError, or nil if none found.
+func (m *ListIstioConfigRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListIstioVersionRequest) validate(all bool) error {
+func (m *ListIstioConfigRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -187,19 +187,19 @@ func (m *ListIstioVersionRequest) validate(all bool) error {
 	var errors []error
 
 	if len(errors) > 0 {
-		return ListIstioVersionRequestMultiError(errors)
+		return ListIstioConfigRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListIstioVersionRequestMultiError is an error wrapping multiple validation
-// errors returned by ListIstioVersionRequest.ValidateAll() if the designated
+// ListIstioConfigRequestMultiError is an error wrapping multiple validation
+// errors returned by ListIstioConfigRequest.ValidateAll() if the designated
 // constraints aren't met.
-type ListIstioVersionRequestMultiError []error
+type ListIstioConfigRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListIstioVersionRequestMultiError) Error() string {
+func (m ListIstioConfigRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -208,11 +208,11 @@ func (m ListIstioVersionRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListIstioVersionRequestMultiError) AllErrors() []error { return m }
+func (m ListIstioConfigRequestMultiError) AllErrors() []error { return m }
 
-// ListIstioVersionRequestValidationError is the validation error returned by
-// ListIstioVersionRequest.Validate if the designated constraints aren't met.
-type ListIstioVersionRequestValidationError struct {
+// ListIstioConfigRequestValidationError is the validation error returned by
+// ListIstioConfigRequest.Validate if the designated constraints aren't met.
+type ListIstioConfigRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -220,24 +220,24 @@ type ListIstioVersionRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListIstioVersionRequestValidationError) Field() string { return e.field }
+func (e ListIstioConfigRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListIstioVersionRequestValidationError) Reason() string { return e.reason }
+func (e ListIstioConfigRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListIstioVersionRequestValidationError) Cause() error { return e.cause }
+func (e ListIstioConfigRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListIstioVersionRequestValidationError) Key() bool { return e.key }
+func (e ListIstioConfigRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListIstioVersionRequestValidationError) ErrorName() string {
-	return "ListIstioVersionRequestValidationError"
+func (e ListIstioConfigRequestValidationError) ErrorName() string {
+	return "ListIstioConfigRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListIstioVersionRequestValidationError) Error() string {
+func (e ListIstioConfigRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -249,14 +249,14 @@ func (e ListIstioVersionRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListIstioVersionRequest.%s: %s%s",
+		"invalid %sListIstioConfigRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListIstioVersionRequestValidationError{}
+var _ error = ListIstioConfigRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -264,24 +264,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListIstioVersionRequestValidationError{}
+} = ListIstioConfigRequestValidationError{}
 
-// Validate checks the field values on ListIstioVersionResponse with the rules
+// Validate checks the field values on ListIstioConfigResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ListIstioVersionResponse) Validate() error {
+func (m *ListIstioConfigResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ListIstioVersionResponse with the
+// ValidateAll checks the field values on ListIstioConfigResponse with the
 // rules defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ListIstioVersionResponseMultiError, or nil if none found.
-func (m *ListIstioVersionResponse) ValidateAll() error {
+// ListIstioConfigResponseMultiError, or nil if none found.
+func (m *ListIstioConfigResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ListIstioVersionResponse) validate(all bool) error {
+func (m *ListIstioConfigResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -298,7 +298,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		switch v := interface{}(m.GetWebAnnotations()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -306,7 +306,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "WebAnnotations",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -315,7 +315,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetWebAnnotations()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return ListIstioVersionResponseValidationError{
+			return ListIstioConfigResponseValidationError{
 				field:  "WebAnnotations",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -327,7 +327,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		switch v := interface{}(m.GetData()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -335,7 +335,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 			}
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
-				errors = append(errors, ListIstioVersionResponseValidationError{
+				errors = append(errors, ListIstioConfigResponseValidationError{
 					field:  "Data",
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -344,7 +344,7 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 		}
 	} else if v, ok := interface{}(m.GetData()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
-			return ListIstioVersionResponseValidationError{
+			return ListIstioConfigResponseValidationError{
 				field:  "Data",
 				reason: "embedded message failed validation",
 				cause:  err,
@@ -353,19 +353,19 @@ func (m *ListIstioVersionResponse) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return ListIstioVersionResponseMultiError(errors)
+		return ListIstioConfigResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// ListIstioVersionResponseMultiError is an error wrapping multiple validation
-// errors returned by ListIstioVersionResponse.ValidateAll() if the designated
+// ListIstioConfigResponseMultiError is an error wrapping multiple validation
+// errors returned by ListIstioConfigResponse.ValidateAll() if the designated
 // constraints aren't met.
-type ListIstioVersionResponseMultiError []error
+type ListIstioConfigResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ListIstioVersionResponseMultiError) Error() string {
+func (m ListIstioConfigResponseMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -374,11 +374,11 @@ func (m ListIstioVersionResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ListIstioVersionResponseMultiError) AllErrors() []error { return m }
+func (m ListIstioConfigResponseMultiError) AllErrors() []error { return m }
 
-// ListIstioVersionResponseValidationError is the validation error returned by
-// ListIstioVersionResponse.Validate if the designated constraints aren't met.
-type ListIstioVersionResponseValidationError struct {
+// ListIstioConfigResponseValidationError is the validation error returned by
+// ListIstioConfigResponse.Validate if the designated constraints aren't met.
+type ListIstioConfigResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -386,24 +386,24 @@ type ListIstioVersionResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ListIstioVersionResponseValidationError) Field() string { return e.field }
+func (e ListIstioConfigResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ListIstioVersionResponseValidationError) Reason() string { return e.reason }
+func (e ListIstioConfigResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ListIstioVersionResponseValidationError) Cause() error { return e.cause }
+func (e ListIstioConfigResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ListIstioVersionResponseValidationError) Key() bool { return e.key }
+func (e ListIstioConfigResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ListIstioVersionResponseValidationError) ErrorName() string {
-	return "ListIstioVersionResponseValidationError"
+func (e ListIstioConfigResponseValidationError) ErrorName() string {
+	return "ListIstioConfigResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ListIstioVersionResponseValidationError) Error() string {
+func (e ListIstioConfigResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -415,14 +415,14 @@ func (e ListIstioVersionResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sListIstioVersionResponse.%s: %s%s",
+		"invalid %sListIstioConfigResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ListIstioVersionResponseValidationError{}
+var _ error = ListIstioConfigResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -430,24 +430,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ListIstioVersionResponseValidationError{}
+} = ListIstioConfigResponseValidationError{}
 
-// Validate checks the field values on IstioVersionAndFeatures with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *IstioVersionAndFeatures) Validate() error {
+// Validate checks the field values on IstioConfigData with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *IstioConfigData) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on IstioVersionAndFeatures with the
-// rules defined in the proto definition for this message. If any rules are
+// ValidateAll checks the field values on IstioConfigData with the rules
+// defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// IstioVersionAndFeaturesMultiError, or nil if none found.
-func (m *IstioVersionAndFeatures) ValidateAll() error {
+// IstioConfigDataMultiError, or nil if none found.
+func (m *IstioConfigData) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *IstioVersionAndFeatures) validate(all bool) error {
+func (m *IstioConfigData) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -461,7 +461,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 			switch v := interface{}(item).(type) {
 			case interface{ ValidateAll() error }:
 				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, IstioVersionAndFeaturesValidationError{
+					errors = append(errors, IstioConfigDataValidationError{
 						field:  fmt.Sprintf("IstioVersions[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -469,7 +469,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 				}
 			case interface{ Validate() error }:
 				if err := v.Validate(); err != nil {
-					errors = append(errors, IstioVersionAndFeaturesValidationError{
+					errors = append(errors, IstioConfigDataValidationError{
 						field:  fmt.Sprintf("IstioVersions[%v]", idx),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -478,7 +478,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 			}
 		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				return IstioVersionAndFeaturesValidationError{
+				return IstioConfigDataValidationError{
 					field:  fmt.Sprintf("IstioVersions[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
@@ -486,6 +486,64 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 			}
 		}
 
+	}
+
+	if all {
+		switch v := interface{}(m.GetSidecarResourceConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "SidecarResourceConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetSidecarResourceConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioConfigDataValidationError{
+				field:  "SidecarResourceConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetHighAvailability()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IstioConfigDataValidationError{
+					field:  "HighAvailability",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetHighAvailability()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IstioConfigDataValidationError{
+				field:  "HighAvailability",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	{
@@ -506,7 +564,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 				switch v := interface{}(val).(type) {
 				case interface{ ValidateAll() error }:
 					if err := v.ValidateAll(); err != nil {
-						errors = append(errors, IstioVersionAndFeaturesValidationError{
+						errors = append(errors, IstioConfigDataValidationError{
 							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
@@ -514,7 +572,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 					}
 				case interface{ Validate() error }:
 					if err := v.Validate(); err != nil {
-						errors = append(errors, IstioVersionAndFeaturesValidationError{
+						errors = append(errors, IstioConfigDataValidationError{
 							field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 							reason: "embedded message failed validation",
 							cause:  err,
@@ -523,7 +581,7 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 				}
 			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
 				if err := v.Validate(); err != nil {
-					return IstioVersionAndFeaturesValidationError{
+					return IstioConfigDataValidationError{
 						field:  fmt.Sprintf("FeatureConfigs[%v]", key),
 						reason: "embedded message failed validation",
 						cause:  err,
@@ -535,19 +593,19 @@ func (m *IstioVersionAndFeatures) validate(all bool) error {
 	}
 
 	if len(errors) > 0 {
-		return IstioVersionAndFeaturesMultiError(errors)
+		return IstioConfigDataMultiError(errors)
 	}
 
 	return nil
 }
 
-// IstioVersionAndFeaturesMultiError is an error wrapping multiple validation
-// errors returned by IstioVersionAndFeatures.ValidateAll() if the designated
-// constraints aren't met.
-type IstioVersionAndFeaturesMultiError []error
+// IstioConfigDataMultiError is an error wrapping multiple validation errors
+// returned by IstioConfigData.ValidateAll() if the designated constraints
+// aren't met.
+type IstioConfigDataMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m IstioVersionAndFeaturesMultiError) Error() string {
+func (m IstioConfigDataMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -556,11 +614,11 @@ func (m IstioVersionAndFeaturesMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m IstioVersionAndFeaturesMultiError) AllErrors() []error { return m }
+func (m IstioConfigDataMultiError) AllErrors() []error { return m }
 
-// IstioVersionAndFeaturesValidationError is the validation error returned by
-// IstioVersionAndFeatures.Validate if the designated constraints aren't met.
-type IstioVersionAndFeaturesValidationError struct {
+// IstioConfigDataValidationError is the validation error returned by
+// IstioConfigData.Validate if the designated constraints aren't met.
+type IstioConfigDataValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -568,24 +626,22 @@ type IstioVersionAndFeaturesValidationError struct {
 }
 
 // Field function returns field value.
-func (e IstioVersionAndFeaturesValidationError) Field() string { return e.field }
+func (e IstioConfigDataValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e IstioVersionAndFeaturesValidationError) Reason() string { return e.reason }
+func (e IstioConfigDataValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e IstioVersionAndFeaturesValidationError) Cause() error { return e.cause }
+func (e IstioConfigDataValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e IstioVersionAndFeaturesValidationError) Key() bool { return e.key }
+func (e IstioConfigDataValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e IstioVersionAndFeaturesValidationError) ErrorName() string {
-	return "IstioVersionAndFeaturesValidationError"
-}
+func (e IstioConfigDataValidationError) ErrorName() string { return "IstioConfigDataValidationError" }
 
 // Error satisfies the builtin error interface
-func (e IstioVersionAndFeaturesValidationError) Error() string {
+func (e IstioConfigDataValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -597,14 +653,14 @@ func (e IstioVersionAndFeaturesValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sIstioVersionAndFeatures.%s: %s%s",
+		"invalid %sIstioConfigData.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = IstioVersionAndFeaturesValidationError{}
+var _ error = IstioConfigDataValidationError{}
 
 var _ interface {
 	Field() string
@@ -612,7 +668,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = IstioVersionAndFeaturesValidationError{}
+} = IstioConfigDataValidationError{}
 
 // Validate checks the field values on IstioVersion with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

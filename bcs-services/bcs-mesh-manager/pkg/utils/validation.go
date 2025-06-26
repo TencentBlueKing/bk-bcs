@@ -20,6 +20,7 @@ import (
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/cmd/mesh-manager/options"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/clients/k8s"
+	meshmanager "github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/proto/bcs-mesh-manager"
 )
 
 // ValidateClusterVersion 检查集群版本是否支持istio版本
@@ -77,6 +78,49 @@ func ValidateIstioInstalled(ctx context.Context, clusterIDs []string) error {
 		if installed {
 			return fmt.Errorf("cluster %s already installed istio", clusterID)
 		}
+	}
+	return nil
+}
+
+// ValidateObservabilityConfig 检查可观性配置是否配置正确
+func ValidateObservabilityConfig(observabilityConfig *meshmanager.ObservabilityConfig) error {
+	if observabilityConfig == nil {
+		return nil
+	}
+	// 日志采集参数是否正确
+	if observabilityConfig.LogCollectorConfig != nil {
+		if observabilityConfig.LogCollectorConfig.Enabled.GetValue() {
+			// TEXT or JSON
+			if observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue() != "TEXT" &&
+				observabilityConfig.LogCollectorConfig.AccessLogEncoding.GetValue() != "JSON" {
+				return fmt.Errorf("log collector access log endcoding is invalid, must be TEXT or JSON")
+			}
+		}
+	}
+	// 检查otel tracing配置
+	if observabilityConfig.TracingConfig != nil && observabilityConfig.TracingConfig.Enabled.GetValue() {
+		// 检查endpoint
+		if observabilityConfig.TracingConfig.Endpoint.GetValue() == "" {
+			return fmt.Errorf("otel tracing endpoint is required")
+		}
+		// 采样率 ,0 - 100 之间
+		if observabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() < 0 ||
+			observabilityConfig.TracingConfig.TraceSamplingPercent.GetValue() > 100 {
+			return fmt.Errorf("otel tracing trace sampling percent is invalid")
+		}
+
+		// 检查上报地址是否配置正确, 只检查service和port, path非必须（<1.21不需要）
+		service, port, _, err := ParseOpenTelemetryEndpoint(observabilityConfig.TracingConfig.Endpoint.GetValue())
+		if err != nil {
+			return fmt.Errorf("otel tracing endpoint is invalid, err: %s", err)
+		}
+		if service == "" {
+			return fmt.Errorf("otel tracing endpoint is invalid")
+		}
+		if port == 0 {
+			return fmt.Errorf("otel tracing port is invalid")
+		}
+
 	}
 	return nil
 }

@@ -57,6 +57,12 @@ func TestIsVersionSupported(t *testing.T) {
 			supportVersion: "not-a-constraint",
 			expect:         false,
 		},
+		{
+			name:           "empty cluster version",
+			clusterVersion: "",
+			supportVersion: "1.21",
+			expect:         false,
+		},
 	}
 
 	for _, tt := range tests {

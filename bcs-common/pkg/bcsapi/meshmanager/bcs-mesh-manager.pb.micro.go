@@ -37,8 +37,8 @@ var _ server.Option
 func NewMeshManagerEndpoints() []*api.Endpoint {
 	return []*api.Endpoint{
 		{
-			Name:    "MeshManager.ListIstioVersion",
-			Path:    []string{"/meshmanager/v1/mesh/istio/version"},
+			Name:    "MeshManager.ListIstioConfig",
+			Path:    []string{"/meshmanager/v1/mesh/istio/config"},
 			Method:  []string{"GET"},
 			Handler: "rpc",
 		},
@@ -78,10 +78,8 @@ func NewMeshManagerEndpoints() []*api.Endpoint {
 // Client API for MeshManager service
 
 type MeshManagerService interface {
-	// ===== 版本管理相关 =====
-	// 获取当前开放的istio版本
-	ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, opts ...client.CallOption) (*ListIstioVersionResponse, error)
-	// ===== Istio 相关 =====
+	// 获取当前开放的istio版本和配置信息
+	ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, opts ...client.CallOption) (*ListIstioConfigResponse, error)
 	// 安装istio
 	InstallIstio(ctx context.Context, in *IstioRequest, opts ...client.CallOption) (*InstallIstioResponse, error)
 	// 获取istio列表
@@ -106,9 +104,9 @@ func NewMeshManagerService(name string, c client.Client) MeshManagerService {
 	}
 }
 
-func (c *meshManagerService) ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, opts ...client.CallOption) (*ListIstioVersionResponse, error) {
-	req := c.c.NewRequest(c.name, "MeshManager.ListIstioVersion", in)
-	out := new(ListIstioVersionResponse)
+func (c *meshManagerService) ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, opts ...client.CallOption) (*ListIstioConfigResponse, error) {
+	req := c.c.NewRequest(c.name, "MeshManager.ListIstioConfig", in)
+	out := new(ListIstioConfigResponse)
 	err := c.c.Call(ctx, req, out, opts...)
 	if err != nil {
 		return nil, err
@@ -169,10 +167,8 @@ func (c *meshManagerService) GetIstioDetail(ctx context.Context, in *GetIstioDet
 // Server API for MeshManager service
 
 type MeshManagerHandler interface {
-	// ===== 版本管理相关 =====
-	// 获取当前开放的istio版本
-	ListIstioVersion(context.Context, *ListIstioVersionRequest, *ListIstioVersionResponse) error
-	// ===== Istio 相关 =====
+	// 获取当前开放的istio版本和配置信息
+	ListIstioConfig(context.Context, *ListIstioConfigRequest, *ListIstioConfigResponse) error
 	// 安装istio
 	InstallIstio(context.Context, *IstioRequest, *InstallIstioResponse) error
 	// 获取istio列表
@@ -187,7 +183,7 @@ type MeshManagerHandler interface {
 
 func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts ...server.HandlerOption) error {
 	type meshManager interface {
-		ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error
+		ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, out *ListIstioConfigResponse) error
 		InstallIstio(ctx context.Context, in *IstioRequest, out *InstallIstioResponse) error
 		ListIstio(ctx context.Context, in *ListIstioRequest, out *ListIstioResponse) error
 		UpdateIstio(ctx context.Context, in *IstioRequest, out *UpdateIstioResponse) error
@@ -199,8 +195,8 @@ func RegisterMeshManagerHandler(s server.Server, hdlr MeshManagerHandler, opts .
 	}
 	h := &meshManagerHandler{hdlr}
 	opts = append(opts, api.WithEndpoint(&api.Endpoint{
-		Name:    "MeshManager.ListIstioVersion",
-		Path:    []string{"/meshmanager/v1/mesh/istio/version"},
+		Name:    "MeshManager.ListIstioConfig",
+		Path:    []string{"/meshmanager/v1/mesh/istio/config"},
 		Method:  []string{"GET"},
 		Handler: "rpc",
 	}))
@@ -241,8 +237,8 @@ type meshManagerHandler struct {
 	MeshManagerHandler
 }
 
-func (h *meshManagerHandler) ListIstioVersion(ctx context.Context, in *ListIstioVersionRequest, out *ListIstioVersionResponse) error {
-	return h.MeshManagerHandler.ListIstioVersion(ctx, in, out)
+func (h *meshManagerHandler) ListIstioConfig(ctx context.Context, in *ListIstioConfigRequest, out *ListIstioConfigResponse) error {
+	return h.MeshManagerHandler.ListIstioConfig(ctx, in, out)
 }
 
 func (h *meshManagerHandler) InstallIstio(ctx context.Context, in *IstioRequest, out *InstallIstioResponse) error {

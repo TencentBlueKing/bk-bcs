@@ -14,10 +14,10 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/Tencent/bk-bcs/bcs-common/common/blog"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/common"
 	"github.com/Tencent/bk-bcs/bcs-services/bcs-mesh-manager/pkg/store/entity"
@@ -56,7 +56,7 @@ func ConvertValuesToListItem(
 
 	// 从实际的部署配置中提取可观测性配置
 	if istiodValues.MeshConfig != nil {
-		convertObservabilityConfigValues(istiodValues.MeshConfig, result)
+		convertObservabilityConfigValues(istiodValues, result)
 	}
 
 	// 从实际的部署配置中提取功能特性配置
@@ -72,7 +72,6 @@ func ConvertValuesToListItem(
 	// - istiodValues.Global.RemotePilotAddress (远程 pilot 地址)
 	// - istiodValues.Global.ExternalIstiod (外部 istiod)
 	// - istiodValues.MultiCluster (多集群配置)
-	// - istiodValues.Pilot.TraceSampling (追踪采样)
 	// - istiodValues.Pilot.ConfigMap (配置映射)
 	// - istiodValues.Pilot.Env 中的其他环境变量（除了 PILOT_HTTP10）
 
@@ -81,25 +80,25 @@ func ConvertValuesToListItem(
 
 // convertResourceConfigValues 从实际的资源配置构建 ResourceConfig
 func convertResourceConfigValues(
-	resources *v1.ResourceRequirements,
+	resources *common.ResourceConfig,
 ) *meshmanager.ResourceConfig {
 	config := &meshmanager.ResourceConfig{}
 
 	if resources.Requests != nil {
-		if cpu, ok := resources.Requests[v1.ResourceCPU]; ok {
-			config.CpuRequest = wrapperspb.String(cpu.String())
+		if resources.Requests.CPU != nil {
+			config.CpuRequest = wrapperspb.String(*resources.Requests.CPU)
 		}
-		if memory, ok := resources.Requests[v1.ResourceMemory]; ok {
-			config.MemoryRequest = wrapperspb.String(memory.String())
+		if resources.Requests.Memory != nil {
+			config.MemoryRequest = wrapperspb.String(*resources.Requests.Memory)
 		}
 	}
 
 	if resources.Limits != nil {
-		if cpu, ok := resources.Limits[v1.ResourceCPU]; ok {
-			config.CpuLimit = wrapperspb.String(cpu.String())
+		if resources.Limits.CPU != nil {
+			config.CpuLimit = wrapperspb.String(*resources.Limits.CPU)
 		}
-		if memory, ok := resources.Limits[v1.ResourceMemory]; ok {
-			config.MemoryLimit = wrapperspb.String(memory.String())
+		if resources.Limits.Memory != nil {
+			config.MemoryLimit = wrapperspb.String(*resources.Limits.Memory)
 		}
 	}
 
@@ -108,7 +107,7 @@ func convertResourceConfigValues(
 
 // updateResourceConfigValues 从实际的资源配置更新现有的 ResourceConfig
 func updateResourceConfigValues(
-	resources *v1.ResourceRequirements,
+	resources *common.ResourceConfig,
 	config *meshmanager.ResourceConfig,
 ) {
 	if config == nil {
@@ -116,20 +115,20 @@ func updateResourceConfigValues(
 	}
 
 	if resources.Requests != nil {
-		if cpu, ok := resources.Requests[v1.ResourceCPU]; ok {
-			config.CpuRequest = wrapperspb.String(cpu.String())
+		if resources.Requests.CPU != nil {
+			config.CpuRequest = wrapperspb.String(*resources.Requests.CPU)
 		}
-		if memory, ok := resources.Requests[v1.ResourceMemory]; ok {
-			config.MemoryRequest = wrapperspb.String(memory.String())
+		if resources.Requests.Memory != nil {
+			config.MemoryRequest = wrapperspb.String(*resources.Requests.Memory)
 		}
 	}
 
 	if resources.Limits != nil {
-		if cpu, ok := resources.Limits[v1.ResourceCPU]; ok {
-			config.CpuLimit = wrapperspb.String(cpu.String())
+		if resources.Limits.CPU != nil {
+			config.CpuLimit = wrapperspb.String(*resources.Limits.CPU)
 		}
-		if memory, ok := resources.Limits[v1.ResourceMemory]; ok {
-			config.MemoryLimit = wrapperspb.String(memory.String())
+		if resources.Limits.Memory != nil {
+			config.MemoryLimit = wrapperspb.String(*resources.Limits.Memory)
 		}
 	}
 }
@@ -183,22 +182,54 @@ func convertHighAvailabilityValues(
 
 // convertObservabilityConfigValues 从实际的可观测性配置更新 ObservabilityConfig
 func convertObservabilityConfigValues(
-	meshConfig *common.IstiodMeshConfig,
+	istiodValues *common.IstiodInstallValues,
 	result *meshmanager.IstioListItem,
 ) {
+	meshConfig := istiodValues.MeshConfig
 	// 确保 result.ObservabilityConfig 存在
 	if result.ObservabilityConfig == nil {
 		result.ObservabilityConfig = &meshmanager.ObservabilityConfig{}
 	}
 
 	// 更新追踪配置
-	if meshConfig.EnableTracing != nil && *meshConfig.EnableTracing {
-		if result.ObservabilityConfig.TracingConfig == nil {
-			result.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{}
-		}
-		result.ObservabilityConfig.TracingConfig.Enabled = wrapperspb.Bool(true)
+	if result.ObservabilityConfig.TracingConfig == nil {
+		result.ObservabilityConfig.TracingConfig = &meshmanager.TracingConfig{}
+	}
+	result.ObservabilityConfig.TracingConfig.Enabled =
+		wrapperspb.Bool(meshConfig.EnableTracing != nil && *meshConfig.EnableTracing)
 
-		// 更新追踪端点
+	// 先看istio版本
+	if IsVersionSupported(result.Version, ">=1.21") {
+		// 高于1.21的版本，使用otel
+		if meshConfig.ExtensionProviders != nil {
+			for _, provider := range meshConfig.ExtensionProviders {
+				if provider.Name != nil && *provider.Name != OtelTracingName {
+					continue
+				}
+				// 匹配到 otel-tracing
+				endpoint := ""
+				if provider.OpenTelemetry != nil && provider.OpenTelemetry.Port != nil && provider.OpenTelemetry.Service != nil {
+					endpoint = *provider.OpenTelemetry.Service + ":" + strconv.Itoa(int(*provider.OpenTelemetry.Port))
+				}
+				if provider.OpenTelemetry != nil && provider.OpenTelemetry.Http != nil && provider.OpenTelemetry.Http.Path != nil {
+					endpoint += *provider.OpenTelemetry.Http.Path
+				}
+				result.ObservabilityConfig.TracingConfig.Endpoint =
+					wrapperspb.String(endpoint)
+
+				// 获取token
+				if provider.OpenTelemetry != nil &&
+					provider.OpenTelemetry.Http != nil &&
+					provider.OpenTelemetry.Http.Headers != nil {
+					if token, ok := provider.OpenTelemetry.Http.Headers[OtelTracingHeader]; ok {
+						result.ObservabilityConfig.TracingConfig.BkToken = wrapperspb.String(token)
+					}
+				}
+			}
+		}
+
+	} else {
+		// 低于1.21的版本，使用zipkin
 		if meshConfig.DefaultConfig != nil && meshConfig.DefaultConfig.TracingConfig != nil &&
 			meshConfig.DefaultConfig.TracingConfig.Zipkin != nil &&
 			meshConfig.DefaultConfig.TracingConfig.Zipkin.Address != nil {
@@ -206,22 +237,25 @@ func convertObservabilityConfigValues(
 				wrapperspb.String(*meshConfig.DefaultConfig.TracingConfig.Zipkin.Address)
 		}
 	}
+	// 获取采样率
+	if istiodValues.Pilot != nil && istiodValues.Pilot.TraceSampling != nil {
+		result.ObservabilityConfig.TracingConfig.TraceSamplingPercent =
+			wrapperspb.Int32(int32(*istiodValues.Pilot.TraceSampling * 100))
+	}
 
 	// 更新日志配置
-	if meshConfig.AccessLogFile != nil {
-		if result.ObservabilityConfig.LogCollectorConfig == nil {
-			result.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{}
-		}
-		result.ObservabilityConfig.LogCollectorConfig.Enabled = wrapperspb.Bool(true)
-
-		// 更新日志格式
-		if meshConfig.AccessLogFormat != nil {
-			result.ObservabilityConfig.LogCollectorConfig.AccessLogFormat = wrapperspb.String(*meshConfig.AccessLogFormat)
-		}
-		// 更新日志编码
-		if meshConfig.AccessLogEncoding != nil {
-			result.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding = wrapperspb.String(*meshConfig.AccessLogEncoding)
-		}
+	if result.ObservabilityConfig.LogCollectorConfig == nil {
+		result.ObservabilityConfig.LogCollectorConfig = &meshmanager.LogCollectorConfig{}
+	}
+	result.ObservabilityConfig.LogCollectorConfig.Enabled =
+		wrapperspb.Bool(meshConfig.AccessLogFile != nil && *meshConfig.AccessLogFile != "")
+	// 更新日志格式
+	if meshConfig.AccessLogFormat != nil {
+		result.ObservabilityConfig.LogCollectorConfig.AccessLogFormat = wrapperspb.String(*meshConfig.AccessLogFormat)
+	}
+	// 更新日志编码
+	if meshConfig.AccessLogEncoding != nil {
+		result.ObservabilityConfig.LogCollectorConfig.AccessLogEncoding = wrapperspb.String(*meshConfig.AccessLogEncoding)
 	}
 }
 

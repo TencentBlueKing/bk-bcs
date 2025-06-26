@@ -99,8 +99,20 @@ func (i *IstioInstallAction) Execute(ctx context.Context) error {
 	}
 
 	// TODO: 安装远程集群中的istio
-	// 1、主集群中先安装egress gateway，获取到clb
+	// 1、[网络没打通]主集群中先安装egress gateway，获取到clb
 	// 2、远程集群中安装istio，使用主集群的clb
+
+	// 安装其他集群依赖的资源
+	// 主从集群都需要安装
+	clusters := make([]string, 0, len(i.PrimaryClusters)+len(i.RemoteClusters))
+	clusters = append(clusters, i.PrimaryClusters...)
+	clusters = append(clusters, i.RemoteClusters...)
+	for _, cluster := range clusters {
+		if err := i.installClusterResource(ctx, cluster, i.IstioInstallOption); err != nil {
+			blog.Errorf("[%s]install cluster resource failed, err: %s", i.MeshID, err)
+			return fmt.Errorf("install cluster resource failed: %s", err)
+		}
+	}
 
 	blog.Infof("[%s]istio install completed", i.MeshID)
 	return nil
@@ -111,7 +123,7 @@ func (i *IstioInstallAction) Done(err error) {
 	m := make(entity.M)
 	if err != nil {
 		blog.Errorf("[%s]istio install failed, err: %s", i.MeshID, err)
-		m[entity.FieldKeyStatus] = common.IstioStatusFailed
+		m[entity.FieldKeyStatus] = common.IstioStatusInstallFailed
 		m[entity.FieldKeyStatusMessage] = fmt.Sprintf("安装失败，%s", err.Error())
 	} else {
 		blog.Infof("[%s]istio install success", i.MeshID)
@@ -165,6 +177,56 @@ func (i *IstioInstallAction) installIstioForPrimary(ctx context.Context, chartVe
 		},
 	); err != nil {
 		return fmt.Errorf("install istiod failed: %s", err)
+	}
+
+	return nil
+}
+
+// installClusterResource 安装集群依赖的资源
+func (i *IstioInstallAction) installClusterResource(
+	ctx context.Context,
+	clusterID string,
+	installOption *common.IstioInstallOption,
+) error {
+	// 开启控制面监控，下发serviceMonitor
+	if installOption.ObservabilityConfig != nil && installOption.ObservabilityConfig.MetricsConfig != nil &&
+		installOption.ObservabilityConfig.MetricsConfig.ControlPlaneMetricsEnabled.GetValue() {
+		// 下发ServiceMonitor 资源
+		blog.Infof("[%s]control plane metrics enabled, deploying ServiceMonitor for cluster %s", i.MeshID, clusterID)
+		if err := i.deployServiceMonitor(ctx, clusterID); err != nil {
+			blog.Errorf("[%s]deploy ServiceMonitor failed for cluster %s, err: %s", i.MeshID, clusterID, err)
+			return fmt.Errorf("deploy ServiceMonitor failed: %s", err)
+		}
+	}
+
+	// 开启数据面监控，下发PodMonitor
+	if installOption.ObservabilityConfig != nil && installOption.ObservabilityConfig.MetricsConfig != nil &&
+		installOption.ObservabilityConfig.MetricsConfig.DataPlaneMetricsEnabled.GetValue() {
+		// 下发PodMonitor 资源
+		blog.Infof("[%s]data plane metrics enabled, deploying PodMonitor for cluster %s", i.MeshID, clusterID)
+		if err := i.deployPodMonitor(ctx, clusterID); err != nil {
+			blog.Errorf("[%s]deploy PodMonitor failed for cluster %s, err: %s", i.MeshID, clusterID, err)
+			return fmt.Errorf("deploy PodMonitor failed: %s", err)
+		}
+	}
+
+	// 全链路：高于1.21的版本，并且开启Telemetry，则下发Telemetry 资源
+	if utils.IsVersionSupported(installOption.Version, ">=1.21") &&
+		installOption.ObservabilityConfig != nil &&
+		installOption.ObservabilityConfig.TracingConfig != nil &&
+		installOption.ObservabilityConfig.TracingConfig.Enabled.GetValue() {
+		// 下发Telemetry 资源
+		blog.Infof("[%s]tracing enabled for version %s, deploying Telemetry for cluster %s",
+			i.MeshID, installOption.Version, clusterID,
+		)
+		traceSamplingPercent := 1
+		if installOption.ObservabilityConfig.TracingConfig.TraceSamplingPercent != nil {
+			traceSamplingPercent = int(installOption.ObservabilityConfig.TracingConfig.TraceSamplingPercent.GetValue())
+		}
+		if err := i.deployTelemetry(ctx, clusterID, traceSamplingPercent); err != nil {
+			blog.Errorf("[%s]deploy Telemetry failed for cluster %s, err: %s", i.MeshID, clusterID, err)
+			return fmt.Errorf("deploy Telemetry failed: %s", err)
+		}
 	}
 
 	return nil
@@ -233,4 +295,37 @@ func (i *IstioInstallAction) installComponent(
 			}
 		}
 	}
+}
+
+// deployPodMonitor 部署PodMonitor资源用于数据面监控
+func (i *IstioInstallAction) deployPodMonitor(ctx context.Context, clusterID string) error {
+	return k8s.DeployResourceByYAML(
+		ctx,
+		clusterID,
+		common.GetPodMonitorYAML(),
+		"PodMonitor",
+		common.PodMonitorName,
+	)
+}
+
+// deployServiceMonitor 部署ServiceMonitor资源用于控制面监控
+func (i *IstioInstallAction) deployServiceMonitor(ctx context.Context, clusterID string) error {
+	return k8s.DeployResourceByYAML(
+		ctx,
+		clusterID,
+		common.GetServiceMonitorYAML(),
+		"ServiceMonitor",
+		common.ServiceMonitorName,
+	)
+}
+
+// deployTelemetry 部署Telemetry资源用于链路追踪
+func (i *IstioInstallAction) deployTelemetry(ctx context.Context, clusterID string, randomSamplingPercnt int) error {
+	return k8s.DeployResourceByYAML(
+		ctx,
+		clusterID,
+		common.GetTelemetryYAML(randomSamplingPercnt),
+		"Telemetry",
+		common.TelemetryName,
+	)
 }

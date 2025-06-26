@@ -9,8 +9,9 @@
       "name": "MeshManager"
     }
   ],
+  "basePath": "/bcsapi/v4",
   "schemes": [
-    "http"
+    "https"
   ],
   "consumes": [
     "application/json"
@@ -19,6 +20,29 @@
     "application/json"
   ],
   "paths": {
+    "/meshmanager/v1/mesh/istio/config": {
+      "get": {
+        "summary": "获取当前开放的istio版本和配置信息",
+        "operationId": "MeshManager_ListIstioConfig",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/meshmanagerListIstioConfigResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "MeshManager"
+        ]
+      }
+    },
     "/meshmanager/v1/mesh/istio/detail/{meshID}": {
       "get": {
         "summary": "获取istio详情",
@@ -40,6 +64,7 @@
         "parameters": [
           {
             "name": "meshID",
+            "description": "网格ID",
             "in": "path",
             "required": true,
             "type": "string"
@@ -59,7 +84,7 @@
     },
     "/meshmanager/v1/mesh/istio/install": {
       "post": {
-        "summary": "===== Istio 相关 =====\n安装istio",
+        "summary": "安装istio",
         "operationId": "MeshManager_InstallIstio",
         "responses": {
           "200": {
@@ -111,30 +136,35 @@
         "parameters": [
           {
             "name": "projectCode",
+            "description": "projectCode. 项目编码",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "meshID",
+            "description": "meshID. 网格ID，可选过滤条件",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "name",
+            "description": "name. 网格名称，可选过滤条件",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "status",
+            "description": "status. 网格状态，可选过滤条件[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
             "in": "query",
             "required": false,
             "type": "string"
           },
           {
             "name": "page",
+            "description": "page. 页码",
             "in": "query",
             "required": false,
             "type": "integer",
@@ -142,35 +172,13 @@
           },
           {
             "name": "pageSize",
+            "description": "pageSize. 每页数量",
             "in": "query",
             "required": false,
             "type": "integer",
             "format": "int32"
           }
         ],
-        "tags": [
-          "MeshManager"
-        ]
-      }
-    },
-    "/meshmanager/v1/mesh/istio/version": {
-      "get": {
-        "summary": "===== 版本管理相关 =====\n获取当前开放的istio版本",
-        "operationId": "MeshManager_ListIstioVersion",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/meshmanagerListIstioVersionResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
         "tags": [
           "MeshManager"
         ]
@@ -197,12 +205,14 @@
         "parameters": [
           {
             "name": "meshID",
+            "description": "网格ID",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
             "name": "projectCode",
+            "description": "projectCode. 项目编码",
             "in": "query",
             "required": false,
             "type": "string"
@@ -232,6 +242,7 @@
         "parameters": [
           {
             "name": "meshID",
+            "description": "网格ID",
             "in": "path",
             "required": true,
             "type": "string"
@@ -244,59 +255,86 @@
               "type": "object",
               "properties": {
                 "projectID": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "项目ID",
+                  "title": "projectID"
                 },
                 "projectCode": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "项目编码",
+                  "title": "projectCode"
                 },
                 "name": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "网格名称",
+                  "title": "name"
                 },
                 "version": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "使用的版本，例如 1.18",
+                  "title": "version"
                 },
                 "controlPlaneMode": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
+                  "title": "controlPlaneMode"
                 },
                 "clusterMode": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "多集群集群模式[primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+                  "title": "clusterMode"
                 },
                 "description": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "文字描述",
+                  "title": "description"
                 },
                 "primaryClusters": {
                   "type": "array",
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "description": "主集群列表，使用BCS集群ID",
+                  "title": "primaryClusters"
                 },
                 "remoteClusters": {
                   "type": "array",
                   "items": {
                     "type": "string"
-                  }
+                  },
+                  "description": "远程/从集群列表,多集群模式下填写",
+                  "title": "remoteClusters"
                 },
                 "differentNetwork": {
-                  "type": "boolean"
+                  "type": "boolean",
+                  "description": "网络是否已打通：关乎是否默认安装egress gateway，true：已打通（默认），false：未打通，暂不支持",
+                  "title": "differentNetwork"
                 },
                 "sidecarResourceConfig": {
-                  "$ref": "#/definitions/meshmanagerResourceConfig"
+                  "$ref": "#/definitions/meshmanagerResourceConfig",
+                  "description": "sidecar资源配置",
+                  "title": "sidecarResourceConfig"
                 },
                 "highAvailability": {
-                  "$ref": "#/definitions/meshmanagerHighAvailability"
+                  "$ref": "#/definitions/meshmanagerHighAvailability",
+                  "description": "高可用配置",
+                  "title": "highAvailability"
                 },
                 "observabilityConfig": {
                   "$ref": "#/definitions/meshmanagerObservabilityConfig",
-                  "title": "可观测性配置"
+                  "description": "可观测性配置",
+                  "title": "observabilityConfig"
                 },
                 "featureConfigs": {
                   "type": "object",
                   "additionalProperties": {
                     "$ref": "#/definitions/meshmanagerFeatureConfig"
-                  }
+                  },
+                  "description": "功能特性[跟随版本关联的特性]",
+                  "title": "featureConfigs"
                 }
               },
-              "title": "===== Mesh 管理相关消息 =====\nistio配置信息"
+              "title": "istio配置信息"
             }
           }
         ],
@@ -311,13 +349,17 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "是否启用",
+          "title": "enabled"
         },
         "nodeLabels": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
-          }
+          },
+          "description": "节点标签",
+          "title": "nodeLabels"
         }
       },
       "title": "专属调度标签"
@@ -352,28 +394,40 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "description": "特性名称",
+          "title": "name"
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "特性描述",
+          "title": "description"
         },
         "value": {
-          "type": "string"
+          "type": "string",
+          "description": "特性值",
+          "title": "value"
         },
         "defaultValue": {
-          "type": "string"
+          "type": "string",
+          "description": "默认值",
+          "title": "defaultValue"
         },
         "availableValues": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "可选值",
+          "title": "availableValues"
         },
         "supportVersions": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "description": "支持的istio版本",
+          "title": "supportVersions"
         }
       },
       "title": "功能特性配置"
@@ -412,29 +466,43 @@
       "type": "object",
       "properties": {
         "autoscaleEnabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "是否开启hpa",
+          "title": "autoscaleEnabled"
         },
         "autoscaleMin": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "hpa最小副本数",
+          "title": "autoscaleMin"
         },
         "autoscaleMax": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "hpa最大副本数",
+          "title": "autoscaleMax"
         },
         "replicaCount": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "副本数",
+          "title": "replicaCount"
         },
         "targetCPUAverageUtilizationPercent": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "目标cpu平均使用率 0-100",
+          "title": "targetCPUAverageUtilizationPercent"
         },
         "resourceConfig": {
-          "$ref": "#/definitions/meshmanagerResourceConfig"
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "description": "resource配置",
+          "title": "resourceConfig"
         },
         "dedicatedNode": {
-          "$ref": "#/definitions/meshmanagerDedicatedNode"
+          "$ref": "#/definitions/meshmanagerDedicatedNode",
+          "description": "专属节点（专用节点标签），默认会加上容忍",
+          "title": "dedicatedNode"
         }
       },
       "title": "高可用配置，hpa，副本数设置等"
@@ -465,7 +533,7 @@
         },
         "meshID": {
           "type": "string",
-          "description": "meshID",
+          "description": "网格ID",
           "title": "meshID"
         }
       },
@@ -479,175 +547,7 @@
         "data"
       ]
     },
-    "meshmanagerIstioListItem": {
-      "type": "object",
-      "properties": {
-        "meshID": {
-          "type": "string"
-        },
-        "status": {
-          "type": "string"
-        },
-        "statusMessage": {
-          "type": "string"
-        },
-        "networkID": {
-          "type": "string"
-        },
-        "chartVersion": {
-          "type": "string"
-        },
-        "createTime": {
-          "type": "string",
-          "format": "int64"
-        },
-        "updateTime": {
-          "type": "string",
-          "format": "int64"
-        },
-        "createBy": {
-          "type": "string"
-        },
-        "updateBy": {
-          "type": "string"
-        },
-        "projectID": {
-          "type": "string",
-          "title": "保持跟 IstioRequest 一致"
-        },
-        "projectCode": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "controlPlaneMode": {
-          "type": "string"
-        },
-        "clusterMode": {
-          "type": "string"
-        },
-        "primaryClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "remoteClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "differentNetwork": {
-          "type": "boolean"
-        },
-        "sidecarResourceConfig": {
-          "$ref": "#/definitions/meshmanagerResourceConfig"
-        },
-        "highAvailability": {
-          "$ref": "#/definitions/meshmanagerHighAvailability"
-        },
-        "observabilityConfig": {
-          "$ref": "#/definitions/meshmanagerObservabilityConfig",
-          "title": "可观测性配置"
-        },
-        "featureConfigs": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/meshmanagerFeatureConfig"
-          }
-        }
-      },
-      "description": "istio列表项",
-      "title": "IstioListItem"
-    },
-    "meshmanagerIstioRequest": {
-      "type": "object",
-      "properties": {
-        "meshID": {
-          "type": "string"
-        },
-        "projectID": {
-          "type": "string"
-        },
-        "projectCode": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "controlPlaneMode": {
-          "type": "string"
-        },
-        "clusterMode": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "primaryClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "remoteClusters": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "differentNetwork": {
-          "type": "boolean"
-        },
-        "sidecarResourceConfig": {
-          "$ref": "#/definitions/meshmanagerResourceConfig"
-        },
-        "highAvailability": {
-          "$ref": "#/definitions/meshmanagerHighAvailability"
-        },
-        "observabilityConfig": {
-          "$ref": "#/definitions/meshmanagerObservabilityConfig",
-          "title": "可观测性配置"
-        },
-        "featureConfigs": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/meshmanagerFeatureConfig"
-          }
-        }
-      },
-      "title": "===== Mesh 管理相关消息 =====\nistio配置信息"
-    },
-    "meshmanagerIstioVersion": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        },
-        "chartVersion": {
-          "type": "string"
-        },
-        "kubeVersion": {
-          "type": "string"
-        }
-      },
-      "title": "istio版本信息"
-    },
-    "meshmanagerIstioVersionAndFeatures": {
+    "meshmanagerIstioConfigData": {
       "type": "object",
       "properties": {
         "istioVersions": {
@@ -658,6 +558,16 @@
           "description": "istio版本列表",
           "title": "istioVersions"
         },
+        "sidecarResourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "description": "sidecar资源配置",
+          "title": "sidecarResourceConfig"
+        },
+        "highAvailability": {
+          "$ref": "#/definitions/meshmanagerHighAvailability",
+          "description": "高可用配置",
+          "title": "highAvailability"
+        },
         "featureConfigs": {
           "type": "object",
           "additionalProperties": {
@@ -667,23 +577,316 @@
           "title": "featureConfigs"
         }
       },
-      "title": "获取istio版本列表响应"
+      "title": "istio版本和功能特性"
+    },
+    "meshmanagerIstioListItem": {
+      "type": "object",
+      "properties": {
+        "meshID": {
+          "type": "string",
+          "description": "网格ID",
+          "title": "meshID"
+        },
+        "status": {
+          "type": "string",
+          "description": "状态[running：运行中；installing：安装中；installed：安装完成；failed：安装失败；uninstalling：卸载中；uninstalled：卸载完成；uninstalling-failed：卸载失败；updating：配置更新中；update-failed：配置更新失败]",
+          "title": "status"
+        },
+        "statusMessage": {
+          "type": "string",
+          "description": "状态消息，状态为failed时，会返回失败原因",
+          "title": "statusMessage"
+        },
+        "networkID": {
+          "type": "string",
+          "description": "网络ID",
+          "title": "networkID"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "chart版本",
+          "title": "chartVersion"
+        },
+        "createTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "创建时间",
+          "title": "createTime"
+        },
+        "updateTime": {
+          "type": "string",
+          "format": "int64",
+          "description": "更新时间",
+          "title": "updateTime"
+        },
+        "createBy": {
+          "type": "string",
+          "description": "创建者",
+          "title": "createBy"
+        },
+        "updateBy": {
+          "type": "string",
+          "description": "更新者",
+          "title": "updateBy"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "名称",
+          "title": "name"
+        },
+        "description": {
+          "type": "string",
+          "description": "描述",
+          "title": "description"
+        },
+        "version": {
+          "type": "string",
+          "description": "使用的版本",
+          "title": "version"
+        },
+        "controlPlaneMode": {
+          "type": "string",
+          "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
+          "title": "controlPlaneMode"
+        },
+        "clusterMode": {
+          "type": "string",
+          "description": "多集群集群模式,primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+          "title": "clusterMode"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "主集群列表",
+          "title": "primaryClusters"
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "远程集群列表",
+          "title": "remoteClusters"
+        },
+        "differentNetwork": {
+          "type": "boolean",
+          "description": "网络是否一致：关乎是否默认安装egress gateway",
+          "title": "differentNetwork"
+        },
+        "sidecarResourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "description": "sidecar资源配置",
+          "title": "sidecarResourceConfig"
+        },
+        "highAvailability": {
+          "$ref": "#/definitions/meshmanagerHighAvailability",
+          "description": "高可用配置",
+          "title": "highAvailability"
+        },
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "description": "可观测性配置",
+          "title": "observabilityConfig"
+        },
+        "featureConfigs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerFeatureConfig"
+          },
+          "description": "功能特性[跟随版本关联的特性]",
+          "title": "featureConfigs"
+        }
+      },
+      "description": "istio列表项",
+      "title": "IstioListItem"
+    },
+    "meshmanagerIstioRequest": {
+      "type": "object",
+      "properties": {
+        "meshID": {
+          "type": "string",
+          "description": "网格ID",
+          "title": "meshID"
+        },
+        "projectID": {
+          "type": "string",
+          "description": "项目ID",
+          "title": "projectID"
+        },
+        "projectCode": {
+          "type": "string",
+          "description": "项目编码",
+          "title": "projectCode"
+        },
+        "name": {
+          "type": "string",
+          "description": "网格名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "使用的版本，例如 1.18",
+          "title": "version"
+        },
+        "controlPlaneMode": {
+          "type": "string",
+          "description": "安装模式[independent：独立控制面（默认）；hosting：托管控制面]",
+          "title": "controlPlaneMode"
+        },
+        "clusterMode": {
+          "type": "string",
+          "description": "多集群集群模式[primaryPemote：主从架构（默认）；multiPrimary：多主架构]",
+          "title": "clusterMode"
+        },
+        "description": {
+          "type": "string",
+          "description": "文字描述",
+          "title": "description"
+        },
+        "primaryClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "主集群列表，使用BCS集群ID",
+          "title": "primaryClusters"
+        },
+        "remoteClusters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "远程/从集群列表,多集群模式下填写",
+          "title": "remoteClusters"
+        },
+        "differentNetwork": {
+          "type": "boolean",
+          "description": "网络是否已打通：关乎是否默认安装egress gateway，true：已打通（默认），false：未打通，暂不支持",
+          "title": "differentNetwork"
+        },
+        "sidecarResourceConfig": {
+          "$ref": "#/definitions/meshmanagerResourceConfig",
+          "description": "sidecar资源配置",
+          "title": "sidecarResourceConfig"
+        },
+        "highAvailability": {
+          "$ref": "#/definitions/meshmanagerHighAvailability",
+          "description": "高可用配置",
+          "title": "highAvailability"
+        },
+        "observabilityConfig": {
+          "$ref": "#/definitions/meshmanagerObservabilityConfig",
+          "description": "可观测性配置",
+          "title": "observabilityConfig"
+        },
+        "featureConfigs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/meshmanagerFeatureConfig"
+          },
+          "description": "功能特性[跟随版本关联的特性]",
+          "title": "featureConfigs"
+        }
+      },
+      "title": "istio配置信息"
+    },
+    "meshmanagerIstioVersion": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "版本名称",
+          "title": "name"
+        },
+        "version": {
+          "type": "string",
+          "description": "istio版本号",
+          "title": "version"
+        },
+        "chartVersion": {
+          "type": "string",
+          "description": "对应chart版本",
+          "title": "chartVersion"
+        },
+        "kubeVersion": {
+          "type": "string",
+          "description": "支持的Kubernetes版本，semver格式",
+          "title": "kubeVersion"
+        }
+      },
+      "title": "istio版本信息"
+    },
+    "meshmanagerListIstioConfigResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64",
+          "description": "返回错误码",
+          "title": "code"
+        },
+        "message": {
+          "type": "string",
+          "description": "返回错误信息",
+          "title": "message"
+        },
+        "requestID": {
+          "type": "string",
+          "description": "请求 ID",
+          "title": "request id"
+        },
+        "webAnnotations": {
+          "$ref": "#/definitions/meshmanagerWebAnnotations",
+          "description": "权限信息",
+          "title": "web_annotations"
+        },
+        "data": {
+          "$ref": "#/definitions/meshmanagerIstioConfigData",
+          "description": "响应数据",
+          "title": "data"
+        }
+      },
+      "description": "获取istio版本列表响应",
+      "title": "ListIstioConfigResponse",
+      "required": [
+        "code",
+        "message",
+        "requestID",
+        "webAnnotations",
+        "data"
+      ]
     },
     "meshmanagerListIstioData": {
       "type": "object",
       "properties": {
         "total": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "总数",
+          "title": "total"
         },
         "items": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/meshmanagerIstioListItem"
-          }
+          },
+          "description": "列表项",
+          "title": "items"
         }
       },
-      "title": "istio列表响应"
+      "title": "istio列表数据"
     },
     "meshmanagerListIstioResponse": {
       "type": "object",
@@ -715,57 +918,23 @@
         "data"
       ]
     },
-    "meshmanagerListIstioVersionResponse": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int64",
-          "description": "返回错误码",
-          "title": "code"
-        },
-        "message": {
-          "type": "string",
-          "description": "返回错误信息",
-          "title": "message"
-        },
-        "requestID": {
-          "type": "string",
-          "description": "请求 ID",
-          "title": "request id"
-        },
-        "webAnnotations": {
-          "$ref": "#/definitions/meshmanagerWebAnnotations",
-          "description": "权限信息",
-          "title": "web_annotations"
-        },
-        "data": {
-          "$ref": "#/definitions/meshmanagerIstioVersionAndFeatures",
-          "description": "响应数据",
-          "title": "data"
-        }
-      },
-      "description": "获取istio版本列表响应",
-      "title": "ListIstioVersionResponse",
-      "required": [
-        "code",
-        "message",
-        "requestID",
-        "webAnnotations",
-        "data"
-      ]
-    },
     "meshmanagerLogCollectorConfig": {
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "是否启用",
+          "title": "enabled"
         },
         "accessLogEncoding": {
-          "type": "string"
+          "type": "string",
+          "description": "日志编码 [text, json]",
+          "title": "accessLogEncoding"
         },
         "accessLogFormat": {
-          "type": "string"
+          "type": "string",
+          "description": "日志格式",
+          "title": "accessLogFormat"
         }
       },
       "title": "日志采集配置"
@@ -775,11 +944,13 @@
       "properties": {
         "controlPlaneMetricsEnabled": {
           "type": "boolean",
-          "title": "控制面指标"
+          "description": "控制面指标采集开关",
+          "title": "controlPlaneMetricsEnabled"
         },
         "dataPlaneMetricsEnabled": {
           "type": "boolean",
-          "title": "数据面指标"
+          "description": "数据面指标采集开关",
+          "title": "dataPlaneMetricsEnabled"
         }
       },
       "title": "指标采集配置"
@@ -788,13 +959,19 @@
       "type": "object",
       "properties": {
         "metricsConfig": {
-          "$ref": "#/definitions/meshmanagerMetricsConfig"
+          "$ref": "#/definitions/meshmanagerMetricsConfig",
+          "description": "指标采集配置",
+          "title": "metricsConfig"
         },
         "logCollectorConfig": {
-          "$ref": "#/definitions/meshmanagerLogCollectorConfig"
+          "$ref": "#/definitions/meshmanagerLogCollectorConfig",
+          "description": "日志采集配置",
+          "title": "logCollectorConfig"
         },
         "tracingConfig": {
-          "$ref": "#/definitions/meshmanagerTracingConfig"
+          "$ref": "#/definitions/meshmanagerTracingConfig",
+          "description": "全量路追踪配置",
+          "title": "tracingConfig"
         }
       },
       "title": "可观测性配置"
@@ -803,16 +980,24 @@
       "type": "object",
       "properties": {
         "cpuRequest": {
-          "type": "string"
+          "type": "string",
+          "description": "CPU请求",
+          "title": "cpuRequest"
         },
         "cpuLimit": {
-          "type": "string"
+          "type": "string",
+          "description": "CPU限制",
+          "title": "cpuLimit"
         },
         "memoryRequest": {
-          "type": "string"
+          "type": "string",
+          "description": "内存请求",
+          "title": "memoryRequest"
         },
         "memoryLimit": {
-          "type": "string"
+          "type": "string",
+          "description": "内存限制",
+          "title": "memoryLimit"
         }
       },
       "title": "resource配置"
@@ -821,17 +1006,25 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "type": "boolean"
+          "type": "boolean",
+          "description": "是否启用",
+          "title": "enabled"
         },
         "traceSamplingPercent": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "采样率,百分比",
+          "title": "traceSamplingPercent"
         },
         "endpoint": {
-          "type": "string"
+          "type": "string",
+          "description": "上报地址",
+          "title": "endpoint"
         },
         "bkToken": {
-          "type": "string"
+          "type": "string",
+          "description": "蓝鲸token",
+          "title": "bkToken"
         }
       },
       "title": "tracing配置"
@@ -910,5 +1103,17 @@
         }
       }
     }
-  }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
 }

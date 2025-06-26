@@ -39,6 +39,7 @@ type MeshIstio struct {
 	UpdateTime    int64  `bson:"updateTime" json:"updateTime"`
 	CreateBy      string `bson:"createBy" json:"createBy"`
 	UpdateBy      string `bson:"updateBy" json:"updateBy"`
+	IsDeleted     bool   `bson:"isDeleted" json:"isDeleted"`
 
 	// Mesh configuration
 	ControlPlaneMode string   `bson:"controlPlaneMode" json:"controlPlaneMode"`

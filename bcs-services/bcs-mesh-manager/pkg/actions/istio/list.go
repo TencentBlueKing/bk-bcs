@@ -90,6 +90,8 @@ func (l *ListIstioAction) list(ctx context.Context) (*meshmanager.ListIstioData,
 	opt := l.buildPaginationOptions()
 
 	total, meshIstios, err := l.model.List(ctx, cond, opt)
+	blog.Infof("list mesh successfully, projectCode: %s, total: %d, len(meshIstios): %d, cond: %v, opt: %v",
+		l.req.ProjectCode, total, len(meshIstios), cond, opt)
 	if err != nil {
 		return nil, err
 	}

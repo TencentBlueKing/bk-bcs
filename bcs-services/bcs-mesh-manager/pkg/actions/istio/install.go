@@ -114,6 +114,10 @@ func (i *InstallIstioAction) Validate() error {
 	if err := utils.ValidateIstioInstalled(context.TODO(), allClusters); err != nil {
 		return err
 	}
+	// 检查可观测性配置是否配置正确
+	if err := utils.ValidateObservabilityConfig(i.req.ObservabilityConfig); err != nil {
+		return err
+	}
 	return nil
 }
 

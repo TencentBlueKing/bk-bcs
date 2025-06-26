@@ -61,7 +61,6 @@ func (u *UpdateIstioAction) Handle(
 		u.setResp(common.ParamErrorCode, err.Error())
 		return nil
 	}
-
 	if err := u.update(ctx); err != nil {
 		blog.Errorf("update mesh failed, %s, meshID: %s", err.Error(), u.req.MeshID)
 		u.setResp(common.DBErrorCode, err.Error())
@@ -87,47 +86,22 @@ func (u *UpdateIstioAction) validate(req *meshmanager.IstioRequest) error {
 	if req.ProjectID == nil {
 		return fmt.Errorf("projectID is required")
 	}
-	if len(req.PrimaryClusters) == 0 {
-		return fmt.Errorf("clusters is required")
-	}
 	if req.Version.GetValue() == "" {
 		return fmt.Errorf("chart version is required")
 	}
 	if req.FeatureConfigs == nil {
 		return fmt.Errorf("feature configs is required")
 	}
-
-	// 检查主从集群版本兼容性
-	allClusters := make([]string, 0, len(req.PrimaryClusters)+len(req.RemoteClusters))
-	allClusters = append(allClusters, req.PrimaryClusters...)
-	allClusters = append(allClusters, req.RemoteClusters...)
-	if err := utils.ValidateClusterVersion(
-		context.TODO(),
-		u.istioConfig,
-		allClusters,
-		req.Version.GetValue(),
-	); err != nil {
+	// 检查可观测性配置是否配置正确
+	if err := utils.ValidateObservabilityConfig(req.ObservabilityConfig); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 // update implements the business logic for updating mesh
 func (u *UpdateIstioAction) update(ctx context.Context) error {
-
-	// 更新 istio 的状态为更新中
-	err := u.model.Update(ctx, u.req.MeshID.GetValue(), entity.M{
-		entity.FieldKeyStatus: common.IstioStatusUpdating,
-	})
-	if err != nil {
-		blog.Errorf("update mesh status failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
-		return err
-	}
-
-	// 获取更新的字段
-	updateFields := u.buildUpdateFields(u.req)
-	blog.Infof("update fields: %+v for meshID: %s", updateFields, u.req.MeshID.GetValue())
-
 	// 获取istio信息
 	istio, err := u.model.Get(ctx, operator.NewLeafCondition(operator.Eq, operator.M{
 		entity.FieldKeyMeshID:    u.req.MeshID.GetValue(),
@@ -137,25 +111,45 @@ func (u *UpdateIstioAction) update(ctx context.Context) error {
 		blog.Errorf("get mesh istio failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
 		return err
 	}
+	// 主从集群信息使用db中的，不可更新，单独接口处理集群更新的情况
+	u.req.PrimaryClusters = istio.PrimaryClusters
+	u.req.RemoteClusters = istio.RemoteClusters
+
+	// 更新 istio 的状态为更新中
+	err = u.model.Update(ctx, u.req.MeshID.GetValue(), entity.M{
+		entity.FieldKeyStatus: common.IstioStatusUpdating,
+	})
+	if err != nil {
+		blog.Errorf("update mesh status failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
+		return err
+	}
+	// 获取更新的字段
+	updateFields := u.buildUpdateFields(u.req)
+	blog.Infof("update fields: %+v for meshID: %s", updateFields, u.req.MeshID.GetValue())
 
 	// 构建更新配置
-	updateValues := utils.ConvertRequestToValues(u.req)
+	updateValues, err := utils.ConvertRequestToValues(istio.Version, u.req)
+	if err != nil {
+		blog.Errorf("convert request to values failed, meshID: %s, err: %s", u.req.MeshID.GetValue(), err)
+		return err
+	}
 	blog.Infof("update values: %+v for meshID: %s", updateValues, u.req.MeshID.GetValue())
 
 	// 异步更新istio
 	action := actions.NewIstioUpdateAction(
 		&actions.IstioUpdateOption{
-			Model:           u.model,
-			ProjectCode:     &istio.ProjectCode,
-			MeshID:          &istio.MeshID,
-			ChartName:       common.ComponentIstiod,
-			ChartVersion:    &istio.ChartVersion,
-			ChartValuesPath: u.istioConfig.ChartValuesPath,
-			ChartRepo:       &u.istioConfig.ChartRepo,
-			PrimaryClusters: istio.PrimaryClusters,
-			RemoteClusters:  istio.RemoteClusters,
-			UpdateFields:    updateFields,
-			UpdateValues:    updateValues,
+			Model:               u.model,
+			ProjectCode:         &istio.ProjectCode,
+			MeshID:              &istio.MeshID,
+			ChartName:           common.ComponentIstiod,
+			ChartVersion:        &istio.ChartVersion,
+			ChartRepo:           &u.istioConfig.ChartRepo,
+			PrimaryClusters:     istio.PrimaryClusters,
+			RemoteClusters:      istio.RemoteClusters,
+			UpdateFields:        updateFields,
+			UpdateValues:        updateValues,
+			ObservabilityConfig: u.req.ObservabilityConfig,
+			Version:             istio.Version,
 		},
 	)
 	_, err = operation.GlobalOperator.Dispatch(action, 10*time.Minute)

@@ -9,11 +9,35 @@ import "protoc-gen-swagger/options/annotations.proto";
 import "validate/validate.proto";
 import "google/protobuf/struct.proto";
 
+// OpenAPI 配置
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
   info : {title : "Mesh Manager API Doc" version : "0.1.0"};
-schemes : HTTP consumes : "application/json" produces : "application/json"
+base_path : "/bcsapi/v4" security_definitions : {
+security: {
+key:
+  "ApiKeyAuth";
+value: {
+type:
+  TYPE_API_KEY;
+in:
+  IN_HEADER;
+name:
+  "Authorization";
+};
+}
+};
+security : {
+security_requirement: {
+key:
+  "ApiKeyAuth";
+value: {};
+}
+};
+schemes : HTTPS consumes : "application/json" produces : "application/json"
 }
 ;
+
+// ===== 通用消息定义 =====
 
 // WebAnnotations 权限信息
 message WebAnnotations {
@@ -24,17 +48,21 @@ message WebAnnotations {
       } ];
 }
 
+// ===== 服务定义 =====
+
 service MeshManager {
   // ===== 版本管理相关 =====
-  // 获取当前开放的istio版本
-  rpc ListIstioVersion(ListIstioVersionRequest)
-      returns (ListIstioVersionResponse) {
+
+  // 获取当前开放的istio版本和配置信息
+  rpc ListIstioConfig(ListIstioConfigRequest)
+      returns (ListIstioConfigResponse) {
     option (google.api.http) = {
-      get : "/meshmanager/v1/mesh/istio/version"
+      get : "/meshmanager/v1/mesh/istio/config"
     };
   }
 
-  // ===== Istio 相关 =====
+  // ===== Istio 管理相关 =====
+
   // 安装istio
   rpc InstallIstio(IstioRequest) returns (InstallIstioResponse) {
     option (google.api.http) = {
@@ -74,14 +102,15 @@ service MeshManager {
 }
 
 // ===== 版本管理相关消息 =====
+
 // 获取当前开放的istio版本请求
-message ListIstioVersionRequest {}
+message ListIstioConfigRequest {}
 
 // 获取当前开放的istio版本响应
-message ListIstioVersionResponse {
+message ListIstioConfigResponse {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
     json_schema : {
-      title : "ListIstioVersionResponse"
+      title : "ListIstioConfigResponse"
       description : "获取istio版本列表响应"
       required : [ "code", "message", "requestID", "web_annotations", "data" ]
     }
@@ -104,7 +133,7 @@ message ListIstioVersionResponse {
         title : "web_annotations",
         description : "权限信息"
       } ];
-  IstioVersionAndFeatures data = 5 [
+  IstioConfigData data = 5 [
     json_name = "data",
     (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
       title : "data"
@@ -113,12 +142,22 @@ message ListIstioVersionResponse {
   ];
 }
 
-// 获取istio版本列表响应
-message IstioVersionAndFeatures {
+// istio版本和功能特性
+message IstioConfigData {
   repeated IstioVersion istioVersions = 1
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "istioVersions"
         description : "istio版本列表"
+      } ];
+  ResourceConfig sidecarResourceConfig = 20
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "sidecarResourceConfig",
+        description : "sidecar资源配置"
+      } ];
+  HighAvailability highAvailability = 21
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "highAvailability",
+        description : "高可用配置"
       } ];
   map<string, FeatureConfig> featureConfigs = 2
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
@@ -129,97 +168,293 @@ message IstioVersionAndFeatures {
 
 // istio版本信息
 message IstioVersion {
-  string name = 1;         // 版本名称
-  string version = 2;      // 版本号
-  string chartVersion = 3; // chart 版本
-  string kubeVersion = 4;  // 支持的 kube 版本
+  string name = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "name", description : "版本名称"} ];
+  string version = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "version",
+        description : "istio版本号"
+      } ];
+  string chartVersion = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "chartVersion",
+        description : "对应chart版本"
+      } ];
+  string kubeVersion = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "kubeVersion",
+        description : "支持的Kubernetes版本，semver格式"
+      } ];
 }
 
 // 功能特性配置
 message FeatureConfig {
-  string name = 1;                     // 特性名称
-  string description = 2;              // 特性描述
-  string value = 3;                    // 特性值
-  string defaultValue = 4;             // 默认值
-  repeated string availableValues = 5; // 可选值
-  repeated string supportVersions = 6; // 支持的版本
+  string name = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "name", description : "特性名称"} ];
+  string description = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "description",
+        description : "特性描述"
+      } ];
+  string value = 3 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "value", description : "特性值"} ];
+  string defaultValue = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "defaultValue",
+        description : "默认值"
+      } ];
+  repeated string availableValues = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "availableValues",
+        description : "可选值"
+      } ];
+  repeated string supportVersions = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "supportVersions",
+        description : "支持的istio版本"
+      } ];
 }
 
-// ===== Mesh 管理相关消息 =====
+// ===== Istio 管理相关消息 =====
+
 // istio配置信息
 message IstioRequest {
-  google.protobuf.StringValue meshID = 1;
-  google.protobuf.StringValue projectID = 2;                // 项目ID
-  google.protobuf.StringValue projectCode = 3;              // 项目编码
-  google.protobuf.StringValue name = 4;                     // 网格名称
-  google.protobuf.StringValue version = 5;                  // 使用的版本
-  google.protobuf.StringValue controlPlaneMode = 6;         // 安装模式
-  google.protobuf.StringValue clusterMode = 7;              // 多集群集群模式
-  google.protobuf.StringValue description = 8;              // 描述
-  repeated string primaryClusters = 9; // 主集群列表
-  repeated string remoteClusters = 10;  // 远程集群列表
-  google.protobuf.BoolValue differentNetwork = 11; // 网络是否一致：关乎是否默认安装egress gateway
-  ResourceConfig sidecarResourceConfig = 12; // sidecar资源配置
-  HighAvailability highAvailability = 13;    // 高可用配置
-  // 可观测性配置
-  ObservabilityConfig observabilityConfig = 14;
-  map<string, FeatureConfig> featureConfigs = 15; // 功能特性[跟随版本关联的特性]
+  google.protobuf.StringValue meshID = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "meshID",
+        description : "网格ID"
+      } ];
+  google.protobuf.StringValue projectID = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectID",
+        description : "项目ID"
+      } ];
+  google.protobuf.StringValue projectCode = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectCode",
+        description : "项目编码"
+      } ];
+  google.protobuf.StringValue name = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "name",
+        description : "网格名称"
+      } ];
+  google.protobuf.StringValue version = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "version",
+        description : "使用的版本，例如 1.18"
+      } ];
+  google.protobuf.StringValue controlPlaneMode = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "controlPlaneMode",
+        description : "安装模式["
+                      "independent：独立控制面（默认）；hosting：托管控制面]"
+      } ];
+  google.protobuf.StringValue clusterMode = 7
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clusterMode",
+        description : "多集群集群模式["
+                      "primaryPemote：主从架构（默认）；multiPrimary：多主架构]"
+      } ];
+  google.protobuf.StringValue description = 8
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "description",
+        description : "文字描述"
+      } ];
+  repeated string primaryClusters = 9
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "primaryClusters",
+        description : "主集群列表，使用BCS集群ID"
+      } ];
+  repeated string remoteClusters = 10
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "remoteClusters",
+        description : "远程/从集群列表,多集群模式下填写"
+      } ];
+  google.protobuf.BoolValue differentNetwork = 11
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "differentNetwork",
+        description : "网络是否已打通：关乎是否默认安装egress "
+                      "gateway，true：已打通（默认），false：未打通，暂不支持"
+      } ];
+  ResourceConfig sidecarResourceConfig = 12
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "sidecarResourceConfig",
+        description : "sidecar资源配置"
+      } ];
+  HighAvailability highAvailability = 13
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "highAvailability",
+        description : "高可用配置"
+      } ];
+  ObservabilityConfig observabilityConfig = 14
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "observabilityConfig",
+        description : "可观测性配置"
+      } ];
+  map<string, FeatureConfig> featureConfigs = 15
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "featureConfigs",
+        description : "功能特性[跟随版本关联的特性]"
+      } ];
 }
+
+// ===== 配置相关消息 =====
 
 // 可观测性配置
 message ObservabilityConfig {
-  MetricsConfig metricsConfig = 1;           // 指标采集配置
-  LogCollectorConfig logCollectorConfig = 2; // 日志采集配置
-  TracingConfig tracingConfig = 3;           // 全量路追踪配置
+  MetricsConfig metricsConfig = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "metricsConfig",
+        description : "指标采集配置"
+      } ];
+  LogCollectorConfig logCollectorConfig = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "logCollectorConfig",
+        description : "日志采集配置"
+      } ];
+  TracingConfig tracingConfig = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "tracingConfig",
+        description : "全量路追踪配置"
+      } ];
 }
 
 // 高可用配置，hpa，副本数设置等
 message HighAvailability {
-  google.protobuf.BoolValue autoscaleEnabled = 1;                    // 是否开启hpa
-  google.protobuf.Int32Value autoscaleMin = 2;                       // hpa最小副本数
-  google.protobuf.Int32Value autoscaleMax = 3;                       // hpa最大副本数
-  google.protobuf.Int32Value replicaCount = 4;                       // 副本数
-  google.protobuf.Int32Value targetCPUAverageUtilizationPercent = 5; // 目标cpu平均使用率 0-100
-  ResourceConfig resourceConfig = 6;            // resource配置
-  DedicatedNode dedicatedNode = 7; // 专属节点（专用节点标签），默认会加上容忍
+  google.protobuf.BoolValue autoscaleEnabled = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "autoscaleEnabled",
+        description : "是否开启hpa"
+      } ];
+  google.protobuf.Int32Value autoscaleMin = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "autoscaleMin",
+        description : "hpa最小副本数"
+      } ];
+  google.protobuf.Int32Value autoscaleMax = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "autoscaleMax",
+        description : "hpa最大副本数"
+      } ];
+  google.protobuf.Int32Value replicaCount = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "replicaCount",
+        description : "副本数"
+      } ];
+  google.protobuf.Int32Value targetCPUAverageUtilizationPercent = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "targetCPUAverageUtilizationPercent",
+        description : "目标cpu平均使用率 0-100"
+      } ];
+  ResourceConfig resourceConfig = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "resourceConfig",
+        description : "resource配置"
+      } ];
+  DedicatedNode dedicatedNode = 7
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "dedicatedNode",
+        description : "专属节点（专用节点标签），默认会加上容忍"
+      } ];
 }
 
 // 专属调度标签
 message DedicatedNode {
-  google.protobuf.BoolValue enabled = 1; // 是否启用
-  map<string, string> nodeLabels = 2;    // 节点标签
+  google.protobuf.BoolValue enabled = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "enabled",
+        description : "是否启用"
+      } ];
+  map<string, string> nodeLabels = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "nodeLabels",
+        description : "节点标签"
+      } ];
 }
 
 // resource配置
 message ResourceConfig {
-  google.protobuf.StringValue cpuRequest = 1;    // CPU请求
-  google.protobuf.StringValue cpuLimit = 2;      // CPU限制
-  google.protobuf.StringValue memoryRequest = 3; // 内存请求
-  google.protobuf.StringValue memoryLimit = 4;   // 内存限制
+  google.protobuf.StringValue cpuRequest = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "cpuRequest",
+        description : "CPU请求"
+      } ];
+  google.protobuf.StringValue cpuLimit = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "cpuLimit",
+        description : "CPU限制"
+      } ];
+  google.protobuf.StringValue memoryRequest = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "memoryRequest",
+        description : "内存请求"
+      } ];
+  google.protobuf.StringValue memoryLimit = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "memoryLimit",
+        description : "内存限制"
+      } ];
 }
 
 // 日志采集配置
 message LogCollectorConfig {
-  google.protobuf.BoolValue enabled = 1;             // 是否启用
-  google.protobuf.StringValue accessLogEncoding = 2; // 日志编码 [text, json]
-  google.protobuf.StringValue accessLogFormat = 3;   // 日志格式
+  google.protobuf.BoolValue enabled = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "enabled",
+        description : "是否启用"
+      } ];
+  google.protobuf.StringValue accessLogEncoding = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "accessLogEncoding",
+        description : "日志编码 [text, json]"
+      } ];
+  google.protobuf.StringValue accessLogFormat = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "accessLogFormat",
+        description : "日志格式"
+      } ];
 }
 
 // tracing配置
 message TracingConfig {
-  google.protobuf.BoolValue enabled = 1;               // 是否启用
-  google.protobuf.Int32Value traceSamplingPercent = 2; // 采样率,百分比
-  google.protobuf.StringValue endpoint = 3;            // 上报地址
-  google.protobuf.StringValue bkToken = 4;             // 蓝鲸token
+  google.protobuf.BoolValue enabled = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "enabled",
+        description : "是否启用"
+      } ];
+  google.protobuf.Int32Value traceSamplingPercent = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "traceSamplingPercent",
+        description : "采样率,百分比"
+      } ];
+  google.protobuf.StringValue endpoint = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "endpoint",
+        description : "上报地址"
+      } ];
+  google.protobuf.StringValue bkToken = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "bkToken",
+        description : "蓝鲸token"
+      } ];
 }
 
 // 指标采集配置
 message MetricsConfig {
-  // 控制面指标
-  google.protobuf.BoolValue controlPlaneMetricsEnabled = 1;
-  // 数据面指标
-  google.protobuf.BoolValue dataPlaneMetricsEnabled = 2;
+  google.protobuf.BoolValue controlPlaneMetricsEnabled = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "controlPlaneMetricsEnabled",
+        description : "控制面指标采集开关"
+      } ];
+  google.protobuf.BoolValue dataPlaneMetricsEnabled = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "dataPlaneMetricsEnabled",
+        description : "数据面指标采集开关"
+      } ];
 }
+
+// ===== 响应消息 =====
 
 // 安装istio响应
 message InstallIstioResponse {
@@ -251,7 +486,7 @@ message InstallIstioResponse {
   string meshID = 5
       [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
         title : "meshID",
-        description : "meshID"
+        description : "网格ID"
       } ];
 }
 
@@ -261,12 +496,47 @@ message ListIstioRequest {
     json_schema : {title : "ListIstioRequest" description : "获取istio列表请求"}
   };
 
-  string projectCode = 1 [ (validate.rules).string = {min_len : 1 , max_len : 32} ];
-  string meshID = 2;
-  string name = 3;
-  string status = 4;
-  int32 page = 5 [ (validate.rules).int32 = {gt : 0, lte : 10000} ];
-  int32 pageSize = 6 [ (validate.rules).int32 = {gt : 0, lte : 100} ];
+  string projectCode = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectCode",
+      description : "项目编码"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 32}
+  ];
+  string meshID = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "meshID",
+        description : "网格ID，可选过滤条件"
+      } ];
+  string name = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "name",
+        description : "网格名称，可选过滤条件"
+      } ];
+  string status = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "status",
+        description : "网格状态，可选过滤条件["
+                      "running：运行中；installing：安装中；installed：安装完成"
+                      "；failed：安装失败；uninstalling：卸载中；uninstalled："
+                      "卸载完成；uninstalling-"
+                      "failed：卸载失败；updating：配置更新中；update-"
+                      "failed：配置更新失败]"
+      } ];
+  int32 page = 5 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "page",
+      description : "页码"
+    },
+    (validate.rules).int32 = {gt : 0, lte : 10000}
+  ];
+  int32 pageSize = 6 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "pageSize",
+      description : "每页数量"
+    },
+    (validate.rules).int32 = {gt : 0, lte : 100}
+  ];
 }
 
 // 获取istio列表响应
@@ -279,17 +549,22 @@ message ListIstioResponse {
     }
   };
 
-  uint32 code = 1;
-  string message = 2;
-  string requestID = 3;
-  WebAnnotations web_annotations = 4;
-  ListIstioData data = 5;
+  uint32 code = 1;                    // 返回错误码
+  string message = 2;                 // 返回错误信息
+  string requestID = 3;               // 请求ID
+  WebAnnotations web_annotations = 4; // 权限信息
+  ListIstioData data = 5;             // 响应数据
 }
 
-// istio列表响应
+// istio列表数据
 message ListIstioData {
-  int32 total = 1;
-  repeated IstioListItem items = 2;
+  int32 total = 1 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                        {title : "total", description : "总数"} ];
+  repeated IstioListItem items = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "items",
+        description : "列表项"
+      } ];
 }
 
 // istio列表项
@@ -298,32 +573,128 @@ message IstioListItem {
     json_schema : {title : "IstioListItem" description : "istio列表项"}
   };
 
-  string meshID = 1;        // meshID
-  string status = 2;        // 状态
-  string statusMessage = 3; // 状态消息
-  string networkID = 4;     // 网络ID
-  string chartVersion = 5;  // chart版本
-  int64 createTime = 6;     // 创建时间
-  int64 updateTime = 7;     // 更新时间
-  string createBy = 8;      // 创建者
-  string updateBy = 9;      // 更新者
+  // 系统字段
+  string meshID = 1
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "meshID",
+        description : "网格ID"
+      } ];
+  string status = 2
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "status",
+        description : "状态["
+                      "running：运行中；installing：安装中；installed：安装完成"
+                      "；failed：安装失败；uninstalling：卸载中；uninstalled："
+                      "卸载完成；uninstalling-"
+                      "failed：卸载失败；updating：配置更新中；update-"
+                      "failed：配置更新失败]"
+      } ];
+  string statusMessage = 3
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "statusMessage",
+        description : "状态消息，状态为failed时，会返回失败原因"
+      } ];
+  string networkID = 4
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "networkID",
+        description : "网络ID"
+      } ];
+  string chartVersion = 5
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "chartVersion",
+        description : "chart版本"
+      } ];
+  int64 createTime = 6
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "createTime",
+        description : "创建时间"
+      } ];
+  int64 updateTime = 7
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "updateTime",
+        description : "更新时间"
+      } ];
+  string createBy = 8
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "createBy",
+        description : "创建者"
+      } ];
+  string updateBy = 9
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "updateBy",
+        description : "更新者"
+      } ];
 
-  /* 保持跟 IstioRequest 一致 */
-  string projectID = 10;                // 项目ID
-  string projectCode = 11;              // 项目编码
-  string name = 12;                     // 名称
-  string description = 13;              // 描述
-  string version = 14;                  // 使用的版本
-  string controlPlaneMode = 15;         // 安装模式
-  string clusterMode = 16;              // 多集群集群模式
-  repeated string primaryClusters = 17; // 主集群列表
-  repeated string remoteClusters = 18;  // 远程集群列表
-  bool differentNetwork = 19; // 网络是否一致：关乎是否默认安装egress gateway
-  ResourceConfig sidecarResourceConfig = 20; // sidecar资源配置
-  HighAvailability highAvailability = 21;    // 高可用配置
-  // 可观测性配置
-  ObservabilityConfig observabilityConfig = 22;
-  map<string, FeatureConfig> featureConfigs = 23; // 功能特性[跟随版本关联的特性]
+  // 配置字段 (保持跟 IstioRequest 一致)
+  string projectID = 10
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectID",
+        description : "项目ID"
+      } ];
+  string projectCode = 11
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "projectCode",
+        description : "项目编码"
+      } ];
+  string name = 12 [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) =
+                         {title : "name", description : "名称"} ];
+  string description = 13
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "description",
+        description : "描述"
+      } ];
+  string version = 14
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "version",
+        description : "使用的版本"
+      } ];
+  string controlPlaneMode = 15
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "controlPlaneMode",
+        description : "安装模式["
+                      "independent：独立控制面（默认）；hosting：托管控制面]"
+      } ];
+  string clusterMode = 16
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "clusterMode",
+        description : "多集群集群模式,"
+                      "primaryPemote：主从架构（默认）；multiPrimary：多主架构]"
+      } ];
+  repeated string primaryClusters = 17
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "primaryClusters",
+        description : "主集群列表"
+      } ];
+  repeated string remoteClusters = 18
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "remoteClusters",
+        description : "远程集群列表"
+      } ];
+  bool differentNetwork = 19
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "differentNetwork",
+        description : "网络是否一致：关乎是否默认安装egress gateway"
+      } ];
+  ResourceConfig sidecarResourceConfig = 20
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "sidecarResourceConfig",
+        description : "sidecar资源配置"
+      } ];
+  HighAvailability highAvailability = 21
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "highAvailability",
+        description : "高可用配置"
+      } ];
+  ObservabilityConfig observabilityConfig = 22
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "observabilityConfig",
+        description : "可观测性配置"
+      } ];
+  map<string, FeatureConfig> featureConfigs = 23
+      [ (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+        title : "featureConfigs",
+        description : "功能特性[跟随版本关联的特性]"
+      } ];
 }
 
 // 更新istio响应
@@ -336,10 +707,10 @@ message UpdateIstioResponse {
     }
   };
 
-  uint32 code = 1;
-  string message = 2;
-  string requestID = 3;
-  WebAnnotations web_annotations = 4;
+  uint32 code = 1;                    // 返回错误码
+  string message = 2;                 // 返回错误信息
+  string requestID = 3;               // 请求ID
+  WebAnnotations web_annotations = 4; // 权限信息
 }
 
 // 删除istio请求
@@ -348,8 +719,20 @@ message DeleteIstioRequest {
     json_schema : {title : "DeleteIstioRequest" description : "删除istio请求"}
   };
 
-  string meshID = 1 [ (validate.rules).string = {min_len : 1} ];
-  string projectCode = 2 [ (validate.rules).string = {min_len : 1, max_len : 32} ];
+  string meshID = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "meshID",
+      description : "网格ID"
+    },
+    (validate.rules).string = {min_len : 1}
+  ];
+  string projectCode = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectCode",
+      description : "项目编码"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 32}
+  ];
 }
 
 // 删除istio响应
@@ -362,23 +745,35 @@ message DeleteIstioResponse {
     }
   };
 
-  uint32 code = 1;
-  string message = 2;
-  string requestID = 3;
-  WebAnnotations web_annotations = 4;
+  uint32 code = 1;                    // 返回错误码
+  string message = 2;                 // 返回错误信息
+  string requestID = 3;               // 请求ID
+  WebAnnotations web_annotations = 4; // 权限信息
 }
 
 // 获取istio详情请求
 message GetIstioDetailRequest {
   option (grpc.gateway.protoc_gen_swagger.options.openapiv2_schema) = {
-    json_schema : {title : "GetIstioDetailRequest" description : "获取istio详情请求"}
+    json_schema : {
+      title : "GetIstioDetailRequest"
+      description : "获取istio详情请求"
+    }
   };
 
-  string projectCode = 1[(grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
-        title: "projectCode",
-        description: "项目编码"
-    }, (validate.rules).string = {min_len : 1 , max_len : 32}];
-  string meshID = 2 [ (validate.rules).string = {min_len : 1} ];
+  string projectCode = 1 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "projectCode",
+      description : "项目编码"
+    },
+    (validate.rules).string = {min_len : 1, max_len : 32}
+  ];
+  string meshID = 2 [
+    (grpc.gateway.protoc_gen_swagger.options.openapiv2_field) = {
+      title : "meshID",
+      description : "网格ID"
+    },
+    (validate.rules).string = {min_len : 1}
+  ];
 }
 
 // 获取istio详情响应
@@ -391,9 +786,9 @@ message GetIstioDetailResponse {
     }
   };
 
-  uint32 code = 1;
-  string message = 2;
-  string requestID = 3;
-  WebAnnotations web_annotations = 4;
-  IstioListItem data = 5;
+  uint32 code = 1;                    // 返回错误码
+  string message = 2;                 // 返回错误信息
+  string requestID = 3;               // 请求ID
+  WebAnnotations web_annotations = 4; // 权限信息
+  IstioListItem data = 5;             // 详情数据
 }
